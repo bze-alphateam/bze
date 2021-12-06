@@ -1,0 +1,17 @@
+syntax = "proto3";
+package cosmonaut.bzedgev5.scavenge;
+
+option go_package = "github.com/cosmonaut/bzedgev5/x/scavenge/types";
+
+
+
+message Scavenge {
+  string index = 1; 
+  string solutionHash = 2; 
+  string solution = 3; 
+  string description = 4; 
+  string reward = 5; 
+  string scavenger = 6; 
+  
+}
+
