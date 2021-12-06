@@ -17,7 +17,6 @@ func (k msgServer) SubmitScavenge(goCtx context.Context, msg *types.MsgSubmitSca
 		Description:  msg.Description,
 		SolutionHash: msg.SolutionHash,
 		Reward:       msg.Reward,
-		Scavenger:    msg.Creator,
 	}
 
 	_, isFound := k.GetScavenge(ctx, scavenge.SolutionHash)
@@ -25,7 +24,7 @@ func (k msgServer) SubmitScavenge(goCtx context.Context, msg *types.MsgSubmitSca
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Scavenge with the same solution already exists")
 	}
 
-	scavenger, err := sdk.AccAddressFromBech32(scavenge.Scavenger)
+	scavenger, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
 	}
