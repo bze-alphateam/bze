@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	keepertest "github.com/bzedgev5/testutil/keeper"
-	"github.com/bzedgev5/x/scavenge/types"
+	keepertest "github.com/bze-alphateam/bzedgev5/testutil/keeper"
+	"github.com/bze-alphateam/bzedgev5/x/scavenge/types"
 )
 
 // Prevent strconv unused error

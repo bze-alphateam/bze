@@ -4,7 +4,7 @@ import (
 	"context"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/bzedgev5/x/scavenge/types"
+	"github.com/bze-alphateam/bzedgev5/x/scavenge/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

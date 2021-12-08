@@ -3,8 +3,8 @@ package scavenge
 import (
 	"fmt"
 
-	"github.com/bzedgev5/x/scavenge/keeper"
-	"github.com/bzedgev5/x/scavenge/types"
+	"github.com/bze-alphateam/bzedgev5/x/scavenge/keeper"
+	"github.com/bze-alphateam/bzedgev5/x/scavenge/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

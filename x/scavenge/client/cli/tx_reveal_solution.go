@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/bzedgev5/x/scavenge/types"
+	"github.com/bze-alphateam/bzedgev5/x/scavenge/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -15,11 +15,12 @@ var _ = strconv.Itoa(0)
 
 func CmdRevealSolution() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "reveal-solution [solution]",
+		Use:   "reveal-solution [scavengeIndex] [solution]",
 		Short: "Broadcast message reveal-solution",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			argSolution := args[0]
+			argScavengeIndex := args[0]
+			argSolution := args[1]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -29,6 +30,7 @@ func CmdRevealSolution() *cobra.Command {
 			msg := types.NewMsgRevealSolution(
 				clientCtx.GetFromAddress().String(),
 				argSolution,
+				argScavengeIndex,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

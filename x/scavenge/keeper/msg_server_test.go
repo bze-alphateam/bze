@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	keepertest "github.com/bzedgev5/testutil/keeper"
-	"github.com/bzedgev5/x/scavenge/keeper"
-	"github.com/bzedgev5/x/scavenge/types"
+	keepertest "github.com/bze-alphateam/bzedgev5/testutil/keeper"
+	"github.com/bze-alphateam/bzedgev5/x/scavenge/keeper"
+	"github.com/bze-alphateam/bzedgev5/x/scavenge/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

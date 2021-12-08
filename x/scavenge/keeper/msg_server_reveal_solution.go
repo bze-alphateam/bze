@@ -7,14 +7,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/bzedgev5/x/scavenge/types"
+	"github.com/bze-alphateam/bzedgev5/x/scavenge/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k msgServer) RevealSolution(goCtx context.Context, msg *types.MsgRevealSolution) (*types.MsgRevealSolutionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	var solutionScavengerBytes = []byte(msg.Solution + msg.Creator)
+	var solutionScavengerBytes = []byte(msg.ScavengeIndex + msg.Solution + msg.Creator)
 	var solutionScavengerHash = sha256.Sum256(solutionScavengerBytes)
 	var solutionScavengerHashString = hex.EncodeToString(solutionScavengerHash[:])
 	_, isFound := k.GetCommit(ctx, solutionScavengerHashString)
@@ -22,11 +22,8 @@ func (k msgServer) RevealSolution(goCtx context.Context, msg *types.MsgRevealSol
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Commit with this hash does not exist")
 	}
 
-	var solutionHash = sha256.Sum256([]byte(msg.Solution))
-	var solutionHashString = hex.EncodeToString(solutionHash[:])
 	var scavenge = types.Scavenge{}
-
-	scavenge, isFound = k.GetScavenge(ctx, solutionHashString)
+	scavenge, isFound = k.GetScavenge(ctx, msg.ScavengeIndex)
 	if !isFound {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Scavenge with this solution hash doesnt exist")
 	}
@@ -36,8 +33,14 @@ func (k msgServer) RevealSolution(goCtx context.Context, msg *types.MsgRevealSol
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Scavenge already solved")
 	}
 
+	var solutionHash = sha256.Sum256([]byte(msg.Solution))
+	var solutionHashString = hex.EncodeToString(solutionHash[:])
+	if solutionHashString != scavenge.SolutionHash {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "This is NOT the correct solution")
+	}
+
 	scavenge.Scavenger = msg.Creator
-	scavenge.SolutionHash = msg.Solution
+	scavenge.Solution = msg.Solution
 
 	moduleAccount := sdk.AccAddress(crypto.AddressHash([]byte(types.ModuleName)))
 	scavengerAddress, err := sdk.AccAddressFromBech32(scavenge.Scavenger)

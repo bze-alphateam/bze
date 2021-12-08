@@ -7,10 +7,11 @@ import (
 
 var _ sdk.Msg = &MsgRevealSolution{}
 
-func NewMsgRevealSolution(creator string, solution string) *MsgRevealSolution {
+func NewMsgRevealSolution(creator string, solution string, scavengeIndex string) *MsgRevealSolution {
 	return &MsgRevealSolution{
-		Creator:  creator,
-		Solution: solution,
+		Creator:       creator,
+		Solution:      solution,
+		ScavengeIndex: scavengeIndex,
 	}
 }
 

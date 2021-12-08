@@ -4,10 +4,10 @@ info:
   name: ''
   description: ''
 paths:
-  /cosmonaut/bzedgev5/scavenge/commit:
+  /bzedgev5/scavenge/commit:
     get:
       summary: Queries a list of commit items.
-      operationId: CosmonautBzedgev5ScavengeCommitAll
+      operationId: Bzedgev5ScavengeCommitAll
       responses:
         '200':
           description: A successful response.
@@ -126,10 +126,10 @@ paths:
           type: boolean
       tags:
         - Query
-  '/cosmonaut/bzedgev5/scavenge/commit/{index}':
+  '/bzedgev5/scavenge/commit/{index}':
     get:
       summary: Queries a commit by index.
-      operationId: CosmonautBzedgev5ScavengeCommit
+      operationId: Bzedgev5ScavengeCommit
       responses:
         '200':
           description: A successful response.
@@ -170,10 +170,10 @@ paths:
           type: string
       tags:
         - Query
-  /cosmonaut/bzedgev5/scavenge/scavenge:
+  /bzedgev5/scavenge/scavenge:
     get:
       summary: Queries a list of scavenge items.
-      operationId: CosmonautBzedgev5ScavengeScavengeAll
+      operationId: Bzedgev5ScavengeScavengeAll
       responses:
         '200':
           description: A successful response.
@@ -298,10 +298,10 @@ paths:
           type: boolean
       tags:
         - Query
-  '/cosmonaut/bzedgev5/scavenge/scavenge/{index}':
+  '/bzedgev5/scavenge/scavenge/{index}':
     get:
       summary: Queries a scavenge by index.
-      operationId: CosmonautBzedgev5ScavengeScavenge
+      operationId: Bzedgev5ScavengeScavenge
       responses:
         '200':
           description: A successful response.
@@ -12846,7 +12846,7 @@ paths:
       tags:
         - Query
 definitions:
-  cosmonaut.bzedgev5.scavenge.Commit:
+  bzedgev5.scavenge.Commit:
     type: object
     properties:
       index:
@@ -12855,13 +12855,13 @@ definitions:
         type: string
       solutionScavengerHash:
         type: string
-  cosmonaut.bzedgev5.scavenge.MsgCommitSolutionResponse:
+  bzedgev5.scavenge.MsgCommitSolutionResponse:
     type: object
-  cosmonaut.bzedgev5.scavenge.MsgRevealSolutionResponse:
+  bzedgev5.scavenge.MsgRevealSolutionResponse:
     type: object
-  cosmonaut.bzedgev5.scavenge.MsgSubmitScavengeResponse:
+  bzedgev5.scavenge.MsgSubmitScavengeResponse:
     type: object
-  cosmonaut.bzedgev5.scavenge.QueryAllCommitResponse:
+  bzedgev5.scavenge.QueryAllCommitResponse:
     type: object
     properties:
       commit:
@@ -12900,7 +12900,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  cosmonaut.bzedgev5.scavenge.QueryAllScavengeResponse:
+  bzedgev5.scavenge.QueryAllScavengeResponse:
     type: object
     properties:
       scavenge:
@@ -12945,7 +12945,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  cosmonaut.bzedgev5.scavenge.QueryGetCommitResponse:
+  bzedgev5.scavenge.QueryGetCommitResponse:
     type: object
     properties:
       commit:
@@ -12957,7 +12957,7 @@ definitions:
             type: string
           solutionScavengerHash:
             type: string
-  cosmonaut.bzedgev5.scavenge.QueryGetScavengeResponse:
+  bzedgev5.scavenge.QueryGetScavengeResponse:
     type: object
     properties:
       scavenge:
@@ -12975,7 +12975,7 @@ definitions:
             type: string
           scavenger:
             type: string
-  cosmonaut.bzedgev5.scavenge.Scavenge:
+  bzedgev5.scavenge.Scavenge:
     type: object
     properties:
       index:

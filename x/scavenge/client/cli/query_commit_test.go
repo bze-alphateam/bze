@@ -12,9 +12,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/bzedgev5/testutil/network"
-	"github.com/bzedgev5/x/scavenge/client/cli"
-	"github.com/bzedgev5/x/scavenge/types"
+	"github.com/bze-alphateam/bzedgev5/testutil/network"
+	"github.com/bze-alphateam/bzedgev5/x/scavenge/client/cli"
+	"github.com/bze-alphateam/bzedgev5/x/scavenge/types"
 )
 
 // Prevent strconv unused error

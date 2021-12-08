@@ -436,13 +436,13 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Scavenge_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"cosmonaut", "bzedgev5", "scavenge", "index"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Scavenge_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"bzedgev5", "scavenge", "index"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_ScavengeAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 2}, []string{"cosmonaut", "bzedgev5", "scavenge"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ScavengeAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 1}, []string{"bzedgev5", "scavenge"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Commit_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"cosmonaut", "bzedgev5", "scavenge", "commit", "index"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Commit_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"bzedgev5", "scavenge", "commit", "index"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_CommitAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"cosmonaut", "bzedgev5", "scavenge", "commit"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_CommitAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bzedgev5", "scavenge", "commit"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

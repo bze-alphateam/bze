@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	"github.com/bzedgev5/x/scavenge/types"
+	"github.com/bze-alphateam/bzedgev5/x/scavenge/types"
 	"github.com/stretchr/testify/require"
 )
 
