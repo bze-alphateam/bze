@@ -1,8 +1,8 @@
 package scavenge
 
 import (
-	"github.com/cosmonaut/bzedgev5/x/scavenge/keeper"
-	"github.com/cosmonaut/bzedgev5/x/scavenge/types"
+	"github.com/bzedgev5/x/scavenge/keeper"
+	"github.com/bzedgev5/x/scavenge/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

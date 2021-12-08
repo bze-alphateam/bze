@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/cosmonaut/bzedgev5/app"
+	"github.com/bzedgev5/app"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/tendermint/spm/cosmoscmd"
 )

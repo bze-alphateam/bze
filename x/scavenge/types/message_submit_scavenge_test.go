@@ -3,7 +3,7 @@ package types
 import (
 	"testing"
 
-	"github.com/cosmonaut/bzedgev5/testutil/sample"
+	"github.com/bzedgev5/testutil/sample"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 )

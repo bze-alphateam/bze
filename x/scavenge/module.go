@@ -11,9 +11,9 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/cosmonaut/bzedgev5/x/scavenge/client/cli"
-	"github.com/cosmonaut/bzedgev5/x/scavenge/keeper"
-	"github.com/cosmonaut/bzedgev5/x/scavenge/types"
+	"github.com/bzedgev5/x/scavenge/client/cli"
+	"github.com/bzedgev5/x/scavenge/keeper"
+	"github.com/bzedgev5/x/scavenge/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"

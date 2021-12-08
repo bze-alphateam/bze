@@ -3,9 +3,9 @@ package scavenge_test
 import (
 	"testing"
 
-	keepertest "github.com/cosmonaut/bzedgev5/testutil/keeper"
-	"github.com/cosmonaut/bzedgev5/x/scavenge"
-	"github.com/cosmonaut/bzedgev5/x/scavenge/types"
+	keepertest "github.com/bzedgev5/testutil/keeper"
+	"github.com/bzedgev5/x/scavenge"
+	"github.com/bzedgev5/x/scavenge/types"
 	"github.com/stretchr/testify/require"
 )
 

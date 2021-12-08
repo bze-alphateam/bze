@@ -86,10 +86,10 @@ import (
 	"github.com/tendermint/spm/cosmoscmd"
 	"github.com/tendermint/spm/openapiconsole"
 
-	"github.com/cosmonaut/bzedgev5/docs"
-	scavengemodule "github.com/cosmonaut/bzedgev5/x/scavenge"
-	scavengemodulekeeper "github.com/cosmonaut/bzedgev5/x/scavenge/keeper"
-	scavengemoduletypes "github.com/cosmonaut/bzedgev5/x/scavenge/types"
+	"github.com/bzedgev5/docs"
+	scavengemodule "github.com/bzedgev5/x/scavenge"
+	scavengemodulekeeper "github.com/bzedgev5/x/scavenge/keeper"
+	scavengemoduletypes "github.com/bzedgev5/x/scavenge/types"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 

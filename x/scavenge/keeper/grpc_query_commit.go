@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	"github.com/cosmonaut/bzedgev5/x/scavenge/types"
+	"github.com/bzedgev5/x/scavenge/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"

@@ -2,26 +2,32 @@ package keeper
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/cosmonaut/bzedgev5/x/scavenge/types"
+	"github.com/bzedgev5/x/scavenge/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k msgServer) SubmitScavenge(goCtx context.Context, msg *types.MsgSubmitScavenge) (*types.MsgSubmitScavengeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	var indexBytes = []byte(msg.SolutionHash + msg.Description)
+	var indexHash = sha256.Sum256(indexBytes)
+	var indexString = hex.EncodeToString(indexHash[:])
+
 	var scavenge = types.Scavenge{
-		Index:        msg.SolutionHash,
+		Index:        indexString,
 		Description:  msg.Description,
 		SolutionHash: msg.SolutionHash,
 		Reward:       msg.Reward,
 	}
 
-	_, isFound := k.GetScavenge(ctx, scavenge.SolutionHash)
+	_, isFound := k.GetScavenge(ctx, scavenge.Index)
 	if isFound {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Scavenge with the same solution already exists")
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Scavenge already exists")
 	}
 
 	scavenger, err := sdk.AccAddressFromBech32(msg.Creator)
