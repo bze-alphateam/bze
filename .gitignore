@@ -3,3 +3,5 @@ vue/dist
 release/
 
 .idea
+.DS_Store
+cmd/.DS_Store
