@@ -45,27 +45,29 @@ install: check-network go.sum
 		go install -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) ./cmd/bzedgev5d
 
 build: check-network go.sum
-		go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/bzedgev5d ./cmd/bzedgev5d
+		go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/$(GOOS)/bzedgev5d ./cmd/bzedgev5d
 
-buildwindows: check-network go.sum
-		go build -buildmode=exe -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/bzedgev5d.exe ./cmd/bzedgev5d
-
+build-win64: check-network go.sum
+		go build -buildmode=exe -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/win64/bzedgev5d.exe ./cmd/bzedgev5d
 
 .PHONY: build
 
-build-linux: go.sum
+build-linux: check-network go.sum
 ifeq ($(OS), Linux)
 		GOOS=linux GOARCH=amd64 $(MAKE) build
 else
 		LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
 endif
 
-build-mac: go.sum
+build-mac: check-network go.sum
 ifeq ($(OS), Darwin)
 		GOOS=darwin GOARCH=amd64 $(MAKE) build
 else
 		LEDGER_ENABLED=false GOOS=darwin GOARCH=amd64 $(MAKE) build
 endif
+
+build-all: all build-win64 build-mac build-linux
+
 
 go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"
