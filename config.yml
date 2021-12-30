@@ -15,4 +15,4 @@ faucet:
   name: bob
   coins: ["100000000000ubze"]
 build:
-  binary: "bzed"
+  binary: "bzedgev5d"
