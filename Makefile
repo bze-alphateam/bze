@@ -71,9 +71,9 @@ build-all: all build-win64 build-mac build-linux compress-build
 compress-build:
 	rm -rf $(BUILDDIR)/compressed
 	mkdir $(BUILDDIR)/compressed
-	zip $(BUILDDIR)/compressed/bze-$(VERSION)-win64.zip $(BUILDDIR)/win64/bzedgev5d.exe
-	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-darwin.tar.gz -P $(BUILDDIR)/darwin/bzedgev5d
-	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-linux.tar.gz -P $(BUILDDIR)/linux/bzedgev5d
+	zip -j $(BUILDDIR)/compressed/bze-$(VERSION)-win64.zip $(BUILDDIR)/win64/bzedgev5d.exe
+	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-darwin.tar.gz -C $(BUILDDIR)/darwin/ .
+	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-linux.tar.gz -C $(BUILDDIR)/linux/ .
 
 go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"
