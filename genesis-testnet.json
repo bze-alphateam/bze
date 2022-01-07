@@ -50,7 +50,7 @@
           "address": "bze1c29vfpuejshpn5tw2xcr2tw0rqgfz6yx5na3nc",
           "coins": [
             {
-              "denom": "ubze",
+              "denom": "utestbze",
               "amount": "1000000000000000"
             }
           ]
@@ -65,7 +65,7 @@
     },
     "crisis": {
       "constant_fee": {
-        "denom": "ubze",
+        "denom": "utestbze",
         "amount": "1000000000"
       }
     },
@@ -121,7 +121,7 @@
                   "key": "GYGszOPGpZ1xvZBTE1qQpBZzekhk9AjYGLF5JK0Ca00="
                 },
                 "value": {
-                  "denom": "ubze",
+                  "denom": "utestbze",
                   "amount": "1000000000000"
                 }
               }
@@ -167,7 +167,7 @@
       "deposit_params": {
         "min_deposit": [
           {
-            "denom": "ubze",
+            "denom": "utestbze",
             "amount": "100000000000"
           }
         ],
@@ -221,7 +221,7 @@
         "annual_provisions": "0.000000000000000000"
       },
       "params": {
-        "mint_denom": "ubze",
+        "mint_denom": "utestbze",
         "inflation_rate_change": "0.130000000000000000",
         "inflation_max": "0.150000000000000000",
         "inflation_min": "0.020000000000000000",
@@ -251,7 +251,7 @@
         "max_validators": 195,
         "max_entries": 7,
         "historical_entries": 10000,
-        "bond_denom": "ubze"
+        "bond_denom": "utestbze"
       },
       "last_total_power": "0",
       "last_validator_powers": [],
