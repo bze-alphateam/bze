@@ -4373,7 +4373,7 @@ paths:
                           "value": "1.212s"
                         }
       parameters:
-        - name: proposalStatus
+        - name: "status"
           description: |-
             proposal_status defines the status of the proposals.
 
