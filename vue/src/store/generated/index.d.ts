@@ -1,5 +1,5 @@
 declare const _default: {
-    BzeAlphateamBzedgev5Bzedgev5Scavenge: (store: any) => void;
+    BzeAlphateamBzeBzeScavenge: (store: any) => void;
     CosmosCosmosSdkCosmosAuthzV1Beta1: (store: any) => void;
     CosmosCosmosSdkCosmosBankV1Beta1: (store: any) => void;
     CosmosCosmosSdkCosmosCrisisV1Beta1: (store: any) => void;

@@ -3,8 +3,8 @@ package keeper
 import (
 	"testing"
 
-	"github.com/bze-alphateam/bzedgev5/x/scavenge/keeper"
-	"github.com/bze-alphateam/bzedgev5/x/scavenge/types"
+	"github.com/bze-alphateam/bze/x/scavenge/keeper"
+	"github.com/bze-alphateam/bze/x/scavenge/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store"

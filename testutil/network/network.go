@@ -18,7 +18,7 @@ import (
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	tmdb "github.com/tendermint/tm-db"
 
-	"github.com/bze-alphateam/bzedgev5/app"
+	"github.com/bze-alphateam/bze/app"
 )
 
 type (

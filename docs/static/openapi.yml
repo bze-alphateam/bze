@@ -4,10 +4,10 @@ info:
   name: ''
   description: ''
 paths:
-  /bzedgev5/scavenge/commit:
+  /bze/scavenge/commit:
     get:
       summary: Queries a list of commit items.
-      operationId: Bzedgev5ScavengeCommitAll
+      operationId: BzeScavengeCommitAll
       responses:
         '200':
           description: A successful response.
@@ -126,10 +126,10 @@ paths:
           type: boolean
       tags:
         - Query
-  '/bzedgev5/scavenge/commit/{index}':
+  '/bze/scavenge/commit/{index}':
     get:
       summary: Queries a commit by index.
-      operationId: Bzedgev5ScavengeCommit
+      operationId: BzeScavengeCommit
       responses:
         '200':
           description: A successful response.
@@ -170,10 +170,10 @@ paths:
           type: string
       tags:
         - Query
-  /bzedgev5/scavenge/scavenge:
+  /bze/scavenge/scavenge:
     get:
       summary: Queries a list of scavenge items.
-      operationId: Bzedgev5ScavengeScavengeAll
+      operationId: BzeScavengeScavengeAll
       responses:
         '200':
           description: A successful response.
@@ -298,10 +298,10 @@ paths:
           type: boolean
       tags:
         - Query
-  '/bzedgev5/scavenge/scavenge/{index}':
+  '/bze/scavenge/scavenge/{index}':
     get:
       summary: Queries a scavenge by index.
-      operationId: Bzedgev5ScavengeScavenge
+      operationId: BzeScavengeScavenge
       responses:
         '200':
           description: A successful response.
@@ -4373,7 +4373,7 @@ paths:
                           "value": "1.212s"
                         }
       parameters:
-        - name: "status"
+        - name: proposalStatus
           description: |-
             proposal_status defines the status of the proposals.
 
@@ -12846,7 +12846,7 @@ paths:
       tags:
         - Query
 definitions:
-  bzedgev5.scavenge.Commit:
+  bze.scavenge.Commit:
     type: object
     properties:
       index:
@@ -12855,13 +12855,13 @@ definitions:
         type: string
       solutionScavengerHash:
         type: string
-  bzedgev5.scavenge.MsgCommitSolutionResponse:
+  bze.scavenge.MsgCommitSolutionResponse:
     type: object
-  bzedgev5.scavenge.MsgRevealSolutionResponse:
+  bze.scavenge.MsgRevealSolutionResponse:
     type: object
-  bzedgev5.scavenge.MsgSubmitScavengeResponse:
+  bze.scavenge.MsgSubmitScavengeResponse:
     type: object
-  bzedgev5.scavenge.QueryAllCommitResponse:
+  bze.scavenge.QueryAllCommitResponse:
     type: object
     properties:
       commit:
@@ -12900,7 +12900,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  bzedgev5.scavenge.QueryAllScavengeResponse:
+  bze.scavenge.QueryAllScavengeResponse:
     type: object
     properties:
       scavenge:
@@ -12945,7 +12945,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  bzedgev5.scavenge.QueryGetCommitResponse:
+  bze.scavenge.QueryGetCommitResponse:
     type: object
     properties:
       commit:
@@ -12957,7 +12957,7 @@ definitions:
             type: string
           solutionScavengerHash:
             type: string
-  bzedgev5.scavenge.QueryGetScavengeResponse:
+  bze.scavenge.QueryGetScavengeResponse:
     type: object
     properties:
       scavenge:
@@ -12975,7 +12975,7 @@ definitions:
             type: string
           scavenger:
             type: string
-  bzedgev5.scavenge.Scavenge:
+  bze.scavenge.Scavenge:
     type: object
     properties:
       index:

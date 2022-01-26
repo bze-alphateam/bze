@@ -3,7 +3,7 @@ package types
 import (
 	"testing"
 
-	"github.com/bze-alphateam/bzedgev5/testutil/sample"
+	"github.com/bze-alphateam/bze/testutil/sample"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 )

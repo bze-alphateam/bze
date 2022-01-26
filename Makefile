@@ -8,8 +8,8 @@ COVERAGE ?= coverage.txt
 BUILDDIR ?= $(CURDIR)/build
 LEDGER_ENABLED ?= true
 
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=bze-5 \
-	-X github.com/cosmos/cosmos-sdk/version.ServerName=bzedgev5 \
+ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=bze \
+	-X github.com/cosmos/cosmos-sdk/version.ServerName=bzed \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT)
 
@@ -42,13 +42,13 @@ download:
 	git submodule update --init --recursive
 
 install: check-network go.sum
-		go install -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) ./cmd/bzedgev5d
+		go install -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) ./cmd/bzed
 
 build: check-network go.sum
-		go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/$(GOOS)/bzedgev5d ./cmd/bzedgev5d
+		go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/$(GOOS)/bzed ./cmd/bzed
 
 build-win64: check-network go.sum
-		go build -buildmode=exe -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/win64/bzedgev5d.exe ./cmd/bzedgev5d
+		go build -buildmode=exe -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/win64/bzed.exe ./cmd/bzed
 
 .PHONY: build
 
@@ -71,7 +71,7 @@ build-all: all build-win64 build-mac build-linux compress-build
 compress-build:
 	rm -rf $(BUILDDIR)/compressed
 	mkdir $(BUILDDIR)/compressed
-	zip -j $(BUILDDIR)/compressed/bze-$(VERSION)-win64.zip $(BUILDDIR)/win64/bzedgev5d.exe
+	zip -j $(BUILDDIR)/compressed/bze-$(VERSION)-win64.zip $(BUILDDIR)/win64/bzed.exe
 	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-darwin.tar.gz -C $(BUILDDIR)/darwin/ .
 	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-linux.tar.gz -C $(BUILDDIR)/linux/ .
 
@@ -104,8 +104,8 @@ test-sim-nondeterminism: check-network
 
 test-sim-custom-genesis-fast: check-network
 	@echo "Running custom genesis simulation..."
-	@echo "By default, ${HOME}/.bzedge/config/genesis.json will be used."
-	@go test $(TEST_TAGS) -mod=readonly $(SIMAPP) -run TestFullAppSimulation -Genesis=${HOME}/.bzedge/config/genesis.json \
+	@echo "By default, ${HOME}/.bze/config/genesis.json will be used."
+	@go test $(TEST_TAGS) -mod=readonly $(SIMAPP) -run TestFullAppSimulation -Genesis=${HOME}/.bze/config/genesis.json \
 		-Enabled=true -NumBlocks=100 -BlockSize=200 -Commit=true -Seed=99 -Period=5 -v -timeout 24h
 
 test-sim-import-export:
@@ -120,13 +120,13 @@ test-sim-after-import:
 ###                                Localnet                                 ###
 ###############################################################################
 
-build-docker-bzedgev5dnode:
+build-docker-bzednode:
 	$(MAKE) -C check-networks/local
 
 # Run a 4-node testnet locally
-localnet-start: build-linux build-docker-testbzedgev5dnode localnet-stop
-	@if ! [ -f $(BUILDDIR)/node0/.testbzedgev5/config/genesis.json ]; \
-	then docker run --rm -v $(BUILDDIR):/testbzedgev5d:Z bzedgev5/testbzedgev5dnode testnet --v 4 -o . --starting-ip-address 192.168.10.2 $(TESTNET_FLAGS); \
+localnet-start: build-linux build-docker-testbzednode localnet-stop
+	@if ! [ -f $(BUILDDIR)/node0/.testbze/config/genesis.json ]; \
+	then docker run --rm -v $(BUILDDIR):/testbzed:Z bze/testbzednode testnet --v 4 -o . --starting-ip-address 192.168.10.2 $(TESTNET_FLAGS); \
 	fi
 	BUILDDIR=$(BUILDDIR) docker-compose up -d
 

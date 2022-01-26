@@ -1,5 +1,5 @@
 // THIS FILE IS GENERATED AUTOMATICALLY. DO NOT MODIFY.
-import BzeAlphateamBzedgev5Bzedgev5Scavenge from './bze-alphateam/bzedgev5/bzedgev5.scavenge';
+import BzeAlphateamBzeBzeScavenge from './bze-alphateam/bze/bze.scavenge';
 import CosmosCosmosSdkCosmosAuthzV1Beta1 from './cosmos/cosmos-sdk/cosmos.authz.v1beta1';
 import CosmosCosmosSdkCosmosBankV1Beta1 from './cosmos/cosmos-sdk/cosmos.bank.v1beta1';
 import CosmosCosmosSdkCosmosCrisisV1Beta1 from './cosmos/cosmos-sdk/cosmos.crisis.v1beta1';
@@ -12,7 +12,7 @@ import CosmosCosmosSdkCosmosStakingV1Beta1 from './cosmos/cosmos-sdk/cosmos.stak
 import CosmosCosmosSdkCosmosVestingV1Beta1 from './cosmos/cosmos-sdk/cosmos.vesting.v1beta1';
 import CosmosIbcGoIbcApplicationsTransferV1 from './cosmos/ibc-go/ibc.applications.transfer.v1';
 export default {
-    BzeAlphateamBzedgev5Bzedgev5Scavenge: load(BzeAlphateamBzedgev5Bzedgev5Scavenge, 'bzedgev5.scavenge'),
+    BzeAlphateamBzeBzeScavenge: load(BzeAlphateamBzeBzeScavenge, 'bze.scavenge'),
     CosmosCosmosSdkCosmosAuthzV1Beta1: load(CosmosCosmosSdkCosmosAuthzV1Beta1, 'cosmos.authz.v1beta1'),
     CosmosCosmosSdkCosmosBankV1Beta1: load(CosmosCosmosSdkCosmosBankV1Beta1, 'cosmos.bank.v1beta1'),
     CosmosCosmosSdkCosmosCrisisV1Beta1: load(CosmosCosmosSdkCosmosCrisisV1Beta1, 'cosmos.crisis.v1beta1'),
