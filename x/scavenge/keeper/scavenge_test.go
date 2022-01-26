@@ -4,9 +4,9 @@ import (
 	"strconv"
 	"testing"
 
-	keepertest "github.com/bze-alphateam/bzedgev5/testutil/keeper"
-	"github.com/bze-alphateam/bzedgev5/x/scavenge/keeper"
-	"github.com/bze-alphateam/bzedgev5/x/scavenge/types"
+	keepertest "github.com/bze-alphateam/bze/testutil/keeper"
+	"github.com/bze-alphateam/bze/x/scavenge/keeper"
+	"github.com/bze-alphateam/bze/x/scavenge/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )

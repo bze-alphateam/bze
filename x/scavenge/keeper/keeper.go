@@ -5,7 +5,7 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/bze-alphateam/bzedgev5/x/scavenge/types"
+	"github.com/bze-alphateam/bze/x/scavenge/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

@@ -86,16 +86,16 @@ import (
 	"github.com/tendermint/spm/cosmoscmd"
 	"github.com/tendermint/spm/openapiconsole"
 
-	"github.com/bze-alphateam/bzedgev5/docs"
-	scavengemodule "github.com/bze-alphateam/bzedgev5/x/scavenge"
-	scavengemodulekeeper "github.com/bze-alphateam/bzedgev5/x/scavenge/keeper"
-	scavengemoduletypes "github.com/bze-alphateam/bzedgev5/x/scavenge/types"
+	"github.com/bze-alphateam/bze/docs"
+	scavengemodule "github.com/bze-alphateam/bze/x/scavenge"
+	scavengemodulekeeper "github.com/bze-alphateam/bze/x/scavenge/keeper"
+	scavengemoduletypes "github.com/bze-alphateam/bze/x/scavenge/types"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
 const (
 	AccountAddressPrefix = "bze"
-	Name                 = "bzedgev5"
+	Name                 = "bze"
 )
 
 // this line is used by starport scaffolding # stargate/wasm/app/enabledProposals

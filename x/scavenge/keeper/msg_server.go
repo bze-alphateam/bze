@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/bze-alphateam/bzedgev5/x/scavenge/types"
+	"github.com/bze-alphateam/bze/x/scavenge/types"
 )
 
 type msgServer struct {

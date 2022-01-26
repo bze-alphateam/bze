@@ -1,9 +1,9 @@
 syntax = "proto3";
-package bzedgev5.scavenge;
+package bze.scavenge;
 
 // this line is used by starport scaffolding # proto/tx/import
 
-option go_package = "github.com/bze-alphateam/bzedgev5/x/scavenge/types";
+option go_package = "github.com/bze-alphateam/bze/x/scavenge/types";
 
 // Msg defines the Msg service.
 service Msg {
