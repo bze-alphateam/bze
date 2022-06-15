@@ -24,7 +24,12 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
+
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -134,6 +139,7 @@ var (
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
+		authzmodule.AppModuleBasic{},
 		feegrantmodule.AppModuleBasic{},
 		ibc.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
@@ -205,6 +211,7 @@ type App struct {
 	EvidenceKeeper   evidencekeeper.Keeper
 	TransferKeeper   ibctransferkeeper.Keeper
 	FeeGrantKeeper   feegrantkeeper.Keeper
+	AuthzKeeper      *authzkeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
@@ -244,7 +251,7 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		scavengemoduletypes.StoreKey,
+		scavengemoduletypes.StoreKey, authzkeeper.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -350,6 +357,13 @@ func New(
 
 		app.BankKeeper,
 	)
+	authzKeeper := authzkeeper.NewKeeper(
+		keys[authzkeeper.StoreKey],
+		appCodec,
+		bApp.MsgServiceRouter(),
+	)
+	app.AuthzKeeper = &authzKeeper
+
 	scavengeModule := scavengemodule.NewAppModule(appCodec, app.ScavengeKeeper)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
@@ -387,6 +401,7 @@ func New(
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
+		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		ibc.NewAppModule(app.IBCKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
@@ -416,6 +431,7 @@ func New(
 		crisistypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		scavengemoduletypes.ModuleName,
+		authz.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -436,6 +452,7 @@ func New(
 		paramstypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		scavengemoduletypes.ModuleName,
+		authz.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -458,6 +475,7 @@ func New(
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		scavengemoduletypes.ModuleName,
+		authz.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	)
 
