@@ -1,10 +1,10 @@
 module github.com/bze-alphateam/bze
 
-go 1.16
+go 1.17
 
 require (
-	github.com/cosmos/cosmos-sdk v0.45.3
-	github.com/cosmos/ibc-go v1.2.2
+	github.com/cosmos/cosmos-sdk v0.45.4
+	github.com/cosmos/ibc-go/v2 v2.3.0 // indirect
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.7 // indirect
