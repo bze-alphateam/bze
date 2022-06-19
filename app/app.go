@@ -479,6 +479,10 @@ func New(
 		ibctransfertypes.ModuleName,
 		scavengemoduletypes.ModuleName,
 		authz.ModuleName,
+		upgradetypes.ModuleName,
+		paramstypes.ModuleName,
+		vestingtypes.ModuleName,
+		feegrant.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	)
 
