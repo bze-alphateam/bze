@@ -45,7 +45,7 @@ install: check-network go.sum
 		go install -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) ./cmd/bzed
 
 build: check-network go.sum
-		go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/$(GOOS)/bzed ./cmd/bzed
+		go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/$(GOOS)-$(GOARCH)/bzed ./cmd/bzed
 
 build-win64: check-network go.sum
 		go build -buildmode=exe -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/win64/bzed.exe ./cmd/bzed
@@ -59,6 +59,13 @@ else
 		LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
 endif
 
+build-linux-arm64: check-network go.sum
+ifeq ($(OS), Linux)
+		GOOS=linux GOARCH=arm64 $(MAKE) build
+else
+		LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 $(MAKE) build
+endif
+
 build-mac: check-network go.sum
 ifeq ($(OS), Darwin)
 		GOOS=darwin GOARCH=amd64 $(MAKE) build
@@ -66,14 +73,23 @@ else
 		LEDGER_ENABLED=false GOOS=darwin GOARCH=amd64 $(MAKE) build
 endif
 
-build-all: all build-win64 build-mac build-linux compress-build
+build-mac-arm64: check-network go.sum
+ifeq ($(OS), Darwin)
+		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 $(MAKE) build
+else
+		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 $(MAKE) build
+endif
+
+build-all: all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
 
 compress-build:
 	rm -rf $(BUILDDIR)/compressed
 	mkdir $(BUILDDIR)/compressed
 	zip -j $(BUILDDIR)/compressed/bze-$(VERSION)-win64.zip $(BUILDDIR)/win64/bzed.exe
-	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-darwin.tar.gz -C $(BUILDDIR)/darwin/ .
-	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-linux.tar.gz -C $(BUILDDIR)/linux/ .
+	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-darwin-arm64.tar.gz -C $(BUILDDIR)/darwin-arm64/ .
+	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-darwin-amd64.tar.gz -C $(BUILDDIR)/darwin-amd64/ .
+	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-linux-arm64.tar.gz -C $(BUILDDIR)/linux-arm64/ .
+	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-linux-amd64.tar.gz -C $(BUILDDIR)/linux-amd64/ .
 
 go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"
