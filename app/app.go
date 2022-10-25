@@ -1,6 +1,7 @@
 package app
 
 import (
+	ibcclientclient "github.com/cosmos/ibc-go/modules/core/02-client/client"
 	"io"
 	"net/http"
 	"os"
@@ -110,6 +111,8 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 		upgradeclient.ProposalHandler,
 		upgradeclient.CancelProposalHandler,
 		// this line is used by starport scaffolding # stargate/app/govProposalHandler
+		ibcclientclient.UpdateClientProposalHandler,
+		ibcclientclient.UpgradeProposalHandler,
 	)
 
 	return govProposalHandlers
