@@ -464,6 +464,10 @@ func New(
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		scavengemoduletypes.ModuleName,
+		feegrant.ModuleName,
+		upgradetypes.ModuleName,
+		vestingtypes.ModuleName,
+		paramstypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	)
 
