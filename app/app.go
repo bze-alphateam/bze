@@ -1,6 +1,7 @@
 package app
 
 import (
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	ibcclientclient "github.com/cosmos/ibc-go/v2/modules/core/02-client/client"
 	"io"
 	"net/http"
@@ -92,6 +93,10 @@ import (
 	scavengemodule "github.com/bze-alphateam/bze/x/scavenge"
 	scavengemodulekeeper "github.com/bze-alphateam/bze/x/scavenge/keeper"
 	scavengemoduletypes "github.com/bze-alphateam/bze/x/scavenge/types"
+
+	cointrunkmodule "github.com/bze-alphateam/bze/x/cointrunk"
+	cointrunkmodulekeeper "github.com/bze-alphateam/bze/x/cointrunk/keeper"
+	cointrunkmoduletypes "github.com/bze-alphateam/bze/x/cointrunk/types"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
@@ -145,19 +150,21 @@ var (
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		scavengemodule.AppModuleBasic{},
+		cointrunkmodule.AppModuleBasic{},
 		// this line is used by starport scaffolding # stargate/app/moduleBasic
 	)
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:     nil,
-		distrtypes.ModuleName:          nil,
-		minttypes.ModuleName:           {authtypes.Minter},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:            {authtypes.Burner},
-		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		scavengemoduletypes.ModuleName: {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		authtypes.FeeCollectorName:      nil,
+		distrtypes.ModuleName:           nil,
+		minttypes.ModuleName:            {authtypes.Minter},
+		stakingtypes.BondedPoolName:     {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:  {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:             {authtypes.Burner},
+		ibctransfertypes.ModuleName:     {authtypes.Minter, authtypes.Burner},
+		scavengemoduletypes.ModuleName:  {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		cointrunkmoduletypes.ModuleName: {authtypes.Burner},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 )
@@ -214,7 +221,8 @@ type App struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
-	ScavengeKeeper scavengemodulekeeper.Keeper
+	ScavengeKeeper  scavengemodulekeeper.Keeper
+	CointrunkKeeper cointrunkmodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// the module manager
@@ -248,7 +256,7 @@ func New(
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		scavengemoduletypes.StoreKey,
+		scavengemoduletypes.StoreKey, cointrunkmoduletypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -351,11 +359,20 @@ func New(
 		appCodec,
 		keys[scavengemoduletypes.StoreKey],
 		keys[scavengemoduletypes.MemStoreKey],
-
 		app.BankKeeper,
 	)
-	scavengeModule := scavengemodule.NewAppModule(appCodec, app.ScavengeKeeper)
 
+	app.CointrunkKeeper = *cointrunkmodulekeeper.NewKeeper(
+		appCodec,
+		keys[cointrunkmoduletypes.StoreKey],
+		keys[cointrunkmoduletypes.MemStoreKey],
+		app.GetSubspace(cointrunkmoduletypes.ModuleName),
+		app.BankKeeper,
+		app.GovKeeper,
+	)
+
+	scavengeModule := scavengemodule.NewAppModule(appCodec, app.ScavengeKeeper)
+	cointrunkModule := cointrunkmodule.NewAppModule(appCodec, app.CointrunkKeeper, app.AccountKeeper, app.BankKeeper)
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 
 	// Create static IBC router, add transfer route, then set and seal it
@@ -395,6 +412,7 @@ func New(
 		params.NewAppModule(app.ParamsKeeper),
 		transferModule,
 		scavengeModule,
+		cointrunkModule,
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
 
@@ -421,6 +439,7 @@ func New(
 		scavengemoduletypes.ModuleName,
 		vestingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		cointrunkmoduletypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -442,6 +461,7 @@ func New(
 		scavengemoduletypes.ModuleName,
 		vestingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		cointrunkmoduletypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -468,6 +488,7 @@ func New(
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		paramstypes.ModuleName,
+		cointrunkmoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	)
 
@@ -499,6 +520,7 @@ func New(
 
 	app.SetAnteHandler(anteHandler)
 	app.SetEndBlocker(app.EndBlocker)
+	app.setupUpgradeHandlers()
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
@@ -511,6 +533,38 @@ func New(
 	// this line is used by starport scaffolding # stargate/app/beforeInitReturn
 
 	return app
+}
+
+func (app *App) setupUpgradeHandlers() {
+	// TODO: prepare the upgrade handler for v6
+	// When a planned update height is reached, the old binary will panic
+	// writing on disk the height and name of the update that triggered it
+	// This will read that value, and execute the preparations for the upgrade.
+	//upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	//if err != nil {
+	//	panic(fmt.Errorf("failed to read upgrade info from disk: %w", err))
+	//}
+	//
+	//if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+	//	return
+	//}
+
+	var storeUpgrades *storetypes.StoreUpgrades
+
+	//switch true {
+	//case true: //TODO: add version name
+	//	// add  missing cointrunk module
+	//	storeUpgrades = &storetypes.StoreUpgrades{
+	//		Added: []string{cointrunkmoduletypes.ModuleName},
+	//	}
+	//}
+	storeUpgrades = &storetypes.StoreUpgrades{
+		Added: []string{cointrunkmoduletypes.ModuleName},
+	}
+	//if storeUpgrades != nil {
+	// configure store loader that checks if version == upgradeHeight and applies store upgrades
+	app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(130, storeUpgrades))
+	//}
 }
 
 // Name returns the name of the App
@@ -656,6 +710,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(scavengemoduletypes.ModuleName)
+	paramsKeeper.Subspace(cointrunkmoduletypes.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 
 	return paramsKeeper
