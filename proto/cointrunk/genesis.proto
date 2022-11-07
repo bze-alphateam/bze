@@ -1,0 +1,14 @@
+syntax = "proto3";
+package bzealphateam.bze.cointrunk;
+
+import "gogoproto/gogo.proto";
+import "cointrunk/params.proto";
+// this line is used by starport scaffolding # genesis/proto/import
+
+option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
+
+// GenesisState defines the cointrunk module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+  // this line is used by starport scaffolding # genesis/proto/state
+}

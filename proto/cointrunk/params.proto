@@ -1,0 +1,14 @@
+syntax = "proto3";
+package bzealphateam.bze.cointrunk;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+  
+  uint64 anonArticleLimit = 1 [(gogoproto.moretags) = "yaml:\"anon_article_limit\""];
+  string anonArticleCost = 2 [(gogoproto.moretags) = "yaml:\"anon_article_cost\""];
+}
