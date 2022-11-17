@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"gopkg.in/yaml.v2"
@@ -77,7 +78,9 @@ func validateAnonArticleLimit(v interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
-	// TODO implement validation
+	if anonArticleLimit < 1 {
+		return fmt.Errorf("invalid anonArticleLimit. Expected uint64 higher than 0 received %v", anonArticleLimit)
+	}
 	_ = anonArticleLimit
 
 	return nil
@@ -90,7 +93,10 @@ func validateAnonArticleCost(v interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
-	// TODO implement validation
+	_, err := sdk.ParseCoinsNormalized(anonArticleCost)
+	if err != nil {
+		return err
+	}
 	_ = anonArticleCost
 
 	return nil
