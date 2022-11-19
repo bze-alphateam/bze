@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
+	keepertest "github.com/bze-alphateam/bze/testutil/keeper"
+	"github.com/bze-alphateam/bze/x/cointrunk/keeper"
+	"github.com/bze-alphateam/bze/x/cointrunk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-    "github.com/bze-alphateam/bze/x/cointrunk/types"
-    "github.com/bze-alphateam/bze/x/cointrunk/keeper"
-    keepertest "github.com/bze-alphateam/bze/testutil/keeper"
 )
 
 func setupMsgServer(t testing.TB) (types.MsgServer, context.Context) {

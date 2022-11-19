@@ -8,6 +8,5 @@ import (
 
 // x/cointrunk module sentinel errors
 var (
-	ErrSample = sdkerrors.Register(ModuleName, 1100, "sample error")
-	
+	ErrInvalidProposalContent = sdkerrors.Register(ModuleName, 5, "invalid proposal content")
 )

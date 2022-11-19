@@ -5,33 +5,31 @@ import (
 
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/bze-alphateam/bze/x/cointrunk/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/bze-alphateam/bze/x/cointrunk/types"
-	
 )
 
 type (
 	Keeper struct {
-		
-		cdc      	codec.BinaryCodec
-		storeKey 	sdk.StoreKey
-		memKey   	sdk.StoreKey
-		paramstore	paramtypes.Subspace
-		
-        bankKeeper types.BankKeeper
-        govKeeper types.GovKeeper
+		cdc        codec.BinaryCodec
+		storeKey   sdk.StoreKey
+		memKey     sdk.StoreKey
+		paramstore paramtypes.Subspace
+
+		bankKeeper types.BankKeeper
+		govKeeper  types.GovKeeper
 	}
 )
 
 func NewKeeper(
-    cdc codec.BinaryCodec,
-    storeKey,
-    memKey sdk.StoreKey,
+	cdc codec.BinaryCodec,
+	storeKey,
+	memKey sdk.StoreKey,
 	ps paramtypes.Subspace,
-    
-    bankKeeper types.BankKeeper,govKeeper types.GovKeeper,
+
+	bankKeeper types.BankKeeper, govKeeper types.GovKeeper,
 ) *Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
@@ -39,12 +37,12 @@ func NewKeeper(
 	}
 
 	return &Keeper{
-		
-		cdc:      	cdc,
-		storeKey: 	storeKey,
-		memKey:   	memKey,
-		paramstore:	ps,
-		bankKeeper: bankKeeper,govKeeper: govKeeper,
+
+		cdc:        cdc,
+		storeKey:   storeKey,
+		memKey:     memKey,
+		paramstore: ps,
+		bankKeeper: bankKeeper, govKeeper: govKeeper,
 	}
 }
 

@@ -10,9 +10,10 @@ import (
 func (k Keeper) SetScavenge(ctx sdk.Context, scavenge types.Scavenge) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ScavengeKeyPrefix))
 	b := k.cdc.MustMarshal(&scavenge)
-	store.Set(types.ScavengeKey(
-		scavenge.Index,
-	), b)
+	store.Set(
+		types.ScavengeKey(scavenge.Index),
+		b,
+	)
 }
 
 // GetScavenge returns a scavenge from its index

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package bzealphateam.bze.cointrunk;
+package bze.cointrunk;
 
 // this line is used by starport scaffolding # proto/tx/import
 

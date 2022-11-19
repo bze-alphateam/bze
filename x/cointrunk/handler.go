@@ -3,9 +3,9 @@ package cointrunk
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/bze-alphateam/bze/x/cointrunk/keeper"
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 

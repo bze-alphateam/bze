@@ -18,7 +18,6 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramstore.SetParamSet(ctx, &params)
 }
 
-
 // AnonArticleLimit returns the AnonArticleLimit param
 func (k Keeper) AnonArticleLimit(ctx sdk.Context) (res uint64) {
 	k.paramstore.Get(ctx, types.KeyAnonArticleLimit, &res)

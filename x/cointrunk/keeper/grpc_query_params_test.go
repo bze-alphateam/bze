@@ -3,10 +3,10 @@ package keeper_test
 import (
 	"testing"
 
+	testkeeper "github.com/bze-alphateam/bze/testutil/keeper"
+	"github.com/bze-alphateam/bze/x/cointrunk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	testkeeper 	"github.com/bze-alphateam/bze/testutil/keeper"
-	"github.com/bze-alphateam/bze/x/cointrunk/types"
 )
 
 func TestParamsQuery(t *testing.T) {

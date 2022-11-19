@@ -37,12 +37,12 @@ func CointrunkKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 		"CointrunkParams",
 	)
 	k := keeper.NewKeeper(
-	    cdc,
-	    storeKey,
-	    memStoreKey,
-	    paramsSubspace, 
-        nil,
-        nil,
+		cdc,
+		storeKey,
+		memStoreKey,
+		paramsSubspace,
+		nil,
+		nil,
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
