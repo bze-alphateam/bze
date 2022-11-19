@@ -5,15 +5,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-
-
-
-
 type GovKeeper interface {
 	// Methods imported from gov should be defined here
 }
-
-
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
 type AccountKeeper interface {

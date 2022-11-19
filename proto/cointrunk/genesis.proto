@@ -1,5 +1,5 @@
 syntax = "proto3";
-package bzealphateam.bze.cointrunk;
+package bze.cointrunk;
 
 import "gogoproto/gogo.proto";
 import "cointrunk/params.proto";

@@ -1,0 +1,11 @@
+syntax = "proto3";
+package bze.cointrunk;
+
+option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
+
+message Publisher {
+  
+  string name = 1; 
+  string address = 2; 
+  bool active = 3; 
+}

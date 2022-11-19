@@ -1,5 +1,6 @@
 // THIS FILE IS GENERATED AUTOMATICALLY. DO NOT MODIFY.
 
+import BzeAlphateamBzeBzeCointrunk from './bze-alphateam/bze/bze.cointrunk'
 import BzeAlphateamBzeBzeScavenge from './bze-alphateam/bze/bze.scavenge'
 import BzeAlphateamBzeBzealphateamBzeCointrunk from './bze-alphateam/bze/bzealphateam.bze.cointrunk'
 import CosmosCosmosSdkCosmosAuthzV1Beta1 from './cosmos/cosmos-sdk/cosmos.authz.v1beta1'
@@ -16,6 +17,7 @@ import CosmosIbcGoIbcApplicationsTransferV1 from './cosmos/ibc-go/ibc.applicatio
 
 
 export default { 
+  BzeAlphateamBzeBzeCointrunk: load(BzeAlphateamBzeBzeCointrunk, 'bze.cointrunk'),
   BzeAlphateamBzeBzeScavenge: load(BzeAlphateamBzeBzeScavenge, 'bze.scavenge'),
   BzeAlphateamBzeBzealphateamBzeCointrunk: load(BzeAlphateamBzeBzealphateamBzeCointrunk, 'bzealphateam.bze.cointrunk'),
   CosmosCosmosSdkCosmosAuthzV1Beta1: load(CosmosCosmosSdkCosmosAuthzV1Beta1, 'cosmos.authz.v1beta1'),
