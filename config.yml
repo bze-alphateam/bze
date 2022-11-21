@@ -21,3 +21,15 @@ genesis:
     staking:
       params:
         bond_denom: "utestbze"
+    gov:
+      voting_params:
+        voting_period: "120s"
+      deposit_params:
+        min_deposit:
+          -
+            denom: "utestbze"
+            amount: "1000000"
+      tally_params:
+        quorum: "0.00001"
+        threshold: "0.001"
+        veto_threshold: "0.01"
