@@ -3,6 +3,8 @@ package bze.cointrunk;
 
 import "gogoproto/gogo.proto";
 import "cointrunk/params.proto";
+import "cointrunk/publisher.proto";
+import "cointrunk/accepted_domain.proto";
 // this line is used by starport scaffolding # genesis/proto/import
 
 option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
@@ -10,5 +12,7 @@ option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
 // GenesisState defines the cointrunk module's genesis state.
 message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
+  repeated Publisher PublisherList = 2 [(gogoproto.nullable) = false];
+  repeated AcceptedDomain AcceptedDomainList = 3 [(gogoproto.nullable) = false];
   // this line is used by starport scaffolding # genesis/proto/state
 }
