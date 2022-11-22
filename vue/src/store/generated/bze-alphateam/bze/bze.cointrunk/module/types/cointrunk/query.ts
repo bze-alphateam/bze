@@ -1,6 +1,12 @@
 /* eslint-disable */
 import { Reader, Writer } from "protobufjs/minimal";
 import { Params } from "../cointrunk/params";
+import {
+  PageRequest,
+  PageResponse,
+} from "../cosmos/base/query/v1beta1/pagination";
+import { AcceptedDomain } from "../cointrunk/accepted_domain";
+import { Publisher } from "../cointrunk/publisher";
 
 export const protobufPackage = "bze.cointrunk";
 
@@ -11,6 +17,24 @@ export interface QueryParamsRequest {}
 export interface QueryParamsResponse {
   /** params holds all the parameters of this module. */
   params: Params | undefined;
+}
+
+export interface QueryAcceptedDomainRequest {
+  pagination: PageRequest | undefined;
+}
+
+export interface QueryAcceptedDomainResponse {
+  acceptedDomain: AcceptedDomain[];
+  pagination: PageResponse | undefined;
+}
+
+export interface QueryPublisherRequest {
+  pagination: PageRequest | undefined;
+}
+
+export interface QueryPublisherResponse {
+  publisher: Publisher[];
+  pagination: PageResponse | undefined;
 }
 
 const baseQueryParamsRequest: object = {};
@@ -110,10 +134,346 @@ export const QueryParamsResponse = {
   },
 };
 
+const baseQueryAcceptedDomainRequest: object = {};
+
+export const QueryAcceptedDomainRequest = {
+  encode(
+    message: QueryAcceptedDomainRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(10).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryAcceptedDomainRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryAcceptedDomainRequest,
+    } as QueryAcceptedDomainRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryAcceptedDomainRequest {
+    const message = {
+      ...baseQueryAcceptedDomainRequest,
+    } as QueryAcceptedDomainRequest;
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryAcceptedDomainRequest): unknown {
+    const obj: any = {};
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageRequest.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryAcceptedDomainRequest>
+  ): QueryAcceptedDomainRequest {
+    const message = {
+      ...baseQueryAcceptedDomainRequest,
+    } as QueryAcceptedDomainRequest;
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryAcceptedDomainResponse: object = {};
+
+export const QueryAcceptedDomainResponse = {
+  encode(
+    message: QueryAcceptedDomainResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.acceptedDomain) {
+      AcceptedDomain.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    if (message.pagination !== undefined) {
+      PageResponse.encode(
+        message.pagination,
+        writer.uint32(18).fork()
+      ).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryAcceptedDomainResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryAcceptedDomainResponse,
+    } as QueryAcceptedDomainResponse;
+    message.acceptedDomain = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.acceptedDomain.push(
+            AcceptedDomain.decode(reader, reader.uint32())
+          );
+          break;
+        case 2:
+          message.pagination = PageResponse.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryAcceptedDomainResponse {
+    const message = {
+      ...baseQueryAcceptedDomainResponse,
+    } as QueryAcceptedDomainResponse;
+    message.acceptedDomain = [];
+    if (object.acceptedDomain !== undefined && object.acceptedDomain !== null) {
+      for (const e of object.acceptedDomain) {
+        message.acceptedDomain.push(AcceptedDomain.fromJSON(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryAcceptedDomainResponse): unknown {
+    const obj: any = {};
+    if (message.acceptedDomain) {
+      obj.acceptedDomain = message.acceptedDomain.map((e) =>
+        e ? AcceptedDomain.toJSON(e) : undefined
+      );
+    } else {
+      obj.acceptedDomain = [];
+    }
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageResponse.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryAcceptedDomainResponse>
+  ): QueryAcceptedDomainResponse {
+    const message = {
+      ...baseQueryAcceptedDomainResponse,
+    } as QueryAcceptedDomainResponse;
+    message.acceptedDomain = [];
+    if (object.acceptedDomain !== undefined && object.acceptedDomain !== null) {
+      for (const e of object.acceptedDomain) {
+        message.acceptedDomain.push(AcceptedDomain.fromPartial(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryPublisherRequest: object = {};
+
+export const QueryPublisherRequest = {
+  encode(
+    message: QueryPublisherRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(10).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): QueryPublisherRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseQueryPublisherRequest } as QueryPublisherRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryPublisherRequest {
+    const message = { ...baseQueryPublisherRequest } as QueryPublisherRequest;
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryPublisherRequest): unknown {
+    const obj: any = {};
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageRequest.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryPublisherRequest>
+  ): QueryPublisherRequest {
+    const message = { ...baseQueryPublisherRequest } as QueryPublisherRequest;
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryPublisherResponse: object = {};
+
+export const QueryPublisherResponse = {
+  encode(
+    message: QueryPublisherResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.publisher) {
+      Publisher.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    if (message.pagination !== undefined) {
+      PageResponse.encode(
+        message.pagination,
+        writer.uint32(18).fork()
+      ).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): QueryPublisherResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseQueryPublisherResponse } as QueryPublisherResponse;
+    message.publisher = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.publisher.push(Publisher.decode(reader, reader.uint32()));
+          break;
+        case 2:
+          message.pagination = PageResponse.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryPublisherResponse {
+    const message = { ...baseQueryPublisherResponse } as QueryPublisherResponse;
+    message.publisher = [];
+    if (object.publisher !== undefined && object.publisher !== null) {
+      for (const e of object.publisher) {
+        message.publisher.push(Publisher.fromJSON(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryPublisherResponse): unknown {
+    const obj: any = {};
+    if (message.publisher) {
+      obj.publisher = message.publisher.map((e) =>
+        e ? Publisher.toJSON(e) : undefined
+      );
+    } else {
+      obj.publisher = [];
+    }
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageResponse.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryPublisherResponse>
+  ): QueryPublisherResponse {
+    const message = { ...baseQueryPublisherResponse } as QueryPublisherResponse;
+    message.publisher = [];
+    if (object.publisher !== undefined && object.publisher !== null) {
+      for (const e of object.publisher) {
+        message.publisher.push(Publisher.fromPartial(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
 /** Query defines the gRPC querier service. */
 export interface Query {
   /** Parameters queries the parameters of the module. */
   Params(request: QueryParamsRequest): Promise<QueryParamsResponse>;
+  /** Queries a list of AcceptedDomain items. */
+  AcceptedDomain(
+    request: QueryAcceptedDomainRequest
+  ): Promise<QueryAcceptedDomainResponse>;
+  /** Queries a list of Publisher items. */
+  Publisher(request: QueryPublisherRequest): Promise<QueryPublisherResponse>;
 }
 
 export class QueryClientImpl implements Query {
@@ -125,6 +485,28 @@ export class QueryClientImpl implements Query {
     const data = QueryParamsRequest.encode(request).finish();
     const promise = this.rpc.request("bze.cointrunk.Query", "Params", data);
     return promise.then((data) => QueryParamsResponse.decode(new Reader(data)));
+  }
+
+  AcceptedDomain(
+    request: QueryAcceptedDomainRequest
+  ): Promise<QueryAcceptedDomainResponse> {
+    const data = QueryAcceptedDomainRequest.encode(request).finish();
+    const promise = this.rpc.request(
+      "bze.cointrunk.Query",
+      "AcceptedDomain",
+      data
+    );
+    return promise.then((data) =>
+      QueryAcceptedDomainResponse.decode(new Reader(data))
+    );
+  }
+
+  Publisher(request: QueryPublisherRequest): Promise<QueryPublisherResponse> {
+    const data = QueryPublisherRequest.encode(request).finish();
+    const promise = this.rpc.request("bze.cointrunk.Query", "Publisher", data);
+    return promise.then((data) =>
+      QueryPublisherResponse.decode(new Reader(data))
+    );
   }
 }
 
