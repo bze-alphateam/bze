@@ -11,11 +11,11 @@ import (
 
 var _ = strconv.Itoa(0)
 
-func CmdPublisher() *cobra.Command {
+func CmdPublisherByIndex() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "publishers",
-		Short: "Query publisher",
-		Args:  cobra.ExactArgs(0),
+		Use:   "publisher [address]",
+		Short: "Query publisher by address",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -25,15 +25,12 @@ func CmdPublisher() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryPublisherRequest{}
-
-			pageReq, err := client.ReadPageRequest(cmd.Flags())
-			if err != nil {
-				return err
+			index := args[0]
+			params := &types.QueryPublisherByIndexRequest{
+				Index: index,
 			}
-			params.Pagination = pageReq
 
-			res, err := queryClient.Publisher(cmd.Context(), params)
+			res, err := queryClient.PublisherByIndex(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
