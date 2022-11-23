@@ -37,6 +37,14 @@ export interface QueryPublisherResponse {
   pagination: PageResponse | undefined;
 }
 
+export interface QueryPublisherByIndexRequest {
+  index: string;
+}
+
+export interface QueryPublisherByIndexResponse {
+  publisher: Publisher | undefined;
+}
+
 const baseQueryParamsRequest: object = {};
 
 export const QueryParamsRequest = {
@@ -464,6 +472,147 @@ export const QueryPublisherResponse = {
   },
 };
 
+const baseQueryPublisherByIndexRequest: object = { index: "" };
+
+export const QueryPublisherByIndexRequest = {
+  encode(
+    message: QueryPublisherByIndexRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.index !== "") {
+      writer.uint32(10).string(message.index);
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryPublisherByIndexRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryPublisherByIndexRequest,
+    } as QueryPublisherByIndexRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.index = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryPublisherByIndexRequest {
+    const message = {
+      ...baseQueryPublisherByIndexRequest,
+    } as QueryPublisherByIndexRequest;
+    if (object.index !== undefined && object.index !== null) {
+      message.index = String(object.index);
+    } else {
+      message.index = "";
+    }
+    return message;
+  },
+
+  toJSON(message: QueryPublisherByIndexRequest): unknown {
+    const obj: any = {};
+    message.index !== undefined && (obj.index = message.index);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryPublisherByIndexRequest>
+  ): QueryPublisherByIndexRequest {
+    const message = {
+      ...baseQueryPublisherByIndexRequest,
+    } as QueryPublisherByIndexRequest;
+    if (object.index !== undefined && object.index !== null) {
+      message.index = object.index;
+    } else {
+      message.index = "";
+    }
+    return message;
+  },
+};
+
+const baseQueryPublisherByIndexResponse: object = {};
+
+export const QueryPublisherByIndexResponse = {
+  encode(
+    message: QueryPublisherByIndexResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.publisher !== undefined) {
+      Publisher.encode(message.publisher, writer.uint32(10).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryPublisherByIndexResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryPublisherByIndexResponse,
+    } as QueryPublisherByIndexResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.publisher = Publisher.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryPublisherByIndexResponse {
+    const message = {
+      ...baseQueryPublisherByIndexResponse,
+    } as QueryPublisherByIndexResponse;
+    if (object.publisher !== undefined && object.publisher !== null) {
+      message.publisher = Publisher.fromJSON(object.publisher);
+    } else {
+      message.publisher = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryPublisherByIndexResponse): unknown {
+    const obj: any = {};
+    message.publisher !== undefined &&
+      (obj.publisher = message.publisher
+        ? Publisher.toJSON(message.publisher)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryPublisherByIndexResponse>
+  ): QueryPublisherByIndexResponse {
+    const message = {
+      ...baseQueryPublisherByIndexResponse,
+    } as QueryPublisherByIndexResponse;
+    if (object.publisher !== undefined && object.publisher !== null) {
+      message.publisher = Publisher.fromPartial(object.publisher);
+    } else {
+      message.publisher = undefined;
+    }
+    return message;
+  },
+};
+
 /** Query defines the gRPC querier service. */
 export interface Query {
   /** Parameters queries the parameters of the module. */
@@ -474,6 +623,10 @@ export interface Query {
   ): Promise<QueryAcceptedDomainResponse>;
   /** Queries a list of Publisher items. */
   Publisher(request: QueryPublisherRequest): Promise<QueryPublisherResponse>;
+  /** Queries a list of PublisherByIndex items. */
+  PublisherByIndex(
+    request: QueryPublisherByIndexRequest
+  ): Promise<QueryPublisherByIndexResponse>;
 }
 
 export class QueryClientImpl implements Query {
@@ -506,6 +659,20 @@ export class QueryClientImpl implements Query {
     const promise = this.rpc.request("bze.cointrunk.Query", "Publisher", data);
     return promise.then((data) =>
       QueryPublisherResponse.decode(new Reader(data))
+    );
+  }
+
+  PublisherByIndex(
+    request: QueryPublisherByIndexRequest
+  ): Promise<QueryPublisherByIndexResponse> {
+    const data = QueryPublisherByIndexRequest.encode(request).finish();
+    const promise = this.rpc.request(
+      "bze.cointrunk.Query",
+      "PublisherByIndex",
+      data
+    );
+    return promise.then((data) =>
+      QueryPublisherByIndexResponse.decode(new Reader(data))
     );
   }
 }

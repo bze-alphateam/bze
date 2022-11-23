@@ -252,6 +252,50 @@ paths:
           type: boolean
       tags:
         - Query
+  /bze-alphateam/bze/cointrunk/publisher_by_index:
+    get:
+      summary: Queries a list of PublisherByIndex items.
+      operationId: BzeCointrunkPublisherByIndex
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              publisher:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  address:
+                    type: string
+                  active:
+                    type: boolean
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: index
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
   /bzealphateam/bze/cointrunk/params:
     get:
       summary: Parameters queries the parameters of the module.
@@ -30369,6 +30413,18 @@ definitions:
           anonArticleCost:
             type: string
     description: QueryParamsResponse is response type for the Query/Params RPC method.
+  bze.cointrunk.QueryPublisherByIndexResponse:
+    type: object
+    properties:
+      publisher:
+        type: object
+        properties:
+          name:
+            type: string
+          address:
+            type: string
+          active:
+            type: boolean
   bze.cointrunk.QueryPublisherResponse:
     type: object
     properties:

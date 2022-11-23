@@ -52,6 +52,10 @@ export interface CointrunkQueryParamsResponse {
   params?: CointrunkParams;
 }
 
+export interface CointrunkQueryPublisherByIndexResponse {
+  publisher?: CointrunkPublisher;
+}
+
 export interface CointrunkQueryPublisherResponse {
   publisher?: CointrunkPublisher[];
 
@@ -383,6 +387,23 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
   ) =>
     this.request<CointrunkQueryPublisherResponse, RpcStatus>({
       path: `/bze-alphateam/bze/cointrunk/publisher`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryPublisherByIndex
+   * @summary Queries a list of PublisherByIndex items.
+   * @request GET:/bze-alphateam/bze/cointrunk/publisher_by_index
+   */
+  queryPublisherByIndex = (query?: { index?: string }, params: RequestParams = {}) =>
+    this.request<CointrunkQueryPublisherByIndexResponse, RpcStatus>({
+      path: `/bze-alphateam/bze/cointrunk/publisher_by_index`,
       method: "GET",
       query: query,
       format: "json",

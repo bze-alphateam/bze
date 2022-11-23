@@ -48,6 +48,7 @@ const getDefaultState = () => {
 				Params: {},
 				AcceptedDomain: {},
 				Publisher: {},
+				PublisherByIndex: {},
 				
 				_Structure: {
 						AcceptedDomain: getStructure(AcceptedDomain.fromPartial({})),
@@ -100,6 +101,12 @@ export default {
 						(<any> params).query=null
 					}
 			return state.Publisher[JSON.stringify(params)] ?? {}
+		},
+				getPublisherByIndex: (state) => (params = { params: {}}) => {
+					if (!(<any> params).query) {
+						(<any> params).query=null
+					}
+			return state.PublisherByIndex[JSON.stringify(params)] ?? {}
 		},
 				
 		getTypeStructure: (state) => (type) => {
@@ -204,6 +211,32 @@ export default {
 				return getters['getPublisher']( { params: {...key}, query}) ?? {}
 			} catch (e) {
 				throw new Error('QueryClient:QueryPublisher API Node Unavailable. Could not perform query: ' + e.message)
+				
+			}
+		},
+		
+		
+		
+		
+		 		
+		
+		
+		async QueryPublisherByIndex({ commit, rootGetters, getters }, { options: { subscribe, all} = { subscribe:false, all:false}, params, query=null }) {
+			try {
+				const key = params ?? {};
+				const queryClient=await initQueryClient(rootGetters)
+				let value= (await queryClient.queryPublisherByIndex(query)).data
+				
+					
+				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
+					let next_values=(await queryClient.queryPublisherByIndex({...query, 'pagination.key':(<any> value).pagination.next_key})).data
+					value = mergeResults(value, next_values);
+				}
+				commit('QUERY', { query: 'PublisherByIndex', key: { params: {...key}, query}, value })
+				if (subscribe) commit('SUBSCRIBE', { action: 'QueryPublisherByIndex', payload: { options: { all }, params: {...key},query }})
+				return getters['getPublisherByIndex']( { params: {...key}, query}) ?? {}
+			} catch (e) {
+				throw new Error('QueryClient:QueryPublisherByIndex API Node Unavailable. Could not perform query: ' + e.message)
 				
 			}
 		},
