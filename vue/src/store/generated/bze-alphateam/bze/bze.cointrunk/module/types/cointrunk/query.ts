@@ -623,7 +623,7 @@ export interface Query {
   ): Promise<QueryAcceptedDomainResponse>;
   /** Queries a list of Publisher items. */
   Publisher(request: QueryPublisherRequest): Promise<QueryPublisherResponse>;
-  /** Queries a list of PublisherByIndex items. */
+  /** Queries publisher by index/address. */
   PublisherByIndex(
     request: QueryPublisherByIndexRequest
   ): Promise<QueryPublisherByIndexResponse>;
