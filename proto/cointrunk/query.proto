@@ -15,21 +15,21 @@ option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
 service Query {
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/bzealphateam/bze/cointrunk/params";
+    option (google.api.http).get = "/bze/cointrunk/params";
   }
   // Queries a list of AcceptedDomain items.
 	rpc AcceptedDomain(QueryAcceptedDomainRequest) returns (QueryAcceptedDomainResponse) {
-		option (google.api.http).get = "/bze-alphateam/bze/cointrunk/accepted_domain";
+		option (google.api.http).get = "/bze/cointrunk/accepted_domain";
 	}
 
 // Queries a list of Publisher items.
 	rpc Publisher(QueryPublisherRequest) returns (QueryPublisherResponse) {
-		option (google.api.http).get = "/bze-alphateam/bze/cointrunk/publisher";
+		option (google.api.http).get = "/bze/cointrunk/publishers";
 	}
 
-// Queries a list of PublisherByIndex items.
+// Queries publisher by index/address.
 	rpc PublisherByIndex(QueryPublisherByIndexRequest) returns (QueryPublisherByIndexResponse) {
-		option (google.api.http).get = "/bze-alphateam/bze/cointrunk/publisher_by_index";
+		option (google.api.http).get = "/bze/cointrunk/publisher/{index}";
 	}
 
 // this line is used by starport scaffolding # 2

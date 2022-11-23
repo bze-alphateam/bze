@@ -347,7 +347,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @tags Query
    * @name QueryAcceptedDomain
    * @summary Queries a list of AcceptedDomain items.
-   * @request GET:/bze-alphateam/bze/cointrunk/accepted_domain
+   * @request GET:/bze/cointrunk/accepted_domain
    */
   queryAcceptedDomain = (
     query?: {
@@ -360,50 +360,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     params: RequestParams = {},
   ) =>
     this.request<CointrunkQueryAcceptedDomainResponse, RpcStatus>({
-      path: `/bze-alphateam/bze/cointrunk/accepted_domain`,
-      method: "GET",
-      query: query,
-      format: "json",
-      ...params,
-    });
-
-  /**
-   * No description
-   *
-   * @tags Query
-   * @name QueryPublisher
-   * @summary Queries a list of Publisher items.
-   * @request GET:/bze-alphateam/bze/cointrunk/publisher
-   */
-  queryPublisher = (
-    query?: {
-      "pagination.key"?: string;
-      "pagination.offset"?: string;
-      "pagination.limit"?: string;
-      "pagination.count_total"?: boolean;
-      "pagination.reverse"?: boolean;
-    },
-    params: RequestParams = {},
-  ) =>
-    this.request<CointrunkQueryPublisherResponse, RpcStatus>({
-      path: `/bze-alphateam/bze/cointrunk/publisher`,
-      method: "GET",
-      query: query,
-      format: "json",
-      ...params,
-    });
-
-  /**
-   * No description
-   *
-   * @tags Query
-   * @name QueryPublisherByIndex
-   * @summary Queries a list of PublisherByIndex items.
-   * @request GET:/bze-alphateam/bze/cointrunk/publisher_by_index
-   */
-  queryPublisherByIndex = (query?: { index?: string }, params: RequestParams = {}) =>
-    this.request<CointrunkQueryPublisherByIndexResponse, RpcStatus>({
-      path: `/bze-alphateam/bze/cointrunk/publisher_by_index`,
+      path: `/bze/cointrunk/accepted_domain`,
       method: "GET",
       query: query,
       format: "json",
@@ -416,12 +373,54 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @tags Query
    * @name QueryParams
    * @summary Parameters queries the parameters of the module.
-   * @request GET:/bzealphateam/bze/cointrunk/params
+   * @request GET:/bze/cointrunk/params
    */
   queryParams = (params: RequestParams = {}) =>
     this.request<CointrunkQueryParamsResponse, RpcStatus>({
-      path: `/bzealphateam/bze/cointrunk/params`,
+      path: `/bze/cointrunk/params`,
       method: "GET",
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryPublisherByIndex
+   * @summary Queries publisher by index/address.
+   * @request GET:/bze/cointrunk/publisher/{index}
+   */
+  queryPublisherByIndex = (index: string, params: RequestParams = {}) =>
+    this.request<CointrunkQueryPublisherByIndexResponse, RpcStatus>({
+      path: `/bze/cointrunk/publisher/${index}`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryPublisher
+   * @summary Queries a list of Publisher items.
+   * @request GET:/bze/cointrunk/publishers
+   */
+  queryPublisher = (
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<CointrunkQueryPublisherResponse, RpcStatus>({
+      path: `/bze/cointrunk/publishers`,
+      method: "GET",
+      query: query,
       format: "json",
       ...params,
     });

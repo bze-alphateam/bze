@@ -225,13 +225,9 @@ export default {
 			try {
 				const key = params ?? {};
 				const queryClient=await initQueryClient(rootGetters)
-				let value= (await queryClient.queryPublisherByIndex(query)).data
+				let value= (await queryClient.queryPublisherByIndex( key.index)).data
 				
 					
-				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
-					let next_values=(await queryClient.queryPublisherByIndex({...query, 'pagination.key':(<any> value).pagination.next_key})).data
-					value = mergeResults(value, next_values);
-				}
 				commit('QUERY', { query: 'PublisherByIndex', key: { params: {...key}, query}, value })
 				if (subscribe) commit('SUBSCRIBE', { action: 'QueryPublisherByIndex', payload: { options: { all }, params: {...key},query }})
 				return getters['getPublisherByIndex']( { params: {...key}, query}) ?? {}

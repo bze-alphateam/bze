@@ -4,7 +4,7 @@ info:
   name: ''
   description: ''
 paths:
-  /bze-alphateam/bze/cointrunk/accepted_domain:
+  /bze/cointrunk/accepted_domain:
     get:
       summary: Queries a list of AcceptedDomain items.
       operationId: BzeCointrunkAcceptedDomain
@@ -127,7 +127,93 @@ paths:
           type: boolean
       tags:
         - Query
-  /bze-alphateam/bze/cointrunk/publisher:
+  /bze/cointrunk/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: BzeCointrunkParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+                properties:
+                  anonArticleLimit:
+                    type: string
+                    format: uint64
+                  anonArticleCost:
+                    type: string
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  '/bze/cointrunk/publisher/{index}':
+    get:
+      summary: Queries publisher by index/address.
+      operationId: BzeCointrunkPublisherByIndex
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              publisher:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  address:
+                    type: string
+                  active:
+                    type: boolean
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: index
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /bze/cointrunk/publishers:
     get:
       summary: Queries a list of Publisher items.
       operationId: BzeCointrunkPublisher
@@ -250,92 +336,6 @@ paths:
           in: query
           required: false
           type: boolean
-      tags:
-        - Query
-  /bze-alphateam/bze/cointrunk/publisher_by_index:
-    get:
-      summary: Queries a list of PublisherByIndex items.
-      operationId: BzeCointrunkPublisherByIndex
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              publisher:
-                type: object
-                properties:
-                  name:
-                    type: string
-                  address:
-                    type: string
-                  active:
-                    type: boolean
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: index
-          in: query
-          required: false
-          type: string
-      tags:
-        - Query
-  /bzealphateam/bze/cointrunk/params:
-    get:
-      summary: Parameters queries the parameters of the module.
-      operationId: BzeCointrunkParams
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              params:
-                description: params holds all the parameters of this module.
-                type: object
-                properties:
-                  anonArticleLimit:
-                    type: string
-                    format: uint64
-                  anonArticleCost:
-                    type: string
-            description: >-
-              QueryParamsResponse is response type for the Query/Params RPC
-              method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
       tags:
         - Query
   /bze/scavenge/commit:
