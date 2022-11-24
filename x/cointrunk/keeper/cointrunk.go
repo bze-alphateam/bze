@@ -83,6 +83,20 @@ func (k Keeper) SetAcceptedDomain(ctx sdk.Context, acceptedDomain types.Accepted
 	)
 }
 
+func (k Keeper) GetArticlesByPrefix(ctx sdk.Context, pre string) (list []types.Article) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ArticleKeyPrefix+pre))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.Article
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
+}
+
 func (k Keeper) SetArticle(ctx sdk.Context, article types.Article) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GenerateArticlePrefix(ctx)))
 	hash := md5.Sum([]byte(article.Url))

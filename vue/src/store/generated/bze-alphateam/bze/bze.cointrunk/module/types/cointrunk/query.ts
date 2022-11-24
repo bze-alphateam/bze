@@ -7,6 +7,7 @@ import {
 } from "../cosmos/base/query/v1beta1/pagination";
 import { AcceptedDomain } from "../cointrunk/accepted_domain";
 import { Publisher } from "../cointrunk/publisher";
+import { Article } from "../cointrunk/article";
 
 export const protobufPackage = "bze.cointrunk";
 
@@ -43,6 +44,16 @@ export interface QueryPublisherByIndexRequest {
 
 export interface QueryPublisherByIndexResponse {
   publisher: Publisher | undefined;
+}
+
+export interface QueryArticlesByPrefixRequest {
+  prefix: string;
+  pagination: PageRequest | undefined;
+}
+
+export interface QueryArticlesByPrefixResponse {
+  article: Article[];
+  pagination: PageResponse | undefined;
 }
 
 const baseQueryParamsRequest: object = {};
@@ -613,6 +624,196 @@ export const QueryPublisherByIndexResponse = {
   },
 };
 
+const baseQueryArticlesByPrefixRequest: object = { prefix: "" };
+
+export const QueryArticlesByPrefixRequest = {
+  encode(
+    message: QueryArticlesByPrefixRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.prefix !== "") {
+      writer.uint32(10).string(message.prefix);
+    }
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryArticlesByPrefixRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryArticlesByPrefixRequest,
+    } as QueryArticlesByPrefixRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.prefix = reader.string();
+          break;
+        case 2:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryArticlesByPrefixRequest {
+    const message = {
+      ...baseQueryArticlesByPrefixRequest,
+    } as QueryArticlesByPrefixRequest;
+    if (object.prefix !== undefined && object.prefix !== null) {
+      message.prefix = String(object.prefix);
+    } else {
+      message.prefix = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryArticlesByPrefixRequest): unknown {
+    const obj: any = {};
+    message.prefix !== undefined && (obj.prefix = message.prefix);
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageRequest.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryArticlesByPrefixRequest>
+  ): QueryArticlesByPrefixRequest {
+    const message = {
+      ...baseQueryArticlesByPrefixRequest,
+    } as QueryArticlesByPrefixRequest;
+    if (object.prefix !== undefined && object.prefix !== null) {
+      message.prefix = object.prefix;
+    } else {
+      message.prefix = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryArticlesByPrefixResponse: object = {};
+
+export const QueryArticlesByPrefixResponse = {
+  encode(
+    message: QueryArticlesByPrefixResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.article) {
+      Article.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    if (message.pagination !== undefined) {
+      PageResponse.encode(
+        message.pagination,
+        writer.uint32(18).fork()
+      ).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryArticlesByPrefixResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryArticlesByPrefixResponse,
+    } as QueryArticlesByPrefixResponse;
+    message.article = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.article.push(Article.decode(reader, reader.uint32()));
+          break;
+        case 2:
+          message.pagination = PageResponse.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryArticlesByPrefixResponse {
+    const message = {
+      ...baseQueryArticlesByPrefixResponse,
+    } as QueryArticlesByPrefixResponse;
+    message.article = [];
+    if (object.article !== undefined && object.article !== null) {
+      for (const e of object.article) {
+        message.article.push(Article.fromJSON(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryArticlesByPrefixResponse): unknown {
+    const obj: any = {};
+    if (message.article) {
+      obj.article = message.article.map((e) =>
+        e ? Article.toJSON(e) : undefined
+      );
+    } else {
+      obj.article = [];
+    }
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageResponse.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryArticlesByPrefixResponse>
+  ): QueryArticlesByPrefixResponse {
+    const message = {
+      ...baseQueryArticlesByPrefixResponse,
+    } as QueryArticlesByPrefixResponse;
+    message.article = [];
+    if (object.article !== undefined && object.article !== null) {
+      for (const e of object.article) {
+        message.article.push(Article.fromPartial(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
 /** Query defines the gRPC querier service. */
 export interface Query {
   /** Parameters queries the parameters of the module. */
@@ -627,6 +828,10 @@ export interface Query {
   PublisherByIndex(
     request: QueryPublisherByIndexRequest
   ): Promise<QueryPublisherByIndexResponse>;
+  /** Queries a list of ArticlesByPrefix items. */
+  ArticlesByPrefix(
+    request: QueryArticlesByPrefixRequest
+  ): Promise<QueryArticlesByPrefixResponse>;
 }
 
 export class QueryClientImpl implements Query {
@@ -673,6 +878,20 @@ export class QueryClientImpl implements Query {
     );
     return promise.then((data) =>
       QueryPublisherByIndexResponse.decode(new Reader(data))
+    );
+  }
+
+  ArticlesByPrefix(
+    request: QueryArticlesByPrefixRequest
+  ): Promise<QueryArticlesByPrefixResponse> {
+    const data = QueryArticlesByPrefixRequest.encode(request).finish();
+    const promise = this.rpc.request(
+      "bze.cointrunk.Query",
+      "ArticlesByPrefix",
+      data
+    );
+    return promise.then((data) =>
+      QueryArticlesByPrefixResponse.decode(new Reader(data))
     );
   }
 }
