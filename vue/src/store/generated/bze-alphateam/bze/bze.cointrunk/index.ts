@@ -2,12 +2,13 @@ import { txClient, queryClient, MissingWalletError , registry} from './module'
 
 import { AcceptedDomain } from "./module/types/cointrunk/accepted_domain"
 import { AcceptedDomainProposal } from "./module/types/cointrunk/accepted_domain_proposal"
+import { Article } from "./module/types/cointrunk/article"
 import { Params } from "./module/types/cointrunk/params"
 import { Publisher } from "./module/types/cointrunk/publisher"
 import { PublisherProposal } from "./module/types/cointrunk/publisher_proposal"
 
 
-export { AcceptedDomain, AcceptedDomainProposal, Params, Publisher, PublisherProposal };
+export { AcceptedDomain, AcceptedDomainProposal, Article, Params, Publisher, PublisherProposal };
 
 async function initTxClient(vuexGetters) {
 	return await txClient(vuexGetters['common/wallet/signer'], {
@@ -53,6 +54,7 @@ const getDefaultState = () => {
 				_Structure: {
 						AcceptedDomain: getStructure(AcceptedDomain.fromPartial({})),
 						AcceptedDomainProposal: getStructure(AcceptedDomainProposal.fromPartial({})),
+						Article: getStructure(Article.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
 						Publisher: getStructure(Publisher.fromPartial({})),
 						PublisherProposal: getStructure(PublisherProposal.fromPartial({})),
@@ -238,7 +240,35 @@ export default {
 		},
 		
 		
+		async sendMsgAddArticle({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgAddArticle(value)
+				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
+	gas: "200000" }, memo})
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgAddArticle:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgAddArticle:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
 		
+		async MsgAddArticle({ rootGetters }, { value }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgAddArticle(value)
+				return msg
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgAddArticle:Init Could not initialize signing client. Wallet is required.')
+				} else{
+					throw new Error('TxClient:MsgAddArticle:Create Could not create message: ' + e.message)
+				}
+			}
+		},
 		
 	}
 }

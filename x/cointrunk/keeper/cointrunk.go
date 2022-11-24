@@ -1,9 +1,16 @@
 package keeper
 
 import (
+	"crypto/md5"
+	"encoding/binary"
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gobuffalo/packr/v2/file/resolver/encoding/hex"
+)
+
+const (
+	CounterKey = "counter"
 )
 
 func (k Keeper) GetPublisher(ctx sdk.Context, index string) (publisher types.Publisher, found bool) {
@@ -72,6 +79,42 @@ func (k Keeper) SetAcceptedDomain(ctx sdk.Context, acceptedDomain types.Accepted
 	record := k.cdc.MustMarshal(&acceptedDomain)
 	store.Set(
 		types.AcceptedDomainKey(acceptedDomain.Domain),
+		record,
+	)
+}
+
+func (k Keeper) SetArticle(ctx sdk.Context, article types.Article) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GenerateArticlePrefix(ctx)))
+	hash := md5.Sum([]byte(article.Url))
+	keyString := hex.EncodeToString(hash[:])
+	record := k.cdc.MustMarshal(&article)
+	store.Set(
+		types.ArticleKey(keyString),
+		record,
+	)
+
+	k.incrementCounter(ctx)
+}
+
+func (k Keeper) GetCounter(ctx sdk.Context) (no uint64) {
+	counterStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GenerateArticleCountPrefix(ctx)))
+	counter := counterStore.Get(types.ArticleKey(CounterKey))
+	if counter == nil {
+		return 0
+	}
+
+	return binary.BigEndian.Uint64(counter)
+}
+
+func (k Keeper) incrementCounter(ctx sdk.Context) {
+	no := k.GetCounter(ctx)
+	no++
+	counterStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GenerateArticleCountPrefix(ctx)))
+	record := make([]byte, 8)
+	binary.BigEndian.PutUint64(record, no)
+
+	counterStore.Set(
+		types.ArticleKey(CounterKey),
 		record,
 	)
 }

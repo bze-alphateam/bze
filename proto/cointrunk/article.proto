@@ -1,0 +1,13 @@
+syntax = "proto3";
+package bze.cointrunk;
+
+option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
+
+message Article {
+
+  string title = 1;
+  string url = 2;
+  string picture = 3;
+  string publisher = 4;
+  bool paid = 5;
+}

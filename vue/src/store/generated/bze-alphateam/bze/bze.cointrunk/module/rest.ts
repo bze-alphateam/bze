@@ -14,6 +14,8 @@ export interface CointrunkAcceptedDomain {
   active?: boolean;
 }
 
+export type CointrunkMsgAddArticleResponse = object;
+
 /**
  * Params defines the parameters for the module.
  */
