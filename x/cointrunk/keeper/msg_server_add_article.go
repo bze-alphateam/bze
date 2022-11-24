@@ -5,11 +5,16 @@ import (
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"gopkg.in/errgo.v2/fmt/errors"
+	"strings"
 )
 
 func (k msgServer) AddArticle(goCtx context.Context, msg *types.MsgAddArticle) (*types.MsgAddArticleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
+	err := k.validateMessageDomains(ctx, msg)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid domain (%s)", err)
+	}
 	publisher, found := k.GetPublisher(ctx, msg.Publisher)
 	paid := !found || publisher.Active != true
 	if paid {
@@ -36,7 +41,7 @@ func (k msgServer) AddArticle(goCtx context.Context, msg *types.MsgAddArticle) (
 	}
 
 	var article = types.Article{
-		Title:     msg.Title,
+		Title:     strings.Trim(msg.Title, " "),
 		Url:       msg.Url,
 		Picture:   msg.Picture,
 		Publisher: msg.Publisher,
@@ -48,4 +53,33 @@ func (k msgServer) AddArticle(goCtx context.Context, msg *types.MsgAddArticle) (
 	_ = ctx
 
 	return &types.MsgAddArticleResponse{}, nil
+}
+
+func (k msgServer) validateMessageDomains(ctx sdk.Context, msg *types.MsgAddArticle) error {
+	parsedUrl, err := msg.ParseUrl(msg.Url)
+	if err != nil {
+		return errors.Newf("Invalid article url(%s)", err)
+	}
+
+	_, found := k.GetAcceptedDomain(ctx, parsedUrl.Host)
+	if !found {
+		return errors.Newf("Provided url domain (%s) is not an accepted domain", parsedUrl.Host)
+	}
+
+	//msg.Picture is optional so do not validate it unless needed
+	if msg.Picture == "" {
+		return nil
+	}
+	
+	parsedUrl, err = msg.ParseUrl(msg.Picture)
+	if err != nil {
+		return errors.Newf("Invalid article picture url(%s)", err)
+	}
+
+	_, found = k.GetAcceptedDomain(ctx, parsedUrl.Host)
+	if !found {
+		return errors.Newf("Provided picture domain (%s) is not an accepted domain", parsedUrl.Host)
+	}
+
+	return nil
 }
