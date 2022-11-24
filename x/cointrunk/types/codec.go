@@ -5,17 +5,21 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	// this line is used by starport scaffolding # 1
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&AcceptedDomainProposal{}, "cointrunk/AcceptedDomainProposal", nil)
 	cdc.RegisterConcrete(&PublisherProposal{}, "cointrunk/PublisherProposal", nil)
+	cdc.RegisterConcrete(&MsgAddArticle{}, "cointrunk/AddArticle", nil)
 	// this line is used by starport scaffolding # 2
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgAddArticle{},
+	)
 	// this line is used by starport scaffolding # 3
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),

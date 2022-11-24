@@ -30345,6 +30345,8 @@ definitions:
         type: string
       active:
         type: boolean
+  bze.cointrunk.MsgAddArticleResponse:
+    type: object
   bze.cointrunk.Params:
     type: object
     properties:
