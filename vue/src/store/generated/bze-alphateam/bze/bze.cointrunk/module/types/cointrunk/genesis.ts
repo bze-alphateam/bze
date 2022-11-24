@@ -2,6 +2,7 @@
 import { Params } from "../cointrunk/params";
 import { Publisher } from "../cointrunk/publisher";
 import { AcceptedDomain } from "../cointrunk/accepted_domain";
+import { Article } from "../cointrunk/article";
 import { Writer, Reader } from "protobufjs/minimal";
 
 export const protobufPackage = "bze.cointrunk";
@@ -10,8 +11,9 @@ export const protobufPackage = "bze.cointrunk";
 export interface GenesisState {
   params: Params | undefined;
   PublisherList: Publisher[];
-  /** this line is used by starport scaffolding # genesis/proto/state */
   AcceptedDomainList: AcceptedDomain[];
+  /** this line is used by starport scaffolding # genesis/proto/state */
+  ArticleList: Article[];
 }
 
 const baseGenesisState: object = {};
@@ -27,6 +29,9 @@ export const GenesisState = {
     for (const v of message.AcceptedDomainList) {
       AcceptedDomain.encode(v!, writer.uint32(26).fork()).ldelim();
     }
+    for (const v of message.ArticleList) {
+      Article.encode(v!, writer.uint32(34).fork()).ldelim();
+    }
     return writer;
   },
 
@@ -36,6 +41,7 @@ export const GenesisState = {
     const message = { ...baseGenesisState } as GenesisState;
     message.PublisherList = [];
     message.AcceptedDomainList = [];
+    message.ArticleList = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -50,6 +56,9 @@ export const GenesisState = {
             AcceptedDomain.decode(reader, reader.uint32())
           );
           break;
+        case 4:
+          message.ArticleList.push(Article.decode(reader, reader.uint32()));
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -62,6 +71,7 @@ export const GenesisState = {
     const message = { ...baseGenesisState } as GenesisState;
     message.PublisherList = [];
     message.AcceptedDomainList = [];
+    message.ArticleList = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromJSON(object.params);
     } else {
@@ -78,6 +88,11 @@ export const GenesisState = {
     ) {
       for (const e of object.AcceptedDomainList) {
         message.AcceptedDomainList.push(AcceptedDomain.fromJSON(e));
+      }
+    }
+    if (object.ArticleList !== undefined && object.ArticleList !== null) {
+      for (const e of object.ArticleList) {
+        message.ArticleList.push(Article.fromJSON(e));
       }
     }
     return message;
@@ -101,6 +116,13 @@ export const GenesisState = {
     } else {
       obj.AcceptedDomainList = [];
     }
+    if (message.ArticleList) {
+      obj.ArticleList = message.ArticleList.map((e) =>
+        e ? Article.toJSON(e) : undefined
+      );
+    } else {
+      obj.ArticleList = [];
+    }
     return obj;
   },
 
@@ -108,6 +130,7 @@ export const GenesisState = {
     const message = { ...baseGenesisState } as GenesisState;
     message.PublisherList = [];
     message.AcceptedDomainList = [];
+    message.ArticleList = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromPartial(object.params);
     } else {
@@ -124,6 +147,11 @@ export const GenesisState = {
     ) {
       for (const e of object.AcceptedDomainList) {
         message.AcceptedDomainList.push(AcceptedDomain.fromPartial(e));
+      }
+    }
+    if (object.ArticleList !== undefined && object.ArticleList !== null) {
+      for (const e of object.ArticleList) {
+        message.ArticleList.push(Article.fromPartial(e));
       }
     }
     return message;

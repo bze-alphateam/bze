@@ -16,6 +16,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, acceptedDomain := range genState.AcceptedDomainList {
 		k.SetAcceptedDomain(ctx, acceptedDomain)
 	}
+
+	for _, article := range genState.ArticleList {
+		k.SetArticle(ctx, article)
+	}
+
 	// this line is used by starport scaffolding # genesis/module/init
 	k.SetParams(ctx, genState.Params)
 }
@@ -26,6 +31,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.Params = k.GetParams(ctx)
 	genesis.PublisherList = k.GetAllPublisher(ctx)
 	genesis.AcceptedDomainList = k.GetAllAcceptedDomain(ctx)
+	genesis.ArticleList = k.GetAllArticles(ctx)
 	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis
