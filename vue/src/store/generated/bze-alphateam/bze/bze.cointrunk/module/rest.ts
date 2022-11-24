@@ -14,6 +14,14 @@ export interface CointrunkAcceptedDomain {
   active?: boolean;
 }
 
+export interface CointrunkArticle {
+  title?: string;
+  url?: string;
+  picture?: string;
+  publisher?: string;
+  paid?: boolean;
+}
+
 export type CointrunkMsgAddArticleResponse = object;
 
 /**
@@ -33,6 +41,21 @@ export interface CointrunkPublisher {
 
 export interface CointrunkQueryAcceptedDomainResponse {
   acceptedDomain?: CointrunkAcceptedDomain[];
+
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
+  pagination?: V1Beta1PageResponse;
+}
+
+export interface CointrunkQueryArticlesByPrefixResponse {
+  article?: CointrunkArticle[];
 
   /**
    * PageResponse is to be embedded in gRPC response messages where the
@@ -363,6 +386,33 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
   ) =>
     this.request<CointrunkQueryAcceptedDomainResponse, RpcStatus>({
       path: `/bze/cointrunk/accepted_domain`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryArticlesByPrefix
+   * @summary Queries a list of ArticlesByPrefix items.
+   * @request GET:/bze/cointrunk/articles_by_prefix/{prefix}
+   */
+  queryArticlesByPrefix = (
+    prefix: string,
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<CointrunkQueryArticlesByPrefixResponse, RpcStatus>({
+      path: `/bze/cointrunk/articles_by_prefix/${prefix}`,
       method: "GET",
       query: query,
       format: "json",
