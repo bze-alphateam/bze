@@ -36,4 +36,4 @@ genesis:
     cointrunk:
       params:
         anonArticleLimit: 5
-        anonArticleCost: "250000000000utestbze"
+        anonArticleCost: "25000000000utestbze"
