@@ -52,7 +52,7 @@ func (msg *MsgAddArticle) ValidateBasic() error {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid title: expecting at least 10 characters")
 	}
 
-	err = msg.validateRawURI(msg.Url)
+	_, err = msg.ParseUrl(msg.Url)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid url provided (%s)", err)
 	}
@@ -62,7 +62,7 @@ func (msg *MsgAddArticle) ValidateBasic() error {
 		return nil
 	}
 
-	err = msg.validateRawURI(msg.Picture)
+	_, err = msg.ParseUrl(msg.Picture)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid picture url provided (%s)", err)
 	}
@@ -70,14 +70,14 @@ func (msg *MsgAddArticle) ValidateBasic() error {
 	return nil
 }
 
-func (msg *MsgAddArticle) validateRawURI(uri string) error {
+func (msg *MsgAddArticle) ParseUrl(uri string) (*url.URL, error) {
 	parsed, err := url.ParseRequestURI(uri)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if parsed.Scheme != "https" {
-		return errors.New("invalid url scheme: only https accepted")
+		return nil, errors.New("invalid url scheme: only https accepted")
 	}
 
-	return nil
+	return parsed, nil
 }

@@ -1,6 +1,9 @@
 package types
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"strings"
+)
 
 var _ binary.ByteOrder
 
@@ -13,6 +16,7 @@ const (
 func AcceptedDomainKey(
 	index string,
 ) []byte {
+	index = strings.TrimPrefix(index, "www.")
 	var key []byte
 
 	indexBytes := []byte(index)
