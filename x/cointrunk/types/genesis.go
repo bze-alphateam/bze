@@ -11,6 +11,7 @@ func DefaultGenesis() *GenesisState {
 		PublisherList:      []Publisher{},
 		AcceptedDomainList: []AcceptedDomain{},
 		ArticleList:        []Article{},
+		BurnedCoinsList:    []BurnedCoins{},
 	}
 }
 
