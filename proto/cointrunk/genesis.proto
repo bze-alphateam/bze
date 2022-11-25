@@ -6,6 +6,7 @@ import "cointrunk/params.proto";
 import "cointrunk/publisher.proto";
 import "cointrunk/accepted_domain.proto";
 import "cointrunk/article.proto";
+import "cointrunk/burned_coins.proto";
 // this line is used by starport scaffolding # genesis/proto/import
 
 option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
@@ -16,5 +17,6 @@ message GenesisState {
   repeated Publisher PublisherList = 2 [(gogoproto.nullable) = false];
   repeated AcceptedDomain AcceptedDomainList = 3 [(gogoproto.nullable) = false];
   repeated Article ArticleList = 4 [(gogoproto.nullable) = false];
+  repeated BurnedCoins BurnedCoinsList = 5 [(gogoproto.nullable) = false];
   // this line is used by starport scaffolding # genesis/proto/state
 }

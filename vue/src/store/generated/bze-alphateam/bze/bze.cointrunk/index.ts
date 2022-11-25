@@ -4,12 +4,13 @@ import { AcceptedDomain } from "./module/types/cointrunk/accepted_domain"
 import { AcceptedDomainProposal } from "./module/types/cointrunk/accepted_domain_proposal"
 import { Article } from "./module/types/cointrunk/article"
 import { BurnCoinsProposal } from "./module/types/cointrunk/burn_coins_proposal"
+import { BurnedCoins } from "./module/types/cointrunk/burned_coins"
 import { Params } from "./module/types/cointrunk/params"
 import { Publisher } from "./module/types/cointrunk/publisher"
 import { PublisherProposal } from "./module/types/cointrunk/publisher_proposal"
 
 
-export { AcceptedDomain, AcceptedDomainProposal, Article, BurnCoinsProposal, Params, Publisher, PublisherProposal };
+export { AcceptedDomain, AcceptedDomainProposal, Article, BurnCoinsProposal, BurnedCoins, Params, Publisher, PublisherProposal };
 
 async function initTxClient(vuexGetters) {
 	return await txClient(vuexGetters['common/wallet/signer'], {
@@ -58,6 +59,7 @@ const getDefaultState = () => {
 						AcceptedDomainProposal: getStructure(AcceptedDomainProposal.fromPartial({})),
 						Article: getStructure(Article.fromPartial({})),
 						BurnCoinsProposal: getStructure(BurnCoinsProposal.fromPartial({})),
+						BurnedCoins: getStructure(BurnedCoins.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
 						Publisher: getStructure(Publisher.fromPartial({})),
 						PublisherProposal: getStructure(PublisherProposal.fromPartial({})),

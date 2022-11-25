@@ -3,6 +3,7 @@ import { Params } from "../cointrunk/params";
 import { Publisher } from "../cointrunk/publisher";
 import { AcceptedDomain } from "../cointrunk/accepted_domain";
 import { Article } from "../cointrunk/article";
+import { BurnedCoins } from "../cointrunk/burned_coins";
 import { Writer, Reader } from "protobufjs/minimal";
 
 export const protobufPackage = "bze.cointrunk";
@@ -12,8 +13,9 @@ export interface GenesisState {
   params: Params | undefined;
   PublisherList: Publisher[];
   AcceptedDomainList: AcceptedDomain[];
-  /** this line is used by starport scaffolding # genesis/proto/state */
   ArticleList: Article[];
+  /** this line is used by starport scaffolding # genesis/proto/state */
+  BurnedCoinsList: BurnedCoins[];
 }
 
 const baseGenesisState: object = {};
@@ -32,6 +34,9 @@ export const GenesisState = {
     for (const v of message.ArticleList) {
       Article.encode(v!, writer.uint32(34).fork()).ldelim();
     }
+    for (const v of message.BurnedCoinsList) {
+      BurnedCoins.encode(v!, writer.uint32(42).fork()).ldelim();
+    }
     return writer;
   },
 
@@ -42,6 +47,7 @@ export const GenesisState = {
     message.PublisherList = [];
     message.AcceptedDomainList = [];
     message.ArticleList = [];
+    message.BurnedCoinsList = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -59,6 +65,11 @@ export const GenesisState = {
         case 4:
           message.ArticleList.push(Article.decode(reader, reader.uint32()));
           break;
+        case 5:
+          message.BurnedCoinsList.push(
+            BurnedCoins.decode(reader, reader.uint32())
+          );
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -72,6 +83,7 @@ export const GenesisState = {
     message.PublisherList = [];
     message.AcceptedDomainList = [];
     message.ArticleList = [];
+    message.BurnedCoinsList = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromJSON(object.params);
     } else {
@@ -93,6 +105,14 @@ export const GenesisState = {
     if (object.ArticleList !== undefined && object.ArticleList !== null) {
       for (const e of object.ArticleList) {
         message.ArticleList.push(Article.fromJSON(e));
+      }
+    }
+    if (
+      object.BurnedCoinsList !== undefined &&
+      object.BurnedCoinsList !== null
+    ) {
+      for (const e of object.BurnedCoinsList) {
+        message.BurnedCoinsList.push(BurnedCoins.fromJSON(e));
       }
     }
     return message;
@@ -123,6 +143,13 @@ export const GenesisState = {
     } else {
       obj.ArticleList = [];
     }
+    if (message.BurnedCoinsList) {
+      obj.BurnedCoinsList = message.BurnedCoinsList.map((e) =>
+        e ? BurnedCoins.toJSON(e) : undefined
+      );
+    } else {
+      obj.BurnedCoinsList = [];
+    }
     return obj;
   },
 
@@ -131,6 +158,7 @@ export const GenesisState = {
     message.PublisherList = [];
     message.AcceptedDomainList = [];
     message.ArticleList = [];
+    message.BurnedCoinsList = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromPartial(object.params);
     } else {
@@ -152,6 +180,14 @@ export const GenesisState = {
     if (object.ArticleList !== undefined && object.ArticleList !== null) {
       for (const e of object.ArticleList) {
         message.ArticleList.push(Article.fromPartial(e));
+      }
+    }
+    if (
+      object.BurnedCoinsList !== undefined &&
+      object.BurnedCoinsList !== null
+    ) {
+      for (const e of object.BurnedCoinsList) {
+        message.BurnedCoinsList.push(BurnedCoins.fromPartial(e));
       }
     }
     return message;

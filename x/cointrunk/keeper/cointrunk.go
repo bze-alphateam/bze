@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gobuffalo/packr/v2/file/resolver/encoding/hex"
+	"strconv"
 )
 
 const (
@@ -132,6 +133,29 @@ func (k Keeper) GetCounter(ctx sdk.Context) (no uint64) {
 	}
 
 	return binary.BigEndian.Uint64(counter)
+}
+
+func (k Keeper) GetAllBurnedCoins(ctx sdk.Context) (list []types.BurnedCoins) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BurnedCoinsKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.BurnedCoins
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
+}
+
+func (k Keeper) SetBurnedCoins(ctx sdk.Context, burnedCoins types.BurnedCoins) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BurnedCoinsKeyPrefix))
+	val := k.cdc.MustMarshal(&burnedCoins)
+	store.Set(
+		types.BurnedCoinsKey(strconv.FormatInt(ctx.BlockHeader().Height, 10)),
+		val,
+	)
 }
 
 func (k Keeper) incrementCounter(ctx sdk.Context) {

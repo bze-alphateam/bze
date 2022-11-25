@@ -26,10 +26,18 @@ func (k Keeper) HandleAcceptedDomainProposal(ctx sdk.Context, proposal *types.Ac
 func (k Keeper) HandleBurnCoinsProposal(ctx sdk.Context, proposal *types.BurnCoinsProposal) error {
 	moduleAcc := k.accKeeper.GetModuleAccount(ctx, types.ModuleName)
 	coins := k.bankKeeper.GetAllBalances(ctx, moduleAcc.GetAddress())
+	if coins.IsZero() {
+		//nothing to burn at this moment
+		return nil
+	}
+
 	err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, coins)
 	if err != nil {
 		panic(err)
 	}
-	//TODO: save burn events so we can brag about it
+
+	var burnedCoins = types.BurnedCoins{Burned: coins.String()}
+	k.SetBurnedCoins(ctx, burnedCoins)
+
 	return nil
 }
