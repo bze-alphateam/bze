@@ -10,6 +10,7 @@ import (
 const (
 	ProposalTypeAcceptedDomain = "AcceptedDomainProposal"
 	ProposalTypePublisher      = "PublisherProposal"
+	ProposalTypeBurnCoins      = "BurnCoinsProposal"
 )
 
 func init() {
@@ -17,11 +18,14 @@ func init() {
 	govtypes.RegisterProposalTypeCodec(&AcceptedDomainProposal{}, "cointrunk/AcceptedDomainProposal")
 	govtypes.RegisterProposalType(ProposalTypePublisher)
 	govtypes.RegisterProposalTypeCodec(&PublisherProposal{}, "cointrunk/PublisherProposal")
+	govtypes.RegisterProposalType(ProposalTypeBurnCoins)
+	govtypes.RegisterProposalTypeCodec(&BurnCoinsProposal{}, "cointrunk/BurnCoinsProposal")
 }
 
 var (
 	_ govtypes.Content = &AcceptedDomainProposal{}
 	_ govtypes.Content = &PublisherProposal{}
+	_ govtypes.Content = &BurnCoinsProposal{}
 )
 
 func NewAcceptedDomainProposal(title, description, domain string, active bool) govtypes.Content {
@@ -75,6 +79,26 @@ func (m *PublisherProposal) ValidateBasic() error {
 	_, err = sdk.AccAddressFromBech32(m.Address)
 	if err != nil {
 		return sdkerrors.Wrapf(ErrInvalidProposalContent, "proposal publisher address is invalid")
+	}
+
+	return nil
+}
+
+func NewBurnCoinsProposal(title, description string) govtypes.Content {
+	return &BurnCoinsProposal{
+		Title:       title,
+		Description: description,
+	}
+}
+
+func (m *BurnCoinsProposal) ProposalRoute() string { return RouterKey }
+
+func (m *BurnCoinsProposal) ProposalType() string { return ProposalTypeBurnCoins }
+
+func (m *BurnCoinsProposal) ValidateBasic() error {
+	err := govtypes.ValidateAbstract(m)
+	if err != nil {
+		return err
 	}
 
 	return nil
