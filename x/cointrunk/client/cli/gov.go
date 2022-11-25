@@ -144,7 +144,7 @@ func NewCmdSubmitPublisherProposal() *cobra.Command {
 
 func NewCmdSubmitBurnCoinsProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "coins-burn",
+		Use:   "burn-coins",
 		Args:  cobra.ExactArgs(0),
 		Short: "Submit coins burning proposal",
 		Long:  "Submit coins burning proposal along with an initial deposit.\n",

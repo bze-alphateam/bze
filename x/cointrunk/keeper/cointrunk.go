@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gobuffalo/packr/v2/file/resolver/encoding/hex"
-	"strconv"
 )
 
 const (
@@ -153,7 +152,7 @@ func (k Keeper) SetBurnedCoins(ctx sdk.Context, burnedCoins types.BurnedCoins) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BurnedCoinsKeyPrefix))
 	val := k.cdc.MustMarshal(&burnedCoins)
 	store.Set(
-		types.BurnedCoinsKey(strconv.FormatInt(ctx.BlockHeader().Height, 10)),
+		types.BurnedCoinsKey(burnedCoins.Height),
 		val,
 	)
 }

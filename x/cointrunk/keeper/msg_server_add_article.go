@@ -70,7 +70,7 @@ func (k msgServer) validateMessageDomains(ctx sdk.Context, msg *types.MsgAddArti
 	if msg.Picture == "" {
 		return nil
 	}
-	
+
 	parsedUrl, err = msg.ParseUrl(msg.Picture)
 	if err != nil {
 		return errors.Newf("Invalid article picture url(%s)", err)

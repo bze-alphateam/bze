@@ -53,6 +53,7 @@ const getDefaultState = () => {
 				Publisher: {},
 				PublisherByIndex: {},
 				ArticlesByPrefix: {},
+				AllBurnedCoins: {},
 				
 				_Structure: {
 						AcceptedDomain: getStructure(AcceptedDomain.fromPartial({})),
@@ -120,6 +121,12 @@ export default {
 						(<any> params).query=null
 					}
 			return state.ArticlesByPrefix[JSON.stringify(params)] ?? {}
+		},
+				getAllBurnedCoins: (state) => (params = { params: {}}) => {
+					if (!(<any> params).query) {
+						(<any> params).query=null
+					}
+			return state.AllBurnedCoins[JSON.stringify(params)] ?? {}
 		},
 				
 		getTypeStructure: (state) => (type) => {
@@ -272,6 +279,32 @@ export default {
 				return getters['getArticlesByPrefix']( { params: {...key}, query}) ?? {}
 			} catch (e) {
 				throw new Error('QueryClient:QueryArticlesByPrefix API Node Unavailable. Could not perform query: ' + e.message)
+				
+			}
+		},
+		
+		
+		
+		
+		 		
+		
+		
+		async QueryAllBurnedCoins({ commit, rootGetters, getters }, { options: { subscribe, all} = { subscribe:false, all:false}, params, query=null }) {
+			try {
+				const key = params ?? {};
+				const queryClient=await initQueryClient(rootGetters)
+				let value= (await queryClient.queryAllBurnedCoins(query)).data
+				
+					
+				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
+					let next_values=(await queryClient.queryAllBurnedCoins({...query, 'pagination.key':(<any> value).pagination.next_key})).data
+					value = mergeResults(value, next_values);
+				}
+				commit('QUERY', { query: 'AllBurnedCoins', key: { params: {...key}, query}, value })
+				if (subscribe) commit('SUBSCRIBE', { action: 'QueryAllBurnedCoins', payload: { options: { all }, params: {...key},query }})
+				return getters['getAllBurnedCoins']( { params: {...key}, query}) ?? {}
+			} catch (e) {
+				throw new Error('QueryClient:QueryAllBurnedCoins API Node Unavailable. Could not perform query: ' + e.message)
 				
 			}
 		},

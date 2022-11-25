@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"strconv"
 )
 
 func (k Keeper) HandlePublisherProposal(ctx sdk.Context, proposal *types.PublisherProposal) error {
@@ -36,7 +37,10 @@ func (k Keeper) HandleBurnCoinsProposal(ctx sdk.Context, proposal *types.BurnCoi
 		panic(err)
 	}
 
-	var burnedCoins = types.BurnedCoins{Burned: coins.String()}
+	var burnedCoins = types.BurnedCoins{
+		Burned: coins.String(),
+		Height: strconv.FormatInt(ctx.BlockHeader().Height, 10),
+	}
 	k.SetBurnedCoins(ctx, burnedCoins)
 
 	return nil
