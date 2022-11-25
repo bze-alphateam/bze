@@ -112,7 +112,7 @@ func (k Keeper) GetAllArticles(ctx sdk.Context) (list []types.Article) {
 }
 
 func (k Keeper) SetArticle(ctx sdk.Context, article types.Article) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GenerateArticlePrefix(ctx)))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ArticleKeyPrefix))
 	hash := md5.Sum([]byte(article.Url))
 	keyString := hex.EncodeToString(hash[:])
 	record := k.cdc.MustMarshal(&article)
@@ -121,17 +121,42 @@ func (k Keeper) SetArticle(ctx sdk.Context, article types.Article) {
 		record,
 	)
 
-	k.incrementCounter(ctx)
+	if article.Paid {
+		k.incrementMonthlyPaidArticleCounter(ctx)
+	}
 }
 
-func (k Keeper) GetCounter(ctx sdk.Context) (no uint64) {
-	counterStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GenerateArticleCountPrefix(ctx)))
+func (k Keeper) GetMonthlyPaidArticleCounter(ctx sdk.Context) uint64 {
+	return k.getCounter(ctx, types.GenerateMonthlyPaidArticleCounterPrefix(ctx))
+}
+
+func (k Keeper) getCounter(ctx sdk.Context, storePrefix string) uint64 {
+	counterStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(storePrefix))
 	counter := counterStore.Get(types.ArticleKey(CounterKey))
 	if counter == nil {
 		return 0
 	}
 
 	return binary.BigEndian.Uint64(counter)
+}
+
+func (k Keeper) incrementMonthlyPaidArticleCounter(ctx sdk.Context) uint64 {
+	return k.incrementCounter(ctx, types.GenerateMonthlyPaidArticleCounterPrefix(ctx))
+}
+
+func (k Keeper) incrementCounter(ctx sdk.Context, storePrefix string) uint64 {
+	no := k.getCounter(ctx, storePrefix)
+	no++
+	counterStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(storePrefix))
+	record := make([]byte, 8)
+	binary.BigEndian.PutUint64(record, no)
+
+	counterStore.Set(
+		types.ArticleKey(CounterKey),
+		record,
+	)
+
+	return no
 }
 
 func (k Keeper) GetAllBurnedCoins(ctx sdk.Context) (list []types.BurnedCoins) {
@@ -154,18 +179,5 @@ func (k Keeper) SetBurnedCoins(ctx sdk.Context, burnedCoins types.BurnedCoins) {
 	store.Set(
 		types.BurnedCoinsKey(burnedCoins.Height),
 		val,
-	)
-}
-
-func (k Keeper) incrementCounter(ctx sdk.Context) {
-	no := k.GetCounter(ctx)
-	no++
-	counterStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.GenerateArticleCountPrefix(ctx)))
-	record := make([]byte, 8)
-	binary.BigEndian.PutUint64(record, no)
-
-	counterStore.Set(
-		types.ArticleKey(CounterKey),
-		record,
 	)
 }
