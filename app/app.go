@@ -121,6 +121,7 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 		ibcclientclient.UpgradeProposalHandler,
 		cointrunkmoduleclient.AcceptedDomainProposalHandler,
 		cointrunkmoduleclient.PublisherProposalHandler,
+		cointrunkmoduleclient.BurnCoinsProposalHandler,
 		// this line is used by starport scaffolding # stargate/app/govProposalHandler
 	)
 
@@ -359,6 +360,7 @@ func New(
 		app.GetSubspace(cointrunkmoduletypes.ModuleName),
 		app.BankKeeper,
 		app.GovKeeper,
+		app.AccountKeeper,
 	)
 
 	scavengeModule := scavengemodule.NewAppModule(appCodec, app.ScavengeKeeper)

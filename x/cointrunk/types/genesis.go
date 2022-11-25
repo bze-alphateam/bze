@@ -10,6 +10,7 @@ func DefaultGenesis() *GenesisState {
 		Params:             DefaultParams(),
 		PublisherList:      []Publisher{},
 		AcceptedDomainList: []AcceptedDomain{},
+		ArticleList:        []Article{},
 	}
 }
 
