@@ -6,4 +6,5 @@ option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
 message BurnedCoins {
 
   string burned = 1;
+  string height = 2;
 }

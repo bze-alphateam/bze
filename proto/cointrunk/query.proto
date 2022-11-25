@@ -8,6 +8,7 @@ import "cointrunk/params.proto";
 import "cointrunk/accepted_domain.proto";
 import "cointrunk/publisher.proto";
 import "cointrunk/article.proto";
+import "cointrunk/burned_coins.proto";
 // this line is used by starport scaffolding # 1
 
 option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
@@ -36,6 +37,11 @@ service Query {
 // Queries a list of ArticlesByPrefix items.
 	rpc ArticlesByPrefix(QueryArticlesByPrefixRequest) returns (QueryArticlesByPrefixResponse) {
 		option (google.api.http).get = "/bze/cointrunk/articles_by_prefix/{prefix}";
+	}
+
+// Queries a list of CoinsBurnEvents items.
+	rpc AllBurnedCoins(QueryAllBurnedCoinsRequest) returns (QueryAllBurnedCoinsResponse) {
+		option (google.api.http).get = "/bze/cointrunk/all_burned_coins";
 	}
 
 // this line is used by starport scaffolding # 2
@@ -83,6 +89,15 @@ cosmos.base.query.v1beta1.PageRequest pagination = 2;
 
 message QueryArticlesByPrefixResponse {
 	repeated Article article = 1 [(gogoproto.nullable) = false];
+cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllBurnedCoinsRequest {
+cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllBurnedCoinsResponse {
+	repeated BurnedCoins burnedCoins = 1 [(gogoproto.nullable) = false];
 cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 

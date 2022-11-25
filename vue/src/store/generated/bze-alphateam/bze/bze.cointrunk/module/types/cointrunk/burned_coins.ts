@@ -5,14 +5,18 @@ export const protobufPackage = "bze.cointrunk";
 
 export interface BurnedCoins {
   burned: string;
+  height: string;
 }
 
-const baseBurnedCoins: object = { burned: "" };
+const baseBurnedCoins: object = { burned: "", height: "" };
 
 export const BurnedCoins = {
   encode(message: BurnedCoins, writer: Writer = Writer.create()): Writer {
     if (message.burned !== "") {
       writer.uint32(10).string(message.burned);
+    }
+    if (message.height !== "") {
+      writer.uint32(18).string(message.height);
     }
     return writer;
   },
@@ -26,6 +30,9 @@ export const BurnedCoins = {
       switch (tag >>> 3) {
         case 1:
           message.burned = reader.string();
+          break;
+        case 2:
+          message.height = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -42,12 +49,18 @@ export const BurnedCoins = {
     } else {
       message.burned = "";
     }
+    if (object.height !== undefined && object.height !== null) {
+      message.height = String(object.height);
+    } else {
+      message.height = "";
+    }
     return message;
   },
 
   toJSON(message: BurnedCoins): unknown {
     const obj: any = {};
     message.burned !== undefined && (obj.burned = message.burned);
+    message.height !== undefined && (obj.height = message.height);
     return obj;
   },
 
@@ -57,6 +70,11 @@ export const BurnedCoins = {
       message.burned = object.burned;
     } else {
       message.burned = "";
+    }
+    if (object.height !== undefined && object.height !== null) {
+      message.height = object.height;
+    } else {
+      message.height = "";
     }
     return message;
   },
