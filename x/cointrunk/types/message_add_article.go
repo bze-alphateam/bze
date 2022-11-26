@@ -15,9 +15,9 @@ var _ sdk.Msg = &MsgAddArticle{}
 func NewMsgAddArticle(publisher string, title string, url string, picture string) *MsgAddArticle {
 	return &MsgAddArticle{
 		Publisher: publisher,
-		Title:     title,
-		Url:       url,
-		Picture:   picture,
+		Title:     strings.TrimSpace(title),
+		Url:       strings.TrimSpace(url),
+		Picture:   strings.TrimSpace(picture),
 	}
 }
 
@@ -48,13 +48,16 @@ func (msg *MsgAddArticle) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid publisher address (%s)", err)
 	}
 
-	if len(strings.Trim(msg.Title, " ")) < 10 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid title: expecting at least 10 characters")
+	if len(msg.Title) < 10 || len(msg.Title) > 140 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid title: expecting between 10 and 140 characters")
 	}
 
 	_, err = msg.ParseUrl(msg.Url)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid url provided (%s)", err)
+	}
+	if len(msg.Url) > 2048 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid url: provided url exceeds 2048 characters")
 	}
 
 	//validate picture only if it's provided
@@ -65,6 +68,10 @@ func (msg *MsgAddArticle) ValidateBasic() error {
 	_, err = msg.ParseUrl(msg.Picture)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid picture url provided (%s)", err)
+	}
+
+	if len(msg.Picture) > 2048 {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid picture url: provided url exceeds 2048 chars")
 	}
 
 	return nil

@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"gopkg.in/errgo.v2/fmt/errors"
-	"strings"
 )
 
 func (k msgServer) AddArticle(goCtx context.Context, msg *types.MsgAddArticle) (*types.MsgAddArticleResponse, error) {
@@ -41,7 +40,7 @@ func (k msgServer) AddArticle(goCtx context.Context, msg *types.MsgAddArticle) (
 	}
 
 	var article = types.Article{
-		Title:     strings.Trim(msg.Title, " "),
+		Title:     msg.Title,
 		Url:       msg.Url,
 		Picture:   msg.Picture,
 		Publisher: msg.Publisher,
