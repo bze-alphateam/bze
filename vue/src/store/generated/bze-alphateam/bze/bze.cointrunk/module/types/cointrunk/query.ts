@@ -47,12 +47,11 @@ export interface QueryPublisherByIndexResponse {
   publisher: Publisher | undefined;
 }
 
-export interface QueryArticlesByPrefixRequest {
-  prefix: string;
+export interface QueryAllArticlesRequest {
   pagination: PageRequest | undefined;
 }
 
-export interface QueryArticlesByPrefixResponse {
+export interface QueryAllArticlesResponse {
   article: Article[];
   pagination: PageResponse | undefined;
 }
@@ -634,37 +633,28 @@ export const QueryPublisherByIndexResponse = {
   },
 };
 
-const baseQueryArticlesByPrefixRequest: object = { prefix: "" };
+const baseQueryAllArticlesRequest: object = {};
 
-export const QueryArticlesByPrefixRequest = {
+export const QueryAllArticlesRequest = {
   encode(
-    message: QueryArticlesByPrefixRequest,
+    message: QueryAllArticlesRequest,
     writer: Writer = Writer.create()
   ): Writer {
-    if (message.prefix !== "") {
-      writer.uint32(10).string(message.prefix);
-    }
     if (message.pagination !== undefined) {
       PageRequest.encode(message.pagination, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
 
-  decode(
-    input: Reader | Uint8Array,
-    length?: number
-  ): QueryArticlesByPrefixRequest {
+  decode(input: Reader | Uint8Array, length?: number): QueryAllArticlesRequest {
     const reader = input instanceof Uint8Array ? new Reader(input) : input;
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = {
-      ...baseQueryArticlesByPrefixRequest,
-    } as QueryArticlesByPrefixRequest;
+      ...baseQueryAllArticlesRequest,
+    } as QueryAllArticlesRequest;
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
-        case 1:
-          message.prefix = reader.string();
-          break;
         case 2:
           message.pagination = PageRequest.decode(reader, reader.uint32());
           break;
@@ -676,15 +666,10 @@ export const QueryArticlesByPrefixRequest = {
     return message;
   },
 
-  fromJSON(object: any): QueryArticlesByPrefixRequest {
+  fromJSON(object: any): QueryAllArticlesRequest {
     const message = {
-      ...baseQueryArticlesByPrefixRequest,
-    } as QueryArticlesByPrefixRequest;
-    if (object.prefix !== undefined && object.prefix !== null) {
-      message.prefix = String(object.prefix);
-    } else {
-      message.prefix = "";
-    }
+      ...baseQueryAllArticlesRequest,
+    } as QueryAllArticlesRequest;
     if (object.pagination !== undefined && object.pagination !== null) {
       message.pagination = PageRequest.fromJSON(object.pagination);
     } else {
@@ -693,9 +678,8 @@ export const QueryArticlesByPrefixRequest = {
     return message;
   },
 
-  toJSON(message: QueryArticlesByPrefixRequest): unknown {
+  toJSON(message: QueryAllArticlesRequest): unknown {
     const obj: any = {};
-    message.prefix !== undefined && (obj.prefix = message.prefix);
     message.pagination !== undefined &&
       (obj.pagination = message.pagination
         ? PageRequest.toJSON(message.pagination)
@@ -704,16 +688,11 @@ export const QueryArticlesByPrefixRequest = {
   },
 
   fromPartial(
-    object: DeepPartial<QueryArticlesByPrefixRequest>
-  ): QueryArticlesByPrefixRequest {
+    object: DeepPartial<QueryAllArticlesRequest>
+  ): QueryAllArticlesRequest {
     const message = {
-      ...baseQueryArticlesByPrefixRequest,
-    } as QueryArticlesByPrefixRequest;
-    if (object.prefix !== undefined && object.prefix !== null) {
-      message.prefix = object.prefix;
-    } else {
-      message.prefix = "";
-    }
+      ...baseQueryAllArticlesRequest,
+    } as QueryAllArticlesRequest;
     if (object.pagination !== undefined && object.pagination !== null) {
       message.pagination = PageRequest.fromPartial(object.pagination);
     } else {
@@ -723,11 +702,11 @@ export const QueryArticlesByPrefixRequest = {
   },
 };
 
-const baseQueryArticlesByPrefixResponse: object = {};
+const baseQueryAllArticlesResponse: object = {};
 
-export const QueryArticlesByPrefixResponse = {
+export const QueryAllArticlesResponse = {
   encode(
-    message: QueryArticlesByPrefixResponse,
+    message: QueryAllArticlesResponse,
     writer: Writer = Writer.create()
   ): Writer {
     for (const v of message.article) {
@@ -745,12 +724,12 @@ export const QueryArticlesByPrefixResponse = {
   decode(
     input: Reader | Uint8Array,
     length?: number
-  ): QueryArticlesByPrefixResponse {
+  ): QueryAllArticlesResponse {
     const reader = input instanceof Uint8Array ? new Reader(input) : input;
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = {
-      ...baseQueryArticlesByPrefixResponse,
-    } as QueryArticlesByPrefixResponse;
+      ...baseQueryAllArticlesResponse,
+    } as QueryAllArticlesResponse;
     message.article = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -769,10 +748,10 @@ export const QueryArticlesByPrefixResponse = {
     return message;
   },
 
-  fromJSON(object: any): QueryArticlesByPrefixResponse {
+  fromJSON(object: any): QueryAllArticlesResponse {
     const message = {
-      ...baseQueryArticlesByPrefixResponse,
-    } as QueryArticlesByPrefixResponse;
+      ...baseQueryAllArticlesResponse,
+    } as QueryAllArticlesResponse;
     message.article = [];
     if (object.article !== undefined && object.article !== null) {
       for (const e of object.article) {
@@ -787,7 +766,7 @@ export const QueryArticlesByPrefixResponse = {
     return message;
   },
 
-  toJSON(message: QueryArticlesByPrefixResponse): unknown {
+  toJSON(message: QueryAllArticlesResponse): unknown {
     const obj: any = {};
     if (message.article) {
       obj.article = message.article.map((e) =>
@@ -804,11 +783,11 @@ export const QueryArticlesByPrefixResponse = {
   },
 
   fromPartial(
-    object: DeepPartial<QueryArticlesByPrefixResponse>
-  ): QueryArticlesByPrefixResponse {
+    object: DeepPartial<QueryAllArticlesResponse>
+  ): QueryAllArticlesResponse {
     const message = {
-      ...baseQueryArticlesByPrefixResponse,
-    } as QueryArticlesByPrefixResponse;
+      ...baseQueryAllArticlesResponse,
+    } as QueryAllArticlesResponse;
     message.article = [];
     if (object.article !== undefined && object.article !== null) {
       for (const e of object.article) {
@@ -1012,9 +991,9 @@ export interface Query {
     request: QueryPublisherByIndexRequest
   ): Promise<QueryPublisherByIndexResponse>;
   /** Queries a list of ArticlesByPrefix items. */
-  ArticlesByPrefix(
-    request: QueryArticlesByPrefixRequest
-  ): Promise<QueryArticlesByPrefixResponse>;
+  AllArticles(
+    request: QueryAllArticlesRequest
+  ): Promise<QueryAllArticlesResponse>;
   /** Queries a list of CoinsBurnEvents items. */
   AllBurnedCoins(
     request: QueryAllBurnedCoinsRequest
@@ -1068,17 +1047,17 @@ export class QueryClientImpl implements Query {
     );
   }
 
-  ArticlesByPrefix(
-    request: QueryArticlesByPrefixRequest
-  ): Promise<QueryArticlesByPrefixResponse> {
-    const data = QueryArticlesByPrefixRequest.encode(request).finish();
+  AllArticles(
+    request: QueryAllArticlesRequest
+  ): Promise<QueryAllArticlesResponse> {
+    const data = QueryAllArticlesRequest.encode(request).finish();
     const promise = this.rpc.request(
       "bze.cointrunk.Query",
-      "ArticlesByPrefix",
+      "AllArticles",
       data
     );
     return promise.then((data) =>
-      QueryArticlesByPrefixResponse.decode(new Reader(data))
+      QueryAllArticlesResponse.decode(new Reader(data))
     );
   }
 

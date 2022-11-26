@@ -127,25 +127,31 @@ paths:
           type: boolean
       tags:
         - Query
-  /bze/cointrunk/all_burned_coins:
+  /bze/cointrunk/all_articles:
     get:
-      summary: Queries a list of CoinsBurnEvents items.
-      operationId: BzeCointrunkAllBurnedCoins
+      summary: Queries a list of ArticlesByPrefix items.
+      operationId: BzeCointrunkAllArticles
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              burnedCoins:
+              article:
                 type: array
                 items:
                   type: object
                   properties:
-                    burned:
+                    title:
                       type: string
-                    height:
+                    url:
                       type: string
+                    picture:
+                      type: string
+                    publisher:
+                      type: string
+                    paid:
+                      type: boolean
               pagination:
                 type: object
                 properties:
@@ -250,31 +256,25 @@ paths:
           type: boolean
       tags:
         - Query
-  '/bze/cointrunk/articles_by_prefix/{prefix}':
+  /bze/cointrunk/all_burned_coins:
     get:
-      summary: Queries a list of ArticlesByPrefix items.
-      operationId: BzeCointrunkArticlesByPrefix
+      summary: Queries a list of CoinsBurnEvents items.
+      operationId: BzeCointrunkAllBurnedCoins
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              article:
+              burnedCoins:
                 type: array
                 items:
                   type: object
                   properties:
-                    title:
+                    burned:
                       type: string
-                    url:
+                    height:
                       type: string
-                    picture:
-                      type: string
-                    publisher:
-                      type: string
-                    paid:
-                      type: boolean
               pagination:
                 type: object
                 properties:
@@ -321,10 +321,6 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
-        - name: prefix
-          in: path
-          required: true
-          type: string
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -30678,18 +30674,24 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  bze.cointrunk.QueryAllBurnedCoinsResponse:
+  bze.cointrunk.QueryAllArticlesResponse:
     type: object
     properties:
-      burnedCoins:
+      article:
         type: array
         items:
           type: object
           properties:
-            burned:
+            title:
               type: string
-            height:
+            url:
               type: string
+            picture:
+              type: string
+            publisher:
+              type: string
+            paid:
+              type: boolean
       pagination:
         type: object
         properties:
@@ -30715,24 +30717,18 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  bze.cointrunk.QueryArticlesByPrefixResponse:
+  bze.cointrunk.QueryAllBurnedCoinsResponse:
     type: object
     properties:
-      article:
+      burnedCoins:
         type: array
         items:
           type: object
           properties:
-            title:
+            burned:
               type: string
-            url:
+            height:
               type: string
-            picture:
-              type: string
-            publisher:
-              type: string
-            paid:
-              type: boolean
       pagination:
         type: object
         properties:

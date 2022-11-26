@@ -13,11 +13,10 @@ var _ = strconv.Itoa(0)
 
 func CmdArticlesByPrefix() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "articles-by-prefix [prefix]",
-		Short: "Query ArticlesByPrefix",
-		Args:  cobra.ExactArgs(1),
+		Use:   "all-articles",
+		Short: "Query all articles",
+		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			reqPrefix := args[0]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -26,9 +25,7 @@ func CmdArticlesByPrefix() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryArticlesByPrefixRequest{
-				Prefix: reqPrefix,
-			}
+			params := &types.QueryAllArticlesRequest{}
 
 			pageReq, err := client.ReadPageRequest(cmd.Flags())
 			if err != nil {
@@ -36,7 +33,7 @@ func CmdArticlesByPrefix() *cobra.Command {
 			}
 			params.Pagination = pageReq
 
-			res, err := queryClient.ArticlesByPrefix(cmd.Context(), params)
+			res, err := queryClient.AllArticles(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
