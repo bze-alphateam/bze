@@ -15,6 +15,8 @@ export interface CointrunkAcceptedDomain {
 }
 
 export interface CointrunkArticle {
+  /** @format uint64 */
+  id?: string;
   title?: string;
   url?: string;
   picture?: string;

@@ -45,6 +45,7 @@ func (k msgServer) AddArticle(goCtx context.Context, msg *types.MsgAddArticle) (
 		Picture:   msg.Picture,
 		Publisher: msg.Publisher,
 		Paid:      paid,
+		Id:        0,
 	}
 
 	k.SetArticle(ctx, article)

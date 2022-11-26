@@ -29,7 +29,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdPublisher())
 	cmd.AddCommand(CmdPublisherByIndex())
 
-	cmd.AddCommand(CmdArticlesByPrefix())
+	cmd.AddCommand(CmdAllArticles())
 
 	cmd.AddCommand(CmdAllBurnedCoins())
 

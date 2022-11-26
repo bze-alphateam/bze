@@ -18,5 +18,6 @@ message GenesisState {
   repeated AcceptedDomain AcceptedDomainList = 3 [(gogoproto.nullable) = false];
   repeated Article ArticleList = 4 [(gogoproto.nullable) = false];
   repeated BurnedCoins BurnedCoinsList = 5 [(gogoproto.nullable) = false];
+  uint64 articlesCounter = 6;
   // this line is used by starport scaffolding # genesis/proto/state
 }

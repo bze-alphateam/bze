@@ -142,6 +142,9 @@ paths:
                 items:
                   type: object
                   properties:
+                    id:
+                      type: string
+                      format: uint64
                     title:
                       type: string
                     url:
@@ -30600,6 +30603,9 @@ definitions:
   bze.cointrunk.Article:
     type: object
     properties:
+      id:
+        type: string
+        format: uint64
       title:
         type: string
       url:
@@ -30682,6 +30688,9 @@ definitions:
         items:
           type: object
           properties:
+            id:
+              type: string
+              format: uint64
             title:
               type: string
             url:
