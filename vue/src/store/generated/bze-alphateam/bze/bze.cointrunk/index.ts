@@ -2,6 +2,7 @@ import { txClient, queryClient, MissingWalletError , registry} from './module'
 
 import { AcceptedDomain } from "./module/types/cointrunk/accepted_domain"
 import { AcceptedDomainProposal } from "./module/types/cointrunk/accepted_domain_proposal"
+import { AnonArticlesCounter } from "./module/types/cointrunk/anon_articles_counter"
 import { Article } from "./module/types/cointrunk/article"
 import { BurnCoinsProposal } from "./module/types/cointrunk/burn_coins_proposal"
 import { BurnedCoins } from "./module/types/cointrunk/burned_coins"
@@ -10,7 +11,7 @@ import { Publisher } from "./module/types/cointrunk/publisher"
 import { PublisherProposal } from "./module/types/cointrunk/publisher_proposal"
 
 
-export { AcceptedDomain, AcceptedDomainProposal, Article, BurnCoinsProposal, BurnedCoins, Params, Publisher, PublisherProposal };
+export { AcceptedDomain, AcceptedDomainProposal, AnonArticlesCounter, Article, BurnCoinsProposal, BurnedCoins, Params, Publisher, PublisherProposal };
 
 async function initTxClient(vuexGetters) {
 	return await txClient(vuexGetters['common/wallet/signer'], {
@@ -54,10 +55,12 @@ const getDefaultState = () => {
 				PublisherByIndex: {},
 				AllArticles: {},
 				AllBurnedCoins: {},
+				AllAnonArticlesCounters: {},
 				
 				_Structure: {
 						AcceptedDomain: getStructure(AcceptedDomain.fromPartial({})),
 						AcceptedDomainProposal: getStructure(AcceptedDomainProposal.fromPartial({})),
+						AnonArticlesCounter: getStructure(AnonArticlesCounter.fromPartial({})),
 						Article: getStructure(Article.fromPartial({})),
 						BurnCoinsProposal: getStructure(BurnCoinsProposal.fromPartial({})),
 						BurnedCoins: getStructure(BurnedCoins.fromPartial({})),
@@ -127,6 +130,12 @@ export default {
 						(<any> params).query=null
 					}
 			return state.AllBurnedCoins[JSON.stringify(params)] ?? {}
+		},
+				getAllAnonArticlesCounters: (state) => (params = { params: {}}) => {
+					if (!(<any> params).query) {
+						(<any> params).query=null
+					}
+			return state.AllAnonArticlesCounters[JSON.stringify(params)] ?? {}
 		},
 				
 		getTypeStructure: (state) => (type) => {
@@ -305,6 +314,32 @@ export default {
 				return getters['getAllBurnedCoins']( { params: {...key}, query}) ?? {}
 			} catch (e) {
 				throw new Error('QueryClient:QueryAllBurnedCoins API Node Unavailable. Could not perform query: ' + e.message)
+				
+			}
+		},
+		
+		
+		
+		
+		 		
+		
+		
+		async QueryAllAnonArticlesCounters({ commit, rootGetters, getters }, { options: { subscribe, all} = { subscribe:false, all:false}, params, query=null }) {
+			try {
+				const key = params ?? {};
+				const queryClient=await initQueryClient(rootGetters)
+				let value= (await queryClient.queryAllAnonArticlesCounters(query)).data
+				
+					
+				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
+					let next_values=(await queryClient.queryAllAnonArticlesCounters({...query, 'pagination.key':(<any> value).pagination.next_key})).data
+					value = mergeResults(value, next_values);
+				}
+				commit('QUERY', { query: 'AllAnonArticlesCounters', key: { params: {...key}, query}, value })
+				if (subscribe) commit('SUBSCRIBE', { action: 'QueryAllAnonArticlesCounters', payload: { options: { all }, params: {...key},query }})
+				return getters['getAllAnonArticlesCounters']( { params: {...key}, query}) ?? {}
+			} catch (e) {
+				throw new Error('QueryClient:QueryAllAnonArticlesCounters API Node Unavailable. Could not perform query: ' + e.message)
 				
 			}
 		},
