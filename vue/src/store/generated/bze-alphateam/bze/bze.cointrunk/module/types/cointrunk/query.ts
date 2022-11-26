@@ -9,6 +9,7 @@ import { AcceptedDomain } from "../cointrunk/accepted_domain";
 import { Publisher } from "../cointrunk/publisher";
 import { Article } from "../cointrunk/article";
 import { BurnedCoins } from "../cointrunk/burned_coins";
+import { AnonArticlesCounter } from "../cointrunk/anon_articles_counter";
 
 export const protobufPackage = "bze.cointrunk";
 
@@ -62,6 +63,15 @@ export interface QueryAllBurnedCoinsRequest {
 
 export interface QueryAllBurnedCoinsResponse {
   burnedCoins: BurnedCoins[];
+  pagination: PageResponse | undefined;
+}
+
+export interface QueryAllAnonArticlesCountersRequest {
+  pagination: PageRequest | undefined;
+}
+
+export interface QueryAllAnonArticlesCountersResponse {
+  AnonArticlesCounters: AnonArticlesCounter[];
   pagination: PageResponse | undefined;
 }
 
@@ -976,6 +986,187 @@ export const QueryAllBurnedCoinsResponse = {
   },
 };
 
+const baseQueryAllAnonArticlesCountersRequest: object = {};
+
+export const QueryAllAnonArticlesCountersRequest = {
+  encode(
+    message: QueryAllAnonArticlesCountersRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(10).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryAllAnonArticlesCountersRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryAllAnonArticlesCountersRequest,
+    } as QueryAllAnonArticlesCountersRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryAllAnonArticlesCountersRequest {
+    const message = {
+      ...baseQueryAllAnonArticlesCountersRequest,
+    } as QueryAllAnonArticlesCountersRequest;
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryAllAnonArticlesCountersRequest): unknown {
+    const obj: any = {};
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageRequest.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryAllAnonArticlesCountersRequest>
+  ): QueryAllAnonArticlesCountersRequest {
+    const message = {
+      ...baseQueryAllAnonArticlesCountersRequest,
+    } as QueryAllAnonArticlesCountersRequest;
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryAllAnonArticlesCountersResponse: object = {};
+
+export const QueryAllAnonArticlesCountersResponse = {
+  encode(
+    message: QueryAllAnonArticlesCountersResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.AnonArticlesCounters) {
+      AnonArticlesCounter.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    if (message.pagination !== undefined) {
+      PageResponse.encode(
+        message.pagination,
+        writer.uint32(18).fork()
+      ).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryAllAnonArticlesCountersResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryAllAnonArticlesCountersResponse,
+    } as QueryAllAnonArticlesCountersResponse;
+    message.AnonArticlesCounters = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.AnonArticlesCounters.push(
+            AnonArticlesCounter.decode(reader, reader.uint32())
+          );
+          break;
+        case 2:
+          message.pagination = PageResponse.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryAllAnonArticlesCountersResponse {
+    const message = {
+      ...baseQueryAllAnonArticlesCountersResponse,
+    } as QueryAllAnonArticlesCountersResponse;
+    message.AnonArticlesCounters = [];
+    if (
+      object.AnonArticlesCounters !== undefined &&
+      object.AnonArticlesCounters !== null
+    ) {
+      for (const e of object.AnonArticlesCounters) {
+        message.AnonArticlesCounters.push(AnonArticlesCounter.fromJSON(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryAllAnonArticlesCountersResponse): unknown {
+    const obj: any = {};
+    if (message.AnonArticlesCounters) {
+      obj.AnonArticlesCounters = message.AnonArticlesCounters.map((e) =>
+        e ? AnonArticlesCounter.toJSON(e) : undefined
+      );
+    } else {
+      obj.AnonArticlesCounters = [];
+    }
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageResponse.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryAllAnonArticlesCountersResponse>
+  ): QueryAllAnonArticlesCountersResponse {
+    const message = {
+      ...baseQueryAllAnonArticlesCountersResponse,
+    } as QueryAllAnonArticlesCountersResponse;
+    message.AnonArticlesCounters = [];
+    if (
+      object.AnonArticlesCounters !== undefined &&
+      object.AnonArticlesCounters !== null
+    ) {
+      for (const e of object.AnonArticlesCounters) {
+        message.AnonArticlesCounters.push(AnonArticlesCounter.fromPartial(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
 /** Query defines the gRPC querier service. */
 export interface Query {
   /** Parameters queries the parameters of the module. */
@@ -998,6 +1189,10 @@ export interface Query {
   AllBurnedCoins(
     request: QueryAllBurnedCoinsRequest
   ): Promise<QueryAllBurnedCoinsResponse>;
+  /** Queries a list of AllAnonArticlesCounters items. */
+  AllAnonArticlesCounters(
+    request: QueryAllAnonArticlesCountersRequest
+  ): Promise<QueryAllAnonArticlesCountersResponse>;
 }
 
 export class QueryClientImpl implements Query {
@@ -1072,6 +1267,20 @@ export class QueryClientImpl implements Query {
     );
     return promise.then((data) =>
       QueryAllBurnedCoinsResponse.decode(new Reader(data))
+    );
+  }
+
+  AllAnonArticlesCounters(
+    request: QueryAllAnonArticlesCountersRequest
+  ): Promise<QueryAllAnonArticlesCountersResponse> {
+    const data = QueryAllAnonArticlesCountersRequest.encode(request).finish();
+    const promise = this.rpc.request(
+      "bze.cointrunk.Query",
+      "AllAnonArticlesCounters",
+      data
+    );
+    return promise.then((data) =>
+      QueryAllAnonArticlesCountersResponse.decode(new Reader(data))
     );
   }
 }

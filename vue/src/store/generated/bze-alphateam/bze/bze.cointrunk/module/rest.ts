@@ -14,6 +14,13 @@ export interface CointrunkAcceptedDomain {
   active?: boolean;
 }
 
+export interface CointrunkAnonArticlesCounter {
+  key?: string;
+
+  /** @format uint64 */
+  counter?: string;
+}
+
 export interface CointrunkArticle {
   /** @format uint64 */
   id?: string;
@@ -48,6 +55,21 @@ export interface CointrunkPublisher {
 
 export interface CointrunkQueryAcceptedDomainResponse {
   acceptedDomain?: CointrunkAcceptedDomain[];
+
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
+  pagination?: V1Beta1PageResponse;
+}
+
+export interface CointrunkQueryAllAnonArticlesCountersResponse {
+  AnonArticlesCounters?: CointrunkAnonArticlesCounter[];
 
   /**
    * PageResponse is to be embedded in gRPC response messages where the
@@ -408,6 +430,32 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
   ) =>
     this.request<CointrunkQueryAcceptedDomainResponse, RpcStatus>({
       path: `/bze/cointrunk/accepted_domain`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryAllAnonArticlesCounters
+   * @summary Queries a list of AllAnonArticlesCounters items.
+   * @request GET:/bze/cointrunk/all_anon_articles_counters
+   */
+  queryAllAnonArticlesCounters = (
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<CointrunkQueryAllAnonArticlesCountersResponse, RpcStatus>({
+      path: `/bze/cointrunk/all_anon_articles_counters`,
       method: "GET",
       query: query,
       format: "json",

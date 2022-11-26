@@ -9,8 +9,9 @@ var _ binary.ByteOrder
 
 const (
 	// ArticleKeyPrefix is the prefix to retrieve all Article
-	ArticleKeyPrefix        = "Article/value/"
-	ArticleCounterKeyPrefix = "Article/counter/"
+	ArticleKeyPrefix             = "Article/value/"
+	ArticleCounterKeyPrefix      = "Article/counter/"
+	AnonArticlesCounterKeyPrefix = "Article/anon/counter/"
 )
 
 // ArticleKey returns the store key to retrieve a Publisher from the index fields
@@ -27,5 +28,5 @@ func ArticleKey(
 }
 
 func GenerateMonthlyPaidArticleCounterPrefix(ctx sdk.Context) (prefix string) {
-	return ctx.BlockHeader().Time.Format("200601")
+	return AnonArticlesCounterKeyPrefix + ctx.BlockHeader().Time.Format("200601")
 }
