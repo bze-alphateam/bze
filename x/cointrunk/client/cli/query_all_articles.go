@@ -11,7 +11,7 @@ import (
 
 var _ = strconv.Itoa(0)
 
-func CmdArticlesByPrefix() *cobra.Command {
+func CmdAllArticles() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "all-articles",
 		Short: "Query all articles",

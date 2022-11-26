@@ -9,6 +9,9 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+	k.SetParams(ctx, genState.Params)
+	k.SetArticleCounter(ctx, genState.ArticlesCounter)
+
 	for _, publisher := range genState.PublisherList {
 		k.SetPublisher(ctx, publisher)
 	}
@@ -26,7 +29,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	// this line is used by starport scaffolding # genesis/module/init
-	k.SetParams(ctx, genState.Params)
 }
 
 // ExportGenesis returns the capability module's exported genesis.
@@ -37,6 +39,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.AcceptedDomainList = k.GetAllAcceptedDomain(ctx)
 	genesis.ArticleList = k.GetAllArticles(ctx)
 	genesis.BurnedCoinsList = k.GetAllBurnedCoins(ctx)
+	genesis.ArticlesCounter = k.GetArticleCounter(ctx)
 	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis

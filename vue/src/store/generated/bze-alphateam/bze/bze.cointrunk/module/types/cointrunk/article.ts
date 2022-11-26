@@ -1,9 +1,11 @@
 /* eslint-disable */
-import { Writer, Reader } from "protobufjs/minimal";
+import * as Long from "long";
+import { util, configure, Writer, Reader } from "protobufjs/minimal";
 
 export const protobufPackage = "bze.cointrunk";
 
 export interface Article {
+  id: number;
   title: string;
   url: string;
   picture: string;
@@ -12,6 +14,7 @@ export interface Article {
 }
 
 const baseArticle: object = {
+  id: 0,
   title: "",
   url: "",
   picture: "",
@@ -21,20 +24,23 @@ const baseArticle: object = {
 
 export const Article = {
   encode(message: Article, writer: Writer = Writer.create()): Writer {
+    if (message.id !== 0) {
+      writer.uint32(8).uint64(message.id);
+    }
     if (message.title !== "") {
-      writer.uint32(10).string(message.title);
+      writer.uint32(18).string(message.title);
     }
     if (message.url !== "") {
-      writer.uint32(18).string(message.url);
+      writer.uint32(26).string(message.url);
     }
     if (message.picture !== "") {
-      writer.uint32(26).string(message.picture);
+      writer.uint32(34).string(message.picture);
     }
     if (message.publisher !== "") {
-      writer.uint32(34).string(message.publisher);
+      writer.uint32(42).string(message.publisher);
     }
     if (message.paid === true) {
-      writer.uint32(40).bool(message.paid);
+      writer.uint32(48).bool(message.paid);
     }
     return writer;
   },
@@ -47,18 +53,21 @@ export const Article = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.title = reader.string();
+          message.id = longToNumber(reader.uint64() as Long);
           break;
         case 2:
-          message.url = reader.string();
+          message.title = reader.string();
           break;
         case 3:
-          message.picture = reader.string();
+          message.url = reader.string();
           break;
         case 4:
-          message.publisher = reader.string();
+          message.picture = reader.string();
           break;
         case 5:
+          message.publisher = reader.string();
+          break;
+        case 6:
           message.paid = reader.bool();
           break;
         default:
@@ -71,6 +80,11 @@ export const Article = {
 
   fromJSON(object: any): Article {
     const message = { ...baseArticle } as Article;
+    if (object.id !== undefined && object.id !== null) {
+      message.id = Number(object.id);
+    } else {
+      message.id = 0;
+    }
     if (object.title !== undefined && object.title !== null) {
       message.title = String(object.title);
     } else {
@@ -101,6 +115,7 @@ export const Article = {
 
   toJSON(message: Article): unknown {
     const obj: any = {};
+    message.id !== undefined && (obj.id = message.id);
     message.title !== undefined && (obj.title = message.title);
     message.url !== undefined && (obj.url = message.url);
     message.picture !== undefined && (obj.picture = message.picture);
@@ -111,6 +126,11 @@ export const Article = {
 
   fromPartial(object: DeepPartial<Article>): Article {
     const message = { ...baseArticle } as Article;
+    if (object.id !== undefined && object.id !== null) {
+      message.id = object.id;
+    } else {
+      message.id = 0;
+    }
     if (object.title !== undefined && object.title !== null) {
       message.title = object.title;
     } else {
@@ -140,6 +160,16 @@ export const Article = {
   },
 };
 
+declare var self: any | undefined;
+declare var window: any | undefined;
+var globalThis: any = (() => {
+  if (typeof globalThis !== "undefined") return globalThis;
+  if (typeof self !== "undefined") return self;
+  if (typeof window !== "undefined") return window;
+  if (typeof global !== "undefined") return global;
+  throw "Unable to locate global object";
+})();
+
 type Builtin = Date | Function | Uint8Array | string | number | undefined;
 export type DeepPartial<T> = T extends Builtin
   ? T
@@ -150,3 +180,15 @@ export type DeepPartial<T> = T extends Builtin
   : T extends {}
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
+
+function longToNumber(long: Long): number {
+  if (long.gt(Number.MAX_SAFE_INTEGER)) {
+    throw new globalThis.Error("Value is larger than Number.MAX_SAFE_INTEGER");
+  }
+  return long.toNumber();
+}
+
+if (util.Long !== Long) {
+  util.Long = Long as any;
+  configure();
+}

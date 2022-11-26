@@ -2,10 +2,10 @@ package keeper
 
 import (
 	"encoding/binary"
+	"fmt"
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"strconv"
 )
 
 const (
@@ -98,8 +98,11 @@ func (k Keeper) GetAllArticles(ctx sdk.Context) (list []types.Article) {
 
 func (k Keeper) SetArticle(ctx sdk.Context, article types.Article) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ArticleKeyPrefix))
-	articleCounter := k.incrementCounter(ctx, types.ArticleCounterKeyPrefix)
-	keyString := strconv.FormatUint(articleCounter, 10)
+	if article.Id == 0 {
+		article.Id = k.incrementCounter(ctx, types.ArticleCounterKeyPrefix)
+	}
+	keyString := fmt.Sprintf("%012d", article.Id)
+
 	record := k.cdc.MustMarshal(&article)
 	store.Set(
 		types.ArticleKey(keyString),
@@ -113,6 +116,21 @@ func (k Keeper) SetArticle(ctx sdk.Context, article types.Article) {
 
 func (k Keeper) GetMonthlyPaidArticleCounter(ctx sdk.Context) uint64 {
 	return k.getCounter(ctx, types.GenerateMonthlyPaidArticleCounterPrefix(ctx))
+}
+
+func (k Keeper) GetArticleCounter(ctx sdk.Context) uint64 {
+	return k.getCounter(ctx, types.ArticleCounterKeyPrefix)
+}
+
+func (k Keeper) SetArticleCounter(ctx sdk.Context, counter uint64) {
+	counterStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ArticleCounterKeyPrefix))
+	record := make([]byte, 8)
+	binary.BigEndian.PutUint64(record, counter)
+
+	counterStore.Set(
+		types.ArticleKey(CounterKey),
+		record,
+	)
 }
 
 func (k Keeper) getCounter(ctx sdk.Context, storePrefix string) uint64 {
