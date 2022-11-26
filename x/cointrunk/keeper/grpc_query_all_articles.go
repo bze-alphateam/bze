@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) ArticlesByPrefix(goCtx context.Context, req *types.QueryArticlesByPrefixRequest) (*types.QueryArticlesByPrefixResponse, error) {
+func (k Keeper) AllArticles(goCtx context.Context, req *types.QueryAllArticlesRequest) (*types.QueryAllArticlesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -19,7 +19,7 @@ func (k Keeper) ArticlesByPrefix(goCtx context.Context, req *types.QueryArticles
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	var articles []types.Article
 	store := ctx.KVStore(k.storeKey)
-	articlesStore := prefix.NewStore(store, types.KeyPrefix(types.ArticleKeyPrefix+req.Prefix))
+	articlesStore := prefix.NewStore(store, types.KeyPrefix(types.ArticleKeyPrefix))
 	pageRes, err := query.Paginate(articlesStore, req.Pagination, func(key []byte, value []byte) error {
 		var article types.Article
 		if err := k.cdc.Unmarshal(value, &article); err != nil {
@@ -35,5 +35,5 @@ func (k Keeper) ArticlesByPrefix(goCtx context.Context, req *types.QueryArticles
 
 	_ = ctx
 
-	return &types.QueryArticlesByPrefixResponse{Article: articles, Pagination: pageRes}, nil
+	return &types.QueryAllArticlesResponse{Article: articles, Pagination: pageRes}, nil
 }

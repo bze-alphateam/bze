@@ -59,8 +59,8 @@ export interface CointrunkQueryAcceptedDomainResponse {
   pagination?: V1Beta1PageResponse;
 }
 
-export interface CointrunkQueryAllBurnedCoinsResponse {
-  burnedCoins?: CointrunkBurnedCoins[];
+export interface CointrunkQueryAllArticlesResponse {
+  article?: CointrunkArticle[];
 
   /**
    * PageResponse is to be embedded in gRPC response messages where the
@@ -74,8 +74,8 @@ export interface CointrunkQueryAllBurnedCoinsResponse {
   pagination?: V1Beta1PageResponse;
 }
 
-export interface CointrunkQueryArticlesByPrefixResponse {
-  article?: CointrunkArticle[];
+export interface CointrunkQueryAllBurnedCoinsResponse {
+  burnedCoins?: CointrunkBurnedCoins[];
 
   /**
    * PageResponse is to be embedded in gRPC response messages where the
@@ -416,6 +416,32 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * No description
    *
    * @tags Query
+   * @name QueryAllArticles
+   * @summary Queries a list of ArticlesByPrefix items.
+   * @request GET:/bze/cointrunk/all_articles
+   */
+  queryAllArticles = (
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<CointrunkQueryAllArticlesResponse, RpcStatus>({
+      path: `/bze/cointrunk/all_articles`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
    * @name QueryAllBurnedCoins
    * @summary Queries a list of CoinsBurnEvents items.
    * @request GET:/bze/cointrunk/all_burned_coins
@@ -432,33 +458,6 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
   ) =>
     this.request<CointrunkQueryAllBurnedCoinsResponse, RpcStatus>({
       path: `/bze/cointrunk/all_burned_coins`,
-      method: "GET",
-      query: query,
-      format: "json",
-      ...params,
-    });
-
-  /**
-   * No description
-   *
-   * @tags Query
-   * @name QueryArticlesByPrefix
-   * @summary Queries a list of ArticlesByPrefix items.
-   * @request GET:/bze/cointrunk/articles_by_prefix/{prefix}
-   */
-  queryArticlesByPrefix = (
-    prefix: string,
-    query?: {
-      "pagination.key"?: string;
-      "pagination.offset"?: string;
-      "pagination.limit"?: string;
-      "pagination.count_total"?: boolean;
-      "pagination.reverse"?: boolean;
-    },
-    params: RequestParams = {},
-  ) =>
-    this.request<CointrunkQueryArticlesByPrefixResponse, RpcStatus>({
-      path: `/bze/cointrunk/articles_by_prefix/${prefix}`,
       method: "GET",
       query: query,
       format: "json",

@@ -19,8 +19,8 @@ func (k msgServer) AddArticle(goCtx context.Context, msg *types.MsgAddArticle) (
 	paid := !found || publisher.Active != true
 	if paid {
 		articleLimit := k.AnonArticleLimit(ctx)
-		existingArticlesCount := k.GetMonthlyPaidArticleCounter(ctx)
-		if existingArticlesCount >= articleLimit {
+		existingPaidArticlesCount := k.GetMonthlyPaidArticleCounter(ctx)
+		if existingPaidArticlesCount >= articleLimit {
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Paid article limit reached for current period")
 		}
 
