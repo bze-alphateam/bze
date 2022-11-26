@@ -61,9 +61,13 @@ func (k msgServer) validateMessageDomains(ctx sdk.Context, msg *types.MsgAddArti
 		return errors.Newf("Invalid article url(%s)", err)
 	}
 
-	_, found := k.GetAcceptedDomain(ctx, parsedUrl.Host)
+	acceptedDomain, found := k.GetAcceptedDomain(ctx, parsedUrl.Host)
 	if !found {
 		return errors.Newf("Provided url domain (%s) is not an accepted domain", parsedUrl.Host)
+	}
+
+	if acceptedDomain.Active != true {
+		return errors.Newf("Provided url domain (%s) is NOT active", parsedUrl.Host)
 	}
 
 	//msg.Picture is optional so do not validate it unless needed
@@ -76,9 +80,13 @@ func (k msgServer) validateMessageDomains(ctx sdk.Context, msg *types.MsgAddArti
 		return errors.Newf("Invalid article picture url(%s)", err)
 	}
 
-	_, found = k.GetAcceptedDomain(ctx, parsedUrl.Host)
+	acceptedDomain, found = k.GetAcceptedDomain(ctx, parsedUrl.Host)
 	if !found {
 		return errors.Newf("Provided picture domain (%s) is not an accepted domain", parsedUrl.Host)
+	}
+
+	if acceptedDomain.Active != true {
+		return errors.Newf("Provided picture domain (%s) is NOT active", parsedUrl.Host)
 	}
 
 	return nil
