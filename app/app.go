@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -518,24 +517,12 @@ func New(
 }
 
 func (app *App) setupUpgradeHandlers() {
-	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-	if err != nil {
-		panic(fmt.Errorf("failed to read upgrade info from disk: %w", err))
-	}
-
-	if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		return
-	}
-
-	switch upgradeInfo.Name {
-	case "v5.1.2":
-		app.UpgradeKeeper.SetUpgradeHandler(
-			"v5.1.2",
-			func(ctx sdk.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-				//do nothing on purpose
-				return vm, nil
-			})
-	}
+	app.UpgradeKeeper.SetUpgradeHandler(
+		"v5.1.2",
+		func(ctx sdk.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+			//do nothing on purpose
+			return vm, nil
+		})
 }
 
 // Name returns the name of the App
