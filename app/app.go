@@ -76,6 +76,8 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v2/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v2/modules/core"
 	ibcclient "github.com/cosmos/ibc-go/v2/modules/core/02-client"
+	ibcclientclient "github.com/cosmos/ibc-go/modules/core/02-client/client"
+	ibcclienttypes "github.com/cosmos/ibc-go/modules/core/02-client/types"
 	ibcporttypes "github.com/cosmos/ibc-go/v2/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v2/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v2/modules/core/keeper"
@@ -331,6 +333,14 @@ func New(
 		appCodec, keys[ibchost.StoreKey], app.GetSubspace(ibchost.ModuleName), app.StakingKeeper, app.UpgradeKeeper, scopedIBCKeeper,
 	)
 
+	// register the proposal types
+	govRouter := govtypes.NewRouter()
+	govRouter.AddRoute(govtypes.RouterKey, govtypes.ProposalHandler).
+		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
+		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
+		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
+		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper))
+
 	// Create Transfer Keepers
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec, keys[ibctransfertypes.StoreKey], app.GetSubspace(ibctransfertypes.ModuleName),
@@ -502,6 +512,8 @@ func New(
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 	app.mm.RegisterServices(module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter()))
 
+	app.setupUpgradeHandlers()
+
 	// initialize stores
 	app.MountKVStores(keys)
 	app.MountTransientStores(tkeys)
@@ -542,35 +554,12 @@ func New(
 }
 
 func (app *App) setupUpgradeHandlers() {
-	// TODO: prepare the upgrade handler for v6
-	// When a planned update height is reached, the old binary will panic
-	// writing on disk the height and name of the update that triggered it
-	// This will read that value, and execute the preparations for the upgrade.
-	//upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-	//if err != nil {
-	//	panic(fmt.Errorf("failed to read upgrade info from disk: %w", err))
-	//}
-	//
-	//if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-	//	return
-	//}
-
-	var storeUpgrades *storetypes.StoreUpgrades
-
-	//switch true {
-	//case true: //TODO: add version name
-	//	// add  missing cointrunk module
-	//	storeUpgrades = &storetypes.StoreUpgrades{
-	//		Added: []string{cointrunkmoduletypes.ModuleName},
-	//	}
-	//}
-	storeUpgrades = &storetypes.StoreUpgrades{
-		Added: []string{cointrunkmoduletypes.ModuleName},
-	}
-	//if storeUpgrades != nil {
-	// configure store loader that checks if version == upgradeHeight and applies store upgrades
-	app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(130, storeUpgrades))
-	//}
+	app.UpgradeKeeper.SetUpgradeHandler(
+		"v5.1.2",
+		func(ctx sdk.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+			//do nothing on purpose
+			return vm, nil
+		})
 }
 
 // Name returns the name of the App
