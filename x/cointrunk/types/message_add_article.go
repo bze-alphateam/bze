@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	"github.com/bze-alphateam/bze/bzeutils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"net/url"
@@ -15,7 +16,7 @@ var _ sdk.Msg = &MsgAddArticle{}
 func NewMsgAddArticle(publisher string, title string, url string, picture string) *MsgAddArticle {
 	return &MsgAddArticle{
 		Publisher: publisher,
-		Title:     strings.TrimSpace(title),
+		Title:     strings.TrimSpace(bzeutils.GetSanitizer().SanitizeHtml(title)),
 		Url:       strings.TrimSpace(url),
 		Picture:   strings.TrimSpace(picture),
 	}
