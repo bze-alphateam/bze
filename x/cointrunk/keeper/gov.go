@@ -7,10 +7,14 @@ import (
 
 func (k Keeper) HandlePublisherProposal(ctx sdk.Context, proposal *types.PublisherProposal) error {
 	_ = sdk.MustAccAddressFromBech32(proposal.Address)
-	publisher, _ := k.GetPublisher(ctx, proposal.Address)
+	publisher, found := k.GetPublisher(ctx, proposal.Address)
 	publisher.Name = proposal.Name
 	publisher.Active = proposal.Active
-	publisher.Address = proposal.Address
+	if !found {
+		publisher.Address = proposal.Address
+		publisher.CreatedAt = ctx.BlockHeader().Time.Unix()
+		publisher.ArticlesCount = 0
+	}
 	k.SetPublisher(ctx, publisher)
 	return nil
 }
