@@ -29,6 +29,9 @@ export interface CointrunkArticle {
   picture?: string;
   publisher?: string;
   paid?: boolean;
+
+  /** @format int64 */
+  createdAt?: string;
 }
 
 export type CointrunkMsgAddArticleResponse = object;
@@ -46,6 +49,12 @@ export interface CointrunkPublisher {
   name?: string;
   address?: string;
   active?: boolean;
+
+  /** @format int64 */
+  articlesCount?: number;
+
+  /** @format int64 */
+  createdAt?: string;
 }
 
 export interface CointrunkQueryAcceptedDomainResponse {

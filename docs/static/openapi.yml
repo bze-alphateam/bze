@@ -437,6 +437,9 @@ paths:
                       type: string
                     paid:
                       type: boolean
+                    createdAt:
+                      type: string
+                      format: int64
               pagination:
                 type: object
                 properties:
@@ -602,6 +605,12 @@ paths:
                     type: string
                   active:
                     type: boolean
+                  articlesCount:
+                    type: integer
+                    format: int64
+                  createdAt:
+                    type: string
+                    format: int64
         default:
           description: An unexpected error response.
           schema:
@@ -648,6 +657,12 @@ paths:
                       type: string
                     active:
                       type: boolean
+                    articlesCount:
+                      type: integer
+                      format: int64
+                    createdAt:
+                      type: string
+                      format: int64
               pagination:
                 type: object
                 properties:
@@ -31236,6 +31251,9 @@ definitions:
         type: string
       paid:
         type: boolean
+      createdAt:
+        type: string
+        format: int64
   bze.cointrunk.MsgAddArticleResponse:
     type: object
   bze.cointrunk.Params:
@@ -31256,6 +31274,12 @@ definitions:
         type: string
       active:
         type: boolean
+      articlesCount:
+        type: integer
+        format: int64
+      createdAt:
+        type: string
+        format: int64
   bze.cointrunk.QueryAcceptedDomainResponse:
     type: object
     properties:
@@ -31352,6 +31376,9 @@ definitions:
               type: string
             paid:
               type: boolean
+            createdAt:
+              type: string
+              format: int64
       pagination:
         type: object
         properties:
@@ -31402,6 +31429,12 @@ definitions:
             type: string
           active:
             type: boolean
+          articlesCount:
+            type: integer
+            format: int64
+          createdAt:
+            type: string
+            format: int64
   bze.cointrunk.QueryPublisherResponse:
     type: object
     properties:
@@ -31416,6 +31449,12 @@ definitions:
               type: string
             active:
               type: boolean
+            articlesCount:
+              type: integer
+              format: int64
+            createdAt:
+              type: string
+              format: int64
       pagination:
         type: object
         properties:

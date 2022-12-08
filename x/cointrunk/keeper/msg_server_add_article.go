@@ -47,9 +47,15 @@ func (k msgServer) AddArticle(goCtx context.Context, msg *types.MsgAddArticle) (
 		Publisher: msg.Publisher,
 		Paid:      paid,
 		Id:        0,
+		CreatedAt: ctx.BlockHeader().Time.Unix(),
 	}
 
 	k.SetArticle(ctx, article)
+
+	if found {
+		publisher.ArticlesCount += 1
+		k.SetPublisher(ctx, publisher)
+	}
 
 	_ = ctx
 
