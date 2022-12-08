@@ -24,10 +24,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetArticle(ctx, article)
 	}
 
-	for _, burnedCoins := range genState.BurnedCoinsList {
-		k.SetBurnedCoins(ctx, burnedCoins)
-	}
-
 	// this line is used by starport scaffolding # genesis/module/init
 }
 
@@ -38,7 +34,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.PublisherList = k.GetAllPublisher(ctx)
 	genesis.AcceptedDomainList = k.GetAllAcceptedDomain(ctx)
 	genesis.ArticleList = k.GetAllArticles(ctx)
-	genesis.BurnedCoinsList = k.GetAllBurnedCoins(ctx)
 	genesis.ArticlesCounter = k.GetArticleCounter(ctx)
 	// this line is used by starport scaffolding # genesis/module/export
 
