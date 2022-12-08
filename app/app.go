@@ -98,6 +98,10 @@ import (
 	cointrunkmoduleclient "github.com/bze-alphateam/bze/x/cointrunk/client"
 	cointrunkmodulekeeper "github.com/bze-alphateam/bze/x/cointrunk/keeper"
 	cointrunkmoduletypes "github.com/bze-alphateam/bze/x/cointrunk/types"
+
+	burnermodule "github.com/bze-alphateam/bze/x/burner"
+	burnermodulekeeper "github.com/bze-alphateam/bze/x/burner/keeper"
+	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
@@ -155,6 +159,7 @@ var (
 		vesting.AppModuleBasic{},
 		scavengemodule.AppModuleBasic{},
 		cointrunkmodule.AppModuleBasic{},
+		burnermodule.AppModuleBasic{},
 		// this line is used by starport scaffolding # stargate/app/moduleBasic
 	)
 
@@ -167,8 +172,9 @@ var (
 		stakingtypes.NotBondedPoolName:  {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:             {authtypes.Burner},
 		ibctransfertypes.ModuleName:     {authtypes.Minter, authtypes.Burner},
-		scavengemoduletypes.ModuleName:  {authtypes.Burner, authtypes.Staking},
-		cointrunkmoduletypes.ModuleName: {authtypes.Burner},
+		scavengemoduletypes.ModuleName:  nil,
+		cointrunkmoduletypes.ModuleName: nil,
+		burnermoduletypes.ModuleName:    {authtypes.Burner},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 )
@@ -227,6 +233,7 @@ type App struct {
 
 	ScavengeKeeper  scavengemodulekeeper.Keeper
 	CointrunkKeeper cointrunkmodulekeeper.Keeper
+	BurnerKeeper    burnermodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// the module manager
@@ -256,11 +263,23 @@ func New(
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
 	keys := sdk.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
-		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
-		govtypes.StoreKey, paramstypes.StoreKey, ibchost.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
-		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
-		scavengemoduletypes.StoreKey, cointrunkmoduletypes.StoreKey,
+		authtypes.StoreKey,
+		banktypes.StoreKey,
+		stakingtypes.StoreKey,
+		minttypes.StoreKey,
+		distrtypes.StoreKey,
+		slashingtypes.StoreKey,
+		govtypes.StoreKey,
+		paramstypes.StoreKey,
+		ibchost.StoreKey,
+		upgradetypes.StoreKey,
+		feegrant.StoreKey,
+		evidencetypes.StoreKey,
+		ibctransfertypes.StoreKey,
+		capabilitytypes.StoreKey,
+		scavengemoduletypes.StoreKey,
+		cointrunkmoduletypes.StoreKey,
+		burnermoduletypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -363,8 +382,18 @@ func New(
 		app.AccountKeeper,
 	)
 
+	app.BurnerKeeper = *burnermodulekeeper.NewKeeper(
+		appCodec,
+		keys[burnermoduletypes.StoreKey],
+		keys[burnermoduletypes.MemStoreKey],
+		app.GetSubspace(burnermoduletypes.ModuleName),
+		app.BankKeeper,
+		app.AccountKeeper,
+	)
+
 	scavengeModule := scavengemodule.NewAppModule(appCodec, app.ScavengeKeeper)
 	cointrunkModule := cointrunkmodule.NewAppModule(appCodec, app.CointrunkKeeper, app.AccountKeeper, app.BankKeeper)
+	burnerModule := burnermodule.NewAppModule(appCodec, app.BurnerKeeper, app.AccountKeeper, app.BankKeeper)
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 
 	// register the proposal types
@@ -419,6 +448,7 @@ func New(
 		transferModule,
 		scavengeModule,
 		cointrunkModule,
+		burnerModule,
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
 
@@ -446,6 +476,7 @@ func New(
 		vestingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		cointrunkmoduletypes.ModuleName,
+		burnermoduletypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -468,6 +499,7 @@ func New(
 		vestingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		cointrunkmoduletypes.ModuleName,
+		burnermoduletypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -495,6 +527,7 @@ func New(
 		vestingtypes.ModuleName,
 		paramstypes.ModuleName,
 		cointrunkmoduletypes.ModuleName,
+		burnermoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	)
 
@@ -696,6 +729,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(scavengemoduletypes.ModuleName)
 	paramsKeeper.Subspace(cointrunkmoduletypes.ModuleName)
+	paramsKeeper.Subspace(burnermoduletypes.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 
 	return paramsKeeper
