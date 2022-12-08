@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "burner/params.proto";
+import "burner/burned_coins.proto";
 // this line is used by starport scaffolding # 1
 
 option go_package = "github.com/bze-alphateam/bze/x/burner/types";
@@ -13,9 +14,13 @@ option go_package = "github.com/bze-alphateam/bze/x/burner/types";
 service Query {
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/bzealphateam/bze/burner/params";
+    option (google.api.http).get = "/bze/burner/v1/params";
   }
   // this line is used by starport scaffolding # 2
+
+  rpc AllBurnedCoins(QueryAllBurnedCoinsRequest) returns (QueryAllBurnedCoinsResponse) {
+    option (google.api.http).get = "/bze/burner/v1/all_burned_coins";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -25,6 +30,15 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllBurnedCoinsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllBurnedCoinsResponse {
+  repeated BurnedCoins burnedCoins = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // this line is used by starport scaffolding # 3

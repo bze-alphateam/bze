@@ -3,7 +3,7 @@ package cli
 import (
 	"strconv"
 
-	"github.com/bze-alphateam/bze/x/cointrunk/types"
+	"github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
@@ -14,7 +14,7 @@ var _ = strconv.Itoa(0)
 func CmdAllBurnedCoins() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "all-burned-coins",
-		Short: "Query coins-burn-events",
+		Short: "Query coins burned",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 

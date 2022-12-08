@@ -31,8 +31,6 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 
 	cmd.AddCommand(CmdAllArticles())
 
-	cmd.AddCommand(CmdAllBurnedCoins())
-
 	cmd.AddCommand(CmdAllAnonArticlesCounters())
 
 	// this line is used by starport scaffolding # 1
