@@ -31,11 +31,6 @@ export interface CointrunkArticle {
   paid?: boolean;
 }
 
-export interface CointrunkBurnedCoins {
-  burned?: string;
-  height?: string;
-}
-
 export type CointrunkMsgAddArticleResponse = object;
 
 /**
@@ -85,21 +80,6 @@ export interface CointrunkQueryAllAnonArticlesCountersResponse {
 
 export interface CointrunkQueryAllArticlesResponse {
   article?: CointrunkArticle[];
-
-  /**
-   * PageResponse is to be embedded in gRPC response messages where the
-   * corresponding request message has used PageRequest.
-   *
-   *  message SomeResponse {
-   *          repeated Bar results = 1;
-   *          PageResponse page = 2;
-   *  }
-   */
-  pagination?: V1Beta1PageResponse;
-}
-
-export interface CointrunkQueryAllBurnedCoinsResponse {
-  burnedCoins?: CointrunkBurnedCoins[];
 
   /**
    * PageResponse is to be embedded in gRPC response messages where the
@@ -482,32 +462,6 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
   ) =>
     this.request<CointrunkQueryAllArticlesResponse, RpcStatus>({
       path: `/bze/cointrunk/all_articles`,
-      method: "GET",
-      query: query,
-      format: "json",
-      ...params,
-    });
-
-  /**
-   * No description
-   *
-   * @tags Query
-   * @name QueryAllBurnedCoins
-   * @summary Queries a list of CoinsBurnEvents items.
-   * @request GET:/bze/cointrunk/all_burned_coins
-   */
-  queryAllBurnedCoins = (
-    query?: {
-      "pagination.key"?: string;
-      "pagination.offset"?: string;
-      "pagination.limit"?: string;
-      "pagination.count_total"?: boolean;
-      "pagination.reverse"?: boolean;
-    },
-    params: RequestParams = {},
-  ) =>
-    this.request<CointrunkQueryAllBurnedCoinsResponse, RpcStatus>({
-      path: `/bze/cointrunk/all_burned_coins`,
       method: "GET",
       query: query,
       format: "json",
