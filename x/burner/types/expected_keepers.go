@@ -7,7 +7,6 @@ import (
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
 	GetModuleAccount(ctx sdk.Context, moduleName string) types.ModuleAccountI
 	// Methods imported from account should be defined here
 }
@@ -16,6 +15,5 @@ type AccountKeeper interface {
 type BankKeeper interface {
 	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	BurnCoins(ctx sdk.Context, moduleName string, amounts sdk.Coins) error
-	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	// Methods imported from bank should be defined here
 }
