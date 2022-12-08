@@ -3,6 +3,7 @@ package bze.burner.v1;
 
 import "gogoproto/gogo.proto";
 import "burner/params.proto";
+import "burner/burned_coins.proto";
 // this line is used by starport scaffolding # genesis/proto/import
 
 option go_package = "github.com/bze-alphateam/bze/x/burner/types";
@@ -10,5 +11,6 @@ option go_package = "github.com/bze-alphateam/bze/x/burner/types";
 // GenesisState defines the burner module's genesis state.
 message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
+  repeated BurnedCoins BurnedCoinsList = 2 [(gogoproto.nullable) = false];
   // this line is used by starport scaffolding # genesis/proto/state
 }
