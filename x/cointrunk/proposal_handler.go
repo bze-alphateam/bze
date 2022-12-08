@@ -15,8 +15,6 @@ func NewCointrunkProposalHandler(k keeper.Keeper) govtypes.Handler {
 			return k.HandlePublisherProposal(ctx, c)
 		case *types.AcceptedDomainProposal:
 			return k.HandleAcceptedDomainProposal(ctx, c)
-		case *types.BurnCoinsProposal:
-			return k.HandleBurnCoinsProposal(ctx, c)
 		default:
 			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized cointrunk proposal content type: %T", c)
 		}

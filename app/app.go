@@ -100,6 +100,7 @@ import (
 	cointrunkmoduletypes "github.com/bze-alphateam/bze/x/cointrunk/types"
 
 	burnermodule "github.com/bze-alphateam/bze/x/burner"
+	burnermoduleclient "github.com/bze-alphateam/bze/x/burner/client"
 	burnermodulekeeper "github.com/bze-alphateam/bze/x/burner/keeper"
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
@@ -125,7 +126,7 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 		ibcclientclient.UpgradeProposalHandler,
 		cointrunkmoduleclient.AcceptedDomainProposalHandler,
 		cointrunkmoduleclient.PublisherProposalHandler,
-		cointrunkmoduleclient.BurnCoinsProposalHandler,
+		burnermoduleclient.BurnCoinsProposalHandler,
 		// this line is used by starport scaffolding # stargate/app/govProposalHandler
 	)
 
@@ -403,7 +404,8 @@ func New(
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
-		AddRoute(cointrunkmoduletypes.RouterKey, cointrunkmodule.NewCointrunkProposalHandler(app.CointrunkKeeper))
+		AddRoute(cointrunkmoduletypes.RouterKey, cointrunkmodule.NewCointrunkProposalHandler(app.CointrunkKeeper)).
+		AddRoute(burnermoduletypes.RouterKey, burnermodule.NewBurnerProposalHandler(app.BurnerKeeper))
 
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,

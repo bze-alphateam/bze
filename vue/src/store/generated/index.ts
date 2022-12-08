@@ -1,5 +1,6 @@
 // THIS FILE IS GENERATED AUTOMATICALLY. DO NOT MODIFY.
 
+import BzeAlphateamBzeBzeBurnerV1 from './bze-alphateam/bze/bze.burner.v1'
 import BzeAlphateamBzeBzeCointrunk from './bze-alphateam/bze/bze.cointrunk'
 import BzeAlphateamBzeBzeScavenge from './bze-alphateam/bze/bze.scavenge'
 import BzeAlphateamBzeBzealphateamBzeBurner from './bze-alphateam/bze/bzealphateam.bze.burner'
@@ -18,6 +19,7 @@ import CosmosIbcGoIbcApplicationsTransferV1 from './cosmos/ibc-go/ibc.applicatio
 
 
 export default { 
+  BzeAlphateamBzeBzeBurnerV1: load(BzeAlphateamBzeBzeBurnerV1, 'bze.burner.v1'),
   BzeAlphateamBzeBzeCointrunk: load(BzeAlphateamBzeBzeCointrunk, 'bze.cointrunk'),
   BzeAlphateamBzeBzeScavenge: load(BzeAlphateamBzeBzeScavenge, 'bze.scavenge'),
   BzeAlphateamBzeBzealphateamBzeBurner: load(BzeAlphateamBzeBzealphateamBzeBurner, 'bzealphateam.bze.burner'),
