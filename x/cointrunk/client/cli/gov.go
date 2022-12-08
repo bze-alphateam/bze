@@ -16,7 +16,7 @@ const (
 
 func NewCmdSubmitAcceptedDomainProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "accepted-domain [domain-name]",
+		Use:   "add-accepted-domain [domain-name]",
 		Args:  cobra.ExactArgs(1),
 		Short: "Submit an accepted domain proposal",
 		Long: "Submit an accepted domain proposal along with an initial deposit.\n" +
@@ -79,7 +79,7 @@ func NewCmdSubmitAcceptedDomainProposal() *cobra.Command {
 
 func NewCmdSubmitPublisherProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "publisher [name] [address]",
+		Use:   "add-publisher [name] [address]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Submit a publisher proposal",
 		Long: "Submit a publishers proposal along with an initial deposit.\n" +
