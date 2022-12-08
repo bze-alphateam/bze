@@ -11,7 +11,6 @@ import (
 
 var AcceptedDomainProposalHandler = govclient.NewProposalHandler(cli.NewCmdSubmitAcceptedDomainProposal, emptyRestHandler)
 var PublisherProposalHandler = govclient.NewProposalHandler(cli.NewCmdSubmitPublisherProposal, emptyRestHandler)
-var BurnCoinsProposalHandler = govclient.NewProposalHandler(cli.NewCmdSubmitBurnCoinsProposal, emptyRestHandler)
 
 func emptyRestHandler(client.Context) govrest.ProposalRESTHandler {
 	return govrest.ProposalRESTHandler{
