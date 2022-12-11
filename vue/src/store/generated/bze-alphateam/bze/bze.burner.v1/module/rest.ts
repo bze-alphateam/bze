@@ -25,6 +25,8 @@ export interface V1BurnedCoins {
   height?: string;
 }
 
+export type V1MsgFundBurnerResponse = object;
+
 /**
  * Params defines the parameters for the module.
  */
