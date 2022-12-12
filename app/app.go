@@ -1,6 +1,9 @@
 package app
 
 import (
+	v512 "github.com/bze-alphateam/bze/app/upgrades/v512"
+	v600 "github.com/bze-alphateam/bze/app/upgrades/v600"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"io"
 	"net/http"
 	"os"
@@ -580,11 +583,32 @@ func New(
 
 func (app *App) setupUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
-		"v5.1.2",
-		func(ctx sdk.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-			//do nothing on purpose
-			return vm, nil
-		})
+		v512.UpgradeName,
+		v512.CreateUpgradeHandler(),
+	)
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v600.UpgradeName,
+		v600.CreateUpgradeHandler(),
+	)
+
+	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(err)
+	}
+
+	if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		return
+	}
+
+	if upgradeInfo.Name == v600.UpgradeName {
+		storeUpgrades := storetypes.StoreUpgrades{
+			Added: []string{"burner", "cointrunk"},
+		}
+
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
 }
 
 // Name returns the name of the App
