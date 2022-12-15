@@ -603,7 +603,7 @@ func (app *App) setupUpgradeHandlers() {
 
 	if upgradeInfo.Name == v600.UpgradeName {
 		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{"burner", "cointrunk"},
+			Added: []string{burnermoduletypes.StoreKey, cointrunkmoduletypes.StoreKey},
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
