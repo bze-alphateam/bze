@@ -17,31 +17,31 @@ option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
 service Query {
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/bze/cointrunk/params";
+    option (google.api.http).get = "/bze/cointrunk/v1/params";
   }
   // Queries a list of AcceptedDomain items.
 	rpc AcceptedDomain(QueryAcceptedDomainRequest) returns (QueryAcceptedDomainResponse) {
-		option (google.api.http).get = "/bze/cointrunk/accepted_domain";
+		option (google.api.http).get = "/bze/cointrunk/v1/accepted_domain";
 	}
 
 // Queries a list of Publisher items.
 	rpc Publisher(QueryPublisherRequest) returns (QueryPublisherResponse) {
-		option (google.api.http).get = "/bze/cointrunk/publishers";
+		option (google.api.http).get = "/bze/cointrunk/v1/publishers";
 	}
 
 // Queries publisher by index/address.
 	rpc PublisherByIndex(QueryPublisherByIndexRequest) returns (QueryPublisherByIndexResponse) {
-		option (google.api.http).get = "/bze/cointrunk/publisher/{index}";
+		option (google.api.http).get = "/bze/cointrunk/v1/publisher/{index}";
 	}
 
 // Queries a list of ArticlesByPrefix items.
 	rpc AllArticles(QueryAllArticlesRequest) returns (QueryAllArticlesResponse) {
-		option (google.api.http).get = "/bze/cointrunk/all_articles";
+		option (google.api.http).get = "/bze/cointrunk/v1/articles";
 	}
 
 // Queries a list of AllAnonArticlesCounters items.
 	rpc AllAnonArticlesCounters(QueryAllAnonArticlesCountersRequest) returns (QueryAllAnonArticlesCountersResponse) {
-		option (google.api.http).get = "/bze/cointrunk/all_anon_articles_counters";
+		option (google.api.http).get = "/bze/cointrunk/v1/all_anon_articles_counters";
 	}
 
 // this line is used by starport scaffolding # 2
