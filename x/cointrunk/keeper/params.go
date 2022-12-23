@@ -25,7 +25,7 @@ func (k Keeper) AnonArticleLimit(ctx sdk.Context) (res uint64) {
 }
 
 // AnonArticleCost returns the AnonArticleCost param
-func (k Keeper) AnonArticleCost(ctx sdk.Context) (res string) {
+func (k Keeper) AnonArticleCost(ctx sdk.Context) (res sdk.Coin) {
 	k.paramstore.Get(ctx, types.KeyAnonArticleCost, &res)
 	return
 }

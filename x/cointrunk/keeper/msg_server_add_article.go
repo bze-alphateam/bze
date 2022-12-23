@@ -24,11 +24,7 @@ func (k msgServer) AddArticle(goCtx context.Context, msg *types.MsgAddArticle) (
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Paid article limit reached for current period")
 		}
 
-		articleCost, err := sdk.ParseCoinsNormalized(k.AnonArticleCost(ctx))
-		if err != nil {
-			panic(err)
-		}
-
+		articleCost := sdk.NewCoins(k.AnonArticleCost(ctx))
 		publisherAcc, err := sdk.AccAddressFromBech32(msg.Publisher)
 		if err != nil {
 			panic(err)

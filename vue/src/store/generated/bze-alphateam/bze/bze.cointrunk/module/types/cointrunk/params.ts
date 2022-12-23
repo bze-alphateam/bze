@@ -1,24 +1,25 @@
 /* eslint-disable */
 import * as Long from "long";
 import { util, configure, Writer, Reader } from "protobufjs/minimal";
+import { Coin } from "../cosmos/base/v1beta1/coin";
 
 export const protobufPackage = "bze.cointrunk";
 
 /** Params defines the parameters for the module. */
 export interface Params {
   anonArticleLimit: number;
-  anonArticleCost: string;
+  anonArticleCost: Coin | undefined;
 }
 
-const baseParams: object = { anonArticleLimit: 0, anonArticleCost: "" };
+const baseParams: object = { anonArticleLimit: 0 };
 
 export const Params = {
   encode(message: Params, writer: Writer = Writer.create()): Writer {
     if (message.anonArticleLimit !== 0) {
       writer.uint32(8).uint64(message.anonArticleLimit);
     }
-    if (message.anonArticleCost !== "") {
-      writer.uint32(18).string(message.anonArticleCost);
+    if (message.anonArticleCost !== undefined) {
+      Coin.encode(message.anonArticleCost, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
@@ -34,7 +35,7 @@ export const Params = {
           message.anonArticleLimit = longToNumber(reader.uint64() as Long);
           break;
         case 2:
-          message.anonArticleCost = reader.string();
+          message.anonArticleCost = Coin.decode(reader, reader.uint32());
           break;
         default:
           reader.skipType(tag & 7);
@@ -58,9 +59,9 @@ export const Params = {
       object.anonArticleCost !== undefined &&
       object.anonArticleCost !== null
     ) {
-      message.anonArticleCost = String(object.anonArticleCost);
+      message.anonArticleCost = Coin.fromJSON(object.anonArticleCost);
     } else {
-      message.anonArticleCost = "";
+      message.anonArticleCost = undefined;
     }
     return message;
   },
@@ -70,7 +71,9 @@ export const Params = {
     message.anonArticleLimit !== undefined &&
       (obj.anonArticleLimit = message.anonArticleLimit);
     message.anonArticleCost !== undefined &&
-      (obj.anonArticleCost = message.anonArticleCost);
+      (obj.anonArticleCost = message.anonArticleCost
+        ? Coin.toJSON(message.anonArticleCost)
+        : undefined);
     return obj;
   },
 
@@ -88,9 +91,9 @@ export const Params = {
       object.anonArticleCost !== undefined &&
       object.anonArticleCost !== null
     ) {
-      message.anonArticleCost = object.anonArticleCost;
+      message.anonArticleCost = Coin.fromPartial(object.anonArticleCost);
     } else {
-      message.anonArticleCost = "";
+      message.anonArticleCost = undefined;
     }
     return message;
   },

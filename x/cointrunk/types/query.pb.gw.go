@@ -558,17 +558,17 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bze", "cointrunk", "params"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"bze", "cointrunk", "v1", "params"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_AcceptedDomain_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bze", "cointrunk", "accepted_domain"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AcceptedDomain_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"bze", "cointrunk", "v1", "accepted_domain"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Publisher_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bze", "cointrunk", "publishers"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Publisher_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"bze", "cointrunk", "v1", "publishers"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_PublisherByIndex_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"bze", "cointrunk", "publisher", "index"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_PublisherByIndex_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"bze", "cointrunk", "v1", "publisher", "index"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_AllArticles_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bze", "cointrunk", "all_articles"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AllArticles_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"bze", "cointrunk", "v1", "articles"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_AllAnonArticlesCounters_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bze", "cointrunk", "all_anon_articles_counters"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_AllAnonArticlesCounters_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"bze", "cointrunk", "v1", "all_anon_articles_counters"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
