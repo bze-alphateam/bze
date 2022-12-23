@@ -42,7 +42,14 @@ export type CointrunkMsgAddArticleResponse = object;
 export interface CointrunkParams {
   /** @format uint64 */
   anonArticleLimit?: string;
-  anonArticleCost?: string;
+
+  /**
+   * Coin defines a token with a denomination and an amount.
+   *
+   * NOTE: The amount field is an Int which implements the custom method
+   * signatures required by gogoproto.
+   */
+  anonArticleCost?: V1Beta1Coin;
 }
 
 export interface CointrunkPublisher {
@@ -138,6 +145,17 @@ export interface RpcStatus {
   code?: number;
   message?: string;
   details?: ProtobufAny[];
+}
+
+/**
+* Coin defines a token with a denomination and an amount.
+
+NOTE: The amount field is an Int which implements the custom method
+signatures required by gogoproto.
+*/
+export interface V1Beta1Coin {
+  denom?: string;
+  amount?: string;
 }
 
 /**
@@ -405,7 +423,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @tags Query
    * @name QueryAcceptedDomain
    * @summary Queries a list of AcceptedDomain items.
-   * @request GET:/bze/cointrunk/accepted_domain
+   * @request GET:/bze/cointrunk/v1/accepted_domain
    */
   queryAcceptedDomain = (
     query?: {
@@ -418,7 +436,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     params: RequestParams = {},
   ) =>
     this.request<CointrunkQueryAcceptedDomainResponse, RpcStatus>({
-      path: `/bze/cointrunk/accepted_domain`,
+      path: `/bze/cointrunk/v1/accepted_domain`,
       method: "GET",
       query: query,
       format: "json",
@@ -431,7 +449,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @tags Query
    * @name QueryAllAnonArticlesCounters
    * @summary Queries a list of AllAnonArticlesCounters items.
-   * @request GET:/bze/cointrunk/all_anon_articles_counters
+   * @request GET:/bze/cointrunk/v1/all_anon_articles_counters
    */
   queryAllAnonArticlesCounters = (
     query?: {
@@ -444,7 +462,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     params: RequestParams = {},
   ) =>
     this.request<CointrunkQueryAllAnonArticlesCountersResponse, RpcStatus>({
-      path: `/bze/cointrunk/all_anon_articles_counters`,
+      path: `/bze/cointrunk/v1/all_anon_articles_counters`,
       method: "GET",
       query: query,
       format: "json",
@@ -457,7 +475,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @tags Query
    * @name QueryAllArticles
    * @summary Queries a list of ArticlesByPrefix items.
-   * @request GET:/bze/cointrunk/all_articles
+   * @request GET:/bze/cointrunk/v1/articles
    */
   queryAllArticles = (
     query?: {
@@ -470,7 +488,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     params: RequestParams = {},
   ) =>
     this.request<CointrunkQueryAllArticlesResponse, RpcStatus>({
-      path: `/bze/cointrunk/all_articles`,
+      path: `/bze/cointrunk/v1/articles`,
       method: "GET",
       query: query,
       format: "json",
@@ -483,11 +501,11 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @tags Query
    * @name QueryParams
    * @summary Parameters queries the parameters of the module.
-   * @request GET:/bze/cointrunk/params
+   * @request GET:/bze/cointrunk/v1/params
    */
   queryParams = (params: RequestParams = {}) =>
     this.request<CointrunkQueryParamsResponse, RpcStatus>({
-      path: `/bze/cointrunk/params`,
+      path: `/bze/cointrunk/v1/params`,
       method: "GET",
       format: "json",
       ...params,
@@ -499,11 +517,11 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @tags Query
    * @name QueryPublisherByIndex
    * @summary Queries publisher by index/address.
-   * @request GET:/bze/cointrunk/publisher/{index}
+   * @request GET:/bze/cointrunk/v1/publisher/{index}
    */
   queryPublisherByIndex = (index: string, params: RequestParams = {}) =>
     this.request<CointrunkQueryPublisherByIndexResponse, RpcStatus>({
-      path: `/bze/cointrunk/publisher/${index}`,
+      path: `/bze/cointrunk/v1/publisher/${index}`,
       method: "GET",
       format: "json",
       ...params,
@@ -515,7 +533,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @tags Query
    * @name QueryPublisher
    * @summary Queries a list of Publisher items.
-   * @request GET:/bze/cointrunk/publishers
+   * @request GET:/bze/cointrunk/v1/publishers
    */
   queryPublisher = (
     query?: {
@@ -528,7 +546,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     params: RequestParams = {},
   ) =>
     this.request<CointrunkQueryPublisherResponse, RpcStatus>({
-      path: `/bze/cointrunk/publishers`,
+      path: `/bze/cointrunk/v1/publishers`,
       method: "GET",
       query: query,
       format: "json",

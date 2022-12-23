@@ -162,7 +162,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /bze/cointrunk/accepted_domain:
+  /bze/cointrunk/v1/accepted_domain:
     get:
       summary: Queries a list of AcceptedDomain items.
       operationId: BzeCointrunkAcceptedDomain
@@ -285,7 +285,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /bze/cointrunk/all_anon_articles_counters:
+  /bze/cointrunk/v1/all_anon_articles_counters:
     get:
       summary: Queries a list of AllAnonArticlesCounters items.
       operationId: BzeCointrunkAllAnonArticlesCounters
@@ -409,7 +409,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /bze/cointrunk/all_articles:
+  /bze/cointrunk/v1/articles:
     get:
       summary: Queries a list of ArticlesByPrefix items.
       operationId: BzeCointrunkAllArticles
@@ -544,7 +544,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /bze/cointrunk/params:
+  /bze/cointrunk/v1/params:
     get:
       summary: Parameters queries the parameters of the module.
       operationId: BzeCointrunkParams
@@ -562,7 +562,20 @@ paths:
                     type: string
                     format: uint64
                   anonArticleCost:
-                    type: string
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -586,7 +599,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  '/bze/cointrunk/publisher/{index}':
+  '/bze/cointrunk/v1/publisher/{index}':
     get:
       summary: Queries publisher by index/address.
       operationId: BzeCointrunkPublisherByIndex
@@ -636,7 +649,7 @@ paths:
           type: string
       tags:
         - Query
-  /bze/cointrunk/publishers:
+  /bze/cointrunk/v1/publishers:
     get:
       summary: Queries a list of Publisher items.
       operationId: BzeCointrunkPublisher
@@ -32692,7 +32705,17 @@ definitions:
         type: string
         format: uint64
       anonArticleCost:
-        type: string
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
     description: Params defines the parameters for the module.
   bze.cointrunk.Publisher:
     type: object
@@ -32844,7 +32867,20 @@ definitions:
             type: string
             format: uint64
           anonArticleCost:
-            type: string
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   bze.cointrunk.QueryPublisherByIndexResponse:
     type: object
@@ -32909,6 +32945,18 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
+  cosmos.base.v1beta1.Coin:
+    type: object
+    properties:
+      denom:
+        type: string
+      amount:
+        type: string
+    description: |-
+      Coin defines a token with a denomination and an amount.
+
+      NOTE: The amount field is an Int which implements the custom method
+      signatures required by gogoproto.
   bze.scavenge.Commit:
     type: object
     properties:
@@ -35117,18 +35165,6 @@ definitions:
     description: |-
       SendEnabled maps coin denom to a send_enabled status (whether a denom is
       sendable).
-  cosmos.base.v1beta1.Coin:
-    type: object
-    properties:
-      denom:
-        type: string
-      amount:
-        type: string
-    description: |-
-      Coin defines a token with a denomination and an amount.
-
-      NOTE: The amount field is an Int which implements the custom method
-      signatures required by gogoproto.
   cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse:
     type: object
     properties:

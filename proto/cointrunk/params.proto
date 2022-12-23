@@ -2,6 +2,7 @@ syntax = "proto3";
 package bze.cointrunk;
 
 import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
 
@@ -10,5 +11,9 @@ message Params {
   option (gogoproto.goproto_stringer) = false;
   
   uint64 anonArticleLimit = 1 [(gogoproto.moretags) = "yaml:\"anon_article_limit\""];
-  string anonArticleCost = 2 [(gogoproto.moretags) = "yaml:\"anon_article_cost\""];
+  cosmos.base.v1beta1.Coin anonArticleCost = 2 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"anon_article_cost\"",
+    (gogoproto.jsontag)      = "anon_article_cost,omitempty"
+  ];
 }

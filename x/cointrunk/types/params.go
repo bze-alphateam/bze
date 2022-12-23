@@ -3,12 +3,16 @@ package types
 import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"gopkg.in/yaml.v2"
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
+
+const (
+	DefaultDenom                 = "ubze"
+	DefaultAnonArticleCostAmount = 25000000000
+)
 
 var (
 	KeyAnonArticleLimit            = []byte("AnonArticleLimit")
@@ -16,8 +20,8 @@ var (
 )
 
 var (
-	KeyAnonArticleCost            = []byte("AnonArticleCost")
-	DefaultAnonArticleCost string = "50000000000ubze"
+	KeyAnonArticleCost     = []byte("AnonArticleCost")
+	DefaultAnonArticleCost = sdk.NewCoin(DefaultDenom, sdk.NewInt(DefaultAnonArticleCostAmount))
 )
 
 // ParamKeyTable the param key table for launch module
@@ -28,7 +32,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 // NewParams creates a new Params instance
 func NewParams(
 	anonArticleLimit uint64,
-	anonArticleCost string,
+	anonArticleCost sdk.Coin,
 ) Params {
 	return Params{
 		AnonArticleLimit: anonArticleLimit,
@@ -88,16 +92,13 @@ func validateAnonArticleLimit(v interface{}) error {
 
 // validateAnonArticleCost validates the AnonArticleCost param
 func validateAnonArticleCost(v interface{}) error {
-	anonArticleCost, ok := v.(string)
+	anonArticleCost, ok := v.(sdk.Coin)
 	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", v)
+		return fmt.Errorf("invalid parameter anonArticleLimit type: %T", v)
 	}
-
-	_, err := sdk.ParseCoinsNormalized(anonArticleCost)
-	if err != nil {
-		return err
+	if !anonArticleCost.IsValid() {
+		return fmt.Errorf("invalid anonArticleLimit coin: %s", anonArticleCost.String())
 	}
-	_ = anonArticleCost
 
 	return nil
 }
