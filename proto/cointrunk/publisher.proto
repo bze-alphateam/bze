@@ -10,4 +10,5 @@ message Publisher {
   bool active = 3;
   uint32 articlesCount = 4;
   int64 createdAt = 5;
+  int64 respect = 6;
 }
