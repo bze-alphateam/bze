@@ -29,6 +29,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -156,6 +159,7 @@ var (
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
 		feegrantmodule.AppModuleBasic{},
+		authzmodule.AppModuleBasic{},
 		ibc.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
@@ -216,6 +220,7 @@ type App struct {
 
 	// keepers
 	AccountKeeper    authkeeper.AccountKeeper
+	AuthzKeeper      *authzkeeper.Keeper
 	BankKeeper       bankkeeper.Keeper
 	CapabilityKeeper *capabilitykeeper.Keeper
 	StakingKeeper    stakingkeeper.Keeper
@@ -281,6 +286,7 @@ func New(
 		evidencetypes.StoreKey,
 		ibctransfertypes.StoreKey,
 		capabilitytypes.StoreKey,
+		authzkeeper.StoreKey,
 		scavengemoduletypes.StoreKey,
 		cointrunkmoduletypes.StoreKey,
 		burnermoduletypes.StoreKey,
@@ -317,6 +323,14 @@ func New(
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms,
 	)
+
+	authzKeeper := authzkeeper.NewKeeper(
+		keys[authzkeeper.StoreKey],
+		appCodec,
+		bApp.MsgServiceRouter(),
+	)
+	app.AuthzKeeper = &authzKeeper
+
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.ModuleAccountAddrs(),
 	)
@@ -446,6 +460,7 @@ func New(
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		authzmodule.NewAppModule(appCodec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
@@ -479,6 +494,7 @@ func New(
 		evidencetypes.ModuleName,
 		scavengemoduletypes.ModuleName,
 		vestingtypes.ModuleName,
+		authz.ModuleName,
 		ibctransfertypes.ModuleName,
 		cointrunkmoduletypes.ModuleName,
 		burnermoduletypes.ModuleName,
@@ -502,6 +518,7 @@ func New(
 		evidencetypes.ModuleName,
 		scavengemoduletypes.ModuleName,
 		vestingtypes.ModuleName,
+		authz.ModuleName,
 		ibctransfertypes.ModuleName,
 		cointrunkmoduletypes.ModuleName,
 		burnermoduletypes.ModuleName,
@@ -530,6 +547,7 @@ func New(
 		feegrant.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
+		authz.ModuleName,
 		paramstypes.ModuleName,
 		cointrunkmoduletypes.ModuleName,
 		burnermoduletypes.ModuleName,
@@ -603,7 +621,7 @@ func (app *App) setupUpgradeHandlers() {
 
 	if upgradeInfo.Name == v600.UpgradeName {
 		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{burnermoduletypes.StoreKey, cointrunkmoduletypes.StoreKey},
+			Added: []string{burnermoduletypes.StoreKey, cointrunkmoduletypes.StoreKey, authzkeeper.StoreKey},
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
