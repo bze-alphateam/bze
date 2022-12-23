@@ -14,6 +14,7 @@ func (k Keeper) HandlePublisherProposal(ctx sdk.Context, proposal *types.Publish
 		publisher.Address = proposal.Address
 		publisher.CreatedAt = ctx.BlockHeader().Time.Unix()
 		publisher.ArticlesCount = 0
+		publisher.Respect = 0
 	}
 	k.SetPublisher(ctx, publisher)
 	return nil
