@@ -131,31 +131,161 @@ func (m *MsgAddArticleResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddArticleResponse proto.InternalMessageInfo
 
+type MsgPayPublisherRespect struct {
+	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
+	Amount  string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+}
+
+func (m *MsgPayPublisherRespect) Reset()         { *m = MsgPayPublisherRespect{} }
+func (m *MsgPayPublisherRespect) String() string { return proto.CompactTextString(m) }
+func (*MsgPayPublisherRespect) ProtoMessage()    {}
+func (*MsgPayPublisherRespect) Descriptor() ([]byte, []int) {
+	return fileDescriptor_776bb1586e9b1fcd, []int{2}
+}
+func (m *MsgPayPublisherRespect) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgPayPublisherRespect) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgPayPublisherRespect.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgPayPublisherRespect) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgPayPublisherRespect.Merge(m, src)
+}
+func (m *MsgPayPublisherRespect) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgPayPublisherRespect) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgPayPublisherRespect.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgPayPublisherRespect proto.InternalMessageInfo
+
+func (m *MsgPayPublisherRespect) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgPayPublisherRespect) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *MsgPayPublisherRespect) GetAmount() string {
+	if m != nil {
+		return m.Amount
+	}
+	return ""
+}
+
+type MsgPayPublisherRespectResponse struct {
+	RespectPaid        uint64 `protobuf:"varint,1,opt,name=respectPaid,proto3" json:"respectPaid,omitempty"`
+	PublisherReward    string `protobuf:"bytes,2,opt,name=publisherReward,proto3" json:"publisherReward,omitempty"`
+	CommunityPoolFunds string `protobuf:"bytes,3,opt,name=communityPoolFunds,proto3" json:"communityPoolFunds,omitempty"`
+}
+
+func (m *MsgPayPublisherRespectResponse) Reset()         { *m = MsgPayPublisherRespectResponse{} }
+func (m *MsgPayPublisherRespectResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgPayPublisherRespectResponse) ProtoMessage()    {}
+func (*MsgPayPublisherRespectResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_776bb1586e9b1fcd, []int{3}
+}
+func (m *MsgPayPublisherRespectResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgPayPublisherRespectResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgPayPublisherRespectResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgPayPublisherRespectResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgPayPublisherRespectResponse.Merge(m, src)
+}
+func (m *MsgPayPublisherRespectResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgPayPublisherRespectResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgPayPublisherRespectResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgPayPublisherRespectResponse proto.InternalMessageInfo
+
+func (m *MsgPayPublisherRespectResponse) GetRespectPaid() uint64 {
+	if m != nil {
+		return m.RespectPaid
+	}
+	return 0
+}
+
+func (m *MsgPayPublisherRespectResponse) GetPublisherReward() string {
+	if m != nil {
+		return m.PublisherReward
+	}
+	return ""
+}
+
+func (m *MsgPayPublisherRespectResponse) GetCommunityPoolFunds() string {
+	if m != nil {
+		return m.CommunityPoolFunds
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*MsgAddArticle)(nil), "bze.cointrunk.MsgAddArticle")
 	proto.RegisterType((*MsgAddArticleResponse)(nil), "bze.cointrunk.MsgAddArticleResponse")
+	proto.RegisterType((*MsgPayPublisherRespect)(nil), "bze.cointrunk.MsgPayPublisherRespect")
+	proto.RegisterType((*MsgPayPublisherRespectResponse)(nil), "bze.cointrunk.MsgPayPublisherRespectResponse")
 }
 
 func init() { proto.RegisterFile("cointrunk/tx.proto", fileDescriptor_776bb1586e9b1fcd) }
 
 var fileDescriptor_776bb1586e9b1fcd = []byte{
-	// 244 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4a, 0xce, 0xcf, 0xcc,
-	0x2b, 0x29, 0x2a, 0xcd, 0xcb, 0xd6, 0x2f, 0xa9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2,
-	0x4d, 0xaa, 0x4a, 0xd5, 0x83, 0x8b, 0x2b, 0xe5, 0x73, 0xf1, 0xfa, 0x16, 0xa7, 0x3b, 0xa6, 0xa4,
-	0x38, 0x16, 0x95, 0x64, 0x26, 0xe7, 0xa4, 0x0a, 0xc9, 0x70, 0x71, 0x16, 0x94, 0x26, 0xe5, 0x64,
-	0x16, 0x67, 0xa4, 0x16, 0x49, 0x30, 0x2a, 0x30, 0x6a, 0x70, 0x06, 0x21, 0x04, 0x84, 0x44, 0xb8,
-	0x58, 0x4b, 0x32, 0x4b, 0x72, 0x52, 0x25, 0x98, 0xc0, 0x32, 0x10, 0x8e, 0x90, 0x00, 0x17, 0x73,
-	0x69, 0x51, 0x8e, 0x04, 0x33, 0x58, 0x0c, 0xc4, 0x14, 0x92, 0xe0, 0x62, 0x2f, 0xc8, 0x4c, 0x2e,
-	0x29, 0x2d, 0x4a, 0x95, 0x60, 0x01, 0x8b, 0xc2, 0xb8, 0x4a, 0xe2, 0x5c, 0xa2, 0x28, 0x16, 0x06,
-	0xa5, 0x16, 0x17, 0xe4, 0xe7, 0x15, 0xa7, 0x1a, 0x85, 0x73, 0x31, 0xfb, 0x16, 0xa7, 0x0b, 0x05,
-	0x70, 0x71, 0x21, 0xbb, 0x46, 0x0f, 0xc5, 0xb9, 0x7a, 0x28, 0x5a, 0xa5, 0x54, 0xf0, 0xc9, 0xc2,
-	0x0c, 0x76, 0xf2, 0x38, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18,
-	0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0xbd, 0xf4,
-	0xcc, 0x92, 0x8c, 0xd2, 0x24, 0xbd, 0xe4, 0xfc, 0x5c, 0xfd, 0xa4, 0xaa, 0x54, 0xdd, 0xc4, 0x9c,
-	0x82, 0x8c, 0xc4, 0x92, 0xd4, 0x44, 0x30, 0x4f, 0xbf, 0x42, 0x1f, 0x29, 0xf8, 0x2a, 0x0b, 0x52,
-	0x8b, 0x93, 0xd8, 0xc0, 0x41, 0x68, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0x9e, 0x64, 0xd1, 0x3c,
-	0x58, 0x01, 0x00, 0x00,
+	// 372 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0xcd, 0x4a, 0xf3, 0x40,
+	0x14, 0x6d, 0xbe, 0xf6, 0xab, 0xf4, 0x4a, 0x51, 0x46, 0xad, 0xa1, 0x48, 0x28, 0x41, 0xa1, 0x9b,
+	0x26, 0xa0, 0x4f, 0x50, 0x17, 0xe2, 0xa6, 0x10, 0xba, 0x74, 0x37, 0xc9, 0x0c, 0xe9, 0xd0, 0x24,
+	0x13, 0xe6, 0x07, 0xdb, 0x3e, 0x85, 0x0f, 0xe0, 0xe3, 0xb8, 0x70, 0xd9, 0xa5, 0x4b, 0x69, 0x5f,
+	0x44, 0x92, 0x26, 0xfd, 0xd1, 0x20, 0xee, 0x72, 0xce, 0xb9, 0x37, 0xe7, 0xcc, 0xbd, 0x17, 0x50,
+	0xc0, 0x59, 0xa2, 0x84, 0x4e, 0xa6, 0xae, 0x9a, 0x39, 0xa9, 0xe0, 0x8a, 0xa3, 0xb6, 0xbf, 0xa0,
+	0xce, 0x96, 0xb7, 0x39, 0xb4, 0x47, 0x32, 0x1c, 0x12, 0x32, 0x14, 0x8a, 0x05, 0x11, 0x45, 0x57,
+	0xd0, 0x4a, 0xb5, 0x1f, 0x31, 0x39, 0xa1, 0xc2, 0x34, 0x7a, 0x46, 0xbf, 0x35, 0xde, 0x11, 0xe8,
+	0x1c, 0xfe, 0x2b, 0xa6, 0x22, 0x6a, 0xfe, 0xcb, 0x95, 0x0d, 0x40, 0xa7, 0x50, 0xd7, 0x22, 0x32,
+	0xeb, 0x39, 0x97, 0x7d, 0x22, 0x13, 0x8e, 0x52, 0x16, 0x28, 0x2d, 0xa8, 0xd9, 0xc8, 0xd9, 0x12,
+	0xda, 0x97, 0x70, 0x71, 0x60, 0x38, 0xa6, 0x32, 0xe5, 0x89, 0xa4, 0x36, 0x81, 0xce, 0x48, 0x86,
+	0x1e, 0x9e, 0x7b, 0xa5, 0x5b, 0x26, 0xd1, 0x40, 0x65, 0x3f, 0x0b, 0x04, 0xc5, 0x8a, 0x97, 0x81,
+	0x4a, 0x98, 0x29, 0x98, 0x10, 0x41, 0xa5, 0x2c, 0x02, 0x95, 0x10, 0x75, 0xa0, 0x89, 0x63, 0xae,
+	0x13, 0x55, 0xa4, 0x2a, 0x90, 0xfd, 0x6a, 0x80, 0x55, 0x6d, 0x53, 0x06, 0x41, 0x3d, 0x38, 0x16,
+	0x1b, 0xca, 0xc3, 0x8c, 0xe4, 0x96, 0x8d, 0xf1, 0x3e, 0x85, 0xfa, 0x70, 0x92, 0xee, 0xba, 0x9f,
+	0xb1, 0x20, 0x85, 0xfd, 0x77, 0x1a, 0x39, 0xd9, 0x0e, 0xe2, 0x58, 0x27, 0x4c, 0xcd, 0x3d, 0xce,
+	0xa3, 0x07, 0x9d, 0x10, 0x59, 0x44, 0xaa, 0x50, 0x6e, 0xdf, 0x0c, 0xa8, 0x8f, 0x64, 0x88, 0x3c,
+	0x80, 0xfd, 0x9d, 0x38, 0x07, 0x4b, 0x73, 0x0e, 0x06, 0xd8, 0xbd, 0xfe, 0x4d, 0xdd, 0xbe, 0x6a,
+	0x0a, 0x67, 0x55, 0xb3, 0xbd, 0xf9, 0xd9, 0x5c, 0x51, 0xd6, 0x1d, 0xfc, 0xa9, 0xac, 0x34, 0xbb,
+	0x7f, 0x7c, 0x5f, 0x59, 0xc6, 0x72, 0x65, 0x19, 0x9f, 0x2b, 0xcb, 0x78, 0x59, 0x5b, 0xb5, 0xe5,
+	0xda, 0xaa, 0x7d, 0xac, 0xad, 0xda, 0x93, 0x13, 0x32, 0x35, 0xd1, 0xbe, 0x13, 0xf0, 0xd8, 0xf5,
+	0x17, 0x74, 0x80, 0xa3, 0x74, 0x82, 0x15, 0xc5, 0x39, 0x72, 0x67, 0xee, 0xde, 0xc5, 0xce, 0x53,
+	0x2a, 0xfd, 0x66, 0x7e, 0xb5, 0x77, 0x5f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xc0, 0xf8, 0x48, 0x2c,
+	0xcb, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -171,6 +301,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
 	AddArticle(ctx context.Context, in *MsgAddArticle, opts ...grpc.CallOption) (*MsgAddArticleResponse, error)
+	PayPublisherRespect(ctx context.Context, in *MsgPayPublisherRespect, opts ...grpc.CallOption) (*MsgPayPublisherRespectResponse, error)
 }
 
 type msgClient struct {
@@ -190,9 +321,19 @@ func (c *msgClient) AddArticle(ctx context.Context, in *MsgAddArticle, opts ...g
 	return out, nil
 }
 
+func (c *msgClient) PayPublisherRespect(ctx context.Context, in *MsgPayPublisherRespect, opts ...grpc.CallOption) (*MsgPayPublisherRespectResponse, error) {
+	out := new(MsgPayPublisherRespectResponse)
+	err := c.cc.Invoke(ctx, "/bze.cointrunk.Msg/PayPublisherRespect", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	AddArticle(context.Context, *MsgAddArticle) (*MsgAddArticleResponse, error)
+	PayPublisherRespect(context.Context, *MsgPayPublisherRespect) (*MsgPayPublisherRespectResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -201,6 +342,9 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) AddArticle(ctx context.Context, req *MsgAddArticle) (*MsgAddArticleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddArticle not implemented")
+}
+func (*UnimplementedMsgServer) PayPublisherRespect(ctx context.Context, req *MsgPayPublisherRespect) (*MsgPayPublisherRespectResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PayPublisherRespect not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -225,6 +369,24 @@ func _Msg_AddArticle_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_PayPublisherRespect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgPayPublisherRespect)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).PayPublisherRespect(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.cointrunk.Msg/PayPublisherRespect",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).PayPublisherRespect(ctx, req.(*MsgPayPublisherRespect))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "bze.cointrunk.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -232,6 +394,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddArticle",
 			Handler:    _Msg_AddArticle_Handler,
+		},
+		{
+			MethodName: "PayPublisherRespect",
+			Handler:    _Msg_PayPublisherRespect_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -312,6 +478,92 @@ func (m *MsgAddArticleResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgPayPublisherRespect) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgPayPublisherRespect) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgPayPublisherRespect) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Amount) > 0 {
+		i -= len(m.Amount)
+		copy(dAtA[i:], m.Amount)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Amount)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgPayPublisherRespectResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgPayPublisherRespectResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgPayPublisherRespectResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.CommunityPoolFunds) > 0 {
+		i -= len(m.CommunityPoolFunds)
+		copy(dAtA[i:], m.CommunityPoolFunds)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.CommunityPoolFunds)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.PublisherReward) > 0 {
+		i -= len(m.PublisherReward)
+		copy(dAtA[i:], m.PublisherReward)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.PublisherReward)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.RespectPaid != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.RespectPaid))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -354,6 +606,47 @@ func (m *MsgAddArticleResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
+	return n
+}
+
+func (m *MsgPayPublisherRespect) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Amount)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgPayPublisherRespectResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.RespectPaid != 0 {
+		n += 1 + sovTx(uint64(m.RespectPaid))
+	}
+	l = len(m.PublisherReward)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.CommunityPoolFunds)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
 	return n
 }
 
@@ -570,6 +863,285 @@ func (m *MsgAddArticleResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgAddArticleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgPayPublisherRespect) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgPayPublisherRespect: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgPayPublisherRespect: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgPayPublisherRespectResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgPayPublisherRespectResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgPayPublisherRespectResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RespectPaid", wireType)
+			}
+			m.RespectPaid = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.RespectPaid |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PublisherReward", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PublisherReward = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CommunityPoolFunds", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CommunityPoolFunds = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

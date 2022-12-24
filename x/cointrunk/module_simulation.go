@@ -28,6 +28,10 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgAddArticle int = 100
 
+	opWeightMsgPayPublisherRespect = "op_weight_msg_pay_publisher_respect"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgPayPublisherRespect int = 100
+
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -78,6 +82,17 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgAddArticle,
 		cointrunksimulation.SimulateMsgAddArticle(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
+	var weightMsgPayPublisherRespect int
+	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgPayPublisherRespect, &weightMsgPayPublisherRespect, nil,
+		func(_ *rand.Rand) {
+			weightMsgPayPublisherRespect = defaultWeightMsgPayPublisherRespect
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgPayPublisherRespect,
+		cointrunksimulation.SimulateMsgPayPublisherRespect(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
 	// this line is used by starport scaffolding # simapp/module/operation

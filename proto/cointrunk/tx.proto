@@ -8,6 +8,7 @@ option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
 // Msg defines the Msg service.
 service Msg {
       rpc AddArticle(MsgAddArticle) returns (MsgAddArticleResponse);
+  rpc PayPublisherRespect(MsgPayPublisherRespect) returns (MsgPayPublisherRespectResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -19,6 +20,18 @@ message MsgAddArticle {
 }
 
 message MsgAddArticleResponse {
+}
+
+message MsgPayPublisherRespect {
+  string creator = 1;
+  string address = 2;
+  string amount = 3;
+}
+
+message MsgPayPublisherRespectResponse {
+  uint64 respectPaid = 1;
+  string publisherReward = 2;
+  string communityPoolFunds = 3;
 }
 
 // this line is used by starport scaffolding # proto/tx/message

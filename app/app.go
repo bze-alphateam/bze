@@ -398,6 +398,7 @@ func New(
 		app.BankKeeper,
 		app.GovKeeper,
 		app.AccountKeeper,
+		app.DistrKeeper,
 	)
 
 	app.BurnerKeeper = *burnermodulekeeper.NewKeeper(
@@ -410,7 +411,7 @@ func New(
 	)
 
 	scavengeModule := scavengemodule.NewAppModule(appCodec, app.ScavengeKeeper)
-	cointrunkModule := cointrunkmodule.NewAppModule(appCodec, app.CointrunkKeeper, app.AccountKeeper, app.BankKeeper)
+	cointrunkModule := cointrunkmodule.NewAppModule(appCodec, app.CointrunkKeeper, app.AccountKeeper, app.BankKeeper, app.DistrKeeper)
 	burnerModule := burnermodule.NewAppModule(appCodec, app.BurnerKeeper, app.AccountKeeper, app.BankKeeper)
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 
