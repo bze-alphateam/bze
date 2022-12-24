@@ -10,6 +10,7 @@ export interface Publisher {
   active: boolean;
   articlesCount: number;
   createdAt: number;
+  respect: number;
 }
 
 const basePublisher: object = {
@@ -18,6 +19,7 @@ const basePublisher: object = {
   active: false,
   articlesCount: 0,
   createdAt: 0,
+  respect: 0,
 };
 
 export const Publisher = {
@@ -36,6 +38,9 @@ export const Publisher = {
     }
     if (message.createdAt !== 0) {
       writer.uint32(40).int64(message.createdAt);
+    }
+    if (message.respect !== 0) {
+      writer.uint32(48).int64(message.respect);
     }
     return writer;
   },
@@ -61,6 +66,9 @@ export const Publisher = {
           break;
         case 5:
           message.createdAt = longToNumber(reader.int64() as Long);
+          break;
+        case 6:
+          message.respect = longToNumber(reader.int64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -97,6 +105,11 @@ export const Publisher = {
     } else {
       message.createdAt = 0;
     }
+    if (object.respect !== undefined && object.respect !== null) {
+      message.respect = Number(object.respect);
+    } else {
+      message.respect = 0;
+    }
     return message;
   },
 
@@ -108,6 +121,7 @@ export const Publisher = {
     message.articlesCount !== undefined &&
       (obj.articlesCount = message.articlesCount);
     message.createdAt !== undefined && (obj.createdAt = message.createdAt);
+    message.respect !== undefined && (obj.respect = message.respect);
     return obj;
   },
 
@@ -137,6 +151,11 @@ export const Publisher = {
       message.createdAt = object.createdAt;
     } else {
       message.createdAt = 0;
+    }
+    if (object.respect !== undefined && object.respect !== null) {
+      message.respect = object.respect;
+    } else {
+      message.respect = 0;
     }
     return message;
   },

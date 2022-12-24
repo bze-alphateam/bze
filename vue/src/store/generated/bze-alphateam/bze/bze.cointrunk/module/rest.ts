@@ -36,6 +36,13 @@ export interface CointrunkArticle {
 
 export type CointrunkMsgAddArticleResponse = object;
 
+export interface CointrunkMsgPayPublisherRespectResponse {
+  /** @format uint64 */
+  respectPaid?: string;
+  publisherReward?: string;
+  communityPoolFunds?: string;
+}
+
 /**
  * Params defines the parameters for the module.
  */
@@ -62,6 +69,9 @@ export interface CointrunkPublisher {
 
   /** @format int64 */
   createdAt?: string;
+
+  /** @format int64 */
+  respect?: string;
 }
 
 export interface CointrunkQueryAcceptedDomainResponse {

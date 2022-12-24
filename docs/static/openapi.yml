@@ -624,6 +624,9 @@ paths:
                   createdAt:
                     type: string
                     format: int64
+                  respect:
+                    type: string
+                    format: int64
         default:
           description: An unexpected error response.
           schema:
@@ -674,6 +677,9 @@ paths:
                       type: integer
                       format: int64
                     createdAt:
+                      type: string
+                      format: int64
+                    respect:
                       type: string
                       format: int64
               pagination:
@@ -32698,6 +32704,16 @@ definitions:
         format: int64
   bze.cointrunk.MsgAddArticleResponse:
     type: object
+  bze.cointrunk.MsgPayPublisherRespectResponse:
+    type: object
+    properties:
+      respectPaid:
+        type: string
+        format: uint64
+      publisherReward:
+        type: string
+      communityPoolFunds:
+        type: string
   bze.cointrunk.Params:
     type: object
     properties:
@@ -32730,6 +32746,9 @@ definitions:
         type: integer
         format: int64
       createdAt:
+        type: string
+        format: int64
+      respect:
         type: string
         format: int64
   bze.cointrunk.QueryAcceptedDomainResponse:
@@ -32900,6 +32919,9 @@ definitions:
           createdAt:
             type: string
             format: int64
+          respect:
+            type: string
+            format: int64
   bze.cointrunk.QueryPublisherResponse:
     type: object
     properties:
@@ -32918,6 +32940,9 @@ definitions:
               type: integer
               format: int64
             createdAt:
+              type: string
+              format: int64
+            respect:
               type: string
               format: int64
       pagination:
