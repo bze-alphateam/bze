@@ -30,8 +30,8 @@ message MsgPayPublisherRespect {
 
 message MsgPayPublisherRespectResponse {
   uint64 respectPaid = 1;
-  string publisherReward = 2;
-  string communityPoolFunds = 3;
+  uint64 publisherReward = 2;
+  uint64 communityPoolFunds = 3;
 }
 
 // this line is used by starport scaffolding # proto/tx/message

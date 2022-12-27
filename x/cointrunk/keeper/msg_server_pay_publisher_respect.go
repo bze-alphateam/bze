@@ -68,7 +68,7 @@ func (k msgServer) PayPublisherRespect(goCtx context.Context, msg *types.MsgPayP
 
 	return &types.MsgPayPublisherRespectResponse{
 		RespectPaid:        coin.Amount.Uint64(),
-		PublisherReward:    publisherRewardCoin.String(),
-		CommunityPoolFunds: taxPaidCoin.String(),
+		PublisherReward:    publisherRewardCoin.Amount.Uint64(),
+		CommunityPoolFunds: taxPaidCoin.Amount.Uint64(),
 	}, nil
 }
