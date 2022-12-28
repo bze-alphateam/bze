@@ -11,31 +11,31 @@ export const protobufPackage = "bze.cointrunk.v1";
 /** GenesisState defines the cointrunk module's genesis state. */
 export interface GenesisState {
   params: Params | undefined;
-  PublisherList: Publisher[];
-  AcceptedDomainList: AcceptedDomain[];
-  ArticleList: Article[];
+  publisher_list: Publisher[];
+  accepted_domain_list: AcceptedDomain[];
+  article_list: Article[];
   /** this line is used by starport scaffolding # genesis/proto/state */
-  articlesCounter: number;
+  articles_counter: number;
 }
 
-const baseGenesisState: object = { articlesCounter: 0 };
+const baseGenesisState: object = { articles_counter: 0 };
 
 export const GenesisState = {
   encode(message: GenesisState, writer: Writer = Writer.create()): Writer {
     if (message.params !== undefined) {
       Params.encode(message.params, writer.uint32(10).fork()).ldelim();
     }
-    for (const v of message.PublisherList) {
+    for (const v of message.publisher_list) {
       Publisher.encode(v!, writer.uint32(18).fork()).ldelim();
     }
-    for (const v of message.AcceptedDomainList) {
+    for (const v of message.accepted_domain_list) {
       AcceptedDomain.encode(v!, writer.uint32(26).fork()).ldelim();
     }
-    for (const v of message.ArticleList) {
+    for (const v of message.article_list) {
       Article.encode(v!, writer.uint32(34).fork()).ldelim();
     }
-    if (message.articlesCounter !== 0) {
-      writer.uint32(40).uint64(message.articlesCounter);
+    if (message.articles_counter !== 0) {
+      writer.uint32(40).uint64(message.articles_counter);
     }
     return writer;
   },
@@ -44,9 +44,9 @@ export const GenesisState = {
     const reader = input instanceof Uint8Array ? new Reader(input) : input;
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseGenesisState } as GenesisState;
-    message.PublisherList = [];
-    message.AcceptedDomainList = [];
-    message.ArticleList = [];
+    message.publisher_list = [];
+    message.accepted_domain_list = [];
+    message.article_list = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -54,18 +54,20 @@ export const GenesisState = {
           message.params = Params.decode(reader, reader.uint32());
           break;
         case 2:
-          message.PublisherList.push(Publisher.decode(reader, reader.uint32()));
+          message.publisher_list.push(
+            Publisher.decode(reader, reader.uint32())
+          );
           break;
         case 3:
-          message.AcceptedDomainList.push(
+          message.accepted_domain_list.push(
             AcceptedDomain.decode(reader, reader.uint32())
           );
           break;
         case 4:
-          message.ArticleList.push(Article.decode(reader, reader.uint32()));
+          message.article_list.push(Article.decode(reader, reader.uint32()));
           break;
         case 5:
-          message.articlesCounter = longToNumber(reader.uint64() as Long);
+          message.articles_counter = longToNumber(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -77,39 +79,39 @@ export const GenesisState = {
 
   fromJSON(object: any): GenesisState {
     const message = { ...baseGenesisState } as GenesisState;
-    message.PublisherList = [];
-    message.AcceptedDomainList = [];
-    message.ArticleList = [];
+    message.publisher_list = [];
+    message.accepted_domain_list = [];
+    message.article_list = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromJSON(object.params);
     } else {
       message.params = undefined;
     }
-    if (object.PublisherList !== undefined && object.PublisherList !== null) {
-      for (const e of object.PublisherList) {
-        message.PublisherList.push(Publisher.fromJSON(e));
+    if (object.publisher_list !== undefined && object.publisher_list !== null) {
+      for (const e of object.publisher_list) {
+        message.publisher_list.push(Publisher.fromJSON(e));
       }
     }
     if (
-      object.AcceptedDomainList !== undefined &&
-      object.AcceptedDomainList !== null
+      object.accepted_domain_list !== undefined &&
+      object.accepted_domain_list !== null
     ) {
-      for (const e of object.AcceptedDomainList) {
-        message.AcceptedDomainList.push(AcceptedDomain.fromJSON(e));
+      for (const e of object.accepted_domain_list) {
+        message.accepted_domain_list.push(AcceptedDomain.fromJSON(e));
       }
     }
-    if (object.ArticleList !== undefined && object.ArticleList !== null) {
-      for (const e of object.ArticleList) {
-        message.ArticleList.push(Article.fromJSON(e));
+    if (object.article_list !== undefined && object.article_list !== null) {
+      for (const e of object.article_list) {
+        message.article_list.push(Article.fromJSON(e));
       }
     }
     if (
-      object.articlesCounter !== undefined &&
-      object.articlesCounter !== null
+      object.articles_counter !== undefined &&
+      object.articles_counter !== null
     ) {
-      message.articlesCounter = Number(object.articlesCounter);
+      message.articles_counter = Number(object.articles_counter);
     } else {
-      message.articlesCounter = 0;
+      message.articles_counter = 0;
     }
     return message;
   },
@@ -118,67 +120,67 @@ export const GenesisState = {
     const obj: any = {};
     message.params !== undefined &&
       (obj.params = message.params ? Params.toJSON(message.params) : undefined);
-    if (message.PublisherList) {
-      obj.PublisherList = message.PublisherList.map((e) =>
+    if (message.publisher_list) {
+      obj.publisher_list = message.publisher_list.map((e) =>
         e ? Publisher.toJSON(e) : undefined
       );
     } else {
-      obj.PublisherList = [];
+      obj.publisher_list = [];
     }
-    if (message.AcceptedDomainList) {
-      obj.AcceptedDomainList = message.AcceptedDomainList.map((e) =>
+    if (message.accepted_domain_list) {
+      obj.accepted_domain_list = message.accepted_domain_list.map((e) =>
         e ? AcceptedDomain.toJSON(e) : undefined
       );
     } else {
-      obj.AcceptedDomainList = [];
+      obj.accepted_domain_list = [];
     }
-    if (message.ArticleList) {
-      obj.ArticleList = message.ArticleList.map((e) =>
+    if (message.article_list) {
+      obj.article_list = message.article_list.map((e) =>
         e ? Article.toJSON(e) : undefined
       );
     } else {
-      obj.ArticleList = [];
+      obj.article_list = [];
     }
-    message.articlesCounter !== undefined &&
-      (obj.articlesCounter = message.articlesCounter);
+    message.articles_counter !== undefined &&
+      (obj.articles_counter = message.articles_counter);
     return obj;
   },
 
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = { ...baseGenesisState } as GenesisState;
-    message.PublisherList = [];
-    message.AcceptedDomainList = [];
-    message.ArticleList = [];
+    message.publisher_list = [];
+    message.accepted_domain_list = [];
+    message.article_list = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromPartial(object.params);
     } else {
       message.params = undefined;
     }
-    if (object.PublisherList !== undefined && object.PublisherList !== null) {
-      for (const e of object.PublisherList) {
-        message.PublisherList.push(Publisher.fromPartial(e));
+    if (object.publisher_list !== undefined && object.publisher_list !== null) {
+      for (const e of object.publisher_list) {
+        message.publisher_list.push(Publisher.fromPartial(e));
       }
     }
     if (
-      object.AcceptedDomainList !== undefined &&
-      object.AcceptedDomainList !== null
+      object.accepted_domain_list !== undefined &&
+      object.accepted_domain_list !== null
     ) {
-      for (const e of object.AcceptedDomainList) {
-        message.AcceptedDomainList.push(AcceptedDomain.fromPartial(e));
+      for (const e of object.accepted_domain_list) {
+        message.accepted_domain_list.push(AcceptedDomain.fromPartial(e));
       }
     }
-    if (object.ArticleList !== undefined && object.ArticleList !== null) {
-      for (const e of object.ArticleList) {
-        message.ArticleList.push(Article.fromPartial(e));
+    if (object.article_list !== undefined && object.article_list !== null) {
+      for (const e of object.article_list) {
+        message.article_list.push(Article.fromPartial(e));
       }
     }
     if (
-      object.articlesCounter !== undefined &&
-      object.articlesCounter !== null
+      object.articles_counter !== undefined &&
+      object.articles_counter !== null
     ) {
-      message.articlesCounter = object.articlesCounter;
+      message.articles_counter = object.articles_counter;
     } else {
-      message.articlesCounter = 0;
+      message.articles_counter = 0;
     }
     return message;
   },

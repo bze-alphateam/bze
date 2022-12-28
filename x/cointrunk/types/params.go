@@ -28,7 +28,7 @@ var (
 	KeyPublisherRespectParams     = []byte("PublisherRespectParams")
 	DefaultPublisherRespectParams = PublisherRespectParams{
 		Denom: DefaultDenom,
-		Tax:   sdk.NewDecWithPrec(20, 2),
+		Tax:   sdk.NewDecWithPrec(20, 2), //20%
 	}
 )
 
