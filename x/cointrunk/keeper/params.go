@@ -10,6 +10,7 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 	return types.NewParams(
 		k.AnonArticleLimit(ctx),
 		k.AnonArticleCost(ctx),
+		k.PublisherRespectParams(ctx),
 	)
 }
 
@@ -27,5 +28,11 @@ func (k Keeper) AnonArticleLimit(ctx sdk.Context) (res uint64) {
 // AnonArticleCost returns the AnonArticleCost param
 func (k Keeper) AnonArticleCost(ctx sdk.Context) (res sdk.Coin) {
 	k.paramstore.Get(ctx, types.KeyAnonArticleCost, &res)
+	return
+}
+
+// PublisherRespectParams returns the PublisherRespectParams param
+func (k Keeper) PublisherRespectParams(ctx sdk.Context) (res types.PublisherRespectParams) {
+	k.paramstore.Get(ctx, types.KeyPublisherRespectParams, &res)
 	return
 }

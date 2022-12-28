@@ -1,5 +1,5 @@
 syntax = "proto3";
-package bze.cointrunk;
+package bze.cointrunk.v1;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";

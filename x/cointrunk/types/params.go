@@ -24,6 +24,14 @@ var (
 	DefaultAnonArticleCost = sdk.NewCoin(DefaultDenom, sdk.NewInt(DefaultAnonArticleCostAmount))
 )
 
+var (
+	KeyPublisherRespectParams     = []byte("PublisherRespectParams")
+	DefaultPublisherRespectParams = PublisherRespectParams{
+		Denom: DefaultDenom,
+		Tax:   sdk.NewDecWithPrec(20, 2),
+	}
+)
+
 // ParamKeyTable the param key table for launch module
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
@@ -33,10 +41,12 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams(
 	anonArticleLimit uint64,
 	anonArticleCost sdk.Coin,
+	PublisherRespectParams PublisherRespectParams,
 ) Params {
 	return Params{
-		AnonArticleLimit: anonArticleLimit,
-		AnonArticleCost:  anonArticleCost,
+		AnonArticleLimit:       anonArticleLimit,
+		AnonArticleCost:        anonArticleCost,
+		PublisherRespectParams: PublisherRespectParams,
 	}
 }
 
@@ -45,6 +55,7 @@ func DefaultParams() Params {
 	return NewParams(
 		DefaultAnonArticleLimit,
 		DefaultAnonArticleCost,
+		DefaultPublisherRespectParams,
 	)
 }
 
@@ -53,6 +64,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyAnonArticleLimit, &p.AnonArticleLimit, validateAnonArticleLimit),
 		paramtypes.NewParamSetPair(KeyAnonArticleCost, &p.AnonArticleCost, validateAnonArticleCost),
+		paramtypes.NewParamSetPair(KeyPublisherRespectParams, &p.PublisherRespectParams, validatePublisherRespectParams),
 	}
 }
 
@@ -63,6 +75,10 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateAnonArticleCost(p.AnonArticleCost); err != nil {
+		return err
+	}
+
+	if err := validatePublisherRespectParams(p.PublisherRespectParams); err != nil {
 		return err
 	}
 
@@ -98,6 +114,25 @@ func validateAnonArticleCost(v interface{}) error {
 	}
 	if !anonArticleCost.IsValid() {
 		return fmt.Errorf("invalid anonArticleLimit coin: %s", anonArticleCost.String())
+	}
+
+	return nil
+}
+
+// validateAnonArticleCost validates the AnonArticleCost param
+func validatePublisherRespectParams(v interface{}) error {
+	publisherRespectParams, ok := v.(PublisherRespectParams)
+	if !ok {
+		return fmt.Errorf("invalid parameter publisherRespectParams type: %T", v)
+	}
+
+	if publisherRespectParams.Tax.IsNegative() {
+		return fmt.Errorf("publisherRespectParams tax should be positive: %s", publisherRespectParams.Tax.String())
+	}
+
+	err := sdk.ValidateDenom(publisherRespectParams.Denom)
+	if err != nil {
+		return err
 	}
 
 	return nil
