@@ -15,7 +15,17 @@ func (k msgServer) PayPublisherRespect(goCtx context.Context, msg *types.MsgPayP
 	if err != nil {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid amount (%s)", err)
 	}
-	//TODO: param to decide the denom we accept to be paid as respect
+
+	publisherRespectParams := k.PublisherRespectParams(ctx)
+	if coin.Denom != publisherRespectParams.Denom {
+		return nil, sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"invalid coin denom. Accepted (%s) got (%s)",
+			publisherRespectParams.Denom,
+			coin.Denom,
+		)
+	}
+
 	if !coin.IsPositive() {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid coin amount (amount should be positive)")
 	}
@@ -36,8 +46,7 @@ func (k msgServer) PayPublisherRespect(goCtx context.Context, msg *types.MsgPayP
 	}
 
 	totalAmountInt := sdk.NewInt(coin.Amount.Int64())
-	//TODO: param to decide the tax % we take
-	taxPercent := sdk.NewDecWithPrec(20, 2) //20%
+	taxPercent := publisherRespectParams.Tax
 	taxAmountDec := taxPercent.MulInt(totalAmountInt)
 	taxAmountInt := taxAmountDec.TruncateInt()
 	if taxAmountInt.IsNegative() {
@@ -55,11 +64,12 @@ func (k msgServer) PayPublisherRespect(goCtx context.Context, msg *types.MsgPayP
 		return nil, sdkErr
 	}
 
-	//TODO: check the tax is > 0
 	taxPaidCoin := sdk.NewCoin(coin.Denom, taxAmountInt)
-	err = k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(taxPaidCoin), creatorAcc)
-	if err != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "Could not fund community pool (%s)", err)
+	if !taxPaidCoin.IsZero() {
+		err = k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(taxPaidCoin), creatorAcc)
+		if err != nil {
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "Could not fund community pool (%s)", err)
+		}
 	}
 
 	publisher.Respect += coin.Amount.Int64()

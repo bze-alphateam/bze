@@ -558,10 +558,10 @@ paths:
                 description: params holds all the parameters of this module.
                 type: object
                 properties:
-                  anonArticleLimit:
+                  anon_article_limit:
                     type: string
                     format: uint64
-                  anonArticleCost:
+                  anon_article_cost:
                     type: object
                     properties:
                       denom:
@@ -576,7 +576,7 @@ paths:
                       custom method
 
                       signatures required by gogoproto.
-                  publisherRespectParams:
+                  publisher_respect_params:
                     type: object
                     properties:
                       tax:
@@ -32727,10 +32727,10 @@ definitions:
   bze.cointrunk.v1.Params:
     type: object
     properties:
-      anonArticleLimit:
+      anon_article_limit:
         type: string
         format: uint64
-      anonArticleCost:
+      anon_article_cost:
         type: object
         properties:
           denom:
@@ -32742,7 +32742,7 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-      publisherRespectParams:
+      publisher_respect_params:
         type: object
         properties:
           tax:
@@ -32907,10 +32907,10 @@ definitions:
         description: params holds all the parameters of this module.
         type: object
         properties:
-          anonArticleLimit:
+          anon_article_limit:
             type: string
             format: uint64
-          anonArticleCost:
+          anon_article_cost:
             type: object
             properties:
               denom:
@@ -32925,7 +32925,7 @@ definitions:
               method
 
               signatures required by gogoproto.
-          publisherRespectParams:
+          publisher_respect_params:
             type: object
             properties:
               tax:

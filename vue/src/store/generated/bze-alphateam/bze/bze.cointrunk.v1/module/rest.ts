@@ -60,7 +60,7 @@ export interface V1MsgPayPublisherRespectResponse {
 
 export interface V1Params {
   /** @format uint64 */
-  anonArticleLimit?: string;
+  anon_article_limit?: string;
 
   /**
    * Coin defines a token with a denomination and an amount.
@@ -68,10 +68,10 @@ export interface V1Params {
    * NOTE: The amount field is an Int which implements the custom method
    * signatures required by gogoproto.
    */
-  anonArticleCost?: V1Beta1Coin;
+  anon_article_cost?: V1Beta1Coin;
 
   /** Params defines the parameters for the module. */
-  publisherRespectParams?: V1PublisherRespectParams;
+  publisher_respect_params?: V1PublisherRespectParams;
 }
 
 export interface V1Publisher {

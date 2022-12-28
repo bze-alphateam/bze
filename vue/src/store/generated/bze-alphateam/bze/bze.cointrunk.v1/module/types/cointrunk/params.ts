@@ -12,9 +12,9 @@ export interface PublisherRespectParams {
 }
 
 export interface Params {
-  anonArticleLimit: number;
-  anonArticleCost: Coin | undefined;
-  publisherRespectParams: PublisherRespectParams | undefined;
+  anon_article_limit: number;
+  anon_article_cost: Coin | undefined;
+  publisher_respect_params: PublisherRespectParams | undefined;
 }
 
 const basePublisherRespectParams: object = { tax: "", denom: "" };
@@ -94,19 +94,19 @@ export const PublisherRespectParams = {
   },
 };
 
-const baseParams: object = { anonArticleLimit: 0 };
+const baseParams: object = { anon_article_limit: 0 };
 
 export const Params = {
   encode(message: Params, writer: Writer = Writer.create()): Writer {
-    if (message.anonArticleLimit !== 0) {
-      writer.uint32(8).uint64(message.anonArticleLimit);
+    if (message.anon_article_limit !== 0) {
+      writer.uint32(8).uint64(message.anon_article_limit);
     }
-    if (message.anonArticleCost !== undefined) {
-      Coin.encode(message.anonArticleCost, writer.uint32(18).fork()).ldelim();
+    if (message.anon_article_cost !== undefined) {
+      Coin.encode(message.anon_article_cost, writer.uint32(18).fork()).ldelim();
     }
-    if (message.publisherRespectParams !== undefined) {
+    if (message.publisher_respect_params !== undefined) {
       PublisherRespectParams.encode(
-        message.publisherRespectParams,
+        message.publisher_respect_params,
         writer.uint32(26).fork()
       ).ldelim();
     }
@@ -121,13 +121,13 @@ export const Params = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.anonArticleLimit = longToNumber(reader.uint64() as Long);
+          message.anon_article_limit = longToNumber(reader.uint64() as Long);
           break;
         case 2:
-          message.anonArticleCost = Coin.decode(reader, reader.uint32());
+          message.anon_article_cost = Coin.decode(reader, reader.uint32());
           break;
         case 3:
-          message.publisherRespectParams = PublisherRespectParams.decode(
+          message.publisher_respect_params = PublisherRespectParams.decode(
             reader,
             reader.uint32()
           );
@@ -143,45 +143,45 @@ export const Params = {
   fromJSON(object: any): Params {
     const message = { ...baseParams } as Params;
     if (
-      object.anonArticleLimit !== undefined &&
-      object.anonArticleLimit !== null
+      object.anon_article_limit !== undefined &&
+      object.anon_article_limit !== null
     ) {
-      message.anonArticleLimit = Number(object.anonArticleLimit);
+      message.anon_article_limit = Number(object.anon_article_limit);
     } else {
-      message.anonArticleLimit = 0;
+      message.anon_article_limit = 0;
     }
     if (
-      object.anonArticleCost !== undefined &&
-      object.anonArticleCost !== null
+      object.anon_article_cost !== undefined &&
+      object.anon_article_cost !== null
     ) {
-      message.anonArticleCost = Coin.fromJSON(object.anonArticleCost);
+      message.anon_article_cost = Coin.fromJSON(object.anon_article_cost);
     } else {
-      message.anonArticleCost = undefined;
+      message.anon_article_cost = undefined;
     }
     if (
-      object.publisherRespectParams !== undefined &&
-      object.publisherRespectParams !== null
+      object.publisher_respect_params !== undefined &&
+      object.publisher_respect_params !== null
     ) {
-      message.publisherRespectParams = PublisherRespectParams.fromJSON(
-        object.publisherRespectParams
+      message.publisher_respect_params = PublisherRespectParams.fromJSON(
+        object.publisher_respect_params
       );
     } else {
-      message.publisherRespectParams = undefined;
+      message.publisher_respect_params = undefined;
     }
     return message;
   },
 
   toJSON(message: Params): unknown {
     const obj: any = {};
-    message.anonArticleLimit !== undefined &&
-      (obj.anonArticleLimit = message.anonArticleLimit);
-    message.anonArticleCost !== undefined &&
-      (obj.anonArticleCost = message.anonArticleCost
-        ? Coin.toJSON(message.anonArticleCost)
+    message.anon_article_limit !== undefined &&
+      (obj.anon_article_limit = message.anon_article_limit);
+    message.anon_article_cost !== undefined &&
+      (obj.anon_article_cost = message.anon_article_cost
+        ? Coin.toJSON(message.anon_article_cost)
         : undefined);
-    message.publisherRespectParams !== undefined &&
-      (obj.publisherRespectParams = message.publisherRespectParams
-        ? PublisherRespectParams.toJSON(message.publisherRespectParams)
+    message.publisher_respect_params !== undefined &&
+      (obj.publisher_respect_params = message.publisher_respect_params
+        ? PublisherRespectParams.toJSON(message.publisher_respect_params)
         : undefined);
     return obj;
   },
@@ -189,30 +189,30 @@ export const Params = {
   fromPartial(object: DeepPartial<Params>): Params {
     const message = { ...baseParams } as Params;
     if (
-      object.anonArticleLimit !== undefined &&
-      object.anonArticleLimit !== null
+      object.anon_article_limit !== undefined &&
+      object.anon_article_limit !== null
     ) {
-      message.anonArticleLimit = object.anonArticleLimit;
+      message.anon_article_limit = object.anon_article_limit;
     } else {
-      message.anonArticleLimit = 0;
+      message.anon_article_limit = 0;
     }
     if (
-      object.anonArticleCost !== undefined &&
-      object.anonArticleCost !== null
+      object.anon_article_cost !== undefined &&
+      object.anon_article_cost !== null
     ) {
-      message.anonArticleCost = Coin.fromPartial(object.anonArticleCost);
+      message.anon_article_cost = Coin.fromPartial(object.anon_article_cost);
     } else {
-      message.anonArticleCost = undefined;
+      message.anon_article_cost = undefined;
     }
     if (
-      object.publisherRespectParams !== undefined &&
-      object.publisherRespectParams !== null
+      object.publisher_respect_params !== undefined &&
+      object.publisher_respect_params !== null
     ) {
-      message.publisherRespectParams = PublisherRespectParams.fromPartial(
-        object.publisherRespectParams
+      message.publisher_respect_params = PublisherRespectParams.fromPartial(
+        object.publisher_respect_params
       );
     } else {
-      message.publisherRespectParams = undefined;
+      message.publisher_respect_params = undefined;
     }
     return message;
   },
