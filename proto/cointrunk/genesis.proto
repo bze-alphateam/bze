@@ -15,19 +15,19 @@ message GenesisState {
   Params params = 1 [
     (gogoproto.nullable) = false
   ];
-  repeated Publisher PublisherList = 2 [
+  repeated Publisher publisher_list = 2 [
     (gogoproto.nullable) = false,
-    (gogoproto.jsontag)      = "publisher_list,omitempty"
+    (gogoproto.jsontag)      = "publishers_list,omitempty"
   ];
-  repeated AcceptedDomain AcceptedDomainList = 3 [
+  repeated AcceptedDomain accepted_domain_list = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)      = "accepted_domain_list,omitempty"
   ];
-  repeated Article ArticleList = 4 [
+  repeated Article article_list = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)      = "article_list,omitempty"
   ];
-  uint64 articlesCounter = 5 [
+  uint64 articles_counter = 5 [
     (gogoproto.jsontag)      = "articles_counter,omitempty"
   ];
   // this line is used by starport scaffolding # genesis/proto/state
