@@ -28,6 +28,13 @@ export interface AcceptedDomainUpdatedEvent {
   accepted_domain: AcceptedDomain | undefined;
 }
 
+export interface PublisherRespectPaidEvent {
+  respect_paid: number;
+  publisher_reward: number;
+  community_pool_funds: number;
+  publisher: string;
+}
+
 const baseArticleAddedEvent: object = {
   publisher: "",
   article_id: 0,
@@ -412,6 +419,146 @@ export const AcceptedDomainUpdatedEvent = {
       );
     } else {
       message.accepted_domain = undefined;
+    }
+    return message;
+  },
+};
+
+const basePublisherRespectPaidEvent: object = {
+  respect_paid: 0,
+  publisher_reward: 0,
+  community_pool_funds: 0,
+  publisher: "",
+};
+
+export const PublisherRespectPaidEvent = {
+  encode(
+    message: PublisherRespectPaidEvent,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.respect_paid !== 0) {
+      writer.uint32(8).uint64(message.respect_paid);
+    }
+    if (message.publisher_reward !== 0) {
+      writer.uint32(16).uint64(message.publisher_reward);
+    }
+    if (message.community_pool_funds !== 0) {
+      writer.uint32(24).uint64(message.community_pool_funds);
+    }
+    if (message.publisher !== "") {
+      writer.uint32(34).string(message.publisher);
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): PublisherRespectPaidEvent {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...basePublisherRespectPaidEvent,
+    } as PublisherRespectPaidEvent;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.respect_paid = longToNumber(reader.uint64() as Long);
+          break;
+        case 2:
+          message.publisher_reward = longToNumber(reader.uint64() as Long);
+          break;
+        case 3:
+          message.community_pool_funds = longToNumber(reader.uint64() as Long);
+          break;
+        case 4:
+          message.publisher = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): PublisherRespectPaidEvent {
+    const message = {
+      ...basePublisherRespectPaidEvent,
+    } as PublisherRespectPaidEvent;
+    if (object.respect_paid !== undefined && object.respect_paid !== null) {
+      message.respect_paid = Number(object.respect_paid);
+    } else {
+      message.respect_paid = 0;
+    }
+    if (
+      object.publisher_reward !== undefined &&
+      object.publisher_reward !== null
+    ) {
+      message.publisher_reward = Number(object.publisher_reward);
+    } else {
+      message.publisher_reward = 0;
+    }
+    if (
+      object.community_pool_funds !== undefined &&
+      object.community_pool_funds !== null
+    ) {
+      message.community_pool_funds = Number(object.community_pool_funds);
+    } else {
+      message.community_pool_funds = 0;
+    }
+    if (object.publisher !== undefined && object.publisher !== null) {
+      message.publisher = String(object.publisher);
+    } else {
+      message.publisher = "";
+    }
+    return message;
+  },
+
+  toJSON(message: PublisherRespectPaidEvent): unknown {
+    const obj: any = {};
+    message.respect_paid !== undefined &&
+      (obj.respect_paid = message.respect_paid);
+    message.publisher_reward !== undefined &&
+      (obj.publisher_reward = message.publisher_reward);
+    message.community_pool_funds !== undefined &&
+      (obj.community_pool_funds = message.community_pool_funds);
+    message.publisher !== undefined && (obj.publisher = message.publisher);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<PublisherRespectPaidEvent>
+  ): PublisherRespectPaidEvent {
+    const message = {
+      ...basePublisherRespectPaidEvent,
+    } as PublisherRespectPaidEvent;
+    if (object.respect_paid !== undefined && object.respect_paid !== null) {
+      message.respect_paid = object.respect_paid;
+    } else {
+      message.respect_paid = 0;
+    }
+    if (
+      object.publisher_reward !== undefined &&
+      object.publisher_reward !== null
+    ) {
+      message.publisher_reward = object.publisher_reward;
+    } else {
+      message.publisher_reward = 0;
+    }
+    if (
+      object.community_pool_funds !== undefined &&
+      object.community_pool_funds !== null
+    ) {
+      message.community_pool_funds = object.community_pool_funds;
+    } else {
+      message.community_pool_funds = 0;
+    }
+    if (object.publisher !== undefined && object.publisher !== null) {
+      message.publisher = object.publisher;
+    } else {
+      message.publisher = "";
     }
     return message;
   },

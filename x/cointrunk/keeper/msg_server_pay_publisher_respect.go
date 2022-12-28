@@ -74,6 +74,17 @@ func (k msgServer) PayPublisherRespect(goCtx context.Context, msg *types.MsgPayP
 
 	publisher.Respect += coin.Amount.Int64()
 	k.SetPublisher(ctx, publisher)
+
+	err = ctx.EventManager().EmitTypedEvent(&types.PublisherRespectPaidEvent{
+		Publisher:          publisher.Address,
+		RespectPaid:        coin.Amount.Uint64(),
+		CommunityPoolFunds: taxPaidCoin.Amount.Uint64(),
+		PublisherReward:    publisherRewardCoin.Amount.Uint64(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	_ = ctx
 
 	return &types.MsgPayPublisherRespectResponse{
