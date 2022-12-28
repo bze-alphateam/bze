@@ -4,13 +4,18 @@ import { AcceptedDomain } from "./module/types/cointrunk/accepted_domain"
 import { AcceptedDomainProposal } from "./module/types/cointrunk/accepted_domain_proposal"
 import { AnonArticlesCounter } from "./module/types/cointrunk/anon_articles_counter"
 import { Article } from "./module/types/cointrunk/article"
+import { ArticleAddedEvent } from "./module/types/cointrunk/events"
+import { PublisherAddedEvent } from "./module/types/cointrunk/events"
+import { PublisherUpdatedEvent } from "./module/types/cointrunk/events"
+import { AcceptedDomainAddedEvent } from "./module/types/cointrunk/events"
+import { AcceptedDomainUpdatedEvent } from "./module/types/cointrunk/events"
 import { PublisherRespectParams } from "./module/types/cointrunk/params"
 import { Params } from "./module/types/cointrunk/params"
 import { Publisher } from "./module/types/cointrunk/publisher"
 import { PublisherProposal } from "./module/types/cointrunk/publisher_proposal"
 
 
-export { AcceptedDomain, AcceptedDomainProposal, AnonArticlesCounter, Article, PublisherRespectParams, Params, Publisher, PublisherProposal };
+export { AcceptedDomain, AcceptedDomainProposal, AnonArticlesCounter, Article, ArticleAddedEvent, PublisherAddedEvent, PublisherUpdatedEvent, AcceptedDomainAddedEvent, AcceptedDomainUpdatedEvent, PublisherRespectParams, Params, Publisher, PublisherProposal };
 
 async function initTxClient(vuexGetters) {
 	return await txClient(vuexGetters['common/wallet/signer'], {
@@ -60,6 +65,11 @@ const getDefaultState = () => {
 						AcceptedDomainProposal: getStructure(AcceptedDomainProposal.fromPartial({})),
 						AnonArticlesCounter: getStructure(AnonArticlesCounter.fromPartial({})),
 						Article: getStructure(Article.fromPartial({})),
+						ArticleAddedEvent: getStructure(ArticleAddedEvent.fromPartial({})),
+						PublisherAddedEvent: getStructure(PublisherAddedEvent.fromPartial({})),
+						PublisherUpdatedEvent: getStructure(PublisherUpdatedEvent.fromPartial({})),
+						AcceptedDomainAddedEvent: getStructure(AcceptedDomainAddedEvent.fromPartial({})),
+						AcceptedDomainUpdatedEvent: getStructure(AcceptedDomainUpdatedEvent.fromPartial({})),
 						PublisherRespectParams: getStructure(PublisherRespectParams.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
 						Publisher: getStructure(Publisher.fromPartial({})),
@@ -310,21 +320,6 @@ export default {
 		},
 		
 		
-		async sendMsgPayPublisherRespect({ rootGetters }, { value, fee = [], memo = '' }) {
-			try {
-				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgPayPublisherRespect(value)
-				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
-	gas: "200000" }, memo})
-				return result
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgPayPublisherRespect:Init Could not initialize signing client. Wallet is required.')
-				}else{
-					throw new Error('TxClient:MsgPayPublisherRespect:Send Could not broadcast Tx: '+ e.message)
-				}
-			}
-		},
 		async sendMsgAddArticle({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
@@ -340,20 +335,22 @@ export default {
 				}
 			}
 		},
-		
-		async MsgPayPublisherRespect({ rootGetters }, { value }) {
+		async sendMsgPayPublisherRespect({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
 				const msg = await txClient.msgPayPublisherRespect(value)
-				return msg
+				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
+	gas: "200000" }, memo})
+				return result
 			} catch (e) {
 				if (e == MissingWalletError) {
 					throw new Error('TxClient:MsgPayPublisherRespect:Init Could not initialize signing client. Wallet is required.')
-				} else{
-					throw new Error('TxClient:MsgPayPublisherRespect:Create Could not create message: ' + e.message)
+				}else{
+					throw new Error('TxClient:MsgPayPublisherRespect:Send Could not broadcast Tx: '+ e.message)
 				}
 			}
 		},
+		
 		async MsgAddArticle({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
@@ -364,6 +361,19 @@ export default {
 					throw new Error('TxClient:MsgAddArticle:Init Could not initialize signing client. Wallet is required.')
 				} else{
 					throw new Error('TxClient:MsgAddArticle:Create Could not create message: ' + e.message)
+				}
+			}
+		},
+		async MsgPayPublisherRespect({ rootGetters }, { value }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgPayPublisherRespect(value)
+				return msg
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgPayPublisherRespect:Init Could not initialize signing client. Wallet is required.')
+				} else{
+					throw new Error('TxClient:MsgPayPublisherRespect:Create Could not create message: ' + e.message)
 				}
 			}
 		},

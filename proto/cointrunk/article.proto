@@ -11,5 +11,5 @@ message Article {
   string picture = 4;
   string publisher = 5;
   bool paid = 6;
-  int64 createdAt = 7;
+  int64 created_at = 7;
 }

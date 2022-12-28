@@ -25,5 +25,10 @@ func (k Keeper) HandleBurnCoinsProposal(ctx sdk.Context, proposal *types.BurnCoi
 	}
 	k.SetBurnedCoins(ctx, burnedCoins)
 
+	err = ctx.EventManager().EmitTypedEvent(&types.CoinsBurnedEvent{Burned: burnedCoins.Burned})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

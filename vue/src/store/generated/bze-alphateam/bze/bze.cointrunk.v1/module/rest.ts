@@ -42,7 +42,7 @@ export interface V1Article {
   paid?: boolean;
 
   /** @format int64 */
-  createdAt?: string;
+  created_at?: string;
 }
 
 export type V1MsgAddArticleResponse = object;
@@ -496,7 +496,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    *
    * @tags Query
    * @name QueryAllArticles
-   * @summary Queries a list of ArticlesByPrefix items.
+   * @summary Queries a list of Article items.
    * @request GET:/bze/cointrunk/v1/articles
    */
   queryAllArticles = (

@@ -998,7 +998,7 @@ export interface Query {
   PublisherByIndex(
     request: QueryPublisherByIndexRequest
   ): Promise<QueryPublisherByIndexResponse>;
-  /** Queries a list of ArticlesByPrefix items. */
+  /** Queries a list of Article items. */
   AllArticles(
     request: QueryAllArticlesRequest
   ): Promise<QueryAllArticlesResponse>;

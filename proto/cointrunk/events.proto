@@ -1,0 +1,29 @@
+syntax = "proto3";
+package bze.cointrunk.v1;
+
+import "cointrunk/publisher.proto";
+import "cointrunk/accepted_domain.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
+
+message ArticleAddedEvent {
+  string publisher = 1;
+  uint64 article_id = 2;
+  bool paid = 3;
+}
+
+message PublisherAddedEvent {
+  Publisher publisher = 1;
+}
+
+message PublisherUpdatedEvent {
+  Publisher publisher = 1;
+}
+
+message AcceptedDomainAddedEvent {
+  AcceptedDomain accepted_domain = 1;
+}
+
+message AcceptedDomainUpdatedEvent {
+  AcceptedDomain accepted_domain = 1;
+}

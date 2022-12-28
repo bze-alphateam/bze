@@ -16,14 +16,41 @@ func (k Keeper) HandlePublisherProposal(ctx sdk.Context, proposal *types.Publish
 		publisher.ArticlesCount = 0
 		publisher.Respect = 0
 	}
+
 	k.SetPublisher(ctx, publisher)
+
+	if found {
+		event := types.PublisherUpdatedEvent{Publisher: &publisher}
+		if err := ctx.EventManager().EmitTypedEvent(&event); err != nil {
+			return err
+		}
+	} else {
+		event := types.PublisherAddedEvent{Publisher: &publisher}
+		if err := ctx.EventManager().EmitTypedEvent(&event); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func (k Keeper) HandleAcceptedDomainProposal(ctx sdk.Context, proposal *types.AcceptedDomainProposal) error {
-	acceptedDomain, _ := k.GetAcceptedDomain(ctx, proposal.Domain)
+	acceptedDomain, found := k.GetAcceptedDomain(ctx, proposal.Domain)
 	acceptedDomain.Domain = proposal.Domain
 	acceptedDomain.Active = proposal.Active
 	k.SetAcceptedDomain(ctx, acceptedDomain)
+
+	if found {
+		event := types.AcceptedDomainUpdatedEvent{AcceptedDomain: &acceptedDomain}
+		if err := ctx.EventManager().EmitTypedEvent(&event); err != nil {
+			return err
+		}
+	} else {
+		event := types.AcceptedDomainAddedEvent{AcceptedDomain: &acceptedDomain}
+		if err := ctx.EventManager().EmitTypedEvent(&event); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

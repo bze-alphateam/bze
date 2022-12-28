@@ -53,9 +53,24 @@ func (k msgServer) AddArticle(goCtx context.Context, msg *types.MsgAddArticle) (
 		k.SetPublisher(ctx, publisher)
 	}
 
+	err = k.emitArticleAddedEvent(ctx, article)
+	if err != nil {
+		return nil, err
+	}
+
 	_ = ctx
 
 	return &types.MsgAddArticleResponse{}, nil
+}
+
+func (k msgServer) emitArticleAddedEvent(ctx sdk.Context, article types.Article) error {
+	return ctx.EventManager().EmitTypedEvent(
+		&types.ArticleAddedEvent{
+			ArticleId: article.Id,
+			Publisher: article.Publisher,
+			Paid:      article.Paid,
+		},
+	)
 }
 
 func (k msgServer) validateMessageDomains(ctx sdk.Context, msg *types.MsgAddArticle) error {
