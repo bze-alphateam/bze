@@ -34,7 +34,7 @@ service Query {
 		option (google.api.http).get = "/bze/cointrunk/v1/publisher/{index}";
 	}
 
-// Queries a list of ArticlesByPrefix items.
+// Queries a list of Article items.
 	rpc AllArticles(QueryAllArticlesRequest) returns (QueryAllArticlesResponse) {
 		option (google.api.http).get = "/bze/cointrunk/v1/articles";
 	}

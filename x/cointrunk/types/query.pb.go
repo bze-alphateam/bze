@@ -675,7 +675,7 @@ type QueryClient interface {
 	Publisher(ctx context.Context, in *QueryPublisherRequest, opts ...grpc.CallOption) (*QueryPublisherResponse, error)
 	// Queries publisher by index/address.
 	PublisherByIndex(ctx context.Context, in *QueryPublisherByIndexRequest, opts ...grpc.CallOption) (*QueryPublisherByIndexResponse, error)
-	// Queries a list of ArticlesByPrefix items.
+	// Queries a list of Article items.
 	AllArticles(ctx context.Context, in *QueryAllArticlesRequest, opts ...grpc.CallOption) (*QueryAllArticlesResponse, error)
 	// Queries a list of AllAnonArticlesCounters items.
 	AllAnonArticlesCounters(ctx context.Context, in *QueryAllAnonArticlesCountersRequest, opts ...grpc.CallOption) (*QueryAllAnonArticlesCountersResponse, error)
@@ -753,7 +753,7 @@ type QueryServer interface {
 	Publisher(context.Context, *QueryPublisherRequest) (*QueryPublisherResponse, error)
 	// Queries publisher by index/address.
 	PublisherByIndex(context.Context, *QueryPublisherByIndexRequest) (*QueryPublisherByIndexResponse, error)
-	// Queries a list of ArticlesByPrefix items.
+	// Queries a list of Article items.
 	AllArticles(context.Context, *QueryAllArticlesRequest) (*QueryAllArticlesResponse, error)
 	// Queries a list of AllAnonArticlesCounters items.
 	AllAnonArticlesCounters(context.Context, *QueryAllAnonArticlesCountersRequest) (*QueryAllAnonArticlesCountersResponse, error)

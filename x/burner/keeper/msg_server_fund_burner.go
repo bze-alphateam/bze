@@ -24,6 +24,11 @@ func (k msgServer) FundBurner(goCtx context.Context, msg *types.MsgFundBurner) (
 		return nil, err
 	}
 
+	err = ctx.EventManager().EmitTypedEvent(&types.FundBurnerEvent{From: msg.Creator, Amount: amount.String()})
+	if err != nil {
+		return nil, err
+	}
+
 	_ = ctx
 
 	return &types.MsgFundBurnerResponse{}, nil

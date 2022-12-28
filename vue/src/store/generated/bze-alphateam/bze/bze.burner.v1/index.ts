@@ -2,10 +2,12 @@ import { txClient, queryClient, MissingWalletError , registry} from './module'
 
 import { BurnCoinsProposal } from "./module/types/burner/burn_coins_proposal"
 import { BurnedCoins } from "./module/types/burner/burned_coins"
+import { CoinsBurnedEvent } from "./module/types/burner/events"
+import { FundBurnerEvent } from "./module/types/burner/events"
 import { Params } from "./module/types/burner/params"
 
 
-export { BurnCoinsProposal, BurnedCoins, Params };
+export { BurnCoinsProposal, BurnedCoins, CoinsBurnedEvent, FundBurnerEvent, Params };
 
 async function initTxClient(vuexGetters) {
 	return await txClient(vuexGetters['common/wallet/signer'], {
@@ -49,6 +51,8 @@ const getDefaultState = () => {
 				_Structure: {
 						BurnCoinsProposal: getStructure(BurnCoinsProposal.fromPartial({})),
 						BurnedCoins: getStructure(BurnedCoins.fromPartial({})),
+						CoinsBurnedEvent: getStructure(CoinsBurnedEvent.fromPartial({})),
+						FundBurnerEvent: getStructure(FundBurnerEvent.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
 						
 		},

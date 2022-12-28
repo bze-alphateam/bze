@@ -411,7 +411,7 @@ paths:
         - Query
   /bze/cointrunk/v1/articles:
     get:
-      summary: Queries a list of ArticlesByPrefix items.
+      summary: Queries a list of Article items.
       operationId: BzeCointrunkV1AllArticles
       responses:
         '200':
@@ -437,7 +437,7 @@ paths:
                       type: string
                     paid:
                       type: boolean
-                    createdAt:
+                    created_at:
                       type: string
                       format: int64
               pagination:
@@ -32707,7 +32707,7 @@ definitions:
         type: string
       paid:
         type: boolean
-      createdAt:
+      created_at:
         type: string
         format: int64
   bze.cointrunk.v1.MsgAddArticleResponse:
@@ -32872,7 +32872,7 @@ definitions:
               type: string
             paid:
               type: boolean
-            createdAt:
+            created_at:
               type: string
               format: int64
       pagination:

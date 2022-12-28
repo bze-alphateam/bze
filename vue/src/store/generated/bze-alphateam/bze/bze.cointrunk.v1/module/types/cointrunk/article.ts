@@ -11,7 +11,7 @@ export interface Article {
   picture: string;
   publisher: string;
   paid: boolean;
-  createdAt: number;
+  created_at: number;
 }
 
 const baseArticle: object = {
@@ -21,7 +21,7 @@ const baseArticle: object = {
   picture: "",
   publisher: "",
   paid: false,
-  createdAt: 0,
+  created_at: 0,
 };
 
 export const Article = {
@@ -44,8 +44,8 @@ export const Article = {
     if (message.paid === true) {
       writer.uint32(48).bool(message.paid);
     }
-    if (message.createdAt !== 0) {
-      writer.uint32(56).int64(message.createdAt);
+    if (message.created_at !== 0) {
+      writer.uint32(56).int64(message.created_at);
     }
     return writer;
   },
@@ -76,7 +76,7 @@ export const Article = {
           message.paid = reader.bool();
           break;
         case 7:
-          message.createdAt = longToNumber(reader.int64() as Long);
+          message.created_at = longToNumber(reader.int64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -118,10 +118,10 @@ export const Article = {
     } else {
       message.paid = false;
     }
-    if (object.createdAt !== undefined && object.createdAt !== null) {
-      message.createdAt = Number(object.createdAt);
+    if (object.created_at !== undefined && object.created_at !== null) {
+      message.created_at = Number(object.created_at);
     } else {
-      message.createdAt = 0;
+      message.created_at = 0;
     }
     return message;
   },
@@ -134,7 +134,7 @@ export const Article = {
     message.picture !== undefined && (obj.picture = message.picture);
     message.publisher !== undefined && (obj.publisher = message.publisher);
     message.paid !== undefined && (obj.paid = message.paid);
-    message.createdAt !== undefined && (obj.createdAt = message.createdAt);
+    message.created_at !== undefined && (obj.created_at = message.created_at);
     return obj;
   },
 
@@ -170,10 +170,10 @@ export const Article = {
     } else {
       message.paid = false;
     }
-    if (object.createdAt !== undefined && object.createdAt !== null) {
-      message.createdAt = object.createdAt;
+    if (object.created_at !== undefined && object.created_at !== null) {
+      message.created_at = object.created_at;
     } else {
-      message.createdAt = 0;
+      message.created_at = 0;
     }
     return message;
   },
