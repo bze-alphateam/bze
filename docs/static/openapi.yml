@@ -165,7 +165,7 @@ paths:
   /bze/cointrunk/v1/accepted_domain:
     get:
       summary: Queries a list of AcceptedDomain items.
-      operationId: BzeCointrunkAcceptedDomain
+      operationId: BzeCointrunkV1AcceptedDomain
       responses:
         '200':
           description: A successful response.
@@ -288,7 +288,7 @@ paths:
   /bze/cointrunk/v1/all_anon_articles_counters:
     get:
       summary: Queries a list of AllAnonArticlesCounters items.
-      operationId: BzeCointrunkAllAnonArticlesCounters
+      operationId: BzeCointrunkV1AllAnonArticlesCounters
       responses:
         '200':
           description: A successful response.
@@ -412,7 +412,7 @@ paths:
   /bze/cointrunk/v1/articles:
     get:
       summary: Queries a list of ArticlesByPrefix items.
-      operationId: BzeCointrunkAllArticles
+      operationId: BzeCointrunkV1AllArticles
       responses:
         '200':
           description: A successful response.
@@ -547,7 +547,7 @@ paths:
   /bze/cointrunk/v1/params:
     get:
       summary: Parameters queries the parameters of the module.
-      operationId: BzeCointrunkParams
+      operationId: BzeCointrunkV1Params
       responses:
         '200':
           description: A successful response.
@@ -576,6 +576,14 @@ paths:
                       custom method
 
                       signatures required by gogoproto.
+                  publisherRespectParams:
+                    type: object
+                    properties:
+                      tax:
+                        type: string
+                      denom:
+                        type: string
+                    description: Params defines the parameters for the module.
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -602,7 +610,7 @@ paths:
   '/bze/cointrunk/v1/publisher/{index}':
     get:
       summary: Queries publisher by index/address.
-      operationId: BzeCointrunkPublisherByIndex
+      operationId: BzeCointrunkV1PublisherByIndex
       responses:
         '200':
           description: A successful response.
@@ -655,7 +663,7 @@ paths:
   /bze/cointrunk/v1/publishers:
     get:
       summary: Queries a list of Publisher items.
-      operationId: BzeCointrunkPublisher
+      operationId: BzeCointrunkV1Publisher
       responses:
         '200':
           description: A successful response.
@@ -32668,14 +32676,14 @@ definitions:
                   "@type": "type.googleapis.com/google.protobuf.Duration",
                   "value": "1.212s"
                 }
-  bze.cointrunk.AcceptedDomain:
+  bze.cointrunk.v1.AcceptedDomain:
     type: object
     properties:
       domain:
         type: string
       active:
         type: boolean
-  bze.cointrunk.AnonArticlesCounter:
+  bze.cointrunk.v1.AnonArticlesCounter:
     type: object
     properties:
       key:
@@ -32683,7 +32691,7 @@ definitions:
       counter:
         type: string
         format: uint64
-  bze.cointrunk.Article:
+  bze.cointrunk.v1.Article:
     type: object
     properties:
       id:
@@ -32702,9 +32710,9 @@ definitions:
       createdAt:
         type: string
         format: int64
-  bze.cointrunk.MsgAddArticleResponse:
+  bze.cointrunk.v1.MsgAddArticleResponse:
     type: object
-  bze.cointrunk.MsgPayPublisherRespectResponse:
+  bze.cointrunk.v1.MsgPayPublisherRespectResponse:
     type: object
     properties:
       respectPaid:
@@ -32712,9 +32720,11 @@ definitions:
         format: uint64
       publisherReward:
         type: string
+        format: uint64
       communityPoolFunds:
         type: string
-  bze.cointrunk.Params:
+        format: uint64
+  bze.cointrunk.v1.Params:
     type: object
     properties:
       anonArticleLimit:
@@ -32732,8 +32742,15 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-    description: Params defines the parameters for the module.
-  bze.cointrunk.Publisher:
+      publisherRespectParams:
+        type: object
+        properties:
+          tax:
+            type: string
+          denom:
+            type: string
+        description: Params defines the parameters for the module.
+  bze.cointrunk.v1.Publisher:
     type: object
     properties:
       name:
@@ -32751,7 +32768,15 @@ definitions:
       respect:
         type: string
         format: int64
-  bze.cointrunk.QueryAcceptedDomainResponse:
+  bze.cointrunk.v1.PublisherRespectParams:
+    type: object
+    properties:
+      tax:
+        type: string
+      denom:
+        type: string
+    description: Params defines the parameters for the module.
+  bze.cointrunk.v1.QueryAcceptedDomainResponse:
     type: object
     properties:
       acceptedDomain:
@@ -32788,7 +32813,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  bze.cointrunk.QueryAllAnonArticlesCountersResponse:
+  bze.cointrunk.v1.QueryAllAnonArticlesCountersResponse:
     type: object
     properties:
       AnonArticlesCounters:
@@ -32826,7 +32851,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  bze.cointrunk.QueryAllArticlesResponse:
+  bze.cointrunk.v1.QueryAllArticlesResponse:
     type: object
     properties:
       article:
@@ -32875,7 +32900,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  bze.cointrunk.QueryParamsResponse:
+  bze.cointrunk.v1.QueryParamsResponse:
     type: object
     properties:
       params:
@@ -32900,8 +32925,16 @@ definitions:
               method
 
               signatures required by gogoproto.
+          publisherRespectParams:
+            type: object
+            properties:
+              tax:
+                type: string
+              denom:
+                type: string
+            description: Params defines the parameters for the module.
     description: QueryParamsResponse is response type for the Query/Params RPC method.
-  bze.cointrunk.QueryPublisherByIndexResponse:
+  bze.cointrunk.v1.QueryPublisherByIndexResponse:
     type: object
     properties:
       publisher:
@@ -32922,7 +32955,7 @@ definitions:
           respect:
             type: string
             format: int64
-  bze.cointrunk.QueryPublisherResponse:
+  bze.cointrunk.v1.QueryPublisherResponse:
     type: object
     properties:
       publisher:
