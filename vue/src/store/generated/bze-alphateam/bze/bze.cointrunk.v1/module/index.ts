@@ -4,13 +4,13 @@ import { StdFee } from "@cosmjs/launchpad";
 import { SigningStargateClient } from "@cosmjs/stargate";
 import { Registry, OfflineSigner, EncodeObject, DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { Api } from "./rest";
-import { MsgAddArticle } from "./types/cointrunk/tx";
 import { MsgPayPublisherRespect } from "./types/cointrunk/tx";
+import { MsgAddArticle } from "./types/cointrunk/tx";
 
 
 const types = [
-  ["/bze.cointrunk.v1.MsgAddArticle", MsgAddArticle],
   ["/bze.cointrunk.v1.MsgPayPublisherRespect", MsgPayPublisherRespect],
+  ["/bze.cointrunk.v1.MsgAddArticle", MsgAddArticle],
   
 ];
 export const MissingWalletError = new Error("wallet is required");
@@ -43,8 +43,8 @@ const txClient = async (wallet: OfflineSigner, { addr: addr }: TxClientOptions =
 
   return {
     signAndBroadcast: (msgs: EncodeObject[], { fee, memo }: SignAndBroadcastOptions = {fee: defaultFee, memo: ""}) => client.signAndBroadcast(address, msgs, fee,memo),
-    msgAddArticle: (data: MsgAddArticle): EncodeObject => ({ typeUrl: "/bze.cointrunk.v1.MsgAddArticle", value: MsgAddArticle.fromPartial( data ) }),
     msgPayPublisherRespect: (data: MsgPayPublisherRespect): EncodeObject => ({ typeUrl: "/bze.cointrunk.v1.MsgPayPublisherRespect", value: MsgPayPublisherRespect.fromPartial( data ) }),
+    msgAddArticle: (data: MsgAddArticle): EncodeObject => ({ typeUrl: "/bze.cointrunk.v1.MsgAddArticle", value: MsgAddArticle.fromPartial( data ) }),
     
   };
 };

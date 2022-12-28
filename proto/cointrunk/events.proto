@@ -27,3 +27,10 @@ message AcceptedDomainAddedEvent {
 message AcceptedDomainUpdatedEvent {
   AcceptedDomain accepted_domain = 1;
 }
+
+message PublisherRespectPaidEvent {
+  uint64 respect_paid = 1;
+  uint64 publisher_reward = 2;
+  uint64 community_pool_funds = 3;
+  string publisher = 4;
+}
