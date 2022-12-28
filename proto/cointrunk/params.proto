@@ -19,14 +19,14 @@ message PublisherRespectParams {
 message Params {
   option (gogoproto.goproto_stringer) = false;
   
-  uint64 anonArticleLimit = 1 [(gogoproto.moretags) = "yaml:\"anon_article_limit\""];
-  cosmos.base.v1beta1.Coin anonArticleCost = 2 [
+  uint64 anon_article_limit = 1 [(gogoproto.moretags) = "yaml:\"anon_article_limit\""];
+  cosmos.base.v1beta1.Coin anon_article_cost = 2 [
     (gogoproto.nullable)     = false,
     (gogoproto.moretags)     = "yaml:\"anon_article_cost\"",
     (gogoproto.jsontag)      = "anon_article_cost,omitempty"
   ];
 
-  PublisherRespectParams publisherRespectParams = 3 [
+  PublisherRespectParams publisher_respect_params = 3 [
     (gogoproto.nullable)     = false,
     (gogoproto.moretags)     = "yaml:\"publisher_respect\"",
     (gogoproto.jsontag)      = "publisher_respect,omitempty"
