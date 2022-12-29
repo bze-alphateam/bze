@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -30,7 +29,7 @@ func (k msgServer) AddArticle(goCtx context.Context, msg *types.MsgAddArticle) (
 			panic(err)
 		}
 
-		sdkErr := k.bankKeeper.SendCoinsFromAccountToModule(ctx, publisherAcc, burnermoduletypes.ModuleName, articleCost)
+		sdkErr := k.distrKeeper.FundCommunityPool(ctx, articleCost, publisherAcc)
 		if sdkErr != nil {
 			return nil, sdkErr
 		}
