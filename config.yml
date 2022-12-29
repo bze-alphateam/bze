@@ -33,3 +33,12 @@ genesis:
         quorum: "0.00001"
         threshold: "0.001"
         veto_threshold: "0.01"
+    cointrunk:
+      params:
+        anonArticleLimit: 5
+        anonArticleCost:
+          denom: "utestbze"
+          amount: "25000000000"
+        publisher_respect_params:
+          denom: "utestbze"
+          tax: "0.200000000000"
