@@ -49,13 +49,13 @@ export type V1MsgAddArticleResponse = object;
 
 export interface V1MsgPayPublisherRespectResponse {
   /** @format uint64 */
-  respectPaid?: string;
+  respect_paid?: string;
 
   /** @format uint64 */
-  publisherReward?: string;
+  publisher_reward?: string;
 
   /** @format uint64 */
-  communityPoolFunds?: string;
+  community_pool_funds?: string;
 }
 
 export interface V1Params {
@@ -80,10 +80,10 @@ export interface V1Publisher {
   active?: boolean;
 
   /** @format int64 */
-  articlesCount?: number;
+  articles_count?: number;
 
   /** @format int64 */
-  createdAt?: string;
+  created_at?: string;
 
   /** @format int64 */
   respect?: string;
