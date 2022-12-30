@@ -610,6 +610,10 @@ func (app *App) setupUpgradeHandlers() {
 		v600.UpgradeName,
 		v600.CreateUpgradeHandler(&app.CointrunkKeeper),
 	)
+	app.UpgradeKeeper.SetUpgradeHandler(
+		"v6.0.0-bis",
+		v600.CreateUpgradeHandler(&app.CointrunkKeeper),
+	)
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
