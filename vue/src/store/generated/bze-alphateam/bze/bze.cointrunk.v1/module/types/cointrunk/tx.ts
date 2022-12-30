@@ -20,9 +20,9 @@ export interface MsgPayPublisherRespect {
 }
 
 export interface MsgPayPublisherRespectResponse {
-  respectPaid: number;
-  publisherReward: number;
-  communityPoolFunds: number;
+  respect_paid: number;
+  publisher_reward: number;
+  community_pool_funds: number;
 }
 
 const baseMsgAddArticle: object = {
@@ -273,9 +273,9 @@ export const MsgPayPublisherRespect = {
 };
 
 const baseMsgPayPublisherRespectResponse: object = {
-  respectPaid: 0,
-  publisherReward: 0,
-  communityPoolFunds: 0,
+  respect_paid: 0,
+  publisher_reward: 0,
+  community_pool_funds: 0,
 };
 
 export const MsgPayPublisherRespectResponse = {
@@ -283,14 +283,14 @@ export const MsgPayPublisherRespectResponse = {
     message: MsgPayPublisherRespectResponse,
     writer: Writer = Writer.create()
   ): Writer {
-    if (message.respectPaid !== 0) {
-      writer.uint32(8).uint64(message.respectPaid);
+    if (message.respect_paid !== 0) {
+      writer.uint32(8).uint64(message.respect_paid);
     }
-    if (message.publisherReward !== 0) {
-      writer.uint32(16).uint64(message.publisherReward);
+    if (message.publisher_reward !== 0) {
+      writer.uint32(16).uint64(message.publisher_reward);
     }
-    if (message.communityPoolFunds !== 0) {
-      writer.uint32(24).uint64(message.communityPoolFunds);
+    if (message.community_pool_funds !== 0) {
+      writer.uint32(24).uint64(message.community_pool_funds);
     }
     return writer;
   },
@@ -308,13 +308,13 @@ export const MsgPayPublisherRespectResponse = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.respectPaid = longToNumber(reader.uint64() as Long);
+          message.respect_paid = longToNumber(reader.uint64() as Long);
           break;
         case 2:
-          message.publisherReward = longToNumber(reader.uint64() as Long);
+          message.publisher_reward = longToNumber(reader.uint64() as Long);
           break;
         case 3:
-          message.communityPoolFunds = longToNumber(reader.uint64() as Long);
+          message.community_pool_funds = longToNumber(reader.uint64() as Long);
           break;
         default:
           reader.skipType(tag & 7);
@@ -328,38 +328,38 @@ export const MsgPayPublisherRespectResponse = {
     const message = {
       ...baseMsgPayPublisherRespectResponse,
     } as MsgPayPublisherRespectResponse;
-    if (object.respectPaid !== undefined && object.respectPaid !== null) {
-      message.respectPaid = Number(object.respectPaid);
+    if (object.respect_paid !== undefined && object.respect_paid !== null) {
+      message.respect_paid = Number(object.respect_paid);
     } else {
-      message.respectPaid = 0;
+      message.respect_paid = 0;
     }
     if (
-      object.publisherReward !== undefined &&
-      object.publisherReward !== null
+      object.publisher_reward !== undefined &&
+      object.publisher_reward !== null
     ) {
-      message.publisherReward = Number(object.publisherReward);
+      message.publisher_reward = Number(object.publisher_reward);
     } else {
-      message.publisherReward = 0;
+      message.publisher_reward = 0;
     }
     if (
-      object.communityPoolFunds !== undefined &&
-      object.communityPoolFunds !== null
+      object.community_pool_funds !== undefined &&
+      object.community_pool_funds !== null
     ) {
-      message.communityPoolFunds = Number(object.communityPoolFunds);
+      message.community_pool_funds = Number(object.community_pool_funds);
     } else {
-      message.communityPoolFunds = 0;
+      message.community_pool_funds = 0;
     }
     return message;
   },
 
   toJSON(message: MsgPayPublisherRespectResponse): unknown {
     const obj: any = {};
-    message.respectPaid !== undefined &&
-      (obj.respectPaid = message.respectPaid);
-    message.publisherReward !== undefined &&
-      (obj.publisherReward = message.publisherReward);
-    message.communityPoolFunds !== undefined &&
-      (obj.communityPoolFunds = message.communityPoolFunds);
+    message.respect_paid !== undefined &&
+      (obj.respect_paid = message.respect_paid);
+    message.publisher_reward !== undefined &&
+      (obj.publisher_reward = message.publisher_reward);
+    message.community_pool_funds !== undefined &&
+      (obj.community_pool_funds = message.community_pool_funds);
     return obj;
   },
 
@@ -369,26 +369,26 @@ export const MsgPayPublisherRespectResponse = {
     const message = {
       ...baseMsgPayPublisherRespectResponse,
     } as MsgPayPublisherRespectResponse;
-    if (object.respectPaid !== undefined && object.respectPaid !== null) {
-      message.respectPaid = object.respectPaid;
+    if (object.respect_paid !== undefined && object.respect_paid !== null) {
+      message.respect_paid = object.respect_paid;
     } else {
-      message.respectPaid = 0;
+      message.respect_paid = 0;
     }
     if (
-      object.publisherReward !== undefined &&
-      object.publisherReward !== null
+      object.publisher_reward !== undefined &&
+      object.publisher_reward !== null
     ) {
-      message.publisherReward = object.publisherReward;
+      message.publisher_reward = object.publisher_reward;
     } else {
-      message.publisherReward = 0;
+      message.publisher_reward = 0;
     }
     if (
-      object.communityPoolFunds !== undefined &&
-      object.communityPoolFunds !== null
+      object.community_pool_funds !== undefined &&
+      object.community_pool_funds !== null
     ) {
-      message.communityPoolFunds = object.communityPoolFunds;
+      message.community_pool_funds = object.community_pool_funds;
     } else {
-      message.communityPoolFunds = 0;
+      message.community_pool_funds = 0;
     }
     return message;
   },
