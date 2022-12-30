@@ -626,10 +626,10 @@ paths:
                     type: string
                   active:
                     type: boolean
-                  articlesCount:
+                  articles_count:
                     type: integer
                     format: int64
-                  createdAt:
+                  created_at:
                     type: string
                     format: int64
                   respect:
@@ -681,10 +681,10 @@ paths:
                       type: string
                     active:
                       type: boolean
-                    articlesCount:
+                    articles_count:
                       type: integer
                       format: int64
-                    createdAt:
+                    created_at:
                       type: string
                       format: int64
                     respect:
@@ -32715,13 +32715,13 @@ definitions:
   bze.cointrunk.v1.MsgPayPublisherRespectResponse:
     type: object
     properties:
-      respectPaid:
+      respect_paid:
         type: string
         format: uint64
-      publisherReward:
+      publisher_reward:
         type: string
         format: uint64
-      communityPoolFunds:
+      community_pool_funds:
         type: string
         format: uint64
   bze.cointrunk.v1.Params:
@@ -32759,10 +32759,10 @@ definitions:
         type: string
       active:
         type: boolean
-      articlesCount:
+      articles_count:
         type: integer
         format: int64
-      createdAt:
+      created_at:
         type: string
         format: int64
       respect:
@@ -32946,10 +32946,10 @@ definitions:
             type: string
           active:
             type: boolean
-          articlesCount:
+          articles_count:
             type: integer
             format: int64
-          createdAt:
+          created_at:
             type: string
             format: int64
           respect:
@@ -32969,10 +32969,10 @@ definitions:
               type: string
             active:
               type: boolean
-            articlesCount:
+            articles_count:
               type: integer
               format: int64
-            createdAt:
+            created_at:
               type: string
               format: int64
             respect:

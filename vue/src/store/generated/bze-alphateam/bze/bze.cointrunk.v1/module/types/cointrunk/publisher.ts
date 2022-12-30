@@ -8,8 +8,8 @@ export interface Publisher {
   name: string;
   address: string;
   active: boolean;
-  articlesCount: number;
-  createdAt: number;
+  articles_count: number;
+  created_at: number;
   respect: number;
 }
 
@@ -17,8 +17,8 @@ const basePublisher: object = {
   name: "",
   address: "",
   active: false,
-  articlesCount: 0,
-  createdAt: 0,
+  articles_count: 0,
+  created_at: 0,
   respect: 0,
 };
 
@@ -33,11 +33,11 @@ export const Publisher = {
     if (message.active === true) {
       writer.uint32(24).bool(message.active);
     }
-    if (message.articlesCount !== 0) {
-      writer.uint32(32).uint32(message.articlesCount);
+    if (message.articles_count !== 0) {
+      writer.uint32(32).uint32(message.articles_count);
     }
-    if (message.createdAt !== 0) {
-      writer.uint32(40).int64(message.createdAt);
+    if (message.created_at !== 0) {
+      writer.uint32(40).int64(message.created_at);
     }
     if (message.respect !== 0) {
       writer.uint32(48).int64(message.respect);
@@ -62,10 +62,10 @@ export const Publisher = {
           message.active = reader.bool();
           break;
         case 4:
-          message.articlesCount = reader.uint32();
+          message.articles_count = reader.uint32();
           break;
         case 5:
-          message.createdAt = longToNumber(reader.int64() as Long);
+          message.created_at = longToNumber(reader.int64() as Long);
           break;
         case 6:
           message.respect = longToNumber(reader.int64() as Long);
@@ -95,15 +95,15 @@ export const Publisher = {
     } else {
       message.active = false;
     }
-    if (object.articlesCount !== undefined && object.articlesCount !== null) {
-      message.articlesCount = Number(object.articlesCount);
+    if (object.articles_count !== undefined && object.articles_count !== null) {
+      message.articles_count = Number(object.articles_count);
     } else {
-      message.articlesCount = 0;
+      message.articles_count = 0;
     }
-    if (object.createdAt !== undefined && object.createdAt !== null) {
-      message.createdAt = Number(object.createdAt);
+    if (object.created_at !== undefined && object.created_at !== null) {
+      message.created_at = Number(object.created_at);
     } else {
-      message.createdAt = 0;
+      message.created_at = 0;
     }
     if (object.respect !== undefined && object.respect !== null) {
       message.respect = Number(object.respect);
@@ -118,9 +118,9 @@ export const Publisher = {
     message.name !== undefined && (obj.name = message.name);
     message.address !== undefined && (obj.address = message.address);
     message.active !== undefined && (obj.active = message.active);
-    message.articlesCount !== undefined &&
-      (obj.articlesCount = message.articlesCount);
-    message.createdAt !== undefined && (obj.createdAt = message.createdAt);
+    message.articles_count !== undefined &&
+      (obj.articles_count = message.articles_count);
+    message.created_at !== undefined && (obj.created_at = message.created_at);
     message.respect !== undefined && (obj.respect = message.respect);
     return obj;
   },
@@ -142,15 +142,15 @@ export const Publisher = {
     } else {
       message.active = false;
     }
-    if (object.articlesCount !== undefined && object.articlesCount !== null) {
-      message.articlesCount = object.articlesCount;
+    if (object.articles_count !== undefined && object.articles_count !== null) {
+      message.articles_count = object.articles_count;
     } else {
-      message.articlesCount = 0;
+      message.articles_count = 0;
     }
-    if (object.createdAt !== undefined && object.createdAt !== null) {
-      message.createdAt = object.createdAt;
+    if (object.created_at !== undefined && object.created_at !== null) {
+      message.created_at = object.created_at;
     } else {
-      message.createdAt = 0;
+      message.created_at = 0;
     }
     if (object.respect !== undefined && object.respect !== null) {
       message.respect = object.respect;
