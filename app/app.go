@@ -608,7 +608,7 @@ func (app *App) setupUpgradeHandlers() {
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v600.UpgradeName,
-		v600.CreateUpgradeHandler(),
+		v600.CreateUpgradeHandler(&app.CointrunkKeeper),
 	)
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
