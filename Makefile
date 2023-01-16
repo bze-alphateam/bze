@@ -9,7 +9,7 @@ BUILDDIR ?= $(CURDIR)/build
 LEDGER_ENABLED ?= true
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=bze \
-	-X github.com/cosmos/cosmos-sdk/version.ServerName=bzed \
+	-X github.com/cosmos/cosmos-sdk/version.AppName=bzed \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT)
 
