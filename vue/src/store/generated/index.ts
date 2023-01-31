@@ -1,6 +1,11 @@
 // THIS FILE IS GENERATED AUTOMATICALLY. DO NOT MODIFY.
 
+import BzeAlphateamBzeBzeBurnerV1 from './bze-alphateam/bze/bze.burner.v1'
+import BzeAlphateamBzeBzeCointrunkV1 from './bze-alphateam/bze/bze.cointrunk.v1'
+import BzeAlphateamBzeBzeCointrunk from './bze-alphateam/bze/bze.cointrunk'
 import BzeAlphateamBzeBzeScavenge from './bze-alphateam/bze/bze.scavenge'
+import BzeAlphateamBzeBzealphateamBzeBurner from './bze-alphateam/bze/bzealphateam.bze.burner'
+import BzeAlphateamBzeBzealphateamBzeCointrunk from './bze-alphateam/bze/bzealphateam.bze.cointrunk'
 import CosmosCosmosSdkCosmosAuthzV1Beta1 from './cosmos/cosmos-sdk/cosmos.authz.v1beta1'
 import CosmosCosmosSdkCosmosBankV1Beta1 from './cosmos/cosmos-sdk/cosmos.bank.v1beta1'
 import CosmosCosmosSdkCosmosCrisisV1Beta1 from './cosmos/cosmos-sdk/cosmos.crisis.v1beta1'
@@ -15,7 +20,12 @@ import CosmosIbcGoIbcApplicationsTransferV1 from './cosmos/ibc-go/ibc.applicatio
 
 
 export default { 
+  BzeAlphateamBzeBzeBurnerV1: load(BzeAlphateamBzeBzeBurnerV1, 'bze.burner.v1'),
+  BzeAlphateamBzeBzeCointrunkV1: load(BzeAlphateamBzeBzeCointrunkV1, 'bze.cointrunk.v1'),
+  BzeAlphateamBzeBzeCointrunk: load(BzeAlphateamBzeBzeCointrunk, 'bze.cointrunk'),
   BzeAlphateamBzeBzeScavenge: load(BzeAlphateamBzeBzeScavenge, 'bze.scavenge'),
+  BzeAlphateamBzeBzealphateamBzeBurner: load(BzeAlphateamBzeBzealphateamBzeBurner, 'bzealphateam.bze.burner'),
+  BzeAlphateamBzeBzealphateamBzeCointrunk: load(BzeAlphateamBzeBzealphateamBzeCointrunk, 'bzealphateam.bze.cointrunk'),
   CosmosCosmosSdkCosmosAuthzV1Beta1: load(CosmosCosmosSdkCosmosAuthzV1Beta1, 'cosmos.authz.v1beta1'),
   CosmosCosmosSdkCosmosBankV1Beta1: load(CosmosCosmosSdkCosmosBankV1Beta1, 'cosmos.bank.v1beta1'),
   CosmosCosmosSdkCosmosCrisisV1Beta1: load(CosmosCosmosSdkCosmosCrisisV1Beta1, 'cosmos.crisis.v1beta1'),

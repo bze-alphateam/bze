@@ -1,0 +1,14 @@
+syntax = "proto3";
+package bze.cointrunk.v1;
+
+option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
+
+message Publisher {
+  
+  string name = 1; 
+  string address = 2; 
+  bool active = 3;
+  uint32 articles_count = 4;
+  int64 created_at = 5;
+  int64 respect = 6;
+}

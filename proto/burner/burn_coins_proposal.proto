@@ -1,0 +1,10 @@
+syntax = "proto3";
+package bze.burner.v1;
+
+option go_package = "github.com/bze-alphateam/bze/x/burner/types";
+
+message BurnCoinsProposal {
+  
+  string title = 1; 
+  string description = 2;
+}

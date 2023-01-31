@@ -1,0 +1,103 @@
+syntax = "proto3";
+package bze.cointrunk.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cointrunk/params.proto";
+import "cointrunk/accepted_domain.proto";
+import "cointrunk/publisher.proto";
+import "cointrunk/article.proto";
+import "cointrunk/anon_articles_counter.proto";
+// this line is used by starport scaffolding # 1
+
+option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Parameters queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/bze/cointrunk/v1/params";
+  }
+  // Queries a list of AcceptedDomain items.
+	rpc AcceptedDomain(QueryAcceptedDomainRequest) returns (QueryAcceptedDomainResponse) {
+		option (google.api.http).get = "/bze/cointrunk/v1/accepted_domain";
+	}
+
+// Queries a list of Publisher items.
+	rpc Publisher(QueryPublisherRequest) returns (QueryPublisherResponse) {
+		option (google.api.http).get = "/bze/cointrunk/v1/publishers";
+	}
+
+// Queries publisher by index/address.
+	rpc PublisherByIndex(QueryPublisherByIndexRequest) returns (QueryPublisherByIndexResponse) {
+		option (google.api.http).get = "/bze/cointrunk/v1/publisher/{index}";
+	}
+
+// Queries a list of Article items.
+	rpc AllArticles(QueryAllArticlesRequest) returns (QueryAllArticlesResponse) {
+		option (google.api.http).get = "/bze/cointrunk/v1/articles";
+	}
+
+// Queries a list of AllAnonArticlesCounters items.
+	rpc AllAnonArticlesCounters(QueryAllAnonArticlesCountersRequest) returns (QueryAllAnonArticlesCountersResponse) {
+		option (google.api.http).get = "/bze/cointrunk/v1/all_anon_articles_counters";
+	}
+
+// this line is used by starport scaffolding # 2
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAcceptedDomainRequest {
+cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAcceptedDomainResponse {
+repeated AcceptedDomain acceptedDomain = 1 [(gogoproto.nullable) = false];
+cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPublisherRequest {
+cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryPublisherResponse {
+repeated Publisher publisher = 1 [(gogoproto.nullable) = false];
+cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPublisherByIndexRequest {
+	string index = 1;
+}
+
+message QueryPublisherByIndexResponse {
+	Publisher publisher = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllArticlesRequest {
+cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryAllArticlesResponse {
+	repeated Article article = 1 [(gogoproto.nullable) = false];
+cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllAnonArticlesCountersRequest {
+cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllAnonArticlesCountersResponse {
+	repeated AnonArticlesCounter AnonArticlesCounters = 1 [(gogoproto.nullable) = false];
+cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// this line is used by starport scaffolding # 3
