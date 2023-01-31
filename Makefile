@@ -1,6 +1,6 @@
 PACKAGES=$(shell go list ./... | grep -v '/simulation')
 PACKAGE_NAME:=github.com/bze-alphateam/bze-v5
-GOLANG_CROSS_VERSION  = v1.17.2
+GOLANG_CROSS_VERSION  = v1.19.3
 VERSION := $(shell echo $(shell git describe --tags 2>/dev/null ) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 NETWORK ?= mainnet

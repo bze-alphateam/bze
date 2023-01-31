@@ -1,0 +1,10 @@
+syntax = "proto3";
+package bze.cointrunk.v1;
+
+option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
+
+message AnonArticlesCounter {
+
+  string key = 1;
+  uint64 counter = 2;
+}
