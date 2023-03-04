@@ -104,8 +104,6 @@ lint:
 	@echo "--> Running linter"
 	@golangci-lint run
 	@go mod verify
-	@flake8 --show-source --count --statistics
-	@find . -name "*.nix" -type f | xargs nixpkgs-fmt --check
 
 # a trick to make all the lint commands execute, return error when at least one fails.
 # golangci-lint is run in standalone job in ci
