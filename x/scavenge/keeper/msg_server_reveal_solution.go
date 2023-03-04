@@ -22,8 +22,7 @@ func (k msgServer) RevealSolution(goCtx context.Context, msg *types.MsgRevealSol
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Commit with this hash does not exist")
 	}
 
-	var scavenge = types.Scavenge{}
-	scavenge, isFound = k.GetScavenge(ctx, msg.ScavengeIndex)
+	scavenge, isFound := k.GetScavenge(ctx, msg.ScavengeIndex)
 	if !isFound {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Scavenge with this solution hash doesnt exist")
 	}
