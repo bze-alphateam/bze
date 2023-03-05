@@ -2,11 +2,13 @@ package types
 
 import (
 	"errors"
-	"github.com/bze-alphateam/bze/bzeutils"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"net/url"
 	"strings"
+
+	"github.com/bze-alphateam/bze/bzeutils"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const TypeMsgAddArticle = "add_article"
