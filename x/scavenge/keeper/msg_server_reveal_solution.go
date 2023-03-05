@@ -4,11 +4,13 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/bze-alphateam/bze/x/scavenge/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/tendermint/tendermint/crypto"
 )
 
 func (k msgServer) RevealSolution(goCtx context.Context, msg *types.MsgRevealSolution) (*types.MsgRevealSolutionResponse, error) {
@@ -22,8 +24,7 @@ func (k msgServer) RevealSolution(goCtx context.Context, msg *types.MsgRevealSol
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Commit with this hash does not exist")
 	}
 
-	var scavenge = types.Scavenge{}
-	scavenge, isFound = k.GetScavenge(ctx, msg.ScavengeIndex)
+	scavenge, isFound := k.GetScavenge(ctx, msg.ScavengeIndex)
 	if !isFound {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Scavenge with this solution hash doesnt exist")
 	}

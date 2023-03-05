@@ -1,12 +1,14 @@
 package client
 
 import (
+	"net/http"
+
 	"github.com/bze-alphateam/bze/x/burner/client/cli"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/types/rest"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govrest "github.com/cosmos/cosmos-sdk/x/gov/client/rest"
-	"net/http"
 )
 
 var BurnCoinsProposalHandler = govclient.NewProposalHandler(cli.NewCmdSubmitBurnCoinsProposal, emptyRestHandler)

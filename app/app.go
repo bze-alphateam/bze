@@ -3,7 +3,7 @@ package app
 import (
 	v512 "github.com/bze-alphateam/bze/app/upgrades/v512"
 	v600 "github.com/bze-alphateam/bze/app/upgrades/v600"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+
 	"io"
 	"net/http"
 	"os"
@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"

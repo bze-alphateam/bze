@@ -41,7 +41,7 @@ all: download install
 download:
 	git submodule update --init --recursive
 
-install: check-network go.sum
+install: lint check-network go.sum
 		go install -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) ./cmd/bzed
 
 build: check-network go.sum
@@ -80,7 +80,7 @@ else
 		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 $(MAKE) build
 endif
 
-build-all: all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
+build-all: lint all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
 
 compress-build:
 	rm -rf $(BUILDDIR)/compressed
@@ -104,8 +104,6 @@ lint:
 	@echo "--> Running linter"
 	@golangci-lint run
 	@go mod verify
-	@flake8 --show-source --count --statistics
-	@find . -name "*.nix" -type f | xargs nixpkgs-fmt --check
 
 # a trick to make all the lint commands execute, return error when at least one fails.
 # golangci-lint is run in standalone job in ci
