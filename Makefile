@@ -41,7 +41,7 @@ all: download install
 download:
 	git submodule update --init --recursive
 
-install: check-network go.sum
+install: lint check-network go.sum
 		go install -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) ./cmd/bzed
 
 build: check-network go.sum
@@ -80,7 +80,7 @@ else
 		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 $(MAKE) build
 endif
 
-build-all: all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
+build-all: lint all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
 
 compress-build:
 	rm -rf $(BUILDDIR)/compressed
@@ -102,7 +102,8 @@ test: check-network
 # look into .golangci.yml for enabling / disabling linters
 lint:
 	@echo "--> Running linter"
-	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout=10m -c .golangci.yml
+	@golangci-lint run
+	@go mod verify
 
 # a trick to make all the lint commands execute, return error when at least one fails.
 # golangci-lint is run in standalone job in ci
