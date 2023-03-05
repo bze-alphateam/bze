@@ -3,7 +3,9 @@ package keeper
 import (
 	"encoding/binary"
 	"fmt"
+
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

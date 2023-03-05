@@ -102,8 +102,7 @@ test: check-network
 # look into .golangci.yml for enabling / disabling linters
 lint:
 	@echo "--> Running linter"
-	@golangci-lint run
-	@go mod verify
+	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run --timeout=10m -c .golangci.yml
 
 # a trick to make all the lint commands execute, return error when at least one fails.
 # golangci-lint is run in standalone job in ci
