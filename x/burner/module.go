@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	// this line is used by starport scaffolding # 1
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -15,6 +14,7 @@ import (
 	"github.com/bze-alphateam/bze/x/burner/client/cli"
 	"github.com/bze-alphateam/bze/x/burner/keeper"
 	"github.com/bze-alphateam/bze/x/burner/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
