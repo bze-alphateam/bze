@@ -18,9 +18,7 @@ TESTNET_FLAGS ?=
 
 check_version:
 ifneq ($(GO_MINOR_VERSION),19)
-		@echo "\033[0;31mERROR:\033[0m Go version 1.19 is required for building bzed. It looks like you are using" "$(shell go version)"
-		@echo "" 
-		@echo "There are potential consensus-breaking changes that can occur when running binaries compiled with different versions of Go. Please download Go version 1.19 and retry. Thank you!"
+		@echo "\033[0;31mERROR:\033[0m Go version 1.19 is required for building bzed. It looks like you are using" "$(shell go version) \nThere are potential consensus-breaking changes that can occur when running binaries compiled with different versions of Go. Please download Go version 1.19 and retry. Thank you!"
 		exit 1
 endif
 
