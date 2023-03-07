@@ -20,7 +20,7 @@ check_version:
 ifneq ($(GO_MINOR_VERSION),19)
 		@echo "ERROR: Go version 1.19 is required for building bzed..."
 		@echo "It looks like you are using:"
-		@echo "$(shell go version | awk '{print $$3}')" 
+		@echo "$(shell go version)" 
 		@echo "There are consensus-breaking changes by using binaries compiled with versions of Go other than 1.19!!!"
 		@echo "Please download and compile using Go version 1.19 and retry."
 		@echo "Thank you!"
