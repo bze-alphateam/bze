@@ -16,6 +16,12 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=bze \
 BUILD_FLAGS := -ldflags '$(ldflags)'
 TESTNET_FLAGS ?=
 
+check_version:
+ifneq ($(GO_MINOR_VERSION),19)
+        @echo "ERROR: Go version 1.19 is required for building bzed. There are consensus-breaking changes with using binaries compiled with versions of Go other than 1.19. Please download and compile with Go version 1.19"
+        exit 1
+endif
+
 ledger ?= HID
 ifeq ($(LEDGER_ENABLED),true)
 	BUILD_TAGS := -tags cgo,ledger,!test_ledger_mock,!ledger_mock
@@ -41,39 +47,39 @@ all: download install
 download:
 	git submodule update --init --recursive
 
-install: lint check-network go.sum
+install: check_version lint check-network go.sum
 		go install -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) ./cmd/bzed
 
-build: check-network go.sum
+build: check_version check-network go.sum
 		go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/bzed ./cmd/bzed
 
-build-win64: check-network go.sum
+build-win64: check_version check-network go.sum
 		go build -buildmode=exe -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/win64/bzed.exe ./cmd/bzed
 
 .PHONY: build
 
-build-linux: check-network go.sum
+build-linux: check_version check-network go.sum
 ifeq ($(OS), Linux)
 		GOOS=linux GOARCH=amd64 $(MAKE) build
 else
 		LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
 endif
 
-build-linux-arm64: check-network go.sum
+build-linux-arm64: check_version check-network go.sum
 ifeq ($(OS), Linux)
 		GOOS=linux GOARCH=arm64 $(MAKE) build
 else
 		LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 $(MAKE) build
 endif
 
-build-mac: check-network go.sum
+build-mac: check_version check-network go.sum
 ifeq ($(OS), Darwin)
 		GOOS=darwin GOARCH=amd64 $(MAKE) build
 else
 		LEDGER_ENABLED=false GOOS=darwin GOARCH=amd64 $(MAKE) build
 endif
 
-build-mac-arm64: check-network go.sum
+build-mac-arm64: check_version check-network go.sum
 ifeq ($(OS), Darwin)
 		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 $(MAKE) build
 else
