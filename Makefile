@@ -16,12 +16,6 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=bze \
 BUILD_FLAGS := -ldflags '$(ldflags)'
 TESTNET_FLAGS ?=
 
-check_version:
-	@if ! go version | grep -q "go1.19"; then \
-		echo "\033[0;31mERROR:\033[0m Go version 1.19 is required for building bzed. It looks like you are using" "$(shell go version) \nThere are potential consensus-breaking changes that can occur when running binaries compiled with different versions of Go. Please download Go version 1.19 and retry. Thank you!"; \
-		exit 1; \
-	fi
-
 ledger ?= HID
 ifeq ($(LEDGER_ENABLED),true)
 	BUILD_TAGS := -tags cgo,ledger,!test_ledger_mock,!ledger_mock
@@ -86,7 +80,7 @@ else
 		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 $(MAKE) build
 endif
 
-build-all: lint all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
+build-all: check_version lint all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
 
 compress-build:
 	rm -rf $(BUILDDIR)/compressed
@@ -116,6 +110,13 @@ lint:
 lint-ci:
 	@echo "--> Running linter for CI"
 	@nix run -f ./. lint-env -c lint-ci
+
+# Add check to make sure we are using the proper Go version before proceeding with anything
+check_version:
+	@if ! go version | grep -q "go1.19"; then \
+		echo "\033[0;31mERROR:\033[0m Go version 1.19 is required for building bzed. It looks like you are using" "$(shell go version) \nThere are potential consensus-breaking changes that can occur when running binaries compiled with different versions of Go. Please download Go version 1.19 and retry. Thank you!"; \
+		exit 1; \
+	fi
 
 test-sim-nondeterminism: check-network
 	@echo "Running non-determinism test..."
