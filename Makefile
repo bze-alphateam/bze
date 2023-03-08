@@ -41,46 +41,46 @@ all: download install
 download:
 	git submodule update --init --recursive
 
-install: check_version lint check-network go.sum
+install: check-version lint check-network go.sum
 		go install -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) ./cmd/bzed
 
-build: check_version check-network go.sum
+build: check-version check-network go.sum
 		go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/bzed ./cmd/bzed
 
-build-win64: check_version check-network go.sum
+build-win64: check-version check-network go.sum
 		go build -buildmode=exe -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/win64/bzed.exe ./cmd/bzed
 
 .PHONY: build
 
-build-linux: check_version check-network go.sum
+build-linux: check-version check-network go.sum
 ifeq ($(OS), Linux)
 		GOOS=linux GOARCH=amd64 $(MAKE) build
 else
 		LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
 endif
 
-build-linux-arm64: check_version check-network go.sum
+build-linux-arm64: check-version check-network go.sum
 ifeq ($(OS), Linux)
 		GOOS=linux GOARCH=arm64 $(MAKE) build
 else
 		LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 $(MAKE) build
 endif
 
-build-mac: check_version check-network go.sum
+build-mac: check-version check-network go.sum
 ifeq ($(OS), Darwin)
 		GOOS=darwin GOARCH=amd64 $(MAKE) build
 else
 		LEDGER_ENABLED=false GOOS=darwin GOARCH=amd64 $(MAKE) build
 endif
 
-build-mac-arm64: check_version check-network go.sum
+build-mac-arm64: check-version check-network go.sum
 ifeq ($(OS), Darwin)
 		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 $(MAKE) build
 else
 		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 $(MAKE) build
 endif
 
-build-all: check_version lint all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
+build-all: check-version lint all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
 
 compress-build:
 	rm -rf $(BUILDDIR)/compressed
@@ -112,9 +112,9 @@ lint-ci:
 	@nix run -f ./. lint-env -c lint-ci
 
 # Add check to make sure we are using the proper Go version before proceeding with anything
-check_version:
+check-version:
 	@if ! go version | grep -q "go1.19"; then \
-		echo "\033[0;31mERROR:\033[0m Go version 1.19 is required for building bzed. It looks like you are using" "$(shell go version) \nThere are potential consensus-breaking changes that can occur when running binaries compiled with different versions of Go. Please download Go version 1.19 and retry. Thank you!"; \
+		echo "\033[0;31mERROR:\033[0m Go version 1.19 is required for compiling bzed. It looks like you are using" "$(shell go version) \nThere are potential consensus-breaking changes that can occur when running binaries compiled with different versions of Go. Please download Go version 1.19 and retry. Thank you!"; \
 		exit 1; \
 	fi
 
