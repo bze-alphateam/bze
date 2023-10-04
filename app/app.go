@@ -1,8 +1,11 @@
 package app
 
 import (
+	"github.com/bze-alphateam/bze/app/openapiconsole"
+	appparams "github.com/bze-alphateam/bze/app/params"
 	v512 "github.com/bze-alphateam/bze/app/upgrades/v512"
 	v600 "github.com/bze-alphateam/bze/app/upgrades/v600"
+	bzecmd "github.com/bze-alphateam/bze/cmd/bzed/cmd"
 
 	"io"
 	"net/http"
@@ -93,9 +96,6 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/tendermint/starport/starport/pkg/cosmoscmd"
-	"github.com/tendermint/starport/starport/pkg/openapiconsole"
-
 	"github.com/bze-alphateam/bze/docs"
 	scavengemodule "github.com/bze-alphateam/bze/x/scavenge"
 	scavengemodulekeeper "github.com/bze-alphateam/bze/x/scavenge/keeper"
@@ -117,6 +117,37 @@ const (
 	AccountAddressPrefix = "bze"
 	Name                 = "bze"
 )
+
+// CosmosApp implements the common methods for a Cosmos SDK-based application
+// specific blockchain.
+type CosmosApp interface {
+	// The assigned name of the app.
+	Name() string
+
+	// The application types codec.
+	// NOTE: This should be sealed before being returned.
+	LegacyAmino() *codec.LegacyAmino
+
+	// Application updates every begin block.
+	BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock
+
+	// Application updates every end block.
+	EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock
+
+	// Application update at chain (i.e app) initialization.
+	InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain
+
+	// Loads the app at a given height.
+	LoadHeight(height int64) error
+
+	// Exports the state of the application for a genesis file.
+	ExportAppStateAndValidators(
+		forZeroHeight bool, jailAllowedAddrs []string,
+	) (servertypes.ExportedApp, error)
+
+	// All the registered module account addreses.
+	ModuleAccountAddrs() map[string]bool
+}
 
 // this line is used by starport scaffolding # stargate/wasm/app/enabledProposals
 
@@ -189,7 +220,7 @@ var (
 )
 
 var (
-	_ cosmoscmd.CosmosApp     = (*App)(nil)
+	_ CosmosApp               = (*App)(nil)
 	_ servertypes.Application = (*App)(nil)
 )
 
@@ -259,10 +290,10 @@ func New(
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 	invCheckPeriod uint,
-	encodingConfig cosmoscmd.EncodingConfig,
+	encodingConfig appparams.EncodingConfig,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
-) cosmoscmd.App {
+) bzecmd.App {
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry

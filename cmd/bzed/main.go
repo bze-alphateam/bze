@@ -1,15 +1,15 @@
 package main
 
 import (
+	bzecmd "github.com/bze-alphateam/bze/cmd/bzed/cmd"
 	"os"
 
 	"github.com/bze-alphateam/bze/app"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-	"github.com/tendermint/starport/starport/pkg/cosmoscmd"
 )
 
 func main() {
-	rootCmd, _ := cosmoscmd.NewRootCmd(
+	rootCmd, _ := bzecmd.NewRootCmd(
 		app.Name,
 		app.AccountAddressPrefix,
 		app.DefaultNodeHome,
