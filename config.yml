@@ -1,44 +1,53 @@
+version: 1
+build:
+  binary: bzed
+  proto:
+    path: proto
+    third_party_paths:
+    - third_party/proto
+    - proto_vendor
 accounts:
-  - name: alice
-    coins: ["1000000000000utestbze"]
-  - name: bob
-    coins: ["1000000000000utestbze"]
-validator:
-  name: alice
-  staked: "10000000000utestbze"
-client:
-  openapi:
-    path: "docs/static/openapi.yml"
-  vuex:
-    path: "vue/src/store"
+- name: alice
+  coins:
+  - 1000000000000utestbze
+- name: bob
+  coins:
+  - 1000000000000utestbze
 faucet:
   name: bob
-  coins: ["100000000000utestbze"]
-build:
-  binary: "bzed"
+  coins:
+  - 100000000000utestbze
+  host: 0.0.0.0:4500
+client:
+  vuex:
+    path: vue/src/store
+  openapi:
+    path: docs/static/openapi.yml
 genesis:
   app_state:
-    staking:
+    cointrunk:
       params:
-        bond_denom: "utestbze"
+        anonArticleCost:
+          amount: "25000000000"
+          denom: utestbze
+        anonArticleLimit: 5
+        publisher_respect_params:
+          denom: utestbze
+          tax: "0.200000000000"
     gov:
-      voting_params:
-        voting_period: "120s"
       deposit_params:
         min_deposit:
-          -
-            denom: "utestbze"
-            amount: "1000000"
+        - amount: "1000000"
+          denom: utestbze
       tally_params:
         quorum: "0.00001"
         threshold: "0.001"
         veto_threshold: "0.01"
-    cointrunk:
+      voting_params:
+        voting_period: 120s
+    staking:
       params:
-        anonArticleLimit: 5
-        anonArticleCost:
-          denom: "utestbze"
-          amount: "25000000000"
-        publisher_respect_params:
-          denom: "utestbze"
-          tax: "0.200000000000"
+        bond_denom: utestbze
+validators:
+- name: alice
+  bonded: 10000000000utestbze
