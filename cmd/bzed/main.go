@@ -1,7 +1,8 @@
 package main
 
 import (
-	bzecmd "github.com/bze-alphateam/bze/cmd/bzed/cmd"
+	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/ibc-go/v7/testing/simapp/simd/cmd"
 	"os"
 
 	"github.com/bze-alphateam/bze/app"
@@ -9,16 +10,16 @@ import (
 )
 
 func main() {
-	rootCmd, _ := bzecmd.NewRootCmd(
-		app.Name,
-		app.AccountAddressPrefix,
-		app.DefaultNodeHome,
-		app.Name,
-		app.ModuleBasics,
-		app.New,
-		// this line is used by starport scaffolding # root/arguments
-	)
-	if err := svrcmd.Execute(rootCmd, "", app.DefaultNodeHome); err != nil {
-		os.Exit(1)
+	//	app.SetAddressPrefixes() //TODO: either implement or remove
+	rootCmd, _ := cmd.NewRootCmd()
+
+	if err := svrcmd.Execute(rootCmd, "bzed", app.DefaultNodeHome); err != nil {
+		switch e := err.(type) {
+		case server.ErrorCode:
+			os.Exit(e.Code)
+
+		default:
+			os.Exit(1)
+		}
 	}
 }
