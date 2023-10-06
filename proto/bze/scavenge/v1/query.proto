@@ -3,8 +3,8 @@ package bze.scavenge;
 
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "scavenge/scavenge.proto";
-import "scavenge/commit.proto";
+import "bze/scavenge/v1/scavenge.proto";
+import "bze/scavenge/v1/commit.proto";
 // this line is used by starport scaffolding # 1
 import "gogoproto/gogo.proto";
 

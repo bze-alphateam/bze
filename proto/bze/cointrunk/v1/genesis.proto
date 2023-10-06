@@ -2,10 +2,10 @@ syntax = "proto3";
 package bze.cointrunk.v1;
 
 import "gogoproto/gogo.proto";
-import "cointrunk/params.proto";
-import "cointrunk/publisher.proto";
-import "cointrunk/accepted_domain.proto";
-import "cointrunk/article.proto";
+import "bze/cointrunk/v1/params.proto";
+import "bze/cointrunk/v1/publisher.proto";
+import "bze/cointrunk/v1/accepted_domain.proto";
+import "bze/cointrunk/v1/article.proto";
 // this line is used by starport scaffolding # genesis/proto/import
 
 option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";

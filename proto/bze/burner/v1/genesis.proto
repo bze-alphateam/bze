@@ -2,8 +2,8 @@ syntax = "proto3";
 package bze.burner.v1;
 
 import "gogoproto/gogo.proto";
-import "burner/params.proto";
-import "burner/burned_coins.proto";
+import "bze/burner/v1/params.proto";
+import "bze/burner/v1/burned_coins.proto";
 // this line is used by starport scaffolding # genesis/proto/import
 
 option go_package = "github.com/bze-alphateam/bze/x/burner/types";

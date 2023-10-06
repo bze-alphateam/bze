@@ -4,8 +4,9 @@ package bze.burner.v1;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "burner/params.proto";
-import "burner/burned_coins.proto";
+import "cosmos_proto/cosmos.proto";
+import "bze/burner/v1/params.proto";
+import "bze/burner/v1/burned_coins.proto";
 // this line is used by starport scaffolding # 1
 
 option go_package = "github.com/bze-alphateam/bze/x/burner/types";

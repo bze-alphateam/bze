@@ -1,8 +1,8 @@
 syntax = "proto3";
 package bze.cointrunk.v1;
 
-import "cointrunk/publisher.proto";
-import "cointrunk/accepted_domain.proto";
+import "bze/cointrunk/v1/publisher.proto";
+import "bze/cointrunk/v1/accepted_domain.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
 

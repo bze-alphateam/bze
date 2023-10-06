@@ -4,11 +4,11 @@ package bze.cointrunk.v1;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "cointrunk/params.proto";
-import "cointrunk/accepted_domain.proto";
-import "cointrunk/publisher.proto";
-import "cointrunk/article.proto";
-import "cointrunk/anon_articles_counter.proto";
+import "bze/cointrunk/v1/params.proto";
+import "bze/cointrunk/v1/accepted_domain.proto";
+import "bze/cointrunk/v1/publisher.proto";
+import "bze/cointrunk/v1/article.proto";
+import "bze/cointrunk/v1/anon_articles_counter.proto";
 // this line is used by starport scaffolding # 1
 
 option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
