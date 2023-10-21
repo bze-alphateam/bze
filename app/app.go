@@ -6,6 +6,7 @@ import (
 	appparams "github.com/bze-alphateam/bze/app/params"
 	v512 "github.com/bze-alphateam/bze/app/upgrades/v512"
 	v600 "github.com/bze-alphateam/bze/app/upgrades/v600"
+	v700 "github.com/bze-alphateam/bze/app/upgrades/v700"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/x/group"
@@ -725,6 +726,11 @@ func (app *App) setupUpgradeHandlers() {
 		v600.CreateUpgradeHandler(&app.CointrunkKeeper),
 	)
 
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v700.UpgradeName,
+		v700.CreateUpgradeHandler(&app.ParamsKeeper, &app.ConsensusParamsKeeper),
+	)
+
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(err)
@@ -737,6 +743,15 @@ func (app *App) setupUpgradeHandlers() {
 	if upgradeInfo.Name == v600.UpgradeName {
 		storeUpgrades := storetypes.StoreUpgrades{
 			Added: []string{burnermoduletypes.StoreKey, cointrunkmoduletypes.StoreKey, authzkeeper.StoreKey},
+		}
+
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
+
+	if upgradeInfo.Name == v700.UpgradeName {
+		storeUpgrades := storetypes.StoreUpgrades{
+			Added: []string{crisistypes.ModuleName, consensusparamtypes.ModuleName, group.ModuleName},
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades

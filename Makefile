@@ -41,7 +41,7 @@ all: download install
 download:
 	git submodule update --init --recursive
 
-install: check-version lint check-network go.sum
+install: check-version check-network go.sum
 		go install -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) ./cmd/bzed
 
 build: check-version check-network go.sum
@@ -80,7 +80,7 @@ else
 		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 $(MAKE) build
 endif
 
-build-all: check-version lint all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
+build-all: check-version all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
 
 compress-build:
 	rm -rf $(BUILDDIR)/compressed
