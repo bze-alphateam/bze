@@ -7,6 +7,7 @@ NETWORK ?= mainnet
 COVERAGE ?= coverage.txt
 BUILDDIR ?= $(CURDIR)/build
 LEDGER_ENABLED ?= true
+DOCKER := $(shell which docker)
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=bze \
 	-X github.com/cosmos/cosmos-sdk/version.AppName=bzed \
@@ -283,3 +284,19 @@ document:
 # ./proto -> ./x
 proto-all:
 	make proto-all -f MakefileDoc
+
+###############################################################################
+###                                Local Testnet (docker)                   ###
+###############################################################################
+
+localnet-docker-rmi:
+	$(DOCKER) rmi beezee/localnet-beezee 2>/dev/null; true
+
+localnet-docker-build: localnet-docker-rmi
+	$(DOCKER) build --tag beezee/localnet-beezee -f scripts/containers/Dockerfile \
+    		$(shell git rev-parse --show-toplevel)
+
+localnet-docker-run:
+	$(DOCKER) run --rm -v $(CURDIR)/.testnets:/beezee beezee/localnet-beezee \
+		testnet init-files --v 3 -o /beezee --starting-ip-address 192.168.5.20 --keyring-backend=test --chain-id=bze-testnet-1
+	docker-compose up -d
