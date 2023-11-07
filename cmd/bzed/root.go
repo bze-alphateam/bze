@@ -35,10 +35,10 @@ import (
 )
 
 //--------------------------------------------------------------------------------------------------
-// Constructor for marsd root command
+// Constructor for bzed root command
 //--------------------------------------------------------------------------------------------------
 
-// NewRootCmd creates root command for the Mars app-chain daemon
+// NewRootCmd creates root command for the BZE app-chain daemon
 func NewRootCmd(encodingConfig app.EncodingConfig) *cobra.Command {
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
@@ -49,13 +49,13 @@ func NewRootCmd(encodingConfig app.EncodingConfig) *cobra.Command {
 		WithAccountRetriever(authtypes.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastBlock).
 		WithHomeDir(app.DefaultNodeHome).
-		WithViper("MARS")
+		WithViper("BZE")
 
 	// **** create root command ****
 
 	rootCmd := &cobra.Command{
-		Use:   "marsd",
-		Short: "Mars app-chain daemon",
+		Use:   "bzed",
+		Short: "BZE app-chain daemon",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
 			if err != nil {
@@ -90,6 +90,8 @@ func NewRootCmd(encodingConfig app.EncodingConfig) *cobra.Command {
 		},
 	)
 
+	addGenesisSubCommands(encodingConfig, rootCmd)
+
 	rootCmd.AddCommand(
 		genesisCommand(encodingConfig),
 		queryCommand(),
@@ -114,6 +116,12 @@ func genesisCommand(encodingConfig app.EncodingConfig) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
+	addGenesisSubCommands(encodingConfig, cmd)
+
+	return cmd
+}
+
+func addGenesisSubCommands(encodingConfig app.EncodingConfig, cmd *cobra.Command) {
 	cmd.AddCommand(
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
 		genutilcli.MigrateGenesisCmd(),
@@ -125,9 +133,8 @@ func genesisCommand(encodingConfig app.EncodingConfig) *cobra.Command {
 		),
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
+		AddGenesisAccountStarportCmd(app.DefaultNodeHome),
 	)
-
-	return cmd
 }
 
 func queryCommand() *cobra.Command {
