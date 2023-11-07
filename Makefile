@@ -1,6 +1,6 @@
 PACKAGES=$(shell go list ./... | grep -v '/simulation')
 PACKAGE_NAME:=github.com/bze-alphateam/bze-v5
-GOLANG_CROSS_VERSION  = v1.19.3
+GOLANG_CROSS_VERSION  = v1.20.8
 VERSION := $(shell echo $(shell git describe --tags 2>/dev/null ) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 NETWORK ?= mainnet
@@ -113,8 +113,8 @@ lint-ci:
 
 # Add check to make sure we are using the proper Go version before proceeding with anything
 check-version:
-	@if ! go version | grep -q "go1.19"; then \
-		echo "\033[0;31mERROR:\033[0m Go version 1.19 is required for compiling bzed. It looks like you are using" "$(shell go version) \nThere are potential consensus-breaking changes that can occur when running binaries compiled with different versions of Go. Please download Go version 1.19 and retry. Thank you!"; \
+	@if ! go version | grep -q "go1.20"; then \
+		echo "\033[0;31mERROR:\033[0m Go version 1.20 is required for compiling bzed. It looks like you are using" "$(shell go version) \nThere are potential consensus-breaking changes that can occur when running binaries compiled with different versions of Go. Please download Go version 1.20 and retry. Thank you!"; \
 		exit 1; \
 	fi
 
