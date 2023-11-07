@@ -93,18 +93,14 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/tendermint/starport/starport/pkg/cosmoscmd"
-	"github.com/tendermint/starport/starport/pkg/openapiconsole"
-
 	"github.com/bze-alphateam/bze/docs"
-	scavengemodule "github.com/bze-alphateam/bze/x/scavenge"
-	scavengemodulekeeper "github.com/bze-alphateam/bze/x/scavenge/keeper"
-	scavengemoduletypes "github.com/bze-alphateam/bze/x/scavenge/types"
-
 	cointrunkmodule "github.com/bze-alphateam/bze/x/cointrunk"
 	cointrunkmoduleclient "github.com/bze-alphateam/bze/x/cointrunk/client"
 	cointrunkmodulekeeper "github.com/bze-alphateam/bze/x/cointrunk/keeper"
 	cointrunkmoduletypes "github.com/bze-alphateam/bze/x/cointrunk/types"
+	scavengemodule "github.com/bze-alphateam/bze/x/scavenge"
+	scavengemodulekeeper "github.com/bze-alphateam/bze/x/scavenge/keeper"
+	scavengemoduletypes "github.com/bze-alphateam/bze/x/scavenge/types"
 
 	burnermodule "github.com/bze-alphateam/bze/x/burner"
 	burnermoduleclient "github.com/bze-alphateam/bze/x/burner/client"
@@ -189,7 +185,6 @@ var (
 )
 
 var (
-	_ cosmoscmd.CosmosApp     = (*App)(nil)
 	_ servertypes.Application = (*App)(nil)
 )
 
@@ -259,10 +254,10 @@ func New(
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
 	invCheckPeriod uint,
-	encodingConfig cosmoscmd.EncodingConfig,
+	encodingConfig EncodingConfig,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
-) cosmoscmd.App {
+) *App {
 	appCodec := encodingConfig.Marshaler
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
@@ -735,7 +730,8 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 
 	// register app's OpenAPI routes.
 	apiSvr.Router.Handle("/static/openapi.yml", http.FileServer(http.FS(docs.Docs)))
-	apiSvr.Router.HandleFunc("/", openapiconsole.Handler(Name, "/static/openapi.yml"))
+	//removed by SDK upgrade
+	//apiSvr.Router.HandleFunc("/", openapiconsole.Handler(Name, "/static/openapi.yml"))
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
