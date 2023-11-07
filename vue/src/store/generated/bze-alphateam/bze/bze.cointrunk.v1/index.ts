@@ -322,21 +322,6 @@ export default {
 		},
 		
 		
-		async sendMsgPayPublisherRespect({ rootGetters }, { value, fee = [], memo = '' }) {
-			try {
-				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgPayPublisherRespect(value)
-				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
-	gas: "200000" }, memo})
-				return result
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgPayPublisherRespect:Init Could not initialize signing client. Wallet is required.')
-				}else{
-					throw new Error('TxClient:MsgPayPublisherRespect:Send Could not broadcast Tx: '+ e.message)
-				}
-			}
-		},
 		async sendMsgAddArticle({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
@@ -352,20 +337,22 @@ export default {
 				}
 			}
 		},
-		
-		async MsgPayPublisherRespect({ rootGetters }, { value }) {
+		async sendMsgPayPublisherRespect({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
 				const msg = await txClient.msgPayPublisherRespect(value)
-				return msg
+				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
+	gas: "200000" }, memo})
+				return result
 			} catch (e) {
 				if (e == MissingWalletError) {
 					throw new Error('TxClient:MsgPayPublisherRespect:Init Could not initialize signing client. Wallet is required.')
-				} else{
-					throw new Error('TxClient:MsgPayPublisherRespect:Create Could not create message: ' + e.message)
+				}else{
+					throw new Error('TxClient:MsgPayPublisherRespect:Send Could not broadcast Tx: '+ e.message)
 				}
 			}
 		},
+		
 		async MsgAddArticle({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
@@ -376,6 +363,19 @@ export default {
 					throw new Error('TxClient:MsgAddArticle:Init Could not initialize signing client. Wallet is required.')
 				} else{
 					throw new Error('TxClient:MsgAddArticle:Create Could not create message: ' + e.message)
+				}
+			}
+		},
+		async MsgPayPublisherRespect({ rootGetters }, { value }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgPayPublisherRespect(value)
+				return msg
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgPayPublisherRespect:Init Could not initialize signing client. Wallet is required.')
+				} else{
+					throw new Error('TxClient:MsgPayPublisherRespect:Create Could not create message: ' + e.message)
 				}
 			}
 		},
