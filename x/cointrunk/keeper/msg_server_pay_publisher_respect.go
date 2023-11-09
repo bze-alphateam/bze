@@ -2,10 +2,11 @@ package keeper
 
 import (
 	"context"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func (k msgServer) PayPublisherRespect(goCtx context.Context, msg *types.MsgPayPublisherRespect) (*types.MsgPayPublisherRespectResponse, error) {

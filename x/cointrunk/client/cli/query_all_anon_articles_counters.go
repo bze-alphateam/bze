@@ -17,7 +17,6 @@ func CmdAllAnonArticlesCounters() *cobra.Command {
 		Short: "Query all-anon-articles-counters",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

@@ -2,6 +2,7 @@ package bzeutils
 
 import (
 	"github.com/microcosm-cc/bluemonday"
+
 	"sync"
 )
 

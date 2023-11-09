@@ -29,10 +29,10 @@ func CmdSubmitScavenge() *cobra.Command {
 			solutionHash := sha256.Sum256([]byte(args[0]))
 			// convert the hash to string
 			solutionHashString := hex.EncodeToString(solutionHash[:])
-			argsDescription := string(args[1])
-			argsReward := string(args[2])
+			argsDescription := args[1]
+			argsReward := args[2]
 			// create a new message
-			msg := types.NewMsgSubmitScavenge(clientCtx.GetFromAddress().String(), string(solutionHashString), string(argsDescription), string(argsReward))
+			msg := types.NewMsgSubmitScavenge(clientCtx.GetFromAddress().String(), solutionHashString, argsDescription, argsReward)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
