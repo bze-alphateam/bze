@@ -3,6 +3,7 @@ package app
 import (
 	v512 "github.com/bze-alphateam/bze/app/upgrades/v512"
 	v600 "github.com/bze-alphateam/bze/app/upgrades/v600"
+	v610 "github.com/bze-alphateam/bze/app/upgrades/v610"
 
 	"io"
 	"net/http"
@@ -604,6 +605,11 @@ func (app *App) setupUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v600.UpgradeName,
 		v600.CreateUpgradeHandler(&app.CointrunkKeeper),
+	)
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v610.UpgradeName,
+		v610.CreateUpgradeHandler(),
 	)
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
