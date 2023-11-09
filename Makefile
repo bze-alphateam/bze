@@ -1,6 +1,6 @@
 PACKAGES=$(shell go list ./... | grep -v '/simulation')
 PACKAGE_NAME:=github.com/bze-alphateam/bze-v5
-GOLANG_CROSS_VERSION  = v1.19.3
+GOLANG_CROSS_VERSION  = v1.20.8
 VERSION := $(shell echo $(shell git describe --tags 2>/dev/null ) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 NETWORK ?= mainnet
@@ -9,7 +9,7 @@ BUILDDIR ?= $(CURDIR)/build
 LEDGER_ENABLED ?= true
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=bze \
-	-X github.com/cosmos/cosmos-sdk/version.ServerName=bzed \
+	-X github.com/cosmos/cosmos-sdk/version.AppName=bzed \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT)
 
@@ -41,46 +41,46 @@ all: download install
 download:
 	git submodule update --init --recursive
 
-install: check-network go.sum
+install: check-version lint check-network go.sum
 		go install -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) ./cmd/bzed
 
-build: check-network go.sum
-		go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/$(GOOS)-$(GOARCH)/bzed ./cmd/bzed
+build: check-version check-network go.sum
+		go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/bzed ./cmd/bzed
 
-build-win64: check-network go.sum
+build-win64: check-version check-network go.sum
 		go build -buildmode=exe -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/win64/bzed.exe ./cmd/bzed
 
 .PHONY: build
 
-build-linux: check-network go.sum
+build-linux: check-version check-network go.sum
 ifeq ($(OS), Linux)
 		GOOS=linux GOARCH=amd64 $(MAKE) build
 else
 		LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 $(MAKE) build
 endif
 
-build-linux-arm64: check-network go.sum
+build-linux-arm64: check-version check-network go.sum
 ifeq ($(OS), Linux)
 		GOOS=linux GOARCH=arm64 $(MAKE) build
 else
 		LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 $(MAKE) build
 endif
 
-build-mac: check-network go.sum
+build-mac: check-version check-network go.sum
 ifeq ($(OS), Darwin)
 		GOOS=darwin GOARCH=amd64 $(MAKE) build
 else
 		LEDGER_ENABLED=false GOOS=darwin GOARCH=amd64 $(MAKE) build
 endif
 
-build-mac-arm64: check-network go.sum
+build-mac-arm64: check-version check-network go.sum
 ifeq ($(OS), Darwin)
 		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 $(MAKE) build
 else
 		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 $(MAKE) build
 endif
 
-build-all: all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
+build-all: check-version lint all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
 
 compress-build:
 	rm -rf $(BUILDDIR)/compressed
@@ -104,14 +104,19 @@ lint:
 	@echo "--> Running linter"
 	@golangci-lint run
 	@go mod verify
-	@flake8 --show-source --count --statistics
-	@find . -name "*.nix" -type f | xargs nixpkgs-fmt --check
 
 # a trick to make all the lint commands execute, return error when at least one fails.
 # golangci-lint is run in standalone job in ci
 lint-ci:
 	@echo "--> Running linter for CI"
 	@nix run -f ./. lint-env -c lint-ci
+
+# Add check to make sure we are using the proper Go version before proceeding with anything
+check-version:
+	@if ! go version | grep -q "go1.20"; then \
+		echo "\033[0;31mERROR:\033[0m Go version 1.20 is required for compiling bzed. It looks like you are using" "$(shell go version) \nThere are potential consensus-breaking changes that can occur when running binaries compiled with different versions of Go. Please download Go version 1.20 and retry. Thank you!"; \
+		exit 1; \
+	fi
 
 test-sim-nondeterminism: check-network
 	@echo "Running non-determinism test..."

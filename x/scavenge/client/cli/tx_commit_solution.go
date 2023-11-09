@@ -40,7 +40,7 @@ func CmdCommitSolution() *cobra.Command {
 			// convert the hash to string
 			var solutionScavengerHashString = hex.EncodeToString(solutionScavengerHash[:])
 			// create a new message
-			msg := types.NewMsgCommitSolution(clientCtx.GetFromAddress().String(), string(solutionHashString), string(solutionScavengerHashString))
+			msg := types.NewMsgCommitSolution(clientCtx.GetFromAddress().String(), solutionHashString, solutionScavengerHashString)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

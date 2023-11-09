@@ -2,9 +2,12 @@ package keeper
 
 import (
 	"context"
+
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"gopkg.in/errgo.v2/fmt/errors"
 )
 
@@ -15,7 +18,7 @@ func (k msgServer) AddArticle(goCtx context.Context, msg *types.MsgAddArticle) (
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid domain (%s)", err)
 	}
 	publisher, found := k.GetPublisher(ctx, msg.Publisher)
-	paid := !found || publisher.Active != true
+	paid := !found || !publisher.Active
 	if paid {
 		articleLimit := k.AnonArticleLimit(ctx)
 		existingPaidArticlesCount := k.GetMonthlyPaidArticleCounter(ctx)
@@ -83,7 +86,7 @@ func (k msgServer) validateMessageDomains(ctx sdk.Context, msg *types.MsgAddArti
 		return errors.Newf("Provided url domain (%s) is not an accepted domain", parsedUrl.Host)
 	}
 
-	if acceptedDomain.Active != true {
+	if !acceptedDomain.Active {
 		return errors.Newf("Provided url domain (%s) is NOT active", parsedUrl.Host)
 	}
 
@@ -102,7 +105,7 @@ func (k msgServer) validateMessageDomains(ctx sdk.Context, msg *types.MsgAddArti
 		return errors.Newf("Provided picture domain (%s) is not an accepted domain", parsedUrl.Host)
 	}
 
-	if acceptedDomain.Active != true {
+	if !acceptedDomain.Active {
 		return errors.Newf("Provided picture domain (%s) is NOT active", parsedUrl.Host)
 	}
 
