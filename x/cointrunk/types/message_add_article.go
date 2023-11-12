@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -11,7 +12,13 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const TypeMsgAddArticle = "add_article"
+const (
+	TypeMsgAddArticle = "add_article"
+
+	titleMaxLength = 320
+	titleMinLength = 10
+	urlMaxLength   = 2048
+)
 
 var _ sdk.Msg = &MsgAddArticle{}
 
@@ -51,16 +58,16 @@ func (msg *MsgAddArticle) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid publisher address (%s)", err)
 	}
 
-	if len(msg.Title) < 10 || len(msg.Title) > 140 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid title: expecting between 10 and 140 characters")
+	if len(msg.Title) < titleMinLength || len(msg.Title) > titleMaxLength {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("invalid title: expecting between %d and %d characters", titleMinLength, titleMaxLength))
 	}
 
 	_, err = msg.ParseUrl(msg.Url)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid url provided (%s)", err)
 	}
-	if len(msg.Url) > 2048 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid url: provided url exceeds 2048 characters")
+	if len(msg.Url) > urlMaxLength {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("invalid url: provided url exceeds %d characters", urlMaxLength))
 	}
 
 	//validate picture only if it's provided
@@ -73,8 +80,8 @@ func (msg *MsgAddArticle) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid picture url provided (%s)", err)
 	}
 
-	if len(msg.Picture) > 2048 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid picture url: provided url exceeds 2048 chars")
+	if len(msg.Picture) > urlMaxLength {
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("invalid url: provided url exceeds %d characters", urlMaxLength))
 	}
 
 	return nil
