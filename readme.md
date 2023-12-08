@@ -12,14 +12,16 @@ Zcash codebase in 2022 with the help of the community.
 [Keplr Browser Extension](https://keplr.getbze.com/)  
 
 ### Explorers:
-https://explorer.erialos.me/beezee  
+https://exporer.getbze.com/beezee  
+https://ping.pub/beezee  
+https://explorer.erialos.me/beezee   
 https://explorers.vidulum.app/beezee  
 
 ### Trading:
 [Osmosis Pool](https://frontier.osmosis.zone/pool/856)  
 [Dex tracker]( https://dexscreener.com/osmosis/856)  
-[LiveCoinWatch] (https://www.livecoinwatch.com/price/BZEdge-BZE)  
-[CoinGeko] (https://www.coingecko.com/en/coins/beezee)  
+[LiveCoinWatch](https://www.livecoinwatch.com/price/BZEdge-BZE)  
+[CoinGeko](https://www.coingecko.com/en/coins/beezee)  
 
 ### Resources:
 [Configs & Utils](https://github.com/bze-alphateam/bze-configs)  
