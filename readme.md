@@ -16,8 +16,10 @@ https://explorer.erialos.me/beezee
 https://explorers.vidulum.app/beezee  
 
 ### Trading:
-[Osmosis Pool](https://frontier.osmosis.zone/pool/856) 
-[Dex tracker]( https://dexscreener.com/osmosis/856)
+[Osmosis Pool](https://frontier.osmosis.zone/pool/856)  
+[Dex tracker]( https://dexscreener.com/osmosis/856)  
+[LiveCoinWatch] (https://www.livecoinwatch.com/price/BZEdge-BZE)  
+[CoinGeko] (https://www.coingecko.com/en/coins/beezee)  
 
 ### Resources:
 [Configs & Utils](https://github.com/bze-alphateam/bze-configs)  
@@ -36,7 +38,7 @@ https://explorers.vidulum.app/beezee
 
 ### Building from source
 #### Checkout to the branch/tag you want to build 
-`git checkout v6.0.0`
+`git checkout v6.1.0`
 
 #### Build binaries:
 `make build-all`  
