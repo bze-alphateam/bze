@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/bze-alphateam/bze/app/openapi"
 	v512 "github.com/bze-alphateam/bze/app/upgrades/v512"
 	v600 "github.com/bze-alphateam/bze/app/upgrades/v600"
 	v610 "github.com/bze-alphateam/bze/app/upgrades/v610"
@@ -750,7 +751,7 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 	// register app's OpenAPI routes.
 	apiSvr.Router.Handle("/static/openapi.yml", http.FileServer(http.FS(docs.Docs)))
 	//removed by SDK upgrade
-	//apiSvr.Router.HandleFunc("/", openapiconsole.Handler(Name, "/static/openapi.yml"))
+	apiSvr.Router.HandleFunc("/", openapi.Handler(Name, "/static/openapi.yml"))
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
