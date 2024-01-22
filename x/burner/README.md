@@ -33,13 +33,13 @@ The Burner module, developed by BeeZee (BZE) for Cosmos SDK ecosystem, enabling 
 ### Fund Burner
 Use this command to fund the Burner module with the specified amount.
 ```bash
-bzecli tx burner fund-burner <amount> --from <your-key>
+bzed tx burner fund-burner <amount> --from <your-key>
 ```
 
 ### Query Burned Coins
 Use this command to retrieve a list of all burned coins.
 ```bash
-bzecli query burner all-burned-coins
+bzed query burner all-burned-coins
 ```
 
 
