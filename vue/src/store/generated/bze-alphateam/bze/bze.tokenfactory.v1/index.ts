@@ -1,9 +1,10 @@
 import { txClient, queryClient, MissingWalletError , registry} from './module'
 
+import { DenomAuthority } from "./module/types/tokenfactory/denom_authority"
 import { Params } from "./module/types/tokenfactory/params"
 
 
-export { Params };
+export { DenomAuthority, Params };
 
 async function initTxClient(vuexGetters) {
 	return await txClient(vuexGetters['common/wallet/signer'], {
@@ -44,6 +45,7 @@ const getDefaultState = () => {
 				Params: {},
 				
 				_Structure: {
+						DenomAuthority: getStructure(DenomAuthority.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
 						
 		},
@@ -89,7 +91,7 @@ export default {
 	},
 	actions: {
 		init({ dispatch, rootGetters }) {
-			console.log('Vuex module: bzealphateam.bze.tokenfactory initialized!')
+			console.log('Vuex module: bze.tokenfactory.v1 initialized!')
 			if (rootGetters['common/env/client']) {
 				rootGetters['common/env/client'].on('newblock', () => {
 					dispatch('StoreUpdate')

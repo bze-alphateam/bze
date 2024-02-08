@@ -1,5 +1,5 @@
 syntax = "proto3";
-package bzealphateam.bze.tokenfactory;
+package bze.tokenfactory.v1;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
@@ -13,7 +13,7 @@ option go_package = "github.com/bze-alphateam/bze/x/tokenfactory/types";
 service Query {
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/bze-alphateam/bze/tokenfactory/params";
+    option (google.api.http).get = "/bze/tokenfactory/v1/params";
   }
   // this line is used by starport scaffolding # 2
 }

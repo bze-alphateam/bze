@@ -9,13 +9,6 @@
  * ---------------------------------------------------------------
  */
 
-/**
- * Params defines the parameters for the module.
- */
-export interface BzetokenfactoryParams {
-  createDenomFee?: string;
-}
-
 export interface ProtobufAny {
   "@type"?: string;
 }
@@ -27,16 +20,23 @@ export interface RpcStatus {
   details?: ProtobufAny[];
 }
 
-export interface TokenfactoryMsgCreateDenomResponse {
+/**
+ * Params defines the parameters for the module.
+ */
+export interface Tokenfactoryv1Params {
+  createDenomFee?: string;
+}
+
+export interface V1MsgCreateDenomResponse {
   new_denom?: string;
 }
 
 /**
  * QueryParamsResponse is response type for the Query/Params RPC method.
  */
-export interface TokenfactoryQueryParamsResponse {
+export interface V1QueryParamsResponse {
   /** params holds all the parameters of this module. */
-  params?: BzetokenfactoryParams;
+  params?: Tokenfactoryv1Params;
 }
 
 export type QueryParamsType = Record<string | number, any>;
@@ -231,7 +231,7 @@ export class HttpClient<SecurityDataType = unknown> {
 }
 
 /**
- * @title tokenfactory/genesis.proto
+ * @title tokenfactory/denom_authority.proto
  * @version version not set
  */
 export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {
@@ -241,11 +241,11 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @tags Query
    * @name QueryParams
    * @summary Parameters queries the parameters of the module.
-   * @request GET:/bze-alphateam/bze/tokenfactory/params
+   * @request GET:/bze/tokenfactory/v1/params
    */
   queryParams = (params: RequestParams = {}) =>
-    this.request<TokenfactoryQueryParamsResponse, RpcStatus>({
-      path: `/bze-alphateam/bze/tokenfactory/params`,
+    this.request<V1QueryParamsResponse, RpcStatus>({
+      path: `/bze/tokenfactory/v1/params`,
       method: "GET",
       format: "json",
       ...params,

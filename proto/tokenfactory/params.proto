@@ -1,5 +1,5 @@
 syntax = "proto3";
-package bzealphateam.bze.tokenfactory;
+package bze.tokenfactory.v1;
 
 import "gogoproto/gogo.proto";
 

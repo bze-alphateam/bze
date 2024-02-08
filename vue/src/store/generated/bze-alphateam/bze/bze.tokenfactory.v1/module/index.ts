@@ -8,7 +8,7 @@ import { MsgCreateDenom } from "./types/tokenfactory/tx";
 
 
 const types = [
-  ["/bzealphateam.bze.tokenfactory.MsgCreateDenom", MsgCreateDenom],
+  ["/bze.tokenfactory.v1.MsgCreateDenom", MsgCreateDenom],
   
 ];
 export const MissingWalletError = new Error("wallet is required");
@@ -41,7 +41,7 @@ const txClient = async (wallet: OfflineSigner, { addr: addr }: TxClientOptions =
 
   return {
     signAndBroadcast: (msgs: EncodeObject[], { fee, memo }: SignAndBroadcastOptions = {fee: defaultFee, memo: ""}) => client.signAndBroadcast(address, msgs, fee,memo),
-    msgCreateDenom: (data: MsgCreateDenom): EncodeObject => ({ typeUrl: "/bzealphateam.bze.tokenfactory.MsgCreateDenom", value: MsgCreateDenom.fromPartial( data ) }),
+    msgCreateDenom: (data: MsgCreateDenom): EncodeObject => ({ typeUrl: "/bze.tokenfactory.v1.MsgCreateDenom", value: MsgCreateDenom.fromPartial( data ) }),
     
   };
 };
