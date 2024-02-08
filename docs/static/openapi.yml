@@ -1151,10 +1151,10 @@ paths:
           type: string
       tags:
         - Query
-  /bze-alphateam/bze/tokenfactory/params:
+  /bze/tokenfactory/v1/params:
     get:
       summary: Parameters queries the parameters of the module.
-      operationId: BzealphateamBzeTokenfactoryParams
+      operationId: BzeTokenfactoryV1Params
       responses:
         '200':
           description: A successful response.
@@ -32295,13 +32295,18 @@ definitions:
         type: string
       scavenger:
         type: string
-  bzealphateam.bze.tokenfactory.Params:
+  bze.tokenfactory.v1.MsgCreateDenomResponse:
+    type: object
+    properties:
+      new_denom:
+        type: string
+  bze.tokenfactory.v1.Params:
     type: object
     properties:
       createDenomFee:
         type: string
     description: Params defines the parameters for the module.
-  bzealphateam.bze.tokenfactory.QueryParamsResponse:
+  bze.tokenfactory.v1.QueryParamsResponse:
     type: object
     properties:
       params:

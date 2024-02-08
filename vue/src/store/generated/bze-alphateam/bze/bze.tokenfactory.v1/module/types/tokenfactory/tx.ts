@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { Reader, Writer } from "protobufjs/minimal";
 
-export const protobufPackage = "bzealphateam.bze.tokenfactory";
+export const protobufPackage = "bze.tokenfactory.v1";
 
 export interface MsgCreateDenom {
   creator: string;
@@ -158,7 +158,7 @@ export class MsgClientImpl implements Msg {
   CreateDenom(request: MsgCreateDenom): Promise<MsgCreateDenomResponse> {
     const data = MsgCreateDenom.encode(request).finish();
     const promise = this.rpc.request(
-      "bzealphateam.bze.tokenfactory.Msg",
+      "bze.tokenfactory.v1.Msg",
       "CreateDenom",
       data
     );

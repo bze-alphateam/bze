@@ -1,5 +1,5 @@
 syntax = "proto3";
-package bzealphateam.bze.tokenfactory;
+package bze.tokenfactory.v1;
 
 // this line is used by starport scaffolding # proto/tx/import
 
@@ -7,7 +7,17 @@ option go_package = "github.com/bze-alphateam/bze/x/tokenfactory/types";
 
 // Msg defines the Msg service.
 service Msg {
-    // this line is used by starport scaffolding # proto/tx/rpc
+      rpc CreateDenom(MsgCreateDenom) returns (MsgCreateDenomResponse);
+// this line is used by starport scaffolding # proto/tx/rpc
+}
+
+message MsgCreateDenom {
+  string creator = 1;
+  string subdenom = 2;
+}
+
+message MsgCreateDenomResponse {
+  string new_denom = 1;
 }
 
 // this line is used by starport scaffolding # proto/tx/message
