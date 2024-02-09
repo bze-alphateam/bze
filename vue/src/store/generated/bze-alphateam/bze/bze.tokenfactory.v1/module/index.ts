@@ -4,10 +4,12 @@ import { StdFee } from "@cosmjs/launchpad";
 import { SigningStargateClient } from "@cosmjs/stargate";
 import { Registry, OfflineSigner, EncodeObject, DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { Api } from "./rest";
+import { MsgMint } from "./types/tokenfactory/tx";
 import { MsgCreateDenom } from "./types/tokenfactory/tx";
 
 
 const types = [
+  ["/bze.tokenfactory.v1.MsgMint", MsgMint],
   ["/bze.tokenfactory.v1.MsgCreateDenom", MsgCreateDenom],
   
 ];
@@ -41,6 +43,7 @@ const txClient = async (wallet: OfflineSigner, { addr: addr }: TxClientOptions =
 
   return {
     signAndBroadcast: (msgs: EncodeObject[], { fee, memo }: SignAndBroadcastOptions = {fee: defaultFee, memo: ""}) => client.signAndBroadcast(address, msgs, fee,memo),
+    msgMint: (data: MsgMint): EncodeObject => ({ typeUrl: "/bze.tokenfactory.v1.MsgMint", value: MsgMint.fromPartial( data ) }),
     msgCreateDenom: (data: MsgCreateDenom): EncodeObject => ({ typeUrl: "/bze.tokenfactory.v1.MsgCreateDenom", value: MsgCreateDenom.fromPartial( data ) }),
     
   };

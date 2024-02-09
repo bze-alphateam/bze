@@ -32347,6 +32347,8 @@ definitions:
     properties:
       new_denom:
         type: string
+  bze.tokenfactory.v1.MsgMintResponse:
+    type: object
   bze.tokenfactory.v1.Params:
     type: object
     properties:

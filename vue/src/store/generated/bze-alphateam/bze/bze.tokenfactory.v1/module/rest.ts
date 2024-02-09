@@ -35,6 +35,8 @@ export interface V1MsgCreateDenomResponse {
   new_denom?: string;
 }
 
+export type V1MsgMintResponse = object;
+
 export interface V1QueryDenomAuthorityResponse {
   denomAuthority?: Tokenfactoryv1DenomAuthority;
 }
