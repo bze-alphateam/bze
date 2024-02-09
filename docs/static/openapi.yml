@@ -1151,6 +1151,47 @@ paths:
           type: string
       tags:
         - Query
+  '/bze/tokenfactory/v1/denom_authority/{denom}':
+    get:
+      summary: Queries a list of QueryDenomAuthority items.
+      operationId: BzeTokenfactoryV1DenomAuthority
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              denomAuthority:
+                type: object
+                properties:
+                  admin:
+                    type: string
+                    title: 'Can be empty for no admin, or a valid osmosis address'
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: denom
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /bze/tokenfactory/v1/params:
     get:
       summary: Parameters queries the parameters of the module.
@@ -32295,6 +32336,12 @@ definitions:
         type: string
       scavenger:
         type: string
+  bze.tokenfactory.v1.DenomAuthority:
+    type: object
+    properties:
+      admin:
+        type: string
+        title: 'Can be empty for no admin, or a valid osmosis address'
   bze.tokenfactory.v1.MsgCreateDenomResponse:
     type: object
     properties:
@@ -32306,6 +32353,15 @@ definitions:
       createDenomFee:
         type: string
     description: Params defines the parameters for the module.
+  bze.tokenfactory.v1.QueryDenomAuthorityResponse:
+    type: object
+    properties:
+      denomAuthority:
+        type: object
+        properties:
+          admin:
+            type: string
+            title: 'Can be empty for no admin, or a valid osmosis address'
   bze.tokenfactory.v1.QueryParamsResponse:
     type: object
     properties:

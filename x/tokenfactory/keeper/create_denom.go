@@ -9,7 +9,7 @@ import (
 
 // Runs CreateDenom logic after the charge and all denom validation has been handled.
 // Made into a second function for genesis initialization.
-func (k Keeper) createDenomAfterValidation(ctx sdk.Context, creatorAddr string, denom string) (err error) {
+func (k Keeper) CreateDenomAfterValidation(ctx sdk.Context, creatorAddr string, denom string) (err error) {
 	_, exists := k.bankKeeper.GetDenomMetaData(ctx, denom)
 	if !exists {
 		denomMetaData := banktypes.Metadata{
@@ -26,7 +26,7 @@ func (k Keeper) createDenomAfterValidation(ctx sdk.Context, creatorAddr string, 
 	dAuth := types.DenomAuthority{
 		Admin: creatorAddr,
 	}
-	err = k.setDenomAuthority(ctx, denom, dAuth)
+	err = k.SetDenomAuthority(ctx, denom, dAuth)
 	if err != nil {
 		return err
 	}

@@ -19,7 +19,7 @@ func (k msgServer) CreateDenom(goCtx context.Context, msg *types.MsgCreateDenom)
 		return nil, err
 	}
 
-	err = k.createDenomAfterValidation(ctx, msg.Creator, denom)
+	err = k.CreateDenomAfterValidation(ctx, msg.Creator, denom)
 
 	return &types.MsgCreateDenomResponse{NewDenom: denom}, err
 }
