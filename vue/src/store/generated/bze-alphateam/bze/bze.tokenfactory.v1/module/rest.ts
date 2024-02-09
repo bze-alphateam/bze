@@ -20,6 +20,10 @@ export interface RpcStatus {
   details?: ProtobufAny[];
 }
 
+export interface Tokenfactoryv1DenomAuthority {
+  admin?: string;
+}
+
 /**
  * Params defines the parameters for the module.
  */
@@ -29,6 +33,10 @@ export interface Tokenfactoryv1Params {
 
 export interface V1MsgCreateDenomResponse {
   new_denom?: string;
+}
+
+export interface V1QueryDenomAuthorityResponse {
+  denomAuthority?: Tokenfactoryv1DenomAuthority;
 }
 
 /**
@@ -235,6 +243,22 @@ export class HttpClient<SecurityDataType = unknown> {
  * @version version not set
  */
 export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryDenomAuthority
+   * @summary Queries a list of QueryDenomAuthority items.
+   * @request GET:/bze/tokenfactory/v1/denom_authority/{denom}
+   */
+  queryDenomAuthority = (denom: string, params: RequestParams = {}) =>
+    this.request<V1QueryDenomAuthorityResponse, RpcStatus>({
+      path: `/bze/tokenfactory/v1/denom_authority/${denom}`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+
   /**
    * No description
    *
