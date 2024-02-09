@@ -31,6 +31,8 @@ export interface Tokenfactoryv1Params {
   createDenomFee?: string;
 }
 
+export type V1MsgBurnResponse = object;
+
 export interface V1MsgCreateDenomResponse {
   new_denom?: string;
 }

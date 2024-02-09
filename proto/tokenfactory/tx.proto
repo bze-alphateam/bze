@@ -9,6 +9,7 @@ option go_package = "github.com/bze-alphateam/bze/x/tokenfactory/types";
 service Msg {
       rpc CreateDenom(MsgCreateDenom) returns (MsgCreateDenomResponse);
   rpc Mint(MsgMint) returns (MsgMintResponse);
+  rpc Burn(MsgBurn) returns (MsgBurnResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -23,11 +24,18 @@ message MsgCreateDenomResponse {
 
 message MsgMint {
   string creator = 1;
-  string denom = 2;
-  string amount = 3;
+  string coins = 2;
 }
 
 message MsgMintResponse {
+}
+
+message MsgBurn {
+  string creator = 1;
+  string coins = 2;
+}
+
+message MsgBurnResponse {
 }
 
 // this line is used by starport scaffolding # proto/tx/message
