@@ -12,6 +12,7 @@ var (
 	ErrDenomExists              = sdkerrors.Register(ModuleName, 2, "attempting to create a denom that already exists (has bank metadata)")
 	ErrUnauthorized             = sdkerrors.Register(ModuleName, 3, "unauthorized account")
 	ErrInvalidDenom             = sdkerrors.Register(ModuleName, 4, "invalid denom")
+	ErrInvalidAmount            = sdkerrors.Register(ModuleName, 13, "invalid amount")
 	ErrInvalidCreator           = sdkerrors.Register(ModuleName, 5, "invalid creator")
 	ErrInvalidAuthorityMetadata = sdkerrors.Register(ModuleName, 6, "invalid authority metadata")
 	ErrInvalidGenesis           = sdkerrors.Register(ModuleName, 7, "invalid genesis")
