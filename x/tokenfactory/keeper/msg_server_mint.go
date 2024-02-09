@@ -9,12 +9,23 @@ import (
 func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_, denomExists := k.bankKeeper.GetDenomMetaData(ctx, msg.Denom)
-	if !denomExists {
-		return nil, types.ErrDenomDoesNotExist.Wrapf("denom: %s", msg.Denom)
+	coin, err := sdk.ParseCoinNormalized(msg.Coins)
+	if err != nil || !coin.IsPositive() {
+		return nil, types.ErrInvalidAmount.Wrapf("coins: %s", msg.Coins)
 	}
 
-	dAuth, err := k.Keeper.GetDenomAuthority(ctx, msg.Denom)
+	_, denomExists := k.bankKeeper.GetDenomMetaData(ctx, coin.GetDenom())
+	if !denomExists {
+		return nil, types.ErrDenomDoesNotExist.Wrapf("denom: %s", coin.GetDenom())
+	}
+
+	//check denom is a tokenfactory denom
+	_, _, err = types.DeconstructDenom(coin.GetDenom())
+	if err != nil {
+		return nil, err
+	}
+
+	dAuth, err := k.Keeper.GetDenomAuthority(ctx, coin.GetDenom())
 	if err != nil {
 		return nil, err
 	}
@@ -23,23 +34,11 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMi
 		return nil, types.ErrUnauthorized
 	}
 
-	//check denom is a tokenfactory denom
-	_, _, err = types.DeconstructDenom(msg.Denom)
-	if err != nil {
-		return nil, err
-	}
-
-	amountInt, ok := sdk.NewIntFromString(msg.Amount)
-	if !ok || !amountInt.IsPositive() {
-		return nil, types.ErrInvalidAmount.Wrapf("converting amount [%s] to int [%d] failed", msg.Amount, amountInt.Int64())
-	}
-
 	addr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return nil, err
 	}
 
-	coin := sdk.NewCoin(msg.Denom, amountInt)
 	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(coin))
 	if err != nil {
 		return nil, err
@@ -54,7 +53,7 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMi
 		sdk.NewEvent(
 			types.TypeMsgMint,
 			sdk.NewAttribute(types.AttributeMintToAddress, msg.Creator),
-			sdk.NewAttribute(types.AttributeAmount, msg.Amount),
+			sdk.NewAttribute(types.AttributeAmount, coin.String()),
 		),
 	})
 

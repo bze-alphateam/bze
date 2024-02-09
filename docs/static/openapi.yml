@@ -32342,6 +32342,8 @@ definitions:
       admin:
         type: string
         title: 'Can be empty for no admin, or a valid osmosis address'
+  bze.tokenfactory.v1.MsgBurnResponse:
+    type: object
   bze.tokenfactory.v1.MsgCreateDenomResponse:
     type: object
     properties:

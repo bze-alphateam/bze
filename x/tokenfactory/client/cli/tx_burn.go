@@ -12,10 +12,10 @@ import (
 
 var _ = strconv.Itoa(0)
 
-func CmdMint() *cobra.Command {
+func CmdBurn() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "mint [coins]",
-		Short: "Broadcast message Mint. Usage bze mint 101denom",
+		Use:   "burn [coins]",
+		Short: "Broadcast message Burn. usage: bze burn 100denom",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argCoins := args[0]
@@ -25,7 +25,7 @@ func CmdMint() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgMint(
+			msg := types.NewMsgBurn(
 				clientCtx.GetFromAddress().String(),
 				argCoins,
 			)
