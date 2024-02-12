@@ -1,0 +1,14 @@
+syntax = "proto3";
+package bze.tokenfactory.v1;
+
+import "gogoproto/gogo.proto";
+// this line is used by starport scaffolding # genesis/proto/import
+
+option go_package = "github.com/bze-alphateam/bze/x/tokenfactory/types";
+
+message DenomAuthority {
+  option (gogoproto.equal) = true;
+
+  // Can be empty for no admin, or a valid osmosis address
+  string admin = 1 [ (gogoproto.moretags) = "yaml:\"admin\"" ];
+}
