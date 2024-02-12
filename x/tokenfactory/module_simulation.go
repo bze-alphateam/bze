@@ -36,6 +36,14 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgBurn int = 100
 
+	opWeightMsgChangeAdmin = "op_weight_msg_change_admin"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgChangeAdmin int = 100
+
+	opWeightMsgSetDenomMetadata = "op_weight_msg_set_denom_metadata"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgSetDenomMetadata int = 100
+
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -105,6 +113,28 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgBurn,
 		tokenfactorysimulation.SimulateMsgBurn(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
+	var weightMsgChangeAdmin int
+	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgChangeAdmin, &weightMsgChangeAdmin, nil,
+		func(_ *rand.Rand) {
+			weightMsgChangeAdmin = defaultWeightMsgChangeAdmin
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgChangeAdmin,
+		tokenfactorysimulation.SimulateMsgChangeAdmin(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
+	var weightMsgSetDenomMetadata int
+	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgSetDenomMetadata, &weightMsgSetDenomMetadata, nil,
+		func(_ *rand.Rand) {
+			weightMsgSetDenomMetadata = defaultWeightMsgSetDenomMetadata
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgSetDenomMetadata,
+		tokenfactorysimulation.SimulateMsgSetDenomMetadata(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
 	// this line is used by starport scaffolding # simapp/module/operation
