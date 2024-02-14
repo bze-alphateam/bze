@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"gopkg.in/yaml.v2"
@@ -9,34 +10,38 @@ import (
 
 var _ paramtypes.ParamSet = (*Params)(nil)
 
-var (
-	KeyCreateMarketFee = []byte("CreateMarketFee")
-	// TODO: Determine the default value
-	DefaultCreateMarketFee string = "create_market_fee"
+const (
+	feeDestinationCommunityPool = "community_pool"
+	feeDestinationBurnerModule  = "burner"
+
+	// the opposite side of the order gets the fee. If TakerFeeDestination is "counter_party" then the market maker gets
+	// the fees that the market taker pays
+	feeDestinationOrderCounterParty = "counter_party"
 )
 
 var (
-	KeyMarketMakerFee = []byte("MarketMakerFee")
-	// TODO: Determine the default value
-	DefaultMarketMakerFee string = "market_maker_fee"
+	KeyCreateMarketFee     = []byte("CreateMarketFee")
+	DefaultCreateMarketFee = "10000000000ubze"
 )
 
 var (
-	KeyMarketTakerFee = []byte("MarketTakerFee")
-	// TODO: Determine the default value
-	DefaultMarketTakerFee string = "market_taker_fee"
+	KeyMarketMakerFee     = []byte("MarketMakerFee")
+	DefaultMarketMakerFee = "100ubze"
 )
 
 var (
-	KeyMakerFeeDestination = []byte("MakerFeeDestination")
-	// TODO: Determine the default value
-	DefaultMakerFeeDestination string = "maker_fee_destination"
+	KeyMarketTakerFee     = []byte("MarketTakerFee")
+	DefaultMarketTakerFee = "1000ubze"
 )
 
 var (
-	KeyTakerFeeDestination = []byte("TakerFeeDestination")
-	// TODO: Determine the default value
-	DefaultTakerFeeDestination string = "taker_fee_destination"
+	KeyMakerFeeDestination     = []byte("MakerFeeDestination")
+	DefaultMakerFeeDestination = feeDestinationCommunityPool
+)
+
+var (
+	KeyTakerFeeDestination     = []byte("TakerFeeDestination")
+	DefaultTakerFeeDestination = feeDestinationCommunityPool
 )
 
 // ParamKeyTable the param key table for launch module
@@ -121,8 +126,14 @@ func validateCreateMarketFee(v interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
-	// TODO implement validation
-	_ = createMarketFee
+	normCoin, err := sdk.ParseCoinNormalized(createMarketFee)
+	if err != nil {
+		return err
+	}
+
+	if normCoin.IsNegative() {
+		return fmt.Errorf("negative amount provided")
+	}
 
 	return nil
 }
@@ -134,8 +145,14 @@ func validateMarketMakerFee(v interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
-	// TODO implement validation
-	_ = marketMakerFee
+	normCoin, err := sdk.ParseCoinNormalized(marketMakerFee)
+	if err != nil {
+		return err
+	}
+
+	if normCoin.IsNegative() {
+		return fmt.Errorf("negative amount provided")
+	}
 
 	return nil
 }
@@ -147,8 +164,14 @@ func validateMarketTakerFee(v interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
-	// TODO implement validation
-	_ = marketTakerFee
+	normCoin, err := sdk.ParseCoinNormalized(marketTakerFee)
+	if err != nil {
+		return err
+	}
+
+	if normCoin.IsNegative() {
+		return fmt.Errorf("negative amount provided")
+	}
 
 	return nil
 }
@@ -160,10 +183,7 @@ func validateMakerFeeDestination(v interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
-	// TODO implement validation
-	_ = makerFeeDestination
-
-	return nil
+	return validateFeeDestination(makerFeeDestination)
 }
 
 // validateTakerFeeDestination validates the TakerFeeDestination param
@@ -173,8 +193,13 @@ func validateTakerFeeDestination(v interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
-	// TODO implement validation
-	_ = takerFeeDestination
+	return validateFeeDestination(takerFeeDestination)
+}
+
+func validateFeeDestination(dest string) error {
+	if dest != feeDestinationCommunityPool && dest != feeDestinationBurnerModule && dest != feeDestinationOrderCounterParty {
+		return fmt.Errorf("invalid fee destination: %s", dest)
+	}
 
 	return nil
 }
