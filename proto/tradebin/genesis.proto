@@ -1,0 +1,14 @@
+syntax = "proto3";
+package bzealphateam.bze.tradebin;
+
+import "gogoproto/gogo.proto";
+import "tradebin/params.proto";
+// this line is used by starport scaffolding # genesis/proto/import
+
+option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
+
+// GenesisState defines the tradebin module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+  // this line is used by starport scaffolding # genesis/proto/state
+}
