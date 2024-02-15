@@ -42,8 +42,8 @@ func (k Keeper) GetMarketAlias(
 	store := k.getMarketAliasStore(ctx)
 
 	b := store.Get(types.MarketKey(
-		asset2,
 		asset1,
+		asset2,
 	))
 	if b == nil {
 		return val, false
