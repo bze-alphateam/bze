@@ -5,6 +5,7 @@ import BzeAlphateamBzeBzeCointrunkV1 from './bze-alphateam/bze/bze.cointrunk.v1'
 import BzeAlphateamBzeBzeCointrunk from './bze-alphateam/bze/bze.cointrunk'
 import BzeAlphateamBzeBzeScavenge from './bze-alphateam/bze/bze.scavenge'
 import BzeAlphateamBzeBzeTokenfactoryV1 from './bze-alphateam/bze/bze.tokenfactory.v1'
+import BzeAlphateamBzeBzeTradebinV1 from './bze-alphateam/bze/bze.tradebin.v1'
 import BzeAlphateamBzeBzealphateamBzeBurner from './bze-alphateam/bze/bzealphateam.bze.burner'
 import BzeAlphateamBzeBzealphateamBzeCointrunk from './bze-alphateam/bze/bzealphateam.bze.cointrunk'
 import BzeAlphateamBzeBzealphateamBzeTokenfactory from './bze-alphateam/bze/bzealphateam.bze.tokenfactory'
@@ -28,6 +29,7 @@ export default {
   BzeAlphateamBzeBzeCointrunk: load(BzeAlphateamBzeBzeCointrunk, 'bze.cointrunk'),
   BzeAlphateamBzeBzeScavenge: load(BzeAlphateamBzeBzeScavenge, 'bze.scavenge'),
   BzeAlphateamBzeBzeTokenfactoryV1: load(BzeAlphateamBzeBzeTokenfactoryV1, 'bze.tokenfactory.v1'),
+  BzeAlphateamBzeBzeTradebinV1: load(BzeAlphateamBzeBzeTradebinV1, 'bze.tradebin.v1'),
   BzeAlphateamBzeBzealphateamBzeBurner: load(BzeAlphateamBzeBzealphateamBzeBurner, 'bzealphateam.bze.burner'),
   BzeAlphateamBzeBzealphateamBzeCointrunk: load(BzeAlphateamBzeBzealphateamBzeCointrunk, 'bzealphateam.bze.cointrunk'),
   BzeAlphateamBzeBzealphateamBzeTokenfactory: load(BzeAlphateamBzeBzealphateamBzeTokenfactory, 'bzealphateam.bze.tokenfactory'),

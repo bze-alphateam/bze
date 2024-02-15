@@ -1231,10 +1231,10 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /bze-alphateam/bze/tradebin/market:
+  /bze/tradebin/v1/market:
     get:
       summary: Queries a list of Market items.
-      operationId: BzealphateamBzeTradebinMarketAll
+      operationId: BzeTradebinV1MarketAll
       responses:
         '200':
           description: A successful response.
@@ -1356,10 +1356,10 @@ paths:
           type: boolean
       tags:
         - Query
-  '/bze-alphateam/bze/tradebin/market/{asset1}/{asset2}':
+  '/bze/tradebin/v1/market/{asset1}/{asset2}':
     get:
       summary: Queries a Market by index.
-      operationId: BzealphateamBzeTradebinMarket
+      operationId: BzeTradebinV1Market
       responses:
         '200':
           description: A successful response.
@@ -1404,10 +1404,10 @@ paths:
           type: string
       tags:
         - Query
-  /bze-alphateam/bze/tradebin/params:
+  /bze/tradebin/v1/params:
     get:
       summary: Parameters queries the parameters of the module.
-      operationId: BzealphateamBzeTradebinParams
+      operationId: BzeTradebinV1Params
       responses:
         '200':
           description: A successful response.
@@ -32694,7 +32694,7 @@ definitions:
     description: |-
       Metadata represents a struct that describes
       a basic token.
-  bzealphateam.bze.tradebin.Market:
+  bze.tradebin.v1.Market:
     type: object
     properties:
       asset1:
@@ -32703,7 +32703,9 @@ definitions:
         type: string
       creator:
         type: string
-  bzealphateam.bze.tradebin.Params:
+  bze.tradebin.v1.MsgCreateMarketResponse:
+    type: object
+  bze.tradebin.v1.Params:
     type: object
     properties:
       createMarketFee:
@@ -32717,7 +32719,7 @@ definitions:
       takerFeeDestination:
         type: string
     description: Params defines the parameters for the module.
-  bzealphateam.bze.tradebin.QueryAllMarketResponse:
+  bze.tradebin.v1.QueryAllMarketResponse:
     type: object
     properties:
       market:
@@ -32756,7 +32758,7 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
-  bzealphateam.bze.tradebin.QueryGetMarketResponse:
+  bze.tradebin.v1.QueryGetMarketResponse:
     type: object
     properties:
       market:
@@ -32768,7 +32770,7 @@ definitions:
             type: string
           creator:
             type: string
-  bzealphateam.bze.tradebin.QueryParamsResponse:
+  bze.tradebin.v1.QueryParamsResponse:
     type: object
     properties:
       params:

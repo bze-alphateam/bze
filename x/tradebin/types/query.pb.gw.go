@@ -343,11 +343,11 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"bze-alphateam", "bze", "tradebin", "params"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"bze", "tradebin", "v1", "params"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Market_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"bze-alphateam", "bze", "tradebin", "market", "asset1", "asset2"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Market_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"bze", "tradebin", "v1", "market", "asset1", "asset2"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_MarketAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"bze-alphateam", "bze", "tradebin", "market"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_MarketAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"bze", "tradebin", "v1", "market"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
