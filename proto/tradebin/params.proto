@@ -1,5 +1,5 @@
 syntax = "proto3";
-package bzealphateam.bze.tradebin;
+package bze.tradebin.v1;
 
 import "gogoproto/gogo.proto";
 
