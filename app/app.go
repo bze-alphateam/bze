@@ -6,6 +6,9 @@ import (
 	v600 "github.com/bze-alphateam/bze/app/upgrades/v600"
 	v610 "github.com/bze-alphateam/bze/app/upgrades/v610"
 	v700 "github.com/bze-alphateam/bze/app/upgrades/v700"
+	"github.com/bze-alphateam/bze/x/tradebin"
+	tradebinkeeper "github.com/bze-alphateam/bze/x/tradebin/keeper"
+	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
 
 	"github.com/bze-alphateam/bze/x/tokenfactory"
 	tokenfactorykeeper "github.com/bze-alphateam/bze/x/tokenfactory/keeper"
@@ -173,6 +176,7 @@ var (
 		cointrunkmodule.AppModuleBasic{},
 		burnermodule.AppModuleBasic{},
 		tokenfactory.AppModuleBasic{},
+		tradebin.AppModuleBasic{},
 		// this line is used by starport scaffolding # stargate/app/moduleBasic
 	)
 
@@ -189,6 +193,7 @@ var (
 		cointrunkmoduletypes.ModuleName: nil,
 		burnermoduletypes.ModuleName:    {authtypes.Burner},
 		tokenfactorytypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		tradebintypes.ModuleName:        nil,
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 
@@ -255,6 +260,7 @@ type App struct {
 	CointrunkKeeper    cointrunkmodulekeeper.Keeper
 	BurnerKeeper       burnermodulekeeper.Keeper
 	TokenFactoryKeeper tokenfactorykeeper.Keeper
+	TradebinKeeper     tradebinkeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// the module manager
@@ -303,6 +309,7 @@ func New(
 		cointrunkmoduletypes.StoreKey,
 		burnermoduletypes.StoreKey,
 		tokenfactorytypes.StoreKey,
+		tradebintypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -433,10 +440,21 @@ func New(
 		app.DistrKeeper,
 	)
 
+	app.TradebinKeeper = *tradebinkeeper.NewKeeper(
+		appCodec,
+		keys[tradebintypes.StoreKey],
+		keys[tradebintypes.MemStoreKey],
+		app.GetSubspace(tradebintypes.ModuleName),
+		app.BankKeeper,
+		app.AccountKeeper,
+		app.DistrKeeper,
+	)
+
 	scavengeModule := scavengemodule.NewAppModule(appCodec, app.ScavengeKeeper)
 	cointrunkModule := cointrunkmodule.NewAppModule(appCodec, app.CointrunkKeeper, app.AccountKeeper, app.BankKeeper, app.DistrKeeper)
 	burnerModule := burnermodule.NewAppModule(appCodec, app.BurnerKeeper, app.AccountKeeper, app.BankKeeper)
 	tokenfactoryModule := tokenfactory.NewAppModule(appCodec, app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper)
+	tradebinModule := tradebin.NewAppModule(appCodec, app.TradebinKeeper, app.AccountKeeper, app.BankKeeper)
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 
 	// register the proposal types
@@ -496,6 +514,7 @@ func New(
 		cointrunkModule,
 		burnerModule,
 		tokenfactoryModule,
+		tradebinModule,
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
 
@@ -526,6 +545,7 @@ func New(
 		cointrunkmoduletypes.ModuleName,
 		burnermoduletypes.ModuleName,
 		tokenfactorytypes.ModuleName,
+		tradebintypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -551,6 +571,7 @@ func New(
 		cointrunkmoduletypes.ModuleName,
 		burnermoduletypes.ModuleName,
 		tokenfactorytypes.ModuleName,
+		tradebintypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -581,6 +602,7 @@ func New(
 		cointrunkmoduletypes.ModuleName,
 		burnermoduletypes.ModuleName,
 		tokenfactorytypes.ModuleName,
+		tradebintypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	)
 
@@ -645,7 +667,7 @@ func (app *App) setupUpgradeHandlers() {
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v700.UpgradeName,
-		v700.CreateUpgradeHandler(&app.TokenFactoryKeeper),
+		v700.CreateUpgradeHandler(&app.TokenFactoryKeeper, &app.TradebinKeeper),
 	)
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
@@ -668,7 +690,7 @@ func (app *App) setupUpgradeHandlers() {
 
 	if upgradeInfo.Name == v700.UpgradeName {
 		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{tokenfactorytypes.StoreKey},
+			Added: []string{tokenfactorytypes.StoreKey, tradebintypes.StoreKey},
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
@@ -822,6 +844,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(cointrunkmoduletypes.ModuleName)
 	paramsKeeper.Subspace(burnermoduletypes.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
+	paramsKeeper.Subspace(tradebintypes.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 
 	return paramsKeeper
