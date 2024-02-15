@@ -8,5 +8,6 @@ import (
 
 // x/tradebin module sentinel errors
 var (
-	ErrSample = sdkerrors.Register(ModuleName, 1100, "sample error")
+	ErrMarketAlreadyExists = sdkerrors.Register(ModuleName, 4000, "market already exists")
+	ErrDenomHasNoSupply    = sdkerrors.Register(ModuleName, 4001, "bank module has no supply for the provided denom")
 )

@@ -9,7 +9,11 @@ import (
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
 	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -23,19 +27,126 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+type MsgCreateMarket struct {
+	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Asset1  string `protobuf:"bytes,2,opt,name=asset1,proto3" json:"asset1,omitempty"`
+	Asset2  string `protobuf:"bytes,3,opt,name=asset2,proto3" json:"asset2,omitempty"`
+}
+
+func (m *MsgCreateMarket) Reset()         { *m = MsgCreateMarket{} }
+func (m *MsgCreateMarket) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateMarket) ProtoMessage()    {}
+func (*MsgCreateMarket) Descriptor() ([]byte, []int) {
+	return fileDescriptor_adab200f727dc48e, []int{0}
+}
+func (m *MsgCreateMarket) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateMarket) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateMarket.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateMarket) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateMarket.Merge(m, src)
+}
+func (m *MsgCreateMarket) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateMarket) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateMarket.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateMarket proto.InternalMessageInfo
+
+func (m *MsgCreateMarket) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgCreateMarket) GetAsset1() string {
+	if m != nil {
+		return m.Asset1
+	}
+	return ""
+}
+
+func (m *MsgCreateMarket) GetAsset2() string {
+	if m != nil {
+		return m.Asset2
+	}
+	return ""
+}
+
+type MsgCreateMarketResponse struct {
+}
+
+func (m *MsgCreateMarketResponse) Reset()         { *m = MsgCreateMarketResponse{} }
+func (m *MsgCreateMarketResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateMarketResponse) ProtoMessage()    {}
+func (*MsgCreateMarketResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_adab200f727dc48e, []int{1}
+}
+func (m *MsgCreateMarketResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateMarketResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateMarketResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateMarketResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateMarketResponse.Merge(m, src)
+}
+func (m *MsgCreateMarketResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateMarketResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateMarketResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateMarketResponse proto.InternalMessageInfo
+
+func init() {
+	proto.RegisterType((*MsgCreateMarket)(nil), "bzealphateam.bze.tradebin.MsgCreateMarket")
+	proto.RegisterType((*MsgCreateMarketResponse)(nil), "bzealphateam.bze.tradebin.MsgCreateMarketResponse")
+}
+
 func init() { proto.RegisterFile("tradebin/tx.proto", fileDescriptor_adab200f727dc48e) }
 
 var fileDescriptor_adab200f727dc48e = []byte{
-	// 134 bytes of a gzipped FileDescriptorProto
+	// 229 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x2c, 0x29, 0x4a, 0x4c,
 	0x49, 0x4d, 0xca, 0xcc, 0xd3, 0x2f, 0xa9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x92, 0x4c,
 	0xaa, 0x4a, 0x4d, 0xcc, 0x29, 0xc8, 0x48, 0x2c, 0x49, 0x4d, 0xcc, 0xd5, 0x4b, 0xaa, 0x4a, 0xd5,
-	0x83, 0xa9, 0x31, 0x62, 0xe5, 0x62, 0xf6, 0x2d, 0x4e, 0x77, 0x72, 0x3f, 0xf1, 0x48, 0x8e, 0xf1,
-	0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e,
-	0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0xdd, 0xf4, 0xcc, 0x92, 0x8c, 0xd2, 0x24, 0xbd, 0xe4, 0xfc,
-	0x5c, 0xfd, 0xa4, 0xaa, 0x54, 0x5d, 0xb8, 0x39, 0x20, 0x9e, 0x7e, 0x85, 0x3e, 0xc2, 0xb6, 0xca,
-	0x82, 0xd4, 0xe2, 0x24, 0x36, 0xb0, 0x8d, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0x4e, 0x06,
-	0x0d, 0x0a, 0x86, 0x00, 0x00, 0x00,
+	0x83, 0xa9, 0x51, 0x8a, 0xe6, 0xe2, 0xf7, 0x2d, 0x4e, 0x77, 0x2e, 0x4a, 0x4d, 0x2c, 0x49, 0xf5,
+	0x4d, 0x2c, 0xca, 0x4e, 0x2d, 0x11, 0x92, 0xe0, 0x62, 0x4f, 0x06, 0xf1, 0xf3, 0x8b, 0x24, 0x18,
+	0x15, 0x18, 0x35, 0x38, 0x83, 0x60, 0x5c, 0x21, 0x31, 0x2e, 0xb6, 0xc4, 0xe2, 0xe2, 0xd4, 0x12,
+	0x43, 0x09, 0x26, 0xb0, 0x04, 0x94, 0x07, 0x17, 0x37, 0x92, 0x60, 0x46, 0x12, 0x37, 0x52, 0x92,
+	0xe4, 0x12, 0x47, 0x33, 0x3c, 0x28, 0xb5, 0xb8, 0x20, 0x3f, 0xaf, 0x38, 0xd5, 0xa8, 0x94, 0x8b,
+	0xd9, 0xb7, 0x38, 0x5d, 0x28, 0x8f, 0x8b, 0x07, 0xc5, 0x6e, 0x2d, 0x3d, 0x9c, 0x4e, 0xd5, 0x43,
+	0x33, 0x4a, 0xca, 0x88, 0x78, 0xb5, 0x30, 0x6b, 0x9d, 0xdc, 0x4f, 0x3c, 0x92, 0x63, 0xbc, 0xf0,
+	0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x09, 0x8f, 0xe5, 0x18, 0x2e, 0x3c, 0x96, 0x63, 0xb8,
+	0xf1, 0x58, 0x8e, 0x21, 0x4a, 0x37, 0x3d, 0xb3, 0x24, 0xa3, 0x34, 0x49, 0x2f, 0x39, 0x3f, 0x57,
+	0x3f, 0xa9, 0x2a, 0x55, 0x17, 0x6e, 0x30, 0x88, 0xa7, 0x5f, 0xa1, 0x8f, 0x08, 0xd5, 0xca, 0x82,
+	0xd4, 0xe2, 0x24, 0x36, 0x70, 0xc8, 0x1a, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0xcc, 0x32, 0x8a,
+	0xa5, 0x6e, 0x01, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -50,6 +161,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
+	CreateMarket(ctx context.Context, in *MsgCreateMarket, opts ...grpc.CallOption) (*MsgCreateMarketResponse, error)
 }
 
 type msgClient struct {
@@ -60,22 +172,454 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
+func (c *msgClient) CreateMarket(ctx context.Context, in *MsgCreateMarket, opts ...grpc.CallOption) (*MsgCreateMarketResponse, error) {
+	out := new(MsgCreateMarketResponse)
+	err := c.cc.Invoke(ctx, "/bzealphateam.bze.tradebin.Msg/CreateMarket", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
+	CreateMarket(context.Context, *MsgCreateMarket) (*MsgCreateMarketResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
 type UnimplementedMsgServer struct {
 }
 
+func (*UnimplementedMsgServer) CreateMarket(ctx context.Context, req *MsgCreateMarket) (*MsgCreateMarketResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateMarket not implemented")
+}
+
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
+}
+
+func _Msg_CreateMarket_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateMarket)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateMarket(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bzealphateam.bze.tradebin.Msg/CreateMarket",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateMarket(ctx, req.(*MsgCreateMarket))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "bzealphateam.bze.tradebin.Msg",
 	HandlerType: (*MsgServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "tradebin/tx.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateMarket",
+			Handler:    _Msg_CreateMarket_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "tradebin/tx.proto",
 }
+
+func (m *MsgCreateMarket) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateMarket) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateMarket) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Asset2) > 0 {
+		i -= len(m.Asset2)
+		copy(dAtA[i:], m.Asset2)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Asset2)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Asset1) > 0 {
+		i -= len(m.Asset1)
+		copy(dAtA[i:], m.Asset1)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Asset1)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateMarketResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateMarketResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateMarketResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
+	offset -= sovTx(v)
+	base := offset
+	for v >= 1<<7 {
+		dAtA[offset] = uint8(v&0x7f | 0x80)
+		v >>= 7
+		offset++
+	}
+	dAtA[offset] = uint8(v)
+	return base
+}
+func (m *MsgCreateMarket) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Asset1)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Asset2)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgCreateMarketResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func sovTx(x uint64) (n int) {
+	return (math_bits.Len64(x|1) + 6) / 7
+}
+func sozTx(x uint64) (n int) {
+	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *MsgCreateMarket) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateMarket: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateMarket: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Asset1", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Asset1 = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Asset2", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Asset2 = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateMarketResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateMarketResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateMarketResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func skipTx(dAtA []byte) (n int, err error) {
+	l := len(dAtA)
+	iNdEx := 0
+	depth := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return 0, io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		wireType := int(wire & 0x7)
+		switch wireType {
+		case 0:
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				iNdEx++
+				if dAtA[iNdEx-1] < 0x80 {
+					break
+				}
+			}
+		case 1:
+			iNdEx += 8
+		case 2:
+			var length int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				length |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if length < 0 {
+				return 0, ErrInvalidLengthTx
+			}
+			iNdEx += length
+		case 3:
+			depth++
+		case 4:
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupTx
+			}
+			depth--
+		case 5:
+			iNdEx += 4
+		default:
+			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
+		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthTx
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
+	}
+	return 0, io.ErrUnexpectedEOF
+}
+
+var (
+	ErrInvalidLengthTx        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowTx          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupTx = fmt.Errorf("proto: unexpected end of group")
+)
