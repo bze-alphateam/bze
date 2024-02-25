@@ -47,9 +47,19 @@ func (k Keeper) Market(c context.Context, req *types.QueryGetMarketRequest) (*ty
 		req.Asset1,
 		req.Asset2,
 	)
-	if !found {
-		return nil, status.Error(codes.NotFound, "not found")
+	if found {
+		return &types.QueryGetMarketResponse{Market: val}, nil
 	}
 
-	return &types.QueryGetMarketResponse{Market: val}, nil
+	//try finding the alias in case the user requested the market with assets in wrong order
+	val, found = k.GetMarketAlias(
+		ctx,
+		req.Asset1,
+		req.Asset2,
+	)
+	if found {
+		return &types.QueryGetMarketResponse{Market: val}, nil
+	}
+
+	return nil, status.Error(codes.NotFound, "not found")
 }
