@@ -1246,9 +1246,9 @@ paths:
                 items:
                   type: object
                   properties:
-                    asset1:
+                    base:
                       type: string
-                    asset2:
+                    quote:
                       type: string
                     creator:
                       type: string
@@ -1257,9 +1257,9 @@ paths:
                 items:
                   type: object
                   properties:
-                    asset1:
+                    base:
                       type: string
-                    asset2:
+                    quote:
                       type: string
                     creator:
                       type: string
@@ -1303,9 +1303,9 @@ paths:
                 items:
                   type: object
                   properties:
-                    asset1:
+                    base:
                       type: string
-                    asset2:
+                    quote:
                       type: string
                     creator:
                       type: string
@@ -1413,7 +1413,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/bze/tradebin/v1/market/{asset1}/{asset2}':
+  '/bze/tradebin/v1/market/{base}/{quote}':
     get:
       summary: Queries a Market by index.
       operationId: BzeTradebinV1Market
@@ -1426,9 +1426,9 @@ paths:
               market:
                 type: object
                 properties:
-                  asset1:
+                  base:
                     type: string
-                  asset2:
+                  quote:
                     type: string
                   creator:
                     type: string
@@ -1451,11 +1451,11 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
-        - name: asset1
+        - name: base
           in: path
           required: true
           type: string
-        - name: asset2
+        - name: quote
           in: path
           required: true
           type: string
@@ -32754,9 +32754,9 @@ definitions:
   bze.tradebin.v1.Market:
     type: object
     properties:
-      asset1:
+      base:
         type: string
-      asset2:
+      quote:
         type: string
       creator:
         type: string
@@ -32784,9 +32784,9 @@ definitions:
         items:
           type: object
           properties:
-            asset1:
+            base:
               type: string
-            asset2:
+            quote:
               type: string
             creator:
               type: string
@@ -32823,9 +32823,9 @@ definitions:
         items:
           type: object
           properties:
-            asset1:
+            base:
               type: string
-            asset2:
+            quote:
               type: string
             creator:
               type: string
@@ -32834,9 +32834,9 @@ definitions:
         items:
           type: object
           properties:
-            asset1:
+            base:
               type: string
-            asset2:
+            quote:
               type: string
             creator:
               type: string
@@ -32846,9 +32846,9 @@ definitions:
       market:
         type: object
         properties:
-          asset1:
+          base:
             type: string
-          asset2:
+          quote:
             type: string
           creator:
             type: string

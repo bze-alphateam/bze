@@ -167,7 +167,7 @@ export default {
 			try {
 				const key = params ?? {};
 				const queryClient=await initQueryClient(rootGetters)
-				let value= (await queryClient.queryMarket( key.asset1,  key.asset2)).data
+				let value= (await queryClient.queryMarket( key.base,  key.quote)).data
 				
 					
 				commit('QUERY', { query: 'Market', key: { params: {...key}, query}, value })

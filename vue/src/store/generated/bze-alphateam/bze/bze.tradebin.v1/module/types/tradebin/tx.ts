@@ -5,24 +5,24 @@ export const protobufPackage = "bze.tradebin.v1";
 
 export interface MsgCreateMarket {
   creator: string;
-  asset1: string;
-  asset2: string;
+  base: string;
+  quote: string;
 }
 
 export interface MsgCreateMarketResponse {}
 
-const baseMsgCreateMarket: object = { creator: "", asset1: "", asset2: "" };
+const baseMsgCreateMarket: object = { creator: "", base: "", quote: "" };
 
 export const MsgCreateMarket = {
   encode(message: MsgCreateMarket, writer: Writer = Writer.create()): Writer {
     if (message.creator !== "") {
       writer.uint32(10).string(message.creator);
     }
-    if (message.asset1 !== "") {
-      writer.uint32(18).string(message.asset1);
+    if (message.base !== "") {
+      writer.uint32(18).string(message.base);
     }
-    if (message.asset2 !== "") {
-      writer.uint32(26).string(message.asset2);
+    if (message.quote !== "") {
+      writer.uint32(26).string(message.quote);
     }
     return writer;
   },
@@ -38,10 +38,10 @@ export const MsgCreateMarket = {
           message.creator = reader.string();
           break;
         case 2:
-          message.asset1 = reader.string();
+          message.base = reader.string();
           break;
         case 3:
-          message.asset2 = reader.string();
+          message.quote = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -58,15 +58,15 @@ export const MsgCreateMarket = {
     } else {
       message.creator = "";
     }
-    if (object.asset1 !== undefined && object.asset1 !== null) {
-      message.asset1 = String(object.asset1);
+    if (object.base !== undefined && object.base !== null) {
+      message.base = String(object.base);
     } else {
-      message.asset1 = "";
+      message.base = "";
     }
-    if (object.asset2 !== undefined && object.asset2 !== null) {
-      message.asset2 = String(object.asset2);
+    if (object.quote !== undefined && object.quote !== null) {
+      message.quote = String(object.quote);
     } else {
-      message.asset2 = "";
+      message.quote = "";
     }
     return message;
   },
@@ -74,8 +74,8 @@ export const MsgCreateMarket = {
   toJSON(message: MsgCreateMarket): unknown {
     const obj: any = {};
     message.creator !== undefined && (obj.creator = message.creator);
-    message.asset1 !== undefined && (obj.asset1 = message.asset1);
-    message.asset2 !== undefined && (obj.asset2 = message.asset2);
+    message.base !== undefined && (obj.base = message.base);
+    message.quote !== undefined && (obj.quote = message.quote);
     return obj;
   },
 
@@ -86,15 +86,15 @@ export const MsgCreateMarket = {
     } else {
       message.creator = "";
     }
-    if (object.asset1 !== undefined && object.asset1 !== null) {
-      message.asset1 = object.asset1;
+    if (object.base !== undefined && object.base !== null) {
+      message.base = object.base;
     } else {
-      message.asset1 = "";
+      message.base = "";
     }
-    if (object.asset2 !== undefined && object.asset2 !== null) {
-      message.asset2 = object.asset2;
+    if (object.quote !== undefined && object.quote !== null) {
+      message.quote = object.quote;
     } else {
-      message.asset2 = "";
+      message.quote = "";
     }
     return message;
   },

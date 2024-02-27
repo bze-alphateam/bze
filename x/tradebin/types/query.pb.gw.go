@@ -62,26 +62,26 @@ func request_Query_Market_0(ctx context.Context, marshaler runtime.Marshaler, cl
 		_   = err
 	)
 
-	val, ok = pathParams["asset1"]
+	val, ok = pathParams["base"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "asset1")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "base")
 	}
 
-	protoReq.Asset1, err = runtime.String(val)
+	protoReq.Base, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "asset1", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "base", err)
 	}
 
-	val, ok = pathParams["asset2"]
+	val, ok = pathParams["quote"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "asset2")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "quote")
 	}
 
-	protoReq.Asset2, err = runtime.String(val)
+	protoReq.Quote, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "asset2", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "quote", err)
 	}
 
 	msg, err := client.Market(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -100,26 +100,26 @@ func local_request_Query_Market_0(ctx context.Context, marshaler runtime.Marshal
 		_   = err
 	)
 
-	val, ok = pathParams["asset1"]
+	val, ok = pathParams["base"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "asset1")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "base")
 	}
 
-	protoReq.Asset1, err = runtime.String(val)
+	protoReq.Base, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "asset1", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "base", err)
 	}
 
-	val, ok = pathParams["asset2"]
+	val, ok = pathParams["quote"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "asset2")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "quote")
 	}
 
-	protoReq.Asset2, err = runtime.String(val)
+	protoReq.Quote, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "asset2", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "quote", err)
 	}
 
 	msg, err := server.Market(ctx, &protoReq)
@@ -442,7 +442,7 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 var (
 	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"bze", "tradebin", "v1", "params"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_Market_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"bze", "tradebin", "v1", "market", "asset1", "asset2"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Market_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"bze", "tradebin", "v1", "market", "base", "quote"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_MarketAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"bze", "tradebin", "v1", "market"}, "", runtime.AssumeColonVerbOpt(true)))
 

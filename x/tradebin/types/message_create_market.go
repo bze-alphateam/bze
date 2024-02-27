@@ -9,11 +9,11 @@ const TypeMsgCreateMarket = "create_market"
 
 var _ sdk.Msg = &MsgCreateMarket{}
 
-func NewMsgCreateMarket(creator string, asset1 string, asset2 string) *MsgCreateMarket {
+func NewMsgCreateMarket(creator string, base string, quote string) *MsgCreateMarket {
 	return &MsgCreateMarket{
 		Creator: creator,
-		Asset1:  asset1,
-		Asset2:  asset2,
+		Base:    base,
+		Quote:   quote,
 	}
 }
 

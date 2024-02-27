@@ -18,33 +18,36 @@ func (k Keeper) getMarketAliasStore(ctx sdk.Context) sdk.KVStore {
 func (k Keeper) SetMarket(ctx sdk.Context, market types.Market) {
 	store := k.getMarketStore(ctx)
 	b := k.cdc.MustMarshal(&market)
-	store.Set(types.MarketKey(
-		market.Asset1,
-		market.Asset2,
-	), b)
+	key := types.MarketKey(
+		market.Base,
+		market.Quote,
+	)
+	store.Set(key, b)
 
 	//store the same market on switched assets as keys in order to make sure the market is unique between two assets
 	//we duplicate the same market details in another key. This will help us when searching one asset's markets.
 	aStore := k.getMarketAliasStore(ctx)
-	aStore.Set(types.MarketKey(
-		market.Asset2,
-		market.Asset1,
-	), b)
+	aKey := types.MarketKey(
+		market.Quote,
+		market.Base,
+	)
+	aStore.Set(aKey, b)
 }
 
 // GetMarketAlias returns a market from the alias index
 func (k Keeper) GetMarketAlias(
 	ctx sdk.Context,
-	asset1 string,
-	asset2 string,
+	quoteAsset string,
+	baseAsset string,
 
 ) (val types.Market, found bool) {
 	store := k.getMarketAliasStore(ctx)
 
-	b := store.Get(types.MarketKey(
-		asset1,
-		asset2,
-	))
+	key := types.MarketKey(
+		quoteAsset,
+		baseAsset,
+	)
+	b := store.Get(key)
 	if b == nil {
 		return val, false
 	}
@@ -56,16 +59,17 @@ func (k Keeper) GetMarketAlias(
 // GetMarket returns a market from its index
 func (k Keeper) GetMarket(
 	ctx sdk.Context,
-	asset1 string,
-	asset2 string,
+	baseAsset string,
+	quoteAsset string,
 
 ) (val types.Market, found bool) {
 	store := k.getMarketStore(ctx)
 
-	b := store.Get(types.MarketKey(
-		asset1,
-		asset2,
-	))
+	key := types.MarketKey(
+		baseAsset,
+		quoteAsset,
+	)
+	b := store.Get(key)
 	if b == nil {
 		return val, false
 	}

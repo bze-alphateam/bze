@@ -8,22 +8,22 @@ import (
 
 func (k msgServer) CreateMarket(goCtx context.Context, msg *types.MsgCreateMarket) (*types.MsgCreateMarketResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	_, found := k.GetMarket(ctx, msg.Asset1, msg.Asset2)
+	_, found := k.GetMarket(ctx, msg.Base, msg.Quote)
 	if found {
 		return nil, types.ErrMarketAlreadyExists
 	}
 
 	//check aliases too: user can try to create a market that exists
-	_, found = k.GetMarketAlias(ctx, msg.Asset1, msg.Asset2)
+	_, found = k.GetMarketAlias(ctx, msg.Base, msg.Quote)
 	if found {
 		return nil, types.ErrMarketAlreadyExists
 	}
 
-	if !k.bankKeeper.HasSupply(ctx, msg.Asset1) {
+	if !k.bankKeeper.HasSupply(ctx, msg.Base) {
 		return nil, types.ErrDenomHasNoSupply
 	}
 
-	if !k.bankKeeper.HasSupply(ctx, msg.Asset2) {
+	if !k.bankKeeper.HasSupply(ctx, msg.Quote) {
 		return nil, types.ErrDenomHasNoSupply
 	}
 
@@ -45,8 +45,8 @@ func (k msgServer) CreateMarket(goCtx context.Context, msg *types.MsgCreateMarke
 	}
 
 	k.SetMarket(ctx, types.Market{
-		Asset1:  msg.Asset1,
-		Asset2:  msg.Asset2,
+		Base:    msg.Base,
+		Quote:   msg.Quote,
 		Creator: msg.Creator,
 	})
 
