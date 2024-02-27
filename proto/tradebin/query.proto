@@ -18,7 +18,7 @@ service Query {
   }
   // Queries a Market by index.
 	rpc Market(QueryGetMarketRequest) returns (QueryGetMarketResponse) {
-		option (google.api.http).get = "/bze/tradebin/v1/market/{asset1}/{asset2}";
+		option (google.api.http).get = "/bze/tradebin/v1/market/{base}/{quote}";
 	}
 
 	// Queries a list of Market items.
@@ -44,8 +44,8 @@ message QueryParamsResponse {
 }
 
 message QueryGetMarketRequest {
-	  string asset1 = 1;
-  string asset2 = 2;
+	string base = 1;
+  string quote = 2;
 
 }
 

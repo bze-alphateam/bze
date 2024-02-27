@@ -21,8 +21,8 @@ export interface RpcStatus {
 }
 
 export interface Tradebinv1Market {
-  asset1?: string;
-  asset2?: string;
+  base?: string;
+  quote?: string;
   creator?: string;
 }
 
@@ -378,11 +378,11 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @tags Query
    * @name QueryMarket
    * @summary Queries a Market by index.
-   * @request GET:/bze/tradebin/v1/market/{asset1}/{asset2}
+   * @request GET:/bze/tradebin/v1/market/{base}/{quote}
    */
-  queryMarket = (asset1: string, asset2: string, params: RequestParams = {}) =>
+  queryMarket = (base: string, quote: string, params: RequestParams = {}) =>
     this.request<V1QueryGetMarketResponse, RpcStatus>({
-      path: `/bze/tradebin/v1/market/${asset1}/${asset2}`,
+      path: `/bze/tradebin/v1/market/${base}/${quote}`,
       method: "GET",
       format: "json",
       ...params,

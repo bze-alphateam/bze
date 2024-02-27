@@ -13,8 +13,8 @@ service Msg {
 
 message MsgCreateMarket {
   string creator = 1;
-  string asset1 = 2;
-  string asset2 = 3;
+  string base = 2;
+  string quote = 3;
 }
 
 message MsgCreateMarketResponse {

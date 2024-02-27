@@ -19,8 +19,8 @@ export interface QueryParamsResponse {
 }
 
 export interface QueryGetMarketRequest {
-  asset1: string;
-  asset2: string;
+  base: string;
+  quote: string;
 }
 
 export interface QueryGetMarketResponse {
@@ -142,18 +142,18 @@ export const QueryParamsResponse = {
   },
 };
 
-const baseQueryGetMarketRequest: object = { asset1: "", asset2: "" };
+const baseQueryGetMarketRequest: object = { base: "", quote: "" };
 
 export const QueryGetMarketRequest = {
   encode(
     message: QueryGetMarketRequest,
     writer: Writer = Writer.create()
   ): Writer {
-    if (message.asset1 !== "") {
-      writer.uint32(10).string(message.asset1);
+    if (message.base !== "") {
+      writer.uint32(10).string(message.base);
     }
-    if (message.asset2 !== "") {
-      writer.uint32(18).string(message.asset2);
+    if (message.quote !== "") {
+      writer.uint32(18).string(message.quote);
     }
     return writer;
   },
@@ -166,10 +166,10 @@ export const QueryGetMarketRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.asset1 = reader.string();
+          message.base = reader.string();
           break;
         case 2:
-          message.asset2 = reader.string();
+          message.quote = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -181,23 +181,23 @@ export const QueryGetMarketRequest = {
 
   fromJSON(object: any): QueryGetMarketRequest {
     const message = { ...baseQueryGetMarketRequest } as QueryGetMarketRequest;
-    if (object.asset1 !== undefined && object.asset1 !== null) {
-      message.asset1 = String(object.asset1);
+    if (object.base !== undefined && object.base !== null) {
+      message.base = String(object.base);
     } else {
-      message.asset1 = "";
+      message.base = "";
     }
-    if (object.asset2 !== undefined && object.asset2 !== null) {
-      message.asset2 = String(object.asset2);
+    if (object.quote !== undefined && object.quote !== null) {
+      message.quote = String(object.quote);
     } else {
-      message.asset2 = "";
+      message.quote = "";
     }
     return message;
   },
 
   toJSON(message: QueryGetMarketRequest): unknown {
     const obj: any = {};
-    message.asset1 !== undefined && (obj.asset1 = message.asset1);
-    message.asset2 !== undefined && (obj.asset2 = message.asset2);
+    message.base !== undefined && (obj.base = message.base);
+    message.quote !== undefined && (obj.quote = message.quote);
     return obj;
   },
 
@@ -205,15 +205,15 @@ export const QueryGetMarketRequest = {
     object: DeepPartial<QueryGetMarketRequest>
   ): QueryGetMarketRequest {
     const message = { ...baseQueryGetMarketRequest } as QueryGetMarketRequest;
-    if (object.asset1 !== undefined && object.asset1 !== null) {
-      message.asset1 = object.asset1;
+    if (object.base !== undefined && object.base !== null) {
+      message.base = object.base;
     } else {
-      message.asset1 = "";
+      message.base = "";
     }
-    if (object.asset2 !== undefined && object.asset2 !== null) {
-      message.asset2 = object.asset2;
+    if (object.quote !== undefined && object.quote !== null) {
+      message.quote = object.quote;
     } else {
-      message.asset2 = "";
+      message.quote = "";
     }
     return message;
   },

@@ -6,18 +6,18 @@ var _ binary.ByteOrder
 
 const (
 	// MarketKeyPrefix is the prefix to retrieve all Market
-	MarketKeyPrefix      = "Market/value/"
-	MarketAliasKeyPrefix = "Market/alias/"
+	MarketKeyPrefix      = "value/market/"
+	MarketAliasKeyPrefix = "alias/market/"
 )
 
 // MarketKey returns the store key to retrieve a Market from the index fields
 func MarketKey(
-	asset1 string,
-	asset2 string,
+	base string,
+	quote string,
 ) []byte {
-	key := MarketAssetKey(asset1)
+	key := MarketAssetKey(base)
 
-	asset2Bytes := MarketAssetKey(asset2)
+	asset2Bytes := MarketAssetKey(quote)
 	key = append(key, asset2Bytes...)
 
 	return key

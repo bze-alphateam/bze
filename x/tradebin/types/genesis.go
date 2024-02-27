@@ -23,7 +23,7 @@ func (gs GenesisState) Validate() error {
 	marketIndexMap := make(map[string]struct{})
 
 	for _, elem := range gs.MarketList {
-		index := string(MarketKey(elem.Asset1, elem.Asset2))
+		index := string(MarketKey(elem.Base, elem.Quote))
 		if _, ok := marketIndexMap[index]; ok {
 			return fmt.Errorf("duplicated index for market")
 		}

@@ -44,8 +44,8 @@ func (k Keeper) Market(c context.Context, req *types.QueryGetMarketRequest) (*ty
 
 	val, found := k.GetMarket(
 		ctx,
-		req.Asset1,
-		req.Asset2,
+		req.Base,
+		req.Quote,
 	)
 	if found {
 		return &types.QueryGetMarketResponse{Market: val}, nil
@@ -54,8 +54,8 @@ func (k Keeper) Market(c context.Context, req *types.QueryGetMarketRequest) (*ty
 	//try finding the alias in case the user requested the market with assets in wrong order
 	val, found = k.GetMarketAlias(
 		ctx,
-		req.Asset1,
-		req.Asset2,
+		req.Base,
+		req.Quote,
 	)
 	if found {
 		return &types.QueryGetMarketResponse{Market: val}, nil

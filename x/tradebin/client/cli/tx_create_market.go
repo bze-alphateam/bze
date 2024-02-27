@@ -14,7 +14,7 @@ var _ = strconv.Itoa(0)
 
 func CmdCreateMarket() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-market [asset-1] [asset-2]",
+		Use:   "create-market [base] [quote]",
 		Short: "Broadcast message CreateMarket",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {

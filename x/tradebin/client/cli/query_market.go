@@ -12,7 +12,7 @@ import (
 func CmdListMarket() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list-market",
-		Short: "list all market",
+		Short: "list all markets",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
@@ -44,8 +44,8 @@ func CmdListMarket() *cobra.Command {
 
 func CmdShowMarket() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show-market [asset-1] [asset-2]",
-		Short: "shows a market",
+		Use:   "show-market [baseAsset] [quoteAsset]",
+		Short: "shows a market for the given assets",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -56,8 +56,8 @@ func CmdShowMarket() *cobra.Command {
 			argAsset2 := args[1]
 
 			params := &types.QueryGetMarketRequest{
-				Asset1: argAsset1,
-				Asset2: argAsset2,
+				Base:  argAsset1,
+				Quote: argAsset2,
 			}
 
 			res, err := queryClient.Market(context.Background(), params)

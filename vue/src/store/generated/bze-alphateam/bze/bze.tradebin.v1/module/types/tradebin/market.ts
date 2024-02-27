@@ -4,20 +4,20 @@ import { Writer, Reader } from "protobufjs/minimal";
 export const protobufPackage = "bze.tradebin.v1";
 
 export interface Market {
-  asset1: string;
-  asset2: string;
+  base: string;
+  quote: string;
   creator: string;
 }
 
-const baseMarket: object = { asset1: "", asset2: "", creator: "" };
+const baseMarket: object = { base: "", quote: "", creator: "" };
 
 export const Market = {
   encode(message: Market, writer: Writer = Writer.create()): Writer {
-    if (message.asset1 !== "") {
-      writer.uint32(10).string(message.asset1);
+    if (message.base !== "") {
+      writer.uint32(10).string(message.base);
     }
-    if (message.asset2 !== "") {
-      writer.uint32(18).string(message.asset2);
+    if (message.quote !== "") {
+      writer.uint32(18).string(message.quote);
     }
     if (message.creator !== "") {
       writer.uint32(26).string(message.creator);
@@ -33,10 +33,10 @@ export const Market = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.asset1 = reader.string();
+          message.base = reader.string();
           break;
         case 2:
-          message.asset2 = reader.string();
+          message.quote = reader.string();
           break;
         case 3:
           message.creator = reader.string();
@@ -51,15 +51,15 @@ export const Market = {
 
   fromJSON(object: any): Market {
     const message = { ...baseMarket } as Market;
-    if (object.asset1 !== undefined && object.asset1 !== null) {
-      message.asset1 = String(object.asset1);
+    if (object.base !== undefined && object.base !== null) {
+      message.base = String(object.base);
     } else {
-      message.asset1 = "";
+      message.base = "";
     }
-    if (object.asset2 !== undefined && object.asset2 !== null) {
-      message.asset2 = String(object.asset2);
+    if (object.quote !== undefined && object.quote !== null) {
+      message.quote = String(object.quote);
     } else {
-      message.asset2 = "";
+      message.quote = "";
     }
     if (object.creator !== undefined && object.creator !== null) {
       message.creator = String(object.creator);
@@ -71,23 +71,23 @@ export const Market = {
 
   toJSON(message: Market): unknown {
     const obj: any = {};
-    message.asset1 !== undefined && (obj.asset1 = message.asset1);
-    message.asset2 !== undefined && (obj.asset2 = message.asset2);
+    message.base !== undefined && (obj.base = message.base);
+    message.quote !== undefined && (obj.quote = message.quote);
     message.creator !== undefined && (obj.creator = message.creator);
     return obj;
   },
 
   fromPartial(object: DeepPartial<Market>): Market {
     const message = { ...baseMarket } as Market;
-    if (object.asset1 !== undefined && object.asset1 !== null) {
-      message.asset1 = object.asset1;
+    if (object.base !== undefined && object.base !== null) {
+      message.base = object.base;
     } else {
-      message.asset1 = "";
+      message.base = "";
     }
-    if (object.asset2 !== undefined && object.asset2 !== null) {
-      message.asset2 = object.asset2;
+    if (object.quote !== undefined && object.quote !== null) {
+      message.quote = object.quote;
     } else {
-      message.asset2 = "";
+      message.quote = "";
     }
     if (object.creator !== undefined && object.creator !== null) {
       message.creator = object.creator;
