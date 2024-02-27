@@ -26,6 +26,11 @@ service Query {
 		option (google.api.http).get = "/bze/tradebin/v1/market";
 	}
 
+// Queries a list of AssetMarkets items.
+	rpc AssetMarkets(QueryAssetMarketsRequest) returns (QueryAssetMarketsResponse) {
+		option (google.api.http).get = "/bze/tradebin/v1/asset_markets/{asset}";
+	}
+
 // this line is used by starport scaffolding # 2
 }
 
@@ -55,6 +60,15 @@ message QueryAllMarketRequest {
 message QueryAllMarketResponse {
 	repeated Market market = 1 [(gogoproto.nullable) = false];
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAssetMarketsRequest {
+  string asset = 1;
+}
+
+message QueryAssetMarketsResponse {
+	repeated Market base = 1 [(gogoproto.nullable) = false];
+	repeated Market quote = 2 [(gogoproto.nullable) = false];
 }
 
 // this line is used by starport scaffolding # 3
