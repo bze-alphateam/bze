@@ -45,6 +45,7 @@ const getDefaultState = () => {
 				Params: {},
 				Market: {},
 				MarketAll: {},
+				AssetMarkets: {},
 				
 				_Structure: {
 						Market: getStructure(Market.fromPartial({})),
@@ -94,6 +95,12 @@ export default {
 						(<any> params).query=null
 					}
 			return state.MarketAll[JSON.stringify(params)] ?? {}
+		},
+				getAssetMarkets: (state) => (params = { params: {}}) => {
+					if (!(<any> params).query) {
+						(<any> params).query=null
+					}
+			return state.AssetMarkets[JSON.stringify(params)] ?? {}
 		},
 				
 		getTypeStructure: (state) => (type) => {
@@ -194,6 +201,28 @@ export default {
 				return getters['getMarketAll']( { params: {...key}, query}) ?? {}
 			} catch (e) {
 				throw new Error('QueryClient:QueryMarketAll API Node Unavailable. Could not perform query: ' + e.message)
+				
+			}
+		},
+		
+		
+		
+		
+		 		
+		
+		
+		async QueryAssetMarkets({ commit, rootGetters, getters }, { options: { subscribe, all} = { subscribe:false, all:false}, params, query=null }) {
+			try {
+				const key = params ?? {};
+				const queryClient=await initQueryClient(rootGetters)
+				let value= (await queryClient.queryAssetMarkets( key.asset)).data
+				
+					
+				commit('QUERY', { query: 'AssetMarkets', key: { params: {...key}, query}, value })
+				if (subscribe) commit('SUBSCRIBE', { action: 'QueryAssetMarkets', payload: { options: { all }, params: {...key},query }})
+				return getters['getAssetMarkets']( { params: {...key}, query}) ?? {}
+			} catch (e) {
+				throw new Error('QueryClient:QueryAssetMarkets API Node Unavailable. Could not perform query: ' + e.message)
 				
 			}
 		},

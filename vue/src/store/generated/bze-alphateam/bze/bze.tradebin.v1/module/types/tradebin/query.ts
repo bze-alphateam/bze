@@ -36,6 +36,15 @@ export interface QueryAllMarketResponse {
   pagination: PageResponse | undefined;
 }
 
+export interface QueryAssetMarketsRequest {
+  asset: string;
+}
+
+export interface QueryAssetMarketsResponse {
+  base: Market[];
+  quote: Market[];
+}
+
 const baseQueryParamsRequest: object = {};
 
 export const QueryParamsRequest = {
@@ -426,6 +435,175 @@ export const QueryAllMarketResponse = {
   },
 };
 
+const baseQueryAssetMarketsRequest: object = { asset: "" };
+
+export const QueryAssetMarketsRequest = {
+  encode(
+    message: QueryAssetMarketsRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.asset !== "") {
+      writer.uint32(10).string(message.asset);
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryAssetMarketsRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryAssetMarketsRequest,
+    } as QueryAssetMarketsRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.asset = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryAssetMarketsRequest {
+    const message = {
+      ...baseQueryAssetMarketsRequest,
+    } as QueryAssetMarketsRequest;
+    if (object.asset !== undefined && object.asset !== null) {
+      message.asset = String(object.asset);
+    } else {
+      message.asset = "";
+    }
+    return message;
+  },
+
+  toJSON(message: QueryAssetMarketsRequest): unknown {
+    const obj: any = {};
+    message.asset !== undefined && (obj.asset = message.asset);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryAssetMarketsRequest>
+  ): QueryAssetMarketsRequest {
+    const message = {
+      ...baseQueryAssetMarketsRequest,
+    } as QueryAssetMarketsRequest;
+    if (object.asset !== undefined && object.asset !== null) {
+      message.asset = object.asset;
+    } else {
+      message.asset = "";
+    }
+    return message;
+  },
+};
+
+const baseQueryAssetMarketsResponse: object = {};
+
+export const QueryAssetMarketsResponse = {
+  encode(
+    message: QueryAssetMarketsResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.base) {
+      Market.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    for (const v of message.quote) {
+      Market.encode(v!, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryAssetMarketsResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryAssetMarketsResponse,
+    } as QueryAssetMarketsResponse;
+    message.base = [];
+    message.quote = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.base.push(Market.decode(reader, reader.uint32()));
+          break;
+        case 2:
+          message.quote.push(Market.decode(reader, reader.uint32()));
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryAssetMarketsResponse {
+    const message = {
+      ...baseQueryAssetMarketsResponse,
+    } as QueryAssetMarketsResponse;
+    message.base = [];
+    message.quote = [];
+    if (object.base !== undefined && object.base !== null) {
+      for (const e of object.base) {
+        message.base.push(Market.fromJSON(e));
+      }
+    }
+    if (object.quote !== undefined && object.quote !== null) {
+      for (const e of object.quote) {
+        message.quote.push(Market.fromJSON(e));
+      }
+    }
+    return message;
+  },
+
+  toJSON(message: QueryAssetMarketsResponse): unknown {
+    const obj: any = {};
+    if (message.base) {
+      obj.base = message.base.map((e) => (e ? Market.toJSON(e) : undefined));
+    } else {
+      obj.base = [];
+    }
+    if (message.quote) {
+      obj.quote = message.quote.map((e) => (e ? Market.toJSON(e) : undefined));
+    } else {
+      obj.quote = [];
+    }
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryAssetMarketsResponse>
+  ): QueryAssetMarketsResponse {
+    const message = {
+      ...baseQueryAssetMarketsResponse,
+    } as QueryAssetMarketsResponse;
+    message.base = [];
+    message.quote = [];
+    if (object.base !== undefined && object.base !== null) {
+      for (const e of object.base) {
+        message.base.push(Market.fromPartial(e));
+      }
+    }
+    if (object.quote !== undefined && object.quote !== null) {
+      for (const e of object.quote) {
+        message.quote.push(Market.fromPartial(e));
+      }
+    }
+    return message;
+  },
+};
+
 /** Query defines the gRPC querier service. */
 export interface Query {
   /** Parameters queries the parameters of the module. */
@@ -434,6 +612,10 @@ export interface Query {
   Market(request: QueryGetMarketRequest): Promise<QueryGetMarketResponse>;
   /** Queries a list of Market items. */
   MarketAll(request: QueryAllMarketRequest): Promise<QueryAllMarketResponse>;
+  /** Queries a list of AssetMarkets items. */
+  AssetMarkets(
+    request: QueryAssetMarketsRequest
+  ): Promise<QueryAssetMarketsResponse>;
 }
 
 export class QueryClientImpl implements Query {
@@ -464,6 +646,20 @@ export class QueryClientImpl implements Query {
     );
     return promise.then((data) =>
       QueryAllMarketResponse.decode(new Reader(data))
+    );
+  }
+
+  AssetMarkets(
+    request: QueryAssetMarketsRequest
+  ): Promise<QueryAssetMarketsResponse> {
+    const data = QueryAssetMarketsRequest.encode(request).finish();
+    const promise = this.rpc.request(
+      "bze.tradebin.v1.Query",
+      "AssetMarkets",
+      data
+    );
+    return promise.then((data) =>
+      QueryAssetMarketsResponse.decode(new Reader(data))
     );
   }
 }

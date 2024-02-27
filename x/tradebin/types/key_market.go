@@ -15,14 +15,21 @@ func MarketKey(
 	asset1 string,
 	asset2 string,
 ) []byte {
+	key := MarketAssetKey(asset1)
+
+	asset2Bytes := MarketAssetKey(asset2)
+	key = append(key, asset2Bytes...)
+
+	return key
+}
+
+func MarketAssetKey(
+	asset string,
+) []byte {
 	var key []byte
 
-	asset1Bytes := []byte(asset1)
+	asset1Bytes := []byte(asset)
 	key = append(key, asset1Bytes...)
-	key = append(key, []byte("/")...)
-
-	asset2Bytes := []byte(asset2)
-	key = append(key, asset2Bytes...)
 	key = append(key, []byte("/")...)
 
 	return key

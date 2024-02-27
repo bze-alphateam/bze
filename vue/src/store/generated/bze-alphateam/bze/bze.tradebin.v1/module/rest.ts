@@ -54,6 +54,11 @@ export interface V1QueryAllMarketResponse {
   pagination?: V1Beta1PageResponse;
 }
 
+export interface V1QueryAssetMarketsResponse {
+  base?: Tradebinv1Market[];
+  quote?: Tradebinv1Market[];
+}
+
 export interface V1QueryGetMarketResponse {
   market?: Tradebinv1Market;
 }
@@ -325,6 +330,22 @@ export class HttpClient<SecurityDataType = unknown> {
  * @version version not set
  */
 export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryAssetMarkets
+   * @summary Queries a list of AssetMarkets items.
+   * @request GET:/bze/tradebin/v1/asset_markets/{asset}
+   */
+  queryAssetMarkets = (asset: string, params: RequestParams = {}) =>
+    this.request<V1QueryAssetMarketsResponse, RpcStatus>({
+      path: `/bze/tradebin/v1/asset_markets/${asset}`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+
   /**
    * No description
    *
