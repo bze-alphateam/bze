@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { Params } from "../tradebin/params";
 import { Market } from "../tradebin/market";
+import { QueueMessage } from "../tradebin/queue_message";
 import { Writer, Reader } from "protobufjs/minimal";
 
 export const protobufPackage = "bze.tradebin.v1";
@@ -8,8 +9,9 @@ export const protobufPackage = "bze.tradebin.v1";
 /** GenesisState defines the tradebin module's genesis state. */
 export interface GenesisState {
   params: Params | undefined;
-  /** this line is used by starport scaffolding # genesis/proto/state */
   marketList: Market[];
+  /** this line is used by starport scaffolding # genesis/proto/state */
+  queueMessageList: QueueMessage[];
 }
 
 const baseGenesisState: object = {};
@@ -22,6 +24,9 @@ export const GenesisState = {
     for (const v of message.marketList) {
       Market.encode(v!, writer.uint32(18).fork()).ldelim();
     }
+    for (const v of message.queueMessageList) {
+      QueueMessage.encode(v!, writer.uint32(26).fork()).ldelim();
+    }
     return writer;
   },
 
@@ -30,6 +35,7 @@ export const GenesisState = {
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseGenesisState } as GenesisState;
     message.marketList = [];
+    message.queueMessageList = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -38,6 +44,11 @@ export const GenesisState = {
           break;
         case 2:
           message.marketList.push(Market.decode(reader, reader.uint32()));
+          break;
+        case 3:
+          message.queueMessageList.push(
+            QueueMessage.decode(reader, reader.uint32())
+          );
           break;
         default:
           reader.skipType(tag & 7);
@@ -50,6 +61,7 @@ export const GenesisState = {
   fromJSON(object: any): GenesisState {
     const message = { ...baseGenesisState } as GenesisState;
     message.marketList = [];
+    message.queueMessageList = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromJSON(object.params);
     } else {
@@ -58,6 +70,14 @@ export const GenesisState = {
     if (object.marketList !== undefined && object.marketList !== null) {
       for (const e of object.marketList) {
         message.marketList.push(Market.fromJSON(e));
+      }
+    }
+    if (
+      object.queueMessageList !== undefined &&
+      object.queueMessageList !== null
+    ) {
+      for (const e of object.queueMessageList) {
+        message.queueMessageList.push(QueueMessage.fromJSON(e));
       }
     }
     return message;
@@ -74,12 +94,20 @@ export const GenesisState = {
     } else {
       obj.marketList = [];
     }
+    if (message.queueMessageList) {
+      obj.queueMessageList = message.queueMessageList.map((e) =>
+        e ? QueueMessage.toJSON(e) : undefined
+      );
+    } else {
+      obj.queueMessageList = [];
+    }
     return obj;
   },
 
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = { ...baseGenesisState } as GenesisState;
     message.marketList = [];
+    message.queueMessageList = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromPartial(object.params);
     } else {
@@ -88,6 +116,14 @@ export const GenesisState = {
     if (object.marketList !== undefined && object.marketList !== null) {
       for (const e of object.marketList) {
         message.marketList.push(Market.fromPartial(e));
+      }
+    }
+    if (
+      object.queueMessageList !== undefined &&
+      object.queueMessageList !== null
+    ) {
+      for (const e of object.queueMessageList) {
+        message.queueMessageList.push(QueueMessage.fromPartial(e));
       }
     }
     return message;
