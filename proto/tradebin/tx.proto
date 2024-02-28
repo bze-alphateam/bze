@@ -8,6 +8,7 @@ option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
 // Msg defines the Msg service.
 service Msg {
       rpc CreateMarket(MsgCreateMarket) returns (MsgCreateMarketResponse);
+  rpc CreateOrder(MsgCreateOrder) returns (MsgCreateOrderResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -18,6 +19,17 @@ message MsgCreateMarket {
 }
 
 message MsgCreateMarketResponse {
+}
+
+message MsgCreateOrder {
+  string creator = 1;
+  string orderType = 2;
+  int64 amount = 3;
+  string price = 4;
+  string marketId = 5;
+}
+
+message MsgCreateOrderResponse {
 }
 
 // this line is used by starport scaffolding # proto/tx/message

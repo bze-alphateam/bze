@@ -2,9 +2,10 @@ import { txClient, queryClient, MissingWalletError , registry} from './module'
 
 import { Market } from "./module/types/tradebin/market"
 import { Params } from "./module/types/tradebin/params"
+import { QueueMessage } from "./module/types/tradebin/queue_message"
 
 
-export { Market, Params };
+export { Market, Params, QueueMessage };
 
 async function initTxClient(vuexGetters) {
 	return await txClient(vuexGetters['common/wallet/signer'], {
@@ -50,6 +51,7 @@ const getDefaultState = () => {
 				_Structure: {
 						Market: getStructure(Market.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
+						QueueMessage: getStructure(QueueMessage.fromPartial({})),
 						
 		},
 		_Registry: registry,
@@ -243,6 +245,21 @@ export default {
 				}
 			}
 		},
+		async sendMsgCreateOrder({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgCreateOrder(value)
+				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
+	gas: "200000" }, memo})
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgCreateOrder:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgCreateOrder:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
 		
 		async MsgCreateMarket({ rootGetters }, { value }) {
 			try {
@@ -254,6 +271,19 @@ export default {
 					throw new Error('TxClient:MsgCreateMarket:Init Could not initialize signing client. Wallet is required.')
 				} else{
 					throw new Error('TxClient:MsgCreateMarket:Create Could not create message: ' + e.message)
+				}
+			}
+		},
+		async MsgCreateOrder({ rootGetters }, { value }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgCreateOrder(value)
+				return msg
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgCreateOrder:Init Could not initialize signing client. Wallet is required.')
+				} else{
+					throw new Error('TxClient:MsgCreateOrder:Create Could not create message: ' + e.message)
 				}
 			}
 		},

@@ -35,12 +35,7 @@ func (k Keeper) SetMarket(ctx sdk.Context, market types.Market) {
 }
 
 // GetMarketAlias returns a market from the alias index
-func (k Keeper) GetMarketAlias(
-	ctx sdk.Context,
-	quoteAsset string,
-	baseAsset string,
-
-) (val types.Market, found bool) {
+func (k Keeper) GetMarketAlias(ctx sdk.Context, quoteAsset string, baseAsset string) (val types.Market, found bool) {
 	store := k.getMarketAliasStore(ctx)
 
 	key := types.MarketKey(
@@ -57,18 +52,27 @@ func (k Keeper) GetMarketAlias(
 }
 
 // GetMarket returns a market from its index
-func (k Keeper) GetMarket(
-	ctx sdk.Context,
-	baseAsset string,
-	quoteAsset string,
-
-) (val types.Market, found bool) {
+func (k Keeper) GetMarket(ctx sdk.Context, baseAsset string, quoteAsset string) (val types.Market, found bool) {
 	store := k.getMarketStore(ctx)
 
 	key := types.MarketKey(
 		baseAsset,
 		quoteAsset,
 	)
+	b := store.Get(key)
+	if b == nil {
+		return val, false
+	}
+
+	k.cdc.MustUnmarshal(b, &val)
+	return val, true
+}
+
+// GetMarketById returns a market from its index
+func (k Keeper) GetMarketById(ctx sdk.Context, marketId string) (val types.Market, found bool) {
+	store := k.getMarketStore(ctx)
+
+	key := types.MarketIdKey(marketId)
 	b := store.Get(key)
 	if b == nil {
 		return val, false

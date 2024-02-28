@@ -4,6 +4,7 @@ package bze.tradebin.v1;
 import "gogoproto/gogo.proto";
 import "tradebin/params.proto";
 import "tradebin/market.proto";
+import "tradebin/queue_message.proto";
 // this line is used by starport scaffolding # genesis/proto/import
 
 option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
@@ -12,5 +13,6 @@ option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
 message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
   repeated Market marketList = 2 [(gogoproto.nullable) = false];
+  repeated QueueMessage queueMessageList = 3 [(gogoproto.nullable) = false];
   // this line is used by starport scaffolding # genesis/proto/state
 }

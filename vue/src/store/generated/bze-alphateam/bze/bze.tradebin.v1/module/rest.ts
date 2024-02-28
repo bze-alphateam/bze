@@ -39,6 +39,8 @@ export interface Tradebinv1Params {
 
 export type V1MsgCreateMarketResponse = object;
 
+export type V1MsgCreateOrderResponse = object;
+
 export interface V1QueryAllMarketResponse {
   market?: Tradebinv1Market[];
 
