@@ -37,6 +37,8 @@ export interface Tradebinv1Params {
   takerFeeDestination?: string;
 }
 
+export type V1MsgCancelOrderResponse = object;
+
 export type V1MsgCreateMarketResponse = object;
 
 export type V1MsgCreateOrderResponse = object;
@@ -328,7 +330,7 @@ export class HttpClient<SecurityDataType = unknown> {
 }
 
 /**
- * @title tradebin/genesis.proto
+ * @title tradebin/events.proto
  * @version version not set
  */
 export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {

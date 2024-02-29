@@ -22,6 +22,14 @@ export interface MsgCreateOrder {
 
 export interface MsgCreateOrderResponse {}
 
+export interface MsgCancelOrder {
+  creator: string;
+  marketId: string;
+  orderId: string;
+}
+
+export interface MsgCancelOrderResponse {}
+
 const baseMsgCreateMarket: object = { creator: "", base: "", quote: "" };
 
 export const MsgCreateMarket = {
@@ -324,11 +332,139 @@ export const MsgCreateOrderResponse = {
   },
 };
 
+const baseMsgCancelOrder: object = { creator: "", marketId: "", orderId: "" };
+
+export const MsgCancelOrder = {
+  encode(message: MsgCancelOrder, writer: Writer = Writer.create()): Writer {
+    if (message.creator !== "") {
+      writer.uint32(10).string(message.creator);
+    }
+    if (message.marketId !== "") {
+      writer.uint32(18).string(message.marketId);
+    }
+    if (message.orderId !== "") {
+      writer.uint32(26).string(message.orderId);
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): MsgCancelOrder {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseMsgCancelOrder } as MsgCancelOrder;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.creator = reader.string();
+          break;
+        case 2:
+          message.marketId = reader.string();
+          break;
+        case 3:
+          message.orderId = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): MsgCancelOrder {
+    const message = { ...baseMsgCancelOrder } as MsgCancelOrder;
+    if (object.creator !== undefined && object.creator !== null) {
+      message.creator = String(object.creator);
+    } else {
+      message.creator = "";
+    }
+    if (object.marketId !== undefined && object.marketId !== null) {
+      message.marketId = String(object.marketId);
+    } else {
+      message.marketId = "";
+    }
+    if (object.orderId !== undefined && object.orderId !== null) {
+      message.orderId = String(object.orderId);
+    } else {
+      message.orderId = "";
+    }
+    return message;
+  },
+
+  toJSON(message: MsgCancelOrder): unknown {
+    const obj: any = {};
+    message.creator !== undefined && (obj.creator = message.creator);
+    message.marketId !== undefined && (obj.marketId = message.marketId);
+    message.orderId !== undefined && (obj.orderId = message.orderId);
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<MsgCancelOrder>): MsgCancelOrder {
+    const message = { ...baseMsgCancelOrder } as MsgCancelOrder;
+    if (object.creator !== undefined && object.creator !== null) {
+      message.creator = object.creator;
+    } else {
+      message.creator = "";
+    }
+    if (object.marketId !== undefined && object.marketId !== null) {
+      message.marketId = object.marketId;
+    } else {
+      message.marketId = "";
+    }
+    if (object.orderId !== undefined && object.orderId !== null) {
+      message.orderId = object.orderId;
+    } else {
+      message.orderId = "";
+    }
+    return message;
+  },
+};
+
+const baseMsgCancelOrderResponse: object = {};
+
+export const MsgCancelOrderResponse = {
+  encode(_: MsgCancelOrderResponse, writer: Writer = Writer.create()): Writer {
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): MsgCancelOrderResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseMsgCancelOrderResponse } as MsgCancelOrderResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(_: any): MsgCancelOrderResponse {
+    const message = { ...baseMsgCancelOrderResponse } as MsgCancelOrderResponse;
+    return message;
+  },
+
+  toJSON(_: MsgCancelOrderResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial(_: DeepPartial<MsgCancelOrderResponse>): MsgCancelOrderResponse {
+    const message = { ...baseMsgCancelOrderResponse } as MsgCancelOrderResponse;
+    return message;
+  },
+};
+
 /** Msg defines the Msg service. */
 export interface Msg {
   CreateMarket(request: MsgCreateMarket): Promise<MsgCreateMarketResponse>;
-  /** this line is used by starport scaffolding # proto/tx/rpc */
   CreateOrder(request: MsgCreateOrder): Promise<MsgCreateOrderResponse>;
+  /** this line is used by starport scaffolding # proto/tx/rpc */
+  CancelOrder(request: MsgCancelOrder): Promise<MsgCancelOrderResponse>;
 }
 
 export class MsgClientImpl implements Msg {
@@ -357,6 +493,18 @@ export class MsgClientImpl implements Msg {
     );
     return promise.then((data) =>
       MsgCreateOrderResponse.decode(new Reader(data))
+    );
+  }
+
+  CancelOrder(request: MsgCancelOrder): Promise<MsgCancelOrderResponse> {
+    const data = MsgCancelOrder.encode(request).finish();
+    const promise = this.rpc.request(
+      "bze.tradebin.v1.Msg",
+      "CancelOrder",
+      data
+    );
+    return promise.then((data) =>
+      MsgCancelOrderResponse.decode(new Reader(data))
     );
   }
 }

@@ -15,4 +15,5 @@ var (
 	ErrInvalidOrderPrice    = sdkerrors.Register(ModuleName, 4004, "invalid order price")
 	ErrInvalidOrderMarketId = sdkerrors.Register(ModuleName, 4005, "invalid order market id")
 	ErrMarketNotFound       = sdkerrors.Register(ModuleName, 4006, "market not found")
+	ErrInvalidOrderId       = sdkerrors.Register(ModuleName, 4007, "invalid order id")
 )

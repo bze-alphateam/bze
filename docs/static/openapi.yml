@@ -32760,6 +32760,8 @@ definitions:
         type: string
       creator:
         type: string
+  bze.tradebin.v1.MsgCancelOrderResponse:
+    type: object
   bze.tradebin.v1.MsgCreateMarketResponse:
     type: object
   bze.tradebin.v1.MsgCreateOrderResponse:
