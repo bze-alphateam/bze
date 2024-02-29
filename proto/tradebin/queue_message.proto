@@ -4,11 +4,11 @@ package bze.tradebin.v1;
 option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
 
 message QueueMessage {
-  
   string message_id = 1;
   string market_id = 2;
   string message_type = 3;
   int64 amount = 4;
   string price = 5;
   int64 created_at = 6;
+  string order_id = 7;
 }

@@ -1,0 +1,12 @@
+syntax = "proto3";
+package bze.tradebin.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
+
+//message MessageQueuedEvent {
+//  string creator = 1;
+//  string market_id = 2;
+//  string message_type = 3;
+//}

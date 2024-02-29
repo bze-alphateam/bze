@@ -9,6 +9,7 @@ option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
 service Msg {
       rpc CreateMarket(MsgCreateMarket) returns (MsgCreateMarketResponse);
   rpc CreateOrder(MsgCreateOrder) returns (MsgCreateOrderResponse);
+  rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -30,6 +31,15 @@ message MsgCreateOrder {
 }
 
 message MsgCreateOrderResponse {
+}
+
+message MsgCancelOrder {
+  string creator = 1;
+  string marketId = 2;
+  string orderId = 3;
+}
+
+message MsgCancelOrderResponse {
 }
 
 // this line is used by starport scaffolding # proto/tx/message

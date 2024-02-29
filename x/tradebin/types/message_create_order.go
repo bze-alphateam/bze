@@ -6,8 +6,9 @@ import (
 	"strconv"
 )
 
-const TypeMsgCreateOrder = "create_order"
 const (
+	TypeMsgCreateOrder = "create_order"
+
 	OrderTypeBuy  = "buy"
 	OrderTypeSell = "sell"
 )
