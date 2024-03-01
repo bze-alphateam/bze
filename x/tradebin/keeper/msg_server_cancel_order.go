@@ -11,16 +11,23 @@ func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder)
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	_, found := k.GetMarketById(ctx, msg.MarketId)
 	if !found {
-		return nil, types.ErrMarketNotFound.Wrapf("market id: %s", msg.MarketId)
+		return nil, types.ErrMarketNotFound
 	}
 
-	//TODO: check the user owns the actual order
-	//TODO: check order is part of the selected market
+	order, found := k.GetOrder(ctx, msg.MarketId, msg.OrderType, msg.OrderId)
+	if !found {
+		return nil, types.ErrOrderNotFound
+	}
+
+	if order.Owner != msg.Creator {
+		return nil, types.ErrUnauthorizedOrder
+	}
 
 	qm := types.QueueMessage{
 		MarketId:    msg.MarketId,
 		MessageType: types.OrderTypeCancel,
 		OrderId:     msg.OrderId,
+		OrderType:   msg.OrderType,
 	}
 
 	k.SetQueueMessage(ctx, qm)

@@ -32,6 +32,7 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 
 	qm := types.QueueMessage{
 		MarketId:    msg.MarketId,
+		OrderType:   msg.OrderType,
 		MessageType: msg.OrderType,
 		Amount:      coin.Amount.Int64(),
 		Price:       msg.Price,

@@ -24,7 +24,7 @@ message MsgCreateMarketResponse {
 
 message MsgCreateOrder {
   string creator = 1;
-  string orderType = 2;
+  string order_type = 2;
   int64 amount = 3;
   string price = 4;
   string marketId = 5;
@@ -37,6 +37,7 @@ message MsgCancelOrder {
   string creator = 1;
   string marketId = 2;
   string orderId = 3;
+  string order_type = 4;
 }
 
 message MsgCancelOrderResponse {

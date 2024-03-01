@@ -13,11 +13,12 @@ const (
 
 var _ sdk.Msg = &MsgCancelOrder{}
 
-func NewMsgCancelOrder(creator string, marketId string, orderId string) *MsgCancelOrder {
+func NewMsgCancelOrder(creator string, marketId string, orderId string, orderType string) *MsgCancelOrder {
 	return &MsgCancelOrder{
-		Creator:  creator,
-		MarketId: marketId,
-		OrderId:  orderId,
+		Creator:   creator,
+		MarketId:  marketId,
+		OrderId:   orderId,
+		OrderType: orderType,
 	}
 }
 
@@ -54,6 +55,10 @@ func (msg *MsgCancelOrder) ValidateBasic() error {
 
 	if msg.OrderId == "" {
 		return sdkerrors.Wrapf(ErrInvalidOrderId, "empty order_id")
+	}
+
+	if msg.OrderType != OrderTypeSell && msg.OrderType != OrderTypeBuy {
+		return sdkerrors.Wrapf(ErrInvalidOrderType, "invalid order type")
 	}
 
 	return nil
