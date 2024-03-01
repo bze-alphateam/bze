@@ -14,7 +14,7 @@ export interface MsgCreateMarketResponse {}
 
 export interface MsgCreateOrder {
   creator: string;
-  orderType: string;
+  order_type: string;
   amount: number;
   price: string;
   marketId: string;
@@ -26,6 +26,7 @@ export interface MsgCancelOrder {
   creator: string;
   marketId: string;
   orderId: string;
+  order_type: string;
 }
 
 export interface MsgCancelOrderResponse {}
@@ -167,7 +168,7 @@ export const MsgCreateMarketResponse = {
 
 const baseMsgCreateOrder: object = {
   creator: "",
-  orderType: "",
+  order_type: "",
   amount: 0,
   price: "",
   marketId: "",
@@ -178,8 +179,8 @@ export const MsgCreateOrder = {
     if (message.creator !== "") {
       writer.uint32(10).string(message.creator);
     }
-    if (message.orderType !== "") {
-      writer.uint32(18).string(message.orderType);
+    if (message.order_type !== "") {
+      writer.uint32(18).string(message.order_type);
     }
     if (message.amount !== 0) {
       writer.uint32(24).int64(message.amount);
@@ -204,7 +205,7 @@ export const MsgCreateOrder = {
           message.creator = reader.string();
           break;
         case 2:
-          message.orderType = reader.string();
+          message.order_type = reader.string();
           break;
         case 3:
           message.amount = longToNumber(reader.int64() as Long);
@@ -230,10 +231,10 @@ export const MsgCreateOrder = {
     } else {
       message.creator = "";
     }
-    if (object.orderType !== undefined && object.orderType !== null) {
-      message.orderType = String(object.orderType);
+    if (object.order_type !== undefined && object.order_type !== null) {
+      message.order_type = String(object.order_type);
     } else {
-      message.orderType = "";
+      message.order_type = "";
     }
     if (object.amount !== undefined && object.amount !== null) {
       message.amount = Number(object.amount);
@@ -256,7 +257,7 @@ export const MsgCreateOrder = {
   toJSON(message: MsgCreateOrder): unknown {
     const obj: any = {};
     message.creator !== undefined && (obj.creator = message.creator);
-    message.orderType !== undefined && (obj.orderType = message.orderType);
+    message.order_type !== undefined && (obj.order_type = message.order_type);
     message.amount !== undefined && (obj.amount = message.amount);
     message.price !== undefined && (obj.price = message.price);
     message.marketId !== undefined && (obj.marketId = message.marketId);
@@ -270,10 +271,10 @@ export const MsgCreateOrder = {
     } else {
       message.creator = "";
     }
-    if (object.orderType !== undefined && object.orderType !== null) {
-      message.orderType = object.orderType;
+    if (object.order_type !== undefined && object.order_type !== null) {
+      message.order_type = object.order_type;
     } else {
-      message.orderType = "";
+      message.order_type = "";
     }
     if (object.amount !== undefined && object.amount !== null) {
       message.amount = object.amount;
@@ -332,7 +333,12 @@ export const MsgCreateOrderResponse = {
   },
 };
 
-const baseMsgCancelOrder: object = { creator: "", marketId: "", orderId: "" };
+const baseMsgCancelOrder: object = {
+  creator: "",
+  marketId: "",
+  orderId: "",
+  order_type: "",
+};
 
 export const MsgCancelOrder = {
   encode(message: MsgCancelOrder, writer: Writer = Writer.create()): Writer {
@@ -344,6 +350,9 @@ export const MsgCancelOrder = {
     }
     if (message.orderId !== "") {
       writer.uint32(26).string(message.orderId);
+    }
+    if (message.order_type !== "") {
+      writer.uint32(34).string(message.order_type);
     }
     return writer;
   },
@@ -363,6 +372,9 @@ export const MsgCancelOrder = {
           break;
         case 3:
           message.orderId = reader.string();
+          break;
+        case 4:
+          message.order_type = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -389,6 +401,11 @@ export const MsgCancelOrder = {
     } else {
       message.orderId = "";
     }
+    if (object.order_type !== undefined && object.order_type !== null) {
+      message.order_type = String(object.order_type);
+    } else {
+      message.order_type = "";
+    }
     return message;
   },
 
@@ -397,6 +414,7 @@ export const MsgCancelOrder = {
     message.creator !== undefined && (obj.creator = message.creator);
     message.marketId !== undefined && (obj.marketId = message.marketId);
     message.orderId !== undefined && (obj.orderId = message.orderId);
+    message.order_type !== undefined && (obj.order_type = message.order_type);
     return obj;
   },
 
@@ -416,6 +434,11 @@ export const MsgCancelOrder = {
       message.orderId = object.orderId;
     } else {
       message.orderId = "";
+    }
+    if (object.order_type !== undefined && object.order_type !== null) {
+      message.order_type = object.order_type;
+    } else {
+      message.order_type = "";
     }
     return message;
   },

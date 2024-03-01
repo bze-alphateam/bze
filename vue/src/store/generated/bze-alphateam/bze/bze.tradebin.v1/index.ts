@@ -1,11 +1,15 @@
 import { txClient, queryClient, MissingWalletError , registry} from './module'
 
 import { Market } from "./module/types/tradebin/market"
+import { Order } from "./module/types/tradebin/order"
+import { OrderReference } from "./module/types/tradebin/order"
+import { AggregatedOrder } from "./module/types/tradebin/order"
+import { HistoryOrder } from "./module/types/tradebin/order"
 import { Params } from "./module/types/tradebin/params"
 import { QueueMessage } from "./module/types/tradebin/queue_message"
 
 
-export { Market, Params, QueueMessage };
+export { Market, Order, OrderReference, AggregatedOrder, HistoryOrder, Params, QueueMessage };
 
 async function initTxClient(vuexGetters) {
 	return await txClient(vuexGetters['common/wallet/signer'], {
@@ -50,6 +54,10 @@ const getDefaultState = () => {
 				
 				_Structure: {
 						Market: getStructure(Market.fromPartial({})),
+						Order: getStructure(Order.fromPartial({})),
+						OrderReference: getStructure(OrderReference.fromPartial({})),
+						AggregatedOrder: getStructure(AggregatedOrder.fromPartial({})),
+						HistoryOrder: getStructure(HistoryOrder.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
 						QueueMessage: getStructure(QueueMessage.fromPartial({})),
 						
@@ -230,18 +238,18 @@ export default {
 		},
 		
 		
-		async sendMsgCancelOrder({ rootGetters }, { value, fee = [], memo = '' }) {
+		async sendMsgCreateOrder({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgCancelOrder(value)
+				const msg = await txClient.msgCreateOrder(value)
 				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
 	gas: "200000" }, memo})
 				return result
 			} catch (e) {
 				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCancelOrder:Init Could not initialize signing client. Wallet is required.')
+					throw new Error('TxClient:MsgCreateOrder:Init Could not initialize signing client. Wallet is required.')
 				}else{
-					throw new Error('TxClient:MsgCancelOrder:Send Could not broadcast Tx: '+ e.message)
+					throw new Error('TxClient:MsgCreateOrder:Send Could not broadcast Tx: '+ e.message)
 				}
 			}
 		},
@@ -260,32 +268,32 @@ export default {
 				}
 			}
 		},
-		async sendMsgCreateOrder({ rootGetters }, { value, fee = [], memo = '' }) {
+		async sendMsgCancelOrder({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgCreateOrder(value)
+				const msg = await txClient.msgCancelOrder(value)
 				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
 	gas: "200000" }, memo})
 				return result
 			} catch (e) {
 				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCreateOrder:Init Could not initialize signing client. Wallet is required.')
+					throw new Error('TxClient:MsgCancelOrder:Init Could not initialize signing client. Wallet is required.')
 				}else{
-					throw new Error('TxClient:MsgCreateOrder:Send Could not broadcast Tx: '+ e.message)
+					throw new Error('TxClient:MsgCancelOrder:Send Could not broadcast Tx: '+ e.message)
 				}
 			}
 		},
 		
-		async MsgCancelOrder({ rootGetters }, { value }) {
+		async MsgCreateOrder({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgCancelOrder(value)
+				const msg = await txClient.msgCreateOrder(value)
 				return msg
 			} catch (e) {
 				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCancelOrder:Init Could not initialize signing client. Wallet is required.')
+					throw new Error('TxClient:MsgCreateOrder:Init Could not initialize signing client. Wallet is required.')
 				} else{
-					throw new Error('TxClient:MsgCancelOrder:Create Could not create message: ' + e.message)
+					throw new Error('TxClient:MsgCreateOrder:Create Could not create message: ' + e.message)
 				}
 			}
 		},
@@ -302,16 +310,16 @@ export default {
 				}
 			}
 		},
-		async MsgCreateOrder({ rootGetters }, { value }) {
+		async MsgCancelOrder({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgCreateOrder(value)
+				const msg = await txClient.msgCancelOrder(value)
 				return msg
 			} catch (e) {
 				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCreateOrder:Init Could not initialize signing client. Wallet is required.')
+					throw new Error('TxClient:MsgCancelOrder:Init Could not initialize signing client. Wallet is required.')
 				} else{
-					throw new Error('TxClient:MsgCreateOrder:Create Could not create message: ' + e.message)
+					throw new Error('TxClient:MsgCancelOrder:Create Could not create message: ' + e.message)
 				}
 			}
 		},

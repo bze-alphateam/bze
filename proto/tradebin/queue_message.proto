@@ -11,4 +11,5 @@ message QueueMessage {
   string price = 5;
   int64 created_at = 6;
   string order_id = 7;
+  string order_type = 8;
 }

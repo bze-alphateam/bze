@@ -14,12 +14,13 @@ var _ = strconv.Itoa(0)
 
 func CmdCancelOrder() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cancel-order [market-id] [order-id]",
+		Use:   "cancel-order [market-id] [order-id] [order-type]",
 		Short: "Broadcast message CancelOrder",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argMarketId := args[0]
 			argOrderId := args[1]
+			argOrderType := args[2]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -30,6 +31,7 @@ func CmdCancelOrder() *cobra.Command {
 				clientCtx.GetFromAddress().String(),
 				argMarketId,
 				argOrderId,
+				argOrderType,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
