@@ -17,12 +17,24 @@ func (k Keeper) getUserOrderStore(ctx sdk.Context) sdk.KVStore {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.UserOrderKeyPrefix))
 }
 
+func (k Keeper) getUserOrderByAddressStore(ctx sdk.Context, address string) sdk.KVStore {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), types.UserOrderByUserPrefix(address))
+}
+
+func (k Keeper) getUserOrderByAddressAndMarketStore(ctx sdk.Context, address, marketId string) sdk.KVStore {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), types.UserOrderByUserAndMarketPrefix(address, marketId))
+}
+
 func (k Keeper) getPriceOrderStore(ctx sdk.Context) sdk.KVStore {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PriceOrderKeyPrefix))
 }
 
 func (k Keeper) getAggregatedOrderStore(ctx sdk.Context) sdk.KVStore {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.AggOrderKeyPrefix))
+}
+
+func (k Keeper) getAggregatedOrderByMarketAndTypeStore(ctx sdk.Context, marketId, orderType string) sdk.KVStore {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), types.AggOrderByMarketAndTypePrefix(marketId, orderType))
 }
 
 func (k Keeper) getOrderCounterStore(ctx sdk.Context) sdk.KVStore {

@@ -37,11 +37,40 @@ export interface Tradebinv1Params {
   takerFeeDestination?: string;
 }
 
+export interface V1AggregatedOrder {
+  market_id?: string;
+  order_type?: string;
+
+  /** @format int64 */
+  amount?: string;
+  price?: string;
+}
+
+export interface V1HistoryOrder {
+  market_id?: string;
+  order_type?: string;
+
+  /** @format int64 */
+  amount?: string;
+  price?: string;
+
+  /** @format int64 */
+  executed_at?: string;
+  maker?: string;
+  taker?: string;
+}
+
 export type V1MsgCancelOrderResponse = object;
 
 export type V1MsgCreateMarketResponse = object;
 
 export type V1MsgCreateOrderResponse = object;
+
+export interface V1OrderReference {
+  id?: string;
+  market_id?: string;
+  order_type?: string;
+}
 
 export interface V1QueryAllMarketResponse {
   market?: Tradebinv1Market[];
@@ -67,12 +96,72 @@ export interface V1QueryGetMarketResponse {
   market?: Tradebinv1Market;
 }
 
+export interface V1QueryMarketAggregatedOrdersResponse {
+  list?: V1AggregatedOrder[];
+
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
+  pagination?: V1Beta1PageResponse;
+}
+
+export interface V1QueryMarketHistoryResponse {
+  list?: V1HistoryOrder[];
+
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
+  pagination?: V1Beta1PageResponse;
+}
+
 /**
  * QueryParamsResponse is response type for the Query/Params RPC method.
  */
 export interface V1QueryParamsResponse {
   /** params holds all the parameters of this module. */
   params?: Tradebinv1Params;
+}
+
+export interface V1QueryUserMarketOrdersResponse {
+  list?: V1OrderReference[];
+
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
+  pagination?: V1Beta1PageResponse;
+}
+
+export interface V1QueryUserOrdersResponse {
+  list?: V1OrderReference[];
+
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
+  pagination?: V1Beta1PageResponse;
 }
 
 /**
@@ -396,6 +485,61 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * No description
    *
    * @tags Query
+   * @name QueryMarketAggregatedOrders
+   * @summary Queries a list of MarketAggregatedOrders items.
+   * @request GET:/bze/tradebin/v1/market_aggregated_orders/{market}/{order_type}
+   */
+  queryMarketAggregatedOrders = (
+    market: string,
+    order_type: string,
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<V1QueryMarketAggregatedOrdersResponse, RpcStatus>({
+      path: `/bze/tradebin/v1/market_aggregated_orders/${market}/${order_type}`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryMarketHistory
+   * @summary Queries a list of MarketHistory items.
+   * @request GET:/bze/tradebin/v1/market_history/{market}
+   */
+  queryMarketHistory = (
+    market: string,
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<V1QueryMarketHistoryResponse, RpcStatus>({
+      path: `/bze/tradebin/v1/market_history/${market}`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
    * @name QueryParams
    * @summary Parameters queries the parameters of the module.
    * @request GET:/bze/tradebin/v1/params
@@ -404,6 +548,61 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     this.request<V1QueryParamsResponse, RpcStatus>({
       path: `/bze/tradebin/v1/params`,
       method: "GET",
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryUserMarketOrders
+   * @summary Queries a list of UserMarketOrders items.
+   * @request GET:/bze/tradebin/v1/user_market_orders/{address}/{market}
+   */
+  queryUserMarketOrders = (
+    address: string,
+    market: string,
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<V1QueryUserMarketOrdersResponse, RpcStatus>({
+      path: `/bze/tradebin/v1/user_market_orders/${address}/${market}`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryUserOrders
+   * @summary Queries a list of UserOrders items.
+   * @request GET:/bze/tradebin/v1/user_orders/{address}
+   */
+  queryUserOrders = (
+    address: string,
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<V1QueryUserOrdersResponse, RpcStatus>({
+      path: `/bze/tradebin/v1/user_orders/${address}`,
+      method: "GET",
+      query: query,
       format: "json",
       ...params,
     });

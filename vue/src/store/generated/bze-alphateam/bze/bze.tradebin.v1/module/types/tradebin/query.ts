@@ -6,6 +6,11 @@ import {
   PageRequest,
   PageResponse,
 } from "../cosmos/base/query/v1beta1/pagination";
+import {
+  OrderReference,
+  AggregatedOrder,
+  HistoryOrder,
+} from "../tradebin/order";
 
 export const protobufPackage = "bze.tradebin.v1";
 
@@ -43,6 +48,48 @@ export interface QueryAssetMarketsRequest {
 export interface QueryAssetMarketsResponse {
   base: Market[];
   quote: Market[];
+}
+
+export interface QueryUserOrdersRequest {
+  address: string;
+  pagination: PageRequest | undefined;
+}
+
+export interface QueryUserOrdersResponse {
+  list: OrderReference[];
+  pagination: PageResponse | undefined;
+}
+
+export interface QueryUserMarketOrdersRequest {
+  address: string;
+  market: string;
+  pagination: PageRequest | undefined;
+}
+
+export interface QueryUserMarketOrdersResponse {
+  list: OrderReference[];
+  pagination: PageResponse | undefined;
+}
+
+export interface QueryMarketAggregatedOrdersRequest {
+  market: string;
+  order_type: string;
+  pagination: PageRequest | undefined;
+}
+
+export interface QueryMarketAggregatedOrdersResponse {
+  list: AggregatedOrder[];
+  pagination: PageResponse | undefined;
+}
+
+export interface QueryMarketHistoryRequest {
+  market: string;
+  pagination: PageRequest | undefined;
+}
+
+export interface QueryMarketHistoryResponse {
+  list: HistoryOrder[];
+  pagination: PageResponse | undefined;
 }
 
 const baseQueryParamsRequest: object = {};
@@ -604,6 +651,791 @@ export const QueryAssetMarketsResponse = {
   },
 };
 
+const baseQueryUserOrdersRequest: object = { address: "" };
+
+export const QueryUserOrdersRequest = {
+  encode(
+    message: QueryUserOrdersRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.address !== "") {
+      writer.uint32(10).string(message.address);
+    }
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): QueryUserOrdersRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseQueryUserOrdersRequest } as QueryUserOrdersRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.address = reader.string();
+          break;
+        case 2:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryUserOrdersRequest {
+    const message = { ...baseQueryUserOrdersRequest } as QueryUserOrdersRequest;
+    if (object.address !== undefined && object.address !== null) {
+      message.address = String(object.address);
+    } else {
+      message.address = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryUserOrdersRequest): unknown {
+    const obj: any = {};
+    message.address !== undefined && (obj.address = message.address);
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageRequest.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryUserOrdersRequest>
+  ): QueryUserOrdersRequest {
+    const message = { ...baseQueryUserOrdersRequest } as QueryUserOrdersRequest;
+    if (object.address !== undefined && object.address !== null) {
+      message.address = object.address;
+    } else {
+      message.address = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryUserOrdersResponse: object = {};
+
+export const QueryUserOrdersResponse = {
+  encode(
+    message: QueryUserOrdersResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.list) {
+      OrderReference.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    if (message.pagination !== undefined) {
+      PageResponse.encode(
+        message.pagination,
+        writer.uint32(18).fork()
+      ).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): QueryUserOrdersResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryUserOrdersResponse,
+    } as QueryUserOrdersResponse;
+    message.list = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.list.push(OrderReference.decode(reader, reader.uint32()));
+          break;
+        case 2:
+          message.pagination = PageResponse.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryUserOrdersResponse {
+    const message = {
+      ...baseQueryUserOrdersResponse,
+    } as QueryUserOrdersResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(OrderReference.fromJSON(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryUserOrdersResponse): unknown {
+    const obj: any = {};
+    if (message.list) {
+      obj.list = message.list.map((e) =>
+        e ? OrderReference.toJSON(e) : undefined
+      );
+    } else {
+      obj.list = [];
+    }
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageResponse.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryUserOrdersResponse>
+  ): QueryUserOrdersResponse {
+    const message = {
+      ...baseQueryUserOrdersResponse,
+    } as QueryUserOrdersResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(OrderReference.fromPartial(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryUserMarketOrdersRequest: object = { address: "", market: "" };
+
+export const QueryUserMarketOrdersRequest = {
+  encode(
+    message: QueryUserMarketOrdersRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.address !== "") {
+      writer.uint32(10).string(message.address);
+    }
+    if (message.market !== "") {
+      writer.uint32(18).string(message.market);
+    }
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(26).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryUserMarketOrdersRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryUserMarketOrdersRequest,
+    } as QueryUserMarketOrdersRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.address = reader.string();
+          break;
+        case 2:
+          message.market = reader.string();
+          break;
+        case 3:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryUserMarketOrdersRequest {
+    const message = {
+      ...baseQueryUserMarketOrdersRequest,
+    } as QueryUserMarketOrdersRequest;
+    if (object.address !== undefined && object.address !== null) {
+      message.address = String(object.address);
+    } else {
+      message.address = "";
+    }
+    if (object.market !== undefined && object.market !== null) {
+      message.market = String(object.market);
+    } else {
+      message.market = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryUserMarketOrdersRequest): unknown {
+    const obj: any = {};
+    message.address !== undefined && (obj.address = message.address);
+    message.market !== undefined && (obj.market = message.market);
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageRequest.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryUserMarketOrdersRequest>
+  ): QueryUserMarketOrdersRequest {
+    const message = {
+      ...baseQueryUserMarketOrdersRequest,
+    } as QueryUserMarketOrdersRequest;
+    if (object.address !== undefined && object.address !== null) {
+      message.address = object.address;
+    } else {
+      message.address = "";
+    }
+    if (object.market !== undefined && object.market !== null) {
+      message.market = object.market;
+    } else {
+      message.market = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryUserMarketOrdersResponse: object = {};
+
+export const QueryUserMarketOrdersResponse = {
+  encode(
+    message: QueryUserMarketOrdersResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.list) {
+      OrderReference.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    if (message.pagination !== undefined) {
+      PageResponse.encode(
+        message.pagination,
+        writer.uint32(18).fork()
+      ).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryUserMarketOrdersResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryUserMarketOrdersResponse,
+    } as QueryUserMarketOrdersResponse;
+    message.list = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.list.push(OrderReference.decode(reader, reader.uint32()));
+          break;
+        case 2:
+          message.pagination = PageResponse.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryUserMarketOrdersResponse {
+    const message = {
+      ...baseQueryUserMarketOrdersResponse,
+    } as QueryUserMarketOrdersResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(OrderReference.fromJSON(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryUserMarketOrdersResponse): unknown {
+    const obj: any = {};
+    if (message.list) {
+      obj.list = message.list.map((e) =>
+        e ? OrderReference.toJSON(e) : undefined
+      );
+    } else {
+      obj.list = [];
+    }
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageResponse.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryUserMarketOrdersResponse>
+  ): QueryUserMarketOrdersResponse {
+    const message = {
+      ...baseQueryUserMarketOrdersResponse,
+    } as QueryUserMarketOrdersResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(OrderReference.fromPartial(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryMarketAggregatedOrdersRequest: object = {
+  market: "",
+  order_type: "",
+};
+
+export const QueryMarketAggregatedOrdersRequest = {
+  encode(
+    message: QueryMarketAggregatedOrdersRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.market !== "") {
+      writer.uint32(10).string(message.market);
+    }
+    if (message.order_type !== "") {
+      writer.uint32(18).string(message.order_type);
+    }
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(26).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryMarketAggregatedOrdersRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryMarketAggregatedOrdersRequest,
+    } as QueryMarketAggregatedOrdersRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.market = reader.string();
+          break;
+        case 2:
+          message.order_type = reader.string();
+          break;
+        case 3:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryMarketAggregatedOrdersRequest {
+    const message = {
+      ...baseQueryMarketAggregatedOrdersRequest,
+    } as QueryMarketAggregatedOrdersRequest;
+    if (object.market !== undefined && object.market !== null) {
+      message.market = String(object.market);
+    } else {
+      message.market = "";
+    }
+    if (object.order_type !== undefined && object.order_type !== null) {
+      message.order_type = String(object.order_type);
+    } else {
+      message.order_type = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryMarketAggregatedOrdersRequest): unknown {
+    const obj: any = {};
+    message.market !== undefined && (obj.market = message.market);
+    message.order_type !== undefined && (obj.order_type = message.order_type);
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageRequest.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryMarketAggregatedOrdersRequest>
+  ): QueryMarketAggregatedOrdersRequest {
+    const message = {
+      ...baseQueryMarketAggregatedOrdersRequest,
+    } as QueryMarketAggregatedOrdersRequest;
+    if (object.market !== undefined && object.market !== null) {
+      message.market = object.market;
+    } else {
+      message.market = "";
+    }
+    if (object.order_type !== undefined && object.order_type !== null) {
+      message.order_type = object.order_type;
+    } else {
+      message.order_type = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryMarketAggregatedOrdersResponse: object = {};
+
+export const QueryMarketAggregatedOrdersResponse = {
+  encode(
+    message: QueryMarketAggregatedOrdersResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.list) {
+      AggregatedOrder.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    if (message.pagination !== undefined) {
+      PageResponse.encode(
+        message.pagination,
+        writer.uint32(18).fork()
+      ).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryMarketAggregatedOrdersResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryMarketAggregatedOrdersResponse,
+    } as QueryMarketAggregatedOrdersResponse;
+    message.list = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.list.push(AggregatedOrder.decode(reader, reader.uint32()));
+          break;
+        case 2:
+          message.pagination = PageResponse.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryMarketAggregatedOrdersResponse {
+    const message = {
+      ...baseQueryMarketAggregatedOrdersResponse,
+    } as QueryMarketAggregatedOrdersResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(AggregatedOrder.fromJSON(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryMarketAggregatedOrdersResponse): unknown {
+    const obj: any = {};
+    if (message.list) {
+      obj.list = message.list.map((e) =>
+        e ? AggregatedOrder.toJSON(e) : undefined
+      );
+    } else {
+      obj.list = [];
+    }
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageResponse.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryMarketAggregatedOrdersResponse>
+  ): QueryMarketAggregatedOrdersResponse {
+    const message = {
+      ...baseQueryMarketAggregatedOrdersResponse,
+    } as QueryMarketAggregatedOrdersResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(AggregatedOrder.fromPartial(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryMarketHistoryRequest: object = { market: "" };
+
+export const QueryMarketHistoryRequest = {
+  encode(
+    message: QueryMarketHistoryRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.market !== "") {
+      writer.uint32(10).string(message.market);
+    }
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryMarketHistoryRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryMarketHistoryRequest,
+    } as QueryMarketHistoryRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.market = reader.string();
+          break;
+        case 2:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryMarketHistoryRequest {
+    const message = {
+      ...baseQueryMarketHistoryRequest,
+    } as QueryMarketHistoryRequest;
+    if (object.market !== undefined && object.market !== null) {
+      message.market = String(object.market);
+    } else {
+      message.market = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryMarketHistoryRequest): unknown {
+    const obj: any = {};
+    message.market !== undefined && (obj.market = message.market);
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageRequest.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryMarketHistoryRequest>
+  ): QueryMarketHistoryRequest {
+    const message = {
+      ...baseQueryMarketHistoryRequest,
+    } as QueryMarketHistoryRequest;
+    if (object.market !== undefined && object.market !== null) {
+      message.market = object.market;
+    } else {
+      message.market = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryMarketHistoryResponse: object = {};
+
+export const QueryMarketHistoryResponse = {
+  encode(
+    message: QueryMarketHistoryResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.list) {
+      HistoryOrder.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    if (message.pagination !== undefined) {
+      PageResponse.encode(
+        message.pagination,
+        writer.uint32(18).fork()
+      ).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryMarketHistoryResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryMarketHistoryResponse,
+    } as QueryMarketHistoryResponse;
+    message.list = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.list.push(HistoryOrder.decode(reader, reader.uint32()));
+          break;
+        case 2:
+          message.pagination = PageResponse.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryMarketHistoryResponse {
+    const message = {
+      ...baseQueryMarketHistoryResponse,
+    } as QueryMarketHistoryResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(HistoryOrder.fromJSON(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryMarketHistoryResponse): unknown {
+    const obj: any = {};
+    if (message.list) {
+      obj.list = message.list.map((e) =>
+        e ? HistoryOrder.toJSON(e) : undefined
+      );
+    } else {
+      obj.list = [];
+    }
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageResponse.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryMarketHistoryResponse>
+  ): QueryMarketHistoryResponse {
+    const message = {
+      ...baseQueryMarketHistoryResponse,
+    } as QueryMarketHistoryResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(HistoryOrder.fromPartial(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
 /** Query defines the gRPC querier service. */
 export interface Query {
   /** Parameters queries the parameters of the module. */
@@ -616,6 +1448,20 @@ export interface Query {
   AssetMarkets(
     request: QueryAssetMarketsRequest
   ): Promise<QueryAssetMarketsResponse>;
+  /** Queries a list of UserOrders items. */
+  UserOrders(request: QueryUserOrdersRequest): Promise<QueryUserOrdersResponse>;
+  /** Queries a list of UserMarketOrders items. */
+  UserMarketOrders(
+    request: QueryUserMarketOrdersRequest
+  ): Promise<QueryUserMarketOrdersResponse>;
+  /** Queries a list of MarketAggregatedOrders items. */
+  MarketAggregatedOrders(
+    request: QueryMarketAggregatedOrdersRequest
+  ): Promise<QueryMarketAggregatedOrdersResponse>;
+  /** Queries a list of MarketHistory items. */
+  MarketHistory(
+    request: QueryMarketHistoryRequest
+  ): Promise<QueryMarketHistoryResponse>;
 }
 
 export class QueryClientImpl implements Query {
@@ -660,6 +1506,62 @@ export class QueryClientImpl implements Query {
     );
     return promise.then((data) =>
       QueryAssetMarketsResponse.decode(new Reader(data))
+    );
+  }
+
+  UserOrders(
+    request: QueryUserOrdersRequest
+  ): Promise<QueryUserOrdersResponse> {
+    const data = QueryUserOrdersRequest.encode(request).finish();
+    const promise = this.rpc.request(
+      "bze.tradebin.v1.Query",
+      "UserOrders",
+      data
+    );
+    return promise.then((data) =>
+      QueryUserOrdersResponse.decode(new Reader(data))
+    );
+  }
+
+  UserMarketOrders(
+    request: QueryUserMarketOrdersRequest
+  ): Promise<QueryUserMarketOrdersResponse> {
+    const data = QueryUserMarketOrdersRequest.encode(request).finish();
+    const promise = this.rpc.request(
+      "bze.tradebin.v1.Query",
+      "UserMarketOrders",
+      data
+    );
+    return promise.then((data) =>
+      QueryUserMarketOrdersResponse.decode(new Reader(data))
+    );
+  }
+
+  MarketAggregatedOrders(
+    request: QueryMarketAggregatedOrdersRequest
+  ): Promise<QueryMarketAggregatedOrdersResponse> {
+    const data = QueryMarketAggregatedOrdersRequest.encode(request).finish();
+    const promise = this.rpc.request(
+      "bze.tradebin.v1.Query",
+      "MarketAggregatedOrders",
+      data
+    );
+    return promise.then((data) =>
+      QueryMarketAggregatedOrdersResponse.decode(new Reader(data))
+    );
+  }
+
+  MarketHistory(
+    request: QueryMarketHistoryRequest
+  ): Promise<QueryMarketHistoryResponse> {
+    const data = QueryMarketHistoryRequest.encode(request).finish();
+    const promise = this.rpc.request(
+      "bze.tradebin.v1.Query",
+      "MarketHistory",
+      data
+    );
+    return promise.then((data) =>
+      QueryMarketHistoryResponse.decode(new Reader(data))
     );
   }
 }
