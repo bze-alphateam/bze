@@ -98,6 +98,22 @@ func (k Keeper) GetAllMarket(ctx sdk.Context) (list []types.Market) {
 	return
 }
 
+// GetAllMarketAlias returns all market alias
+func (k Keeper) GetAllMarketAlias(ctx sdk.Context) (list []types.Market) {
+	store := k.getMarketAliasStore(ctx)
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.Market
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
+}
+
 // GetAllAssetMarkets returns all markets for an asset
 func (k Keeper) GetAllAssetMarkets(ctx sdk.Context, asset string) (list []types.Market) {
 	store := k.getMarketStore(ctx)

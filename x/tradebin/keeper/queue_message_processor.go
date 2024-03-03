@@ -211,22 +211,22 @@ func (pe *ProcessingEngine) fundUsersAccounts(ctx sdk.Context, order types.Order
 	orderOwnerAddr, _ := sdk.AccAddressFromBech32(order.Owner)
 	coinsForOrderOwner, err := pe.k.GetOrderCoins(types.TheOtherOrderType(order.OrderType), order.Price, amount, &market)
 	if err != nil {
-		return fmt.Errorf("error when funding user accounts: %v", err)
+		return fmt.Errorf("error 1 when funding user accounts: %v", err)
 	}
 
 	coinsForMsgOwner, err := pe.k.GetOrderCoins(order.OrderType, order.Price, amount, &market)
 	if err != nil {
-		return fmt.Errorf("error when funding user accounts: %v", err)
+		return fmt.Errorf("error 2 when funding user accounts: %v", err)
 	}
 
 	err = pe.bank.SendCoinsFromModuleToAccount(ctx, types.ModuleName, orderOwnerAddr, sdk.NewCoins(coinsForOrderOwner))
 	if err != nil {
-		return fmt.Errorf("error when funding user accounts: %v", err)
+		return fmt.Errorf("error 3 when funding user accounts: %v", err)
 	}
 
 	err = pe.bank.SendCoinsFromModuleToAccount(ctx, types.ModuleName, taker, sdk.NewCoins(coinsForMsgOwner))
 	if err != nil {
-		return fmt.Errorf("error when funding user accounts: %v", err)
+		return fmt.Errorf("error 4 when funding user accounts: %v", err)
 	}
 
 	return nil

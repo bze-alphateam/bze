@@ -73,6 +73,21 @@ func (k Keeper) GetOrderCoins(orderType, orderPrice string, orderAmount int64, m
 	return coin, nil
 }
 
+func (k Keeper) GetAllOrder(ctx sdk.Context) (list []types.Order) {
+	store := k.getOrderStore(ctx)
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.Order
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
+}
+
 func (k Keeper) GetOrder(ctx sdk.Context, marketId, orderType, orderId string) (order types.Order, found bool) {
 	store := k.getOrderStore(ctx)
 
@@ -119,6 +134,21 @@ func (k Keeper) RemoveOrder(ctx sdk.Context, order types.Order) {
 	k.RemoveUserOrder(ctx, order.Owner, order.MarketId, order.OrderType, order.Id)
 }
 
+func (k Keeper) GetAllPriceOrder(ctx sdk.Context) (list []types.OrderReference) {
+	store := k.getPriceOrderStore(ctx)
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.OrderReference
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
+}
+
 func (k Keeper) SetPriceOrder(ctx sdk.Context, order types.OrderReference, price string) {
 	store := k.getPriceOrderStore(ctx)
 	b := k.cdc.MustMarshal(&order)
@@ -147,6 +177,21 @@ func (k Keeper) GetPriceOrderByPrice(ctx sdk.Context, marketId, orderType, price
 	return
 }
 
+func (k Keeper) GetAllUserOrder(ctx sdk.Context) (list []types.OrderReference) {
+	store := k.getUserOrderStore(ctx)
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.OrderReference
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
+}
+
 func (k Keeper) SetUserOrder(ctx sdk.Context, order types.OrderReference, userAddress string) {
 	store := k.getUserOrderStore(ctx)
 	b := k.cdc.MustMarshal(&order)
@@ -158,6 +203,21 @@ func (k Keeper) RemoveUserOrder(ctx sdk.Context, userAddress, marketId, orderTyp
 	store := k.getUserOrderStore(ctx)
 	key := types.UserOrderKey(userAddress, marketId, orderType, orderId)
 	store.Delete(key)
+}
+
+func (k Keeper) GetAllAggregatedOrder(ctx sdk.Context) (list []types.AggregatedOrder) {
+	store := k.getAggregatedOrderStore(ctx)
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.AggregatedOrder
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
 }
 
 func (k Keeper) SetAggregatedOrder(ctx sdk.Context, order types.AggregatedOrder) {

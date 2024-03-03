@@ -14,6 +14,21 @@ func (k Keeper) getHistoryOrderByMarketStore(ctx sdk.Context, marketId string) s
 	return prefix.NewStore(ctx.KVStore(k.storeKey), types.HistoryOrderByMarketPrefix(marketId))
 }
 
+func (k Keeper) GetAllHistoryOrder(ctx sdk.Context) (list []types.HistoryOrder) {
+	store := k.getHistoryOrderStore(ctx)
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.HistoryOrder
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
+}
+
 func (k Keeper) SetHistoryOrder(ctx sdk.Context, order types.HistoryOrder, index string) {
 	store := k.getHistoryOrderStore(ctx)
 	b := k.cdc.MustMarshal(&order)
