@@ -306,12 +306,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @tags Query
    * @name QueryDenomAuthority
    * @summary Queries a list of QueryDenomAuthority items.
-   * @request GET:/bze/tokenfactory/v1/denom_authority/{denom}
+   * @request GET:/bze/tokenfactory/v1/denom_authority
    */
-  queryDenomAuthority = (denom: string, params: RequestParams = {}) =>
+  queryDenomAuthority = (query?: { denom?: string }, params: RequestParams = {}) =>
     this.request<V1QueryDenomAuthorityResponse, RpcStatus>({
-      path: `/bze/tokenfactory/v1/denom_authority/${denom}`,
+      path: `/bze/tokenfactory/v1/denom_authority`,
       method: "GET",
+      query: query,
       format: "json",
       ...params,
     });

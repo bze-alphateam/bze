@@ -149,21 +149,6 @@ export interface V1QueryUserMarketOrdersResponse {
   pagination?: V1Beta1PageResponse;
 }
 
-export interface V1QueryUserOrdersResponse {
-  list?: V1OrderReference[];
-
-  /**
-   * PageResponse is to be embedded in gRPC response messages where the
-   * corresponding request message has used PageRequest.
-   *
-   *  message SomeResponse {
-   *          repeated Bar results = 1;
-   *          PageResponse page = 2;
-   *  }
-   */
-  pagination?: V1Beta1PageResponse;
-}
-
 /**
 * message SomeRequest {
          Foo some_parameter = 1;
@@ -427,25 +412,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * No description
    *
    * @tags Query
-   * @name QueryAssetMarkets
-   * @summary Queries a list of AssetMarkets items.
-   * @request GET:/bze/tradebin/v1/asset_markets/{asset}
-   */
-  queryAssetMarkets = (asset: string, params: RequestParams = {}) =>
-    this.request<V1QueryAssetMarketsResponse, RpcStatus>({
-      path: `/bze/tradebin/v1/asset_markets/${asset}`,
-      method: "GET",
-      format: "json",
-      ...params,
-    });
-
-  /**
-   * No description
-   *
-   * @tags Query
    * @name QueryMarketAll
    * @summary Queries a list of Market items.
-   * @request GET:/bze/tradebin/v1/market
+   * @request GET:/bze/tradebin/v1/all_markets
    */
   queryMarketAll = (
     query?: {
@@ -458,7 +427,24 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     params: RequestParams = {},
   ) =>
     this.request<V1QueryAllMarketResponse, RpcStatus>({
-      path: `/bze/tradebin/v1/market`,
+      path: `/bze/tradebin/v1/all_markets`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryAssetMarkets
+   * @summary Queries a list of AssetMarkets items.
+   * @request GET:/bze/tradebin/v1/asset_markets
+   */
+  queryAssetMarkets = (query?: { asset?: string }, params: RequestParams = {}) =>
+    this.request<V1QueryAssetMarketsResponse, RpcStatus>({
+      path: `/bze/tradebin/v1/asset_markets`,
       method: "GET",
       query: query,
       format: "json",
@@ -471,12 +457,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @tags Query
    * @name QueryMarket
    * @summary Queries a Market by index.
-   * @request GET:/bze/tradebin/v1/market/{base}/{quote}
+   * @request GET:/bze/tradebin/v1/market
    */
-  queryMarket = (base: string, quote: string, params: RequestParams = {}) =>
+  queryMarket = (query?: { base?: string; quote?: string }, params: RequestParams = {}) =>
     this.request<V1QueryGetMarketResponse, RpcStatus>({
-      path: `/bze/tradebin/v1/market/${base}/${quote}`,
+      path: `/bze/tradebin/v1/market`,
       method: "GET",
+      query: query,
       format: "json",
       ...params,
     });
@@ -487,12 +474,12 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @tags Query
    * @name QueryMarketAggregatedOrders
    * @summary Queries a list of MarketAggregatedOrders items.
-   * @request GET:/bze/tradebin/v1/market_aggregated_orders/{market}/{order_type}
+   * @request GET:/bze/tradebin/v1/market_aggregated_orders
    */
   queryMarketAggregatedOrders = (
-    market: string,
-    order_type: string,
     query?: {
+      market?: string;
+      order_type?: string;
       "pagination.key"?: string;
       "pagination.offset"?: string;
       "pagination.limit"?: string;
@@ -502,7 +489,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     params: RequestParams = {},
   ) =>
     this.request<V1QueryMarketAggregatedOrdersResponse, RpcStatus>({
-      path: `/bze/tradebin/v1/market_aggregated_orders/${market}/${order_type}`,
+      path: `/bze/tradebin/v1/market_aggregated_orders`,
       method: "GET",
       query: query,
       format: "json",
@@ -515,11 +502,11 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @tags Query
    * @name QueryMarketHistory
    * @summary Queries a list of MarketHistory items.
-   * @request GET:/bze/tradebin/v1/market_history/{market}
+   * @request GET:/bze/tradebin/v1/market_history
    */
   queryMarketHistory = (
-    market: string,
     query?: {
+      market?: string;
       "pagination.key"?: string;
       "pagination.offset"?: string;
       "pagination.limit"?: string;
@@ -529,7 +516,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     params: RequestParams = {},
   ) =>
     this.request<V1QueryMarketHistoryResponse, RpcStatus>({
-      path: `/bze/tradebin/v1/market_history/${market}`,
+      path: `/bze/tradebin/v1/market_history`,
       method: "GET",
       query: query,
       format: "json",
@@ -558,12 +545,12 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @tags Query
    * @name QueryUserMarketOrders
    * @summary Queries a list of UserMarketOrders items.
-   * @request GET:/bze/tradebin/v1/user_market_orders/{address}/{market}
+   * @request GET:/bze/tradebin/v1/user_market_orders/{address}
    */
   queryUserMarketOrders = (
     address: string,
-    market: string,
     query?: {
+      market?: string;
       "pagination.key"?: string;
       "pagination.offset"?: string;
       "pagination.limit"?: string;
@@ -573,34 +560,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     params: RequestParams = {},
   ) =>
     this.request<V1QueryUserMarketOrdersResponse, RpcStatus>({
-      path: `/bze/tradebin/v1/user_market_orders/${address}/${market}`,
-      method: "GET",
-      query: query,
-      format: "json",
-      ...params,
-    });
-
-  /**
-   * No description
-   *
-   * @tags Query
-   * @name QueryUserOrders
-   * @summary Queries a list of UserOrders items.
-   * @request GET:/bze/tradebin/v1/user_orders/{address}
-   */
-  queryUserOrders = (
-    address: string,
-    query?: {
-      "pagination.key"?: string;
-      "pagination.offset"?: string;
-      "pagination.limit"?: string;
-      "pagination.count_total"?: boolean;
-      "pagination.reverse"?: boolean;
-    },
-    params: RequestParams = {},
-  ) =>
-    this.request<V1QueryUserOrdersResponse, RpcStatus>({
-      path: `/bze/tradebin/v1/user_orders/${address}`,
+      path: `/bze/tradebin/v1/user_market_orders/${address}`,
       method: "GET",
       query: query,
       format: "json",

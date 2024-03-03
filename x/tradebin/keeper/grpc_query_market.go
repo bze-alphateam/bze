@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,6 +41,11 @@ func (k Keeper) Market(c context.Context, req *types.QueryGetMarketRequest) (*ty
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
+
+	if req.Base == "" || req.Quote == "" {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid base [%s] and quote [%s] params provided", req.Base, req.Quote))
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 
 	val, found := k.GetMarket(

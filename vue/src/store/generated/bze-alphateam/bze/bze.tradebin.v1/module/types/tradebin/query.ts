@@ -50,16 +50,6 @@ export interface QueryAssetMarketsResponse {
   quote: Market[];
 }
 
-export interface QueryUserOrdersRequest {
-  address: string;
-  pagination: PageRequest | undefined;
-}
-
-export interface QueryUserOrdersResponse {
-  list: OrderReference[];
-  pagination: PageResponse | undefined;
-}
-
 export interface QueryUserMarketOrdersRequest {
   address: string;
   market: string;
@@ -646,184 +636,6 @@ export const QueryAssetMarketsResponse = {
       for (const e of object.quote) {
         message.quote.push(Market.fromPartial(e));
       }
-    }
-    return message;
-  },
-};
-
-const baseQueryUserOrdersRequest: object = { address: "" };
-
-export const QueryUserOrdersRequest = {
-  encode(
-    message: QueryUserOrdersRequest,
-    writer: Writer = Writer.create()
-  ): Writer {
-    if (message.address !== "") {
-      writer.uint32(10).string(message.address);
-    }
-    if (message.pagination !== undefined) {
-      PageRequest.encode(message.pagination, writer.uint32(18).fork()).ldelim();
-    }
-    return writer;
-  },
-
-  decode(input: Reader | Uint8Array, length?: number): QueryUserOrdersRequest {
-    const reader = input instanceof Uint8Array ? new Reader(input) : input;
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseQueryUserOrdersRequest } as QueryUserOrdersRequest;
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.address = reader.string();
-          break;
-        case 2:
-          message.pagination = PageRequest.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): QueryUserOrdersRequest {
-    const message = { ...baseQueryUserOrdersRequest } as QueryUserOrdersRequest;
-    if (object.address !== undefined && object.address !== null) {
-      message.address = String(object.address);
-    } else {
-      message.address = "";
-    }
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageRequest.fromJSON(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
-    return message;
-  },
-
-  toJSON(message: QueryUserOrdersRequest): unknown {
-    const obj: any = {};
-    message.address !== undefined && (obj.address = message.address);
-    message.pagination !== undefined &&
-      (obj.pagination = message.pagination
-        ? PageRequest.toJSON(message.pagination)
-        : undefined);
-    return obj;
-  },
-
-  fromPartial(
-    object: DeepPartial<QueryUserOrdersRequest>
-  ): QueryUserOrdersRequest {
-    const message = { ...baseQueryUserOrdersRequest } as QueryUserOrdersRequest;
-    if (object.address !== undefined && object.address !== null) {
-      message.address = object.address;
-    } else {
-      message.address = "";
-    }
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageRequest.fromPartial(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
-    return message;
-  },
-};
-
-const baseQueryUserOrdersResponse: object = {};
-
-export const QueryUserOrdersResponse = {
-  encode(
-    message: QueryUserOrdersResponse,
-    writer: Writer = Writer.create()
-  ): Writer {
-    for (const v of message.list) {
-      OrderReference.encode(v!, writer.uint32(10).fork()).ldelim();
-    }
-    if (message.pagination !== undefined) {
-      PageResponse.encode(
-        message.pagination,
-        writer.uint32(18).fork()
-      ).ldelim();
-    }
-    return writer;
-  },
-
-  decode(input: Reader | Uint8Array, length?: number): QueryUserOrdersResponse {
-    const reader = input instanceof Uint8Array ? new Reader(input) : input;
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = {
-      ...baseQueryUserOrdersResponse,
-    } as QueryUserOrdersResponse;
-    message.list = [];
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1:
-          message.list.push(OrderReference.decode(reader, reader.uint32()));
-          break;
-        case 2:
-          message.pagination = PageResponse.decode(reader, reader.uint32());
-          break;
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-    return message;
-  },
-
-  fromJSON(object: any): QueryUserOrdersResponse {
-    const message = {
-      ...baseQueryUserOrdersResponse,
-    } as QueryUserOrdersResponse;
-    message.list = [];
-    if (object.list !== undefined && object.list !== null) {
-      for (const e of object.list) {
-        message.list.push(OrderReference.fromJSON(e));
-      }
-    }
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageResponse.fromJSON(object.pagination);
-    } else {
-      message.pagination = undefined;
-    }
-    return message;
-  },
-
-  toJSON(message: QueryUserOrdersResponse): unknown {
-    const obj: any = {};
-    if (message.list) {
-      obj.list = message.list.map((e) =>
-        e ? OrderReference.toJSON(e) : undefined
-      );
-    } else {
-      obj.list = [];
-    }
-    message.pagination !== undefined &&
-      (obj.pagination = message.pagination
-        ? PageResponse.toJSON(message.pagination)
-        : undefined);
-    return obj;
-  },
-
-  fromPartial(
-    object: DeepPartial<QueryUserOrdersResponse>
-  ): QueryUserOrdersResponse {
-    const message = {
-      ...baseQueryUserOrdersResponse,
-    } as QueryUserOrdersResponse;
-    message.list = [];
-    if (object.list !== undefined && object.list !== null) {
-      for (const e of object.list) {
-        message.list.push(OrderReference.fromPartial(e));
-      }
-    }
-    if (object.pagination !== undefined && object.pagination !== null) {
-      message.pagination = PageResponse.fromPartial(object.pagination);
-    } else {
-      message.pagination = undefined;
     }
     return message;
   },
@@ -1448,8 +1260,6 @@ export interface Query {
   AssetMarkets(
     request: QueryAssetMarketsRequest
   ): Promise<QueryAssetMarketsResponse>;
-  /** Queries a list of UserOrders items. */
-  UserOrders(request: QueryUserOrdersRequest): Promise<QueryUserOrdersResponse>;
   /** Queries a list of UserMarketOrders items. */
   UserMarketOrders(
     request: QueryUserMarketOrdersRequest
@@ -1506,20 +1316,6 @@ export class QueryClientImpl implements Query {
     );
     return promise.then((data) =>
       QueryAssetMarketsResponse.decode(new Reader(data))
-    );
-  }
-
-  UserOrders(
-    request: QueryUserOrdersRequest
-  ): Promise<QueryUserOrdersResponse> {
-    const data = QueryUserOrdersRequest.encode(request).finish();
-    const promise = this.rpc.request(
-      "bze.tradebin.v1.Query",
-      "UserOrders",
-      data
-    );
-    return promise.then((data) =>
-      QueryUserOrdersResponse.decode(new Reader(data))
     );
   }
 

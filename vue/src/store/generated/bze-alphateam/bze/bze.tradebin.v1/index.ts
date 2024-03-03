@@ -51,7 +51,6 @@ const getDefaultState = () => {
 				Market: {},
 				MarketAll: {},
 				AssetMarkets: {},
-				UserOrders: {},
 				UserMarketOrders: {},
 				MarketAggregatedOrders: {},
 				MarketHistory: {},
@@ -115,12 +114,6 @@ export default {
 						(<any> params).query=null
 					}
 			return state.AssetMarkets[JSON.stringify(params)] ?? {}
-		},
-				getUserOrders: (state) => (params = { params: {}}) => {
-					if (!(<any> params).query) {
-						(<any> params).query=null
-					}
-			return state.UserOrders[JSON.stringify(params)] ?? {}
 		},
 				getUserMarketOrders: (state) => (params = { params: {}}) => {
 					if (!(<any> params).query) {
@@ -205,9 +198,13 @@ export default {
 			try {
 				const key = params ?? {};
 				const queryClient=await initQueryClient(rootGetters)
-				let value= (await queryClient.queryMarket( key.base,  key.quote)).data
+				let value= (await queryClient.queryMarket(query)).data
 				
 					
+				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
+					let next_values=(await queryClient.queryMarket({...query, 'pagination.key':(<any> value).pagination.next_key})).data
+					value = mergeResults(value, next_values);
+				}
 				commit('QUERY', { query: 'Market', key: { params: {...key}, query}, value })
 				if (subscribe) commit('SUBSCRIBE', { action: 'QueryMarket', payload: { options: { all }, params: {...key},query }})
 				return getters['getMarket']( { params: {...key}, query}) ?? {}
@@ -253,9 +250,13 @@ export default {
 			try {
 				const key = params ?? {};
 				const queryClient=await initQueryClient(rootGetters)
-				let value= (await queryClient.queryAssetMarkets( key.asset)).data
+				let value= (await queryClient.queryAssetMarkets(query)).data
 				
 					
+				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
+					let next_values=(await queryClient.queryAssetMarkets({...query, 'pagination.key':(<any> value).pagination.next_key})).data
+					value = mergeResults(value, next_values);
+				}
 				commit('QUERY', { query: 'AssetMarkets', key: { params: {...key}, query}, value })
 				if (subscribe) commit('SUBSCRIBE', { action: 'QueryAssetMarkets', payload: { options: { all }, params: {...key},query }})
 				return getters['getAssetMarkets']( { params: {...key}, query}) ?? {}
@@ -271,41 +272,15 @@ export default {
 		 		
 		
 		
-		async QueryUserOrders({ commit, rootGetters, getters }, { options: { subscribe, all} = { subscribe:false, all:false}, params, query=null }) {
-			try {
-				const key = params ?? {};
-				const queryClient=await initQueryClient(rootGetters)
-				let value= (await queryClient.queryUserOrders( key.address, query)).data
-				
-					
-				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
-					let next_values=(await queryClient.queryUserOrders( key.address, {...query, 'pagination.key':(<any> value).pagination.next_key})).data
-					value = mergeResults(value, next_values);
-				}
-				commit('QUERY', { query: 'UserOrders', key: { params: {...key}, query}, value })
-				if (subscribe) commit('SUBSCRIBE', { action: 'QueryUserOrders', payload: { options: { all }, params: {...key},query }})
-				return getters['getUserOrders']( { params: {...key}, query}) ?? {}
-			} catch (e) {
-				throw new Error('QueryClient:QueryUserOrders API Node Unavailable. Could not perform query: ' + e.message)
-				
-			}
-		},
-		
-		
-		
-		
-		 		
-		
-		
 		async QueryUserMarketOrders({ commit, rootGetters, getters }, { options: { subscribe, all} = { subscribe:false, all:false}, params, query=null }) {
 			try {
 				const key = params ?? {};
 				const queryClient=await initQueryClient(rootGetters)
-				let value= (await queryClient.queryUserMarketOrders( key.address,  key.market, query)).data
+				let value= (await queryClient.queryUserMarketOrders( key.address, query)).data
 				
 					
 				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
-					let next_values=(await queryClient.queryUserMarketOrders( key.address,  key.market, {...query, 'pagination.key':(<any> value).pagination.next_key})).data
+					let next_values=(await queryClient.queryUserMarketOrders( key.address, {...query, 'pagination.key':(<any> value).pagination.next_key})).data
 					value = mergeResults(value, next_values);
 				}
 				commit('QUERY', { query: 'UserMarketOrders', key: { params: {...key}, query}, value })
@@ -327,11 +302,11 @@ export default {
 			try {
 				const key = params ?? {};
 				const queryClient=await initQueryClient(rootGetters)
-				let value= (await queryClient.queryMarketAggregatedOrders( key.market,  key.order_type, query)).data
+				let value= (await queryClient.queryMarketAggregatedOrders(query)).data
 				
 					
 				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
-					let next_values=(await queryClient.queryMarketAggregatedOrders( key.market,  key.order_type, {...query, 'pagination.key':(<any> value).pagination.next_key})).data
+					let next_values=(await queryClient.queryMarketAggregatedOrders({...query, 'pagination.key':(<any> value).pagination.next_key})).data
 					value = mergeResults(value, next_values);
 				}
 				commit('QUERY', { query: 'MarketAggregatedOrders', key: { params: {...key}, query}, value })
@@ -353,11 +328,11 @@ export default {
 			try {
 				const key = params ?? {};
 				const queryClient=await initQueryClient(rootGetters)
-				let value= (await queryClient.queryMarketHistory( key.market, query)).data
+				let value= (await queryClient.queryMarketHistory(query)).data
 				
 					
 				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
-					let next_values=(await queryClient.queryMarketHistory( key.market, {...query, 'pagination.key':(<any> value).pagination.next_key})).data
+					let next_values=(await queryClient.queryMarketHistory({...query, 'pagination.key':(<any> value).pagination.next_key})).data
 					value = mergeResults(value, next_values);
 				}
 				commit('QUERY', { query: 'MarketHistory', key: { params: {...key}, query}, value })
@@ -370,6 +345,21 @@ export default {
 		},
 		
 		
+		async sendMsgCreateMarket({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgCreateMarket(value)
+				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
+	gas: "200000" }, memo})
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgCreateMarket:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgCreateMarket:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
 		async sendMsgCreateOrder({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
@@ -400,22 +390,20 @@ export default {
 				}
 			}
 		},
-		async sendMsgCreateMarket({ rootGetters }, { value, fee = [], memo = '' }) {
+		
+		async MsgCreateMarket({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
 				const msg = await txClient.msgCreateMarket(value)
-				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
-	gas: "200000" }, memo})
-				return result
+				return msg
 			} catch (e) {
 				if (e == MissingWalletError) {
 					throw new Error('TxClient:MsgCreateMarket:Init Could not initialize signing client. Wallet is required.')
-				}else{
-					throw new Error('TxClient:MsgCreateMarket:Send Could not broadcast Tx: '+ e.message)
+				} else{
+					throw new Error('TxClient:MsgCreateMarket:Create Could not create message: ' + e.message)
 				}
 			}
 		},
-		
 		async MsgCreateOrder({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
@@ -439,19 +427,6 @@ export default {
 					throw new Error('TxClient:MsgCancelOrder:Init Could not initialize signing client. Wallet is required.')
 				} else{
 					throw new Error('TxClient:MsgCancelOrder:Create Could not create message: ' + e.message)
-				}
-			}
-		},
-		async MsgCreateMarket({ rootGetters }, { value }) {
-			try {
-				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgCreateMarket(value)
-				return msg
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCreateMarket:Init Could not initialize signing client. Wallet is required.')
-				} else{
-					throw new Error('TxClient:MsgCreateMarket:Create Could not create message: ' + e.message)
 				}
 			}
 		},

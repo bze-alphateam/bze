@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,6 +13,10 @@ import (
 func (k Keeper) AssetMarkets(goCtx context.Context, req *types.QueryAssetMarketsRequest) (*types.QueryAssetMarketsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	
+	if req.Asset == "" {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid asset [%s] provided", req.Asset))
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
