@@ -10,6 +10,10 @@ func (k Keeper) getHistoryOrderStore(ctx sdk.Context) sdk.KVStore {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.HistoryOrderKeyPrefix))
 }
 
+func (k Keeper) getHistoryOrderByMarketStore(ctx sdk.Context, marketId string) sdk.KVStore {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), types.HistoryOrderByMarketPrefix(marketId))
+}
+
 func (k Keeper) SetHistoryOrder(ctx sdk.Context, order types.HistoryOrder, index string) {
 	store := k.getHistoryOrderStore(ctx)
 	b := k.cdc.MustMarshal(&order)
