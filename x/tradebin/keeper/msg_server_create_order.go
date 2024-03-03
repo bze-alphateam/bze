@@ -42,7 +42,7 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 		MarketId:    msg.MarketId,
 		OrderType:   msg.OrderType,
 		MessageType: msg.OrderType,
-		Amount:      coin.Amount.Int64(),
+		Amount:      msg.Amount,
 		Price:       msg.Price,
 		Owner:       msg.Creator,
 	}
