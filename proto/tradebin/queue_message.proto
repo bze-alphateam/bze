@@ -12,4 +12,5 @@ message QueueMessage {
   int64 created_at = 6;
   string order_id = 7;
   string order_type = 8;
+  string owner = 9;
 }

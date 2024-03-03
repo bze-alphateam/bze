@@ -28,6 +28,7 @@ func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder)
 		MessageType: types.OrderTypeCancel,
 		OrderId:     msg.OrderId,
 		OrderType:   msg.OrderType,
+		Owner:       msg.Creator,
 	}
 
 	k.SetQueueMessage(ctx, qm)

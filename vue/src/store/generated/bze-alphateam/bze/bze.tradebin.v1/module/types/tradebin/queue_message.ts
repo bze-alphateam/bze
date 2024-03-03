@@ -13,6 +13,7 @@ export interface QueueMessage {
   created_at: number;
   order_id: string;
   order_type: string;
+  owner: string;
 }
 
 const baseQueueMessage: object = {
@@ -24,6 +25,7 @@ const baseQueueMessage: object = {
   created_at: 0,
   order_id: "",
   order_type: "",
+  owner: "",
 };
 
 export const QueueMessage = {
@@ -51,6 +53,9 @@ export const QueueMessage = {
     }
     if (message.order_type !== "") {
       writer.uint32(66).string(message.order_type);
+    }
+    if (message.owner !== "") {
+      writer.uint32(74).string(message.owner);
     }
     return writer;
   },
@@ -85,6 +90,9 @@ export const QueueMessage = {
           break;
         case 8:
           message.order_type = reader.string();
+          break;
+        case 9:
+          message.owner = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -136,6 +144,11 @@ export const QueueMessage = {
     } else {
       message.order_type = "";
     }
+    if (object.owner !== undefined && object.owner !== null) {
+      message.owner = String(object.owner);
+    } else {
+      message.owner = "";
+    }
     return message;
   },
 
@@ -150,6 +163,7 @@ export const QueueMessage = {
     message.created_at !== undefined && (obj.created_at = message.created_at);
     message.order_id !== undefined && (obj.order_id = message.order_id);
     message.order_type !== undefined && (obj.order_type = message.order_type);
+    message.owner !== undefined && (obj.owner = message.owner);
     return obj;
   },
 
@@ -194,6 +208,11 @@ export const QueueMessage = {
       message.order_type = object.order_type;
     } else {
       message.order_type = "";
+    }
+    if (object.owner !== undefined && object.owner !== null) {
+      message.owner = object.owner;
+    } else {
+      message.owner = "";
     }
     return message;
   },

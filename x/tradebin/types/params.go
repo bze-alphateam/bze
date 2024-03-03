@@ -11,12 +11,8 @@ import (
 var _ paramtypes.ParamSet = (*Params)(nil)
 
 const (
-	feeDestinationCommunityPool = "community_pool"
-	feeDestinationBurnerModule  = "burner"
-
-	// the opposite side of the order gets the fee. If TakerFeeDestination is "counter_party" then the market maker gets
-	// the fees that the market taker pays
-	feeDestinationOrderCounterParty = "counter_party"
+	FeeDestinationCommunityPool = "community_pool"
+	FeeDestinationBurnerModule  = "burner"
 )
 
 var (
@@ -26,22 +22,22 @@ var (
 
 var (
 	KeyMarketMakerFee     = []byte("MarketMakerFee")
-	DefaultMarketMakerFee = "100ubze"
+	DefaultMarketMakerFee = "1000ubze"
 )
 
 var (
 	KeyMarketTakerFee     = []byte("MarketTakerFee")
-	DefaultMarketTakerFee = "1000ubze"
+	DefaultMarketTakerFee = "100000ubze"
 )
 
 var (
 	KeyMakerFeeDestination     = []byte("MakerFeeDestination")
-	DefaultMakerFeeDestination = feeDestinationCommunityPool
+	DefaultMakerFeeDestination = FeeDestinationBurnerModule
 )
 
 var (
 	KeyTakerFeeDestination     = []byte("TakerFeeDestination")
-	DefaultTakerFeeDestination = feeDestinationCommunityPool
+	DefaultTakerFeeDestination = FeeDestinationBurnerModule
 )
 
 // ParamKeyTable the param key table for launch module
@@ -197,7 +193,7 @@ func validateTakerFeeDestination(v interface{}) error {
 }
 
 func validateFeeDestination(dest string) error {
-	if dest != feeDestinationCommunityPool && dest != feeDestinationBurnerModule && dest != feeDestinationOrderCounterParty {
+	if dest != FeeDestinationCommunityPool && dest != FeeDestinationBurnerModule {
 		return fmt.Errorf("invalid fee destination: %s", dest)
 	}
 
