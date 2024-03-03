@@ -21,14 +21,19 @@ func (k Keeper) UserMarketOrders(goCtx context.Context, req *types.QueryUserMark
 		return nil, status.Error(codes.InvalidArgument, "invalid address")
 	}
 
-	_, found := k.GetMarketById(ctx, req.Market)
-	if !found {
-		return nil, status.Error(codes.InvalidArgument, "invalid market")
+	var userOrderStore sdk.KVStore
+	if req.Market != "" {
+		_, found := k.GetMarketById(ctx, req.Market)
+		if !found {
+			return nil, status.Error(codes.InvalidArgument, "invalid market")
+		}
+
+		userOrderStore = k.getUserOrderByAddressAndMarketStore(ctx, req.Address, req.Market)
+	} else {
+		userOrderStore = k.getUserOrderByAddressStore(ctx, req.Address)
 	}
 
 	var orders []types.OrderReference
-	userOrderStore := k.getUserOrderByAddressAndMarketStore(ctx, req.Address, req.Market)
-
 	pageRes, err := query.Paginate(userOrderStore, req.Pagination, func(key []byte, value []byte) error {
 		var order types.OrderReference
 		if err := k.cdc.Unmarshal(value, &order); err != nil {

@@ -1151,7 +1151,7 @@ paths:
           type: string
       tags:
         - Query
-  '/bze/tokenfactory/v1/denom_authority/{denom}':
+  /bze/tokenfactory/v1/denom_authority:
     get:
       summary: Queries a list of QueryDenomAuthority items.
       operationId: BzeTokenfactoryV1DenomAuthority
@@ -1187,8 +1187,8 @@ paths:
                   additionalProperties: {}
       parameters:
         - name: denom
-          in: path
-          required: true
+          in: query
+          required: false
           type: string
       tags:
         - Query
@@ -1231,64 +1231,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  '/bze/tradebin/v1/asset_markets/{asset}':
-    get:
-      summary: Queries a list of AssetMarkets items.
-      operationId: BzeTradebinV1AssetMarkets
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              base:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    base:
-                      type: string
-                    quote:
-                      type: string
-                    creator:
-                      type: string
-              quote:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    base:
-                      type: string
-                    quote:
-                      type: string
-                    creator:
-                      type: string
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: asset
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  /bze/tradebin/v1/market:
+  /bze/tradebin/v1/all_markets:
     get:
       summary: Queries a list of Market items.
       operationId: BzeTradebinV1MarketAll
@@ -1413,7 +1356,64 @@ paths:
           type: boolean
       tags:
         - Query
-  '/bze/tradebin/v1/market/{base}/{quote}':
+  /bze/tradebin/v1/asset_markets:
+    get:
+      summary: Queries a list of AssetMarkets items.
+      operationId: BzeTradebinV1AssetMarkets
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              base:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    base:
+                      type: string
+                    quote:
+                      type: string
+                    creator:
+                      type: string
+              quote:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    base:
+                      type: string
+                    quote:
+                      type: string
+                    creator:
+                      type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: asset
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  /bze/tradebin/v1/market:
     get:
       summary: Queries a Market by index.
       operationId: BzeTradebinV1Market
@@ -1452,16 +1452,16 @@ paths:
                   additionalProperties: {}
       parameters:
         - name: base
-          in: path
-          required: true
+          in: query
+          required: false
           type: string
         - name: quote
-          in: path
-          required: true
+          in: query
+          required: false
           type: string
       tags:
         - Query
-  '/bze/tradebin/v1/market_aggregated_orders/{market}/{order_type}':
+  /bze/tradebin/v1/market_aggregated_orders:
     get:
       summary: Queries a list of MarketAggregatedOrders items.
       operationId: BzeTradebinV1MarketAggregatedOrders
@@ -1532,12 +1532,12 @@ paths:
                   additionalProperties: {}
       parameters:
         - name: market
-          in: path
-          required: true
+          in: query
+          required: false
           type: string
         - name: order_type
-          in: path
-          required: true
+          in: query
+          required: false
           type: string
         - name: pagination.key
           description: |-
@@ -1597,7 +1597,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/bze/tradebin/v1/market_history/{market}':
+  /bze/tradebin/v1/market_history:
     get:
       summary: Queries a list of MarketHistory items.
       operationId: BzeTradebinV1MarketHistory
@@ -1675,8 +1675,8 @@ paths:
                   additionalProperties: {}
       parameters:
         - name: market
-          in: path
-          required: true
+          in: query
+          required: false
           type: string
         - name: pagination.key
           description: |-
@@ -1783,7 +1783,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  '/bze/tradebin/v1/user_market_orders/{address}/{market}':
+  '/bze/tradebin/v1/user_market_orders/{address}':
     get:
       summary: Queries a list of UserMarketOrders items.
       operationId: BzeTradebinV1UserMarketOrders
@@ -1855,137 +1855,8 @@ paths:
           required: true
           type: string
         - name: market
-          in: path
-          required: true
-          type: string
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
           in: query
           required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-  '/bze/tradebin/v1/user_orders/{address}':
-    get:
-      summary: Queries a list of UserOrders items.
-      operationId: BzeTradebinV1UserOrders
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              list:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                    market_id:
-                      type: string
-                    order_type:
-                      type: string
-              pagination:
-                type: object
-                properties:
-                  next_key:
-                    type: string
-                    format: byte
-                    title: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-                description: >-
-                  PageResponse is to be embedded in gRPC response messages where
-                  the
-
-                  corresponding request message has used PageRequest.
-
-                   message SomeResponse {
-                           repeated Bar results = 1;
-                           PageResponse page = 2;
-                   }
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: address
-          in: path
-          required: true
           type: string
         - name: pagination.key
           description: |-
@@ -33543,45 +33414,6 @@ definitions:
             type: string
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   bze.tradebin.v1.QueryUserMarketOrdersResponse:
-    type: object
-    properties:
-      list:
-        type: array
-        items:
-          type: object
-          properties:
-            id:
-              type: string
-            market_id:
-              type: string
-            order_type:
-              type: string
-      pagination:
-        type: object
-        properties:
-          next_key:
-            type: string
-            format: byte
-            title: |-
-              next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently
-          total:
-            type: string
-            format: uint64
-            title: >-
-              total is total number of results available if
-              PageRequest.count_total
-
-              was set, its value is undefined otherwise
-        description: |-
-          PageResponse is to be embedded in gRPC response messages where the
-          corresponding request message has used PageRequest.
-
-           message SomeResponse {
-                   repeated Bar results = 1;
-                   PageResponse page = 2;
-           }
-  bze.tradebin.v1.QueryUserOrdersResponse:
     type: object
     properties:
       list:

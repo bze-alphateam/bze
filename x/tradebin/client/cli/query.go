@@ -28,7 +28,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdListMarket())
 	cmd.AddCommand(CmdShowMarket())
 	cmd.AddCommand(CmdAssetMarkets())
-	cmd.AddCommand(CmdUserOrders())
+	//cmd.AddCommand(CmdUserOrders())
 	cmd.AddCommand(CmdUserMarketOrders())
 	cmd.AddCommand(CmdMarketAggregatedOrders())
 	cmd.AddCommand(CmdMarketHistory())

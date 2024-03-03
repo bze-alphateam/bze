@@ -19,37 +19,32 @@ service Query {
   }
   // Queries a Market by index.
 	rpc Market(QueryGetMarketRequest) returns (QueryGetMarketResponse) {
-		option (google.api.http).get = "/bze/tradebin/v1/market/{base}/{quote}";
+		option (google.api.http).get = "/bze/tradebin/v1/market";
 	}
 
 	// Queries a list of Market items.
 	rpc MarketAll(QueryAllMarketRequest) returns (QueryAllMarketResponse) {
-		option (google.api.http).get = "/bze/tradebin/v1/market";
+		option (google.api.http).get = "/bze/tradebin/v1/all_markets";
 	}
 
 // Queries a list of AssetMarkets items.
 	rpc AssetMarkets(QueryAssetMarketsRequest) returns (QueryAssetMarketsResponse) {
-		option (google.api.http).get = "/bze/tradebin/v1/asset_markets/{asset}";
-	}
-
-// Queries a list of UserOrders items.
-	rpc UserOrders(QueryUserOrdersRequest) returns (QueryUserOrdersResponse) {
-		option (google.api.http).get = "/bze/tradebin/v1/user_orders/{address}";
+		option (google.api.http).get = "/bze/tradebin/v1/asset_markets";
 	}
 
 // Queries a list of UserMarketOrders items.
 	rpc UserMarketOrders(QueryUserMarketOrdersRequest) returns (QueryUserMarketOrdersResponse) {
-		option (google.api.http).get = "/bze/tradebin/v1/user_market_orders/{address}/{market}";
+		option (google.api.http).get = "/bze/tradebin/v1/user_market_orders/{address}";
 	}
 
 // Queries a list of MarketAggregatedOrders items.
 	rpc MarketAggregatedOrders(QueryMarketAggregatedOrdersRequest) returns (QueryMarketAggregatedOrdersResponse) {
-		option (google.api.http).get = "/bze/tradebin/v1/market_aggregated_orders/{market}/{order_type}";
+		option (google.api.http).get = "/bze/tradebin/v1/market_aggregated_orders";
 	}
 
 // Queries a list of MarketHistory items.
 	rpc MarketHistory(QueryMarketHistoryRequest) returns (QueryMarketHistoryResponse) {
-		option (google.api.http).get = "/bze/tradebin/v1/market_history/{market}";
+		option (google.api.http).get = "/bze/tradebin/v1/market_history";
 	}
 
 // this line is used by starport scaffolding # 2
@@ -90,16 +85,6 @@ message QueryAssetMarketsRequest {
 message QueryAssetMarketsResponse {
 	repeated Market base = 1 [(gogoproto.nullable) = false];
 	repeated Market quote = 2 [(gogoproto.nullable) = false];
-}
-
-message QueryUserOrdersRequest {
-  string address = 1;
-	cosmos.base.query.v1beta1.PageRequest pagination = 2;
-}
-
-message QueryUserOrdersResponse {
-	repeated OrderReference list = 1 [(gogoproto.nullable) = false];
-	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryUserMarketOrdersRequest {
