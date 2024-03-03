@@ -4,6 +4,7 @@ import (
 	"github.com/bze-alphateam/bze/x/tradebin/keeper"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"strconv"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis
@@ -14,13 +15,28 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetMarket(ctx, elem)
 	}
 
+	var qmCounter uint64
 	for _, elem := range genState.QueueMessageList {
+		qmCounter++
 		k.SetQueueMessage(ctx, elem)
+	}
+
+	for _, elem := range genState.OrderList {
+		k.SetOrder(ctx, elem)
+	}
+
+	for _, elem := range genState.AggregatedOrderList {
+		k.SetAggregatedOrder(ctx, elem)
+	}
+
+	for key, elem := range genState.HistoryOrderList {
+		k.SetHistoryOrder(ctx, elem, strconv.Itoa(key))
 	}
 
 	// this line is used by starport scaffolding # genesis/module/init
 	k.SetParams(ctx, genState.Params)
-	k.SetQueueMessageCounter(ctx, 0)
+	k.SetQueueMessageCounter(ctx, qmCounter)
+	k.SetOrderCounter(ctx, uint64(genState.OrderCounter))
 }
 
 // ExportGenesis returns the capability module's exported genesis.
@@ -30,6 +46,12 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	genesis.MarketList = k.GetAllMarket(ctx)
 	genesis.QueueMessageList = k.GetAllQueueMessage(ctx)
+
+	genesis.OrderList = k.GetAllOrder(ctx)
+	genesis.AggregatedOrderList = k.GetAllAggregatedOrder(ctx)
+	genesis.HistoryOrderList = k.GetAllHistoryOrder(ctx)
+
+	genesis.OrderCounter = int64(k.GetOrderCounter(ctx))
 	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis

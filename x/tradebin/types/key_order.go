@@ -1,6 +1,10 @@
 package types
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"fmt"
+	"strconv"
+)
 
 var _ binary.ByteOrder
 
@@ -32,15 +36,15 @@ func UserOrderByUserAndMarketPrefix(address, marketId string) []byte {
 }
 
 func PriceOrderKey(marketId, orderType, price, orderId string) []byte {
-	return []byte(marketId + "/" + orderType + "/" + price + "/" + orderId + "/")
+	return []byte(marketId + "/" + orderType + "/" + transformPrice(price) + "/" + orderId + "/")
 }
 
 func PriceOrderPrefixKey(marketId, orderType, price string) []byte {
-	return []byte(marketId + "/" + orderType + "/" + price + "/")
+	return []byte(marketId + "/" + orderType + "/" + transformPrice(price) + "/")
 }
 
 func AggOrderKey(marketId, orderType, price string) []byte {
-	return []byte(marketId + "/" + orderType + "/" + price + "/")
+	return []byte(marketId + "/" + orderType + "/" + transformPrice(price) + "/")
 }
 
 func AggOrderByMarketAndTypePrefix(marketId, orderType string) []byte {
@@ -63,4 +67,15 @@ func OrderCounterKey() []byte {
 	key = append(key, []byte("/")...)
 
 	return key
+}
+
+func transformPrice(price string) string {
+	floatVal, err := strconv.ParseFloat(price, 64)
+	if err != nil {
+		return price
+	}
+
+	// Format the float back into a string with zero padding to ensure it's 24 characters long
+	// Adjust the precision as needed
+	return fmt.Sprintf("%024.10f", floatVal)
 }
