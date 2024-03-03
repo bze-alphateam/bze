@@ -71,3 +71,11 @@ func (msg *MsgCreateOrder) ValidateBasic() error {
 
 	return nil
 }
+
+func TheOtherOrderType(orderType string) string {
+	if orderType == OrderTypeBuy {
+		return OrderTypeSell
+	}
+
+	return OrderTypeBuy
+}
