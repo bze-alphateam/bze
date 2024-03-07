@@ -103,15 +103,22 @@ func (k Keeper) GetOrder(ctx sdk.Context, marketId, orderType, orderId string) (
 }
 
 func (k Keeper) SetOrder(ctx sdk.Context, order types.Order) types.Order {
+	defer k.incrementOrderCounter(ctx)
+
 	counter := k.GetOrderCounter(ctx)
 	order.Id = k.largeZeroFillId(counter)
 	order.CreatedAt = ctx.BlockHeader().Time.Unix()
 
+	k.SaveOrder(ctx, order)
+
+	return order
+}
+
+func (k Keeper) SaveOrder(ctx sdk.Context, order types.Order) types.Order {
 	store := k.getOrderStore(ctx)
 	b := k.cdc.MustMarshal(&order)
 	key := types.OrderKey(order.MarketId, order.OrderType, order.Id)
 	store.Set(key, b)
-	k.incrementOrderCounter(ctx)
 
 	orderRef := types.OrderReference{
 		Id:        order.Id,
