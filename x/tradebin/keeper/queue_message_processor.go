@@ -191,6 +191,7 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 		order := pe.saveOrder(ctx, message, message.Amount)
 		//reset aggregate
 		agg.Amount = order.Amount
+		agg.OrderType = order.OrderType
 		pe.k.SetAggregatedOrder(ctx, agg)
 
 		ctx.Logger().Info(fmt.Sprintf("[addOrder] message with id %s has been placed as order %s", message.MessageId, order.Id))

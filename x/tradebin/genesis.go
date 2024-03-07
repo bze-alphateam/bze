@@ -22,7 +22,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	for _, elem := range genState.OrderList {
-		k.SetOrder(ctx, elem)
+		k.SaveOrder(ctx, elem)
 	}
 
 	for _, elem := range genState.AggregatedOrderList {

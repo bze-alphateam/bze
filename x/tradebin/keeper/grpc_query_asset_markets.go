@@ -14,7 +14,7 @@ func (k Keeper) AssetMarkets(goCtx context.Context, req *types.QueryAssetMarkets
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	
+
 	if req.Asset == "" {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid asset [%s] provided", req.Asset))
 	}

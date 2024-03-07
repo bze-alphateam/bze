@@ -1736,6 +1736,68 @@ paths:
           type: boolean
       tags:
         - Query
+  /bze/tradebin/v1/market_order:
+    get:
+      summary: Queries a list of MarketOrder items.
+      operationId: BzeTradebinV1MarketOrder
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              order:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  market_id:
+                    type: string
+                  order_type:
+                    type: string
+                  amount:
+                    type: string
+                    format: int64
+                  price:
+                    type: string
+                  created_at:
+                    type: string
+                    format: int64
+                  owner:
+                    type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: market
+          in: query
+          required: false
+          type: string
+        - name: order_type
+          in: query
+          required: false
+          type: string
+        - name: order_id
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
   /bze/tradebin/v1/params:
     get:
       summary: Parameters queries the parameters of the module.
@@ -33205,6 +33267,25 @@ definitions:
     type: object
   bze.tradebin.v1.MsgCreateOrderResponse:
     type: object
+  bze.tradebin.v1.Order:
+    type: object
+    properties:
+      id:
+        type: string
+      market_id:
+        type: string
+      order_type:
+        type: string
+      amount:
+        type: string
+        format: int64
+      price:
+        type: string
+      created_at:
+        type: string
+        format: int64
+      owner:
+        type: string
   bze.tradebin.v1.OrderReference:
     type: object
     properties:
@@ -33395,6 +33476,28 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
+  bze.tradebin.v1.QueryMarketOrderResponse:
+    type: object
+    properties:
+      order:
+        type: object
+        properties:
+          id:
+            type: string
+          market_id:
+            type: string
+          order_type:
+            type: string
+          amount:
+            type: string
+            format: int64
+          price:
+            type: string
+          created_at:
+            type: string
+            format: int64
+          owner:
+            type: string
   bze.tradebin.v1.QueryParamsResponse:
     type: object
     properties:
