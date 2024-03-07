@@ -18,6 +18,7 @@ type ProcessingKeeper interface {
 	GetOrder(ctx sdk.Context, marketId, orderType, orderId string) (order types.Order, found bool)
 	RemoveOrder(ctx sdk.Context, order types.Order)
 	SetOrder(ctx sdk.Context, order types.Order) types.Order
+	SaveOrder(ctx sdk.Context, order types.Order) types.Order
 
 	GetAggregatedOrder(ctx sdk.Context, marketId, orderType, price string) (order types.AggregatedOrder, found bool)
 	SetAggregatedOrder(ctx sdk.Context, order types.AggregatedOrder)
@@ -97,7 +98,7 @@ func (pe *ProcessingEngine) cancelOrder(ctx sdk.Context, message types.QueueMess
 	market, _ := pe.k.GetMarketById(ctx, order.MarketId)
 	coin, err := pe.k.GetOrderCoins(order.OrderType, order.Price, order.Amount, &market)
 	if err != nil {
-		//todo: log the error
+		ctx.Logger().Error("[ProcessingEngine][cancelOrder] could not get order coins: %v", err)
 		return
 	}
 
@@ -114,6 +115,8 @@ func (pe *ProcessingEngine) cancelOrder(ctx sdk.Context, message types.QueueMess
 			Error(fmt.Sprintf("[ProcessingEngine][cancelOrder] error on sending funds to order owner: %v", err))
 		return
 	}
+
+	pe.removeOrderFromAggregate(ctx, order)
 	ctx.Logger().Info(fmt.Sprintf("[cancelOrder] order %s cancelled", message.OrderId))
 }
 
@@ -160,7 +163,7 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 		}
 
 		if orderToFill.Amount > 0 {
-			pe.k.SetOrder(ctx, orderToFill)
+			pe.k.SaveOrder(ctx, orderToFill)
 		} else {
 			pe.k.RemoveOrder(ctx, orderToFill)
 		}
@@ -180,17 +183,23 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 		}
 		return
 	}
-
-	pe.k.RemoveAggregatedOrder(ctx, agg)
+	//if this code is reached then all orders are filled, and we have a remaining amount in the message to deal with
 
 	//if min amount condition is met we can place an order with the remaining funds from the message
 	if message.Amount >= minAmount {
 		ctx.Logger().Info(fmt.Sprintf("[addOrder] message with id %s has a remaining amount", message.MessageId))
 		order := pe.saveOrder(ctx, message, message.Amount)
-		pe.addOrderToAggregate(ctx, order)
+		//reset aggregate
+		agg.Amount = order.Amount
+		pe.k.SetAggregatedOrder(ctx, agg)
+
 		ctx.Logger().Info(fmt.Sprintf("[addOrder] message with id %s has been placed as order %s", message.MessageId, order.Id))
 		return
 	}
+
+	//remove the aggregate because all orders at this price were filled and the remaining amount in the message is not
+	//enough to place an order, and it will be sent back to message owner
+	pe.k.RemoveAggregatedOrder(ctx, agg)
 
 	ctx.Logger().Info(fmt.Sprintf("[addOrder] message with id %s remaining amount is too low, returning dust.", message.MessageId))
 	//we have a remaining amount smaller than min amount. We should send it back to the msg owner
