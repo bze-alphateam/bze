@@ -66,6 +66,20 @@ export type V1MsgCreateMarketResponse = object;
 
 export type V1MsgCreateOrderResponse = object;
 
+export interface V1Order {
+  id?: string;
+  market_id?: string;
+  order_type?: string;
+
+  /** @format int64 */
+  amount?: string;
+  price?: string;
+
+  /** @format int64 */
+  created_at?: string;
+  owner?: string;
+}
+
 export interface V1OrderReference {
   id?: string;
   market_id?: string;
@@ -124,6 +138,10 @@ export interface V1QueryMarketHistoryResponse {
    *  }
    */
   pagination?: V1Beta1PageResponse;
+}
+
+export interface V1QueryMarketOrderResponse {
+  order?: V1Order;
 }
 
 /**
@@ -517,6 +535,26 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
   ) =>
     this.request<V1QueryMarketHistoryResponse, RpcStatus>({
       path: `/bze/tradebin/v1/market_history`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryMarketOrder
+   * @summary Queries a list of MarketOrder items.
+   * @request GET:/bze/tradebin/v1/market_order
+   */
+  queryMarketOrder = (
+    query?: { market?: string; order_type?: string; order_id?: string },
+    params: RequestParams = {},
+  ) =>
+    this.request<V1QueryMarketOrderResponse, RpcStatus>({
+      path: `/bze/tradebin/v1/market_order`,
       method: "GET",
       query: query,
       format: "json",

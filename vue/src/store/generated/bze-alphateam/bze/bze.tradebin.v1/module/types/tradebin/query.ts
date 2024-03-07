@@ -10,6 +10,7 @@ import {
   OrderReference,
   AggregatedOrder,
   HistoryOrder,
+  Order,
 } from "../tradebin/order";
 
 export const protobufPackage = "bze.tradebin.v1";
@@ -80,6 +81,16 @@ export interface QueryMarketHistoryRequest {
 export interface QueryMarketHistoryResponse {
   list: HistoryOrder[];
   pagination: PageResponse | undefined;
+}
+
+export interface QueryMarketOrderRequest {
+  market: string;
+  order_type: string;
+  order_id: string;
+}
+
+export interface QueryMarketOrderResponse {
+  order: Order | undefined;
 }
 
 const baseQueryParamsRequest: object = {};
@@ -1248,6 +1259,180 @@ export const QueryMarketHistoryResponse = {
   },
 };
 
+const baseQueryMarketOrderRequest: object = {
+  market: "",
+  order_type: "",
+  order_id: "",
+};
+
+export const QueryMarketOrderRequest = {
+  encode(
+    message: QueryMarketOrderRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.market !== "") {
+      writer.uint32(10).string(message.market);
+    }
+    if (message.order_type !== "") {
+      writer.uint32(18).string(message.order_type);
+    }
+    if (message.order_id !== "") {
+      writer.uint32(26).string(message.order_id);
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): QueryMarketOrderRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryMarketOrderRequest,
+    } as QueryMarketOrderRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.market = reader.string();
+          break;
+        case 2:
+          message.order_type = reader.string();
+          break;
+        case 3:
+          message.order_id = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryMarketOrderRequest {
+    const message = {
+      ...baseQueryMarketOrderRequest,
+    } as QueryMarketOrderRequest;
+    if (object.market !== undefined && object.market !== null) {
+      message.market = String(object.market);
+    } else {
+      message.market = "";
+    }
+    if (object.order_type !== undefined && object.order_type !== null) {
+      message.order_type = String(object.order_type);
+    } else {
+      message.order_type = "";
+    }
+    if (object.order_id !== undefined && object.order_id !== null) {
+      message.order_id = String(object.order_id);
+    } else {
+      message.order_id = "";
+    }
+    return message;
+  },
+
+  toJSON(message: QueryMarketOrderRequest): unknown {
+    const obj: any = {};
+    message.market !== undefined && (obj.market = message.market);
+    message.order_type !== undefined && (obj.order_type = message.order_type);
+    message.order_id !== undefined && (obj.order_id = message.order_id);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryMarketOrderRequest>
+  ): QueryMarketOrderRequest {
+    const message = {
+      ...baseQueryMarketOrderRequest,
+    } as QueryMarketOrderRequest;
+    if (object.market !== undefined && object.market !== null) {
+      message.market = object.market;
+    } else {
+      message.market = "";
+    }
+    if (object.order_type !== undefined && object.order_type !== null) {
+      message.order_type = object.order_type;
+    } else {
+      message.order_type = "";
+    }
+    if (object.order_id !== undefined && object.order_id !== null) {
+      message.order_id = object.order_id;
+    } else {
+      message.order_id = "";
+    }
+    return message;
+  },
+};
+
+const baseQueryMarketOrderResponse: object = {};
+
+export const QueryMarketOrderResponse = {
+  encode(
+    message: QueryMarketOrderResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.order !== undefined) {
+      Order.encode(message.order, writer.uint32(10).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryMarketOrderResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryMarketOrderResponse,
+    } as QueryMarketOrderResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.order = Order.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryMarketOrderResponse {
+    const message = {
+      ...baseQueryMarketOrderResponse,
+    } as QueryMarketOrderResponse;
+    if (object.order !== undefined && object.order !== null) {
+      message.order = Order.fromJSON(object.order);
+    } else {
+      message.order = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryMarketOrderResponse): unknown {
+    const obj: any = {};
+    message.order !== undefined &&
+      (obj.order = message.order ? Order.toJSON(message.order) : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryMarketOrderResponse>
+  ): QueryMarketOrderResponse {
+    const message = {
+      ...baseQueryMarketOrderResponse,
+    } as QueryMarketOrderResponse;
+    if (object.order !== undefined && object.order !== null) {
+      message.order = Order.fromPartial(object.order);
+    } else {
+      message.order = undefined;
+    }
+    return message;
+  },
+};
+
 /** Query defines the gRPC querier service. */
 export interface Query {
   /** Parameters queries the parameters of the module. */
@@ -1272,6 +1457,10 @@ export interface Query {
   MarketHistory(
     request: QueryMarketHistoryRequest
   ): Promise<QueryMarketHistoryResponse>;
+  /** Queries a list of MarketOrder items. */
+  MarketOrder(
+    request: QueryMarketOrderRequest
+  ): Promise<QueryMarketOrderResponse>;
 }
 
 export class QueryClientImpl implements Query {
@@ -1358,6 +1547,20 @@ export class QueryClientImpl implements Query {
     );
     return promise.then((data) =>
       QueryMarketHistoryResponse.decode(new Reader(data))
+    );
+  }
+
+  MarketOrder(
+    request: QueryMarketOrderRequest
+  ): Promise<QueryMarketOrderResponse> {
+    const data = QueryMarketOrderRequest.encode(request).finish();
+    const promise = this.rpc.request(
+      "bze.tradebin.v1.Query",
+      "MarketOrder",
+      data
+    );
+    return promise.then((data) =>
+      QueryMarketOrderResponse.decode(new Reader(data))
     );
   }
 }
