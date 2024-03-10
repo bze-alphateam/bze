@@ -21,18 +21,20 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_AddMakerOrder() {
 
 	addr1 := sdk.AccAddress("addr1_______________")
 
+	mBuyAmt := keeper.CalculateMinAmount("100")
 	mBuy := types.QueueMessage{
 		MarketId:    getMarketId(),
 		MessageType: types.OrderTypeBuy,
-		Amount:      100,
+		Amount:      mBuyAmt.String(),
 		Price:       "100",
 		OrderType:   types.OrderTypeBuy,
 		Owner:       addr1.String(),
 	}
+	mSellAmt := keeper.CalculateMinAmount("10")
 	mSell := types.QueueMessage{
 		MarketId:    getMarketId(),
 		MessageType: types.OrderTypeSell,
-		Amount:      1000,
+		Amount:      mSellAmt.String(),
 		Price:       "10",
 		OrderType:   types.OrderTypeSell,
 		Owner:       addr1.String(),
@@ -112,22 +114,24 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 	mBuy := types.QueueMessage{
 		MarketId:    getMarketId(),
 		MessageType: types.OrderTypeBuy,
-		Amount:      100,
+		Amount:      "100",
 		Price:       "100",
 		OrderType:   types.OrderTypeBuy,
 		Owner:       addr1.String(),
 	}
-	buyCoins, err := suite.k.GetOrderCoins(mBuy.OrderType, mBuy.Price, mBuy.Amount, &market)
+	buyAmtInt, _ := sdk.NewIntFromString(mBuy.Amount)
+	buyCoins, err := suite.k.GetOrderCoins(mBuy.OrderType, mBuy.Price, buyAmtInt, &market)
 	suite.Require().Nil(err)
 	mSell := types.QueueMessage{
 		MarketId:    getMarketId(),
 		MessageType: types.OrderTypeSell,
-		Amount:      1000,
+		Amount:      "1000",
 		Price:       "10",
 		OrderType:   types.OrderTypeSell,
 		Owner:       addr1.String(),
 	}
-	sellCoins, err := suite.k.GetOrderCoins(mSell.OrderType, mSell.Price, mSell.Amount, &market)
+	sellAmtInt, _ := sdk.NewIntFromString(mSell.Amount)
+	sellCoins, err := suite.k.GetOrderCoins(mSell.OrderType, mSell.Price, sellAmtInt, &market)
 	suite.Require().Nil(err)
 
 	//set messages in queue
@@ -223,16 +227,16 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 
 	//sellPrice := int64(10)
 	sellPriceStr := "1"
-	sellAmt := keeper.CalculateMinAmount(sellPriceStr) * 5
+	sellAmt := keeper.CalculateMinAmount(sellPriceStr).MulRaw(5)
 	//buyPrice := int64(20)
 	buyPriceStr := "2"
-	buyAmt := keeper.CalculateMinAmount(buyPriceStr) * 5
+	buyAmt := keeper.CalculateMinAmount(buyPriceStr).MulRaw(5)
 	orderCounter := int64(10)
 	for i := int64(0); i < orderCounter; i++ {
 		qmSell := types.QueueMessage{
 			MarketId:    getMarketId(),
 			MessageType: types.OrderTypeSell,
-			Amount:      sellAmt,
+			Amount:      sellAmt.String(),
 			Price:       sellPriceStr,
 			OrderType:   types.OrderTypeSell,
 			Owner:       makerAddr.String(),
@@ -241,7 +245,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 		qmBuy := types.QueueMessage{
 			MarketId:    getMarketId(),
 			MessageType: types.OrderTypeBuy,
-			Amount:      buyAmt,
+			Amount:      buyAmt.String(),
 			Price:       buyPriceStr,
 			OrderType:   types.OrderTypeBuy,
 			Owner:       makerAddr.String(),
@@ -255,22 +259,23 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	suite.Require().NotEmpty(allOrders)
 	suite.Require().Equal(len(allOrders), int(orderCounter)*2) //all orders should be there
 	//check aggregated orders
-	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt*orderCounter)
-	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, sellPriceStr, sellAmt*orderCounter)
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt.MulRaw(orderCounter).String())
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, sellPriceStr, sellAmt.MulRaw(orderCounter).String())
 
 	//1. fill 50% of an order -> check its amount is updated -> check the maker gets his coins ->
 	//check module balances updated -> check the taker balances are updated -> check aggregated is updated
+	qmAmountInt := sellAmt.QuoRaw(2)
 	qmBuy := types.QueueMessage{
 		MarketId:    getMarketId(),
 		MessageType: types.OrderTypeBuy,
-		Amount:      sellAmt / 2,
+		Amount:      qmAmountInt.String(),
 		Price:       sellPriceStr,
 		OrderType:   types.OrderTypeBuy,
 		Owner:       takerAddr.String(),
 	}
-	makerCoins, err := suite.k.GetOrderCoins(qmBuy.OrderType, qmBuy.Price, qmBuy.Amount, &market)
+	makerCoins, err := suite.k.GetOrderCoins(qmBuy.OrderType, qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
-	takerCoins, err := suite.k.GetOrderCoins(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmBuy.Amount, &market)
+	takerCoins, err := suite.k.GetOrderCoins(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
 
 	tradedUbzeCoins := makerCoins
@@ -292,21 +297,22 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	//check module amounts were subtracted
 	suite.checkModuleBalances(moduleAddr, tradedUbzeCoins, tradedStakeCoins, initialModuleBalances)
 
-	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt*orderCounter)
-	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, sellPriceStr, (sellAmt*orderCounter)-takerCoins.Amount.Int64())
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt.MulRaw(orderCounter).String())
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, sellPriceStr, sellAmt.MulRaw(orderCounter).Sub(takerCoins.Amount).String())
 
 	//2. fill 25% of the order -> check all above again
+	qmAmountInt = sellAmt.QuoRaw(4)
 	qmBuy = types.QueueMessage{
 		MarketId:    getMarketId(),
 		MessageType: types.OrderTypeBuy,
-		Amount:      sellAmt / 4,
+		Amount:      qmAmountInt.String(),
 		Price:       sellPriceStr,
 		OrderType:   types.OrderTypeBuy,
 		Owner:       takerAddr.String(),
 	}
-	makerCoins, err = suite.k.GetOrderCoins(qmBuy.OrderType, qmBuy.Price, qmBuy.Amount, &market)
+	makerCoins, err = suite.k.GetOrderCoins(qmBuy.OrderType, qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
-	takerCoins, err = suite.k.GetOrderCoins(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmBuy.Amount, &market)
+	takerCoins, err = suite.k.GetOrderCoins(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
 
 	suite.k.SetQueueMessage(suite.ctx, qmBuy)
@@ -326,21 +332,22 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 
 	suite.checkModuleBalances(moduleAddr, tradedUbzeCoins, tradedStakeCoins, initialModuleBalances)
 
-	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt*orderCounter)
-	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, sellPriceStr, (sellAmt*orderCounter)-tradedStakeCoins.Amount.Int64())
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt.MulRaw(orderCounter).String())
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, sellPriceStr, sellAmt.MulRaw(orderCounter).Sub(tradedStakeCoins.Amount).String())
 
 	//3. fill 200% of orders (2 * order amount) -> check all of the above again
+	qmAmountInt = sellAmt.MulRaw(2)
 	qmBuy = types.QueueMessage{
 		MarketId:    getMarketId(),
 		MessageType: types.OrderTypeBuy,
-		Amount:      sellAmt * 2,
+		Amount:      qmAmountInt.String(),
 		Price:       sellPriceStr,
 		OrderType:   types.OrderTypeBuy,
 		Owner:       takerAddr.String(),
 	}
-	makerCoins, err = suite.k.GetOrderCoins(qmBuy.OrderType, qmBuy.Price, qmBuy.Amount, &market)
+	makerCoins, err = suite.k.GetOrderCoins(qmBuy.OrderType, qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
-	takerCoins, err = suite.k.GetOrderCoins(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmBuy.Amount, &market)
+	takerCoins, err = suite.k.GetOrderCoins(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
 
 	suite.k.SetQueueMessage(suite.ctx, qmBuy)
@@ -360,21 +367,22 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 
 	suite.checkModuleBalances(moduleAddr, tradedUbzeCoins, tradedStakeCoins, initialModuleBalances)
 
-	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt*orderCounter)
-	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, sellPriceStr, (sellAmt*orderCounter)-tradedStakeCoins.Amount.Int64())
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt.MulRaw(orderCounter).String())
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, sellPriceStr, sellAmt.MulRaw(orderCounter).Sub(tradedStakeCoins.Amount).String())
 
 	//4. fill the rest + some amount to also create an order
+	qmAmountInt = sellAmt.MulRaw(8)
 	qmBuy = types.QueueMessage{
 		MarketId:    getMarketId(),
 		MessageType: types.OrderTypeBuy,
-		Amount:      sellAmt * 8,
+		Amount:      qmAmountInt.String(),
 		Price:       sellPriceStr,
 		OrderType:   types.OrderTypeBuy,
 		Owner:       takerAddr.String(),
 	}
-	makerCoins, err = suite.k.GetOrderCoins(qmBuy.OrderType, qmBuy.Price, qmBuy.Amount, &market)
+	makerCoins, err = suite.k.GetOrderCoins(qmBuy.OrderType, qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
-	takerCoins, err = suite.k.GetOrderCoins(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmBuy.Amount, &market)
+	takerCoins, err = suite.k.GetOrderCoins(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
 
 	suite.k.SetQueueMessage(suite.ctx, qmBuy)
@@ -388,18 +396,21 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	var smallOrders []types.Order
 	for _, ord := range allOrders {
 		suite.Require().Equal(ord.OrderType, types.OrderTypeBuy)
-		if ord.Amount < sellAmt {
+		ordAmtInt, _ := sdk.NewIntFromString(ord.Amount)
+		if ordAmtInt.LT(sellAmt) {
 			smallOrders = append(smallOrders, ord)
 		}
 	}
 
 	//check the smaller order is there, and it has the right values
 	suite.Require().Equal(len(smallOrders), 1)
-	suite.Require().Equal(smallOrders[0].Amount, sellAmt*3/4)
+	suite.Require().Equal(smallOrders[0].Amount, sellAmt.MulRaw(3).QuoRaw(4).String())
 	suite.Require().Equal(smallOrders[0].Price, sellPriceStr)
 
-	newOrderMakerCoins, err := suite.k.GetOrderCoins(types.TheOtherOrderType(smallOrders[0].OrderType), smallOrders[0].Price, smallOrders[0].Amount, &market)
-	newOrderTakerCoins, err := suite.k.GetOrderCoins(smallOrders[0].OrderType, smallOrders[0].Price, smallOrders[0].Amount, &market)
+	smallOrdAmt, _ := sdk.NewIntFromString(smallOrders[0].Amount)
+
+	newOrderMakerCoins, err := suite.k.GetOrderCoins(types.TheOtherOrderType(smallOrders[0].OrderType), smallOrders[0].Price, smallOrdAmt, &market)
+	newOrderTakerCoins, err := suite.k.GetOrderCoins(smallOrders[0].OrderType, smallOrders[0].Price, smallOrdAmt, &market)
 	suite.Require().Nil(err)
 	tradedUbzeCoins = tradedUbzeCoins.Add(makerCoins).Sub(newOrderTakerCoins)
 	suite.Require().Nil(err)
@@ -410,25 +421,26 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	takerNewBalance = suite.app.BankKeeper.GetAllBalances(suite.ctx, takerAddr)
 	suite.Require().Equal(takerNewBalance.AmountOf(tradedStakeCoins.Denom), tradedStakeCoins.Amount.Add(takerBalance.AmountOf(tradedStakeCoins.Denom)))
 
-	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt*orderCounter)
-	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, sellPriceStr, newOrderTakerCoins.Amount.Int64())
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt.MulRaw(orderCounter).String())
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, sellPriceStr, newOrderTakerCoins.Amount.String())
 	//sell order should not exist anymore
 	_, ok := suite.k.GetAggregatedOrder(suite.ctx, getMarketId(), types.OrderTypeSell, sellPriceStr)
 	suite.Require().False(ok)
 
 	//5. fill all remaining orders
+	qmAmountInt = buyAmt.MulRaw(12)
 	qmSell := types.QueueMessage{
 		MarketId:    getMarketId(),
 		MessageType: types.OrderTypeSell,
-		Amount:      buyAmt * 12,
+		Amount:      qmAmountInt.String(),
 		Price:       buyPriceStr,
 		OrderType:   types.OrderTypeSell,
 		Owner:       takerAddr.String(),
 	}
 
-	makerCoins, err = suite.k.GetOrderCoins(qmSell.OrderType, qmSell.Price, qmSell.Amount, &market)
+	makerCoins, err = suite.k.GetOrderCoins(qmSell.OrderType, qmSell.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
-	takerCoins, err = suite.k.GetOrderCoins(types.TheOtherOrderType(qmSell.OrderType), qmSell.Price, qmSell.Amount, &market)
+	takerCoins, err = suite.k.GetOrderCoins(types.TheOtherOrderType(qmSell.OrderType), qmSell.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
 
 	suite.k.SetQueueMessage(suite.ctx, qmSell)
@@ -445,7 +457,7 @@ func (suite *IntegrationTestSuite) checkModuleBalances(moduleAddr sdk.AccAddress
 	suite.Require().Equal(moduleBalance.AmountOf(tradedStakeCoins.Denom), initialBalances.AmountOf(tradedStakeCoins.Denom).Sub(tradedStakeCoins.Amount))
 }
 
-func (suite *IntegrationTestSuite) checkAggregatedOrder(marketId, orderType, price string, expectedAmount int64) {
+func (suite *IntegrationTestSuite) checkAggregatedOrder(marketId, orderType, price string, expectedAmount string) {
 	agg, ok := suite.k.GetAggregatedOrder(suite.ctx, marketId, orderType, price)
 	suite.Require().True(ok)
 	suite.Require().Equal(agg.Amount, expectedAmount)

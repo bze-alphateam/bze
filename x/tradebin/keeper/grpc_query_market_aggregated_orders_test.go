@@ -31,14 +31,14 @@ func (suite *IntegrationTestSuite) TestMarketAggregatedOrders_Success() {
 	aggBuy := types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeBuy,
-		Amount:    100,
+		Amount:    "100",
 		Price:     "2",
 	}
 
 	aggSell := types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeSell,
-		Amount:    int64(9223372036854775806),
+		Amount:    "92233720368547758061",
 		Price:     "232183213232131221313",
 	}
 

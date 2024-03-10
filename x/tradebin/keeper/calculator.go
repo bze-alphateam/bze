@@ -1,20 +1,29 @@
 package keeper
 
 import (
-	"math"
-	"strconv"
+	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func CalculateMinAmount(price string) int64 {
-	priceFloat, err := strconv.ParseFloat(price, 64)
+func CalculateMinAmount(price string) sdk.Int {
+	// Convert the price string to a Dec
+	priceDec, err := sdk.NewDecFromStr(price)
 	if err != nil {
-		return 0
+		fmt.Println("Error converting price to Dec:", err)
+		return sdk.NewInt(0)
 	}
 
-	//multiply with 1k it to make sure we avoid dust
-	//users might suffer loss when trading coins sold for very low prices
-	//that's why we make sure we multiply by 1k to lower that loss
-	amtFloat := math.Ceil(1/priceFloat) * 1000
+	// The denominator for our operation, represented as a Dec
+	oneDec := sdk.NewDec(1)
 
-	return int64(amtFloat)
+	// Perform the division (1 / price), ensuring high precision
+	amtDec := oneDec.Quo(priceDec)
+	// Ceil the result to ensure we avoid dust effectively
+	amtDec = amtDec.Ceil()
+
+	// Multiply by 1000 to adjust for potential dust and lower loss,
+	// as described in your comment.
+	amtDec = amtDec.MulInt64(1000)
+
+	return amtDec.TruncateInt()
 }

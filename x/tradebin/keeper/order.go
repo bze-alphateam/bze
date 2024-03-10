@@ -5,8 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"math"
-	"strconv"
 )
 
 func (k Keeper) getOrderStore(ctx sdk.Context) sdk.KVStore {
@@ -44,19 +42,20 @@ func (k Keeper) getOrderCounterStore(ctx sdk.Context) sdk.KVStore {
 // GetOrderCoins - returns the needed coins for an order
 // When the user submits an order we have to capture the coins needed for that order to be placed.
 // This function returns the sdk.Coins that we have to send from user's account to module and back
-func (k Keeper) GetOrderCoins(orderType, orderPrice string, orderAmount int64, market *types.Market) (sdk.Coin, error) {
-	var amount int64
+func (k Keeper) GetOrderCoins(orderType, orderPrice string, orderAmount sdk.Int, market *types.Market) (sdk.Coin, error) {
+	var amount sdk.Int
 	var denom string
 	var coin sdk.Coin
 	switch orderType {
 	case types.OrderTypeBuy:
 		denom = market.Quote
-		priceFloat, err := strconv.ParseFloat(orderPrice, 64)
+		oAmount := orderAmount.ToDec()
+		oPrice, err := sdk.NewDecFromStr(orderPrice)
 		if err != nil {
-			return coin, sdkerrors.Wrapf(types.ErrInvalidOrderPrice, "order price float error: %s", err)
+			return coin, sdkerrors.Wrapf(types.ErrInvalidOrderPrice, "error when transforming order price: %v", err)
 		}
-		floatAmount := priceFloat * float64(orderAmount)
-		amount = int64(math.Ceil(floatAmount))
+		oAmount = oAmount.Mul(oPrice).Ceil()
+		amount = oAmount.TruncateInt()
 	case types.OrderTypeSell:
 		denom = market.Base
 		amount = orderAmount
@@ -64,11 +63,11 @@ func (k Keeper) GetOrderCoins(orderType, orderPrice string, orderAmount int64, m
 		return coin, types.ErrInvalidOrderType
 	}
 
-	if amount <= 0 {
+	if amount.LTE(sdk.ZeroInt()) {
 		return coin, sdkerrors.Wrapf(types.ErrInvalidOrderAmount, "order amount is too low for this price")
 	}
 
-	coin = sdk.NewInt64Coin(denom, amount)
+	coin = sdk.NewCoin(denom, amount)
 
 	return coin, nil
 }

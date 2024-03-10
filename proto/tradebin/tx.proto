@@ -25,7 +25,7 @@ message MsgCreateMarketResponse {
 message MsgCreateOrder {
   string creator = 1;
   string order_type = 2;
-  int64 amount = 3;
+  string amount = 3;
   string price = 4;
   string marketId = 5;
 }
