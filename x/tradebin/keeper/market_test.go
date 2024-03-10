@@ -1,67 +1,28 @@
 package keeper_test
 
-import (
-	"strconv"
-	"testing"
+func (suite *IntegrationTestSuite) TestMarket() {
+	//create market
+	suite.k.SetMarket(suite.ctx, market)
 
-	keepertest "github.com/bze-alphateam/bze/testutil/keeper"
-	"github.com/bze-alphateam/bze/testutil/nullify"
-	"github.com/bze-alphateam/bze/x/tradebin/keeper"
-	"github.com/bze-alphateam/bze/x/tradebin/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-)
+	//check it exists in all indexes
+	found, ok := suite.k.GetMarket(suite.ctx, market.Base, market.Quote)
+	suite.Require().True(ok)
+	suite.Equal(found.Base, market.Base)
+	suite.Equal(found.Quote, market.Quote)
 
-// Prevent strconv unused error
-var _ = strconv.IntSize
+	found, ok = suite.k.GetMarketAlias(suite.ctx, market.Quote, market.Base)
+	suite.Require().True(ok)
+	suite.Equal(found.Base, market.Base)
+	suite.Equal(found.Quote, market.Quote)
 
-func createNMarket(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.Market {
-	items := make([]types.Market, n)
-	for i := range items {
-		items[i].Asset1 = strconv.Itoa(i)
-		items[i].Asset2 = strconv.Itoa(i)
+	found, ok = suite.k.GetMarketById(suite.ctx, getMarketId())
+	suite.Require().True(ok)
+	suite.Equal(found.Base, market.Base)
+	suite.Equal(found.Quote, market.Quote)
 
-		keeper.SetMarket(ctx, items[i])
-	}
-	return items
-}
+	list := suite.k.GetAllAssetMarkets(suite.ctx, market.Base)
+	suite.Require().NotEmpty(list)
 
-func TestMarketGet(t *testing.T) {
-	keeper, ctx := keepertest.TradebinKeeper(t)
-	items := createNMarket(keeper, ctx, 10)
-	for _, item := range items {
-		rst, found := keeper.GetMarket(ctx,
-			item.Asset1,
-			item.Asset2,
-		)
-		require.True(t, found)
-		require.Equal(t,
-			nullify.Fill(&item),
-			nullify.Fill(&rst),
-		)
-	}
-}
-func TestMarketRemove(t *testing.T) {
-	keeper, ctx := keepertest.TradebinKeeper(t)
-	items := createNMarket(keeper, ctx, 10)
-	for _, item := range items {
-		keeper.RemoveMarket(ctx,
-			item.Asset1,
-			item.Asset2,
-		)
-		_, found := keeper.GetMarket(ctx,
-			item.Asset1,
-			item.Asset2,
-		)
-		require.False(t, found)
-	}
-}
-
-func TestMarketGetAll(t *testing.T) {
-	keeper, ctx := keepertest.TradebinKeeper(t)
-	items := createNMarket(keeper, ctx, 10)
-	require.ElementsMatch(t,
-		nullify.Fill(items),
-		nullify.Fill(keeper.GetAllMarket(ctx)),
-	)
+	list = suite.k.GetAllAssetMarketAliases(suite.ctx, market.Quote)
+	suite.Require().NotEmpty(list)
 }

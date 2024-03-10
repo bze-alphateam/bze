@@ -11,7 +11,10 @@ func CalculateMinAmount(price string) int64 {
 		return 0
 	}
 
-	amtFloat := math.Ceil(1 / priceFloat)
+	//multiply with 1k it to make sure we avoid dust
+	//users might suffer loss when trading coins sold for very low prices
+	//that's why we make sure we multiply by 1k to lower that loss
+	amtFloat := math.Ceil(1/priceFloat) * 1000
 
 	return int64(amtFloat)
 }
