@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )
 
@@ -20,10 +19,7 @@ func CmdCreateOrder() *cobra.Command {
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argOrderType := args[0]
-			argAmount, err := cast.ToInt64E(args[1])
-			if err != nil {
-				return err
-			}
+			argAmount := args[1]
 			argPrice := args[2]
 			argMarketId := args[3]
 

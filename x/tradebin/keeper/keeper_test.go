@@ -31,7 +31,7 @@ func getRandomOrder(amt int64) types.Order {
 	return types.Order{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeBuy,
-		Amount:    amt,
+		Amount:    fmt.Sprintf("%d", amt),
 		Price:     "1233001",
 		Owner:     "test1_____",
 	}
@@ -99,21 +99,21 @@ func (suite *IntegrationTestSuite) TestNewOrder() {
 	cases := map[string]struct {
 		MarketId  string
 		OrderType string
-		Amount    int64
+		Amount    string
 		Price     string
 		Owner     string
 	}{
 		"buy order": {
 			MarketId:  getMarketId(),
 			OrderType: types.OrderTypeBuy,
-			Amount:    10,
+			Amount:    "10",
 			Price:     "100",
 			Owner:     "123",
 		},
 		"sell order": {
 			MarketId:  getMarketId(),
 			OrderType: types.OrderTypeSell,
-			Amount:    100,
+			Amount:    "100",
 			Price:     "10",
 			Owner:     "1234444555666",
 		},
@@ -161,7 +161,7 @@ func (suite *IntegrationTestSuite) TestSaveOrder() {
 	suite.Require().Equal(savedOrder.MarketId, order.MarketId)
 	suite.Require().Equal(savedOrder.Amount, order.Amount)
 
-	savedOrder.Amount = int64(1)
+	savedOrder.Amount = "1"
 	saveResult := suite.k.SaveOrder(suite.ctx, savedOrder)
 	suite.Require().Equal(savedOrder, saveResult)
 
@@ -180,15 +180,15 @@ func (suite *IntegrationTestSuite) TestGetOrderCoins() {
 
 	sellCoins, err := suite.k.GetOrderCoins(types.OrderTypeSell, price, minAmount, &market)
 	suite.Require().Nil(err)
-	suite.Require().Equal(sellCoins.Amount.Int64(), minAmount)
+	suite.Require().Equal(sellCoins.Amount, minAmount)
 	suite.Require().Equal(sellCoins.Denom, market.Base)
 }
 
 func (suite *IntegrationTestSuite) TestGetOrderCoins_Error() {
-	_, err := suite.k.GetOrderCoins("NOT_A_TYPE", "100", 2, &market)
+	_, err := suite.k.GetOrderCoins("NOT_A_TYPE", "100", sdk.NewInt(2), &market)
 	suite.Require().NotNil(err)
 
-	_, err = suite.k.GetOrderCoins(types.OrderTypeBuy, "0.", 1, &market)
+	_, err = suite.k.GetOrderCoins(types.OrderTypeBuy, "0.", sdk.NewInt(1), &market)
 	suite.Require().NotNil(err)
 }
 
@@ -236,7 +236,7 @@ func (suite *IntegrationTestSuite) TestAggregatedOrder() {
 	agg := types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeBuy,
-		Amount:    10,
+		Amount:    "10",
 		Price:     "1",
 	}
 

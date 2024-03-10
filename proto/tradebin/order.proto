@@ -9,7 +9,7 @@ message Order {
   string id = 1;
   string market_id = 2;
   string order_type = 3;
-  int64 amount = 4;
+  string amount = 4;
   string price = 5;
   int64 created_at = 6;
   string owner = 7;
@@ -24,14 +24,14 @@ message OrderReference {
 message AggregatedOrder {
   string market_id = 1;
   string order_type = 2;
-  int64 amount = 3;
+  string amount = 3;
   string price = 4;
 }
 
 message HistoryOrder {
   string market_id = 1;
   string order_type = 2;
-  int64 amount = 3;
+  string amount = 3;
   string price = 4;
   int64 executed_at = 5;
   string maker = 6;

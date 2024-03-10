@@ -15,7 +15,7 @@ const (
 
 var _ sdk.Msg = &MsgCreateOrder{}
 
-func NewMsgCreateOrder(creator string, orderType string, amount int64, price string, marketId string) *MsgCreateOrder {
+func NewMsgCreateOrder(creator string, orderType string, amount string, price string, marketId string) *MsgCreateOrder {
 	return &MsgCreateOrder{
 		Creator:   creator,
 		OrderType: orderType,
@@ -56,7 +56,11 @@ func (msg *MsgCreateOrder) ValidateBasic() error {
 		return sdkerrors.Wrapf(ErrInvalidOrderType, "invalid order type")
 	}
 
-	if msg.Amount <= 0 {
+	amtInt, ok := sdk.NewIntFromString(msg.Amount)
+	if !ok {
+		return sdkerrors.Wrapf(ErrInvalidOrderAmount, "could not convert order amount")
+	}
+	if !amtInt.IsPositive() {
 		return sdkerrors.Wrapf(ErrInvalidOrderAmount, "invalid order amount")
 	}
 

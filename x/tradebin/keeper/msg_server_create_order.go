@@ -11,7 +11,11 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	minAmt := CalculateMinAmount(msg.Price)
-	if minAmt > msg.Amount {
+	amtInt, ok := sdk.NewIntFromString(msg.Amount)
+	if !ok {
+		return nil, types.ErrInvalidOrderAmount.Wrapf("amount could not be converted to Int")
+	}
+	if minAmt.GT(amtInt) {
 		return nil, types.ErrInvalidOrderAmount.Wrapf("amount should be bigger than: %d", minAmt)
 	}
 
@@ -21,7 +25,7 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 	}
 
 	//calculate needed funds for this order
-	coin, err := k.GetOrderCoins(msg.OrderType, msg.Price, msg.Amount, &market)
+	coin, err := k.GetOrderCoins(msg.OrderType, msg.Price, amtInt, &market)
 	if err != nil {
 		return nil, err
 	}
