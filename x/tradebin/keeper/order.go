@@ -102,7 +102,7 @@ func (k Keeper) GetOrder(ctx sdk.Context, marketId, orderType, orderId string) (
 	return order, true
 }
 
-func (k Keeper) SetOrder(ctx sdk.Context, order types.Order) types.Order {
+func (k Keeper) NewOrder(ctx sdk.Context, order types.Order) types.Order {
 	defer k.incrementOrderCounter(ctx)
 
 	counter := k.GetOrderCounter(ctx)
