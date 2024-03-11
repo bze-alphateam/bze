@@ -19,6 +19,10 @@ func (k msgServer) CreateMarket(goCtx context.Context, msg *types.MsgCreateMarke
 		return nil, types.ErrMarketAlreadyExists
 	}
 
+	if msg.Base == "" || msg.Quote == "" || msg.Quote == msg.Base {
+		return nil, types.ErrInvalidDenom
+	}
+
 	if !k.bankKeeper.HasSupply(ctx, msg.Base) {
 		return nil, types.ErrDenomHasNoSupply
 	}

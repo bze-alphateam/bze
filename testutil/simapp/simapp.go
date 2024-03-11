@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	dbm "github.com/tendermint/tm-db"
 	"time"
@@ -92,4 +93,18 @@ func FundModuleAccount(bankKeeper bankkeeper.Keeper, ctx sdk.Context, recipientM
 	}
 
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, recipientMod, amounts)
+}
+
+func AddDenoms(bankKeeper bankkeeper.Keeper, ctx sdk.Context, denoms []string) {
+	for _, denom := range denoms {
+		denomMetaData := banktypes.Metadata{
+			DenomUnits: []*banktypes.DenomUnit{{
+				Denom:    denom,
+				Exponent: 0,
+			}},
+			Base: denom,
+		}
+
+		bankKeeper.SetDenomMetaData(ctx, denomMetaData)
+	}
 }

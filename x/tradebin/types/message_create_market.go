@@ -43,5 +43,10 @@ func (msg *MsgCreateMarket) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
+
+	if msg.Base == "" || msg.Quote == "" || msg.Base == msg.Quote {
+		return ErrInvalidDenom
+	}
+
 	return nil
 }
