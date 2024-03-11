@@ -16,7 +16,7 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 		return nil, types.ErrInvalidOrderAmount.Wrapf("amount could not be converted to Int")
 	}
 	if minAmt.GT(amtInt) {
-		return nil, types.ErrInvalidOrderAmount.Wrapf("amount should be bigger than: %d", minAmt)
+		return nil, types.ErrInvalidOrderAmount.Wrapf("amount should be bigger than: %s", minAmt.String())
 	}
 
 	market, found := k.GetMarketById(ctx, msg.MarketId)
