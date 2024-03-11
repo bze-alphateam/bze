@@ -37,7 +37,7 @@ type IntegrationTestSuite struct {
 }
 
 func (suite *IntegrationTestSuite) SetupTest() {
-	app := simapp.Setup(false)
+	app := simapp.Setup(false, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
 
 	suite.app = app

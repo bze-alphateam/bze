@@ -40,10 +40,15 @@ func (ao EmptyAppOptions) Get(o string) interface{} {
 	return nil
 }
 
-func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
+func setup(withGenesis bool, invCheckPeriod uint, withLogger bool) (*SimApp, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeEncodingConfig()
-	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
+	logger := log.NewNopLogger()
+	if withLogger {
+		logger = log.TestingLogger()
+	}
+
+	app := New(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
 	if withGenesis {
 		return app, NewDefaultGenesisState(encCdc.Marshaler)
 	}
@@ -51,8 +56,8 @@ func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 }
 
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
-func Setup(isCheckTx bool) *SimApp {
-	app, genesisState := setup(!isCheckTx, 5)
+func Setup(isCheckTx, withLogger bool) *SimApp {
+	app, genesisState := setup(!isCheckTx, 5, withLogger)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")

@@ -12,6 +12,9 @@ func CalculateMinAmount(price string) sdk.Int {
 		fmt.Println("Error converting price to Dec:", err)
 		return sdk.NewInt(0)
 	}
+	if priceDec.IsZero() {
+		return sdk.NewInt(0)
+	}
 
 	// The denominator for our operation, represented as a Dec
 	oneDec := sdk.NewDec(1)
