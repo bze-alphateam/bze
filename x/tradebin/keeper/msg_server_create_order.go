@@ -52,9 +52,6 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 	}
 
 	k.SetQueueMessage(ctx, qm)
-
-	_ = ctx
-
 	err = k.emitOrderCreateMessageEvent(ctx, &qm)
 	if err != nil {
 		ctx.Logger().Error(err.Error())

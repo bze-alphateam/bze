@@ -190,7 +190,7 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 		aggAmountInt = aggAmountInt.Sub(amountToExecute)
 		agg.Amount = aggAmountInt.String()
 
-		err := pe.fundUsersAccounts(ctx, orderToFill, market, amountToExecute, msgOwnerAddr)
+		err := pe.fundUsersAccounts(ctx, &orderToFill, &market, amountToExecute, msgOwnerAddr)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("[addOrder] %v", err))
 			return
@@ -202,27 +202,25 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 			pe.k.RemoveOrder(ctx, orderToFill)
 		}
 
-		pe.addHistoryOrder(ctx, orderToFill, amountToExecute, message.Owner)
+		pe.addHistoryOrder(ctx, &orderToFill, amountToExecute, &message)
 		pe.emitOrderExecutedEvent(ctx, &orderToFill, amountToExecute.String())
 	}
 
-	ctx.Logger().Info("[addOrder] finished filling orders.")
+	if aggAmountInt.GT(zeroInt) {
+		pe.k.SetAggregatedOrder(ctx, agg)
+		ctx.Logger().Info("[addOrder] aggregated order updated")
+	} else {
+		pe.k.RemoveAggregatedOrder(ctx, agg)
+		ctx.Logger().Info("[addOrder] aggregated order removed")
+	}
+
 	if msgAmountInt.Equal(zeroInt) {
 		ctx.Logger().Info(fmt.Sprintf("[addOrder] message with id %s was completely filled", message.MessageId))
-		if aggAmountInt.GT(zeroInt) {
-			pe.k.SetAggregatedOrder(ctx, agg)
-			ctx.Logger().Info("[addOrder] aggregated order updated")
-		} else {
-			pe.k.RemoveAggregatedOrder(ctx, agg)
-			ctx.Logger().Info("[addOrder] aggregated order removed")
-		}
 		return
 	}
-	//if this code is reached then all orders are filled, and we have a remaining amount in the message to deal with
-	pe.k.RemoveAggregatedOrder(ctx, agg)
 
-	//if min amount condition is met we can place an order with the remaining message amount
-	if msgAmountInt.GTE(minAmount) {
+	//if min amount condition is met and all orders were filled we can proceed to place the order
+	if msgAmountInt.GTE(minAmount) && aggAmountInt.IsZero() {
 		ctx.Logger().Info(fmt.Sprintf("[addOrder] message with id %s has a remaining amount", message.MessageId))
 		order := pe.saveOrder(ctx, message, message.Amount)
 		pe.addOrderToAggregate(ctx, order)
@@ -246,14 +244,14 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 	}
 }
 
-func (pe *ProcessingEngine) fundUsersAccounts(ctx sdk.Context, order types.Order, market types.Market, amount sdk.Int, taker sdk.AccAddress) error {
+func (pe *ProcessingEngine) fundUsersAccounts(ctx sdk.Context, order *types.Order, market *types.Market, amount sdk.Int, taker sdk.AccAddress) error {
 	orderOwnerAddr, _ := sdk.AccAddressFromBech32(order.Owner)
-	coinsForOrderOwner, err := pe.k.GetOrderCoins(types.TheOtherOrderType(order.OrderType), order.Price, amount, &market)
+	coinsForOrderOwner, err := pe.k.GetOrderCoins(types.TheOtherOrderType(order.OrderType), order.Price, amount, market)
 	if err != nil {
 		return fmt.Errorf("error 1 when funding user accounts: %v", err)
 	}
 
-	coinsForMsgOwner, err := pe.k.GetOrderCoins(order.OrderType, order.Price, amount, &market)
+	coinsForMsgOwner, err := pe.k.GetOrderCoins(order.OrderType, order.Price, amount, market)
 	if err != nil {
 		return fmt.Errorf("error 2 when funding user accounts: %v", err)
 	}
@@ -268,10 +266,11 @@ func (pe *ProcessingEngine) fundUsersAccounts(ctx sdk.Context, order types.Order
 		return fmt.Errorf("error 4 when funding user accounts: %v", err)
 	}
 
+	ctx.Logger().Debug("[fundUsersAccounts] funded users accounts", amount.String(), order.Id)
 	return nil
 }
 
-func (pe *ProcessingEngine) addHistoryOrder(ctx sdk.Context, order types.Order, amount sdk.Int, taker string) {
+func (pe *ProcessingEngine) addHistoryOrder(ctx sdk.Context, order *types.Order, amount sdk.Int, message *types.QueueMessage) {
 	history := types.HistoryOrder{
 		MarketId:   order.MarketId,
 		OrderType:  order.OrderType,
@@ -279,10 +278,10 @@ func (pe *ProcessingEngine) addHistoryOrder(ctx sdk.Context, order types.Order, 
 		Price:      order.Price,
 		ExecutedAt: ctx.BlockTime().Unix(),
 		Maker:      order.Owner,
-		Taker:      taker,
+		Taker:      message.Owner,
 	}
 
-	pe.k.SetHistoryOrder(ctx, history, order.Id)
+	pe.k.SetHistoryOrder(ctx, history, message.MessageId)
 }
 
 func (pe *ProcessingEngine) getExecutedAmount(messageAmount, orderAmount, minAmount sdk.Int) sdk.Int {
