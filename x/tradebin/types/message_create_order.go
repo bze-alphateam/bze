@@ -3,7 +3,6 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"strconv"
 )
 
 const (
@@ -64,12 +63,12 @@ func (msg *MsgCreateOrder) ValidateBasic() error {
 		return sdkerrors.Wrapf(ErrInvalidOrderAmount, "invalid order amount")
 	}
 
-	priceFloat, err := strconv.ParseFloat(msg.Price, 64)
+	priceDec, err := sdk.NewDecFromStr(msg.Price)
 	if err != nil {
-		return sdkerrors.Wrapf(ErrInvalidOrderPrice, "order price is not float: %v", err)
+		return sdkerrors.Wrapf(ErrInvalidOrderPrice, "invalid price provided")
 	}
 
-	if priceFloat <= 0 {
+	if priceDec.LTE(sdk.ZeroDec()) {
 		return sdkerrors.Wrapf(ErrInvalidOrderPrice, "price should be higher than 0")
 	}
 
