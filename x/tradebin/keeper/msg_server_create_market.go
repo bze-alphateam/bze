@@ -48,11 +48,24 @@ func (k msgServer) CreateMarket(goCtx context.Context, msg *types.MsgCreateMarke
 		}
 	}
 
-	k.SetMarket(ctx, types.Market{
+	market := types.Market{
 		Base:    msg.Base,
 		Quote:   msg.Quote,
 		Creator: msg.Creator,
-	})
+	}
+	k.SetMarket(ctx, market)
+
+	err = k.emitMarketCreatedEvent(ctx, &market)
 
 	return &types.MsgCreateMarketResponse{}, nil
+}
+
+func (k msgServer) emitMarketCreatedEvent(ctx sdk.Context, market *types.Market) error {
+	return ctx.EventManager().EmitTypedEvent(
+		&types.MarketCreatedEvent{
+			Creator: market.Creator,
+			Base:    market.Base,
+			Quote:   market.Quote,
+		},
+	)
 }

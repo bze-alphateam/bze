@@ -33,5 +33,21 @@ func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder)
 
 	k.SetQueueMessage(ctx, qm)
 
+	err := k.emitOrderCancelMessageEvent(ctx, &order)
+	if err != nil {
+		ctx.Logger().Error(err.Error())
+	}
+
 	return &types.MsgCancelOrderResponse{}, nil
+}
+
+func (k msgServer) emitOrderCancelMessageEvent(ctx sdk.Context, order *types.Order) error {
+	return ctx.EventManager().EmitTypedEvent(
+		&types.OrderCancelMessageEvent{
+			Creator:   order.Owner,
+			MarketId:  order.MarketId,
+			OrderId:   order.Id,
+			OrderType: order.OrderType,
+		},
+	)
 }

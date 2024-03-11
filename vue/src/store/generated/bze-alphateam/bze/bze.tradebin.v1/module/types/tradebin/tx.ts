@@ -1,6 +1,5 @@
 /* eslint-disable */
-import { Reader, util, configure, Writer } from "protobufjs/minimal";
-import * as Long from "long";
+import { Reader, Writer } from "protobufjs/minimal";
 
 export const protobufPackage = "bze.tradebin.v1";
 
@@ -15,7 +14,7 @@ export interface MsgCreateMarketResponse {}
 export interface MsgCreateOrder {
   creator: string;
   order_type: string;
-  amount: number;
+  amount: string;
   price: string;
   marketId: string;
 }
@@ -169,7 +168,7 @@ export const MsgCreateMarketResponse = {
 const baseMsgCreateOrder: object = {
   creator: "",
   order_type: "",
-  amount: 0,
+  amount: "",
   price: "",
   marketId: "",
 };
@@ -182,8 +181,8 @@ export const MsgCreateOrder = {
     if (message.order_type !== "") {
       writer.uint32(18).string(message.order_type);
     }
-    if (message.amount !== 0) {
-      writer.uint32(24).int64(message.amount);
+    if (message.amount !== "") {
+      writer.uint32(26).string(message.amount);
     }
     if (message.price !== "") {
       writer.uint32(34).string(message.price);
@@ -208,7 +207,7 @@ export const MsgCreateOrder = {
           message.order_type = reader.string();
           break;
         case 3:
-          message.amount = longToNumber(reader.int64() as Long);
+          message.amount = reader.string();
           break;
         case 4:
           message.price = reader.string();
@@ -237,9 +236,9 @@ export const MsgCreateOrder = {
       message.order_type = "";
     }
     if (object.amount !== undefined && object.amount !== null) {
-      message.amount = Number(object.amount);
+      message.amount = String(object.amount);
     } else {
-      message.amount = 0;
+      message.amount = "";
     }
     if (object.price !== undefined && object.price !== null) {
       message.price = String(object.price);
@@ -279,7 +278,7 @@ export const MsgCreateOrder = {
     if (object.amount !== undefined && object.amount !== null) {
       message.amount = object.amount;
     } else {
-      message.amount = 0;
+      message.amount = "";
     }
     if (object.price !== undefined && object.price !== null) {
       message.price = object.price;
@@ -540,16 +539,6 @@ interface Rpc {
   ): Promise<Uint8Array>;
 }
 
-declare var self: any | undefined;
-declare var window: any | undefined;
-var globalThis: any = (() => {
-  if (typeof globalThis !== "undefined") return globalThis;
-  if (typeof self !== "undefined") return self;
-  if (typeof window !== "undefined") return window;
-  if (typeof global !== "undefined") return global;
-  throw "Unable to locate global object";
-})();
-
 type Builtin = Date | Function | Uint8Array | string | number | undefined;
 export type DeepPartial<T> = T extends Builtin
   ? T
@@ -560,15 +549,3 @@ export type DeepPartial<T> = T extends Builtin
   : T extends {}
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
-
-function longToNumber(long: Long): number {
-  if (long.gt(Number.MAX_SAFE_INTEGER)) {
-    throw new globalThis.Error("Value is larger than Number.MAX_SAFE_INTEGER");
-  }
-  return long.toNumber();
-}
-
-if (util.Long !== Long) {
-  util.Long = Long as any;
-  configure();
-}
