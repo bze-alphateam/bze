@@ -8,7 +8,7 @@ export interface QueueMessage {
   message_id: string;
   market_id: string;
   message_type: string;
-  amount: number;
+  amount: string;
   price: string;
   created_at: number;
   order_id: string;
@@ -20,7 +20,7 @@ const baseQueueMessage: object = {
   message_id: "",
   market_id: "",
   message_type: "",
-  amount: 0,
+  amount: "",
   price: "",
   created_at: 0,
   order_id: "",
@@ -39,8 +39,8 @@ export const QueueMessage = {
     if (message.message_type !== "") {
       writer.uint32(26).string(message.message_type);
     }
-    if (message.amount !== 0) {
-      writer.uint32(32).int64(message.amount);
+    if (message.amount !== "") {
+      writer.uint32(34).string(message.amount);
     }
     if (message.price !== "") {
       writer.uint32(42).string(message.price);
@@ -77,7 +77,7 @@ export const QueueMessage = {
           message.message_type = reader.string();
           break;
         case 4:
-          message.amount = longToNumber(reader.int64() as Long);
+          message.amount = reader.string();
           break;
         case 5:
           message.price = reader.string();
@@ -120,9 +120,9 @@ export const QueueMessage = {
       message.message_type = "";
     }
     if (object.amount !== undefined && object.amount !== null) {
-      message.amount = Number(object.amount);
+      message.amount = String(object.amount);
     } else {
-      message.amount = 0;
+      message.amount = "";
     }
     if (object.price !== undefined && object.price !== null) {
       message.price = String(object.price);
@@ -187,7 +187,7 @@ export const QueueMessage = {
     if (object.amount !== undefined && object.amount !== null) {
       message.amount = object.amount;
     } else {
-      message.amount = 0;
+      message.amount = "";
     }
     if (object.price !== undefined && object.price !== null) {
       message.price = object.price;

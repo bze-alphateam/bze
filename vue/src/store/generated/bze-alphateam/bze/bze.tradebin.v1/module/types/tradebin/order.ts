@@ -8,7 +8,7 @@ export interface Order {
   id: string;
   market_id: string;
   order_type: string;
-  amount: number;
+  amount: string;
   price: string;
   created_at: number;
   owner: string;
@@ -23,14 +23,14 @@ export interface OrderReference {
 export interface AggregatedOrder {
   market_id: string;
   order_type: string;
-  amount: number;
+  amount: string;
   price: string;
 }
 
 export interface HistoryOrder {
   market_id: string;
   order_type: string;
-  amount: number;
+  amount: string;
   price: string;
   executed_at: number;
   maker: string;
@@ -41,7 +41,7 @@ const baseOrder: object = {
   id: "",
   market_id: "",
   order_type: "",
-  amount: 0,
+  amount: "",
   price: "",
   created_at: 0,
   owner: "",
@@ -58,8 +58,8 @@ export const Order = {
     if (message.order_type !== "") {
       writer.uint32(26).string(message.order_type);
     }
-    if (message.amount !== 0) {
-      writer.uint32(32).int64(message.amount);
+    if (message.amount !== "") {
+      writer.uint32(34).string(message.amount);
     }
     if (message.price !== "") {
       writer.uint32(42).string(message.price);
@@ -90,7 +90,7 @@ export const Order = {
           message.order_type = reader.string();
           break;
         case 4:
-          message.amount = longToNumber(reader.int64() as Long);
+          message.amount = reader.string();
           break;
         case 5:
           message.price = reader.string();
@@ -127,9 +127,9 @@ export const Order = {
       message.order_type = "";
     }
     if (object.amount !== undefined && object.amount !== null) {
-      message.amount = Number(object.amount);
+      message.amount = String(object.amount);
     } else {
-      message.amount = 0;
+      message.amount = "";
     }
     if (object.price !== undefined && object.price !== null) {
       message.price = String(object.price);
@@ -181,7 +181,7 @@ export const Order = {
     if (object.amount !== undefined && object.amount !== null) {
       message.amount = object.amount;
     } else {
-      message.amount = 0;
+      message.amount = "";
     }
     if (object.price !== undefined && object.price !== null) {
       message.price = object.price;
@@ -294,7 +294,7 @@ export const OrderReference = {
 const baseAggregatedOrder: object = {
   market_id: "",
   order_type: "",
-  amount: 0,
+  amount: "",
   price: "",
 };
 
@@ -306,8 +306,8 @@ export const AggregatedOrder = {
     if (message.order_type !== "") {
       writer.uint32(18).string(message.order_type);
     }
-    if (message.amount !== 0) {
-      writer.uint32(24).int64(message.amount);
+    if (message.amount !== "") {
+      writer.uint32(26).string(message.amount);
     }
     if (message.price !== "") {
       writer.uint32(34).string(message.price);
@@ -329,7 +329,7 @@ export const AggregatedOrder = {
           message.order_type = reader.string();
           break;
         case 3:
-          message.amount = longToNumber(reader.int64() as Long);
+          message.amount = reader.string();
           break;
         case 4:
           message.price = reader.string();
@@ -355,9 +355,9 @@ export const AggregatedOrder = {
       message.order_type = "";
     }
     if (object.amount !== undefined && object.amount !== null) {
-      message.amount = Number(object.amount);
+      message.amount = String(object.amount);
     } else {
-      message.amount = 0;
+      message.amount = "";
     }
     if (object.price !== undefined && object.price !== null) {
       message.price = String(object.price);
@@ -391,7 +391,7 @@ export const AggregatedOrder = {
     if (object.amount !== undefined && object.amount !== null) {
       message.amount = object.amount;
     } else {
-      message.amount = 0;
+      message.amount = "";
     }
     if (object.price !== undefined && object.price !== null) {
       message.price = object.price;
@@ -405,7 +405,7 @@ export const AggregatedOrder = {
 const baseHistoryOrder: object = {
   market_id: "",
   order_type: "",
-  amount: 0,
+  amount: "",
   price: "",
   executed_at: 0,
   maker: "",
@@ -420,8 +420,8 @@ export const HistoryOrder = {
     if (message.order_type !== "") {
       writer.uint32(18).string(message.order_type);
     }
-    if (message.amount !== 0) {
-      writer.uint32(24).int64(message.amount);
+    if (message.amount !== "") {
+      writer.uint32(26).string(message.amount);
     }
     if (message.price !== "") {
       writer.uint32(34).string(message.price);
@@ -452,7 +452,7 @@ export const HistoryOrder = {
           message.order_type = reader.string();
           break;
         case 3:
-          message.amount = longToNumber(reader.int64() as Long);
+          message.amount = reader.string();
           break;
         case 4:
           message.price = reader.string();
@@ -487,9 +487,9 @@ export const HistoryOrder = {
       message.order_type = "";
     }
     if (object.amount !== undefined && object.amount !== null) {
-      message.amount = Number(object.amount);
+      message.amount = String(object.amount);
     } else {
-      message.amount = 0;
+      message.amount = "";
     }
     if (object.price !== undefined && object.price !== null) {
       message.price = String(object.price);
@@ -542,7 +542,7 @@ export const HistoryOrder = {
     if (object.amount !== undefined && object.amount !== null) {
       message.amount = object.amount;
     } else {
-      message.amount = 0;
+      message.amount = "";
     }
     if (object.price !== undefined && object.price !== null) {
       message.price = object.price;

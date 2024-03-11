@@ -1482,7 +1482,6 @@ paths:
                       type: string
                     amount:
                       type: string
-                      format: int64
                     price:
                       type: string
               pagination:
@@ -1618,7 +1617,6 @@ paths:
                       type: string
                     amount:
                       type: string
-                      format: int64
                     price:
                       type: string
                     executed_at:
@@ -1757,7 +1755,6 @@ paths:
                     type: string
                   amount:
                     type: string
-                    format: int64
                   price:
                     type: string
                   created_at:
@@ -33230,7 +33227,6 @@ definitions:
         type: string
       amount:
         type: string
-        format: int64
       price:
         type: string
   bze.tradebin.v1.HistoryOrder:
@@ -33242,7 +33238,6 @@ definitions:
         type: string
       amount:
         type: string
-        format: int64
       price:
         type: string
       executed_at:
@@ -33278,7 +33273,6 @@ definitions:
         type: string
       amount:
         type: string
-        format: int64
       price:
         type: string
       created_at:
@@ -33399,7 +33393,6 @@ definitions:
               type: string
             amount:
               type: string
-              format: int64
             price:
               type: string
       pagination:
@@ -33441,7 +33434,6 @@ definitions:
               type: string
             amount:
               type: string
-              format: int64
             price:
               type: string
             executed_at:
@@ -33490,7 +33482,6 @@ definitions:
             type: string
           amount:
             type: string
-            format: int64
           price:
             type: string
           created_at:

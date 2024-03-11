@@ -40,8 +40,6 @@ export interface Tradebinv1Params {
 export interface V1AggregatedOrder {
   market_id?: string;
   order_type?: string;
-
-  /** @format int64 */
   amount?: string;
   price?: string;
 }
@@ -49,8 +47,6 @@ export interface V1AggregatedOrder {
 export interface V1HistoryOrder {
   market_id?: string;
   order_type?: string;
-
-  /** @format int64 */
   amount?: string;
   price?: string;
 
@@ -70,8 +66,6 @@ export interface V1Order {
   id?: string;
   market_id?: string;
   order_type?: string;
-
-  /** @format int64 */
   amount?: string;
   price?: string;
 

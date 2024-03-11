@@ -55,6 +55,11 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 
 	_ = ctx
 
+	err = k.emitOrderCreateMessageEvent(ctx, &qm)
+	if err != nil {
+		ctx.Logger().Error(err.Error())
+	}
+
 	return &types.MsgCreateOrderResponse{}, nil
 }
 
@@ -101,4 +106,16 @@ func (k msgServer) captureOrderFees(ctx sdk.Context, msg *types.MsgCreateOrder, 
 	}
 
 	return
+}
+
+func (k msgServer) emitOrderCreateMessageEvent(ctx sdk.Context, qm *types.QueueMessage) error {
+	return ctx.EventManager().EmitTypedEvent(
+		&types.OrderCreateMessageEvent{
+			Creator:   qm.Owner,
+			MarketId:  qm.MarketId,
+			OrderType: qm.OrderType,
+			Amount:    qm.Amount,
+			Price:     qm.Price,
+		},
+	)
 }
