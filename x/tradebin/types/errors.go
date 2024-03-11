@@ -18,4 +18,5 @@ var (
 	ErrInvalidOrderId       = sdkerrors.Register(ModuleName, 4007, "invalid order id")
 	ErrOrderNotFound        = sdkerrors.Register(ModuleName, 4008, "order not found")
 	ErrUnauthorizedOrder    = sdkerrors.Register(ModuleName, 4009, "not authorized")
+	ErrInvalidDenom         = sdkerrors.Register(ModuleName, 4010, "invalid denom provided")
 )
