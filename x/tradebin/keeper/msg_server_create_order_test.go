@@ -267,7 +267,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Sell_Success() {
 
 func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_StressBalance() {
 	suite.k.SetMarket(suite.ctx, market)
-	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper)
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
 	suite.Require().Nil(err)
 
 	//create initial random markets
