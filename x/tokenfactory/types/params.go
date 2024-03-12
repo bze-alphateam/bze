@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"gopkg.in/yaml.v2"
@@ -64,8 +65,14 @@ func validateCreateDenomFee(v interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
-	// TODO implement validation
-	_ = createDenomFee
+	normCoins, err := sdk.ParseCoinNormalized(createDenomFee)
+	if err != nil {
+		return err
+	}
+
+	if normCoins.IsNegative() {
+		return fmt.Errorf("negative amount provided")
+	}
 
 	return nil
 }
