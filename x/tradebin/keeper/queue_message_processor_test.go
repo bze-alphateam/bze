@@ -16,7 +16,7 @@ func newBzeCoin(amt int64) sdk.Coin {
 }
 
 func (suite *IntegrationTestSuite) TestQueueMessageProcessor_AddMakerOrder() {
-	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper)
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
 	suite.Require().Nil(err)
 
 	addr1 := sdk.AccAddress("addr1_______________")
@@ -94,7 +94,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_AddMakerOrder() {
 func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 	//create test market
 	suite.k.SetMarket(suite.ctx, market)
-	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper)
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
 	suite.Require().Nil(err)
 
 	//add some coins to module so it has what to send back on order cancel
@@ -200,7 +200,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	//create test market
 	suite.k.SetMarket(suite.ctx, market)
-	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper)
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
 	suite.Require().Nil(err)
 
 	//add some coins to module, so it has what to send back on order cancel

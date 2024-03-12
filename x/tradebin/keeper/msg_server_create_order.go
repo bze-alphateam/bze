@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -54,7 +53,7 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 	k.SetQueueMessage(ctx, qm)
 	err = k.emitOrderCreateMessageEvent(ctx, &qm)
 	if err != nil {
-		ctx.Logger().Error(err.Error())
+		k.Logger(ctx).Error(err.Error())
 	}
 
 	return &types.MsgCreateOrderResponse{}, nil
@@ -78,12 +77,12 @@ func (k msgServer) captureOrderFees(ctx sdk.Context, msg *types.MsgCreateOrder, 
 
 	coin, err := sdk.ParseCoinNormalized(fee)
 	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("[MsgCreateOrder][captureOrderFees] could not parse fees: %v", err))
+		k.Logger(ctx).Error("could not parse fees: %v", "error", err.Error())
 		return
 	}
 
 	if !coin.IsPositive() {
-		ctx.Logger().Debug("[MsgCreateOrder][captureOrderFees] not capturing order create fee because if is not a positive value")
+		k.Logger(ctx).Debug("not capturing order create fee because if is not a positive value")
 		return
 	}
 
@@ -94,12 +93,12 @@ func (k msgServer) captureOrderFees(ctx sdk.Context, msg *types.MsgCreateOrder, 
 			return
 		}
 
-		ctx.Logger().Error(fmt.Sprintf("[MsgCreateOrder][captureOrderFees] could not send fee to burner: %v", err))
+		k.Logger(ctx).Error("could not send fee to burner", "error", err.Error())
 	}
 
 	err = k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(coin), sender)
 	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("[MsgCreateOrder][captureOrderFees] could not fund community pool: %v", err))
+		k.Logger(ctx).Error("could not fund community pool", "error", err)
 	}
 
 	return

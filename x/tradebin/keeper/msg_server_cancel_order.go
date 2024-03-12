@@ -35,7 +35,7 @@ func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder)
 
 	err := k.emitOrderCancelMessageEvent(ctx, &order)
 	if err != nil {
-		ctx.Logger().Error(err.Error())
+		k.Logger(ctx).Error(err.Error())
 	}
 
 	return &types.MsgCancelOrderResponse{}, nil

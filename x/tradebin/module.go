@@ -173,7 +173,7 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // returns no validator updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-	engine, err := keeper.NewProcessingEngine(am.keeper, am.bankKeeper)
+	engine, err := keeper.NewProcessingEngine(am.keeper, am.bankKeeper, am.keeper.Logger(ctx))
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("could not get processing engine: %v", err))
 		return []abci.ValidatorUpdate{}
