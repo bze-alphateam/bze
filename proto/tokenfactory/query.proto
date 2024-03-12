@@ -18,7 +18,7 @@ service Query {
   }
   // Queries a list of QueryDenomAuthority items.
 	rpc DenomAuthority(QueryDenomAuthorityRequest) returns (QueryDenomAuthorityResponse) {
-		option (google.api.http).get = "/bze/tokenfactory/v1/denom_authority/{denom}";
+		option (google.api.http).get = "/bze/tokenfactory/v1/denom_authority";
 	}
 
 // this line is used by starport scaffolding # 2

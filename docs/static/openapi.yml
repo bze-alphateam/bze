@@ -1151,7 +1151,7 @@ paths:
           type: string
       tags:
         - Query
-  '/bze/tokenfactory/v1/denom_authority/{denom}':
+  /bze/tokenfactory/v1/denom_authority:
     get:
       summary: Queries a list of QueryDenomAuthority items.
       operationId: BzeTokenfactoryV1DenomAuthority
@@ -1187,8 +1187,8 @@ paths:
                   additionalProperties: {}
       parameters:
         - name: denom
-          in: path
-          required: true
+          in: query
+          required: false
           type: string
       tags:
         - Query
@@ -1229,6 +1229,750 @@ paths:
                     '@type':
                       type: string
                   additionalProperties: {}
+      tags:
+        - Query
+  /bze/tradebin/v1/all_markets:
+    get:
+      summary: Queries a list of Market items.
+      operationId: BzeTradebinV1MarketAll
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              market:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    base:
+                      type: string
+                    quote:
+                      type: string
+                    creator:
+                      type: string
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /bze/tradebin/v1/asset_markets:
+    get:
+      summary: Queries a list of AssetMarkets items.
+      operationId: BzeTradebinV1AssetMarkets
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              base:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    base:
+                      type: string
+                    quote:
+                      type: string
+                    creator:
+                      type: string
+              quote:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    base:
+                      type: string
+                    quote:
+                      type: string
+                    creator:
+                      type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: asset
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  /bze/tradebin/v1/market:
+    get:
+      summary: Queries a Market by index.
+      operationId: BzeTradebinV1Market
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              market:
+                type: object
+                properties:
+                  base:
+                    type: string
+                  quote:
+                    type: string
+                  creator:
+                    type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: base
+          in: query
+          required: false
+          type: string
+        - name: quote
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  /bze/tradebin/v1/market_aggregated_orders:
+    get:
+      summary: Queries a list of MarketAggregatedOrders items.
+      operationId: BzeTradebinV1MarketAggregatedOrders
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              list:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    market_id:
+                      type: string
+                    order_type:
+                      type: string
+                    amount:
+                      type: string
+                    price:
+                      type: string
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: market
+          in: query
+          required: false
+          type: string
+        - name: order_type
+          in: query
+          required: false
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /bze/tradebin/v1/market_history:
+    get:
+      summary: Queries a list of MarketHistory items.
+      operationId: BzeTradebinV1MarketHistory
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              list:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    market_id:
+                      type: string
+                    order_type:
+                      type: string
+                    amount:
+                      type: string
+                    price:
+                      type: string
+                    executed_at:
+                      type: string
+                      format: int64
+                    maker:
+                      type: string
+                    taker:
+                      type: string
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: market
+          in: query
+          required: false
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /bze/tradebin/v1/market_order:
+    get:
+      summary: Queries a list of MarketOrder items.
+      operationId: BzeTradebinV1MarketOrder
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              order:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  market_id:
+                    type: string
+                  order_type:
+                    type: string
+                  amount:
+                    type: string
+                  price:
+                    type: string
+                  created_at:
+                    type: string
+                    format: int64
+                  owner:
+                    type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: market
+          in: query
+          required: false
+          type: string
+        - name: order_type
+          in: query
+          required: false
+          type: string
+        - name: order_id
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  /bze/tradebin/v1/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: BzeTradebinV1Params
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+                properties:
+                  createMarketFee:
+                    type: string
+                  marketMakerFee:
+                    type: string
+                  marketTakerFee:
+                    type: string
+                  makerFeeDestination:
+                    type: string
+                  takerFeeDestination:
+                    type: string
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  '/bze/tradebin/v1/user_market_orders/{address}':
+    get:
+      summary: Queries a list of UserMarketOrders items.
+      operationId: BzeTradebinV1UserMarketOrders
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              list:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    market_id:
+                      type: string
+                    order_type:
+                      type: string
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: address
+          in: path
+          required: true
+          type: string
+        - name: market
+          in: query
+          required: false
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
       tags:
         - Query
   /cosmos/auth/v1beta1/accounts:
@@ -32474,6 +33218,334 @@ definitions:
     description: |-
       Metadata represents a struct that describes
       a basic token.
+  bze.tradebin.v1.AggregatedOrder:
+    type: object
+    properties:
+      market_id:
+        type: string
+      order_type:
+        type: string
+      amount:
+        type: string
+      price:
+        type: string
+  bze.tradebin.v1.HistoryOrder:
+    type: object
+    properties:
+      market_id:
+        type: string
+      order_type:
+        type: string
+      amount:
+        type: string
+      price:
+        type: string
+      executed_at:
+        type: string
+        format: int64
+      maker:
+        type: string
+      taker:
+        type: string
+  bze.tradebin.v1.Market:
+    type: object
+    properties:
+      base:
+        type: string
+      quote:
+        type: string
+      creator:
+        type: string
+  bze.tradebin.v1.MsgCancelOrderResponse:
+    type: object
+  bze.tradebin.v1.MsgCreateMarketResponse:
+    type: object
+  bze.tradebin.v1.MsgCreateOrderResponse:
+    type: object
+  bze.tradebin.v1.Order:
+    type: object
+    properties:
+      id:
+        type: string
+      market_id:
+        type: string
+      order_type:
+        type: string
+      amount:
+        type: string
+      price:
+        type: string
+      created_at:
+        type: string
+        format: int64
+      owner:
+        type: string
+  bze.tradebin.v1.OrderReference:
+    type: object
+    properties:
+      id:
+        type: string
+      market_id:
+        type: string
+      order_type:
+        type: string
+  bze.tradebin.v1.Params:
+    type: object
+    properties:
+      createMarketFee:
+        type: string
+      marketMakerFee:
+        type: string
+      marketTakerFee:
+        type: string
+      makerFeeDestination:
+        type: string
+      takerFeeDestination:
+        type: string
+    description: Params defines the parameters for the module.
+  bze.tradebin.v1.QueryAllMarketResponse:
+    type: object
+    properties:
+      market:
+        type: array
+        items:
+          type: object
+          properties:
+            base:
+              type: string
+            quote:
+              type: string
+            creator:
+              type: string
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  bze.tradebin.v1.QueryAssetMarketsResponse:
+    type: object
+    properties:
+      base:
+        type: array
+        items:
+          type: object
+          properties:
+            base:
+              type: string
+            quote:
+              type: string
+            creator:
+              type: string
+      quote:
+        type: array
+        items:
+          type: object
+          properties:
+            base:
+              type: string
+            quote:
+              type: string
+            creator:
+              type: string
+  bze.tradebin.v1.QueryGetMarketResponse:
+    type: object
+    properties:
+      market:
+        type: object
+        properties:
+          base:
+            type: string
+          quote:
+            type: string
+          creator:
+            type: string
+  bze.tradebin.v1.QueryMarketAggregatedOrdersResponse:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          properties:
+            market_id:
+              type: string
+            order_type:
+              type: string
+            amount:
+              type: string
+            price:
+              type: string
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  bze.tradebin.v1.QueryMarketHistoryResponse:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          properties:
+            market_id:
+              type: string
+            order_type:
+              type: string
+            amount:
+              type: string
+            price:
+              type: string
+            executed_at:
+              type: string
+              format: int64
+            maker:
+              type: string
+            taker:
+              type: string
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  bze.tradebin.v1.QueryMarketOrderResponse:
+    type: object
+    properties:
+      order:
+        type: object
+        properties:
+          id:
+            type: string
+          market_id:
+            type: string
+          order_type:
+            type: string
+          amount:
+            type: string
+          price:
+            type: string
+          created_at:
+            type: string
+            format: int64
+          owner:
+            type: string
+  bze.tradebin.v1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+        properties:
+          createMarketFee:
+            type: string
+          marketMakerFee:
+            type: string
+          marketTakerFee:
+            type: string
+          makerFeeDestination:
+            type: string
+          takerFeeDestination:
+            type: string
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
+  bze.tradebin.v1.QueryUserMarketOrdersResponse:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+            market_id:
+              type: string
+            order_type:
+              type: string
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
   cosmos.auth.v1beta1.Params:
     type: object
     properties:
