@@ -1,20 +1,20 @@
-package tradebin
+package rewards
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/telemetry"
+	// this line is used by starport scaffolding # 1
+
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	"time"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/bze-alphateam/bze/x/tradebin/client/cli"
-	"github.com/bze-alphateam/bze/x/tradebin/keeper"
-	"github.com/bze-alphateam/bze/x/tradebin/types"
+	"github.com/bze-alphateam/bze/x/rewards/client/cli"
+	"github.com/bze-alphateam/bze/x/rewards/keeper"
+	"github.com/bze-alphateam/bze/x/rewards/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -78,7 +78,8 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	_ = types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	// this line is used by starport scaffolding # 2
 }
 
 // GetTxCmd returns the capability module's root tx command.
@@ -99,18 +100,21 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper     keeper.Keeper
-	bankKeeper types.BankKeeper
+	keeper        keeper.Keeper
+	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
 }
 
 func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
+	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         keeper,
+		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 	}
 }
@@ -168,15 +172,6 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
 // EndBlock executes all ABCI EndBlock logic respective to the capability module. It
 // returns no validator updates.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-	engine, err := keeper.NewProcessingEngine(am.keeper, am.bankKeeper, am.keeper.Logger(ctx))
-	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("could not get processing engine: %v", err))
-		return []abci.ValidatorUpdate{}
-	}
-
-	engine.ProcessQueueMessages(ctx)
-
+func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
