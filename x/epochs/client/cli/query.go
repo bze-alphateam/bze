@@ -2,6 +2,8 @@ package cli
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+
 	// "strings"
 
 	"github.com/spf13/cobra"
@@ -24,9 +26,70 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	//TODO add queries
-
+	cmd.AddCommand(CmdAllEpochs())
+	cmd.AddCommand(CmdEpochInfo())
 	// this line is used by starport scaffolding # 1
+
+	return cmd
+}
+
+func CmdAllEpochs() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "all",
+		Short: "Query epochs info",
+		Args:  cobra.ExactArgs(0),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			params := &types.QueryEpochsInfoRequest{}
+
+			res, err := queryClient.EpochInfos(cmd.Context(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdEpochInfo() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "identifier [identifier]",
+		Short: "Query epoch info by identifier",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			identifier := args[0]
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			params := &types.QueryCurrentEpochRequest{
+				Identifier: identifier,
+			}
+
+			res, err := queryClient.CurrentEpoch(cmd.Context(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
 }
