@@ -2,10 +2,10 @@ package app
 
 import (
 	"github.com/bze-alphateam/bze/app/openapi"
-	v512 "github.com/bze-alphateam/bze/app/upgrades/v512"
-	v600 "github.com/bze-alphateam/bze/app/upgrades/v600"
-	v610 "github.com/bze-alphateam/bze/app/upgrades/v610"
 	v700 "github.com/bze-alphateam/bze/app/upgrades/v700"
+	"github.com/bze-alphateam/bze/x/epochs"
+	epochskeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
+	epochstypes "github.com/bze-alphateam/bze/x/epochs/types"
 	"github.com/bze-alphateam/bze/x/tradebin"
 	tradebinkeeper "github.com/bze-alphateam/bze/x/tradebin/keeper"
 	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
@@ -177,6 +177,7 @@ var (
 		burnermodule.AppModuleBasic{},
 		tokenfactory.AppModuleBasic{},
 		tradebin.AppModuleBasic{},
+		epochs.AppModuleBasic{},
 		// this line is used by starport scaffolding # stargate/app/moduleBasic
 	)
 
@@ -194,6 +195,7 @@ var (
 		burnermoduletypes.ModuleName:    {authtypes.Burner},
 		tokenfactorytypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		tradebintypes.ModuleName:        nil,
+		epochstypes.ModuleName:          nil,
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 
@@ -261,6 +263,7 @@ type App struct {
 	BurnerKeeper       burnermodulekeeper.Keeper
 	TokenFactoryKeeper tokenfactorykeeper.Keeper
 	TradebinKeeper     tradebinkeeper.Keeper
+	EpochsKeeper       epochskeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// the module manager
@@ -310,6 +313,7 @@ func New(
 		burnermoduletypes.StoreKey,
 		tokenfactorytypes.StoreKey,
 		tradebintypes.StoreKey,
+		epochstypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -450,11 +454,19 @@ func New(
 		app.DistrKeeper,
 	)
 
+	app.EpochsKeeper = *epochskeeper.NewKeeper(
+		appCodec,
+		keys[epochstypes.StoreKey],
+		keys[epochstypes.MemStoreKey],
+		nil, //no hooks registered
+	)
+
 	scavengeModule := scavengemodule.NewAppModule(appCodec, app.ScavengeKeeper)
 	cointrunkModule := cointrunkmodule.NewAppModule(appCodec, app.CointrunkKeeper, app.AccountKeeper, app.BankKeeper, app.DistrKeeper)
 	burnerModule := burnermodule.NewAppModule(appCodec, app.BurnerKeeper, app.AccountKeeper, app.BankKeeper)
 	tokenfactoryModule := tokenfactory.NewAppModule(appCodec, app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper)
 	tradebinModule := tradebin.NewAppModule(appCodec, app.TradebinKeeper, app.AccountKeeper, app.BankKeeper)
+	epochsModule := epochs.NewAppModule(appCodec, app.EpochsKeeper)
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 
 	// register the proposal types
@@ -515,6 +527,7 @@ func New(
 		burnerModule,
 		tokenfactoryModule,
 		tradebinModule,
+		epochsModule,
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
 
@@ -546,6 +559,7 @@ func New(
 		burnermoduletypes.ModuleName,
 		tokenfactorytypes.ModuleName,
 		tradebintypes.ModuleName,
+		epochstypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -572,6 +586,7 @@ func New(
 		burnermoduletypes.ModuleName,
 		tokenfactorytypes.ModuleName,
 		tradebintypes.ModuleName,
+		epochstypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -603,6 +618,7 @@ func New(
 		burnermoduletypes.ModuleName,
 		tokenfactorytypes.ModuleName,
 		tradebintypes.ModuleName,
+		epochstypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	)
 
@@ -650,24 +666,10 @@ func New(
 }
 
 func (app *App) setupUpgradeHandlers() {
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v512.UpgradeName,
-		v512.CreateUpgradeHandler(),
-	)
-
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v600.UpgradeName,
-		v600.CreateUpgradeHandler(&app.CointrunkKeeper),
-	)
-
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v610.UpgradeName,
-		v610.CreateUpgradeHandler(),
-	)
-
+	cfg := module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v700.UpgradeName,
-		v700.CreateUpgradeHandler(&app.TokenFactoryKeeper, &app.TradebinKeeper),
+		v700.CreateUpgradeHandler(cfg, app.mm),
 	)
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
@@ -679,18 +681,9 @@ func (app *App) setupUpgradeHandlers() {
 		return
 	}
 
-	if upgradeInfo.Name == v600.UpgradeName {
-		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{burnermoduletypes.StoreKey, cointrunkmoduletypes.StoreKey, authzkeeper.StoreKey},
-		}
-
-		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
-	}
-
 	if upgradeInfo.Name == v700.UpgradeName {
 		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{tokenfactorytypes.StoreKey, tradebintypes.StoreKey},
+			Added: []string{tokenfactorytypes.StoreKey, tradebintypes.StoreKey, epochstypes.StoreKey},
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades

@@ -3,11 +3,13 @@
 import BzeAlphateamBzeBzeBurnerV1 from './bze-alphateam/bze/bze.burner.v1'
 import BzeAlphateamBzeBzeCointrunkV1 from './bze-alphateam/bze/bze.cointrunk.v1'
 import BzeAlphateamBzeBzeCointrunk from './bze-alphateam/bze/bze.cointrunk'
+import BzeAlphateamBzeBzeEpochsV1 from './bze-alphateam/bze/bze.epochs.v1'
 import BzeAlphateamBzeBzeScavenge from './bze-alphateam/bze/bze.scavenge'
 import BzeAlphateamBzeBzeTokenfactoryV1 from './bze-alphateam/bze/bze.tokenfactory.v1'
 import BzeAlphateamBzeBzeTradebinV1 from './bze-alphateam/bze/bze.tradebin.v1'
 import BzeAlphateamBzeBzealphateamBzeBurner from './bze-alphateam/bze/bzealphateam.bze.burner'
 import BzeAlphateamBzeBzealphateamBzeCointrunk from './bze-alphateam/bze/bzealphateam.bze.cointrunk'
+import BzeAlphateamBzeBzealphateamBzeEpochs from './bze-alphateam/bze/bzealphateam.bze.epochs'
 import BzeAlphateamBzeBzealphateamBzeTokenfactory from './bze-alphateam/bze/bzealphateam.bze.tokenfactory'
 import BzeAlphateamBzeBzealphateamBzeTradebin from './bze-alphateam/bze/bzealphateam.bze.tradebin'
 import CosmosCosmosSdkCosmosAuthzV1Beta1 from './cosmos/cosmos-sdk/cosmos.authz.v1beta1'
@@ -27,11 +29,13 @@ export default {
   BzeAlphateamBzeBzeBurnerV1: load(BzeAlphateamBzeBzeBurnerV1, 'bze.burner.v1'),
   BzeAlphateamBzeBzeCointrunkV1: load(BzeAlphateamBzeBzeCointrunkV1, 'bze.cointrunk.v1'),
   BzeAlphateamBzeBzeCointrunk: load(BzeAlphateamBzeBzeCointrunk, 'bze.cointrunk'),
+  BzeAlphateamBzeBzeEpochsV1: load(BzeAlphateamBzeBzeEpochsV1, 'bze.epochs.v1'),
   BzeAlphateamBzeBzeScavenge: load(BzeAlphateamBzeBzeScavenge, 'bze.scavenge'),
   BzeAlphateamBzeBzeTokenfactoryV1: load(BzeAlphateamBzeBzeTokenfactoryV1, 'bze.tokenfactory.v1'),
   BzeAlphateamBzeBzeTradebinV1: load(BzeAlphateamBzeBzeTradebinV1, 'bze.tradebin.v1'),
   BzeAlphateamBzeBzealphateamBzeBurner: load(BzeAlphateamBzeBzealphateamBzeBurner, 'bzealphateam.bze.burner'),
   BzeAlphateamBzeBzealphateamBzeCointrunk: load(BzeAlphateamBzeBzealphateamBzeCointrunk, 'bzealphateam.bze.cointrunk'),
+  BzeAlphateamBzeBzealphateamBzeEpochs: load(BzeAlphateamBzeBzealphateamBzeEpochs, 'bzealphateam.bze.epochs'),
   BzeAlphateamBzeBzealphateamBzeTokenfactory: load(BzeAlphateamBzeBzealphateamBzeTokenfactory, 'bzealphateam.bze.tokenfactory'),
   BzeAlphateamBzeBzealphateamBzeTradebin: load(BzeAlphateamBzeBzealphateamBzeTradebin, 'bzealphateam.bze.tradebin'),
   CosmosCosmosSdkCosmosAuthzV1Beta1: load(CosmosCosmosSdkCosmosAuthzV1Beta1, 'cosmos.authz.v1beta1'),
