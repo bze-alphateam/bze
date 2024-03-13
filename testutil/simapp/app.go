@@ -2,9 +2,7 @@ package simapp
 
 import (
 	"github.com/bze-alphateam/bze/app/openapi"
-	v512 "github.com/bze-alphateam/bze/app/upgrades/v512"
 	v600 "github.com/bze-alphateam/bze/app/upgrades/v600"
-	v610 "github.com/bze-alphateam/bze/app/upgrades/v610"
 	v700 "github.com/bze-alphateam/bze/app/upgrades/v700"
 	"github.com/bze-alphateam/bze/x/epochs"
 	epochskeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
@@ -669,24 +667,10 @@ func New(
 }
 
 func (app *SimApp) setupUpgradeHandlers() {
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v512.UpgradeName,
-		v512.CreateUpgradeHandler(),
-	)
-
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v600.UpgradeName,
-		v600.CreateUpgradeHandler(&app.CointrunkKeeper),
-	)
-
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v610.UpgradeName,
-		v610.CreateUpgradeHandler(),
-	)
-
+	cfg := module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v700.UpgradeName,
-		v700.CreateUpgradeHandler(&app.TokenFactoryKeeper, &app.TradebinKeeper, &app.EpochsKeeper),
+		v700.CreateUpgradeHandler(cfg, app.mm),
 	)
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
