@@ -450,7 +450,6 @@ func New(
 		keys[tradebintypes.MemStoreKey],
 		app.GetSubspace(tradebintypes.ModuleName),
 		app.BankKeeper,
-		app.AccountKeeper,
 		app.DistrKeeper,
 	)
 
