@@ -94,7 +94,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgCreateMarket,
-		tradebinsimulation.SimulateMsgCreateMarket(am.accountKeeper, am.bankKeeper, am.keeper),
+		tradebinsimulation.SimulateMsgCreateMarket(am.bankKeeper, am.keeper),
 	))
 
 	var weightMsgCreateOrder int
@@ -105,7 +105,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgCreateOrder,
-		tradebinsimulation.SimulateMsgCreateOrder(am.accountKeeper, am.bankKeeper, am.keeper),
+		tradebinsimulation.SimulateMsgCreateOrder(am.bankKeeper, am.keeper),
 	))
 
 	var weightMsgCancelOrder int
@@ -116,7 +116,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgCancelOrder,
-		tradebinsimulation.SimulateMsgCancelOrder(am.accountKeeper, am.bankKeeper, am.keeper),
+		tradebinsimulation.SimulateMsgCancelOrder(am.bankKeeper, am.keeper),
 	))
 
 	// this line is used by starport scaffolding # simapp/module/operation

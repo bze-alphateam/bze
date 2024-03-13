@@ -464,7 +464,7 @@ func New(
 	cointrunkModule := cointrunkmodule.NewAppModule(appCodec, app.CointrunkKeeper, app.AccountKeeper, app.BankKeeper, app.DistrKeeper)
 	burnerModule := burnermodule.NewAppModule(appCodec, app.BurnerKeeper, app.AccountKeeper, app.BankKeeper)
 	tokenfactoryModule := tokenfactory.NewAppModule(appCodec, app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper)
-	tradebinModule := tradebin.NewAppModule(appCodec, app.TradebinKeeper, app.AccountKeeper, app.BankKeeper)
+	tradebinModule := tradebin.NewAppModule(appCodec, app.TradebinKeeper, app.BankKeeper)
 	epochsModule := epochs.NewAppModule(appCodec, app.EpochsKeeper)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition

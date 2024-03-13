@@ -11,7 +11,6 @@ import (
 )
 
 func SimulateMsgCancelOrder(
-	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k keeper.Keeper,
 ) simtypes.Operation {
