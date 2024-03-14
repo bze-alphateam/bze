@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"gopkg.in/yaml.v2"
@@ -77,8 +78,14 @@ func validateCreateStakingRewardFee(v interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
-	// TODO implement validation
-	_ = createStakingRewardFee
+	normCoins, err := sdk.ParseCoinNormalized(createStakingRewardFee)
+	if err != nil {
+		return err
+	}
+
+	if normCoins.IsNegative() {
+		return fmt.Errorf("negative amount provided")
+	}
 
 	return nil
 }
@@ -90,8 +97,14 @@ func validateCreateTradingRewardFee(v interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
-	// TODO implement validation
-	_ = createTradingRewardFee
+	normCoins, err := sdk.ParseCoinNormalized(createTradingRewardFee)
+	if err != nil {
+		return err
+	}
+
+	if normCoins.IsNegative() {
+		return fmt.Errorf("negative amount provided")
+	}
 
 	return nil
 }

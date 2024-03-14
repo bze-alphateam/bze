@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "rewards/params.proto";
+import "rewards/staking_reward.proto";
 // this line is used by starport scaffolding # 1
 
 option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
@@ -15,7 +16,17 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/bze/rewards/v1/params";
   }
-  // this line is used by starport scaffolding # 2
+  // Queries a StakingReward by index.
+	rpc StakingReward(QueryGetStakingRewardRequest) returns (QueryGetStakingRewardResponse) {
+		option (google.api.http).get = "/bze/rewards/v1/staking_reward/{reward_id}";
+	}
+
+	// Queries a list of StakingReward items.
+	rpc StakingRewardAll(QueryAllStakingRewardRequest) returns (QueryAllStakingRewardResponse) {
+		option (google.api.http).get = "/bze/rewards/v1/staking_reward";
+	}
+
+// this line is used by starport scaffolding # 2
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -25,6 +36,23 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryGetStakingRewardRequest {
+	  string reward_id = 1;
+}
+
+message QueryGetStakingRewardResponse {
+	StakingReward staking_reward = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllStakingRewardRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllStakingRewardResponse {
+	repeated StakingReward list = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // this line is used by starport scaffolding # 3
