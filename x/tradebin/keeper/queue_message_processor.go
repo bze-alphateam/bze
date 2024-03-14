@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/bze-alphateam/bze/bzeutils"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -83,75 +84,88 @@ func (pe *ProcessingEngine) ProcessQueueMessages(ctx sdk.Context) {
 
 func (pe *ProcessingEngine) getMessageHandler() func(ctx sdk.Context, message types.QueueMessage) {
 	return func(ctx sdk.Context, message types.QueueMessage) {
+		var wrappingFn func(ctx sdk.Context) error
+
 		switch message.MessageType {
 		case types.OrderTypeCancel:
-			pe.cancelOrder(ctx, message)
+			wrappingFn = func(ctx sdk.Context) error {
+				return pe.cancelOrder(ctx, message)
+			}
 		default:
-			pe.addOrder(ctx, message)
+			wrappingFn = func(ctx sdk.Context) error {
+				return pe.addOrder(ctx, message)
+			}
+		}
+
+		err := bzeutils.ApplyFuncIfNoError(ctx, wrappingFn)
+		if err != nil {
+			//leave the message on queue until we discover what the issue was.
+			pe.logger.Error("error on handling queue message", "message", message)
+			return
 		}
 
 		pe.msgsToDelete = append(pe.msgsToDelete, message.MessageId)
 	}
 }
 
-func (pe *ProcessingEngine) cancelOrder(ctx sdk.Context, message types.QueueMessage) {
+func (pe *ProcessingEngine) cancelOrder(ctx sdk.Context, message types.QueueMessage) error {
 	logger := pe.logger.With(
 		"message", message,
+		"func", "cancelOrder",
 	)
-
 	logger.Info("cancelling order")
+
 	order, found := pe.k.GetOrder(ctx, message.MarketId, message.OrderType, message.OrderId)
 	if !found {
-		return
+		logger.Error("could not find order")
+		return nil
 	}
 	pe.k.RemoveOrder(ctx, order)
 
 	market, _ := pe.k.GetMarketById(ctx, order.MarketId)
 	orderAmountInt, ok := sdk.NewIntFromString(order.Amount)
 	if !ok {
-		//should never happen
-		logger.Error("could not convert order amount", "order", order)
-		return
+
+		return fmt.Errorf("could not convert order amount")
 	}
 
 	coin, err := pe.k.GetOrderCoins(order.OrderType, order.Price, orderAmountInt, &market)
 	if err != nil {
-		logger.Error("could not get order coins", "order", order, "error", err)
-		return
+
+		return fmt.Errorf("could not get order coins: %v", err)
 	}
 
 	accAddr, err := sdk.AccAddressFromBech32(order.Owner)
 	if err != nil {
-		logger.
-			Error("error on getting account address for order owner", "order", order, "error", err)
-		return
+
+		return fmt.Errorf("error on getting account address for order owner: %v", err)
 	}
 
 	err = pe.bank.SendCoinsFromModuleToAccount(ctx, types.ModuleName, accAddr, sdk.NewCoins(coin))
 	if err != nil {
-		logger.
-			Error("error on sending funds to order owner", "error", err)
-		return
+
+		return fmt.Errorf("error on sending funds to order owner: %v", err)
 	}
 
 	pe.removeOrderFromAggregate(ctx, &order)
+	pe.emitOrderCanceledEvent(ctx, &order)
 	logger.Info("order cancelled")
 
-	pe.emitOrderCanceledEvent(ctx, &order)
+	return nil
 }
 
-func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage) {
+func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage) error {
 	logger := pe.logger.With(
 		"message", message,
+		"func", "addOrder",
 	)
-
 	logger.Info("adding new order on market")
+
 	zeroInt := sdk.ZeroInt()
 	msgAmountInt, ok := sdk.NewIntFromString(message.Amount)
 	if !ok {
-		//should never happen
-		logger.Error("could not convert queue message amount")
-		return
+
+		return fmt.Errorf("could not convert queue message amount")
 	}
 
 	//find opposite orders if they exist
@@ -160,16 +174,15 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 	if !found {
 		order := pe.saveOrder(ctx, message, message.Amount)
 		pe.addOrderToAggregate(ctx, order)
-
 		logger.Info("no orders to fill. saving as new order", "order", *order)
-		return
+
+		return nil
 	}
 
 	aggAmountInt, ok := sdk.NewIntFromString(agg.Amount)
 	if !ok {
-		//should never happen
-		logger.Error("could not convert agg amount", "agg_amount", agg.Amount)
-		return
+
+		return fmt.Errorf("could not convert agg amount")
 	}
 
 	oppositeOrderRefs := pe.k.GetPriceOrderByPrice(ctx, message.MarketId, types.TheOtherOrderType(message.OrderType), message.Price)
@@ -187,9 +200,8 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 		orderToFill, _ := pe.k.GetOrder(ctx, orderRef.MarketId, orderRef.OrderType, orderRef.Id)
 		orderAmountInt, ok := sdk.NewIntFromString(orderToFill.Amount)
 		if !ok {
-			//should never happen
-			logger.Error("could not convert order amount")
-			continue
+
+			return fmt.Errorf("could not convert order to fill amount")
 		}
 
 		//find how much to send to the found order's owner
@@ -209,8 +221,8 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 
 		err := pe.fundUsersAccounts(ctx, &orderToFill, &market, amountToExecute, msgOwnerAddr)
 		if err != nil {
-			logger.Error(err.Error())
-			return
+
+			return err
 		}
 
 		if orderAmountInt.GT(zeroInt) {
@@ -233,7 +245,7 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 
 	if msgAmountInt.Equal(zeroInt) {
 		logger.Info("message was completely filled")
-		return
+		return nil
 	}
 
 	//if min amount condition is met and all orders were filled we can proceed to place the order
@@ -243,22 +255,24 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 		pe.addOrderToAggregate(ctx, order)
 
 		logger.Info("message has been saved as order", "order", *order)
-		return
+		return nil
 	}
 
 	logger.Info("message remaining amount is too low, returning dust")
 	//we have a remaining amount smaller than min amount. We should send it back to the msg owner
 	coinsForMsgOwner, err := pe.k.GetOrderCoins(message.OrderType, message.Price, msgAmountInt, &market)
 	if err != nil {
-		logger.Error("error when creating funds to return to message owner", "error", err.Error())
-		return
+
+		return fmt.Errorf("error when creating funds to return to message owner: %v", err)
 	}
 
 	err = pe.bank.SendCoinsFromModuleToAccount(ctx, types.ModuleName, msgOwnerAddr, sdk.NewCoins(coinsForMsgOwner))
 	if err != nil {
-		logger.Error("error when returning funds to message owner", "error", err.Error())
-		return
+
+		return fmt.Errorf("error when returning funds to message owner: %v", err)
 	}
+
+	return nil
 }
 
 func (pe *ProcessingEngine) fundUsersAccounts(ctx sdk.Context, order *types.Order, market *types.Market, amount sdk.Int, taker sdk.AccAddress) error {
