@@ -20,7 +20,7 @@ func CmdCreateStakingReward() *cobra.Command {
 			stakingDenom := args[2]
 			duration := args[3]
 			minStake := args[4]
-			lock := args[4]
+			lock := args[5]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -50,7 +50,7 @@ func CmdCreateStakingReward() *cobra.Command {
 
 func CmdUpdateStakingReward() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-staking-reward [reward-id] [duration]",
+		Use:   "update-staking-reward [reward-id] [duration-to-add]",
 		Short: "Adds new funds to a staking reward for the specified duration",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
