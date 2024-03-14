@@ -13,6 +13,31 @@ export interface ProtobufAny {
   "@type"?: string;
 }
 
+export interface RewardsMsgCreateStakingRewardResponse {
+  reward_id?: string;
+}
+
+export type RewardsMsgUpdateStakingRewardResponse = object;
+
+export interface RewardsQueryAllStakingRewardResponse {
+  list?: V1RewardsStakingReward[];
+
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
+  pagination?: V1Beta1PageResponse;
+}
+
+export interface RewardsQueryGetStakingRewardResponse {
+  staking_reward?: V1RewardsStakingReward;
+}
+
 /**
  * QueryParamsResponse is response type for the Query/Params RPC method.
  */
@@ -29,11 +54,95 @@ export interface RpcStatus {
 }
 
 /**
+* message SomeRequest {
+         Foo some_parameter = 1;
+         PageRequest pagination = 2;
+ }
+*/
+export interface V1Beta1PageRequest {
+  /**
+   * key is a value returned in PageResponse.next_key to begin
+   * querying the next page most efficiently. Only one of offset or key
+   * should be set.
+   * @format byte
+   */
+  key?: string;
+
+  /**
+   * offset is a numeric offset that can be used when key is unavailable.
+   * It is less efficient than using key. Only one of offset or key should
+   * be set.
+   * @format uint64
+   */
+  offset?: string;
+
+  /**
+   * limit is the total number of results to be returned in the result page.
+   * If left empty it will default to a value to be set by each app.
+   * @format uint64
+   */
+  limit?: string;
+
+  /**
+   * count_total is set to true  to indicate that the result set should include
+   * a count of the total number of items available for pagination in UIs.
+   * count_total is only respected when offset is used. It is ignored when key
+   * is set.
+   */
+  count_total?: boolean;
+
+  /**
+   * reverse is set to true if results are to be returned in the descending order.
+   *
+   * Since: cosmos-sdk 0.43
+   */
+  reverse?: boolean;
+}
+
+/**
+* PageResponse is to be embedded in gRPC response messages where the
+corresponding request message has used PageRequest.
+
+ message SomeResponse {
+         repeated Bar results = 1;
+         PageResponse page = 2;
+ }
+*/
+export interface V1Beta1PageResponse {
+  /** @format byte */
+  next_key?: string;
+
+  /** @format uint64 */
+  total?: string;
+}
+
+/**
  * Params defines the parameters for the module.
  */
 export interface V1RewardsParams {
   createStakingRewardFee?: string;
   createTradingRewardFee?: string;
+}
+
+export interface V1RewardsStakingReward {
+  reward_id?: string;
+
+  /** @format int64 */
+  prize_amount?: string;
+  prize_denom?: string;
+  staking_denom?: string;
+
+  /** @format int64 */
+  duration?: number;
+
+  /** @format int64 */
+  payouts?: number;
+
+  /** @format uint64 */
+  minStake?: string;
+
+  /** @format int64 */
+  lock?: number;
 }
 
 export type QueryParamsType = Record<string | number, any>;
@@ -243,6 +352,48 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
   queryParams = (params: RequestParams = {}) =>
     this.request<RewardsQueryParamsResponse, RpcStatus>({
       path: `/bze/rewards/v1/params`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryStakingRewardAll
+   * @summary Queries a list of StakingReward items.
+   * @request GET:/bze/rewards/v1/staking_reward
+   */
+  queryStakingRewardAll = (
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<RewardsQueryAllStakingRewardResponse, RpcStatus>({
+      path: `/bze/rewards/v1/staking_reward`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryStakingReward
+   * @summary Queries a StakingReward by index.
+   * @request GET:/bze/rewards/v1/staking_reward/{reward_id}
+   */
+  queryStakingReward = (reward_id: string, params: RequestParams = {}) =>
+    this.request<RewardsQueryGetStakingRewardResponse, RpcStatus>({
+      path: `/bze/rewards/v1/staking_reward/${reward_id}`,
       method: "GET",
       format: "json",
       ...params,

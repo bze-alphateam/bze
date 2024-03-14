@@ -24,7 +24,19 @@ var (
 )
 
 const (
-// this line is used by starport scaffolding # simapp/module/const
+	opWeightMsgCreateStakingReward = "op_weight_msg_staking_reward"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgCreateStakingReward int = 100
+
+	opWeightMsgUpdateStakingReward = "op_weight_msg_staking_reward"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgUpdateStakingReward int = 100
+
+	opWeightMsgDeleteStakingReward = "op_weight_msg_staking_reward"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgDeleteStakingReward int = 100
+
+	// this line is used by starport scaffolding # simapp/module/const
 )
 
 // GenerateGenesisState creates a randomized GenState of the module
@@ -35,6 +47,14 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	}
 	rewardsGenesis := types.GenesisState{
 		Params: types.DefaultParams(),
+		StakingRewardList: []types.StakingReward{
+			{
+				RewardId: "0",
+			},
+			{
+				RewardId: "1",
+			},
+		},
 		// this line is used by starport scaffolding # simapp/module/genesisState
 	}
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&rewardsGenesis)
@@ -64,6 +84,39 @@ func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	operations := make([]simtypes.WeightedOperation, 0)
+
+	var weightMsgCreateStakingReward int
+	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgCreateStakingReward, &weightMsgCreateStakingReward, nil,
+		func(_ *rand.Rand) {
+			weightMsgCreateStakingReward = defaultWeightMsgCreateStakingReward
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgCreateStakingReward,
+		rewardssimulation.SimulateMsgCreateStakingReward(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
+	var weightMsgUpdateStakingReward int
+	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgUpdateStakingReward, &weightMsgUpdateStakingReward, nil,
+		func(_ *rand.Rand) {
+			weightMsgUpdateStakingReward = defaultWeightMsgUpdateStakingReward
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgUpdateStakingReward,
+		rewardssimulation.SimulateMsgUpdateStakingReward(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
+	var weightMsgDeleteStakingReward int
+	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgDeleteStakingReward, &weightMsgDeleteStakingReward, nil,
+		func(_ *rand.Rand) {
+			weightMsgDeleteStakingReward = defaultWeightMsgDeleteStakingReward
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgDeleteStakingReward,
+		rewardssimulation.SimulateMsgDeleteStakingReward(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
 
 	// this line is used by starport scaffolding # simapp/module/operation
 
