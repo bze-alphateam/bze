@@ -30,6 +30,14 @@ func TestGenesisState_Validate(t *testing.T) {
 		RewardId: "1",
 },
 },
+TradingRewardList: []types.TradingReward{
+	{
+		RewardId: "0",
+},
+	{
+		RewardId: "1",
+},
+},
 // this line is used by starport scaffolding # types/genesis/validField
 			},
 			valid: true,
@@ -38,6 +46,20 @@ func TestGenesisState_Validate(t *testing.T) {
 	desc:     "duplicated stakingReward",
 	genState: &types.GenesisState{
 		StakingRewardList: []types.StakingReward{
+			{
+				RewardId: "0",
+},
+			{
+				RewardId: "0",
+},
+		},
+	},
+	valid:    false,
+},
+{
+	desc:     "duplicated tradingReward",
+	genState: &types.GenesisState{
+		TradingRewardList: []types.TradingReward{
 			{
 				RewardId: "0",
 },

@@ -6,7 +6,7 @@ export const protobufPackage = "bze.v1.rewards";
 export interface MsgCreateStakingReward {
   /** msg creator */
   creator: string;
-  /** the amount paid as prize */
+  /** the amount paid as prize for each epoch (duration) */
   prize_amount: string;
   /** the denom paid as prize */
   prize_denom: string;
@@ -32,6 +32,21 @@ export interface MsgUpdateStakingReward {
 }
 
 export interface MsgUpdateStakingRewardResponse {}
+
+export interface MsgCreateTradingReward {
+  creator: string;
+  /** the amount paid as prize for each slot */
+  prize_amount: string;
+  /** the denom paid as prize */
+  prize_denom: string;
+  duration: string;
+  market_id: string;
+  slots: string;
+}
+
+export interface MsgCreateTradingRewardResponse {
+  reward_id: string;
+}
 
 const baseMsgCreateStakingReward: object = {
   creator: "",
@@ -425,15 +440,241 @@ export const MsgUpdateStakingRewardResponse = {
   },
 };
 
+const baseMsgCreateTradingReward: object = {
+  creator: "",
+  prize_amount: "",
+  prize_denom: "",
+  duration: "",
+  market_id: "",
+  slots: "",
+};
+
+export const MsgCreateTradingReward = {
+  encode(
+    message: MsgCreateTradingReward,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.creator !== "") {
+      writer.uint32(10).string(message.creator);
+    }
+    if (message.prize_amount !== "") {
+      writer.uint32(18).string(message.prize_amount);
+    }
+    if (message.prize_denom !== "") {
+      writer.uint32(26).string(message.prize_denom);
+    }
+    if (message.duration !== "") {
+      writer.uint32(34).string(message.duration);
+    }
+    if (message.market_id !== "") {
+      writer.uint32(42).string(message.market_id);
+    }
+    if (message.slots !== "") {
+      writer.uint32(50).string(message.slots);
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): MsgCreateTradingReward {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseMsgCreateTradingReward } as MsgCreateTradingReward;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.creator = reader.string();
+          break;
+        case 2:
+          message.prize_amount = reader.string();
+          break;
+        case 3:
+          message.prize_denom = reader.string();
+          break;
+        case 4:
+          message.duration = reader.string();
+          break;
+        case 5:
+          message.market_id = reader.string();
+          break;
+        case 6:
+          message.slots = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): MsgCreateTradingReward {
+    const message = { ...baseMsgCreateTradingReward } as MsgCreateTradingReward;
+    if (object.creator !== undefined && object.creator !== null) {
+      message.creator = String(object.creator);
+    } else {
+      message.creator = "";
+    }
+    if (object.prize_amount !== undefined && object.prize_amount !== null) {
+      message.prize_amount = String(object.prize_amount);
+    } else {
+      message.prize_amount = "";
+    }
+    if (object.prize_denom !== undefined && object.prize_denom !== null) {
+      message.prize_denom = String(object.prize_denom);
+    } else {
+      message.prize_denom = "";
+    }
+    if (object.duration !== undefined && object.duration !== null) {
+      message.duration = String(object.duration);
+    } else {
+      message.duration = "";
+    }
+    if (object.market_id !== undefined && object.market_id !== null) {
+      message.market_id = String(object.market_id);
+    } else {
+      message.market_id = "";
+    }
+    if (object.slots !== undefined && object.slots !== null) {
+      message.slots = String(object.slots);
+    } else {
+      message.slots = "";
+    }
+    return message;
+  },
+
+  toJSON(message: MsgCreateTradingReward): unknown {
+    const obj: any = {};
+    message.creator !== undefined && (obj.creator = message.creator);
+    message.prize_amount !== undefined &&
+      (obj.prize_amount = message.prize_amount);
+    message.prize_denom !== undefined &&
+      (obj.prize_denom = message.prize_denom);
+    message.duration !== undefined && (obj.duration = message.duration);
+    message.market_id !== undefined && (obj.market_id = message.market_id);
+    message.slots !== undefined && (obj.slots = message.slots);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<MsgCreateTradingReward>
+  ): MsgCreateTradingReward {
+    const message = { ...baseMsgCreateTradingReward } as MsgCreateTradingReward;
+    if (object.creator !== undefined && object.creator !== null) {
+      message.creator = object.creator;
+    } else {
+      message.creator = "";
+    }
+    if (object.prize_amount !== undefined && object.prize_amount !== null) {
+      message.prize_amount = object.prize_amount;
+    } else {
+      message.prize_amount = "";
+    }
+    if (object.prize_denom !== undefined && object.prize_denom !== null) {
+      message.prize_denom = object.prize_denom;
+    } else {
+      message.prize_denom = "";
+    }
+    if (object.duration !== undefined && object.duration !== null) {
+      message.duration = object.duration;
+    } else {
+      message.duration = "";
+    }
+    if (object.market_id !== undefined && object.market_id !== null) {
+      message.market_id = object.market_id;
+    } else {
+      message.market_id = "";
+    }
+    if (object.slots !== undefined && object.slots !== null) {
+      message.slots = object.slots;
+    } else {
+      message.slots = "";
+    }
+    return message;
+  },
+};
+
+const baseMsgCreateTradingRewardResponse: object = { reward_id: "" };
+
+export const MsgCreateTradingRewardResponse = {
+  encode(
+    message: MsgCreateTradingRewardResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.reward_id !== "") {
+      writer.uint32(10).string(message.reward_id);
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): MsgCreateTradingRewardResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseMsgCreateTradingRewardResponse,
+    } as MsgCreateTradingRewardResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.reward_id = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): MsgCreateTradingRewardResponse {
+    const message = {
+      ...baseMsgCreateTradingRewardResponse,
+    } as MsgCreateTradingRewardResponse;
+    if (object.reward_id !== undefined && object.reward_id !== null) {
+      message.reward_id = String(object.reward_id);
+    } else {
+      message.reward_id = "";
+    }
+    return message;
+  },
+
+  toJSON(message: MsgCreateTradingRewardResponse): unknown {
+    const obj: any = {};
+    message.reward_id !== undefined && (obj.reward_id = message.reward_id);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<MsgCreateTradingRewardResponse>
+  ): MsgCreateTradingRewardResponse {
+    const message = {
+      ...baseMsgCreateTradingRewardResponse,
+    } as MsgCreateTradingRewardResponse;
+    if (object.reward_id !== undefined && object.reward_id !== null) {
+      message.reward_id = object.reward_id;
+    } else {
+      message.reward_id = "";
+    }
+    return message;
+  },
+};
+
 /** Msg defines the Msg service. */
 export interface Msg {
   CreateStakingReward(
     request: MsgCreateStakingReward
   ): Promise<MsgCreateStakingRewardResponse>;
-  /** this line is used by starport scaffolding # proto/tx/rpc */
   UpdateStakingReward(
     request: MsgUpdateStakingReward
   ): Promise<MsgUpdateStakingRewardResponse>;
+  /** this line is used by starport scaffolding # proto/tx/rpc */
+  CreateTradingReward(
+    request: MsgCreateTradingReward
+  ): Promise<MsgCreateTradingRewardResponse>;
 }
 
 export class MsgClientImpl implements Msg {
@@ -466,6 +707,20 @@ export class MsgClientImpl implements Msg {
     );
     return promise.then((data) =>
       MsgUpdateStakingRewardResponse.decode(new Reader(data))
+    );
+  }
+
+  CreateTradingReward(
+    request: MsgCreateTradingReward
+  ): Promise<MsgCreateTradingRewardResponse> {
+    const data = MsgCreateTradingReward.encode(request).finish();
+    const promise = this.rpc.request(
+      "bze.v1.rewards.Msg",
+      "CreateTradingReward",
+      data
+    );
+    return promise.then((data) =>
+      MsgCreateTradingRewardResponse.decode(new Reader(data))
     );
   }
 }

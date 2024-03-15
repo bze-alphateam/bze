@@ -1,6 +1,7 @@
 syntax = "proto3";
 package bze.v1.rewards;
 
+import "rewards/trading_reward.proto";
 // this line is used by starport scaffolding # proto/tx/import
 
 option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
@@ -9,12 +10,13 @@ option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
 service Msg {
   rpc CreateStakingReward(MsgCreateStakingReward) returns (MsgCreateStakingRewardResponse);
   rpc UpdateStakingReward(MsgUpdateStakingReward) returns (MsgUpdateStakingRewardResponse);
+  rpc CreateTradingReward(MsgCreateTradingReward) returns (MsgCreateTradingRewardResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
 message MsgCreateStakingReward {
   string creator = 1; //msg creator
-  string prize_amount = 2; //the amount paid as prize
+  string prize_amount = 2; //the amount paid as prize for each epoch (duration)
   string prize_denom = 3; //the denom paid as prize
   string staking_denom = 4; //the denom a user has to stake in order to qualify
   string duration = 5; // the number of days the rewards are paid
@@ -32,5 +34,17 @@ message MsgUpdateStakingReward {
   string duration = 3; // the number of days the rewards are paid
 }
 message MsgUpdateStakingRewardResponse {}
+
+message MsgCreateTradingReward {
+  string creator = 1;
+  string prize_amount = 2; //the amount paid as prize for each slot
+  string prize_denom = 3; //the denom paid as prize
+  string duration = 4;
+  string market_id = 5;
+  string slots = 6;
+}
+message MsgCreateTradingRewardResponse {
+  string reward_id = 1;
+}
 
 // this line is used by starport scaffolding # proto/tx/message

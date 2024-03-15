@@ -14,4 +14,6 @@ var (
 	ErrInvalidMinStake     = sdkerrors.Register(ModuleName, 5004, "invalid min stake")
 	ErrInvalidDuration     = sdkerrors.Register(ModuleName, 5005, "invalid duration")
 	ErrInvalidLockingTime  = sdkerrors.Register(ModuleName, 5006, "invalid staking reward lock")
+	ErrInvalidMarketId     = sdkerrors.Register(ModuleName, 5007, "invalid market_id")
+	ErrInvalidSlots        = sdkerrors.Register(ModuleName, 5008, "invalid slots")
 )

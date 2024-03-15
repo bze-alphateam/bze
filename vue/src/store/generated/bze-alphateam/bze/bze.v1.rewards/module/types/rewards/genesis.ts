@@ -3,6 +3,7 @@ import * as Long from "long";
 import { util, configure, Writer, Reader } from "protobufjs/minimal";
 import { Params } from "../rewards/params";
 import { StakingReward } from "../rewards/staking_reward";
+import { TradingReward } from "../rewards/trading_reward";
 
 export const protobufPackage = "bze.v1.rewards";
 
@@ -12,6 +13,8 @@ export interface GenesisState {
   staking_reward_list: StakingReward[];
   staking_rewards_counter: number;
   trading_rewards_counter: number;
+  /** this line is used by starport scaffolding # genesis/proto/state */
+  tradingRewardList: TradingReward[];
 }
 
 const baseGenesisState: object = {
@@ -33,6 +36,9 @@ export const GenesisState = {
     if (message.trading_rewards_counter !== 0) {
       writer.uint32(32).uint64(message.trading_rewards_counter);
     }
+    for (const v of message.tradingRewardList) {
+      TradingReward.encode(v!, writer.uint32(42).fork()).ldelim();
+    }
     return writer;
   },
 
@@ -41,6 +47,7 @@ export const GenesisState = {
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseGenesisState } as GenesisState;
     message.staking_reward_list = [];
+    message.tradingRewardList = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -62,6 +69,11 @@ export const GenesisState = {
             reader.uint64() as Long
           );
           break;
+        case 5:
+          message.tradingRewardList.push(
+            TradingReward.decode(reader, reader.uint32())
+          );
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -73,6 +85,7 @@ export const GenesisState = {
   fromJSON(object: any): GenesisState {
     const message = { ...baseGenesisState } as GenesisState;
     message.staking_reward_list = [];
+    message.tradingRewardList = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromJSON(object.params);
     } else {
@@ -102,6 +115,14 @@ export const GenesisState = {
     } else {
       message.trading_rewards_counter = 0;
     }
+    if (
+      object.tradingRewardList !== undefined &&
+      object.tradingRewardList !== null
+    ) {
+      for (const e of object.tradingRewardList) {
+        message.tradingRewardList.push(TradingReward.fromJSON(e));
+      }
+    }
     return message;
   },
 
@@ -120,12 +141,20 @@ export const GenesisState = {
       (obj.staking_rewards_counter = message.staking_rewards_counter);
     message.trading_rewards_counter !== undefined &&
       (obj.trading_rewards_counter = message.trading_rewards_counter);
+    if (message.tradingRewardList) {
+      obj.tradingRewardList = message.tradingRewardList.map((e) =>
+        e ? TradingReward.toJSON(e) : undefined
+      );
+    } else {
+      obj.tradingRewardList = [];
+    }
     return obj;
   },
 
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = { ...baseGenesisState } as GenesisState;
     message.staking_reward_list = [];
+    message.tradingRewardList = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromPartial(object.params);
     } else {
@@ -154,6 +183,14 @@ export const GenesisState = {
       message.trading_rewards_counter = object.trading_rewards_counter;
     } else {
       message.trading_rewards_counter = 0;
+    }
+    if (
+      object.tradingRewardList !== undefined &&
+      object.tradingRewardList !== null
+    ) {
+      for (const e of object.tradingRewardList) {
+        message.tradingRewardList.push(TradingReward.fromPartial(e));
+      }
     }
     return message;
   },

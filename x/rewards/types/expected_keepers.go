@@ -24,3 +24,7 @@ type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	// Methods imported from bank should be defined here
 }
+
+type TradingKeeper interface {
+	MarketExists(ctx sdk.Context, marketId string) bool
+}

@@ -36,6 +36,10 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgDeleteStakingReward int = 100
 
+	opWeightMsgCreateTradingReward = "op_weight_msg_trading_reward"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgCreateTradingReward int = 100
+
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -48,6 +52,14 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	rewardsGenesis := types.GenesisState{
 		Params: types.DefaultParams(),
 		StakingRewardList: []types.StakingReward{
+			{
+				RewardId: "0",
+			},
+			{
+				RewardId: "1",
+			},
+		},
+		TradingRewardList: []types.TradingReward{
 			{
 				RewardId: "0",
 			},
@@ -116,6 +128,17 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgDeleteStakingReward,
 		rewardssimulation.SimulateMsgDeleteStakingReward(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
+	var weightMsgCreateTradingReward int
+	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgCreateTradingReward, &weightMsgCreateTradingReward, nil,
+		func(_ *rand.Rand) {
+			weightMsgCreateTradingReward = defaultWeightMsgCreateTradingReward
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgCreateTradingReward,
+		rewardssimulation.SimulateMsgCreateTradingReward(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
 	// this line is used by starport scaffolding # simapp/module/operation
