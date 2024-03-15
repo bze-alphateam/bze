@@ -7,7 +7,6 @@ var _ binary.ByteOrder
 const (
 	// StakingRewardKeyPrefix is the prefix to retrieve all StakingReward
 	StakingRewardKeyPrefix = "sr/value/"
-	TradingRewardKeyPrefix = "tr/value/"
 	CounterKey             = "sr/c/"
 )
 
@@ -18,8 +17,4 @@ func StakingRewardKey(rewardId string) []byte {
 
 func StakingRewardCounterKey() []byte {
 	return []byte{1}
-}
-
-func TradingRewardCounterKey() []byte {
-	return []byte{2}
 }

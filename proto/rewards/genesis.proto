@@ -4,6 +4,7 @@ package bze.v1.rewards;
 import "gogoproto/gogo.proto";
 import "rewards/params.proto";
 import "rewards/staking_reward.proto";
+import "rewards/trading_reward.proto";
 // this line is used by starport scaffolding # genesis/proto/import
 
 option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
@@ -15,5 +16,6 @@ message GenesisState {
   uint64 staking_rewards_counter = 3;
   uint64 trading_rewards_counter = 4;
 
+  repeated TradingReward tradingRewardList = 5 [(gogoproto.nullable) = false];
   // this line is used by starport scaffolding # genesis/proto/state
 }

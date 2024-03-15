@@ -14,7 +14,8 @@ func DefaultGenesis() *GenesisState {
 		StakingRewardList:     []StakingReward{},
 		StakingRewardsCounter: 0,
 		TradingRewardsCounter: 0,
-		// this line is used by starport scaffolding # genesis/types/default
+		TradingRewardList: []TradingReward{},
+// this line is used by starport scaffolding # genesis/types/default
 		Params: DefaultParams(),
 	}
 }
@@ -32,7 +33,17 @@ func (gs GenesisState) Validate() error {
 		}
 		stakingRewardIndexMap[index] = struct{}{}
 	}
-	// this line is used by starport scaffolding # genesis/types/validate
+	// Check for duplicated index in tradingReward
+tradingRewardIndexMap := make(map[string]struct{})
+
+for _, elem := range gs.TradingRewardList {
+	index := string(TradingRewardKey(elem.RewardId))
+	if _, ok := tradingRewardIndexMap[index]; ok {
+		return fmt.Errorf("duplicated index for tradingReward")
+	}
+	tradingRewardIndexMap[index] = struct{}{}
+}
+// this line is used by starport scaffolding # genesis/types/validate
 
 	return gs.Params.Validate()
 }

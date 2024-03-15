@@ -6,6 +6,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "rewards/params.proto";
 import "rewards/staking_reward.proto";
+import "rewards/trading_reward.proto";
 // this line is used by starport scaffolding # 1
 
 option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
@@ -24,6 +25,16 @@ service Query {
 	// Queries a list of StakingReward items.
 	rpc StakingRewardAll(QueryAllStakingRewardRequest) returns (QueryAllStakingRewardResponse) {
 		option (google.api.http).get = "/bze/rewards/v1/staking_reward";
+	}
+
+// Queries a TradingReward by index.
+	rpc TradingReward(QueryGetTradingRewardRequest) returns (QueryGetTradingRewardResponse) {
+		option (google.api.http).get = "/bze/rewards/v1/trading_reward/{rewardId}";
+	}
+
+	// Queries a list of TradingReward items.
+	rpc TradingRewardAll(QueryAllTradingRewardRequest) returns (QueryAllTradingRewardResponse) {
+		option (google.api.http).get = "/bze/rewards/v1/trading_reward";
 	}
 
 // this line is used by starport scaffolding # 2
@@ -52,6 +63,24 @@ message QueryAllStakingRewardRequest {
 
 message QueryAllStakingRewardResponse {
 	repeated StakingReward list = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetTradingRewardRequest {
+	  string rewardId = 1;
+
+}
+
+message QueryGetTradingRewardResponse {
+	TradingReward tradingReward = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllTradingRewardRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllTradingRewardResponse {
+	repeated TradingReward tradingReward = 1 [(gogoproto.nullable) = false];
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 

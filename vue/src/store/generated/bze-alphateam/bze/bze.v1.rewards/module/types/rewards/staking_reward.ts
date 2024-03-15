@@ -6,23 +6,23 @@ export const protobufPackage = "bze.v1.rewards";
 
 export interface StakingReward {
   reward_id: string;
-  prize_amount: number;
+  prize_amount: string;
   prize_denom: string;
   staking_denom: string;
   duration: number;
   payouts: number;
-  minStake: number;
+  min_stake: number;
   lock: number;
 }
 
 const baseStakingReward: object = {
   reward_id: "",
-  prize_amount: 0,
+  prize_amount: "",
   prize_denom: "",
   staking_denom: "",
   duration: 0,
   payouts: 0,
-  minStake: 0,
+  min_stake: 0,
   lock: 0,
 };
 
@@ -31,8 +31,8 @@ export const StakingReward = {
     if (message.reward_id !== "") {
       writer.uint32(10).string(message.reward_id);
     }
-    if (message.prize_amount !== 0) {
-      writer.uint32(16).int64(message.prize_amount);
+    if (message.prize_amount !== "") {
+      writer.uint32(18).string(message.prize_amount);
     }
     if (message.prize_denom !== "") {
       writer.uint32(26).string(message.prize_denom);
@@ -46,8 +46,8 @@ export const StakingReward = {
     if (message.payouts !== 0) {
       writer.uint32(48).uint32(message.payouts);
     }
-    if (message.minStake !== 0) {
-      writer.uint32(56).uint64(message.minStake);
+    if (message.min_stake !== 0) {
+      writer.uint32(56).uint64(message.min_stake);
     }
     if (message.lock !== 0) {
       writer.uint32(64).uint32(message.lock);
@@ -66,7 +66,7 @@ export const StakingReward = {
           message.reward_id = reader.string();
           break;
         case 2:
-          message.prize_amount = longToNumber(reader.int64() as Long);
+          message.prize_amount = reader.string();
           break;
         case 3:
           message.prize_denom = reader.string();
@@ -81,7 +81,7 @@ export const StakingReward = {
           message.payouts = reader.uint32();
           break;
         case 7:
-          message.minStake = longToNumber(reader.uint64() as Long);
+          message.min_stake = longToNumber(reader.uint64() as Long);
           break;
         case 8:
           message.lock = reader.uint32();
@@ -102,9 +102,9 @@ export const StakingReward = {
       message.reward_id = "";
     }
     if (object.prize_amount !== undefined && object.prize_amount !== null) {
-      message.prize_amount = Number(object.prize_amount);
+      message.prize_amount = String(object.prize_amount);
     } else {
-      message.prize_amount = 0;
+      message.prize_amount = "";
     }
     if (object.prize_denom !== undefined && object.prize_denom !== null) {
       message.prize_denom = String(object.prize_denom);
@@ -126,10 +126,10 @@ export const StakingReward = {
     } else {
       message.payouts = 0;
     }
-    if (object.minStake !== undefined && object.minStake !== null) {
-      message.minStake = Number(object.minStake);
+    if (object.min_stake !== undefined && object.min_stake !== null) {
+      message.min_stake = Number(object.min_stake);
     } else {
-      message.minStake = 0;
+      message.min_stake = 0;
     }
     if (object.lock !== undefined && object.lock !== null) {
       message.lock = Number(object.lock);
@@ -150,7 +150,7 @@ export const StakingReward = {
       (obj.staking_denom = message.staking_denom);
     message.duration !== undefined && (obj.duration = message.duration);
     message.payouts !== undefined && (obj.payouts = message.payouts);
-    message.minStake !== undefined && (obj.minStake = message.minStake);
+    message.min_stake !== undefined && (obj.min_stake = message.min_stake);
     message.lock !== undefined && (obj.lock = message.lock);
     return obj;
   },
@@ -165,7 +165,7 @@ export const StakingReward = {
     if (object.prize_amount !== undefined && object.prize_amount !== null) {
       message.prize_amount = object.prize_amount;
     } else {
-      message.prize_amount = 0;
+      message.prize_amount = "";
     }
     if (object.prize_denom !== undefined && object.prize_denom !== null) {
       message.prize_denom = object.prize_denom;
@@ -187,10 +187,10 @@ export const StakingReward = {
     } else {
       message.payouts = 0;
     }
-    if (object.minStake !== undefined && object.minStake !== null) {
-      message.minStake = object.minStake;
+    if (object.min_stake !== undefined && object.min_stake !== null) {
+      message.min_stake = object.min_stake;
     } else {
-      message.minStake = 0;
+      message.min_stake = 0;
     }
     if (object.lock !== undefined && object.lock !== null) {
       message.lock = object.lock;

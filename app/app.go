@@ -474,6 +474,7 @@ func New(
 		app.GetSubspace(rewardstypes.ModuleName),
 		app.BankKeeper,
 		app.DistrKeeper,
+		app.TradebinKeeper,
 	)
 
 	scavengeModule := scavengemodule.NewAppModule(appCodec, app.ScavengeKeeper)

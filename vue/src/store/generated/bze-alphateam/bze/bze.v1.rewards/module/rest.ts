@@ -17,6 +17,10 @@ export interface RewardsMsgCreateStakingRewardResponse {
   reward_id?: string;
 }
 
+export interface RewardsMsgCreateTradingRewardResponse {
+  reward_id?: string;
+}
+
 export type RewardsMsgUpdateStakingRewardResponse = object;
 
 export interface RewardsQueryAllStakingRewardResponse {
@@ -34,8 +38,27 @@ export interface RewardsQueryAllStakingRewardResponse {
   pagination?: V1Beta1PageResponse;
 }
 
+export interface RewardsQueryAllTradingRewardResponse {
+  tradingReward?: V1RewardsTradingReward[];
+
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
+  pagination?: V1Beta1PageResponse;
+}
+
 export interface RewardsQueryGetStakingRewardResponse {
   staking_reward?: V1RewardsStakingReward;
+}
+
+export interface RewardsQueryGetTradingRewardResponse {
+  tradingReward?: V1RewardsTradingReward;
 }
 
 /**
@@ -126,8 +149,6 @@ export interface V1RewardsParams {
 
 export interface V1RewardsStakingReward {
   reward_id?: string;
-
-  /** @format int64 */
   prize_amount?: string;
   prize_denom?: string;
   staking_denom?: string;
@@ -139,10 +160,23 @@ export interface V1RewardsStakingReward {
   payouts?: number;
 
   /** @format uint64 */
-  minStake?: string;
+  min_stake?: string;
 
   /** @format int64 */
   lock?: number;
+}
+
+export interface V1RewardsTradingReward {
+  reward_id?: string;
+  prize_amount?: string;
+  prize_denom?: string;
+
+  /** @format int64 */
+  duration?: number;
+  market_id?: string;
+
+  /** @format int64 */
+  slots?: number;
 }
 
 export type QueryParamsType = Record<string | number, any>;
@@ -394,6 +428,48 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
   queryStakingReward = (reward_id: string, params: RequestParams = {}) =>
     this.request<RewardsQueryGetStakingRewardResponse, RpcStatus>({
       path: `/bze/rewards/v1/staking_reward/${reward_id}`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryTradingRewardAll
+   * @summary Queries a list of TradingReward items.
+   * @request GET:/bze/rewards/v1/trading_reward
+   */
+  queryTradingRewardAll = (
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<RewardsQueryAllTradingRewardResponse, RpcStatus>({
+      path: `/bze/rewards/v1/trading_reward`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryTradingReward
+   * @summary Queries a TradingReward by index.
+   * @request GET:/bze/rewards/v1/trading_reward/{rewardId}
+   */
+  queryTradingReward = (rewardId: string, params: RequestParams = {}) =>
+    this.request<RewardsQueryGetTradingRewardResponse, RpcStatus>({
+      path: `/bze/rewards/v1/trading_reward/${rewardId}`,
       method: "GET",
       format: "json",
       ...params,

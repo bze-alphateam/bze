@@ -14,6 +14,11 @@ func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCrea
 		return nil, sdkerrors.ErrInvalidRequest
 	}
 
+	acc, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return nil, err
+	}
+
 	stakingReward, err := msg.ToStakingReward()
 	if err != nil {
 		return nil, err
@@ -29,9 +34,18 @@ func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCrea
 		return nil, types.ErrInvalidPrizeDenom
 	}
 
-	//capture the total value of prizes
-	//the prize amount needs to be multiplied by duration
-	err = k.captureStakingRewardCoins(ctx, msg.Creator, stakingReward.PrizeDenom, stakingReward.PrizeAmount, int64(stakingReward.Duration))
+	feeParam := k.GetParams(ctx).CreateStakingRewardFee
+	toCapture, err := k.getAmountToCapture(feeParam, stakingReward.PrizeDenom, stakingReward.PrizeAmount, int64(stakingReward.Duration))
+	if err != nil {
+		return nil, sdkerrors.Wrapf(err, "could not calculate amount needed to create the reward")
+	}
+
+	err = k.checkUserBalances(ctx, toCapture, acc)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.ModuleName, toCapture)
 	if err != nil {
 		return nil, err
 	}
@@ -52,9 +66,9 @@ func (k msgServer) UpdateStakingReward(goCtx context.Context, msg *types.MsgUpda
 		return nil, sdkerrors.ErrInvalidRequest
 	}
 
-	stakingReward, isFound := k.GetStakingReward(ctx, msg.RewardId)
-	if !isFound {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, "staking reward not found")
+	acc, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return nil, err
 	}
 
 	durationInt, err := strconv.ParseInt(msg.Duration, 10, 32)
@@ -66,7 +80,17 @@ func (k msgServer) UpdateStakingReward(goCtx context.Context, msg *types.MsgUpda
 		return nil, types.ErrInvalidDuration
 	}
 
-	err = k.captureStakingRewardCoins(ctx, msg.Creator, stakingReward.PrizeDenom, stakingReward.PrizeAmount, durationInt)
+	stakingReward, isFound := k.GetStakingReward(ctx, msg.RewardId)
+	if !isFound {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, "staking reward not found")
+	}
+
+	toCapture, err := k.getAmountToCapture("", stakingReward.PrizeDenom, stakingReward.PrizeAmount, durationInt)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(err, "could not calculate amount needed to create the reward")
+	}
+
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.ModuleName, toCapture)
 	if err != nil {
 		return nil, err
 	}
@@ -75,25 +99,4 @@ func (k msgServer) UpdateStakingReward(goCtx context.Context, msg *types.MsgUpda
 	k.SetStakingReward(ctx, stakingReward)
 
 	return &types.MsgUpdateStakingRewardResponse{}, nil
-}
-
-func (k msgServer) captureStakingRewardCoins(ctx sdk.Context, creator, denom string, amount, duration int64) error {
-	acc, err := sdk.AccAddressFromBech32(creator)
-	if err != nil {
-		return err
-	}
-
-	toCapture := sdk.NewCoin(denom, sdk.NewInt(amount))
-	toCapture.Amount.MulRaw(duration)
-	if !toCapture.IsPositive() {
-		//should never happen
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "calculated amount to capture is not positive")
-	}
-
-	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.ModuleName, sdk.NewCoins(toCapture))
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

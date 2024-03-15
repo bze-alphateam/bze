@@ -67,7 +67,7 @@ func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 	if !amtInt.IsPositive() {
 		return sr, sdkerrors.Wrapf(ErrInvalidPrizeAmount, "amount should be greater than 0")
 	}
-	sr.PrizeAmount = amtInt.Int64()
+	sr.PrizeAmount = msg.PrizeAmount
 
 	if msg.PrizeDenom == "" {
 		return sr, ErrInvalidPrizeDenom

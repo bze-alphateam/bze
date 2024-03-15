@@ -2,9 +2,10 @@ import { txClient, queryClient, MissingWalletError , registry} from './module'
 
 import { Params } from "./module/types/rewards/params"
 import { StakingReward } from "./module/types/rewards/staking_reward"
+import { TradingReward } from "./module/types/rewards/trading_reward"
 
 
-export { Params, StakingReward };
+export { Params, StakingReward, TradingReward };
 
 async function initTxClient(vuexGetters) {
 	return await txClient(vuexGetters['common/wallet/signer'], {
@@ -45,10 +46,13 @@ const getDefaultState = () => {
 				Params: {},
 				StakingReward: {},
 				StakingRewardAll: {},
+				TradingReward: {},
+				TradingRewardAll: {},
 				
 				_Structure: {
 						Params: getStructure(Params.fromPartial({})),
 						StakingReward: getStructure(StakingReward.fromPartial({})),
+						TradingReward: getStructure(TradingReward.fromPartial({})),
 						
 		},
 		_Registry: registry,
@@ -94,6 +98,18 @@ export default {
 						(<any> params).query=null
 					}
 			return state.StakingRewardAll[JSON.stringify(params)] ?? {}
+		},
+				getTradingReward: (state) => (params = { params: {}}) => {
+					if (!(<any> params).query) {
+						(<any> params).query=null
+					}
+			return state.TradingReward[JSON.stringify(params)] ?? {}
+		},
+				getTradingRewardAll: (state) => (params = { params: {}}) => {
+					if (!(<any> params).query) {
+						(<any> params).query=null
+					}
+			return state.TradingRewardAll[JSON.stringify(params)] ?? {}
 		},
 				
 		getTypeStructure: (state) => (type) => {
@@ -199,6 +215,54 @@ export default {
 		},
 		
 		
+		
+		
+		 		
+		
+		
+		async QueryTradingReward({ commit, rootGetters, getters }, { options: { subscribe, all} = { subscribe:false, all:false}, params, query=null }) {
+			try {
+				const key = params ?? {};
+				const queryClient=await initQueryClient(rootGetters)
+				let value= (await queryClient.queryTradingReward( key.rewardId)).data
+				
+					
+				commit('QUERY', { query: 'TradingReward', key: { params: {...key}, query}, value })
+				if (subscribe) commit('SUBSCRIBE', { action: 'QueryTradingReward', payload: { options: { all }, params: {...key},query }})
+				return getters['getTradingReward']( { params: {...key}, query}) ?? {}
+			} catch (e) {
+				throw new Error('QueryClient:QueryTradingReward API Node Unavailable. Could not perform query: ' + e.message)
+				
+			}
+		},
+		
+		
+		
+		
+		 		
+		
+		
+		async QueryTradingRewardAll({ commit, rootGetters, getters }, { options: { subscribe, all} = { subscribe:false, all:false}, params, query=null }) {
+			try {
+				const key = params ?? {};
+				const queryClient=await initQueryClient(rootGetters)
+				let value= (await queryClient.queryTradingRewardAll(query)).data
+				
+					
+				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
+					let next_values=(await queryClient.queryTradingRewardAll({...query, 'pagination.key':(<any> value).pagination.next_key})).data
+					value = mergeResults(value, next_values);
+				}
+				commit('QUERY', { query: 'TradingRewardAll', key: { params: {...key}, query}, value })
+				if (subscribe) commit('SUBSCRIBE', { action: 'QueryTradingRewardAll', payload: { options: { all }, params: {...key},query }})
+				return getters['getTradingRewardAll']( { params: {...key}, query}) ?? {}
+			} catch (e) {
+				throw new Error('QueryClient:QueryTradingRewardAll API Node Unavailable. Could not perform query: ' + e.message)
+				
+			}
+		},
+		
+		
 		async sendMsgUpdateStakingReward({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
@@ -211,6 +275,21 @@ export default {
 					throw new Error('TxClient:MsgUpdateStakingReward:Init Could not initialize signing client. Wallet is required.')
 				}else{
 					throw new Error('TxClient:MsgUpdateStakingReward:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
+		async sendMsgCreateTradingReward({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgCreateTradingReward(value)
+				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
+	gas: "200000" }, memo})
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgCreateTradingReward:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgCreateTradingReward:Send Could not broadcast Tx: '+ e.message)
 				}
 			}
 		},
@@ -240,6 +319,19 @@ export default {
 					throw new Error('TxClient:MsgUpdateStakingReward:Init Could not initialize signing client. Wallet is required.')
 				} else{
 					throw new Error('TxClient:MsgUpdateStakingReward:Create Could not create message: ' + e.message)
+				}
+			}
+		},
+		async MsgCreateTradingReward({ rootGetters }, { value }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgCreateTradingReward(value)
+				return msg
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgCreateTradingReward:Init Could not initialize signing client. Wallet is required.')
+				} else{
+					throw new Error('TxClient:MsgCreateTradingReward:Create Could not create message: ' + e.message)
 				}
 			}
 		},
