@@ -57,7 +57,7 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 		tradingReward,
 	)
 
-	return &types.MsgCreateTradingRewardResponse{}, nil
+	return &types.MsgCreateTradingRewardResponse{RewardId: tradingReward.RewardId}, nil
 }
 
 func (k msgServer) checkUserBalances(ctx sdk.Context, neededCoins sdk.Coins, address sdk.AccAddress) error {
