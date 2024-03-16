@@ -80,7 +80,7 @@ func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 	sr.StakingDenom = msg.StakingDenom
 
 	minStake, ok := sdk.NewIntFromString(msg.MinStake)
-	if minStake.IsNegative() {
+	if !ok || minStake.IsNegative() {
 		return sr, ErrInvalidMinStake
 	}
 	sr.MinStake = minStake.Uint64()
@@ -98,7 +98,7 @@ func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 	if err != nil {
 		return sr, sdkerrors.Wrapf(ErrInvalidLockingTime, "could not convert string to int: %s", err.Error())
 	}
-	if lockInt <= 0 || lockInt > tenYearsInDays {
+	if lockInt < 0 || lockInt > tenYearsInDays {
 		return sr, ErrInvalidLockingTime
 	}
 	sr.Lock = uint32(lockInt)
