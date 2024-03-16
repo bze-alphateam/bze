@@ -4,20 +4,21 @@ import (
 	"github.com/bze-alphateam/bze/testutil/simapp"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func (suite *IntegrationTestSuite) TestCreateStakingReward_InvalidRequest() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	_, err := suite.msgServer.CreateStakingReward(goCtx, nil)
-	suite.Require().NotNil(err)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
 }
 
 func (suite *IntegrationTestSuite) TestUpdateStakingReward_InvalidRequest() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	_, err := suite.msgServer.UpdateStakingReward(goCtx, nil)
-	suite.Require().NotNil(err)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
 }
 
 func (suite *IntegrationTestSuite) TestCreateStakingReward_InvalidCreator() {
@@ -41,6 +42,10 @@ func (suite *IntegrationTestSuite) TestUpdateStakingReward_InvalidCreator() {
 func (suite *IntegrationTestSuite) TestCreateStakingReward_InvalidStakingReward() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 
+	addr1 := sdk.AccAddress("addr1_______________")
+	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
+
 	tests := []struct {
 		name string
 		msg  types.MsgCreateStakingReward
@@ -48,28 +53,28 @@ func (suite *IntegrationTestSuite) TestCreateStakingReward_InvalidStakingReward(
 		{
 			name: "empty prize amount",
 			msg: types.MsgCreateStakingReward{
-				Creator:     someRandomAddress,
+				Creator:     addr1.String(),
 				PrizeAmount: "",
 			},
 		},
 		{
 			name: "zero prize amount",
 			msg: types.MsgCreateStakingReward{
-				Creator:     someRandomAddress,
+				Creator:     addr1.String(),
 				PrizeAmount: "0",
 			},
 		},
 		{
 			name: "negative prize amount",
 			msg: types.MsgCreateStakingReward{
-				Creator:     someRandomAddress,
+				Creator:     addr1.String(),
 				PrizeAmount: "-10",
 			},
 		},
 		{
 			name: "empty prize denom",
 			msg: types.MsgCreateStakingReward{
-				Creator:     someRandomAddress,
+				Creator:     addr1.String(),
 				PrizeAmount: "10",
 				PrizeDenom:  "",
 			},
@@ -77,7 +82,7 @@ func (suite *IntegrationTestSuite) TestCreateStakingReward_InvalidStakingReward(
 		{
 			name: "empty staking denom",
 			msg: types.MsgCreateStakingReward{
-				Creator:      someRandomAddress,
+				Creator:      addr1.String(),
 				PrizeAmount:  "10",
 				PrizeDenom:   "ubze",
 				StakingDenom: "",
@@ -86,7 +91,7 @@ func (suite *IntegrationTestSuite) TestCreateStakingReward_InvalidStakingReward(
 		{
 			name: "invalid min stake",
 			msg: types.MsgCreateStakingReward{
-				Creator:      someRandomAddress,
+				Creator:      addr1.String(),
 				PrizeAmount:  "10",
 				PrizeDenom:   "ubze",
 				StakingDenom: "ubze",
@@ -96,7 +101,7 @@ func (suite *IntegrationTestSuite) TestCreateStakingReward_InvalidStakingReward(
 		{
 			name: "negative min stake",
 			msg: types.MsgCreateStakingReward{
-				Creator:      someRandomAddress,
+				Creator:      addr1.String(),
 				PrizeAmount:  "10",
 				PrizeDenom:   "ubze",
 				StakingDenom: "ubze",
@@ -106,7 +111,7 @@ func (suite *IntegrationTestSuite) TestCreateStakingReward_InvalidStakingReward(
 		{
 			name: "invalid duration",
 			msg: types.MsgCreateStakingReward{
-				Creator:      someRandomAddress,
+				Creator:      addr1.String(),
 				PrizeAmount:  "10",
 				PrizeDenom:   "ubze",
 				StakingDenom: "ubze",
@@ -117,7 +122,7 @@ func (suite *IntegrationTestSuite) TestCreateStakingReward_InvalidStakingReward(
 		{
 			name: "duration too low",
 			msg: types.MsgCreateStakingReward{
-				Creator:      someRandomAddress,
+				Creator:      addr1.String(),
 				PrizeAmount:  "10",
 				PrizeDenom:   "ubze",
 				StakingDenom: "ubze",
@@ -128,7 +133,7 @@ func (suite *IntegrationTestSuite) TestCreateStakingReward_InvalidStakingReward(
 		{
 			name: "duration too high",
 			msg: types.MsgCreateStakingReward{
-				Creator:      someRandomAddress,
+				Creator:      addr1.String(),
 				PrizeAmount:  "10",
 				PrizeDenom:   "ubze",
 				StakingDenom: "ubze",
@@ -139,7 +144,7 @@ func (suite *IntegrationTestSuite) TestCreateStakingReward_InvalidStakingReward(
 		{
 			name: "invalid lock",
 			msg: types.MsgCreateStakingReward{
-				Creator:      someRandomAddress,
+				Creator:      addr1.String(),
 				PrizeAmount:  "10",
 				PrizeDenom:   "ubze",
 				StakingDenom: "ubze",
@@ -151,7 +156,7 @@ func (suite *IntegrationTestSuite) TestCreateStakingReward_InvalidStakingReward(
 		{
 			name: "negative lock",
 			msg: types.MsgCreateStakingReward{
-				Creator:      someRandomAddress,
+				Creator:      addr1.String(),
 				PrizeAmount:  "10",
 				PrizeDenom:   "ubze",
 				StakingDenom: "ubze",
@@ -163,7 +168,7 @@ func (suite *IntegrationTestSuite) TestCreateStakingReward_InvalidStakingReward(
 		{
 			name: "lock too high",
 			msg: types.MsgCreateStakingReward{
-				Creator:      someRandomAddress,
+				Creator:      addr1.String(),
 				PrizeAmount:  "10",
 				PrizeDenom:   "ubze",
 				StakingDenom: "ubze",
@@ -182,6 +187,10 @@ func (suite *IntegrationTestSuite) TestCreateStakingReward_InvalidStakingReward(
 func (suite *IntegrationTestSuite) TestUpdateStakingReward_InvalidStakingReward() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 
+	addr1 := sdk.AccAddress("addr1_______________")
+	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
+
 	tests := []struct {
 		name             string
 		msg              types.MsgUpdateStakingReward
@@ -190,28 +199,28 @@ func (suite *IntegrationTestSuite) TestUpdateStakingReward_InvalidStakingReward(
 		{
 			name: "invalid duration",
 			msg: types.MsgUpdateStakingReward{
-				Creator:  someRandomAddress,
+				Creator:  addr1.String(),
 				Duration: "",
 			},
 		},
 		{
 			name: "zero duration",
 			msg: types.MsgUpdateStakingReward{
-				Creator:  someRandomAddress,
+				Creator:  addr1.String(),
 				Duration: "0",
 			},
 		},
 		{
 			name: "negative duration",
 			msg: types.MsgUpdateStakingReward{
-				Creator:  someRandomAddress,
+				Creator:  addr1.String(),
 				Duration: "-220",
 			},
 		},
 		{
 			name: "missing staking reward",
 			msg: types.MsgUpdateStakingReward{
-				Creator:  someRandomAddress,
+				Creator:  addr1.String(),
 				Duration: "10",
 				RewardId: "notastakingrewardid",
 			},
@@ -219,7 +228,7 @@ func (suite *IntegrationTestSuite) TestUpdateStakingReward_InvalidStakingReward(
 		{
 			name: "not enough balance",
 			msg: types.MsgUpdateStakingReward{
-				Creator:  someRandomAddress,
+				Creator:  addr1.String(),
 				Duration: "10",
 				RewardId: "001",
 			},
@@ -237,8 +246,12 @@ func (suite *IntegrationTestSuite) TestUpdateStakingReward_InvalidStakingReward(
 
 func (suite *IntegrationTestSuite) TestCreateStakingReward_MissingSupply() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
+	addr1 := sdk.AccAddress("addr1_______________")
+	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
+
 	msg := types.MsgCreateStakingReward{
-		Creator:      someRandomAddress,
+		Creator:      addr1.String(),
 		PrizeAmount:  "10",
 		PrizeDenom:   "ubze",
 		StakingDenom: "ubze",
