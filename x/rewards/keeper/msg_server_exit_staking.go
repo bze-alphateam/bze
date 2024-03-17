@@ -38,7 +38,12 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 		return nil, fmt.Errorf("could not transform amount from storage into int")
 	}
 
-	//TODO: Pay pending rewards here
+	//send pending rewards
+	_, err = k.claimPending(ctx, stakingReward, &participation)
+	if err != nil {
+		return nil, err
+	}
+
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, acc, partCoins)
 	if err != nil {
 		return nil, err

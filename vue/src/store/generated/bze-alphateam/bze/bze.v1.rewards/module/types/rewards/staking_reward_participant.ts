@@ -6,13 +6,17 @@ export const protobufPackage = "bze.v1.rewards";
 export interface StakingRewardParticipant {
   address: string;
   reward_id: string;
+  /** stake[address] */
   amount: string;
+  /** S0[address] */
+  joined_at: string;
 }
 
 const baseStakingRewardParticipant: object = {
   address: "",
   reward_id: "",
   amount: "",
+  joined_at: "",
 };
 
 export const StakingRewardParticipant = {
@@ -28,6 +32,9 @@ export const StakingRewardParticipant = {
     }
     if (message.amount !== "") {
       writer.uint32(26).string(message.amount);
+    }
+    if (message.joined_at !== "") {
+      writer.uint32(34).string(message.joined_at);
     }
     return writer;
   },
@@ -52,6 +59,9 @@ export const StakingRewardParticipant = {
           break;
         case 3:
           message.amount = reader.string();
+          break;
+        case 4:
+          message.joined_at = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -80,6 +90,11 @@ export const StakingRewardParticipant = {
     } else {
       message.amount = "";
     }
+    if (object.joined_at !== undefined && object.joined_at !== null) {
+      message.joined_at = String(object.joined_at);
+    } else {
+      message.joined_at = "";
+    }
     return message;
   },
 
@@ -88,6 +103,7 @@ export const StakingRewardParticipant = {
     message.address !== undefined && (obj.address = message.address);
     message.reward_id !== undefined && (obj.reward_id = message.reward_id);
     message.amount !== undefined && (obj.amount = message.amount);
+    message.joined_at !== undefined && (obj.joined_at = message.joined_at);
     return obj;
   },
 
@@ -111,6 +127,11 @@ export const StakingRewardParticipant = {
       message.amount = object.amount;
     } else {
       message.amount = "";
+    }
+    if (object.joined_at !== undefined && object.joined_at !== null) {
+      message.joined_at = object.joined_at;
+    } else {
+      message.joined_at = "";
     }
     return message;
   },

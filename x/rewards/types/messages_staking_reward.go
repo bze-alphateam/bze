@@ -11,6 +11,9 @@ const (
 	TypeMsgUpdateStakingReward = "update_staking_reward"
 
 	tenYearsInDays = 365 * 10
+
+	defaultStakedAmount     = "0"
+	defaultDistributedStake = "0"
 )
 
 var _ sdk.Msg = &MsgCreateStakingReward{}
@@ -102,6 +105,9 @@ func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 		return sr, ErrInvalidLockingTime
 	}
 	sr.Lock = uint32(lockInt)
+
+	sr.StakedAmount = defaultStakedAmount
+	sr.DistributedStake = defaultDistributedStake
 
 	return sr, nil
 }

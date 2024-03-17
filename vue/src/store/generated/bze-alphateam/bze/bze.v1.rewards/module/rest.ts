@@ -13,6 +13,8 @@ export interface ProtobufAny {
   "@type"?: string;
 }
 
+export type RewardsMsgClaimStakingRewardsResponse = object;
+
 export interface RewardsMsgCreateStakingRewardResponse {
   reward_id?: string;
 }
@@ -199,12 +201,14 @@ export interface V1RewardsStakingReward {
   /** @format int64 */
   lock?: number;
   staked_amount?: string;
+  distributed_stake?: string;
 }
 
 export interface V1RewardsStakingRewardParticipant {
   address?: string;
   reward_id?: string;
   amount?: string;
+  joined_at?: string;
 }
 
 export interface V1RewardsTradingReward {

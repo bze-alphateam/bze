@@ -35,6 +35,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdCreateTradingReward())
 	cmd.AddCommand(CmdJoinStaking())
 	cmd.AddCommand(CmdExitStaking())
+	cmd.AddCommand(CmdClaimStakingRewards())
 	// this line is used by starport scaffolding # 1
 
 	return cmd
