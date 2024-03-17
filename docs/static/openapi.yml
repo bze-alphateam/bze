@@ -2229,6 +2229,10 @@ paths:
                       format: int64
                     staked_amount:
                       type: string
+                      title: T
+                    distributed_stake:
+                      type: string
+                      title: S
               pagination:
                 type: object
                 properties:
@@ -2368,6 +2372,10 @@ paths:
                     format: int64
                   staked_amount:
                     type: string
+                    title: T
+                  distributed_stake:
+                    type: string
+                    title: S
         default:
           description: An unexpected error response.
           schema:
@@ -2414,6 +2422,10 @@ paths:
                       type: string
                     amount:
                       type: string
+                      title: 'stake[address]'
+                    joined_at:
+                      type: string
+                      title: 'S0[address]'
               pagination:
                 type: object
                 properties:
@@ -2543,6 +2555,10 @@ paths:
                       type: string
                     amount:
                       type: string
+                      title: 'stake[address]'
+                    joined_at:
+                      type: string
+                      title: 'S0[address]'
               pagination:
                 type: object
                 properties:
@@ -34601,6 +34617,8 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
+  bze.v1.rewards.MsgClaimStakingRewardsResponse:
+    type: object
   bze.v1.rewards.MsgCreateStakingRewardResponse:
     type: object
     properties:
@@ -34639,6 +34657,10 @@ definitions:
               type: string
             amount:
               type: string
+              title: 'stake[address]'
+            joined_at:
+              type: string
+              title: 'S0[address]'
       pagination:
         type: object
         properties:
@@ -34694,6 +34716,10 @@ definitions:
               format: int64
             staked_amount:
               type: string
+              title: T
+            distributed_stake:
+              type: string
+              title: S
       pagination:
         type: object
         properties:
@@ -34780,6 +34806,10 @@ definitions:
               type: string
             amount:
               type: string
+              title: 'stake[address]'
+            joined_at:
+              type: string
+              title: 'S0[address]'
       pagination:
         type: object
         properties:
@@ -34833,6 +34863,10 @@ definitions:
             format: int64
           staked_amount:
             type: string
+            title: T
+          distributed_stake:
+            type: string
+            title: S
   bze.v1.rewards.QueryGetTradingRewardResponse:
     type: object
     properties:
@@ -34890,6 +34924,10 @@ definitions:
         format: int64
       staked_amount:
         type: string
+        title: T
+      distributed_stake:
+        type: string
+        title: S
   bze.v1.rewards.StakingRewardParticipant:
     type: object
     properties:
@@ -34899,6 +34937,10 @@ definitions:
         type: string
       amount:
         type: string
+        title: 'stake[address]'
+      joined_at:
+        type: string
+        title: 'S0[address]'
   bze.v1.rewards.TradingReward:
     type: object
     properties:

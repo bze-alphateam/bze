@@ -63,6 +63,13 @@ export interface MsgExitStaking {
 
 export interface MsgExitStakingResponse {}
 
+export interface MsgClaimStakingRewards {
+  creator: string;
+  rewardId: string;
+}
+
+export interface MsgClaimStakingRewardsResponse {}
+
 const baseMsgCreateStakingReward: object = {
   creator: "",
   prize_amount: "",
@@ -915,6 +922,135 @@ export const MsgExitStakingResponse = {
   },
 };
 
+const baseMsgClaimStakingRewards: object = { creator: "", rewardId: "" };
+
+export const MsgClaimStakingRewards = {
+  encode(
+    message: MsgClaimStakingRewards,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.creator !== "") {
+      writer.uint32(10).string(message.creator);
+    }
+    if (message.rewardId !== "") {
+      writer.uint32(18).string(message.rewardId);
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): MsgClaimStakingRewards {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseMsgClaimStakingRewards } as MsgClaimStakingRewards;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.creator = reader.string();
+          break;
+        case 2:
+          message.rewardId = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): MsgClaimStakingRewards {
+    const message = { ...baseMsgClaimStakingRewards } as MsgClaimStakingRewards;
+    if (object.creator !== undefined && object.creator !== null) {
+      message.creator = String(object.creator);
+    } else {
+      message.creator = "";
+    }
+    if (object.rewardId !== undefined && object.rewardId !== null) {
+      message.rewardId = String(object.rewardId);
+    } else {
+      message.rewardId = "";
+    }
+    return message;
+  },
+
+  toJSON(message: MsgClaimStakingRewards): unknown {
+    const obj: any = {};
+    message.creator !== undefined && (obj.creator = message.creator);
+    message.rewardId !== undefined && (obj.rewardId = message.rewardId);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<MsgClaimStakingRewards>
+  ): MsgClaimStakingRewards {
+    const message = { ...baseMsgClaimStakingRewards } as MsgClaimStakingRewards;
+    if (object.creator !== undefined && object.creator !== null) {
+      message.creator = object.creator;
+    } else {
+      message.creator = "";
+    }
+    if (object.rewardId !== undefined && object.rewardId !== null) {
+      message.rewardId = object.rewardId;
+    } else {
+      message.rewardId = "";
+    }
+    return message;
+  },
+};
+
+const baseMsgClaimStakingRewardsResponse: object = {};
+
+export const MsgClaimStakingRewardsResponse = {
+  encode(
+    _: MsgClaimStakingRewardsResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): MsgClaimStakingRewardsResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseMsgClaimStakingRewardsResponse,
+    } as MsgClaimStakingRewardsResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(_: any): MsgClaimStakingRewardsResponse {
+    const message = {
+      ...baseMsgClaimStakingRewardsResponse,
+    } as MsgClaimStakingRewardsResponse;
+    return message;
+  },
+
+  toJSON(_: MsgClaimStakingRewardsResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial(
+    _: DeepPartial<MsgClaimStakingRewardsResponse>
+  ): MsgClaimStakingRewardsResponse {
+    const message = {
+      ...baseMsgClaimStakingRewardsResponse,
+    } as MsgClaimStakingRewardsResponse;
+    return message;
+  },
+};
+
 /** Msg defines the Msg service. */
 export interface Msg {
   CreateStakingReward(
@@ -927,8 +1063,11 @@ export interface Msg {
     request: MsgCreateTradingReward
   ): Promise<MsgCreateTradingRewardResponse>;
   JoinStaking(request: MsgJoinStaking): Promise<MsgJoinStakingResponse>;
-  /** this line is used by starport scaffolding # proto/tx/rpc */
   ExitStaking(request: MsgExitStaking): Promise<MsgExitStakingResponse>;
+  /** this line is used by starport scaffolding # proto/tx/rpc */
+  ClaimStakingRewards(
+    request: MsgClaimStakingRewards
+  ): Promise<MsgClaimStakingRewardsResponse>;
 }
 
 export class MsgClientImpl implements Msg {
@@ -991,6 +1130,20 @@ export class MsgClientImpl implements Msg {
     const promise = this.rpc.request("bze.v1.rewards.Msg", "ExitStaking", data);
     return promise.then((data) =>
       MsgExitStakingResponse.decode(new Reader(data))
+    );
+  }
+
+  ClaimStakingRewards(
+    request: MsgClaimStakingRewards
+  ): Promise<MsgClaimStakingRewardsResponse> {
+    const data = MsgClaimStakingRewards.encode(request).finish();
+    const promise = this.rpc.request(
+      "bze.v1.rewards.Msg",
+      "ClaimStakingRewards",
+      data
+    );
+    return promise.then((data) =>
+      MsgClaimStakingRewardsResponse.decode(new Reader(data))
     );
   }
 }

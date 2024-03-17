@@ -12,6 +12,7 @@ service Msg {
   rpc CreateTradingReward(MsgCreateTradingReward) returns (MsgCreateTradingRewardResponse);
   rpc JoinStaking(MsgJoinStaking) returns (MsgJoinStakingResponse);
   rpc ExitStaking(MsgExitStaking) returns (MsgExitStakingResponse);
+  rpc ClaimStakingRewards(MsgClaimStakingRewards) returns (MsgClaimStakingRewardsResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -63,6 +64,15 @@ message MsgExitStaking {
 }
 
 message MsgExitStakingResponse {
+}
+
+message MsgClaimStakingRewards {
+  string creator = 1;
+  string rewardId = 2;
+}
+
+message MsgClaimStakingRewardsResponse {
+  string amount = 1;
 }
 
 // this line is used by starport scaffolding # proto/tx/message

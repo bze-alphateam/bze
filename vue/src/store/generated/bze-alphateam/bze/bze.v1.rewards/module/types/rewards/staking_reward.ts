@@ -13,7 +13,10 @@ export interface StakingReward {
   payouts: number;
   min_stake: number;
   lock: number;
+  /** T */
   staked_amount: string;
+  /** S */
+  distributed_stake: string;
 }
 
 const baseStakingReward: object = {
@@ -26,6 +29,7 @@ const baseStakingReward: object = {
   min_stake: 0,
   lock: 0,
   staked_amount: "",
+  distributed_stake: "",
 };
 
 export const StakingReward = {
@@ -56,6 +60,9 @@ export const StakingReward = {
     }
     if (message.staked_amount !== "") {
       writer.uint32(74).string(message.staked_amount);
+    }
+    if (message.distributed_stake !== "") {
+      writer.uint32(82).string(message.distributed_stake);
     }
     return writer;
   },
@@ -93,6 +100,9 @@ export const StakingReward = {
           break;
         case 9:
           message.staked_amount = reader.string();
+          break;
+        case 10:
+          message.distributed_stake = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -149,6 +159,14 @@ export const StakingReward = {
     } else {
       message.staked_amount = "";
     }
+    if (
+      object.distributed_stake !== undefined &&
+      object.distributed_stake !== null
+    ) {
+      message.distributed_stake = String(object.distributed_stake);
+    } else {
+      message.distributed_stake = "";
+    }
     return message;
   },
 
@@ -167,6 +185,8 @@ export const StakingReward = {
     message.lock !== undefined && (obj.lock = message.lock);
     message.staked_amount !== undefined &&
       (obj.staked_amount = message.staked_amount);
+    message.distributed_stake !== undefined &&
+      (obj.distributed_stake = message.distributed_stake);
     return obj;
   },
 
@@ -216,6 +236,14 @@ export const StakingReward = {
       message.staked_amount = object.staked_amount;
     } else {
       message.staked_amount = "";
+    }
+    if (
+      object.distributed_stake !== undefined &&
+      object.distributed_stake !== null
+    ) {
+      message.distributed_stake = object.distributed_stake;
+    } else {
+      message.distributed_stake = "";
     }
     return message;
   },
