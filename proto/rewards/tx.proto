@@ -1,7 +1,6 @@
 syntax = "proto3";
 package bze.v1.rewards;
 
-import "rewards/trading_reward.proto";
 // this line is used by starport scaffolding # proto/tx/import
 
 option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
@@ -11,6 +10,8 @@ service Msg {
   rpc CreateStakingReward(MsgCreateStakingReward) returns (MsgCreateStakingRewardResponse);
   rpc UpdateStakingReward(MsgUpdateStakingReward) returns (MsgUpdateStakingRewardResponse);
   rpc CreateTradingReward(MsgCreateTradingReward) returns (MsgCreateTradingRewardResponse);
+  rpc JoinStaking(MsgJoinStaking) returns (MsgJoinStakingResponse);
+  rpc ExitStaking(MsgExitStaking) returns (MsgExitStakingResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -45,6 +46,23 @@ message MsgCreateTradingReward {
 }
 message MsgCreateTradingRewardResponse {
   string reward_id = 1;
+}
+
+message MsgJoinStaking {
+  string creator = 1;
+  string reward_id = 2;
+  string amount = 3;
+}
+
+message MsgJoinStakingResponse {
+}
+
+message MsgExitStaking {
+  string creator = 1;
+  string rewardId = 2;
+}
+
+message MsgExitStakingResponse {
 }
 
 // this line is used by starport scaffolding # proto/tx/message

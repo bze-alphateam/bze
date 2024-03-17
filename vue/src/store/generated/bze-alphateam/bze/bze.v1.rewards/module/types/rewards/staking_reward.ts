@@ -13,6 +13,7 @@ export interface StakingReward {
   payouts: number;
   min_stake: number;
   lock: number;
+  staked_amount: string;
 }
 
 const baseStakingReward: object = {
@@ -24,6 +25,7 @@ const baseStakingReward: object = {
   payouts: 0,
   min_stake: 0,
   lock: 0,
+  staked_amount: "",
 };
 
 export const StakingReward = {
@@ -51,6 +53,9 @@ export const StakingReward = {
     }
     if (message.lock !== 0) {
       writer.uint32(64).uint32(message.lock);
+    }
+    if (message.staked_amount !== "") {
+      writer.uint32(74).string(message.staked_amount);
     }
     return writer;
   },
@@ -85,6 +90,9 @@ export const StakingReward = {
           break;
         case 8:
           message.lock = reader.uint32();
+          break;
+        case 9:
+          message.staked_amount = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -136,6 +144,11 @@ export const StakingReward = {
     } else {
       message.lock = 0;
     }
+    if (object.staked_amount !== undefined && object.staked_amount !== null) {
+      message.staked_amount = String(object.staked_amount);
+    } else {
+      message.staked_amount = "";
+    }
     return message;
   },
 
@@ -152,6 +165,8 @@ export const StakingReward = {
     message.payouts !== undefined && (obj.payouts = message.payouts);
     message.min_stake !== undefined && (obj.min_stake = message.min_stake);
     message.lock !== undefined && (obj.lock = message.lock);
+    message.staked_amount !== undefined &&
+      (obj.staked_amount = message.staked_amount);
     return obj;
   },
 
@@ -196,6 +211,11 @@ export const StakingReward = {
       message.lock = object.lock;
     } else {
       message.lock = 0;
+    }
+    if (object.staked_amount !== undefined && object.staked_amount !== null) {
+      message.staked_amount = object.staked_amount;
+    } else {
+      message.staked_amount = "";
     }
     return message;
   },

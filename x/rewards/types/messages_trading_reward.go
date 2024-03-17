@@ -59,10 +59,10 @@ func (msg *MsgCreateTradingReward) ToTradingReward() (TradingReward, error) {
 
 	amtInt, ok := sdk.NewIntFromString(msg.PrizeAmount)
 	if !ok {
-		return tr, sdkerrors.Wrapf(ErrInvalidPrizeAmount, "could not convert order amount")
+		return tr, sdkerrors.Wrapf(ErrInvalidAmount, "could not convert order amount")
 	}
 	if !amtInt.IsPositive() {
-		return tr, sdkerrors.Wrapf(ErrInvalidPrizeAmount, "amount should be greater than 0")
+		return tr, sdkerrors.Wrapf(ErrInvalidAmount, "amount should be greater than 0")
 	}
 	tr.PrizeAmount = amtInt.String()
 

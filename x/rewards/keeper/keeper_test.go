@@ -11,8 +11,6 @@ import (
 	"time"
 )
 
-const someRandomAddress = "bze1m33n82r5x3eyjmjtwjkl82zzdlrnv8pevd8u9r"
-
 type IntegrationTestSuite struct {
 	suite.Suite
 

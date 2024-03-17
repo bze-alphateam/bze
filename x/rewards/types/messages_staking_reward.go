@@ -62,10 +62,10 @@ func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 
 	amtInt, ok := sdk.NewIntFromString(msg.PrizeAmount)
 	if !ok {
-		return sr, sdkerrors.Wrapf(ErrInvalidPrizeAmount, "could not convert order amount")
+		return sr, sdkerrors.Wrapf(ErrInvalidAmount, "could not convert order amount")
 	}
 	if !amtInt.IsPositive() {
-		return sr, sdkerrors.Wrapf(ErrInvalidPrizeAmount, "amount should be greater than 0")
+		return sr, sdkerrors.Wrapf(ErrInvalidAmount, "amount should be greater than 0")
 	}
 	sr.PrizeAmount = msg.PrizeAmount
 

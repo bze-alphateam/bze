@@ -15,22 +15,30 @@ func TestGenesis(t *testing.T) {
 		Params: types.DefaultParams(),
 
 		StakingRewardList: []types.StakingReward{
-		{
-			RewardId: "0",
-},
-		{
-			RewardId: "1",
-},
-	},
-	TradingRewardList: []types.TradingReward{
-		{
-			RewardId: "0",
-},
-		{
-			RewardId: "1",
-},
-	},
-	// this line is used by starport scaffolding # genesis/test/state
+			{
+				RewardId: "0",
+			},
+			{
+				RewardId: "1",
+			},
+		},
+		TradingRewardList: []types.TradingReward{
+			{
+				RewardId: "0",
+			},
+			{
+				RewardId: "1",
+			},
+		},
+		StakingRewardParticipantList: []types.StakingRewardParticipant{
+			{
+				Index: "0",
+			},
+			{
+				Index: "1",
+			},
+		},
+		// this line is used by starport scaffolding # genesis/test/state
 	}
 
 	k, ctx := keepertest.RewardsKeeper(t)
@@ -42,6 +50,7 @@ func TestGenesis(t *testing.T) {
 	nullify.Fill(got)
 
 	require.ElementsMatch(t, genesisState.StakingRewardList, got.StakingRewardList)
-require.ElementsMatch(t, genesisState.TradingRewardList, got.TradingRewardList)
-// this line is used by starport scaffolding # genesis/test/assert
+	require.ElementsMatch(t, genesisState.TradingRewardList, got.TradingRewardList)
+	require.ElementsMatch(t, genesisState.StakingRewardParticipantList, got.StakingRewardParticipantList)
+	// this line is used by starport scaffolding # genesis/test/assert
 }

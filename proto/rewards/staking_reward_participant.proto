@@ -1,0 +1,10 @@
+syntax = "proto3";
+package bze.v1.rewards;
+
+option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
+
+message StakingRewardParticipant {
+  string address = 1;
+  string reward_id = 2;
+  string amount = 3;
+}

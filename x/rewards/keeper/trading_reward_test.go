@@ -4,10 +4,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/bze-alphateam/bze/x/rewards/keeper"
-	"github.com/bze-alphateam/bze/x/rewards/types"
 	keepertest "github.com/bze-alphateam/bze/testutil/keeper"
 	"github.com/bze-alphateam/bze/testutil/nullify"
+	"github.com/bze-alphateam/bze/x/rewards/keeper"
+	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
@@ -19,7 +19,7 @@ func createNTradingReward(keeper *keeper.Keeper, ctx sdk.Context, n int) []types
 	items := make([]types.TradingReward, n)
 	for i := range items {
 		items[i].RewardId = strconv.Itoa(i)
-        
+
 		keeper.SetTradingReward(ctx, items[i])
 	}
 	return items
@@ -30,8 +30,7 @@ func TestTradingRewardGet(t *testing.T) {
 	items := createNTradingReward(keeper, ctx, 10)
 	for _, item := range items {
 		rst, found := keeper.GetTradingReward(ctx,
-		    item.RewardId,
-            
+			item.RewardId,
 		)
 		require.True(t, found)
 		require.Equal(t,
@@ -45,12 +44,10 @@ func TestTradingRewardRemove(t *testing.T) {
 	items := createNTradingReward(keeper, ctx, 10)
 	for _, item := range items {
 		keeper.RemoveTradingReward(ctx,
-		    item.RewardId,
-            
+			item.RewardId,
 		)
 		_, found := keeper.GetTradingReward(ctx,
-		    item.RewardId,
-            
+			item.RewardId,
 		)
 		require.False(t, found)
 	}

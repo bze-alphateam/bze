@@ -36,7 +36,7 @@ func (k Keeper) TradingRewardAll(c context.Context, req *types.QueryAllTradingRe
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryAllTradingRewardResponse{TradingReward: tradingRewards, Pagination: pageRes}, nil
+	return &types.QueryAllTradingRewardResponse{List: tradingRewards, Pagination: pageRes}, nil
 }
 
 func (k Keeper) TradingReward(c context.Context, req *types.QueryGetTradingRewardRequest) (*types.QueryGetTradingRewardResponse, error) {

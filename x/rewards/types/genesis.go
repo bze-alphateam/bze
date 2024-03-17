@@ -11,11 +11,12 @@ const DefaultIndex uint64 = 1
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		StakingRewardList:     []StakingReward{},
-		StakingRewardsCounter: 0,
-		TradingRewardsCounter: 0,
-		TradingRewardList: []TradingReward{},
-// this line is used by starport scaffolding # genesis/types/default
+		StakingRewardList:            []StakingReward{},
+		StakingRewardsCounter:        0,
+		TradingRewardsCounter:        0,
+		TradingRewardList:            []TradingReward{},
+		StakingRewardParticipantList: []StakingRewardParticipant{},
+		// this line is used by starport scaffolding # genesis/types/default
 		Params: DefaultParams(),
 	}
 }
@@ -34,16 +35,26 @@ func (gs GenesisState) Validate() error {
 		stakingRewardIndexMap[index] = struct{}{}
 	}
 	// Check for duplicated index in tradingReward
-tradingRewardIndexMap := make(map[string]struct{})
+	tradingRewardIndexMap := make(map[string]struct{})
 
-for _, elem := range gs.TradingRewardList {
-	index := string(TradingRewardKey(elem.RewardId))
-	if _, ok := tradingRewardIndexMap[index]; ok {
-		return fmt.Errorf("duplicated index for tradingReward")
+	for _, elem := range gs.TradingRewardList {
+		index := string(TradingRewardKey(elem.RewardId))
+		if _, ok := tradingRewardIndexMap[index]; ok {
+			return fmt.Errorf("duplicated index for tradingReward")
+		}
+		tradingRewardIndexMap[index] = struct{}{}
 	}
-	tradingRewardIndexMap[index] = struct{}{}
-}
-// this line is used by starport scaffolding # genesis/types/validate
+	// Check for duplicated index in stakingRewardParticipant
+	stakingRewardParticipantIndexMap := make(map[string]struct{})
+
+	for _, elem := range gs.StakingRewardParticipantList {
+		index := string(StakingRewardParticipantKey(elem.Address, elem.RewardId))
+		if _, ok := stakingRewardParticipantIndexMap[index]; ok {
+			return fmt.Errorf("duplicated index for stakingRewardParticipant")
+		}
+		stakingRewardParticipantIndexMap[index] = struct{}{}
+	}
+	// this line is used by starport scaffolding # genesis/types/validate
 
 	return gs.Params.Validate()
 }

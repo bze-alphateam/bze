@@ -40,6 +40,14 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgCreateTradingReward int = 100
 
+	opWeightMsgJoinStaking = "op_weight_msg_join_staking"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgJoinStaking int = 100
+
+	opWeightMsgExitStaking = "op_weight_msg_exit_staking"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgExitStaking int = 100
+
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -139,6 +147,28 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgCreateTradingReward,
 		rewardssimulation.SimulateMsgCreateTradingReward(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
+	var weightMsgJoinStaking int
+	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgJoinStaking, &weightMsgJoinStaking, nil,
+		func(_ *rand.Rand) {
+			weightMsgJoinStaking = defaultWeightMsgJoinStaking
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgJoinStaking,
+		rewardssimulation.SimulateMsgJoinStaking(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
+	var weightMsgExitStaking int
+	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgExitStaking, &weightMsgExitStaking, nil,
+		func(_ *rand.Rand) {
+			weightMsgExitStaking = defaultWeightMsgExitStaking
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgExitStaking,
+		rewardssimulation.SimulateMsgExitStaking(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
 	// this line is used by starport scaffolding # simapp/module/operation

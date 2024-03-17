@@ -9,10 +9,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func CmdListStakingReward() *cobra.Command {
+func CmdListStakingRewardParticipant() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-staking-reward",
-		Short: "list all StakingReward",
+		Use:   "staking-reward-participants",
+		Short: "list all StakingRewardParticipant",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
@@ -23,11 +23,11 @@ func CmdListStakingReward() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryAllStakingRewardRequest{
+			params := &types.QueryAllStakingRewardParticipantRequest{
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.StakingRewardAll(context.Background(), params)
+			res, err := queryClient.StakingRewardParticipantAll(context.Background(), params)
 			if err != nil {
 				return err
 			}
@@ -42,23 +42,29 @@ func CmdListStakingReward() *cobra.Command {
 	return cmd
 }
 
-func CmdShowStakingReward() *cobra.Command {
+func CmdShowStakingRewardParticipant() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show-staking-reward [reward-id]",
-		Short: "shows a StakingReward",
+		Use:   "staking-reward-participant [address]",
+		Short: "shows a StakingRewardParticipant",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
-			queryClient := types.NewQueryClient(clientCtx)
-
-			argRewardId := args[0]
-
-			params := &types.QueryGetStakingRewardRequest{
-				RewardId: argRewardId,
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
 			}
 
-			res, err := queryClient.StakingReward(context.Background(), params)
+			queryClient := types.NewQueryClient(clientCtx)
+
+			argIndex := args[0]
+
+			params := &types.QueryGetStakingRewardParticipantRequest{
+				Address:    argIndex,
+				Pagination: pageReq,
+			}
+
+			res, err := queryClient.StakingRewardParticipant(context.Background(), params)
 			if err != nil {
 				return err
 			}
