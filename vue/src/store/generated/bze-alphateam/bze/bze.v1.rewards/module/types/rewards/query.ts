@@ -7,6 +7,7 @@ import {
   PageResponse,
 } from "../cosmos/base/query/v1beta1/pagination";
 import { TradingReward } from "../rewards/trading_reward";
+import { StakingRewardParticipant } from "../rewards/staking_reward_participant";
 
 export const protobufPackage = "bze.v1.rewards";
 
@@ -37,11 +38,11 @@ export interface QueryAllStakingRewardResponse {
 }
 
 export interface QueryGetTradingRewardRequest {
-  rewardId: string;
+  reward_id: string;
 }
 
 export interface QueryGetTradingRewardResponse {
-  tradingReward: TradingReward | undefined;
+  trading_reward: TradingReward | undefined;
 }
 
 export interface QueryAllTradingRewardRequest {
@@ -49,7 +50,26 @@ export interface QueryAllTradingRewardRequest {
 }
 
 export interface QueryAllTradingRewardResponse {
-  tradingReward: TradingReward[];
+  list: TradingReward[];
+  pagination: PageResponse | undefined;
+}
+
+export interface QueryGetStakingRewardParticipantRequest {
+  address: string;
+  pagination: PageRequest | undefined;
+}
+
+export interface QueryGetStakingRewardParticipantResponse {
+  list: StakingRewardParticipant[];
+  pagination: PageResponse | undefined;
+}
+
+export interface QueryAllStakingRewardParticipantRequest {
+  pagination: PageRequest | undefined;
+}
+
+export interface QueryAllStakingRewardParticipantResponse {
+  list: StakingRewardParticipant[];
   pagination: PageResponse | undefined;
 }
 
@@ -470,15 +490,15 @@ export const QueryAllStakingRewardResponse = {
   },
 };
 
-const baseQueryGetTradingRewardRequest: object = { rewardId: "" };
+const baseQueryGetTradingRewardRequest: object = { reward_id: "" };
 
 export const QueryGetTradingRewardRequest = {
   encode(
     message: QueryGetTradingRewardRequest,
     writer: Writer = Writer.create()
   ): Writer {
-    if (message.rewardId !== "") {
-      writer.uint32(10).string(message.rewardId);
+    if (message.reward_id !== "") {
+      writer.uint32(10).string(message.reward_id);
     }
     return writer;
   },
@@ -496,7 +516,7 @@ export const QueryGetTradingRewardRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.rewardId = reader.string();
+          message.reward_id = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -510,17 +530,17 @@ export const QueryGetTradingRewardRequest = {
     const message = {
       ...baseQueryGetTradingRewardRequest,
     } as QueryGetTradingRewardRequest;
-    if (object.rewardId !== undefined && object.rewardId !== null) {
-      message.rewardId = String(object.rewardId);
+    if (object.reward_id !== undefined && object.reward_id !== null) {
+      message.reward_id = String(object.reward_id);
     } else {
-      message.rewardId = "";
+      message.reward_id = "";
     }
     return message;
   },
 
   toJSON(message: QueryGetTradingRewardRequest): unknown {
     const obj: any = {};
-    message.rewardId !== undefined && (obj.rewardId = message.rewardId);
+    message.reward_id !== undefined && (obj.reward_id = message.reward_id);
     return obj;
   },
 
@@ -530,10 +550,10 @@ export const QueryGetTradingRewardRequest = {
     const message = {
       ...baseQueryGetTradingRewardRequest,
     } as QueryGetTradingRewardRequest;
-    if (object.rewardId !== undefined && object.rewardId !== null) {
-      message.rewardId = object.rewardId;
+    if (object.reward_id !== undefined && object.reward_id !== null) {
+      message.reward_id = object.reward_id;
     } else {
-      message.rewardId = "";
+      message.reward_id = "";
     }
     return message;
   },
@@ -546,9 +566,9 @@ export const QueryGetTradingRewardResponse = {
     message: QueryGetTradingRewardResponse,
     writer: Writer = Writer.create()
   ): Writer {
-    if (message.tradingReward !== undefined) {
+    if (message.trading_reward !== undefined) {
       TradingReward.encode(
-        message.tradingReward,
+        message.trading_reward,
         writer.uint32(10).fork()
       ).ldelim();
     }
@@ -568,7 +588,10 @@ export const QueryGetTradingRewardResponse = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.tradingReward = TradingReward.decode(reader, reader.uint32());
+          message.trading_reward = TradingReward.decode(
+            reader,
+            reader.uint32()
+          );
           break;
         default:
           reader.skipType(tag & 7);
@@ -582,19 +605,19 @@ export const QueryGetTradingRewardResponse = {
     const message = {
       ...baseQueryGetTradingRewardResponse,
     } as QueryGetTradingRewardResponse;
-    if (object.tradingReward !== undefined && object.tradingReward !== null) {
-      message.tradingReward = TradingReward.fromJSON(object.tradingReward);
+    if (object.trading_reward !== undefined && object.trading_reward !== null) {
+      message.trading_reward = TradingReward.fromJSON(object.trading_reward);
     } else {
-      message.tradingReward = undefined;
+      message.trading_reward = undefined;
     }
     return message;
   },
 
   toJSON(message: QueryGetTradingRewardResponse): unknown {
     const obj: any = {};
-    message.tradingReward !== undefined &&
-      (obj.tradingReward = message.tradingReward
-        ? TradingReward.toJSON(message.tradingReward)
+    message.trading_reward !== undefined &&
+      (obj.trading_reward = message.trading_reward
+        ? TradingReward.toJSON(message.trading_reward)
         : undefined);
     return obj;
   },
@@ -605,10 +628,10 @@ export const QueryGetTradingRewardResponse = {
     const message = {
       ...baseQueryGetTradingRewardResponse,
     } as QueryGetTradingRewardResponse;
-    if (object.tradingReward !== undefined && object.tradingReward !== null) {
-      message.tradingReward = TradingReward.fromPartial(object.tradingReward);
+    if (object.trading_reward !== undefined && object.trading_reward !== null) {
+      message.trading_reward = TradingReward.fromPartial(object.trading_reward);
     } else {
-      message.tradingReward = undefined;
+      message.trading_reward = undefined;
     }
     return message;
   },
@@ -693,7 +716,7 @@ export const QueryAllTradingRewardResponse = {
     message: QueryAllTradingRewardResponse,
     writer: Writer = Writer.create()
   ): Writer {
-    for (const v of message.tradingReward) {
+    for (const v of message.list) {
       TradingReward.encode(v!, writer.uint32(10).fork()).ldelim();
     }
     if (message.pagination !== undefined) {
@@ -714,14 +737,12 @@ export const QueryAllTradingRewardResponse = {
     const message = {
       ...baseQueryAllTradingRewardResponse,
     } as QueryAllTradingRewardResponse;
-    message.tradingReward = [];
+    message.list = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.tradingReward.push(
-            TradingReward.decode(reader, reader.uint32())
-          );
+          message.list.push(TradingReward.decode(reader, reader.uint32()));
           break;
         case 2:
           message.pagination = PageResponse.decode(reader, reader.uint32());
@@ -738,10 +759,10 @@ export const QueryAllTradingRewardResponse = {
     const message = {
       ...baseQueryAllTradingRewardResponse,
     } as QueryAllTradingRewardResponse;
-    message.tradingReward = [];
-    if (object.tradingReward !== undefined && object.tradingReward !== null) {
-      for (const e of object.tradingReward) {
-        message.tradingReward.push(TradingReward.fromJSON(e));
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(TradingReward.fromJSON(e));
       }
     }
     if (object.pagination !== undefined && object.pagination !== null) {
@@ -754,12 +775,12 @@ export const QueryAllTradingRewardResponse = {
 
   toJSON(message: QueryAllTradingRewardResponse): unknown {
     const obj: any = {};
-    if (message.tradingReward) {
-      obj.tradingReward = message.tradingReward.map((e) =>
+    if (message.list) {
+      obj.list = message.list.map((e) =>
         e ? TradingReward.toJSON(e) : undefined
       );
     } else {
-      obj.tradingReward = [];
+      obj.list = [];
     }
     message.pagination !== undefined &&
       (obj.pagination = message.pagination
@@ -774,10 +795,377 @@ export const QueryAllTradingRewardResponse = {
     const message = {
       ...baseQueryAllTradingRewardResponse,
     } as QueryAllTradingRewardResponse;
-    message.tradingReward = [];
-    if (object.tradingReward !== undefined && object.tradingReward !== null) {
-      for (const e of object.tradingReward) {
-        message.tradingReward.push(TradingReward.fromPartial(e));
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(TradingReward.fromPartial(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryGetStakingRewardParticipantRequest: object = { address: "" };
+
+export const QueryGetStakingRewardParticipantRequest = {
+  encode(
+    message: QueryGetStakingRewardParticipantRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.address !== "") {
+      writer.uint32(10).string(message.address);
+    }
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(18).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryGetStakingRewardParticipantRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryGetStakingRewardParticipantRequest,
+    } as QueryGetStakingRewardParticipantRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.address = reader.string();
+          break;
+        case 2:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryGetStakingRewardParticipantRequest {
+    const message = {
+      ...baseQueryGetStakingRewardParticipantRequest,
+    } as QueryGetStakingRewardParticipantRequest;
+    if (object.address !== undefined && object.address !== null) {
+      message.address = String(object.address);
+    } else {
+      message.address = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryGetStakingRewardParticipantRequest): unknown {
+    const obj: any = {};
+    message.address !== undefined && (obj.address = message.address);
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageRequest.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryGetStakingRewardParticipantRequest>
+  ): QueryGetStakingRewardParticipantRequest {
+    const message = {
+      ...baseQueryGetStakingRewardParticipantRequest,
+    } as QueryGetStakingRewardParticipantRequest;
+    if (object.address !== undefined && object.address !== null) {
+      message.address = object.address;
+    } else {
+      message.address = "";
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryGetStakingRewardParticipantResponse: object = {};
+
+export const QueryGetStakingRewardParticipantResponse = {
+  encode(
+    message: QueryGetStakingRewardParticipantResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.list) {
+      StakingRewardParticipant.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    if (message.pagination !== undefined) {
+      PageResponse.encode(
+        message.pagination,
+        writer.uint32(18).fork()
+      ).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryGetStakingRewardParticipantResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryGetStakingRewardParticipantResponse,
+    } as QueryGetStakingRewardParticipantResponse;
+    message.list = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.list.push(
+            StakingRewardParticipant.decode(reader, reader.uint32())
+          );
+          break;
+        case 2:
+          message.pagination = PageResponse.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryGetStakingRewardParticipantResponse {
+    const message = {
+      ...baseQueryGetStakingRewardParticipantResponse,
+    } as QueryGetStakingRewardParticipantResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(StakingRewardParticipant.fromJSON(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryGetStakingRewardParticipantResponse): unknown {
+    const obj: any = {};
+    if (message.list) {
+      obj.list = message.list.map((e) =>
+        e ? StakingRewardParticipant.toJSON(e) : undefined
+      );
+    } else {
+      obj.list = [];
+    }
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageResponse.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryGetStakingRewardParticipantResponse>
+  ): QueryGetStakingRewardParticipantResponse {
+    const message = {
+      ...baseQueryGetStakingRewardParticipantResponse,
+    } as QueryGetStakingRewardParticipantResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(StakingRewardParticipant.fromPartial(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryAllStakingRewardParticipantRequest: object = {};
+
+export const QueryAllStakingRewardParticipantRequest = {
+  encode(
+    message: QueryAllStakingRewardParticipantRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(10).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryAllStakingRewardParticipantRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryAllStakingRewardParticipantRequest,
+    } as QueryAllStakingRewardParticipantRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryAllStakingRewardParticipantRequest {
+    const message = {
+      ...baseQueryAllStakingRewardParticipantRequest,
+    } as QueryAllStakingRewardParticipantRequest;
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryAllStakingRewardParticipantRequest): unknown {
+    const obj: any = {};
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageRequest.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryAllStakingRewardParticipantRequest>
+  ): QueryAllStakingRewardParticipantRequest {
+    const message = {
+      ...baseQueryAllStakingRewardParticipantRequest,
+    } as QueryAllStakingRewardParticipantRequest;
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryAllStakingRewardParticipantResponse: object = {};
+
+export const QueryAllStakingRewardParticipantResponse = {
+  encode(
+    message: QueryAllStakingRewardParticipantResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.list) {
+      StakingRewardParticipant.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    if (message.pagination !== undefined) {
+      PageResponse.encode(
+        message.pagination,
+        writer.uint32(18).fork()
+      ).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryAllStakingRewardParticipantResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryAllStakingRewardParticipantResponse,
+    } as QueryAllStakingRewardParticipantResponse;
+    message.list = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.list.push(
+            StakingRewardParticipant.decode(reader, reader.uint32())
+          );
+          break;
+        case 2:
+          message.pagination = PageResponse.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryAllStakingRewardParticipantResponse {
+    const message = {
+      ...baseQueryAllStakingRewardParticipantResponse,
+    } as QueryAllStakingRewardParticipantResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(StakingRewardParticipant.fromJSON(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryAllStakingRewardParticipantResponse): unknown {
+    const obj: any = {};
+    if (message.list) {
+      obj.list = message.list.map((e) =>
+        e ? StakingRewardParticipant.toJSON(e) : undefined
+      );
+    } else {
+      obj.list = [];
+    }
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageResponse.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryAllStakingRewardParticipantResponse>
+  ): QueryAllStakingRewardParticipantResponse {
+    const message = {
+      ...baseQueryAllStakingRewardParticipantResponse,
+    } as QueryAllStakingRewardParticipantResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(StakingRewardParticipant.fromPartial(e));
       }
     }
     if (object.pagination !== undefined && object.pagination !== null) {
@@ -809,6 +1197,14 @@ export interface Query {
   TradingRewardAll(
     request: QueryAllTradingRewardRequest
   ): Promise<QueryAllTradingRewardResponse>;
+  /** Queries a StakingRewardParticipant by index. */
+  StakingRewardParticipant(
+    request: QueryGetStakingRewardParticipantRequest
+  ): Promise<QueryGetStakingRewardParticipantResponse>;
+  /** Queries a list of StakingRewardParticipant items. */
+  StakingRewardParticipantAll(
+    request: QueryAllStakingRewardParticipantRequest
+  ): Promise<QueryAllStakingRewardParticipantResponse>;
 }
 
 export class QueryClientImpl implements Query {
@@ -875,6 +1271,38 @@ export class QueryClientImpl implements Query {
     );
     return promise.then((data) =>
       QueryAllTradingRewardResponse.decode(new Reader(data))
+    );
+  }
+
+  StakingRewardParticipant(
+    request: QueryGetStakingRewardParticipantRequest
+  ): Promise<QueryGetStakingRewardParticipantResponse> {
+    const data = QueryGetStakingRewardParticipantRequest.encode(
+      request
+    ).finish();
+    const promise = this.rpc.request(
+      "bze.v1.rewards.Query",
+      "StakingRewardParticipant",
+      data
+    );
+    return promise.then((data) =>
+      QueryGetStakingRewardParticipantResponse.decode(new Reader(data))
+    );
+  }
+
+  StakingRewardParticipantAll(
+    request: QueryAllStakingRewardParticipantRequest
+  ): Promise<QueryAllStakingRewardParticipantResponse> {
+    const data = QueryAllStakingRewardParticipantRequest.encode(
+      request
+    ).finish();
+    const promise = this.rpc.request(
+      "bze.v1.rewards.Query",
+      "StakingRewardParticipantAll",
+      data
+    );
+    return promise.then((data) =>
+      QueryAllStakingRewardParticipantResponse.decode(new Reader(data))
     );
   }
 }

@@ -8,7 +8,7 @@ import (
 
 // x/rewards module sentinel errors
 var (
-	ErrInvalidPrizeAmount  = sdkerrors.Register(ModuleName, 5000, "invalid prize amount")
+	ErrInvalidAmount       = sdkerrors.Register(ModuleName, 5000, "invalid amount")
 	ErrInvalidPrizeDenom   = sdkerrors.Register(ModuleName, 5002, "invalid prize denom")
 	ErrInvalidStakingDenom = sdkerrors.Register(ModuleName, 5003, "invalid staking denom")
 	ErrInvalidMinStake     = sdkerrors.Register(ModuleName, 5004, "invalid min stake")
@@ -16,4 +16,5 @@ var (
 	ErrInvalidLockingTime  = sdkerrors.Register(ModuleName, 5006, "invalid staking reward lock")
 	ErrInvalidMarketId     = sdkerrors.Register(ModuleName, 5007, "invalid market_id")
 	ErrInvalidSlots        = sdkerrors.Register(ModuleName, 5008, "invalid slots")
+	ErrInvalidRewardId     = sdkerrors.Register(ModuleName, 5009, "invalid reward_id")
 )

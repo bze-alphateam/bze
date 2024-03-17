@@ -48,6 +48,21 @@ export interface MsgCreateTradingRewardResponse {
   reward_id: string;
 }
 
+export interface MsgJoinStaking {
+  creator: string;
+  reward_id: string;
+  amount: string;
+}
+
+export interface MsgJoinStakingResponse {}
+
+export interface MsgExitStaking {
+  creator: string;
+  rewardId: string;
+}
+
+export interface MsgExitStakingResponse {}
+
 const baseMsgCreateStakingReward: object = {
   creator: "",
   prize_amount: "",
@@ -663,6 +678,243 @@ export const MsgCreateTradingRewardResponse = {
   },
 };
 
+const baseMsgJoinStaking: object = { creator: "", reward_id: "", amount: "" };
+
+export const MsgJoinStaking = {
+  encode(message: MsgJoinStaking, writer: Writer = Writer.create()): Writer {
+    if (message.creator !== "") {
+      writer.uint32(10).string(message.creator);
+    }
+    if (message.reward_id !== "") {
+      writer.uint32(18).string(message.reward_id);
+    }
+    if (message.amount !== "") {
+      writer.uint32(26).string(message.amount);
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): MsgJoinStaking {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseMsgJoinStaking } as MsgJoinStaking;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.creator = reader.string();
+          break;
+        case 2:
+          message.reward_id = reader.string();
+          break;
+        case 3:
+          message.amount = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): MsgJoinStaking {
+    const message = { ...baseMsgJoinStaking } as MsgJoinStaking;
+    if (object.creator !== undefined && object.creator !== null) {
+      message.creator = String(object.creator);
+    } else {
+      message.creator = "";
+    }
+    if (object.reward_id !== undefined && object.reward_id !== null) {
+      message.reward_id = String(object.reward_id);
+    } else {
+      message.reward_id = "";
+    }
+    if (object.amount !== undefined && object.amount !== null) {
+      message.amount = String(object.amount);
+    } else {
+      message.amount = "";
+    }
+    return message;
+  },
+
+  toJSON(message: MsgJoinStaking): unknown {
+    const obj: any = {};
+    message.creator !== undefined && (obj.creator = message.creator);
+    message.reward_id !== undefined && (obj.reward_id = message.reward_id);
+    message.amount !== undefined && (obj.amount = message.amount);
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<MsgJoinStaking>): MsgJoinStaking {
+    const message = { ...baseMsgJoinStaking } as MsgJoinStaking;
+    if (object.creator !== undefined && object.creator !== null) {
+      message.creator = object.creator;
+    } else {
+      message.creator = "";
+    }
+    if (object.reward_id !== undefined && object.reward_id !== null) {
+      message.reward_id = object.reward_id;
+    } else {
+      message.reward_id = "";
+    }
+    if (object.amount !== undefined && object.amount !== null) {
+      message.amount = object.amount;
+    } else {
+      message.amount = "";
+    }
+    return message;
+  },
+};
+
+const baseMsgJoinStakingResponse: object = {};
+
+export const MsgJoinStakingResponse = {
+  encode(_: MsgJoinStakingResponse, writer: Writer = Writer.create()): Writer {
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): MsgJoinStakingResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseMsgJoinStakingResponse } as MsgJoinStakingResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(_: any): MsgJoinStakingResponse {
+    const message = { ...baseMsgJoinStakingResponse } as MsgJoinStakingResponse;
+    return message;
+  },
+
+  toJSON(_: MsgJoinStakingResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial(_: DeepPartial<MsgJoinStakingResponse>): MsgJoinStakingResponse {
+    const message = { ...baseMsgJoinStakingResponse } as MsgJoinStakingResponse;
+    return message;
+  },
+};
+
+const baseMsgExitStaking: object = { creator: "", rewardId: "" };
+
+export const MsgExitStaking = {
+  encode(message: MsgExitStaking, writer: Writer = Writer.create()): Writer {
+    if (message.creator !== "") {
+      writer.uint32(10).string(message.creator);
+    }
+    if (message.rewardId !== "") {
+      writer.uint32(18).string(message.rewardId);
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): MsgExitStaking {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseMsgExitStaking } as MsgExitStaking;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.creator = reader.string();
+          break;
+        case 2:
+          message.rewardId = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): MsgExitStaking {
+    const message = { ...baseMsgExitStaking } as MsgExitStaking;
+    if (object.creator !== undefined && object.creator !== null) {
+      message.creator = String(object.creator);
+    } else {
+      message.creator = "";
+    }
+    if (object.rewardId !== undefined && object.rewardId !== null) {
+      message.rewardId = String(object.rewardId);
+    } else {
+      message.rewardId = "";
+    }
+    return message;
+  },
+
+  toJSON(message: MsgExitStaking): unknown {
+    const obj: any = {};
+    message.creator !== undefined && (obj.creator = message.creator);
+    message.rewardId !== undefined && (obj.rewardId = message.rewardId);
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<MsgExitStaking>): MsgExitStaking {
+    const message = { ...baseMsgExitStaking } as MsgExitStaking;
+    if (object.creator !== undefined && object.creator !== null) {
+      message.creator = object.creator;
+    } else {
+      message.creator = "";
+    }
+    if (object.rewardId !== undefined && object.rewardId !== null) {
+      message.rewardId = object.rewardId;
+    } else {
+      message.rewardId = "";
+    }
+    return message;
+  },
+};
+
+const baseMsgExitStakingResponse: object = {};
+
+export const MsgExitStakingResponse = {
+  encode(_: MsgExitStakingResponse, writer: Writer = Writer.create()): Writer {
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): MsgExitStakingResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseMsgExitStakingResponse } as MsgExitStakingResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(_: any): MsgExitStakingResponse {
+    const message = { ...baseMsgExitStakingResponse } as MsgExitStakingResponse;
+    return message;
+  },
+
+  toJSON(_: MsgExitStakingResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial(_: DeepPartial<MsgExitStakingResponse>): MsgExitStakingResponse {
+    const message = { ...baseMsgExitStakingResponse } as MsgExitStakingResponse;
+    return message;
+  },
+};
+
 /** Msg defines the Msg service. */
 export interface Msg {
   CreateStakingReward(
@@ -671,10 +923,12 @@ export interface Msg {
   UpdateStakingReward(
     request: MsgUpdateStakingReward
   ): Promise<MsgUpdateStakingRewardResponse>;
-  /** this line is used by starport scaffolding # proto/tx/rpc */
   CreateTradingReward(
     request: MsgCreateTradingReward
   ): Promise<MsgCreateTradingRewardResponse>;
+  JoinStaking(request: MsgJoinStaking): Promise<MsgJoinStakingResponse>;
+  /** this line is used by starport scaffolding # proto/tx/rpc */
+  ExitStaking(request: MsgExitStaking): Promise<MsgExitStakingResponse>;
 }
 
 export class MsgClientImpl implements Msg {
@@ -721,6 +975,22 @@ export class MsgClientImpl implements Msg {
     );
     return promise.then((data) =>
       MsgCreateTradingRewardResponse.decode(new Reader(data))
+    );
+  }
+
+  JoinStaking(request: MsgJoinStaking): Promise<MsgJoinStakingResponse> {
+    const data = MsgJoinStaking.encode(request).finish();
+    const promise = this.rpc.request("bze.v1.rewards.Msg", "JoinStaking", data);
+    return promise.then((data) =>
+      MsgJoinStakingResponse.decode(new Reader(data))
+    );
+  }
+
+  ExitStaking(request: MsgExitStaking): Promise<MsgExitStakingResponse> {
+    const data = MsgExitStaking.encode(request).finish();
+    const promise = this.rpc.request("bze.v1.rewards.Msg", "ExitStaking", data);
+    return promise.then((data) =>
+      MsgExitStakingResponse.decode(new Reader(data))
     );
   }
 }

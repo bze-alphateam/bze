@@ -4,15 +4,19 @@ import { StdFee } from "@cosmjs/launchpad";
 import { SigningStargateClient } from "@cosmjs/stargate";
 import { Registry, OfflineSigner, EncodeObject, DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { Api } from "./rest";
+import { MsgExitStaking } from "./types/rewards/tx";
 import { MsgUpdateStakingReward } from "./types/rewards/tx";
-import { MsgCreateTradingReward } from "./types/rewards/tx";
 import { MsgCreateStakingReward } from "./types/rewards/tx";
+import { MsgCreateTradingReward } from "./types/rewards/tx";
+import { MsgJoinStaking } from "./types/rewards/tx";
 
 
 const types = [
+  ["/bze.v1.rewards.MsgExitStaking", MsgExitStaking],
   ["/bze.v1.rewards.MsgUpdateStakingReward", MsgUpdateStakingReward],
-  ["/bze.v1.rewards.MsgCreateTradingReward", MsgCreateTradingReward],
   ["/bze.v1.rewards.MsgCreateStakingReward", MsgCreateStakingReward],
+  ["/bze.v1.rewards.MsgCreateTradingReward", MsgCreateTradingReward],
+  ["/bze.v1.rewards.MsgJoinStaking", MsgJoinStaking],
   
 ];
 export const MissingWalletError = new Error("wallet is required");
@@ -45,9 +49,11 @@ const txClient = async (wallet: OfflineSigner, { addr: addr }: TxClientOptions =
 
   return {
     signAndBroadcast: (msgs: EncodeObject[], { fee, memo }: SignAndBroadcastOptions = {fee: defaultFee, memo: ""}) => client.signAndBroadcast(address, msgs, fee,memo),
+    msgExitStaking: (data: MsgExitStaking): EncodeObject => ({ typeUrl: "/bze.v1.rewards.MsgExitStaking", value: MsgExitStaking.fromPartial( data ) }),
     msgUpdateStakingReward: (data: MsgUpdateStakingReward): EncodeObject => ({ typeUrl: "/bze.v1.rewards.MsgUpdateStakingReward", value: MsgUpdateStakingReward.fromPartial( data ) }),
-    msgCreateTradingReward: (data: MsgCreateTradingReward): EncodeObject => ({ typeUrl: "/bze.v1.rewards.MsgCreateTradingReward", value: MsgCreateTradingReward.fromPartial( data ) }),
     msgCreateStakingReward: (data: MsgCreateStakingReward): EncodeObject => ({ typeUrl: "/bze.v1.rewards.MsgCreateStakingReward", value: MsgCreateStakingReward.fromPartial( data ) }),
+    msgCreateTradingReward: (data: MsgCreateTradingReward): EncodeObject => ({ typeUrl: "/bze.v1.rewards.MsgCreateTradingReward", value: MsgCreateTradingReward.fromPartial( data ) }),
+    msgJoinStaking: (data: MsgJoinStaking): EncodeObject => ({ typeUrl: "/bze.v1.rewards.MsgJoinStaking", value: MsgJoinStaking.fromPartial( data ) }),
     
   };
 };

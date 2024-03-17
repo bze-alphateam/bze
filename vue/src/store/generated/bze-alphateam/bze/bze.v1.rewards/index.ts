@@ -2,10 +2,11 @@ import { txClient, queryClient, MissingWalletError , registry} from './module'
 
 import { Params } from "./module/types/rewards/params"
 import { StakingReward } from "./module/types/rewards/staking_reward"
+import { StakingRewardParticipant } from "./module/types/rewards/staking_reward_participant"
 import { TradingReward } from "./module/types/rewards/trading_reward"
 
 
-export { Params, StakingReward, TradingReward };
+export { Params, StakingReward, StakingRewardParticipant, TradingReward };
 
 async function initTxClient(vuexGetters) {
 	return await txClient(vuexGetters['common/wallet/signer'], {
@@ -48,10 +49,13 @@ const getDefaultState = () => {
 				StakingRewardAll: {},
 				TradingReward: {},
 				TradingRewardAll: {},
+				StakingRewardParticipant: {},
+				StakingRewardParticipantAll: {},
 				
 				_Structure: {
 						Params: getStructure(Params.fromPartial({})),
 						StakingReward: getStructure(StakingReward.fromPartial({})),
+						StakingRewardParticipant: getStructure(StakingRewardParticipant.fromPartial({})),
 						TradingReward: getStructure(TradingReward.fromPartial({})),
 						
 		},
@@ -110,6 +114,18 @@ export default {
 						(<any> params).query=null
 					}
 			return state.TradingRewardAll[JSON.stringify(params)] ?? {}
+		},
+				getStakingRewardParticipant: (state) => (params = { params: {}}) => {
+					if (!(<any> params).query) {
+						(<any> params).query=null
+					}
+			return state.StakingRewardParticipant[JSON.stringify(params)] ?? {}
+		},
+				getStakingRewardParticipantAll: (state) => (params = { params: {}}) => {
+					if (!(<any> params).query) {
+						(<any> params).query=null
+					}
+			return state.StakingRewardParticipantAll[JSON.stringify(params)] ?? {}
 		},
 				
 		getTypeStructure: (state) => (type) => {
@@ -224,7 +240,7 @@ export default {
 			try {
 				const key = params ?? {};
 				const queryClient=await initQueryClient(rootGetters)
-				let value= (await queryClient.queryTradingReward( key.rewardId)).data
+				let value= (await queryClient.queryTradingReward( key.reward_id)).data
 				
 					
 				commit('QUERY', { query: 'TradingReward', key: { params: {...key}, query}, value })
@@ -263,6 +279,73 @@ export default {
 		},
 		
 		
+		
+		
+		 		
+		
+		
+		async QueryStakingRewardParticipant({ commit, rootGetters, getters }, { options: { subscribe, all} = { subscribe:false, all:false}, params, query=null }) {
+			try {
+				const key = params ?? {};
+				const queryClient=await initQueryClient(rootGetters)
+				let value= (await queryClient.queryStakingRewardParticipant( key.address, query)).data
+				
+					
+				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
+					let next_values=(await queryClient.queryStakingRewardParticipant( key.address, {...query, 'pagination.key':(<any> value).pagination.next_key})).data
+					value = mergeResults(value, next_values);
+				}
+				commit('QUERY', { query: 'StakingRewardParticipant', key: { params: {...key}, query}, value })
+				if (subscribe) commit('SUBSCRIBE', { action: 'QueryStakingRewardParticipant', payload: { options: { all }, params: {...key},query }})
+				return getters['getStakingRewardParticipant']( { params: {...key}, query}) ?? {}
+			} catch (e) {
+				throw new Error('QueryClient:QueryStakingRewardParticipant API Node Unavailable. Could not perform query: ' + e.message)
+				
+			}
+		},
+		
+		
+		
+		
+		 		
+		
+		
+		async QueryStakingRewardParticipantAll({ commit, rootGetters, getters }, { options: { subscribe, all} = { subscribe:false, all:false}, params, query=null }) {
+			try {
+				const key = params ?? {};
+				const queryClient=await initQueryClient(rootGetters)
+				let value= (await queryClient.queryStakingRewardParticipantAll(query)).data
+				
+					
+				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
+					let next_values=(await queryClient.queryStakingRewardParticipantAll({...query, 'pagination.key':(<any> value).pagination.next_key})).data
+					value = mergeResults(value, next_values);
+				}
+				commit('QUERY', { query: 'StakingRewardParticipantAll', key: { params: {...key}, query}, value })
+				if (subscribe) commit('SUBSCRIBE', { action: 'QueryStakingRewardParticipantAll', payload: { options: { all }, params: {...key},query }})
+				return getters['getStakingRewardParticipantAll']( { params: {...key}, query}) ?? {}
+			} catch (e) {
+				throw new Error('QueryClient:QueryStakingRewardParticipantAll API Node Unavailable. Could not perform query: ' + e.message)
+				
+			}
+		},
+		
+		
+		async sendMsgExitStaking({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgExitStaking(value)
+				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
+	gas: "200000" }, memo})
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgExitStaking:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgExitStaking:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
 		async sendMsgUpdateStakingReward({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
@@ -275,21 +358,6 @@ export default {
 					throw new Error('TxClient:MsgUpdateStakingReward:Init Could not initialize signing client. Wallet is required.')
 				}else{
 					throw new Error('TxClient:MsgUpdateStakingReward:Send Could not broadcast Tx: '+ e.message)
-				}
-			}
-		},
-		async sendMsgCreateTradingReward({ rootGetters }, { value, fee = [], memo = '' }) {
-			try {
-				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgCreateTradingReward(value)
-				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
-	gas: "200000" }, memo})
-				return result
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCreateTradingReward:Init Could not initialize signing client. Wallet is required.')
-				}else{
-					throw new Error('TxClient:MsgCreateTradingReward:Send Could not broadcast Tx: '+ e.message)
 				}
 			}
 		},
@@ -308,7 +376,50 @@ export default {
 				}
 			}
 		},
+		async sendMsgCreateTradingReward({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgCreateTradingReward(value)
+				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
+	gas: "200000" }, memo})
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgCreateTradingReward:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgCreateTradingReward:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
+		async sendMsgJoinStaking({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgJoinStaking(value)
+				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
+	gas: "200000" }, memo})
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgJoinStaking:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgJoinStaking:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
 		
+		async MsgExitStaking({ rootGetters }, { value }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgExitStaking(value)
+				return msg
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgExitStaking:Init Could not initialize signing client. Wallet is required.')
+				} else{
+					throw new Error('TxClient:MsgExitStaking:Create Could not create message: ' + e.message)
+				}
+			}
+		},
 		async MsgUpdateStakingReward({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
@@ -319,6 +430,19 @@ export default {
 					throw new Error('TxClient:MsgUpdateStakingReward:Init Could not initialize signing client. Wallet is required.')
 				} else{
 					throw new Error('TxClient:MsgUpdateStakingReward:Create Could not create message: ' + e.message)
+				}
+			}
+		},
+		async MsgCreateStakingReward({ rootGetters }, { value }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgCreateStakingReward(value)
+				return msg
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgCreateStakingReward:Init Could not initialize signing client. Wallet is required.')
+				} else{
+					throw new Error('TxClient:MsgCreateStakingReward:Create Could not create message: ' + e.message)
 				}
 			}
 		},
@@ -335,16 +459,16 @@ export default {
 				}
 			}
 		},
-		async MsgCreateStakingReward({ rootGetters }, { value }) {
+		async MsgJoinStaking({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgCreateStakingReward(value)
+				const msg = await txClient.msgJoinStaking(value)
 				return msg
 			} catch (e) {
 				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCreateStakingReward:Init Could not initialize signing client. Wallet is required.')
+					throw new Error('TxClient:MsgJoinStaking:Init Could not initialize signing client. Wallet is required.')
 				} else{
-					throw new Error('TxClient:MsgCreateStakingReward:Create Could not create message: ' + e.message)
+					throw new Error('TxClient:MsgJoinStaking:Create Could not create message: ' + e.message)
 				}
 			}
 		},

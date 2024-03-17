@@ -4,6 +4,7 @@ import { util, configure, Writer, Reader } from "protobufjs/minimal";
 import { Params } from "../rewards/params";
 import { StakingReward } from "../rewards/staking_reward";
 import { TradingReward } from "../rewards/trading_reward";
+import { StakingRewardParticipant } from "../rewards/staking_reward_participant";
 
 export const protobufPackage = "bze.v1.rewards";
 
@@ -13,8 +14,9 @@ export interface GenesisState {
   staking_reward_list: StakingReward[];
   staking_rewards_counter: number;
   trading_rewards_counter: number;
+  trading_reward_list: TradingReward[];
   /** this line is used by starport scaffolding # genesis/proto/state */
-  tradingRewardList: TradingReward[];
+  staking_reward_participant_list: StakingRewardParticipant[];
 }
 
 const baseGenesisState: object = {
@@ -36,8 +38,11 @@ export const GenesisState = {
     if (message.trading_rewards_counter !== 0) {
       writer.uint32(32).uint64(message.trading_rewards_counter);
     }
-    for (const v of message.tradingRewardList) {
+    for (const v of message.trading_reward_list) {
       TradingReward.encode(v!, writer.uint32(42).fork()).ldelim();
+    }
+    for (const v of message.staking_reward_participant_list) {
+      StakingRewardParticipant.encode(v!, writer.uint32(50).fork()).ldelim();
     }
     return writer;
   },
@@ -47,7 +52,8 @@ export const GenesisState = {
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseGenesisState } as GenesisState;
     message.staking_reward_list = [];
-    message.tradingRewardList = [];
+    message.trading_reward_list = [];
+    message.staking_reward_participant_list = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -70,8 +76,13 @@ export const GenesisState = {
           );
           break;
         case 5:
-          message.tradingRewardList.push(
+          message.trading_reward_list.push(
             TradingReward.decode(reader, reader.uint32())
+          );
+          break;
+        case 6:
+          message.staking_reward_participant_list.push(
+            StakingRewardParticipant.decode(reader, reader.uint32())
           );
           break;
         default:
@@ -85,7 +96,8 @@ export const GenesisState = {
   fromJSON(object: any): GenesisState {
     const message = { ...baseGenesisState } as GenesisState;
     message.staking_reward_list = [];
-    message.tradingRewardList = [];
+    message.trading_reward_list = [];
+    message.staking_reward_participant_list = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromJSON(object.params);
     } else {
@@ -116,11 +128,21 @@ export const GenesisState = {
       message.trading_rewards_counter = 0;
     }
     if (
-      object.tradingRewardList !== undefined &&
-      object.tradingRewardList !== null
+      object.trading_reward_list !== undefined &&
+      object.trading_reward_list !== null
     ) {
-      for (const e of object.tradingRewardList) {
-        message.tradingRewardList.push(TradingReward.fromJSON(e));
+      for (const e of object.trading_reward_list) {
+        message.trading_reward_list.push(TradingReward.fromJSON(e));
+      }
+    }
+    if (
+      object.staking_reward_participant_list !== undefined &&
+      object.staking_reward_participant_list !== null
+    ) {
+      for (const e of object.staking_reward_participant_list) {
+        message.staking_reward_participant_list.push(
+          StakingRewardParticipant.fromJSON(e)
+        );
       }
     }
     return message;
@@ -141,12 +163,19 @@ export const GenesisState = {
       (obj.staking_rewards_counter = message.staking_rewards_counter);
     message.trading_rewards_counter !== undefined &&
       (obj.trading_rewards_counter = message.trading_rewards_counter);
-    if (message.tradingRewardList) {
-      obj.tradingRewardList = message.tradingRewardList.map((e) =>
+    if (message.trading_reward_list) {
+      obj.trading_reward_list = message.trading_reward_list.map((e) =>
         e ? TradingReward.toJSON(e) : undefined
       );
     } else {
-      obj.tradingRewardList = [];
+      obj.trading_reward_list = [];
+    }
+    if (message.staking_reward_participant_list) {
+      obj.staking_reward_participant_list = message.staking_reward_participant_list.map(
+        (e) => (e ? StakingRewardParticipant.toJSON(e) : undefined)
+      );
+    } else {
+      obj.staking_reward_participant_list = [];
     }
     return obj;
   },
@@ -154,7 +183,8 @@ export const GenesisState = {
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = { ...baseGenesisState } as GenesisState;
     message.staking_reward_list = [];
-    message.tradingRewardList = [];
+    message.trading_reward_list = [];
+    message.staking_reward_participant_list = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromPartial(object.params);
     } else {
@@ -185,11 +215,21 @@ export const GenesisState = {
       message.trading_rewards_counter = 0;
     }
     if (
-      object.tradingRewardList !== undefined &&
-      object.tradingRewardList !== null
+      object.trading_reward_list !== undefined &&
+      object.trading_reward_list !== null
     ) {
-      for (const e of object.tradingRewardList) {
-        message.tradingRewardList.push(TradingReward.fromPartial(e));
+      for (const e of object.trading_reward_list) {
+        message.trading_reward_list.push(TradingReward.fromPartial(e));
+      }
+    }
+    if (
+      object.staking_reward_participant_list !== undefined &&
+      object.staking_reward_participant_list !== null
+    ) {
+      for (const e of object.staking_reward_participant_list) {
+        message.staking_reward_participant_list.push(
+          StakingRewardParticipant.fromPartial(e)
+        );
       }
     }
     return message;

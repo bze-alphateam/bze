@@ -69,14 +69,14 @@ func (k msgServer) checkUserBalances(ctx sdk.Context, neededCoins sdk.Coins, add
 	return nil
 }
 
-func (k msgServer) getAmountToCapture(feeParam, denom, amount string, prizeMultiplier int64) (sdk.Coins, error) {
+func (k msgServer) getAmountToCapture(feeParam, denom, amount string, multiplier int64) (sdk.Coins, error) {
 	amtInt, ok := sdk.NewIntFromString(amount)
 	if !ok {
 		return nil, fmt.Errorf("could not convert povided amount to int: %s", amount)
 	}
 
 	toCapture := sdk.NewCoin(denom, amtInt)
-	toCapture.Amount = toCapture.Amount.MulRaw(prizeMultiplier)
+	toCapture.Amount = toCapture.Amount.MulRaw(multiplier)
 	if !toCapture.IsPositive() {
 		//should never happen
 		return nil, fmt.Errorf("calculated amount to capture is not positive")

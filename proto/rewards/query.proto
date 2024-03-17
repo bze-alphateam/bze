@@ -7,6 +7,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "rewards/params.proto";
 import "rewards/staking_reward.proto";
 import "rewards/trading_reward.proto";
+import "rewards/staking_reward_participant.proto";
 // this line is used by starport scaffolding # 1
 
 option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
@@ -29,12 +30,22 @@ service Query {
 
 // Queries a TradingReward by index.
 	rpc TradingReward(QueryGetTradingRewardRequest) returns (QueryGetTradingRewardResponse) {
-		option (google.api.http).get = "/bze/rewards/v1/trading_reward/{rewardId}";
+		option (google.api.http).get = "/bze/rewards/v1/trading_reward/{reward_id}";
 	}
 
 	// Queries a list of TradingReward items.
 	rpc TradingRewardAll(QueryAllTradingRewardRequest) returns (QueryAllTradingRewardResponse) {
 		option (google.api.http).get = "/bze/rewards/v1/trading_reward";
+	}
+
+	// Queries a StakingRewardParticipant by index.
+	rpc StakingRewardParticipant(QueryGetStakingRewardParticipantRequest) returns (QueryGetStakingRewardParticipantResponse) {
+		option (google.api.http).get = "/bze/rewards/v1/staking_reward_participant/{address}";
+	}
+
+	// Queries a list of StakingRewardParticipant items.
+	rpc StakingRewardParticipantAll(QueryAllStakingRewardParticipantRequest) returns (QueryAllStakingRewardParticipantResponse) {
+		option (google.api.http).get = "/bze/rewards/v1/staking_reward_participants";
 	}
 
 // this line is used by starport scaffolding # 2
@@ -67,12 +78,11 @@ message QueryAllStakingRewardResponse {
 }
 
 message QueryGetTradingRewardRequest {
-	  string rewardId = 1;
-
+	  string reward_id = 1;
 }
 
 message QueryGetTradingRewardResponse {
-	TradingReward tradingReward = 1 [(gogoproto.nullable) = false];
+	TradingReward trading_reward = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryAllTradingRewardRequest {
@@ -80,7 +90,26 @@ message QueryAllTradingRewardRequest {
 }
 
 message QueryAllTradingRewardResponse {
-	repeated TradingReward tradingReward = 1 [(gogoproto.nullable) = false];
+	repeated TradingReward list = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetStakingRewardParticipantRequest {
+	string address = 1;
+	cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryGetStakingRewardParticipantResponse {
+	repeated StakingRewardParticipant list = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllStakingRewardParticipantRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllStakingRewardParticipantResponse {
+	repeated StakingRewardParticipant list = 1 [(gogoproto.nullable) = false];
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
