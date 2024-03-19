@@ -7,7 +7,7 @@ type EpochHook struct {
 	Name  string
 }
 
-func NewBeforeEpochHook(name string, after func(ctx sdk.Context, epochIdentifier string, epochNumber int64) error) EpochHook {
+func NewAfterEpochHook(name string, after func(ctx sdk.Context, epochIdentifier string, epochNumber int64) error) EpochHook {
 	return EpochHook{
 		Name:  name,
 		after: after,

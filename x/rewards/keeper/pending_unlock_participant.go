@@ -34,3 +34,19 @@ func (k Keeper) GetAllEpochPendingUnlockParticipant(ctx sdk.Context, epoch int64
 
 	return
 }
+
+// GetAllPendingUnlockParticipant returns all types.PendingUnlockParticipant
+func (k Keeper) GetAllPendingUnlockParticipant(ctx sdk.Context) (list []types.PendingUnlockParticipant) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PendingUnlockParticipantKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.PendingUnlockParticipant
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
+}
