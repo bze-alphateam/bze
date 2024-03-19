@@ -465,7 +465,6 @@ func New(
 		appCodec,
 		keys[epochstypes.StoreKey],
 		keys[epochstypes.MemStoreKey],
-		nil, //no hooks registered
 	)
 
 	app.RewardsKeeper = *rewardskeeper.NewKeeper(
@@ -476,6 +475,14 @@ func New(
 		app.BankKeeper,
 		app.DistrKeeper,
 		app.TradebinKeeper,
+		app.EpochsKeeper,
+	)
+
+	app.EpochsKeeper.SetHooks(
+		[]epochstypes.EpochHook{
+			app.RewardsKeeper.GetDistributeAllStakingRewardsHook(),
+			app.RewardsKeeper.GetUnlockPendingUnlockParticipantsHook(),
+		},
 	)
 
 	scavengeModule := scavengemodule.NewAppModule(appCodec, app.ScavengeKeeper)

@@ -5,22 +5,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) GetUnlockPendingUnlockParticipantsHook() types.EpochHook {
-	hookName := "pending_unlock_hook"
-	return types.NewBeforeEpochHook(hookName, func(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
-		k.Logger(ctx).
-			With("epoch", epochIdentifier, "epoch_number", epochNumber, "hook_name", hookName).
-			Debug("preparing to execute hook")
-		k.UnlockAllPendingUnlockParticipants(ctx, epochNumber)
-
-		return nil
-	})
-}
-
 func (k Keeper) UnlockAllPendingUnlockParticipants(ctx sdk.Context, epochNumber int64) {
 	pending := k.GetAllEpochPendingUnlockParticipant(ctx, epochNumber)
 	for _, p := range pending {
-		logger := k.Logger(ctx).With("pending", p)
+		logger := k.Logger(ctx).With("pending_unlock", p)
 		partCoins, err := k.getAmountToCapture("", p.Denom, p.Amount, int64(1))
 		if err != nil {
 			logger.Error(err.Error())
