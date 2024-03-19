@@ -13,11 +13,6 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 	if msg == nil {
 		return nil, sdkerrors.ErrInvalidRequest
 	}
-	acc, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		return nil, err
-	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	stakingReward, found := k.GetStakingReward(ctx, msg.RewardId)
 	if !found {
@@ -44,14 +39,28 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 		return nil, err
 	}
 
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, acc, partCoins)
-	if err != nil {
-		return nil, err
+	k.beginUnlock(ctx, participation, stakingReward)
+	k.RemoveStakingRewardParticipant(ctx, participation.Address, participation.RewardId)
+	remainingStakedAmount := stakedAmountInt.Sub(partCoins.AmountOf(stakingReward.StakingDenom))
+	if remainingStakedAmount.IsPositive() {
+		stakingReward.StakedAmount = remainingStakedAmount.String()
+		k.SetStakingReward(ctx, stakingReward)
+	} else {
+		k.RemoveStakingReward(ctx, stakingReward.RewardId)
 	}
 
-	k.RemoveStakingRewardParticipant(ctx, participation.Address, participation.RewardId)
-	stakingReward.StakedAmount = stakedAmountInt.Sub(partCoins.AmountOf(stakingReward.StakingDenom)).String()
-	k.SetStakingReward(ctx, stakingReward)
-
 	return &types.MsgExitStakingResponse{}, nil
+}
+
+func (k msgServer) beginUnlock(ctx sdk.Context, p types.StakingRewardParticipant, sr types.StakingReward) {
+	lockedUntil := k.epochKeeper.GetEpochCountByIdentifier(ctx, distributionEpoch)
+	lockedUntil += int64(sr.Lock)
+	pending := types.PendingUnlockParticipant{
+		Index:   types.CreatePendingUnlockParticipantKey(lockedUntil, sr.RewardId),
+		Address: p.Address,
+		Amount:  p.Amount,
+		Denom:   sr.StakingDenom,
+	}
+
+	k.SetPendingUnlockParticipant(ctx, pending)
 }

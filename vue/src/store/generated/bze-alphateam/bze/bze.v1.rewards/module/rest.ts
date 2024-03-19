@@ -13,7 +13,9 @@ export interface ProtobufAny {
   "@type"?: string;
 }
 
-export type RewardsMsgClaimStakingRewardsResponse = object;
+export interface RewardsMsgClaimStakingRewardsResponse {
+  amount?: string;
+}
 
 export interface RewardsMsgCreateStakingRewardResponse {
   reward_id?: string;

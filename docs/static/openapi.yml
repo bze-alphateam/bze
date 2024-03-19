@@ -34619,6 +34619,9 @@ definitions:
            }
   bze.v1.rewards.MsgClaimStakingRewardsResponse:
     type: object
+    properties:
+      amount:
+        type: string
   bze.v1.rewards.MsgCreateStakingRewardResponse:
     type: object
     properties:

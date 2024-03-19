@@ -9,3 +9,10 @@ message StakingRewardParticipant {
   string amount = 3; // stake[address]
   string joined_at = 4; // S0[address]
 }
+
+message PendingUnlockParticipant {
+  string index = 1;
+  string address = 2;
+  string amount = 3;
+  string denom = 4;
+}
