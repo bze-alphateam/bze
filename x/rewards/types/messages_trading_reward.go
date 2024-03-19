@@ -9,7 +9,7 @@ import (
 const (
 	TypeMsgCreateTradingReward = "create_trading_reward"
 
-	maxAllowedSlots = 100
+	maxAllowedSlots = 10
 )
 
 var _ sdk.Msg = &MsgCreateTradingReward{}

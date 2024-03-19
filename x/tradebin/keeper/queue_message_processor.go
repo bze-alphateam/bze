@@ -35,6 +35,8 @@ type ProcessingKeeper interface {
 	GetOrderCoins(orderType, orderPrice string, orderAmount sdk.Int, market *types.Market) (sdk.Coin, error)
 
 	Logger(ctx sdk.Context) log.Logger
+
+	GetOnOrderFillHooks() []types.OnMarketOrderFill
 }
 
 type BankKeeper interface {
@@ -232,7 +234,7 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 		}
 
 		pe.addHistoryOrder(ctx, &orderToFill, amountToExecute, &message)
-		pe.emitOrderExecutedEvent(ctx, &orderToFill, amountToExecute.String())
+		pe.emitOrderExecutedEvent(ctx, &orderToFill, amountToExecute.String(), message.Owner)
 	}
 
 	if aggAmountInt.GT(zeroInt) {
@@ -416,7 +418,7 @@ func (pe *ProcessingEngine) addOrderToAggregate(ctx sdk.Context, order *types.Or
 	pe.k.SetAggregatedOrder(ctx, agg)
 }
 
-func (pe *ProcessingEngine) emitOrderExecutedEvent(ctx sdk.Context, order *types.Order, amount string) {
+func (pe *ProcessingEngine) emitOrderExecutedEvent(ctx sdk.Context, order *types.Order, amount, userAddress string) {
 	err := ctx.EventManager().EmitTypedEvent(
 		&types.OrderExecutedEvent{
 			Id:        order.Id,
@@ -429,6 +431,20 @@ func (pe *ProcessingEngine) emitOrderExecutedEvent(ctx sdk.Context, order *types
 
 	if err != nil {
 		pe.logger.Error(err.Error())
+	}
+
+	//call hooks for the filled order
+	for _, h := range pe.k.GetOnOrderFillHooks() {
+		wrappedFn := func(ctx sdk.Context) error {
+			h(ctx, order.MarketId, amount, userAddress)
+
+			return nil
+		}
+
+		err = bzeutils.ApplyFuncIfNoError(ctx, wrappedFn)
+		if err != nil {
+			pe.k.Logger(ctx).Error(err.Error())
+		}
 	}
 }
 

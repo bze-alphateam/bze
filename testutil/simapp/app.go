@@ -478,6 +478,12 @@ func New(
 		app.EpochsKeeper,
 	)
 
+	app.TradebinKeeper.SetOnOrderFillHooks(
+		[]tradebintypes.OnMarketOrderFill{
+			app.RewardsKeeper.GetOnOrderFillHook(),
+		},
+	)
+
 	app.EpochsKeeper.SetHooks(
 		[]epochstypes.EpochHook{
 			app.RewardsKeeper.GetDistributeAllStakingRewardsHook(),
