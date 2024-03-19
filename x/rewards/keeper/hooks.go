@@ -7,7 +7,7 @@ import (
 
 func (k Keeper) GetDistributeAllStakingRewardsHook() types.EpochHook {
 	hookName := "distribution_hook"
-	return types.NewBeforeEpochHook(hookName, func(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return types.NewAfterEpochHook(hookName, func(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 		if epochIdentifier != distributionEpoch {
 			return nil
 		}
@@ -24,7 +24,7 @@ func (k Keeper) GetDistributeAllStakingRewardsHook() types.EpochHook {
 
 func (k Keeper) GetUnlockPendingUnlockParticipantsHook() types.EpochHook {
 	hookName := "pending_unlock_hook"
-	return types.NewBeforeEpochHook(hookName, func(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return types.NewAfterEpochHook(hookName, func(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 		if epochIdentifier != distributionEpoch {
 			return nil
 		}

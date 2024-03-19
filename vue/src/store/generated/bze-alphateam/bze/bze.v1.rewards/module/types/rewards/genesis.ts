@@ -4,7 +4,10 @@ import { util, configure, Writer, Reader } from "protobufjs/minimal";
 import { Params } from "../rewards/params";
 import { StakingReward } from "../rewards/staking_reward";
 import { TradingReward } from "../rewards/trading_reward";
-import { StakingRewardParticipant } from "../rewards/staking_reward_participant";
+import {
+  StakingRewardParticipant,
+  PendingUnlockParticipant,
+} from "../rewards/staking_reward_participant";
 
 export const protobufPackage = "bze.v1.rewards";
 
@@ -15,8 +18,9 @@ export interface GenesisState {
   staking_rewards_counter: number;
   trading_rewards_counter: number;
   trading_reward_list: TradingReward[];
-  /** this line is used by starport scaffolding # genesis/proto/state */
   staking_reward_participant_list: StakingRewardParticipant[];
+  /** this line is used by starport scaffolding # genesis/proto/state */
+  pending_unlock_participant_list: PendingUnlockParticipant[];
 }
 
 const baseGenesisState: object = {
@@ -44,6 +48,9 @@ export const GenesisState = {
     for (const v of message.staking_reward_participant_list) {
       StakingRewardParticipant.encode(v!, writer.uint32(50).fork()).ldelim();
     }
+    for (const v of message.pending_unlock_participant_list) {
+      PendingUnlockParticipant.encode(v!, writer.uint32(58).fork()).ldelim();
+    }
     return writer;
   },
 
@@ -54,6 +61,7 @@ export const GenesisState = {
     message.staking_reward_list = [];
     message.trading_reward_list = [];
     message.staking_reward_participant_list = [];
+    message.pending_unlock_participant_list = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -85,6 +93,11 @@ export const GenesisState = {
             StakingRewardParticipant.decode(reader, reader.uint32())
           );
           break;
+        case 7:
+          message.pending_unlock_participant_list.push(
+            PendingUnlockParticipant.decode(reader, reader.uint32())
+          );
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -98,6 +111,7 @@ export const GenesisState = {
     message.staking_reward_list = [];
     message.trading_reward_list = [];
     message.staking_reward_participant_list = [];
+    message.pending_unlock_participant_list = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromJSON(object.params);
     } else {
@@ -145,6 +159,16 @@ export const GenesisState = {
         );
       }
     }
+    if (
+      object.pending_unlock_participant_list !== undefined &&
+      object.pending_unlock_participant_list !== null
+    ) {
+      for (const e of object.pending_unlock_participant_list) {
+        message.pending_unlock_participant_list.push(
+          PendingUnlockParticipant.fromJSON(e)
+        );
+      }
+    }
     return message;
   },
 
@@ -177,6 +201,13 @@ export const GenesisState = {
     } else {
       obj.staking_reward_participant_list = [];
     }
+    if (message.pending_unlock_participant_list) {
+      obj.pending_unlock_participant_list = message.pending_unlock_participant_list.map(
+        (e) => (e ? PendingUnlockParticipant.toJSON(e) : undefined)
+      );
+    } else {
+      obj.pending_unlock_participant_list = [];
+    }
     return obj;
   },
 
@@ -185,6 +216,7 @@ export const GenesisState = {
     message.staking_reward_list = [];
     message.trading_reward_list = [];
     message.staking_reward_participant_list = [];
+    message.pending_unlock_participant_list = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromPartial(object.params);
     } else {
@@ -229,6 +261,16 @@ export const GenesisState = {
       for (const e of object.staking_reward_participant_list) {
         message.staking_reward_participant_list.push(
           StakingRewardParticipant.fromPartial(e)
+        );
+      }
+    }
+    if (
+      object.pending_unlock_participant_list !== undefined &&
+      object.pending_unlock_participant_list !== null
+    ) {
+      for (const e of object.pending_unlock_participant_list) {
+        message.pending_unlock_participant_list.push(
+          PendingUnlockParticipant.fromPartial(e)
         );
       }
     }
