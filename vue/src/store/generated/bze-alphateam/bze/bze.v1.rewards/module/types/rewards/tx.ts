@@ -68,7 +68,9 @@ export interface MsgClaimStakingRewards {
   rewardId: string;
 }
 
-export interface MsgClaimStakingRewardsResponse {}
+export interface MsgClaimStakingRewardsResponse {
+  amount: string;
+}
 
 const baseMsgCreateStakingReward: object = {
   creator: "",
@@ -999,13 +1001,16 @@ export const MsgClaimStakingRewards = {
   },
 };
 
-const baseMsgClaimStakingRewardsResponse: object = {};
+const baseMsgClaimStakingRewardsResponse: object = { amount: "" };
 
 export const MsgClaimStakingRewardsResponse = {
   encode(
-    _: MsgClaimStakingRewardsResponse,
+    message: MsgClaimStakingRewardsResponse,
     writer: Writer = Writer.create()
   ): Writer {
+    if (message.amount !== "") {
+      writer.uint32(10).string(message.amount);
+    }
     return writer;
   },
 
@@ -1021,6 +1026,9 @@ export const MsgClaimStakingRewardsResponse = {
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
+        case 1:
+          message.amount = reader.string();
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -1029,24 +1037,35 @@ export const MsgClaimStakingRewardsResponse = {
     return message;
   },
 
-  fromJSON(_: any): MsgClaimStakingRewardsResponse {
+  fromJSON(object: any): MsgClaimStakingRewardsResponse {
     const message = {
       ...baseMsgClaimStakingRewardsResponse,
     } as MsgClaimStakingRewardsResponse;
+    if (object.amount !== undefined && object.amount !== null) {
+      message.amount = String(object.amount);
+    } else {
+      message.amount = "";
+    }
     return message;
   },
 
-  toJSON(_: MsgClaimStakingRewardsResponse): unknown {
+  toJSON(message: MsgClaimStakingRewardsResponse): unknown {
     const obj: any = {};
+    message.amount !== undefined && (obj.amount = message.amount);
     return obj;
   },
 
   fromPartial(
-    _: DeepPartial<MsgClaimStakingRewardsResponse>
+    object: DeepPartial<MsgClaimStakingRewardsResponse>
   ): MsgClaimStakingRewardsResponse {
     const message = {
       ...baseMsgClaimStakingRewardsResponse,
     } as MsgClaimStakingRewardsResponse;
+    if (object.amount !== undefined && object.amount !== null) {
+      message.amount = object.amount;
+    } else {
+      message.amount = "";
+    }
     return message;
   },
 };

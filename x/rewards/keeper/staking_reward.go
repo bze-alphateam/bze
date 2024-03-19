@@ -49,3 +49,18 @@ func (k Keeper) GetAllStakingReward(ctx sdk.Context) (list []types.StakingReward
 
 	return
 }
+
+func (k Keeper) IterateAllStakingRewards(ctx sdk.Context, msgHandler func(ctx sdk.Context, sr types.StakingReward) (stop bool)) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.StakingRewardKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var sr types.StakingReward
+		k.cdc.MustUnmarshal(iterator.Value(), &sr)
+		s := msgHandler(ctx, sr)
+		if s {
+			break
+		}
+	}
+}

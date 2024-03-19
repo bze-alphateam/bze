@@ -28,3 +28,7 @@ type BankKeeper interface {
 type TradingKeeper interface {
 	MarketExists(ctx sdk.Context, marketId string) bool
 }
+
+type EpochKeeper interface {
+	GetEpochCountByIdentifier(ctx sdk.Context, identifier string) int64
+}
