@@ -6,41 +6,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) GetDistributeAllStakingRewardsHook() types.EpochHook {
-	hookName := "distribution_hook"
-	return types.NewBeforeEpochHook(hookName, func(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
-		k.Logger(ctx).
-			With("epoch", epochIdentifier, "epoch_number", epochNumber, "hook_name", hookName).
-			Debug("preparing to execute hook")
-
-		k.DistributeAllStakingRewards(ctx)
-
-		return nil
-	})
-}
-
 func (k Keeper) DistributeAllStakingRewards(ctx sdk.Context) {
 	k.IterateAllStakingRewards(ctx, k.getDistributeRewardHandler())
 }
 
 func (k Keeper) getDistributeRewardHandler() func(ctx sdk.Context, reward types.StakingReward) (stop bool) {
 	return func(ctx sdk.Context, sr types.StakingReward) (stop bool) {
-		logger := k.Logger(ctx).With("reward_id", sr.RewardId, "type", "staking")
+		logger := k.Logger(ctx).With("staking_reward", sr)
+
+		logger.Debug("preparing to distribute staking reward")
+
 		if sr.Payouts >= sr.Duration {
-			logger.Debug("stake finished. skipping distribution")
-			stop = false
-			return
-		}
-
-		stakedAmount, ok := sdk.NewIntFromString(sr.StakedAmount)
-		if !ok {
-			logger.Error("could not transform staked amount from storage into int")
-			stop = true
-			return
-		}
-
-		if !stakedAmount.IsPositive() {
-			logger.Debug("no stakers found. skipping distribution")
+			logger.Debug("staking reward finished. skipping distribution")
 			stop = false
 			return
 		}
@@ -52,9 +29,11 @@ func (k Keeper) getDistributeRewardHandler() func(ctx sdk.Context, reward types.
 			return
 		}
 
-		//increment payouts to skip when the reward finished (a.k.a. all payouts calculated)
+		//increment payouts to know when the reward finished (a.k.a. all payouts calculated)
 		sr.Payouts++
 		k.SetStakingReward(ctx, sr)
+
+		logger.Debug("staking reward distributed")
 
 		return
 	}

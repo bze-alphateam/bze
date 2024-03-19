@@ -23,5 +23,5 @@ func CreatePendingUnlockParticipantKey(epoch int64, key string) string {
 
 // PendingUnlockParticipantPrefix returns the store key to retrieve all PendingUnlockParticipant for an epoch
 func PendingUnlockParticipantPrefix(epoch int64) string {
-	return fmt.Sprintf("%s/%d/", PendingUnlockParticipantKeyPrefix, epoch)
+	return fmt.Sprintf("%s%d/", PendingUnlockParticipantKeyPrefix, epoch)
 }

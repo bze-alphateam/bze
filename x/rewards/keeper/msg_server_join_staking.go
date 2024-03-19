@@ -80,20 +80,20 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 // claimPending - sends the pending rewards to the participant and updates the participant.JoinedAt field with current
 // StakingReward.DistributedStake
 func (k msgServer) claimPending(ctx sdk.Context, sr types.StakingReward, participant *types.StakingRewardParticipant) (*sdk.Coin, error) {
-	deposited, ok := sdk.NewIntFromString(participant.Amount)
-	if !ok {
-		return nil, fmt.Errorf("could not transform participant amount from storage into int")
+	deposited, err := sdk.NewDecFromStr(participant.Amount)
+	if err != nil {
+		return nil, err
 	}
-	distributedStake, ok := sdk.NewIntFromString(sr.DistributedStake)
-	if !ok {
-		return nil, fmt.Errorf("could not transform distributed stake from storage into int")
+	distributedStake, err := sdk.NewDecFromStr(sr.DistributedStake)
+	if err != nil {
+		return nil, err
 	}
-	joinedAt, ok := sdk.NewIntFromString(participant.JoinedAt)
-	if !ok {
-		return nil, fmt.Errorf("could not transform joined at from storage into int")
+	joinedAt, err := sdk.NewDecFromStr(participant.JoinedAt)
+	if err != nil {
+		return nil, err
 	}
 
-	reward := deposited.Mul(distributedStake.Sub(joinedAt))
+	reward := deposited.Mul(distributedStake.Sub(joinedAt)).TruncateInt()
 	if !reward.IsPositive() {
 		return nil, fmt.Errorf("no rewards to claim")
 	}
