@@ -20,6 +20,8 @@ type (
 
 		bankKeeper  types.BankKeeper
 		distrKeeper types.DistrKeeper
+
+		onOrderFillHooks []types.OnMarketOrderFill
 	}
 )
 
@@ -45,6 +47,14 @@ func NewKeeper(
 		bankKeeper:  bankKeeper,
 		distrKeeper: distrKeeper,
 	}
+}
+
+func (k *Keeper) SetOnOrderFillHooks(hooks []types.OnMarketOrderFill) {
+	k.onOrderFillHooks = hooks
+}
+
+func (k Keeper) GetOnOrderFillHooks() []types.OnMarketOrderFill {
+	return k.onOrderFillHooks
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

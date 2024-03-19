@@ -5,6 +5,7 @@ package types
 
 import (
 	fmt "fmt"
+	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/gogo/protobuf/proto"
 	io "io"
 	math "math"
@@ -106,31 +107,214 @@ func (m *TradingReward) GetSlots() uint32 {
 	return 0
 }
 
+type TradingRewardLeaderboard struct {
+	RewardId string                          `protobuf:"bytes,1,opt,name=reward_id,json=rewardId,proto3" json:"reward_id,omitempty"`
+	List     []TradingRewardLeaderboardEntry `protobuf:"bytes,2,rep,name=list,proto3" json:"list"`
+}
+
+func (m *TradingRewardLeaderboard) Reset()         { *m = TradingRewardLeaderboard{} }
+func (m *TradingRewardLeaderboard) String() string { return proto.CompactTextString(m) }
+func (*TradingRewardLeaderboard) ProtoMessage()    {}
+func (*TradingRewardLeaderboard) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e96afcb90471b82d, []int{1}
+}
+func (m *TradingRewardLeaderboard) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TradingRewardLeaderboard) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TradingRewardLeaderboard.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TradingRewardLeaderboard) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TradingRewardLeaderboard.Merge(m, src)
+}
+func (m *TradingRewardLeaderboard) XXX_Size() int {
+	return m.Size()
+}
+func (m *TradingRewardLeaderboard) XXX_DiscardUnknown() {
+	xxx_messageInfo_TradingRewardLeaderboard.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TradingRewardLeaderboard proto.InternalMessageInfo
+
+func (m *TradingRewardLeaderboard) GetRewardId() string {
+	if m != nil {
+		return m.RewardId
+	}
+	return ""
+}
+
+func (m *TradingRewardLeaderboard) GetList() []TradingRewardLeaderboardEntry {
+	if m != nil {
+		return m.List
+	}
+	return nil
+}
+
+type TradingRewardLeaderboardEntry struct {
+	Amount    string `protobuf:"bytes,1,opt,name=amount,proto3" json:"amount,omitempty"`
+	Address   string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
+	CreatedAt int64  `protobuf:"varint,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+}
+
+func (m *TradingRewardLeaderboardEntry) Reset()         { *m = TradingRewardLeaderboardEntry{} }
+func (m *TradingRewardLeaderboardEntry) String() string { return proto.CompactTextString(m) }
+func (*TradingRewardLeaderboardEntry) ProtoMessage()    {}
+func (*TradingRewardLeaderboardEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e96afcb90471b82d, []int{2}
+}
+func (m *TradingRewardLeaderboardEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TradingRewardLeaderboardEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TradingRewardLeaderboardEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TradingRewardLeaderboardEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TradingRewardLeaderboardEntry.Merge(m, src)
+}
+func (m *TradingRewardLeaderboardEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *TradingRewardLeaderboardEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_TradingRewardLeaderboardEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TradingRewardLeaderboardEntry proto.InternalMessageInfo
+
+func (m *TradingRewardLeaderboardEntry) GetAmount() string {
+	if m != nil {
+		return m.Amount
+	}
+	return ""
+}
+
+func (m *TradingRewardLeaderboardEntry) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *TradingRewardLeaderboardEntry) GetCreatedAt() int64 {
+	if m != nil {
+		return m.CreatedAt
+	}
+	return 0
+}
+
+type TradingRewardCandidate struct {
+	RewardId string `protobuf:"bytes,1,opt,name=reward_id,json=rewardId,proto3" json:"reward_id,omitempty"`
+	Amount   string `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
+	Address  string `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *TradingRewardCandidate) Reset()         { *m = TradingRewardCandidate{} }
+func (m *TradingRewardCandidate) String() string { return proto.CompactTextString(m) }
+func (*TradingRewardCandidate) ProtoMessage()    {}
+func (*TradingRewardCandidate) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e96afcb90471b82d, []int{3}
+}
+func (m *TradingRewardCandidate) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TradingRewardCandidate) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TradingRewardCandidate.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TradingRewardCandidate) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TradingRewardCandidate.Merge(m, src)
+}
+func (m *TradingRewardCandidate) XXX_Size() int {
+	return m.Size()
+}
+func (m *TradingRewardCandidate) XXX_DiscardUnknown() {
+	xxx_messageInfo_TradingRewardCandidate.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TradingRewardCandidate proto.InternalMessageInfo
+
+func (m *TradingRewardCandidate) GetRewardId() string {
+	if m != nil {
+		return m.RewardId
+	}
+	return ""
+}
+
+func (m *TradingRewardCandidate) GetAmount() string {
+	if m != nil {
+		return m.Amount
+	}
+	return ""
+}
+
+func (m *TradingRewardCandidate) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*TradingReward)(nil), "bze.v1.rewards.TradingReward")
+	proto.RegisterType((*TradingRewardLeaderboard)(nil), "bze.v1.rewards.TradingRewardLeaderboard")
+	proto.RegisterType((*TradingRewardLeaderboardEntry)(nil), "bze.v1.rewards.TradingRewardLeaderboardEntry")
+	proto.RegisterType((*TradingRewardCandidate)(nil), "bze.v1.rewards.TradingRewardCandidate")
 }
 
 func init() { proto.RegisterFile("rewards/trading_reward.proto", fileDescriptor_e96afcb90471b82d) }
 
 var fileDescriptor_e96afcb90471b82d = []byte{
-	// 259 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x3c, 0x90, 0xbd, 0x4e, 0xc3, 0x30,
-	0x14, 0x85, 0x63, 0xa0, 0x55, 0x6b, 0x28, 0x83, 0xc5, 0x60, 0x01, 0x32, 0x85, 0xa9, 0x03, 0x24,
-	0x42, 0x3c, 0x01, 0x08, 0x21, 0x75, 0x8d, 0x98, 0x58, 0x22, 0x07, 0x5b, 0xad, 0x45, 0x13, 0x47,
-	0xb6, 0xc3, 0x4f, 0x9e, 0x82, 0x37, 0x62, 0x65, 0xec, 0xc8, 0x88, 0x92, 0x17, 0x41, 0xb9, 0x17,
-	0x65, 0xfc, 0xbe, 0x7b, 0xae, 0x8e, 0x74, 0xe8, 0xa9, 0xd3, 0x6f, 0xd2, 0x29, 0x9f, 0x04, 0x27,
-	0x95, 0x29, 0x57, 0x19, 0x72, 0x5c, 0x39, 0x1b, 0x2c, 0x3b, 0xcc, 0x1b, 0x1d, 0xbf, 0x5e, 0xc7,
-	0xff, 0xa1, 0x8b, 0x2f, 0x42, 0x67, 0x8f, 0x18, 0x4c, 0x41, 0xb1, 0x13, 0x3a, 0xc5, 0x63, 0x66,
-	0x14, 0x27, 0x73, 0xb2, 0x98, 0xa6, 0x13, 0x14, 0x4b, 0xc5, 0xce, 0xe9, 0x41, 0xe5, 0x4c, 0xa3,
-	0x33, 0x59, 0xd8, 0xba, 0x0c, 0x7c, 0x07, 0xee, 0xfb, 0xe0, 0x6e, 0x41, 0xb1, 0x33, 0x8a, 0x98,
-	0x29, 0x5d, 0xda, 0x82, 0xef, 0x42, 0x82, 0x82, 0xba, 0xef, 0x0d, 0x3b, 0xa6, 0x13, 0x55, 0x3b,
-	0x19, 0x8c, 0x2d, 0xf9, 0xde, 0x9c, 0x2c, 0x66, 0xe9, 0xc0, 0x7d, 0x79, 0x21, 0xdd, 0x8b, 0x0e,
-	0x7d, 0xf9, 0x08, 0xcb, 0x51, 0x2c, 0x15, 0x3b, 0xa2, 0x23, 0xbf, 0xb1, 0xc1, 0xf3, 0x31, 0x7c,
-	0x21, 0xdc, 0x3d, 0x7c, 0xb7, 0x82, 0x6c, 0x5b, 0x41, 0x7e, 0x5b, 0x41, 0x3e, 0x3b, 0x11, 0x6d,
-	0x3b, 0x11, 0xfd, 0x74, 0x22, 0x7a, 0xba, 0x5c, 0x99, 0xb0, 0xae, 0xf3, 0xf8, 0xd9, 0x16, 0x49,
-	0xde, 0xe8, 0x2b, 0xb9, 0xa9, 0xd6, 0x32, 0x68, 0x09, 0x94, 0xbc, 0x27, 0xc3, 0x50, 0x1f, 0x95,
-	0xf6, 0xf9, 0x18, 0x06, 0xba, 0xf9, 0x0b, 0x00, 0x00, 0xff, 0xff, 0x98, 0xd8, 0x03, 0xb5, 0x40,
-	0x01, 0x00, 0x00,
+	// 391 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x52, 0xcd, 0x8e, 0xda, 0x30,
+	0x18, 0x8c, 0x09, 0x50, 0xf8, 0x28, 0x3d, 0x58, 0x08, 0x45, 0xb4, 0x04, 0x9a, 0x13, 0x87, 0x92,
+	0xa8, 0xed, 0x13, 0x40, 0xff, 0x84, 0xd4, 0x53, 0xd4, 0x53, 0x2f, 0x91, 0x83, 0xad, 0x10, 0x95,
+	0xc4, 0x91, 0x63, 0xda, 0xc2, 0xa9, 0x8f, 0xd0, 0x37, 0xda, 0x2b, 0x47, 0x8e, 0x7b, 0x5a, 0xad,
+	0xe0, 0x45, 0x56, 0xb1, 0xb3, 0xac, 0x72, 0x80, 0xbd, 0x79, 0xc6, 0xf3, 0xf9, 0x9b, 0x19, 0x19,
+	0xde, 0x08, 0xf6, 0x87, 0x08, 0x9a, 0x7b, 0x52, 0x10, 0x1a, 0xa7, 0x51, 0xa0, 0xb1, 0x9b, 0x09,
+	0x2e, 0x39, 0x7e, 0x15, 0xee, 0x98, 0xfb, 0xfb, 0xbd, 0x5b, 0x8a, 0x06, 0xbd, 0x88, 0x47, 0x5c,
+	0x5d, 0x79, 0xc5, 0x49, 0xab, 0x9c, 0x1b, 0x04, 0xdd, 0x1f, 0x7a, 0xdc, 0x57, 0x42, 0xfc, 0x1a,
+	0xda, 0x7a, 0x24, 0x88, 0xa9, 0x85, 0xc6, 0x68, 0xd2, 0xf6, 0x5b, 0x9a, 0x58, 0x50, 0xfc, 0x16,
+	0x5e, 0x66, 0x22, 0xde, 0xb1, 0x80, 0x24, 0x7c, 0x93, 0x4a, 0xab, 0xa6, 0xee, 0x3b, 0x8a, 0x9b,
+	0x29, 0x0a, 0x8f, 0x40, 0xc3, 0x80, 0xb2, 0x94, 0x27, 0x96, 0xa9, 0x14, 0xa0, 0xa8, 0xcf, 0x05,
+	0x83, 0x07, 0xd0, 0xa2, 0x1b, 0x41, 0x64, 0xcc, 0x53, 0xab, 0x3e, 0x46, 0x93, 0xae, 0x7f, 0xc6,
+	0xc5, 0xf2, 0x84, 0x88, 0x5f, 0x4c, 0x16, 0xcb, 0x1b, 0x7a, 0xb9, 0x26, 0x16, 0x14, 0xf7, 0xa0,
+	0x91, 0xaf, 0xb9, 0xcc, 0xad, 0xa6, 0x9a, 0xd2, 0xc0, 0xf9, 0x87, 0xc0, 0xaa, 0x24, 0xf8, 0xce,
+	0x08, 0x65, 0x22, 0xe4, 0xcf, 0x86, 0xf9, 0x06, 0xf5, 0x75, 0x9c, 0x17, 0x21, 0xcc, 0x49, 0xe7,
+	0xc3, 0xd4, 0xad, 0x16, 0xe6, 0x5e, 0x7a, 0xf4, 0x4b, 0x2a, 0xc5, 0x76, 0x5e, 0xdf, 0xdf, 0x8d,
+	0x0c, 0x5f, 0x3d, 0xe0, 0x64, 0x30, 0xbc, 0x2a, 0xc6, 0x7d, 0x68, 0x96, 0x85, 0x69, 0x0f, 0x25,
+	0xc2, 0x16, 0xbc, 0x20, 0x94, 0x0a, 0x96, 0xe7, 0x65, 0x93, 0x8f, 0x10, 0x0f, 0x01, 0x96, 0x82,
+	0x11, 0xc9, 0x68, 0x40, 0xa4, 0x2a, 0xd1, 0xf4, 0xdb, 0x25, 0x33, 0x93, 0x4e, 0x04, 0xfd, 0xca,
+	0xc6, 0x4f, 0x24, 0xa5, 0x31, 0x25, 0x92, 0x5d, 0x4f, 0xfc, 0xe4, 0xa3, 0x76, 0xc9, 0x87, 0x59,
+	0xf1, 0x31, 0xff, 0xba, 0x3f, 0xda, 0xe8, 0x70, 0xb4, 0xd1, 0xfd, 0xd1, 0x46, 0xff, 0x4f, 0xb6,
+	0x71, 0x38, 0xd9, 0xc6, 0xed, 0xc9, 0x36, 0x7e, 0xbe, 0x8b, 0x62, 0xb9, 0xda, 0x84, 0xee, 0x92,
+	0x27, 0x5e, 0xb8, 0x63, 0x53, 0xb2, 0xce, 0x56, 0x44, 0x32, 0xa2, 0x90, 0xf7, 0xd7, 0x3b, 0x7f,
+	0xce, 0x6d, 0xc6, 0xf2, 0xb0, 0xa9, 0xbe, 0xdb, 0xc7, 0x87, 0x00, 0x00, 0x00, 0xff, 0xff, 0x49,
+	0xda, 0x67, 0xaf, 0xb4, 0x02, 0x00, 0x00,
 }
 
 func (m *TradingReward) Marshal() (dAtA []byte, err error) {
@@ -194,6 +378,136 @@ func (m *TradingReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *TradingRewardLeaderboard) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TradingRewardLeaderboard) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TradingRewardLeaderboard) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.List) > 0 {
+		for iNdEx := len(m.List) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.List[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTradingReward(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.RewardId) > 0 {
+		i -= len(m.RewardId)
+		copy(dAtA[i:], m.RewardId)
+		i = encodeVarintTradingReward(dAtA, i, uint64(len(m.RewardId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TradingRewardLeaderboardEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TradingRewardLeaderboardEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TradingRewardLeaderboardEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.CreatedAt != 0 {
+		i = encodeVarintTradingReward(dAtA, i, uint64(m.CreatedAt))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintTradingReward(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Amount) > 0 {
+		i -= len(m.Amount)
+		copy(dAtA[i:], m.Amount)
+		i = encodeVarintTradingReward(dAtA, i, uint64(len(m.Amount)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TradingRewardCandidate) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TradingRewardCandidate) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TradingRewardCandidate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintTradingReward(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Amount) > 0 {
+		i -= len(m.Amount)
+		copy(dAtA[i:], m.Amount)
+		i = encodeVarintTradingReward(dAtA, i, uint64(len(m.Amount)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.RewardId) > 0 {
+		i -= len(m.RewardId)
+		copy(dAtA[i:], m.RewardId)
+		i = encodeVarintTradingReward(dAtA, i, uint64(len(m.RewardId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTradingReward(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTradingReward(v)
 	base := offset
@@ -232,6 +546,66 @@ func (m *TradingReward) Size() (n int) {
 	}
 	if m.Slots != 0 {
 		n += 1 + sovTradingReward(uint64(m.Slots))
+	}
+	return n
+}
+
+func (m *TradingRewardLeaderboard) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.RewardId)
+	if l > 0 {
+		n += 1 + l + sovTradingReward(uint64(l))
+	}
+	if len(m.List) > 0 {
+		for _, e := range m.List {
+			l = e.Size()
+			n += 1 + l + sovTradingReward(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TradingRewardLeaderboardEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Amount)
+	if l > 0 {
+		n += 1 + l + sovTradingReward(uint64(l))
+	}
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovTradingReward(uint64(l))
+	}
+	if m.CreatedAt != 0 {
+		n += 1 + sovTradingReward(uint64(m.CreatedAt))
+	}
+	return n
+}
+
+func (m *TradingRewardCandidate) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.RewardId)
+	if l > 0 {
+		n += 1 + l + sovTradingReward(uint64(l))
+	}
+	l = len(m.Amount)
+	if l > 0 {
+		n += 1 + l + sovTradingReward(uint64(l))
+	}
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovTradingReward(uint64(l))
 	}
 	return n
 }
@@ -437,6 +811,401 @@ func (m *TradingReward) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTradingReward(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTradingReward
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TradingRewardLeaderboard) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTradingReward
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TradingRewardLeaderboard: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TradingRewardLeaderboard: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTradingReward
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTradingReward
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTradingReward
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RewardId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field List", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTradingReward
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTradingReward
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTradingReward
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.List = append(m.List, TradingRewardLeaderboardEntry{})
+			if err := m.List[len(m.List)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTradingReward(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTradingReward
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TradingRewardLeaderboardEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTradingReward
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TradingRewardLeaderboardEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TradingRewardLeaderboardEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTradingReward
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTradingReward
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTradingReward
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTradingReward
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTradingReward
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTradingReward
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CreatedAt", wireType)
+			}
+			m.CreatedAt = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTradingReward
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CreatedAt |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTradingReward(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTradingReward
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TradingRewardCandidate) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTradingReward
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TradingRewardCandidate: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TradingRewardCandidate: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTradingReward
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTradingReward
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTradingReward
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RewardId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTradingReward
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTradingReward
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTradingReward
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTradingReward
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTradingReward
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTradingReward
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTradingReward(dAtA[iNdEx:])

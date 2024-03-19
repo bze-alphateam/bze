@@ -16,6 +16,15 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// Set all the tradingReward
 	for _, elem := range genState.TradingRewardList {
 		k.SetTradingReward(ctx, elem)
+		k.SetMarketIdRewardId(ctx, elem)
+	}
+
+	for _, elem := range genState.TradingRewardLeaderboardList {
+		k.SetTradingRewardLeaderboard(ctx, elem)
+	}
+
+	for _, elem := range genState.TradingRewardCandidateList {
+		k.SetTradingRewardCandidate(ctx, elem)
 	}
 
 	// Set all the stakingRewardParticipant
@@ -45,6 +54,8 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.TradingRewardList = k.GetAllTradingReward(ctx)
 	genesis.StakingRewardParticipantList = k.GetAllStakingRewardParticipant(ctx)
 	genesis.PendingUnlockParticipantList = k.GetAllPendingUnlockParticipant(ctx)
+	genesis.TradingRewardLeaderboardList = k.GetAllTradingRewardLeaderboard(ctx)
+	genesis.TradingRewardCandidateList = k.GetAllTradingRewardCandidate(ctx)
 	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis

@@ -20,5 +20,7 @@ message GenesisState {
   repeated TradingReward trading_reward_list = 5 [(gogoproto.nullable) = false];
   repeated StakingRewardParticipant staking_reward_participant_list = 6 [(gogoproto.nullable) = false];
   repeated PendingUnlockParticipant pending_unlock_participant_list = 7 [(gogoproto.nullable) = false];
+  repeated TradingRewardLeaderboard trading_reward_leaderboard_list = 8 [(gogoproto.nullable) = false];
+  repeated TradingRewardCandidate trading_reward_candidate_list = 9 [(gogoproto.nullable) = false];
   // this line is used by starport scaffolding # genesis/proto/state
 }

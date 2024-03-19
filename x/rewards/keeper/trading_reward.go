@@ -47,3 +47,27 @@ func (k Keeper) GetAllTradingReward(ctx sdk.Context) (list []types.TradingReward
 
 	return
 }
+
+// SetMarketIdRewardId save a reward id on a market id key
+func (k Keeper) SetMarketIdRewardId(ctx sdk.Context, tradingReward types.TradingReward) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.MarketIdRewardIdKeyPrefix))
+	val := []byte(tradingReward.RewardId)
+	store.Set(types.MarketIdRewardIdKey(tradingReward.MarketId), val)
+}
+
+// GetMarketIdRewardId get a reward id for a market id key
+func (k Keeper) GetMarketIdRewardId(ctx sdk.Context, marketId string) (string, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.MarketIdRewardIdKeyPrefix))
+	val := store.Get(types.MarketIdRewardIdKey(marketId))
+	if val == nil {
+		return "", false
+	}
+
+	return string(val), true
+}
+
+// RemoveMarketIdRewardId removes the reward id stored for a market id
+func (k Keeper) RemoveMarketIdRewardId(ctx sdk.Context, marketId string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.MarketIdRewardIdKeyPrefix))
+	store.Delete(types.MarketIdRewardIdKey(marketId))
+}

@@ -56,6 +56,7 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 		ctx,
 		tradingReward,
 	)
+	k.SetMarketIdRewardId(ctx, tradingReward)
 
 	return &types.MsgCreateTradingRewardResponse{RewardId: tradingReward.RewardId}, nil
 }
