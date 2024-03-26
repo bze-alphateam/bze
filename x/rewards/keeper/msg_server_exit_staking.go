@@ -46,7 +46,10 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 		stakingReward.StakedAmount = remainingStakedAmount.String()
 		k.SetStakingReward(ctx, stakingReward)
 	} else {
-		k.RemoveStakingReward(ctx, stakingReward.RewardId)
+		//if this staking reward is finished (all funds were distributed and payouts executed) we should remove it
+		if stakingReward.Payouts >= stakingReward.Duration {
+			k.RemoveStakingReward(ctx, stakingReward.RewardId)
+		}
 	}
 
 	return &types.MsgExitStakingResponse{}, nil

@@ -25,7 +25,7 @@ func (k Keeper) getDistributeRewardHandler() func(ctx sdk.Context, reward types.
 		err := k.distributeStakingRewards(&sr, sr.PrizeAmount)
 		if err != nil {
 			logger.Error(err.Error())
-			stop = true
+			stop = false
 			return
 		}
 
