@@ -36,3 +36,8 @@ message TradingRewardCandidate {
   string amount = 2;
   string address = 3;
 }
+
+message MarketIdTradingRewardId {
+  string reward_id = 1;
+  string market_id = 2;
+}

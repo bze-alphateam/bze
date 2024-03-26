@@ -71,14 +71,6 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 				RewardId: "1",
 			},
 		},
-		TradingRewardList: []types.TradingReward{
-			{
-				RewardId: "0",
-			},
-			{
-				RewardId: "1",
-			},
-		},
 		// this line is used by starport scaffolding # simapp/module/genesisState
 	}
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&rewardsGenesis)

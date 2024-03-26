@@ -14,10 +14,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetStakingReward(ctx, elem)
 	}
 	// Set all the tradingReward
-	for _, elem := range genState.TradingRewardList {
-		k.SetTradingReward(ctx, elem)
-		//TODO: move this to its own genesis export/import
-		k.SetMarketIdRewardId(ctx, elem)
+	for _, elem := range genState.PendingTradingRewardList {
+		k.SetPendingTradingReward(ctx, elem)
+	}
+
+	for _, elem := range genState.ActiveTradingRewardList {
+		k.SetActiveTradingReward(ctx, elem)
 	}
 
 	for _, elem := range genState.TradingRewardLeaderboardList {
@@ -38,6 +40,18 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetPendingUnlockParticipant(ctx, elem)
 	}
 
+	for _, elem := range genState.PendingTradingRewardExpirationList {
+		k.SetPendingTradingRewardExpiration(ctx, elem)
+	}
+
+	for _, elem := range genState.ActiveTradingRewardExpirationList {
+		k.SetActiveTradingRewardExpiration(ctx, elem)
+	}
+
+	for _, elem := range genState.MarketIdTradingRewardIdList {
+		k.SetMarketIdRewardId(ctx, elem)
+	}
+
 	// this line is used by starport scaffolding # genesis/module/init
 	k.SetParams(ctx, genState.Params)
 	k.SetTradingRewardsCounter(ctx, genState.TradingRewardsCounter)
@@ -52,11 +66,17 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.StakingRewardList = k.GetAllStakingReward(ctx)
 	genesis.StakingRewardsCounter = k.GetStakingRewardsCounter(ctx)
 	genesis.TradingRewardsCounter = k.GetTradingRewardsCounter(ctx)
-	genesis.TradingRewardList = k.GetAllTradingReward(ctx)
+
+	genesis.PendingTradingRewardList = k.GetAllPendingTradingReward(ctx)
+	genesis.ActiveTradingRewardList = k.GetAllActiveTradingReward(ctx)
 	genesis.StakingRewardParticipantList = k.GetAllStakingRewardParticipant(ctx)
 	genesis.PendingUnlockParticipantList = k.GetAllPendingUnlockParticipant(ctx)
 	genesis.TradingRewardLeaderboardList = k.GetAllTradingRewardLeaderboard(ctx)
 	genesis.TradingRewardCandidateList = k.GetAllTradingRewardCandidate(ctx)
+
+	genesis.MarketIdTradingRewardIdList = k.GetAllMarketIdRewardId(ctx)
+	genesis.PendingTradingRewardExpirationList = k.GetAllPendingTradingRewardExpiration(ctx)
+	genesis.ActiveTradingRewardExpirationList = k.GetAllActiveTradingRewardExpiration(ctx)
 	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis

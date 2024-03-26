@@ -20,7 +20,7 @@ func createNTradingReward(keeper *keeper.Keeper, ctx sdk.Context, n int) []types
 	for i := range items {
 		items[i].RewardId = strconv.Itoa(i)
 
-		keeper.SetTradingReward(ctx, items[i])
+		keeper.SetPendingTradingReward(ctx, items[i])
 	}
 	return items
 }
@@ -29,7 +29,7 @@ func TestTradingRewardGet(t *testing.T) {
 	keeper, ctx := keepertest.RewardsKeeper(t)
 	items := createNTradingReward(keeper, ctx, 10)
 	for _, item := range items {
-		rst, found := keeper.GetTradingReward(ctx,
+		rst, found := keeper.GetPendingTradingReward(ctx,
 			item.RewardId,
 		)
 		require.True(t, found)
@@ -43,10 +43,10 @@ func TestTradingRewardRemove(t *testing.T) {
 	keeper, ctx := keepertest.RewardsKeeper(t)
 	items := createNTradingReward(keeper, ctx, 10)
 	for _, item := range items {
-		keeper.RemoveTradingReward(ctx,
+		keeper.RemovePendingTradingReward(ctx,
 			item.RewardId,
 		)
-		_, found := keeper.GetTradingReward(ctx,
+		_, found := keeper.GetPendingTradingReward(ctx,
 			item.RewardId,
 		)
 		require.False(t, found)
@@ -58,6 +58,6 @@ func TestTradingRewardGetAll(t *testing.T) {
 	items := createNTradingReward(keeper, ctx, 10)
 	require.ElementsMatch(t,
 		nullify.Fill(items),
-		nullify.Fill(keeper.GetAllTradingReward(ctx)),
+		nullify.Fill(keeper.GetAllPendingTradingReward(ctx)),
 	)
 }

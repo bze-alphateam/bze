@@ -11,7 +11,7 @@ const (
 
 // StakingRewardParticipantKey returns the store key to retrieve a StakingRewardParticipant from the index fields
 func StakingRewardParticipantKey(address, rewardId string) []byte {
-	return []byte(address + "/" + rewardId)
+	return []byte(address + "/" + rewardId + "/")
 }
 
 // StakingRewardParticipantPrefix returns the store prefix key to retrieve a StakingRewardParticipant for an address

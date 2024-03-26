@@ -13,6 +13,11 @@ func (k Keeper) SetTradingRewardLeaderboard(ctx sdk.Context, leaderboard types.T
 	store.Set(types.TradingRewardKey(leaderboard.RewardId), b)
 }
 
+func (k Keeper) RemoveTradingRewardLeaderboard(ctx sdk.Context, rewardId string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LeaderboardKeyPrefix))
+	store.Delete(types.TradingRewardKey(rewardId))
+}
+
 // GetTradingRewardLeaderboard returns a types.TradingRewardLeaderboard from its index
 func (k Keeper) GetTradingRewardLeaderboard(ctx sdk.Context, rewardId string) (val types.TradingRewardLeaderboard, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LeaderboardKeyPrefix))

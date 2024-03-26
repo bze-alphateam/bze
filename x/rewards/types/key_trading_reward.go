@@ -8,16 +8,19 @@ import (
 var _ binary.ByteOrder
 
 const (
-	// TradingRewardKeyPrefix is the prefix to retrieve all TradingReward
-	TradingRewardKeyPrefix = "tr/value/"
+	// PendingTradingRewardKeyPrefix is the prefix to retrieve all pending TradingReward
+	PendingTradingRewardKeyPrefix = "tr/v/p/"
+	// ActiveTradingRewardKeyPrefix is the prefix to retrieve all active TradingReward
+	ActiveTradingRewardKeyPrefix = "tr/v/a/"
 	// MarketIdRewardIdKeyPrefix is the prefix to retrieve a reward id for a market id
 	MarketIdRewardIdKeyPrefix = "tr/mr/"
 	// LeaderboardKeyPrefix is the prefix of a leaderboard for a trading reward
 	LeaderboardKeyPrefix = "tr/lb/"
 	// RewardCandidateKeyPrefix prefix that holds entries/participants for trading rewards
 	RewardCandidateKeyPrefix = "tr/r/"
-	// TradingRewardExpirationKeyPrefix - the prefix used to save trading reward expiration
-	TradingRewardExpirationKeyPrefix = "tr/exp/"
+	// PendingTradingRewardExpirationKeyPrefix - the prefix used to save trading reward expiration
+	PendingTradingRewardExpirationKeyPrefix = "tr/exp/p/"
+	ActiveTradingRewardExpirationKeyPrefix  = "tr/exp/a/"
 )
 
 // TradingRewardCandidateKey returns the store key to retrieve a reward candidate

@@ -247,7 +247,7 @@ func (suite *IntegrationTestSuite) TestCreateTradingReward_Success() {
 	res, err := suite.msgServer.CreateTradingReward(goCtx, &msg)
 	suite.Require().NoError(err)
 
-	storeTradingReward, ok := suite.k.GetTradingReward(suite.ctx, res.RewardId)
+	storeTradingReward, ok := suite.k.GetPendingTradingReward(suite.ctx, res.RewardId)
 	suite.Require().True(ok)
 
 	suite.Require().EqualValues(msg.PrizeAmount, storeTradingReward.PrizeAmount)
