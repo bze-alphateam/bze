@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) TradingRewardAll(c context.Context, req *types.QueryAllTradingRewardRequest) (*types.QueryAllTradingRewardResponse, error) {
+func (k msgServer) TradingRewardAll(c context.Context, req *types.QueryAllTradingRewardRequest) (*types.QueryAllTradingRewardResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -19,9 +19,7 @@ func (k Keeper) TradingRewardAll(c context.Context, req *types.QueryAllTradingRe
 	var tradingRewards []types.TradingReward
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := ctx.KVStore(k.storeKey)
-	tradingRewardStore := prefix.NewStore(store, types.KeyPrefix(types.PendingTradingRewardKeyPrefix))
-
+	tradingRewardStore := k.getTradingRewardStore(ctx, req.State)
 	pageRes, err := query.Paginate(tradingRewardStore, req.Pagination, func(key []byte, value []byte) error {
 		var tradingReward types.TradingReward
 		if err := k.cdc.Unmarshal(value, &tradingReward); err != nil {
@@ -39,16 +37,30 @@ func (k Keeper) TradingRewardAll(c context.Context, req *types.QueryAllTradingRe
 	return &types.QueryAllTradingRewardResponse{List: tradingRewards, Pagination: pageRes}, nil
 }
 
-func (k Keeper) TradingReward(c context.Context, req *types.QueryGetTradingRewardRequest) (*types.QueryGetTradingRewardResponse, error) {
+func (k msgServer) TradingReward(c context.Context, req *types.QueryGetTradingRewardRequest) (*types.QueryGetTradingRewardResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
 	val, found := k.GetPendingTradingReward(ctx, req.RewardId)
-	if !found {
-		return nil, status.Error(codes.NotFound, "not found")
+	if found {
+		return &types.QueryGetTradingRewardResponse{TradingReward: val}, nil
 	}
 
-	return &types.QueryGetTradingRewardResponse{TradingReward: val}, nil
+	val, found = k.GetActiveTradingReward(ctx, req.RewardId)
+	if found {
+		return &types.QueryGetTradingRewardResponse{TradingReward: val}, nil
+	}
+
+	return nil, status.Error(codes.NotFound, "not found")
+}
+
+func (k msgServer) getTradingRewardStore(ctx sdk.Context, state string) prefix.Store {
+	s := k.getActiveTradingRewardStore(ctx)
+	if state == "pending" {
+		s = k.getPendingTradingRewardStore(ctx)
+	}
+
+	return s
 }
