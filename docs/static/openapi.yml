@@ -2692,6 +2692,9 @@ paths:
                     slots:
                       type: integer
                       format: int64
+                    expire_at:
+                      type: integer
+                      format: int64
               pagination:
                 type: object
                 properties:
@@ -2821,6 +2824,9 @@ paths:
                   market_id:
                     type: string
                   slots:
+                    type: integer
+                    format: int64
+                  expire_at:
                     type: integer
                     format: int64
         default:
@@ -34770,6 +34776,9 @@ definitions:
             slots:
               type: integer
               format: int64
+            expire_at:
+              type: integer
+              format: int64
       pagination:
         type: object
         properties:
@@ -34890,6 +34899,9 @@ definitions:
           slots:
             type: integer
             format: int64
+          expire_at:
+            type: integer
+            format: int64
   bze.v1.rewards.QueryParamsResponse:
     type: object
     properties:
@@ -34959,6 +34971,9 @@ definitions:
       market_id:
         type: string
       slots:
+        type: integer
+        format: int64
+      expire_at:
         type: integer
         format: int64
   cosmos.auth.v1beta1.Params:

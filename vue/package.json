@@ -1,27 +1,18 @@
 {
-  "name": "@starport/template",
-  "version": "0.1.55",
-  "description": "A Vue 3 boilerplate project utilizing @starport/vue and @starport/vuex",
-  "author": "Tendermint, Inc <hello@tendermint.com>",
-  "private": true,
-  "scripts": {
-    "serve": "vue-cli-service serve --mode=production",
-    "dev": "vue-cli-service serve",
-    "lint": "vue-cli-service lint",
-    "build": "vue-cli-service build",
-    "test:unit": "vue-cli-service test:unit"
-  },
+  "author": "Tendermint, Inc \u003chello@tendermint.com\u003e",
   "dependencies": {
     "@cosmjs/launchpad": "^0.26.1",
     "@cosmjs/proto-signing": "^0.26.1",
     "@cosmjs/stargate": "^0.26.1",
     "@starport/vue": "^0.1.55",
     "@starport/vuex": "^0.1.55",
+    "bze-alphateam-bze-client-ts": "file:../ts-client",
     "core-js": "^3.18.2",
     "vue": "^3.2.6",
     "vue-router": "^4.0.3",
     "vuex": "^4.0.0"
   },
+  "description": "A Vue 3 boilerplate project utilizing @starport/vue and @starport/vuex",
   "devDependencies": {
     "@babel/core": "^7.15.5",
     "@babel/eslint-parser": "^7.15.7",
@@ -49,5 +40,15 @@
   },
   "gitHooks": {
     "pre-commit": "lint-staged"
-  }
+  },
+  "name": "@starport/template",
+  "private": true,
+  "scripts": {
+    "build": "vue-cli-service build",
+    "dev": "vue-cli-service serve",
+    "lint": "vue-cli-service lint",
+    "serve": "vue-cli-service serve --mode=production",
+    "test:unit": "vue-cli-service test:unit"
+  },
+  "version": "0.1.55"
 }

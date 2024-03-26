@@ -90,6 +90,11 @@ func (k msgServer) UpdateStakingReward(goCtx context.Context, msg *types.MsgUpda
 		return nil, sdkerrors.Wrapf(err, "could not calculate amount needed to create the reward")
 	}
 
+	err = k.checkUserBalances(ctx, toCapture, acc)
+	if err != nil {
+		return nil, err
+	}
+
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.ModuleName, toCapture)
 	if err != nil {
 		return nil, err

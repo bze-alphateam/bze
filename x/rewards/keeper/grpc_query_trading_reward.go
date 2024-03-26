@@ -20,7 +20,7 @@ func (k Keeper) TradingRewardAll(c context.Context, req *types.QueryAllTradingRe
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
-	tradingRewardStore := prefix.NewStore(store, types.KeyPrefix(types.TradingRewardKeyPrefix))
+	tradingRewardStore := prefix.NewStore(store, types.KeyPrefix(types.PendingTradingRewardKeyPrefix))
 
 	pageRes, err := query.Paginate(tradingRewardStore, req.Pagination, func(key []byte, value []byte) error {
 		var tradingReward types.TradingReward
@@ -45,7 +45,7 @@ func (k Keeper) TradingReward(c context.Context, req *types.QueryGetTradingRewar
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, found := k.GetTradingReward(ctx, req.RewardId)
+	val, found := k.GetPendingTradingReward(ctx, req.RewardId)
 	if !found {
 		return nil, status.Error(codes.NotFound, "not found")
 	}

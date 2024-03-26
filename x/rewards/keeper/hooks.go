@@ -57,19 +57,36 @@ func (k Keeper) GetRemoveExpiredTradingRewardsHook() types.EpochHook {
 	})
 }
 
+func (k Keeper) GetTradingRewardsDistributionHook() types.EpochHook {
+	hookName := "trading_rewards_distribution"
+	return types.NewAfterEpochHook(hookName, func(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+		if epochIdentifier != expirationEpoch {
+			return nil
+		}
+
+		k.Logger(ctx).
+			With("epoch", epochIdentifier, "epoch_number", epochNumber, "hook_name", hookName).
+			Debug("preparing to execute hook")
+
+		k.distributeTradingRewards(ctx, epochNumber)
+
+		return nil
+	})
+}
+
 func (k Keeper) GetOnOrderFillHook() func(ctx sdk.Context, marketId, amountTraded, userAddress string) {
 	return func(ctx sdk.Context, marketId, amountTraded, userAddress string) {
 		logger := ctx.Logger().With("market_id", marketId)
-		existingRewardId, found := k.GetMarketIdRewardId(ctx, marketId)
+		existingReward, found := k.GetMarketIdRewardId(ctx, marketId)
 		if !found {
 			logger.Debug("no rewards found for this market id")
 			return
 		}
 
-		reward, found := k.GetTradingReward(ctx, existingRewardId)
+		reward, found := k.GetActiveTradingReward(ctx, existingReward.RewardId)
 		if !found {
-			logger.With("reward_id", existingRewardId).
-				Error("the reward id found for this market does not exist in trading reward store")
+			logger.With("reward_id", existingReward).
+				Error("the reward id found for this market does not exist in active trading reward store")
 			return
 		}
 		logger = logger.With("reward", reward)

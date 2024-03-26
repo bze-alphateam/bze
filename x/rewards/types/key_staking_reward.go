@@ -12,7 +12,7 @@ const (
 
 // StakingRewardKey returns the store key to retrieve a StakingReward from the index fields
 func StakingRewardKey(rewardId string) []byte {
-	return []byte(rewardId)
+	return []byte(rewardId + "/")
 }
 
 func StakingRewardCounterKey() []byte {

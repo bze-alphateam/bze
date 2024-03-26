@@ -11,13 +11,19 @@ const DefaultIndex uint64 = 1
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		StakingRewardList:            []StakingReward{},
-		StakingRewardsCounter:        0,
-		TradingRewardsCounter:        0,
-		TradingRewardList:            []TradingReward{},
-		StakingRewardParticipantList: []StakingRewardParticipant{},
-		// this line is used by starport scaffolding # genesis/types/default
-		Params: DefaultParams(),
+		Params:                             DefaultParams(),
+		StakingRewardList:                  []StakingReward{},
+		StakingRewardsCounter:              0,
+		TradingRewardsCounter:              0,
+		ActiveTradingRewardList:            []TradingReward{},
+		PendingTradingRewardList:           []TradingReward{},
+		StakingRewardParticipantList:       []StakingRewardParticipant{},
+		PendingUnlockParticipantList:       []PendingUnlockParticipant{},
+		TradingRewardLeaderboardList:       []TradingRewardLeaderboard{},
+		TradingRewardCandidateList:         []TradingRewardCandidate{},
+		MarketIdTradingRewardIdList:        []MarketIdTradingRewardId{},
+		PendingTradingRewardExpirationList: []TradingRewardExpiration{},
+		ActiveTradingRewardExpirationList:  []TradingRewardExpiration{},
 	}
 }
 
@@ -34,19 +40,19 @@ func (gs GenesisState) Validate() error {
 		}
 		stakingRewardIndexMap[index] = struct{}{}
 	}
+
 	// Check for duplicated index in tradingReward
 	tradingRewardIndexMap := make(map[string]struct{})
-
-	for _, elem := range gs.TradingRewardList {
+	for _, elem := range gs.ActiveTradingRewardList {
 		index := string(TradingRewardKey(elem.RewardId))
 		if _, ok := tradingRewardIndexMap[index]; ok {
 			return fmt.Errorf("duplicated index for tradingReward")
 		}
 		tradingRewardIndexMap[index] = struct{}{}
 	}
+
 	// Check for duplicated index in stakingRewardParticipant
 	stakingRewardParticipantIndexMap := make(map[string]struct{})
-
 	for _, elem := range gs.StakingRewardParticipantList {
 		index := string(StakingRewardParticipantKey(elem.Address, elem.RewardId))
 		if _, ok := stakingRewardParticipantIndexMap[index]; ok {

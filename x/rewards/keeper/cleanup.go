@@ -7,20 +7,20 @@ import (
 
 func (k Keeper) removeExpiredTradingRewards(ctx sdk.Context, epochNumber int64) {
 	logger := k.Logger(ctx).With("epoch_number", epochNumber)
-	toRemove := k.GetAllTradingRewardExpirationByExpireAt(ctx, uint32(epochNumber))
+	toRemove := k.GetAllPendingTradingRewardExpirationByExpireAt(ctx, uint32(epochNumber))
 	for _, exp := range toRemove {
-		k.RemoveTradingRewardExpiration(ctx, exp.ExpireAt, exp.RewardId)
-		tr, found := k.GetTradingReward(ctx, exp.RewardId)
+		k.RemovePendingTradingRewardExpiration(ctx, exp.ExpireAt, exp.RewardId)
+		tr, found := k.GetPendingTradingReward(ctx, exp.RewardId)
 		if !found {
 			logger.With("trading_reward_expiration", exp).Error("trading reward not found for this trading reward expiration")
 			continue
 		}
-		k.RemoveTradingReward(ctx, exp.RewardId)
+		k.RemovePendingTradingReward(ctx, exp.RewardId)
 
 		//burn coins that were captured
 		toBurn, err := k.getAmountToCapture("", tr.PrizeDenom, tr.PrizeAmount, int64(tr.Slots))
 		if err != nil {
-			logger.With("trading_reward", tr).Error("could not create amount to capture")
+			logger.With("trading_reward", tr).Error("could not create amount to burn from trading reward")
 			continue
 		}
 
@@ -30,6 +30,7 @@ func (k Keeper) removeExpiredTradingRewards(ctx sdk.Context, epochNumber int64) 
 			continue
 		}
 
-		logger.With("trading_reward_expiration", exp).Debug("removed expired trading reward")
+		logger.With("trading_reward", tr, "to_burn", toBurn).
+			Debug("removed expired trading reward and burnt the tokens associated with it")
 	}
 }

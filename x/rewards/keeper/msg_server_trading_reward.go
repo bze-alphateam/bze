@@ -63,7 +63,7 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 	//add ID
 	tradingReward.RewardId = k.smallZeroFillId(k.GetTradingRewardsCounter(ctx))
 	tradingReward.ExpireAt = k.getNewTradingRewardExpireAt(ctx)
-	k.SetTradingReward(
+	k.SetPendingTradingReward(
 		ctx,
 		tradingReward,
 	)
@@ -73,7 +73,7 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 		RewardId: tradingReward.RewardId,
 		ExpireAt: tradingReward.ExpireAt,
 	}
-	k.SetTradingRewardExpiration(ctx, exp)
+	k.SetPendingTradingRewardExpiration(ctx, exp)
 
 	return &types.MsgCreateTradingRewardResponse{RewardId: tradingReward.RewardId}, nil
 }
