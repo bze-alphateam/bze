@@ -11,8 +11,9 @@ import (
 
 func CmdListTradingReward() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-trading-reward",
+		Use:   "list-trading-reward [state]",
 		Short: "list all TradingReward",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
@@ -21,9 +22,12 @@ func CmdListTradingReward() *cobra.Command {
 				return err
 			}
 
+			argState := args[0]
+
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryAllTradingRewardRequest{
+				State:      argState,
 				Pagination: pageReq,
 			}
 

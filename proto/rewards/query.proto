@@ -35,7 +35,7 @@ service Query {
 
 	// Queries a list of TradingReward items.
 	rpc TradingRewardAll(QueryAllTradingRewardRequest) returns (QueryAllTradingRewardResponse) {
-		option (google.api.http).get = "/bze/rewards/v1/trading_reward";
+		option (google.api.http).get = "/bze/rewards/v1/trading_reward/{state}";
 	}
 
 	// Queries a StakingRewardParticipant by index.
@@ -86,7 +86,8 @@ message QueryGetTradingRewardResponse {
 }
 
 message QueryAllTradingRewardRequest {
-	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+	string state = 1;
+	cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 message QueryAllTradingRewardResponse {
