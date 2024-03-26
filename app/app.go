@@ -200,7 +200,7 @@ var (
 		tokenfactorytypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		tradebintypes.ModuleName:        nil,
 		epochstypes.ModuleName:          nil,
-		rewardstypes.ModuleName:         nil,
+		rewardstypes.ModuleName:         {authtypes.Burner},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 
@@ -477,10 +477,17 @@ func New(
 		app.EpochsKeeper,
 	)
 
+	app.TradebinKeeper.SetOnOrderFillHooks(
+		[]tradebintypes.OnMarketOrderFill{
+			app.RewardsKeeper.GetOnOrderFillHook(),
+		},
+	)
+
 	app.EpochsKeeper.SetHooks(
 		[]epochstypes.EpochHook{
 			app.RewardsKeeper.GetDistributeAllStakingRewardsHook(),
 			app.RewardsKeeper.GetUnlockPendingUnlockParticipantsHook(),
+			//TODO: add here call to distribute trading rewards hook
 		},
 	)
 
@@ -652,7 +659,8 @@ func New(
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
-	app.mm.RegisterServices(module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter()))
+	cfg := module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.mm.RegisterServices(cfg)
 
 	// initialize stores
 	app.MountKVStores(keys)
@@ -678,7 +686,7 @@ func New(
 
 	app.SetAnteHandler(anteHandler)
 	app.SetEndBlocker(app.EndBlocker)
-	app.setupUpgradeHandlers()
+	app.setupUpgradeHandlers(cfg)
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
@@ -693,8 +701,7 @@ func New(
 	return app
 }
 
-func (app *App) setupUpgradeHandlers() {
-	cfg := module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+func (app *App) setupUpgradeHandlers(cfg module.Configurator) {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v700.UpgradeName,
 		v700.CreateUpgradeHandler(cfg, app.mm),

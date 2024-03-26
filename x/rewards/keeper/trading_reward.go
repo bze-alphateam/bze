@@ -71,3 +71,58 @@ func (k Keeper) RemoveMarketIdRewardId(ctx sdk.Context, marketId string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.MarketIdRewardIdKeyPrefix))
 	store.Delete(types.MarketIdRewardIdKey(marketId))
 }
+
+func (k Keeper) GetAllMarketIdRewardId(ctx sdk.Context) (list []string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.MarketIdRewardIdKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		list = append(list, string(iterator.Value()))
+	}
+
+	return
+}
+
+// SetTradingRewardExpiration save the reward id on the expiration key
+func (k Keeper) SetTradingRewardExpiration(ctx sdk.Context, expiration types.TradingRewardExpiration) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TradingRewardExpirationKeyPrefix))
+	b := k.cdc.MustMarshal(&expiration)
+	store.Set(types.TradingRewardExpirationKey(expiration.ExpireAt, expiration.RewardId), b)
+}
+
+func (k Keeper) RemoveTradingRewardExpiration(ctx sdk.Context, expireAt uint32, rewardId string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TradingRewardExpirationKeyPrefix))
+	store.Delete(types.TradingRewardExpirationKey(expireAt, rewardId))
+}
+
+func (k Keeper) GetAllTradingRewardExpiration(ctx sdk.Context) (list []types.TradingRewardExpiration) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TradingRewardExpirationKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.TradingRewardExpiration
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
+}
+
+func (k Keeper) GetAllTradingRewardExpirationByExpireAt(ctx sdk.Context, expireAt uint32) (list []types.TradingRewardExpiration) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TradingRewardExpirationKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte(types.TradingRewardExpirationByExpireAtPrefix(expireAt)))
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.TradingRewardExpiration
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
+}

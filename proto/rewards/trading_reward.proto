@@ -12,6 +12,12 @@ message TradingReward {
   uint32 duration = 4;
   string market_id = 5;
   uint32 slots = 6;
+  uint32 expire_at = 7;
+}
+
+message TradingRewardExpiration {
+  string reward_id = 1;
+  uint32 expire_at = 2;
 }
 
 message TradingRewardLeaderboard {

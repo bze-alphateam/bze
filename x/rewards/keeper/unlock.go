@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) UnlockAllPendingUnlockParticipants(ctx sdk.Context, epochNumber int64) {
+func (k Keeper) UnlockAllPendingUnlockParticipantsByEpoch(ctx sdk.Context, epochNumber int64) {
 	pending := k.GetAllEpochPendingUnlockParticipant(ctx, epochNumber)
 	for _, p := range pending {
 		logger := k.Logger(ctx).With("pending_unlock", p)
