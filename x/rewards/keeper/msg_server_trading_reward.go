@@ -8,6 +8,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+const (
+	expirationPeriodInHours uint32 = 30 * 24
+)
+
 func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCreateTradingReward) (*types.MsgCreateTradingRewardResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if msg == nil {
@@ -34,6 +38,12 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 		return nil, types.ErrInvalidMarketId
 	}
 
+	//if there is already an active reward for this market id do not allow adding another one
+	_, found := k.GetMarketIdRewardId(ctx, tradingReward.MarketId)
+	if found {
+		return nil, types.ErrRewardAlreadyExists
+	}
+
 	feeParam := k.GetParams(ctx).CreateTradingRewardFee
 	toCapture, err := k.getAmountToCapture(feeParam, tradingReward.PrizeDenom, tradingReward.PrizeAmount, int64(tradingReward.Slots))
 	if err != nil {
@@ -52,11 +62,18 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 
 	//add ID
 	tradingReward.RewardId = k.smallZeroFillId(k.GetTradingRewardsCounter(ctx))
+	tradingReward.ExpireAt = k.getNewTradingRewardExpireAt(ctx)
 	k.SetTradingReward(
 		ctx,
 		tradingReward,
 	)
-	k.SetMarketIdRewardId(ctx, tradingReward)
+
+	//save expiration
+	exp := types.TradingRewardExpiration{
+		RewardId: tradingReward.RewardId,
+		ExpireAt: tradingReward.ExpireAt,
+	}
+	k.SetTradingRewardExpiration(ctx, exp)
 
 	return &types.MsgCreateTradingRewardResponse{RewardId: tradingReward.RewardId}, nil
 }
@@ -68,4 +85,10 @@ func (k msgServer) checkUserBalances(ctx sdk.Context, neededCoins sdk.Coins, add
 	}
 
 	return nil
+}
+
+func (k msgServer) getNewTradingRewardExpireAt(ctx sdk.Context) uint32 {
+	cnt := uint32(k.epochKeeper.GetEpochCountByIdentifier(ctx, expirationEpoch))
+
+	return cnt + expirationPeriodInHours
 }

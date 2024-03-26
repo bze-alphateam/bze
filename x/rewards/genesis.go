@@ -16,6 +16,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// Set all the tradingReward
 	for _, elem := range genState.TradingRewardList {
 		k.SetTradingReward(ctx, elem)
+		//TODO: move this to its own genesis export/import
 		k.SetMarketIdRewardId(ctx, elem)
 	}
 

@@ -12,9 +12,11 @@ import (
 )
 
 const (
-	epochIdentifierDay = "day"
+	epochIdentifierDay  = "day"
+	epochIdentifierHour = "hour"
 
 	distributionEpoch = epochIdentifierDay
+	expirationEpoch   = epochIdentifierHour
 )
 
 type (

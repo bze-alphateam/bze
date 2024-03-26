@@ -9,7 +9,8 @@ import (
 const (
 	TypeMsgCreateTradingReward = "create_trading_reward"
 
-	maxAllowedSlots = 10
+	maxAllowedSlots    = 10
+	maxAllowedDuration = 365
 )
 
 var _ sdk.Msg = &MsgCreateTradingReward{}
@@ -80,7 +81,7 @@ func (msg *MsgCreateTradingReward) ToTradingReward() (TradingReward, error) {
 	if err != nil {
 		return tr, sdkerrors.Wrapf(ErrInvalidDuration, "could not convert duration to int: %s", err.Error())
 	}
-	if durationInt <= 0 || durationInt > tenYearsInDays {
+	if durationInt <= 0 || durationInt > maxAllowedDuration {
 		return tr, ErrInvalidDuration
 	}
 	tr.Duration = uint32(durationInt)

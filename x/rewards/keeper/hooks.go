@@ -26,7 +26,7 @@ func (k Keeper) GetDistributeAllStakingRewardsHook() types.EpochHook {
 func (k Keeper) GetUnlockPendingUnlockParticipantsHook() types.EpochHook {
 	hookName := "pending_unlock_hook"
 	return types.NewAfterEpochHook(hookName, func(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
-		if epochIdentifier != distributionEpoch {
+		if epochIdentifier != expirationEpoch {
 			return nil
 		}
 
@@ -34,7 +34,24 @@ func (k Keeper) GetUnlockPendingUnlockParticipantsHook() types.EpochHook {
 			With("epoch", epochIdentifier, "epoch_number", epochNumber, "hook_name", hookName).
 			Debug("preparing to execute hook")
 
-		k.UnlockAllPendingUnlockParticipants(ctx, epochNumber)
+		k.UnlockAllPendingUnlockParticipantsByEpoch(ctx, epochNumber)
+
+		return nil
+	})
+}
+
+func (k Keeper) GetRemoveExpiredTradingRewardsHook() types.EpochHook {
+	hookName := "remove_expired_trading_rewards"
+	return types.NewAfterEpochHook(hookName, func(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+		if epochIdentifier != expirationEpoch {
+			return nil
+		}
+
+		k.Logger(ctx).
+			With("epoch", epochIdentifier, "epoch_number", epochNumber, "hook_name", hookName).
+			Debug("preparing to execute hook")
+
+		k.removeExpiredTradingRewards(ctx, epochNumber)
 
 		return nil
 	})

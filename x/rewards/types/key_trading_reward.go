@@ -1,6 +1,9 @@
 package types
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"fmt"
+)
 
 var _ binary.ByteOrder
 
@@ -13,21 +16,31 @@ const (
 	LeaderboardKeyPrefix = "tr/lb/"
 	// RewardCandidateKeyPrefix prefix that holds entries/participants for trading rewards
 	RewardCandidateKeyPrefix = "tr/r/"
+	// TradingRewardExpirationKeyPrefix - the prefix used to save trading reward expiration
+	TradingRewardExpirationKeyPrefix = "tr/exp/"
 )
 
 // TradingRewardCandidateKey returns the store key to retrieve a reward candidate
 func TradingRewardCandidateKey(rewardId, address string) []byte {
-	return []byte(rewardId + "/" + address)
+	return []byte(rewardId + "/" + address + "/")
 }
 
 // MarketIdRewardIdKey returns the store key to retrieve a TradingReward.RewardId from the index fields
 func MarketIdRewardIdKey(marketId string) []byte {
-	return []byte(marketId)
+	return []byte(marketId + "/")
 }
 
 // TradingRewardKey returns the store key to retrieve a TradingReward from the index fields
 func TradingRewardKey(rewardId string) []byte {
-	return []byte(rewardId)
+	return []byte(rewardId + "/")
+}
+
+func TradingRewardExpirationKey(expireAt uint32, rewardId string) []byte {
+	return []byte(TradingRewardExpirationByExpireAtPrefix(expireAt) + rewardId + "/")
+}
+
+func TradingRewardExpirationByExpireAtPrefix(expireAt uint32) string {
+	return fmt.Sprintf("%d/", expireAt)
 }
 
 func TradingRewardCounterKey() []byte {
