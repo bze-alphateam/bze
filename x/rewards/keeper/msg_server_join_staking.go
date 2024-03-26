@@ -38,6 +38,11 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 		return nil, err
 	}
 
+	//check if min stake requirement is met
+	if toCapture.AmountOf(stakingReward.StakingDenom).LT(sdk.NewIntFromUint64(stakingReward.MinStake)) {
+		return nil, fmt.Errorf("amount is smaller than staking reward min stake")
+	}
+
 	if err = k.checkUserBalances(ctx, toCapture, acc); err != nil {
 		return nil, err
 	}
