@@ -25,6 +25,7 @@ func (k Keeper) distributeTradingRewards(ctx sdk.Context, epochNumber int64) {
 			k.RemoveActiveTradingRewardExpiration(ctx, exp.ExpireAt, exp.RewardId)
 			k.RemoveActiveTradingReward(ctx, exp.RewardId)
 			k.RemoveTradingRewardLeaderboard(ctx, exp.RewardId)
+			k.cleanupTradingRewardCandidates(ctx, exp.RewardId)
 
 			continue
 		}
@@ -55,5 +56,12 @@ func (k Keeper) distributeTradingRewards(ctx sdk.Context, epochNumber int64) {
 		//extend the expiration of this paid trading reward for another period just to display the winners
 		exp.ExpireAt += oneWeekInHours
 		k.SetActiveTradingRewardExpiration(ctx, exp)
+	}
+}
+
+func (k Keeper) cleanupTradingRewardCandidates(ctx sdk.Context, rewardId string) {
+	toRemove := k.GetTradingRewardCandidateByRewardId(ctx, rewardId)
+	for _, trc := range toRemove {
+		k.RemoveTradingRewardCandidate(ctx, trc.RewardId, trc.Address)
 	}
 }
