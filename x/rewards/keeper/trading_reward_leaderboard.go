@@ -66,10 +66,31 @@ func (k Keeper) GetTradingRewardCandidate(ctx sdk.Context, rewardId, address str
 	return val, true
 }
 
+func (k Keeper) RemoveTradingRewardCandidate(ctx sdk.Context, rewardId, address string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.RewardCandidateKeyPrefix))
+	store.Delete(types.TradingRewardCandidateKey(rewardId, address))
+}
+
 // GetAllTradingRewardCandidate returns all []types.TradingRewardCandidate
 func (k Keeper) GetAllTradingRewardCandidate(ctx sdk.Context) (list []types.TradingRewardCandidate) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.RewardCandidateKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.TradingRewardCandidate
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
+}
+
+// GetTradingRewardCandidateByRewardId returns all []types.TradingRewardCandidate for a rewardId
+func (k Keeper) GetTradingRewardCandidateByRewardId(ctx sdk.Context, rewardId string) (list []types.TradingRewardCandidate) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.RewardCandidateKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte(rewardId+"/"))
 
 	defer iterator.Close()
 
