@@ -46,6 +46,7 @@ export interface QueryGetTradingRewardResponse {
 }
 
 export interface QueryAllTradingRewardRequest {
+  state: string;
   pagination: PageRequest | undefined;
 }
 
@@ -637,15 +638,18 @@ export const QueryGetTradingRewardResponse = {
   },
 };
 
-const baseQueryAllTradingRewardRequest: object = {};
+const baseQueryAllTradingRewardRequest: object = { state: "" };
 
 export const QueryAllTradingRewardRequest = {
   encode(
     message: QueryAllTradingRewardRequest,
     writer: Writer = Writer.create()
   ): Writer {
+    if (message.state !== "") {
+      writer.uint32(10).string(message.state);
+    }
     if (message.pagination !== undefined) {
-      PageRequest.encode(message.pagination, writer.uint32(10).fork()).ldelim();
+      PageRequest.encode(message.pagination, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
@@ -663,6 +667,9 @@ export const QueryAllTradingRewardRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          message.state = reader.string();
+          break;
+        case 2:
           message.pagination = PageRequest.decode(reader, reader.uint32());
           break;
         default:
@@ -677,6 +684,11 @@ export const QueryAllTradingRewardRequest = {
     const message = {
       ...baseQueryAllTradingRewardRequest,
     } as QueryAllTradingRewardRequest;
+    if (object.state !== undefined && object.state !== null) {
+      message.state = String(object.state);
+    } else {
+      message.state = "";
+    }
     if (object.pagination !== undefined && object.pagination !== null) {
       message.pagination = PageRequest.fromJSON(object.pagination);
     } else {
@@ -687,6 +699,7 @@ export const QueryAllTradingRewardRequest = {
 
   toJSON(message: QueryAllTradingRewardRequest): unknown {
     const obj: any = {};
+    message.state !== undefined && (obj.state = message.state);
     message.pagination !== undefined &&
       (obj.pagination = message.pagination
         ? PageRequest.toJSON(message.pagination)
@@ -700,6 +713,11 @@ export const QueryAllTradingRewardRequest = {
     const message = {
       ...baseQueryAllTradingRewardRequest,
     } as QueryAllTradingRewardRequest;
+    if (object.state !== undefined && object.state !== null) {
+      message.state = object.state;
+    } else {
+      message.state = "";
+    }
     if (object.pagination !== undefined && object.pagination !== null) {
       message.pagination = PageRequest.fromPartial(object.pagination);
     } else {

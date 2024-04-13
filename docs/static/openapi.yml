@@ -2663,7 +2663,62 @@ paths:
           type: boolean
       tags:
         - Query
-  /bze/rewards/v1/trading_reward:
+  '/bze/rewards/v1/trading_reward/{reward_id}':
+    get:
+      summary: Queries a TradingReward by index.
+      operationId: BzeV1RewardsTradingReward
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              trading_reward:
+                type: object
+                properties:
+                  reward_id:
+                    type: string
+                  prize_amount:
+                    type: string
+                  prize_denom:
+                    type: string
+                  duration:
+                    type: integer
+                    format: int64
+                  market_id:
+                    type: string
+                  slots:
+                    type: integer
+                    format: int64
+                  expire_at:
+                    type: integer
+                    format: int64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: reward_id
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  '/bze/rewards/v1/trading_reward/{state}':
     get:
       summary: Queries a list of TradingReward items.
       operationId: BzeV1RewardsTradingRewardAll
@@ -2741,6 +2796,10 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
+        - name: state
+          in: path
+          required: true
+          type: string
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -2797,61 +2856,6 @@ paths:
           in: query
           required: false
           type: boolean
-      tags:
-        - Query
-  '/bze/rewards/v1/trading_reward/{reward_id}':
-    get:
-      summary: Queries a TradingReward by index.
-      operationId: BzeV1RewardsTradingReward
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              trading_reward:
-                type: object
-                properties:
-                  reward_id:
-                    type: string
-                  prize_amount:
-                    type: string
-                  prize_denom:
-                    type: string
-                  duration:
-                    type: integer
-                    format: int64
-                  market_id:
-                    type: string
-                  slots:
-                    type: integer
-                    format: int64
-                  expire_at:
-                    type: integer
-                    format: int64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: reward_id
-          in: path
-          required: true
-          type: string
       tags:
         - Query
   /cosmos/auth/v1beta1/accounts:

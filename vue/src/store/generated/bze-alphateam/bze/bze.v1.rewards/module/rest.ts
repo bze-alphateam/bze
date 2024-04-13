@@ -224,6 +224,9 @@ export interface V1RewardsTradingReward {
 
   /** @format int64 */
   slots?: number;
+
+  /** @format int64 */
+  expire_at?: number;
 }
 
 export type QueryParamsType = Record<string | number, any>;
@@ -418,7 +421,7 @@ export class HttpClient<SecurityDataType = unknown> {
 }
 
 /**
- * @title rewards/genesis.proto
+ * @title rewards/events.proto
  * @version version not set
  */
 export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {
@@ -537,11 +540,28 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * No description
    *
    * @tags Query
+   * @name QueryTradingReward
+   * @summary Queries a TradingReward by index.
+   * @request GET:/bze/rewards/v1/trading_reward/{reward_id}
+   */
+  queryTradingReward = (reward_id: string, params: RequestParams = {}) =>
+    this.request<RewardsQueryGetTradingRewardResponse, RpcStatus>({
+      path: `/bze/rewards/v1/trading_reward/${reward_id}`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
    * @name QueryTradingRewardAll
    * @summary Queries a list of TradingReward items.
-   * @request GET:/bze/rewards/v1/trading_reward
+   * @request GET:/bze/rewards/v1/trading_reward/{state}
    */
   queryTradingRewardAll = (
+    state: string,
     query?: {
       "pagination.key"?: string;
       "pagination.offset"?: string;
@@ -552,25 +572,9 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     params: RequestParams = {},
   ) =>
     this.request<RewardsQueryAllTradingRewardResponse, RpcStatus>({
-      path: `/bze/rewards/v1/trading_reward`,
+      path: `/bze/rewards/v1/trading_reward/${state}`,
       method: "GET",
       query: query,
-      format: "json",
-      ...params,
-    });
-
-  /**
-   * No description
-   *
-   * @tags Query
-   * @name QueryTradingReward
-   * @summary Queries a TradingReward by index.
-   * @request GET:/bze/rewards/v1/trading_reward/{reward_id}
-   */
-  queryTradingReward = (reward_id: string, params: RequestParams = {}) =>
-    this.request<RewardsQueryGetTradingRewardResponse, RpcStatus>({
-      path: `/bze/rewards/v1/trading_reward/${reward_id}`,
-      method: "GET",
       format: "json",
       ...params,
     });
