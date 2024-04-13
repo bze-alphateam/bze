@@ -6,7 +6,10 @@ import {
   PageRequest,
   PageResponse,
 } from "../cosmos/base/query/v1beta1/pagination";
-import { TradingReward } from "../rewards/trading_reward";
+import {
+  TradingReward,
+  TradingRewardLeaderboard,
+} from "../rewards/trading_reward";
 import { StakingRewardParticipant } from "../rewards/staking_reward_participant";
 
 export const protobufPackage = "bze.v1.rewards";
@@ -73,6 +76,20 @@ export interface QueryAllStakingRewardParticipantResponse {
   list: StakingRewardParticipant[];
   pagination: PageResponse | undefined;
 }
+
+export interface QueryGetTradingRewardLeaderboardRequest {
+  reward_id: string;
+}
+
+export interface QueryGetTradingRewardLeaderboardResponse {
+  leaderboard: TradingRewardLeaderboard | undefined;
+}
+
+export interface QueryGetMarketIdTradingRewardIdHandlerRequest {
+  marketId: string;
+}
+
+export interface QueryGetMarketIdTradingRewardIdHandlerResponse {}
 
 const baseQueryParamsRequest: object = {};
 
@@ -1195,6 +1212,280 @@ export const QueryAllStakingRewardParticipantResponse = {
   },
 };
 
+const baseQueryGetTradingRewardLeaderboardRequest: object = { reward_id: "" };
+
+export const QueryGetTradingRewardLeaderboardRequest = {
+  encode(
+    message: QueryGetTradingRewardLeaderboardRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.reward_id !== "") {
+      writer.uint32(10).string(message.reward_id);
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryGetTradingRewardLeaderboardRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryGetTradingRewardLeaderboardRequest,
+    } as QueryGetTradingRewardLeaderboardRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.reward_id = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryGetTradingRewardLeaderboardRequest {
+    const message = {
+      ...baseQueryGetTradingRewardLeaderboardRequest,
+    } as QueryGetTradingRewardLeaderboardRequest;
+    if (object.reward_id !== undefined && object.reward_id !== null) {
+      message.reward_id = String(object.reward_id);
+    } else {
+      message.reward_id = "";
+    }
+    return message;
+  },
+
+  toJSON(message: QueryGetTradingRewardLeaderboardRequest): unknown {
+    const obj: any = {};
+    message.reward_id !== undefined && (obj.reward_id = message.reward_id);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryGetTradingRewardLeaderboardRequest>
+  ): QueryGetTradingRewardLeaderboardRequest {
+    const message = {
+      ...baseQueryGetTradingRewardLeaderboardRequest,
+    } as QueryGetTradingRewardLeaderboardRequest;
+    if (object.reward_id !== undefined && object.reward_id !== null) {
+      message.reward_id = object.reward_id;
+    } else {
+      message.reward_id = "";
+    }
+    return message;
+  },
+};
+
+const baseQueryGetTradingRewardLeaderboardResponse: object = {};
+
+export const QueryGetTradingRewardLeaderboardResponse = {
+  encode(
+    message: QueryGetTradingRewardLeaderboardResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.leaderboard !== undefined) {
+      TradingRewardLeaderboard.encode(
+        message.leaderboard,
+        writer.uint32(10).fork()
+      ).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryGetTradingRewardLeaderboardResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryGetTradingRewardLeaderboardResponse,
+    } as QueryGetTradingRewardLeaderboardResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.leaderboard = TradingRewardLeaderboard.decode(
+            reader,
+            reader.uint32()
+          );
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryGetTradingRewardLeaderboardResponse {
+    const message = {
+      ...baseQueryGetTradingRewardLeaderboardResponse,
+    } as QueryGetTradingRewardLeaderboardResponse;
+    if (object.leaderboard !== undefined && object.leaderboard !== null) {
+      message.leaderboard = TradingRewardLeaderboard.fromJSON(
+        object.leaderboard
+      );
+    } else {
+      message.leaderboard = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryGetTradingRewardLeaderboardResponse): unknown {
+    const obj: any = {};
+    message.leaderboard !== undefined &&
+      (obj.leaderboard = message.leaderboard
+        ? TradingRewardLeaderboard.toJSON(message.leaderboard)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryGetTradingRewardLeaderboardResponse>
+  ): QueryGetTradingRewardLeaderboardResponse {
+    const message = {
+      ...baseQueryGetTradingRewardLeaderboardResponse,
+    } as QueryGetTradingRewardLeaderboardResponse;
+    if (object.leaderboard !== undefined && object.leaderboard !== null) {
+      message.leaderboard = TradingRewardLeaderboard.fromPartial(
+        object.leaderboard
+      );
+    } else {
+      message.leaderboard = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryGetMarketIdTradingRewardIdHandlerRequest: object = {
+  marketId: "",
+};
+
+export const QueryGetMarketIdTradingRewardIdHandlerRequest = {
+  encode(
+    message: QueryGetMarketIdTradingRewardIdHandlerRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.marketId !== "") {
+      writer.uint32(10).string(message.marketId);
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryGetMarketIdTradingRewardIdHandlerRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryGetMarketIdTradingRewardIdHandlerRequest,
+    } as QueryGetMarketIdTradingRewardIdHandlerRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.marketId = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryGetMarketIdTradingRewardIdHandlerRequest {
+    const message = {
+      ...baseQueryGetMarketIdTradingRewardIdHandlerRequest,
+    } as QueryGetMarketIdTradingRewardIdHandlerRequest;
+    if (object.marketId !== undefined && object.marketId !== null) {
+      message.marketId = String(object.marketId);
+    } else {
+      message.marketId = "";
+    }
+    return message;
+  },
+
+  toJSON(message: QueryGetMarketIdTradingRewardIdHandlerRequest): unknown {
+    const obj: any = {};
+    message.marketId !== undefined && (obj.marketId = message.marketId);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryGetMarketIdTradingRewardIdHandlerRequest>
+  ): QueryGetMarketIdTradingRewardIdHandlerRequest {
+    const message = {
+      ...baseQueryGetMarketIdTradingRewardIdHandlerRequest,
+    } as QueryGetMarketIdTradingRewardIdHandlerRequest;
+    if (object.marketId !== undefined && object.marketId !== null) {
+      message.marketId = object.marketId;
+    } else {
+      message.marketId = "";
+    }
+    return message;
+  },
+};
+
+const baseQueryGetMarketIdTradingRewardIdHandlerResponse: object = {};
+
+export const QueryGetMarketIdTradingRewardIdHandlerResponse = {
+  encode(
+    _: QueryGetMarketIdTradingRewardIdHandlerResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryGetMarketIdTradingRewardIdHandlerResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryGetMarketIdTradingRewardIdHandlerResponse,
+    } as QueryGetMarketIdTradingRewardIdHandlerResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(_: any): QueryGetMarketIdTradingRewardIdHandlerResponse {
+    const message = {
+      ...baseQueryGetMarketIdTradingRewardIdHandlerResponse,
+    } as QueryGetMarketIdTradingRewardIdHandlerResponse;
+    return message;
+  },
+
+  toJSON(_: QueryGetMarketIdTradingRewardIdHandlerResponse): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial(
+    _: DeepPartial<QueryGetMarketIdTradingRewardIdHandlerResponse>
+  ): QueryGetMarketIdTradingRewardIdHandlerResponse {
+    const message = {
+      ...baseQueryGetMarketIdTradingRewardIdHandlerResponse,
+    } as QueryGetMarketIdTradingRewardIdHandlerResponse;
+    return message;
+  },
+};
+
 /** Query defines the gRPC querier service. */
 export interface Query {
   /** Parameters queries the parameters of the module. */
@@ -1223,6 +1514,14 @@ export interface Query {
   StakingRewardParticipantAll(
     request: QueryAllStakingRewardParticipantRequest
   ): Promise<QueryAllStakingRewardParticipantResponse>;
+  /** Queries a list of GetTradingRewardLeaderboard items. */
+  GetTradingRewardLeaderboardHandler(
+    request: QueryGetTradingRewardLeaderboardRequest
+  ): Promise<QueryGetTradingRewardLeaderboardResponse>;
+  /** Queries a list of GetMarketIdTradingRewardIdHandler items. */
+  GetMarketIdTradingRewardIdHandler(
+    request: QueryGetMarketIdTradingRewardIdHandlerRequest
+  ): Promise<QueryGetMarketIdTradingRewardIdHandlerResponse>;
 }
 
 export class QueryClientImpl implements Query {
@@ -1321,6 +1620,38 @@ export class QueryClientImpl implements Query {
     );
     return promise.then((data) =>
       QueryAllStakingRewardParticipantResponse.decode(new Reader(data))
+    );
+  }
+
+  GetTradingRewardLeaderboardHandler(
+    request: QueryGetTradingRewardLeaderboardRequest
+  ): Promise<QueryGetTradingRewardLeaderboardResponse> {
+    const data = QueryGetTradingRewardLeaderboardRequest.encode(
+      request
+    ).finish();
+    const promise = this.rpc.request(
+      "bze.v1.rewards.Query",
+      "GetTradingRewardLeaderboardHandler",
+      data
+    );
+    return promise.then((data) =>
+      QueryGetTradingRewardLeaderboardResponse.decode(new Reader(data))
+    );
+  }
+
+  GetMarketIdTradingRewardIdHandler(
+    request: QueryGetMarketIdTradingRewardIdHandlerRequest
+  ): Promise<QueryGetMarketIdTradingRewardIdHandlerResponse> {
+    const data = QueryGetMarketIdTradingRewardIdHandlerRequest.encode(
+      request
+    ).finish();
+    const promise = this.rpc.request(
+      "bze.v1.rewards.Query",
+      "GetMarketIdTradingRewardIdHandler",
+      data
+    );
+    return promise.then((data) =>
+      QueryGetMarketIdTradingRewardIdHandlerResponse.decode(new Reader(data))
     );
   }
 }
