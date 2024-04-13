@@ -3,7 +3,13 @@ import * as Long from "long";
 import { util, configure, Writer, Reader } from "protobufjs/minimal";
 import { Params } from "../rewards/params";
 import { StakingReward } from "../rewards/staking_reward";
-import { TradingReward } from "../rewards/trading_reward";
+import {
+  TradingReward,
+  TradingRewardLeaderboard,
+  TradingRewardCandidate,
+  MarketIdTradingRewardId,
+  TradingRewardExpiration,
+} from "../rewards/trading_reward";
 import {
   StakingRewardParticipant,
   PendingUnlockParticipant,
@@ -17,10 +23,16 @@ export interface GenesisState {
   staking_reward_list: StakingReward[];
   staking_rewards_counter: number;
   trading_rewards_counter: number;
-  trading_reward_list: TradingReward[];
+  active_trading_reward_list: TradingReward[];
+  pending_trading_reward_list: TradingReward[];
   staking_reward_participant_list: StakingRewardParticipant[];
-  /** this line is used by starport scaffolding # genesis/proto/state */
   pending_unlock_participant_list: PendingUnlockParticipant[];
+  trading_reward_leaderboard_list: TradingRewardLeaderboard[];
+  trading_reward_candidate_list: TradingRewardCandidate[];
+  market_id_trading_reward_id_list: MarketIdTradingRewardId[];
+  pending_trading_reward_expiration_list: TradingRewardExpiration[];
+  /** this line is used by starport scaffolding # genesis/proto/state */
+  active_trading_reward_expiration_list: TradingRewardExpiration[];
 }
 
 const baseGenesisState: object = {
@@ -42,14 +54,32 @@ export const GenesisState = {
     if (message.trading_rewards_counter !== 0) {
       writer.uint32(32).uint64(message.trading_rewards_counter);
     }
-    for (const v of message.trading_reward_list) {
+    for (const v of message.active_trading_reward_list) {
       TradingReward.encode(v!, writer.uint32(42).fork()).ldelim();
     }
+    for (const v of message.pending_trading_reward_list) {
+      TradingReward.encode(v!, writer.uint32(50).fork()).ldelim();
+    }
     for (const v of message.staking_reward_participant_list) {
-      StakingRewardParticipant.encode(v!, writer.uint32(50).fork()).ldelim();
+      StakingRewardParticipant.encode(v!, writer.uint32(58).fork()).ldelim();
     }
     for (const v of message.pending_unlock_participant_list) {
-      PendingUnlockParticipant.encode(v!, writer.uint32(58).fork()).ldelim();
+      PendingUnlockParticipant.encode(v!, writer.uint32(66).fork()).ldelim();
+    }
+    for (const v of message.trading_reward_leaderboard_list) {
+      TradingRewardLeaderboard.encode(v!, writer.uint32(74).fork()).ldelim();
+    }
+    for (const v of message.trading_reward_candidate_list) {
+      TradingRewardCandidate.encode(v!, writer.uint32(82).fork()).ldelim();
+    }
+    for (const v of message.market_id_trading_reward_id_list) {
+      MarketIdTradingRewardId.encode(v!, writer.uint32(90).fork()).ldelim();
+    }
+    for (const v of message.pending_trading_reward_expiration_list) {
+      TradingRewardExpiration.encode(v!, writer.uint32(98).fork()).ldelim();
+    }
+    for (const v of message.active_trading_reward_expiration_list) {
+      TradingRewardExpiration.encode(v!, writer.uint32(106).fork()).ldelim();
     }
     return writer;
   },
@@ -59,9 +89,15 @@ export const GenesisState = {
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseGenesisState } as GenesisState;
     message.staking_reward_list = [];
-    message.trading_reward_list = [];
+    message.active_trading_reward_list = [];
+    message.pending_trading_reward_list = [];
     message.staking_reward_participant_list = [];
     message.pending_unlock_participant_list = [];
+    message.trading_reward_leaderboard_list = [];
+    message.trading_reward_candidate_list = [];
+    message.market_id_trading_reward_id_list = [];
+    message.pending_trading_reward_expiration_list = [];
+    message.active_trading_reward_expiration_list = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -84,18 +120,48 @@ export const GenesisState = {
           );
           break;
         case 5:
-          message.trading_reward_list.push(
+          message.active_trading_reward_list.push(
             TradingReward.decode(reader, reader.uint32())
           );
           break;
         case 6:
+          message.pending_trading_reward_list.push(
+            TradingReward.decode(reader, reader.uint32())
+          );
+          break;
+        case 7:
           message.staking_reward_participant_list.push(
             StakingRewardParticipant.decode(reader, reader.uint32())
           );
           break;
-        case 7:
+        case 8:
           message.pending_unlock_participant_list.push(
             PendingUnlockParticipant.decode(reader, reader.uint32())
+          );
+          break;
+        case 9:
+          message.trading_reward_leaderboard_list.push(
+            TradingRewardLeaderboard.decode(reader, reader.uint32())
+          );
+          break;
+        case 10:
+          message.trading_reward_candidate_list.push(
+            TradingRewardCandidate.decode(reader, reader.uint32())
+          );
+          break;
+        case 11:
+          message.market_id_trading_reward_id_list.push(
+            MarketIdTradingRewardId.decode(reader, reader.uint32())
+          );
+          break;
+        case 12:
+          message.pending_trading_reward_expiration_list.push(
+            TradingRewardExpiration.decode(reader, reader.uint32())
+          );
+          break;
+        case 13:
+          message.active_trading_reward_expiration_list.push(
+            TradingRewardExpiration.decode(reader, reader.uint32())
           );
           break;
         default:
@@ -109,9 +175,15 @@ export const GenesisState = {
   fromJSON(object: any): GenesisState {
     const message = { ...baseGenesisState } as GenesisState;
     message.staking_reward_list = [];
-    message.trading_reward_list = [];
+    message.active_trading_reward_list = [];
+    message.pending_trading_reward_list = [];
     message.staking_reward_participant_list = [];
     message.pending_unlock_participant_list = [];
+    message.trading_reward_leaderboard_list = [];
+    message.trading_reward_candidate_list = [];
+    message.market_id_trading_reward_id_list = [];
+    message.pending_trading_reward_expiration_list = [];
+    message.active_trading_reward_expiration_list = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromJSON(object.params);
     } else {
@@ -142,11 +214,19 @@ export const GenesisState = {
       message.trading_rewards_counter = 0;
     }
     if (
-      object.trading_reward_list !== undefined &&
-      object.trading_reward_list !== null
+      object.active_trading_reward_list !== undefined &&
+      object.active_trading_reward_list !== null
     ) {
-      for (const e of object.trading_reward_list) {
-        message.trading_reward_list.push(TradingReward.fromJSON(e));
+      for (const e of object.active_trading_reward_list) {
+        message.active_trading_reward_list.push(TradingReward.fromJSON(e));
+      }
+    }
+    if (
+      object.pending_trading_reward_list !== undefined &&
+      object.pending_trading_reward_list !== null
+    ) {
+      for (const e of object.pending_trading_reward_list) {
+        message.pending_trading_reward_list.push(TradingReward.fromJSON(e));
       }
     }
     if (
@@ -169,6 +249,56 @@ export const GenesisState = {
         );
       }
     }
+    if (
+      object.trading_reward_leaderboard_list !== undefined &&
+      object.trading_reward_leaderboard_list !== null
+    ) {
+      for (const e of object.trading_reward_leaderboard_list) {
+        message.trading_reward_leaderboard_list.push(
+          TradingRewardLeaderboard.fromJSON(e)
+        );
+      }
+    }
+    if (
+      object.trading_reward_candidate_list !== undefined &&
+      object.trading_reward_candidate_list !== null
+    ) {
+      for (const e of object.trading_reward_candidate_list) {
+        message.trading_reward_candidate_list.push(
+          TradingRewardCandidate.fromJSON(e)
+        );
+      }
+    }
+    if (
+      object.market_id_trading_reward_id_list !== undefined &&
+      object.market_id_trading_reward_id_list !== null
+    ) {
+      for (const e of object.market_id_trading_reward_id_list) {
+        message.market_id_trading_reward_id_list.push(
+          MarketIdTradingRewardId.fromJSON(e)
+        );
+      }
+    }
+    if (
+      object.pending_trading_reward_expiration_list !== undefined &&
+      object.pending_trading_reward_expiration_list !== null
+    ) {
+      for (const e of object.pending_trading_reward_expiration_list) {
+        message.pending_trading_reward_expiration_list.push(
+          TradingRewardExpiration.fromJSON(e)
+        );
+      }
+    }
+    if (
+      object.active_trading_reward_expiration_list !== undefined &&
+      object.active_trading_reward_expiration_list !== null
+    ) {
+      for (const e of object.active_trading_reward_expiration_list) {
+        message.active_trading_reward_expiration_list.push(
+          TradingRewardExpiration.fromJSON(e)
+        );
+      }
+    }
     return message;
   },
 
@@ -187,12 +317,19 @@ export const GenesisState = {
       (obj.staking_rewards_counter = message.staking_rewards_counter);
     message.trading_rewards_counter !== undefined &&
       (obj.trading_rewards_counter = message.trading_rewards_counter);
-    if (message.trading_reward_list) {
-      obj.trading_reward_list = message.trading_reward_list.map((e) =>
-        e ? TradingReward.toJSON(e) : undefined
+    if (message.active_trading_reward_list) {
+      obj.active_trading_reward_list = message.active_trading_reward_list.map(
+        (e) => (e ? TradingReward.toJSON(e) : undefined)
       );
     } else {
-      obj.trading_reward_list = [];
+      obj.active_trading_reward_list = [];
+    }
+    if (message.pending_trading_reward_list) {
+      obj.pending_trading_reward_list = message.pending_trading_reward_list.map(
+        (e) => (e ? TradingReward.toJSON(e) : undefined)
+      );
+    } else {
+      obj.pending_trading_reward_list = [];
     }
     if (message.staking_reward_participant_list) {
       obj.staking_reward_participant_list = message.staking_reward_participant_list.map(
@@ -208,15 +345,56 @@ export const GenesisState = {
     } else {
       obj.pending_unlock_participant_list = [];
     }
+    if (message.trading_reward_leaderboard_list) {
+      obj.trading_reward_leaderboard_list = message.trading_reward_leaderboard_list.map(
+        (e) => (e ? TradingRewardLeaderboard.toJSON(e) : undefined)
+      );
+    } else {
+      obj.trading_reward_leaderboard_list = [];
+    }
+    if (message.trading_reward_candidate_list) {
+      obj.trading_reward_candidate_list = message.trading_reward_candidate_list.map(
+        (e) => (e ? TradingRewardCandidate.toJSON(e) : undefined)
+      );
+    } else {
+      obj.trading_reward_candidate_list = [];
+    }
+    if (message.market_id_trading_reward_id_list) {
+      obj.market_id_trading_reward_id_list = message.market_id_trading_reward_id_list.map(
+        (e) => (e ? MarketIdTradingRewardId.toJSON(e) : undefined)
+      );
+    } else {
+      obj.market_id_trading_reward_id_list = [];
+    }
+    if (message.pending_trading_reward_expiration_list) {
+      obj.pending_trading_reward_expiration_list = message.pending_trading_reward_expiration_list.map(
+        (e) => (e ? TradingRewardExpiration.toJSON(e) : undefined)
+      );
+    } else {
+      obj.pending_trading_reward_expiration_list = [];
+    }
+    if (message.active_trading_reward_expiration_list) {
+      obj.active_trading_reward_expiration_list = message.active_trading_reward_expiration_list.map(
+        (e) => (e ? TradingRewardExpiration.toJSON(e) : undefined)
+      );
+    } else {
+      obj.active_trading_reward_expiration_list = [];
+    }
     return obj;
   },
 
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = { ...baseGenesisState } as GenesisState;
     message.staking_reward_list = [];
-    message.trading_reward_list = [];
+    message.active_trading_reward_list = [];
+    message.pending_trading_reward_list = [];
     message.staking_reward_participant_list = [];
     message.pending_unlock_participant_list = [];
+    message.trading_reward_leaderboard_list = [];
+    message.trading_reward_candidate_list = [];
+    message.market_id_trading_reward_id_list = [];
+    message.pending_trading_reward_expiration_list = [];
+    message.active_trading_reward_expiration_list = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromPartial(object.params);
     } else {
@@ -247,11 +425,19 @@ export const GenesisState = {
       message.trading_rewards_counter = 0;
     }
     if (
-      object.trading_reward_list !== undefined &&
-      object.trading_reward_list !== null
+      object.active_trading_reward_list !== undefined &&
+      object.active_trading_reward_list !== null
     ) {
-      for (const e of object.trading_reward_list) {
-        message.trading_reward_list.push(TradingReward.fromPartial(e));
+      for (const e of object.active_trading_reward_list) {
+        message.active_trading_reward_list.push(TradingReward.fromPartial(e));
+      }
+    }
+    if (
+      object.pending_trading_reward_list !== undefined &&
+      object.pending_trading_reward_list !== null
+    ) {
+      for (const e of object.pending_trading_reward_list) {
+        message.pending_trading_reward_list.push(TradingReward.fromPartial(e));
       }
     }
     if (
@@ -271,6 +457,56 @@ export const GenesisState = {
       for (const e of object.pending_unlock_participant_list) {
         message.pending_unlock_participant_list.push(
           PendingUnlockParticipant.fromPartial(e)
+        );
+      }
+    }
+    if (
+      object.trading_reward_leaderboard_list !== undefined &&
+      object.trading_reward_leaderboard_list !== null
+    ) {
+      for (const e of object.trading_reward_leaderboard_list) {
+        message.trading_reward_leaderboard_list.push(
+          TradingRewardLeaderboard.fromPartial(e)
+        );
+      }
+    }
+    if (
+      object.trading_reward_candidate_list !== undefined &&
+      object.trading_reward_candidate_list !== null
+    ) {
+      for (const e of object.trading_reward_candidate_list) {
+        message.trading_reward_candidate_list.push(
+          TradingRewardCandidate.fromPartial(e)
+        );
+      }
+    }
+    if (
+      object.market_id_trading_reward_id_list !== undefined &&
+      object.market_id_trading_reward_id_list !== null
+    ) {
+      for (const e of object.market_id_trading_reward_id_list) {
+        message.market_id_trading_reward_id_list.push(
+          MarketIdTradingRewardId.fromPartial(e)
+        );
+      }
+    }
+    if (
+      object.pending_trading_reward_expiration_list !== undefined &&
+      object.pending_trading_reward_expiration_list !== null
+    ) {
+      for (const e of object.pending_trading_reward_expiration_list) {
+        message.pending_trading_reward_expiration_list.push(
+          TradingRewardExpiration.fromPartial(e)
+        );
+      }
+    }
+    if (
+      object.active_trading_reward_expiration_list !== undefined &&
+      object.active_trading_reward_expiration_list !== null
+    ) {
+      for (const e of object.active_trading_reward_expiration_list) {
+        message.active_trading_reward_expiration_list.push(
+          TradingRewardExpiration.fromPartial(e)
         );
       }
     }
