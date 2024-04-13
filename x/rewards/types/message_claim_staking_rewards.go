@@ -42,7 +42,7 @@ func (msg *MsgClaimStakingRewards) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	
+
 	if msg.RewardId == "" {
 		return sdkerrors.Wrapf(ErrInvalidRewardId, "empty reward id")
 	}

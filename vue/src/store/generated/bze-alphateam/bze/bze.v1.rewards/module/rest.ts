@@ -76,6 +76,8 @@ export interface RewardsQueryAllTradingRewardResponse {
   pagination?: V1Beta1PageResponse;
 }
 
+export type RewardsQueryGetMarketIdTradingRewardIdHandlerResponse = object;
+
 export interface RewardsQueryGetStakingRewardParticipantResponse {
   list?: V1RewardsStakingRewardParticipant[];
 
@@ -95,6 +97,10 @@ export interface RewardsQueryGetStakingRewardResponse {
   staking_reward?: V1RewardsStakingReward;
 }
 
+export interface RewardsQueryGetTradingRewardLeaderboardResponse {
+  leaderboard?: RewardsTradingRewardLeaderboard;
+}
+
 export interface RewardsQueryGetTradingRewardResponse {
   trading_reward?: V1RewardsTradingReward;
 }
@@ -105,6 +111,19 @@ export interface RewardsQueryGetTradingRewardResponse {
 export interface RewardsQueryParamsResponse {
   /** params holds all the parameters of this module. */
   params?: V1RewardsParams;
+}
+
+export interface RewardsTradingRewardLeaderboard {
+  reward_id?: string;
+  list?: RewardsTradingRewardLeaderboardEntry[];
+}
+
+export interface RewardsTradingRewardLeaderboardEntry {
+  amount?: string;
+  address?: string;
+
+  /** @format int64 */
+  created_at?: string;
 }
 
 export interface RpcStatus {
@@ -425,6 +444,38 @@ export class HttpClient<SecurityDataType = unknown> {
  * @version version not set
  */
 export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryGetMarketIdTradingRewardIdHandler
+   * @summary Queries a list of GetMarketIdTradingRewardIdHandler items.
+   * @request GET:/bze-alphateam/bze/rewards/get_market_id_trading_reward_id_handler/{marketId}
+   */
+  queryGetMarketIdTradingRewardIdHandler = (marketId: string, params: RequestParams = {}) =>
+    this.request<RewardsQueryGetMarketIdTradingRewardIdHandlerResponse, RpcStatus>({
+      path: `/bze-alphateam/bze/rewards/get_market_id_trading_reward_id_handler/${marketId}`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryGetTradingRewardLeaderboardHandler
+   * @summary Queries a list of GetTradingRewardLeaderboard items.
+   * @request GET:/bze/rewards/v1/get_trading_reward_leaderboard/{reward_id}
+   */
+  queryGetTradingRewardLeaderboardHandler = (reward_id: string, params: RequestParams = {}) =>
+    this.request<RewardsQueryGetTradingRewardLeaderboardResponse, RpcStatus>({
+      path: `/bze/rewards/v1/get_trading_reward_leaderboard/${reward_id}`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+
   /**
    * No description
    *

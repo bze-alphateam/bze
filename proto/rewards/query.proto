@@ -48,6 +48,16 @@ service Query {
 		option (google.api.http).get = "/bze/rewards/v1/staking_reward_participants";
 	}
 
+	// Queries a list of GetTradingRewardLeaderboard items.
+	rpc GetTradingRewardLeaderboardHandler(QueryGetTradingRewardLeaderboardRequest) returns (QueryGetTradingRewardLeaderboardResponse) {
+		option (google.api.http).get = "/bze/rewards/v1/trading_reward_leaderboard/{reward_id}";
+	}
+
+// Queries a list of GetMarketIdTradingRewardIdHandler items.
+	rpc GetMarketIdTradingRewardIdHandler(QueryGetMarketIdTradingRewardIdHandlerRequest) returns (QueryGetMarketIdTradingRewardIdHandlerResponse) {
+		option (google.api.http).get = "/bze/rewards/v1/market_id_trading_reward_id";
+	}
+
 // this line is used by starport scaffolding # 2
 }
 
@@ -112,6 +122,22 @@ message QueryAllStakingRewardParticipantRequest {
 message QueryAllStakingRewardParticipantResponse {
 	repeated StakingRewardParticipant list = 1 [(gogoproto.nullable) = false];
 	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetTradingRewardLeaderboardRequest {
+  string reward_id = 1;
+}
+
+message QueryGetTradingRewardLeaderboardResponse {
+		TradingRewardLeaderboard leaderboard = 1;
+}
+
+message QueryGetMarketIdTradingRewardIdHandlerRequest {
+  string market_id = 1;
+}
+
+message QueryGetMarketIdTradingRewardIdHandlerResponse {
+	MarketIdTradingRewardId market_id_reward_id = 1;
 }
 
 // this line is used by starport scaffolding # 3

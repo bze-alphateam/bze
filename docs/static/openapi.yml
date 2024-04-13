@@ -2151,6 +2151,92 @@ paths:
           type: boolean
       tags:
         - Query
+  '/bze-alphateam/bze/rewards/get_market_id_trading_reward_id_handler/{marketId}':
+    get:
+      summary: Queries a list of GetMarketIdTradingRewardIdHandler items.
+      operationId: BzeV1RewardsGetMarketIdTradingRewardIdHandler
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: marketId
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  '/bze/rewards/v1/get_trading_reward_leaderboard/{reward_id}':
+    get:
+      summary: Queries a list of GetTradingRewardLeaderboard items.
+      operationId: BzeV1RewardsGetTradingRewardLeaderboardHandler
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              leaderboard:
+                type: object
+                properties:
+                  reward_id:
+                    type: string
+                  list:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        amount:
+                          type: string
+                        address:
+                          type: string
+                        created_at:
+                          type: string
+                          format: int64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: reward_id
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /bze/rewards/v1/params:
     get:
       summary: Parameters queries the parameters of the module.
@@ -34808,6 +34894,8 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
+  bze.v1.rewards.QueryGetMarketIdTradingRewardIdHandlerResponse:
+    type: object
   bze.v1.rewards.QueryGetStakingRewardParticipantResponse:
     type: object
     properties:
@@ -34883,6 +34971,26 @@ definitions:
           distributed_stake:
             type: string
             title: S
+  bze.v1.rewards.QueryGetTradingRewardLeaderboardResponse:
+    type: object
+    properties:
+      leaderboard:
+        type: object
+        properties:
+          reward_id:
+            type: string
+          list:
+            type: array
+            items:
+              type: object
+              properties:
+                amount:
+                  type: string
+                address:
+                  type: string
+                created_at:
+                  type: string
+                  format: int64
   bze.v1.rewards.QueryGetTradingRewardResponse:
     type: object
     properties:
@@ -34979,6 +35087,33 @@ definitions:
         format: int64
       expire_at:
         type: integer
+        format: int64
+  bze.v1.rewards.TradingRewardLeaderboard:
+    type: object
+    properties:
+      reward_id:
+        type: string
+      list:
+        type: array
+        items:
+          type: object
+          properties:
+            amount:
+              type: string
+            address:
+              type: string
+            created_at:
+              type: string
+              format: int64
+  bze.v1.rewards.TradingRewardLeaderboardEntry:
+    type: object
+    properties:
+      amount:
+        type: string
+      address:
+        type: string
+      created_at:
+        type: string
         format: int64
   cosmos.auth.v1beta1.Params:
     type: object

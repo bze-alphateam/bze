@@ -697,6 +697,194 @@ func (m *QueryAllStakingRewardParticipantResponse) GetPagination() *query.PageRe
 	return nil
 }
 
+type QueryGetTradingRewardLeaderboardRequest struct {
+	RewardId string `protobuf:"bytes,1,opt,name=reward_id,json=rewardId,proto3" json:"reward_id,omitempty"`
+}
+
+func (m *QueryGetTradingRewardLeaderboardRequest) Reset() {
+	*m = QueryGetTradingRewardLeaderboardRequest{}
+}
+func (m *QueryGetTradingRewardLeaderboardRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetTradingRewardLeaderboardRequest) ProtoMessage()    {}
+func (*QueryGetTradingRewardLeaderboardRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5ddc078ee02fb5e8, []int{14}
+}
+func (m *QueryGetTradingRewardLeaderboardRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetTradingRewardLeaderboardRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetTradingRewardLeaderboardRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetTradingRewardLeaderboardRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetTradingRewardLeaderboardRequest.Merge(m, src)
+}
+func (m *QueryGetTradingRewardLeaderboardRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetTradingRewardLeaderboardRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetTradingRewardLeaderboardRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetTradingRewardLeaderboardRequest proto.InternalMessageInfo
+
+func (m *QueryGetTradingRewardLeaderboardRequest) GetRewardId() string {
+	if m != nil {
+		return m.RewardId
+	}
+	return ""
+}
+
+type QueryGetTradingRewardLeaderboardResponse struct {
+	Leaderboard *TradingRewardLeaderboard `protobuf:"bytes,1,opt,name=leaderboard,proto3" json:"leaderboard,omitempty"`
+}
+
+func (m *QueryGetTradingRewardLeaderboardResponse) Reset() {
+	*m = QueryGetTradingRewardLeaderboardResponse{}
+}
+func (m *QueryGetTradingRewardLeaderboardResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetTradingRewardLeaderboardResponse) ProtoMessage()    {}
+func (*QueryGetTradingRewardLeaderboardResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5ddc078ee02fb5e8, []int{15}
+}
+func (m *QueryGetTradingRewardLeaderboardResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetTradingRewardLeaderboardResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetTradingRewardLeaderboardResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetTradingRewardLeaderboardResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetTradingRewardLeaderboardResponse.Merge(m, src)
+}
+func (m *QueryGetTradingRewardLeaderboardResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetTradingRewardLeaderboardResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetTradingRewardLeaderboardResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetTradingRewardLeaderboardResponse proto.InternalMessageInfo
+
+func (m *QueryGetTradingRewardLeaderboardResponse) GetLeaderboard() *TradingRewardLeaderboard {
+	if m != nil {
+		return m.Leaderboard
+	}
+	return nil
+}
+
+type QueryGetMarketIdTradingRewardIdHandlerRequest struct {
+	MarketId string `protobuf:"bytes,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+}
+
+func (m *QueryGetMarketIdTradingRewardIdHandlerRequest) Reset() {
+	*m = QueryGetMarketIdTradingRewardIdHandlerRequest{}
+}
+func (m *QueryGetMarketIdTradingRewardIdHandlerRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryGetMarketIdTradingRewardIdHandlerRequest) ProtoMessage() {}
+func (*QueryGetMarketIdTradingRewardIdHandlerRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5ddc078ee02fb5e8, []int{16}
+}
+func (m *QueryGetMarketIdTradingRewardIdHandlerRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetMarketIdTradingRewardIdHandlerRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetMarketIdTradingRewardIdHandlerRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetMarketIdTradingRewardIdHandlerRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetMarketIdTradingRewardIdHandlerRequest.Merge(m, src)
+}
+func (m *QueryGetMarketIdTradingRewardIdHandlerRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetMarketIdTradingRewardIdHandlerRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetMarketIdTradingRewardIdHandlerRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetMarketIdTradingRewardIdHandlerRequest proto.InternalMessageInfo
+
+func (m *QueryGetMarketIdTradingRewardIdHandlerRequest) GetMarketId() string {
+	if m != nil {
+		return m.MarketId
+	}
+	return ""
+}
+
+type QueryGetMarketIdTradingRewardIdHandlerResponse struct {
+	MarketIdRewardId *MarketIdTradingRewardId `protobuf:"bytes,1,opt,name=market_id_reward_id,json=marketIdRewardId,proto3" json:"market_id_reward_id,omitempty"`
+}
+
+func (m *QueryGetMarketIdTradingRewardIdHandlerResponse) Reset() {
+	*m = QueryGetMarketIdTradingRewardIdHandlerResponse{}
+}
+func (m *QueryGetMarketIdTradingRewardIdHandlerResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryGetMarketIdTradingRewardIdHandlerResponse) ProtoMessage() {}
+func (*QueryGetMarketIdTradingRewardIdHandlerResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5ddc078ee02fb5e8, []int{17}
+}
+func (m *QueryGetMarketIdTradingRewardIdHandlerResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetMarketIdTradingRewardIdHandlerResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetMarketIdTradingRewardIdHandlerResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetMarketIdTradingRewardIdHandlerResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetMarketIdTradingRewardIdHandlerResponse.Merge(m, src)
+}
+func (m *QueryGetMarketIdTradingRewardIdHandlerResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetMarketIdTradingRewardIdHandlerResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetMarketIdTradingRewardIdHandlerResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetMarketIdTradingRewardIdHandlerResponse proto.InternalMessageInfo
+
+func (m *QueryGetMarketIdTradingRewardIdHandlerResponse) GetMarketIdRewardId() *MarketIdTradingRewardId {
+	if m != nil {
+		return m.MarketIdRewardId
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "bze.v1.rewards.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "bze.v1.rewards.QueryParamsResponse")
@@ -712,62 +900,76 @@ func init() {
 	proto.RegisterType((*QueryGetStakingRewardParticipantResponse)(nil), "bze.v1.rewards.QueryGetStakingRewardParticipantResponse")
 	proto.RegisterType((*QueryAllStakingRewardParticipantRequest)(nil), "bze.v1.rewards.QueryAllStakingRewardParticipantRequest")
 	proto.RegisterType((*QueryAllStakingRewardParticipantResponse)(nil), "bze.v1.rewards.QueryAllStakingRewardParticipantResponse")
+	proto.RegisterType((*QueryGetTradingRewardLeaderboardRequest)(nil), "bze.v1.rewards.QueryGetTradingRewardLeaderboardRequest")
+	proto.RegisterType((*QueryGetTradingRewardLeaderboardResponse)(nil), "bze.v1.rewards.QueryGetTradingRewardLeaderboardResponse")
+	proto.RegisterType((*QueryGetMarketIdTradingRewardIdHandlerRequest)(nil), "bze.v1.rewards.QueryGetMarketIdTradingRewardIdHandlerRequest")
+	proto.RegisterType((*QueryGetMarketIdTradingRewardIdHandlerResponse)(nil), "bze.v1.rewards.QueryGetMarketIdTradingRewardIdHandlerResponse")
 }
 
 func init() { proto.RegisterFile("rewards/query.proto", fileDescriptor_5ddc078ee02fb5e8) }
 
 var fileDescriptor_5ddc078ee02fb5e8 = []byte{
-	// 785 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x96, 0xc1, 0x4f, 0x13, 0x4f,
-	0x14, 0xc7, 0x3b, 0xfc, 0x80, 0x9f, 0x8c, 0x81, 0x90, 0xa1, 0x21, 0x4d, 0x81, 0x95, 0xac, 0x09,
-	0x34, 0x08, 0xbb, 0x29, 0x10, 0x31, 0xd1, 0x0b, 0x1c, 0x20, 0xea, 0x05, 0xab, 0x27, 0x2f, 0x64,
-	0x4a, 0xc7, 0x65, 0xc3, 0xb2, 0xbb, 0xdd, 0x19, 0x50, 0x40, 0x2e, 0x5e, 0xbd, 0x18, 0x3d, 0x78,
-	0x54, 0xff, 0x0a, 0xff, 0x02, 0x13, 0x12, 0x2f, 0x24, 0x5e, 0x3c, 0x19, 0x03, 0xfe, 0x21, 0xa6,
-	0x33, 0xb3, 0xb4, 0xb3, 0xdd, 0x69, 0x17, 0x53, 0x13, 0x6f, 0xdd, 0x99, 0xf7, 0xe6, 0x7d, 0xde,
-	0xf7, 0xcd, 0xbc, 0x57, 0x38, 0x16, 0x91, 0xe7, 0x38, 0xaa, 0x51, 0xbb, 0xbe, 0x4f, 0xa2, 0x43,
-	0x2b, 0x8c, 0x02, 0x16, 0xa0, 0x91, 0xea, 0x11, 0xb1, 0x0e, 0xca, 0x96, 0xdc, 0x2b, 0xe6, 0x9d,
-	0xc0, 0x09, 0xf8, 0x96, 0xdd, 0xf8, 0x25, 0xac, 0x8a, 0x93, 0x4e, 0x10, 0x38, 0x1e, 0xb1, 0x71,
-	0xe8, 0xda, 0xd8, 0xf7, 0x03, 0x86, 0x99, 0x1b, 0xf8, 0x54, 0xee, 0xce, 0x6d, 0x07, 0x74, 0x2f,
-	0xa0, 0x76, 0x15, 0x53, 0x22, 0x0e, 0xb7, 0x0f, 0xca, 0x55, 0xc2, 0x70, 0xd9, 0x0e, 0xb1, 0xe3,
-	0xfa, 0xdc, 0x58, 0xda, 0xe6, 0x63, 0x88, 0x10, 0x47, 0x78, 0x2f, 0x3e, 0x61, 0x32, 0x5e, 0xa5,
-	0x0c, 0xef, 0xba, 0xbe, 0xb3, 0x25, 0xbe, 0x93, 0xbb, 0x2c, 0xc2, 0xb5, 0xb6, 0xdd, 0x52, 0xba,
-	0xef, 0x56, 0x88, 0x23, 0xe6, 0x6e, 0xbb, 0x21, 0xf6, 0x99, 0xb0, 0x34, 0xf3, 0x10, 0x3d, 0x6a,
-	0xd0, 0x6d, 0xf2, 0xd0, 0x15, 0x52, 0xdf, 0x27, 0x94, 0x99, 0x0f, 0xe1, 0x98, 0xb2, 0x4a, 0xc3,
-	0xc0, 0xa7, 0x04, 0x2d, 0xc3, 0x41, 0x81, 0x58, 0x00, 0xd3, 0xa0, 0x74, 0x7d, 0x71, 0xdc, 0x52,
-	0x95, 0xb2, 0x84, 0xfd, 0x5a, 0xff, 0xe9, 0x8f, 0x1b, 0xb9, 0x8a, 0xb4, 0x35, 0xef, 0xc2, 0x49,
-	0x7e, 0xd8, 0x06, 0x61, 0x8f, 0x05, 0x4e, 0x85, 0x9b, 0xcb, 0x60, 0x68, 0x02, 0x0e, 0x49, 0x3c,
-	0xb7, 0xc6, 0x0f, 0x1e, 0xaa, 0x5c, 0x13, 0x0b, 0xf7, 0x6b, 0xe6, 0x2e, 0x9c, 0xd2, 0x38, 0x4b,
-	0xa6, 0x07, 0x70, 0x44, 0x4d, 0x52, 0xb2, 0x4d, 0x25, 0xd9, 0x14, 0x77, 0x89, 0x38, 0x4c, 0x5b,
-	0x17, 0xcd, 0x67, 0x92, 0x74, 0xd5, 0xf3, 0x52, 0x49, 0xd7, 0x21, 0x6c, 0x16, 0x4f, 0xc6, 0x99,
-	0xb1, 0x44, 0xa5, 0xad, 0x46, 0xa5, 0x2d, 0x71, 0x8d, 0x64, 0xa5, 0xad, 0x4d, 0xec, 0x10, 0xe9,
-	0x5b, 0x69, 0xf1, 0x34, 0x3f, 0x01, 0x99, 0x55, 0x7b, 0x20, 0x99, 0xd5, 0x0a, 0xec, 0xf7, 0x5c,
-	0xca, 0x0a, 0x60, 0xfa, 0xbf, 0xac, 0xb9, 0x70, 0x07, 0xb4, 0xa1, 0x20, 0xf6, 0x71, 0xc4, 0xd9,
-	0xae, 0x88, 0x22, 0xaa, 0xc2, 0xd8, 0x52, 0xb5, 0x27, 0xe2, 0x8a, 0xfd, 0x59, 0xd5, 0x12, 0xce,
-	0xcd, 0xaa, 0xa9, 0x17, 0x57, 0x57, 0x35, 0xc5, 0x3d, 0xae, 0x1a, 0x6b, 0x5d, 0x34, 0x5f, 0x36,
-	0xab, 0x96, 0x4a, 0x9a, 0x87, 0x03, 0x94, 0x61, 0x46, 0x24, 0xa5, 0xf8, 0x48, 0xd4, 0xb2, 0xaf,
-	0x27, 0xb5, 0x4c, 0xcf, 0xb5, 0x4b, 0x2d, 0xd3, 0x32, 0xec, 0x71, 0x2d, 0x5f, 0x03, 0x38, 0x9b,
-	0xfa, 0x8a, 0x36, 0x9b, 0xfd, 0x20, 0x56, 0xab, 0x00, 0xff, 0xc7, 0xb5, 0x5a, 0x44, 0x28, 0x95,
-	0x7a, 0xc5, 0x9f, 0x3d, 0x53, 0xec, 0x33, 0x80, 0xa5, 0xee, 0x34, 0x52, 0xbc, 0x35, 0x45, 0xbc,
-	0x52, 0xc7, 0x87, 0xd0, 0xe2, 0xff, 0x77, 0x74, 0xac, 0x4b, 0x19, 0x93, 0xcf, 0x36, 0x45, 0xc6,
-	0x5e, 0xb5, 0x8a, 0x4b, 0xb1, 0x3a, 0xc6, 0xfc, 0x07, 0xc5, 0x5a, 0x7c, 0x3b, 0x04, 0x07, 0x38,
-	0x39, 0xaa, 0xc3, 0x41, 0x31, 0x18, 0x90, 0x99, 0x44, 0x6a, 0x9f, 0x3d, 0xc5, 0x9b, 0x1d, 0x6d,
-	0x44, 0x20, 0xd3, 0x78, 0xf5, 0xed, 0xd7, 0xbb, 0xbe, 0x02, 0x1a, 0xb7, 0xab, 0x47, 0xc4, 0x8e,
-	0xa7, 0xdd, 0x41, 0x59, 0x8e, 0x50, 0xf4, 0x11, 0xc0, 0x61, 0x25, 0x5d, 0x34, 0x9f, 0x7a, 0xac,
-	0x66, 0x26, 0x15, 0x17, 0x32, 0x5a, 0x4b, 0x9c, 0x45, 0x8e, 0x33, 0x8f, 0xe6, 0x92, 0x38, 0xea,
-	0x68, 0xb2, 0x8f, 0x2f, 0x5b, 0xe6, 0x09, 0x7a, 0x0f, 0xe0, 0xa8, 0x72, 0xda, 0xaa, 0xe7, 0x69,
-	0x28, 0x35, 0xf3, 0x48, 0x43, 0xa9, 0x1b, 0x2a, 0xe6, 0x0c, 0xa7, 0x9c, 0x46, 0x46, 0x67, 0x4a,
-	0x2e, 0x9e, 0xd2, 0x95, 0xf4, 0xe2, 0xa5, 0x35, 0x5c, 0xbd, 0x78, 0xa9, 0xfd, 0x51, 0x2f, 0x9e,
-	0x3a, 0x21, 0x14, 0xf1, 0x3e, 0x00, 0x38, 0xaa, 0x9c, 0xd6, 0x51, 0xbc, 0x2b, 0x50, 0xea, 0xba,
-	0xb8, 0x69, 0x71, 0xca, 0x12, 0x9a, 0xe9, 0x46, 0xc9, 0xc7, 0xcb, 0x09, 0xfa, 0x0a, 0x60, 0x41,
-	0xf7, 0xe0, 0xd0, 0x4a, 0xa6, 0xeb, 0xd5, 0xde, 0x56, 0x8a, 0x77, 0xae, 0xee, 0x28, 0xf9, 0xef,
-	0x71, 0xfe, 0xdb, 0x68, 0xb9, 0x73, 0xf1, 0x5b, 0xff, 0x22, 0xda, 0xc7, 0xb2, 0xf5, 0x9f, 0xa0,
-	0x2f, 0x00, 0x4e, 0xe8, 0x42, 0x34, 0xa4, 0x5f, 0xc9, 0x74, 0x13, 0x33, 0x27, 0x94, 0xa1, 0xd9,
-	0x99, 0x4b, 0x3c, 0xa1, 0x05, 0x74, 0x2b, 0x7b, 0x42, 0x74, 0x6d, 0xfd, 0xf4, 0xdc, 0x00, 0x67,
-	0xe7, 0x06, 0xf8, 0x79, 0x6e, 0x80, 0x37, 0x17, 0x46, 0xee, 0xec, 0xc2, 0xc8, 0x7d, 0xbf, 0x30,
-	0x72, 0x4f, 0xe7, 0x1d, 0x97, 0xed, 0xec, 0x57, 0xad, 0xed, 0x60, 0xaf, 0x71, 0xe0, 0x02, 0xf6,
-	0xc2, 0x1d, 0xcc, 0x08, 0xe6, 0x5f, 0xf6, 0x8b, 0xcb, 0x00, 0xec, 0x30, 0x24, 0xb4, 0x3a, 0xc8,
-	0xff, 0x3d, 0x2f, 0xfd, 0x0e, 0x00, 0x00, 0xff, 0xff, 0x1c, 0xf2, 0x7c, 0x09, 0x40, 0x0c, 0x00,
-	0x00,
+	// 951 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x57, 0x41, 0x6f, 0xdc, 0x44,
+	0x14, 0xde, 0x09, 0x6d, 0xa0, 0x53, 0x5a, 0x45, 0x93, 0x55, 0xb5, 0xda, 0xa6, 0x26, 0x0c, 0x52,
+	0xba, 0x2a, 0x59, 0x5b, 0x9b, 0x56, 0x4d, 0x25, 0xa0, 0x52, 0x73, 0x48, 0x09, 0x14, 0x29, 0x2c,
+	0x88, 0x03, 0x97, 0xd5, 0x6c, 0x3c, 0xb8, 0x56, 0xbc, 0xb6, 0xd7, 0x33, 0x59, 0x68, 0x4b, 0x2e,
+	0x9c, 0x90, 0xb8, 0x20, 0x71, 0xe0, 0x08, 0xfc, 0x0a, 0x7e, 0x01, 0xa8, 0x12, 0x97, 0x4a, 0x1c,
+	0xca, 0x09, 0xa1, 0x84, 0x1f, 0x82, 0x76, 0x3c, 0x5e, 0x7b, 0xbc, 0x1e, 0xdb, 0x8d, 0x16, 0xa9,
+	0xb7, 0xf5, 0xcc, 0x7b, 0x6f, 0xbe, 0xf7, 0x7d, 0x6f, 0xde, 0x9b, 0x85, 0xab, 0x11, 0xfd, 0x92,
+	0x44, 0x36, 0xb3, 0xc6, 0x47, 0x34, 0x7a, 0x64, 0x86, 0x51, 0xc0, 0x03, 0x74, 0x79, 0xf8, 0x98,
+	0x9a, 0x93, 0x9e, 0x29, 0xf7, 0xda, 0x4d, 0x27, 0x70, 0x02, 0xb1, 0x65, 0x4d, 0x7f, 0xc5, 0x56,
+	0xed, 0x35, 0x27, 0x08, 0x1c, 0x8f, 0x5a, 0x24, 0x74, 0x2d, 0xe2, 0xfb, 0x01, 0x27, 0xdc, 0x0d,
+	0x7c, 0x26, 0x77, 0x6f, 0x1c, 0x04, 0x6c, 0x14, 0x30, 0x6b, 0x48, 0x18, 0x8d, 0x83, 0x5b, 0x93,
+	0xde, 0x90, 0x72, 0xd2, 0xb3, 0x42, 0xe2, 0xb8, 0xbe, 0x30, 0x96, 0xb6, 0xcd, 0x04, 0x44, 0x48,
+	0x22, 0x32, 0x4a, 0x22, 0xac, 0x25, 0xab, 0x8c, 0x93, 0x43, 0xd7, 0x77, 0x06, 0xf1, 0x77, 0x7e,
+	0x97, 0x47, 0xc4, 0x9e, 0xdb, 0xed, 0x14, 0xfb, 0x0e, 0x42, 0x12, 0x71, 0xf7, 0xc0, 0x0d, 0x89,
+	0xcf, 0x63, 0x4b, 0xdc, 0x84, 0xe8, 0xe3, 0x29, 0xba, 0x7d, 0x71, 0x74, 0x9f, 0x8e, 0x8f, 0x28,
+	0xe3, 0xf8, 0x43, 0xb8, 0xaa, 0xac, 0xb2, 0x30, 0xf0, 0x19, 0x45, 0xb7, 0xe0, 0x72, 0x0c, 0xb1,
+	0x05, 0xd6, 0x41, 0xe7, 0xe2, 0xd6, 0x15, 0x53, 0x65, 0xca, 0x8c, 0xed, 0x77, 0xce, 0x3d, 0xfd,
+	0xfb, 0x8d, 0x46, 0x5f, 0xda, 0xe2, 0x77, 0xe0, 0x9a, 0x08, 0x76, 0x9f, 0xf2, 0x4f, 0x62, 0x38,
+	0x7d, 0x61, 0x2e, 0x0f, 0x43, 0x57, 0xe1, 0x05, 0x09, 0xcf, 0xb5, 0x45, 0xe0, 0x0b, 0xfd, 0xd7,
+	0xe2, 0x85, 0x3d, 0x1b, 0x1f, 0xc2, 0x6b, 0x1a, 0x67, 0x89, 0xe9, 0x03, 0x78, 0x59, 0x4d, 0x52,
+	0x62, 0xbb, 0x96, 0xc7, 0xa6, 0xb8, 0x4b, 0x88, 0x97, 0x58, 0x76, 0x11, 0x7f, 0x21, 0x91, 0xde,
+	0xf3, 0xbc, 0x42, 0xa4, 0xbb, 0x10, 0xa6, 0xe2, 0xc9, 0x73, 0x36, 0xcc, 0x58, 0x69, 0x73, 0xaa,
+	0xb4, 0x19, 0x97, 0x91, 0x54, 0xda, 0xdc, 0x27, 0x0e, 0x95, 0xbe, 0xfd, 0x8c, 0x27, 0xfe, 0x05,
+	0xc8, 0xac, 0xe6, 0x0f, 0x92, 0x59, 0x6d, 0xc3, 0x73, 0x9e, 0xcb, 0x78, 0x0b, 0xac, 0xbf, 0x52,
+	0x37, 0x17, 0xe1, 0x80, 0xee, 0x2b, 0x10, 0x97, 0x04, 0xc4, 0xeb, 0x95, 0x10, 0xe3, 0x53, 0x15,
+	0x8c, 0x19, 0xd5, 0x3e, 0x8d, 0x4b, 0xec, 0x6c, 0xaa, 0xe5, 0x9c, 0x53, 0xd5, 0xd4, 0xc2, 0xd5,
+	0xa9, 0xa6, 0xb8, 0x27, 0xaa, 0xf1, 0xec, 0x22, 0xfe, 0x3a, 0x55, 0xad, 0x10, 0x69, 0x13, 0x9e,
+	0x67, 0x9c, 0x70, 0x2a, 0x51, 0xc6, 0x1f, 0x39, 0x2d, 0x97, 0x16, 0xa2, 0x65, 0x71, 0xae, 0x15,
+	0x5a, 0x16, 0x65, 0xb8, 0x60, 0x2d, 0xbf, 0x03, 0xf0, 0x7a, 0xe1, 0x2d, 0xda, 0x4f, 0xfb, 0x41,
+	0xc2, 0x56, 0x0b, 0xbe, 0x4a, 0x6c, 0x3b, 0xa2, 0x8c, 0x49, 0xbe, 0x92, 0xcf, 0x85, 0x31, 0xf6,
+	0x2b, 0x80, 0x9d, 0x6a, 0x34, 0x92, 0xbc, 0x1d, 0x85, 0xbc, 0x4e, 0xe9, 0x45, 0xc8, 0xf8, 0xff,
+	0x3f, 0x3c, 0x8e, 0x25, 0x8d, 0xf9, 0x6b, 0x5b, 0x40, 0xe3, 0xa2, 0x5a, 0xc5, 0x8c, 0xac, 0xd2,
+	0x33, 0x5f, 0x46, 0xb2, 0x76, 0xd3, 0x9a, 0x53, 0x4a, 0xfc, 0x01, 0x25, 0x36, 0x8d, 0x86, 0x41,
+	0xdd, 0x5e, 0x32, 0x49, 0xab, 0x45, 0x1f, 0x67, 0xd6, 0x56, 0x2e, 0x7a, 0xe9, 0xb2, 0xa4, 0xbd,
+	0x53, 0x7a, 0xe3, 0xb2, 0x61, 0xb2, 0xce, 0xf8, 0x01, 0xec, 0x26, 0xe7, 0x7e, 0x44, 0xa2, 0x43,
+	0xca, 0xf7, 0x6c, 0xc5, 0x71, 0xcf, 0x7e, 0x9f, 0xf8, 0xb6, 0x47, 0xa3, 0x4c, 0x16, 0x23, 0x61,
+	0x98, 0xc9, 0x62, 0x24, 0x3d, 0xf1, 0xb7, 0x00, 0x9a, 0x75, 0xc3, 0xc9, 0x64, 0x3e, 0x83, 0xab,
+	0xb3, 0x78, 0x03, 0x95, 0x9f, 0xa9, 0x24, 0xb9, 0xa4, 0x34, 0x41, 0xfb, 0x2b, 0x09, 0x84, 0x64,
+	0x65, 0xeb, 0xf7, 0xd7, 0xe1, 0x79, 0x01, 0x05, 0x8d, 0xe1, 0x72, 0x3c, 0xb1, 0x11, 0xce, 0x87,
+	0x9b, 0x7f, 0x14, 0xb4, 0xdf, 0x2a, 0xb5, 0x89, 0x41, 0x63, 0xe3, 0x9b, 0x3f, 0xff, 0xfd, 0x61,
+	0xa9, 0x85, 0xae, 0x58, 0xc3, 0xc7, 0xd4, 0x4a, 0x9e, 0x21, 0x93, 0x9e, 0x7c, 0xdb, 0xa0, 0x9f,
+	0x01, 0xbc, 0xa4, 0xd4, 0x21, 0xda, 0x2c, 0x0c, 0xab, 0x79, 0x2c, 0xb4, 0xbb, 0x35, 0xad, 0x25,
+	0x9c, 0x2d, 0x01, 0x67, 0x13, 0xdd, 0xc8, 0xc3, 0x51, 0xdf, 0x0c, 0xd6, 0x93, 0x19, 0xbf, 0xc7,
+	0xe8, 0x47, 0x00, 0x57, 0x94, 0x68, 0xf7, 0x3c, 0x4f, 0x83, 0x52, 0xf3, 0x50, 0xd0, 0xa0, 0xd4,
+	0x4d, 0x7b, 0xbc, 0x21, 0x50, 0xae, 0x23, 0xa3, 0x1c, 0xa5, 0x20, 0x4f, 0xd1, 0x57, 0x4f, 0x5e,
+	0xd1, 0x24, 0xd4, 0x93, 0x57, 0x38, 0xb8, 0xf4, 0xe4, 0xa9, 0xa3, 0x5b, 0x21, 0xef, 0x27, 0x00,
+	0x57, 0x94, 0x68, 0xa5, 0xe4, 0xbd, 0x00, 0x4a, 0xdd, 0x78, 0xc5, 0xa6, 0x40, 0xd9, 0x41, 0x1b,
+	0x55, 0x28, 0xc5, 0xdc, 0x3f, 0x46, 0x7f, 0x00, 0xd8, 0xd2, 0x75, 0x42, 0xb4, 0x5d, 0xab, 0xbc,
+	0xe6, 0xfb, 0x7d, 0xfb, 0xce, 0x8b, 0x3b, 0x4a, 0xfc, 0xef, 0x0a, 0xfc, 0xb7, 0xd1, 0xad, 0x72,
+	0xf1, 0xb3, 0x6f, 0x77, 0xeb, 0x89, 0x9c, 0xc9, 0xc7, 0xe8, 0x37, 0x00, 0xaf, 0xea, 0x8e, 0x98,
+	0x52, 0xbf, 0x5d, 0xab, 0x12, 0x6b, 0x27, 0x54, 0x63, 0x0a, 0xe1, 0x9b, 0x22, 0xa1, 0x2e, 0x7a,
+	0xbb, 0x7e, 0x42, 0x0c, 0x3d, 0x07, 0x10, 0x97, 0x74, 0x78, 0xd9, 0x1b, 0xf5, 0xfa, 0x54, 0x8c,
+	0x18, 0xbd, 0x3e, 0x55, 0x33, 0x05, 0xdf, 0x15, 0xe9, 0xdc, 0x41, 0xb7, 0xcb, 0xeb, 0x6b, 0x90,
+	0x99, 0x1d, 0xca, 0x8d, 0x78, 0x0e, 0xe0, 0x9b, 0x95, 0x4d, 0x1f, 0xbd, 0xa7, 0xc3, 0x57, 0x6b,
+	0xf6, 0xb4, 0xef, 0x9e, 0xd5, 0xbd, 0x4a, 0xb3, 0x74, 0x02, 0xe5, 0xd2, 0x75, 0xed, 0x9d, 0xdd,
+	0xa7, 0x27, 0x06, 0x78, 0x76, 0x62, 0x80, 0x7f, 0x4e, 0x0c, 0xf0, 0xfd, 0xa9, 0xd1, 0x78, 0x76,
+	0x6a, 0x34, 0xfe, 0x3a, 0x35, 0x1a, 0x9f, 0x6f, 0x3a, 0x2e, 0x7f, 0x78, 0x34, 0x34, 0x0f, 0x82,
+	0xd1, 0x34, 0x60, 0x97, 0x78, 0xe1, 0x43, 0xc2, 0x29, 0x11, 0x5f, 0xd6, 0x57, 0xb3, 0x03, 0xf8,
+	0xa3, 0x90, 0xb2, 0xe1, 0xb2, 0xf8, 0x2b, 0x7a, 0xf3, 0xbf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x26,
+	0x2a, 0x7d, 0x46, 0x8d, 0x0f, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -796,6 +998,10 @@ type QueryClient interface {
 	StakingRewardParticipant(ctx context.Context, in *QueryGetStakingRewardParticipantRequest, opts ...grpc.CallOption) (*QueryGetStakingRewardParticipantResponse, error)
 	// Queries a list of StakingRewardParticipant items.
 	StakingRewardParticipantAll(ctx context.Context, in *QueryAllStakingRewardParticipantRequest, opts ...grpc.CallOption) (*QueryAllStakingRewardParticipantResponse, error)
+	// Queries a list of GetTradingRewardLeaderboard items.
+	GetTradingRewardLeaderboardHandler(ctx context.Context, in *QueryGetTradingRewardLeaderboardRequest, opts ...grpc.CallOption) (*QueryGetTradingRewardLeaderboardResponse, error)
+	// Queries a list of GetMarketIdTradingRewardIdHandler items.
+	GetMarketIdTradingRewardIdHandler(ctx context.Context, in *QueryGetMarketIdTradingRewardIdHandlerRequest, opts ...grpc.CallOption) (*QueryGetMarketIdTradingRewardIdHandlerResponse, error)
 }
 
 type queryClient struct {
@@ -869,6 +1075,24 @@ func (c *queryClient) StakingRewardParticipantAll(ctx context.Context, in *Query
 	return out, nil
 }
 
+func (c *queryClient) GetTradingRewardLeaderboardHandler(ctx context.Context, in *QueryGetTradingRewardLeaderboardRequest, opts ...grpc.CallOption) (*QueryGetTradingRewardLeaderboardResponse, error) {
+	out := new(QueryGetTradingRewardLeaderboardResponse)
+	err := c.cc.Invoke(ctx, "/bze.v1.rewards.Query/GetTradingRewardLeaderboardHandler", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetMarketIdTradingRewardIdHandler(ctx context.Context, in *QueryGetMarketIdTradingRewardIdHandlerRequest, opts ...grpc.CallOption) (*QueryGetMarketIdTradingRewardIdHandlerResponse, error) {
+	out := new(QueryGetMarketIdTradingRewardIdHandlerResponse)
+	err := c.cc.Invoke(ctx, "/bze.v1.rewards.Query/GetMarketIdTradingRewardIdHandler", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
@@ -885,6 +1109,10 @@ type QueryServer interface {
 	StakingRewardParticipant(context.Context, *QueryGetStakingRewardParticipantRequest) (*QueryGetStakingRewardParticipantResponse, error)
 	// Queries a list of StakingRewardParticipant items.
 	StakingRewardParticipantAll(context.Context, *QueryAllStakingRewardParticipantRequest) (*QueryAllStakingRewardParticipantResponse, error)
+	// Queries a list of GetTradingRewardLeaderboard items.
+	GetTradingRewardLeaderboardHandler(context.Context, *QueryGetTradingRewardLeaderboardRequest) (*QueryGetTradingRewardLeaderboardResponse, error)
+	// Queries a list of GetMarketIdTradingRewardIdHandler items.
+	GetMarketIdTradingRewardIdHandler(context.Context, *QueryGetMarketIdTradingRewardIdHandlerRequest) (*QueryGetMarketIdTradingRewardIdHandlerResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -911,6 +1139,12 @@ func (*UnimplementedQueryServer) StakingRewardParticipant(ctx context.Context, r
 }
 func (*UnimplementedQueryServer) StakingRewardParticipantAll(ctx context.Context, req *QueryAllStakingRewardParticipantRequest) (*QueryAllStakingRewardParticipantResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StakingRewardParticipantAll not implemented")
+}
+func (*UnimplementedQueryServer) GetTradingRewardLeaderboardHandler(ctx context.Context, req *QueryGetTradingRewardLeaderboardRequest) (*QueryGetTradingRewardLeaderboardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTradingRewardLeaderboardHandler not implemented")
+}
+func (*UnimplementedQueryServer) GetMarketIdTradingRewardIdHandler(ctx context.Context, req *QueryGetMarketIdTradingRewardIdHandlerRequest) (*QueryGetMarketIdTradingRewardIdHandlerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMarketIdTradingRewardIdHandler not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -1043,6 +1277,42 @@ func _Query_StakingRewardParticipantAll_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetTradingRewardLeaderboardHandler_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetTradingRewardLeaderboardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetTradingRewardLeaderboardHandler(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.v1.rewards.Query/GetTradingRewardLeaderboardHandler",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetTradingRewardLeaderboardHandler(ctx, req.(*QueryGetTradingRewardLeaderboardRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetMarketIdTradingRewardIdHandler_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetMarketIdTradingRewardIdHandlerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetMarketIdTradingRewardIdHandler(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.v1.rewards.Query/GetMarketIdTradingRewardIdHandler",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetMarketIdTradingRewardIdHandler(ctx, req.(*QueryGetMarketIdTradingRewardIdHandlerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "bze.v1.rewards.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -1074,6 +1344,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "StakingRewardParticipantAll",
 			Handler:    _Query_StakingRewardParticipantAll_Handler,
+		},
+		{
+			MethodName: "GetTradingRewardLeaderboardHandler",
+			Handler:    _Query_GetTradingRewardLeaderboardHandler_Handler,
+		},
+		{
+			MethodName: "GetMarketIdTradingRewardIdHandler",
+			Handler:    _Query_GetMarketIdTradingRewardIdHandler_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1612,6 +1890,136 @@ func (m *QueryAllStakingRewardParticipantResponse) MarshalToSizedBuffer(dAtA []b
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryGetTradingRewardLeaderboardRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetTradingRewardLeaderboardRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetTradingRewardLeaderboardRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.RewardId) > 0 {
+		i -= len(m.RewardId)
+		copy(dAtA[i:], m.RewardId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.RewardId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetTradingRewardLeaderboardResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetTradingRewardLeaderboardResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetTradingRewardLeaderboardResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Leaderboard != nil {
+		{
+			size, err := m.Leaderboard.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetMarketIdTradingRewardIdHandlerRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetMarketIdTradingRewardIdHandlerRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetMarketIdTradingRewardIdHandlerRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.MarketId) > 0 {
+		i -= len(m.MarketId)
+		copy(dAtA[i:], m.MarketId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.MarketId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetMarketIdTradingRewardIdHandlerResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetMarketIdTradingRewardIdHandlerResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetMarketIdTradingRewardIdHandlerResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.MarketIdRewardId != nil {
+		{
+			size, err := m.MarketIdRewardId.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -1822,6 +2230,58 @@ func (m *QueryAllStakingRewardParticipantResponse) Size() (n int) {
 	}
 	if m.Pagination != nil {
 		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetTradingRewardLeaderboardRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.RewardId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetTradingRewardLeaderboardResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Leaderboard != nil {
+		l = m.Leaderboard.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetMarketIdTradingRewardIdHandlerRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.MarketId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetMarketIdTradingRewardIdHandlerResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.MarketIdRewardId != nil {
+		l = m.MarketIdRewardId.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -3160,6 +3620,342 @@ func (m *QueryAllStakingRewardParticipantResponse) Unmarshal(dAtA []byte) error 
 				m.Pagination = &query.PageResponse{}
 			}
 			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetTradingRewardLeaderboardRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetTradingRewardLeaderboardRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetTradingRewardLeaderboardRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RewardId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetTradingRewardLeaderboardResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetTradingRewardLeaderboardResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetTradingRewardLeaderboardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Leaderboard", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Leaderboard == nil {
+				m.Leaderboard = &TradingRewardLeaderboard{}
+			}
+			if err := m.Leaderboard.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetMarketIdTradingRewardIdHandlerRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetMarketIdTradingRewardIdHandlerRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetMarketIdTradingRewardIdHandlerRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MarketId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetMarketIdTradingRewardIdHandlerResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetMarketIdTradingRewardIdHandlerResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetMarketIdTradingRewardIdHandlerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketIdRewardId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.MarketIdRewardId == nil {
+				m.MarketIdRewardId = &MarketIdTradingRewardId{}
+			}
+			if err := m.MarketIdRewardId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
