@@ -388,9 +388,13 @@ export default {
 			try {
 				const key = params ?? {};
 				const queryClient=await initQueryClient(rootGetters)
-				let value= (await queryClient.queryGetMarketIdTradingRewardIdHandler( key.marketId)).data
+				let value= (await queryClient.queryGetMarketIdTradingRewardIdHandler(query)).data
 				
 					
+				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
+					let next_values=(await queryClient.queryGetMarketIdTradingRewardIdHandler({...query, 'pagination.key':(<any> value).pagination.next_key})).data
+					value = mergeResults(value, next_values);
+				}
 				commit('QUERY', { query: 'GetMarketIdTradingRewardIdHandler', key: { params: {...key}, query}, value })
 				if (subscribe) commit('SUBSCRIBE', { action: 'QueryGetMarketIdTradingRewardIdHandler', payload: { options: { all }, params: {...key},query }})
 				return getters['getGetMarketIdTradingRewardIdHandler']( { params: {...key}, query}) ?? {}
@@ -401,18 +405,18 @@ export default {
 		},
 		
 		
-		async sendMsgClaimStakingRewards({ rootGetters }, { value, fee = [], memo = '' }) {
+		async sendMsgCreateStakingReward({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgClaimStakingRewards(value)
+				const msg = await txClient.msgCreateStakingReward(value)
 				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
 	gas: "200000" }, memo})
 				return result
 			} catch (e) {
 				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgClaimStakingRewards:Init Could not initialize signing client. Wallet is required.')
+					throw new Error('TxClient:MsgCreateStakingReward:Init Could not initialize signing client. Wallet is required.')
 				}else{
-					throw new Error('TxClient:MsgClaimStakingRewards:Send Could not broadcast Tx: '+ e.message)
+					throw new Error('TxClient:MsgCreateStakingReward:Send Could not broadcast Tx: '+ e.message)
 				}
 			}
 		},
@@ -428,6 +432,36 @@ export default {
 					throw new Error('TxClient:MsgJoinStaking:Init Could not initialize signing client. Wallet is required.')
 				}else{
 					throw new Error('TxClient:MsgJoinStaking:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
+		async sendMsgClaimStakingRewards({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgClaimStakingRewards(value)
+				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
+	gas: "200000" }, memo})
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgClaimStakingRewards:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgClaimStakingRewards:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
+		async sendMsgUpdateStakingReward({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgUpdateStakingReward(value)
+				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
+	gas: "200000" }, memo})
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgUpdateStakingReward:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgUpdateStakingReward:Send Could not broadcast Tx: '+ e.message)
 				}
 			}
 		},
@@ -461,47 +495,17 @@ export default {
 				}
 			}
 		},
-		async sendMsgCreateStakingReward({ rootGetters }, { value, fee = [], memo = '' }) {
+		
+		async MsgCreateStakingReward({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
 				const msg = await txClient.msgCreateStakingReward(value)
-				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
-	gas: "200000" }, memo})
-				return result
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCreateStakingReward:Init Could not initialize signing client. Wallet is required.')
-				}else{
-					throw new Error('TxClient:MsgCreateStakingReward:Send Could not broadcast Tx: '+ e.message)
-				}
-			}
-		},
-		async sendMsgUpdateStakingReward({ rootGetters }, { value, fee = [], memo = '' }) {
-			try {
-				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgUpdateStakingReward(value)
-				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
-	gas: "200000" }, memo})
-				return result
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgUpdateStakingReward:Init Could not initialize signing client. Wallet is required.')
-				}else{
-					throw new Error('TxClient:MsgUpdateStakingReward:Send Could not broadcast Tx: '+ e.message)
-				}
-			}
-		},
-		
-		async MsgClaimStakingRewards({ rootGetters }, { value }) {
-			try {
-				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgClaimStakingRewards(value)
 				return msg
 			} catch (e) {
 				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgClaimStakingRewards:Init Could not initialize signing client. Wallet is required.')
+					throw new Error('TxClient:MsgCreateStakingReward:Init Could not initialize signing client. Wallet is required.')
 				} else{
-					throw new Error('TxClient:MsgClaimStakingRewards:Create Could not create message: ' + e.message)
+					throw new Error('TxClient:MsgCreateStakingReward:Create Could not create message: ' + e.message)
 				}
 			}
 		},
@@ -515,6 +519,32 @@ export default {
 					throw new Error('TxClient:MsgJoinStaking:Init Could not initialize signing client. Wallet is required.')
 				} else{
 					throw new Error('TxClient:MsgJoinStaking:Create Could not create message: ' + e.message)
+				}
+			}
+		},
+		async MsgClaimStakingRewards({ rootGetters }, { value }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgClaimStakingRewards(value)
+				return msg
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgClaimStakingRewards:Init Could not initialize signing client. Wallet is required.')
+				} else{
+					throw new Error('TxClient:MsgClaimStakingRewards:Create Could not create message: ' + e.message)
+				}
+			}
+		},
+		async MsgUpdateStakingReward({ rootGetters }, { value }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgUpdateStakingReward(value)
+				return msg
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgUpdateStakingReward:Init Could not initialize signing client. Wallet is required.')
+				} else{
+					throw new Error('TxClient:MsgUpdateStakingReward:Create Could not create message: ' + e.message)
 				}
 			}
 		},
@@ -541,32 +571,6 @@ export default {
 					throw new Error('TxClient:MsgExitStaking:Init Could not initialize signing client. Wallet is required.')
 				} else{
 					throw new Error('TxClient:MsgExitStaking:Create Could not create message: ' + e.message)
-				}
-			}
-		},
-		async MsgCreateStakingReward({ rootGetters }, { value }) {
-			try {
-				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgCreateStakingReward(value)
-				return msg
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCreateStakingReward:Init Could not initialize signing client. Wallet is required.')
-				} else{
-					throw new Error('TxClient:MsgCreateStakingReward:Create Could not create message: ' + e.message)
-				}
-			}
-		},
-		async MsgUpdateStakingReward({ rootGetters }, { value }) {
-			try {
-				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgUpdateStakingReward(value)
-				return msg
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgUpdateStakingReward:Init Could not initialize signing client. Wallet is required.')
-				} else{
-					throw new Error('TxClient:MsgUpdateStakingReward:Create Could not create message: ' + e.message)
 				}
 			}
 		},

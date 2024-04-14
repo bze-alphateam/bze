@@ -2151,7 +2151,7 @@ paths:
           type: boolean
       tags:
         - Query
-  '/bze-alphateam/bze/rewards/get_market_id_trading_reward_id_handler/{marketId}':
+  /bze/rewards/v1/market_id_trading_reward_id:
     get:
       summary: Queries a list of GetMarketIdTradingRewardIdHandler items.
       operationId: BzeV1RewardsGetMarketIdTradingRewardIdHandler
@@ -2160,58 +2160,14 @@ paths:
           description: A successful response.
           schema:
             type: object
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
             properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: marketId
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  '/bze/rewards/v1/get_trading_reward_leaderboard/{reward_id}':
-    get:
-      summary: Queries a list of GetTradingRewardLeaderboard items.
-      operationId: BzeV1RewardsGetTradingRewardLeaderboardHandler
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              leaderboard:
+              market_id_reward_id:
                 type: object
                 properties:
                   reward_id:
                     type: string
-                  list:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        amount:
-                          type: string
-                        address:
-                          type: string
-                        created_at:
-                          type: string
-                          format: int64
+                  market_id:
+                    type: string
         default:
           description: An unexpected error response.
           schema:
@@ -2231,9 +2187,9 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
-        - name: reward_id
-          in: path
-          required: true
+        - name: market_id
+          in: query
+          required: false
           type: string
       tags:
         - Query
@@ -2942,6 +2898,58 @@ paths:
           in: query
           required: false
           type: boolean
+      tags:
+        - Query
+  '/bze/rewards/v1/trading_reward_leaderboard/{reward_id}':
+    get:
+      summary: Queries a list of GetTradingRewardLeaderboard items.
+      operationId: BzeV1RewardsGetTradingRewardLeaderboardHandler
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              leaderboard:
+                type: object
+                properties:
+                  reward_id:
+                    type: string
+                  list:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        amount:
+                          type: string
+                        address:
+                          type: string
+                        created_at:
+                          type: string
+                          format: int64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: reward_id
+          in: path
+          required: true
+          type: string
       tags:
         - Query
   /cosmos/auth/v1beta1/accounts:
@@ -34713,6 +34721,13 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
+  bze.v1.rewards.MarketIdTradingRewardId:
+    type: object
+    properties:
+      reward_id:
+        type: string
+      market_id:
+        type: string
   bze.v1.rewards.MsgClaimStakingRewardsResponse:
     type: object
     properties:
@@ -34896,6 +34911,14 @@ definitions:
            }
   bze.v1.rewards.QueryGetMarketIdTradingRewardIdHandlerResponse:
     type: object
+    properties:
+      market_id_reward_id:
+        type: object
+        properties:
+          reward_id:
+            type: string
+          market_id:
+            type: string
   bze.v1.rewards.QueryGetStakingRewardParticipantResponse:
     type: object
     properties:

@@ -9,6 +9,7 @@ import {
 import {
   TradingReward,
   TradingRewardLeaderboard,
+  MarketIdTradingRewardId,
 } from "../rewards/trading_reward";
 import { StakingRewardParticipant } from "../rewards/staking_reward_participant";
 
@@ -86,10 +87,12 @@ export interface QueryGetTradingRewardLeaderboardResponse {
 }
 
 export interface QueryGetMarketIdTradingRewardIdHandlerRequest {
-  marketId: string;
+  market_id: string;
 }
 
-export interface QueryGetMarketIdTradingRewardIdHandlerResponse {}
+export interface QueryGetMarketIdTradingRewardIdHandlerResponse {
+  market_id_reward_id: MarketIdTradingRewardId | undefined;
+}
 
 const baseQueryParamsRequest: object = {};
 
@@ -1364,7 +1367,7 @@ export const QueryGetTradingRewardLeaderboardResponse = {
 };
 
 const baseQueryGetMarketIdTradingRewardIdHandlerRequest: object = {
-  marketId: "",
+  market_id: "",
 };
 
 export const QueryGetMarketIdTradingRewardIdHandlerRequest = {
@@ -1372,8 +1375,8 @@ export const QueryGetMarketIdTradingRewardIdHandlerRequest = {
     message: QueryGetMarketIdTradingRewardIdHandlerRequest,
     writer: Writer = Writer.create()
   ): Writer {
-    if (message.marketId !== "") {
-      writer.uint32(10).string(message.marketId);
+    if (message.market_id !== "") {
+      writer.uint32(10).string(message.market_id);
     }
     return writer;
   },
@@ -1391,7 +1394,7 @@ export const QueryGetMarketIdTradingRewardIdHandlerRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.marketId = reader.string();
+          message.market_id = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -1405,17 +1408,17 @@ export const QueryGetMarketIdTradingRewardIdHandlerRequest = {
     const message = {
       ...baseQueryGetMarketIdTradingRewardIdHandlerRequest,
     } as QueryGetMarketIdTradingRewardIdHandlerRequest;
-    if (object.marketId !== undefined && object.marketId !== null) {
-      message.marketId = String(object.marketId);
+    if (object.market_id !== undefined && object.market_id !== null) {
+      message.market_id = String(object.market_id);
     } else {
-      message.marketId = "";
+      message.market_id = "";
     }
     return message;
   },
 
   toJSON(message: QueryGetMarketIdTradingRewardIdHandlerRequest): unknown {
     const obj: any = {};
-    message.marketId !== undefined && (obj.marketId = message.marketId);
+    message.market_id !== undefined && (obj.market_id = message.market_id);
     return obj;
   },
 
@@ -1425,10 +1428,10 @@ export const QueryGetMarketIdTradingRewardIdHandlerRequest = {
     const message = {
       ...baseQueryGetMarketIdTradingRewardIdHandlerRequest,
     } as QueryGetMarketIdTradingRewardIdHandlerRequest;
-    if (object.marketId !== undefined && object.marketId !== null) {
-      message.marketId = object.marketId;
+    if (object.market_id !== undefined && object.market_id !== null) {
+      message.market_id = object.market_id;
     } else {
-      message.marketId = "";
+      message.market_id = "";
     }
     return message;
   },
@@ -1438,9 +1441,15 @@ const baseQueryGetMarketIdTradingRewardIdHandlerResponse: object = {};
 
 export const QueryGetMarketIdTradingRewardIdHandlerResponse = {
   encode(
-    _: QueryGetMarketIdTradingRewardIdHandlerResponse,
+    message: QueryGetMarketIdTradingRewardIdHandlerResponse,
     writer: Writer = Writer.create()
   ): Writer {
+    if (message.market_id_reward_id !== undefined) {
+      MarketIdTradingRewardId.encode(
+        message.market_id_reward_id,
+        writer.uint32(10).fork()
+      ).ldelim();
+    }
     return writer;
   },
 
@@ -1456,6 +1465,12 @@ export const QueryGetMarketIdTradingRewardIdHandlerResponse = {
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
+        case 1:
+          message.market_id_reward_id = MarketIdTradingRewardId.decode(
+            reader,
+            reader.uint32()
+          );
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -1464,24 +1479,48 @@ export const QueryGetMarketIdTradingRewardIdHandlerResponse = {
     return message;
   },
 
-  fromJSON(_: any): QueryGetMarketIdTradingRewardIdHandlerResponse {
+  fromJSON(object: any): QueryGetMarketIdTradingRewardIdHandlerResponse {
     const message = {
       ...baseQueryGetMarketIdTradingRewardIdHandlerResponse,
     } as QueryGetMarketIdTradingRewardIdHandlerResponse;
+    if (
+      object.market_id_reward_id !== undefined &&
+      object.market_id_reward_id !== null
+    ) {
+      message.market_id_reward_id = MarketIdTradingRewardId.fromJSON(
+        object.market_id_reward_id
+      );
+    } else {
+      message.market_id_reward_id = undefined;
+    }
     return message;
   },
 
-  toJSON(_: QueryGetMarketIdTradingRewardIdHandlerResponse): unknown {
+  toJSON(message: QueryGetMarketIdTradingRewardIdHandlerResponse): unknown {
     const obj: any = {};
+    message.market_id_reward_id !== undefined &&
+      (obj.market_id_reward_id = message.market_id_reward_id
+        ? MarketIdTradingRewardId.toJSON(message.market_id_reward_id)
+        : undefined);
     return obj;
   },
 
   fromPartial(
-    _: DeepPartial<QueryGetMarketIdTradingRewardIdHandlerResponse>
+    object: DeepPartial<QueryGetMarketIdTradingRewardIdHandlerResponse>
   ): QueryGetMarketIdTradingRewardIdHandlerResponse {
     const message = {
       ...baseQueryGetMarketIdTradingRewardIdHandlerResponse,
     } as QueryGetMarketIdTradingRewardIdHandlerResponse;
+    if (
+      object.market_id_reward_id !== undefined &&
+      object.market_id_reward_id !== null
+    ) {
+      message.market_id_reward_id = MarketIdTradingRewardId.fromPartial(
+        object.market_id_reward_id
+      );
+    } else {
+      message.market_id_reward_id = undefined;
+    }
     return message;
   },
 };

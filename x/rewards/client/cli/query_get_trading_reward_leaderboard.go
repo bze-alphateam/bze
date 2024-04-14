@@ -31,7 +31,7 @@ func CmdGetTradingRewardLeaderboard() *cobra.Command {
 				RewardId: reqRewardId,
 			}
 
-			res, err := queryClient.GetTradingRewardLeaderboard(cmd.Context(), params)
+			res, err := queryClient.GetTradingRewardLeaderboardHandler(cmd.Context(), params)
 			if err != nil {
 				return err
 			}

@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k msgServer) TradingRewardAll(c context.Context, req *types.QueryAllTradingRewardRequest) (*types.QueryAllTradingRewardResponse, error) {
+func (k Keeper) TradingRewardAll(c context.Context, req *types.QueryAllTradingRewardRequest) (*types.QueryAllTradingRewardResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -37,7 +37,7 @@ func (k msgServer) TradingRewardAll(c context.Context, req *types.QueryAllTradin
 	return &types.QueryAllTradingRewardResponse{List: tradingRewards, Pagination: pageRes}, nil
 }
 
-func (k msgServer) TradingReward(c context.Context, req *types.QueryGetTradingRewardRequest) (*types.QueryGetTradingRewardResponse, error) {
+func (k Keeper) TradingReward(c context.Context, req *types.QueryGetTradingRewardRequest) (*types.QueryGetTradingRewardResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -56,7 +56,7 @@ func (k msgServer) TradingReward(c context.Context, req *types.QueryGetTradingRe
 	return nil, status.Error(codes.NotFound, "not found")
 }
 
-func (k msgServer) getTradingRewardStore(ctx sdk.Context, state string) prefix.Store {
+func (k Keeper) getTradingRewardStore(ctx sdk.Context, state string) prefix.Store {
 	s := k.getActiveTradingRewardStore(ctx)
 	if state == "pending" {
 		s = k.getPendingTradingRewardStore(ctx)
