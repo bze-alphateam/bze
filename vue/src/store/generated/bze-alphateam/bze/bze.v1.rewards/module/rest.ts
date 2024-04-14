@@ -13,6 +13,11 @@ export interface ProtobufAny {
   "@type"?: string;
 }
 
+export interface RewardsMarketIdTradingRewardId {
+  reward_id?: string;
+  market_id?: string;
+}
+
 export interface RewardsMsgClaimStakingRewardsResponse {
   amount?: string;
 }
@@ -76,7 +81,9 @@ export interface RewardsQueryAllTradingRewardResponse {
   pagination?: V1Beta1PageResponse;
 }
 
-export type RewardsQueryGetMarketIdTradingRewardIdHandlerResponse = object;
+export interface RewardsQueryGetMarketIdTradingRewardIdHandlerResponse {
+  market_id_reward_id?: RewardsMarketIdTradingRewardId;
+}
 
 export interface RewardsQueryGetStakingRewardParticipantResponse {
   list?: V1RewardsStakingRewardParticipant[];
@@ -450,28 +457,13 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * @tags Query
    * @name QueryGetMarketIdTradingRewardIdHandler
    * @summary Queries a list of GetMarketIdTradingRewardIdHandler items.
-   * @request GET:/bze-alphateam/bze/rewards/get_market_id_trading_reward_id_handler/{marketId}
+   * @request GET:/bze/rewards/v1/market_id_trading_reward_id
    */
-  queryGetMarketIdTradingRewardIdHandler = (marketId: string, params: RequestParams = {}) =>
+  queryGetMarketIdTradingRewardIdHandler = (query?: { market_id?: string }, params: RequestParams = {}) =>
     this.request<RewardsQueryGetMarketIdTradingRewardIdHandlerResponse, RpcStatus>({
-      path: `/bze-alphateam/bze/rewards/get_market_id_trading_reward_id_handler/${marketId}`,
+      path: `/bze/rewards/v1/market_id_trading_reward_id`,
       method: "GET",
-      format: "json",
-      ...params,
-    });
-
-  /**
-   * No description
-   *
-   * @tags Query
-   * @name QueryGetTradingRewardLeaderboardHandler
-   * @summary Queries a list of GetTradingRewardLeaderboard items.
-   * @request GET:/bze/rewards/v1/get_trading_reward_leaderboard/{reward_id}
-   */
-  queryGetTradingRewardLeaderboardHandler = (reward_id: string, params: RequestParams = {}) =>
-    this.request<RewardsQueryGetTradingRewardLeaderboardResponse, RpcStatus>({
-      path: `/bze/rewards/v1/get_trading_reward_leaderboard/${reward_id}`,
-      method: "GET",
+      query: query,
       format: "json",
       ...params,
     });
@@ -626,6 +618,22 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       path: `/bze/rewards/v1/trading_reward/${state}`,
       method: "GET",
       query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryGetTradingRewardLeaderboardHandler
+   * @summary Queries a list of GetTradingRewardLeaderboard items.
+   * @request GET:/bze/rewards/v1/trading_reward_leaderboard/{reward_id}
+   */
+  queryGetTradingRewardLeaderboardHandler = (reward_id: string, params: RequestParams = {}) =>
+    this.request<RewardsQueryGetTradingRewardLeaderboardResponse, RpcStatus>({
+      path: `/bze/rewards/v1/trading_reward_leaderboard/${reward_id}`,
+      method: "GET",
       format: "json",
       ...params,
     });
