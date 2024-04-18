@@ -34743,6 +34743,8 @@ definitions:
     properties:
       reward_id:
         type: string
+  bze.v1.rewards.MsgDistributeStakingRewardsResponse:
+    type: object
   bze.v1.rewards.MsgExitStakingResponse:
     type: object
   bze.v1.rewards.MsgJoinStakingResponse:
