@@ -40,6 +40,16 @@ func (k Keeper) HandleActivateTradingRewardProposal(ctx sdk.Context, proposal *t
 		MarketId: r.MarketId,
 	})
 
+	err := ctx.EventManager().EmitTypedEvent(
+		&types.TradingRewardActivationEvent{
+			RewardId: exp.RewardId,
+		},
+	)
+
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+	}
+
 	k.Logger(ctx).Info(fmt.Sprintf("trading reward with id [%s] has been activated", r.RewardId))
 
 	return nil

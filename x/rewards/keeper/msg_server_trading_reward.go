@@ -75,6 +75,22 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 	}
 	k.SetPendingTradingRewardExpiration(ctx, exp)
 
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.TradingRewardCreateEvent{
+			RewardId:    tradingReward.RewardId,
+			PrizeAmount: tradingReward.PrizeAmount,
+			PrizeDenom:  tradingReward.PrizeDenom,
+			Duration:    tradingReward.Duration,
+			MarketId:    tradingReward.MarketId,
+			Slots:       tradingReward.Slots,
+			Creator:     msg.Creator,
+		},
+	)
+
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+	}
+
 	return &types.MsgCreateTradingRewardResponse{RewardId: tradingReward.RewardId}, nil
 }
 

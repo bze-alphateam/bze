@@ -32,5 +32,15 @@ func (k Keeper) removeExpiredTradingRewards(ctx sdk.Context, epochNumber int64) 
 
 		logger.With("trading_reward", tr, "to_burn", toBurn).
 			Debug("removed expired trading reward and burnt the tokens associated with it")
+
+		err = ctx.EventManager().EmitTypedEvent(
+			&types.TradingRewardExpireEvent{
+				RewardId: exp.RewardId,
+			},
+		)
+
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())
+		}
 	}
 }

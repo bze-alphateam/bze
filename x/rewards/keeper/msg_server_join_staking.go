@@ -79,6 +79,18 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 	k.SetStakingRewardParticipant(ctx, participant)
 	k.SetStakingReward(ctx, stakingReward)
 
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.StakingRewardJoinEvent{
+			RewardId: stakingReward.RewardId,
+			Address:  msg.Creator,
+			Amount:   toCapture.AmountOf(stakingReward.StakingDenom).String(),
+		},
+	)
+
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+	}
+
 	return &types.MsgJoinStakingResponse{}, nil
 }
 

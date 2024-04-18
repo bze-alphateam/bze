@@ -30,5 +30,17 @@ func (k msgServer) ClaimStakingRewards(goCtx context.Context, msg *types.MsgClai
 
 	k.SetStakingRewardParticipant(ctx, participant)
 
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.StakingRewardClaimEvent{
+			RewardId: stakingReward.RewardId,
+			Address:  msg.Creator,
+			Amount:   paid.Amount.String(),
+		},
+	)
+
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+	}
+
 	return &types.MsgClaimStakingRewardsResponse{Amount: paid.Amount.String()}, nil
 }
