@@ -105,3 +105,9 @@ func (k Keeper) getAmountToCapture(feeParam, denom, amount string, multiplier in
 
 	return result, nil
 }
+
+func (k Keeper) getNewTradingRewardExpireAt(ctx sdk.Context) uint32 {
+	cnt := uint32(k.epochKeeper.GetEpochCountByIdentifier(ctx, expirationEpoch))
+
+	return cnt + expirationPeriodInHours
+}

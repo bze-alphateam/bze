@@ -1,7 +1,8 @@
 package cli
 
 import (
-	"github.com/bze-alphateam/bze/x/burner/types"
+	"fmt"
+	"github.com/bze-alphateam/bze/x/rewards/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,16 +11,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewCmdSubmitBurnCoinsProposal() *cobra.Command {
+func NewCmdSubmitActivateTradingRewardProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "burn-coins",
-		Args:  cobra.ExactArgs(0),
-		Short: "Submit coins burning proposal",
-		Long:  "Submit coins burning proposal along with an initial deposit.\n",
+		Use:   "activate-trading-reward",
+		Args:  cobra.ExactArgs(1),
+		Short: "Submit activate trading reward proposal",
+		Long:  "Submit activate trading reward proposal along with an initial deposit.\n",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
+			}
+
+			argRewardId := args[0]
+			if argRewardId == "" {
+				return fmt.Errorf("empty reward id provided")
 			}
 
 			title, err := cmd.Flags().GetString(govcli.FlagTitle)
@@ -32,7 +38,7 @@ func NewCmdSubmitBurnCoinsProposal() *cobra.Command {
 				return err
 			}
 
-			content := types.NewBurnCoinsProposal(title, description)
+			content := types.NewActivateTradingRewardProposal(argRewardId, title, description)
 
 			from := clientCtx.GetFromAddress()
 

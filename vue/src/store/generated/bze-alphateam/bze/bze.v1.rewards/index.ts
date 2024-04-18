@@ -1,5 +1,6 @@
 import { txClient, queryClient, MissingWalletError , registry} from './module'
 
+import { ActivateTradingRewardProposal } from "./module/types/rewards/gov"
 import { Params } from "./module/types/rewards/params"
 import { StakingReward } from "./module/types/rewards/staking_reward"
 import { StakingRewardParticipant } from "./module/types/rewards/staking_reward_participant"
@@ -12,7 +13,7 @@ import { TradingRewardCandidate } from "./module/types/rewards/trading_reward"
 import { MarketIdTradingRewardId } from "./module/types/rewards/trading_reward"
 
 
-export { Params, StakingReward, StakingRewardParticipant, PendingUnlockParticipant, TradingReward, TradingRewardExpiration, TradingRewardLeaderboard, TradingRewardLeaderboardEntry, TradingRewardCandidate, MarketIdTradingRewardId };
+export { ActivateTradingRewardProposal, Params, StakingReward, StakingRewardParticipant, PendingUnlockParticipant, TradingReward, TradingRewardExpiration, TradingRewardLeaderboard, TradingRewardLeaderboardEntry, TradingRewardCandidate, MarketIdTradingRewardId };
 
 async function initTxClient(vuexGetters) {
 	return await txClient(vuexGetters['common/wallet/signer'], {
@@ -61,6 +62,7 @@ const getDefaultState = () => {
 				GetMarketIdTradingRewardIdHandler: {},
 				
 				_Structure: {
+						ActivateTradingRewardProposal: getStructure(ActivateTradingRewardProposal.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
 						StakingReward: getStructure(StakingReward.fromPartial({})),
 						StakingRewardParticipant: getStructure(StakingRewardParticipant.fromPartial({})),
@@ -405,33 +407,33 @@ export default {
 		},
 		
 		
-		async sendMsgCreateStakingReward({ rootGetters }, { value, fee = [], memo = '' }) {
+		async sendMsgCreateTradingReward({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgCreateStakingReward(value)
+				const msg = await txClient.msgCreateTradingReward(value)
 				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
 	gas: "200000" }, memo})
 				return result
 			} catch (e) {
 				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCreateStakingReward:Init Could not initialize signing client. Wallet is required.')
+					throw new Error('TxClient:MsgCreateTradingReward:Init Could not initialize signing client. Wallet is required.')
 				}else{
-					throw new Error('TxClient:MsgCreateStakingReward:Send Could not broadcast Tx: '+ e.message)
+					throw new Error('TxClient:MsgCreateTradingReward:Send Could not broadcast Tx: '+ e.message)
 				}
 			}
 		},
-		async sendMsgJoinStaking({ rootGetters }, { value, fee = [], memo = '' }) {
+		async sendMsgExitStaking({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgJoinStaking(value)
+				const msg = await txClient.msgExitStaking(value)
 				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
 	gas: "200000" }, memo})
 				return result
 			} catch (e) {
 				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgJoinStaking:Init Could not initialize signing client. Wallet is required.')
+					throw new Error('TxClient:MsgExitStaking:Init Could not initialize signing client. Wallet is required.')
 				}else{
-					throw new Error('TxClient:MsgJoinStaking:Send Could not broadcast Tx: '+ e.message)
+					throw new Error('TxClient:MsgExitStaking:Send Could not broadcast Tx: '+ e.message)
 				}
 			}
 		},
@@ -465,60 +467,60 @@ export default {
 				}
 			}
 		},
-		async sendMsgCreateTradingReward({ rootGetters }, { value, fee = [], memo = '' }) {
+		async sendMsgJoinStaking({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgCreateTradingReward(value)
+				const msg = await txClient.msgJoinStaking(value)
 				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
 	gas: "200000" }, memo})
 				return result
 			} catch (e) {
 				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCreateTradingReward:Init Could not initialize signing client. Wallet is required.')
+					throw new Error('TxClient:MsgJoinStaking:Init Could not initialize signing client. Wallet is required.')
 				}else{
-					throw new Error('TxClient:MsgCreateTradingReward:Send Could not broadcast Tx: '+ e.message)
+					throw new Error('TxClient:MsgJoinStaking:Send Could not broadcast Tx: '+ e.message)
 				}
 			}
 		},
-		async sendMsgExitStaking({ rootGetters }, { value, fee = [], memo = '' }) {
+		async sendMsgCreateStakingReward({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgExitStaking(value)
+				const msg = await txClient.msgCreateStakingReward(value)
 				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
 	gas: "200000" }, memo})
 				return result
 			} catch (e) {
 				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgExitStaking:Init Could not initialize signing client. Wallet is required.')
+					throw new Error('TxClient:MsgCreateStakingReward:Init Could not initialize signing client. Wallet is required.')
 				}else{
-					throw new Error('TxClient:MsgExitStaking:Send Could not broadcast Tx: '+ e.message)
+					throw new Error('TxClient:MsgCreateStakingReward:Send Could not broadcast Tx: '+ e.message)
 				}
 			}
 		},
 		
-		async MsgCreateStakingReward({ rootGetters }, { value }) {
+		async MsgCreateTradingReward({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgCreateStakingReward(value)
+				const msg = await txClient.msgCreateTradingReward(value)
 				return msg
 			} catch (e) {
 				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCreateStakingReward:Init Could not initialize signing client. Wallet is required.')
+					throw new Error('TxClient:MsgCreateTradingReward:Init Could not initialize signing client. Wallet is required.')
 				} else{
-					throw new Error('TxClient:MsgCreateStakingReward:Create Could not create message: ' + e.message)
+					throw new Error('TxClient:MsgCreateTradingReward:Create Could not create message: ' + e.message)
 				}
 			}
 		},
-		async MsgJoinStaking({ rootGetters }, { value }) {
+		async MsgExitStaking({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgJoinStaking(value)
+				const msg = await txClient.msgExitStaking(value)
 				return msg
 			} catch (e) {
 				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgJoinStaking:Init Could not initialize signing client. Wallet is required.')
+					throw new Error('TxClient:MsgExitStaking:Init Could not initialize signing client. Wallet is required.')
 				} else{
-					throw new Error('TxClient:MsgJoinStaking:Create Could not create message: ' + e.message)
+					throw new Error('TxClient:MsgExitStaking:Create Could not create message: ' + e.message)
 				}
 			}
 		},
@@ -548,29 +550,29 @@ export default {
 				}
 			}
 		},
-		async MsgCreateTradingReward({ rootGetters }, { value }) {
+		async MsgJoinStaking({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgCreateTradingReward(value)
+				const msg = await txClient.msgJoinStaking(value)
 				return msg
 			} catch (e) {
 				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCreateTradingReward:Init Could not initialize signing client. Wallet is required.')
+					throw new Error('TxClient:MsgJoinStaking:Init Could not initialize signing client. Wallet is required.')
 				} else{
-					throw new Error('TxClient:MsgCreateTradingReward:Create Could not create message: ' + e.message)
+					throw new Error('TxClient:MsgJoinStaking:Create Could not create message: ' + e.message)
 				}
 			}
 		},
-		async MsgExitStaking({ rootGetters }, { value }) {
+		async MsgCreateStakingReward({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgExitStaking(value)
+				const msg = await txClient.msgCreateStakingReward(value)
 				return msg
 			} catch (e) {
 				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgExitStaking:Init Could not initialize signing client. Wallet is required.')
+					throw new Error('TxClient:MsgCreateStakingReward:Init Could not initialize signing client. Wallet is required.')
 				} else{
-					throw new Error('TxClient:MsgExitStaking:Create Could not create message: ' + e.message)
+					throw new Error('TxClient:MsgCreateStakingReward:Create Could not create message: ' + e.message)
 				}
 			}
 		},
