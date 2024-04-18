@@ -59,7 +59,7 @@ func (k msgServer) beginUnlock(ctx sdk.Context, p types.StakingRewardParticipant
 	lockedUntil := k.epochKeeper.GetEpochCountByIdentifier(ctx, expirationEpoch)
 	lockedUntil += int64(sr.Lock) * 24
 	pending := types.PendingUnlockParticipant{
-		Index:   types.CreatePendingUnlockParticipantKey(lockedUntil, sr.RewardId),
+		Index:   types.CreatePendingUnlockParticipantKey(lockedUntil, fmt.Sprintf("%s/%s", sr.RewardId, p.Address)),
 		Address: p.Address,
 		Amount:  p.Amount,
 		Denom:   sr.StakingDenom,
