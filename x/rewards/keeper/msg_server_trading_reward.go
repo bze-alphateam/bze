@@ -86,9 +86,3 @@ func (k msgServer) checkUserBalances(ctx sdk.Context, neededCoins sdk.Coins, add
 
 	return nil
 }
-
-func (k msgServer) getNewTradingRewardExpireAt(ctx sdk.Context) uint32 {
-	cnt := uint32(k.epochKeeper.GetEpochCountByIdentifier(ctx, expirationEpoch))
-
-	return cnt + expirationPeriodInHours
-}
