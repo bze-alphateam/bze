@@ -42,6 +42,7 @@ func (k Keeper) distributeTradingRewards(ctx sdk.Context, epochNumber int64) {
 			continue
 		}
 
+		var eventWinners []string
 		for _, winner := range leaderboard.List {
 			acc, err := sdk.AccAddressFromBech32(winner.Address)
 			if err != nil {
@@ -49,6 +50,7 @@ func (k Keeper) distributeTradingRewards(ctx sdk.Context, epochNumber int64) {
 			}
 
 			_ = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, acc, rewardPerSlot)
+			eventWinners = append(eventWinners, winner.Address)
 		}
 
 		//the trading reward is finished. remove the market id
@@ -56,6 +58,19 @@ func (k Keeper) distributeTradingRewards(ctx sdk.Context, epochNumber int64) {
 		//extend the expiration of this paid trading reward for another period just to display the winners
 		exp.ExpireAt += oneWeekInHours
 		k.SetActiveTradingRewardExpiration(ctx, exp)
+
+		err = ctx.EventManager().EmitTypedEvent(
+			&types.TradingRewardDistributionEvent{
+				RewardId:    exp.RewardId,
+				PrizeAmount: rewardPerSlot.String(),
+				PrizeDenom:  tr.PrizeDenom,
+				Winners:     eventWinners,
+			},
+		)
+
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())
+		}
 	}
 }
 

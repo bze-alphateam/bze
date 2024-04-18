@@ -49,7 +49,27 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 		//if this staking reward is finished (all funds were distributed and payouts executed) we should remove it
 		if stakingReward.Payouts >= stakingReward.Duration {
 			k.RemoveStakingReward(ctx, stakingReward.RewardId)
+			err = ctx.EventManager().EmitTypedEvent(
+				&types.StakingRewardFinishEvent{
+					RewardId: stakingReward.RewardId,
+				},
+			)
+
+			if err != nil {
+				k.Logger(ctx).Error(err.Error())
+			}
 		}
+	}
+
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.StakingRewardExitEvent{
+			RewardId: stakingReward.RewardId,
+			Address:  msg.Creator,
+		},
+	)
+
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
 	}
 
 	return &types.MsgExitStakingResponse{}, nil

@@ -57,6 +57,22 @@ func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCrea
 		stakingReward,
 	)
 
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.StakingRewardCreateEvent{
+			RewardId:     stakingReward.RewardId,
+			PrizeAmount:  stakingReward.PrizeAmount,
+			PrizeDenom:   stakingReward.PrizeDenom,
+			StakingDenom: stakingReward.StakingDenom,
+			Duration:     stakingReward.Duration,
+			MinStake:     stakingReward.MinStake,
+			Lock:         stakingReward.Lock,
+		},
+	)
+
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+	}
+
 	return &types.MsgCreateStakingRewardResponse{RewardId: stakingReward.RewardId}, nil
 }
 
@@ -102,6 +118,17 @@ func (k msgServer) UpdateStakingReward(goCtx context.Context, msg *types.MsgUpda
 
 	stakingReward.Duration += uint32(durationInt)
 	k.SetStakingReward(ctx, stakingReward)
+
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.StakingRewardUpdateEvent{
+			RewardId: stakingReward.RewardId,
+			Duration: stakingReward.Duration,
+		},
+	)
+
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+	}
 
 	return &types.MsgUpdateStakingRewardResponse{}, nil
 }
