@@ -30,6 +30,8 @@ export interface RewardsMsgCreateTradingRewardResponse {
   reward_id?: string;
 }
 
+export type RewardsMsgDistributeStakingRewardsResponse = object;
+
 export type RewardsMsgExitStakingResponse = object;
 
 export type RewardsMsgJoinStakingResponse = object;
