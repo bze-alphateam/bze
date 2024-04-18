@@ -176,7 +176,7 @@ func (suite *IntegrationTestSuite) TestCreateTradingReward_MissingSupply() {
 		PrizeDenom:  "ubzesd",
 		Duration:    "100",
 		MarketId:    "stake/ubze",
-		Slots:       "99",
+		Slots:       "1",
 	}
 
 	_, err := suite.msgServer.CreateTradingReward(goCtx, &msg)
@@ -227,7 +227,7 @@ func (suite *IntegrationTestSuite) TestCreateTradingReward_Success() {
 	initialUserBalances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
 	suite.Require().True(initialUserBalances.IsZero())
 
-	balances := sdk.NewCoins(sdk.NewInt64Coin("ubze", 10000020000))
+	balances := sdk.NewCoins(sdk.NewInt64Coin("ubze", 10000002000))
 	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, balances))
 	suite.app.TradebinKeeper.SetMarket(suite.ctx, types2.Market{
 		Base:    "stake",
@@ -241,7 +241,7 @@ func (suite *IntegrationTestSuite) TestCreateTradingReward_Success() {
 		PrizeDenom:  "ubze",
 		Duration:    "100",
 		MarketId:    "stake/ubze",
-		Slots:       "100",
+		Slots:       "10",
 	}
 
 	res, err := suite.msgServer.CreateTradingReward(goCtx, &msg)
@@ -254,7 +254,7 @@ func (suite *IntegrationTestSuite) TestCreateTradingReward_Success() {
 	suite.Require().EqualValues(msg.PrizeDenom, storeTradingReward.PrizeDenom)
 	suite.Require().EqualValues(uint32(100), storeTradingReward.Duration)
 	suite.Require().EqualValues(msg.MarketId, storeTradingReward.MarketId)
-	suite.Require().EqualValues(uint32(100), storeTradingReward.Slots)
+	suite.Require().EqualValues(uint32(10), storeTradingReward.Slots)
 
 	expectedRemainingBalance := sdk.NewCoins(sdk.NewInt64Coin("ubze", 0))
 	actualRemainingBalance := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
