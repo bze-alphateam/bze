@@ -110,6 +110,12 @@ func (k msgServer) claimPending(ctx sdk.Context, sr types.StakingReward, partici
 		return nil, err
 	}
 
+	//user has nothing to claim
+	if distributedStake.Equal(joinedAt) {
+		zeroCoins := sdk.NewCoin(sr.PrizeDenom, sdk.NewInt(0))
+		return &zeroCoins, nil
+	}
+
 	reward := deposited.Mul(distributedStake.Sub(joinedAt)).TruncateInt()
 	if !reward.IsPositive() {
 		return nil, fmt.Errorf("no rewards to claim")
