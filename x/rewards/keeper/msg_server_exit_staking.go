@@ -32,6 +32,10 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 	if !ok {
 		return nil, fmt.Errorf("could not transform amount from storage into int")
 	}
+	if !stakedAmountInt.IsPositive() {
+		//disaster in this case
+		return nil, fmt.Errorf("no staked amount left")
+	}
 
 	//send pending rewards
 	_, err = k.claimPending(ctx, stakingReward, &participation)
@@ -41,23 +45,22 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 
 	k.beginUnlock(ctx, participation, stakingReward)
 	k.RemoveStakingRewardParticipant(ctx, participation.Address, participation.RewardId)
-	remainingStakedAmount := stakedAmountInt.Sub(partCoins.AmountOf(stakingReward.StakingDenom))
-	if remainingStakedAmount.IsPositive() {
-		stakingReward.StakedAmount = remainingStakedAmount.String()
-		k.SetStakingReward(ctx, stakingReward)
-	} else {
-		//if this staking reward is finished (all funds were distributed and payouts executed) we should remove it
-		if stakingReward.Payouts >= stakingReward.Duration {
-			k.RemoveStakingReward(ctx, stakingReward.RewardId)
-			err = ctx.EventManager().EmitTypedEvent(
-				&types.StakingRewardFinishEvent{
-					RewardId: stakingReward.RewardId,
-				},
-			)
 
-			if err != nil {
-				k.Logger(ctx).Error(err.Error())
-			}
+	remainingStakedAmount := stakedAmountInt.Sub(partCoins.AmountOf(stakingReward.StakingDenom))
+	stakingReward.StakedAmount = remainingStakedAmount.String()
+	k.SetStakingReward(ctx, stakingReward)
+
+	//if this staking reward is finished (all funds were distributed and payouts executed) we should remove it
+	if remainingStakedAmount.IsZero() && stakingReward.Payouts >= stakingReward.Duration {
+		k.RemoveStakingReward(ctx, stakingReward.RewardId)
+		err = ctx.EventManager().EmitTypedEvent(
+			&types.StakingRewardFinishEvent{
+				RewardId: stakingReward.RewardId,
+			},
+		)
+
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())
 		}
 	}
 

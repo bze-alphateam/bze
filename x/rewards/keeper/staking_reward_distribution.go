@@ -22,7 +22,7 @@ func (k Keeper) getDistributeRewardHandler() func(ctx sdk.Context, reward types.
 			return
 		}
 
-		err := k.distributeStakingRewards(ctx, &sr, sr.PrizeAmount)
+		err := k.distributeStakingRewards(&sr, sr.PrizeAmount)
 		if err != nil {
 			logger.Error(err.Error())
 			stop = false
@@ -33,13 +33,22 @@ func (k Keeper) getDistributeRewardHandler() func(ctx sdk.Context, reward types.
 		sr.Payouts++
 		k.SetStakingReward(ctx, sr)
 
-		logger.Debug("staking reward distributed")
+		err = ctx.EventManager().EmitTypedEvent(
+			&types.StakingRewardDistributionEvent{
+				RewardId: sr.RewardId,
+				Amount:   sr.PrizeAmount,
+			},
+		)
+
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())
+		}
 
 		return
 	}
 }
 
-func (k Keeper) distributeStakingRewards(ctx sdk.Context, sr *types.StakingReward, rewardAmount string) error {
+func (k Keeper) distributeStakingRewards(sr *types.StakingReward, rewardAmount string) error {
 	stakedAmount, ok := sdk.NewIntFromString(sr.StakedAmount)
 	if !ok {
 		return fmt.Errorf("could not transform staked amount from storage into int")
@@ -66,17 +75,6 @@ func (k Keeper) distributeStakingRewards(ctx sdk.Context, sr *types.StakingRewar
 	//S = S + r / T;
 	sFloat = sFloat.Add(reward.ToDec().Quo(stakedAmount.ToDec()))
 	sr.DistributedStake = sFloat.String()
-
-	err = ctx.EventManager().EmitTypedEvent(
-		&types.StakingRewardDistributionEvent{
-			RewardId: sr.RewardId,
-			Amount:   rewardAmount,
-		},
-	)
-
-	if err != nil {
-		k.Logger(ctx).Error(err.Error())
-	}
 
 	return nil
 }

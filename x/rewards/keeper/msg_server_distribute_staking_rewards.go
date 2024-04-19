@@ -13,7 +13,7 @@ func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *types.Ms
 		return nil, sdkerrors.ErrInvalidRequest
 	}
 
-	_, err := sdk.AccAddressFromBech32(msg.Creator)
+	acc, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return nil, err
 	}
@@ -33,14 +33,38 @@ func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *types.Ms
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, "staking reward not found")
 	}
 
-	err = k.distributeStakingRewards(ctx, &stakingReward, msg.Amount)
+	toCapture, err := k.getAmountToCapture("", stakingReward.PrizeDenom, msg.Amount, 1)
+	if err != nil {
+		return nil, sdkerrors.Wrap(types.ErrInvalidAmount, "could not create capture amount")
+	}
+
+	err = k.checkUserBalances(ctx, toCapture, acc)
+	if err != nil {
+		return nil, sdkerrors.ErrInsufficientFunds
+	}
+
+	err = k.distributeStakingRewards(&stakingReward, msg.Amount)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.ModuleName, toCapture)
 	if err != nil {
 		return nil, err
 	}
 
 	k.SetStakingReward(ctx, stakingReward)
 
-	k.Logger(ctx).Debug("staking reward distributed")
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.StakingRewardDistributionEvent{
+			RewardId: stakingReward.RewardId,
+			Amount:   msg.Amount,
+		},
+	)
+
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+	}
 
 	return &types.MsgDistributeStakingRewardsResponse{}, nil
 }

@@ -1,116 +1,142 @@
 package keeper_test
 
 import (
-	"strconv"
+	"github.com/bze-alphateam/bze/x/rewards/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Prevent strconv unused error
-var _ = strconv.IntSize
+func (suite *IntegrationTestSuite) TestQueryTradingRewardAll_Success_EmptyList() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
 
-//
-//func TestTradingRewardQuerySingle(t *testing.T) {
-//	keeper, ctx := keepertest.RewardsKeeper(t)
-//	wctx := sdk.WrapSDKContext(ctx)
-//	msgs := createNTradingReward(keeper, ctx, 2)
-//	for _, tc := range []struct {
-//		desc     string
-//		request  *types.QueryGetTradingRewardRequest
-//		response *types.QueryGetTradingRewardResponse
-//		err      error
-//	}{
-//		{
-//			desc: "First",
-//			request: &types.QueryGetTradingRewardRequest{
-//				RewardId: msgs[0].RewardId,
-//			},
-//			response: &types.QueryGetTradingRewardResponse{TradingReward: msgs[0]},
-//		},
-//		{
-//			desc: "Second",
-//			request: &types.QueryGetTradingRewardRequest{
-//				RewardId: msgs[1].RewardId,
-//			},
-//			response: &types.QueryGetTradingRewardResponse{TradingReward: msgs[1]},
-//		},
-//		{
-//			desc: "KeyNotFound",
-//			request: &types.QueryGetTradingRewardRequest{
-//				RewardId: strconv.Itoa(100000),
-//			},
-//			err: status.Error(codes.NotFound, "not found"),
-//		},
-//		{
-//			desc: "InvalidRequest",
-//			err:  status.Error(codes.InvalidArgument, "invalid request"),
-//		},
-//	} {
-//		t.Run(tc.desc, func(t *testing.T) {
-//			response, err := keeper.TradingReward(wctx, tc.request)
-//			if tc.err != nil {
-//				require.ErrorIs(t, err, tc.err)
-//			} else {
-//				require.NoError(t, err)
-//				require.Equal(t,
-//					nullify.Fill(tc.response),
-//					nullify.Fill(response),
-//				)
-//			}
-//		})
-//	}
-//}
-//
-//func TestTradingRewardQueryPaginated(t *testing.T) {
-//	keeper, ctx := keepertest.RewardsKeeper(t)
-//	wctx := sdk.WrapSDKContext(ctx)
-//	msgs := createNTradingReward(keeper, ctx, 5)
-//
-//	request := func(next []byte, offset, limit uint64, total bool) *types.QueryAllTradingRewardRequest {
-//		return &types.QueryAllTradingRewardRequest{
-//			Pagination: &query.PageRequest{
-//				Key:        next,
-//				Offset:     offset,
-//				Limit:      limit,
-//				CountTotal: total,
-//			},
-//		}
-//	}
-//	t.Run("ByOffset", func(t *testing.T) {
-//		step := 2
-//		for i := 0; i < len(msgs); i += step {
-//			resp, err := keeper.TradingRewardAll(wctx, request(nil, uint64(i), uint64(step), false))
-//			require.NoError(t, err)
-//			require.LessOrEqual(t, len(resp.TradingReward), step)
-//			require.Subset(t,
-//				nullify.Fill(msgs),
-//				nullify.Fill(resp.TradingReward),
-//			)
-//		}
-//	})
-//	t.Run("ByKey", func(t *testing.T) {
-//		step := 2
-//		var next []byte
-//		for i := 0; i < len(msgs); i += step {
-//			resp, err := keeper.TradingRewardAll(wctx, request(next, 0, uint64(step), false))
-//			require.NoError(t, err)
-//			require.LessOrEqual(t, len(resp.TradingReward), step)
-//			require.Subset(t,
-//				nullify.Fill(msgs),
-//				nullify.Fill(resp.TradingReward),
-//			)
-//			next = resp.Pagination.NextKey
-//		}
-//	})
-//	t.Run("Total", func(t *testing.T) {
-//		resp, err := keeper.TradingRewardAll(wctx, request(nil, 0, 0, true))
-//		require.NoError(t, err)
-//		require.Equal(t, len(msgs), int(resp.Pagination.Total))
-//		require.ElementsMatch(t,
-//			nullify.Fill(msgs),
-//			nullify.Fill(resp.TradingReward),
-//		)
-//	})
-//	t.Run("InvalidRequest", func(t *testing.T) {
-//		_, err := keeper.TradingRewardAll(wctx, nil)
-//		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
-//	})
-//}
+	l, err := suite.k.TradingRewardAll(goCtx, &types.QueryAllTradingRewardRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Empty(l.List)
+}
+
+func (suite *IntegrationTestSuite) TestQueryTradingRewardAll_InvalidRequest() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	_, err := suite.k.TradingRewardAll(goCtx, nil)
+	suite.Require().Error(err)
+}
+
+func (suite *IntegrationTestSuite) TestQueryTradingRewardAll_Pending_Success() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	tr := types.TradingReward{
+		RewardId: "2132",
+	}
+	suite.k.SetPendingTradingReward(suite.ctx, tr)
+
+	l, err := suite.k.TradingRewardAll(goCtx, &types.QueryAllTradingRewardRequest{State: "pending"})
+	suite.Require().NoError(err)
+	suite.Require().NotEmpty(l.List)
+	suite.Require().EqualValues(l.List[0], tr)
+}
+
+func (suite *IntegrationTestSuite) TestQueryTradingRewardAll_Active_Success() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	tr := types.TradingReward{
+		RewardId: "2132",
+	}
+	suite.k.SetActiveTradingReward(suite.ctx, tr)
+
+	shouldBeEmpty, err := suite.k.TradingRewardAll(goCtx, &types.QueryAllTradingRewardRequest{State: "pending"})
+	suite.Require().Empty(shouldBeEmpty.List)
+
+	l, err := suite.k.TradingRewardAll(goCtx, &types.QueryAllTradingRewardRequest{State: "active"})
+	suite.Require().NoError(err)
+	suite.Require().NotEmpty(l.List)
+	suite.Require().EqualValues(l.List[0], tr)
+}
+
+func (suite *IntegrationTestSuite) TestQueryTradingReward_InvalidRequest() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	_, err := suite.k.TradingReward(goCtx, nil)
+	suite.Require().Error(err)
+}
+
+func (suite *IntegrationTestSuite) TestQueryTradingReward_NotFound() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	_, err := suite.k.TradingReward(goCtx, &types.QueryGetTradingRewardRequest{RewardId: "da"})
+	suite.Require().Error(err)
+}
+
+func (suite *IntegrationTestSuite) TestQueryTradingReward_Pending_Success() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	tr := types.TradingReward{
+		RewardId: "2132",
+	}
+	suite.k.SetPendingTradingReward(suite.ctx, tr)
+
+	resp, err := suite.k.TradingReward(goCtx, &types.QueryGetTradingRewardRequest{RewardId: tr.RewardId})
+	suite.Require().NoError(err)
+	suite.Require().EqualValues(resp.TradingReward, tr)
+}
+
+func (suite *IntegrationTestSuite) TestQueryTradingReward_Active_Success() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	tr := types.TradingReward{
+		RewardId: "2132",
+	}
+	suite.k.SetActiveTradingReward(suite.ctx, tr)
+
+	resp, err := suite.k.TradingReward(goCtx, &types.QueryGetTradingRewardRequest{RewardId: tr.RewardId})
+	suite.Require().NoError(err)
+	suite.Require().EqualValues(resp.TradingReward, tr)
+}
+
+func (suite *IntegrationTestSuite) TestQueryGetMarketIdTradingRewardIdHandler_InvalidRequest() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	_, err := suite.k.GetMarketIdTradingRewardIdHandler(goCtx, nil)
+	suite.Require().Error(err)
+}
+
+func (suite *IntegrationTestSuite) TestQueryGetMarketIdTradingRewardIdHandler_NotFound() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	_, err := suite.k.GetMarketIdTradingRewardIdHandler(goCtx, &types.QueryGetMarketIdTradingRewardIdHandlerRequest{MarketId: "s"})
+	suite.Require().Error(err)
+}
+
+func (suite *IntegrationTestSuite) TestQueryGetMarketIdTradingRewardIdHandler_Success() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	mid := types.MarketIdTradingRewardId{
+		RewardId: "123",
+		MarketId: "asd/dsa",
+	}
+
+	suite.k.SetMarketIdRewardId(suite.ctx, mid)
+
+	resp, err := suite.k.GetMarketIdTradingRewardIdHandler(goCtx, &types.QueryGetMarketIdTradingRewardIdHandlerRequest{MarketId: mid.MarketId})
+	suite.Require().NoError(err)
+	suite.Require().EqualValues(resp.MarketIdRewardId, &mid)
+}
+
+func (suite *IntegrationTestSuite) TestQueryGetTradingRewardLeaderboardHandler_InvalidRequest() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	_, err := suite.k.GetTradingRewardLeaderboardHandler(goCtx, nil)
+	suite.Require().Error(err)
+}
+
+func (suite *IntegrationTestSuite) TestQueryGetTradingRewardLeaderboardHandler_NotFound() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	_, err := suite.k.GetTradingRewardLeaderboardHandler(goCtx, &types.QueryGetTradingRewardLeaderboardRequest{RewardId: "a"})
+	suite.Require().Error(err)
+}
+
+func (suite *IntegrationTestSuite) TestQueryGetTradingRewardLeaderboardHandler_Success() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	lb := types.TradingRewardLeaderboard{
+		RewardId: "123",
+	}
+
+	suite.k.SetTradingRewardLeaderboard(suite.ctx, lb)
+
+	resp, err := suite.k.GetTradingRewardLeaderboardHandler(goCtx, &types.QueryGetTradingRewardLeaderboardRequest{RewardId: lb.RewardId})
+	suite.Require().NoError(err)
+	suite.Require().EqualValues(resp.Leaderboard, &lb)
+}

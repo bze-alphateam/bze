@@ -1,21 +1,22 @@
 package keeper_test
 
 import (
-	"testing"
-
-	testkeeper "github.com/bze-alphateam/bze/testutil/keeper"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
 )
 
-func TestParamsQuery(t *testing.T) {
-	keeper, ctx := testkeeper.RewardsKeeper(t)
-	wctx := sdk.WrapSDKContext(ctx)
-	params := types.DefaultParams()
-	keeper.SetParams(ctx, params)
+func (suite *IntegrationTestSuite) TestQueryGetParams_InvalidRequest() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	_, err := suite.k.Params(goCtx, nil)
+	suite.Require().Error(err)
+}
 
-	response, err := keeper.Params(wctx, &types.QueryParamsRequest{})
-	require.NoError(t, err)
-	require.Equal(t, &types.QueryParamsResponse{Params: params}, response)
+func (suite *IntegrationTestSuite) TestQueryGetParams_Success() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	resp, err := suite.k.Params(goCtx, &types.QueryParamsRequest{})
+	suite.Require().NoError(err)
+
+	def := types.DefaultGenesis()
+	suite.Require().Equal(resp.Params, def.GetParams())
 }
