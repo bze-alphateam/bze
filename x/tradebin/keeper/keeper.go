@@ -18,9 +18,10 @@ type (
 		memKey     sdk.StoreKey
 		paramstore paramtypes.Subspace
 
-		bankKeeper    types.BankKeeper
-		accountKeeper types.AccountKeeper
-		distrKeeper   types.DistrKeeper
+		bankKeeper  types.BankKeeper
+		distrKeeper types.DistrKeeper
+
+		onOrderFillHooks []types.OnMarketOrderFill
 	}
 )
 
@@ -29,8 +30,8 @@ func NewKeeper(
 	storeKey,
 	memKey sdk.StoreKey,
 	ps paramtypes.Subspace,
-
-	bankKeeper types.BankKeeper, accountKeeper types.AccountKeeper, distrKeeper types.DistrKeeper,
+	bankKeeper types.BankKeeper,
+	distrKeeper types.DistrKeeper,
 ) *Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
@@ -39,12 +40,21 @@ func NewKeeper(
 
 	return &Keeper{
 
-		cdc:        cdc,
-		storeKey:   storeKey,
-		memKey:     memKey,
-		paramstore: ps,
-		bankKeeper: bankKeeper, accountKeeper: accountKeeper, distrKeeper: distrKeeper,
+		cdc:         cdc,
+		storeKey:    storeKey,
+		memKey:      memKey,
+		paramstore:  ps,
+		bankKeeper:  bankKeeper,
+		distrKeeper: distrKeeper,
 	}
+}
+
+func (k *Keeper) SetOnOrderFillHooks(hooks []types.OnMarketOrderFill) {
+	k.onOrderFillHooks = hooks
+}
+
+func (k Keeper) GetOnOrderFillHooks() []types.OnMarketOrderFill {
+	return k.onOrderFillHooks
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
