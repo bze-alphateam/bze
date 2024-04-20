@@ -1,63 +1,108 @@
 package keeper_test
 
 import (
-	"strconv"
-	"testing"
-
-	keepertest "github.com/bze-alphateam/bze/testutil/keeper"
-	"github.com/bze-alphateam/bze/testutil/nullify"
-	"github.com/bze-alphateam/bze/x/rewards/keeper"
 	"github.com/bze-alphateam/bze/x/rewards/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
+	"strconv"
 )
 
-// Prevent strconv unused error
-var _ = strconv.IntSize
+func (suite *IntegrationTestSuite) TestPendingTradingReward() {
+	list := suite.k.GetAllPendingTradingReward(suite.ctx)
+	suite.Require().Empty(list)
 
-func createNTradingReward(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.TradingReward {
-	items := make([]types.TradingReward, n)
-	for i := range items {
-		items[i].RewardId = strconv.Itoa(i)
+	_, f := suite.k.GetPendingTradingReward(suite.ctx, "fake")
+	suite.Require().False(f)
 
-		keeper.SetPendingTradingReward(ctx, items[i])
+	counter := suite.k.GetTradingRewardsCounter(suite.ctx)
+	suite.Require().EqualValues(counter, 0)
+
+	max := 10
+	for i := 0; i < max; i++ {
+		tr := types.TradingReward{RewardId: strconv.Itoa(i), Slots: uint32(i)}
+		suite.k.SetPendingTradingReward(suite.ctx, tr)
+
+		newSr, f := suite.k.GetPendingTradingReward(suite.ctx, tr.RewardId)
+		suite.Require().True(f)
+		suite.Require().EqualValues(newSr, tr)
 	}
-	return items
+
+	list = suite.k.GetAllPendingTradingReward(suite.ctx)
+	suite.Require().NotEmpty(list)
+	suite.Require().EqualValues(len(list), max)
+
+	counter = suite.k.GetTradingRewardsCounter(suite.ctx)
+	suite.Require().EqualValues(counter, max)
+
+	suite.k.RemovePendingTradingReward(suite.ctx, "0")
+	_, f = suite.k.GetPendingTradingReward(suite.ctx, "0")
+	suite.Require().False(f)
+
+	list = suite.k.GetAllPendingTradingReward(suite.ctx)
+	suite.Require().NotEmpty(list)
+	suite.Require().EqualValues(len(list), max-1)
 }
 
-func TestTradingRewardGet(t *testing.T) {
-	keeper, ctx := keepertest.RewardsKeeper(t)
-	items := createNTradingReward(keeper, ctx, 10)
-	for _, item := range items {
-		rst, found := keeper.GetPendingTradingReward(ctx,
-			item.RewardId,
-		)
-		require.True(t, found)
-		require.Equal(t,
-			nullify.Fill(&item),
-			nullify.Fill(&rst),
-		)
+func (suite *IntegrationTestSuite) TestActiveTradingReward() {
+	list := suite.k.GetAllActiveTradingReward(suite.ctx)
+	suite.Require().Empty(list)
+
+	_, f := suite.k.GetActiveTradingReward(suite.ctx, "fake")
+	suite.Require().False(f)
+
+	counter := suite.k.GetTradingRewardsCounter(suite.ctx)
+	suite.Require().EqualValues(counter, 0)
+
+	max := 10
+	for i := 0; i < max; i++ {
+		tr := types.TradingReward{RewardId: strconv.Itoa(i), Slots: uint32(i)}
+		suite.k.SetActiveTradingReward(suite.ctx, tr)
+
+		newSr, f := suite.k.GetActiveTradingReward(suite.ctx, tr.RewardId)
+		suite.Require().True(f)
+		suite.Require().EqualValues(newSr, tr)
 	}
-}
-func TestTradingRewardRemove(t *testing.T) {
-	keeper, ctx := keepertest.RewardsKeeper(t)
-	items := createNTradingReward(keeper, ctx, 10)
-	for _, item := range items {
-		keeper.RemovePendingTradingReward(ctx,
-			item.RewardId,
-		)
-		_, found := keeper.GetPendingTradingReward(ctx,
-			item.RewardId,
-		)
-		require.False(t, found)
-	}
+
+	list = suite.k.GetAllActiveTradingReward(suite.ctx)
+	suite.Require().NotEmpty(list)
+	suite.Require().EqualValues(len(list), max)
+
+	counter = suite.k.GetTradingRewardsCounter(suite.ctx)
+	suite.Require().EqualValues(counter, max)
+
+	suite.k.RemoveActiveTradingReward(suite.ctx, "0")
+	_, f = suite.k.GetActiveTradingReward(suite.ctx, "0")
+	suite.Require().False(f)
+
+	list = suite.k.GetAllActiveTradingReward(suite.ctx)
+	suite.Require().NotEmpty(list)
+	suite.Require().EqualValues(len(list), max-1)
 }
 
-func TestTradingRewardGetAll(t *testing.T) {
-	keeper, ctx := keepertest.RewardsKeeper(t)
-	items := createNTradingReward(keeper, ctx, 10)
-	require.ElementsMatch(t,
-		nullify.Fill(items),
-		nullify.Fill(keeper.GetAllPendingTradingReward(ctx)),
-	)
+func (suite *IntegrationTestSuite) TestMarketIdRewardId() {
+	list := suite.k.GetAllMarketIdRewardId(suite.ctx)
+	suite.Require().Empty(list)
+
+	_, f := suite.k.GetMarketIdRewardId(suite.ctx, "fake")
+	suite.Require().False(f)
+
+	max := 10
+	for i := 0; i < max; i++ {
+		mid := types.MarketIdTradingRewardId{MarketId: strconv.Itoa(i)}
+		suite.k.SetMarketIdRewardId(suite.ctx, mid)
+
+		newSr, f := suite.k.GetMarketIdRewardId(suite.ctx, mid.MarketId)
+		suite.Require().True(f)
+		suite.Require().EqualValues(newSr, mid)
+	}
+
+	list = suite.k.GetAllMarketIdRewardId(suite.ctx)
+	suite.Require().NotEmpty(list)
+	suite.Require().EqualValues(len(list), max)
+
+	suite.k.RemoveMarketIdRewardId(suite.ctx, "0")
+	_, f = suite.k.GetMarketIdRewardId(suite.ctx, "0")
+	suite.Require().False(f)
+
+	list = suite.k.GetAllMarketIdRewardId(suite.ctx)
+	suite.Require().NotEmpty(list)
+	suite.Require().EqualValues(len(list), max-1)
 }

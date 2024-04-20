@@ -16,6 +16,12 @@ func (k Keeper) getDistributeRewardHandler() func(ctx sdk.Context, reward types.
 
 		logger.Debug("preparing to distribute staking reward")
 
+		if sr.StakedAmount == "0" {
+			logger.Debug("staking reward has no staked coins. skipping distribution")
+			stop = false
+			return
+		}
+
 		if sr.Payouts >= sr.Duration {
 			logger.Debug("staking reward finished. skipping distribution")
 			stop = false

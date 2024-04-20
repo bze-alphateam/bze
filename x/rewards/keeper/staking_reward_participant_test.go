@@ -1,56 +1,37 @@
 package keeper_test
 
 import (
+	"github.com/bze-alphateam/bze/x/rewards/types"
 	"strconv"
 )
 
-// Prevent strconv unused error
-var _ = strconv.IntSize
+func (suite *IntegrationTestSuite) TestStakingRewardParticipant() {
+	list := suite.k.GetAllStakingRewardParticipant(suite.ctx)
+	suite.Require().Empty(list)
 
-//
-//func createNStakingRewardParticipant(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.StakingRewardParticipant {
-//	items := make([]types.StakingRewardParticipant, n)
-//	for i := range items {
-//		items[i].Index = strconv.Itoa(i)
-//
-//		keeper.SetStakingRewardParticipant(ctx, items[i])
-//	}
-//	return items
-//}
-//
-//func TestStakingRewardParticipantGet(t *testing.T) {
-//	keeper, ctx := keepertest.RewardsKeeper(t)
-//	items := createNStakingRewardParticipant(keeper, ctx, 10)
-//	for _, item := range items {
-//		rst, found := keeper.GetStakingRewardParticipant(ctx,
-//			item.Index,
-//		)
-//		require.True(t, found)
-//		require.Equal(t,
-//			nullify.Fill(&item),
-//			nullify.Fill(&rst),
-//		)
-//	}
-//}
-//func TestStakingRewardParticipantRemove(t *testing.T) {
-//	keeper, ctx := keepertest.RewardsKeeper(t)
-//	items := createNStakingRewardParticipant(keeper, ctx, 10)
-//	for _, item := range items {
-//		keeper.RemoveStakingRewardParticipant(ctx,
-//			item.Index,
-//		)
-//		_, found := keeper.GetStakingRewardParticipant(ctx,
-//			item.Index,
-//		)
-//		require.False(t, found)
-//	}
-//}
-//
-//func TestStakingRewardParticipantGetAll(t *testing.T) {
-//	keeper, ctx := keepertest.RewardsKeeper(t)
-//	items := createNStakingRewardParticipant(keeper, ctx, 10)
-//	require.ElementsMatch(t,
-//		nullify.Fill(items),
-//		nullify.Fill(keeper.GetAllStakingRewardParticipant(ctx)),
-//	)
-//}
+	_, f := suite.k.GetStakingRewardParticipant(suite.ctx, "fake", "fake2")
+	suite.Require().False(f)
+
+	max := 10
+	for i := 0; i < max; i++ {
+		convI := strconv.Itoa(i)
+		srp := types.StakingRewardParticipant{Address: convI, RewardId: convI}
+		suite.k.SetStakingRewardParticipant(suite.ctx, srp)
+
+		newSrp, f := suite.k.GetStakingRewardParticipant(suite.ctx, convI, convI)
+		suite.Require().True(f)
+		suite.Require().EqualValues(newSrp, srp)
+	}
+
+	list = suite.k.GetAllStakingRewardParticipant(suite.ctx)
+	suite.Require().NotEmpty(list)
+	suite.Require().EqualValues(len(list), max)
+
+	suite.k.RemoveStakingRewardParticipant(suite.ctx, "0", "0")
+	_, f = suite.k.GetStakingRewardParticipant(suite.ctx, "0", "0")
+	suite.Require().False(f)
+
+	list = suite.k.GetAllStakingRewardParticipant(suite.ctx)
+	suite.Require().NotEmpty(list)
+	suite.Require().EqualValues(len(list), max-1)
+}
