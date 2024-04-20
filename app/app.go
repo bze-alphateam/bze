@@ -489,7 +489,7 @@ func New(
 		[]epochstypes.EpochHook{
 			app.RewardsKeeper.GetDistributeAllStakingRewardsHook(),
 			app.RewardsKeeper.GetUnlockPendingUnlockParticipantsHook(),
-			app.RewardsKeeper.GetRemoveExpiredTradingRewardsHook(),
+			app.RewardsKeeper.GetRemoveExpiredPendingTradingRewardsHook(),
 			app.RewardsKeeper.GetTradingRewardsDistributionHook(),
 		},
 	)
