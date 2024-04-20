@@ -203,7 +203,7 @@ var (
 		tokenfactorytypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		tradebintypes.ModuleName:        nil,
 		epochstypes.ModuleName:          nil,
-		rewardstypes.ModuleName:         nil,
+		rewardstypes.ModuleName:         {authtypes.Burner},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 

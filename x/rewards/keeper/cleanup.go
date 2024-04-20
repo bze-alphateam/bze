@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) removeExpiredTradingRewards(ctx sdk.Context, epochNumber int64) {
+func (k Keeper) removeExpiredPendingTradingRewards(ctx sdk.Context, epochNumber int64) {
 	logger := k.Logger(ctx).With("epoch_number", epochNumber)
 	toRemove := k.GetAllPendingTradingRewardExpirationByExpireAt(ctx, uint32(epochNumber))
 	for _, exp := range toRemove {
