@@ -14,9 +14,10 @@ func (k Keeper) getPendingTradingRewardStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PendingTradingRewardKeyPrefix))
 }
 
-func (k Keeper) setTradingReward(store prefix.Store, tradingReward types.TradingReward) {
+func (k Keeper) setTradingReward(ctx sdk.Context, store prefix.Store, tradingReward types.TradingReward) {
 	b := k.cdc.MustMarshal(&tradingReward)
 	store.Set(types.TradingRewardKey(tradingReward.RewardId), b)
+	k.incrementTradingRewardsCounter(ctx)
 }
 
 func (k Keeper) getTradingReward(store prefix.Store, rewardId string) (val types.TradingReward, found bool) {
@@ -52,7 +53,7 @@ func (k Keeper) getAllTradingReward(store prefix.Store) (list []types.TradingRew
 // SetPendingTradingReward set a specific tradingReward in the store from its index
 func (k Keeper) SetPendingTradingReward(ctx sdk.Context, tradingReward types.TradingReward) {
 	store := k.getPendingTradingRewardStore(ctx)
-	k.setTradingReward(store, tradingReward)
+	k.setTradingReward(ctx, store, tradingReward)
 }
 
 // GetPendingTradingReward returns a tradingReward from its index
@@ -78,7 +79,7 @@ func (k Keeper) GetAllPendingTradingReward(ctx sdk.Context) []types.TradingRewar
 // SetActiveTradingReward set a specific tradingReward in the store from its index
 func (k Keeper) SetActiveTradingReward(ctx sdk.Context, tradingReward types.TradingReward) {
 	store := k.getActiveTradingRewardStore(ctx)
-	k.setTradingReward(store, tradingReward)
+	k.setTradingReward(ctx, store, tradingReward)
 }
 
 // GetActiveTradingReward returns a tradingReward from its index
