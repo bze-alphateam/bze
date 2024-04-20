@@ -1,63 +1,49 @@
 package keeper_test
 
 import (
-	"strconv"
-	"testing"
-
-	keepertest "github.com/bze-alphateam/bze/testutil/keeper"
-	"github.com/bze-alphateam/bze/testutil/nullify"
-	"github.com/bze-alphateam/bze/x/rewards/keeper"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
+	"strconv"
 )
 
-// Prevent strconv unused error
-var _ = strconv.IntSize
+func (suite *IntegrationTestSuite) TestStakingReward() {
+	list := suite.k.GetAllStakingReward(suite.ctx)
+	suite.Require().Empty(list)
 
-func createNStakingReward(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.StakingReward {
-	items := make([]types.StakingReward, n)
-	for i := range items {
-		items[i].RewardId = strconv.Itoa(i)
+	_, f := suite.k.GetStakingReward(suite.ctx, "fake")
+	suite.Require().False(f)
 
-		keeper.SetStakingReward(ctx, items[i])
+	counter := suite.k.GetStakingRewardsCounter(suite.ctx)
+	suite.Require().EqualValues(counter, 0)
+
+	max := 10
+	for i := 0; i < max; i++ {
+		sr := types.StakingReward{RewardId: strconv.Itoa(i), Lock: uint32(i)}
+		suite.k.SetStakingReward(suite.ctx, sr)
+
+		newSr, f := suite.k.GetStakingReward(suite.ctx, sr.RewardId)
+		suite.Require().True(f)
+		suite.Require().EqualValues(newSr, sr)
 	}
-	return items
-}
 
-func TestStakingRewardGet(t *testing.T) {
-	keeper, ctx := keepertest.RewardsKeeper(t)
-	items := createNStakingReward(keeper, ctx, 10)
-	for _, item := range items {
-		rst, found := keeper.GetStakingReward(ctx,
-			item.RewardId,
-		)
-		require.True(t, found)
-		require.Equal(t,
-			nullify.Fill(&item),
-			nullify.Fill(&rst),
-		)
-	}
-}
-func TestStakingRewardRemove(t *testing.T) {
-	keeper, ctx := keepertest.RewardsKeeper(t)
-	items := createNStakingReward(keeper, ctx, 10)
-	for _, item := range items {
-		keeper.RemoveStakingReward(ctx,
-			item.RewardId,
-		)
-		_, found := keeper.GetStakingReward(ctx,
-			item.RewardId,
-		)
-		require.False(t, found)
-	}
-}
+	list = suite.k.GetAllStakingReward(suite.ctx)
+	suite.Require().NotEmpty(list)
+	suite.Require().EqualValues(len(list), max)
 
-func TestStakingRewardGetAll(t *testing.T) {
-	keeper, ctx := keepertest.RewardsKeeper(t)
-	items := createNStakingReward(keeper, ctx, 10)
-	require.ElementsMatch(t,
-		nullify.Fill(items),
-		nullify.Fill(keeper.GetAllStakingReward(ctx)),
-	)
+	suite.k.IterateAllStakingRewards(suite.ctx, func(ctx sdk.Context, sr types.StakingReward) (stop bool) {
+		suite.Require().LessOrEqual(sr.Lock, uint32(max))
+
+		return false
+	})
+
+	counter = suite.k.GetStakingRewardsCounter(suite.ctx)
+	suite.Require().EqualValues(counter, max)
+
+	suite.k.RemoveStakingReward(suite.ctx, "0")
+	_, f = suite.k.GetStakingReward(suite.ctx, "0")
+	suite.Require().False(f)
+
+	list = suite.k.GetAllStakingReward(suite.ctx)
+	suite.Require().NotEmpty(list)
+	suite.Require().EqualValues(len(list), max-1)
 }
