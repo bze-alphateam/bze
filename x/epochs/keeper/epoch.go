@@ -98,3 +98,9 @@ func (k Keeper) NumBlocksSinceEpochStart(ctx sdk.Context, identifier string) (in
 	}
 	return ctx.BlockHeight() - epoch.CurrentEpochStartHeight, nil
 }
+
+func (k Keeper) GetEpochCountByIdentifier(ctx sdk.Context, identifier string) int64 {
+	e := k.GetEpochInfo(ctx, identifier)
+
+	return e.CurrentEpoch
+}

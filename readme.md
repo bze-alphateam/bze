@@ -9,13 +9,11 @@ Zcash codebase in 2022 with the help of the community.
 
 ### Wallets:
 [Vidulum App](https://vidulum.app/)  
-[Keplr Browser Extension](https://keplr.getbze.com/)  
+[Keplr Browser Extension](https://chains.keplr.app/)  
 
 ### Explorers:
 https://exporer.getbze.com/beezee  
 https://ping.pub/beezee  
-https://explorer.erialos.me/beezee   
-https://explorers.vidulum.app/beezee  
 
 ### Trading:
 [Osmosis Pool](https://frontier.osmosis.zone/pool/856)  
@@ -49,3 +47,6 @@ This will build binaries for all supported platforms and compress them in ./buil
 #### Build for specific platform:
 `make build-linux`
 This will build the binary for linux amd64 - check Makefile for more details and platforms
+
+#### Epochs hooks
+
