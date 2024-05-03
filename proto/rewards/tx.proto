@@ -1,0 +1,88 @@
+syntax = "proto3";
+package bze.v1.rewards;
+
+// this line is used by starport scaffolding # proto/tx/import
+
+option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
+
+// Msg defines the Msg service.
+service Msg {
+  rpc CreateStakingReward(MsgCreateStakingReward) returns (MsgCreateStakingRewardResponse);
+  rpc UpdateStakingReward(MsgUpdateStakingReward) returns (MsgUpdateStakingRewardResponse);
+  rpc CreateTradingReward(MsgCreateTradingReward) returns (MsgCreateTradingRewardResponse);
+  rpc JoinStaking(MsgJoinStaking) returns (MsgJoinStakingResponse);
+  rpc ExitStaking(MsgExitStaking) returns (MsgExitStakingResponse);
+  rpc ClaimStakingRewards(MsgClaimStakingRewards) returns (MsgClaimStakingRewardsResponse);
+  rpc DistributeStakingRewards(MsgDistributeStakingRewards) returns (MsgDistributeStakingRewardsResponse);
+// this line is used by starport scaffolding # proto/tx/rpc
+}
+
+message MsgCreateStakingReward {
+  string creator = 1; //msg creator
+  string prize_amount = 2; //the amount paid as prize for each epoch (duration)
+  string prize_denom = 3; //the denom paid as prize
+  string staking_denom = 4; //the denom a user has to stake in order to qualify
+  string duration = 5; // the number of days the rewards are paid
+  string min_stake = 6; // the minimum amount of staking denom a user has to stake in order to qualify
+  string lock = 7; // the number of days the funds are locked upon exiting stake
+}
+
+message MsgCreateStakingRewardResponse {
+  string reward_id = 1;
+}
+
+message MsgUpdateStakingReward {
+  string creator = 1;
+  string reward_id = 2;
+  string duration = 3; // the number of days the rewards are paid
+}
+message MsgUpdateStakingRewardResponse {}
+
+message MsgCreateTradingReward {
+  string creator = 1;
+  string prize_amount = 2; //the amount paid as prize for each slot
+  string prize_denom = 3; //the denom paid as prize
+  string duration = 4;
+  string market_id = 5;
+  string slots = 6;
+}
+message MsgCreateTradingRewardResponse {
+  string reward_id = 1;
+}
+
+message MsgJoinStaking {
+  string creator = 1;
+  string reward_id = 2;
+  string amount = 3;
+}
+
+message MsgJoinStakingResponse {
+}
+
+message MsgExitStaking {
+  string creator = 1;
+  string rewardId = 2;
+}
+
+message MsgExitStakingResponse {
+}
+
+message MsgClaimStakingRewards {
+  string creator = 1;
+  string rewardId = 2;
+}
+
+message MsgClaimStakingRewardsResponse {
+  string amount = 1;
+}
+
+message MsgDistributeStakingRewards {
+  string creator = 1;
+  string rewardId = 2;
+  string amount = 3;
+}
+
+message MsgDistributeStakingRewardsResponse {
+}
+
+// this line is used by starport scaffolding # proto/tx/message

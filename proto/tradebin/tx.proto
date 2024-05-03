@@ -1,0 +1,46 @@
+syntax = "proto3";
+package bze.tradebin.v1;
+
+// this line is used by starport scaffolding # proto/tx/import
+
+option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
+
+// Msg defines the Msg service.
+service Msg {
+      rpc CreateMarket(MsgCreateMarket) returns (MsgCreateMarketResponse);
+  rpc CreateOrder(MsgCreateOrder) returns (MsgCreateOrderResponse);
+  rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
+// this line is used by starport scaffolding # proto/tx/rpc
+}
+
+message MsgCreateMarket {
+  string creator = 1;
+  string base = 2;
+  string quote = 3;
+}
+
+message MsgCreateMarketResponse {
+}
+
+message MsgCreateOrder {
+  string creator = 1;
+  string order_type = 2;
+  string amount = 3;
+  string price = 4;
+  string marketId = 5;
+}
+
+message MsgCreateOrderResponse {
+}
+
+message MsgCancelOrder {
+  string creator = 1;
+  string marketId = 2;
+  string orderId = 3;
+  string order_type = 4;
+}
+
+message MsgCancelOrderResponse {
+}
+
+// this line is used by starport scaffolding # proto/tx/message

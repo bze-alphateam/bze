@@ -68,14 +68,14 @@ endif
 
 build-mac: check-version check-network go.sum
 ifeq ($(OS), Darwin)
-		GOOS=darwin GOARCH=amd64 $(MAKE) build
+		GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/darwin-amd64/bzed ./cmd/bzed
 else
-		LEDGER_ENABLED=false GOOS=darwin GOARCH=amd64 $(MAKE) build
+		LEDGER_ENABLED=false GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/darwin-amd64/bzed ./cmd/bzed
 endif
 
 build-mac-arm64: check-version check-network go.sum
 ifeq ($(OS), Darwin)
-		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/darwin-arm64/bzed ./cmd/bzed
+		GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/darwin-arm64/bzed ./cmd/bzed
 else
 		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/darwin-arm64/bzed ./cmd/bzed
 endif

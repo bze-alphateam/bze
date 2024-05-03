@@ -1,11 +1,13 @@
 accounts:
   - name: alice
-    coins: ["1000000000000utestbze"]
+    coins: ["1000000000000utestbze", "1000000000000ubze", "100000000000000stake"]
   - name: bob
-    coins: ["1000000000000utestbze"]
+    coins: ["1000000000000utestbze", "1000000000000ubze", "100000000000000stake"]
 validator:
   name: alice
   staked: "10000000000utestbze"
+  app:
+    swagger: true
 client:
   openapi:
     path: "docs/static/openapi.yml"
