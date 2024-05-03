@@ -611,7 +611,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /bze/cointrunk/v1/publisher/{index}:
+  '/bze/cointrunk/v1/publisher/{index}':
     get:
       summary: Queries publisher by index/address.
       operationId: BzeCointrunkV1PublisherByIndex
@@ -799,6 +799,182 @@ paths:
           type: boolean
       tags:
         - Query
+  /bze/epochs/v1/current_epoch:
+    get:
+      summary: CurrentEpoch provide current epoch of specified identifier
+      operationId: BzeEpochsV1CurrentEpoch
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              current_epoch:
+                type: string
+                format: int64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: identifier
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  /bze/epochs/v1/epochs:
+    get:
+      summary: EpochInfos provide running epochInfos
+      operationId: BzeEpochsV1EpochInfos
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              epochs:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    identifier:
+                      type: string
+                      description: >-
+                        identifier is a unique reference to this particular
+                        timer.
+                    start_time:
+                      type: string
+                      format: date-time
+                      description: >-
+                        start_time is the time at which the timer first ever
+                        ticks.
+
+                        If start_time is in the future, the epoch will not begin
+                        until the start
+
+                        time.
+                    duration:
+                      type: string
+                      description: >-
+                        duration is the time in between epoch ticks.
+
+                        In order for intended behavior to be met, duration
+                        should
+
+                        be greater than the chains expected block time.
+
+                        Duration must be non-zero.
+                    current_epoch:
+                      type: string
+                      format: int64
+                      description: >-
+                        current_epoch is the current epoch number, or in other
+                        words,
+
+                        how many times has the timer 'ticked'.
+
+                        The first tick (current_epoch=1) is defined as
+
+                        the first block whose blocktime is greater than the
+                        EpochInfo start_time.
+                    current_epoch_start_time:
+                      type: string
+                      format: date-time
+                      description: >-
+                        current_epoch_start_time describes the start time of the
+                        current timer
+
+                        interval. The interval is (current_epoch_start_time,
+
+                        current_epoch_start_time + duration] When the timer
+                        ticks, this is set to
+
+                        current_epoch_start_time = last_epoch_start_time +
+                        duration only one timer
+
+                        tick for a given identifier can occur per block.
+
+
+                        NOTE! The current_epoch_start_time may diverge
+                        significantly from the
+
+                        wall-clock time the epoch began at. Wall-clock time of
+                        epoch start may be
+
+                        >> current_epoch_start_time. Suppose
+                        current_epoch_start_time = 10,
+
+                        duration = 5. Suppose the chain goes offline at t=14,
+                        and comes back online
+
+                        at t=30, and produces blocks at every successive time.
+                        (t=31, 32, etc.)
+
+                        * The t=30 block will start the epoch for (10, 15]
+
+                        * The t=31 block will start the epoch for (15, 20]
+
+                        * The t=32 block will start the epoch for (20, 25]
+
+                        * The t=33 block will start the epoch for (25, 30]
+
+                        * The t=34 block will start the epoch for (30, 35]
+
+                        * The **t=36** block will start the epoch for (35, 40]
+                    epoch_counting_started:
+                      type: boolean
+                      description: >-
+                        epoch_counting_started is a boolean, that indicates
+                        whether this
+
+                        epoch timer has began yet.
+                    current_epoch_start_height:
+                      type: string
+                      format: int64
+                      title: >-
+                        current_epoch_start_height is the block height at which
+                        the current epoch
+
+                        started. (The block height at which the timer last
+                        ticked)
+                  description: |-
+                    EpochInfo is a struct that describes the data going into
+                    a timer defined by the x/epochs module.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
   /bze/scavenge/commit:
     get:
       summary: Queries a list of commit items.
@@ -925,7 +1101,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /bze/scavenge/commit/{index}:
+  '/bze/scavenge/commit/{index}':
     get:
       summary: Queries a commit by index.
       operationId: BzeScavengeCommit
@@ -1101,7 +1277,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /bze/scavenge/scavenge/{index}:
+  '/bze/scavenge/scavenge/{index}':
     get:
       summary: Queries a scavenge by index.
       operationId: BzeScavengeScavenge
@@ -1146,6 +1322,1631 @@ paths:
                   additionalProperties: {}
       parameters:
         - name: index
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /bze/tokenfactory/v1/denom_authority:
+    get:
+      summary: Queries a list of QueryDenomAuthority items.
+      operationId: BzeTokenfactoryV1DenomAuthority
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              denomAuthority:
+                type: object
+                properties:
+                  admin:
+                    type: string
+                    title: 'Can be empty for no admin, or a valid osmosis address'
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: denom
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  /bze/tokenfactory/v1/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: BzeTokenfactoryV1Params
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+                properties:
+                  createDenomFee:
+                    type: string
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /bze/tradebin/v1/all_markets:
+    get:
+      summary: Queries a list of Market items.
+      operationId: BzeTradebinV1MarketAll
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              market:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    base:
+                      type: string
+                    quote:
+                      type: string
+                    creator:
+                      type: string
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /bze/tradebin/v1/asset_markets:
+    get:
+      summary: Queries a list of AssetMarkets items.
+      operationId: BzeTradebinV1AssetMarkets
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              base:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    base:
+                      type: string
+                    quote:
+                      type: string
+                    creator:
+                      type: string
+              quote:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    base:
+                      type: string
+                    quote:
+                      type: string
+                    creator:
+                      type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: asset
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  /bze/tradebin/v1/market:
+    get:
+      summary: Queries a Market by index.
+      operationId: BzeTradebinV1Market
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              market:
+                type: object
+                properties:
+                  base:
+                    type: string
+                  quote:
+                    type: string
+                  creator:
+                    type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: base
+          in: query
+          required: false
+          type: string
+        - name: quote
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  /bze/tradebin/v1/market_aggregated_orders:
+    get:
+      summary: Queries a list of MarketAggregatedOrders items.
+      operationId: BzeTradebinV1MarketAggregatedOrders
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              list:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    market_id:
+                      type: string
+                    order_type:
+                      type: string
+                    amount:
+                      type: string
+                    price:
+                      type: string
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: market
+          in: query
+          required: false
+          type: string
+        - name: order_type
+          in: query
+          required: false
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /bze/tradebin/v1/market_history:
+    get:
+      summary: Queries a list of MarketHistory items.
+      operationId: BzeTradebinV1MarketHistory
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              list:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    market_id:
+                      type: string
+                    order_type:
+                      type: string
+                    amount:
+                      type: string
+                    price:
+                      type: string
+                    executed_at:
+                      type: string
+                      format: int64
+                    maker:
+                      type: string
+                    taker:
+                      type: string
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: market
+          in: query
+          required: false
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /bze/tradebin/v1/market_order:
+    get:
+      summary: Queries a list of MarketOrder items.
+      operationId: BzeTradebinV1MarketOrder
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              order:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  market_id:
+                    type: string
+                  order_type:
+                    type: string
+                  amount:
+                    type: string
+                  price:
+                    type: string
+                  created_at:
+                    type: string
+                    format: int64
+                  owner:
+                    type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: market
+          in: query
+          required: false
+          type: string
+        - name: order_type
+          in: query
+          required: false
+          type: string
+        - name: order_id
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  /bze/tradebin/v1/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: BzeTradebinV1Params
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+                properties:
+                  createMarketFee:
+                    type: string
+                  marketMakerFee:
+                    type: string
+                  marketTakerFee:
+                    type: string
+                  makerFeeDestination:
+                    type: string
+                  takerFeeDestination:
+                    type: string
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  '/bze/tradebin/v1/user_market_orders/{address}':
+    get:
+      summary: Queries a list of UserMarketOrders items.
+      operationId: BzeTradebinV1UserMarketOrders
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              list:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    market_id:
+                      type: string
+                    order_type:
+                      type: string
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: address
+          in: path
+          required: true
+          type: string
+        - name: market
+          in: query
+          required: false
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /bze/rewards/v1/market_id_trading_reward_id:
+    get:
+      summary: Queries a list of GetMarketIdTradingRewardIdHandler items.
+      operationId: BzeV1RewardsGetMarketIdTradingRewardIdHandler
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              market_id_reward_id:
+                type: object
+                properties:
+                  reward_id:
+                    type: string
+                  market_id:
+                    type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: market_id
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
+  /bze/rewards/v1/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: BzeV1RewardsParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+                properties:
+                  createStakingRewardFee:
+                    type: string
+                  createTradingRewardFee:
+                    type: string
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /bze/rewards/v1/staking_reward:
+    get:
+      summary: Queries a list of StakingReward items.
+      operationId: BzeV1RewardsStakingRewardAll
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              list:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    reward_id:
+                      type: string
+                    prize_amount:
+                      type: string
+                    prize_denom:
+                      type: string
+                    staking_denom:
+                      type: string
+                    duration:
+                      type: integer
+                      format: int64
+                    payouts:
+                      type: integer
+                      format: int64
+                    min_stake:
+                      type: string
+                      format: uint64
+                    lock:
+                      type: integer
+                      format: int64
+                    staked_amount:
+                      type: string
+                      title: T
+                    distributed_stake:
+                      type: string
+                      title: S
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  '/bze/rewards/v1/staking_reward/{reward_id}':
+    get:
+      summary: Queries a StakingReward by index.
+      operationId: BzeV1RewardsStakingReward
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              staking_reward:
+                type: object
+                properties:
+                  reward_id:
+                    type: string
+                  prize_amount:
+                    type: string
+                  prize_denom:
+                    type: string
+                  staking_denom:
+                    type: string
+                  duration:
+                    type: integer
+                    format: int64
+                  payouts:
+                    type: integer
+                    format: int64
+                  min_stake:
+                    type: string
+                    format: uint64
+                  lock:
+                    type: integer
+                    format: int64
+                  staked_amount:
+                    type: string
+                    title: T
+                  distributed_stake:
+                    type: string
+                    title: S
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: reward_id
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  '/bze/rewards/v1/staking_reward_participant/{address}':
+    get:
+      summary: Queries a StakingRewardParticipant by index.
+      operationId: BzeV1RewardsStakingRewardParticipant
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              list:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                    reward_id:
+                      type: string
+                    amount:
+                      type: string
+                      title: 'stake[address]'
+                    joined_at:
+                      type: string
+                      title: 'S0[address]'
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: address
+          in: path
+          required: true
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /bze/rewards/v1/staking_reward_participants:
+    get:
+      summary: Queries a list of StakingRewardParticipant items.
+      operationId: BzeV1RewardsStakingRewardParticipantAll
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              list:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                    reward_id:
+                      type: string
+                    amount:
+                      type: string
+                      title: 'stake[address]'
+                    joined_at:
+                      type: string
+                      title: 'S0[address]'
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  '/bze/rewards/v1/trading_reward/{reward_id}':
+    get:
+      summary: Queries a TradingReward by index.
+      operationId: BzeV1RewardsTradingReward
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              trading_reward:
+                type: object
+                properties:
+                  reward_id:
+                    type: string
+                  prize_amount:
+                    type: string
+                  prize_denom:
+                    type: string
+                  duration:
+                    type: integer
+                    format: int64
+                  market_id:
+                    type: string
+                  slots:
+                    type: integer
+                    format: int64
+                  expire_at:
+                    type: integer
+                    format: int64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: reward_id
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  '/bze/rewards/v1/trading_reward/{state}':
+    get:
+      summary: Queries a list of TradingReward items.
+      operationId: BzeV1RewardsTradingRewardAll
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              list:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    reward_id:
+                      type: string
+                    prize_amount:
+                      type: string
+                    prize_denom:
+                      type: string
+                    duration:
+                      type: integer
+                      format: int64
+                    market_id:
+                      type: string
+                    slots:
+                      type: integer
+                      format: int64
+                    expire_at:
+                      type: integer
+                      format: int64
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    title: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: state
+          in: path
+          required: true
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  '/bze/rewards/v1/trading_reward_leaderboard/{reward_id}':
+    get:
+      summary: Queries a list of GetTradingRewardLeaderboard items.
+      operationId: BzeV1RewardsGetTradingRewardLeaderboardHandler
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              leaderboard:
+                type: object
+                properties:
+                  reward_id:
+                    type: string
+                  list:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        amount:
+                          type: string
+                        address:
+                          type: string
+                        created_at:
+                          type: string
+                          format: int64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: reward_id
           in: path
           required: true
           type: string
@@ -1606,7 +3407,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/auth/v1beta1/accounts/{address}:
+  '/cosmos/auth/v1beta1/accounts/{address}':
     get:
       summary: Account returns account details based on address.
       operationId: CosmosAuthV1Beta1Account
@@ -1874,7 +3675,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/auth/v1beta1/module_accounts/{name}:
+  '/cosmos/auth/v1beta1/module_accounts/{name}':
     get:
       summary: ModuleAccountByName returns the module account info by module name
       operationId: CosmosAuthV1Beta1ModuleAccountByName
@@ -2469,7 +4270,7 @@ paths:
         - Query
   /cosmos/authz/v1beta1/grants:
     get:
-      summary: Returns list of `Authorization`, granted to the grantee by the granter.
+      summary: 'Returns list of `Authorization`, granted to the grantee by the granter.'
       operationId: CosmosAuthzV1Beta1Grants
       responses:
         '200':
@@ -2946,7 +4747,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/authz/v1beta1/grants/grantee/{grantee}:
+  '/cosmos/authz/v1beta1/grants/grantee/{grantee}':
     get:
       summary: GranteeGrants returns a list of `GrantAuthorization` by grantee.
       description: 'Since: cosmos-sdk 0.45.2'
@@ -3420,9 +5221,9 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/authz/v1beta1/grants/granter/{granter}:
+  '/cosmos/authz/v1beta1/grants/granter/{granter}':
     get:
-      summary: GranterGrants returns list of `GrantAuthorization`, granted by granter.
+      summary: 'GranterGrants returns list of `GrantAuthorization`, granted by granter.'
       description: 'Since: cosmos-sdk 0.45.2'
       operationId: CosmosAuthzV1Beta1GranterGrants
       responses:
@@ -3894,7 +5695,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/bank/v1beta1/balances/{address}:
+  '/cosmos/bank/v1beta1/balances/{address}':
     get:
       summary: AllBalances queries the balance of all coins for a single account.
       operationId: CosmosBankV1Beta1AllBalances
@@ -4027,7 +5828,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/bank/v1beta1/balances/{address}/by_denom:
+  '/cosmos/bank/v1beta1/balances/{address}/by_denom':
     get:
       summary: Balance queries the balance of a single coin for a single account.
       operationId: CosmosBankV1Beta1Balance
@@ -4267,7 +6068,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/bank/v1beta1/denoms_metadata/{denom}:
+  '/cosmos/bank/v1beta1/denoms_metadata/{denom}':
     get:
       summary: DenomsMetadata queries the client metadata of a given coin denomination.
       operationId: CosmosBankV1Beta1DenomMetadata
@@ -4432,7 +6233,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /cosmos/bank/v1beta1/spendable_balances/{address}:
+  '/cosmos/bank/v1beta1/spendable_balances/{address}':
     get:
       summary: |-
         SpendableBalances queries the spenable balance of all coins for a single
@@ -4698,7 +6499,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/bank/v1beta1/supply/{denom}:
+  '/cosmos/bank/v1beta1/supply/{denom}':
     get:
       summary: SupplyOf queries the supply of a single coin.
       operationId: CosmosBankV1Beta1SupplyOf
@@ -5525,7 +7326,7 @@ paths:
                         }
       tags:
         - Service
-  /cosmos/base/tendermint/v1beta1/blocks/{height}:
+  '/cosmos/base/tendermint/v1beta1/blocks/{height}':
     get:
       summary: GetBlockByHeight queries block for given height.
       operationId: CosmosBaseTendermintV1Beta1GetBlockByHeight
@@ -7249,7 +9050,7 @@ paths:
           type: boolean
       tags:
         - Service
-  /cosmos/base/tendermint/v1beta1/validatorsets/{height}:
+  '/cosmos/base/tendermint/v1beta1/validatorsets/{height}':
     get:
       summary: GetValidatorSetByHeight queries validator-set at a given height.
       operationId: CosmosBaseTendermintV1Beta1GetValidatorSetByHeight
@@ -7775,7 +9576,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards:
+  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards':
     get:
       summary: |-
         DelegationTotalRewards queries the total rewards accrued by a each
@@ -7864,7 +9665,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/{validator_address}:
+  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/{validator_address}':
     get:
       summary: DelegationRewards queries the total rewards accrued by a delegation.
       operationId: CosmosDistributionV1Beta1DelegationRewards
@@ -7927,7 +9728,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/distribution/v1beta1/delegators/{delegator_address}/validators:
+  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/validators':
     get:
       summary: DelegatorValidators queries the validators of a delegator.
       operationId: CosmosDistributionV1Beta1DelegatorValidators
@@ -7973,7 +9774,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/distribution/v1beta1/delegators/{delegator_address}/withdraw_address:
+  '/cosmos/distribution/v1beta1/delegators/{delegator_address}/withdraw_address':
     get:
       summary: DelegatorWithdrawAddress queries withdraw address of a delegator.
       operationId: CosmosDistributionV1Beta1DelegatorWithdrawAddress
@@ -8060,7 +9861,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /cosmos/distribution/v1beta1/validators/{validator_address}/commission:
+  '/cosmos/distribution/v1beta1/validators/{validator_address}/commission':
     get:
       summary: ValidatorCommission queries accumulated commission for a validator.
       operationId: CosmosDistributionV1Beta1ValidatorCommission
@@ -8121,7 +9922,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/distribution/v1beta1/validators/{validator_address}/outstanding_rewards:
+  '/cosmos/distribution/v1beta1/validators/{validator_address}/outstanding_rewards':
     get:
       summary: ValidatorOutstandingRewards queries rewards of a validator address.
       operationId: CosmosDistributionV1Beta1ValidatorOutstandingRewards
@@ -8189,7 +9990,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/distribution/v1beta1/validators/{validator_address}/slashes:
+  '/cosmos/distribution/v1beta1/validators/{validator_address}/slashes':
     get:
       summary: ValidatorSlashes queries slash events of a validator.
       operationId: CosmosDistributionV1Beta1ValidatorSlashes
@@ -8792,7 +10593,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/evidence/v1beta1/evidence/{evidence_hash}:
+  '/cosmos/evidence/v1beta1/evidence/{evidence_hash}':
     get:
       summary: Evidence queries evidence based on evidence hash.
       operationId: CosmosEvidenceV1Beta1Evidence
@@ -9061,7 +10862,7 @@ paths:
           format: byte
       tags:
         - Query
-  /cosmos/feegrant/v1beta1/allowance/{granter}/{grantee}:
+  '/cosmos/feegrant/v1beta1/allowance/{granter}/{grantee}':
     get:
       summary: Allowance returns fee granted to the grantee by the granter.
       operationId: CosmosFeegrantV1Beta1Allowance
@@ -9356,7 +11157,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/feegrant/v1beta1/allowances/{grantee}:
+  '/cosmos/feegrant/v1beta1/allowances/{grantee}':
     get:
       summary: Allowances returns all the grants for address.
       operationId: CosmosFeegrantV1Beta1Allowances
@@ -9719,7 +11520,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/feegrant/v1beta1/issued/{granter}:
+  '/cosmos/feegrant/v1beta1/issued/{granter}':
     get:
       summary: |-
         AllowancesByGranter returns all the grants given by an address
@@ -10084,7 +11885,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/gov/v1beta1/params/{params_type}:
+  '/cosmos/gov/v1beta1/params/{params_type}':
     get:
       summary: Params queries all parameters of the gov module.
       operationId: CosmosGovV1Beta1Params
@@ -10921,7 +12722,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}':
     get:
       summary: Proposal queries proposal details based on ProposalID.
       operationId: CosmosGovV1Beta1Proposal
@@ -11378,7 +13179,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}/deposits:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits':
     get:
       summary: Deposits queries all deposits of a single proposal.
       operationId: CosmosGovV1Beta1Deposits
@@ -11692,7 +13493,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}':
     get:
       summary: >-
         Deposit queries single deposit information based proposalID,
@@ -11932,7 +13733,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}/tally:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}/tally':
     get:
       summary: TallyResult queries the tally of a proposal vote.
       operationId: CosmosGovV1Beta1TallyResult
@@ -12153,7 +13954,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}/votes:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}/votes':
     get:
       summary: Votes queries votes of a given proposal.
       operationId: CosmosGovV1Beta1Votes
@@ -12500,9 +14301,9 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}:
+  '/cosmos/gov/v1beta1/proposals/{proposal_id}/votes/{voter}':
     get:
-      summary: Vote queries voted information based on proposalID, voterAddr.
+      summary: 'Vote queries voted information based on proposalID, voterAddr.'
       operationId: CosmosGovV1Beta1Vote
       responses:
         '200':
@@ -13186,7 +14987,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/slashing/v1beta1/signing_infos/{cons_address}:
+  '/cosmos/slashing/v1beta1/signing_infos/{cons_address}':
     get:
       summary: SigningInfo queries the signing info of given cons address
       operationId: CosmosSlashingV1Beta1SigningInfo
@@ -13280,7 +15081,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/staking/v1beta1/delegations/{delegator_addr}:
+  '/cosmos/staking/v1beta1/delegations/{delegator_addr}':
     get:
       summary: >-
         DelegatorDelegations queries all delegations of a given delegator
@@ -13615,7 +15416,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/delegators/{delegator_addr}/redelegations:
+  '/cosmos/staking/v1beta1/delegators/{delegator_addr}/redelegations':
     get:
       summary: Redelegations queries redelegations of given address.
       operationId: CosmosStakingV1Beta1Redelegations
@@ -14023,7 +15824,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/delegators/{delegator_addr}/unbonding_delegations:
+  '/cosmos/staking/v1beta1/delegators/{delegator_addr}/unbonding_delegations':
     get:
       summary: >-
         DelegatorUnbondingDelegations queries all unbonding delegations of a
@@ -14363,7 +16164,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/delegators/{delegator_addr}/validators:
+  '/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators':
     get:
       summary: |-
         DelegatorValidators queries all validators info for given delegator
@@ -14846,7 +16647,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/delegators/{delegator_addr}/validators/{validator_addr}:
+  '/cosmos/staking/v1beta1/delegators/{delegator_addr}/validators/{validator_addr}':
     get:
       summary: |-
         DelegatorValidator queries validator info for given delegator validator
@@ -15234,7 +17035,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/staking/v1beta1/historical_info/{height}:
+  '/cosmos/staking/v1beta1/historical_info/{height}':
     get:
       summary: HistoricalInfo queries the historical info for given height.
       operationId: CosmosStakingV1Beta1HistoricalInfo
@@ -16649,7 +18450,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/validators/{validator_addr}:
+  '/cosmos/staking/v1beta1/validators/{validator_addr}':
     get:
       summary: Validator queries validator info for given validator address.
       operationId: CosmosStakingV1Beta1Validator
@@ -17030,7 +18831,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/staking/v1beta1/validators/{validator_addr}/delegations:
+  '/cosmos/staking/v1beta1/validators/{validator_addr}/delegations':
     get:
       summary: ValidatorDelegations queries delegate info for given validator.
       operationId: CosmosStakingV1Beta1ValidatorDelegations
@@ -17360,7 +19161,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}:
+  '/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}':
     get:
       summary: Delegation queries delegate info for given validator delegator pair.
       operationId: CosmosStakingV1Beta1Delegation
@@ -17616,7 +19417,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}/unbonding_delegation:
+  '/cosmos/staking/v1beta1/validators/{validator_addr}/delegations/{delegator_addr}/unbonding_delegation':
     get:
       summary: |-
         UnbondingDelegation queries unbonding info for given validator delegator
@@ -17877,7 +19678,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/staking/v1beta1/validators/{validator_addr}/unbonding_delegations:
+  '/cosmos/staking/v1beta1/validators/{validator_addr}/unbonding_delegations':
     get:
       summary: >-
         ValidatorUnbondingDelegations queries unbonding delegations of a
@@ -18796,7 +20597,7 @@ paths:
                     description: Response code.
                   data:
                     type: string
-                    description: Result bytes, if any.
+                    description: 'Result bytes, if any.'
                   raw_log:
                     type: string
                     description: >-
@@ -19213,7 +21014,7 @@ paths:
               RPC method.
       tags:
         - Service
-  /cosmos/tx/v1beta1/txs/block/{height}:
+  '/cosmos/tx/v1beta1/txs/block/{height}':
     get:
       summary: GetBlockWithTxs fetches a block with decoded txs.
       description: 'Since: cosmos-sdk 0.45.2'
@@ -19473,7 +21274,7 @@ paths:
           type: boolean
       tags:
         - Service
-  /cosmos/tx/v1beta1/txs/{hash}:
+  '/cosmos/tx/v1beta1/txs/{hash}':
     get:
       summary: GetTx fetches a tx by hash.
       operationId: CosmosTxV1Beta1GetTx
@@ -19669,13 +21470,13 @@ paths:
                         }
       parameters:
         - name: hash
-          description: hash is the tx hash to query, encoded as a hex string.
+          description: 'hash is the tx hash to query, encoded as a hex string.'
           in: path
           required: true
           type: string
       tags:
         - Service
-  /cosmos/upgrade/v1beta1/applied_plan/{name}:
+  '/cosmos/upgrade/v1beta1/applied_plan/{name}':
     get:
       summary: AppliedPlan queries a previously applied upgrade plan by its name.
       operationId: CosmosUpgradeV1Beta1AppliedPlan
@@ -20442,7 +22243,7 @@ paths:
           type: string
       tags:
         - Query
-  /cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}:
+  '/cosmos/upgrade/v1beta1/upgraded_consensus_state/{last_height}':
     get:
       summary: >-
         UpgradedConsensusState queries the consensus state that will serve
@@ -20715,7 +22516,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /ibc/apps/transfer/v1/channels/{channel_id}/ports/{port_id}/escrow_address:
+  '/ibc/apps/transfer/v1/channels/{channel_id}/ports/{port_id}/escrow_address':
     get:
       summary: >-
         EscrowAddress returns the escrow address for a particular port and
@@ -20931,7 +22732,7 @@ paths:
           type: string
       tags:
         - Query
-  /ibc/apps/transfer/v1/denom_hashes/{trace}:
+  '/ibc/apps/transfer/v1/denom_hashes/{trace}':
     get:
       summary: DenomHash queries a denomination hash information.
       operationId: IbcApplicationsTransferV1DenomHash
@@ -21136,7 +22937,7 @@ paths:
                         }
       parameters:
         - name: trace
-          description: The denomination trace ([port_id]/[channel_id])+/[denom]
+          description: 'The denomination trace ([port_id]/[channel_id])+/[denom]'
           in: path
           required: true
           type: string
@@ -21441,7 +23242,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /ibc/apps/transfer/v1/denom_traces/{hash}:
+  '/ibc/apps/transfer/v1/denom_traces/{hash}':
     get:
       summary: DenomTrace queries a denomination trace information.
       operationId: IbcApplicationsTransferV1DenomTrace
@@ -22280,7 +24081,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}:
+  '/ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}':
     get:
       summary: Channel queries an IBC Channel.
       operationId: IbcCoreChannelV1Channel
@@ -22603,7 +24404,7 @@ paths:
           type: string
       tags:
         - Query
-  /ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/client_state:
+  '/ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/client_state':
     get:
       summary: >-
         ChannelClientState queries for the client state for the channel
@@ -23037,7 +24838,7 @@ paths:
           type: string
       tags:
         - Query
-  /ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/consensus_state/revision/{revision_number}/height/{revision_height}:
+  '/ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/consensus_state/revision/{revision_number}/height/{revision_height}':
     get:
       summary: |-
         ChannelConsensusState queries for the consensus state for the channel
@@ -23468,7 +25269,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/next_sequence:
+  '/ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/next_sequence':
     get:
       summary: >-
         NextSequenceReceive returns the next receive sequence for a given
@@ -23718,7 +25519,7 @@ paths:
           type: string
       tags:
         - Query
-  /ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/packet_acknowledgements:
+  '/ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/packet_acknowledgements':
     get:
       summary: >-
         PacketAcknowledgements returns all the packet acknowledgements
@@ -24084,7 +25885,7 @@ paths:
           collectionFormat: multi
       tags:
         - Query
-  /ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/packet_acks/{sequence}:
+  '/ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/packet_acks/{sequence}':
     get:
       summary: PacketAcknowledgement queries a stored packet acknowledgement hash.
       operationId: IbcCoreChannelV1PacketAcknowledgement
@@ -24342,7 +26143,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/packet_commitments:
+  '/ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/packet_commitments':
     get:
       summary: |-
         PacketCommitments returns all the packet commitments hashes associated
@@ -24697,7 +26498,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_ack_sequences}/unreceived_acks:
+  '/ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_ack_sequences}/unreceived_acks':
     get:
       summary: >-
         UnreceivedAcks returns all the unreceived IBC acknowledgements
@@ -24957,7 +26758,7 @@ paths:
           minItems: 1
       tags:
         - Query
-  /ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_commitment_sequences}/unreceived_packets:
+  '/ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/packet_commitments/{packet_commitment_sequences}/unreceived_packets':
     get:
       summary: >-
         UnreceivedPackets returns all the unreceived IBC packets associated with
@@ -25217,7 +27018,7 @@ paths:
           minItems: 1
       tags:
         - Query
-  /ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/packet_commitments/{sequence}:
+  '/ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/packet_commitments/{sequence}':
     get:
       summary: PacketCommitment queries a stored packet commitment hash.
       operationId: IbcCoreChannelV1PacketCommitment
@@ -25476,7 +27277,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/packet_receipts/{sequence}:
+  '/ibc/core/channel/v1/channels/{channel_id}/ports/{port_id}/packet_receipts/{sequence}':
     get:
       summary: >-
         PacketReceipt queries if a given packet sequence has been received on
@@ -25738,7 +27539,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /ibc/core/channel/v1/connections/{connection}/channels:
+  '/ibc/core/channel/v1/connections/{connection}/channels':
     get:
       summary: |-
         ConnectionChannels queries all the channels associated with a connection
@@ -26829,7 +28630,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /ibc/core/client/v1/client_states/{client_id}:
+  '/ibc/core/client/v1/client_states/{client_id}':
     get:
       summary: ClientState queries an IBC light client.
       operationId: IbcCoreClientV1ClientState
@@ -27243,7 +29044,7 @@ paths:
           type: string
       tags:
         - Query
-  /ibc/core/client/v1/client_status/{client_id}:
+  '/ibc/core/client/v1/client_status/{client_id}':
     get:
       summary: Status queries the status of an IBC client.
       operationId: IbcCoreClientV1ClientStatus
@@ -27453,7 +29254,7 @@ paths:
           type: string
       tags:
         - Query
-  /ibc/core/client/v1/consensus_states/{client_id}:
+  '/ibc/core/client/v1/consensus_states/{client_id}':
     get:
       summary: |-
         ConsensusStates queries all the consensus state associated with a given
@@ -27961,7 +29762,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /ibc/core/client/v1/consensus_states/{client_id}/heights:
+  '/ibc/core/client/v1/consensus_states/{client_id}/heights':
     get:
       summary: >-
         ConsensusStateHeights queries the height of every consensus states
@@ -28291,7 +30092,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /ibc/core/client/v1/consensus_states/{client_id}/revision/{revision_number}/height/{revision_height}:
+  '/ibc/core/client/v1/consensus_states/{client_id}/revision/{revision_number}/height/{revision_height}':
     get:
       summary: >-
         ConsensusState queries a consensus state associated with a client state
@@ -29469,7 +31270,7 @@ paths:
                         }
       tags:
         - Query
-  /ibc/core/connection/v1/client_connections/{client_id}:
+  '/ibc/core/connection/v1/client_connections/{client_id}':
     get:
       summary: |-
         ClientConnections queries the connection paths associated with a client
@@ -30118,7 +31919,7 @@ paths:
           type: boolean
       tags:
         - Query
-  /ibc/core/connection/v1/connections/{connection_id}:
+  '/ibc/core/connection/v1/connections/{connection_id}':
     get:
       summary: Connection queries an IBC connection end.
       operationId: IbcCoreConnectionV1Connection
@@ -30455,7 +32256,7 @@ paths:
           type: string
       tags:
         - Query
-  /ibc/core/connection/v1/connections/{connection_id}/client_state:
+  '/ibc/core/connection/v1/connections/{connection_id}/client_state':
     get:
       summary: |-
         ConnectionClientState queries the client state associated with the
@@ -30882,7 +32683,7 @@ paths:
           type: string
       tags:
         - Query
-  /ibc/core/connection/v1/connections/{connection_id}/consensus_state/revision/{revision_number}/height/{revision_height}:
+  '/ibc/core/connection/v1/connections/{connection_id}/consensus_state/revision/{revision_number}/height/{revision_height}':
     get:
       summary: |-
         ConnectionConsensusState queries the consensus state associated with the
@@ -32110,6 +33911,204 @@ definitions:
 
       NOTE: The amount field is an Int which implements the custom method
       signatures required by gogoproto.
+  bze.epochs.v1.EpochInfo:
+    type: object
+    properties:
+      identifier:
+        type: string
+        description: identifier is a unique reference to this particular timer.
+      start_time:
+        type: string
+        format: date-time
+        description: >-
+          start_time is the time at which the timer first ever ticks.
+
+          If start_time is in the future, the epoch will not begin until the
+          start
+
+          time.
+      duration:
+        type: string
+        description: |-
+          duration is the time in between epoch ticks.
+          In order for intended behavior to be met, duration should
+          be greater than the chains expected block time.
+          Duration must be non-zero.
+      current_epoch:
+        type: string
+        format: int64
+        description: >-
+          current_epoch is the current epoch number, or in other words,
+
+          how many times has the timer 'ticked'.
+
+          The first tick (current_epoch=1) is defined as
+
+          the first block whose blocktime is greater than the EpochInfo
+          start_time.
+      current_epoch_start_time:
+        type: string
+        format: date-time
+        description: >-
+          current_epoch_start_time describes the start time of the current timer
+
+          interval. The interval is (current_epoch_start_time,
+
+          current_epoch_start_time + duration] When the timer ticks, this is set
+          to
+
+          current_epoch_start_time = last_epoch_start_time + duration only one
+          timer
+
+          tick for a given identifier can occur per block.
+
+
+          NOTE! The current_epoch_start_time may diverge significantly from the
+
+          wall-clock time the epoch began at. Wall-clock time of epoch start may
+          be
+
+          >> current_epoch_start_time. Suppose current_epoch_start_time = 10,
+
+          duration = 5. Suppose the chain goes offline at t=14, and comes back
+          online
+
+          at t=30, and produces blocks at every successive time. (t=31, 32,
+          etc.)
+
+          * The t=30 block will start the epoch for (10, 15]
+
+          * The t=31 block will start the epoch for (15, 20]
+
+          * The t=32 block will start the epoch for (20, 25]
+
+          * The t=33 block will start the epoch for (25, 30]
+
+          * The t=34 block will start the epoch for (30, 35]
+
+          * The **t=36** block will start the epoch for (35, 40]
+      epoch_counting_started:
+        type: boolean
+        description: |-
+          epoch_counting_started is a boolean, that indicates whether this
+          epoch timer has began yet.
+      current_epoch_start_height:
+        type: string
+        format: int64
+        title: >-
+          current_epoch_start_height is the block height at which the current
+          epoch
+
+          started. (The block height at which the timer last ticked)
+    description: |-
+      EpochInfo is a struct that describes the data going into
+      a timer defined by the x/epochs module.
+  bze.epochs.v1.QueryCurrentEpochResponse:
+    type: object
+    properties:
+      current_epoch:
+        type: string
+        format: int64
+  bze.epochs.v1.QueryEpochsInfoResponse:
+    type: object
+    properties:
+      epochs:
+        type: array
+        items:
+          type: object
+          properties:
+            identifier:
+              type: string
+              description: identifier is a unique reference to this particular timer.
+            start_time:
+              type: string
+              format: date-time
+              description: >-
+                start_time is the time at which the timer first ever ticks.
+
+                If start_time is in the future, the epoch will not begin until
+                the start
+
+                time.
+            duration:
+              type: string
+              description: |-
+                duration is the time in between epoch ticks.
+                In order for intended behavior to be met, duration should
+                be greater than the chains expected block time.
+                Duration must be non-zero.
+            current_epoch:
+              type: string
+              format: int64
+              description: >-
+                current_epoch is the current epoch number, or in other words,
+
+                how many times has the timer 'ticked'.
+
+                The first tick (current_epoch=1) is defined as
+
+                the first block whose blocktime is greater than the EpochInfo
+                start_time.
+            current_epoch_start_time:
+              type: string
+              format: date-time
+              description: >-
+                current_epoch_start_time describes the start time of the current
+                timer
+
+                interval. The interval is (current_epoch_start_time,
+
+                current_epoch_start_time + duration] When the timer ticks, this
+                is set to
+
+                current_epoch_start_time = last_epoch_start_time + duration only
+                one timer
+
+                tick for a given identifier can occur per block.
+
+
+                NOTE! The current_epoch_start_time may diverge significantly
+                from the
+
+                wall-clock time the epoch began at. Wall-clock time of epoch
+                start may be
+
+                >> current_epoch_start_time. Suppose current_epoch_start_time =
+                10,
+
+                duration = 5. Suppose the chain goes offline at t=14, and comes
+                back online
+
+                at t=30, and produces blocks at every successive time. (t=31,
+                32, etc.)
+
+                * The t=30 block will start the epoch for (10, 15]
+
+                * The t=31 block will start the epoch for (15, 20]
+
+                * The t=32 block will start the epoch for (20, 25]
+
+                * The t=33 block will start the epoch for (25, 30]
+
+                * The t=34 block will start the epoch for (30, 35]
+
+                * The **t=36** block will start the epoch for (35, 40]
+            epoch_counting_started:
+              type: boolean
+              description: |-
+                epoch_counting_started is a boolean, that indicates whether this
+                epoch timer has began yet.
+            current_epoch_start_height:
+              type: string
+              format: int64
+              title: >-
+                current_epoch_start_height is the block height at which the
+                current epoch
+
+                started. (The block height at which the timer last ticked)
+          description: |-
+            EpochInfo is a struct that describes the data going into
+            a timer defined by the x/epochs module.
   bze.scavenge.Commit:
     type: object
     properties:
@@ -32256,6 +34255,891 @@ definitions:
         type: string
       scavenger:
         type: string
+  bze.tokenfactory.v1.DenomAuthority:
+    type: object
+    properties:
+      admin:
+        type: string
+        title: 'Can be empty for no admin, or a valid osmosis address'
+  bze.tokenfactory.v1.MsgBurnResponse:
+    type: object
+  bze.tokenfactory.v1.MsgChangeAdminResponse:
+    type: object
+  bze.tokenfactory.v1.MsgCreateDenomResponse:
+    type: object
+    properties:
+      new_denom:
+        type: string
+  bze.tokenfactory.v1.MsgMintResponse:
+    type: object
+  bze.tokenfactory.v1.MsgSetDenomMetadataResponse:
+    type: object
+  bze.tokenfactory.v1.Params:
+    type: object
+    properties:
+      createDenomFee:
+        type: string
+    description: Params defines the parameters for the module.
+  bze.tokenfactory.v1.QueryDenomAuthorityResponse:
+    type: object
+    properties:
+      denomAuthority:
+        type: object
+        properties:
+          admin:
+            type: string
+            title: 'Can be empty for no admin, or a valid osmosis address'
+  bze.tokenfactory.v1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+        properties:
+          createDenomFee:
+            type: string
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
+  cosmos.bank.v1beta1.DenomUnit:
+    type: object
+    properties:
+      denom:
+        type: string
+        description: denom represents the string name of the given denom unit (e.g uatom).
+      exponent:
+        type: integer
+        format: int64
+        description: >-
+          exponent represents power of 10 exponent that one must
+
+          raise the base_denom to in order to equal the given DenomUnit's denom
+
+          1 denom = 1^exponent base_denom
+
+          (e.g. with a base_denom of uatom, one can create a DenomUnit of 'atom'
+          with
+
+          exponent = 6, thus: 1 atom = 10^6 uatom).
+      aliases:
+        type: array
+        items:
+          type: string
+        title: aliases is a list of string aliases for the given denom
+    description: |-
+      DenomUnit represents a struct that describes a given
+      denomination unit of the basic token.
+  cosmos.bank.v1beta1.Metadata:
+    type: object
+    properties:
+      description:
+        type: string
+      denom_units:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+              description: >-
+                denom represents the string name of the given denom unit (e.g
+                uatom).
+            exponent:
+              type: integer
+              format: int64
+              description: >-
+                exponent represents power of 10 exponent that one must
+
+                raise the base_denom to in order to equal the given DenomUnit's
+                denom
+
+                1 denom = 1^exponent base_denom
+
+                (e.g. with a base_denom of uatom, one can create a DenomUnit of
+                'atom' with
+
+                exponent = 6, thus: 1 atom = 10^6 uatom).
+            aliases:
+              type: array
+              items:
+                type: string
+              title: aliases is a list of string aliases for the given denom
+          description: |-
+            DenomUnit represents a struct that describes a given
+            denomination unit of the basic token.
+        title: denom_units represents the list of DenomUnit's for a given coin
+      base:
+        type: string
+        description: >-
+          base represents the base denom (should be the DenomUnit with exponent
+          = 0).
+      display:
+        type: string
+        description: |-
+          display indicates the suggested denom that should be
+          displayed in clients.
+      name:
+        type: string
+        description: 'Since: cosmos-sdk 0.43'
+        title: 'name defines the name of the token (eg: Cosmos Atom)'
+      symbol:
+        type: string
+        description: >-
+          symbol is the token symbol usually shown on exchanges (eg: ATOM). This
+          can
+
+          be the same as the display.
+
+
+          Since: cosmos-sdk 0.43
+    description: |-
+      Metadata represents a struct that describes
+      a basic token.
+  bze.tradebin.v1.AggregatedOrder:
+    type: object
+    properties:
+      market_id:
+        type: string
+      order_type:
+        type: string
+      amount:
+        type: string
+      price:
+        type: string
+  bze.tradebin.v1.HistoryOrder:
+    type: object
+    properties:
+      market_id:
+        type: string
+      order_type:
+        type: string
+      amount:
+        type: string
+      price:
+        type: string
+      executed_at:
+        type: string
+        format: int64
+      maker:
+        type: string
+      taker:
+        type: string
+  bze.tradebin.v1.Market:
+    type: object
+    properties:
+      base:
+        type: string
+      quote:
+        type: string
+      creator:
+        type: string
+  bze.tradebin.v1.MsgCancelOrderResponse:
+    type: object
+  bze.tradebin.v1.MsgCreateMarketResponse:
+    type: object
+  bze.tradebin.v1.MsgCreateOrderResponse:
+    type: object
+  bze.tradebin.v1.Order:
+    type: object
+    properties:
+      id:
+        type: string
+      market_id:
+        type: string
+      order_type:
+        type: string
+      amount:
+        type: string
+      price:
+        type: string
+      created_at:
+        type: string
+        format: int64
+      owner:
+        type: string
+  bze.tradebin.v1.OrderReference:
+    type: object
+    properties:
+      id:
+        type: string
+      market_id:
+        type: string
+      order_type:
+        type: string
+  bze.tradebin.v1.Params:
+    type: object
+    properties:
+      createMarketFee:
+        type: string
+      marketMakerFee:
+        type: string
+      marketTakerFee:
+        type: string
+      makerFeeDestination:
+        type: string
+      takerFeeDestination:
+        type: string
+    description: Params defines the parameters for the module.
+  bze.tradebin.v1.QueryAllMarketResponse:
+    type: object
+    properties:
+      market:
+        type: array
+        items:
+          type: object
+          properties:
+            base:
+              type: string
+            quote:
+              type: string
+            creator:
+              type: string
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  bze.tradebin.v1.QueryAssetMarketsResponse:
+    type: object
+    properties:
+      base:
+        type: array
+        items:
+          type: object
+          properties:
+            base:
+              type: string
+            quote:
+              type: string
+            creator:
+              type: string
+      quote:
+        type: array
+        items:
+          type: object
+          properties:
+            base:
+              type: string
+            quote:
+              type: string
+            creator:
+              type: string
+  bze.tradebin.v1.QueryGetMarketResponse:
+    type: object
+    properties:
+      market:
+        type: object
+        properties:
+          base:
+            type: string
+          quote:
+            type: string
+          creator:
+            type: string
+  bze.tradebin.v1.QueryMarketAggregatedOrdersResponse:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          properties:
+            market_id:
+              type: string
+            order_type:
+              type: string
+            amount:
+              type: string
+            price:
+              type: string
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  bze.tradebin.v1.QueryMarketHistoryResponse:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          properties:
+            market_id:
+              type: string
+            order_type:
+              type: string
+            amount:
+              type: string
+            price:
+              type: string
+            executed_at:
+              type: string
+              format: int64
+            maker:
+              type: string
+            taker:
+              type: string
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  bze.tradebin.v1.QueryMarketOrderResponse:
+    type: object
+    properties:
+      order:
+        type: object
+        properties:
+          id:
+            type: string
+          market_id:
+            type: string
+          order_type:
+            type: string
+          amount:
+            type: string
+          price:
+            type: string
+          created_at:
+            type: string
+            format: int64
+          owner:
+            type: string
+  bze.tradebin.v1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+        properties:
+          createMarketFee:
+            type: string
+          marketMakerFee:
+            type: string
+          marketTakerFee:
+            type: string
+          makerFeeDestination:
+            type: string
+          takerFeeDestination:
+            type: string
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
+  bze.tradebin.v1.QueryUserMarketOrdersResponse:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+            market_id:
+              type: string
+            order_type:
+              type: string
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  bze.v1.rewards.MarketIdTradingRewardId:
+    type: object
+    properties:
+      reward_id:
+        type: string
+      market_id:
+        type: string
+  bze.v1.rewards.MsgClaimStakingRewardsResponse:
+    type: object
+    properties:
+      amount:
+        type: string
+  bze.v1.rewards.MsgCreateStakingRewardResponse:
+    type: object
+    properties:
+      reward_id:
+        type: string
+  bze.v1.rewards.MsgCreateTradingRewardResponse:
+    type: object
+    properties:
+      reward_id:
+        type: string
+  bze.v1.rewards.MsgDistributeStakingRewardsResponse:
+    type: object
+  bze.v1.rewards.MsgExitStakingResponse:
+    type: object
+  bze.v1.rewards.MsgJoinStakingResponse:
+    type: object
+  bze.v1.rewards.MsgUpdateStakingRewardResponse:
+    type: object
+  bze.v1.rewards.Params:
+    type: object
+    properties:
+      createStakingRewardFee:
+        type: string
+      createTradingRewardFee:
+        type: string
+    description: Params defines the parameters for the module.
+  bze.v1.rewards.QueryAllStakingRewardParticipantResponse:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          properties:
+            address:
+              type: string
+            reward_id:
+              type: string
+            amount:
+              type: string
+              title: 'stake[address]'
+            joined_at:
+              type: string
+              title: 'S0[address]'
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  bze.v1.rewards.QueryAllStakingRewardResponse:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          properties:
+            reward_id:
+              type: string
+            prize_amount:
+              type: string
+            prize_denom:
+              type: string
+            staking_denom:
+              type: string
+            duration:
+              type: integer
+              format: int64
+            payouts:
+              type: integer
+              format: int64
+            min_stake:
+              type: string
+              format: uint64
+            lock:
+              type: integer
+              format: int64
+            staked_amount:
+              type: string
+              title: T
+            distributed_stake:
+              type: string
+              title: S
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  bze.v1.rewards.QueryAllTradingRewardResponse:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          properties:
+            reward_id:
+              type: string
+            prize_amount:
+              type: string
+            prize_denom:
+              type: string
+            duration:
+              type: integer
+              format: int64
+            market_id:
+              type: string
+            slots:
+              type: integer
+              format: int64
+            expire_at:
+              type: integer
+              format: int64
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  bze.v1.rewards.QueryGetMarketIdTradingRewardIdHandlerResponse:
+    type: object
+    properties:
+      market_id_reward_id:
+        type: object
+        properties:
+          reward_id:
+            type: string
+          market_id:
+            type: string
+  bze.v1.rewards.QueryGetStakingRewardParticipantResponse:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          properties:
+            address:
+              type: string
+            reward_id:
+              type: string
+            amount:
+              type: string
+              title: 'stake[address]'
+            joined_at:
+              type: string
+              title: 'S0[address]'
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            title: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  bze.v1.rewards.QueryGetStakingRewardResponse:
+    type: object
+    properties:
+      staking_reward:
+        type: object
+        properties:
+          reward_id:
+            type: string
+          prize_amount:
+            type: string
+          prize_denom:
+            type: string
+          staking_denom:
+            type: string
+          duration:
+            type: integer
+            format: int64
+          payouts:
+            type: integer
+            format: int64
+          min_stake:
+            type: string
+            format: uint64
+          lock:
+            type: integer
+            format: int64
+          staked_amount:
+            type: string
+            title: T
+          distributed_stake:
+            type: string
+            title: S
+  bze.v1.rewards.QueryGetTradingRewardLeaderboardResponse:
+    type: object
+    properties:
+      leaderboard:
+        type: object
+        properties:
+          reward_id:
+            type: string
+          list:
+            type: array
+            items:
+              type: object
+              properties:
+                amount:
+                  type: string
+                address:
+                  type: string
+                created_at:
+                  type: string
+                  format: int64
+  bze.v1.rewards.QueryGetTradingRewardResponse:
+    type: object
+    properties:
+      trading_reward:
+        type: object
+        properties:
+          reward_id:
+            type: string
+          prize_amount:
+            type: string
+          prize_denom:
+            type: string
+          duration:
+            type: integer
+            format: int64
+          market_id:
+            type: string
+          slots:
+            type: integer
+            format: int64
+          expire_at:
+            type: integer
+            format: int64
+  bze.v1.rewards.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+        properties:
+          createStakingRewardFee:
+            type: string
+          createTradingRewardFee:
+            type: string
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
+  bze.v1.rewards.StakingReward:
+    type: object
+    properties:
+      reward_id:
+        type: string
+      prize_amount:
+        type: string
+      prize_denom:
+        type: string
+      staking_denom:
+        type: string
+      duration:
+        type: integer
+        format: int64
+      payouts:
+        type: integer
+        format: int64
+      min_stake:
+        type: string
+        format: uint64
+      lock:
+        type: integer
+        format: int64
+      staked_amount:
+        type: string
+        title: T
+      distributed_stake:
+        type: string
+        title: S
+  bze.v1.rewards.StakingRewardParticipant:
+    type: object
+    properties:
+      address:
+        type: string
+      reward_id:
+        type: string
+      amount:
+        type: string
+        title: 'stake[address]'
+      joined_at:
+        type: string
+        title: 'S0[address]'
+  bze.v1.rewards.TradingReward:
+    type: object
+    properties:
+      reward_id:
+        type: string
+      prize_amount:
+        type: string
+      prize_denom:
+        type: string
+      duration:
+        type: integer
+        format: int64
+      market_id:
+        type: string
+      slots:
+        type: integer
+        format: int64
+      expire_at:
+        type: integer
+        format: int64
+  bze.v1.rewards.TradingRewardLeaderboard:
+    type: object
+    properties:
+      reward_id:
+        type: string
+      list:
+        type: array
+        items:
+          type: object
+          properties:
+            amount:
+              type: string
+            address:
+              type: string
+            created_at:
+              type: string
+              format: int64
+  bze.v1.rewards.TradingRewardLeaderboardEntry:
+    type: object
+    properties:
+      amount:
+        type: string
+      address:
+        type: string
+      created_at:
+        type: string
+        format: int64
   cosmos.auth.v1beta1.Params:
     type: object
     properties:
@@ -33691,34 +36575,6 @@ definitions:
     description: >-
       QueryGrantsResponse is the response type for the Query/Authorizations RPC
       method.
-  cosmos.bank.v1beta1.DenomUnit:
-    type: object
-    properties:
-      denom:
-        type: string
-        description: denom represents the string name of the given denom unit (e.g uatom).
-      exponent:
-        type: integer
-        format: int64
-        description: >-
-          exponent represents power of 10 exponent that one must
-
-          raise the base_denom to in order to equal the given DenomUnit's denom
-
-          1 denom = 1^exponent base_denom
-
-          (e.g. with a base_denom of uatom, one can create a DenomUnit of 'atom'
-          with
-
-          exponent = 6, thus: 1 atom = 10^6 uatom).
-      aliases:
-        type: array
-        items:
-          type: string
-        title: aliases is a list of string aliases for the given denom
-    description: |-
-      DenomUnit represents a struct that describes a given
-      denomination unit of the basic token.
   cosmos.bank.v1beta1.Input:
     type: object
     properties:
@@ -33739,72 +36595,6 @@ definitions:
             NOTE: The amount field is an Int which implements the custom method
             signatures required by gogoproto.
     description: Input models transaction input.
-  cosmos.bank.v1beta1.Metadata:
-    type: object
-    properties:
-      description:
-        type: string
-      denom_units:
-        type: array
-        items:
-          type: object
-          properties:
-            denom:
-              type: string
-              description: >-
-                denom represents the string name of the given denom unit (e.g
-                uatom).
-            exponent:
-              type: integer
-              format: int64
-              description: >-
-                exponent represents power of 10 exponent that one must
-
-                raise the base_denom to in order to equal the given DenomUnit's
-                denom
-
-                1 denom = 1^exponent base_denom
-
-                (e.g. with a base_denom of uatom, one can create a DenomUnit of
-                'atom' with
-
-                exponent = 6, thus: 1 atom = 10^6 uatom).
-            aliases:
-              type: array
-              items:
-                type: string
-              title: aliases is a list of string aliases for the given denom
-          description: |-
-            DenomUnit represents a struct that describes a given
-            denomination unit of the basic token.
-        title: denom_units represents the list of DenomUnit's for a given coin
-      base:
-        type: string
-        description: >-
-          base represents the base denom (should be the DenomUnit with exponent
-          = 0).
-      display:
-        type: string
-        description: |-
-          display indicates the suggested denom that should be
-          displayed in clients.
-      name:
-        type: string
-        description: 'Since: cosmos-sdk 0.43'
-        title: 'name defines the name of the token (eg: Cosmos Atom)'
-      symbol:
-        type: string
-        description: >-
-          symbol is the token symbol usually shown on exchanges (eg: ATOM). This
-          can
-
-          be the same as the display.
-
-
-          Since: cosmos-sdk 0.43
-    description: |-
-      Metadata represents a struct that describes
-      a basic token.
   cosmos.bank.v1beta1.MsgMultiSendResponse:
     type: object
     description: MsgMultiSendResponse defines the Msg/MultiSend response type.
@@ -41149,7 +43939,7 @@ definitions:
         properties:
           rate:
             type: string
-            description: rate is the commission rate charged to delegators, as a fraction.
+            description: 'rate is the commission rate charged to delegators, as a fraction.'
           max_rate:
             type: string
             description: >-
@@ -41170,7 +43960,7 @@ definitions:
     properties:
       rate:
         type: string
-        description: rate is the commission rate charged to delegators, as a fraction.
+        description: 'rate is the commission rate charged to delegators, as a fraction.'
       max_rate:
         type: string
         description: >-
@@ -43834,7 +46624,7 @@ definitions:
         description: Response code.
       data:
         type: string
-        description: Result bytes, if any.
+        description: 'Result bytes, if any.'
       raw_log:
         type: string
         description: |-
@@ -44213,7 +47003,7 @@ definitions:
             description: Response code.
           data:
             type: string
-            description: Result bytes, if any.
+            description: 'Result bytes, if any.'
           raw_log:
             type: string
             description: |-
@@ -45079,7 +47869,7 @@ definitions:
             description: Response code.
           data:
             type: string
-            description: Result bytes, if any.
+            description: 'Result bytes, if any.'
           raw_log:
             type: string
             description: |-
@@ -45291,7 +48081,7 @@ definitions:
               description: Response code.
             data:
               type: string
-              description: Result bytes, if any.
+              description: 'Result bytes, if any.'
             raw_log:
               type: string
               description: |-
@@ -46965,7 +49755,7 @@ definitions:
             index:
               type: boolean
               title: nondeterministic
-          description: EventAttribute is a single key-value pair, associated with an event.
+          description: 'EventAttribute is a single key-value pair, associated with an event.'
     description: >-
       Event allows application developers to attach additional information to
 
@@ -46985,7 +49775,7 @@ definitions:
       index:
         type: boolean
         title: nondeterministic
-    description: EventAttribute is a single key-value pair, associated with an event.
+    description: 'EventAttribute is a single key-value pair, associated with an event.'
   cosmos.upgrade.v1beta1.ModuleVersion:
     type: object
     properties:
@@ -47568,7 +50358,7 @@ definitions:
           this channel will travel
       version:
         type: string
-        title: opaque channel version, which is agreed upon during the handshake
+        title: 'opaque channel version, which is agreed upon during the handshake'
     description: |-
       Channel defines pipeline for exactly-once packet delivery between specific
       modules on separate blockchains, which has at least one end capable of
@@ -47643,7 +50433,7 @@ definitions:
           this channel will travel
       version:
         type: string
-        title: opaque channel version, which is agreed upon during the handshake
+        title: 'opaque channel version, which is agreed upon during the handshake'
       port_id:
         type: string
         title: port identifier
@@ -48333,7 +51123,7 @@ definitions:
               this channel will travel
           version:
             type: string
-            title: opaque channel version, which is agreed upon during the handshake
+            title: 'opaque channel version, which is agreed upon during the handshake'
         description: >-
           Channel defines pipeline for exactly-once packet delivery between
           specific

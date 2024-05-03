@@ -1,0 +1,39 @@
+syntax = "proto3";
+package bze.tradebin.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
+
+message Order {
+  string id = 1;
+  string market_id = 2;
+  string order_type = 3;
+  string amount = 4;
+  string price = 5;
+  int64 created_at = 6;
+  string owner = 7;
+}
+
+message OrderReference {
+  string id = 1;
+  string market_id = 2;
+  string order_type = 3;
+}
+
+message AggregatedOrder {
+  string market_id = 1;
+  string order_type = 2;
+  string amount = 3;
+  string price = 4;
+}
+
+message HistoryOrder {
+  string market_id = 1;
+  string order_type = 2;
+  string amount = 3;
+  string price = 4;
+  int64 executed_at = 5;
+  string maker = 6;
+  string taker = 7;
+}
