@@ -1,0 +1,137 @@
+syntax = "proto3";
+package bze.tradebin.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "tradebin/params.proto";
+import "tradebin/market.proto";
+import "tradebin/order.proto";
+// this line is used by starport scaffolding # 1
+
+option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Parameters queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/bze/tradebin/v1/params";
+  }
+  // Queries a Market by index.
+	rpc Market(QueryGetMarketRequest) returns (QueryGetMarketResponse) {
+		option (google.api.http).get = "/bze/tradebin/v1/market";
+	}
+
+	// Queries a list of Market items.
+	rpc MarketAll(QueryAllMarketRequest) returns (QueryAllMarketResponse) {
+		option (google.api.http).get = "/bze/tradebin/v1/all_markets";
+	}
+
+// Queries a list of AssetMarkets items.
+	rpc AssetMarkets(QueryAssetMarketsRequest) returns (QueryAssetMarketsResponse) {
+		option (google.api.http).get = "/bze/tradebin/v1/asset_markets";
+	}
+
+// Queries a list of UserMarketOrders items.
+	rpc UserMarketOrders(QueryUserMarketOrdersRequest) returns (QueryUserMarketOrdersResponse) {
+		option (google.api.http).get = "/bze/tradebin/v1/user_market_orders/{address}";
+	}
+
+// Queries a list of MarketAggregatedOrders items.
+	rpc MarketAggregatedOrders(QueryMarketAggregatedOrdersRequest) returns (QueryMarketAggregatedOrdersResponse) {
+		option (google.api.http).get = "/bze/tradebin/v1/market_aggregated_orders";
+	}
+
+// Queries a list of MarketHistory items.
+	rpc MarketHistory(QueryMarketHistoryRequest) returns (QueryMarketHistoryResponse) {
+		option (google.api.http).get = "/bze/tradebin/v1/market_history";
+	}
+
+// Queries a list of MarketOrder items.
+	rpc MarketOrder(QueryMarketOrderRequest) returns (QueryMarketOrderResponse) {
+		option (google.api.http).get = "/bze/tradebin/v1/market_order";
+	}
+
+// this line is used by starport scaffolding # 2
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryGetMarketRequest {
+	string base = 1;
+  string quote = 2;
+
+}
+
+message QueryGetMarketResponse {
+	Market market = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllMarketRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllMarketResponse {
+	repeated Market market = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAssetMarketsRequest {
+  string asset = 1;
+}
+
+message QueryAssetMarketsResponse {
+	repeated Market base = 1 [(gogoproto.nullable) = false];
+	repeated Market quote = 2 [(gogoproto.nullable) = false];
+}
+
+message QueryUserMarketOrdersRequest {
+  string address = 1;
+  string market = 2;
+	cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryUserMarketOrdersResponse {
+	repeated OrderReference list = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryMarketAggregatedOrdersRequest {
+  string market = 1;
+  string order_type = 2;
+	cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryMarketAggregatedOrdersResponse {
+	repeated AggregatedOrder list = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryMarketHistoryRequest {
+  string market = 1;
+	cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryMarketHistoryResponse {
+	repeated HistoryOrder list = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryMarketOrderRequest {
+  string market = 1;
+  string order_type = 2;
+  string order_id = 3;
+}
+
+message QueryMarketOrderResponse {
+	Order order = 1 [(gogoproto.nullable) = false];
+}
+
+// this line is used by starport scaffolding # 3

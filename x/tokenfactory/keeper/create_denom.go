@@ -5,6 +5,7 @@ import (
 	"github.com/bze-alphateam/bze/x/tokenfactory/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"strings"
 )
 
 // Runs CreateDenom logic after the charge and all denom validation has been handled.
@@ -39,6 +40,10 @@ func (k Keeper) validateCreateDenom(ctx sdk.Context, creatorAddr string, subdeno
 	// copied from terra-money tokenfactory: Temporary check until IBC bug is sorted out
 	if k.bankKeeper.HasSupply(ctx, subdenom) {
 		return "", fmt.Errorf("temporary error until IBC bug is sorted out, can't create subdenoms that are the same as a native denom")
+	}
+
+	if strings.Contains(subdenom, "_") {
+		return "", types.ErrInvalidSubdenom
 	}
 
 	denom, err := types.GetTokenDenom(creatorAddr, subdenom)
