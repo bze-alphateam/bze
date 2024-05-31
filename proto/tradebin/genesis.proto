@@ -1,0 +1,42 @@
+syntax = "proto3";
+package bze.tradebin.v1;
+
+import "gogoproto/gogo.proto";
+import "tradebin/params.proto";
+import "tradebin/market.proto";
+import "tradebin/queue_message.proto";
+import "tradebin/order.proto";
+// this line is used by starport scaffolding # genesis/proto/import
+
+option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
+
+// GenesisState defines the tradebin module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+  repeated Market market_list = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)      = "market_list,omitempty"
+  ];
+  repeated QueueMessage queue_message_list = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)      = "queue_message_list,omitempty"
+  ];
+  repeated Order order_list = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)      = "order_list,omitempty"
+  ];
+  repeated AggregatedOrder aggregated_order_list = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)      = "aggregated_order_list,omitempty"
+  ];
+  repeated HistoryOrder history_order_list = 6 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)      = "history_order_list,omitempty"
+  ];
+
+  int64 order_counter = 7 [
+    (gogoproto.jsontag)      = "order_counter"
+  ];
+
+  // this line is used by starport scaffolding # genesis/proto/state
+}

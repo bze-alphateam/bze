@@ -1,0 +1,12 @@
+syntax = "proto3";
+package bze.tradebin.v1;
+
+option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
+
+message Market {
+  string base = 1;
+  string quote = 2;
+  string creator = 3; 
+  
+}
+

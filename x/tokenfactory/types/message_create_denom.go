@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"strings"
 )
 
 const TypeMsgCreateDenom = "create_denom"
@@ -42,5 +43,10 @@ func (msg *MsgCreateDenom) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
+
+	if strings.Contains(msg.Subdenom, "_") {
+		return sdkerrors.Wrapf(ErrInvalidSubdenom, "subdenom should not contain _")
+	}
+
 	return nil
 }
