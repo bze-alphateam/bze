@@ -11,7 +11,6 @@ import (
 )
 
 func SimulateMsgCreateMarket(
-	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k keeper.Keeper,
 ) simtypes.Operation {

@@ -24,15 +24,17 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey,
 	memKey sdk.StoreKey,
-	hooks []types.EpochHook,
 ) *Keeper {
 
 	return &Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,
 		memKey:   memKey,
-		hooks:    hooks,
 	}
+}
+
+func (k *Keeper) SetHooks(h []types.EpochHook) {
+	k.hooks = h
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
