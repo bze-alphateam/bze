@@ -841,9 +841,8 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register app's OpenAPI routes.
-	if apiConfig.Swagger || true {
+	if apiConfig.Swagger {
 		apiSvr.Router.Handle("/static/openapi.yml", http.FileServer(http.FS(docs.Docs)))
-		//removed by SDK upgrade
 		apiSvr.Router.HandleFunc("/", openapi.Handler(Name, "/static/openapi.yml"))
 	}
 }
