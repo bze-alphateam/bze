@@ -13,6 +13,19 @@ func (k Keeper) SetPendingUnlockParticipant(ctx sdk.Context, p types.PendingUnlo
 	store.Set(types.PendingUnlockParticipantKey(p.Index), b)
 }
 
+// GetPendingUnlockParticipant returns a types.PendingUnlockParticipant from its index
+func (k Keeper) GetPendingUnlockParticipant(ctx sdk.Context, index string) (val types.PendingUnlockParticipant, found bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PendingUnlockParticipantKeyPrefix))
+
+	b := store.Get(types.PendingUnlockParticipantKey(index))
+	if b == nil {
+		return val, false
+	}
+
+	k.cdc.MustUnmarshal(b, &val)
+	return val, true
+}
+
 // RemovePendingUnlockParticipant removes a types.PendingUnlockParticipant from the store
 func (k Keeper) RemovePendingUnlockParticipant(ctx sdk.Context, p types.PendingUnlockParticipant) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PendingUnlockParticipantKeyPrefix))

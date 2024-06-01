@@ -47,6 +47,8 @@ func (suite *IntegrationTestSuite) TestMsgJoinStaking_AmountLowerThanMinStake() 
 	//dependencies
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 	addr1 := sdk.AccAddress("addr1_______________")
+	balances := sdk.NewCoins(sdk.NewInt64Coin("ubze", 10000))
+	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, balances))
 	sr := types.StakingReward{
 		RewardId:         "01",
 		PrizeDenom:       denomBze,
@@ -69,6 +71,41 @@ func (suite *IntegrationTestSuite) TestMsgJoinStaking_AmountLowerThanMinStake() 
 	_, err := suite.msgServer.JoinStaking(goCtx, &msg)
 	suite.Require().Error(err)
 	suite.Require().ErrorContains(err, "amount is smaller than staking reward min stake")
+}
+
+func (suite *IntegrationTestSuite) TestMsgJoinStaking_AllowedAmountLowerThanMinStake() {
+	//dependencies
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	addr1 := sdk.AccAddress("addr1_______________")
+	balances := sdk.NewCoins(sdk.NewInt64Coin("ubze", 10000))
+	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, balances))
+	sr := types.StakingReward{
+		RewardId:         "01",
+		PrizeDenom:       denomBze,
+		StakedAmount:     "50",
+		DistributedStake: "5",
+		Lock:             100,
+		StakingDenom:     denomBze,
+		Duration:         100,
+		Payouts:          5,
+		MinStake:         1000,
+	}
+	suite.k.SetStakingReward(suite.ctx, sr)
+
+	msg := types.MsgJoinStaking{
+		Creator:  addr1.String(),
+		RewardId: sr.RewardId,
+		Amount:   "1000",
+	}
+	//first stake the min amount allowed
+	_, err := suite.msgServer.JoinStaking(goCtx, &msg)
+	suite.Require().NoError(err)
+
+	//try to stake an amount lower than min stake
+	//it should be allowed since we already have a stake greater than/equal to min stake
+	msg.Amount = "50"
+	_, err = suite.msgServer.JoinStaking(goCtx, &msg)
+	suite.Require().NoError(err)
 }
 
 func (suite *IntegrationTestSuite) TestMsgJoinStaking_NotEnoughBalance() {
