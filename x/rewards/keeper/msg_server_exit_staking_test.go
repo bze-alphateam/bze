@@ -242,3 +242,55 @@ func (suite *IntegrationTestSuite) TestMsgExitStaking_Success_RemovingStakingRew
 	_, f = suite.k.GetStakingReward(suite.ctx, sr.RewardId)
 	suite.Require().False(f)
 }
+
+func (suite *IntegrationTestSuite) TestMsgExitStaking_Success_RemovingStakingReward_WithoutLock() {
+	//dependencies
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	addr1 := sdk.AccAddress("addr1_______________")
+	sr := types.StakingReward{
+		RewardId:         "01",
+		PrizeDenom:       denomBze,
+		StakedAmount:     "50",
+		DistributedStake: "5",
+		Lock:             0,
+		StakingDenom:     denomBze,
+		Duration:         100,
+		Payouts:          100,
+	}
+	suite.k.SetStakingReward(suite.ctx, sr)
+
+	srp := types.StakingRewardParticipant{
+		Address:  addr1.String(),
+		RewardId: sr.RewardId,
+		Amount:   "50",
+		JoinedAt: "0",
+	}
+	suite.k.SetStakingRewardParticipant(suite.ctx, srp)
+
+	balances := sdk.NewCoins(newStakeCoin(10000), newBzeCoin(50000))
+	suite.Require().NoError(simapp.FundModuleAccount(suite.app.BankKeeper, suite.ctx, types.ModuleName, balances))
+
+	//tests and asserts
+	msg := types.MsgExitStaking{
+		Creator:  addr1.String(),
+		RewardId: sr.RewardId,
+	}
+	_, err := suite.msgServer.ExitStaking(goCtx, &msg)
+	suite.Require().NoError(err)
+
+	creatorBalance := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
+	//check the user retrieves the unclaimed rewards + the staked balance
+	suite.Require().EqualValues(creatorBalance.AmountOf(denomBze).String(), "300")
+
+	//check the unlock was NOT created since the funds should be released immediately
+	unlockList := suite.k.GetAllPendingUnlockParticipant(suite.ctx)
+	suite.Require().Empty(unlockList)
+
+	//check the staking reward participant was deleted
+	_, f := suite.k.GetStakingRewardParticipant(suite.ctx, srp.Address, sr.RewardId)
+	suite.Require().False(f)
+
+	//check the staking reward was deleted
+	_, f = suite.k.GetStakingReward(suite.ctx, sr.RewardId)
+	suite.Require().False(f)
+}
