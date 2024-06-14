@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/bze-alphateam/bze/app/openapi"
+	"github.com/bze-alphateam/bze/app/upgrades"
 	v700 "github.com/bze-alphateam/bze/app/upgrades/v700"
 	"github.com/bze-alphateam/bze/x/epochs"
 	epochskeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
@@ -709,6 +710,11 @@ func (app *App) setupUpgradeHandlers(cfg module.Configurator) {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v700.UpgradeName,
 		v700.CreateUpgradeHandler(cfg, app.mm),
+	)
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		"v7.0.0-rc2",
+		upgrades.EmptyUpgradeHandler(),
 	)
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
