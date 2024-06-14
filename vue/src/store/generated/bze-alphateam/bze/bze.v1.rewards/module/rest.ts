@@ -38,6 +38,28 @@ export type RewardsMsgJoinStakingResponse = object;
 
 export type RewardsMsgUpdateStakingRewardResponse = object;
 
+export interface RewardsPendingUnlockParticipant {
+  index?: string;
+  address?: string;
+  amount?: string;
+  denom?: string;
+}
+
+export interface RewardsQueryAllPendingUnlockParticipantResponse {
+  list?: RewardsPendingUnlockParticipant[];
+
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
+  pagination?: V1Beta1PageResponse;
+}
+
 export interface RewardsQueryAllStakingRewardParticipantResponse {
   list?: V1RewardsStakingRewardParticipant[];
 
@@ -453,6 +475,32 @@ export class HttpClient<SecurityDataType = unknown> {
  * @version version not set
  */
 export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryAllPendingUnlockParticipant
+   * @summary Queries a list of AllPendingUnlockParticipant items.
+   * @request GET:/bze/rewards/v1/all_pending_unlock_participant
+   */
+  queryAllPendingUnlockParticipant = (
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<RewardsQueryAllPendingUnlockParticipantResponse, RpcStatus>({
+      path: `/bze/rewards/v1/all_pending_unlock_participant`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+
   /**
    * No description
    *

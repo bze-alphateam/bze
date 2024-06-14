@@ -110,3 +110,29 @@ func (k Keeper) StakingRewardParticipant(c context.Context, req *types.QueryGetS
 
 	return &types.QueryGetStakingRewardParticipantResponse{List: list, Pagination: pageRes}, nil
 }
+
+func (k Keeper) AllPendingUnlockParticipant(goCtx context.Context, req *types.QueryAllPendingUnlockParticipantRequest) (*types.QueryAllPendingUnlockParticipantResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PendingUnlockParticipantKeyPrefix))
+
+	var rewardParticipants []types.PendingUnlockParticipant
+	pageRes, err := query.Paginate(store, req.Pagination, func(key []byte, value []byte) error {
+		var part types.PendingUnlockParticipant
+		if err := k.cdc.Unmarshal(value, &part); err != nil {
+			return err
+		}
+
+		rewardParticipants = append(rewardParticipants, part)
+		return nil
+	})
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryAllPendingUnlockParticipantResponse{List: rewardParticipants, Pagination: pageRes}, nil
+}
