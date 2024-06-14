@@ -43,7 +43,11 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 		return nil, err
 	}
 
-	k.beginUnlock(ctx, participation, stakingReward)
+	err = k.beginUnlock(ctx, participation, stakingReward)
+	if err != nil {
+		return nil, err
+	}
+
 	k.RemoveStakingRewardParticipant(ctx, participation.Address, participation.RewardId)
 
 	remainingStakedAmount := stakedAmountInt.Sub(partCoins.AmountOf(stakingReward.StakingDenom))
@@ -78,15 +82,33 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 	return &types.MsgExitStakingResponse{}, nil
 }
 
-func (k msgServer) beginUnlock(ctx sdk.Context, p types.StakingRewardParticipant, sr types.StakingReward) {
+func (k msgServer) beginUnlock(ctx sdk.Context, p types.StakingRewardParticipant, sr types.StakingReward) error {
 	lockedUntil := k.epochKeeper.GetEpochCountByIdentifier(ctx, expirationEpoch)
 	lockedUntil += int64(sr.Lock) * 24
+	pendingKey := types.CreatePendingUnlockParticipantKey(lockedUntil, fmt.Sprintf("%s/%s", sr.RewardId, p.Address))
 	pending := types.PendingUnlockParticipant{
-		Index:   types.CreatePendingUnlockParticipantKey(lockedUntil, fmt.Sprintf("%s/%s", sr.RewardId, p.Address)),
+		Index:   pendingKey,
 		Address: p.Address,
 		Amount:  p.Amount,
 		Denom:   sr.StakingDenom,
 	}
 
+	inStore, found := k.GetPendingUnlockParticipant(ctx, pendingKey)
+	if found {
+		//we already have a pending unlock for this reward and participant at the same epoch
+		//update the amount, so it can all be unlocked at once
+		inStoreAmount, _ := sdk.NewIntFromString(inStore.Amount)
+		pendingAmount, _ := sdk.NewIntFromString(pending.Amount)
+		pendingAmount.Add(inStoreAmount)
+		pending.Amount = pendingAmount.String()
+	}
+
+	//in case the lock is 0 send the funds immediately
+	if sr.Lock == 0 {
+		return k.performUnlock(ctx, &pending)
+	}
+
 	k.SetPendingUnlockParticipant(ctx, pending)
+
+	return nil
 }
