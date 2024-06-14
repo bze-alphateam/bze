@@ -58,6 +58,11 @@ service Query {
 		option (google.api.http).get = "/bze/rewards/v1/market_id_trading_reward_id";
 	}
 
+// Queries a list of AllPendingUnlockParticipant items.
+	rpc AllPendingUnlockParticipant(QueryAllPendingUnlockParticipantRequest) returns (QueryAllPendingUnlockParticipantResponse) {
+		option (google.api.http).get = "/bze/rewards/v1/all_pending_unlock_participant";
+	}
+
 // this line is used by starport scaffolding # 2
 }
 
@@ -138,6 +143,15 @@ message QueryGetMarketIdTradingRewardIdHandlerRequest {
 
 message QueryGetMarketIdTradingRewardIdHandlerResponse {
 	MarketIdTradingRewardId market_id_reward_id = 1;
+}
+
+message QueryAllPendingUnlockParticipantRequest {
+	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllPendingUnlockParticipantResponse {
+	repeated PendingUnlockParticipant list = 1 [(gogoproto.nullable) = false];
+	cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // this line is used by starport scaffolding # 3
