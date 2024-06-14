@@ -38,11 +38,6 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 		return nil, err
 	}
 
-	//check if min stake requirement is met
-	if toCapture.AmountOf(stakingReward.StakingDenom).LT(sdk.NewIntFromUint64(stakingReward.MinStake)) {
-		return nil, fmt.Errorf("amount is smaller than staking reward min stake")
-	}
-
 	if err = k.checkUserBalances(ctx, toCapture, acc); err != nil {
 		return nil, err
 	}
@@ -67,6 +62,12 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 		return nil, fmt.Errorf("could not transform amount from storage into int")
 	}
 	amtInt = amtInt.Add(toCapture.AmountOf(stakingReward.StakingDenom))
+
+	//check if min stake requirement is met
+	if amtInt.LT(sdk.NewIntFromUint64(stakingReward.MinStake)) {
+		return nil, fmt.Errorf("amount is smaller than staking reward min stake")
+	}
+
 	participant.Amount = amtInt.String()
 
 	stakedAmount = stakedAmount.Add(toCapture.AmountOf(stakingReward.StakingDenom))
