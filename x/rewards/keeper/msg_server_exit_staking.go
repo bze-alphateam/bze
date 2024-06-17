@@ -99,8 +99,7 @@ func (k msgServer) beginUnlock(ctx sdk.Context, p types.StakingRewardParticipant
 		//update the amount, so it can all be unlocked at once
 		inStoreAmount, _ := sdk.NewIntFromString(inStore.Amount)
 		pendingAmount, _ := sdk.NewIntFromString(pending.Amount)
-		pendingAmount.Add(inStoreAmount)
-		pending.Amount = pendingAmount.String()
+		pending.Amount = pendingAmount.Add(inStoreAmount).String()
 	}
 
 	//in case the lock is 0 send the funds immediately
