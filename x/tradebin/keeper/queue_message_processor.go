@@ -314,7 +314,7 @@ func (pe *ProcessingEngine) addHistoryOrder(ctx sdk.Context, order *types.Order,
 		Taker:      message.Owner,
 	}
 
-	pe.k.SetHistoryOrder(ctx, history, message.MessageId)
+	pe.k.SetHistoryOrder(ctx, history, fmt.Sprintf("%s%s", order.Id, message.MessageId[len(message.MessageId)-5:]))
 }
 
 func (pe *ProcessingEngine) getExecutedAmount(messageAmount, orderAmount, minAmount sdk.Int) sdk.Int {
