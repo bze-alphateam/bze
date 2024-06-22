@@ -47,6 +47,8 @@ func applyFunc(ctx sdk.Context, f func(ctx sdk.Context) error, logFunc func(stri
 	} else {
 		// no error, write the output of f
 		write()
+		//cachedCtx has another instance of EventManager. We need to take events from it and add them to the main ctx
+		ctx.EventManager().EmitEvents(cacheCtx.EventManager().Events())
 	}
 	return err
 }
