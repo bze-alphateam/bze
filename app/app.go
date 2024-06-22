@@ -713,7 +713,7 @@ func (app *App) setupUpgradeHandlers(cfg module.Configurator) {
 	)
 
 	app.UpgradeKeeper.SetUpgradeHandler(
-		"v7.0.0-rc2",
+		"v7.0.0-rc3",
 		upgrades.EmptyUpgradeHandler(),
 	)
 
