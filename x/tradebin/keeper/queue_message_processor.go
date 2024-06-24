@@ -382,6 +382,7 @@ func (pe *ProcessingEngine) removeOrderFromAggregate(ctx sdk.Context, order *typ
 	aggAmountInt = aggAmountInt.Sub(orderAmountInt)
 
 	if aggAmountInt.GT(sdk.ZeroInt()) {
+		agg.Amount = aggAmountInt.String()
 		pe.k.SetAggregatedOrder(ctx, agg)
 	} else {
 		pe.k.RemoveAggregatedOrder(ctx, agg)
