@@ -119,9 +119,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 		OrderType:   types.OrderTypeBuy,
 		Owner:       addr1.String(),
 	}
-	buyAmtInt, _ := sdk.NewIntFromString(mBuy.Amount)
-	buyCoins, err := suite.k.GetOrderCoins(mBuy.OrderType, mBuy.Price, buyAmtInt, &market)
-	suite.Require().Nil(err)
+
 	mSell := types.QueueMessage{
 		MarketId:    getMarketId(),
 		MessageType: types.OrderTypeSell,
@@ -130,13 +128,27 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 		OrderType:   types.OrderTypeSell,
 		Owner:       addr1.String(),
 	}
-	sellAmtInt, _ := sdk.NewIntFromString(mSell.Amount)
-	sellCoins, err := suite.k.GetOrderCoins(mSell.OrderType, mSell.Price, sellAmtInt, &market)
-	suite.Require().Nil(err)
 
+	totalBuyAmount := sdk.ZeroInt()
+	totalSellAmount := sdk.ZeroInt()
+	totalBuyCoins := sdk.NewCoin(market.Quote, sdk.ZeroInt())
+	totalSellCoins := sdk.NewCoin(market.Base, sdk.ZeroInt())
 	//set messages in queue
-	suite.k.SetQueueMessage(suite.ctx, mBuy)
-	suite.k.SetQueueMessage(suite.ctx, mSell)
+	for i := 0; i < 3; i++ {
+		suite.k.SetQueueMessage(suite.ctx, mBuy)
+		buyAmtInt, _ := sdk.NewIntFromString(mBuy.Amount)
+		totalBuyAmount = totalBuyAmount.Add(buyAmtInt)
+		buyCoins, err := suite.k.GetOrderCoins(mBuy.OrderType, mBuy.Price, buyAmtInt, &market)
+		suite.Require().Nil(err)
+		totalBuyCoins = totalBuyCoins.Add(buyCoins)
+
+		suite.k.SetQueueMessage(suite.ctx, mSell)
+		sellAmtInt, _ := sdk.NewIntFromString(mSell.Amount)
+		totalSellAmount = totalSellAmount.Add(sellAmtInt)
+		sellCoins, err := suite.k.GetOrderCoins(mSell.OrderType, mSell.Price, sellAmtInt, &market)
+		suite.Require().Nil(err)
+		totalSellCoins = totalSellCoins.Add(sellCoins)
+	}
 
 	//call engine
 	engine.ProcessQueueMessages(suite.ctx)
@@ -151,9 +163,26 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 	suite.Require().Nil(err)
 	suite.Require().NotEmpty(allUserOrders.List)
 
+	//store aggregates so we can check the amounts
+	aggOrderBuy, ok := suite.k.GetAggregatedOrder(suite.ctx, mBuy.MarketId, mBuy.OrderType, mBuy.Price)
+	suite.Require().True(ok)
+	//check aggregate total amount is equal tot total amounts of the orders we placed
+	suite.Require().EqualValues(aggOrderBuy.Amount, totalBuyAmount.String())
+	aggOrderSell, ok := suite.k.GetAggregatedOrder(suite.ctx, mSell.MarketId, mSell.OrderType, mSell.Price)
+	suite.Require().True(ok)
+	//check aggregate total amount is equal tot total amounts of the orders we placed
+	suite.Require().EqualValues(aggOrderSell.Amount, totalSellAmount.String())
+
 	//create cancel messages and store found orders to check storage later with their details
 	var orders []types.OrderReference
+	cancelCount := 0
 	for _, or := range allUserOrders.List {
+		toCancelOrder, ok := suite.k.GetOrder(suite.ctx, or.MarketId, or.OrderType, or.Id)
+		suite.Require().True(ok)
+		canceledAmount, ok := sdk.NewIntFromString(toCancelOrder.Amount)
+		suite.Require().True(ok)
+		canceledCoins, err := suite.k.GetOrderCoins(toCancelOrder.OrderType, toCancelOrder.Price, canceledAmount, &market)
+		suite.Require().Nil(err)
 		qm := types.QueueMessage{
 			MarketId:    or.MarketId,
 			MessageType: types.OrderTypeCancel,
@@ -163,28 +192,56 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 		}
 		orders = append(orders, or)
 		suite.k.SetQueueMessage(suite.ctx, qm)
+		//process cancel message
+		engine.ProcessQueueMessages(suite.ctx)
+		cancelCount++
+		//check user order were canceled
+		checkUserOrders, err := suite.k.UserMarketOrders(sdk.WrapSDKContext(suite.ctx), &types.QueryUserMarketOrdersRequest{
+			Address:    addr1.String(),
+			Market:     getMarketId(),
+			Pagination: nil,
+		})
+		suite.Require().Nil(err)
+		suite.Require().NotNil(checkUserOrders)
+		//list should now have fewer orders
+		suite.Require().Equal(len(checkUserOrders.List), len(allUserOrders.List)-cancelCount)
+
+		//check order coins have been added to the owner account
+		newBalances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
+		suite.Require().False(newBalances.IsZero())
+		if or.OrderType == types.OrderTypeBuy {
+			suite.Require().EqualValues(newBalances.AmountOf(totalBuyCoins.Denom).String(), initialUserBalances.AmountOf(totalBuyCoins.Denom).Add(canceledCoins.Amount).String())
+			//create previously registered amount
+			aggAmount, ok := sdk.NewIntFromString(aggOrderBuy.Amount)
+			suite.Require().True(ok)
+			//subtract the canceled amount
+			aggAmount = aggAmount.Sub(canceledAmount)
+			suite.Require().True(aggAmount.IsPositive() || aggAmount.IsZero())
+			if aggAmount.IsPositive() {
+				checkAggOrder, ok := suite.k.GetAggregatedOrder(suite.ctx, or.MarketId, or.OrderType, toCancelOrder.Price)
+				suite.Require().True(ok)
+				suite.Require().EqualValues(checkAggOrder.Amount, aggAmount.String())
+			}
+			aggOrderBuy.Amount = aggAmount.String()
+		} else {
+			suite.Require().EqualValues(newBalances.AmountOf(totalSellCoins.Denom).String(), initialUserBalances.AmountOf(totalSellCoins.Denom).Add(canceledCoins.Amount).String())
+			aggAmount, ok := sdk.NewIntFromString(aggOrderSell.Amount)
+			suite.Require().True(ok)
+			//subtract the canceled amount
+			aggAmount = aggAmount.Sub(canceledAmount)
+			suite.Require().True(aggAmount.IsPositive() || aggAmount.IsZero())
+			if aggAmount.IsPositive() {
+				checkAggOrder, ok := suite.k.GetAggregatedOrder(suite.ctx, or.MarketId, or.OrderType, toCancelOrder.Price)
+				suite.Require().True(ok)
+				suite.Require().EqualValues(checkAggOrder.Amount, aggAmount.String())
+			}
+			aggOrderSell.Amount = aggAmount.String()
+		}
+		initialUserBalances = newBalances
 	}
-	//process cancel messages
-	engine.ProcessQueueMessages(suite.ctx)
-
-	//check user orders were canceled
-	allUserOrders, err = suite.k.UserMarketOrders(sdk.WrapSDKContext(suite.ctx), &types.QueryUserMarketOrdersRequest{
-		Address:    addr1.String(),
-		Market:     getMarketId(),
-		Pagination: nil,
-	})
-	suite.Require().NotNil(allUserOrders)
-	//list now should be empty
-	suite.Require().Empty(allUserOrders.List)
-
-	//check order coins have been added to the owner account
-	newBalances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
-	suite.Require().False(newBalances.IsZero())
-	suite.Require().Equal(newBalances.AmountOf(buyCoins.Denom), buyCoins.Amount)
-	suite.Require().Equal(newBalances.AmountOf(sellCoins.Denom), sellCoins.Amount)
 
 	//check aggregated orders were removed with the orders
-	_, ok := suite.k.GetAggregatedOrder(suite.ctx, mBuy.MarketId, mBuy.OrderType, mBuy.Price)
+	_, ok = suite.k.GetAggregatedOrder(suite.ctx, mBuy.MarketId, mBuy.OrderType, mBuy.Price)
 	suite.Require().False(ok)
 
 	_, ok = suite.k.GetAggregatedOrder(suite.ctx, mSell.MarketId, mSell.OrderType, mSell.Price)
