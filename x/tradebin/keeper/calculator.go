@@ -26,7 +26,9 @@ func CalculateMinAmount(price string) sdk.Int {
 
 	// Multiply by 1000 to adjust for potential dust and lower loss,
 	// as described in your comment.
-	amtDec = amtDec.MulInt64(1000)
+
+	//Note: gave up on this due to uncontrollable dust that can be lost during a trade
+	//amtDec = amtDec.MulInt64(1000)
 
 	return amtDec.TruncateInt()
 }
