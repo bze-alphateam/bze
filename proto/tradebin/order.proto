@@ -37,3 +37,9 @@ message HistoryOrder {
   string maker = 6;
   string taker = 7;
 }
+
+message UserDust {
+  string owner = 1;
+  string amount = 2;
+  string denom = 3;
+}
