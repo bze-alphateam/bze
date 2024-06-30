@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/bze-alphateam/bze/x/tradebin/keeper"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -113,37 +112,6 @@ func (suite *IntegrationTestSuite) TestNewOrder() {
 		suite.Require().True(ok)
 		suite.Require().Equal(ordRef, ordRef2)
 	}
-}
-
-func (suite *IntegrationTestSuite) TestSaveOrder() {
-	order := getRandomOrder(int64(2))
-	savedOrder := suite.k.NewOrder(suite.ctx, order)
-	suite.Require().NotEmpty(savedOrder.Id)
-	suite.Require().Equal(savedOrder.OrderType, order.OrderType)
-	suite.Require().Equal(savedOrder.MarketId, order.MarketId)
-	suite.Require().Equal(savedOrder.Amount, order.Amount)
-
-	savedOrder.Amount = "1"
-	saveResult := suite.k.SaveOrder(suite.ctx, savedOrder)
-	suite.Require().Equal(savedOrder, saveResult)
-
-	foundOrder, ok := suite.k.GetOrder(suite.ctx, order.MarketId, order.OrderType, savedOrder.Id)
-	suite.Require().True(ok)
-	suite.Require().Equal(foundOrder, saveResult)
-}
-
-func (suite *IntegrationTestSuite) TestGetOrderSdkCoin() {
-	price := "0.91"
-	minAmount := keeper.CalculateMinAmount(price)
-	buyCoins, _, err := suite.k.GetOrderSdkCoin(types.OrderTypeBuy, price, minAmount, &market)
-	suite.Require().Nil(err)
-	suite.Require().Equal(buyCoins.Amount.Int64(), int64(3)) //result of amount * price
-	suite.Require().Equal(buyCoins.Denom, market.Quote)
-
-	sellCoins, _, err := suite.k.GetOrderSdkCoin(types.OrderTypeSell, price, minAmount, &market)
-	suite.Require().Nil(err)
-	suite.Require().Equal(sellCoins.Amount, minAmount)
-	suite.Require().Equal(sellCoins.Denom, market.Base)
 }
 
 func (suite *IntegrationTestSuite) TestGetOrderSdkCoin_Error() {

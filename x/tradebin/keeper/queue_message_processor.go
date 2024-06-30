@@ -210,10 +210,12 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 	for _, orderRef := range oppositeOrderRefs {
 		//stop when all message amount was spent
 		if !msgAmountInt.IsPositive() {
+			logger.Debug("msg amount is not positive anymore. exiting oppositeOrderRefs iteration")
 			break
 		}
 
 		orderToFill, _ := pe.k.GetOrder(ctx, orderRef.MarketId, orderRef.OrderType, orderRef.Id)
+		logger.Debug("preparing to fill message with order", "orderToFill", orderToFill)
 		orderAmountInt, ok := sdk.NewIntFromString(orderToFill.Amount)
 		if !ok {
 
@@ -242,8 +244,10 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 		}
 
 		if orderAmountInt.GT(zeroInt) {
+			logger.Debug("order partially filled")
 			pe.k.SaveOrder(ctx, orderToFill)
 		} else {
+			logger.Debug("order fully filled")
 			pe.k.RemoveOrder(ctx, orderToFill)
 		}
 
@@ -266,7 +270,6 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 
 	//if min amount condition is met and all orders were filled we can proceed to place the order
 	if msgAmountInt.GTE(minAmount) && aggAmountInt.IsZero() {
-		logger.Info("message with has a remaining amount")
 		order := pe.saveOrder(ctx, message, message.Amount)
 		pe.addOrderToAggregate(ctx, order)
 
@@ -305,6 +308,10 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 }
 
 func (pe *ProcessingEngine) fundUsersAccounts(ctx sdk.Context, order *types.Order, market *types.Market, amount sdk.Int, taker sdk.AccAddress) error {
+	logger := pe.logger.With(
+		"func", "fundUsersAccounts",
+		"order", order,
+	)
 	orderOwnerAddr, _ := sdk.AccAddressFromBech32(order.Owner)
 	orderOwnerCoinsReq := types.OrderCoinsArguments{
 		OrderType:    types.TheOtherOrderType(order.OrderType),
@@ -314,8 +321,10 @@ func (pe *ProcessingEngine) fundUsersAccounts(ctx sdk.Context, order *types.Orde
 		UserAddress:  order.Owner,
 		UserReceives: true,
 	}
+	logger.Debug("created order owner coins request", "orderOwnerCoinsReq", orderOwnerCoinsReq)
 
 	coinsForOrderOwner, err := pe.k.GetOrderCoinsWithDust(ctx, orderOwnerCoinsReq)
+	logger.Debug("created coins for order owner", "coinsForOrderOwner", coinsForOrderOwner)
 	if err != nil {
 		return fmt.Errorf("could not get order coins: %v", err)
 	}
@@ -328,8 +337,10 @@ func (pe *ProcessingEngine) fundUsersAccounts(ctx sdk.Context, order *types.Orde
 		UserAddress:  taker.String(),
 		UserReceives: true,
 	}
+	logger.Debug("created msg owner coins request", "msgOwnerCoinsReq", msgOwnerCoinsReq)
 
 	coinsForMsgOwner, err := pe.k.GetOrderCoinsWithDust(ctx, msgOwnerCoinsReq)
+	logger.Debug("created coins for msg owner", "coinsForMsgOwner", coinsForMsgOwner)
 	if err != nil {
 		return fmt.Errorf("could not get order coins: %v", err)
 	}
@@ -339,6 +350,7 @@ func (pe *ProcessingEngine) fundUsersAccounts(ctx sdk.Context, order *types.Orde
 		if err != nil {
 			return fmt.Errorf("error 3 when funding user accounts: %v", err)
 		}
+		logger.Debug("funded order owner", "coinsForOrderOwner", coinsForOrderOwner)
 	} else {
 		ctx.Logger().Info("will not send dust to order order owner because the amount is 0 (zero) but will save dust", "coinsForOrderOwner", coinsForOrderOwner)
 	}
@@ -349,6 +361,7 @@ func (pe *ProcessingEngine) fundUsersAccounts(ctx sdk.Context, order *types.Orde
 		if err != nil {
 			return fmt.Errorf("error 4 when funding user accounts: %v", err)
 		}
+		logger.Debug("funded msg owner", "coinsForMsgOwner", coinsForMsgOwner)
 	} else {
 		ctx.Logger().Info("will not send dust to message order owner because the amount is 0 (zero) but will save dust", "coinsForMsgOwner", coinsForMsgOwner)
 	}
