@@ -132,25 +132,25 @@ func (suite *IntegrationTestSuite) TestSaveOrder() {
 	suite.Require().Equal(foundOrder, saveResult)
 }
 
-func (suite *IntegrationTestSuite) TestGetOrderCoins() {
+func (suite *IntegrationTestSuite) TestGetOrderSdkCoin() {
 	price := "0.91"
 	minAmount := keeper.CalculateMinAmount(price)
-	buyCoins, err := suite.k.GetOrderCoins(types.OrderTypeBuy, price, minAmount, &market)
+	buyCoins, _, err := suite.k.GetOrderSdkCoin(types.OrderTypeBuy, price, minAmount, &market)
 	suite.Require().Nil(err)
-	suite.Require().Equal(buyCoins.Amount.Int64(), int64(1820)) //result of amount * price
+	suite.Require().Equal(buyCoins.Amount.Int64(), int64(3)) //result of amount * price
 	suite.Require().Equal(buyCoins.Denom, market.Quote)
 
-	sellCoins, err := suite.k.GetOrderCoins(types.OrderTypeSell, price, minAmount, &market)
+	sellCoins, _, err := suite.k.GetOrderSdkCoin(types.OrderTypeSell, price, minAmount, &market)
 	suite.Require().Nil(err)
 	suite.Require().Equal(sellCoins.Amount, minAmount)
 	suite.Require().Equal(sellCoins.Denom, market.Base)
 }
 
-func (suite *IntegrationTestSuite) TestGetOrderCoins_Error() {
-	_, err := suite.k.GetOrderCoins("NOT_A_TYPE", "100", sdk.NewInt(2), &market)
+func (suite *IntegrationTestSuite) TestGetOrderSdkCoin_Error() {
+	_, _, err := suite.k.GetOrderSdkCoin("NOT_A_TYPE", "100", sdk.NewInt(2), &market)
 	suite.Require().NotNil(err)
 
-	_, err = suite.k.GetOrderCoins(types.OrderTypeBuy, "0.", sdk.NewInt(1), &market)
+	_, _, err = suite.k.GetOrderSdkCoin(types.OrderTypeBuy, "0.", sdk.NewInt(1), &market)
 	suite.Require().NotNil(err)
 }
 

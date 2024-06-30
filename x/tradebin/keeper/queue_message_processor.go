@@ -32,7 +32,8 @@ type ProcessingKeeper interface {
 	GetMarketById(ctx sdk.Context, marketId string) (val types.Market, found bool)
 
 	//calculator
-	GetOrderCoins(orderType, orderPrice string, orderAmount sdk.Int, market *types.Market) (sdk.Coin, error)
+	GetOrderCoinsWithDust(ctx sdk.Context, orderCoinsArgs types.OrderCoinsArguments) (types.OrderCoins, error)
+	StoreProcessedUserDust(ctx sdk.Context, userDust *types.UserDust, userDustDec *sdk.Dec)
 
 	Logger(ctx sdk.Context) log.Logger
 
@@ -131,25 +132,38 @@ func (pe *ProcessingEngine) cancelOrder(ctx sdk.Context, message types.QueueMess
 		return fmt.Errorf("could not convert order amount")
 	}
 
-	coin, err := pe.k.GetOrderCoins(order.OrderType, order.Price, orderAmountInt, &market)
-	if err != nil {
-
-		return fmt.Errorf("could not get order coins: %v", err)
-	}
-
 	accAddr, err := sdk.AccAddressFromBech32(order.Owner)
 	if err != nil {
 
 		return fmt.Errorf("error on getting account address for order owner: %v", err)
 	}
 
-	err = pe.bank.SendCoinsFromModuleToAccount(ctx, types.ModuleName, accAddr, sdk.NewCoins(coin))
-	if err != nil {
+	coinReq := types.OrderCoinsArguments{
+		OrderType:    order.OrderType,
+		OrderPrice:   order.Price,
+		OrderAmount:  orderAmountInt,
+		Market:       &market,
+		UserAddress:  order.Owner,
+		UserReceives: true,
+	}
 
-		return fmt.Errorf("error on sending funds to order owner: %v", err)
+	orderCoins, err := pe.k.GetOrderCoinsWithDust(ctx, coinReq)
+	if err != nil {
+		return fmt.Errorf("could not get order coins: %v", err)
+	}
+
+	if orderCoins.Coin.IsPositive() {
+		err = pe.bank.SendCoinsFromModuleToAccount(ctx, types.ModuleName, accAddr, sdk.NewCoins(orderCoins.Coin))
+		if err != nil {
+
+			return fmt.Errorf("error on sending funds to order owner: %v", err)
+		}
+	} else {
+		logger.Info("will not send funds to order owner because the amount is too low but will save dust", "orderCoins", orderCoins)
 	}
 
 	pe.removeOrderFromAggregate(ctx, &order)
+	pe.k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
 	pe.emitOrderCanceledEvent(ctx, &order)
 	logger.Info("order cancelled")
 
@@ -262,42 +276,84 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 
 	logger.Info("message remaining amount is too low, returning dust")
 	//we have a remaining amount smaller than min amount. We should send it back to the msg owner
-	coinsForMsgOwner, err := pe.k.GetOrderCoins(message.OrderType, message.Price, msgAmountInt, &market)
-	if err != nil {
-
-		return fmt.Errorf("error when creating funds to return to message owner: %v", err)
+	coinReq := types.OrderCoinsArguments{
+		OrderType:    message.OrderType,
+		OrderPrice:   message.Price,
+		OrderAmount:  msgAmountInt,
+		Market:       &market,
+		UserAddress:  message.Owner,
+		UserReceives: true,
 	}
 
-	err = pe.bank.SendCoinsFromModuleToAccount(ctx, types.ModuleName, msgOwnerAddr, sdk.NewCoins(coinsForMsgOwner))
+	orderCoins, err := pe.k.GetOrderCoinsWithDust(ctx, coinReq)
 	if err != nil {
-
-		return fmt.Errorf("error when returning funds to message owner: %v", err)
+		return fmt.Errorf("could not get order coins: %v", err)
 	}
+
+	if orderCoins.Coin.IsPositive() {
+		err = pe.bank.SendCoinsFromModuleToAccount(ctx, types.ModuleName, msgOwnerAddr, sdk.NewCoins(orderCoins.Coin))
+		if err != nil {
+
+			return fmt.Errorf("error when returning funds to message owner: %v", err)
+		}
+	} else {
+		logger.Info("will not send dust to order message owner because the amount is 0 (zero) but will save dust", "orderCoins", orderCoins)
+	}
+	pe.k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
 
 	return nil
 }
 
 func (pe *ProcessingEngine) fundUsersAccounts(ctx sdk.Context, order *types.Order, market *types.Market, amount sdk.Int, taker sdk.AccAddress) error {
 	orderOwnerAddr, _ := sdk.AccAddressFromBech32(order.Owner)
-	coinsForOrderOwner, err := pe.k.GetOrderCoins(types.TheOtherOrderType(order.OrderType), order.Price, amount, market)
-	if err != nil {
-		return fmt.Errorf("error 1 when funding user accounts: %v", err)
+	orderOwnerCoinsReq := types.OrderCoinsArguments{
+		OrderType:    types.TheOtherOrderType(order.OrderType),
+		OrderPrice:   order.Price,
+		OrderAmount:  amount,
+		Market:       market,
+		UserAddress:  order.Owner,
+		UserReceives: true,
 	}
 
-	coinsForMsgOwner, err := pe.k.GetOrderCoins(order.OrderType, order.Price, amount, market)
+	coinsForOrderOwner, err := pe.k.GetOrderCoinsWithDust(ctx, orderOwnerCoinsReq)
 	if err != nil {
-		return fmt.Errorf("error 2 when funding user accounts: %v", err)
+		return fmt.Errorf("could not get order coins: %v", err)
 	}
 
-	err = pe.bank.SendCoinsFromModuleToAccount(ctx, types.ModuleName, orderOwnerAddr, sdk.NewCoins(coinsForOrderOwner))
-	if err != nil {
-		return fmt.Errorf("error 3 when funding user accounts: %v", err)
+	msgOwnerCoinsReq := types.OrderCoinsArguments{
+		OrderType:    order.OrderType,
+		OrderPrice:   order.Price,
+		OrderAmount:  amount,
+		Market:       market,
+		UserAddress:  taker.String(),
+		UserReceives: true,
 	}
 
-	err = pe.bank.SendCoinsFromModuleToAccount(ctx, types.ModuleName, taker, sdk.NewCoins(coinsForMsgOwner))
+	coinsForMsgOwner, err := pe.k.GetOrderCoinsWithDust(ctx, msgOwnerCoinsReq)
 	if err != nil {
-		return fmt.Errorf("error 4 when funding user accounts: %v", err)
+		return fmt.Errorf("could not get order coins: %v", err)
 	}
+
+	if coinsForOrderOwner.Coin.IsPositive() {
+		err = pe.bank.SendCoinsFromModuleToAccount(ctx, types.ModuleName, orderOwnerAddr, sdk.NewCoins(coinsForOrderOwner.Coin))
+		if err != nil {
+			return fmt.Errorf("error 3 when funding user accounts: %v", err)
+		}
+	} else {
+		ctx.Logger().Info("will not send dust to order order owner because the amount is 0 (zero) but will save dust", "coinsForOrderOwner", coinsForOrderOwner)
+	}
+	pe.k.StoreProcessedUserDust(ctx, coinsForOrderOwner.UserDust, &coinsForOrderOwner.Dust)
+
+	if coinsForMsgOwner.Coin.IsPositive() {
+		err = pe.bank.SendCoinsFromModuleToAccount(ctx, types.ModuleName, taker, sdk.NewCoins(coinsForMsgOwner.Coin))
+		if err != nil {
+			return fmt.Errorf("error 4 when funding user accounts: %v", err)
+		}
+	} else {
+		ctx.Logger().Info("will not send dust to message order owner because the amount is 0 (zero) but will save dust", "coinsForMsgOwner", coinsForMsgOwner)
+	}
+
+	pe.k.StoreProcessedUserDust(ctx, coinsForMsgOwner.UserDust, &coinsForMsgOwner.Dust)
 
 	pe.logger.Debug("funded users accounts", "amount", amount.String(), "order_id", order.Id)
 	return nil

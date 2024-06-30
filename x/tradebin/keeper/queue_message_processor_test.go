@@ -138,14 +138,14 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 		suite.k.SetQueueMessage(suite.ctx, mBuy)
 		buyAmtInt, _ := sdk.NewIntFromString(mBuy.Amount)
 		totalBuyAmount = totalBuyAmount.Add(buyAmtInt)
-		buyCoins, err := suite.k.GetOrderCoins(mBuy.OrderType, mBuy.Price, buyAmtInt, &market)
+		buyCoins, _, err := suite.k.GetOrderSdkCoin(mBuy.OrderType, mBuy.Price, buyAmtInt, &market)
 		suite.Require().Nil(err)
 		totalBuyCoins = totalBuyCoins.Add(buyCoins)
 
 		suite.k.SetQueueMessage(suite.ctx, mSell)
 		sellAmtInt, _ := sdk.NewIntFromString(mSell.Amount)
 		totalSellAmount = totalSellAmount.Add(sellAmtInt)
-		sellCoins, err := suite.k.GetOrderCoins(mSell.OrderType, mSell.Price, sellAmtInt, &market)
+		sellCoins, _, err := suite.k.GetOrderSdkCoin(mSell.OrderType, mSell.Price, sellAmtInt, &market)
 		suite.Require().Nil(err)
 		totalSellCoins = totalSellCoins.Add(sellCoins)
 	}
@@ -181,7 +181,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 		suite.Require().True(ok)
 		canceledAmount, ok := sdk.NewIntFromString(toCancelOrder.Amount)
 		suite.Require().True(ok)
-		canceledCoins, err := suite.k.GetOrderCoins(toCancelOrder.OrderType, toCancelOrder.Price, canceledAmount, &market)
+		canceledCoins, _, err := suite.k.GetOrderSdkCoin(toCancelOrder.OrderType, toCancelOrder.Price, canceledAmount, &market)
 		suite.Require().Nil(err)
 		qm := types.QueueMessage{
 			MarketId:    or.MarketId,
@@ -330,9 +330,9 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 		OrderType:   types.OrderTypeBuy,
 		Owner:       takerAddr.String(),
 	}
-	makerCoins, err := suite.k.GetOrderCoins(qmBuy.OrderType, qmBuy.Price, qmAmountInt, &market)
+	makerCoins, _, err := suite.k.GetOrderSdkCoin(qmBuy.OrderType, qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
-	takerCoins, err := suite.k.GetOrderCoins(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmAmountInt, &market)
+	takerCoins, _, err := suite.k.GetOrderSdkCoin(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
 
 	tradedUbzeCoins := makerCoins
@@ -367,9 +367,9 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 		OrderType:   types.OrderTypeBuy,
 		Owner:       takerAddr.String(),
 	}
-	makerCoins, err = suite.k.GetOrderCoins(qmBuy.OrderType, qmBuy.Price, qmAmountInt, &market)
+	makerCoins, _, err = suite.k.GetOrderSdkCoin(qmBuy.OrderType, qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
-	takerCoins, err = suite.k.GetOrderCoins(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmAmountInt, &market)
+	takerCoins, _, err = suite.k.GetOrderSdkCoin(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
 
 	suite.k.SetQueueMessage(suite.ctx, qmBuy)
@@ -402,9 +402,9 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 		OrderType:   types.OrderTypeBuy,
 		Owner:       takerAddr.String(),
 	}
-	makerCoins, err = suite.k.GetOrderCoins(qmBuy.OrderType, qmBuy.Price, qmAmountInt, &market)
+	makerCoins, _, err = suite.k.GetOrderSdkCoin(qmBuy.OrderType, qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
-	takerCoins, err = suite.k.GetOrderCoins(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmAmountInt, &market)
+	takerCoins, _, err = suite.k.GetOrderSdkCoin(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
 
 	suite.k.SetQueueMessage(suite.ctx, qmBuy)
@@ -437,9 +437,9 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 		OrderType:   types.OrderTypeBuy,
 		Owner:       takerAddr.String(),
 	}
-	makerCoins, err = suite.k.GetOrderCoins(qmBuy.OrderType, qmBuy.Price, qmAmountInt, &market)
+	makerCoins, _, err = suite.k.GetOrderSdkCoin(qmBuy.OrderType, qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
-	takerCoins, err = suite.k.GetOrderCoins(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmAmountInt, &market)
+	takerCoins, _, err = suite.k.GetOrderSdkCoin(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
 
 	suite.k.SetQueueMessage(suite.ctx, qmBuy)
@@ -466,8 +466,8 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 
 	smallOrdAmt, _ := sdk.NewIntFromString(smallOrders[0].Amount)
 
-	newOrderMakerCoins, err := suite.k.GetOrderCoins(types.TheOtherOrderType(smallOrders[0].OrderType), smallOrders[0].Price, smallOrdAmt, &market)
-	newOrderTakerCoins, err := suite.k.GetOrderCoins(smallOrders[0].OrderType, smallOrders[0].Price, smallOrdAmt, &market)
+	newOrderMakerCoins, _, err := suite.k.GetOrderSdkCoin(types.TheOtherOrderType(smallOrders[0].OrderType), smallOrders[0].Price, smallOrdAmt, &market)
+	newOrderTakerCoins, _, err := suite.k.GetOrderSdkCoin(smallOrders[0].OrderType, smallOrders[0].Price, smallOrdAmt, &market)
 	suite.Require().Nil(err)
 	tradedUbzeCoins = tradedUbzeCoins.Add(makerCoins).Sub(newOrderTakerCoins)
 	suite.Require().Nil(err)
@@ -495,9 +495,9 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 		Owner:       takerAddr.String(),
 	}
 
-	makerCoins, err = suite.k.GetOrderCoins(qmSell.OrderType, qmSell.Price, qmAmountInt, &market)
+	makerCoins, _, err = suite.k.GetOrderSdkCoin(qmSell.OrderType, qmSell.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
-	takerCoins, err = suite.k.GetOrderCoins(types.TheOtherOrderType(qmSell.OrderType), qmSell.Price, qmAmountInt, &market)
+	takerCoins, _, err = suite.k.GetOrderSdkCoin(types.TheOtherOrderType(qmSell.OrderType), qmSell.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
 
 	suite.k.SetQueueMessage(suite.ctx, qmSell)
