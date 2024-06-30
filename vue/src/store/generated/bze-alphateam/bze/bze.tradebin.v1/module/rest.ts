@@ -95,6 +95,10 @@ export interface V1QueryAllMarketResponse {
   pagination?: V1Beta1PageResponse;
 }
 
+export interface V1QueryAllUserDustResponse {
+  list?: V1UserDust[];
+}
+
 export interface V1QueryAssetMarketsResponse {
   base?: Tradebinv1Market[];
   quote?: Tradebinv1Market[];
@@ -159,6 +163,12 @@ export interface V1QueryUserMarketOrdersResponse {
    *  }
    */
   pagination?: V1Beta1PageResponse;
+}
+
+export interface V1UserDust {
+  owner?: string;
+  amount?: string;
+  denom?: string;
 }
 
 /**
@@ -440,6 +450,23 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
   ) =>
     this.request<V1QueryAllMarketResponse, RpcStatus>({
       path: `/bze/tradebin/v1/all_markets`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryAllUserDust
+   * @summary Queries a list of AllUserDust items.
+   * @request GET:/bze/tradebin/v1/all_user_dust
+   */
+  queryAllUserDust = (query?: { address?: string }, params: RequestParams = {}) =>
+    this.request<V1QueryAllUserDustResponse, RpcStatus>({
+      path: `/bze/tradebin/v1/all_user_dust`,
       method: "GET",
       query: query,
       format: "json",
