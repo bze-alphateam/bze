@@ -118,7 +118,7 @@ func (k Keeper) CollectUserDust(ctx sdk.Context, address string, coin sdk.Coin, 
 		storageDustAmount = storageDustAmount.Add(coinDust)
 		//check and send dust if it reached at least 1 uDenom
 		if storageDustAmount.GTE(oneDec) {
-			coin.AddAmount(storageDustAmount.TruncateInt())
+			coin = coin.AddAmount(storageDustAmount.TruncateInt())
 			storageDustAmount = storageDustAmount.Sub(storageDustAmount.TruncateDec())
 		}
 	} else {
