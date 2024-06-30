@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
@@ -15,6 +14,10 @@ func (k Keeper) AllUserDust(goCtx context.Context, req *types.QueryAllUserDustRe
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	_, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid address")
+	}
 
 	list := k.GetUserDustByOwner(ctx, req.Address)
 
