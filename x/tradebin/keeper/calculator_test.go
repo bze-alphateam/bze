@@ -114,9 +114,9 @@ func (suite *IntegrationTestSuite) TestGetOrderCoinsWithDust_UserReceive() {
 	}
 	buyCoins, err := suite.k.GetOrderCoinsWithDust(suite.ctx, coinReq)
 	suite.Require().Nil(err)
-	suite.Require().Equal(buyCoins.Coin.Amount.Int64(), int64(4)) //result of amount * price
+	suite.Require().Equal(buyCoins.Coin.Amount.Int64(), int64(3)) //result of amount * price
 	suite.Require().Equal(buyCoins.Coin.Denom, market.Quote)
-	suite.Require().EqualValues(buyCoins.Dust.MustFloat64(), 0.36)
+	suite.Require().EqualValues(buyCoins.Dust.MustFloat64(), 0.64)
 	dustFromStorage, err := sdk.NewDecFromStr(buyCoins.UserDust.Amount)
 	suite.Require().Nil(err)
 	suite.Require().EqualValues(buyCoins.Dust, dustFromStorage)
