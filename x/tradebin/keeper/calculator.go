@@ -36,10 +36,6 @@ func CalculateMinAmount(price string) sdk.Int {
 // GetOrderSdkCoin - returns the needed coins for an order
 // When the user submits an order we have to capture the coins needed for that order to be placed.
 // This function returns the sdk.Coins that we have to send from user's account to module and back
-
-// GetOrderSdkCoin - returns the needed coins for an order
-// When the user submits an order we have to capture the coins needed for that order to be placed.
-// This function returns the sdk.Coins that we have to send from user's account to module and back
 func (k Keeper) GetOrderSdkCoin(orderType, orderPrice string, orderAmount sdk.Int, market *types.Market) (coin sdk.Coin, dust sdk.Dec, err error) {
 	var amount sdk.Int
 	var denom string

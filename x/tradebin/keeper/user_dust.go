@@ -129,7 +129,7 @@ func (k Keeper) CollectUserDust(ctx sdk.Context, address string, coin sdk.Coin, 
 		} else {
 			//he does not have enough dust, so we should take it from the coin amount
 			//add 1 to coin amount for dust payment
-			coin.AddAmount(sdk.OneInt())
+			coin = coin.AddAmount(sdk.OneInt())
 			//calculate the remaining dust from the 1 coin added before and add it to his storage dust
 			remainingDust := oneDec.Sub(coinDust)
 			storageDustAmount = storageDustAmount.Add(remainingDust)
