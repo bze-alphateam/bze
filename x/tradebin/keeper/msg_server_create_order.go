@@ -23,20 +23,33 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 		return nil, types.ErrMarketNotFound.Wrapf("market id: %s", msg.MarketId)
 	}
 
-	//calculate needed funds for this order
-	coin, err := k.GetOrderCoins(msg.OrderType, msg.Price, amtInt, &market)
-	if err != nil {
-		return nil, err
-	}
-
 	accAddr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return nil, err
 	}
 
-	_ = k.captureOrderFees(ctx, msg, accAddr)
+	//calculate needed funds for this order
+	ocReq := types.OrderCoinsArguments{
+		OrderType:    msg.OrderType,
+		OrderPrice:   msg.Price,
+		OrderAmount:  amtInt,
+		Market:       &market,
+		UserAddress:  msg.Creator,
+		UserReceives: false,
+	}
+
+	orderCoins, err := k.GetOrderCoinsWithDust(ctx, ocReq)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = k.captureOrderFees(ctx, msg, accAddr)
+	if err != nil {
+		return nil, err
+	}
+
 	//capture user funds for this order
-	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAddr, types.ModuleName, sdk.NewCoins(coin))
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAddr, types.ModuleName, sdk.NewCoins(orderCoins.Coin))
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +64,8 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 	}
 
 	k.SetQueueMessage(ctx, qm)
+	k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
+
 	err = k.emitOrderCreateMessageEvent(ctx, &qm)
 	if err != nil {
 		k.Logger(ctx).Error(err.Error())
@@ -59,7 +74,7 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 	return &types.MsgCreateOrderResponse{}, nil
 }
 
-func (k msgServer) captureOrderFees(ctx sdk.Context, msg *types.MsgCreateOrder, sender sdk.AccAddress) (coin sdk.Coin) {
+func (k msgServer) captureOrderFees(ctx sdk.Context, msg *types.MsgCreateOrder, sender sdk.AccAddress) (coin sdk.Coin, err error) {
 	//used to decide if it's market taker or market maker
 	_, found := k.GetAggregatedOrder(ctx, msg.MarketId, types.TheOtherOrderType(msg.OrderType), msg.Price)
 	params := k.GetParams(ctx)
@@ -75,31 +90,32 @@ func (k msgServer) captureOrderFees(ctx sdk.Context, msg *types.MsgCreateOrder, 
 		destination = params.GetMakerFeeDestination()
 	}
 
-	coin, err := sdk.ParseCoinNormalized(fee)
+	coin, err = sdk.ParseCoinNormalized(fee)
 	if err != nil {
-		k.Logger(ctx).Error("could not parse fees: %v", "error", err.Error())
-		return
+		k.Logger(ctx).
+			With("err", err).
+			With("param_fee", fee).
+			Error("could not parse fee coin. trading fee not captured")
+
+		//do not return error!! if we have a wrong fee parameter we don't want to stall the trading process
+		return coin, nil
 	}
 
 	if !coin.IsPositive() {
-		k.Logger(ctx).Debug("not capturing order create fee because if is not a positive value")
+		k.Logger(ctx).
+			With("param_fee", fee).
+			Debug("not capturing order create fee because it is not a positive value")
+
 		return
 	}
 
 	if destination == types.FeeDestinationBurnerModule {
 		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.FeeDestinationBurnerModule, sdk.NewCoins(coin))
-		if err == nil {
-			//successfully captured the funds
-			return
-		}
 
-		k.Logger(ctx).Error("could not send fee to burner", "error", err.Error())
+		return
 	}
 
 	err = k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(coin), sender)
-	if err != nil {
-		k.Logger(ctx).Error("could not fund community pool", "error", err)
-	}
 
 	return
 }

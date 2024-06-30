@@ -351,7 +351,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_StressBalance() {
 		suite.Require().True(ok)
 		pickMarket, ok := marketsMap[or.MarketId]
 		suite.Require().True(ok)
-		coins, err := suite.k.GetOrderCoins(or.OrderType, or.Price, amtInt, &pickMarket)
+		coins, _, err := suite.k.GetOrderSdkCoin(or.OrderType, or.Price, amtInt, &pickMarket)
 		suite.Require().NoError(err)
 
 		amounts = amounts.Add(coins)
