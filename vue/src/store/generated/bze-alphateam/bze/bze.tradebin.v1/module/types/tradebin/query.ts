@@ -11,6 +11,7 @@ import {
   AggregatedOrder,
   HistoryOrder,
   Order,
+  UserDust,
 } from "../tradebin/order";
 
 export const protobufPackage = "bze.tradebin.v1";
@@ -91,6 +92,14 @@ export interface QueryMarketOrderRequest {
 
 export interface QueryMarketOrderResponse {
   order: Order | undefined;
+}
+
+export interface QueryAllUserDustRequest {
+  address: string;
+}
+
+export interface QueryAllUserDustResponse {
+  list: UserDust[];
 }
 
 const baseQueryParamsRequest: object = {};
@@ -1433,6 +1442,148 @@ export const QueryMarketOrderResponse = {
   },
 };
 
+const baseQueryAllUserDustRequest: object = { address: "" };
+
+export const QueryAllUserDustRequest = {
+  encode(
+    message: QueryAllUserDustRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.address !== "") {
+      writer.uint32(10).string(message.address);
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): QueryAllUserDustRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryAllUserDustRequest,
+    } as QueryAllUserDustRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.address = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryAllUserDustRequest {
+    const message = {
+      ...baseQueryAllUserDustRequest,
+    } as QueryAllUserDustRequest;
+    if (object.address !== undefined && object.address !== null) {
+      message.address = String(object.address);
+    } else {
+      message.address = "";
+    }
+    return message;
+  },
+
+  toJSON(message: QueryAllUserDustRequest): unknown {
+    const obj: any = {};
+    message.address !== undefined && (obj.address = message.address);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryAllUserDustRequest>
+  ): QueryAllUserDustRequest {
+    const message = {
+      ...baseQueryAllUserDustRequest,
+    } as QueryAllUserDustRequest;
+    if (object.address !== undefined && object.address !== null) {
+      message.address = object.address;
+    } else {
+      message.address = "";
+    }
+    return message;
+  },
+};
+
+const baseQueryAllUserDustResponse: object = {};
+
+export const QueryAllUserDustResponse = {
+  encode(
+    message: QueryAllUserDustResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.list) {
+      UserDust.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryAllUserDustResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryAllUserDustResponse,
+    } as QueryAllUserDustResponse;
+    message.list = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.list.push(UserDust.decode(reader, reader.uint32()));
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryAllUserDustResponse {
+    const message = {
+      ...baseQueryAllUserDustResponse,
+    } as QueryAllUserDustResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(UserDust.fromJSON(e));
+      }
+    }
+    return message;
+  },
+
+  toJSON(message: QueryAllUserDustResponse): unknown {
+    const obj: any = {};
+    if (message.list) {
+      obj.list = message.list.map((e) => (e ? UserDust.toJSON(e) : undefined));
+    } else {
+      obj.list = [];
+    }
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryAllUserDustResponse>
+  ): QueryAllUserDustResponse {
+    const message = {
+      ...baseQueryAllUserDustResponse,
+    } as QueryAllUserDustResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(UserDust.fromPartial(e));
+      }
+    }
+    return message;
+  },
+};
+
 /** Query defines the gRPC querier service. */
 export interface Query {
   /** Parameters queries the parameters of the module. */
@@ -1461,6 +1612,10 @@ export interface Query {
   MarketOrder(
     request: QueryMarketOrderRequest
   ): Promise<QueryMarketOrderResponse>;
+  /** Queries a list of AllUserDust items. */
+  AllUserDust(
+    request: QueryAllUserDustRequest
+  ): Promise<QueryAllUserDustResponse>;
 }
 
 export class QueryClientImpl implements Query {
@@ -1561,6 +1716,20 @@ export class QueryClientImpl implements Query {
     );
     return promise.then((data) =>
       QueryMarketOrderResponse.decode(new Reader(data))
+    );
+  }
+
+  AllUserDust(
+    request: QueryAllUserDustRequest
+  ): Promise<QueryAllUserDustResponse> {
+    const data = QueryAllUserDustRequest.encode(request).finish();
+    const promise = this.rpc.request(
+      "bze.tradebin.v1.Query",
+      "AllUserDust",
+      data
+    );
+    return promise.then((data) =>
+      QueryAllUserDustResponse.decode(new Reader(data))
     );
   }
 }

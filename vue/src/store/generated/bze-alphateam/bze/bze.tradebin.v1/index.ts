@@ -11,11 +11,12 @@ import { Order } from "./module/types/tradebin/order"
 import { OrderReference } from "./module/types/tradebin/order"
 import { AggregatedOrder } from "./module/types/tradebin/order"
 import { HistoryOrder } from "./module/types/tradebin/order"
+import { UserDust } from "./module/types/tradebin/order"
 import { Params } from "./module/types/tradebin/params"
 import { QueueMessage } from "./module/types/tradebin/queue_message"
 
 
-export { OrderCreateMessageEvent, OrderCancelMessageEvent, MarketCreatedEvent, OrderExecutedEvent, OrderCanceledEvent, OrderSavedEvent, Market, Order, OrderReference, AggregatedOrder, HistoryOrder, Params, QueueMessage };
+export { OrderCreateMessageEvent, OrderCancelMessageEvent, MarketCreatedEvent, OrderExecutedEvent, OrderCanceledEvent, OrderSavedEvent, Market, Order, OrderReference, AggregatedOrder, HistoryOrder, UserDust, Params, QueueMessage };
 
 async function initTxClient(vuexGetters) {
 	return await txClient(vuexGetters['common/wallet/signer'], {
@@ -61,6 +62,7 @@ const getDefaultState = () => {
 				MarketAggregatedOrders: {},
 				MarketHistory: {},
 				MarketOrder: {},
+				AllUserDust: {},
 				
 				_Structure: {
 						OrderCreateMessageEvent: getStructure(OrderCreateMessageEvent.fromPartial({})),
@@ -74,6 +76,7 @@ const getDefaultState = () => {
 						OrderReference: getStructure(OrderReference.fromPartial({})),
 						AggregatedOrder: getStructure(AggregatedOrder.fromPartial({})),
 						HistoryOrder: getStructure(HistoryOrder.fromPartial({})),
+						UserDust: getStructure(UserDust.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
 						QueueMessage: getStructure(QueueMessage.fromPartial({})),
 						
@@ -151,6 +154,12 @@ export default {
 						(<any> params).query=null
 					}
 			return state.MarketOrder[JSON.stringify(params)] ?? {}
+		},
+				getAllUserDust: (state) => (params = { params: {}}) => {
+					if (!(<any> params).query) {
+						(<any> params).query=null
+					}
+			return state.AllUserDust[JSON.stringify(params)] ?? {}
 		},
 				
 		getTypeStructure: (state) => (type) => {
@@ -390,6 +399,47 @@ export default {
 		},
 		
 		
+		
+		
+		 		
+		
+		
+		async QueryAllUserDust({ commit, rootGetters, getters }, { options: { subscribe, all} = { subscribe:false, all:false}, params, query=null }) {
+			try {
+				const key = params ?? {};
+				const queryClient=await initQueryClient(rootGetters)
+				let value= (await queryClient.queryAllUserDust(query)).data
+				
+					
+				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
+					let next_values=(await queryClient.queryAllUserDust({...query, 'pagination.key':(<any> value).pagination.next_key})).data
+					value = mergeResults(value, next_values);
+				}
+				commit('QUERY', { query: 'AllUserDust', key: { params: {...key}, query}, value })
+				if (subscribe) commit('SUBSCRIBE', { action: 'QueryAllUserDust', payload: { options: { all }, params: {...key},query }})
+				return getters['getAllUserDust']( { params: {...key}, query}) ?? {}
+			} catch (e) {
+				throw new Error('QueryClient:QueryAllUserDust API Node Unavailable. Could not perform query: ' + e.message)
+				
+			}
+		},
+		
+		
+		async sendMsgCreateOrder({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgCreateOrder(value)
+				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
+	gas: "200000" }, memo})
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgCreateOrder:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgCreateOrder:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
 		async sendMsgCancelOrder({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
@@ -420,22 +470,20 @@ export default {
 				}
 			}
 		},
-		async sendMsgCreateOrder({ rootGetters }, { value, fee = [], memo = '' }) {
+		
+		async MsgCreateOrder({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
 				const msg = await txClient.msgCreateOrder(value)
-				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
-	gas: "200000" }, memo})
-				return result
+				return msg
 			} catch (e) {
 				if (e == MissingWalletError) {
 					throw new Error('TxClient:MsgCreateOrder:Init Could not initialize signing client. Wallet is required.')
-				}else{
-					throw new Error('TxClient:MsgCreateOrder:Send Could not broadcast Tx: '+ e.message)
+				} else{
+					throw new Error('TxClient:MsgCreateOrder:Create Could not create message: ' + e.message)
 				}
 			}
 		},
-		
 		async MsgCancelOrder({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
@@ -459,19 +507,6 @@ export default {
 					throw new Error('TxClient:MsgCreateMarket:Init Could not initialize signing client. Wallet is required.')
 				} else{
 					throw new Error('TxClient:MsgCreateMarket:Create Could not create message: ' + e.message)
-				}
-			}
-		},
-		async MsgCreateOrder({ rootGetters }, { value }) {
-			try {
-				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgCreateOrder(value)
-				return msg
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCreateOrder:Init Could not initialize signing client. Wallet is required.')
-				} else{
-					throw new Error('TxClient:MsgCreateOrder:Create Could not create message: ' + e.message)
 				}
 			}
 		},

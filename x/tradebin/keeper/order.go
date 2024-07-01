@@ -4,7 +4,6 @@ import (
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func (k Keeper) getOrderStore(ctx sdk.Context) sdk.KVStore {
@@ -37,39 +36,6 @@ func (k Keeper) getAggregatedOrderByMarketAndTypeStore(ctx sdk.Context, marketId
 
 func (k Keeper) getOrderCounterStore(ctx sdk.Context) sdk.KVStore {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OrderCounterPrefix))
-}
-
-// GetOrderCoins - returns the needed coins for an order
-// When the user submits an order we have to capture the coins needed for that order to be placed.
-// This function returns the sdk.Coins that we have to send from user's account to module and back
-func (k Keeper) GetOrderCoins(orderType, orderPrice string, orderAmount sdk.Int, market *types.Market) (sdk.Coin, error) {
-	var amount sdk.Int
-	var denom string
-	var coin sdk.Coin
-	switch orderType {
-	case types.OrderTypeBuy:
-		denom = market.Quote
-		oAmount := orderAmount.ToDec()
-		oPrice, err := sdk.NewDecFromStr(orderPrice)
-		if err != nil {
-			return coin, sdkerrors.Wrapf(types.ErrInvalidOrderPrice, "error when transforming order price: %v", err)
-		}
-		oAmount = oAmount.Mul(oPrice).Ceil()
-		amount = oAmount.TruncateInt()
-	case types.OrderTypeSell:
-		denom = market.Base
-		amount = orderAmount
-	default:
-		return coin, types.ErrInvalidOrderType
-	}
-
-	if amount.LTE(sdk.ZeroInt()) {
-		return coin, sdkerrors.Wrapf(types.ErrInvalidOrderAmount, "order amount is too low for this price")
-	}
-
-	coin = sdk.NewCoin(denom, amount)
-
-	return coin, nil
 }
 
 func (k Keeper) GetAllOrder(ctx sdk.Context) (list []types.Order) {

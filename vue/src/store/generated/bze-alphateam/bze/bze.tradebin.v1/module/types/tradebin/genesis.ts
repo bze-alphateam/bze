@@ -4,7 +4,12 @@ import { util, configure, Writer, Reader } from "protobufjs/minimal";
 import { Params } from "../tradebin/params";
 import { Market } from "../tradebin/market";
 import { QueueMessage } from "../tradebin/queue_message";
-import { Order, AggregatedOrder, HistoryOrder } from "../tradebin/order";
+import {
+  Order,
+  AggregatedOrder,
+  HistoryOrder,
+  UserDust,
+} from "../tradebin/order";
 
 export const protobufPackage = "bze.tradebin.v1";
 
@@ -17,6 +22,7 @@ export interface GenesisState {
   aggregated_order_list: AggregatedOrder[];
   history_order_list: HistoryOrder[];
   order_counter: number;
+  all_users_dust: UserDust[];
 }
 
 const baseGenesisState: object = { order_counter: 0 };
@@ -44,6 +50,9 @@ export const GenesisState = {
     if (message.order_counter !== 0) {
       writer.uint32(56).int64(message.order_counter);
     }
+    for (const v of message.all_users_dust) {
+      UserDust.encode(v!, writer.uint32(66).fork()).ldelim();
+    }
     return writer;
   },
 
@@ -56,6 +65,7 @@ export const GenesisState = {
     message.order_list = [];
     message.aggregated_order_list = [];
     message.history_order_list = [];
+    message.all_users_dust = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -86,6 +96,9 @@ export const GenesisState = {
         case 7:
           message.order_counter = longToNumber(reader.int64() as Long);
           break;
+        case 8:
+          message.all_users_dust.push(UserDust.decode(reader, reader.uint32()));
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -101,6 +114,7 @@ export const GenesisState = {
     message.order_list = [];
     message.aggregated_order_list = [];
     message.history_order_list = [];
+    message.all_users_dust = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromJSON(object.params);
     } else {
@@ -144,6 +158,11 @@ export const GenesisState = {
       message.order_counter = Number(object.order_counter);
     } else {
       message.order_counter = 0;
+    }
+    if (object.all_users_dust !== undefined && object.all_users_dust !== null) {
+      for (const e of object.all_users_dust) {
+        message.all_users_dust.push(UserDust.fromJSON(e));
+      }
     }
     return message;
   },
@@ -189,6 +208,13 @@ export const GenesisState = {
     }
     message.order_counter !== undefined &&
       (obj.order_counter = message.order_counter);
+    if (message.all_users_dust) {
+      obj.all_users_dust = message.all_users_dust.map((e) =>
+        e ? UserDust.toJSON(e) : undefined
+      );
+    } else {
+      obj.all_users_dust = [];
+    }
     return obj;
   },
 
@@ -199,6 +225,7 @@ export const GenesisState = {
     message.order_list = [];
     message.aggregated_order_list = [];
     message.history_order_list = [];
+    message.all_users_dust = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromPartial(object.params);
     } else {
@@ -242,6 +269,11 @@ export const GenesisState = {
       message.order_counter = object.order_counter;
     } else {
       message.order_counter = 0;
+    }
+    if (object.all_users_dust !== undefined && object.all_users_dust !== null) {
+      for (const e of object.all_users_dust) {
+        message.all_users_dust.push(UserDust.fromPartial(e));
+      }
     }
     return message;
   },
