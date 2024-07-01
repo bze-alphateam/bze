@@ -52,6 +52,11 @@ service Query {
 		option (google.api.http).get = "/bze/tradebin/v1/market_order";
 	}
 
+// Queries a list of AllUserDust items.
+	rpc AllUserDust(QueryAllUserDustRequest) returns (QueryAllUserDustResponse) {
+		option (google.api.http).get = "/bze/tradebin/v1/all_user_dust";
+	}
+
 // this line is used by starport scaffolding # 2
 }
 
@@ -132,6 +137,14 @@ message QueryMarketOrderRequest {
 
 message QueryMarketOrderResponse {
 	Order order = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllUserDustRequest {
+	string address = 1;
+}
+
+message QueryAllUserDustResponse {
+	repeated UserDust list = 1 [(gogoproto.nullable) = false];
 }
 
 // this line is used by starport scaffolding # 3

@@ -33,6 +33,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetHistoryOrder(ctx, elem, strconv.Itoa(key))
 	}
 
+	for _, elem := range genState.AllUsersDust {
+		k.SetUserDust(ctx, elem)
+	}
+
 	// this line is used by starport scaffolding # genesis/module/init
 	k.SetParams(ctx, genState.Params)
 	k.SetQueueMessageCounter(ctx, qmCounter)
@@ -52,6 +56,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.HistoryOrderList = k.GetAllHistoryOrder(ctx)
 
 	genesis.OrderCounter = int64(k.GetOrderCounter(ctx))
+	genesis.AllUsersDust = k.GetAllUserDust(ctx)
 	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis
