@@ -1532,6 +1532,52 @@ paths:
           type: boolean
       tags:
         - Query
+  /bze/tradebin/v1/all_user_dust:
+    get:
+      summary: Queries a list of AllUserDust items.
+      operationId: BzeTradebinV1AllUserDust
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              list:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    owner:
+                      type: string
+                    amount:
+                      type: string
+                    denom:
+                      type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: address
+          in: query
+          required: false
+          type: string
+      tags:
+        - Query
   /bze/tradebin/v1/asset_markets:
     get:
       summary: Queries a list of AssetMarkets items.
@@ -34644,6 +34690,20 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
+  bze.tradebin.v1.QueryAllUserDustResponse:
+    type: object
+    properties:
+      list:
+        type: array
+        items:
+          type: object
+          properties:
+            owner:
+              type: string
+            amount:
+              type: string
+            denom:
+              type: string
   bze.tradebin.v1.QueryAssetMarketsResponse:
     type: object
     properties:
@@ -34848,6 +34908,15 @@ definitions:
                    repeated Bar results = 1;
                    PageResponse page = 2;
            }
+  bze.tradebin.v1.UserDust:
+    type: object
+    properties:
+      owner:
+        type: string
+      amount:
+        type: string
+      denom:
+        type: string
   bze.v1.rewards.MarketIdTradingRewardId:
     type: object
     properties:

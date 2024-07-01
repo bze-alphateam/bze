@@ -4,15 +4,15 @@ import { StdFee } from "@cosmjs/launchpad";
 import { SigningStargateClient } from "@cosmjs/stargate";
 import { Registry, OfflineSigner, EncodeObject, DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { Api } from "./rest";
+import { MsgCreateOrder } from "./types/tradebin/tx";
 import { MsgCancelOrder } from "./types/tradebin/tx";
 import { MsgCreateMarket } from "./types/tradebin/tx";
-import { MsgCreateOrder } from "./types/tradebin/tx";
 
 
 const types = [
+  ["/bze.tradebin.v1.MsgCreateOrder", MsgCreateOrder],
   ["/bze.tradebin.v1.MsgCancelOrder", MsgCancelOrder],
   ["/bze.tradebin.v1.MsgCreateMarket", MsgCreateMarket],
-  ["/bze.tradebin.v1.MsgCreateOrder", MsgCreateOrder],
   
 ];
 export const MissingWalletError = new Error("wallet is required");
@@ -45,9 +45,9 @@ const txClient = async (wallet: OfflineSigner, { addr: addr }: TxClientOptions =
 
   return {
     signAndBroadcast: (msgs: EncodeObject[], { fee, memo }: SignAndBroadcastOptions = {fee: defaultFee, memo: ""}) => client.signAndBroadcast(address, msgs, fee,memo),
+    msgCreateOrder: (data: MsgCreateOrder): EncodeObject => ({ typeUrl: "/bze.tradebin.v1.MsgCreateOrder", value: MsgCreateOrder.fromPartial( data ) }),
     msgCancelOrder: (data: MsgCancelOrder): EncodeObject => ({ typeUrl: "/bze.tradebin.v1.MsgCancelOrder", value: MsgCancelOrder.fromPartial( data ) }),
     msgCreateMarket: (data: MsgCreateMarket): EncodeObject => ({ typeUrl: "/bze.tradebin.v1.MsgCreateMarket", value: MsgCreateMarket.fromPartial( data ) }),
-    msgCreateOrder: (data: MsgCreateOrder): EncodeObject => ({ typeUrl: "/bze.tradebin.v1.MsgCreateOrder", value: MsgCreateOrder.fromPartial( data ) }),
     
   };
 };
