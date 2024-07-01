@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/bze-alphateam/bze/app/openapi"
+	"github.com/bze-alphateam/bze/app/upgrades"
 	v700 "github.com/bze-alphateam/bze/app/upgrades/v700"
 	"github.com/bze-alphateam/bze/x/epochs"
 	epochskeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
@@ -712,47 +713,8 @@ func (app *App) setupUpgradeHandlers(cfg module.Configurator) {
 	)
 
 	app.UpgradeKeeper.SetUpgradeHandler(
-		"v7.0.0-rc4",
-		func(ctx sdk.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-			app.Logger().Info("[TESTNET]running migration")
-			allAggOrders := app.TradebinKeeper.GetAllAggregatedOrder(ctx)
-			for _, order := range allAggOrders {
-				app.Logger().With("agg_order", order).Info("[TESTNET] deleting agg order")
-				app.TradebinKeeper.RemoveAggregatedOrder(ctx, order)
-			}
-
-			allOrders := app.TradebinKeeper.GetAllOrder(ctx)
-			for _, order := range allOrders {
-				app.Logger().With("order", order).Info("[TESTNET] processing order")
-				agg, ok := app.TradebinKeeper.GetAggregatedOrder(ctx, order.MarketId, order.OrderType, order.Price)
-				if !ok {
-					app.Logger().With("order", order).Info("[TESTNET] aggregated order not found. creating new one")
-					agg = tradebintypes.AggregatedOrder{
-						MarketId:  order.MarketId,
-						OrderType: order.OrderType,
-						Amount:    "0",
-						Price:     order.Price,
-					}
-				}
-
-				aggAmount, ok := sdk.NewIntFromString(agg.Amount)
-				if !ok {
-					continue
-				}
-
-				orderAmount, ok := sdk.NewIntFromString(order.Amount)
-				if !ok {
-					continue
-				}
-
-				agg.Amount = aggAmount.Add(orderAmount).String()
-				app.TradebinKeeper.SetAggregatedOrder(ctx, agg)
-
-				app.Logger().With("order", order, "agg", agg).Info("[TESTNET] aggregated order calculated and saved")
-			}
-
-			return vm, nil
-		},
+		"v7.0.0-rc5",
+		upgrades.EmptyUpgradeHandler(),
 	)
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
