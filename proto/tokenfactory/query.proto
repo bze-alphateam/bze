@@ -1,0 +1,44 @@
+syntax = "proto3";
+package bze.tokenfactory.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "tokenfactory/params.proto";
+import "tokenfactory/denom_authority.proto";
+// this line is used by starport scaffolding # 1
+
+option go_package = "github.com/bze-alphateam/bze/x/tokenfactory/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Parameters queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/bze/tokenfactory/v1/params";
+  }
+  // Queries a list of QueryDenomAuthority items.
+	rpc DenomAuthority(QueryDenomAuthorityRequest) returns (QueryDenomAuthorityResponse) {
+		option (google.api.http).get = "/bze/tokenfactory/v1/denom_authority";
+	}
+
+// this line is used by starport scaffolding # 2
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryDenomAuthorityRequest {
+  string denom = 1;
+}
+
+message QueryDenomAuthorityResponse {
+  DenomAuthority denomAuthority = 1;
+}
+
+// this line is used by starport scaffolding # 3
