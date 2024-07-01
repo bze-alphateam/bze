@@ -27,7 +27,6 @@ func getMarketId() string {
 	return fmt.Sprintf("%s/%s", market.Base, market.Quote)
 }
 
-// TODO write test for multiple orders in the same aggregated price and check the history resulting upon order fill is correct
 type IntegrationTestSuite struct {
 	suite.Suite
 
