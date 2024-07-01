@@ -14,20 +14,23 @@ import (
 func (suite *IntegrationTestSuite) TestCreateOrder_InvalidAmount() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 	_, err := suite.msgServer.CreateOrder(goCtx, &types.MsgCreateOrder{
-		Amount: "as2",
+		Amount: "hdsihdshdshids",
 	})
 
 	suite.Require().NotNil(err)
+	suite.Require().Contains(err.Error(), "amount could not be converted to Int")
 }
 
 func (suite *IntegrationTestSuite) TestCreateOrder_AmountTooLow() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 	_, err := suite.msgServer.CreateOrder(goCtx, &types.MsgCreateOrder{
-		Amount: "10",
+		Amount: "1",
 		Price:  "1",
 	})
 
 	suite.Require().NotNil(err)
+	//amount should be bigger than
+	suite.Require().Contains(err.Error(), "amount should be bigger than")
 }
 
 func (suite *IntegrationTestSuite) TestCreateOrder_MarketNotFound() {
@@ -39,19 +42,27 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketNotFound() {
 	})
 
 	suite.Require().NotNil(err)
+	//market id
+	suite.Require().Contains(err.Error(), "market id")
 }
 
 func (suite *IntegrationTestSuite) TestCreateOrder_InvalidOrderType() {
 	suite.k.SetMarket(suite.ctx, market)
 	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	addr1 := sdk.AccAddress("addr1_______________")
+	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
 	_, err := suite.msgServer.CreateOrder(goCtx, &types.MsgCreateOrder{
 		Amount:    "1000000",
 		Price:     "1",
 		MarketId:  getMarketId(),
 		OrderType: "notatype",
+		Creator:   addr1.String(),
 	})
 
 	suite.Require().NotNil(err)
+	suite.Require().Contains(err.Error(), "order type")
 }
 
 func (suite *IntegrationTestSuite) TestCreateOrder_InvalidCreator() {
@@ -66,9 +77,10 @@ func (suite *IntegrationTestSuite) TestCreateOrder_InvalidCreator() {
 	})
 
 	suite.Require().NotNil(err)
+	suite.Require().Contains(err.Error(), "bech32")
 }
 
-func (suite *IntegrationTestSuite) TestCreateOrder_MarketMaker_Buy_Success() {
+func (suite *IntegrationTestSuite) TestCreateOrder_MarketMaker_Buy_Success_ZeroDust() {
 	suite.k.SetMarket(suite.ctx, market)
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 	addr1 := sdk.AccAddress("addr1_______________")
@@ -111,9 +123,15 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketMaker_Buy_Success() {
 	moduleBalance := suite.app.BankKeeper.GetAllBalances(suite.ctx, feeDestinationModule)
 	suite.Require().False(moduleBalance.IsZero())
 	suite.Require().Equal(moduleBalance.AmountOf(fee.Denom), fee.Amount)
+
+	_, ok := suite.k.GetUserDust(suite.ctx, addr1.String(), market.Quote)
+	suite.Require().False(ok)
+
+	_, ok = suite.k.GetUserDust(suite.ctx, addr1.String(), market.Base)
+	suite.Require().False(ok)
 }
 
-func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Buy_Success() {
+func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Buy_Success_ZeroDust() {
 	suite.k.SetMarket(suite.ctx, market)
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
@@ -163,6 +181,73 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Buy_Success() {
 	moduleBalance := suite.app.BankKeeper.GetAllBalances(suite.ctx, feeDestinationModule)
 	suite.Require().False(moduleBalance.IsZero())
 	suite.Require().Equal(moduleBalance.AmountOf(fee.Denom), fee.Amount)
+
+	_, ok := suite.k.GetUserDust(suite.ctx, addr1.String(), market.Quote)
+	suite.Require().False(ok)
+
+	_, ok = suite.k.GetUserDust(suite.ctx, addr1.String(), market.Base)
+	suite.Require().False(ok)
+}
+
+func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Buy_Success_WithDust() {
+	suite.k.SetMarket(suite.ctx, market)
+	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeSell,
+		Amount:    "100000",
+		Price:     "0.02331",
+	})
+
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	addr1 := sdk.AccAddress("addr1_______________")
+	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
+
+	//initial balances need to be 0
+	initialUserBalances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
+	suite.Require().True(initialUserBalances.IsZero())
+
+	balances := sdk.NewCoins(newStakeCoin(10000), newBzeCoin(20000000000))
+	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, balances))
+	orderMsg := types.MsgCreateOrder{
+		Amount:    "87",
+		Price:     "0.02331",
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Creator:   addr1.String(),
+	}
+	_, err := suite.msgServer.CreateOrder(goCtx, &orderMsg)
+
+	suite.Require().Nil(err)
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 1)
+	suite.Require().Equal(qmList[0].MarketId, getMarketId())
+	suite.Require().Equal(qmList[0].Amount, orderMsg.Amount)
+	suite.Require().Equal(qmList[0].OrderType, orderMsg.OrderType)
+	suite.Require().Equal(qmList[0].MessageType, orderMsg.OrderType)
+	suite.Require().Equal(qmList[0].Price, orderMsg.Price)
+	suite.Require().Equal(qmList[0].Owner, orderMsg.Creator)
+
+	params := suite.k.GetParams(suite.ctx)
+	fee, err := sdk.ParseCoinNormalized(params.MarketTakerFee)
+	suite.Require().Nil(err)
+	userNewBal := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
+
+	suite.Require().Equal(userNewBal.AmountOf(fee.Denom), balances.AmountOf(fee.Denom).Sub(fee.Amount).SubRaw(3))
+
+	feeDestinationModule := suite.app.AccountKeeper.GetModuleAddress(params.TakerFeeDestination)
+	moduleBalance := suite.app.BankKeeper.GetAllBalances(suite.ctx, feeDestinationModule)
+	suite.Require().False(moduleBalance.IsZero())
+	suite.Require().Equal(moduleBalance.AmountOf(fee.Denom), fee.Amount)
+
+	udQuote, ok := suite.k.GetUserDust(suite.ctx, addr1.String(), market.Quote)
+	suite.Require().True(ok)
+	suite.Require().Equal(udQuote.Denom, market.Quote)
+	suite.Require().Equal(udQuote.Owner, addr1.String())
+	suite.Require().EqualValues(udQuote.Amount, "0.972030000000000000")
+
+	_, ok = suite.k.GetUserDust(suite.ctx, addr1.String(), market.Base)
+	suite.Require().False(ok)
 }
 
 func (suite *IntegrationTestSuite) TestCreateOrder_MarketMaker_Sell_Success() {
@@ -209,6 +294,13 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketMaker_Sell_Success() {
 	moduleBalance := suite.app.BankKeeper.GetAllBalances(suite.ctx, feeDestinationModule)
 	suite.Require().False(moduleBalance.IsZero())
 	suite.Require().Equal(moduleBalance.AmountOf(fee.Denom), fee.Amount)
+
+	//should never have dust on sell orders
+	_, ok := suite.k.GetUserDust(suite.ctx, addr1.String(), market.Quote)
+	suite.Require().False(ok)
+
+	_, ok = suite.k.GetUserDust(suite.ctx, addr1.String(), market.Base)
+	suite.Require().False(ok)
 }
 
 func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Sell_Success() {
@@ -263,6 +355,13 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Sell_Success() {
 	moduleBalance := suite.app.BankKeeper.GetAllBalances(suite.ctx, feeDestinationModule)
 	suite.Require().False(moduleBalance.IsZero())
 	suite.Require().Equal(moduleBalance.AmountOf(fee.Denom), fee.Amount)
+
+	//should never have dust on sell orders
+	_, ok := suite.k.GetUserDust(suite.ctx, addr1.String(), market.Quote)
+	suite.Require().False(ok)
+
+	_, ok = suite.k.GetUserDust(suite.ctx, addr1.String(), market.Base)
+	suite.Require().False(ok)
 }
 
 func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_StressBalance() {
