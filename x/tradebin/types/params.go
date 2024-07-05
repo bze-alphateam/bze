@@ -17,7 +17,7 @@ const (
 
 var (
 	KeyCreateMarketFee     = []byte("CreateMarketFee")
-	DefaultCreateMarketFee = "10000000000ubze"
+	DefaultCreateMarketFee = "25000000000ubze"
 )
 
 var (
