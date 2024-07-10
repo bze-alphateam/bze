@@ -210,6 +210,7 @@ var (
 	// this list will be excluded from bank/distribution modules blocked addresses
 	allowedModules = map[string]struct{}{
 		burnermoduletypes.ModuleName: {},
+		tradebintypes.ModuleName:     {},
 	}
 )
 
