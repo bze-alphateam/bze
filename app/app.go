@@ -2,9 +2,21 @@ package app
 
 import (
 	"github.com/bze-alphateam/bze/app/openapi"
-	v512 "github.com/bze-alphateam/bze/app/upgrades/v512"
-	v600 "github.com/bze-alphateam/bze/app/upgrades/v600"
-	v610 "github.com/bze-alphateam/bze/app/upgrades/v610"
+	v700 "github.com/bze-alphateam/bze/app/upgrades/v700"
+	"github.com/bze-alphateam/bze/x/epochs"
+	epochskeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
+	epochstypes "github.com/bze-alphateam/bze/x/epochs/types"
+	"github.com/bze-alphateam/bze/x/rewards"
+	rewardsclient "github.com/bze-alphateam/bze/x/rewards/client"
+	rewardskeeper "github.com/bze-alphateam/bze/x/rewards/keeper"
+	rewardstypes "github.com/bze-alphateam/bze/x/rewards/types"
+	"github.com/bze-alphateam/bze/x/tradebin"
+	tradebinkeeper "github.com/bze-alphateam/bze/x/tradebin/keeper"
+	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
+
+	"github.com/bze-alphateam/bze/x/tokenfactory"
+	tokenfactorykeeper "github.com/bze-alphateam/bze/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/bze-alphateam/bze/x/tokenfactory/types"
 
 	"io"
 	"net/http"
@@ -132,6 +144,7 @@ func getGovProposalHandlers() []govclient.ProposalHandler {
 		cointrunkmoduleclient.AcceptedDomainProposalHandler,
 		cointrunkmoduleclient.PublisherProposalHandler,
 		burnermoduleclient.BurnCoinsProposalHandler,
+		rewardsclient.ActivateTradingRewardProposalHandler,
 		// this line is used by starport scaffolding # stargate/app/govProposalHandler
 	)
 
@@ -167,6 +180,10 @@ var (
 		scavengemodule.AppModuleBasic{},
 		cointrunkmodule.AppModuleBasic{},
 		burnermodule.AppModuleBasic{},
+		tokenfactory.AppModuleBasic{},
+		tradebin.AppModuleBasic{},
+		epochs.AppModuleBasic{},
+		rewards.AppModuleBasic{},
 		// this line is used by starport scaffolding # stargate/app/moduleBasic
 	)
 
@@ -182,6 +199,10 @@ var (
 		scavengemoduletypes.ModuleName:  nil,
 		cointrunkmoduletypes.ModuleName: nil,
 		burnermoduletypes.ModuleName:    {authtypes.Burner},
+		tokenfactorytypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		tradebintypes.ModuleName:        nil,
+		epochstypes.ModuleName:          nil,
+		rewardstypes.ModuleName:         {authtypes.Burner},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 
@@ -189,6 +210,7 @@ var (
 	// this list will be excluded from bank/distribution modules blocked addresses
 	allowedModules = map[string]struct{}{
 		burnermoduletypes.ModuleName: {},
+		tradebintypes.ModuleName:     {},
 	}
 )
 
@@ -244,9 +266,13 @@ type App struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
-	ScavengeKeeper  scavengemodulekeeper.Keeper
-	CointrunkKeeper cointrunkmodulekeeper.Keeper
-	BurnerKeeper    burnermodulekeeper.Keeper
+	ScavengeKeeper     scavengemodulekeeper.Keeper
+	CointrunkKeeper    cointrunkmodulekeeper.Keeper
+	BurnerKeeper       burnermodulekeeper.Keeper
+	TokenFactoryKeeper tokenfactorykeeper.Keeper
+	TradebinKeeper     tradebinkeeper.Keeper
+	EpochsKeeper       epochskeeper.Keeper
+	RewardsKeeper      rewardskeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// the module manager
@@ -294,6 +320,10 @@ func New(
 		scavengemoduletypes.StoreKey,
 		cointrunkmoduletypes.StoreKey,
 		burnermoduletypes.StoreKey,
+		tokenfactorytypes.StoreKey,
+		tradebintypes.StoreKey,
+		epochstypes.StoreKey,
+		rewardstypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -414,9 +444,64 @@ func New(
 		app.AccountKeeper,
 	)
 
+	app.TokenFactoryKeeper = *tokenfactorykeeper.NewKeeper(
+		appCodec,
+		keys[tokenfactorytypes.StoreKey],
+		keys[tokenfactorytypes.MemStoreKey],
+		app.GetSubspace(tokenfactorytypes.ModuleName),
+		app.BankKeeper,
+		app.AccountKeeper,
+		app.DistrKeeper,
+	)
+
+	app.TradebinKeeper = *tradebinkeeper.NewKeeper(
+		appCodec,
+		keys[tradebintypes.StoreKey],
+		keys[tradebintypes.MemStoreKey],
+		app.GetSubspace(tradebintypes.ModuleName),
+		app.BankKeeper,
+		app.DistrKeeper,
+	)
+
+	app.EpochsKeeper = *epochskeeper.NewKeeper(
+		appCodec,
+		keys[epochstypes.StoreKey],
+		keys[epochstypes.MemStoreKey],
+	)
+
+	app.RewardsKeeper = *rewardskeeper.NewKeeper(
+		appCodec,
+		keys[rewardstypes.StoreKey],
+		keys[rewardstypes.MemStoreKey],
+		app.GetSubspace(rewardstypes.ModuleName),
+		app.BankKeeper,
+		app.DistrKeeper,
+		app.TradebinKeeper,
+		app.EpochsKeeper,
+	)
+
+	app.TradebinKeeper.SetOnOrderFillHooks(
+		[]tradebintypes.OnMarketOrderFill{
+			app.RewardsKeeper.GetOnOrderFillHook(),
+		},
+	)
+
+	app.EpochsKeeper.SetHooks(
+		[]epochstypes.EpochHook{
+			app.RewardsKeeper.GetDistributeAllStakingRewardsHook(),
+			app.RewardsKeeper.GetUnlockPendingUnlockParticipantsHook(),
+			app.RewardsKeeper.GetRemoveExpiredPendingTradingRewardsHook(),
+			app.RewardsKeeper.GetTradingRewardsDistributionHook(),
+		},
+	)
+
 	scavengeModule := scavengemodule.NewAppModule(appCodec, app.ScavengeKeeper)
 	cointrunkModule := cointrunkmodule.NewAppModule(appCodec, app.CointrunkKeeper, app.AccountKeeper, app.BankKeeper, app.DistrKeeper)
 	burnerModule := burnermodule.NewAppModule(appCodec, app.BurnerKeeper, app.AccountKeeper, app.BankKeeper)
+	tokenfactoryModule := tokenfactory.NewAppModule(appCodec, app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper)
+	tradebinModule := tradebin.NewAppModule(appCodec, app.TradebinKeeper, app.BankKeeper)
+	epochsModule := epochs.NewAppModule(appCodec, app.EpochsKeeper)
+	rewardsModule := rewards.NewAppModule(appCodec, app.RewardsKeeper, app.AccountKeeper, app.BankKeeper)
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 
 	// register the proposal types
@@ -427,7 +512,8 @@ func New(
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
 		AddRoute(cointrunkmoduletypes.RouterKey, cointrunkmodule.NewCointrunkProposalHandler(app.CointrunkKeeper)).
-		AddRoute(burnermoduletypes.RouterKey, burnermodule.NewBurnerProposalHandler(app.BurnerKeeper))
+		AddRoute(burnermoduletypes.RouterKey, burnermodule.NewBurnerProposalHandler(app.BurnerKeeper)).
+		AddRoute(rewardstypes.RouterKey, rewards.NewRewardsProposalHandler(app.RewardsKeeper))
 
 	app.GovKeeper = govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
@@ -475,6 +561,10 @@ func New(
 		scavengeModule,
 		cointrunkModule,
 		burnerModule,
+		tokenfactoryModule,
+		tradebinModule,
+		epochsModule,
+		rewardsModule,
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
 
@@ -504,6 +594,10 @@ func New(
 		ibctransfertypes.ModuleName,
 		cointrunkmoduletypes.ModuleName,
 		burnermoduletypes.ModuleName,
+		tokenfactorytypes.ModuleName,
+		tradebintypes.ModuleName,
+		epochstypes.ModuleName,
+		rewardstypes.ModuleName,
 	)
 
 	app.mm.SetOrderEndBlockers(
@@ -528,6 +622,10 @@ func New(
 		ibctransfertypes.ModuleName,
 		cointrunkmoduletypes.ModuleName,
 		burnermoduletypes.ModuleName,
+		tokenfactorytypes.ModuleName,
+		tradebintypes.ModuleName,
+		epochstypes.ModuleName,
+		rewardstypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -557,12 +655,17 @@ func New(
 		paramstypes.ModuleName,
 		cointrunkmoduletypes.ModuleName,
 		burnermoduletypes.ModuleName,
+		tokenfactorytypes.ModuleName,
+		tradebintypes.ModuleName,
+		epochstypes.ModuleName,
+		rewardstypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
-	app.mm.RegisterServices(module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter()))
+	cfg := module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.mm.RegisterServices(cfg)
 
 	// initialize stores
 	app.MountKVStores(keys)
@@ -588,7 +691,7 @@ func New(
 
 	app.SetAnteHandler(anteHandler)
 	app.SetEndBlocker(app.EndBlocker)
-	app.setupUpgradeHandlers()
+	app.setupUpgradeHandlers(cfg)
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
@@ -603,20 +706,10 @@ func New(
 	return app
 }
 
-func (app *App) setupUpgradeHandlers() {
+func (app *App) setupUpgradeHandlers(cfg module.Configurator) {
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v512.UpgradeName,
-		v512.CreateUpgradeHandler(),
-	)
-
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v600.UpgradeName,
-		v600.CreateUpgradeHandler(&app.CointrunkKeeper),
-	)
-
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v610.UpgradeName,
-		v610.CreateUpgradeHandler(),
+		v700.UpgradeName,
+		v700.CreateUpgradeHandler(cfg, app.mm),
 	)
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
@@ -628,9 +721,9 @@ func (app *App) setupUpgradeHandlers() {
 		return
 	}
 
-	if upgradeInfo.Name == v600.UpgradeName {
+	if upgradeInfo.Name == v700.UpgradeName {
 		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{burnermoduletypes.StoreKey, cointrunkmoduletypes.StoreKey, authzkeeper.StoreKey},
+			Added: []string{tokenfactorytypes.StoreKey, tradebintypes.StoreKey, epochstypes.StoreKey, rewardstypes.StoreKey},
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
@@ -751,7 +844,6 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 	// register app's OpenAPI routes.
 	if apiConfig.Swagger {
 		apiSvr.Router.Handle("/static/openapi.yml", http.FileServer(http.FS(docs.Docs)))
-		//removed by SDK upgrade
 		apiSvr.Router.HandleFunc("/", openapi.Handler(Name, "/static/openapi.yml"))
 	}
 }
@@ -783,6 +875,9 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(scavengemoduletypes.ModuleName)
 	paramsKeeper.Subspace(cointrunkmoduletypes.ModuleName)
 	paramsKeeper.Subspace(burnermoduletypes.ModuleName)
+	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
+	paramsKeeper.Subspace(tradebintypes.ModuleName)
+	paramsKeeper.Subspace(rewardstypes.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 
 	return paramsKeeper

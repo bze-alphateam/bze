@@ -10,10 +10,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	ActiveFlag = "active"
-)
-
 func NewCmdSubmitBurnCoinsProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "burn-coins",
