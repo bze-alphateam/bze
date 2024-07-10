@@ -1,0 +1,66 @@
+syntax = "proto3";
+package bze.tokenfactory.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos/bank/v1beta1/bank.proto";
+
+// this line is used by starport scaffolding # proto/tx/import
+
+option go_package = "github.com/bze-alphateam/bze/x/tokenfactory/types";
+
+// Msg defines the Msg service.
+service Msg {
+      rpc CreateDenom(MsgCreateDenom) returns (MsgCreateDenomResponse);
+  rpc Mint(MsgMint) returns (MsgMintResponse);
+  rpc Burn(MsgBurn) returns (MsgBurnResponse);
+  rpc ChangeAdmin(MsgChangeAdmin) returns (MsgChangeAdminResponse);
+  rpc SetDenomMetadata(MsgSetDenomMetadata) returns (MsgSetDenomMetadataResponse);
+// this line is used by starport scaffolding # proto/tx/rpc
+}
+
+message MsgCreateDenom {
+  string creator = 1;
+  string subdenom = 2;
+}
+
+message MsgCreateDenomResponse {
+  string new_denom = 1;
+}
+
+message MsgMint {
+  string creator = 1;
+  string coins = 2;
+}
+
+message MsgMintResponse {
+}
+
+message MsgBurn {
+  string creator = 1;
+  string coins = 2;
+}
+
+message MsgBurnResponse {
+}
+
+message MsgChangeAdmin {
+  string creator = 1;
+  string denom = 2;
+  string newAdmin = 3;
+}
+
+message MsgChangeAdminResponse {
+}
+
+message MsgSetDenomMetadata {
+  string creator = 1;
+  cosmos.bank.v1beta1.Metadata metadata = 2 [
+    (gogoproto.moretags) = "yaml:\"metadata\"",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgSetDenomMetadataResponse {
+}
+
+// this line is used by starport scaffolding # proto/tx/message

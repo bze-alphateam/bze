@@ -1,0 +1,17 @@
+syntax = "proto3";
+package bze.v1.rewards;
+
+option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
+
+message StakingReward {
+  string reward_id = 1;
+  string prize_amount = 2;
+  string prize_denom = 3;
+  string staking_denom = 4;
+  uint32 duration = 5;
+  uint32 payouts = 6;
+  uint64 min_stake = 7;
+  uint32 lock = 8;
+  string staked_amount = 9; // T
+  string distributed_stake = 10; // S
+}
