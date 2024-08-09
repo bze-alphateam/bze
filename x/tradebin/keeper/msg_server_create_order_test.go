@@ -15,6 +15,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_InvalidAmount() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 	_, err := suite.msgServer.CreateOrder(goCtx, &types.MsgCreateOrder{
 		Amount: "hdsihdshdshids",
+		Price:  "1",
 	})
 
 	suite.Require().NotNil(err)
