@@ -487,11 +487,17 @@ func (suite *IntegrationTestSuite) randomOrderCreateMessages(count int, creators
 	var msgs []types.MsgCreateOrder
 	orderTypes := []string{types.OrderTypeBuy, types.OrderTypeSell}
 	goCtx := sdk.WrapSDKContext(suite.ctx)
+	const ExecPrice = 15
 	for i := 0; i < count; i++ {
-		randomPrice := suite.randomNumber(4) + 1 //make sure it's always higher than 0
+		randomOrderType := orderTypes[i%2]
+		randomPrice := suite.randomNumber(24) + 1 //make sure it's always higher than 0
+		if randomOrderType == types.OrderTypeBuy && randomPrice > ExecPrice {
+			randomPrice = ExecPrice
+		} else if randomOrderType == types.OrderTypeSell && randomPrice < ExecPrice {
+			randomPrice = ExecPrice
+		}
 		randomPriceStr := strconv.Itoa(randomPrice)
 		minAmount := keeper.CalculateMinAmount(randomPriceStr)
-		randomOrderType := orderTypes[i%2]
 		orderMsg := types.MsgCreateOrder{
 			Amount:    minAmount.AddRaw(int64(suite.randomNumber(1000))).String(),
 			Price:     randomPriceStr,
