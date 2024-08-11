@@ -28,10 +28,9 @@ paths:
                   next_key:
                     type: string
                     format: byte
-                    description: |-
+                    title: |-
                       next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently. It will be empty if
-                      there are no more results.
+                      query the next page most efficiently
                   total:
                     type: string
                     format: uint64
@@ -188,10 +187,9 @@ paths:
                   next_key:
                     type: string
                     format: byte
-                    description: |-
+                    title: |-
                       next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently. It will be empty if
-                      there are no more results.
+                      query the next page most efficiently
                   total:
                     type: string
                     format: uint64
@@ -313,10 +311,9 @@ paths:
                   next_key:
                     type: string
                     format: byte
-                    description: |-
+                    title: |-
                       next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently. It will be empty if
-                      there are no more results.
+                      query the next page most efficiently
                   total:
                     type: string
                     format: uint64
@@ -449,10 +446,9 @@ paths:
                   next_key:
                     type: string
                     format: byte
-                    description: |-
+                    title: |-
                       next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently. It will be empty if
-                      there are no more results.
+                      query the next page most efficiently
                   total:
                     type: string
                     format: uint64
@@ -700,10 +696,9 @@ paths:
                   next_key:
                     type: string
                     format: byte
-                    description: |-
+                    title: |-
                       next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently. It will be empty if
-                      there are no more results.
+                      query the next page most efficiently
                   total:
                     type: string
                     format: uint64
@@ -1002,10 +997,9 @@ paths:
                   next_key:
                     type: string
                     format: byte
-                    description: |-
+                    title: |-
                       next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently. It will be empty if
-                      there are no more results.
+                      query the next page most efficiently
                   total:
                     type: string
                     format: uint64
@@ -1178,10 +1172,9 @@ paths:
                   next_key:
                     type: string
                     format: byte
-                    description: |-
+                    title: |-
                       next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently. It will be empty if
-                      there are no more results.
+                      query the next page most efficiently
                   total:
                     type: string
                     format: uint64
@@ -33290,6 +33283,8 @@ definitions:
         type: string
   bze.burner.v1.MsgFundBurnerResponse:
     type: object
+  bze.burner.v1.MsgStartRaffleResponse:
+    type: object
   bze.burner.v1.Params:
     type: object
     description: Params defines the parameters for the module.
@@ -33311,10 +33306,9 @@ definitions:
           next_key:
             type: string
             format: byte
-            description: |-
+            title: |-
               next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently. It will be empty if
-              there are no more results.
+              query the next page most efficiently
           total:
             type: string
             format: uint64
@@ -33397,10 +33391,6 @@ definitions:
       next_key:
         type: string
         format: byte
-        description: |-
-          next_key is the key to be passed to PageRequest.key to
-          query the next page most efficiently. It will be empty if
-          there are no more results.
         title: |-
           next_key is the key to be passed to PageRequest.key to
           query the next page most efficiently
@@ -33859,10 +33849,9 @@ definitions:
           next_key:
             type: string
             format: byte
-            description: |-
+            title: |-
               next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently. It will be empty if
-              there are no more results.
+              query the next page most efficiently
           total:
             type: string
             format: uint64
@@ -33898,10 +33887,9 @@ definitions:
           next_key:
             type: string
             format: byte
-            description: |-
+            title: |-
               next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently. It will be empty if
-              there are no more results.
+              query the next page most efficiently
           total:
             type: string
             format: uint64
@@ -33948,10 +33936,9 @@ definitions:
           next_key:
             type: string
             format: byte
-            description: |-
+            title: |-
               next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently. It will be empty if
-              there are no more results.
+              query the next page most efficiently
           total:
             type: string
             format: uint64
@@ -34052,10 +34039,9 @@ definitions:
           next_key:
             type: string
             format: byte
-            description: |-
+            title: |-
               next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently. It will be empty if
-              there are no more results.
+              query the next page most efficiently
           total:
             type: string
             format: uint64
@@ -34317,10 +34303,9 @@ definitions:
           next_key:
             type: string
             format: byte
-            description: |-
+            title: |-
               next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently. It will be empty if
-              there are no more results.
+              query the next page most efficiently
           total:
             type: string
             format: uint64
@@ -34363,10 +34348,9 @@ definitions:
           next_key:
             type: string
             format: byte
-            description: |-
+            title: |-
               next_key is the key to be passed to PageRequest.key to
-              query the next page most efficiently. It will be empty if
-              there are no more results.
+              query the next page most efficiently
           total:
             type: string
             format: uint64

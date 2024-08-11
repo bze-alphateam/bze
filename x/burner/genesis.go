@@ -15,6 +15,14 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, burnedCoins := range genState.BurnedCoinsList {
 		k.SetBurnedCoins(ctx, burnedCoins)
 	}
+
+	for _, raffle := range genState.RaffleList {
+		k.SetRaffle(ctx, raffle)
+		k.SetRaffleDeleteHook(ctx, types.RaffleDeleteHook{
+			Denom: raffle.Denom,
+			EndAt: raffle.EndAt,
+		})
+	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.
@@ -22,6 +30,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 	genesis.Params = k.GetParams(ctx)
 	genesis.BurnedCoinsList = k.GetAllBurnedCoins(ctx)
+	genesis.RaffleList = k.GetAllRaffle(ctx)
 
 	// this line is used by starport scaffolding # genesis/module/export
 

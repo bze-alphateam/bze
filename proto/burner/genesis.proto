@@ -4,6 +4,7 @@ package bze.burner.v1;
 import "gogoproto/gogo.proto";
 import "burner/params.proto";
 import "burner/burned_coins.proto";
+import "burner/raffle.proto";
 // this line is used by starport scaffolding # genesis/proto/import
 
 option go_package = "github.com/bze-alphateam/bze/x/burner/types";
@@ -14,6 +15,10 @@ message GenesisState {
   repeated BurnedCoins burned_coins_list = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)      = "burned_coins_list,omitempty"
+  ];
+  repeated Raffle raffle_list = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "raffle_list,omitempty"
   ];
   // this line is used by starport scaffolding # genesis/proto/state
 }

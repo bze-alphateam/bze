@@ -9,6 +9,11 @@
  * ---------------------------------------------------------------
  */
 
+/**
+ * Params defines the parameters for the module.
+ */
+export type Burnerv1Params = object;
+
 export interface ProtobufAny {
   "@type"?: string;
 }
@@ -27,10 +32,7 @@ export interface V1BurnedCoins {
 
 export type V1MsgFundBurnerResponse = object;
 
-/**
- * Params defines the parameters for the module.
- */
-export type V1Params = object;
+export type V1MsgStartRaffleResponse = object;
 
 export interface V1QueryAllBurnedCoinsResponse {
   burnedCoins?: V1BurnedCoins[];
@@ -52,7 +54,7 @@ export interface V1QueryAllBurnedCoinsResponse {
  */
 export interface V1QueryParamsResponse {
   /** params holds all the parameters of this module. */
-  params?: V1Params;
+  params?: Burnerv1Params;
 }
 
 /**

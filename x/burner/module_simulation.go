@@ -28,6 +28,10 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgFundBurner int = 100
 
+	opWeightMsgStartRaffle = "op_weight_msg_start_raffle"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgStartRaffle int = 100
+
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -70,6 +74,17 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgFundBurner,
 		burnersimulation.SimulateMsgFundBurner(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
+	var weightMsgStartRaffle int
+	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgStartRaffle, &weightMsgStartRaffle, nil,
+		func(_ *rand.Rand) {
+			weightMsgStartRaffle = defaultWeightMsgStartRaffle
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgStartRaffle,
+		burnersimulation.SimulateMsgStartRaffle(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
 	// this line is used by starport scaffolding # simapp/module/operation

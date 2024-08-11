@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { Params } from "../burner/params";
 import { BurnedCoins } from "../burner/burned_coins";
+import { Raffle } from "../burner/raffle";
 import { Writer, Reader } from "protobufjs/minimal";
 
 export const protobufPackage = "bze.burner.v1";
@@ -8,8 +9,9 @@ export const protobufPackage = "bze.burner.v1";
 /** GenesisState defines the burner module's genesis state. */
 export interface GenesisState {
   params: Params | undefined;
-  /** this line is used by starport scaffolding # genesis/proto/state */
   burned_coins_list: BurnedCoins[];
+  /** this line is used by starport scaffolding # genesis/proto/state */
+  raffle_list: Raffle[];
 }
 
 const baseGenesisState: object = {};
@@ -22,6 +24,9 @@ export const GenesisState = {
     for (const v of message.burned_coins_list) {
       BurnedCoins.encode(v!, writer.uint32(18).fork()).ldelim();
     }
+    for (const v of message.raffle_list) {
+      Raffle.encode(v!, writer.uint32(26).fork()).ldelim();
+    }
     return writer;
   },
 
@@ -30,6 +35,7 @@ export const GenesisState = {
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = { ...baseGenesisState } as GenesisState;
     message.burned_coins_list = [];
+    message.raffle_list = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -40,6 +46,9 @@ export const GenesisState = {
           message.burned_coins_list.push(
             BurnedCoins.decode(reader, reader.uint32())
           );
+          break;
+        case 3:
+          message.raffle_list.push(Raffle.decode(reader, reader.uint32()));
           break;
         default:
           reader.skipType(tag & 7);
@@ -52,6 +61,7 @@ export const GenesisState = {
   fromJSON(object: any): GenesisState {
     const message = { ...baseGenesisState } as GenesisState;
     message.burned_coins_list = [];
+    message.raffle_list = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromJSON(object.params);
     } else {
@@ -63,6 +73,11 @@ export const GenesisState = {
     ) {
       for (const e of object.burned_coins_list) {
         message.burned_coins_list.push(BurnedCoins.fromJSON(e));
+      }
+    }
+    if (object.raffle_list !== undefined && object.raffle_list !== null) {
+      for (const e of object.raffle_list) {
+        message.raffle_list.push(Raffle.fromJSON(e));
       }
     }
     return message;
@@ -79,12 +94,20 @@ export const GenesisState = {
     } else {
       obj.burned_coins_list = [];
     }
+    if (message.raffle_list) {
+      obj.raffle_list = message.raffle_list.map((e) =>
+        e ? Raffle.toJSON(e) : undefined
+      );
+    } else {
+      obj.raffle_list = [];
+    }
     return obj;
   },
 
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = { ...baseGenesisState } as GenesisState;
     message.burned_coins_list = [];
+    message.raffle_list = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromPartial(object.params);
     } else {
@@ -96,6 +119,11 @@ export const GenesisState = {
     ) {
       for (const e of object.burned_coins_list) {
         message.burned_coins_list.push(BurnedCoins.fromPartial(e));
+      }
+    }
+    if (object.raffle_list !== undefined && object.raffle_list !== null) {
+      for (const e of object.raffle_list) {
+        message.raffle_list.push(Raffle.fromPartial(e));
       }
     }
     return message;

@@ -8,6 +8,7 @@ option go_package = "github.com/bze-alphateam/bze/x/burner/types";
 // Msg defines the Msg service.
 service Msg {
       rpc FundBurner(MsgFundBurner) returns (MsgFundBurnerResponse);
+  rpc StartRaffle(MsgStartRaffle) returns (MsgStartRaffleResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -17,6 +18,19 @@ message MsgFundBurner {
 }
 
 message MsgFundBurnerResponse {
+}
+
+message MsgStartRaffle {
+  string creator = 1;
+  string pot = 2;
+  string duration = 3;
+  string chances = 4;
+  string ratio = 5;
+  string ticketPrice = 6;
+  string denom = 7;
+}
+
+message MsgStartRaffleResponse {
 }
 
 // this line is used by starport scaffolding # proto/tx/message
