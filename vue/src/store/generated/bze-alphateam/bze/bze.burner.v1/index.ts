@@ -5,9 +5,11 @@ import { BurnedCoins } from "./module/types/burner/burned_coins"
 import { CoinsBurnedEvent } from "./module/types/burner/events"
 import { FundBurnerEvent } from "./module/types/burner/events"
 import { Params } from "./module/types/burner/params"
+import { Raffle } from "./module/types/burner/raffle"
+import { RaffleDeleteHook } from "./module/types/burner/raffle"
 
 
-export { BurnCoinsProposal, BurnedCoins, CoinsBurnedEvent, FundBurnerEvent, Params };
+export { BurnCoinsProposal, BurnedCoins, CoinsBurnedEvent, FundBurnerEvent, Params, Raffle, RaffleDeleteHook };
 
 async function initTxClient(vuexGetters) {
 	return await txClient(vuexGetters['common/wallet/signer'], {
@@ -54,6 +56,8 @@ const getDefaultState = () => {
 						CoinsBurnedEvent: getStructure(CoinsBurnedEvent.fromPartial({})),
 						FundBurnerEvent: getStructure(FundBurnerEvent.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
+						Raffle: getStructure(Raffle.fromPartial({})),
+						RaffleDeleteHook: getStructure(RaffleDeleteHook.fromPartial({})),
 						
 		},
 		_Registry: registry,
@@ -176,6 +180,21 @@ export default {
 		},
 		
 		
+		async sendMsgStartRaffle({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgStartRaffle(value)
+				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
+	gas: "200000" }, memo})
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgStartRaffle:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgStartRaffle:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
 		async sendMsgFundBurner({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
@@ -192,6 +211,19 @@ export default {
 			}
 		},
 		
+		async MsgStartRaffle({ rootGetters }, { value }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgStartRaffle(value)
+				return msg
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgStartRaffle:Init Could not initialize signing client. Wallet is required.')
+				} else{
+					throw new Error('TxClient:MsgStartRaffle:Create Could not create message: ' + e.message)
+				}
+			}
+		},
 		async MsgFundBurner({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)

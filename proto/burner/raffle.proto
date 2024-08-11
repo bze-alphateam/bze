@@ -1,0 +1,20 @@
+syntax = "proto3";
+package bze.burner.v1;
+
+option go_package = "github.com/bze-alphateam/bze/x/burner/types";
+
+message Raffle {
+  string pot = 1;
+  uint64 duration = 2;
+  uint64 chances = 3;
+  string ratio = 4;
+  uint64 endAt = 5;
+  uint64 winners = 6;
+  string ticketPrice = 7;
+  string denom = 8;
+}
+
+message RaffleDeleteHook {
+  string denom = 1;
+  uint64 endAt = 2;
+}

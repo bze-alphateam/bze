@@ -442,6 +442,7 @@ func New(
 		app.GetSubspace(burnermoduletypes.ModuleName),
 		app.BankKeeper,
 		app.AccountKeeper,
+		app.EpochsKeeper,
 	)
 
 	app.TokenFactoryKeeper = *tokenfactorykeeper.NewKeeper(
