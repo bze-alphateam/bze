@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { Params } from "../burner/params";
 import { BurnedCoins } from "../burner/burned_coins";
-import { Raffle } from "../burner/raffle";
+import { Raffle, RaffleWinner } from "../burner/raffle";
 import { Writer, Reader } from "protobufjs/minimal";
 
 export const protobufPackage = "bze.burner.v1";
@@ -10,8 +10,9 @@ export const protobufPackage = "bze.burner.v1";
 export interface GenesisState {
   params: Params | undefined;
   burned_coins_list: BurnedCoins[];
-  /** this line is used by starport scaffolding # genesis/proto/state */
   raffle_list: Raffle[];
+  /** this line is used by starport scaffolding # genesis/proto/state */
+  raffle_winners_list: RaffleWinner[];
 }
 
 const baseGenesisState: object = {};
@@ -27,6 +28,9 @@ export const GenesisState = {
     for (const v of message.raffle_list) {
       Raffle.encode(v!, writer.uint32(26).fork()).ldelim();
     }
+    for (const v of message.raffle_winners_list) {
+      RaffleWinner.encode(v!, writer.uint32(34).fork()).ldelim();
+    }
     return writer;
   },
 
@@ -36,6 +40,7 @@ export const GenesisState = {
     const message = { ...baseGenesisState } as GenesisState;
     message.burned_coins_list = [];
     message.raffle_list = [];
+    message.raffle_winners_list = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -50,6 +55,11 @@ export const GenesisState = {
         case 3:
           message.raffle_list.push(Raffle.decode(reader, reader.uint32()));
           break;
+        case 4:
+          message.raffle_winners_list.push(
+            RaffleWinner.decode(reader, reader.uint32())
+          );
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -62,6 +72,7 @@ export const GenesisState = {
     const message = { ...baseGenesisState } as GenesisState;
     message.burned_coins_list = [];
     message.raffle_list = [];
+    message.raffle_winners_list = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromJSON(object.params);
     } else {
@@ -78,6 +89,14 @@ export const GenesisState = {
     if (object.raffle_list !== undefined && object.raffle_list !== null) {
       for (const e of object.raffle_list) {
         message.raffle_list.push(Raffle.fromJSON(e));
+      }
+    }
+    if (
+      object.raffle_winners_list !== undefined &&
+      object.raffle_winners_list !== null
+    ) {
+      for (const e of object.raffle_winners_list) {
+        message.raffle_winners_list.push(RaffleWinner.fromJSON(e));
       }
     }
     return message;
@@ -101,6 +120,13 @@ export const GenesisState = {
     } else {
       obj.raffle_list = [];
     }
+    if (message.raffle_winners_list) {
+      obj.raffle_winners_list = message.raffle_winners_list.map((e) =>
+        e ? RaffleWinner.toJSON(e) : undefined
+      );
+    } else {
+      obj.raffle_winners_list = [];
+    }
     return obj;
   },
 
@@ -108,6 +134,7 @@ export const GenesisState = {
     const message = { ...baseGenesisState } as GenesisState;
     message.burned_coins_list = [];
     message.raffle_list = [];
+    message.raffle_winners_list = [];
     if (object.params !== undefined && object.params !== null) {
       message.params = Params.fromPartial(object.params);
     } else {
@@ -124,6 +151,14 @@ export const GenesisState = {
     if (object.raffle_list !== undefined && object.raffle_list !== null) {
       for (const e of object.raffle_list) {
         message.raffle_list.push(Raffle.fromPartial(e));
+      }
+    }
+    if (
+      object.raffle_winners_list !== undefined &&
+      object.raffle_winners_list !== null
+    ) {
+      for (const e of object.raffle_winners_list) {
+        message.raffle_winners_list.push(RaffleWinner.fromPartial(e));
       }
     }
     return message;

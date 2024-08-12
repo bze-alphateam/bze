@@ -33283,6 +33283,15 @@ definitions:
         type: string
   bze.burner.v1.MsgFundBurnerResponse:
     type: object
+  bze.burner.v1.MsgJoinRaffleResponse:
+    type: object
+    properties:
+      winner:
+        type: boolean
+      amount:
+        type: string
+      denom:
+        type: string
   bze.burner.v1.MsgStartRaffleResponse:
     type: object
   bze.burner.v1.Params:

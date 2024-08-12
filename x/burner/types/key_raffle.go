@@ -5,7 +5,12 @@ import "fmt"
 const (
 	RaffleKeyPrefix        = "rf/v/"
 	RaffleDeleteHookPrefix = "rf/dh/"
+	RaffleWinnerKeyPrefix  = "rf/w/"
 )
+
+func GetRaffleWinnerKeyPrefix(denom string) []byte {
+	return []byte(fmt.Sprintf("%s%s/", RaffleWinnerKeyPrefix, denom))
+}
 
 func GetRaffleDeleteHookPrefix(endAt uint64) []byte {
 	return []byte(fmt.Sprintf("%s%d/", RaffleDeleteHookPrefix, endAt))

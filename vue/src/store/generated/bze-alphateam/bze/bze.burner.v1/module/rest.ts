@@ -32,6 +32,12 @@ export interface V1BurnedCoins {
 
 export type V1MsgFundBurnerResponse = object;
 
+export interface V1MsgJoinRaffleResponse {
+  winner?: boolean;
+  amount?: string;
+  denom?: string;
+}
+
 export type V1MsgStartRaffleResponse = object;
 
 export interface V1QueryAllBurnedCoinsResponse {

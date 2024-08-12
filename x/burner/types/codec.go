@@ -13,6 +13,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&BurnCoinsProposal{}, "burner/BurnCoinsProposal", nil)
 	cdc.RegisterConcrete(&MsgFundBurner{}, "burner/FundBurner", nil)
 	cdc.RegisterConcrete(&MsgStartRaffle{}, "burner/StartRaffle", nil)
+	cdc.RegisterConcrete(&MsgJoinRaffle{}, "burner/JoinRaffle", nil)
 	// this line is used by starport scaffolding # 2
 }
 
@@ -22,6 +23,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgStartRaffle{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgJoinRaffle{},
 	)
 	// this line is used by starport scaffolding # 3
 	registry.RegisterImplementations(

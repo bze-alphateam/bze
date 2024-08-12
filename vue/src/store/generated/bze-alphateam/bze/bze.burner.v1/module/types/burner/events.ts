@@ -12,6 +12,12 @@ export interface FundBurnerEvent {
   amount: string;
 }
 
+export interface RaffleWinnerEvent {
+  denom: string;
+  winner: string;
+  amount: string;
+}
+
 const baseCoinsBurnedEvent: object = { burned: "" };
 
 export const CoinsBurnedEvent = {
@@ -129,6 +135,95 @@ export const FundBurnerEvent = {
       message.from = object.from;
     } else {
       message.from = "";
+    }
+    if (object.amount !== undefined && object.amount !== null) {
+      message.amount = object.amount;
+    } else {
+      message.amount = "";
+    }
+    return message;
+  },
+};
+
+const baseRaffleWinnerEvent: object = { denom: "", winner: "", amount: "" };
+
+export const RaffleWinnerEvent = {
+  encode(message: RaffleWinnerEvent, writer: Writer = Writer.create()): Writer {
+    if (message.denom !== "") {
+      writer.uint32(10).string(message.denom);
+    }
+    if (message.winner !== "") {
+      writer.uint32(18).string(message.winner);
+    }
+    if (message.amount !== "") {
+      writer.uint32(26).string(message.amount);
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): RaffleWinnerEvent {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseRaffleWinnerEvent } as RaffleWinnerEvent;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.denom = reader.string();
+          break;
+        case 2:
+          message.winner = reader.string();
+          break;
+        case 3:
+          message.amount = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RaffleWinnerEvent {
+    const message = { ...baseRaffleWinnerEvent } as RaffleWinnerEvent;
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = String(object.denom);
+    } else {
+      message.denom = "";
+    }
+    if (object.winner !== undefined && object.winner !== null) {
+      message.winner = String(object.winner);
+    } else {
+      message.winner = "";
+    }
+    if (object.amount !== undefined && object.amount !== null) {
+      message.amount = String(object.amount);
+    } else {
+      message.amount = "";
+    }
+    return message;
+  },
+
+  toJSON(message: RaffleWinnerEvent): unknown {
+    const obj: any = {};
+    message.denom !== undefined && (obj.denom = message.denom);
+    message.winner !== undefined && (obj.winner = message.winner);
+    message.amount !== undefined && (obj.amount = message.amount);
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<RaffleWinnerEvent>): RaffleWinnerEvent {
+    const message = { ...baseRaffleWinnerEvent } as RaffleWinnerEvent;
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = object.denom;
+    } else {
+      message.denom = "";
+    }
+    if (object.winner !== undefined && object.winner !== null) {
+      message.winner = object.winner;
+    } else {
+      message.winner = "";
     }
     if (object.amount !== undefined && object.amount !== null) {
       message.amount = object.amount;

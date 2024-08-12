@@ -20,5 +20,9 @@ message GenesisState {
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "raffle_list,omitempty"
   ];
+  repeated RaffleWinner raffle_winners_list = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "raffle_list,omitempty"
+  ];
   // this line is used by starport scaffolding # genesis/proto/state
 }

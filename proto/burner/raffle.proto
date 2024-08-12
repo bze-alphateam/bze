@@ -18,3 +18,10 @@ message RaffleDeleteHook {
   string denom = 1;
   uint64 endAt = 2;
 }
+
+message RaffleWinner {
+  string index = 1;
+  string denom = 2;
+  string amount = 3;
+  string winner = 4;
+}
