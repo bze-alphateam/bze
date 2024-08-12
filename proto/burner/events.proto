@@ -17,3 +17,7 @@ message RaffleWinnerEvent {
   string winner = 2;
   string amount = 3;
 }
+
+message RaffleFinishedEvent {
+  string denom = 1;
+}

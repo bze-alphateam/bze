@@ -203,7 +203,7 @@ var (
 		tradebintypes.ModuleName:           nil,
 		epochstypes.ModuleName:             nil,
 		rewardstypes.ModuleName:            {authtypes.Burner},
-		burnermoduletypes.RaffleModuleName: nil,
+		burnermoduletypes.RaffleModuleName: {authtypes.Burner},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 
@@ -494,6 +494,7 @@ func New(
 			app.RewardsKeeper.GetUnlockPendingUnlockParticipantsHook(),
 			app.RewardsKeeper.GetRemoveExpiredPendingTradingRewardsHook(),
 			app.RewardsKeeper.GetTradingRewardsDistributionHook(),
+			app.BurnerKeeper.GetBurnerRaffleCleanupHook(),
 		},
 	)
 

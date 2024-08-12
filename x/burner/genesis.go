@@ -25,7 +25,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	for _, winner := range genState.RaffleWinnersList {
-		k.SaveRaffleWinner(ctx, winner)
+		k.SetRaffleWinner(ctx, winner)
 	}
 }
 
@@ -35,8 +35,14 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.Params = k.GetParams(ctx)
 	genesis.BurnedCoinsList = k.GetAllBurnedCoins(ctx)
 	genesis.RaffleList = k.GetAllRaffle(ctx)
-	genesis.RaffleWinnersList = k.GetAllRaffleWinners(ctx)
 
+	var winnersList []types.RaffleWinner
+	for _, raffle := range genesis.RaffleList {
+		w := k.GetRaffleWinners(ctx, raffle.Denom)
+		winnersList = append(winnersList, w...)
+	}
+
+	genesis.RaffleWinnersList = winnersList
 	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis
