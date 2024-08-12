@@ -9,6 +9,7 @@ option go_package = "github.com/bze-alphateam/bze/x/burner/types";
 service Msg {
       rpc FundBurner(MsgFundBurner) returns (MsgFundBurnerResponse);
   rpc StartRaffle(MsgStartRaffle) returns (MsgStartRaffleResponse);
+  rpc JoinRaffle(MsgJoinRaffle) returns (MsgJoinRaffleResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -31,6 +32,17 @@ message MsgStartRaffle {
 }
 
 message MsgStartRaffleResponse {
+}
+
+message MsgJoinRaffle {
+  string creator = 1;
+  string denom = 2;
+}
+
+message MsgJoinRaffleResponse {
+  bool winner = 1;
+  string amount = 2;
+  string denom = 3;
 }
 
 // this line is used by starport scaffolding # proto/tx/message

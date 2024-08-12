@@ -22,6 +22,17 @@ export interface MsgStartRaffle {
 
 export interface MsgStartRaffleResponse {}
 
+export interface MsgJoinRaffle {
+  creator: string;
+  denom: string;
+}
+
+export interface MsgJoinRaffleResponse {
+  winner: boolean;
+  amount: string;
+  denom: string;
+}
+
 const baseMsgFundBurner: object = { creator: "", amount: "" };
 
 export const MsgFundBurner = {
@@ -336,11 +347,182 @@ export const MsgStartRaffleResponse = {
   },
 };
 
+const baseMsgJoinRaffle: object = { creator: "", denom: "" };
+
+export const MsgJoinRaffle = {
+  encode(message: MsgJoinRaffle, writer: Writer = Writer.create()): Writer {
+    if (message.creator !== "") {
+      writer.uint32(10).string(message.creator);
+    }
+    if (message.denom !== "") {
+      writer.uint32(18).string(message.denom);
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): MsgJoinRaffle {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseMsgJoinRaffle } as MsgJoinRaffle;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.creator = reader.string();
+          break;
+        case 2:
+          message.denom = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): MsgJoinRaffle {
+    const message = { ...baseMsgJoinRaffle } as MsgJoinRaffle;
+    if (object.creator !== undefined && object.creator !== null) {
+      message.creator = String(object.creator);
+    } else {
+      message.creator = "";
+    }
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = String(object.denom);
+    } else {
+      message.denom = "";
+    }
+    return message;
+  },
+
+  toJSON(message: MsgJoinRaffle): unknown {
+    const obj: any = {};
+    message.creator !== undefined && (obj.creator = message.creator);
+    message.denom !== undefined && (obj.denom = message.denom);
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<MsgJoinRaffle>): MsgJoinRaffle {
+    const message = { ...baseMsgJoinRaffle } as MsgJoinRaffle;
+    if (object.creator !== undefined && object.creator !== null) {
+      message.creator = object.creator;
+    } else {
+      message.creator = "";
+    }
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = object.denom;
+    } else {
+      message.denom = "";
+    }
+    return message;
+  },
+};
+
+const baseMsgJoinRaffleResponse: object = {
+  winner: false,
+  amount: "",
+  denom: "",
+};
+
+export const MsgJoinRaffleResponse = {
+  encode(
+    message: MsgJoinRaffleResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.winner === true) {
+      writer.uint32(8).bool(message.winner);
+    }
+    if (message.amount !== "") {
+      writer.uint32(18).string(message.amount);
+    }
+    if (message.denom !== "") {
+      writer.uint32(26).string(message.denom);
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): MsgJoinRaffleResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseMsgJoinRaffleResponse } as MsgJoinRaffleResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.winner = reader.bool();
+          break;
+        case 2:
+          message.amount = reader.string();
+          break;
+        case 3:
+          message.denom = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): MsgJoinRaffleResponse {
+    const message = { ...baseMsgJoinRaffleResponse } as MsgJoinRaffleResponse;
+    if (object.winner !== undefined && object.winner !== null) {
+      message.winner = Boolean(object.winner);
+    } else {
+      message.winner = false;
+    }
+    if (object.amount !== undefined && object.amount !== null) {
+      message.amount = String(object.amount);
+    } else {
+      message.amount = "";
+    }
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = String(object.denom);
+    } else {
+      message.denom = "";
+    }
+    return message;
+  },
+
+  toJSON(message: MsgJoinRaffleResponse): unknown {
+    const obj: any = {};
+    message.winner !== undefined && (obj.winner = message.winner);
+    message.amount !== undefined && (obj.amount = message.amount);
+    message.denom !== undefined && (obj.denom = message.denom);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<MsgJoinRaffleResponse>
+  ): MsgJoinRaffleResponse {
+    const message = { ...baseMsgJoinRaffleResponse } as MsgJoinRaffleResponse;
+    if (object.winner !== undefined && object.winner !== null) {
+      message.winner = object.winner;
+    } else {
+      message.winner = false;
+    }
+    if (object.amount !== undefined && object.amount !== null) {
+      message.amount = object.amount;
+    } else {
+      message.amount = "";
+    }
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = object.denom;
+    } else {
+      message.denom = "";
+    }
+    return message;
+  },
+};
+
 /** Msg defines the Msg service. */
 export interface Msg {
   FundBurner(request: MsgFundBurner): Promise<MsgFundBurnerResponse>;
-  /** this line is used by starport scaffolding # proto/tx/rpc */
   StartRaffle(request: MsgStartRaffle): Promise<MsgStartRaffleResponse>;
+  /** this line is used by starport scaffolding # proto/tx/rpc */
+  JoinRaffle(request: MsgJoinRaffle): Promise<MsgJoinRaffleResponse>;
 }
 
 export class MsgClientImpl implements Msg {
@@ -361,6 +543,14 @@ export class MsgClientImpl implements Msg {
     const promise = this.rpc.request("bze.burner.v1.Msg", "StartRaffle", data);
     return promise.then((data) =>
       MsgStartRaffleResponse.decode(new Reader(data))
+    );
+  }
+
+  JoinRaffle(request: MsgJoinRaffle): Promise<MsgJoinRaffleResponse> {
+    const data = MsgJoinRaffle.encode(request).finish();
+    const promise = this.rpc.request("bze.burner.v1.Msg", "JoinRaffle", data);
+    return promise.then((data) =>
+      MsgJoinRaffleResponse.decode(new Reader(data))
     );
   }
 }

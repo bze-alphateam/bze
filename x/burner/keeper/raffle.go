@@ -6,10 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const (
-	raffleAccountName = "burner_raffle"
-)
-
 func (k Keeper) GetAllRaffle(ctx sdk.Context) (list []types.Raffle) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.RaffleKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
@@ -52,4 +48,27 @@ func (k Keeper) SetRaffleDeleteHook(ctx sdk.Context, raffle types.RaffleDeleteHo
 		types.RaffleStoreKey(raffle.Denom),
 		val,
 	)
+}
+
+func (k Keeper) SaveRaffleWinner(ctx sdk.Context, raffle types.RaffleWinner) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetRaffleWinnerKeyPrefix(raffle.Denom))
+	val := k.cdc.MustMarshal(&raffle)
+	store.Set(
+		types.RaffleStoreKey(raffle.Index),
+		val,
+	)
+}
+
+func (k Keeper) GetAllRaffleWinners(ctx sdk.Context) (list []types.RaffleWinner) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.RaffleWinnerKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.RaffleWinner
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
 }

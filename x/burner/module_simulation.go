@@ -32,6 +32,10 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgStartRaffle int = 100
 
+	opWeightMsgJoinRaffle = "op_weight_msg_join_raffle"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgJoinRaffle int = 100
+
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -85,6 +89,17 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgStartRaffle,
 		burnersimulation.SimulateMsgStartRaffle(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
+	var weightMsgJoinRaffle int
+	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgJoinRaffle, &weightMsgJoinRaffle, nil,
+		func(_ *rand.Rand) {
+			weightMsgJoinRaffle = defaultWeightMsgJoinRaffle
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgJoinRaffle,
+		burnersimulation.SimulateMsgJoinRaffle(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
 	// this line is used by starport scaffolding # simapp/module/operation

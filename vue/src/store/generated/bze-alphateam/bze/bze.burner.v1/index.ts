@@ -4,12 +4,14 @@ import { BurnCoinsProposal } from "./module/types/burner/burn_coins_proposal"
 import { BurnedCoins } from "./module/types/burner/burned_coins"
 import { CoinsBurnedEvent } from "./module/types/burner/events"
 import { FundBurnerEvent } from "./module/types/burner/events"
+import { RaffleWinnerEvent } from "./module/types/burner/events"
 import { Params } from "./module/types/burner/params"
 import { Raffle } from "./module/types/burner/raffle"
 import { RaffleDeleteHook } from "./module/types/burner/raffle"
+import { RaffleWinner } from "./module/types/burner/raffle"
 
 
-export { BurnCoinsProposal, BurnedCoins, CoinsBurnedEvent, FundBurnerEvent, Params, Raffle, RaffleDeleteHook };
+export { BurnCoinsProposal, BurnedCoins, CoinsBurnedEvent, FundBurnerEvent, RaffleWinnerEvent, Params, Raffle, RaffleDeleteHook, RaffleWinner };
 
 async function initTxClient(vuexGetters) {
 	return await txClient(vuexGetters['common/wallet/signer'], {
@@ -55,9 +57,11 @@ const getDefaultState = () => {
 						BurnedCoins: getStructure(BurnedCoins.fromPartial({})),
 						CoinsBurnedEvent: getStructure(CoinsBurnedEvent.fromPartial({})),
 						FundBurnerEvent: getStructure(FundBurnerEvent.fromPartial({})),
+						RaffleWinnerEvent: getStructure(RaffleWinnerEvent.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
 						Raffle: getStructure(Raffle.fromPartial({})),
 						RaffleDeleteHook: getStructure(RaffleDeleteHook.fromPartial({})),
+						RaffleWinner: getStructure(RaffleWinner.fromPartial({})),
 						
 		},
 		_Registry: registry,
@@ -210,6 +214,21 @@ export default {
 				}
 			}
 		},
+		async sendMsgJoinRaffle({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgJoinRaffle(value)
+				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
+	gas: "200000" }, memo})
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgJoinRaffle:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgJoinRaffle:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
 		
 		async MsgStartRaffle({ rootGetters }, { value }) {
 			try {
@@ -234,6 +253,19 @@ export default {
 					throw new Error('TxClient:MsgFundBurner:Init Could not initialize signing client. Wallet is required.')
 				} else{
 					throw new Error('TxClient:MsgFundBurner:Create Could not create message: ' + e.message)
+				}
+			}
+		},
+		async MsgJoinRaffle({ rootGetters }, { value }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgJoinRaffle(value)
+				return msg
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgJoinRaffle:Init Could not initialize signing client. Wallet is required.')
+				} else{
+					throw new Error('TxClient:MsgJoinRaffle:Create Could not create message: ' + e.message)
 				}
 			}
 		},

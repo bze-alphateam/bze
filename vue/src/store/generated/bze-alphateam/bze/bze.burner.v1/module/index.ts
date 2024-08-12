@@ -6,11 +6,13 @@ import { Registry, OfflineSigner, EncodeObject, DirectSecp256k1HdWallet } from "
 import { Api } from "./rest";
 import { MsgStartRaffle } from "./types/burner/tx";
 import { MsgFundBurner } from "./types/burner/tx";
+import { MsgJoinRaffle } from "./types/burner/tx";
 
 
 const types = [
   ["/bze.burner.v1.MsgStartRaffle", MsgStartRaffle],
   ["/bze.burner.v1.MsgFundBurner", MsgFundBurner],
+  ["/bze.burner.v1.MsgJoinRaffle", MsgJoinRaffle],
   
 ];
 export const MissingWalletError = new Error("wallet is required");
@@ -45,6 +47,7 @@ const txClient = async (wallet: OfflineSigner, { addr: addr }: TxClientOptions =
     signAndBroadcast: (msgs: EncodeObject[], { fee, memo }: SignAndBroadcastOptions = {fee: defaultFee, memo: ""}) => client.signAndBroadcast(address, msgs, fee,memo),
     msgStartRaffle: (data: MsgStartRaffle): EncodeObject => ({ typeUrl: "/bze.burner.v1.MsgStartRaffle", value: MsgStartRaffle.fromPartial( data ) }),
     msgFundBurner: (data: MsgFundBurner): EncodeObject => ({ typeUrl: "/bze.burner.v1.MsgFundBurner", value: MsgFundBurner.fromPartial( data ) }),
+    msgJoinRaffle: (data: MsgJoinRaffle): EncodeObject => ({ typeUrl: "/bze.burner.v1.MsgJoinRaffle", value: MsgJoinRaffle.fromPartial( data ) }),
     
   };
 };
