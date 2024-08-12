@@ -190,20 +190,21 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:      nil,
-		distrtypes.ModuleName:           nil,
-		minttypes.ModuleName:            {authtypes.Minter},
-		stakingtypes.BondedPoolName:     {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:  {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:             {authtypes.Burner},
-		ibctransfertypes.ModuleName:     {authtypes.Minter, authtypes.Burner},
-		scavengemoduletypes.ModuleName:  nil,
-		cointrunkmoduletypes.ModuleName: nil,
-		burnermoduletypes.ModuleName:    {authtypes.Burner},
-		tokenfactorytypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		tradebintypes.ModuleName:        nil,
-		epochstypes.ModuleName:          nil,
-		rewardstypes.ModuleName:         {authtypes.Burner},
+		authtypes.FeeCollectorName:         nil,
+		distrtypes.ModuleName:              nil,
+		minttypes.ModuleName:               {authtypes.Minter},
+		stakingtypes.BondedPoolName:        {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:     {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                {authtypes.Burner},
+		ibctransfertypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
+		scavengemoduletypes.ModuleName:     nil,
+		cointrunkmoduletypes.ModuleName:    nil,
+		burnermoduletypes.ModuleName:       {authtypes.Burner},
+		tokenfactorytypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
+		tradebintypes.ModuleName:           nil,
+		epochstypes.ModuleName:             nil,
+		rewardstypes.ModuleName:            {authtypes.Burner},
+		burnermoduletypes.RaffleModuleName: {authtypes.Burner},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 

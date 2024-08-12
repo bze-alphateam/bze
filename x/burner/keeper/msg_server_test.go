@@ -1,6 +1,8 @@
 package keeper_test
 
-//func setupMsgServer(t testing.TB) (types.MsgServer, context.Context) {
-//	k, ctx := keepertest.BurnerKeeper(t)
-//	return keeper.NewMsgServerImpl(*k), sdk.WrapSDKContext(ctx)
+//func (suite *IntegrationTestSuite) TestMsgClaimStakingRewards_InvalidRequest() {
+//	goCtx := sdk.WrapSDKContext(suite.ctx)
+//
+//	_, err := suite.msgServer.ClaimStakingRewards(goCtx, nil)
+//	suite.Require().Error(err)
 //}

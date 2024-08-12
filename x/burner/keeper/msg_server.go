@@ -185,7 +185,7 @@ func (k msgServer) JoinRaffle(goCtx context.Context, msg *types.MsgJoinRaffle) (
 
 		raffle.Winners += 1
 		k.SetRaffle(ctx, raffle)
-		k.SaveRaffleWinner(ctx, types.RaffleWinner{
+		k.SetRaffleWinner(ctx, types.RaffleWinner{
 			Index:  strconv.Itoa(int(raffle.Winners) % 100), //keep only 100 winners
 			Denom:  raffle.Denom,
 			Amount: wonCoin.Amount.String(),
