@@ -18,6 +18,10 @@ export interface RaffleWinnerEvent {
   amount: string;
 }
 
+export interface RaffleFinishedEvent {
+  denom: string;
+}
+
 const baseCoinsBurnedEvent: object = { burned: "" };
 
 export const CoinsBurnedEvent = {
@@ -229,6 +233,64 @@ export const RaffleWinnerEvent = {
       message.amount = object.amount;
     } else {
       message.amount = "";
+    }
+    return message;
+  },
+};
+
+const baseRaffleFinishedEvent: object = { denom: "" };
+
+export const RaffleFinishedEvent = {
+  encode(
+    message: RaffleFinishedEvent,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.denom !== "") {
+      writer.uint32(10).string(message.denom);
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): RaffleFinishedEvent {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseRaffleFinishedEvent } as RaffleFinishedEvent;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.denom = reader.string();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): RaffleFinishedEvent {
+    const message = { ...baseRaffleFinishedEvent } as RaffleFinishedEvent;
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = String(object.denom);
+    } else {
+      message.denom = "";
+    }
+    return message;
+  },
+
+  toJSON(message: RaffleFinishedEvent): unknown {
+    const obj: any = {};
+    message.denom !== undefined && (obj.denom = message.denom);
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<RaffleFinishedEvent>): RaffleFinishedEvent {
+    const message = { ...baseRaffleFinishedEvent } as RaffleFinishedEvent;
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = object.denom;
+    } else {
+      message.denom = "";
     }
     return message;
   },

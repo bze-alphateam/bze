@@ -425,6 +425,12 @@ func New(
 		app.BankKeeper,
 	)
 
+	app.EpochsKeeper = *epochskeeper.NewKeeper(
+		appCodec,
+		keys[epochstypes.StoreKey],
+		keys[epochstypes.MemStoreKey],
+	)
+
 	app.CointrunkKeeper = *cointrunkmodulekeeper.NewKeeper(
 		appCodec,
 		keys[cointrunkmoduletypes.StoreKey],
@@ -463,12 +469,6 @@ func New(
 		app.GetSubspace(tradebintypes.ModuleName),
 		app.BankKeeper,
 		app.DistrKeeper,
-	)
-
-	app.EpochsKeeper = *epochskeeper.NewKeeper(
-		appCodec,
-		keys[epochstypes.StoreKey],
-		keys[epochstypes.MemStoreKey],
 	)
 
 	app.RewardsKeeper = *rewardskeeper.NewKeeper(

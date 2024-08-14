@@ -111,7 +111,7 @@ func (msg *MsgStartRaffle) ToStorageRaffle() (raffle Raffle, err error) {
 	}
 
 	if chances.LT(sdk.NewInt(ChancesMin)) || chances.GT(sdk.NewInt(ChancesMax)) {
-		return raffle, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "chances have a value greater between %d and %d", ChancesMin, ChancesMax)
+		return raffle, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "chances should have a value between %d and %d", ChancesMin, ChancesMax)
 	}
 	raffle.Chances = chances.Uint64()
 
@@ -127,7 +127,7 @@ func (msg *MsgStartRaffle) ToStorageRaffle() (raffle Raffle, err error) {
 	raffle.TicketPrice = msg.TicketPrice
 
 	if !msg.isAllowedDenomForRaffle(msg.Denom) {
-		return raffle, sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "ibc coins are not allowed in raffles")
+		return raffle, sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "coin not allowed in raffles")
 	}
 
 	raffle.Denom = msg.Denom
