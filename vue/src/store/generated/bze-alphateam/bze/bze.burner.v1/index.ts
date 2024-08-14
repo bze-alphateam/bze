@@ -5,13 +5,14 @@ import { BurnedCoins } from "./module/types/burner/burned_coins"
 import { CoinsBurnedEvent } from "./module/types/burner/events"
 import { FundBurnerEvent } from "./module/types/burner/events"
 import { RaffleWinnerEvent } from "./module/types/burner/events"
+import { RaffleFinishedEvent } from "./module/types/burner/events"
 import { Params } from "./module/types/burner/params"
 import { Raffle } from "./module/types/burner/raffle"
 import { RaffleDeleteHook } from "./module/types/burner/raffle"
 import { RaffleWinner } from "./module/types/burner/raffle"
 
 
-export { BurnCoinsProposal, BurnedCoins, CoinsBurnedEvent, FundBurnerEvent, RaffleWinnerEvent, Params, Raffle, RaffleDeleteHook, RaffleWinner };
+export { BurnCoinsProposal, BurnedCoins, CoinsBurnedEvent, FundBurnerEvent, RaffleWinnerEvent, RaffleFinishedEvent, Params, Raffle, RaffleDeleteHook, RaffleWinner };
 
 async function initTxClient(vuexGetters) {
 	return await txClient(vuexGetters['common/wallet/signer'], {
@@ -58,6 +59,7 @@ const getDefaultState = () => {
 						CoinsBurnedEvent: getStructure(CoinsBurnedEvent.fromPartial({})),
 						FundBurnerEvent: getStructure(FundBurnerEvent.fromPartial({})),
 						RaffleWinnerEvent: getStructure(RaffleWinnerEvent.fromPartial({})),
+						RaffleFinishedEvent: getStructure(RaffleFinishedEvent.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
 						Raffle: getStructure(Raffle.fromPartial({})),
 						RaffleDeleteHook: getStructure(RaffleDeleteHook.fromPartial({})),

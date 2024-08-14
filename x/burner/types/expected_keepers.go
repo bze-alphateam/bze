@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+// EpochKeeper defines expected keeper that can return the current epoch
 type EpochKeeper interface {
 	GetEpochCountByIdentifier(ctx sdk.Context, identifier string) int64
 }

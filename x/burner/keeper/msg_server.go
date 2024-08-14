@@ -40,10 +40,8 @@ func (k msgServer) FundBurner(goCtx context.Context, msg *types.MsgFundBurner) (
 
 	err = ctx.EventManager().EmitTypedEvent(&types.FundBurnerEvent{From: msg.Creator, Amount: amount.String()})
 	if err != nil {
-		return nil, err
+		ctx.Logger().Error("failed to emit fund burner event", "error", err)
 	}
-
-	_ = ctx
 
 	return &types.MsgFundBurnerResponse{}, nil
 }
@@ -170,6 +168,8 @@ func (k msgServer) JoinRaffle(goCtx context.Context, msg *types.MsgJoinRaffle) (
 	}
 
 	if k.IsLucky(ctx, &raffle, creatorAddr.String()) {
+		k.Logger(ctx).With("address", creatorAddr.String(), "denom", msg.Denom).
+			Info("user won raffle")
 		//user won
 		winRatio := sdk.MustNewDecFromStr(raffle.Ratio)
 		wonAmount := currentPot.Amount.ToDec().Mul(winRatio).TruncateInt()
