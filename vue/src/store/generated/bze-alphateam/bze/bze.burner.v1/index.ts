@@ -5,14 +5,16 @@ import { BurnedCoins } from "./module/types/burner/burned_coins"
 import { CoinsBurnedEvent } from "./module/types/burner/events"
 import { FundBurnerEvent } from "./module/types/burner/events"
 import { RaffleWinnerEvent } from "./module/types/burner/events"
+import { RaffleLostEvent } from "./module/types/burner/events"
 import { RaffleFinishedEvent } from "./module/types/burner/events"
 import { Params } from "./module/types/burner/params"
 import { Raffle } from "./module/types/burner/raffle"
 import { RaffleDeleteHook } from "./module/types/burner/raffle"
 import { RaffleWinner } from "./module/types/burner/raffle"
+import { RaffleParticipant } from "./module/types/burner/raffle"
 
 
-export { BurnCoinsProposal, BurnedCoins, CoinsBurnedEvent, FundBurnerEvent, RaffleWinnerEvent, RaffleFinishedEvent, Params, Raffle, RaffleDeleteHook, RaffleWinner };
+export { BurnCoinsProposal, BurnedCoins, CoinsBurnedEvent, FundBurnerEvent, RaffleWinnerEvent, RaffleLostEvent, RaffleFinishedEvent, Params, Raffle, RaffleDeleteHook, RaffleWinner, RaffleParticipant };
 
 async function initTxClient(vuexGetters) {
 	return await txClient(vuexGetters['common/wallet/signer'], {
@@ -51,6 +53,8 @@ function getStructure(template) {
 const getDefaultState = () => {
 	return {
 				Params: {},
+				Raffles: {},
+				RaffleWinners: {},
 				AllBurnedCoins: {},
 				
 				_Structure: {
@@ -59,11 +63,13 @@ const getDefaultState = () => {
 						CoinsBurnedEvent: getStructure(CoinsBurnedEvent.fromPartial({})),
 						FundBurnerEvent: getStructure(FundBurnerEvent.fromPartial({})),
 						RaffleWinnerEvent: getStructure(RaffleWinnerEvent.fromPartial({})),
+						RaffleLostEvent: getStructure(RaffleLostEvent.fromPartial({})),
 						RaffleFinishedEvent: getStructure(RaffleFinishedEvent.fromPartial({})),
 						Params: getStructure(Params.fromPartial({})),
 						Raffle: getStructure(Raffle.fromPartial({})),
 						RaffleDeleteHook: getStructure(RaffleDeleteHook.fromPartial({})),
 						RaffleWinner: getStructure(RaffleWinner.fromPartial({})),
+						RaffleParticipant: getStructure(RaffleParticipant.fromPartial({})),
 						
 		},
 		_Registry: registry,
@@ -97,6 +103,18 @@ export default {
 						(<any> params).query=null
 					}
 			return state.Params[JSON.stringify(params)] ?? {}
+		},
+				getRaffles: (state) => (params = { params: {}}) => {
+					if (!(<any> params).query) {
+						(<any> params).query=null
+					}
+			return state.Raffles[JSON.stringify(params)] ?? {}
+		},
+				getRaffleWinners: (state) => (params = { params: {}}) => {
+					if (!(<any> params).query) {
+						(<any> params).query=null
+					}
+			return state.RaffleWinners[JSON.stringify(params)] ?? {}
 		},
 				getAllBurnedCoins: (state) => (params = { params: {}}) => {
 					if (!(<any> params).query) {
@@ -165,6 +183,58 @@ export default {
 		 		
 		
 		
+		async QueryRaffles({ commit, rootGetters, getters }, { options: { subscribe, all} = { subscribe:false, all:false}, params, query=null }) {
+			try {
+				const key = params ?? {};
+				const queryClient=await initQueryClient(rootGetters)
+				let value= (await queryClient.queryRaffles(query)).data
+				
+					
+				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
+					let next_values=(await queryClient.queryRaffles({...query, 'pagination.key':(<any> value).pagination.next_key})).data
+					value = mergeResults(value, next_values);
+				}
+				commit('QUERY', { query: 'Raffles', key: { params: {...key}, query}, value })
+				if (subscribe) commit('SUBSCRIBE', { action: 'QueryRaffles', payload: { options: { all }, params: {...key},query }})
+				return getters['getRaffles']( { params: {...key}, query}) ?? {}
+			} catch (e) {
+				throw new Error('QueryClient:QueryRaffles API Node Unavailable. Could not perform query: ' + e.message)
+				
+			}
+		},
+		
+		
+		
+		
+		 		
+		
+		
+		async QueryRaffleWinners({ commit, rootGetters, getters }, { options: { subscribe, all} = { subscribe:false, all:false}, params, query=null }) {
+			try {
+				const key = params ?? {};
+				const queryClient=await initQueryClient(rootGetters)
+				let value= (await queryClient.queryRaffleWinners(query)).data
+				
+					
+				while (all && (<any> value).pagination && (<any> value).pagination.next_key!=null) {
+					let next_values=(await queryClient.queryRaffleWinners({...query, 'pagination.key':(<any> value).pagination.next_key})).data
+					value = mergeResults(value, next_values);
+				}
+				commit('QUERY', { query: 'RaffleWinners', key: { params: {...key}, query}, value })
+				if (subscribe) commit('SUBSCRIBE', { action: 'QueryRaffleWinners', payload: { options: { all }, params: {...key},query }})
+				return getters['getRaffleWinners']( { params: {...key}, query}) ?? {}
+			} catch (e) {
+				throw new Error('QueryClient:QueryRaffleWinners API Node Unavailable. Could not perform query: ' + e.message)
+				
+			}
+		},
+		
+		
+		
+		
+		 		
+		
+		
 		async QueryAllBurnedCoins({ commit, rootGetters, getters }, { options: { subscribe, all} = { subscribe:false, all:false}, params, query=null }) {
 			try {
 				const key = params ?? {};
@@ -186,21 +256,6 @@ export default {
 		},
 		
 		
-		async sendMsgStartRaffle({ rootGetters }, { value, fee = [], memo = '' }) {
-			try {
-				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgStartRaffle(value)
-				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
-	gas: "200000" }, memo})
-				return result
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgStartRaffle:Init Could not initialize signing client. Wallet is required.')
-				}else{
-					throw new Error('TxClient:MsgStartRaffle:Send Could not broadcast Tx: '+ e.message)
-				}
-			}
-		},
 		async sendMsgFundBurner({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
@@ -213,6 +268,21 @@ export default {
 					throw new Error('TxClient:MsgFundBurner:Init Could not initialize signing client. Wallet is required.')
 				}else{
 					throw new Error('TxClient:MsgFundBurner:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
+		async sendMsgStartRaffle({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgStartRaffle(value)
+				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
+	gas: "200000" }, memo})
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgStartRaffle:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgStartRaffle:Send Could not broadcast Tx: '+ e.message)
 				}
 			}
 		},
@@ -232,19 +302,6 @@ export default {
 			}
 		},
 		
-		async MsgStartRaffle({ rootGetters }, { value }) {
-			try {
-				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgStartRaffle(value)
-				return msg
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgStartRaffle:Init Could not initialize signing client. Wallet is required.')
-				} else{
-					throw new Error('TxClient:MsgStartRaffle:Create Could not create message: ' + e.message)
-				}
-			}
-		},
 		async MsgFundBurner({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
@@ -255,6 +312,19 @@ export default {
 					throw new Error('TxClient:MsgFundBurner:Init Could not initialize signing client. Wallet is required.')
 				} else{
 					throw new Error('TxClient:MsgFundBurner:Create Could not create message: ' + e.message)
+				}
+			}
+		},
+		async MsgStartRaffle({ rootGetters }, { value }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgStartRaffle(value)
+				return msg
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgStartRaffle:Init Could not initialize signing client. Wallet is required.')
+				} else{
+					throw new Error('TxClient:MsgStartRaffle:Create Could not create message: ' + e.message)
 				}
 			}
 		},

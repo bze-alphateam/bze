@@ -7,9 +7,8 @@ import (
 	"github.com/spf13/cobra"
 	"strconv"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	// "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/bze-alphateam/bze/x/burner/types"
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 var _ = strconv.Itoa(0)
@@ -86,6 +85,35 @@ func CmdStartRaffle() *cobra.Command {
 				argChances,
 				argRatio,
 				argTicketPrice,
+				argDenom,
+			)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdJoinRaffle() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "join-raffle [denom]",
+		Short: "Broadcast message join-raffle",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			argDenom := args[0]
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgJoinRaffle(
+				clientCtx.GetFromAddress().String(),
 				argDenom,
 			)
 			if err := msg.ValidateBasic(); err != nil {

@@ -6,6 +6,7 @@ import {
   PageResponse,
 } from "../cosmos/base/query/v1beta1/pagination";
 import { BurnedCoins } from "../burner/burned_coins";
+import { Raffle } from "../burner/raffle";
 
 export const protobufPackage = "bze.burner.v1";
 
@@ -24,6 +25,23 @@ export interface QueryAllBurnedCoinsRequest {
 
 export interface QueryAllBurnedCoinsResponse {
   burnedCoins: BurnedCoins[];
+  pagination: PageResponse | undefined;
+}
+
+export interface QueryRafflesRequest {
+  pagination: PageRequest | undefined;
+}
+
+export interface QueryRafflesResponse {
+  list: Raffle[];
+  pagination: PageResponse | undefined;
+}
+
+export interface QueryRaffleWinnersRequest {
+  pagination: PageRequest | undefined;
+}
+
+export interface QueryRaffleWinnersResponse {
   pagination: PageResponse | undefined;
 }
 
@@ -297,10 +315,312 @@ export const QueryAllBurnedCoinsResponse = {
   },
 };
 
+const baseQueryRafflesRequest: object = {};
+
+export const QueryRafflesRequest = {
+  encode(
+    message: QueryRafflesRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(10).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): QueryRafflesRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseQueryRafflesRequest } as QueryRafflesRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryRafflesRequest {
+    const message = { ...baseQueryRafflesRequest } as QueryRafflesRequest;
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryRafflesRequest): unknown {
+    const obj: any = {};
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageRequest.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<QueryRafflesRequest>): QueryRafflesRequest {
+    const message = { ...baseQueryRafflesRequest } as QueryRafflesRequest;
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryRafflesResponse: object = {};
+
+export const QueryRafflesResponse = {
+  encode(
+    message: QueryRafflesResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    for (const v of message.list) {
+      Raffle.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+    if (message.pagination !== undefined) {
+      PageResponse.encode(
+        message.pagination,
+        writer.uint32(18).fork()
+      ).ldelim();
+    }
+    return writer;
+  },
+
+  decode(input: Reader | Uint8Array, length?: number): QueryRafflesResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = { ...baseQueryRafflesResponse } as QueryRafflesResponse;
+    message.list = [];
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.list.push(Raffle.decode(reader, reader.uint32()));
+          break;
+        case 2:
+          message.pagination = PageResponse.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryRafflesResponse {
+    const message = { ...baseQueryRafflesResponse } as QueryRafflesResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(Raffle.fromJSON(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryRafflesResponse): unknown {
+    const obj: any = {};
+    if (message.list) {
+      obj.list = message.list.map((e) => (e ? Raffle.toJSON(e) : undefined));
+    } else {
+      obj.list = [];
+    }
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageResponse.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(object: DeepPartial<QueryRafflesResponse>): QueryRafflesResponse {
+    const message = { ...baseQueryRafflesResponse } as QueryRafflesResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(Raffle.fromPartial(e));
+      }
+    }
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryRaffleWinnersRequest: object = {};
+
+export const QueryRaffleWinnersRequest = {
+  encode(
+    message: QueryRaffleWinnersRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(10).fork()).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryRaffleWinnersRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryRaffleWinnersRequest,
+    } as QueryRaffleWinnersRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryRaffleWinnersRequest {
+    const message = {
+      ...baseQueryRaffleWinnersRequest,
+    } as QueryRaffleWinnersRequest;
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryRaffleWinnersRequest): unknown {
+    const obj: any = {};
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageRequest.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryRaffleWinnersRequest>
+  ): QueryRaffleWinnersRequest {
+    const message = {
+      ...baseQueryRaffleWinnersRequest,
+    } as QueryRaffleWinnersRequest;
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageRequest.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
+const baseQueryRaffleWinnersResponse: object = {};
+
+export const QueryRaffleWinnersResponse = {
+  encode(
+    message: QueryRaffleWinnersResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.pagination !== undefined) {
+      PageResponse.encode(
+        message.pagination,
+        writer.uint32(10).fork()
+      ).ldelim();
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryRaffleWinnersResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryRaffleWinnersResponse,
+    } as QueryRaffleWinnersResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.pagination = PageResponse.decode(reader, reader.uint32());
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryRaffleWinnersResponse {
+    const message = {
+      ...baseQueryRaffleWinnersResponse,
+    } as QueryRaffleWinnersResponse;
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromJSON(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryRaffleWinnersResponse): unknown {
+    const obj: any = {};
+    message.pagination !== undefined &&
+      (obj.pagination = message.pagination
+        ? PageResponse.toJSON(message.pagination)
+        : undefined);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryRaffleWinnersResponse>
+  ): QueryRaffleWinnersResponse {
+    const message = {
+      ...baseQueryRaffleWinnersResponse,
+    } as QueryRaffleWinnersResponse;
+    if (object.pagination !== undefined && object.pagination !== null) {
+      message.pagination = PageResponse.fromPartial(object.pagination);
+    } else {
+      message.pagination = undefined;
+    }
+    return message;
+  },
+};
+
 /** Query defines the gRPC querier service. */
 export interface Query {
   /** Parameters queries the parameters of the module. */
   Params(request: QueryParamsRequest): Promise<QueryParamsResponse>;
+  /** Queries a list of Raffles items. */
+  Raffles(request: QueryRafflesRequest): Promise<QueryRafflesResponse>;
+  /** Queries a list of RaffleWinners items. */
+  RaffleWinners(
+    request: QueryRaffleWinnersRequest
+  ): Promise<QueryRaffleWinnersResponse>;
   AllBurnedCoins(
     request: QueryAllBurnedCoinsRequest
   ): Promise<QueryAllBurnedCoinsResponse>;
@@ -315,6 +635,28 @@ export class QueryClientImpl implements Query {
     const data = QueryParamsRequest.encode(request).finish();
     const promise = this.rpc.request("bze.burner.v1.Query", "Params", data);
     return promise.then((data) => QueryParamsResponse.decode(new Reader(data)));
+  }
+
+  Raffles(request: QueryRafflesRequest): Promise<QueryRafflesResponse> {
+    const data = QueryRafflesRequest.encode(request).finish();
+    const promise = this.rpc.request("bze.burner.v1.Query", "Raffles", data);
+    return promise.then((data) =>
+      QueryRafflesResponse.decode(new Reader(data))
+    );
+  }
+
+  RaffleWinners(
+    request: QueryRaffleWinnersRequest
+  ): Promise<QueryRaffleWinnersResponse> {
+    const data = QueryRaffleWinnersRequest.encode(request).finish();
+    const promise = this.rpc.request(
+      "bze.burner.v1.Query",
+      "RaffleWinners",
+      data
+    );
+    return promise.then((data) =>
+      QueryRaffleWinnersResponse.decode(new Reader(data))
+    );
   }
 
   AllBurnedCoins(
