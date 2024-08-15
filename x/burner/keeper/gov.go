@@ -19,7 +19,10 @@ func (k Keeper) HandleBurnCoinsProposal(ctx sdk.Context, proposal *types.BurnCoi
 		panic(err)
 	}
 
-	k.SaveBurnedCoins(ctx, coins)
+	err = k.SaveBurnedCoins(ctx, coins)
+	if err != nil {
+		ctx.Logger().Error("error saving burned coins", "error", err)
+	}
 
 	err = ctx.EventManager().EmitTypedEvent(&types.CoinsBurnedEvent{Burned: coins.String()})
 	if err != nil {

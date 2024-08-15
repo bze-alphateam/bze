@@ -79,6 +79,10 @@ func (k Keeper) RaffleWinners(goCtx context.Context, req *types.QueryRaffleWinne
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
+	if req.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "denom required")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	var items []types.RaffleWinner
 	store := ctx.KVStore(k.storeKey)
