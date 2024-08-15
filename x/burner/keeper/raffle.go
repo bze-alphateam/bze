@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/binary"
 	"github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -105,4 +106,76 @@ func (k Keeper) RemoveRaffleWinner(ctx sdk.Context, winner types.RaffleWinner) {
 func (k Keeper) GetRaffleWinners(ctx sdk.Context, denom string) (list []types.RaffleWinner) {
 
 	return k.getAllRaffleWinnersByPrefix(ctx, types.GetRaffleWinnerKeyPrefix(denom))
+}
+
+func (k Keeper) getRaffleParticipantsByPrefix(ctx sdk.Context, pref []byte) (list []types.RaffleParticipant) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), pref)
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.RaffleParticipant
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
+}
+
+func (k Keeper) GetAllRaffleParticipants(ctx sdk.Context) []types.RaffleParticipant {
+
+	return k.getRaffleParticipantsByPrefix(ctx, types.KeyPrefix(types.RaffleParticipantPrefix))
+}
+
+func (k Keeper) GetAllPrefixedRaffleParticipants(ctx sdk.Context, pref int64) []types.RaffleParticipant {
+
+	return k.getRaffleParticipantsByPrefix(ctx, types.GetRaffleParticipantPrefixedKey(pref))
+}
+
+func (k Keeper) SetRaffleParticipant(ctx sdk.Context, part types.RaffleParticipant) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetRaffleParticipantPrefixedKey(part.ExecuteAt))
+	val := k.cdc.MustMarshal(&part)
+	store.Set(
+		types.GetRaffleParticipantKey(part.Index),
+		val,
+	)
+	k.incrementParticipantCounter(ctx)
+}
+
+func (k Keeper) RemoveRaffleParticipant(ctx sdk.Context, part types.RaffleParticipant) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetRaffleParticipantPrefixedKey(part.ExecuteAt))
+	store.Delete(types.GetRaffleParticipantKey(part.Index))
+}
+
+func (k Keeper) getParticipantCounterStore(ctx sdk.Context) sdk.KVStore {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.RaffleParticipantCounterPrefix))
+}
+
+func (k Keeper) GetParticipantCounter(ctx sdk.Context) uint64 {
+	counterStore := k.getParticipantCounterStore(ctx)
+	counter := counterStore.Get(types.GetRaffleParticipantCounterKey())
+	if counter == nil {
+		return 0
+	}
+
+	return binary.BigEndian.Uint64(counter)
+}
+
+func (k Keeper) SetParticipantCounter(ctx sdk.Context, counter uint64) {
+	counterStore := k.getParticipantCounterStore(ctx)
+	record := make([]byte, 8)
+	binary.BigEndian.PutUint64(record, counter)
+
+	counterStore.Set(
+		types.GetRaffleParticipantCounterKey(),
+		record,
+	)
+}
+
+func (k Keeper) incrementParticipantCounter(ctx sdk.Context) uint64 {
+	counter := k.GetParticipantCounter(ctx)
+	counter++
+	k.SetParticipantCounter(ctx, counter)
+
+	return counter
 }

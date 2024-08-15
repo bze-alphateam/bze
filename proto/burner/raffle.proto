@@ -25,3 +25,10 @@ message RaffleWinner {
   string amount = 3;
   string winner = 4;
 }
+
+message RaffleParticipant {
+  uint64 index = 1;
+  string denom = 2;
+  string participant = 3;
+  int64 executeAt = 4;
+}
