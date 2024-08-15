@@ -60,6 +60,8 @@ export interface V1QueryParamsResponse {
 }
 
 export interface V1QueryRaffleWinnersResponse {
+  list?: V1RaffleWinner[];
+
   /**
    * PageResponse is to be embedded in gRPC response messages where the
    * corresponding request message has used PageRequest.
@@ -105,6 +107,13 @@ export interface V1Raffle {
   ticket_price?: string;
   denom?: string;
   total_won?: string;
+}
+
+export interface V1RaffleWinner {
+  index?: string;
+  denom?: string;
+  amount?: string;
+  winner?: string;
 }
 
 /**
@@ -370,32 +379,6 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * No description
    *
    * @tags Query
-   * @name QueryRaffleWinners
-   * @summary Queries a list of RaffleWinners items.
-   * @request GET:/bze-alphateam/bze/burner/raffle_winners
-   */
-  queryRaffleWinners = (
-    query?: {
-      "pagination.key"?: string;
-      "pagination.offset"?: string;
-      "pagination.limit"?: string;
-      "pagination.count_total"?: boolean;
-      "pagination.reverse"?: boolean;
-    },
-    params: RequestParams = {},
-  ) =>
-    this.request<V1QueryRaffleWinnersResponse, RpcStatus>({
-      path: `/bze-alphateam/bze/burner/raffle_winners`,
-      method: "GET",
-      query: query,
-      format: "json",
-      ...params,
-    });
-
-  /**
-   * No description
-   *
-   * @tags Query
    * @name QueryAllBurnedCoins
    * @request GET:/bze/burner/v1/all_burned_coins
    */
@@ -429,6 +412,33 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     this.request<V1QueryParamsResponse, RpcStatus>({
       path: `/bze/burner/v1/params`,
       method: "GET",
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryRaffleWinners
+   * @summary Queries a list of RaffleWinners items.
+   * @request GET:/bze/burner/v1/raffle_winners
+   */
+  queryRaffleWinners = (
+    query?: {
+      denom?: string;
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<V1QueryRaffleWinnersResponse, RpcStatus>({
+      path: `/bze/burner/v1/raffle_winners`,
+      method: "GET",
+      query: query,
       format: "json",
       ...params,
     });
