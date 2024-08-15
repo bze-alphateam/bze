@@ -28,5 +28,9 @@ message GenesisState {
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "raffle_participants_list,omitempty"
   ];
+
+  uint64 raffle_participant_counter = 6 [
+    (gogoproto.jsontag) = "raffle_participant_counter"
+  ];
   // this line is used by starport scaffolding # genesis/proto/state
 }
