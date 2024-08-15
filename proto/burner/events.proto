@@ -18,6 +18,11 @@ message RaffleWinnerEvent {
   string amount = 3;
 }
 
+message RaffleLostEvent {
+  string denom = 1;
+  string participant = 2;
+}
+
 message RaffleFinishedEvent {
   string denom = 1;
 }

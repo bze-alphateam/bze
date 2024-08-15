@@ -6,7 +6,10 @@ import (
 	"github.com/bze-alphateam/bze/x/burner/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"strconv"
+)
+
+const (
+	raffleDelayHeight = 2
 )
 
 type msgServer struct {
@@ -132,6 +135,10 @@ func (k msgServer) JoinRaffle(goCtx context.Context, msg *types.MsgJoinRaffle) (
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "raffle not found for provided denom")
 	}
 
+	if raffle.EndAt >= (k.GetRaffleCurrentEpoch(ctx) - 1) {
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "raffle has expired")
+	}
+
 	creatorAddr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return nil, err
@@ -167,49 +174,14 @@ func (k msgServer) JoinRaffle(goCtx context.Context, msg *types.MsgJoinRaffle) (
 		return nil, err
 	}
 
-	if k.IsLucky(ctx, &raffle, creatorAddr.String()) {
-		k.Logger(ctx).With("address", creatorAddr.String(), "denom", msg.Denom).
-			Info("user won raffle")
-		//user won
-		winRatio := sdk.MustNewDecFromStr(raffle.Ratio)
-		wonAmount := currentPot.Amount.ToDec().Mul(winRatio).TruncateInt()
-		if !wonAmount.IsPositive() {
-			wonAmount = currentPot.Amount
-		}
-		wonCoin := sdk.NewCoin(currentPot.Denom, wonAmount)
-
-		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.RaffleModuleName, creatorAddr, sdk.NewCoins(wonCoin))
-		if err != nil {
-			return nil, err
-		}
-
-		raffle.Winners += 1
-		k.SetRaffle(ctx, raffle)
-		k.SetRaffleWinner(ctx, types.RaffleWinner{
-			Index:  strconv.Itoa(int(raffle.Winners) % 100), //keep only 100 winners
-			Denom:  raffle.Denom,
-			Amount: wonCoin.Amount.String(),
-			Winner: creatorAddr.String(),
-		})
-
-		err = ctx.EventManager().EmitTypedEvent(&types.RaffleWinnerEvent{
-			Denom:  raffle.Denom,
-			Winner: creatorAddr.String(),
-			Amount: wonCoin.Amount.String(),
-		})
-		if err != nil {
-			//just log it, don't hinder the response for this error
-			k.Logger(ctx).Error("failed to emit raffle winner event", err.Error())
-		}
-
-		return &types.MsgJoinRaffleResponse{
-			Winner: true,
-			Amount: wonAmount.String(),
-			Denom:  wonCoin.Denom,
-		}, nil
+	participant := types.RaffleParticipant{
+		Index:       k.GetParticipantCounter(ctx),
+		Denom:       raffle.Denom,
+		Participant: creatorAddr.String(),
+		ExecuteAt:   ctx.BlockHeight() + raffleDelayHeight,
 	}
 
-	return &types.MsgJoinRaffleResponse{
-		Winner: false,
-	}, nil
+	k.SetRaffleParticipant(ctx, participant)
+
+	return &types.MsgJoinRaffleResponse{}, nil
 }

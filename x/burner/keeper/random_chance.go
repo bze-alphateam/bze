@@ -25,7 +25,7 @@ func generateDeterministicRandomNumber(input []byte, randomRangeMax uint64) uint
 }
 
 func (k Keeper) IsLucky(ctx sdk.Context, raffle *types.Raffle, address string) bool {
-	seed := append(ctx.BlockHeader().ConsensusHash, ctx.BlockHeader().AppHash...)
+	seed := append(ctx.HeaderHash(), ctx.BlockHeader().AppHash...)
 	seed = append(seed, []byte(address)...)
 
 	return generateDeterministicRandomNumber(seed, randomRangeMax) < raffle.Chances

@@ -27,6 +27,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, winner := range genState.RaffleWinnersList {
 		k.SetRaffleWinner(ctx, winner)
 	}
+
+	for _, part := range genState.RaffleParticipantsList {
+		k.SetRaffleParticipant(ctx, part)
+	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.
@@ -43,6 +47,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 
 	genesis.RaffleWinnersList = winnersList
+	genesis.RaffleParticipantsList = k.GetAllRaffleParticipants(ctx)
 	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis
