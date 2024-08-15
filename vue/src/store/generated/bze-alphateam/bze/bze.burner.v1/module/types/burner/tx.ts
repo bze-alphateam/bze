@@ -16,7 +16,7 @@ export interface MsgStartRaffle {
   duration: string;
   chances: string;
   ratio: string;
-  ticketPrice: string;
+  ticket_price: string;
   denom: string;
 }
 
@@ -27,11 +27,7 @@ export interface MsgJoinRaffle {
   denom: string;
 }
 
-export interface MsgJoinRaffleResponse {
-  winner: boolean;
-  amount: string;
-  denom: string;
-}
+export interface MsgJoinRaffleResponse {}
 
 const baseMsgFundBurner: object = { creator: "", amount: "" };
 
@@ -149,7 +145,7 @@ const baseMsgStartRaffle: object = {
   duration: "",
   chances: "",
   ratio: "",
-  ticketPrice: "",
+  ticket_price: "",
   denom: "",
 };
 
@@ -170,8 +166,8 @@ export const MsgStartRaffle = {
     if (message.ratio !== "") {
       writer.uint32(42).string(message.ratio);
     }
-    if (message.ticketPrice !== "") {
-      writer.uint32(50).string(message.ticketPrice);
+    if (message.ticket_price !== "") {
+      writer.uint32(50).string(message.ticket_price);
     }
     if (message.denom !== "") {
       writer.uint32(58).string(message.denom);
@@ -202,7 +198,7 @@ export const MsgStartRaffle = {
           message.ratio = reader.string();
           break;
         case 6:
-          message.ticketPrice = reader.string();
+          message.ticket_price = reader.string();
           break;
         case 7:
           message.denom = reader.string();
@@ -242,10 +238,10 @@ export const MsgStartRaffle = {
     } else {
       message.ratio = "";
     }
-    if (object.ticketPrice !== undefined && object.ticketPrice !== null) {
-      message.ticketPrice = String(object.ticketPrice);
+    if (object.ticket_price !== undefined && object.ticket_price !== null) {
+      message.ticket_price = String(object.ticket_price);
     } else {
-      message.ticketPrice = "";
+      message.ticket_price = "";
     }
     if (object.denom !== undefined && object.denom !== null) {
       message.denom = String(object.denom);
@@ -262,8 +258,8 @@ export const MsgStartRaffle = {
     message.duration !== undefined && (obj.duration = message.duration);
     message.chances !== undefined && (obj.chances = message.chances);
     message.ratio !== undefined && (obj.ratio = message.ratio);
-    message.ticketPrice !== undefined &&
-      (obj.ticketPrice = message.ticketPrice);
+    message.ticket_price !== undefined &&
+      (obj.ticket_price = message.ticket_price);
     message.denom !== undefined && (obj.denom = message.denom);
     return obj;
   },
@@ -295,10 +291,10 @@ export const MsgStartRaffle = {
     } else {
       message.ratio = "";
     }
-    if (object.ticketPrice !== undefined && object.ticketPrice !== null) {
-      message.ticketPrice = object.ticketPrice;
+    if (object.ticket_price !== undefined && object.ticket_price !== null) {
+      message.ticket_price = object.ticket_price;
     } else {
-      message.ticketPrice = "";
+      message.ticket_price = "";
     }
     if (object.denom !== undefined && object.denom !== null) {
       message.denom = object.denom;
@@ -419,26 +415,10 @@ export const MsgJoinRaffle = {
   },
 };
 
-const baseMsgJoinRaffleResponse: object = {
-  winner: false,
-  amount: "",
-  denom: "",
-};
+const baseMsgJoinRaffleResponse: object = {};
 
 export const MsgJoinRaffleResponse = {
-  encode(
-    message: MsgJoinRaffleResponse,
-    writer: Writer = Writer.create()
-  ): Writer {
-    if (message.winner === true) {
-      writer.uint32(8).bool(message.winner);
-    }
-    if (message.amount !== "") {
-      writer.uint32(18).string(message.amount);
-    }
-    if (message.denom !== "") {
-      writer.uint32(26).string(message.denom);
-    }
+  encode(_: MsgJoinRaffleResponse, writer: Writer = Writer.create()): Writer {
     return writer;
   },
 
@@ -449,15 +429,6 @@ export const MsgJoinRaffleResponse = {
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
-        case 1:
-          message.winner = reader.bool();
-          break;
-        case 2:
-          message.amount = reader.string();
-          break;
-        case 3:
-          message.denom = reader.string();
-          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -466,53 +437,18 @@ export const MsgJoinRaffleResponse = {
     return message;
   },
 
-  fromJSON(object: any): MsgJoinRaffleResponse {
+  fromJSON(_: any): MsgJoinRaffleResponse {
     const message = { ...baseMsgJoinRaffleResponse } as MsgJoinRaffleResponse;
-    if (object.winner !== undefined && object.winner !== null) {
-      message.winner = Boolean(object.winner);
-    } else {
-      message.winner = false;
-    }
-    if (object.amount !== undefined && object.amount !== null) {
-      message.amount = String(object.amount);
-    } else {
-      message.amount = "";
-    }
-    if (object.denom !== undefined && object.denom !== null) {
-      message.denom = String(object.denom);
-    } else {
-      message.denom = "";
-    }
     return message;
   },
 
-  toJSON(message: MsgJoinRaffleResponse): unknown {
+  toJSON(_: MsgJoinRaffleResponse): unknown {
     const obj: any = {};
-    message.winner !== undefined && (obj.winner = message.winner);
-    message.amount !== undefined && (obj.amount = message.amount);
-    message.denom !== undefined && (obj.denom = message.denom);
     return obj;
   },
 
-  fromPartial(
-    object: DeepPartial<MsgJoinRaffleResponse>
-  ): MsgJoinRaffleResponse {
+  fromPartial(_: DeepPartial<MsgJoinRaffleResponse>): MsgJoinRaffleResponse {
     const message = { ...baseMsgJoinRaffleResponse } as MsgJoinRaffleResponse;
-    if (object.winner !== undefined && object.winner !== null) {
-      message.winner = object.winner;
-    } else {
-      message.winner = false;
-    }
-    if (object.amount !== undefined && object.amount !== null) {
-      message.amount = object.amount;
-    } else {
-      message.amount = "";
-    }
-    if (object.denom !== undefined && object.denom !== null) {
-      message.denom = object.denom;
-    } else {
-      message.denom = "";
-    }
     return message;
   },
 };

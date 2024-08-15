@@ -33,11 +33,5 @@ func GetRaffleParticipantKey(index uint64) []byte {
 }
 
 func GetRaffleParticipantCounterKey() []byte {
-	var key []byte
-
-	mBytes := []byte(RaffleParticipantCounterKey)
-	key = append(key, mBytes...)
-	key = append(key, []byte("/")...)
-
-	return key
+	return []byte(RaffleParticipantCounterKey)
 }
