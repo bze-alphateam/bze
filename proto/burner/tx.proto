@@ -27,7 +27,7 @@ message MsgStartRaffle {
   string duration = 3;
   string chances = 4;
   string ratio = 5;
-  string ticketPrice = 6;
+  string ticket_price = 6;
   string denom = 7;
 }
 

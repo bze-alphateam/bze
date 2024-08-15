@@ -8,16 +8,16 @@ message Raffle {
   uint64 duration = 2;
   uint64 chances = 3;
   string ratio = 4;
-  uint64 endAt = 5;
+  uint64 end_at = 5;
   uint64 winners = 6;
-  string ticketPrice = 7;
+  string ticket_price = 7;
   string denom = 8;
-  string totalWon = 9;
+  string total_won = 9;
 }
 
 message RaffleDeleteHook {
   string denom = 1;
-  uint64 endAt = 2;
+  uint64 end_at = 2;
 }
 
 message RaffleWinner {
@@ -31,5 +31,5 @@ message RaffleParticipant {
   uint64 index = 1;
   string denom = 2;
   string participant = 3;
-  int64 executeAt = 4;
+  int64 execute_at = 4;
 }
