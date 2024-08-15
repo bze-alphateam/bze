@@ -190,20 +190,21 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:      nil,
-		distrtypes.ModuleName:           nil,
-		minttypes.ModuleName:            {authtypes.Minter},
-		stakingtypes.BondedPoolName:     {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:  {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:             {authtypes.Burner},
-		ibctransfertypes.ModuleName:     {authtypes.Minter, authtypes.Burner},
-		scavengemoduletypes.ModuleName:  nil,
-		cointrunkmoduletypes.ModuleName: nil,
-		burnermoduletypes.ModuleName:    {authtypes.Burner},
-		tokenfactorytypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		tradebintypes.ModuleName:        nil,
-		epochstypes.ModuleName:          nil,
-		rewardstypes.ModuleName:         {authtypes.Burner},
+		authtypes.FeeCollectorName:         nil,
+		distrtypes.ModuleName:              nil,
+		minttypes.ModuleName:               {authtypes.Minter},
+		stakingtypes.BondedPoolName:        {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:     {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                {authtypes.Burner},
+		ibctransfertypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
+		scavengemoduletypes.ModuleName:     nil,
+		cointrunkmoduletypes.ModuleName:    nil,
+		burnermoduletypes.ModuleName:       {authtypes.Burner},
+		tokenfactorytypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
+		tradebintypes.ModuleName:           nil,
+		epochstypes.ModuleName:             nil,
+		rewardstypes.ModuleName:            {authtypes.Burner},
+		burnermoduletypes.RaffleModuleName: {authtypes.Burner},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 
@@ -424,6 +425,12 @@ func New(
 		app.BankKeeper,
 	)
 
+	app.EpochsKeeper = *epochskeeper.NewKeeper(
+		appCodec,
+		keys[epochstypes.StoreKey],
+		keys[epochstypes.MemStoreKey],
+	)
+
 	app.CointrunkKeeper = *cointrunkmodulekeeper.NewKeeper(
 		appCodec,
 		keys[cointrunkmoduletypes.StoreKey],
@@ -442,6 +449,7 @@ func New(
 		app.GetSubspace(burnermoduletypes.ModuleName),
 		app.BankKeeper,
 		app.AccountKeeper,
+		app.EpochsKeeper,
 	)
 
 	app.TokenFactoryKeeper = *tokenfactorykeeper.NewKeeper(
@@ -461,12 +469,6 @@ func New(
 		app.GetSubspace(tradebintypes.ModuleName),
 		app.BankKeeper,
 		app.DistrKeeper,
-	)
-
-	app.EpochsKeeper = *epochskeeper.NewKeeper(
-		appCodec,
-		keys[epochstypes.StoreKey],
-		keys[epochstypes.MemStoreKey],
 	)
 
 	app.RewardsKeeper = *rewardskeeper.NewKeeper(

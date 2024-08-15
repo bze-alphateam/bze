@@ -9,6 +9,11 @@
  * ---------------------------------------------------------------
  */
 
+/**
+ * Params defines the parameters for the module.
+ */
+export type Burnerv1Params = object;
+
 export interface ProtobufAny {
   "@type"?: string;
 }
@@ -27,10 +32,9 @@ export interface V1BurnedCoins {
 
 export type V1MsgFundBurnerResponse = object;
 
-/**
- * Params defines the parameters for the module.
- */
-export type V1Params = object;
+export type V1MsgJoinRaffleResponse = object;
+
+export type V1MsgStartRaffleResponse = object;
 
 export interface V1QueryAllBurnedCoinsResponse {
   burnedCoins?: V1BurnedCoins[];
@@ -52,7 +56,55 @@ export interface V1QueryAllBurnedCoinsResponse {
  */
 export interface V1QueryParamsResponse {
   /** params holds all the parameters of this module. */
-  params?: V1Params;
+  params?: Burnerv1Params;
+}
+
+export interface V1QueryRaffleWinnersResponse {
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
+  pagination?: V1Beta1PageResponse;
+}
+
+export interface V1QueryRafflesResponse {
+  list?: V1Raffle[];
+
+  /**
+   * PageResponse is to be embedded in gRPC response messages where the
+   * corresponding request message has used PageRequest.
+   *
+   *  message SomeResponse {
+   *          repeated Bar results = 1;
+   *          PageResponse page = 2;
+   *  }
+   */
+  pagination?: V1Beta1PageResponse;
+}
+
+export interface V1Raffle {
+  pot?: string;
+
+  /** @format uint64 */
+  duration?: string;
+
+  /** @format uint64 */
+  chances?: string;
+  ratio?: string;
+
+  /** @format uint64 */
+  end_at?: string;
+
+  /** @format uint64 */
+  winners?: string;
+  ticket_price?: string;
+  denom?: string;
+  total_won?: string;
 }
 
 /**
@@ -318,6 +370,32 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
    * No description
    *
    * @tags Query
+   * @name QueryRaffleWinners
+   * @summary Queries a list of RaffleWinners items.
+   * @request GET:/bze-alphateam/bze/burner/raffle_winners
+   */
+  queryRaffleWinners = (
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<V1QueryRaffleWinnersResponse, RpcStatus>({
+      path: `/bze-alphateam/bze/burner/raffle_winners`,
+      method: "GET",
+      query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
    * @name QueryAllBurnedCoins
    * @request GET:/bze/burner/v1/all_burned_coins
    */
@@ -351,6 +429,32 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     this.request<V1QueryParamsResponse, RpcStatus>({
       path: `/bze/burner/v1/params`,
       method: "GET",
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryRaffles
+   * @summary Queries a list of Raffles items.
+   * @request GET:/bze/burner/v1/raffles
+   */
+  queryRaffles = (
+    query?: {
+      "pagination.key"?: string;
+      "pagination.offset"?: string;
+      "pagination.limit"?: string;
+      "pagination.count_total"?: boolean;
+      "pagination.reverse"?: boolean;
+    },
+    params: RequestParams = {},
+  ) =>
+    this.request<V1QueryRafflesResponse, RpcStatus>({
+      path: `/bze/burner/v1/raffles`,
+      method: "GET",
+      query: query,
       format: "json",
       ...params,
     });
