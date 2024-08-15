@@ -100,6 +100,9 @@ func (suite *IntegrationTestSuite) TestBurnerRaffleCleanupHook_MultipleRaffles_S
 	//add to store some random data to delete
 	for i := 1; i <= 5; i++ {
 		denom := fmt.Sprintf("burner%d", i)
+		if i%2 == 0 {
+			denom = fmt.Sprintf("factory/%s", denom)
+		}
 		raffleDeleteHook := types.RaffleDeleteHook{
 			Denom: denom,
 			EndAt: 1,
@@ -146,8 +149,12 @@ func (suite *IntegrationTestSuite) TestBurnerRaffleCleanupHook_MultipleRaffles_S
 
 	suite.Require().NoError(hook.AfterEpochEnd(suite.ctx, "hour", int64(1)))
 	for i := 1; i <= 5; i++ {
-
+		isFactoryDenom := false
 		denom := fmt.Sprintf("burner%d", i)
+		if i%2 == 0 {
+			denom = fmt.Sprintf("factory/%s", denom)
+			isFactoryDenom = true
+		}
 
 		//check raffle was deleted
 		_, ok := suite.k.GetRaffle(suite.ctx, denom)
@@ -162,5 +169,17 @@ func (suite *IntegrationTestSuite) TestBurnerRaffleCleanupHook_MultipleRaffles_S
 
 		bal := suite.app.BankKeeper.GetBalance(suite.ctx, moduleAcc.GetAddress(), denom)
 		suite.Require().True(bal.IsZero())
+
+		allBurns := suite.k.GetAllBurnedCoins(suite.ctx)
+		if !isFactoryDenom {
+			suite.Require().NotEmpty(allBurns)
+		}
+		for _, b := range allBurns {
+			if isFactoryDenom {
+				suite.Require().NotContains(b.Burned, denom)
+			} else {
+				suite.Require().Contains(b.Burned, denom)
+			}
+		}
 	}
 }

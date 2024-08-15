@@ -9,6 +9,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func (suite *IntegrationTestSuite) TestFundBurner_InvalidAmount() {
@@ -573,7 +574,7 @@ func (suite *IntegrationTestSuite) TestJoinRaffle_RaffleNotFound() {
 
 	msg := types.MsgJoinRaffle{
 		Creator: "",
-		Denom:   "dsa",
+		Denom:   "aau",
 	}
 
 	_, err := suite.msgServer.JoinRaffle(goCtx, &msg)
@@ -612,39 +613,42 @@ func (suite *IntegrationTestSuite) TestJoinRaffle_InvalidCreator() {
 
 func (suite *IntegrationTestSuite) TestJoinRaffle_Stress() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
+
 	addr1 := sdk.AccAddress("addr1_______________")
-	balances := sdk.NewCoins(sdk.NewInt64Coin("aau", 1_000_000_000_000_000))
+	initialBalanceAmount := sdk.NewInt(1_000_000_000_000_000)
+	balances := sdk.NewCoins(sdk.NewInt64Coin("aau", initialBalanceAmount.Int64()))
 	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, balances))
 
+	potInt := sdk.NewInt(150_000_000_000)
+	ticketCost := sdk.NewInt(10_000_000)
 	msg := types.MsgStartRaffle{
 		Creator:     addr1.String(),
-		Pot:         "150_000_000_000",
+		Pot:         potInt.String(),
 		Duration:    "1",
 		Chances:     "100",
 		Ratio:       "0.1",
-		TicketPrice: "10000000",
+		TicketPrice: ticketCost.String(),
 		Denom:       "aau",
 	}
 	_, err := suite.msgServer.StartRaffle(goCtx, &msg)
 	suite.Require().NoError(err)
 
 	addrBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr1, "aau")
-	suite.Require().EqualValues(addrBalance.Amount.Int64(), 1_000_000_000_000_000-150_000_000_000)
+	suite.Require().EqualValues(addrBalance.Amount, initialBalanceAmount.Sub(potInt))
 
 	moduleAddress := suite.app.AccountKeeper.GetModuleAddress(types.RaffleModuleName)
 	moduleBalance := suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddress, "aau")
-	suite.Require().EqualValues(moduleBalance.Amount.String(), "150000000000")
+	suite.Require().EqualValues(moduleBalance.Amount, potInt)
 
 	ratio, err := sdk.NewDecFromStr(msg.Ratio)
 	suite.Require().NoError(err)
-	ticketCost := sdk.NewInt(10000000)
 
 	winCount := 0
-	ticketsToPlace := 100000
+	ticketsToPlace := time.Now().Unix()
 	totalPotWon := sdk.ZeroInt()
 
-	for i := ticketsToPlace * 15; i <= ticketsToPlace*20; i++ {
-		appHash := strconv.Itoa(i)
+	for i := ticketsToPlace; i <= ticketsToPlace+100000; i++ {
+		appHash := fmt.Sprintf("%x", i)
 		blockHash := []byte("block_id" + appHash)
 		suite.ctx = suite.ctx.WithBlockHeader(tmproto.Header{
 			LastBlockId: tmproto.BlockID{
@@ -696,6 +700,115 @@ func (suite *IntegrationTestSuite) TestJoinRaffle_Stress() {
 
 				newWinners := suite.k.GetRaffleWinners(suite.ctx, "aau")
 				suite.Require().Len(newWinners, len(winners))
+			}
+		}
+	}
+
+	newModuleBalance := suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddress, "aau")
+	suite.ctx.Logger().Info(fmt.Sprintf("test finished"))
+	suite.ctx.Logger().Info(fmt.Sprintf("%d users won. total participants %d", winCount, 100000))
+	suite.ctx.Logger().Info(fmt.Sprintf("total pot won: %s", totalPotWon.QuoRaw(1_000_000).String()))
+	suite.ctx.Logger().Info(fmt.Sprintf("module balance is: %s", newModuleBalance.Amount.QuoRaw(1_000_000).String()))
+}
+
+func (suite *IntegrationTestSuite) TestJoinRaffle_Simulation() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	addr1 := sdk.AccAddress("addr1_______________")
+	addr2 := sdk.AccAddress("addr2_______________")
+	initialBalanceAmount := sdk.NewInt(1_000_000_000_000_000)
+	balances := sdk.NewCoins(sdk.NewInt64Coin("aau", initialBalanceAmount.Int64()))
+	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, balances))
+	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, balances))
+
+	potInt := sdk.NewInt(50_000_000_000)
+	ticketCost := sdk.NewInt(10_000_000)
+	msg := types.MsgStartRaffle{
+		Creator:     addr1.String(),
+		Pot:         potInt.String(),
+		Duration:    "1",
+		Chances:     "100",
+		Ratio:       "0.15",
+		TicketPrice: ticketCost.String(),
+		Denom:       "aau",
+	}
+	_, err := suite.msgServer.StartRaffle(goCtx, &msg)
+	suite.Require().NoError(err)
+
+	addrBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr1, "aau")
+	suite.Require().EqualValues(addrBalance.Amount, initialBalanceAmount.Sub(potInt))
+
+	addr2Balance := suite.app.BankKeeper.GetBalance(suite.ctx, addr2, "aau")
+	suite.Require().EqualValues(addr2Balance.Amount, initialBalanceAmount)
+
+	moduleAddress := suite.app.AccountKeeper.GetModuleAddress(types.RaffleModuleName)
+	moduleBalance := suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddress, "aau")
+	suite.Require().EqualValues(moduleBalance.Amount, potInt)
+
+	ratio, err := sdk.NewDecFromStr(msg.Ratio)
+	suite.Require().NoError(err)
+
+	winCount := 0
+	ticketsStart := time.Now().Unix()
+	ticketsToPlace := int64(10000)
+	totalPotWon := sdk.ZeroInt()
+
+	for i := ticketsStart; i < ticketsStart+ticketsToPlace; i++ {
+		appHash := fmt.Sprintf("%x", i)
+		blockHash := []byte("block_id" + appHash)
+		suite.ctx = suite.ctx.WithBlockHeader(tmproto.Header{
+			LastBlockId: tmproto.BlockID{
+				Hash: tmhash.Sum(blockHash),
+			},
+			AppHash: tmhash.Sum([]byte(appHash)),
+			Height:  i,
+		}).WithEventManager(sdk.NewEventManager())
+
+		goCtx = sdk.WrapSDKContext(suite.ctx)
+		addrBalance = suite.app.BankKeeper.GetBalance(suite.ctx, addr1, "aau")
+		addr2Balance = suite.app.BankKeeper.GetBalance(suite.ctx, addr2, "aau")
+		moduleBalance = suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddress, "aau")
+		winners := suite.k.GetRaffleWinners(suite.ctx, "aau")
+
+		join := types.MsgJoinRaffle{
+			Creator: addr1.String(),
+			Denom:   "aau",
+		}
+		join2 := types.MsgJoinRaffle{
+			Creator: addr2.String(),
+			Denom:   "aau",
+		}
+
+		_, err = suite.msgServer.JoinRaffle(goCtx, &join)
+		suite.Require().NoError(err)
+		_, err = suite.msgServer.JoinRaffle(goCtx, &join2)
+		suite.Require().NoError(err)
+
+		suite.k.WithdrawLuckyRaffleParticipants(suite.ctx, suite.ctx.BlockHeight())
+
+		for _, e := range suite.ctx.EventManager().Events() {
+			if strings.Contains(e.Type, "RaffleWinnerEvent") {
+				winCount++
+				//wonAmount := currentPot.Amount.Sub(ticketPriceInt).ToDec().Mul(winRatio).TruncateInt()
+				prize := moduleBalance.Amount.ToDec().Mul(ratio).TruncateInt()
+				if !prize.IsPositive() {
+					prize = moduleBalance.SubAmount(ticketCost).Amount
+				}
+				totalPotWon = totalPotWon.Add(prize)
+
+				wantedAddress := addr1
+				compareAddress := addrBalance
+				for _, attr := range e.Attributes {
+					if strings.Contains(attr.String(), addr2.String()) {
+						wantedAddress = addr2
+						compareAddress = addr2Balance
+					}
+				}
+				newBalance := suite.app.BankKeeper.GetBalance(suite.ctx, wantedAddress, "aau")
+				suite.Require().True(newBalance.Amount.GT(compareAddress.Amount))
+
+				newWinners := suite.k.GetRaffleWinners(suite.ctx, "aau")
+				suite.Require().True(len(newWinners) > len(winners) || len(newWinners) == 100)
 			}
 		}
 	}

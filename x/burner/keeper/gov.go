@@ -4,8 +4,6 @@ import (
 	"github.com/bze-alphateam/bze/x/burner/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"strconv"
 )
 
 func (k Keeper) HandleBurnCoinsProposal(ctx sdk.Context, proposal *types.BurnCoinsProposal) error {
@@ -21,13 +19,9 @@ func (k Keeper) HandleBurnCoinsProposal(ctx sdk.Context, proposal *types.BurnCoi
 		panic(err)
 	}
 
-	var burnedCoins = types.BurnedCoins{
-		Burned: coins.String(),
-		Height: strconv.FormatInt(ctx.BlockHeader().Height, 10),
-	}
-	k.SetBurnedCoins(ctx, burnedCoins)
+	k.SaveBurnedCoins(ctx, coins)
 
-	err = ctx.EventManager().EmitTypedEvent(&types.CoinsBurnedEvent{Burned: burnedCoins.Burned})
+	err = ctx.EventManager().EmitTypedEvent(&types.CoinsBurnedEvent{Burned: coins.String()})
 	if err != nil {
 		return err
 	}

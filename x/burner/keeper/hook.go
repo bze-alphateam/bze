@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/bze-alphateam/bze/x/burner/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"strings"
 )
 
 const (
@@ -57,6 +58,13 @@ func (k Keeper) burnerRaffleCleanup(ctx sdk.Context, epochNumber int64) {
 		if err != nil {
 			logger.Error("failed to burn raffle remaining coins", "error", err)
 			continue
+		}
+
+		if !strings.HasPrefix(item.Denom, "factory") {
+			err = k.SaveBurnedCoins(ctx, sdk.NewCoins(currentPot))
+			if err != nil {
+				logger.Error("failed to save burned coins", "error", err)
+			}
 		}
 
 		logger.Debug("burned raffle coins", "burned_current_pot", currentPot)
