@@ -661,6 +661,10 @@ func (suite *IntegrationTestSuite) TestJoinRaffle_Stress() {
 		addrBalance = suite.app.BankKeeper.GetBalance(suite.ctx, addr1, "aau")
 		moduleBalance = suite.app.BankKeeper.GetBalance(suite.ctx, moduleAddress, "aau")
 		winners := suite.k.GetRaffleWinners(suite.ctx, "aau")
+		raffle, ok := suite.k.GetRaffle(suite.ctx, "aau")
+		suite.Require().True(ok)
+		raffleTotalWon, ok := sdk.NewIntFromString(raffle.TotalWon)
+		suite.Require().True(ok)
 
 		join := types.MsgJoinRaffle{
 			Creator: addr1.String(),
@@ -690,6 +694,12 @@ func (suite *IntegrationTestSuite) TestJoinRaffle_Stress() {
 				newWinners := suite.k.GetRaffleWinners(suite.ctx, "aau")
 				suite.Require().True(len(newWinners) == len(winners)+1 || len(newWinners) == 100)
 
+				//check totalWon
+				r, ok := suite.k.GetRaffle(suite.ctx, "aau")
+				suite.Require().True(ok)
+				rTotalWon, ok := sdk.NewIntFromString(r.TotalWon)
+				suite.Require().True(ok)
+				suite.Require().EqualValues(rTotalWon, raffleTotalWon.Add(prize))
 			} else if strings.Contains(e.Type, "RaffleLostEvent") {
 
 				newBalance := suite.app.BankKeeper.GetBalance(suite.ctx, addr1, "aau")

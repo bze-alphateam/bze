@@ -12,6 +12,7 @@ message Raffle {
   uint64 winners = 6;
   string ticketPrice = 7;
   string denom = 8;
+  string totalWon = 9;
 }
 
 message RaffleDeleteHook {

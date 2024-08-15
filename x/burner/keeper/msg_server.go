@@ -117,6 +117,7 @@ func (k Keeper) raffleFromMsgStartRaffle(ctx sdk.Context, msg *types.MsgStartRaf
 	raffle.Winners = 0
 	currentEpoch := k.GetRaffleCurrentEpoch(ctx)
 	raffle.EndAt = currentEpoch + (raffle.Duration * 24)
+	raffle.TotalWon = sdk.ZeroInt().String()
 
 	return raffle, nil
 }

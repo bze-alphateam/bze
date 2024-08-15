@@ -69,6 +69,14 @@ func (k Keeper) WithdrawLuckyRaffleParticipants(ctx sdk.Context, height int64) {
 			}
 
 			raffle.Winners += 1
+			raffleWon, ok := sdk.NewIntFromString(raffle.TotalWon)
+			if !ok {
+				logger.Error("could not parse total won")
+			} else {
+				raffleWon = raffleWon.Add(wonCoin.Amount)
+				raffle.TotalWon = raffleWon.String()
+			}
+
 			k.SetRaffle(ctx, raffle)
 			k.SetRaffleWinner(ctx, types.RaffleWinner{
 				Index:  strconv.Itoa(int(raffle.Winners) % 100), //keep only 100 winners
