@@ -118,28 +118,192 @@ func (m *FundBurnerEvent) GetAmount() string {
 	return ""
 }
 
+type RaffleWinnerEvent struct {
+	Denom  string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	Winner string `protobuf:"bytes,2,opt,name=winner,proto3" json:"winner,omitempty"`
+	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+}
+
+func (m *RaffleWinnerEvent) Reset()         { *m = RaffleWinnerEvent{} }
+func (m *RaffleWinnerEvent) String() string { return proto.CompactTextString(m) }
+func (*RaffleWinnerEvent) ProtoMessage()    {}
+func (*RaffleWinnerEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1ac06489072f6c70, []int{2}
+}
+func (m *RaffleWinnerEvent) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RaffleWinnerEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RaffleWinnerEvent.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RaffleWinnerEvent) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RaffleWinnerEvent.Merge(m, src)
+}
+func (m *RaffleWinnerEvent) XXX_Size() int {
+	return m.Size()
+}
+func (m *RaffleWinnerEvent) XXX_DiscardUnknown() {
+	xxx_messageInfo_RaffleWinnerEvent.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RaffleWinnerEvent proto.InternalMessageInfo
+
+func (m *RaffleWinnerEvent) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *RaffleWinnerEvent) GetWinner() string {
+	if m != nil {
+		return m.Winner
+	}
+	return ""
+}
+
+func (m *RaffleWinnerEvent) GetAmount() string {
+	if m != nil {
+		return m.Amount
+	}
+	return ""
+}
+
+type RaffleLostEvent struct {
+	Denom       string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	Participant string `protobuf:"bytes,2,opt,name=participant,proto3" json:"participant,omitempty"`
+}
+
+func (m *RaffleLostEvent) Reset()         { *m = RaffleLostEvent{} }
+func (m *RaffleLostEvent) String() string { return proto.CompactTextString(m) }
+func (*RaffleLostEvent) ProtoMessage()    {}
+func (*RaffleLostEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1ac06489072f6c70, []int{3}
+}
+func (m *RaffleLostEvent) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RaffleLostEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RaffleLostEvent.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RaffleLostEvent) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RaffleLostEvent.Merge(m, src)
+}
+func (m *RaffleLostEvent) XXX_Size() int {
+	return m.Size()
+}
+func (m *RaffleLostEvent) XXX_DiscardUnknown() {
+	xxx_messageInfo_RaffleLostEvent.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RaffleLostEvent proto.InternalMessageInfo
+
+func (m *RaffleLostEvent) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *RaffleLostEvent) GetParticipant() string {
+	if m != nil {
+		return m.Participant
+	}
+	return ""
+}
+
+type RaffleFinishedEvent struct {
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (m *RaffleFinishedEvent) Reset()         { *m = RaffleFinishedEvent{} }
+func (m *RaffleFinishedEvent) String() string { return proto.CompactTextString(m) }
+func (*RaffleFinishedEvent) ProtoMessage()    {}
+func (*RaffleFinishedEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1ac06489072f6c70, []int{4}
+}
+func (m *RaffleFinishedEvent) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RaffleFinishedEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RaffleFinishedEvent.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RaffleFinishedEvent) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RaffleFinishedEvent.Merge(m, src)
+}
+func (m *RaffleFinishedEvent) XXX_Size() int {
+	return m.Size()
+}
+func (m *RaffleFinishedEvent) XXX_DiscardUnknown() {
+	xxx_messageInfo_RaffleFinishedEvent.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RaffleFinishedEvent proto.InternalMessageInfo
+
+func (m *RaffleFinishedEvent) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*CoinsBurnedEvent)(nil), "bze.burner.v1.CoinsBurnedEvent")
 	proto.RegisterType((*FundBurnerEvent)(nil), "bze.burner.v1.FundBurnerEvent")
+	proto.RegisterType((*RaffleWinnerEvent)(nil), "bze.burner.v1.RaffleWinnerEvent")
+	proto.RegisterType((*RaffleLostEvent)(nil), "bze.burner.v1.RaffleLostEvent")
+	proto.RegisterType((*RaffleFinishedEvent)(nil), "bze.burner.v1.RaffleFinishedEvent")
 }
 
 func init() { proto.RegisterFile("burner/events.proto", fileDescriptor_1ac06489072f6c70) }
 
 var fileDescriptor_1ac06489072f6c70 = []byte{
-	// 195 bytes of a gzipped FileDescriptorProto
+	// 279 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4e, 0x2a, 0x2d, 0xca,
 	0x4b, 0x2d, 0xd2, 0x4f, 0x2d, 0x4b, 0xcd, 0x2b, 0x29, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17,
 	0xe2, 0x4d, 0xaa, 0x4a, 0xd5, 0x83, 0x48, 0xe8, 0x95, 0x19, 0x2a, 0x69, 0x71, 0x09, 0x38, 0xe7,
 	0x67, 0xe6, 0x15, 0x3b, 0x81, 0x44, 0x52, 0x5c, 0x41, 0x2a, 0x85, 0xc4, 0xb8, 0xd8, 0xc0, 0x0a,
 	0x52, 0x24, 0x18, 0x15, 0x18, 0x35, 0x38, 0x83, 0xa0, 0x3c, 0x25, 0x5b, 0x2e, 0x7e, 0xb7, 0xd2,
 	0xbc, 0x14, 0xb0, 0xd2, 0x22, 0x88, 0x52, 0x21, 0x2e, 0x96, 0xb4, 0xa2, 0xfc, 0x5c, 0xa8, 0x42,
-	0x30, 0x1b, 0xa4, 0x3d, 0x31, 0x37, 0xbf, 0x34, 0xaf, 0x44, 0x82, 0x09, 0xa2, 0x1d, 0xc2, 0x73,
-	0x72, 0x3d, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c,
-	0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0xed, 0xf4, 0xcc, 0x92,
-	0x8c, 0xd2, 0x24, 0xbd, 0xe4, 0xfc, 0x5c, 0xfd, 0xa4, 0xaa, 0x54, 0xdd, 0xc4, 0x9c, 0x82, 0x8c,
-	0xc4, 0x92, 0xd4, 0x44, 0x30, 0x4f, 0xbf, 0x42, 0x1f, 0xea, 0x8f, 0x92, 0xca, 0x82, 0xd4, 0xe2,
-	0x24, 0x36, 0xb0, 0x3f, 0x8c, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0x5d, 0xe7, 0x79, 0xbe, 0xde,
-	0x00, 0x00, 0x00,
+	0x30, 0x1b, 0xa4, 0x3d, 0x31, 0x37, 0xbf, 0x34, 0xaf, 0x44, 0x82, 0x09, 0xa2, 0x1d, 0xc2, 0x53,
+	0x8a, 0xe4, 0x12, 0x0c, 0x4a, 0x4c, 0x4b, 0xcb, 0x49, 0x0d, 0xcf, 0xcc, 0x83, 0x1b, 0x20, 0xc2,
+	0xc5, 0x9a, 0x92, 0x9a, 0x07, 0x37, 0x01, 0xc2, 0x01, 0x19, 0x51, 0x0e, 0x56, 0x04, 0x33, 0x02,
+	0xc2, 0x43, 0x32, 0x9a, 0x19, 0xc5, 0x68, 0x4f, 0x2e, 0x7e, 0x88, 0xd1, 0x3e, 0xf9, 0xc5, 0x25,
+	0xf8, 0x0c, 0x56, 0xe0, 0xe2, 0x2e, 0x48, 0x2c, 0x2a, 0xc9, 0x4c, 0xce, 0x2c, 0x48, 0x84, 0x3b,
+	0x10, 0x59, 0x48, 0x49, 0x9b, 0x4b, 0x18, 0x62, 0x94, 0x5b, 0x66, 0x5e, 0x66, 0x71, 0x06, 0x2c,
+	0x4c, 0xb0, 0x1a, 0xe7, 0xe4, 0x7a, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c, 0x0f, 0x1e,
+	0xc9, 0x31, 0x4e, 0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d, 0xc7, 0x72, 0x0c, 0x51,
+	0xda, 0xe9, 0x99, 0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0xfa, 0x49, 0x55, 0xa9, 0xba,
+	0x89, 0x39, 0x05, 0x19, 0x89, 0x25, 0xa9, 0x89, 0x60, 0x9e, 0x7e, 0x85, 0x3e, 0x34, 0x6a, 0x4a,
+	0x2a, 0x0b, 0x52, 0x8b, 0x93, 0xd8, 0xc0, 0x51, 0x63, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0x5f,
+	0x55, 0x0a, 0x54, 0xb1, 0x01, 0x00, 0x00,
 }
 
 func (m *CoinsBurnedEvent) Marshal() (dAtA []byte, err error) {
@@ -209,6 +373,117 @@ func (m *FundBurnerEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *RaffleWinnerEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RaffleWinnerEvent) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RaffleWinnerEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Amount) > 0 {
+		i -= len(m.Amount)
+		copy(dAtA[i:], m.Amount)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Amount)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Winner) > 0 {
+		i -= len(m.Winner)
+		copy(dAtA[i:], m.Winner)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Winner)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RaffleLostEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RaffleLostEvent) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RaffleLostEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Participant) > 0 {
+		i -= len(m.Participant)
+		copy(dAtA[i:], m.Participant)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Participant)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RaffleFinishedEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RaffleFinishedEvent) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RaffleFinishedEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintEvents(dAtA []byte, offset int, v uint64) int {
 	offset -= sovEvents(v)
 	base := offset
@@ -244,6 +519,57 @@ func (m *FundBurnerEvent) Size() (n int) {
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	l = len(m.Amount)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *RaffleWinnerEvent) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Winner)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Amount)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *RaffleLostEvent) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Participant)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *RaffleFinishedEvent) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
@@ -430,6 +756,348 @@ func (m *FundBurnerEvent) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Amount = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RaffleWinnerEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RaffleWinnerEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RaffleWinnerEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Winner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Winner = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RaffleLostEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RaffleLostEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RaffleLostEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Participant", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Participant = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RaffleFinishedEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RaffleFinishedEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RaffleFinishedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

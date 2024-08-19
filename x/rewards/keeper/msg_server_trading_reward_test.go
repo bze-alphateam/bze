@@ -227,7 +227,7 @@ func (suite *IntegrationTestSuite) TestCreateTradingReward_Success() {
 	initialUserBalances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
 	suite.Require().True(initialUserBalances.IsZero())
 
-	balances := sdk.NewCoins(sdk.NewInt64Coin("ubze", 10000002000))
+	balances := sdk.NewCoins(sdk.NewInt64Coin("ubze", 50000002000))
 	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, balances))
 	suite.app.TradebinKeeper.SetMarket(suite.ctx, types2.Market{
 		Base:    "stake",

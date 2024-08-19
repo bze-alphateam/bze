@@ -9,6 +9,42 @@
  * ---------------------------------------------------------------
  */
 
+export interface Cointrunkv1AcceptedDomain {
+  domain?: string;
+  active?: boolean;
+}
+
+export interface Cointrunkv1Params {
+  /** @format uint64 */
+  anon_article_limit?: string;
+
+  /**
+   * Coin defines a token with a denomination and an amount.
+   *
+   * NOTE: The amount field is an Int which implements the custom method
+   * signatures required by gogoproto.
+   */
+  anon_article_cost?: V1Beta1Coin;
+
+  /** Params defines the parameters for the module. */
+  publisher_respect_params?: V1PublisherRespectParams;
+}
+
+export interface Cointrunkv1Publisher {
+  name?: string;
+  address?: string;
+  active?: boolean;
+
+  /** @format int64 */
+  articles_count?: number;
+
+  /** @format int64 */
+  created_at?: string;
+
+  /** @format int64 */
+  respect?: string;
+}
+
 export interface ProtobufAny {
   "@type"?: string;
 }
@@ -18,11 +54,6 @@ export interface RpcStatus {
   code?: number;
   message?: string;
   details?: ProtobufAny[];
-}
-
-export interface V1AcceptedDomain {
-  domain?: string;
-  active?: boolean;
 }
 
 export interface V1AnonArticlesCounter {
@@ -58,37 +89,6 @@ export interface V1MsgPayPublisherRespectResponse {
   community_pool_funds?: string;
 }
 
-export interface V1Params {
-  /** @format uint64 */
-  anon_article_limit?: string;
-
-  /**
-   * Coin defines a token with a denomination and an amount.
-   *
-   * NOTE: The amount field is an Int which implements the custom method
-   * signatures required by gogoproto.
-   */
-  anon_article_cost?: V1Beta1Coin;
-
-  /** Params defines the parameters for the module. */
-  publisher_respect_params?: V1PublisherRespectParams;
-}
-
-export interface V1Publisher {
-  name?: string;
-  address?: string;
-  active?: boolean;
-
-  /** @format int64 */
-  articles_count?: number;
-
-  /** @format int64 */
-  created_at?: string;
-
-  /** @format int64 */
-  respect?: string;
-}
-
 /**
  * Params defines the parameters for the module.
  */
@@ -98,7 +98,7 @@ export interface V1PublisherRespectParams {
 }
 
 export interface V1QueryAcceptedDomainResponse {
-  acceptedDomain?: V1AcceptedDomain[];
+  acceptedDomain?: Cointrunkv1AcceptedDomain[];
 
   /**
    * PageResponse is to be embedded in gRPC response messages where the
@@ -147,15 +147,15 @@ export interface V1QueryAllArticlesResponse {
  */
 export interface V1QueryParamsResponse {
   /** params holds all the parameters of this module. */
-  params?: V1Params;
+  params?: Cointrunkv1Params;
 }
 
 export interface V1QueryPublisherByIndexResponse {
-  publisher?: V1Publisher;
+  publisher?: Cointrunkv1Publisher;
 }
 
 export interface V1QueryPublisherResponse {
-  publisher?: V1Publisher[];
+  publisher?: Cointrunkv1Publisher[];
 
   /**
    * PageResponse is to be embedded in gRPC response messages where the

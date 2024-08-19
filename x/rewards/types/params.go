@@ -12,12 +12,12 @@ var _ paramtypes.ParamSet = (*Params)(nil)
 
 var (
 	KeyCreateStakingRewardFee     = []byte("CreateStakingRewardFee")
-	DefaultCreateStakingRewardFee = "10000000000ubze"
+	DefaultCreateStakingRewardFee = "25000000000ubze"
 )
 
 var (
 	KeyCreateTradingRewardFee     = []byte("CreateTradingRewardFee")
-	DefaultCreateTradingRewardFee = "10000000000ubze"
+	DefaultCreateTradingRewardFee = "50000000000ubze"
 )
 
 // ParamKeyTable the param key table for launch module

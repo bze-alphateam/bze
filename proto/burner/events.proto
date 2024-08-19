@@ -11,3 +11,18 @@ message FundBurnerEvent {
   string from = 1;
   string amount = 2;
 }
+
+message RaffleWinnerEvent {
+  string denom = 1;
+  string winner = 2;
+  string amount = 3;
+}
+
+message RaffleLostEvent {
+  string denom = 1;
+  string participant = 2;
+}
+
+message RaffleFinishedEvent {
+  string denom = 1;
+}

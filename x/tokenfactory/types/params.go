@@ -12,7 +12,7 @@ var _ paramtypes.ParamSet = (*Params)(nil)
 
 var (
 	KeyCreateDenomFee            = []byte("CreateDenomFee")
-	DefaultCreateDenomFee string = "10000000000ubze"
+	DefaultCreateDenomFee string = "25000000000ubze"
 )
 
 // ParamKeyTable the param key table for launch module
