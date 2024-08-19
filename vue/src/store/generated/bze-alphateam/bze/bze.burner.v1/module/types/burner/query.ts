@@ -6,7 +6,7 @@ import {
   PageResponse,
 } from "../cosmos/base/query/v1beta1/pagination";
 import { BurnedCoins } from "../burner/burned_coins";
-import { Raffle } from "../burner/raffle";
+import { Raffle, RaffleWinner } from "../burner/raffle";
 
 export const protobufPackage = "bze.burner.v1";
 
@@ -38,10 +38,12 @@ export interface QueryRafflesResponse {
 }
 
 export interface QueryRaffleWinnersRequest {
+  denom: string;
   pagination: PageRequest | undefined;
 }
 
 export interface QueryRaffleWinnersResponse {
+  list: RaffleWinner[];
   pagination: PageResponse | undefined;
 }
 
@@ -464,15 +466,18 @@ export const QueryRafflesResponse = {
   },
 };
 
-const baseQueryRaffleWinnersRequest: object = {};
+const baseQueryRaffleWinnersRequest: object = { denom: "" };
 
 export const QueryRaffleWinnersRequest = {
   encode(
     message: QueryRaffleWinnersRequest,
     writer: Writer = Writer.create()
   ): Writer {
+    if (message.denom !== "") {
+      writer.uint32(10).string(message.denom);
+    }
     if (message.pagination !== undefined) {
-      PageRequest.encode(message.pagination, writer.uint32(10).fork()).ldelim();
+      PageRequest.encode(message.pagination, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
@@ -490,6 +495,9 @@ export const QueryRaffleWinnersRequest = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          message.denom = reader.string();
+          break;
+        case 2:
           message.pagination = PageRequest.decode(reader, reader.uint32());
           break;
         default:
@@ -504,6 +512,11 @@ export const QueryRaffleWinnersRequest = {
     const message = {
       ...baseQueryRaffleWinnersRequest,
     } as QueryRaffleWinnersRequest;
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = String(object.denom);
+    } else {
+      message.denom = "";
+    }
     if (object.pagination !== undefined && object.pagination !== null) {
       message.pagination = PageRequest.fromJSON(object.pagination);
     } else {
@@ -514,6 +527,7 @@ export const QueryRaffleWinnersRequest = {
 
   toJSON(message: QueryRaffleWinnersRequest): unknown {
     const obj: any = {};
+    message.denom !== undefined && (obj.denom = message.denom);
     message.pagination !== undefined &&
       (obj.pagination = message.pagination
         ? PageRequest.toJSON(message.pagination)
@@ -527,6 +541,11 @@ export const QueryRaffleWinnersRequest = {
     const message = {
       ...baseQueryRaffleWinnersRequest,
     } as QueryRaffleWinnersRequest;
+    if (object.denom !== undefined && object.denom !== null) {
+      message.denom = object.denom;
+    } else {
+      message.denom = "";
+    }
     if (object.pagination !== undefined && object.pagination !== null) {
       message.pagination = PageRequest.fromPartial(object.pagination);
     } else {
@@ -543,10 +562,13 @@ export const QueryRaffleWinnersResponse = {
     message: QueryRaffleWinnersResponse,
     writer: Writer = Writer.create()
   ): Writer {
+    for (const v of message.list) {
+      RaffleWinner.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
     if (message.pagination !== undefined) {
       PageResponse.encode(
         message.pagination,
-        writer.uint32(10).fork()
+        writer.uint32(18).fork()
       ).ldelim();
     }
     return writer;
@@ -561,10 +583,14 @@ export const QueryRaffleWinnersResponse = {
     const message = {
       ...baseQueryRaffleWinnersResponse,
     } as QueryRaffleWinnersResponse;
+    message.list = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
+          message.list.push(RaffleWinner.decode(reader, reader.uint32()));
+          break;
+        case 2:
           message.pagination = PageResponse.decode(reader, reader.uint32());
           break;
         default:
@@ -579,6 +605,12 @@ export const QueryRaffleWinnersResponse = {
     const message = {
       ...baseQueryRaffleWinnersResponse,
     } as QueryRaffleWinnersResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(RaffleWinner.fromJSON(e));
+      }
+    }
     if (object.pagination !== undefined && object.pagination !== null) {
       message.pagination = PageResponse.fromJSON(object.pagination);
     } else {
@@ -589,6 +621,13 @@ export const QueryRaffleWinnersResponse = {
 
   toJSON(message: QueryRaffleWinnersResponse): unknown {
     const obj: any = {};
+    if (message.list) {
+      obj.list = message.list.map((e) =>
+        e ? RaffleWinner.toJSON(e) : undefined
+      );
+    } else {
+      obj.list = [];
+    }
     message.pagination !== undefined &&
       (obj.pagination = message.pagination
         ? PageResponse.toJSON(message.pagination)
@@ -602,6 +641,12 @@ export const QueryRaffleWinnersResponse = {
     const message = {
       ...baseQueryRaffleWinnersResponse,
     } as QueryRaffleWinnersResponse;
+    message.list = [];
+    if (object.list !== undefined && object.list !== null) {
+      for (const e of object.list) {
+        message.list.push(RaffleWinner.fromPartial(e));
+      }
+    }
     if (object.pagination !== undefined && object.pagination !== null) {
       message.pagination = PageResponse.fromPartial(object.pagination);
     } else {
