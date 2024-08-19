@@ -303,7 +303,7 @@ func (suite *IntegrationTestSuite) TestCreateStakingReward_Success() {
 	initialUserBalances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
 	suite.Require().True(initialUserBalances.IsZero())
 
-	balances := sdk.NewCoins(sdk.NewInt64Coin("ubze", 20000000000))
+	balances := sdk.NewCoins(sdk.NewInt64Coin("ubze", 40_000_000_000))
 	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, balances))
 
 	msg := types.MsgCreateStakingReward{
@@ -330,9 +330,9 @@ func (suite *IntegrationTestSuite) TestCreateStakingReward_Success() {
 	suite.Require().EqualValues(1, storeStakingReward.Lock)
 	suite.Require().EqualValues(0, storeStakingReward.Payouts)
 
-	expectedRemainingBalance := sdk.NewCoins(sdk.NewInt64Coin("ubze", 9999999000))
+	expectedRemainingBalance := sdk.NewCoins(sdk.NewInt64Coin("ubze", 14999999000))
 	actualRemainingBalance := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
-	suite.Require().True(actualRemainingBalance.IsEqual(expectedRemainingBalance))
+	suite.Require().EqualValues(expectedRemainingBalance, actualRemainingBalance)
 }
 
 func (suite *IntegrationTestSuite) TestUpdateStakingReward_Success() {
