@@ -9,6 +9,21 @@
  * ---------------------------------------------------------------
  */
 
+export interface BzescavengeCommit {
+  index?: string;
+  solutionHash?: string;
+  solutionScavengerHash?: string;
+}
+
+export interface BzescavengeScavenge {
+  index?: string;
+  solutionHash?: string;
+  solution?: string;
+  description?: string;
+  reward?: string;
+  scavenger?: string;
+}
+
 export interface ProtobufAny {
   "@type"?: string;
 }
@@ -20,12 +35,6 @@ export interface RpcStatus {
   details?: ProtobufAny[];
 }
 
-export interface ScavengeCommit {
-  index?: string;
-  solutionHash?: string;
-  solutionScavengerHash?: string;
-}
-
 export type ScavengeMsgCommitSolutionResponse = object;
 
 export type ScavengeMsgRevealSolutionResponse = object;
@@ -33,7 +42,7 @@ export type ScavengeMsgRevealSolutionResponse = object;
 export type ScavengeMsgSubmitScavengeResponse = object;
 
 export interface ScavengeQueryAllCommitResponse {
-  commit?: ScavengeCommit[];
+  commit?: BzescavengeCommit[];
 
   /**
    * PageResponse is to be embedded in gRPC response messages where the
@@ -48,7 +57,7 @@ export interface ScavengeQueryAllCommitResponse {
 }
 
 export interface ScavengeQueryAllScavengeResponse {
-  scavenge?: ScavengeScavenge[];
+  scavenge?: BzescavengeScavenge[];
 
   /**
    * PageResponse is to be embedded in gRPC response messages where the
@@ -63,20 +72,11 @@ export interface ScavengeQueryAllScavengeResponse {
 }
 
 export interface ScavengeQueryGetCommitResponse {
-  commit?: ScavengeCommit;
+  commit?: BzescavengeCommit;
 }
 
 export interface ScavengeQueryGetScavengeResponse {
-  scavenge?: ScavengeScavenge;
-}
-
-export interface ScavengeScavenge {
-  index?: string;
-  solutionHash?: string;
-  solution?: string;
-  description?: string;
-  reward?: string;
-  scavenger?: string;
+  scavenge?: BzescavengeScavenge;
 }
 
 /**
