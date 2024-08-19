@@ -6,6 +6,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "burner/params.proto";
 import "burner/burned_coins.proto";
+import "burner/raffle.proto";
 // this line is used by starport scaffolding # 1
 
 option go_package = "github.com/bze-alphateam/bze/x/burner/types";
@@ -16,7 +17,17 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/bze/burner/v1/params";
   }
-  // this line is used by starport scaffolding # 2
+  // Queries a list of Raffles items.
+	rpc Raffles(QueryRafflesRequest) returns (QueryRafflesResponse) {
+		option (google.api.http).get = "/bze/burner/v1/raffles";
+	}
+
+// Queries a list of RaffleWinners items.
+	rpc RaffleWinners(QueryRaffleWinnersRequest) returns (QueryRaffleWinnersResponse) {
+		option (google.api.http).get = "/bze/burner/v1/raffle_winners";
+	}
+
+// this line is used by starport scaffolding # 2
 
   rpc AllBurnedCoins(QueryAllBurnedCoinsRequest) returns (QueryAllBurnedCoinsResponse) {
     option (google.api.http).get = "/bze/burner/v1/all_burned_coins";
@@ -38,6 +49,25 @@ message QueryAllBurnedCoinsRequest {
 
 message QueryAllBurnedCoinsResponse {
   repeated BurnedCoins burnedCoins = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryRafflesRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryRafflesResponse {
+  repeated Raffle list = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryRaffleWinnersRequest {
+  string denom = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryRaffleWinnersResponse {
+  repeated RaffleWinner list = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
