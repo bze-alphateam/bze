@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/bze-alphateam/bze/app/openapi"
-	v700 "github.com/bze-alphateam/bze/app/upgrades/v700"
+	v710 "github.com/bze-alphateam/bze/app/upgrades/v710"
 	"github.com/bze-alphateam/bze/x/epochs"
 	epochskeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
 	epochstypes "github.com/bze-alphateam/bze/x/epochs/types"
@@ -32,7 +32,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -711,27 +710,9 @@ func New(
 
 func (app *App) setupUpgradeHandlers(cfg module.Configurator) {
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v700.UpgradeName,
-		v700.CreateUpgradeHandler(cfg, app.mm),
+		v710.UpgradeName,
+		v710.CreateUpgradeHandler(cfg, app.mm),
 	)
-
-	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-	if err != nil {
-		panic(err)
-	}
-
-	if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		return
-	}
-
-	if upgradeInfo.Name == v700.UpgradeName {
-		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{tokenfactorytypes.StoreKey, tradebintypes.StoreKey, epochstypes.StoreKey, rewardstypes.StoreKey},
-		}
-
-		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
-	}
 }
 
 // Name returns the name of the App

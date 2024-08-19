@@ -256,21 +256,6 @@ export default {
 		},
 		
 		
-		async sendMsgFundBurner({ rootGetters }, { value, fee = [], memo = '' }) {
-			try {
-				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgFundBurner(value)
-				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
-	gas: "200000" }, memo})
-				return result
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgFundBurner:Init Could not initialize signing client. Wallet is required.')
-				}else{
-					throw new Error('TxClient:MsgFundBurner:Send Could not broadcast Tx: '+ e.message)
-				}
-			}
-		},
 		async sendMsgStartRaffle({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
@@ -283,6 +268,21 @@ export default {
 					throw new Error('TxClient:MsgStartRaffle:Init Could not initialize signing client. Wallet is required.')
 				}else{
 					throw new Error('TxClient:MsgStartRaffle:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
+		async sendMsgFundBurner({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgFundBurner(value)
+				const result = await txClient.signAndBroadcast([msg], {fee: { amount: fee, 
+	gas: "200000" }, memo})
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgFundBurner:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgFundBurner:Send Could not broadcast Tx: '+ e.message)
 				}
 			}
 		},
@@ -302,19 +302,6 @@ export default {
 			}
 		},
 		
-		async MsgFundBurner({ rootGetters }, { value }) {
-			try {
-				const txClient=await initTxClient(rootGetters)
-				const msg = await txClient.msgFundBurner(value)
-				return msg
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgFundBurner:Init Could not initialize signing client. Wallet is required.')
-				} else{
-					throw new Error('TxClient:MsgFundBurner:Create Could not create message: ' + e.message)
-				}
-			}
-		},
 		async MsgStartRaffle({ rootGetters }, { value }) {
 			try {
 				const txClient=await initTxClient(rootGetters)
@@ -325,6 +312,19 @@ export default {
 					throw new Error('TxClient:MsgStartRaffle:Init Could not initialize signing client. Wallet is required.')
 				} else{
 					throw new Error('TxClient:MsgStartRaffle:Create Could not create message: ' + e.message)
+				}
+			}
+		},
+		async MsgFundBurner({ rootGetters }, { value }) {
+			try {
+				const txClient=await initTxClient(rootGetters)
+				const msg = await txClient.msgFundBurner(value)
+				return msg
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgFundBurner:Init Could not initialize signing client. Wallet is required.')
+				} else{
+					throw new Error('TxClient:MsgFundBurner:Create Could not create message: ' + e.message)
 				}
 			}
 		},
