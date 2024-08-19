@@ -708,7 +708,7 @@ func New(
 	return app
 }
 
-func (app *App) setupUpgradeHandlers(cfg module.Configurator) {
+func (app *SimApp) setupUpgradeHandlers(cfg module.Configurator) {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v710.UpgradeName,
 		v710.CreateUpgradeHandler(cfg, app.mm),
