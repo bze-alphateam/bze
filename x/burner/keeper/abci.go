@@ -7,7 +7,7 @@ import (
 )
 
 func (k Keeper) WithdrawLuckyRaffleParticipants(ctx sdk.Context, height int64) {
-	participants := k.GetAllPrefixedRaffleParticipants(ctx, ctx.BlockHeight())
+	participants := k.GetAllPrefixedRaffleParticipants(ctx, height)
 	if len(participants) == 0 {
 		k.Logger(ctx).Info("no raffle participants found.")
 		return
