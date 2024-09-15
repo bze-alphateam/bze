@@ -15,6 +15,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_InvalidAmount() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 	_, err := suite.msgServer.CreateOrder(goCtx, &types.MsgCreateOrder{
 		Amount: "hdsihdshdshids",
+		Price:  "1",
 	})
 
 	suite.Require().NotNil(err)
@@ -482,15 +483,118 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_StressBalance() {
 	suite.Require().Equal(moduleBalance, amounts)
 }
 
+func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_CheckPrice_Fail() {
+	suite.k.SetMarket(suite.ctx, market)
+	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Amount:    "10000",
+		Price:     "1",
+	})
+	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeSell,
+		Amount:    "10000",
+		Price:     "5",
+	})
+
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	addr1 := sdk.AccAddress("addr1_______________")
+	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
+
+	//initial balances need to be 0
+	initialUserBalances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
+	suite.Require().True(initialUserBalances.IsZero())
+
+	balances := sdk.NewCoins(newStakeCoin(10000000), newBzeCoin(20000000000))
+	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, balances))
+
+	//check price error on sell order
+	orderMsg := types.MsgCreateOrder{
+		Amount:    "1000000",
+		Price:     "0.5",
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeSell,
+		Creator:   addr1.String(),
+	}
+	_, err := suite.msgServer.CreateOrder(goCtx, &orderMsg)
+
+	suite.Require().Error(err)
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 0)
+
+	//check price error on buy
+	orderMsg = types.MsgCreateOrder{
+		Amount:    "1000000",
+		Price:     "5.1",
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Creator:   addr1.String(),
+	}
+	_, err = suite.msgServer.CreateOrder(goCtx, &orderMsg)
+	suite.Require().Error(err)
+
+	qmList = suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 0)
+
+	//add 2 new orders in order to check message queue price validator
+	orderMsg = types.MsgCreateOrder{
+		Amount:    "1000000",
+		Price:     "4",
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Creator:   addr1.String(),
+	}
+	_, err = suite.msgServer.CreateOrder(goCtx, &orderMsg)
+	suite.Require().NoError(err)
+
+	orderMsg = types.MsgCreateOrder{
+		Amount:    "1000000",
+		Price:     "4.5",
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeSell,
+		Creator:   addr1.String(),
+	}
+	_, err = suite.msgServer.CreateOrder(goCtx, &orderMsg)
+	suite.Require().NoError(err)
+
+	orderMsg = types.MsgCreateOrder{
+		Amount:    "1000000",
+		Price:     "3.5",
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeSell,
+		Creator:   addr1.String(),
+	}
+	_, err = suite.msgServer.CreateOrder(goCtx, &orderMsg)
+	suite.Require().Error(err)
+
+	orderMsg = types.MsgCreateOrder{
+		Amount:    "1000000",
+		Price:     "4.55",
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Creator:   addr1.String(),
+	}
+	_, err = suite.msgServer.CreateOrder(goCtx, &orderMsg)
+	suite.Require().Error(err)
+}
+
 func (suite *IntegrationTestSuite) randomOrderCreateMessages(count int, creators []string, market types.Market) []types.MsgCreateOrder {
 	var msgs []types.MsgCreateOrder
 	orderTypes := []string{types.OrderTypeBuy, types.OrderTypeSell}
 	goCtx := sdk.WrapSDKContext(suite.ctx)
+	const ExecPrice = 15
 	for i := 0; i < count; i++ {
-		randomPrice := suite.randomNumber(4) + 1 //make sure it's always higher than 0
+		randomOrderType := orderTypes[i%2]
+		randomPrice := suite.randomNumber(24) + 1 //make sure it's always higher than 0
+		if randomOrderType == types.OrderTypeBuy && randomPrice > ExecPrice {
+			randomPrice = ExecPrice
+		} else if randomOrderType == types.OrderTypeSell && randomPrice < ExecPrice {
+			randomPrice = ExecPrice
+		}
 		randomPriceStr := strconv.Itoa(randomPrice)
 		minAmount := keeper.CalculateMinAmount(randomPriceStr)
-		randomOrderType := orderTypes[i%2]
 		orderMsg := types.MsgCreateOrder{
 			Amount:    minAmount.AddRaw(int64(suite.randomNumber(1000))).String(),
 			Price:     randomPriceStr,

@@ -2,8 +2,7 @@ package simapp
 
 import (
 	"github.com/bze-alphateam/bze/app/openapi"
-	v600 "github.com/bze-alphateam/bze/app/upgrades/v600"
-	v700 "github.com/bze-alphateam/bze/app/upgrades/v700"
+	v710 "github.com/bze-alphateam/bze/app/upgrades/v710"
 	"github.com/bze-alphateam/bze/x/epochs"
 	epochskeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
 	epochstypes "github.com/bze-alphateam/bze/x/epochs/types"
@@ -33,7 +32,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -190,20 +188,21 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:      nil,
-		distrtypes.ModuleName:           nil,
-		minttypes.ModuleName:            {authtypes.Minter},
-		stakingtypes.BondedPoolName:     {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:  {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:             {authtypes.Burner},
-		ibctransfertypes.ModuleName:     {authtypes.Minter, authtypes.Burner},
-		scavengemoduletypes.ModuleName:  nil,
-		cointrunkmoduletypes.ModuleName: nil,
-		burnermoduletypes.ModuleName:    {authtypes.Burner},
-		tokenfactorytypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		tradebintypes.ModuleName:        nil,
-		epochstypes.ModuleName:          nil,
-		rewardstypes.ModuleName:         {authtypes.Burner},
+		authtypes.FeeCollectorName:         nil,
+		distrtypes.ModuleName:              nil,
+		minttypes.ModuleName:               {authtypes.Minter},
+		stakingtypes.BondedPoolName:        {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:     {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                {authtypes.Burner},
+		ibctransfertypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
+		scavengemoduletypes.ModuleName:     nil,
+		cointrunkmoduletypes.ModuleName:    nil,
+		burnermoduletypes.ModuleName:       {authtypes.Burner},
+		tokenfactorytypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
+		tradebintypes.ModuleName:           nil,
+		epochstypes.ModuleName:             nil,
+		rewardstypes.ModuleName:            {authtypes.Burner},
+		burnermoduletypes.RaffleModuleName: {authtypes.Burner},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 
@@ -211,6 +210,7 @@ var (
 	// this list will be excluded from bank/distribution modules blocked addresses
 	allowedModules = map[string]struct{}{
 		burnermoduletypes.ModuleName: {},
+		tradebintypes.ModuleName:     {},
 	}
 )
 
@@ -424,6 +424,12 @@ func New(
 		app.BankKeeper,
 	)
 
+	app.EpochsKeeper = *epochskeeper.NewKeeper(
+		appCodec,
+		keys[epochstypes.StoreKey],
+		keys[epochstypes.MemStoreKey],
+	)
+
 	app.CointrunkKeeper = *cointrunkmodulekeeper.NewKeeper(
 		appCodec,
 		keys[cointrunkmoduletypes.StoreKey],
@@ -442,6 +448,7 @@ func New(
 		app.GetSubspace(burnermoduletypes.ModuleName),
 		app.BankKeeper,
 		app.AccountKeeper,
+		app.EpochsKeeper,
 	)
 
 	app.TokenFactoryKeeper = *tokenfactorykeeper.NewKeeper(
@@ -461,12 +468,6 @@ func New(
 		app.GetSubspace(tradebintypes.ModuleName),
 		app.BankKeeper,
 		app.DistrKeeper,
-	)
-
-	app.EpochsKeeper = *epochskeeper.NewKeeper(
-		appCodec,
-		keys[epochstypes.StoreKey],
-		keys[epochstypes.MemStoreKey],
 	)
 
 	app.RewardsKeeper = *rewardskeeper.NewKeeper(
@@ -490,6 +491,9 @@ func New(
 		[]epochstypes.EpochHook{
 			app.RewardsKeeper.GetDistributeAllStakingRewardsHook(),
 			app.RewardsKeeper.GetUnlockPendingUnlockParticipantsHook(),
+			app.RewardsKeeper.GetRemoveExpiredPendingTradingRewardsHook(),
+			app.RewardsKeeper.GetTradingRewardsDistributionHook(),
+			app.BurnerKeeper.GetBurnerRaffleCleanupHook(),
 		},
 	)
 
@@ -662,7 +666,8 @@ func New(
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
-	app.mm.RegisterServices(module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter()))
+	cfg := module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.mm.RegisterServices(cfg)
 
 	// initialize stores
 	app.MountKVStores(keys)
@@ -688,7 +693,7 @@ func New(
 
 	app.SetAnteHandler(anteHandler)
 	app.SetEndBlocker(app.EndBlocker)
-	app.setupUpgradeHandlers()
+	app.setupUpgradeHandlers(cfg)
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
@@ -703,39 +708,11 @@ func New(
 	return app
 }
 
-func (app *SimApp) setupUpgradeHandlers() {
-	cfg := module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+func (app *SimApp) setupUpgradeHandlers(cfg module.Configurator) {
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v700.UpgradeName,
-		v700.CreateUpgradeHandler(cfg, app.mm),
+		v710.UpgradeName,
+		v710.CreateUpgradeHandler(cfg, app.mm),
 	)
-
-	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-	if err != nil {
-		panic(err)
-	}
-
-	if app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		return
-	}
-
-	if upgradeInfo.Name == v600.UpgradeName {
-		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{burnermoduletypes.StoreKey, cointrunkmoduletypes.StoreKey, authzkeeper.StoreKey},
-		}
-
-		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
-	}
-
-	if upgradeInfo.Name == v700.UpgradeName {
-		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{tokenfactorytypes.StoreKey, tradebintypes.StoreKey, epochstypes.StoreKey, rewardstypes.StoreKey},
-		}
-
-		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
-	}
 }
 
 // Name returns the name of the SimApp

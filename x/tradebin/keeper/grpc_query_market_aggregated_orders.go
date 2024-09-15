@@ -25,10 +25,24 @@ func (k Keeper) MarketAggregatedOrders(goCtx context.Context, req *types.QueryMa
 		return nil, status.Error(codes.InvalidArgument, "invalid order type")
 	}
 
-	var orders []types.AggregatedOrder
-	aggOrderStore := k.getAggregatedOrderByMarketAndTypeStore(ctx, req.Market, req.OrderType)
+	orders, pageRes, err := k.getMarketAggregatedOrdersPaginated(ctx, req.Market, req.OrderType, req.Pagination)
 
-	pageRes, err := query.Paginate(aggOrderStore, req.Pagination, func(key []byte, value []byte) error {
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryMarketAggregatedOrdersResponse{List: orders, Pagination: pageRes}, nil
+}
+
+func (k Keeper) getMarketAggregatedOrdersPaginated(
+	ctx sdk.Context,
+	market string,
+	orderType string,
+	pageReq *query.PageRequest,
+) (orders []types.AggregatedOrder, response *query.PageResponse, err error) {
+
+	aggOrderStore := k.getAggregatedOrderByMarketAndTypeStore(ctx, market, orderType)
+	response, err = query.Paginate(aggOrderStore, pageReq, func(key []byte, value []byte) error {
 		var order types.AggregatedOrder
 		if err := k.cdc.Unmarshal(value, &order); err != nil {
 			return err
@@ -39,8 +53,8 @@ func (k Keeper) MarketAggregatedOrders(goCtx context.Context, req *types.QueryMa
 	})
 
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, nil, err
 	}
 
-	return &types.QueryMarketAggregatedOrdersResponse{List: orders, Pagination: pageRes}, nil
+	return orders, response, nil
 }

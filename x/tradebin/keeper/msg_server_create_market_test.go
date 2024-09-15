@@ -90,7 +90,7 @@ func (suite *IntegrationTestSuite) TestCreateMarket_Success() {
 	initialUserBalances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
 	suite.Require().True(initialUserBalances.IsZero())
 
-	balances := sdk.NewCoins(newStakeCoin(10000), newBzeCoin(20000000000))
+	balances := sdk.NewCoins(newStakeCoin(10000), newBzeCoin(200000000000))
 	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, balances))
 
 	newMarket := types.Market{
