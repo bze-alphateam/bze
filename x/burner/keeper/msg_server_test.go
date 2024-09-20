@@ -724,21 +724,21 @@ func (suite *IntegrationTestSuite) TestJoinRaffle_Stress() {
 func (suite *IntegrationTestSuite) TestJoinRaffle_Simulation() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 
-	addr1 := sdk.AccAddress("addr1_______________")
-	addr2 := sdk.AccAddress("addr2_______________")
+	addr1 := sdk.AccAddress("addr1____20______")
+	addr2 := sdk.AccAddress("addr2_____9______")
 	initialBalanceAmount := sdk.NewInt(1_000_000_000_000_000)
 	balances := sdk.NewCoins(sdk.NewInt64Coin("aau", initialBalanceAmount.Int64()))
 	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, balances))
 	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, balances))
-
-	potInt := sdk.NewInt(50_000_000_000)
+	suite.ek.BeginBlocker(suite.ctx)
+	potInt := sdk.NewInt(200_000_000_000)
 	ticketCost := sdk.NewInt(10_000_000)
 	msg := types.MsgStartRaffle{
 		Creator:     addr1.String(),
 		Pot:         potInt.String(),
-		Duration:    "1",
-		Chances:     "100",
-		Ratio:       "0.15",
+		Duration:    "100",
+		Chances:     "50",
+		Ratio:       "0.50",
 		TicketPrice: ticketCost.String(),
 		Denom:       "aau",
 	}
@@ -760,7 +760,7 @@ func (suite *IntegrationTestSuite) TestJoinRaffle_Simulation() {
 
 	winCount := 0
 	ticketsStart := time.Now().Unix()
-	ticketsToPlace := int64(10000)
+	ticketsToPlace := int64(50000)
 	totalPotWon := sdk.ZeroInt()
 
 	for i := ticketsStart; i < ticketsStart+ticketsToPlace; i++ {
