@@ -724,20 +724,20 @@ func (suite *IntegrationTestSuite) TestJoinRaffle_Stress() {
 func (suite *IntegrationTestSuite) TestJoinRaffle_Simulation() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 
-	addr1 := sdk.AccAddress("addr1____20______")
-	addr2 := sdk.AccAddress("addr2_____9______")
+	addr1 := sdk.AccAddress("addr13___20______")
+	addr2 := sdk.AccAddress("addr2__5__9______")
 	initialBalanceAmount := sdk.NewInt(1_000_000_000_000_000)
 	balances := sdk.NewCoins(sdk.NewInt64Coin("aau", initialBalanceAmount.Int64()))
 	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, balances))
 	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, balances))
 	suite.ek.BeginBlocker(suite.ctx)
 	potInt := sdk.NewInt(200_000_000_000)
-	ticketCost := sdk.NewInt(10_000_000)
+	ticketCost := sdk.NewInt(25_000_000)
 	msg := types.MsgStartRaffle{
 		Creator:     addr1.String(),
 		Pot:         potInt.String(),
-		Duration:    "100",
-		Chances:     "50",
+		Duration:    "14",
+		Chances:     "100",
 		Ratio:       "0.50",
 		TicketPrice: ticketCost.String(),
 		Denom:       "aau",
