@@ -157,7 +157,7 @@ func (k msgServer) checkPrice(ctx sdk.Context, msg *types.MsgCreateOrder) error 
 		return fmt.Errorf("could not parse current price: %s", msg.Price)
 	}
 
-	err = k.checkPriceInQueueMessages(ctx, msg.OrderType, &currentPrice)
+	err = k.checkPriceInQueueMessages(ctx, msg, &currentPrice)
 	if err != nil {
 		return err
 	}
@@ -219,13 +219,13 @@ func (k Keeper) checkPriceInOrderBook(ctx sdk.Context, msg *types.MsgCreateOrder
 	return nil
 }
 
-func (k Keeper) checkPriceInQueueMessages(ctx sdk.Context, msgType string, currentPrice *sdk.Dec) error {
-	oppositeType := types.TheOtherOrderType(msgType)
+func (k Keeper) checkPriceInQueueMessages(ctx sdk.Context, msg *types.MsgCreateOrder, currentPrice *sdk.Dec) error {
+	oppositeType := types.TheOtherOrderType(msg.OrderType)
 	queueMessages := k.GetAllQueueMessage(ctx)
 	msgsPrice := sdk.ZeroDec()
 	for _, queueMessage := range queueMessages {
 		//check against MessageType because we have "cancel" type besides "buy" and "sell"
-		if queueMessage.MessageType != oppositeType {
+		if queueMessage.MarketId != msg.MarketId || queueMessage.MessageType != oppositeType {
 			continue
 		}
 
