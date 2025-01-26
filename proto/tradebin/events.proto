@@ -32,6 +32,8 @@ message OrderExecutedEvent {
   string order_type = 3;
   string amount = 4;
   string price = 5;
+  string maker = 6;
+  string taker = 7;
 }
 
 message OrderCanceledEvent {
