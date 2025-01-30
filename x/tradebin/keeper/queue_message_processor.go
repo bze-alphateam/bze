@@ -528,6 +528,7 @@ func (pe *ProcessingEngine) emitOrderCanceledEvent(ctx sdk.Context, order *types
 			OrderType: order.OrderType,
 			Amount:    order.Amount,
 			Price:     order.Price,
+			Owner:     order.Owner,
 		},
 	)
 
@@ -544,6 +545,7 @@ func (pe *ProcessingEngine) emitOrderSavedEvent(ctx sdk.Context, order *types.Or
 			OrderType: order.OrderType,
 			Amount:    order.Amount,
 			Price:     order.Price,
+			Owner:     order.Owner,
 		},
 	)
 
