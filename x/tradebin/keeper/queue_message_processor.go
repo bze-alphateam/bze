@@ -496,6 +496,8 @@ func (pe *ProcessingEngine) emitOrderExecutedEvent(ctx sdk.Context, order *types
 			OrderType: order.OrderType,
 			Amount:    amount,
 			Price:     order.Price,
+			Taker:     userAddress,
+			Maker:     order.Owner,
 		},
 	)
 
