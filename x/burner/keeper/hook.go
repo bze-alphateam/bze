@@ -10,7 +10,7 @@ const (
 	hookName             = "burner_raffle_cleanup"
 	periodicBurnHookName = "periodic_burner"
 
-	burnInterval = 5
+	burnInterval = 4
 )
 
 func (k Keeper) GetBurnerPeriodicBurnHook() types.EpochHook {
