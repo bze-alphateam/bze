@@ -50,7 +50,7 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 		return nil, err
 	}
 
-	_, err = k.captureOrderFees(ctx, msg, accAddr)
+	_, err = k.captureMsgFees(ctx, msg, accAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -81,13 +81,18 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 	return &types.MsgCreateOrderResponse{}, nil
 }
 
-func (k msgServer) captureOrderFees(ctx sdk.Context, msg *types.MsgCreateOrder, sender sdk.AccAddress) (coin sdk.Coin, err error) {
+func (k msgServer) captureMsgFees(ctx sdk.Context, msg *types.MsgCreateOrder, sender sdk.AccAddress) (sdk.Coin, error) {
 	//used to decide if it's market taker or market maker
 	_, found := k.GetAggregatedOrder(ctx, msg.MarketId, types.TheOtherOrderType(msg.OrderType), msg.Price)
+
+	return k.captureTradingFees(ctx, sender, found)
+}
+
+func (k msgServer) captureTradingFees(ctx sdk.Context, sender sdk.AccAddress, isTaker bool) (coin sdk.Coin, err error) {
 	params := k.GetParams(ctx)
 	var fee string
 	var destination string
-	if found {
+	if isTaker {
 		//is market taker
 		fee = params.GetMarketTakerFee()
 		destination = params.GetTakerFeeDestination()
@@ -273,4 +278,85 @@ func (k msgServer) emitOrderCreateMessageEvent(ctx sdk.Context, qm *types.QueueM
 			Price:     qm.Price,
 		},
 	)
+}
+
+func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (*types.MsgFillOrdersResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	accAddr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return nil, err
+	}
+
+	market, found := k.GetMarketById(ctx, msg.MarketId)
+	if !found {
+		return nil, types.ErrMarketNotFound.Wrapf("market id: %s", msg.MarketId)
+	}
+
+	ctx.GasMeter().ConsumeGas(types.FillOrdersExtraGas, "fill_orders")
+	totalCoins := sdk.NewCoins()
+	for _, fo := range msg.Orders {
+		minAmt := CalculateMinAmount(fo.Price)
+		amtInt, ok := sdk.NewIntFromString(fo.Amount)
+		if !ok {
+			return nil, types.ErrInvalidOrderAmount.Wrapf("amount could not be converted to Int")
+		}
+		if minAmt.GT(amtInt) {
+			ctx.Logger().Debug("order amount is smaller than minimum", "order_to_fill", fo)
+
+			continue
+		}
+
+		//calculate needed funds for this order
+		//inverse the order type because the message specifies what kind of orders it wants to fill
+		//so if user says he wants to fill buy orders, we need to act like he's selling, and vice versa
+		ocReq := types.OrderCoinsArguments{
+			OrderType:    types.TheOtherOrderType(msg.OrderType),
+			OrderPrice:   fo.Price,
+			OrderAmount:  amtInt,
+			Market:       &market,
+			UserAddress:  msg.Creator,
+			UserReceives: false,
+		}
+
+		orderCoins, err := k.GetOrderCoinsWithDust(ctx, ocReq)
+		if err != nil {
+			return nil, err
+		}
+		//messages of type "buy" are added on queue as messageType = "fill_buy"
+		//messages of type "sell" are added on queue as messageType = "fill_sell"
+		//orderType is the opposite of the orders we want to fill: if we fill "buy" it means we "sell", and vice versa.
+		qm := types.QueueMessage{
+			MarketId:    msg.MarketId,
+			OrderType:   ocReq.OrderType, // already inversed when ocReq was built a few lines above
+			MessageType: types.OrderTypeToMessageTypeFill(msg.OrderType),
+			Amount:      fo.Amount,
+			Price:       fo.Price,
+			Owner:       msg.Creator,
+		}
+
+		k.SetQueueMessage(ctx, qm)
+		k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
+
+		totalCoins = totalCoins.Add(orderCoins.Coin)
+		//take extra gas for each order to fill
+		ctx.GasMeter().ConsumeGas(types.FillOrdersExtraGas, "fill_orders")
+	}
+
+	if totalCoins.IsZero() {
+		return nil, types.ErrInvalidOrdersToFill
+	}
+
+	_, err = k.captureTradingFees(ctx, accAddr, true)
+	if err != nil {
+		return nil, err
+	}
+
+	//capture user funds for this order
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAddr, types.ModuleName, totalCoins)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgFillOrdersResponse{}, nil
 }

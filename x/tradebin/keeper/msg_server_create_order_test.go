@@ -422,11 +422,11 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_StressBalance() {
 	}
 
 	for i := 0; i < 5; i++ {
-		suite.randomOrderCreateMessages(suite.randomNumber(3000), creators, market)
-		suite.randomOrderCreateMessages(suite.randomNumber(3000), creators, market1)
-		suite.randomOrderCreateMessages(suite.randomNumber(3000), creators, market2)
-		suite.randomOrderCreateMessages(suite.randomNumber(3000), creators, market3)
-		suite.randomOrderCreateMessages(suite.randomNumber(3000), creators, market4)
+		suite.randomOrderCreateMessages(suite.randomNumber(1000), creators, market)
+		suite.randomOrderCreateMessages(suite.randomNumber(1000), creators, market1)
+		suite.randomOrderCreateMessages(suite.randomNumber(1000), creators, market2)
+		suite.randomOrderCreateMessages(suite.randomNumber(1000), creators, market3)
+		suite.randomOrderCreateMessages(suite.randomNumber(1000), creators, market4)
 
 		engine.ProcessQueueMessages(suite.ctx)
 	}

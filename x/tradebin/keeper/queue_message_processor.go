@@ -90,7 +90,12 @@ func (pe *ProcessingEngine) getMessageHandler() func(ctx sdk.Context, message ty
 		var wrappingFn func(ctx sdk.Context) error
 
 		switch message.MessageType {
-		case types.OrderTypeCancel:
+		case types.MessageTypeFillBuy:
+		case types.MessageTypeFillSell:
+			wrappingFn = func(ctx sdk.Context) error {
+				return pe.fillOrder(ctx, message)
+			}
+		case types.MessageTypeCancel:
 			wrappingFn = func(ctx sdk.Context) error {
 				return pe.cancelOrder(ctx, message)
 			}
@@ -195,81 +200,28 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 		return nil
 	}
 
-	aggAmountInt, ok := sdk.NewIntFromString(agg.Amount)
-	if !ok {
-
-		return fmt.Errorf("could not convert agg amount")
-	}
-
-	oppositeOrderRefs := pe.k.GetPriceOrderByPrice(ctx, message.MarketId, types.TheOtherOrderType(message.OrderType), message.Price)
-	logger.Info("found orders to fill", "number_of_orders", len(oppositeOrderRefs))
 	//should always exist
 	market, _ := pe.k.GetMarketById(ctx, message.MarketId)
 	minAmount := CalculateMinAmount(message.Price)
 	msgOwnerAddr, _ := sdk.AccAddressFromBech32(message.Owner)
-	for _, orderRef := range oppositeOrderRefs {
-		//stop when all message amount was spent
-		if !msgAmountInt.IsPositive() {
-			logger.Debug("msg amount is not positive anymore. exiting oppositeOrderRefs iteration")
-			break
-		}
 
-		orderToFill, _ := pe.k.GetOrder(ctx, orderRef.MarketId, orderRef.OrderType, orderRef.Id)
-		logger.Debug("preparing to fill message with order", "orderToFill", orderToFill)
-		orderAmountInt, ok := sdk.NewIntFromString(orderToFill.Amount)
-		if !ok {
-
-			return fmt.Errorf("could not convert order to fill amount")
-		}
-
-		//find how much to send to the found order's owner
-		amountToExecute := pe.getExecutedAmount(msgAmountInt, orderAmountInt, minAmount)
-		if amountToExecute.IsZero() {
-			break
-		}
-
-		msgAmountInt = msgAmountInt.Sub(amountToExecute)
-		message.Amount = msgAmountInt.String()
-
-		orderAmountInt = orderAmountInt.Sub(amountToExecute)
-		orderToFill.Amount = orderAmountInt.String()
-
-		aggAmountInt = aggAmountInt.Sub(amountToExecute)
-		agg.Amount = aggAmountInt.String()
-
-		err := pe.fundUsersAccounts(ctx, &orderToFill, &market, amountToExecute, msgOwnerAddr)
-		if err != nil {
-
-			return err
-		}
-
-		if orderAmountInt.GT(zeroInt) {
-			logger.Debug("order partially filled")
-			pe.k.SaveOrder(ctx, orderToFill)
-		} else {
-			logger.Debug("order fully filled")
-			pe.k.RemoveOrder(ctx, orderToFill)
-		}
-
-		pe.addHistoryOrder(ctx, &orderToFill, amountToExecute, &message)
-		pe.emitOrderExecutedEvent(ctx, &orderToFill, amountToExecute.String(), message.Owner)
+	remaining, err := pe.fillAggregatedOrder(ctx, &agg, &message, msgAmountInt, &market)
+	if err != nil {
+		return fmt.Errorf("could not fill aggregated order: %v", err)
 	}
 
-	if aggAmountInt.GT(zeroInt) {
-		pe.k.SetAggregatedOrder(ctx, agg)
-		logger.Info("aggregated order updated")
-	} else {
-		pe.k.RemoveAggregatedOrder(ctx, agg)
-		logger.Info("aggregated order removed")
-	}
-
-	if msgAmountInt.Equal(zeroInt) {
+	if remaining.Equal(zeroInt) {
 		logger.Info("message was completely filled")
 		return nil
 	}
 
+	aggAmountInt, ok := sdk.NewIntFromString(agg.Amount)
+	if !ok {
+		return fmt.Errorf("could not convert agg amount")
+	}
+
 	//if min amount condition is met and all orders were filled we can proceed to place the order
-	if msgAmountInt.GTE(minAmount) && aggAmountInt.IsZero() {
+	if remaining.GTE(minAmount) && aggAmountInt.IsZero() {
 		order := pe.saveOrder(ctx, message, message.Amount)
 		pe.addOrderToAggregate(ctx, order)
 
@@ -278,33 +230,8 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 	}
 
 	logger.Info("message remaining amount is too low, returning dust")
-	//we have a remaining amount smaller than min amount. We should send it back to the msg owner
-	coinReq := types.OrderCoinsArguments{
-		OrderType:    message.OrderType,
-		OrderPrice:   message.Price,
-		OrderAmount:  msgAmountInt,
-		Market:       &market,
-		UserAddress:  message.Owner,
-		UserReceives: true,
-	}
 
-	orderCoins, err := pe.k.GetOrderCoinsWithDust(ctx, coinReq)
-	if err != nil {
-		return fmt.Errorf("could not get order coins: %v", err)
-	}
-
-	if orderCoins.Coin.IsPositive() {
-		err = pe.bank.SendCoinsFromModuleToAccount(ctx, types.ModuleName, msgOwnerAddr, sdk.NewCoins(orderCoins.Coin))
-		if err != nil {
-
-			return fmt.Errorf("error when returning funds to message owner: %v", err)
-		}
-	} else {
-		logger.Info("will not send dust to order message owner because the amount is 0 (zero) but will save dust", "orderCoins", orderCoins)
-	}
-	pe.k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
-
-	return nil
+	return pe.refundMessageFunds(ctx, &message, *remaining, &market, msgOwnerAddr)
 }
 
 func (pe *ProcessingEngine) fundUsersAccounts(ctx sdk.Context, order *types.Order, market *types.Market, amount sdk.Int, taker sdk.AccAddress) error {
@@ -552,4 +479,142 @@ func (pe *ProcessingEngine) emitOrderSavedEvent(ctx sdk.Context, order *types.Or
 	if err != nil {
 		pe.logger.Error(err.Error())
 	}
+}
+
+func (pe *ProcessingEngine) fillOrder(ctx sdk.Context, message types.QueueMessage) error {
+	logger := pe.logger.With(
+		"message", message,
+		"func", "fillOrder",
+	)
+	logger.Info("filling order on market")
+
+	msgAmountInt, ok := sdk.NewIntFromString(message.Amount)
+	if !ok {
+
+		return fmt.Errorf("could not convert queue message amount")
+	}
+
+	//should always exist
+	market, _ := pe.k.GetMarketById(ctx, message.MarketId)
+	msgOwnerAddr, _ := sdk.AccAddressFromBech32(message.Owner)
+
+	//find opposite orders if they exist
+	agg, found := pe.k.GetAggregatedOrder(ctx, message.MarketId, types.TheOtherOrderType(message.OrderType), message.Price)
+	if !found {
+		//no pending orders to fill. refund the amount for this order
+		return pe.refundMessageFunds(ctx, &message, msgAmountInt, &market, msgOwnerAddr)
+	}
+
+	remainingAmount, err := pe.fillAggregatedOrder(ctx, &agg, &message, msgAmountInt, &market)
+	if err != nil {
+		return err
+	}
+
+	if !remainingAmount.IsPositive() {
+		logger.Info("message was completely filled")
+		return nil
+	}
+
+	//we haven't filled the entire message amount so we have to refund the msg owner's coins
+
+	return pe.refundMessageFunds(ctx, &message, msgAmountInt, &market, msgOwnerAddr)
+}
+
+func (pe *ProcessingEngine) refundMessageFunds(ctx sdk.Context, message *types.QueueMessage, refundAmount sdk.Int, market *types.Market, msgOwnerAddr sdk.AccAddress) error {
+	coinReq := types.OrderCoinsArguments{
+		OrderType:    message.OrderType,
+		OrderPrice:   message.Price,
+		OrderAmount:  refundAmount,
+		Market:       market,
+		UserAddress:  message.Owner,
+		UserReceives: true,
+	}
+
+	orderCoins, err := pe.k.GetOrderCoinsWithDust(ctx, coinReq)
+	if err != nil {
+		return fmt.Errorf("could not get order coins: %v", err)
+	}
+
+	if orderCoins.Coin.IsPositive() {
+		err = pe.bank.SendCoinsFromModuleToAccount(ctx, types.ModuleName, msgOwnerAddr, sdk.NewCoins(orderCoins.Coin))
+		if err != nil {
+
+			return fmt.Errorf("error when returning funds to message owner: %v", err)
+		}
+	} else {
+		ctx.Logger().Info("will not send dust to order message owner because the amount is 0 (zero) but will save dust", "orderCoins", orderCoins)
+	}
+	pe.k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
+
+	return nil
+}
+
+func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.AggregatedOrder, message *types.QueueMessage, msgAmountInt sdk.Int, market *types.Market) (*sdk.Int, error) {
+	msgOwnerAddr, _ := sdk.AccAddressFromBech32(message.Owner)
+	zeroInt := sdk.ZeroInt()
+	aggAmountInt, ok := sdk.NewIntFromString(agg.Amount)
+	if !ok {
+		return nil, fmt.Errorf("could not convert agg amount")
+	}
+
+	oppositeOrderRefs := pe.k.GetPriceOrderByPrice(ctx, message.MarketId, types.TheOtherOrderType(message.OrderType), message.Price)
+	ctx.Logger().Info("found orders to fill", "number_of_orders", len(oppositeOrderRefs))
+	minAmount := CalculateMinAmount(message.Price)
+	for _, orderRef := range oppositeOrderRefs {
+		//stop when all message amount was spent
+		if !msgAmountInt.IsPositive() {
+			ctx.Logger().Debug("msg amount is not positive anymore. exiting oppositeOrderRefs iteration")
+			break
+		}
+
+		orderToFill, _ := pe.k.GetOrder(ctx, orderRef.MarketId, orderRef.OrderType, orderRef.Id)
+		ctx.Logger().Debug("preparing to fill message with order", "orderToFill", orderToFill)
+		orderAmountInt, ok := sdk.NewIntFromString(orderToFill.Amount)
+		if !ok {
+
+			return nil, fmt.Errorf("could not convert order to fill amount")
+		}
+
+		//find how much to send to the found order's owner
+		amountToExecute := pe.getExecutedAmount(msgAmountInt, orderAmountInt, minAmount)
+		if amountToExecute.IsZero() {
+			break
+		}
+
+		msgAmountInt = msgAmountInt.Sub(amountToExecute)
+		message.Amount = msgAmountInt.String()
+
+		orderAmountInt = orderAmountInt.Sub(amountToExecute)
+		orderToFill.Amount = orderAmountInt.String()
+
+		aggAmountInt = aggAmountInt.Sub(amountToExecute)
+		agg.Amount = aggAmountInt.String()
+
+		err := pe.fundUsersAccounts(ctx, &orderToFill, market, amountToExecute, msgOwnerAddr)
+		if err != nil {
+
+			return nil, err
+		}
+
+		if orderAmountInt.GT(zeroInt) {
+			ctx.Logger().Debug("order partially filled")
+			pe.k.SaveOrder(ctx, orderToFill)
+		} else {
+			ctx.Logger().Debug("order fully filled")
+			pe.k.RemoveOrder(ctx, orderToFill)
+		}
+
+		pe.addHistoryOrder(ctx, &orderToFill, amountToExecute, message)
+		pe.emitOrderExecutedEvent(ctx, &orderToFill, amountToExecute.String(), message.Owner)
+	}
+
+	if aggAmountInt.GT(zeroInt) {
+		pe.k.SetAggregatedOrder(ctx, *agg)
+		ctx.Logger().Info("aggregated order updated")
+	} else {
+		pe.k.RemoveAggregatedOrder(ctx, *agg)
+		ctx.Logger().Info("aggregated order removed")
+	}
+
+	return &msgAmountInt, nil
 }

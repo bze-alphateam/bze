@@ -8,7 +8,9 @@ import (
 const (
 	TypeMsgCancelOrder = "cancel_order"
 
-	OrderTypeCancel = "cancel"
+	MessageTypeCancel   = "cancel"
+	MessageTypeFillBuy  = "fill_buy"
+	MessageTypeFillSell = "fill_sell"
 )
 
 var _ sdk.Msg = &MsgCancelOrder{}
@@ -62,4 +64,23 @@ func (msg *MsgCancelOrder) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+func MessageTypeToOrderType(messageType string) string {
+	switch messageType {
+	case MessageTypeFillSell:
+		return OrderTypeBuy
+	case MessageTypeFillBuy:
+		return OrderTypeSell
+	default:
+		return messageType
+	}
+}
+
+func OrderTypeToMessageTypeFill(orderType string) string {
+	if orderType == OrderTypeBuy {
+		return MessageTypeFillBuy
+	}
+	
+	return MessageTypeFillSell
 }

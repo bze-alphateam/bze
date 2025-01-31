@@ -71,7 +71,7 @@ func (suite *IntegrationTestSuite) TestCancelOrder_CancelBuy_Success() {
 	suite.Require().Len(qms, 1)
 
 	suite.Require().Equal(qms[0].MarketId, order.MarketId)
-	suite.Require().Equal(qms[0].MessageType, types.OrderTypeCancel)
+	suite.Require().Equal(qms[0].MessageType, types.MessageTypeCancel)
 	suite.Require().Equal(qms[0].OrderId, order.Id)
 	suite.Require().Equal(qms[0].OrderType, order.OrderType)
 	suite.Require().Equal(qms[0].Owner, order.Owner)
@@ -100,7 +100,7 @@ func (suite *IntegrationTestSuite) TestCancelOrder_CancelSell_Success() {
 	suite.Require().Len(qms, 1)
 
 	suite.Require().Equal(qms[0].MarketId, order.MarketId)
-	suite.Require().Equal(qms[0].MessageType, types.OrderTypeCancel)
+	suite.Require().Equal(qms[0].MessageType, types.MessageTypeCancel)
 	suite.Require().Equal(qms[0].OrderId, order.Id)
 	suite.Require().Equal(qms[0].OrderType, order.OrderType)
 	suite.Require().Equal(qms[0].Owner, order.Owner)

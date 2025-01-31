@@ -10,6 +10,7 @@ service Msg {
       rpc CreateMarket(MsgCreateMarket) returns (MsgCreateMarketResponse);
   rpc CreateOrder(MsgCreateOrder) returns (MsgCreateOrderResponse);
   rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
+  rpc FillOrders(MsgFillOrders) returns (MsgFillOrdersResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -42,5 +43,19 @@ message MsgCancelOrder {
 
 message MsgCancelOrderResponse {
 }
+
+message FillOrderItem {
+  string price = 1;
+  string amount = 2;
+}
+
+message MsgFillOrders {
+  string creator = 1;
+  string marketId = 2;
+  string order_type = 3;
+  repeated FillOrderItem orders = 4;
+}
+
+message MsgFillOrdersResponse {}
 
 // this line is used by starport scaffolding # proto/tx/message
