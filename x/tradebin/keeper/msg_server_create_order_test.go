@@ -615,8 +615,944 @@ func (suite *IntegrationTestSuite) randomNumber(to int) int {
 	// Uses the current time as the seed
 	rand.Seed(time.Now().UnixNano())
 
-	// Generate a random number between 0 and 99
+	// Generate a random number between 0 and to
 	num := rand.Intn(to)
 
 	return num
+}
+
+func (suite *IntegrationTestSuite) msgOrderFillSetup(orderType string) (allPrices []string, addr1, addr2 sdk.AccAddress) {
+	suite.k.SetMarket(suite.ctx, market)
+
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	addr1 = sdk.AccAddress("addr1_______________")
+	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
+
+	addr2 = sdk.AccAddress("addr2_______________")
+	acc2 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr2)
+	suite.app.AccountKeeper.SetAccount(suite.ctx, acc2)
+
+	//initial balances need to be 0
+	user1Balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
+	suite.Require().True(user1Balances.IsZero())
+
+	user2Balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	suite.Require().True(user2Balances.IsZero())
+
+	balances := sdk.NewCoins(newStakeCoin(10000000), newBzeCoin(20000000000))
+	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, balances))
+	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, balances))
+
+	initialPrice := sdk.ZeroInt()
+	staticAmount := "1000000"
+	for i := 1; i <= 10; i++ {
+		initialPrice = initialPrice.AddRaw(int64(i))
+		orderMsg := types.MsgCreateOrder{
+			Amount:    staticAmount,
+			Price:     initialPrice.String(),
+			MarketId:  getMarketId(),
+			OrderType: orderType,
+			Creator:   addr1.String(),
+		}
+
+		_, err := suite.msgServer.CreateOrder(goCtx, &orderMsg)
+		suite.Require().NoError(err)
+
+		allPrices = append(allPrices, initialPrice.String())
+	}
+
+	return
+}
+
+func (suite *IntegrationTestSuite) TestMsgOrderFill_OneOrderPartialFill_Sell() {
+	_, _, addr2 := suite.msgOrderFillSetup(types.OrderTypeSell)
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
+	suite.Require().Nil(err)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//Let's fill 1 order with amount lower than the available order
+	fillOrder := types.MsgFillOrders{
+		Creator:   addr2.String(),
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeSell,
+		Orders: []*types.FillOrderItem{
+			{
+				Amount: "500000",
+				Price:  "1",
+			},
+		},
+	}
+
+	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	suite.Require().NoError(err)
+
+	//check that the new message is saved accordingly to queue messages storage
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 1)
+	suite.Require().Equal(qmList[0].MarketId, getMarketId())
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeBuy)
+	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillSell)
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
+	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//check that the order was correctly executed and the user received/spent the amounts related to the order
+	user2Balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee
+	suite.Require().EqualValues(20000000000-500000-100000, user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(10000000+500000, user2Balances.AmountOf(denomStake).Int64())
+
+	all := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().NotEmpty(all)
+	//the same number of orders should be present (we filled only half of first order)
+	suite.Require().Len(all, 10)
+	remainingOrderChecked := false
+	for _, order := range all {
+		//let's find our order and check if it contains the correct amount
+		if order.Price != "1" {
+			continue
+		}
+
+		suite.Require().EqualValues(order.Amount, fmt.Sprintf("%d", 1000000-500000))
+		remainingOrderChecked = true
+		break
+	}
+
+	suite.Require().True(remainingOrderChecked)
+}
+
+func (suite *IntegrationTestSuite) TestMsgOrderFill_OneOrderPartialFill_Buy() {
+	_, _, addr2 := suite.msgOrderFillSetup(types.OrderTypeBuy)
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
+	suite.Require().Nil(err)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//Let's fill 1 order with amount lower than the available order
+	fillOrder := types.MsgFillOrders{
+		Creator:   addr2.String(),
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Orders: []*types.FillOrderItem{
+			{
+				Amount: "500000",
+				Price:  "1",
+			},
+		},
+	}
+
+	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	suite.Require().NoError(err)
+
+	//check that the new message is saved accordingly to queue messages storage
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 1)
+	suite.Require().Equal(qmList[0].MarketId, getMarketId())
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeSell)
+	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillBuy)
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
+	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//check that the order was correctly executed and the user received/spent the amounts related to the order
+	user2Balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee
+	suite.Require().EqualValues(10000000-500000, user2Balances.AmountOf(denomStake).Int64())
+	suite.Require().EqualValues(20000000000-100000+500000, user2Balances.AmountOf(denomBze).Int64())
+
+	all := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().NotEmpty(all)
+	//the same number of orders should be present (we filled only half of first order)
+	suite.Require().Len(all, 10)
+	remainingOrderChecked := false
+	for _, order := range all {
+		//let's find our order and check if it contains the correct amount
+		if order.Price != "1" {
+			continue
+		}
+
+		suite.Require().EqualValues(order.Amount, fmt.Sprintf("%d", 1000000-500000))
+		remainingOrderChecked = true
+		break
+	}
+
+	suite.Require().True(remainingOrderChecked)
+}
+
+func (suite *IntegrationTestSuite) TestMsgOrderFill_OneOrderFullFill_Sell() {
+	_, _, addr2 := suite.msgOrderFillSetup(types.OrderTypeSell)
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
+	suite.Require().Nil(err)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//Let's fill 1 order with amount lower than the available order
+	fillOrder := types.MsgFillOrders{
+		Creator:   addr2.String(),
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeSell,
+		Orders: []*types.FillOrderItem{
+			{
+				Amount: "1000000",
+				Price:  "1",
+			},
+		},
+	}
+
+	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	suite.Require().NoError(err)
+
+	//check that the new message is saved accordingly to queue messages storage
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 1)
+	suite.Require().Equal(qmList[0].MarketId, getMarketId())
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeBuy)
+	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillSell)
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
+	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//check that the order was correctly executed and the user received/spent the amounts related to the order
+	user2Balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee
+	suite.Require().EqualValues(20000000000-1000000-100000, user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(10000000+1000000, user2Balances.AmountOf(denomStake).Int64())
+
+	all := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().NotEmpty(all)
+	//the same number of orders should be present (we filled only half of first order)
+	suite.Require().Len(all, 9)
+	for _, order := range all {
+		//let's find our order and check if it contains the correct amount
+		suite.Require().NotEqual(order.Price, "1")
+	}
+}
+
+func (suite *IntegrationTestSuite) TestMsgOrderFill_OneOrderFullFill_Buy() {
+	_, _, addr2 := suite.msgOrderFillSetup(types.OrderTypeBuy)
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
+	suite.Require().Nil(err)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//Let's fill 1 order with amount lower than the available order
+	fillOrder := types.MsgFillOrders{
+		Creator:   addr2.String(),
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Orders: []*types.FillOrderItem{
+			{
+				Amount: "1000000",
+				Price:  "1",
+			},
+		},
+	}
+
+	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	suite.Require().NoError(err)
+
+	//check that the new message is saved accordingly to queue messages storage
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 1)
+	suite.Require().Equal(qmList[0].MarketId, getMarketId())
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeSell)
+	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillBuy)
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
+	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//check that the order was correctly executed and the user received/spent the amounts related to the order
+	user2Balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee
+	suite.Require().EqualValues(20000000000+1000000-100000, user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(10000000-1000000, user2Balances.AmountOf(denomStake).Int64())
+
+	all := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().NotEmpty(all)
+	//the same number of orders should be present (we filled only half of first order)
+	suite.Require().Len(all, 9)
+	for _, order := range all {
+		//let's find our order and check if it contains the correct amount
+		suite.Require().NotEqual(order.Price, "1000000")
+	}
+}
+
+func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoOrdersOnePartialFill_Sell() {
+	allPrices, _, addr2 := suite.msgOrderFillSetup(types.OrderTypeSell)
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
+	suite.Require().Nil(err)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//Let's fill 1 order with amount lower than the available order
+	fillOrder := types.MsgFillOrders{
+		Creator:   addr2.String(),
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeSell,
+		Orders: []*types.FillOrderItem{
+			{
+				Amount: "1000000",
+				Price:  allPrices[0],
+			},
+			{
+				Amount: "500000",
+				Price:  allPrices[1],
+			},
+		},
+	}
+
+	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	suite.Require().NoError(err)
+
+	agg := suite.k.GetAllAggregatedOrder(suite.ctx)
+	_ = agg
+	//check that the new message is saved accordingly to queue messages storage
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 2)
+	suite.Require().Equal(qmList[0].MarketId, getMarketId())
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeBuy)
+	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillSell)
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
+	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
+	suite.Require().Equal(qmList[1].MarketId, getMarketId())
+	suite.Require().Equal(qmList[1].Amount, fillOrder.Orders[1].Amount)
+	suite.Require().Equal(qmList[1].OrderType, types.OrderTypeBuy)
+	suite.Require().Equal(qmList[1].MessageType, types.MessageTypeFillSell)
+	suite.Require().Equal(qmList[1].Price, fillOrder.Orders[1].Price)
+	suite.Require().Equal(qmList[1].Owner, fillOrder.Creator)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//check that the order was correctly executed and the user received/spent the amounts related to the order
+	user2Balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee + the coins spent on the order
+	suite.Require().EqualValues(20000000000-2500000-100000, user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(10000000+1500000, user2Balances.AmountOf(denomStake).Int64())
+
+	all := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().NotEmpty(all)
+	//the same number of orders should be present (we filled only half of first order)
+	suite.Require().Len(all, 9)
+	remainingOrderChecked := false
+	for _, order := range all {
+		suite.Require().NotEqual(order.Price, allPrices[0])
+		//let's find our order and check if it contains the correct amount
+		if order.Price != allPrices[1] {
+			continue
+		}
+
+		suite.Require().EqualValues(order.Amount, fmt.Sprintf("%d", 1000000-500000))
+		remainingOrderChecked = true
+		break
+	}
+
+	suite.Require().True(remainingOrderChecked)
+}
+
+func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoOrdersOnePartialFill_Buy() {
+	allPrices, _, addr2 := suite.msgOrderFillSetup(types.OrderTypeBuy)
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
+	suite.Require().Nil(err)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//Let's fill 1 order with amount lower than the available order
+	fillOrder := types.MsgFillOrders{
+		Creator:   addr2.String(),
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Orders: []*types.FillOrderItem{
+			{
+				Amount: "1000000",
+				Price:  allPrices[0],
+			},
+			{
+				Amount: "500000",
+				Price:  allPrices[1],
+			},
+		},
+	}
+
+	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	suite.Require().NoError(err)
+
+	agg := suite.k.GetAllAggregatedOrder(suite.ctx)
+	_ = agg
+	//check that the new message is saved accordingly to queue messages storage
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 2)
+	suite.Require().Equal(qmList[0].MarketId, getMarketId())
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeSell)
+	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillBuy)
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
+	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
+	suite.Require().Equal(qmList[1].MarketId, getMarketId())
+	suite.Require().Equal(qmList[1].Amount, fillOrder.Orders[1].Amount)
+	suite.Require().Equal(qmList[1].OrderType, types.OrderTypeSell)
+	suite.Require().Equal(qmList[1].MessageType, types.MessageTypeFillBuy)
+	suite.Require().Equal(qmList[1].Price, fillOrder.Orders[1].Price)
+	suite.Require().Equal(qmList[1].Owner, fillOrder.Creator)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//check that the order was correctly executed and the user received/spent the amounts related to the order
+	user2Balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee + the coins spent on the order
+	suite.Require().EqualValues(20000000000+2500000-100000, user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(10000000-1500000, user2Balances.AmountOf(denomStake).Int64())
+
+	all := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().NotEmpty(all)
+	//the same number of orders should be present (we filled only half of first order)
+	suite.Require().Len(all, 9)
+	remainingOrderChecked := false
+	for _, order := range all {
+		suite.Require().NotEqual(order.Price, allPrices[0])
+		//let's find our order and check if it contains the correct amount
+		if order.Price != allPrices[1] {
+			continue
+		}
+
+		suite.Require().EqualValues(order.Amount, fmt.Sprintf("%d", 1000000-500000))
+		remainingOrderChecked = true
+		break
+	}
+
+	suite.Require().True(remainingOrderChecked)
+}
+
+func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoFullyFilledOrders_Buy() {
+	allPrices, _, addr2 := suite.msgOrderFillSetup(types.OrderTypeBuy)
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
+	suite.Require().Nil(err)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//Let's fill 1 order with amount lower than the available order
+	fillOrder := types.MsgFillOrders{
+		Creator:   addr2.String(),
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Orders: []*types.FillOrderItem{
+			{
+				Amount: "1000000",
+				Price:  allPrices[0],
+			},
+			{
+				Amount: "1000000",
+				Price:  allPrices[1],
+			},
+		},
+	}
+
+	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	suite.Require().NoError(err)
+
+	agg := suite.k.GetAllAggregatedOrder(suite.ctx)
+	_ = agg
+	//check that the new message is saved accordingly to queue messages storage
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 2)
+	suite.Require().Equal(qmList[0].MarketId, getMarketId())
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeSell)
+	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillBuy)
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
+	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
+	suite.Require().Equal(qmList[1].MarketId, getMarketId())
+	suite.Require().Equal(qmList[1].Amount, fillOrder.Orders[1].Amount)
+	suite.Require().Equal(qmList[1].OrderType, types.OrderTypeSell)
+	suite.Require().Equal(qmList[1].MessageType, types.MessageTypeFillBuy)
+	suite.Require().Equal(qmList[1].Price, fillOrder.Orders[1].Price)
+	suite.Require().Equal(qmList[1].Owner, fillOrder.Creator)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//check that the order was correctly executed and the user received/spent the amounts related to the order
+	user2Balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee + the coins spent on the order
+	suite.Require().EqualValues(20000000000+4000000-100000, user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(10000000-2000000, user2Balances.AmountOf(denomStake).Int64())
+
+	all := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().NotEmpty(all)
+	//the same number of orders should be present (we filled only half of first order)
+	suite.Require().Len(all, 8)
+	for _, order := range all {
+		suite.Require().NotEqual(order.Price, allPrices[0])
+		suite.Require().NotEqual(order.Price, allPrices[1])
+	}
+}
+
+func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoFullyFilledOrders_Sell() {
+	allPrices, _, addr2 := suite.msgOrderFillSetup(types.OrderTypeSell)
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
+	suite.Require().Nil(err)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//Let's fill 1 order with amount lower than the available order
+	fillOrder := types.MsgFillOrders{
+		Creator:   addr2.String(),
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeSell,
+		Orders: []*types.FillOrderItem{
+			{
+				Amount: "1000000",
+				Price:  allPrices[0],
+			},
+			{
+				Amount: "1000000",
+				Price:  allPrices[1],
+			},
+		},
+	}
+
+	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	suite.Require().NoError(err)
+
+	agg := suite.k.GetAllAggregatedOrder(suite.ctx)
+	_ = agg
+	//check that the new message is saved accordingly to queue messages storage
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 2)
+	suite.Require().Equal(qmList[0].MarketId, getMarketId())
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeBuy)
+	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillSell)
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
+	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
+	suite.Require().Equal(qmList[1].MarketId, getMarketId())
+	suite.Require().Equal(qmList[1].Amount, fillOrder.Orders[1].Amount)
+	suite.Require().Equal(qmList[1].OrderType, types.OrderTypeBuy)
+	suite.Require().Equal(qmList[1].MessageType, types.MessageTypeFillSell)
+	suite.Require().Equal(qmList[1].Price, fillOrder.Orders[1].Price)
+	suite.Require().Equal(qmList[1].Owner, fillOrder.Creator)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//check that the order was correctly executed and the user received/spent the amounts related to the order
+	user2Balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee + the coins spent on the order
+	suite.Require().EqualValues(20000000000-4000000-100000, user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(10000000+2000000, user2Balances.AmountOf(denomStake).Int64())
+
+	all := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().NotEmpty(all)
+	//the same number of orders should be present (we filled only half of first order)
+	suite.Require().Len(all, 8)
+	for _, order := range all {
+		suite.Require().NotEqual(order.Price, allPrices[0])
+		suite.Require().NotEqual(order.Price, allPrices[1])
+	}
+}
+
+func (suite *IntegrationTestSuite) TestMsgOrderFill_OneFullyFilledOrderWithExtraAmount_Buy() {
+	allPrices, _, addr2 := suite.msgOrderFillSetup(types.OrderTypeBuy)
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
+	suite.Require().Nil(err)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//Let's fill 1 order with amount lower than the available order
+	fillOrder := types.MsgFillOrders{
+		Creator:   addr2.String(),
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Orders: []*types.FillOrderItem{
+			{
+				Amount: "1500000",
+				Price:  allPrices[0],
+			},
+		},
+	}
+
+	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	suite.Require().NoError(err)
+
+	//check user funds were fully deducted(after message processing the remaining will be refunded)
+	user2Balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee + the coins spent on the order
+	suite.Require().EqualValues(20000000000-100000, user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(10000000-1500000, user2Balances.AmountOf(denomStake).Int64())
+
+	//check that the new message is saved accordingly to queue messages storage
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 1)
+	suite.Require().Equal(qmList[0].MarketId, getMarketId())
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeSell)
+	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillBuy)
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
+	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//check that the order was correctly executed and the user received/spent the amounts related to the order
+	user2Balances = suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee + the coins spent on the order
+	suite.Require().EqualValues(20000000000+1000000-100000, user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(10000000-1000000, user2Balances.AmountOf(denomStake).Int64())
+
+	all := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().NotEmpty(all)
+	//the same number of orders should be present (we filled only half of first order)
+	suite.Require().Len(all, 9)
+	for _, order := range all {
+		suite.Require().NotEqual(order.Price, allPrices[0])
+	}
+}
+
+func (suite *IntegrationTestSuite) TestMsgOrderFill_OneFullyFilledOrderWithExtraAmount_Sell() {
+	allPrices, _, addr2 := suite.msgOrderFillSetup(types.OrderTypeSell)
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
+	suite.Require().Nil(err)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//Let's fill 1 order with amount lower than the available order
+	fillOrder := types.MsgFillOrders{
+		Creator:   addr2.String(),
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeSell,
+		Orders: []*types.FillOrderItem{
+			{
+				Amount: "1500000",
+				Price:  allPrices[0],
+			},
+		},
+	}
+
+	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	suite.Require().NoError(err)
+
+	//check user funds were fully deducted(after message processing the remaining will be refunded)
+	user2Balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee + the coins spent on the order
+	suite.Require().EqualValues(20000000000-100000-1500000, user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(10000000, user2Balances.AmountOf(denomStake).Int64())
+
+	agg := suite.k.GetAllAggregatedOrder(suite.ctx)
+	_ = agg
+	//check that the new message is saved accordingly to queue messages storage
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 1)
+	suite.Require().Equal(qmList[0].MarketId, getMarketId())
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeBuy)
+	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillSell)
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
+	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//check that the order was correctly executed and the user received/spent the amounts related to the order
+	user2Balances = suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee + the coins spent on the order
+	suite.Require().EqualValues(20000000000-1000000-100000, user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(10000000+1000000, user2Balances.AmountOf(denomStake).Int64())
+
+	all := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().NotEmpty(all)
+	//the same number of orders should be present (we filled only half of first order)
+	suite.Require().Len(all, 9)
+	for _, order := range all {
+		suite.Require().NotEqual(order.Price, allPrices[0])
+	}
+}
+
+func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoFullyFilledOrdersWithExtraAmounts_Buy() {
+	allPrices, _, addr2 := suite.msgOrderFillSetup(types.OrderTypeBuy)
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
+	suite.Require().Nil(err)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//Let's fill 1 order with amount lower than the available order
+	fillOrder := types.MsgFillOrders{
+		Creator:   addr2.String(),
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Orders: []*types.FillOrderItem{
+			{
+				Amount: "2000000",
+				Price:  allPrices[0],
+			},
+			{
+				Amount: "1500000",
+				Price:  allPrices[1],
+			},
+		},
+	}
+
+	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	suite.Require().NoError(err)
+
+	//check user funds were fully deducted(after message processing the remaining will be refunded)
+	user2Balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee + the coins spent on the order
+	suite.Require().EqualValues(20000000000-100000, user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(10000000-3500000, user2Balances.AmountOf(denomStake).Int64())
+
+	//check that the new message is saved accordingly to queue messages storage
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 2)
+	suite.Require().Equal(qmList[0].MarketId, getMarketId())
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeSell)
+	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillBuy)
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
+	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
+	suite.Require().Equal(qmList[1].MarketId, getMarketId())
+	suite.Require().Equal(qmList[1].Amount, fillOrder.Orders[1].Amount)
+	suite.Require().Equal(qmList[1].OrderType, types.OrderTypeSell)
+	suite.Require().Equal(qmList[1].MessageType, types.MessageTypeFillBuy)
+	suite.Require().Equal(qmList[1].Price, fillOrder.Orders[1].Price)
+	suite.Require().Equal(qmList[1].Owner, fillOrder.Creator)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//check that the order was correctly executed and the user received/spent the amounts related to the order
+	user2Balances = suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee + the coins spent on the order
+	suite.Require().EqualValues(20000000000+4000000-100000, user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(10000000-2000000, user2Balances.AmountOf(denomStake).Int64())
+
+	all := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().NotEmpty(all)
+	//the same number of orders should be present (we filled only half of first order)
+	suite.Require().Len(all, 8)
+	for _, order := range all {
+		suite.Require().NotEqual(order.Price, allPrices[0])
+		suite.Require().NotEqual(order.Price, allPrices[1])
+		suite.Require().Equal(order.Amount, "1000000")
+	}
+}
+
+func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoFullyFilledOrdersWithExtraAmounts_Sell() {
+	allPrices, _, addr2 := suite.msgOrderFillSetup(types.OrderTypeSell)
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
+	suite.Require().Nil(err)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//Let's fill 1 order with amount lower than the available order
+	fillOrder := types.MsgFillOrders{
+		Creator:   addr2.String(),
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeSell,
+		Orders: []*types.FillOrderItem{
+			{
+				Amount: "2000000",
+				Price:  allPrices[0],
+			},
+			{
+				Amount: "1500000",
+				Price:  allPrices[1],
+			},
+		},
+	}
+
+	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	suite.Require().NoError(err)
+
+	//check user funds were fully deducted(after message processing the remaining will be refunded)
+	user2Balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee + the coins spent on the order
+	suite.Require().EqualValues(20000000000-6500000-100000, user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(10000000, user2Balances.AmountOf(denomStake).Int64())
+
+	//check that the new message is saved accordingly to queue messages storage
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 2)
+	suite.Require().Equal(qmList[0].MarketId, getMarketId())
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeBuy)
+	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillSell)
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
+	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
+	suite.Require().Equal(qmList[1].MarketId, getMarketId())
+	suite.Require().Equal(qmList[1].Amount, fillOrder.Orders[1].Amount)
+	suite.Require().Equal(qmList[1].OrderType, types.OrderTypeBuy)
+	suite.Require().Equal(qmList[1].MessageType, types.MessageTypeFillSell)
+	suite.Require().Equal(qmList[1].Price, fillOrder.Orders[1].Price)
+	suite.Require().Equal(qmList[1].Owner, fillOrder.Creator)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//check that the order was correctly executed and the user received/spent the amounts related to the order
+	user2Balances = suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee + the coins spent on the order
+	suite.Require().EqualValues(20000000000-4000000-100000, user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(10000000+2000000, user2Balances.AmountOf(denomStake).Int64())
+
+	all := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().NotEmpty(all)
+	//the same number of orders should be present (we filled only half of first order)
+	suite.Require().Len(all, 8)
+	for _, order := range all {
+		suite.Require().NotEqual(order.Price, allPrices[0])
+		suite.Require().NotEqual(order.Price, allPrices[1])
+		suite.Require().Equal(order.Amount, "1000000")
+	}
+}
+
+func (suite *IntegrationTestSuite) TestMsgOrderFill_FillAllWithExtraAmounts_Sell() {
+	allPrices, _, addr2 := suite.msgOrderFillSetup(types.OrderTypeSell)
+	suite.Require().NotEmpty(allPrices)
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
+	suite.Require().Nil(err)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	fillOrder := types.MsgFillOrders{
+		Creator:   addr2.String(),
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeSell,
+		Orders:    []*types.FillOrderItem{},
+	}
+
+	quoteAmount := sdk.ZeroInt()
+	baseAmount := sdk.ZeroInt()
+	expectedQuoteAmount := sdk.ZeroInt()
+	expectedBaseAmount := sdk.ZeroInt()
+	for _, pr := range allPrices {
+		randAmount := 1000000 + suite.randomNumber(999999)
+		fillOrder.Orders = append(fillOrder.Orders, &types.FillOrderItem{
+			Price:  pr,
+			Amount: fmt.Sprintf("%d", randAmount),
+		})
+
+		price, ok := sdk.NewIntFromString(pr)
+		suite.Require().True(ok)
+		baseAmount = baseAmount.AddRaw(int64(randAmount))
+		quoteAmount = quoteAmount.Add(price.MulRaw(int64(randAmount)))
+
+		expectedQuoteAmount = expectedQuoteAmount.Add(price.MulRaw(1000000))
+		expectedBaseAmount = expectedBaseAmount.AddRaw(1000000)
+	}
+
+	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	suite.Require().NoError(err)
+
+	user2Balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee + the coins spent on the order
+	suite.Require().EqualValues(20000000000-100000-quoteAmount.Int64(), user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(10000000, user2Balances.AmountOf(denomStake).Int64())
+
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, len(allPrices))
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//check that the order was correctly executed and the user received/spent the amounts related to the order
+	user2Balances = suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee + the coins spent on the order
+	suite.Require().EqualValues(20000000000-100000-expectedQuoteAmount.Int64(), user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(10000000+expectedBaseAmount.Int64(), user2Balances.AmountOf(denomStake).Int64())
+
+	all := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().Empty(all)
+}
+
+func (suite *IntegrationTestSuite) TestMsgOrderFill_FillAllWithExtraAmounts_Buy() {
+	allPrices, _, addr2 := suite.msgOrderFillSetup(types.OrderTypeBuy)
+	suite.Require().NotEmpty(allPrices)
+
+	//add an extra 10,000,000 STAKE to addr2 because it will fill buy orders (it sells STAKE)
+	balances := sdk.NewCoins(newStakeCoin(10000000))
+	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr2, balances))
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	engine, err := keeper.NewProcessingEngine(suite.app.TradebinKeeper, suite.app.BankKeeper, suite.app.TradebinKeeper.Logger(suite.ctx))
+	suite.Require().Nil(err)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	fillOrder := types.MsgFillOrders{
+		Creator:   addr2.String(),
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Orders:    []*types.FillOrderItem{},
+	}
+
+	quoteAmount := sdk.ZeroInt()
+	baseAmount := sdk.ZeroInt()
+	expectedQuoteAmount := sdk.ZeroInt()
+	expectedBaseAmount := sdk.ZeroInt()
+	for _, pr := range allPrices {
+		randAmount := 1000000 + suite.randomNumber(999999)
+		fillOrder.Orders = append(fillOrder.Orders, &types.FillOrderItem{
+			Price:  pr,
+			Amount: fmt.Sprintf("%d", randAmount),
+		})
+
+		price, ok := sdk.NewIntFromString(pr)
+		suite.Require().True(ok)
+		baseAmount = baseAmount.AddRaw(int64(randAmount))
+		quoteAmount = quoteAmount.Add(price.MulRaw(int64(randAmount)))
+
+		expectedQuoteAmount = expectedQuoteAmount.Add(price.MulRaw(1000000))
+		expectedBaseAmount = expectedBaseAmount.AddRaw(1000000)
+	}
+
+	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	suite.Require().NoError(err)
+
+	user2Balances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee + the coins spent on the order
+	suite.Require().EqualValues(20000000000-100000, user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(20000000-baseAmount.Int64(), user2Balances.AmountOf(denomStake).Int64())
+
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, len(allPrices))
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	//check that the order was correctly executed and the user received/spent the amounts related to the order
+	user2Balances = suite.app.BankKeeper.GetAllBalances(suite.ctx, addr2)
+	//subtract the market making trading fee + the coins spent on the order
+	suite.Require().EqualValues(20000000000-100000+expectedQuoteAmount.Int64(), user2Balances.AmountOf(denomBze).Int64())
+	suite.Require().EqualValues(20000000-expectedBaseAmount.Int64(), user2Balances.AmountOf(denomStake).Int64())
+
+	all := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().Empty(all)
 }

@@ -91,6 +91,7 @@ func (pe *ProcessingEngine) getMessageHandler() func(ctx sdk.Context, message ty
 
 		switch message.MessageType {
 		case types.MessageTypeFillBuy:
+			fallthrough
 		case types.MessageTypeFillSell:
 			wrappingFn = func(ctx sdk.Context) error {
 				return pe.fillOrder(ctx, message)
@@ -517,7 +518,7 @@ func (pe *ProcessingEngine) fillOrder(ctx sdk.Context, message types.QueueMessag
 
 	//we haven't filled the entire message amount so we have to refund the msg owner's coins
 
-	return pe.refundMessageFunds(ctx, &message, msgAmountInt, &market, msgOwnerAddr)
+	return pe.refundMessageFunds(ctx, &message, *remainingAmount, &market, msgOwnerAddr)
 }
 
 func (pe *ProcessingEngine) refundMessageFunds(ctx sdk.Context, message *types.QueueMessage, refundAmount sdk.Int, market *types.Market, msgOwnerAddr sdk.AccAddress) error {
