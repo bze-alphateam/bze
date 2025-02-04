@@ -185,7 +185,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 		suite.Require().Nil(err)
 		qm := types.QueueMessage{
 			MarketId:    or.MarketId,
-			MessageType: types.OrderTypeCancel,
+			MessageType: types.MessageTypeCancel,
 			OrderId:     or.Id,
 			OrderType:   or.OrderType,
 			Owner:       addr1.String(),

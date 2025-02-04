@@ -2,6 +2,10 @@ package types
 
 import sdk "github.com/cosmos/cosmos-sdk/types"
 
+const (
+	FillOrdersExtraGas = 5000
+)
+
 type OrderCoins struct {
 	Coin     sdk.Coin
 	Dust     sdk.Dec

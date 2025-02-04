@@ -7,8 +7,29 @@ import (
 )
 
 const (
-	hookName = "burner_raffle_cleanup"
+	hookName             = "burner_raffle_cleanup"
+	periodicBurnHookName = "periodic_burner"
+
+	burnInterval = 4
 )
+
+func (k Keeper) GetBurnerPeriodicBurnHook() types.EpochHook {
+	return types.NewAfterEpochHook(periodicBurnHookName, func(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+		if epochIdentifier != periodicBurnEpochIdentifier {
+			return nil
+		}
+
+		if epochNumber%burnInterval != 0 {
+			return nil
+		}
+
+		k.Logger(ctx).
+			With("epoch", epochIdentifier, "epoch_number", epochNumber, "hook_name", periodicBurnHookName).
+			Debug("preparing to execute hook")
+
+		return k.burnModuleCoins(ctx)
+	})
+}
 
 func (k Keeper) GetBurnerRaffleCleanupHook() types.EpochHook {
 	return types.NewAfterEpochHook(hookName, func(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {

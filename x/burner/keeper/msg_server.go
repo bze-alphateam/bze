@@ -137,7 +137,8 @@ func (k msgServer) JoinRaffle(goCtx context.Context, msg *types.MsgJoinRaffle) (
 	}
 
 	//do not allow participants to join close to expiration
-	if raffle.EndAt <= (k.GetRaffleCurrentEpoch(ctx) - 1) {
+	re := k.GetRaffleCurrentEpoch(ctx)
+	if re > 0 && raffle.EndAt <= (re-1) {
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "raffle has expired")
 	}
 

@@ -25,7 +25,7 @@ func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder)
 
 	qm := types.QueueMessage{
 		MarketId:    msg.MarketId,
-		MessageType: types.OrderTypeCancel,
+		MessageType: types.MessageTypeCancel,
 		OrderId:     msg.OrderId,
 		OrderType:   msg.OrderType,
 		Owner:       msg.Creator,

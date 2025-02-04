@@ -44,6 +44,11 @@ export interface V1AggregatedOrder {
   price?: string;
 }
 
+export interface V1FillOrderItem {
+  price?: string;
+  amount?: string;
+}
+
 export interface V1HistoryOrder {
   market_id?: string;
   order_type?: string;
@@ -61,6 +66,8 @@ export type V1MsgCancelOrderResponse = object;
 export type V1MsgCreateMarketResponse = object;
 
 export type V1MsgCreateOrderResponse = object;
+
+export type V1MsgFillOrdersResponse = object;
 
 export interface V1Order {
   id?: string;
