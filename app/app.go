@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/bze-alphateam/bze/app/openapi"
-	v711 "github.com/bze-alphateam/bze/app/upgrades/v711"
+	v720 "github.com/bze-alphateam/bze/app/upgrades/v720"
 	"github.com/bze-alphateam/bze/x/epochs"
 	epochskeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
 	epochstypes "github.com/bze-alphateam/bze/x/epochs/types"
@@ -711,8 +711,8 @@ func New(
 
 func (app *App) setupUpgradeHandlers(cfg module.Configurator) {
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v711.UpgradeName,
-		v711.CreateUpgradeHandler(cfg, app.mm),
+		v720.UpgradeName,
+		v720.CreateUpgradeHandler(cfg, app.mm),
 	)
 }
 
