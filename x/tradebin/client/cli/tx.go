@@ -38,6 +38,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdCreateMarket())
 	cmd.AddCommand(CmdCreateOrder())
 	cmd.AddCommand(CmdCancelOrder())
+	cmd.AddCommand(CmdFillOrders())
 	// this line is used by starport scaffolding # 1
 
 	return cmd
@@ -165,8 +166,8 @@ func CmdFillOrders() *cobra.Command {
 
 			msg := types.NewMsgFillOrders(
 				clientCtx.GetFromAddress().String(),
-				argOrderType,
 				argMarketId,
+				argOrderType,
 				decodedOrders,
 			)
 			if err := msg.ValidateBasic(); err != nil {
