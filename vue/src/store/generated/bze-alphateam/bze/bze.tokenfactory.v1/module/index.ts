@@ -7,16 +7,16 @@ import { Api } from "./rest";
 import { MsgCreateDenom } from "./types/tokenfactory/tx";
 import { MsgMint } from "./types/tokenfactory/tx";
 import { MsgBurn } from "./types/tokenfactory/tx";
-import { MsgSetDenomMetadata } from "./types/tokenfactory/tx";
 import { MsgChangeAdmin } from "./types/tokenfactory/tx";
+import { MsgSetDenomMetadata } from "./types/tokenfactory/tx";
 
 
 const types = [
   ["/bze.tokenfactory.v1.MsgCreateDenom", MsgCreateDenom],
   ["/bze.tokenfactory.v1.MsgMint", MsgMint],
   ["/bze.tokenfactory.v1.MsgBurn", MsgBurn],
-  ["/bze.tokenfactory.v1.MsgSetDenomMetadata", MsgSetDenomMetadata],
   ["/bze.tokenfactory.v1.MsgChangeAdmin", MsgChangeAdmin],
+  ["/bze.tokenfactory.v1.MsgSetDenomMetadata", MsgSetDenomMetadata],
   
 ];
 export const MissingWalletError = new Error("wallet is required");
@@ -52,8 +52,8 @@ const txClient = async (wallet: OfflineSigner, { addr: addr }: TxClientOptions =
     msgCreateDenom: (data: MsgCreateDenom): EncodeObject => ({ typeUrl: "/bze.tokenfactory.v1.MsgCreateDenom", value: MsgCreateDenom.fromPartial( data ) }),
     msgMint: (data: MsgMint): EncodeObject => ({ typeUrl: "/bze.tokenfactory.v1.MsgMint", value: MsgMint.fromPartial( data ) }),
     msgBurn: (data: MsgBurn): EncodeObject => ({ typeUrl: "/bze.tokenfactory.v1.MsgBurn", value: MsgBurn.fromPartial( data ) }),
-    msgSetDenomMetadata: (data: MsgSetDenomMetadata): EncodeObject => ({ typeUrl: "/bze.tokenfactory.v1.MsgSetDenomMetadata", value: MsgSetDenomMetadata.fromPartial( data ) }),
     msgChangeAdmin: (data: MsgChangeAdmin): EncodeObject => ({ typeUrl: "/bze.tokenfactory.v1.MsgChangeAdmin", value: MsgChangeAdmin.fromPartial( data ) }),
+    msgSetDenomMetadata: (data: MsgSetDenomMetadata): EncodeObject => ({ typeUrl: "/bze.tokenfactory.v1.MsgSetDenomMetadata", value: MsgSetDenomMetadata.fromPartial( data ) }),
     
   };
 };
