@@ -1,0 +1,41 @@
+syntax = "proto3";
+package bze.tradebin.v1;
+
+option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
+
+import "gogoproto/gogo.proto";
+
+message LiquidityPool {
+  string id = 1; // Unique pool identifier (e.g., "atom/usdc")
+  string base = 2;
+  string quote = 3;
+  string lp_denom = 4; // e.g., "lp/atom/usdc"
+  string creator = 5;
+  string fee = 6 [ // Fee ex: 0.001 = 0.1%
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  FeeDestination fee_dest = 7;
+  uint64 reserve_base = 8; // Amount of base token (ATOM)
+  uint64 reserve_quote = 9; // Amount of quote token (USDC)
+  bool stable = 10; // true/false
+}
+
+message FeeDestination {
+  string treasury = 1 [ // % of the total fee of 1.000
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  string burner = 2 [ // % of the total fee of 1.000
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  string providers = 3 [ // % of the total fee of 1.000
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  string liquidity = 4 [ // % of the total fee of 1.000
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+}

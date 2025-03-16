@@ -33,6 +33,15 @@ func (msg *MsgCreateMarket) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
+func (msg *MsgCreateMarket) GetCreatorAcc() sdk.AccAddress {
+	creator, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		panic(err)
+	}
+
+	return creator
+}
+
 func (msg *MsgCreateMarket) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)

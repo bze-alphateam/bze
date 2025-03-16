@@ -13,6 +13,7 @@ import (
 	reflect "reflect"
 
 	types "github.com/cosmos/cosmos-sdk/types"
+	types0 "github.com/cosmos/cosmos-sdk/x/bank/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -78,6 +79,21 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 	return m.recorder
 }
 
+// GetDenomMetaData mocks base method.
+func (m *MockBankKeeper) GetDenomMetaData(ctx types.Context, denom string) (types0.Metadata, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDenomMetaData", ctx, denom)
+	ret0, _ := ret[0].(types0.Metadata)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
+}
+
+// GetDenomMetaData indicates an expected call of GetDenomMetaData.
+func (mr *MockBankKeeperMockRecorder) GetDenomMetaData(ctx, denom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDenomMetaData", reflect.TypeOf((*MockBankKeeper)(nil).GetDenomMetaData), ctx, denom)
+}
+
 // HasSupply mocks base method.
 func (m *MockBankKeeper) HasSupply(ctx types.Context, denom string) bool {
 	m.ctrl.T.Helper()
@@ -90,6 +106,20 @@ func (m *MockBankKeeper) HasSupply(ctx types.Context, denom string) bool {
 func (mr *MockBankKeeperMockRecorder) HasSupply(ctx, denom any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasSupply", reflect.TypeOf((*MockBankKeeper)(nil).HasSupply), ctx, denom)
+}
+
+// MintCoins mocks base method.
+func (m *MockBankKeeper) MintCoins(ctx types.Context, moduleName string, amt types.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MintCoins", ctx, moduleName, amt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// MintCoins indicates an expected call of MintCoins.
+func (mr *MockBankKeeperMockRecorder) MintCoins(ctx, moduleName, amt any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MintCoins", reflect.TypeOf((*MockBankKeeper)(nil).MintCoins), ctx, moduleName, amt)
 }
 
 // SendCoinsFromAccountToModule mocks base method.
@@ -118,4 +148,16 @@ func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx types.Context, senderM
 func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToAccount", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToAccount), ctx, senderModule, recipientAddr, amt)
+}
+
+// SetDenomMetaData mocks base method.
+func (m *MockBankKeeper) SetDenomMetaData(ctx types.Context, denomMetaData types0.Metadata) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetDenomMetaData", ctx, denomMetaData)
+}
+
+// SetDenomMetaData indicates an expected call of SetDenomMetaData.
+func (mr *MockBankKeeperMockRecorder) SetDenomMetaData(ctx, denomMetaData any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDenomMetaData", reflect.TypeOf((*MockBankKeeper)(nil).SetDenomMetaData), ctx, denomMetaData)
 }

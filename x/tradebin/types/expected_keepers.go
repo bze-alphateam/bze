@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 type DistrKeeper interface {
@@ -13,5 +14,9 @@ type BankKeeper interface {
 	HasSupply(ctx sdk.Context, denom string) bool
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
+	GetDenomMetaData(ctx sdk.Context, denom string) (banktypes.Metadata, bool)
+	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+
 	// Methods imported from bank should be defined here
 }

@@ -1,5 +1,7 @@
 import { Client, registry, MissingWalletError } from 'bze-alphateam-bze-client-ts'
 
+import { LiquidityPool } from "bze-alphateam-bze-client-ts/bze.tradebin.v1/types"
+import { FeeDestination } from "bze-alphateam-bze-client-ts/bze.tradebin.v1/types"
 import { OrderCreateMessageEvent } from "bze-alphateam-bze-client-ts/bze.tradebin.v1/types"
 import { OrderCancelMessageEvent } from "bze-alphateam-bze-client-ts/bze.tradebin.v1/types"
 import { MarketCreatedEvent } from "bze-alphateam-bze-client-ts/bze.tradebin.v1/types"
@@ -17,7 +19,7 @@ import { QueueMessage } from "bze-alphateam-bze-client-ts/bze.tradebin.v1/types"
 import { FillOrderItem } from "bze-alphateam-bze-client-ts/bze.tradebin.v1/types"
 
 
-export { OrderCreateMessageEvent, OrderCancelMessageEvent, MarketCreatedEvent, OrderExecutedEvent, OrderCanceledEvent, OrderSavedEvent, Market, Order, OrderReference, AggregatedOrder, HistoryOrder, UserDust, Params, QueueMessage, FillOrderItem };
+export { LiquidityPool, FeeDestination, OrderCreateMessageEvent, OrderCancelMessageEvent, MarketCreatedEvent, OrderExecutedEvent, OrderCanceledEvent, OrderSavedEvent, Market, Order, OrderReference, AggregatedOrder, HistoryOrder, UserDust, Params, QueueMessage, FillOrderItem };
 
 function initClient(vuexGetters) {
 	return new Client(vuexGetters['common/env/getEnv'], vuexGetters['common/wallet/signer'])
@@ -59,6 +61,8 @@ const getDefaultState = () => {
 				AllUserDust: {},
 				
 				_Structure: {
+						LiquidityPool: getStructure(LiquidityPool.fromPartial({})),
+						FeeDestination: getStructure(FeeDestination.fromPartial({})),
 						OrderCreateMessageEvent: getStructure(OrderCreateMessageEvent.fromPartial({})),
 						OrderCancelMessageEvent: getStructure(OrderCancelMessageEvent.fromPartial({})),
 						MarketCreatedEvent: getStructure(MarketCreatedEvent.fromPartial({})),
@@ -446,19 +450,6 @@ export default {
 				}
 			}
 		},
-		async sendMsgCreateMarket({ rootGetters }, { value, fee = [], memo = '' }) {
-			try {
-				const client=await initClient(rootGetters)
-				const result = await client.BzeTradebinV1.tx.sendMsgCreateMarket({ value, fee: {amount: fee, gas: "200000"}, memo })
-				return result
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCreateMarket:Init Could not initialize signing client. Wallet is required.')
-				}else{
-					throw new Error('TxClient:MsgCreateMarket:Send Could not broadcast Tx: '+ e.message)
-				}
-			}
-		},
 		async sendMsgCancelOrder({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const client=await initClient(rootGetters)
@@ -469,6 +460,32 @@ export default {
 					throw new Error('TxClient:MsgCancelOrder:Init Could not initialize signing client. Wallet is required.')
 				}else{
 					throw new Error('TxClient:MsgCancelOrder:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
+		async sendMsgCreateLiquidityPool({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const client=await initClient(rootGetters)
+				const result = await client.BzeTradebinV1.tx.sendMsgCreateLiquidityPool({ value, fee: {amount: fee, gas: "200000"}, memo })
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgCreateLiquidityPool:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgCreateLiquidityPool:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
+		async sendMsgCreateMarket({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const client=await initClient(rootGetters)
+				const result = await client.BzeTradebinV1.tx.sendMsgCreateMarket({ value, fee: {amount: fee, gas: "200000"}, memo })
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgCreateMarket:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgCreateMarket:Send Could not broadcast Tx: '+ e.message)
 				}
 			}
 		},
@@ -499,19 +516,6 @@ export default {
 				}
 			}
 		},
-		async MsgCreateMarket({ rootGetters }, { value }) {
-			try {
-				const client=initClient(rootGetters)
-				const msg = await client.BzeTradebinV1.tx.msgCreateMarket({value})
-				return msg
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCreateMarket:Init Could not initialize signing client. Wallet is required.')
-				} else{
-					throw new Error('TxClient:MsgCreateMarket:Create Could not create message: ' + e.message)
-				}
-			}
-		},
 		async MsgCancelOrder({ rootGetters }, { value }) {
 			try {
 				const client=initClient(rootGetters)
@@ -522,6 +526,32 @@ export default {
 					throw new Error('TxClient:MsgCancelOrder:Init Could not initialize signing client. Wallet is required.')
 				} else{
 					throw new Error('TxClient:MsgCancelOrder:Create Could not create message: ' + e.message)
+				}
+			}
+		},
+		async MsgCreateLiquidityPool({ rootGetters }, { value }) {
+			try {
+				const client=initClient(rootGetters)
+				const msg = await client.BzeTradebinV1.tx.msgCreateLiquidityPool({value})
+				return msg
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgCreateLiquidityPool:Init Could not initialize signing client. Wallet is required.')
+				} else{
+					throw new Error('TxClient:MsgCreateLiquidityPool:Create Could not create message: ' + e.message)
+				}
+			}
+		},
+		async MsgCreateMarket({ rootGetters }, { value }) {
+			try {
+				const client=initClient(rootGetters)
+				const msg = await client.BzeTradebinV1.tx.msgCreateMarket({value})
+				return msg
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgCreateMarket:Init Could not initialize signing client. Wallet is required.')
+				} else{
+					throw new Error('TxClient:MsgCreateMarket:Create Could not create message: ' + e.message)
 				}
 			}
 		},

@@ -1,6 +1,8 @@
 syntax = "proto3";
 package bze.tradebin.v1;
 
+import "tradebin/amm.proto";
+
 // this line is used by starport scaffolding # proto/tx/import
 
 option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
@@ -11,6 +13,7 @@ service Msg {
   rpc CreateOrder(MsgCreateOrder) returns (MsgCreateOrderResponse);
   rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
   rpc FillOrders(MsgFillOrders) returns (MsgFillOrdersResponse);
+  rpc CreateLiquidityPool(MsgCreateLiquidityPool) returns (MsgCreateLiquidityPoolResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -57,5 +60,20 @@ message MsgFillOrders {
 }
 
 message MsgFillOrdersResponse {}
+
+message MsgCreateLiquidityPool {
+  string creator = 1;
+  string base = 2;
+  string quote = 3;
+  string fee = 4;
+  string feeDest = 5;
+  bool stable = 6;
+  string initialBase = 7;
+  string initialQuote = 8;
+}
+
+message MsgCreateLiquidityPoolResponse {
+  string id = 1;
+}
 
 // this line is used by starport scaffolding # proto/tx/message

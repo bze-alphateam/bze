@@ -53,3 +53,9 @@ message OrderSavedEvent {
   string price = 5;
   string owner = 6;
 }
+
+message LpCreatedEvent {
+  string creator = 1;
+  string base = 2;
+  string quote = 3;
+}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/spf13/cast"
 	"strconv"
 	"time"
 
@@ -39,6 +40,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdCreateOrder())
 	cmd.AddCommand(CmdCancelOrder())
 	cmd.AddCommand(CmdFillOrders())
+	cmd.AddCommand(CmdCreateLiquidityPool())
 	// this line is used by starport scaffolding # 1
 
 	return cmd
@@ -174,6 +176,51 @@ func CmdFillOrders() *cobra.Command {
 				return err
 			}
 
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdCreateLiquidityPool() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-liquidity-pool [base] [quote] [fee] [fee-dest] [stable] [initial-base] [initial-quote]",
+		Short: "Broadcast message create-liquidity-pool",
+		Long:  "The fee-dest should be an array of objects of form: {treasury: 0.25, burner: 0.25, providers: 0.25, liquidity: 0.25} and the sum of the values should be 1.",
+		Args:  cobra.ExactArgs(7),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			argBase := args[0]
+			argQuote := args[1]
+			argFee := args[2]
+			argFeeDest := args[3]
+			argStable, err := cast.ToBoolE(args[4])
+			if err != nil {
+				return err
+			}
+			argInitialBase := args[5]
+			argInitialQuote := args[6]
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgCreateLiquidityPool(
+				clientCtx.GetFromAddress().String(),
+				argBase,
+				argQuote,
+				argFee,
+				argFeeDest,
+				argStable,
+				argInitialBase,
+				argInitialQuote,
+			)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

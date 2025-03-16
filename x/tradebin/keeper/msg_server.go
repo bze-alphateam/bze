@@ -78,33 +78,14 @@ func (k msgServer) CreateMarket(goCtx context.Context, msg *types.MsgCreateMarke
 		return nil, types.ErrMarketAlreadyExists
 	}
 
-	if msg.Base == "" || msg.Quote == "" || msg.Quote == msg.Base {
-		return nil, types.ErrInvalidDenom
-	}
-
-	if !k.bankKeeper.HasSupply(ctx, msg.Base) {
-		return nil, types.ErrDenomHasNoSupply
-	}
-
-	if !k.bankKeeper.HasSupply(ctx, msg.Quote) {
-		return nil, types.ErrDenomHasNoSupply
-	}
-
-	createMarketFee, err := sdk.ParseCoinsNormalized(k.CreateMarketFee(ctx))
+	err := k.validateMarketAssets(ctx, msg.Base, msg.Quote)
 	if err != nil {
 		return nil, err
 	}
 
-	if createMarketFee.IsAllPositive() {
-		accAddr, err := sdk.AccAddressFromBech32(msg.Creator)
-		if err != nil {
-			return nil, err
-		}
-
-		sendErr := k.distrKeeper.FundCommunityPool(ctx, createMarketFee, accAddr)
-		if sendErr != nil {
-			return nil, sendErr
-		}
+	err = k.payMarketCreateFee(ctx, msg.GetCreatorAcc())
+	if err != nil {
+		return nil, err
 	}
 
 	market := types.Market{
@@ -115,8 +96,27 @@ func (k msgServer) CreateMarket(goCtx context.Context, msg *types.MsgCreateMarke
 	k.SetMarket(ctx, market)
 
 	err = k.emitMarketCreatedEvent(ctx, &market)
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+	}
 
 	return &types.MsgCreateMarketResponse{}, nil
+}
+
+func (k msgServer) payMarketCreateFee(ctx sdk.Context, payer sdk.AccAddress) error {
+	createMarketFee, err := sdk.ParseCoinsNormalized(k.CreateMarketFee(ctx))
+	if err != nil {
+		return err
+	}
+
+	if createMarketFee.IsAllPositive() {
+		sendErr := k.distrKeeper.FundCommunityPool(ctx, createMarketFee, payer)
+		if sendErr != nil {
+			return sendErr
+		}
+	}
+
+	return nil
 }
 
 func (k msgServer) emitMarketCreatedEvent(ctx sdk.Context, market *types.Market) error {
