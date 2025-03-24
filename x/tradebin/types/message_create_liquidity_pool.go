@@ -41,12 +41,12 @@ func (msg *MsgCreateLiquidityPool) GetSigners() []sdk.AccAddress {
 }
 
 func (msg *MsgCreateLiquidityPool) GetCreatorAcc() sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		panic(err)
+	signers := msg.GetSigners()
+	if len(signers) == 0 {
+		return nil
 	}
 
-	return creator
+	return signers[0]
 }
 
 func (msg *MsgCreateLiquidityPool) GetSignBytes() []byte {

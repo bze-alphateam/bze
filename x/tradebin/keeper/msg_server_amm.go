@@ -11,6 +11,15 @@ import (
 )
 
 func (k msgServer) CreateLiquidityPool(goCtx context.Context, msg *types.MsgCreateLiquidityPool) (*types.MsgCreateLiquidityPoolResponse, error) {
+	if msg == nil {
+		return nil, sdkerrors.ErrInvalidRequest
+	}
+
+	creatorAcc := msg.GetCreatorAcc()
+	if creatorAcc == nil {
+		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, "invalid creator address")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	base, quote, poolId := k.CreatePoolId(msg.Base, msg.Quote)
@@ -52,7 +61,6 @@ func (k msgServer) CreateLiquidityPool(goCtx context.Context, msg *types.MsgCrea
 		return nil, sdkerrors.ErrNotSupported
 	}
 
-	creatorAcc := msg.GetCreatorAcc()
 	err = k.payMarketCreateFee(ctx, creatorAcc)
 	if err != nil {
 		return nil, err
@@ -151,8 +159,8 @@ func (k msgServer) getProvidedReserves(baseDenom, quoteDenom, baseAmt, quoteAmt 
 		return
 	}
 
-	if !baseCoin.IsPositive() || !quoteCoin.IsPositive() {
-		err = errors.Wrap(sdkerrors.ErrInvalidCoins, "base or quote amount is not positive")
+	if !baseCoin.IsValid() || !quoteCoin.IsValid() {
+		err = errors.Wrap(sdkerrors.ErrInvalidCoins, "invalid reserve")
 		return
 	}
 
@@ -213,14 +221,21 @@ func (k msgServer) validateFee(fee *sdk.Dec) error {
 func (k msgServer) parseValidPoolFees(msg *types.MsgCreateLiquidityPool) (fee sdk.Dec, feeDest types.FeeDestination, err error) {
 	fee, err = sdk.NewDecFromStr(msg.Fee)
 	if err != nil {
+		err = errors.Wrap(sdkerrors.ErrInvalidCoins, err.Error())
 		return
 	}
+
 	err = k.validateFee(&fee)
 	if err != nil {
 		return
 	}
 
 	feeDest, err = msg.ParseFeeDestination()
+	if err != nil {
+		err = errors.Wrap(types.ErrInvalidFeeDestination, err.Error())
+		return
+	}
+
 	err = k.validateFeeDestination(&feeDest)
 	if err != nil {
 		return

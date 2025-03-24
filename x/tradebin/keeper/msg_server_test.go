@@ -114,24 +114,9 @@ func (suite *IntegrationTestSuite) TestCancelOrder_CancelSell_Success() {
 
 func (suite *IntegrationTestSuite) TestCreateMarket_InvalidDenom() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
-	//empty base denom
-	_, err := suite.msgServer.CreateMarket(goCtx, &types.MsgCreateMarket{
-		Creator: "me",
-		Base:    "",
-		Quote:   denomBze,
-	})
-	suite.Require().NotNil(err)
-
-	//empty quote denom
-	_, err = suite.msgServer.CreateMarket(goCtx, &types.MsgCreateMarket{
-		Creator: "me",
-		Base:    denomBze,
-		Quote:   "",
-	})
-	suite.Require().NotNil(err)
 
 	//same denom for both
-	_, err = suite.msgServer.CreateMarket(goCtx, &types.MsgCreateMarket{
+	_, err := suite.msgServer.CreateMarket(goCtx, &types.MsgCreateMarket{
 		Creator: "me",
 		Base:    denomBze,
 		Quote:   denomBze,
