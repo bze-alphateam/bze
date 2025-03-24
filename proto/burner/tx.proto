@@ -37,6 +37,7 @@ message MsgStartRaffleResponse {
 message MsgJoinRaffle {
   string creator = 1;
   string denom = 2;
+  uint64 tickets = 3;
 }
 
 message MsgJoinRaffleResponse {}

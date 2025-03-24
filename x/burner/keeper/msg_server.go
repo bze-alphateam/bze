@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/errors"
 	"fmt"
 	"github.com/bze-alphateam/bze/x/burner/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,12 +54,12 @@ func (k msgServer) StartRaffle(goCtx context.Context, msg *types.MsgStartRaffle)
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if !k.bankKeeper.HasSupply(ctx, msg.Denom) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "denom %s does not exist", msg.Denom)
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "denom %s does not exist", msg.Denom)
 	}
 
 	_, alreadyStarted := k.GetRaffle(ctx, msg.Denom)
 	if alreadyStarted {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "raffle already running for this coin")
+		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "raffle already running for this coin")
 	}
 
 	creatorAcc, err := sdk.AccAddressFromBech32(msg.Creator)
@@ -75,11 +76,11 @@ func (k msgServer) StartRaffle(goCtx context.Context, msg *types.MsgStartRaffle)
 	potAmt, _ := sdk.NewIntFromString(raffle.Pot)
 	pot := sdk.NewCoin(raffle.Denom, potAmt)
 	if !k.accountHasCoins(ctx, pot, creatorAcc) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "not enough balance")
+		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "not enough balance")
 	}
 
 	if err = k.captureRafflePot(ctx, pot, creatorAcc); err != nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "could not capture pot: (%s)", err.Error())
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "could not capture pot: (%s)", err.Error())
 	}
 
 	k.SetRaffle(ctx, raffle)
@@ -127,19 +128,19 @@ func (k msgServer) JoinRaffle(goCtx context.Context, msg *types.MsgJoinRaffle) (
 
 	//check denom exists
 	if !k.bankKeeper.HasSupply(ctx, msg.Denom) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "denom %s does not exist", msg.Denom)
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "denom %s does not exist", msg.Denom)
 	}
 
 	//get raffle
 	raffle, found := k.GetRaffle(ctx, msg.Denom)
 	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "raffle not found for provided denom")
+		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "raffle not found for provided denom")
 	}
 
 	//do not allow participants to join close to expiration
 	re := k.GetRaffleCurrentEpoch(ctx)
 	if re > 0 && raffle.EndAt <= (re-1) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "raffle has expired")
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "raffle has expired")
 	}
 
 	creatorAddr, err := sdk.AccAddressFromBech32(msg.Creator)
@@ -154,9 +155,15 @@ func (k msgServer) JoinRaffle(goCtx context.Context, msg *types.MsgJoinRaffle) (
 		return nil, fmt.Errorf("could not get raffle ticket price")
 	}
 
+	//multiply with the number of tickets
+	ticketPriceInt = ticketPriceInt.MulRaw(int64(msg.GetTickets()))
+	if !ticketPriceInt.IsPositive() {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "the result of price multiplied with tickets is not positive")
+	}
+
 	ticketPrice := sdk.NewCoin(raffle.Denom, ticketPriceInt)
 	if !k.accountHasCoins(ctx, ticketPrice, creatorAddr) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "not enough balance")
+		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "not enough balance")
 	}
 
 	//get raffle module account
@@ -168,7 +175,7 @@ func (k msgServer) JoinRaffle(goCtx context.Context, msg *types.MsgJoinRaffle) (
 	//get raffle module balance for the raffle denom before capturing the ticket price
 	currentPot := k.bankKeeper.GetBalance(ctx, raffleAcc.GetAddress(), raffle.Denom)
 	if !currentPot.IsPositive() {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "no pot to participate to")
+		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "no pot to participate to")
 	}
 
 	//capture ticket price from user account to raffle module name
@@ -177,14 +184,17 @@ func (k msgServer) JoinRaffle(goCtx context.Context, msg *types.MsgJoinRaffle) (
 		return nil, err
 	}
 
-	participant := types.RaffleParticipant{
-		Index:       k.GetParticipantCounter(ctx),
-		Denom:       raffle.Denom,
-		Participant: creatorAddr.String(),
-		ExecuteAt:   ctx.BlockHeight() + raffleDelayHeight,
-	}
+	execAt := ctx.BlockHeight() + raffleDelayHeight
+	for i := int64(0); i < int64(msg.GetTickets()); i++ {
+		participant := types.RaffleParticipant{
+			Index:       k.GetParticipantCounter(ctx),
+			Denom:       raffle.Denom,
+			Participant: creatorAddr.String(),
+			ExecuteAt:   execAt + i,
+		}
 
-	k.SetRaffleParticipant(ctx, participant)
+		k.SetRaffleParticipant(ctx, participant)
+	}
 
 	return &types.MsgJoinRaffleResponse{}, nil
 }

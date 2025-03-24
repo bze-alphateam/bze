@@ -13,13 +13,6 @@ func (k Keeper) WithdrawLuckyRaffleParticipants(ctx sdk.Context, height int64) {
 		return
 	}
 
-	//get raffle module account
-	raffleAcc := k.accKeeper.GetModuleAccount(ctx, types.RaffleModuleName)
-	if raffleAcc == nil {
-		k.Logger(ctx).Error("could not find raffle module account")
-
-		return
-	}
 	for _, participant := range participants {
 		logger := k.Logger(ctx).With("participant", participant)
 		raffle, found := k.GetRaffle(ctx, participant.Denom)
@@ -36,15 +29,15 @@ func (k Keeper) WithdrawLuckyRaffleParticipants(ctx sdk.Context, height int64) {
 			continue
 		}
 
-		//get raffle module balance for the raffle denom before capturing the ticket price
-		currentPot := k.bankKeeper.GetBalance(ctx, raffleAcc.GetAddress(), raffle.Denom)
-		if !currentPot.IsPositive() {
-			logger.Error("current pot is not positive")
+		potInt, ok := sdk.NewIntFromString(raffle.GetPot())
+		if !ok {
+			logger.Error("could not parse pot to sdk int", err)
 			k.RemoveRaffleParticipant(ctx, participant)
 			continue
 		}
 
-		if k.IsLucky(ctx, &raffle, creatorAddr.String()) {
+		currentPot := sdk.NewCoin(raffle.GetDenom(), potInt)
+		if currentPot.IsPositive() && k.IsLucky(ctx, &raffle, creatorAddr.String()) {
 			logger.With("address", creatorAddr.String(), "denom", raffle.Denom).Info("user won raffle")
 			//user won
 			wonCoin := k.getWonCoin(&raffle, currentPot)
@@ -57,12 +50,13 @@ func (k Keeper) WithdrawLuckyRaffleParticipants(ctx sdk.Context, height int64) {
 			}
 
 			raffle.Winners += 1
-			raffleWon, ok := sdk.NewIntFromString(raffle.TotalWon)
+			totalWonInt, ok := sdk.NewIntFromString(raffle.TotalWon)
 			if !ok {
 				logger.Error("could not parse total won")
 			} else {
-				raffleWon = raffleWon.Add(wonCoin.Amount)
-				raffle.TotalWon = raffleWon.String()
+				totalWonInt = totalWonInt.Add(wonCoin.Amount)
+				raffle.TotalWon = totalWonInt.String()
+				raffle.Pot = currentPot.Amount.Sub(wonCoin.Amount).String()
 			}
 
 			k.SetRaffle(ctx, raffle)
@@ -85,6 +79,16 @@ func (k Keeper) WithdrawLuckyRaffleParticipants(ctx sdk.Context, height int64) {
 
 		} else {
 			logger.With("address", creatorAddr.String(), "denom", raffle.Denom).Info("user lost raffle")
+
+			//add ticket price to pot
+			ticketPrice, ok := sdk.NewIntFromString(raffle.TicketPrice)
+			if !ok {
+				logger.Error("could not parse ticket price to sdk int")
+			} else {
+				raffle.Pot = currentPot.Amount.Add(ticketPrice).String()
+				k.SetRaffle(ctx, raffle)
+			}
+
 			err = ctx.EventManager().EmitTypedEvent(&types.RaffleLostEvent{
 				Denom:       raffle.Denom,
 				Participant: participant.Participant,
@@ -100,14 +104,12 @@ func (k Keeper) WithdrawLuckyRaffleParticipants(ctx sdk.Context, height int64) {
 }
 
 func (k Keeper) getWonCoin(raffle *types.Raffle, pot sdk.Coin) sdk.Coin {
-	//get ticket price to enter the raffle
-	ticketPrice := sdk.MustNewDecFromStr(raffle.TicketPrice)
 	winRatio := sdk.MustNewDecFromStr(raffle.Ratio)
 	potAmount := sdk.NewDec(pot.Amount.Int64())
 
-	prize := potAmount.Sub(ticketPrice).Mul(winRatio).TruncateInt()
+	prize := potAmount.Mul(winRatio).TruncateInt()
 	if !prize.IsPositive() {
-		prize = pot.Amount.SubRaw(pot.Amount.Int64())
+		prize = sdk.ZeroInt()
 	}
 
 	return sdk.NewCoin(pot.Denom, prize)

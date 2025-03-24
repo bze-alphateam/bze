@@ -7,6 +7,7 @@ import (
 	types2 "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"go.uber.org/mock/gomock"
 	"strconv"
+	"testing"
 )
 
 func (suite *IntegrationTestSuite) TestFundBurner_InvalidAmount() {
@@ -587,4 +588,127 @@ func (suite *IntegrationTestSuite) TestJoinRaffle_InvalidCreator() {
 	_, err := suite.msgServer.JoinRaffle(goCtx, &msg)
 	suite.Require().Error(err)
 	suite.Require().ErrorContains(err, "bech32")
+}
+
+func (suite *IntegrationTestSuite) TestJoinRaffle_InvalidTickets() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	raffle := types.Raffle{
+		Pot:         "",
+		Duration:    0,
+		Chances:     0,
+		Ratio:       "",
+		EndAt:       10,
+		Winners:     0,
+		TicketPrice: "10",
+		Denom:       "aau",
+	}
+
+	suite.k.SetRaffle(suite.ctx, raffle)
+	addr1 := sdk.AccAddress("addr1_______________")
+	tc := []struct {
+		Name    string
+		Tickets uint64
+	}{
+		{
+			Name:    "0 ticket",
+			Tickets: 0,
+		},
+	}
+
+	for _, c := range tc {
+		suite.T().Run(c.Name, func(t *testing.T) {
+			msg := types.MsgJoinRaffle{
+				Creator: addr1.String(),
+				Denom:   "aau",
+				Tickets: c.Tickets,
+			}
+			suite.epoch.EXPECT().
+				GetEpochCountByIdentifier(gomock.Any(), "hour").Times(1).Return(int64(1))
+			suite.bank.EXPECT().
+				HasSupply(gomock.Any(), "aau").Times(1).Return(true)
+			suite.bank.EXPECT().SpendableCoins(suite.ctx, addr1).Times(1).Return(sdk.NewCoins(sdk.NewInt64Coin("aau", 3231321312)))
+
+			_, err := suite.msgServer.JoinRaffle(goCtx, &msg)
+			suite.Require().Error(err)
+			suite.Require().ErrorContains(err, "price")
+		})
+	}
+}
+
+func (suite *IntegrationTestSuite) TestJoinRaffle_Success() {
+	raffle := types.Raffle{
+		Pot:         "12345",
+		Duration:    9999999999999999,
+		Chances:     10,
+		Ratio:       "0.2",
+		EndAt:       9999999999999999,
+		Winners:     0,
+		TicketPrice: "100",
+		Denom:       "aau",
+	}
+
+	suite.k.SetRaffle(suite.ctx, raffle)
+	addr1 := sdk.AccAddress("addr1_______________")
+	addr2 := sdk.AccAddress("addr2_______________")
+	ma := types2.ModuleAccount{
+		BaseAccount: &types2.BaseAccount{
+			Address:       addr2.String(),
+			PubKey:        nil,
+			AccountNumber: 0,
+			Sequence:      0,
+		},
+		Name:        "test",
+		Permissions: nil,
+	}
+
+	tc := []struct {
+		Name    string
+		Tickets uint64
+		Height  int64
+	}{
+		{
+			Name:    "1 ticket",
+			Tickets: 1,
+			Height:  1,
+		},
+		{
+			Name:    "2 tickets",
+			Tickets: 2,
+			Height:  100,
+		},
+		{
+			Name:    "50 tickets",
+			Tickets: 50,
+			Height:  100000,
+		},
+	}
+
+	for _, c := range tc {
+		suite.ctx = suite.ctx.WithBlockHeight(c.Height)
+		goCtx := sdk.WrapSDKContext(suite.ctx)
+		suite.T().Run(c.Name, func(t *testing.T) {
+			msg := types.MsgJoinRaffle{
+				Creator: addr1.String(),
+				Denom:   "aau",
+				Tickets: c.Tickets,
+			}
+			suite.epoch.EXPECT().GetEpochCountByIdentifier(gomock.Any(), "hour").Times(1).Return(c.Height)
+			suite.bank.EXPECT().HasSupply(gomock.Any(), "aau").Times(1).Return(true)
+			suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Times(1).Return(&ma)
+			suite.bank.EXPECT().GetBalance(suite.ctx, ma.GetAddress(), "aau").Times(1).Return(sdk.NewInt64Coin("aau", 123455))
+			suite.bank.EXPECT().SendCoinsFromAccountToModule(suite.ctx, addr1, types.RaffleModuleName, sdk.NewCoins(sdk.NewInt64Coin("aau", int64(msg.GetTickets())*int64(100)))).Times(1).Return(nil)
+			suite.bank.EXPECT().SpendableCoins(suite.ctx, addr1).Times(1).Return(sdk.NewCoins(sdk.NewInt64Coin("aau", 3231321312)))
+
+			_, err := suite.msgServer.JoinRaffle(goCtx, &msg)
+			suite.Require().NoError(err)
+			execAt := suite.ctx.BlockHeight() + 2
+			for i := int64(0); i < int64(msg.GetTickets()); i++ {
+				list := suite.k.GetAllPrefixedRaffleParticipants(suite.ctx, execAt+i)
+				suite.Require().Len(list, 1)
+				suite.Require().EqualValues("aau", list[0].GetDenom())
+				suite.Require().EqualValues(addr1.String(), list[0].GetParticipant())
+			}
+		})
+	}
 }
