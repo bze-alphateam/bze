@@ -11,7 +11,7 @@ const TypeMsgCreateLiquidityPool = "create_liquidity_pool"
 
 var _ sdk.Msg = &MsgCreateLiquidityPool{}
 
-func NewMsgCreateLiquidityPool(creator string, base string, quote string, fee string, feeDest string, stable bool, initialBase string, initialQuote string) *MsgCreateLiquidityPool {
+func NewMsgCreateLiquidityPool(creator, base, quote, fee, feeDest string, stable bool, initialBase, initialQuote uint64) *MsgCreateLiquidityPool {
 	return &MsgCreateLiquidityPool{
 		Creator:      creator,
 		Base:         base,
@@ -41,12 +41,12 @@ func (msg *MsgCreateLiquidityPool) GetSigners() []sdk.AccAddress {
 }
 
 func (msg *MsgCreateLiquidityPool) GetCreatorAcc() sdk.AccAddress {
-	signers := msg.GetSigners()
-	if len(signers) == 0 {
+	creator, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
 		return nil
 	}
 
-	return signers[0]
+	return creator
 }
 
 func (msg *MsgCreateLiquidityPool) GetSignBytes() []byte {
@@ -68,7 +68,7 @@ func (msg *MsgCreateLiquidityPool) ValidateBasic() error {
 		return errors.Wrap(sdkerrors.ErrInvalidRequest, "missing fee parameters")
 	}
 
-	if len(msg.InitialBase) == 0 || len(msg.InitialQuote) == 0 {
+	if msg.InitialBase <= 0 || msg.InitialQuote <= 0 {
 		return errors.Wrap(sdkerrors.ErrInvalidRequest, "missing initial liquidity")
 	}
 

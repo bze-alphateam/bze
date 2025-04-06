@@ -14,6 +14,7 @@ service Msg {
   rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
   rpc FillOrders(MsgFillOrders) returns (MsgFillOrdersResponse);
   rpc CreateLiquidityPool(MsgCreateLiquidityPool) returns (MsgCreateLiquidityPoolResponse);
+  rpc AddLiquidity(MsgAddLiquidity) returns (MsgAddLiquidityResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -68,12 +69,24 @@ message MsgCreateLiquidityPool {
   string fee = 4;
   string feeDest = 5;
   bool stable = 6;
-  string initialBase = 7;
-  string initialQuote = 8;
+  uint64 initialBase = 7;
+  uint64 initialQuote = 8;
 }
 
 message MsgCreateLiquidityPoolResponse {
   string id = 1;
+}
+
+message MsgAddLiquidity {
+  string creator = 1;
+  string poolId = 2;
+  uint64 baseAmount = 3;
+  uint64 quoteAmount = 4;
+  uint64 minLpTokens = 5;
+}
+
+message MsgAddLiquidityResponse {
+  uint64 mintedAmount = 1;
 }
 
 // this line is used by starport scaffolding # proto/tx/message

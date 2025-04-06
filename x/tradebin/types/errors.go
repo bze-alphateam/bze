@@ -22,4 +22,5 @@ var (
 	ErrInvalidOrdersToFill    = sdkerrors.Register(ModuleName, 4011, "invalid orders to fill")
 	ErrInvalidFeeDestination  = sdkerrors.Register(ModuleName, 4012, "invalid fee destination")
 	ErrNegativeFeeDestination = sdkerrors.Register(ModuleName, 4013, "negative fee destination")
+	ErrResultedAmountTooLow   = sdkerrors.Register(ModuleName, 4014, "the resulted amount is too low")
 )

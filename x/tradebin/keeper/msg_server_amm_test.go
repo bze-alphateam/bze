@@ -252,28 +252,18 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_InvalidFeeDestination
 func (suite *IntegrationTestSuite) TestCreateLiquidityPool_InvalidReserves() {
 	tc := []struct {
 		Name         string
-		InitialBase  string
-		InitialQuote string
+		InitialBase  uint64
+		InitialQuote uint64
 	}{
 		{
-			Name:         "base parse error",
-			InitialBase:  "asd000000231",
-			InitialQuote: "233",
+			Name:         "zero base",
+			InitialBase:  0,
+			InitialQuote: 123456,
 		},
 		{
-			Name:         "quote parse error",
-			InitialBase:  "2123321",
-			InitialQuote: "sad",
-		},
-		{
-			Name:         "negative base",
-			InitialBase:  "-2123321",
-			InitialQuote: "123456",
-		},
-		{
-			Name:         "negative quote",
-			InitialBase:  "2123321",
-			InitialQuote: "-321321",
+			Name:         "zero quote",
+			InitialBase:  2123321,
+			InitialQuote: 0,
 		},
 	}
 
@@ -307,8 +297,8 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_StableNotSupported() 
 		Creator:      getTestAddress(),
 		Fee:          "0.002",
 		FeeDest:      getFeeDestinationString("0.25", "0.25", "0.25", "0.25"),
-		InitialBase:  "123",
-		InitialQuote: "456",
+		InitialBase:  123,
+		InitialQuote: 456,
 		Stable:       true,
 	}
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Base).Return(true).Times(1)
@@ -327,8 +317,8 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_FundCommunityPoolErr(
 		Creator:      getTestAddress(),
 		Fee:          "0.002",
 		FeeDest:      getFeeDestinationString("0.25", "0.25", "0.25", "0.25"),
-		InitialBase:  "123",
-		InitialQuote: "345",
+		InitialBase:  123,
+		InitialQuote: 345,
 	}
 
 	createMarketFeeCoin, err := sdk.ParseCoinsNormalized(suite.k.CreateMarketFee(suite.ctx))
@@ -350,8 +340,8 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_Success() {
 		Creator:      getTestAddress(),
 		Fee:          "0.002",
 		FeeDest:      getFeeDestinationString("0.25", "0.25", "0.25", "0.25"),
-		InitialBase:  "123",
-		InitialQuote: "345",
+		InitialBase:  123,
+		InitialQuote: 345,
 	}
 
 	denomMetaData := banktypes.Metadata{

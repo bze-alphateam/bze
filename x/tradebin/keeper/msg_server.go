@@ -104,6 +104,10 @@ func (k msgServer) CreateMarket(goCtx context.Context, msg *types.MsgCreateMarke
 }
 
 func (k msgServer) payMarketCreateFee(ctx sdk.Context, payer sdk.AccAddress) error {
+	if payer == nil {
+		return fmt.Errorf("could not get payer address")
+	}
+
 	createMarketFee, err := sdk.ParseCoinsNormalized(k.CreateMarketFee(ctx))
 	if err != nil {
 		return err

@@ -13,7 +13,8 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCancelOrder{}, "tradebin/CancelOrder", nil)
 	cdc.RegisterConcrete(&MsgFillOrders{}, "tradebin/FillOrders", nil)
 	cdc.RegisterConcrete(&MsgCreateLiquidityPool{}, "tradebin/CreateLiquidityPool", nil)
-	// this line is used by starport scaffolding # 2
+	cdc.RegisterConcrete(&MsgAddLiquidity{}, "tradebin/AddLiquidity", nil)
+// this line is used by starport scaffolding # 2
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -32,7 +33,10 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgCreateLiquidityPool{},
 	)
-	// this line is used by starport scaffolding # 3
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+	&MsgAddLiquidity{},
+)
+// this line is used by starport scaffolding # 3
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

@@ -41,6 +41,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdCancelOrder())
 	cmd.AddCommand(CmdFillOrders())
 	cmd.AddCommand(CmdCreateLiquidityPool())
+	cmd.AddCommand(CmdAddLiquidity())
 	// this line is used by starport scaffolding # 1
 
 	return cmd
@@ -200,8 +201,14 @@ func CmdCreateLiquidityPool() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argInitialBase := args[5]
-			argInitialQuote := args[6]
+			argInitialBase, err := cast.ToUint64E(args[5])
+			if err != nil {
+				return err
+			}
+			argInitialQuote, err := cast.ToUint64E(args[6])
+			if err != nil {
+				return err
+			}
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -217,6 +224,50 @@ func CmdCreateLiquidityPool() *cobra.Command {
 				argStable,
 				argInitialBase,
 				argInitialQuote,
+			)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdAddLiquidity() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "add-liquidity [pool-id] [base-amount] [quote-amount] [min-lp-tokens]",
+		Short: "Broadcast message add-liquidity",
+		Args:  cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			argPoolId := args[0]
+			argBaseAmount, err := cast.ToUint64E(args[1])
+			if err != nil {
+				return err
+			}
+			argQuoteAmount, err := cast.ToUint64E(args[2])
+			if err != nil {
+				return err
+			}
+			argMinLpTokens, err := cast.ToUint64E(args[3])
+			if err != nil {
+				return err
+			}
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgAddLiquidity(
+				clientCtx.GetFromAddress().String(),
+				argPoolId,
+				argBaseAmount,
+				argQuoteAmount,
+				argMinLpTokens,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

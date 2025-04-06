@@ -36,7 +36,7 @@ func (msg *MsgCreateMarket) GetSigners() []sdk.AccAddress {
 func (msg *MsgCreateMarket) GetCreatorAcc() sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 
 	return creator

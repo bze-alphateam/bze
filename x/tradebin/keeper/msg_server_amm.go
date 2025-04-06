@@ -148,19 +148,24 @@ func (k msgServer) mintInitialLpTokens(ctx sdk.Context, baseCoin, quoteCoin sdk.
 	return
 }
 
-func (k msgServer) getProvidedReserves(baseDenom, quoteDenom, baseAmt, quoteAmt string) (baseCoin, quoteCoin sdk.Coin, err error) {
-	baseCoin, err = sdk.ParseCoinNormalized(fmt.Sprintf("%s%s", baseAmt, baseDenom))
+func (k msgServer) getProvidedReserves(baseDenom, quoteDenom string, baseAmt, quoteAmt uint64) (baseCoin, quoteCoin sdk.Coin, err error) {
+	baseCoin, err = sdk.ParseCoinNormalized(fmt.Sprintf("%d%s", baseAmt, baseDenom))
 	if err != nil {
 		return
 	}
 
-	quoteCoin, err = sdk.ParseCoinNormalized(fmt.Sprintf("%s%s", quoteAmt, quoteDenom))
+	quoteCoin, err = sdk.ParseCoinNormalized(fmt.Sprintf("%d%s", quoteAmt, quoteDenom))
 	if err != nil {
 		return
 	}
 
 	if !baseCoin.IsValid() || !quoteCoin.IsValid() {
 		err = errors.Wrap(sdkerrors.ErrInvalidCoins, "invalid reserve")
+		return
+	}
+
+	if !baseCoin.IsPositive() || !quoteCoin.IsPositive() {
+		err = errors.Wrap(sdkerrors.ErrInvalidCoins, "non positive reserve provided")
 		return
 	}
 
@@ -242,4 +247,112 @@ func (k msgServer) parseValidPoolFees(msg *types.MsgCreateLiquidityPool) (fee sd
 	}
 
 	return
+}
+
+func (k msgServer) AddLiquidity(goCtx context.Context, msg *types.MsgAddLiquidity) (*types.MsgAddLiquidityResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	creatorAcc := msg.GetCreatorAcc()
+	if creatorAcc == nil {
+		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, "invalid creator address")
+	}
+
+	pool, found := k.GetLiquidityPool(ctx, msg.GetPoolId())
+	if !found {
+		return nil, errors.Wrapf(types.ErrMarketNotFound, "pool %s not found", msg.GetPoolId())
+	}
+
+	poolBaseReserve := sdk.NewIntFromUint64(pool.GetReserveBase())
+	poolQuoteReserve := sdk.NewIntFromUint64(pool.GetReserveQuote())
+	if poolBaseReserve.IsZero() || poolQuoteReserve.IsZero() {
+		//pools should not be empty, they are created with a desired price
+		return nil, errors.Wrap(sdkerrors.ErrInvalidCoins, "pool is empty")
+	}
+
+	optimalBase, optimalQuote, err := k.balanceProvidedAmounts(msg.GetBaseAmount(), msg.GetQuoteAmount(), pool.GetReserveBase(), pool.GetReserveQuote())
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to calculate provided amounts")
+	}
+
+	//create user paid coins
+	paidBase, paidQuote, err := k.getProvidedReserves(pool.GetBase(), pool.GetQuote(), optimalBase.Uint64(), optimalQuote.Uint64())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create optimal reserves with the provided coins")
+	}
+
+	//capture user paid coins
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, creatorAcc, types.ModuleName, sdk.NewCoins(paidBase, paidQuote))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to send liquidity coins to module account")
+	}
+
+	//mint LP tokens
+	minted, err := k.mintDepositLpTokens(ctx, &optimalBase, &optimalQuote, &poolBaseReserve, &poolQuoteReserve, &pool)
+	if err != nil {
+		return nil, err
+	}
+
+	if minted.Amount.LT(sdk.NewIntFromUint64(msg.GetMinLpTokens())) {
+		return nil, errors.Wrapf(types.ErrResultedAmountTooLow, "could not mint the minimum expected lp tokens. Minted %d, expected minimum: %d", minted.Amount.Uint64(), msg.GetMinLpTokens())
+	}
+
+	//send LP tokens to user
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, creatorAcc, sdk.NewCoins(minted))
+	if err != nil {
+		return nil, errors.Wrap(err, "could not send lp tokens to creator")
+	}
+
+	//increment pool reserves
+	pool.ReserveBase = poolBaseReserve.Add(optimalBase).Uint64()
+	pool.ReserveQuote = poolQuoteReserve.Add(optimalQuote).Uint64()
+
+	k.SetLiquidityPool(ctx, pool)
+
+	//emit liquidity added event
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.LiquidityAddedEvent{
+			Creator:      msg.Creator,
+			BaseAmount:   optimalBase.Uint64(),
+			QuoteAmount:  optimalQuote.Uint64(),
+			MintedAmount: minted.Amount.Uint64(),
+		},
+	)
+
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+	}
+
+	return &types.MsgAddLiquidityResponse{
+		MintedAmount: minted.Amount.Uint64(),
+	}, nil
+}
+
+func (k msgServer) mintDepositLpTokens(ctx sdk.Context, baseAmount, quoteAmount, poolBaseReserve, poolQuoteReserve *sdk.Int, lp *types.LiquidityPool) (mintedLp sdk.Coin, err error) {
+	lpSupply := k.bankKeeper.GetSupply(ctx, lp.GetLpDenom())
+	if !lpSupply.IsPositive() {
+		return mintedLp, errors.Wrapf(types.ErrInvalidDenom, "could not find supply for pool %s", lp.GetId())
+	}
+
+	baseRatio := sdk.NewDecFromInt(*baseAmount).Quo(sdk.NewDecFromInt(*poolBaseReserve))
+	quoteRatio := sdk.NewDecFromInt(*quoteAmount).Quo(sdk.NewDecFromInt(*poolQuoteReserve))
+
+	var mintRatio sdk.Dec
+	if baseRatio.LT(quoteRatio) {
+		mintRatio = baseRatio
+	} else {
+		mintRatio = quoteRatio
+	}
+
+	tokensToMint := mintRatio.Mul(sdk.NewDecFromInt(lpSupply.Amount)).TruncateInt()
+	if !tokensToMint.IsPositive() {
+		return mintedLp, errors.Wrap(sdkerrors.ErrInvalidCoins, "resulted LP shares is not positive")
+	}
+
+	mintedLp = sdk.NewCoin(lp.GetLpDenom(), tokensToMint)
+	// Mint the LP tokens
+	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(mintedLp))
+	if err != nil {
+		return mintedLp, errors.Wrapf(err, "could not mint liquidity pool tokens %s", lp.GetId())
+	}
+
+	return mintedLp, nil
 }

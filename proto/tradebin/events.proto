@@ -59,3 +59,10 @@ message LpCreatedEvent {
   string base = 2;
   string quote = 3;
 }
+
+message LiquidityAddedEvent {
+  string creator = 1;
+  uint64 baseAmount = 2;
+  uint64 quoteAmount = 3;
+  uint64 mintedAmount = 4;
+}
