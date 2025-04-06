@@ -94,6 +94,20 @@ func (mr *MockBankKeeperMockRecorder) GetDenomMetaData(ctx, denom any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDenomMetaData", reflect.TypeOf((*MockBankKeeper)(nil).GetDenomMetaData), ctx, denom)
 }
 
+// GetSupply mocks base method.
+func (m *MockBankKeeper) GetSupply(ctx types.Context, denom string) types.Coin {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSupply", ctx, denom)
+	ret0, _ := ret[0].(types.Coin)
+	return ret0
+}
+
+// GetSupply indicates an expected call of GetSupply.
+func (mr *MockBankKeeperMockRecorder) GetSupply(ctx, denom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSupply", reflect.TypeOf((*MockBankKeeper)(nil).GetSupply), ctx, denom)
+}
+
 // HasSupply mocks base method.
 func (m *MockBankKeeper) HasSupply(ctx types.Context, denom string) bool {
 	m.ctrl.T.Helper()
