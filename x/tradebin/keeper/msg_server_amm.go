@@ -268,7 +268,7 @@ func (k msgServer) AddLiquidity(goCtx context.Context, msg *types.MsgAddLiquidit
 		return nil, errors.Wrap(sdkerrors.ErrInvalidCoins, "pool is empty")
 	}
 
-	optimalBase, optimalQuote, err := k.balanceProvidedAmounts(msg.GetBaseAmount(), msg.GetQuoteAmount(), pool.GetReserveBase(), pool.GetReserveQuote())
+	optimalBase, optimalQuote, err := k.BalanceProvidedAmounts(msg.GetBaseAmount(), msg.GetQuoteAmount(), pool.GetReserveBase(), pool.GetReserveQuote())
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to calculate provided amounts")
 	}

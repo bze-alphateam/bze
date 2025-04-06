@@ -36,7 +36,7 @@ func (k Keeper) getPoolScaledDenom(poolId string) string {
 	return fmt.Sprintf("%s_%s", lpDenomPrefix, poolId)
 }
 
-func (k Keeper) balanceProvidedAmounts(base, quote, reserveBase, reserveQuote uint64) (sdk.Int, sdk.Int, error) {
+func (k Keeper) BalanceProvidedAmounts(base, quote, reserveBase, reserveQuote uint64) (sdk.Int, sdk.Int, error) {
 	poolBaseReserve := sdk.NewIntFromUint64(reserveBase)
 	poolQuoteReserve := sdk.NewIntFromUint64(reserveQuote)
 	if poolBaseReserve.IsZero() || poolQuoteReserve.IsZero() {
