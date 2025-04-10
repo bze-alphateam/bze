@@ -66,3 +66,9 @@ message LiquidityAddedEvent {
   uint64 quoteAmount = 3;
   uint64 mintedAmount = 4;
 }
+
+message LiquidityRemovedEvent {
+  string creator = 1;
+  uint64 baseAmount = 2;
+  uint64 quoteAmount = 3;
+}

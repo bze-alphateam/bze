@@ -356,3 +356,83 @@ func (k msgServer) mintDepositLpTokens(ctx sdk.Context, baseAmount, quoteAmount,
 
 	return mintedLp, nil
 }
+
+func (k msgServer) RemoveLiquidity(goCtx context.Context, msg *types.MsgRemoveLiquidity) (*types.MsgRemoveLiquidityResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	creatorAcc := msg.GetCreatorAcc()
+	if creatorAcc == nil {
+		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, "invalid creator address")
+	}
+
+	pool, found := k.GetLiquidityPool(ctx, msg.GetPoolId())
+	if !found {
+		return nil, errors.Wrapf(types.ErrMarketNotFound, "pool %s not found", msg.GetPoolId())
+	}
+
+	lpSupply := k.bankKeeper.GetSupply(ctx, pool.GetLpDenom())
+	if !lpSupply.IsPositive() {
+		return nil, errors.Wrapf(types.ErrInvalidDenom, "could not find supply for pool %s", pool.GetId())
+	}
+
+	toRemove := sdk.NewInt64Coin(pool.GetLpDenom(), int64(msg.GetLpTokens()))
+	if !toRemove.IsPositive() {
+		return nil, fmt.Errorf("provided LP tokens is not positive %s", toRemove)
+	}
+
+	//capture user LP tokens
+	err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, creatorAcc, types.ModuleName, sdk.NewCoins(toRemove))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to send LP Tokens to module account")
+	}
+
+	poolBase := sdk.NewIntFromUint64(pool.GetReserveBase())
+	poolQuote := sdk.NewIntFromUint64(pool.GetReserveQuote())
+
+	userShare := sdk.NewDecFromInt(toRemove.Amount).Quo(sdk.NewDecFromInt(lpSupply.Amount))
+	base := sdk.NewDecFromInt(poolBase).Mul(userShare).TruncateInt()
+	quote := sdk.NewDecFromInt(poolQuote).Mul(userShare).TruncateInt()
+
+	// Validate minimum amounts
+	if base.LT(sdk.NewIntFromUint64(msg.MinBase)) {
+		return nil, errors.Wrapf(types.ErrResultedAmountTooLow, "base amount too low, got %s, minimum %d", base, msg.MinBase)
+	}
+
+	if quote.LT(sdk.NewIntFromUint64(msg.MinQuote)) {
+		return nil, errors.Wrapf(types.ErrResultedAmountTooLow, "quote amount too low, got %s, minimum %d", quote, msg.MinQuote)
+	}
+
+	//burn lp tokens
+	err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(toRemove))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to burn LP Tokens")
+	}
+
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, creatorAcc, sdk.NewCoins(sdk.NewCoin(pool.GetBase(), base), sdk.NewCoin(pool.GetQuote(), quote)))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to send resulted coins to user account")
+	}
+
+	pool.ReserveBase = poolBase.Sub(base).Uint64()
+	pool.ReserveQuote = poolQuote.Sub(quote).Uint64()
+
+	k.SetLiquidityPool(ctx, pool)
+
+	//emit liquidity removed event
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.LiquidityRemovedEvent{
+			Creator:     msg.Creator,
+			BaseAmount:  base.Uint64(),
+			QuoteAmount: quote.Uint64(),
+		},
+	)
+
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+	}
+
+	return &types.MsgRemoveLiquidityResponse{
+		Base:  base.Uint64(),
+		Quote: quote.Uint64(),
+	}, nil
+}

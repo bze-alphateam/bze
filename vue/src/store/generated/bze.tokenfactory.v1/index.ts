@@ -191,6 +191,19 @@ export default {
 				}
 			}
 		},
+		async sendMsgCreateDenom({ rootGetters }, { value, fee = [], memo = '' }) {
+			try {
+				const client=await initClient(rootGetters)
+				const result = await client.BzeTokenfactoryV1.tx.sendMsgCreateDenom({ value, fee: {amount: fee, gas: "200000"}, memo })
+				return result
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgCreateDenom:Init Could not initialize signing client. Wallet is required.')
+				}else{
+					throw new Error('TxClient:MsgCreateDenom:Send Could not broadcast Tx: '+ e.message)
+				}
+			}
+		},
 		async sendMsgChangeAdmin({ rootGetters }, { value, fee = [], memo = '' }) {
 			try {
 				const client=await initClient(rootGetters)
@@ -214,19 +227,6 @@ export default {
 					throw new Error('TxClient:MsgBurn:Init Could not initialize signing client. Wallet is required.')
 				}else{
 					throw new Error('TxClient:MsgBurn:Send Could not broadcast Tx: '+ e.message)
-				}
-			}
-		},
-		async sendMsgCreateDenom({ rootGetters }, { value, fee = [], memo = '' }) {
-			try {
-				const client=await initClient(rootGetters)
-				const result = await client.BzeTokenfactoryV1.tx.sendMsgCreateDenom({ value, fee: {amount: fee, gas: "200000"}, memo })
-				return result
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCreateDenom:Init Could not initialize signing client. Wallet is required.')
-				}else{
-					throw new Error('TxClient:MsgCreateDenom:Send Could not broadcast Tx: '+ e.message)
 				}
 			}
 		},
@@ -257,6 +257,19 @@ export default {
 				}
 			}
 		},
+		async MsgCreateDenom({ rootGetters }, { value }) {
+			try {
+				const client=initClient(rootGetters)
+				const msg = await client.BzeTokenfactoryV1.tx.msgCreateDenom({value})
+				return msg
+			} catch (e) {
+				if (e == MissingWalletError) {
+					throw new Error('TxClient:MsgCreateDenom:Init Could not initialize signing client. Wallet is required.')
+				} else{
+					throw new Error('TxClient:MsgCreateDenom:Create Could not create message: ' + e.message)
+				}
+			}
+		},
 		async MsgChangeAdmin({ rootGetters }, { value }) {
 			try {
 				const client=initClient(rootGetters)
@@ -280,19 +293,6 @@ export default {
 					throw new Error('TxClient:MsgBurn:Init Could not initialize signing client. Wallet is required.')
 				} else{
 					throw new Error('TxClient:MsgBurn:Create Could not create message: ' + e.message)
-				}
-			}
-		},
-		async MsgCreateDenom({ rootGetters }, { value }) {
-			try {
-				const client=initClient(rootGetters)
-				const msg = await client.BzeTokenfactoryV1.tx.msgCreateDenom({value})
-				return msg
-			} catch (e) {
-				if (e == MissingWalletError) {
-					throw new Error('TxClient:MsgCreateDenom:Init Could not initialize signing client. Wallet is required.')
-				} else{
-					throw new Error('TxClient:MsgCreateDenom:Create Could not create message: ' + e.message)
 				}
 			}
 		},

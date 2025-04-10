@@ -42,6 +42,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdFillOrders())
 	cmd.AddCommand(CmdCreateLiquidityPool())
 	cmd.AddCommand(CmdAddLiquidity())
+	cmd.AddCommand(CmdRemoveLiquidity())
 	// this line is used by starport scaffolding # 1
 
 	return cmd
@@ -272,6 +273,57 @@ func CmdAddLiquidity() *cobra.Command {
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdRemoveLiquidity() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "remove-liquidity [pool-id] [lp-tokens] [min-base] [min-quote]",
+		Short: "Broadcast message remove-liquidity",
+		Args:  cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			argPoolId := args[0]
+
+			lpTokens, err := strconv.ParseUint(args[1], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid LP tokens amount: %v", err)
+			}
+
+			// Parse min base as uint64
+			minBase, err := strconv.ParseUint(args[2], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid min base amount: %v", err)
+			}
+
+			// Parse min quote as uint64
+			minQuote, err := strconv.ParseUint(args[3], 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid min quote amount: %v", err)
+			}
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgRemoveLiquidity(
+				clientCtx.GetFromAddress().String(),
+				argPoolId,
+				lpTokens,
+				minBase,
+				minQuote,
+			)
+
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
