@@ -7,6 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"go.uber.org/mock/gomock"
+	"strings"
 	"testing"
 )
 
@@ -565,4 +566,262 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_ErrorOnSendingLpTokens() {
 	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "error on sending lp tokens test")
+}
+
+func (suite *IntegrationTestSuite) TestAddLiquidity_Success() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	testCases := []struct {
+		name         string
+		poolReserves struct {
+			base  uint64
+			quote uint64
+		}
+		userDeposit struct {
+			base  uint64
+			quote uint64
+		}
+		lpSupply        uint64
+		minLpTokens     uint64
+		expectedDeposit struct {
+			base  uint64
+			quote uint64
+		}
+		expectedMint uint64
+	}{
+		{
+			name: "balanced deposit - same ratio as pool",
+			poolReserves: struct {
+				base  uint64
+				quote uint64
+			}{
+				base:  1000,
+				quote: 2000,
+			},
+			userDeposit: struct {
+				base  uint64
+				quote uint64
+			}{
+				base:  100,
+				quote: 200,
+			},
+			lpSupply:    1000,
+			minLpTokens: 90,
+			expectedDeposit: struct {
+				base  uint64
+				quote uint64
+			}{
+				base:  100,
+				quote: 200,
+			},
+			expectedMint: 100, // 10% of reserves = 10% of LP supply
+		},
+		{
+			name: "unbalanced deposit - base limiting",
+			poolReserves: struct {
+				base  uint64
+				quote uint64
+			}{
+				base:  1000,
+				quote: 3000,
+			},
+			userDeposit: struct {
+				base  uint64
+				quote uint64
+			}{
+				base:  100,
+				quote: 500, // More than needed for 100 base
+			},
+			lpSupply:    1500,
+			minLpTokens: 100,
+			expectedDeposit: struct {
+				base  uint64
+				quote uint64
+			}{
+				base:  100,
+				quote: 300, // Adjusted to maintain pool ratio
+			},
+			expectedMint: 150, // 10% of reserves = 10% of LP supply
+		},
+		{
+			name: "unbalanced deposit - quote limiting",
+			poolReserves: struct {
+				base  uint64
+				quote uint64
+			}{
+				base:  2000,
+				quote: 1000,
+			},
+			userDeposit: struct {
+				base  uint64
+				quote uint64
+			}{
+				base:  500, // More than needed for 100 quote
+				quote: 100,
+			},
+			lpSupply:    2000,
+			minLpTokens: 150,
+			expectedDeposit: struct {
+				base  uint64
+				quote uint64
+			}{
+				base:  200, // Adjusted to maintain pool ratio
+				quote: 100,
+			},
+			expectedMint: 200, // 10% of reserves = 10% of LP supply
+		},
+		{
+			name: "small deposit with uneven ratio",
+			poolReserves: struct {
+				base  uint64
+				quote uint64
+			}{
+				base:  5000,
+				quote: 7500,
+			},
+			userDeposit: struct {
+				base  uint64
+				quote uint64
+			}{
+				base:  50,
+				quote: 80,
+			},
+			lpSupply:    10000,
+			minLpTokens: 90,
+			expectedDeposit: struct {
+				base  uint64
+				quote uint64
+			}{
+				base:  50,
+				quote: 75, // Adjusted to maintain pool ratio
+			},
+			expectedMint: 100, // 1% of reserves = 1% of LP supply
+		},
+		{
+			name: "large deposit",
+			poolReserves: struct {
+				base  uint64
+				quote uint64
+			}{
+				base:  10000,
+				quote: 20000,
+			},
+			userDeposit: struct {
+				base  uint64
+				quote uint64
+			}{
+				base:  10000, // Doubling the pool
+				quote: 20000,
+			},
+			lpSupply:    5000,
+			minLpTokens: 4000,
+			expectedDeposit: struct {
+				base  uint64
+				quote uint64
+			}{
+				base:  10000,
+				quote: 20000,
+			},
+			expectedMint: 5000, // 100% increase = 100% of LP supply
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			testAcc := getTestAccount()
+			// Reset the keeper and set up a fresh pool for each test
+			testLp := types.LiquidityPool{
+				Id:           "ubze_uusdc",
+				Base:         "ubze",
+				Quote:        "uusdc",
+				LpDenom:      "lp_ubze_uusdc",
+				ReserveBase:  tc.poolReserves.base,
+				ReserveQuote: tc.poolReserves.quote,
+				Creator:      testAcc.String(),
+				Fee:          sdk.NewDecWithPrec(3, 3),
+				Stable:       false,
+			}
+
+			suite.k.SetLiquidityPool(suite.ctx, testLp)
+
+			msg := &types.MsgAddLiquidity{
+				Creator:     testAcc.String(),
+				PoolId:      testLp.Id,
+				BaseAmount:  tc.userDeposit.base,
+				QuoteAmount: tc.userDeposit.quote,
+				MinLpTokens: tc.minLpTokens,
+			}
+
+			// Expected coins that will be sent from user to module
+			expectedBaseCoin := sdk.NewInt64Coin("ubze", int64(tc.expectedDeposit.base))
+			expectedQuoteCoin := sdk.NewInt64Coin("uusdc", int64(tc.expectedDeposit.quote))
+			expectedCoins := sdk.NewCoins(expectedBaseCoin, expectedQuoteCoin)
+
+			// Mock the bank keeper methods
+			suite.bankMock.EXPECT().
+				SendCoinsFromAccountToModule(gomock.Any(), testAcc, types.ModuleName, expectedCoins).
+				Times(1).
+				Return(nil)
+
+			suite.bankMock.EXPECT().
+				GetSupply(suite.ctx, testLp.GetLpDenom()).
+				Times(1).
+				Return(sdk.NewCoin(testLp.GetLpDenom(), sdk.NewIntFromUint64(tc.lpSupply)))
+
+			mintedCoins := sdk.NewCoins(sdk.NewCoin(testLp.GetLpDenom(), sdk.NewIntFromUint64(tc.expectedMint)))
+
+			suite.bankMock.EXPECT().
+				MintCoins(suite.ctx, types.ModuleName, mintedCoins).
+				Times(1).
+				Return(nil)
+
+			suite.bankMock.EXPECT().
+				SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, testAcc, mintedCoins).
+				Times(1).
+				Return(nil)
+
+			// Capture the event that should be emitted
+			eventManager := sdk.NewEventManager()
+			ctx := suite.ctx.WithEventManager(eventManager)
+			goCtx = sdk.WrapSDKContext(ctx)
+
+			// Execute the handler
+			resp, err := suite.msgServer.AddLiquidity(goCtx, msg)
+
+			// Verify no errors and correct response
+			suite.Require().NoError(err)
+			suite.Require().NotNil(resp)
+			suite.Require().Equal(tc.expectedMint, resp.MintedAmount)
+
+			// Verify the pool has been updated correctly
+			updatedPool, found := suite.k.GetLiquidityPool(ctx, testLp.Id)
+			suite.Require().True(found)
+			suite.Require().Equal(tc.poolReserves.base+tc.expectedDeposit.base, updatedPool.ReserveBase)
+			suite.Require().Equal(tc.poolReserves.quote+tc.expectedDeposit.quote, updatedPool.ReserveQuote)
+
+			// Verify that the event was emitted correctly
+			events := ctx.EventManager().Events()
+			hasLiquidityAddedEvent := false
+
+			for _, event := range events {
+				if strings.Contains(event.Type, "LiquidityAddedEvent") {
+					hasLiquidityAddedEvent = true
+					for _, attr := range event.Attributes {
+						switch string(attr.Key) {
+						case "creator":
+							suite.Require().Contains(string(attr.Value), msg.Creator)
+						case "base_amount":
+							suite.Require().Contains(fmt.Sprintf("%d", tc.expectedDeposit.base), string(attr.Value))
+						case "quote_amount":
+							suite.Require().Contains(fmt.Sprintf("%d", tc.expectedDeposit.quote), string(attr.Value))
+						case "minted_amount":
+							suite.Require().Contains(fmt.Sprintf("%d", tc.expectedMint), string(attr.Value))
+						}
+					}
+				}
+			}
+
+			suite.Require().True(hasLiquidityAddedEvent, "LiquidityAddedEvent should be emitted")
+		})
+	}
 }
