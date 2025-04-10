@@ -11,7 +11,8 @@ LEDGER_ENABLED ?= false
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=bze \
 	-X github.com/cosmos/cosmos-sdk/version.AppName=bzed \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
-	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT)
+	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
+	-w -s
 
 BUILD_FLAGS := -ldflags '$(ldflags)'
 TESTNET_FLAGS ?=
@@ -45,39 +46,39 @@ install: check-version lint check-network go.sum
 		go install -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) ./cmd/bzed
 
 build: check-version check-network go.sum
-		go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/bzed ./cmd/bzed
+		go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/bzed ./cmd/bzed
 
 build-win64: check-version check-network go.sum
-		go build -buildmode=exe -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/win64/bzed.exe ./cmd/bzed
+		go build -buildmode=exe -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/win64/bzed.exe ./cmd/bzed
 
 .PHONY: build
 
 build-linux: check-version check-network go.sum
 ifeq ($(OS), Linux)
-		GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/linux-amd64/bzed ./cmd/bzed
+		GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-amd64/bzed ./cmd/bzed
 else
-		LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/linux-amd64/bzed ./cmd/bzed
+		LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-amd64/bzed ./cmd/bzed
 endif
 
 build-linux-arm64: check-version check-network go.sum
 ifeq ($(OS), Linux)
-		GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/linux-arm64/bzed ./cmd/bzed
+		GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-arm64/bzed ./cmd/bzed
 else
-		LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/linux-arm64/bzed ./cmd/bzed
+		LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-arm64/bzed ./cmd/bzed
 endif
 
 build-mac: check-version check-network go.sum
 ifeq ($(OS), Darwin)
-		GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/darwin-amd64/bzed ./cmd/bzed
+		GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-amd64/bzed ./cmd/bzed
 else
-		LEDGER_ENABLED=false GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/darwin-amd64/bzed ./cmd/bzed
+		LEDGER_ENABLED=false GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-amd64/bzed ./cmd/bzed
 endif
 
 build-mac-arm64: check-version check-network go.sum
 ifeq ($(OS), Darwin)
-		GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/darwin-arm64/bzed ./cmd/bzed
+		GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-arm64/bzed ./cmd/bzed
 else
-		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/darwin-arm64/bzed ./cmd/bzed
+		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-arm64/bzed ./cmd/bzed
 endif
 
 build-all: check-version lint all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
