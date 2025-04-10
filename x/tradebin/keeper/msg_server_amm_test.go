@@ -516,3 +516,53 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_LpMintError() {
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "lp minting error")
 }
+
+func (suite *IntegrationTestSuite) TestAddLiquidity_MinLpTokensNotMet() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	testLp := getValidLp()
+	testAcc := getTestAccount()
+	suite.k.SetLiquidityPool(suite.ctx, testLp)
+
+	msg := &types.MsgAddLiquidity{
+		Creator:     testAcc.String(),
+		PoolId:      testLp.Id,
+		BaseAmount:  100,
+		QuoteAmount: 200,
+		MinLpTokens: 11,
+	}
+
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), testAcc, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ubze", 100), sdk.NewInt64Coin("uusdc", 200))).Times(1).Return(nil)
+	suite.bankMock.EXPECT().GetSupply(suite.ctx, testLp.GetLpDenom()).Times(1).Return(sdk.NewCoin(testLp.GetLpDenom(), sdk.NewIntFromUint64(100)))
+	suite.bankMock.EXPECT().MintCoins(suite.ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(testLp.GetLpDenom(), sdk.NewIntFromUint64(10)))).Return(nil)
+
+	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
+	suite.Require().Error(err)
+	suite.Require().Contains(err.Error(), "could not mint the minimum expected lp tokens")
+}
+
+func (suite *IntegrationTestSuite) TestAddLiquidity_ErrorOnSendingLpTokens() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	testLp := getValidLp()
+	testAcc := getTestAccount()
+	suite.k.SetLiquidityPool(suite.ctx, testLp)
+
+	msg := &types.MsgAddLiquidity{
+		Creator:     testAcc.String(),
+		PoolId:      testLp.Id,
+		BaseAmount:  100,
+		QuoteAmount: 200,
+		MinLpTokens: 9,
+	}
+
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), testAcc, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ubze", 100), sdk.NewInt64Coin("uusdc", 200))).Times(1).Return(nil)
+	suite.bankMock.EXPECT().GetSupply(suite.ctx, testLp.GetLpDenom()).Times(1).Return(sdk.NewCoin(testLp.GetLpDenom(), sdk.NewIntFromUint64(100)))
+
+	minted := sdk.NewCoins(sdk.NewCoin(testLp.GetLpDenom(), sdk.NewIntFromUint64(10)))
+	suite.bankMock.EXPECT().MintCoins(suite.ctx, types.ModuleName, minted).Return(nil)
+
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, testAcc, minted).Times(1).Return(fmt.Errorf("error on sending lp tokens test"))
+
+	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
+	suite.Require().Error(err)
+	suite.Require().Contains(err.Error(), "error on sending lp tokens test")
+}
