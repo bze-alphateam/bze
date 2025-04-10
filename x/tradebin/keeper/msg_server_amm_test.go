@@ -10,6 +10,26 @@ import (
 	"testing"
 )
 
+func getValidLp() types.LiquidityPool {
+	return types.LiquidityPool{
+		Id:      "ubze_uusdc",
+		Base:    "ubze",
+		Quote:   "uusdc",
+		Creator: getTestAddress(),
+		LpDenom: "ulp_ubze_uusdc",
+		Fee:     sdk.NewDecWithPrec(1, 3),
+		FeeDest: &types.FeeDestination{
+			Treasury:  sdk.NewDec(1),
+			Burner:    sdk.ZeroDec(),
+			Providers: sdk.ZeroDec(),
+			Liquidity: sdk.ZeroDec(),
+		},
+		ReserveBase:  1000,
+		ReserveQuote: 2000,
+		Stable:       false,
+	}
+}
+
 func getFeeDestinationString(burner, treasury, providers, liquidity string) string {
 	return fmt.Sprintf(
 		"{\"treasury\":\"%s\",\"burner\":\"%s\",\"providers\":\"%s\",\"liquidity\":\"%s\"}",
@@ -20,8 +40,12 @@ func getFeeDestinationString(burner, treasury, providers, liquidity string) stri
 	)
 }
 
+func getTestAccount() sdk.AccAddress {
+	return sdk.AccAddress("addr1_______________")
+}
+
 func getTestAddress() string {
-	return sdk.AccAddress("addr1_______________").String()
+	return getTestAccount().String()
 }
 
 func (suite *IntegrationTestSuite) TestCreateLiquidityPool_InvalidAssets() {
@@ -382,4 +406,113 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_Success() {
 	suite.Require().Equal(msg.GetCreator(), stored.GetCreator())
 	suite.Require().EqualValues(stored.GetReserveBase(), 123)
 	suite.Require().EqualValues(stored.GetReserveQuote(), 345)
+}
+
+func (suite *IntegrationTestSuite) TestAddLiquidity_InvalidCreator() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+
+	msg := &types.MsgAddLiquidity{
+		Creator: "",
+	}
+
+	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
+	suite.Require().Error(err)
+	suite.Require().Contains(err.Error(), fmt.Sprintf("creator"))
+}
+
+func (suite *IntegrationTestSuite) TestAddLiquidity_PoolNotFound() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	testLp := getValidLp()
+	suite.k.SetLiquidityPool(suite.ctx, testLp)
+
+	msg := &types.MsgAddLiquidity{
+		Creator: getTestAddress(),
+		PoolId:  "pool_1",
+	}
+
+	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
+	suite.Require().Error(err)
+	suite.Require().Contains(err.Error(), "pool pool_1 not found")
+}
+
+func (suite *IntegrationTestSuite) TestAddLiquidity_InvalidCoins() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	testLp := getValidLp()
+	suite.k.SetLiquidityPool(suite.ctx, testLp)
+
+	msg := &types.MsgAddLiquidity{
+		Creator: getTestAddress(),
+		PoolId:  testLp.Id,
+	}
+
+	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
+	suite.Require().Error(err)
+	suite.Require().Contains(err.Error(), "failed to create optimal reserves")
+}
+
+func (suite *IntegrationTestSuite) TestAddLiquidity_CoinCaptureFailure() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	testLp := getValidLp()
+	testAcc := getTestAccount()
+	suite.k.SetLiquidityPool(suite.ctx, testLp)
+
+	msg := &types.MsgAddLiquidity{
+		Creator:     testAcc.String(),
+		PoolId:      testLp.Id,
+		BaseAmount:  100,
+		QuoteAmount: 200,
+		MinLpTokens: 321,
+	}
+
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), testAcc, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ubze", 100), sdk.NewInt64Coin("uusdc", 200))).Times(1).Return(fmt.Errorf("invalid balance test"))
+
+	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
+	suite.Require().Error(err)
+	suite.Require().Contains(err.Error(), "invalid balance test")
+}
+
+func (suite *IntegrationTestSuite) TestAddLiquidity_MissingLpTokenSupply() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	testLp := getValidLp()
+	testAcc := getTestAccount()
+	suite.k.SetLiquidityPool(suite.ctx, testLp)
+
+	msg := &types.MsgAddLiquidity{
+		Creator:     testAcc.String(),
+		PoolId:      testLp.Id,
+		BaseAmount:  100,
+		QuoteAmount: 200,
+		MinLpTokens: 321,
+	}
+
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), testAcc, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ubze", 100), sdk.NewInt64Coin("uusdc", 200))).Times(1).Return(nil)
+	suite.bankMock.EXPECT().GetSupply(suite.ctx, testLp.GetLpDenom()).Times(1).Return(sdk.NewCoin(testLp.GetLpDenom(), sdk.ZeroInt()))
+
+	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
+	suite.Require().Error(err)
+	suite.Require().Contains(err.Error(), "could not find supply for pool")
+}
+
+func (suite *IntegrationTestSuite) TestAddLiquidity_LpMintError() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	testLp := getValidLp()
+	testAcc := getTestAccount()
+	suite.k.SetLiquidityPool(suite.ctx, testLp)
+
+	msg := &types.MsgAddLiquidity{
+		Creator:     testAcc.String(),
+		PoolId:      testLp.Id,
+		BaseAmount:  100,
+		QuoteAmount: 200,
+		MinLpTokens: 321,
+	}
+
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), testAcc, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ubze", 100), sdk.NewInt64Coin("uusdc", 200))).Times(1).Return(nil)
+	suite.bankMock.EXPECT().GetSupply(suite.ctx, testLp.GetLpDenom()).Times(1).Return(sdk.NewCoin(testLp.GetLpDenom(), sdk.NewIntFromUint64(100)))
+
+	suite.bankMock.EXPECT().MintCoins(suite.ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(testLp.GetLpDenom(), sdk.NewIntFromUint64(10)))).Return(fmt.Errorf("lp minting error"))
+
+	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
+	suite.Require().Error(err)
+	suite.Require().Contains(err.Error(), "lp minting error")
 }
