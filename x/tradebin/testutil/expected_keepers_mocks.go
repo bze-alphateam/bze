@@ -79,6 +79,20 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 	return m.recorder
 }
 
+// BurnCoins mocks base method.
+func (m *MockBankKeeper) BurnCoins(ctx types.Context, moduleName string, amounts types.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BurnCoins", ctx, moduleName, amounts)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// BurnCoins indicates an expected call of BurnCoins.
+func (mr *MockBankKeeperMockRecorder) BurnCoins(ctx, moduleName, amounts any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BurnCoins", reflect.TypeOf((*MockBankKeeper)(nil).BurnCoins), ctx, moduleName, amounts)
+}
+
 // GetDenomMetaData mocks base method.
 func (m *MockBankKeeper) GetDenomMetaData(ctx types.Context, denom string) (types0.Metadata, bool) {
 	m.ctrl.T.Helper()

@@ -825,3 +825,501 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_Success() {
 		})
 	}
 }
+
+func (suite *IntegrationTestSuite) TestRemoveLiquidity_Errors() {
+	goCtx := sdk.WrapSDKContext(suite.ctx)
+	testLp := types.LiquidityPool{
+		Id:           "ubze_uusdc",
+		Base:         "ubze",
+		Quote:        "uusdc",
+		LpDenom:      "lp_ubze_uusdc",
+		ReserveBase:  1000,
+		ReserveQuote: 2000,
+		Creator:      "creator",
+		Fee:          sdk.NewDecWithPrec(3, 3),
+		Stable:       false,
+	}
+	testAcc := getTestAccount()
+
+	testCases := []struct {
+		name          string
+		setupMock     func()
+		msg           *types.MsgRemoveLiquidity
+		expectedError string
+		errorType     error
+		skipPoolSetup bool
+	}{
+		{
+			name: "invalid creator address",
+			msg: &types.MsgRemoveLiquidity{
+				Creator:  "invalid_address",
+				PoolId:   "ubze_uusdc",
+				LpTokens: 100,
+				MinBase:  10,
+				MinQuote: 20,
+			},
+			expectedError: "invalid creator address",
+			errorType:     sdkerrors.ErrUnauthorized,
+			setupMock:     func() {},
+		},
+		{
+			name: "pool not found",
+			msg: &types.MsgRemoveLiquidity{
+				Creator:  testAcc.String(),
+				PoolId:   "nonexistent_pool",
+				LpTokens: 100,
+				MinBase:  10,
+				MinQuote: 20,
+			},
+			expectedError: "pool nonexistent_pool not found",
+			errorType:     types.ErrMarketNotFound,
+			setupMock:     func() {},
+			skipPoolSetup: true,
+		},
+		{
+			name: "zero LP supply",
+			msg: &types.MsgRemoveLiquidity{
+				Creator:  testAcc.String(),
+				PoolId:   "ubze_uusdc",
+				LpTokens: 100,
+				MinBase:  10,
+				MinQuote: 20,
+			},
+			expectedError: "could not find supply for pool",
+			errorType:     types.ErrInvalidDenom,
+			setupMock: func() {
+				// Return zero supply
+				suite.bankMock.EXPECT().
+					GetSupply(suite.ctx, testLp.LpDenom).
+					Return(sdk.NewCoin(testLp.LpDenom, sdk.ZeroInt())).
+					Times(1)
+			},
+		},
+		{
+			name: "failed to send LP tokens",
+			msg: &types.MsgRemoveLiquidity{
+				Creator:  testAcc.String(),
+				PoolId:   "ubze_uusdc",
+				LpTokens: 100,
+				MinBase:  10,
+				MinQuote: 20,
+			},
+			expectedError: "failed to send LP Tokens to module account",
+			errorType:     nil, // This is a wrapped error so we don't check the type
+			setupMock: func() {
+				suite.bankMock.EXPECT().
+					GetSupply(suite.ctx, testLp.LpDenom).
+					Return(sdk.NewCoin(testLp.LpDenom, sdk.NewInt(1000))).
+					Times(1)
+
+				// Simulate failure when sending coins
+				suite.bankMock.EXPECT().
+					SendCoinsFromAccountToModule(
+						suite.ctx,
+						testAcc,
+						types.ModuleName,
+						sdk.NewCoins(sdk.NewInt64Coin(testLp.LpDenom, 100)),
+					).
+					Return(fmt.Errorf("insufficient funds")).
+					Times(1)
+			},
+		},
+		{
+			name: "base amount too low",
+			msg: &types.MsgRemoveLiquidity{
+				Creator:  testAcc.String(),
+				PoolId:   "ubze_uusdc",
+				LpTokens: 100,
+				MinBase:  500, // Too high - would get only 100 (10%)
+				MinQuote: 10,
+			},
+			expectedError: "base amount too low",
+			errorType:     types.ErrResultedAmountTooLow,
+			setupMock: func() {
+				// Set up mocks for a successful flow up to the point of min amount validation
+				lpSupply := sdk.NewInt(1000) // 1000 LP tokens total
+
+				suite.bankMock.EXPECT().
+					GetSupply(suite.ctx, testLp.LpDenom).
+					Return(sdk.NewCoin(testLp.LpDenom, lpSupply)).
+					Times(1)
+
+				suite.bankMock.EXPECT().
+					SendCoinsFromAccountToModule(
+						suite.ctx,
+						testAcc,
+						types.ModuleName,
+						sdk.NewCoins(sdk.NewInt64Coin(testLp.LpDenom, 100)),
+					).
+					Return(nil).
+					Times(1)
+			},
+		},
+		{
+			name: "quote amount too low",
+			msg: &types.MsgRemoveLiquidity{
+				Creator:  testAcc.String(),
+				PoolId:   "ubze_uusdc",
+				LpTokens: 100,
+				MinBase:  10,
+				MinQuote: 500, // Too high - would get only 200 (10%)
+			},
+			expectedError: "quote amount too low",
+			errorType:     types.ErrResultedAmountTooLow,
+			setupMock: func() {
+				// Set up mocks for a successful flow up to the point of min amount validation
+				lpSupply := sdk.NewInt(1000) // 1000 LP tokens total
+
+				suite.bankMock.EXPECT().
+					GetSupply(suite.ctx, testLp.LpDenom).
+					Return(sdk.NewCoin(testLp.LpDenom, lpSupply)).
+					Times(1)
+
+				suite.bankMock.EXPECT().
+					SendCoinsFromAccountToModule(
+						suite.ctx,
+						testAcc,
+						types.ModuleName,
+						sdk.NewCoins(sdk.NewInt64Coin(testLp.LpDenom, 100)),
+					).
+					Return(nil).
+					Times(1)
+			},
+		},
+		{
+			name: "failed to burn LP tokens",
+			msg: &types.MsgRemoveLiquidity{
+				Creator:  testAcc.String(),
+				PoolId:   "ubze_uusdc",
+				LpTokens: 100,
+				MinBase:  10,
+				MinQuote: 20,
+			},
+			expectedError: "failed to burn LP Tokens",
+			errorType:     nil, // This is a wrapped error so we don't check the type
+			setupMock: func() {
+				lpSupply := sdk.NewInt(1000) // 1000 LP tokens total
+
+				suite.bankMock.EXPECT().
+					GetSupply(suite.ctx, testLp.LpDenom).
+					Return(sdk.NewCoin(testLp.LpDenom, lpSupply)).
+					Times(1)
+
+				suite.bankMock.EXPECT().
+					SendCoinsFromAccountToModule(
+						suite.ctx,
+						testAcc,
+						types.ModuleName,
+						sdk.NewCoins(sdk.NewInt64Coin(testLp.LpDenom, 100)),
+					).
+					Return(nil).
+					Times(1)
+
+				// Simulate failure when burning coins
+				suite.bankMock.EXPECT().
+					BurnCoins(
+						suite.ctx,
+						types.ModuleName,
+						sdk.NewCoins(sdk.NewInt64Coin(testLp.LpDenom, 100)),
+					).
+					Return(fmt.Errorf("failed to burn")).
+					Times(1)
+			},
+		},
+		{
+			name: "failed to send tokens to user",
+			msg: &types.MsgRemoveLiquidity{
+				Creator:  testAcc.String(),
+				PoolId:   "ubze_uusdc",
+				LpTokens: 100,
+				MinBase:  10,
+				MinQuote: 20,
+			},
+			expectedError: "failed to send resulted coins to user account",
+			errorType:     nil, // This is a wrapped error so we don't check the type
+			setupMock: func() {
+				lpSupply := sdk.NewInt(1000) // 1000 LP tokens total
+
+				suite.bankMock.EXPECT().
+					GetSupply(suite.ctx, testLp.LpDenom).
+					Return(sdk.NewCoin(testLp.LpDenom, lpSupply)).
+					Times(1)
+
+				suite.bankMock.EXPECT().
+					SendCoinsFromAccountToModule(
+						suite.ctx,
+						testAcc,
+						types.ModuleName,
+						sdk.NewCoins(sdk.NewInt64Coin(testLp.LpDenom, 100)),
+					).
+					Return(nil).
+					Times(1)
+
+				suite.bankMock.EXPECT().
+					BurnCoins(
+						suite.ctx,
+						types.ModuleName,
+						sdk.NewCoins(sdk.NewInt64Coin(testLp.LpDenom, 100)),
+					).
+					Return(nil).
+					Times(1)
+
+				// Calculate expected amounts (10% of pool)
+				baseAmount := sdk.NewInt(100)  // 10% of 1000
+				quoteAmount := sdk.NewInt(200) // 10% of 2000
+
+				// Simulate failure when sending tokens to user
+				suite.bankMock.EXPECT().
+					SendCoinsFromModuleToAccount(
+						suite.ctx,
+						types.ModuleName,
+						testAcc,
+						sdk.NewCoins(
+							sdk.NewCoin(testLp.Base, baseAmount),
+							sdk.NewCoin(testLp.Quote, quoteAmount),
+						),
+					).
+					Return(fmt.Errorf("insufficient module balance")).
+					Times(1)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			// Set up pool in the keeper if needed
+			if !tc.skipPoolSetup {
+				suite.k.SetLiquidityPool(suite.ctx, testLp)
+			}
+
+			// Setup mocks
+			tc.setupMock()
+
+			// Execute the handler
+			_, err := suite.msgServer.RemoveLiquidity(goCtx, tc.msg)
+
+			// Verify error
+			suite.Require().Error(err)
+			suite.Require().Contains(err.Error(), tc.expectedError)
+			if tc.errorType != nil {
+				suite.Require().ErrorIs(err, tc.errorType)
+			}
+		})
+	}
+}
+
+func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
+	testAcc := getTestAccount()
+
+	testCases := []struct {
+		name          string
+		pool          types.LiquidityPool
+		lpTokens      uint64
+		lpSupply      uint64
+		minBase       uint64
+		minQuote      uint64
+		expectedBase  uint64
+		expectedQuote uint64
+	}{
+		{
+			name: "remove 10% of liquidity",
+			pool: types.LiquidityPool{
+				Id:           "ubze_uusdc",
+				Base:         "ubze",
+				Quote:        "uusdc",
+				LpDenom:      "lp_ubze_uusdc",
+				ReserveBase:  1000,
+				ReserveQuote: 2000,
+				Creator:      "creator",
+				Fee:          sdk.NewDecWithPrec(3, 3),
+				Stable:       false,
+			},
+			lpTokens:      100,
+			lpSupply:      1000, // 10% removal
+			minBase:       90,   // Slightly below expected
+			minQuote:      190,  // Slightly below expected
+			expectedBase:  100,  // 10% of 1000
+			expectedQuote: 200,  // 10% of 2000
+		},
+		{
+			name: "remove 50% of liquidity",
+			pool: types.LiquidityPool{
+				Id:           "ubze_uusdc",
+				Base:         "ubze",
+				Quote:        "uusdc",
+				LpDenom:      "lp_ubze_uusdc",
+				ReserveBase:  5000,
+				ReserveQuote: 10000,
+				Creator:      "creator",
+				Fee:          sdk.NewDecWithPrec(3, 3),
+				Stable:       false,
+			},
+			lpTokens:      500,
+			lpSupply:      1000, // 50% removal
+			minBase:       2400, // Slightly below expected
+			minQuote:      4900, // Slightly below expected
+			expectedBase:  2500, // 50% of 5000
+			expectedQuote: 5000, // 50% of 10000
+		},
+		{
+			name: "remove small amount of liquidity",
+			pool: types.LiquidityPool{
+				Id:           "ubze_uusdc",
+				Base:         "ubze",
+				Quote:        "uusdc",
+				LpDenom:      "lp_ubze_uusdc",
+				ReserveBase:  10000,
+				ReserveQuote: 20000,
+				Creator:      "creator",
+				Fee:          sdk.NewDecWithPrec(3, 3),
+				Stable:       false,
+			},
+			lpTokens:      1,
+			lpSupply:      1000, // 0.1% removal
+			minBase:       9,    // Slightly below expected
+			minQuote:      19,   // Slightly below expected
+			expectedBase:  10,   // 0.1% of 10000
+			expectedQuote: 20,   // 0.1% of 20000
+		},
+		{
+			name: "remove all liquidity",
+			pool: types.LiquidityPool{
+				Id:           "ubze_uusdc",
+				Base:         "ubze",
+				Quote:        "uusdc",
+				LpDenom:      "lp_ubze_uusdc",
+				ReserveBase:  3000,
+				ReserveQuote: 6000,
+				Creator:      "creator",
+				Fee:          sdk.NewDecWithPrec(3, 3),
+				Stable:       false,
+			},
+			lpTokens:      1000,
+			lpSupply:      1000, // 100% removal
+			minBase:       2900, // Slightly below expected
+			minQuote:      5900, // Slightly below expected
+			expectedBase:  3000, // 100% of 3000
+			expectedQuote: 6000, // 100% of 6000
+		},
+		{
+			name: "uneven pool reserves",
+			pool: types.LiquidityPool{
+				Id:           "ubze_uusdc",
+				Base:         "ubze",
+				Quote:        "uusdc",
+				LpDenom:      "lp_ubze_uusdc",
+				ReserveBase:  1500,
+				ReserveQuote: 4500,
+				Creator:      "creator",
+				Fee:          sdk.NewDecWithPrec(3, 3),
+				Stable:       false,
+			},
+			lpTokens:      200,
+			lpSupply:      1000, // 20% removal
+			minBase:       290,  // Slightly below expected
+			minQuote:      890,  // Slightly below expected
+			expectedBase:  300,  // 20% of 1500
+			expectedQuote: 900,  // 20% of 4500
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			// Setup the pool
+			suite.k.SetLiquidityPool(suite.ctx, tc.pool)
+
+			// Create message
+			msg := &types.MsgRemoveLiquidity{
+				Creator:  testAcc.String(),
+				PoolId:   tc.pool.Id,
+				LpTokens: tc.lpTokens,
+				MinBase:  tc.minBase,
+				MinQuote: tc.minQuote,
+			}
+
+			// Setup mocks
+			lpSupply := sdk.NewInt(int64(tc.lpSupply))
+			baseAmount := sdk.NewInt(int64(tc.expectedBase))
+			quoteAmount := sdk.NewInt(int64(tc.expectedQuote))
+
+			suite.bankMock.EXPECT().
+				GetSupply(suite.ctx, tc.pool.LpDenom).
+				Return(sdk.NewCoin(tc.pool.LpDenom, lpSupply)).
+				Times(1)
+
+			suite.bankMock.EXPECT().
+				SendCoinsFromAccountToModule(
+					suite.ctx,
+					testAcc,
+					types.ModuleName,
+					sdk.NewCoins(sdk.NewCoin(tc.pool.LpDenom, sdk.NewInt(int64(tc.lpTokens)))),
+				).
+				Return(nil).
+				Times(1)
+
+			suite.bankMock.EXPECT().
+				BurnCoins(
+					suite.ctx,
+					types.ModuleName,
+					sdk.NewCoins(sdk.NewCoin(tc.pool.LpDenom, sdk.NewInt(int64(tc.lpTokens)))),
+				).
+				Return(nil).
+				Times(1)
+
+			suite.bankMock.EXPECT().
+				SendCoinsFromModuleToAccount(
+					suite.ctx,
+					types.ModuleName,
+					testAcc,
+					sdk.NewCoins(
+						sdk.NewCoin(tc.pool.Base, baseAmount),
+						sdk.NewCoin(tc.pool.Quote, quoteAmount),
+					),
+				).
+				Return(nil).
+				Times(1)
+
+			// Capture events
+			eventManager := sdk.NewEventManager()
+			ctx := suite.ctx.WithEventManager(eventManager)
+			wrappedCtx := sdk.WrapSDKContext(ctx)
+
+			// Execute the handler
+			resp, err := suite.msgServer.RemoveLiquidity(wrappedCtx, msg)
+
+			// Verify success
+			suite.Require().NoError(err)
+			suite.Require().NotNil(resp)
+			suite.Require().Equal(tc.expectedBase, resp.Base)
+			suite.Require().Equal(tc.expectedQuote, resp.Quote)
+
+			// Verify the pool has been updated correctly
+			updatedPool, found := suite.k.GetLiquidityPool(ctx, tc.pool.Id)
+			suite.Require().True(found)
+			suite.Require().Equal(tc.pool.ReserveBase-tc.expectedBase, updatedPool.ReserveBase)
+			suite.Require().Equal(tc.pool.ReserveQuote-tc.expectedQuote, updatedPool.ReserveQuote)
+
+			// Verify that the event was emitted correctly
+			events := ctx.EventManager().Events()
+			hasLiquidityRemovedEvent := false
+
+			for _, event := range events {
+				if strings.Contains(event.Type, "LiquidityRemovedEvent") {
+					hasLiquidityRemovedEvent = true
+					for _, attr := range event.Attributes {
+						switch string(attr.Key) {
+						case "creator":
+							suite.Require().Contains(string(attr.Value), msg.Creator)
+						case "base_amount":
+							suite.Require().Equal(fmt.Sprintf("%d", tc.expectedBase), string(attr.Value))
+						case "quote_amount":
+							suite.Require().Equal(fmt.Sprintf("%d", tc.expectedQuote), string(attr.Value))
+						}
+					}
+				}
+			}
+
+			suite.Require().True(hasLiquidityRemovedEvent, "LiquidityRemovedEvent should be emitted")
+		})
+	}
+}
