@@ -36,10 +36,8 @@ func (k Keeper) getPoolScaledDenom(poolId string) string {
 	return fmt.Sprintf("%s_%s", lpDenomPrefix, poolId)
 }
 
-func (k Keeper) BalanceProvidedAmounts(base, quote, reserveBase, reserveQuote uint64) (sdk.Int, sdk.Int, error) {
-	poolBaseReserve := sdk.NewIntFromUint64(reserveBase)
-	poolQuoteReserve := sdk.NewIntFromUint64(reserveQuote)
-	if poolBaseReserve.IsZero() || poolQuoteReserve.IsZero() {
+func (k Keeper) BalanceProvidedAmounts(base, quote uint64, reserveBase, reserveQuote sdk.Int) (sdk.Int, sdk.Int, error) {
+	if reserveBase.IsZero() || reserveQuote.IsZero() {
 		//pools should not be empty, they are created with a desired price
 		return sdk.ZeroInt(), sdk.ZeroInt(), fmt.Errorf("pool is empty")
 	}
@@ -48,8 +46,8 @@ func (k Keeper) BalanceProvidedAmounts(base, quote, reserveBase, reserveQuote ui
 	desiredQuote := sdk.NewIntFromUint64(quote)
 
 	// Calculate how much would be needed for the provided amounts
-	possibleQuote := desiredBase.Mul(poolQuoteReserve).Quo(poolBaseReserve)
-	possibleBase := desiredQuote.Mul(poolBaseReserve).Quo(poolQuoteReserve)
+	possibleQuote := desiredBase.Mul(reserveQuote).Quo(reserveBase)
+	possibleBase := desiredQuote.Mul(reserveBase).Quo(reserveQuote)
 
 	var optimalBase, optimalQuote sdk.Int
 	// Use the lesser amounts to maintain the ratio

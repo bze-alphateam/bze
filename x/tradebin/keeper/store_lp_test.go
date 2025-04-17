@@ -10,9 +10,11 @@ func (suite *IntegrationTestSuite) TestStoreLp() {
 	suite.Require().False(ok)
 
 	lp := types.LiquidityPool{
-		Id:      "test",
-		Fee:     sdk.ZeroDec(),
-		FeeDest: &types.FeeDestination{},
+		Id:           "test",
+		Fee:          sdk.ZeroDec(),
+		FeeDest:      &types.FeeDestination{},
+		ReserveBase:  sdk.ZeroInt(),
+		ReserveQuote: sdk.ZeroInt(),
 	}
 
 	//save LP
@@ -40,8 +42,8 @@ func (suite *IntegrationTestSuite) TestStoreLp() {
 		Creator:      "address",
 		Fee:          sdk.ZeroDec(),
 		FeeDest:      &types.FeeDestination{},
-		ReserveBase:  0,
-		ReserveQuote: 0,
+		ReserveBase:  sdk.ZeroInt(),
+		ReserveQuote: sdk.ZeroInt(),
 		Stable:       false,
 	}
 

@@ -25,8 +25,8 @@ func getValidLp() types.LiquidityPool {
 			Providers: sdk.ZeroDec(),
 			Liquidity: sdk.ZeroDec(),
 		},
-		ReserveBase:  1000,
-		ReserveQuote: 2000,
+		ReserveBase:  sdk.NewInt(1000),
+		ReserveQuote: sdk.NewInt(2000),
 		Stable:       false,
 	}
 }
@@ -405,8 +405,8 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_Success() {
 	suite.Require().NotNil(stored)
 	suite.Require().Equal(res.GetId(), stored.GetId())
 	suite.Require().Equal(msg.GetCreator(), stored.GetCreator())
-	suite.Require().EqualValues(stored.GetReserveBase(), 123)
-	suite.Require().EqualValues(stored.GetReserveQuote(), 345)
+	suite.Require().EqualValues(stored.ReserveBase.Int64(), 123)
+	suite.Require().EqualValues(stored.ReserveQuote.Int64(), 345)
 }
 
 func (suite *IntegrationTestSuite) TestAddLiquidity_InvalidCreator() {
@@ -735,8 +735,8 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_Success() {
 				Base:         "ubze",
 				Quote:        "uusdc",
 				LpDenom:      "lp_ubze_uusdc",
-				ReserveBase:  tc.poolReserves.base,
-				ReserveQuote: tc.poolReserves.quote,
+				ReserveBase:  sdk.NewInt(int64(tc.poolReserves.base)),
+				ReserveQuote: sdk.NewInt(int64(tc.poolReserves.quote)),
 				Creator:      testAcc.String(),
 				Fee:          sdk.NewDecWithPrec(3, 3),
 				Stable:       false,
@@ -796,8 +796,8 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_Success() {
 			// Verify the pool has been updated correctly
 			updatedPool, found := suite.k.GetLiquidityPool(ctx, testLp.Id)
 			suite.Require().True(found)
-			suite.Require().Equal(tc.poolReserves.base+tc.expectedDeposit.base, updatedPool.ReserveBase)
-			suite.Require().Equal(tc.poolReserves.quote+tc.expectedDeposit.quote, updatedPool.ReserveQuote)
+			suite.Require().Equal(tc.poolReserves.base+tc.expectedDeposit.base, updatedPool.ReserveBase.Uint64())
+			suite.Require().Equal(tc.poolReserves.quote+tc.expectedDeposit.quote, updatedPool.ReserveQuote.Uint64())
 
 			// Verify that the event was emitted correctly
 			events := ctx.EventManager().Events()
@@ -833,8 +833,8 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Errors() {
 		Base:         "ubze",
 		Quote:        "uusdc",
 		LpDenom:      "lp_ubze_uusdc",
-		ReserveBase:  1000,
-		ReserveQuote: 2000,
+		ReserveBase:  sdk.NewInt(1000),
+		ReserveQuote: sdk.NewInt(2000),
 		Creator:      "creator",
 		Fee:          sdk.NewDecWithPrec(3, 3),
 		Stable:       false,
@@ -1128,8 +1128,8 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
 				Base:         "ubze",
 				Quote:        "uusdc",
 				LpDenom:      "lp_ubze_uusdc",
-				ReserveBase:  1000,
-				ReserveQuote: 2000,
+				ReserveBase:  sdk.NewInt(1000),
+				ReserveQuote: sdk.NewInt(2000),
 				Creator:      "creator",
 				Fee:          sdk.NewDecWithPrec(3, 3),
 				Stable:       false,
@@ -1148,8 +1148,8 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
 				Base:         "ubze",
 				Quote:        "uusdc",
 				LpDenom:      "lp_ubze_uusdc",
-				ReserveBase:  5000,
-				ReserveQuote: 10000,
+				ReserveBase:  sdk.NewInt(5000),
+				ReserveQuote: sdk.NewInt(10000),
 				Creator:      "creator",
 				Fee:          sdk.NewDecWithPrec(3, 3),
 				Stable:       false,
@@ -1168,8 +1168,8 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
 				Base:         "ubze",
 				Quote:        "uusdc",
 				LpDenom:      "lp_ubze_uusdc",
-				ReserveBase:  10000,
-				ReserveQuote: 20000,
+				ReserveBase:  sdk.NewInt(10000),
+				ReserveQuote: sdk.NewInt(20000),
 				Creator:      "creator",
 				Fee:          sdk.NewDecWithPrec(3, 3),
 				Stable:       false,
@@ -1188,8 +1188,8 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
 				Base:         "ubze",
 				Quote:        "uusdc",
 				LpDenom:      "lp_ubze_uusdc",
-				ReserveBase:  3000,
-				ReserveQuote: 6000,
+				ReserveBase:  sdk.NewInt(3000),
+				ReserveQuote: sdk.NewInt(6000),
 				Creator:      "creator",
 				Fee:          sdk.NewDecWithPrec(3, 3),
 				Stable:       false,
@@ -1208,8 +1208,8 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
 				Base:         "ubze",
 				Quote:        "uusdc",
 				LpDenom:      "lp_ubze_uusdc",
-				ReserveBase:  1500,
-				ReserveQuote: 4500,
+				ReserveBase:  sdk.NewInt(1500),
+				ReserveQuote: sdk.NewInt(4500),
 				Creator:      "creator",
 				Fee:          sdk.NewDecWithPrec(3, 3),
 				Stable:       false,
@@ -1296,8 +1296,8 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
 			// Verify the pool has been updated correctly
 			updatedPool, found := suite.k.GetLiquidityPool(ctx, tc.pool.Id)
 			suite.Require().True(found)
-			suite.Require().Equal(tc.pool.ReserveBase-tc.expectedBase, updatedPool.ReserveBase)
-			suite.Require().Equal(tc.pool.ReserveQuote-tc.expectedQuote, updatedPool.ReserveQuote)
+			suite.Require().Equal(tc.pool.ReserveBase.Uint64()-tc.expectedBase, updatedPool.ReserveBase.Uint64())
+			suite.Require().Equal(tc.pool.ReserveQuote.Uint64()-tc.expectedQuote, updatedPool.ReserveQuote.Uint64())
 
 			// Verify that the event was emitted correctly
 			events := ctx.EventManager().Events()

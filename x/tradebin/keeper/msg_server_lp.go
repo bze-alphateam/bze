@@ -51,8 +51,8 @@ func (k msgServer) CreateLiquidityPool(goCtx context.Context, msg *types.MsgCrea
 		Creator:      msg.Creator,
 		Fee:          fee,
 		FeeDest:      &feeDest,
-		ReserveBase:  0,
-		ReserveQuote: 0,
+		ReserveBase:  sdk.ZeroInt(),
+		ReserveQuote: sdk.ZeroInt(),
 		Stable:       msg.Stable,
 	}
 
@@ -142,8 +142,8 @@ func (k msgServer) mintInitialLpTokens(ctx sdk.Context, baseCoin, quoteCoin sdk.
 		return
 	}
 
-	lp.ReserveBase = baseCoin.Amount.Uint64()
-	lp.ReserveQuote = quoteCoin.Amount.Uint64()
+	lp.ReserveBase = baseCoin.Amount
+	lp.ReserveQuote = quoteCoin.Amount
 
 	return
 }
@@ -261,14 +261,14 @@ func (k msgServer) AddLiquidity(goCtx context.Context, msg *types.MsgAddLiquidit
 		return nil, errors.Wrapf(types.ErrMarketNotFound, "pool %s not found", msg.GetPoolId())
 	}
 
-	poolBaseReserve := sdk.NewIntFromUint64(pool.GetReserveBase())
-	poolQuoteReserve := sdk.NewIntFromUint64(pool.GetReserveQuote())
+	poolBaseReserve := pool.ReserveBase
+	poolQuoteReserve := pool.ReserveQuote
 	if poolBaseReserve.IsZero() || poolQuoteReserve.IsZero() {
 		//pools should not be empty, they are created with a desired price
 		return nil, errors.Wrap(sdkerrors.ErrInvalidCoins, "pool is empty")
 	}
 
-	optimalBase, optimalQuote, err := k.BalanceProvidedAmounts(msg.GetBaseAmount(), msg.GetQuoteAmount(), pool.GetReserveBase(), pool.GetReserveQuote())
+	optimalBase, optimalQuote, err := k.BalanceProvidedAmounts(msg.GetBaseAmount(), msg.GetQuoteAmount(), pool.ReserveBase, pool.ReserveQuote)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to calculate provided amounts")
 	}
@@ -302,8 +302,8 @@ func (k msgServer) AddLiquidity(goCtx context.Context, msg *types.MsgAddLiquidit
 	}
 
 	//increment pool reserves
-	pool.ReserveBase = poolBaseReserve.Add(optimalBase).Uint64()
-	pool.ReserveQuote = poolQuoteReserve.Add(optimalQuote).Uint64()
+	pool.ReserveBase = poolBaseReserve.Add(optimalBase)
+	pool.ReserveQuote = poolQuoteReserve.Add(optimalQuote)
 
 	k.SetLiquidityPool(ctx, pool)
 
@@ -386,12 +386,9 @@ func (k msgServer) RemoveLiquidity(goCtx context.Context, msg *types.MsgRemoveLi
 		return nil, errors.Wrap(err, "failed to send LP Tokens to module account")
 	}
 
-	poolBase := sdk.NewIntFromUint64(pool.GetReserveBase())
-	poolQuote := sdk.NewIntFromUint64(pool.GetReserveQuote())
-
 	userShare := sdk.NewDecFromInt(toRemove.Amount).Quo(sdk.NewDecFromInt(lpSupply.Amount))
-	base := sdk.NewDecFromInt(poolBase).Mul(userShare).TruncateInt()
-	quote := sdk.NewDecFromInt(poolQuote).Mul(userShare).TruncateInt()
+	base := sdk.NewDecFromInt(pool.ReserveBase).Mul(userShare).TruncateInt()
+	quote := sdk.NewDecFromInt(pool.ReserveQuote).Mul(userShare).TruncateInt()
 
 	// Validate minimum amounts
 	if base.LT(sdk.NewIntFromUint64(msg.MinBase)) {
@@ -413,8 +410,8 @@ func (k msgServer) RemoveLiquidity(goCtx context.Context, msg *types.MsgRemoveLi
 		return nil, errors.Wrap(err, "failed to send resulted coins to user account")
 	}
 
-	pool.ReserveBase = poolBase.Sub(base).Uint64()
-	pool.ReserveQuote = poolQuote.Sub(quote).Uint64()
+	pool.ReserveBase = pool.ReserveBase.Sub(base)
+	pool.ReserveQuote = pool.ReserveQuote.Sub(quote)
 
 	k.SetLiquidityPool(ctx, pool)
 

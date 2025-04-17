@@ -43,6 +43,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdCreateLiquidityPool())
 	cmd.AddCommand(CmdAddLiquidity())
 	cmd.AddCommand(CmdRemoveLiquidity())
+	cmd.AddCommand(CmdMultiSwap())
 	// this line is used by starport scaffolding # 1
 
 	return cmd
@@ -323,7 +324,47 @@ func CmdRemoveLiquidity() *cobra.Command {
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
-			
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdMultiSwap() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "multi-swap [routes] [input] [min-output]",
+		Short: "Broadcast message multi-swap",
+		Args:  cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			argRoutes := args[0]
+			var routes []string
+			err = json.Unmarshal([]byte(argRoutes), &routes)
+			if err != nil {
+				return fmt.Errorf("failed to parse routes: %w", err)
+			}
+
+			argInput := args[1]
+			argMinOutput := args[2]
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgMultiSwap(
+				clientCtx.GetFromAddress().String(),
+				routes,
+				argInput,
+				argMinOutput,
+			)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

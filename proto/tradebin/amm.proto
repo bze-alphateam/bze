@@ -16,8 +16,14 @@ message LiquidityPool {
     (gogoproto.nullable)   = false
   ];
   FeeDestination fee_dest = 7;
-  uint64 reserve_base = 8; // Amount of base token (ATOM)
-  uint64 reserve_quote = 9; // Amount of quote token (USDC)
+  string reserve_base = 8 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string reserve_quote = 9 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
   bool stable = 10; // true/false
 }
 

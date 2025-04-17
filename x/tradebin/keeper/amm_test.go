@@ -122,7 +122,7 @@ func (suite *IntegrationTestSuite) TestBalanceProvidedAmounts() {
 	k := suite.k
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			optimalBase, optimalQuote, err := k.BalanceProvidedAmounts(tc.base, tc.quote, tc.reserveBase, tc.reserveQuote)
+			optimalBase, optimalQuote, err := k.BalanceProvidedAmounts(tc.base, tc.quote, sdk.NewIntFromUint64(tc.reserveBase), sdk.NewIntFromUint64(tc.reserveQuote))
 
 			if tc.expectError {
 				require.Error(t, err)
@@ -148,7 +148,7 @@ func (suite *IntegrationTestSuite) TestBalanceProvidedAmounts_EdgeCases() {
 		reserveBase := uint64(1000)
 		reserveQuote := uint64(2000)
 
-		optimalBase, optimalQuote, err := k.BalanceProvidedAmounts(base, quote, reserveBase, reserveQuote)
+		optimalBase, optimalQuote, err := k.BalanceProvidedAmounts(base, quote, sdk.NewIntFromUint64(reserveBase), sdk.NewIntFromUint64(reserveQuote))
 
 		require.NoError(t, err)
 		require.Equal(t, sdk.NewInt(100).String(), optimalBase.String())
@@ -161,7 +161,7 @@ func (suite *IntegrationTestSuite) TestBalanceProvidedAmounts_EdgeCases() {
 		reserveBase := uint64(1000)
 		reserveQuote := uint64(2000)
 
-		optimalBase, optimalQuote, err := k.BalanceProvidedAmounts(base, quote, reserveBase, reserveQuote)
+		optimalBase, optimalQuote, err := k.BalanceProvidedAmounts(base, quote, sdk.NewIntFromUint64(reserveBase), sdk.NewIntFromUint64(reserveQuote))
 
 		require.NoError(t, err)
 		require.Equal(t, sdk.NewInt(100).String(), optimalBase.String()) // 200 * 1000 / 2000 = 100
@@ -175,7 +175,7 @@ func (suite *IntegrationTestSuite) TestBalanceProvidedAmounts_EdgeCases() {
 		reserveBase := uint64(1000)
 		reserveQuote := uint64(3001) // Not evenly divisible
 
-		optimalBase, optimalQuote, err := k.BalanceProvidedAmounts(base, quote, reserveBase, reserveQuote)
+		optimalBase, optimalQuote, err := k.BalanceProvidedAmounts(base, quote, sdk.NewIntFromUint64(reserveBase), sdk.NewIntFromUint64(reserveQuote))
 
 		require.NoError(t, err)
 		// 100 * 3001 / 1000 = 300.1, which should truncate to 300

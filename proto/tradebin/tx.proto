@@ -16,6 +16,7 @@ service Msg {
   rpc CreateLiquidityPool(MsgCreateLiquidityPool) returns (MsgCreateLiquidityPoolResponse);
   rpc AddLiquidity(MsgAddLiquidity) returns (MsgAddLiquidityResponse);
   rpc RemoveLiquidity(MsgRemoveLiquidity) returns (MsgRemoveLiquidityResponse);
+  rpc MultiSwap(MsgMultiSwap) returns (MsgMultiSwapResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
@@ -101,6 +102,17 @@ message MsgRemoveLiquidity {
 message MsgRemoveLiquidityResponse {
   uint64 base = 1;
   uint64 quote = 2;
+}
+
+message MsgMultiSwap {
+  string creator = 1;
+  repeated string routes = 2;
+  string input = 3;
+  string minOutput = 4;
+}
+
+message MsgMultiSwapResponse {
+  string output = 1;
 }
 
 // this line is used by starport scaffolding # proto/tx/message

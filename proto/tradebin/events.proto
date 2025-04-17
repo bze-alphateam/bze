@@ -72,3 +72,10 @@ message LiquidityRemovedEvent {
   uint64 baseAmount = 2;
   uint64 quoteAmount = 3;
 }
+
+message SwapEvent {
+  string creator = 1;
+  string in = 2;
+  string out = 3;
+  string pool_id = 4;
+}
