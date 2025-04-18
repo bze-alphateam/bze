@@ -11,7 +11,7 @@ const MaxRoutes = 5
 
 var _ sdk.Msg = &MsgMultiSwap{}
 
-func NewMsgMultiSwap(creator string, routes []string, input string, minOutput string) *MsgMultiSwap {
+func NewMsgMultiSwap(creator string, routes []string, input, minOutput sdk.Coin) *MsgMultiSwap {
 	return &MsgMultiSwap{
 		Creator:   creator,
 		Routes:    routes,
@@ -62,44 +62,24 @@ func (msg *MsgMultiSwap) ValidateBasic() error {
 		return errors.Wrapf(ErrInvalidRoutes, "routes length must be between 0 and %d", MaxRoutes)
 	}
 
-	if len(msg.GetInput()) <= 0 {
-		return errors.Wrapf(ErrInvalidOrderAmount, "invalid input amount (%s)", msg.GetInput())
+	if !msg.Input.IsValid() && !msg.Input.IsPositive() {
+		return errors.Wrapf(ErrInvalidOrderAmount, "input amount (%s) is not valid", msg.GetInput().String())
 	}
 
-	if len(msg.GetMinOutput()) <= 0 {
-		return errors.Wrapf(ErrInvalidOrderAmount, "invalid minimum output (%s)", msg.GetMinOutput())
+	if !msg.MinOutput.IsValid() || !msg.MinOutput.IsPositive() {
+		return errors.Wrapf(ErrInvalidOrderAmount, "minimum output (%s) is not valid", msg.GetMinOutput().String())
 	}
 
 	//make sure to validate the input coin and output min coin
-	ic, err := msg.GetInputCoin()
-	if err != nil {
-		return errors.Wrapf(ErrInvalidOrderAmount, "invalid input (%s)", err)
-	}
-
+	ic := msg.GetInput()
 	if !ic.IsPositive() {
 		return errors.Wrapf(ErrInvalidOrderAmount, "input is not positive (%s)", ic.String())
 	}
 
-	moc, err := msg.GetMinOutputCoin()
-	if err != nil {
-		return errors.Wrapf(ErrInvalidOrderAmount, "invalid minimum output (%s)", err)
-	}
-
+	moc := msg.GetMinOutput()
 	if !moc.IsPositive() {
 		return errors.Wrapf(ErrInvalidOrderAmount, "minimum output is not positive (%s)", moc.String())
 	}
 
 	return nil
-}
-
-func (msg *MsgMultiSwap) GetInputCoin() (c sdk.Coin, e error) {
-	c, e = sdk.ParseCoinNormalized(msg.GetInput())
-
-	return c, e
-}
-
-func (msg *MsgMultiSwap) GetMinOutputCoin() (c sdk.Coin, e error) {
-	c, e = sdk.ParseCoinNormalized(msg.GetMinOutput())
-
-	return c, e
 }

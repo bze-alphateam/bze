@@ -25,8 +25,8 @@ func (suite *IntegrationTestSuite) TestCreatePoolId() {
 func (suite *IntegrationTestSuite) TestBalanceProvidedAmounts() {
 	testCases := []struct {
 		name           string
-		base           uint64
-		quote          uint64
+		base           sdk.Int
+		quote          sdk.Int
 		reserveBase    uint64
 		reserveQuote   uint64
 		expectedBase   sdk.Int
@@ -36,8 +36,8 @@ func (suite *IntegrationTestSuite) TestBalanceProvidedAmounts() {
 	}{
 		{
 			name:           "Empty pool - error",
-			base:           100,
-			quote:          200,
+			base:           sdk.NewInt(100),
+			quote:          sdk.NewInt(200),
 			reserveBase:    0,
 			reserveQuote:   1000,
 			expectedBase:   sdk.ZeroInt(),
@@ -47,8 +47,8 @@ func (suite *IntegrationTestSuite) TestBalanceProvidedAmounts() {
 		},
 		{
 			name:           "Empty pool (quote) - error",
-			base:           100,
-			quote:          200,
+			base:           sdk.NewInt(100),
+			quote:          sdk.NewInt(200),
 			reserveBase:    1000,
 			reserveQuote:   0,
 			expectedBase:   sdk.ZeroInt(),
@@ -58,8 +58,8 @@ func (suite *IntegrationTestSuite) TestBalanceProvidedAmounts() {
 		},
 		{
 			name:          "Base is limiting factor",
-			base:          100,
-			quote:         300,
+			base:          sdk.NewInt(100),
+			quote:         sdk.NewInt(300),
 			reserveBase:   1000,
 			reserveQuote:  2000,
 			expectedBase:  sdk.NewInt(100),
@@ -68,8 +68,8 @@ func (suite *IntegrationTestSuite) TestBalanceProvidedAmounts() {
 		},
 		{
 			name:          "Quote is limiting factor",
-			base:          300,
-			quote:         200,
+			base:          sdk.NewInt(300),
+			quote:         sdk.NewInt(200),
 			reserveBase:   1000,
 			reserveQuote:  2000,
 			expectedBase:  sdk.NewInt(100), // 200 * 1000 / 2000 = 100
@@ -78,8 +78,8 @@ func (suite *IntegrationTestSuite) TestBalanceProvidedAmounts() {
 		},
 		{
 			name:          "Exact ratio provided",
-			base:          500,
-			quote:         1000,
+			base:          sdk.NewInt(500),
+			quote:         sdk.NewInt(1000),
 			reserveBase:   1000,
 			reserveQuote:  2000,
 			expectedBase:  sdk.NewInt(500),
@@ -88,8 +88,8 @@ func (suite *IntegrationTestSuite) TestBalanceProvidedAmounts() {
 		},
 		{
 			name:          "Large numbers",
-			base:          1000000,
-			quote:         3000000,
+			base:          sdk.NewInt(1000000),
+			quote:         sdk.NewInt(3000000),
 			reserveBase:   5000000,
 			reserveQuote:  10000000,
 			expectedBase:  sdk.NewInt(1000000),
@@ -98,8 +98,8 @@ func (suite *IntegrationTestSuite) TestBalanceProvidedAmounts() {
 		},
 		{
 			name:          "Small amounts",
-			base:          10,
-			quote:         15,
+			base:          sdk.NewInt(10),
+			quote:         sdk.NewInt(15),
 			reserveBase:   1000,
 			reserveQuote:  2000,
 			expectedBase:  sdk.NewInt(7),
@@ -108,8 +108,8 @@ func (suite *IntegrationTestSuite) TestBalanceProvidedAmounts() {
 		},
 		{
 			name:          "Uneven ratio in pool",
-			base:          100,
-			quote:         200,
+			base:          sdk.NewInt(100),
+			quote:         sdk.NewInt(200),
 			reserveBase:   1000,
 			reserveQuote:  1500,
 			expectedBase:  sdk.NewInt(100),
@@ -143,8 +143,8 @@ func (suite *IntegrationTestSuite) TestBalanceProvidedAmounts_EdgeCases() {
 	t := suite.T()
 	// Very small ratio differences
 	t.Run("Very small ratio difference - base limiting", func(t *testing.T) {
-		base := uint64(100)
-		quote := uint64(201) // Just slightly more than needed
+		base := sdk.NewInt(100)
+		quote := sdk.NewInt(201) // Just slightly more than needed
 		reserveBase := uint64(1000)
 		reserveQuote := uint64(2000)
 
@@ -156,8 +156,8 @@ func (suite *IntegrationTestSuite) TestBalanceProvidedAmounts_EdgeCases() {
 	})
 
 	t.Run("Very small ratio difference - quote limiting", func(t *testing.T) {
-		base := uint64(101) // Just slightly more than needed
-		quote := uint64(200)
+		base := sdk.NewInt(101) // Just slightly more than needed
+		quote := sdk.NewInt(200)
 		reserveBase := uint64(1000)
 		reserveQuote := uint64(2000)
 
@@ -170,8 +170,8 @@ func (suite *IntegrationTestSuite) TestBalanceProvidedAmounts_EdgeCases() {
 
 	// Handle division with remainder
 	t.Run("Division with remainder", func(t *testing.T) {
-		base := uint64(100)
-		quote := uint64(300)
+		base := sdk.NewInt(100)
+		quote := sdk.NewInt(300)
 		reserveBase := uint64(1000)
 		reserveQuote := uint64(3001) // Not evenly divisible
 

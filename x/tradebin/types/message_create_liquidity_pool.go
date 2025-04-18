@@ -11,7 +11,7 @@ const TypeMsgCreateLiquidityPool = "create_liquidity_pool"
 
 var _ sdk.Msg = &MsgCreateLiquidityPool{}
 
-func NewMsgCreateLiquidityPool(creator, base, quote, fee, feeDest string, stable bool, initialBase, initialQuote uint64) *MsgCreateLiquidityPool {
+func NewMsgCreateLiquidityPool(creator, base, quote, fee, feeDest string, stable bool, initialBase, initialQuote sdk.Int) *MsgCreateLiquidityPool {
 	return &MsgCreateLiquidityPool{
 		Creator:      creator,
 		Base:         base,
@@ -68,7 +68,7 @@ func (msg *MsgCreateLiquidityPool) ValidateBasic() error {
 		return errors.Wrap(sdkerrors.ErrInvalidRequest, "missing fee parameters")
 	}
 
-	if msg.InitialBase <= 0 || msg.InitialQuote <= 0 {
+	if !msg.InitialBase.IsPositive() || !msg.InitialQuote.IsPositive() {
 		return errors.Wrap(sdkerrors.ErrInvalidRequest, "missing initial liquidity")
 	}
 

@@ -59,7 +59,7 @@ func (k msgServer) MultiSwap(goCtx context.Context, msg *types.MsgMultiSwap) (*t
 	}
 
 	return &types.MsgMultiSwapResponse{
-		Output: outputCoin.String(),
+		Output: outputCoin,
 	}, nil
 }
 
@@ -69,8 +69,10 @@ func (k msgServer) swapTokens(ctx sdk.Context, input sdk.Coin, pool *types.Liqui
 	}
 
 	realInput, fee := k.calculateSwapInputAndFee(input, pool)
-	//todo: send fee to collector
-	_ = fee
+	err = k.collectSwapFee(ctx, fee, pool)
+	if err != nil {
+		return output, err
+	}
 
 	inputReserve, outputReserve := pool.GetReservesCoinsByDenom(input.Denom)
 
@@ -96,8 +98,8 @@ func (k msgServer) swapTokens(ctx sdk.Context, input sdk.Coin, pool *types.Liqui
 		&types.SwapEvent{
 			Creator: userAddress.String(),
 			PoolId:  pool.GetId(),
-			In:      input.String(),
-			Out:     output.String(),
+			In:      input,
+			Out:     output,
 		},
 	)
 
@@ -108,9 +110,18 @@ func (k msgServer) swapTokens(ctx sdk.Context, input sdk.Coin, pool *types.Liqui
 	return output, nil
 }
 
+func (k msgServer) collectSwapFee(ctx sdk.Context, fee sdk.Coin, pool *types.LiquidityPool) error {
+	//string treasury = community pool
+	//string burner = burner module
+	//string providers = add to LP reserve directly
+	//string liquidity = add LP periodically with the tokens captured by this part.
+
+	return nil
+}
+
 func (k msgServer) calculateSwapInputAndFee(input sdk.Coin, pool *types.LiquidityPool) (remainingInput, fee sdk.Coin) {
-	rAmount := sdk.NewDecFromInt(input.Amount).Mul(pool.Fee).TruncateInt()
-	feeAmount := input.Amount.Sub(rAmount)
+	feeAmount := sdk.NewDecFromInt(input.Amount).Mul(pool.Fee).TruncateInt()
+	rAmount := input.Amount.Sub(feeAmount)
 
 	return sdk.NewCoin(input.GetDenom(), rAmount), sdk.NewCoin(input.GetDenom(), feeAmount)
 }
@@ -136,16 +147,8 @@ func (k msgServer) getRoutesPools(ctx sdk.Context, msg *types.MsgMultiSwap) (poo
 // getMessageCoins - returns the input coin and minimum output coins of the message.
 // it should never return an error as the same validations are handled in ValidateBasic
 func (k msgServer) getMessageCoins(msg *types.MsgMultiSwap) (*sdk.Coin, *sdk.Coin, error) {
-	ic, err := msg.GetInputCoin()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	moc, err := msg.GetMinOutputCoin()
-	if err != nil {
-		return nil, nil, err
-	}
-
+	ic := msg.GetInput()
+	moc := msg.GetMinOutput()
 	if !ic.IsPositive() || !moc.IsPositive() {
 		return nil, nil, errors.Wrap(sdkerrors.ErrInvalidCoins, "invalid input or min output")
 	}

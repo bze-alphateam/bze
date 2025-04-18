@@ -10,7 +10,7 @@ const TypeMsgRemoveLiquidity = "remove_liquidity"
 
 var _ sdk.Msg = &MsgRemoveLiquidity{}
 
-func NewMsgRemoveLiquidity(creator, poolId string, lpTokens, minBase, minQuote uint64) *MsgRemoveLiquidity {
+func NewMsgRemoveLiquidity(creator, poolId string, lpTokens, minBase, minQuote sdk.Int) *MsgRemoveLiquidity {
 	return &MsgRemoveLiquidity{
 		Creator:  creator,
 		PoolId:   poolId,
@@ -60,16 +60,16 @@ func (msg *MsgRemoveLiquidity) ValidateBasic() error {
 		return errors.Wrap(sdkerrors.ErrInvalidRequest, "pool id cannot be empty")
 	}
 
-	if msg.LpTokens <= 0 {
-		return errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid lpTokens %d", msg.LpTokens)
+	if !msg.LpTokens.IsPositive() {
+		return errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid lpTokens %s", msg.LpTokens.String())
 	}
 
-	if msg.MinBase <= 0 {
-		return errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid minBase %d", msg.MinBase)
+	if !msg.MinBase.IsPositive() {
+		return errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid minBase %s", msg.MinBase.String())
 	}
 
-	if msg.MinQuote <= 0 {
-		return errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid minQuote %d", msg.MinQuote)
+	if !msg.MinQuote.IsPositive() {
+		return errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid minQuote %s", msg.MinQuote.String())
 	}
 
 	return nil

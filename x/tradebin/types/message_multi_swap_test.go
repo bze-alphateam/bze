@@ -1,6 +1,7 @@
 package types
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 
 	"github.com/bze-alphateam/bze/testutil/sample"
@@ -22,8 +23,8 @@ func TestMsgMultiSwap_ValidateBasic(t *testing.T) {
 			msg: MsgMultiSwap{
 				Creator:   validAddr,
 				Routes:    []string{"pool1", "pool2"},
-				Input:     "100ubze",
-				MinOutput: "200uusdc",
+				Input:     sdk.NewInt64Coin("ubze", 100),  //"100ubze",
+				MinOutput: sdk.NewInt64Coin("uusdc", 200), //"200uusdc",
 			},
 			err: nil,
 		},
@@ -32,8 +33,8 @@ func TestMsgMultiSwap_ValidateBasic(t *testing.T) {
 			msg: MsgMultiSwap{
 				Creator:   "invalid_address",
 				Routes:    []string{"pool1", "pool2"},
-				Input:     "100ubze",
-				MinOutput: "200uusdc",
+				Input:     sdk.NewInt64Coin("ubze", 100),  //"100ubze",
+				MinOutput: sdk.NewInt64Coin("uusdc", 200), //"200uusdc",
 			},
 			err:    sdkerrors.ErrInvalidAddress,
 			errMsg: "invalid creator address",
@@ -43,8 +44,8 @@ func TestMsgMultiSwap_ValidateBasic(t *testing.T) {
 			msg: MsgMultiSwap{
 				Creator:   validAddr,
 				Routes:    []string{},
-				Input:     "100ubze",
-				MinOutput: "200uusdc",
+				Input:     sdk.NewInt64Coin("ubze", 100),
+				MinOutput: sdk.NewInt64Coin("uusdc", 200),
 			},
 			err:    ErrInvalidRoutes,
 			errMsg: "routes length must be between 0 and",
@@ -54,8 +55,8 @@ func TestMsgMultiSwap_ValidateBasic(t *testing.T) {
 			msg: MsgMultiSwap{
 				Creator:   validAddr,
 				Routes:    []string{"pool1", "pool2", "pool3", "pool4", "pool5", "pool6"},
-				Input:     "100ubze",
-				MinOutput: "200uusdc",
+				Input:     sdk.NewInt64Coin("ubze", 100),
+				MinOutput: sdk.NewInt64Coin("uusdc", 200),
 			},
 			err:    ErrInvalidRoutes,
 			errMsg: "routes length must be between 0 and",
@@ -65,96 +66,30 @@ func TestMsgMultiSwap_ValidateBasic(t *testing.T) {
 			msg: MsgMultiSwap{
 				Creator:   validAddr,
 				Routes:    []string{"pool1", "pool2"},
-				Input:     "",
-				MinOutput: "200uusdc",
+				Input:     sdk.NewInt64Coin("ubze", 0),
+				MinOutput: sdk.NewInt64Coin("uusdc", 200),
 			},
 			err:    ErrInvalidOrderAmount,
-			errMsg: "invalid input amount",
+			errMsg: "not positive",
 		},
 		{
 			name: "empty min output",
 			msg: MsgMultiSwap{
 				Creator:   validAddr,
 				Routes:    []string{"pool1", "pool2"},
-				Input:     "100ubze",
-				MinOutput: "",
+				Input:     sdk.NewInt64Coin("ubze", 100),
+				MinOutput: sdk.NewInt64Coin("uusdc", 0),
 			},
 			err:    ErrInvalidOrderAmount,
-			errMsg: "invalid minimum output",
-		},
-		{
-			name: "invalid input coin format",
-			msg: MsgMultiSwap{
-				Creator:   validAddr,
-				Routes:    []string{"pool1", "pool2"},
-				Input:     "invalid_coin",
-				MinOutput: "200uusdc",
-			},
-			err:    ErrInvalidOrderAmount,
-			errMsg: "invalid input",
-		},
-		{
-			name: "invalid min output coin format",
-			msg: MsgMultiSwap{
-				Creator:   validAddr,
-				Routes:    []string{"pool1", "pool2"},
-				Input:     "100ubze",
-				MinOutput: "invalid_coin",
-			},
-			err:    ErrInvalidOrderAmount,
-			errMsg: "invalid minimum output",
-		},
-		{
-			name: "negative input amount",
-			msg: MsgMultiSwap{
-				Creator:   validAddr,
-				Routes:    []string{"pool1", "pool2"},
-				Input:     "-100ubze",
-				MinOutput: "200uusdc",
-			},
-			err:    ErrInvalidOrderAmount,
-			errMsg: "invalid input",
-		},
-		{
-			name: "negative min output amount",
-			msg: MsgMultiSwap{
-				Creator:   validAddr,
-				Routes:    []string{"pool1", "pool2"},
-				Input:     "100ubze",
-				MinOutput: "-200uusdc",
-			},
-			err:    ErrInvalidOrderAmount,
-			errMsg: "invalid minimum output",
-		},
-		{
-			name: "zero input amount",
-			msg: MsgMultiSwap{
-				Creator:   validAddr,
-				Routes:    []string{"pool1", "pool2"},
-				Input:     "0ubze",
-				MinOutput: "200uusdc",
-			},
-			err:    ErrInvalidOrderAmount,
-			errMsg: "input is not positive",
-		},
-		{
-			name: "zero min output amount",
-			msg: MsgMultiSwap{
-				Creator:   validAddr,
-				Routes:    []string{"pool1", "pool2"},
-				Input:     "100ubze",
-				MinOutput: "0uusdc",
-			},
-			err:    ErrInvalidOrderAmount,
-			errMsg: "minimum output is not positive",
+			errMsg: "minimum output",
 		},
 		{
 			name: "valid single route",
 			msg: MsgMultiSwap{
 				Creator:   validAddr,
 				Routes:    []string{"pool1"},
-				Input:     "100ubze",
-				MinOutput: "200uusdc",
+				Input:     sdk.NewInt64Coin("ubze", 100),
+				MinOutput: sdk.NewInt64Coin("uusdc", 200),
 			},
 			err: nil,
 		},
@@ -163,8 +98,8 @@ func TestMsgMultiSwap_ValidateBasic(t *testing.T) {
 			msg: MsgMultiSwap{
 				Creator:   validAddr,
 				Routes:    []string{"pool1", "pool2", "pool3", "pool4", "pool5"},
-				Input:     "100ubze",
-				MinOutput: "200uusdc",
+				Input:     sdk.NewInt64Coin("ubze", 100),
+				MinOutput: sdk.NewInt64Coin("uusdc", 200),
 			},
 			err: nil,
 		},

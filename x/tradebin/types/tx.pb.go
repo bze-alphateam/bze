@@ -6,6 +6,9 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
 	grpc "google.golang.org/grpc"
@@ -496,14 +499,14 @@ func (m *MsgFillOrdersResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgFillOrdersResponse proto.InternalMessageInfo
 
 type MsgCreateLiquidityPool struct {
-	Creator      string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	Base         string `protobuf:"bytes,2,opt,name=base,proto3" json:"base,omitempty"`
-	Quote        string `protobuf:"bytes,3,opt,name=quote,proto3" json:"quote,omitempty"`
-	Fee          string `protobuf:"bytes,4,opt,name=fee,proto3" json:"fee,omitempty"`
-	FeeDest      string `protobuf:"bytes,5,opt,name=feeDest,proto3" json:"feeDest,omitempty"`
-	Stable       bool   `protobuf:"varint,6,opt,name=stable,proto3" json:"stable,omitempty"`
-	InitialBase  uint64 `protobuf:"varint,7,opt,name=initialBase,proto3" json:"initialBase,omitempty"`
-	InitialQuote uint64 `protobuf:"varint,8,opt,name=initialQuote,proto3" json:"initialQuote,omitempty"`
+	Creator      string                                 `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Base         string                                 `protobuf:"bytes,2,opt,name=base,proto3" json:"base,omitempty"`
+	Quote        string                                 `protobuf:"bytes,3,opt,name=quote,proto3" json:"quote,omitempty"`
+	Fee          string                                 `protobuf:"bytes,4,opt,name=fee,proto3" json:"fee,omitempty"`
+	FeeDest      string                                 `protobuf:"bytes,5,opt,name=feeDest,proto3" json:"feeDest,omitempty"`
+	Stable       bool                                   `protobuf:"varint,6,opt,name=stable,proto3" json:"stable,omitempty"`
+	InitialBase  github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,7,opt,name=initialBase,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"initialBase"`
+	InitialQuote github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,8,opt,name=initialQuote,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"initialQuote"`
 }
 
 func (m *MsgCreateLiquidityPool) Reset()         { *m = MsgCreateLiquidityPool{} }
@@ -581,20 +584,6 @@ func (m *MsgCreateLiquidityPool) GetStable() bool {
 	return false
 }
 
-func (m *MsgCreateLiquidityPool) GetInitialBase() uint64 {
-	if m != nil {
-		return m.InitialBase
-	}
-	return 0
-}
-
-func (m *MsgCreateLiquidityPool) GetInitialQuote() uint64 {
-	if m != nil {
-		return m.InitialQuote
-	}
-	return 0
-}
-
 type MsgCreateLiquidityPoolResponse struct {
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 }
@@ -640,11 +629,11 @@ func (m *MsgCreateLiquidityPoolResponse) GetId() string {
 }
 
 type MsgAddLiquidity struct {
-	Creator     string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	PoolId      string `protobuf:"bytes,2,opt,name=poolId,proto3" json:"poolId,omitempty"`
-	BaseAmount  uint64 `protobuf:"varint,3,opt,name=baseAmount,proto3" json:"baseAmount,omitempty"`
-	QuoteAmount uint64 `protobuf:"varint,4,opt,name=quoteAmount,proto3" json:"quoteAmount,omitempty"`
-	MinLpTokens uint64 `protobuf:"varint,5,opt,name=minLpTokens,proto3" json:"minLpTokens,omitempty"`
+	Creator     string                                 `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	PoolId      string                                 `protobuf:"bytes,2,opt,name=poolId,proto3" json:"poolId,omitempty"`
+	BaseAmount  github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=baseAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"baseAmount"`
+	QuoteAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=quoteAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"quoteAmount"`
+	MinLpTokens github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=minLpTokens,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"minLpTokens"`
 }
 
 func (m *MsgAddLiquidity) Reset()         { *m = MsgAddLiquidity{} }
@@ -694,29 +683,8 @@ func (m *MsgAddLiquidity) GetPoolId() string {
 	return ""
 }
 
-func (m *MsgAddLiquidity) GetBaseAmount() uint64 {
-	if m != nil {
-		return m.BaseAmount
-	}
-	return 0
-}
-
-func (m *MsgAddLiquidity) GetQuoteAmount() uint64 {
-	if m != nil {
-		return m.QuoteAmount
-	}
-	return 0
-}
-
-func (m *MsgAddLiquidity) GetMinLpTokens() uint64 {
-	if m != nil {
-		return m.MinLpTokens
-	}
-	return 0
-}
-
 type MsgAddLiquidityResponse struct {
-	MintedAmount uint64 `protobuf:"varint,1,opt,name=mintedAmount,proto3" json:"mintedAmount,omitempty"`
+	MintedAmount github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=mintedAmount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"mintedAmount"`
 }
 
 func (m *MsgAddLiquidityResponse) Reset()         { *m = MsgAddLiquidityResponse{} }
@@ -752,19 +720,12 @@ func (m *MsgAddLiquidityResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddLiquidityResponse proto.InternalMessageInfo
 
-func (m *MsgAddLiquidityResponse) GetMintedAmount() uint64 {
-	if m != nil {
-		return m.MintedAmount
-	}
-	return 0
-}
-
 type MsgRemoveLiquidity struct {
-	Creator  string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	PoolId   string `protobuf:"bytes,2,opt,name=poolId,proto3" json:"poolId,omitempty"`
-	LpTokens uint64 `protobuf:"varint,3,opt,name=lpTokens,proto3" json:"lpTokens,omitempty"`
-	MinBase  uint64 `protobuf:"varint,4,opt,name=minBase,proto3" json:"minBase,omitempty"`
-	MinQuote uint64 `protobuf:"varint,5,opt,name=minQuote,proto3" json:"minQuote,omitempty"`
+	Creator  string                                 `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	PoolId   string                                 `protobuf:"bytes,2,opt,name=poolId,proto3" json:"poolId,omitempty"`
+	LpTokens github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=lpTokens,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"lpTokens"`
+	MinBase  github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=minBase,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"minBase"`
+	MinQuote github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=minQuote,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"minQuote"`
 }
 
 func (m *MsgRemoveLiquidity) Reset()         { *m = MsgRemoveLiquidity{} }
@@ -814,30 +775,9 @@ func (m *MsgRemoveLiquidity) GetPoolId() string {
 	return ""
 }
 
-func (m *MsgRemoveLiquidity) GetLpTokens() uint64 {
-	if m != nil {
-		return m.LpTokens
-	}
-	return 0
-}
-
-func (m *MsgRemoveLiquidity) GetMinBase() uint64 {
-	if m != nil {
-		return m.MinBase
-	}
-	return 0
-}
-
-func (m *MsgRemoveLiquidity) GetMinQuote() uint64 {
-	if m != nil {
-		return m.MinQuote
-	}
-	return 0
-}
-
 type MsgRemoveLiquidityResponse struct {
-	Base  uint64 `protobuf:"varint,1,opt,name=base,proto3" json:"base,omitempty"`
-	Quote uint64 `protobuf:"varint,2,opt,name=quote,proto3" json:"quote,omitempty"`
+	Base  github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=base,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"base"`
+	Quote github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=quote,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"quote"`
 }
 
 func (m *MsgRemoveLiquidityResponse) Reset()         { *m = MsgRemoveLiquidityResponse{} }
@@ -873,25 +813,11 @@ func (m *MsgRemoveLiquidityResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRemoveLiquidityResponse proto.InternalMessageInfo
 
-func (m *MsgRemoveLiquidityResponse) GetBase() uint64 {
-	if m != nil {
-		return m.Base
-	}
-	return 0
-}
-
-func (m *MsgRemoveLiquidityResponse) GetQuote() uint64 {
-	if m != nil {
-		return m.Quote
-	}
-	return 0
-}
-
 type MsgMultiSwap struct {
-	Creator   string   `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	Routes    []string `protobuf:"bytes,2,rep,name=routes,proto3" json:"routes,omitempty"`
-	Input     string   `protobuf:"bytes,3,opt,name=input,proto3" json:"input,omitempty"`
-	MinOutput string   `protobuf:"bytes,4,opt,name=minOutput,proto3" json:"minOutput,omitempty"`
+	Creator   string     `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Routes    []string   `protobuf:"bytes,2,rep,name=routes,proto3" json:"routes,omitempty"`
+	Input     types.Coin `protobuf:"bytes,3,opt,name=input,proto3" json:"input,omitempty" yaml:"input"`
+	MinOutput types.Coin `protobuf:"bytes,4,opt,name=minOutput,proto3" json:"min_output,omitempty" yaml:"min_output"`
 }
 
 func (m *MsgMultiSwap) Reset()         { *m = MsgMultiSwap{} }
@@ -941,22 +867,22 @@ func (m *MsgMultiSwap) GetRoutes() []string {
 	return nil
 }
 
-func (m *MsgMultiSwap) GetInput() string {
+func (m *MsgMultiSwap) GetInput() types.Coin {
 	if m != nil {
 		return m.Input
 	}
-	return ""
+	return types.Coin{}
 }
 
-func (m *MsgMultiSwap) GetMinOutput() string {
+func (m *MsgMultiSwap) GetMinOutput() types.Coin {
 	if m != nil {
 		return m.MinOutput
 	}
-	return ""
+	return types.Coin{}
 }
 
 type MsgMultiSwapResponse struct {
-	Output string `protobuf:"bytes,1,opt,name=output,proto3" json:"output,omitempty"`
+	Output types.Coin `protobuf:"bytes,1,opt,name=output,proto3" json:"output,omitempty" yaml:"output"`
 }
 
 func (m *MsgMultiSwapResponse) Reset()         { *m = MsgMultiSwapResponse{} }
@@ -992,11 +918,11 @@ func (m *MsgMultiSwapResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgMultiSwapResponse proto.InternalMessageInfo
 
-func (m *MsgMultiSwapResponse) GetOutput() string {
+func (m *MsgMultiSwapResponse) GetOutput() types.Coin {
 	if m != nil {
 		return m.Output
 	}
-	return ""
+	return types.Coin{}
 }
 
 func init() {
@@ -1022,60 +948,71 @@ func init() {
 func init() { proto.RegisterFile("tradebin/tx.proto", fileDescriptor_adab200f727dc48e) }
 
 var fileDescriptor_adab200f727dc48e = []byte{
-	// 844 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0xcf, 0x4f, 0xc4, 0x44,
-	0x14, 0xa6, 0xbb, 0x65, 0xd9, 0x7d, 0x2c, 0xa0, 0x23, 0x2e, 0xb5, 0x91, 0xba, 0xa9, 0x51, 0x37,
-	0x31, 0xec, 0x2a, 0x26, 0xde, 0x38, 0x80, 0x06, 0x43, 0xc2, 0x06, 0xa9, 0x18, 0x13, 0x2e, 0xa6,
-	0xbb, 0x1d, 0x96, 0x09, 0x6d, 0xa7, 0xb4, 0x53, 0x64, 0xb9, 0xf8, 0x2f, 0x98, 0x78, 0xf1, 0xe0,
-	0xdd, 0x7f, 0xc5, 0x23, 0x47, 0x8f, 0x06, 0x12, 0x8f, 0xfe, 0x0d, 0xa6, 0x33, 0xed, 0xf4, 0x07,
-	0x65, 0x21, 0xea, 0x6d, 0xbf, 0x37, 0xdf, 0xbc, 0xf7, 0x7d, 0x6f, 0x66, 0x5e, 0x17, 0xde, 0x64,
-	0xa1, 0xed, 0xe0, 0x09, 0xf1, 0x47, 0xec, 0x76, 0x18, 0x84, 0x94, 0x51, 0xb4, 0x31, 0xb9, 0xc3,
-	0xc3, 0x2c, 0x3c, 0xbc, 0xf9, 0x54, 0x47, 0x92, 0x63, 0x7b, 0x9e, 0x20, 0x99, 0xdf, 0xc2, 0xc6,
-	0x38, 0x9a, 0x7d, 0x11, 0x62, 0x9b, 0xe1, 0xb1, 0x1d, 0x5e, 0x61, 0x86, 0x34, 0x58, 0x99, 0x26,
-	0x98, 0x86, 0x9a, 0xd2, 0x57, 0x06, 0x1d, 0x2b, 0x83, 0x08, 0x81, 0x3a, 0xb1, 0x23, 0xac, 0x35,
-	0x78, 0x98, 0xff, 0x46, 0x9b, 0xb0, 0x7c, 0x1d, 0x53, 0x86, 0xb5, 0x26, 0x0f, 0x0a, 0x60, 0xbe,
-	0x03, 0x5b, 0x95, 0xb4, 0x16, 0x8e, 0x02, 0xea, 0x47, 0xd8, 0xfc, 0x59, 0x81, 0x75, 0xb9, 0x76,
-	0x12, 0x3a, 0x38, 0x5c, 0x50, 0x71, 0x1b, 0x80, 0x26, 0x94, 0xef, 0xd9, 0x3c, 0xc8, 0xea, 0x76,
-	0x78, 0xe4, 0x6c, 0x1e, 0x60, 0xd4, 0x83, 0x96, 0xed, 0xd1, 0xd8, 0x67, 0x69, 0xf5, 0x14, 0x25,
-	0xa2, 0x82, 0x90, 0x4c, 0xb1, 0xa6, 0x0a, 0x51, 0x1c, 0x20, 0x1d, 0xda, 0x1e, 0xd7, 0x72, 0xe4,
-	0x68, 0xcb, 0x7c, 0x41, 0x62, 0x53, 0x83, 0x5e, 0x59, 0x94, 0xd4, 0xfb, 0xa3, 0x90, 0x6b, 0xfb,
-	0x53, 0xec, 0xbe, 0x24, 0xb7, 0x58, 0xa1, 0x51, 0xae, 0x90, 0xec, 0xe2, 0xc2, 0x8f, 0x9c, 0x54,
-	0x6c, 0x06, 0x2b, 0x26, 0xd5, 0x8a, 0xc9, 0x4c, 0x5a, 0x2e, 0x40, 0x4a, 0xdb, 0x83, 0xb5, 0x43,
-	0xe2, 0x8a, 0xe0, 0x11, 0xc3, 0x5e, 0xee, 0x5b, 0x29, 0xfa, 0xce, 0xbb, 0xd4, 0x28, 0x76, 0xc9,
-	0xfc, 0x55, 0x81, 0xb5, 0x71, 0x34, 0x93, 0x29, 0xa2, 0x7f, 0xe9, 0xac, 0xac, 0xbf, 0x59, 0x3d,
-	0xa4, 0xcf, 0xa1, 0xc5, 0x41, 0xa4, 0xa9, 0xfd, 0xe6, 0x60, 0x75, 0xd7, 0x18, 0x56, 0x2e, 0xe6,
-	0xb0, 0x64, 0xc2, 0x4a, 0xd9, 0xe6, 0x16, 0xbc, 0x5d, 0x52, 0x27, 0x6d, 0xff, 0xa5, 0x14, 0x0e,
-	0xeb, 0x98, 0x5c, 0xc7, 0xc4, 0x21, 0x6c, 0xfe, 0x35, 0xa5, 0xee, 0xff, 0x71, 0x77, 0xd1, 0x1b,
-	0xd0, 0xbc, 0xc0, 0xd9, 0x39, 0x24, 0x3f, 0x93, 0xac, 0x17, 0x18, 0x7f, 0x89, 0x23, 0x96, 0xde,
-	0x9b, 0x0c, 0x26, 0xad, 0x8d, 0x98, 0x3d, 0x71, 0xb1, 0xd6, 0xea, 0x2b, 0x83, 0xb6, 0x95, 0x22,
-	0xd4, 0x87, 0x55, 0xe2, 0x13, 0x46, 0x6c, 0xf7, 0x20, 0x29, 0xba, 0xd2, 0x57, 0x06, 0xaa, 0x55,
-	0x0c, 0x21, 0x13, 0xba, 0x29, 0x3c, 0xe5, 0x12, 0xda, 0x9c, 0x52, 0x8a, 0x99, 0x9f, 0x80, 0x51,
-	0xef, 0x33, 0x6b, 0x05, 0x5a, 0x87, 0x06, 0x71, 0x52, 0xab, 0x0d, 0xe2, 0x98, 0xbf, 0x29, 0xfc,
-	0x3d, 0xef, 0x3b, 0x8e, 0xe4, 0x2f, 0xe8, 0x49, 0x0f, 0x5a, 0x01, 0xa5, 0xae, 0x3c, 0xd2, 0x14,
-	0x21, 0x03, 0x20, 0xe9, 0xcf, 0x7e, 0xfe, 0xb4, 0x54, 0xab, 0x10, 0x49, 0xdc, 0xf1, 0x56, 0xa5,
-	0x04, 0x55, 0xb8, 0x2b, 0x84, 0x12, 0x86, 0x47, 0xfc, 0xe3, 0xe0, 0x8c, 0x5e, 0x61, 0x3f, 0xe2,
-	0x5d, 0x53, 0xad, 0x62, 0xc8, 0xdc, 0xe3, 0x13, 0xa2, 0x28, 0x54, 0x9a, 0x32, 0xa1, 0xeb, 0x11,
-	0x9f, 0x61, 0x27, 0xcd, 0xaf, 0x88, 0xd6, 0x14, 0x63, 0xe6, 0x2f, 0x0a, 0xa0, 0x71, 0x34, 0xb3,
-	0xb0, 0x47, 0x6f, 0xf0, 0x7f, 0xf1, 0xaa, 0x43, 0xdb, 0xcd, 0x64, 0x0a, 0xa7, 0x12, 0x27, 0xd9,
-	0x3c, 0xe2, 0xf3, 0x13, 0x14, 0x1e, 0x33, 0xc8, 0x9f, 0x03, 0xf1, 0xc5, 0xc9, 0x09, 0x73, 0x12,
-	0x9b, 0x87, 0xa0, 0x3f, 0x55, 0x26, 0xcd, 0x65, 0xf7, 0x50, 0x98, 0xaa, 0xdc, 0xc3, 0x06, 0x0f,
-	0xa6, 0x33, 0x94, 0x41, 0x77, 0x1c, 0xcd, 0xc6, 0xb1, 0xcb, 0xc8, 0x37, 0x3f, 0xd8, 0xc1, 0x62,
-	0x6f, 0x21, 0x8d, 0x19, 0x8e, 0xb4, 0x46, 0xbf, 0x99, 0x78, 0x13, 0x28, 0xc9, 0x4b, 0xfc, 0x20,
-	0xce, 0xa6, 0xa3, 0x00, 0xe8, 0x5d, 0xe8, 0x78, 0xc4, 0x3f, 0x89, 0x59, 0xb2, 0x92, 0x4e, 0x1b,
-	0x19, 0x30, 0x87, 0xb0, 0x59, 0xac, 0x2a, 0x75, 0xf7, 0xa0, 0x45, 0xc5, 0x16, 0x51, 0x3c, 0x45,
-	0xbb, 0x7f, 0x2f, 0x43, 0x73, 0x1c, 0xcd, 0xd0, 0x39, 0x74, 0x4b, 0x5f, 0x91, 0xfe, 0x93, 0x57,
-	0x5e, 0xf9, 0x20, 0xe8, 0x83, 0x97, 0x18, 0xb2, 0xf6, 0x77, 0xb0, 0x5a, 0xfc, 0x5c, 0xbc, 0xf7,
-	0xfc, 0x46, 0x4e, 0xd0, 0x3f, 0x7a, 0x81, 0x50, 0x4a, 0x5c, 0x18, 0xec, 0xf5, 0x89, 0x73, 0xc2,
-	0x33, 0x89, 0x9f, 0x4e, 0x66, 0x74, 0x06, 0x50, 0x18, 0xab, 0x46, 0xdd, 0xb6, 0x7c, 0x5d, 0xff,
-	0x70, 0xf1, 0xba, 0xcc, 0x4a, 0xe1, 0xad, 0xba, 0xa1, 0xb7, 0xc0, 0x6e, 0x89, 0xa8, 0x8f, 0x5e,
-	0x49, 0x94, 0x05, 0xcf, 0xa1, 0x5b, 0x1a, 0x25, 0xb5, 0x87, 0x5a, 0x64, 0xd4, 0x1f, 0x6a, 0xed,
-	0x2b, 0x9f, 0xc2, 0x46, 0xf5, 0xf5, 0xbe, 0x5f, 0xb7, 0xb9, 0x42, 0xd2, 0x3f, 0x7e, 0x05, 0x49,
-	0x16, 0x39, 0x85, 0x4e, 0xfe, 0x80, 0xb6, 0xeb, 0x76, 0xca, 0x65, 0xfd, 0x83, 0x85, 0xcb, 0x59,
-	0xca, 0x83, 0xaf, 0x7e, 0x7f, 0x30, 0x94, 0xfb, 0x07, 0x43, 0xf9, 0xf3, 0xc1, 0x50, 0x7e, 0x7a,
-	0x34, 0x96, 0xee, 0x1f, 0x8d, 0xa5, 0x3f, 0x1e, 0x8d, 0xa5, 0xf3, 0x9d, 0x19, 0x61, 0x97, 0xf1,
-	0x64, 0x38, 0xa5, 0xde, 0x68, 0x72, 0x87, 0x77, 0x6c, 0x37, 0xb8, 0xb4, 0x19, 0xb6, 0x39, 0x1a,
-	0xdd, 0x8e, 0xf2, 0xbf, 0x68, 0xf3, 0x00, 0x47, 0x93, 0x16, 0xff, 0x07, 0xf6, 0xd9, 0x3f, 0x01,
-	0x00, 0x00, 0xff, 0xff, 0x62, 0x9b, 0xc0, 0xb2, 0xbb, 0x09, 0x00, 0x00,
+	// 1019 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0x41, 0x6f, 0xdc, 0x44,
+	0x14, 0x8e, 0xbd, 0x9b, 0x4d, 0xf2, 0xb2, 0x69, 0xda, 0x21, 0xa4, 0xae, 0xa5, 0x7a, 0x57, 0x46,
+	0xb4, 0x41, 0x10, 0x9b, 0x04, 0x89, 0x03, 0x12, 0x87, 0x6e, 0x2b, 0x20, 0xa8, 0x4b, 0x5b, 0x13,
+	0x04, 0x8a, 0x90, 0x2a, 0xef, 0x7a, 0xba, 0x1d, 0x62, 0x7b, 0xdc, 0xf5, 0x6c, 0xe8, 0xf6, 0xc2,
+	0x8d, 0x33, 0x12, 0x57, 0xce, 0x88, 0x7f, 0xc0, 0x3f, 0x40, 0x3d, 0xf6, 0x88, 0x38, 0x44, 0x28,
+	0xb9, 0x71, 0xe0, 0xc0, 0x2f, 0x40, 0x33, 0x1e, 0xcf, 0xda, 0x1b, 0x77, 0xd3, 0x2c, 0x9c, 0xd6,
+	0x6f, 0xe6, 0xbd, 0xef, 0x7d, 0xef, 0x7d, 0x9e, 0xe7, 0x59, 0xb8, 0xc2, 0x86, 0x7e, 0x80, 0x7b,
+	0x24, 0x76, 0xd9, 0x53, 0x27, 0x19, 0x52, 0x46, 0xd1, 0x7a, 0xef, 0x19, 0x76, 0xf2, 0x65, 0xe7,
+	0x68, 0xc7, 0x44, 0xca, 0xc7, 0x8f, 0xa2, 0xcc, 0xc9, 0xdc, 0x18, 0xd0, 0x01, 0x15, 0x8f, 0x2e,
+	0x7f, 0x92, 0xab, 0x56, 0x9f, 0xa6, 0x11, 0x4d, 0xdd, 0x9e, 0x9f, 0x62, 0xf7, 0x68, 0xa7, 0x87,
+	0x99, 0xbf, 0xe3, 0xf6, 0x29, 0x89, 0xb3, 0x7d, 0xfb, 0x0b, 0x58, 0xef, 0xa6, 0x83, 0xdb, 0x43,
+	0xec, 0x33, 0xdc, 0xf5, 0x87, 0x87, 0x98, 0x21, 0x03, 0x96, 0xfa, 0xdc, 0xa6, 0x43, 0x43, 0x6b,
+	0x6b, 0x5b, 0x2b, 0x5e, 0x6e, 0x22, 0x04, 0x75, 0x8e, 0x63, 0xe8, 0x62, 0x59, 0x3c, 0xa3, 0x0d,
+	0x58, 0x7c, 0x32, 0xa2, 0x0c, 0x1b, 0x35, 0xb1, 0x98, 0x19, 0xf6, 0x35, 0xb8, 0x3a, 0x05, 0xeb,
+	0xe1, 0x34, 0xa1, 0x71, 0x8a, 0xed, 0x1f, 0x35, 0xb8, 0xa4, 0xf6, 0xee, 0x0d, 0x03, 0x3c, 0x9c,
+	0x91, 0xf1, 0x3a, 0x00, 0xe5, 0x2e, 0x0f, 0xd9, 0x38, 0xc9, 0xf3, 0xae, 0x88, 0x95, 0xfd, 0x71,
+	0x82, 0xd1, 0x26, 0x34, 0xfc, 0x88, 0x8e, 0x62, 0x26, 0xb3, 0x4b, 0x8b, 0x93, 0x4a, 0x86, 0xa4,
+	0x8f, 0x8d, 0x7a, 0x46, 0x4a, 0x18, 0xc8, 0x84, 0xe5, 0x48, 0x70, 0xd9, 0x0b, 0x8c, 0x45, 0xb1,
+	0xa1, 0x6c, 0xdb, 0x80, 0xcd, 0x32, 0x29, 0xc5, 0xf7, 0xbb, 0x8c, 0xae, 0x1f, 0xf7, 0x71, 0x78,
+	0x1e, 0xdd, 0x62, 0x06, 0xbd, 0x9c, 0x81, 0x47, 0x09, 0xe2, 0x7b, 0x81, 0x24, 0x9b, 0x9b, 0x53,
+	0x45, 0xd6, 0xa7, 0x8a, 0xcc, 0xa9, 0x4d, 0x08, 0x28, 0x6a, 0x1f, 0xc2, 0xda, 0x47, 0x24, 0xcc,
+	0x16, 0xf7, 0x18, 0x8e, 0x26, 0x75, 0x6b, 0xc5, 0xba, 0x27, 0x5d, 0xd2, 0x8b, 0x5d, 0xb2, 0x7f,
+	0xd2, 0x60, 0xad, 0x9b, 0x0e, 0x14, 0x44, 0x3a, 0x67, 0x65, 0x65, 0xfe, 0xb5, 0x69, 0x91, 0xde,
+	0x87, 0x86, 0x30, 0x52, 0xa3, 0xde, 0xae, 0x6d, 0xad, 0xee, 0x5a, 0xce, 0xd4, 0xeb, 0xec, 0x94,
+	0x8a, 0xf0, 0xa4, 0xb7, 0x7d, 0x15, 0x5e, 0x2f, 0xb1, 0x53, 0x65, 0xff, 0xa6, 0x17, 0xc4, 0xba,
+	0x4b, 0x9e, 0x8c, 0x48, 0x40, 0xd8, 0xf8, 0x3e, 0xa5, 0xe1, 0xff, 0xf1, 0xee, 0xa2, 0xcb, 0x50,
+	0x7b, 0x84, 0x73, 0x1d, 0xf8, 0x23, 0x47, 0x7d, 0x84, 0xf1, 0x1d, 0x9c, 0x32, 0xf9, 0xde, 0xe4,
+	0x26, 0x6f, 0x6d, 0xca, 0xfc, 0x5e, 0x88, 0x8d, 0x46, 0x5b, 0xdb, 0x5a, 0xf6, 0xa4, 0x85, 0xee,
+	0xc3, 0x2a, 0x89, 0x09, 0x23, 0x7e, 0xd8, 0xe1, 0x49, 0x97, 0x78, 0x54, 0xc7, 0x79, 0x7e, 0xdc,
+	0x5a, 0xf8, 0xe3, 0xb8, 0x75, 0x63, 0x40, 0xd8, 0xe3, 0x51, 0xcf, 0xe9, 0xd3, 0xc8, 0x95, 0xc7,
+	0x33, 0xfb, 0xd9, 0x4e, 0x83, 0x43, 0x97, 0x37, 0x31, 0x75, 0xf6, 0x62, 0xe6, 0x15, 0x21, 0x90,
+	0x07, 0x4d, 0x69, 0x3e, 0x10, 0x94, 0x97, 0xe7, 0x82, 0x2c, 0x61, 0xd8, 0xef, 0x82, 0x55, 0xdd,
+	0xc7, 0xbc, 0xd5, 0xe8, 0x12, 0xe8, 0x24, 0x90, 0xad, 0xd4, 0x49, 0x60, 0xff, 0xaa, 0x8b, 0x79,
+	0x71, 0x2b, 0x08, 0x94, 0xff, 0x8c, 0x9e, 0x6f, 0x42, 0x23, 0xa1, 0x34, 0x54, 0xaf, 0x8c, 0xb4,
+	0xd0, 0x67, 0x00, 0xbc, 0xff, 0xb7, 0x0a, 0x47, 0xf7, 0xc2, 0x95, 0x14, 0x10, 0x78, 0xb7, 0x85,
+	0x74, 0x12, 0xb0, 0x3e, 0x5f, 0xb7, 0x0b, 0x10, 0x1c, 0x31, 0x22, 0xf1, 0xdd, 0x64, 0x9f, 0x1e,
+	0xe2, 0x38, 0xcd, 0x54, 0xbf, 0x38, 0x62, 0x01, 0xc2, 0x8e, 0xc4, 0x44, 0x2c, 0x36, 0x4e, 0x35,
+	0xd9, 0x83, 0x66, 0x44, 0x62, 0x86, 0x03, 0xc9, 0x5f, 0x9b, 0x4f, 0xda, 0x22, 0x86, 0xfd, 0x8b,
+	0x0e, 0xa8, 0x9b, 0x0e, 0x3c, 0x1c, 0xd1, 0x23, 0xfc, 0x5f, 0xb4, 0xfa, 0x14, 0x96, 0xc3, 0xbc,
+	0x0d, 0xf3, 0x29, 0xa5, 0xe2, 0xd1, 0x27, 0xb0, 0x14, 0x91, 0x58, 0x9c, 0x88, 0xf9, 0x34, 0xca,
+	0xc3, 0x39, 0xab, 0x88, 0xc4, 0xd9, 0x49, 0x98, 0x4f, 0x1c, 0x15, 0x6f, 0xff, 0xac, 0x81, 0x79,
+	0xb6, 0x55, 0x4a, 0x9d, 0x8e, 0x1c, 0x1c, 0xf3, 0xa9, 0x92, 0x0d, 0x9a, 0x3b, 0xf9, 0xa0, 0xd1,
+	0xe7, 0x02, 0x91, 0x1f, 0xd5, 0xef, 0x75, 0x68, 0x76, 0xd3, 0x41, 0x77, 0x14, 0x32, 0xf2, 0xf9,
+	0xb7, 0x7e, 0x32, 0x5b, 0xcd, 0x21, 0x1d, 0x31, 0x9c, 0x1a, 0x7a, 0xbb, 0xc6, 0xd5, 0xcc, 0x2c,
+	0xf4, 0x15, 0x2c, 0x92, 0x38, 0x19, 0x65, 0x87, 0x6e, 0x75, 0xf7, 0x9a, 0x93, 0xe5, 0x73, 0x38,
+	0x4b, 0x47, 0x5e, 0x0f, 0x9c, 0xdb, 0x94, 0xc4, 0x9d, 0x9b, 0x9c, 0xe3, 0x5f, 0xc7, 0xad, 0x75,
+	0xe1, 0xff, 0x0e, 0x8d, 0x08, 0xc3, 0x51, 0xc2, 0xc6, 0xff, 0x1c, 0xb7, 0x9a, 0x63, 0x3f, 0x0a,
+	0x3f, 0xb0, 0xc5, 0x86, 0xed, 0x65, 0x80, 0xe8, 0x1b, 0x58, 0x89, 0x48, 0x7c, 0x6f, 0xc4, 0x38,
+	0x7a, 0xfd, 0x3c, 0xf4, 0x1d, 0x89, 0xbe, 0x11, 0x91, 0xf8, 0x21, 0x15, 0x41, 0xa5, 0x14, 0x57,
+	0xb2, 0x14, 0x93, 0x5d, 0xdb, 0x9b, 0xc0, 0xdb, 0x0c, 0x36, 0x8a, 0x7d, 0x50, 0x52, 0x7d, 0x0d,
+	0x8d, 0xcc, 0x5b, 0xb4, 0x63, 0x26, 0x81, 0xb7, 0x24, 0x81, 0xcb, 0x15, 0xc9, 0xd7, 0xb2, 0xe4,
+	0x79, 0x62, 0x89, 0xb9, 0xfb, 0xf7, 0x22, 0xd4, 0xba, 0xe9, 0x00, 0x1d, 0x40, 0xb3, 0x74, 0x5f,
+	0x6a, 0x9f, 0xf9, 0x9e, 0x4d, 0x5d, 0x7d, 0xcc, 0xad, 0xf3, 0x3c, 0x54, 0x05, 0x5f, 0xc2, 0x6a,
+	0xf1, 0x62, 0xd4, 0x7a, 0x79, 0xa0, 0x70, 0x30, 0x6f, 0x9e, 0xe3, 0x50, 0x02, 0x2e, 0x5c, 0x61,
+	0xaa, 0x81, 0x27, 0x0e, 0x2f, 0x01, 0x3e, 0x7b, 0x07, 0x41, 0xfb, 0x00, 0x85, 0x0b, 0x84, 0x55,
+	0x15, 0x36, 0xd9, 0x37, 0x6f, 0xcc, 0xde, 0x57, 0xa8, 0x14, 0x5e, 0xab, 0xfa, 0xbc, 0xcf, 0x28,
+	0xb7, 0xe4, 0x68, 0xba, 0xaf, 0xe8, 0xa8, 0x12, 0x1e, 0x40, 0xb3, 0xf4, 0x51, 0xab, 0x14, 0xb5,
+	0xe8, 0x51, 0x2d, 0x6a, 0xe5, 0x7c, 0xef, 0xc3, 0xfa, 0xf4, 0x1c, 0x7e, 0xa3, 0x2a, 0x78, 0xca,
+	0xc9, 0x7c, 0xfb, 0x15, 0x9c, 0x54, 0x92, 0x07, 0xb0, 0x32, 0x19, 0x0c, 0xd7, 0xab, 0x22, 0xd5,
+	0xb6, 0xf9, 0xe6, 0xcc, 0xed, 0x1c, 0xb2, 0xf3, 0xf1, 0xf3, 0x13, 0x4b, 0x7b, 0x71, 0x62, 0x69,
+	0x7f, 0x9e, 0x58, 0xda, 0x0f, 0xa7, 0xd6, 0xc2, 0x8b, 0x53, 0x6b, 0xe1, 0xf7, 0x53, 0x6b, 0xe1,
+	0x60, 0xbb, 0x30, 0xb8, 0x7a, 0xcf, 0xf0, 0xb6, 0x1f, 0x26, 0x8f, 0x7d, 0x86, 0x7d, 0x61, 0xb9,
+	0x4f, 0xdd, 0xc9, 0x5f, 0x18, 0x3e, 0xc3, 0x7a, 0x0d, 0xf1, 0x5f, 0xe3, 0xbd, 0x7f, 0x03, 0x00,
+	0x00, 0xff, 0xff, 0x36, 0xed, 0x96, 0x9e, 0xdb, 0x0c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1770,16 +1707,26 @@ func (m *MsgCreateLiquidityPool) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	_ = i
 	var l int
 	_ = l
-	if m.InitialQuote != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.InitialQuote))
-		i--
-		dAtA[i] = 0x40
+	{
+		size := m.InitialQuote.Size()
+		i -= size
+		if _, err := m.InitialQuote.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
-	if m.InitialBase != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.InitialBase))
-		i--
-		dAtA[i] = 0x38
+	i--
+	dAtA[i] = 0x42
+	{
+		size := m.InitialBase.Size()
+		i -= size
+		if _, err := m.InitialBase.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x3a
 	if m.Stable {
 		i--
 		if m.Stable {
@@ -1878,21 +1825,36 @@ func (m *MsgAddLiquidity) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.MinLpTokens != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.MinLpTokens))
-		i--
-		dAtA[i] = 0x28
+	{
+		size := m.MinLpTokens.Size()
+		i -= size
+		if _, err := m.MinLpTokens.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
-	if m.QuoteAmount != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.QuoteAmount))
-		i--
-		dAtA[i] = 0x20
+	i--
+	dAtA[i] = 0x2a
+	{
+		size := m.QuoteAmount.Size()
+		i -= size
+		if _, err := m.QuoteAmount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
-	if m.BaseAmount != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.BaseAmount))
-		i--
-		dAtA[i] = 0x18
+	i--
+	dAtA[i] = 0x22
+	{
+		size := m.BaseAmount.Size()
+		i -= size
+		if _, err := m.BaseAmount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x1a
 	if len(m.PoolId) > 0 {
 		i -= len(m.PoolId)
 		copy(dAtA[i:], m.PoolId)
@@ -1930,11 +1892,16 @@ func (m *MsgAddLiquidityResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	_ = i
 	var l int
 	_ = l
-	if m.MintedAmount != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.MintedAmount))
-		i--
-		dAtA[i] = 0x8
+	{
+		size := m.MintedAmount.Size()
+		i -= size
+		if _, err := m.MintedAmount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -1958,21 +1925,36 @@ func (m *MsgRemoveLiquidity) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.MinQuote != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.MinQuote))
-		i--
-		dAtA[i] = 0x28
+	{
+		size := m.MinQuote.Size()
+		i -= size
+		if _, err := m.MinQuote.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
-	if m.MinBase != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.MinBase))
-		i--
-		dAtA[i] = 0x20
+	i--
+	dAtA[i] = 0x2a
+	{
+		size := m.MinBase.Size()
+		i -= size
+		if _, err := m.MinBase.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
-	if m.LpTokens != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.LpTokens))
-		i--
-		dAtA[i] = 0x18
+	i--
+	dAtA[i] = 0x22
+	{
+		size := m.LpTokens.Size()
+		i -= size
+		if _, err := m.LpTokens.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x1a
 	if len(m.PoolId) > 0 {
 		i -= len(m.PoolId)
 		copy(dAtA[i:], m.PoolId)
@@ -2010,16 +1992,26 @@ func (m *MsgRemoveLiquidityResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	_ = i
 	var l int
 	_ = l
-	if m.Quote != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.Quote))
-		i--
-		dAtA[i] = 0x10
+	{
+		size := m.Quote.Size()
+		i -= size
+		if _, err := m.Quote.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
-	if m.Base != 0 {
-		i = encodeVarintTx(dAtA, i, uint64(m.Base))
-		i--
-		dAtA[i] = 0x8
+	i--
+	dAtA[i] = 0x12
+	{
+		size := m.Base.Size()
+		i -= size
+		if _, err := m.Base.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -2043,20 +2035,26 @@ func (m *MsgMultiSwap) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.MinOutput) > 0 {
-		i -= len(m.MinOutput)
-		copy(dAtA[i:], m.MinOutput)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.MinOutput)))
-		i--
-		dAtA[i] = 0x22
+	{
+		size, err := m.MinOutput.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
-	if len(m.Input) > 0 {
-		i -= len(m.Input)
-		copy(dAtA[i:], m.Input)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Input)))
-		i--
-		dAtA[i] = 0x1a
+	i--
+	dAtA[i] = 0x22
+	{
+		size, err := m.Input.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x1a
 	if len(m.Routes) > 0 {
 		for iNdEx := len(m.Routes) - 1; iNdEx >= 0; iNdEx-- {
 			i -= len(m.Routes[iNdEx])
@@ -2096,13 +2094,16 @@ func (m *MsgMultiSwapResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Output) > 0 {
-		i -= len(m.Output)
-		copy(dAtA[i:], m.Output)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Output)))
-		i--
-		dAtA[i] = 0xa
+	{
+		size, err := m.Output.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -2301,12 +2302,10 @@ func (m *MsgCreateLiquidityPool) Size() (n int) {
 	if m.Stable {
 		n += 2
 	}
-	if m.InitialBase != 0 {
-		n += 1 + sovTx(uint64(m.InitialBase))
-	}
-	if m.InitialQuote != 0 {
-		n += 1 + sovTx(uint64(m.InitialQuote))
-	}
+	l = m.InitialBase.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.InitialQuote.Size()
+	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -2337,15 +2336,12 @@ func (m *MsgAddLiquidity) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.BaseAmount != 0 {
-		n += 1 + sovTx(uint64(m.BaseAmount))
-	}
-	if m.QuoteAmount != 0 {
-		n += 1 + sovTx(uint64(m.QuoteAmount))
-	}
-	if m.MinLpTokens != 0 {
-		n += 1 + sovTx(uint64(m.MinLpTokens))
-	}
+	l = m.BaseAmount.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.QuoteAmount.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.MinLpTokens.Size()
+	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -2355,9 +2351,8 @@ func (m *MsgAddLiquidityResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.MintedAmount != 0 {
-		n += 1 + sovTx(uint64(m.MintedAmount))
-	}
+	l = m.MintedAmount.Size()
+	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -2375,15 +2370,12 @@ func (m *MsgRemoveLiquidity) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.LpTokens != 0 {
-		n += 1 + sovTx(uint64(m.LpTokens))
-	}
-	if m.MinBase != 0 {
-		n += 1 + sovTx(uint64(m.MinBase))
-	}
-	if m.MinQuote != 0 {
-		n += 1 + sovTx(uint64(m.MinQuote))
-	}
+	l = m.LpTokens.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.MinBase.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.MinQuote.Size()
+	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -2393,12 +2385,10 @@ func (m *MsgRemoveLiquidityResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Base != 0 {
-		n += 1 + sovTx(uint64(m.Base))
-	}
-	if m.Quote != 0 {
-		n += 1 + sovTx(uint64(m.Quote))
-	}
+	l = m.Base.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.Quote.Size()
+	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -2418,14 +2408,10 @@ func (m *MsgMultiSwap) Size() (n int) {
 			n += 1 + l + sovTx(uint64(l))
 		}
 	}
-	l = len(m.Input)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.MinOutput)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
+	l = m.Input.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.MinOutput.Size()
+	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -2435,10 +2421,8 @@ func (m *MsgMultiSwapResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Output)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
+	l = m.Output.Size()
+	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -3686,10 +3670,10 @@ func (m *MsgCreateLiquidityPool) Unmarshal(dAtA []byte) error {
 			}
 			m.Stable = bool(v != 0)
 		case 7:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field InitialBase", wireType)
 			}
-			m.InitialBase = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -3699,16 +3683,31 @@ func (m *MsgCreateLiquidityPool) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.InitialBase |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.InitialBase.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 8:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field InitialQuote", wireType)
 			}
-			m.InitialQuote = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -3718,11 +3717,26 @@ func (m *MsgCreateLiquidityPool) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.InitialQuote |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.InitialQuote.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -3920,10 +3934,10 @@ func (m *MsgAddLiquidity) Unmarshal(dAtA []byte) error {
 			m.PoolId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field BaseAmount", wireType)
 			}
-			m.BaseAmount = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -3933,16 +3947,31 @@ func (m *MsgAddLiquidity) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.BaseAmount |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.BaseAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 4:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field QuoteAmount", wireType)
 			}
-			m.QuoteAmount = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -3952,16 +3981,31 @@ func (m *MsgAddLiquidity) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.QuoteAmount |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.QuoteAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 5:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MinLpTokens", wireType)
 			}
-			m.MinLpTokens = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -3971,11 +4015,26 @@ func (m *MsgAddLiquidity) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.MinLpTokens |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.MinLpTokens.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -4027,10 +4086,10 @@ func (m *MsgAddLiquidityResponse) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MintedAmount", wireType)
 			}
-			m.MintedAmount = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -4040,11 +4099,26 @@ func (m *MsgAddLiquidityResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.MintedAmount |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.MintedAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -4160,10 +4234,10 @@ func (m *MsgRemoveLiquidity) Unmarshal(dAtA []byte) error {
 			m.PoolId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LpTokens", wireType)
 			}
-			m.LpTokens = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -4173,16 +4247,31 @@ func (m *MsgRemoveLiquidity) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.LpTokens |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.LpTokens.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 4:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MinBase", wireType)
 			}
-			m.MinBase = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -4192,16 +4281,31 @@ func (m *MsgRemoveLiquidity) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.MinBase |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.MinBase.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 5:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MinQuote", wireType)
 			}
-			m.MinQuote = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -4211,11 +4315,26 @@ func (m *MsgRemoveLiquidity) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.MinQuote |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.MinQuote.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -4267,10 +4386,10 @@ func (m *MsgRemoveLiquidityResponse) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Base", wireType)
 			}
-			m.Base = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -4280,16 +4399,31 @@ func (m *MsgRemoveLiquidityResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Base |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Base.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 2:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Quote", wireType)
 			}
-			m.Quote = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -4299,11 +4433,26 @@ func (m *MsgRemoveLiquidityResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Quote |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Quote.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -4422,7 +4571,7 @@ func (m *MsgMultiSwap) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Input", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -4432,29 +4581,30 @@ func (m *MsgMultiSwap) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Input = string(dAtA[iNdEx:postIndex])
+			if err := m.Input.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MinOutput", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -4464,23 +4614,24 @@ func (m *MsgMultiSwap) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.MinOutput = string(dAtA[iNdEx:postIndex])
+			if err := m.MinOutput.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -4536,7 +4687,7 @@ func (m *MsgMultiSwapResponse) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Output", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -4546,23 +4697,24 @@ func (m *MsgMultiSwapResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Output = string(dAtA[iNdEx:postIndex])
+			if err := m.Output.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

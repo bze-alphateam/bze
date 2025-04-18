@@ -88,7 +88,7 @@ func (k msgServer) CreateLiquidityPool(goCtx context.Context, msg *types.MsgCrea
 	k.SetLiquidityPool(ctx, lp)
 	//emit LP Created event
 	err = ctx.EventManager().EmitTypedEvent(
-		&types.LpCreatedEvent{
+		&types.PoolCreatedEvent{
 			Creator: msg.Creator,
 			Base:    base,
 			Quote:   quote,
@@ -148,17 +148,9 @@ func (k msgServer) mintInitialLpTokens(ctx sdk.Context, baseCoin, quoteCoin sdk.
 	return
 }
 
-func (k msgServer) getProvidedReserves(baseDenom, quoteDenom string, baseAmt, quoteAmt uint64) (baseCoin, quoteCoin sdk.Coin, err error) {
-	baseCoin, err = sdk.ParseCoinNormalized(fmt.Sprintf("%d%s", baseAmt, baseDenom))
-	if err != nil {
-		return
-	}
-
-	quoteCoin, err = sdk.ParseCoinNormalized(fmt.Sprintf("%d%s", quoteAmt, quoteDenom))
-	if err != nil {
-		return
-	}
-
+func (k msgServer) getProvidedReserves(baseDenom, quoteDenom string, baseAmt, quoteAmt sdk.Int) (baseCoin, quoteCoin sdk.Coin, err error) {
+	baseCoin = sdk.NewCoin(baseDenom, baseAmt)
+	quoteCoin = sdk.NewCoin(quoteDenom, quoteAmt)
 	if !baseCoin.IsValid() || !quoteCoin.IsValid() {
 		err = errors.Wrap(sdkerrors.ErrInvalidCoins, "invalid reserve")
 		return
@@ -268,13 +260,13 @@ func (k msgServer) AddLiquidity(goCtx context.Context, msg *types.MsgAddLiquidit
 		return nil, errors.Wrap(sdkerrors.ErrInvalidCoins, "pool is empty")
 	}
 
-	optimalBase, optimalQuote, err := k.BalanceProvidedAmounts(msg.GetBaseAmount(), msg.GetQuoteAmount(), pool.ReserveBase, pool.ReserveQuote)
+	optimalBase, optimalQuote, err := k.BalanceProvidedAmounts(msg.BaseAmount, msg.QuoteAmount, pool.ReserveBase, pool.ReserveQuote)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to calculate provided amounts")
 	}
 
 	//create user paid coins
-	paidBase, paidQuote, err := k.getProvidedReserves(pool.GetBase(), pool.GetQuote(), optimalBase.Uint64(), optimalQuote.Uint64())
+	paidBase, paidQuote, err := k.getProvidedReserves(pool.GetBase(), pool.GetQuote(), optimalBase, optimalQuote)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create optimal reserves with the provided coins")
 	}
@@ -291,8 +283,8 @@ func (k msgServer) AddLiquidity(goCtx context.Context, msg *types.MsgAddLiquidit
 		return nil, err
 	}
 
-	if minted.Amount.LT(sdk.NewIntFromUint64(msg.GetMinLpTokens())) {
-		return nil, errors.Wrapf(types.ErrResultedAmountTooLow, "could not mint the minimum expected lp tokens. Minted %d, expected minimum: %d", minted.Amount.Uint64(), msg.GetMinLpTokens())
+	if minted.Amount.LT(msg.MinLpTokens) {
+		return nil, errors.Wrapf(types.ErrResultedAmountTooLow, "could not mint the minimum expected lp tokens. Minted %d, expected minimum: %s", minted.Amount.Uint64(), msg.MinLpTokens.String())
 	}
 
 	//send LP tokens to user
@@ -311,9 +303,10 @@ func (k msgServer) AddLiquidity(goCtx context.Context, msg *types.MsgAddLiquidit
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.LiquidityAddedEvent{
 			Creator:      msg.Creator,
-			BaseAmount:   optimalBase.Uint64(),
-			QuoteAmount:  optimalQuote.Uint64(),
-			MintedAmount: minted.Amount.Uint64(),
+			BaseAmount:   optimalBase,
+			QuoteAmount:  optimalQuote,
+			MintedAmount: minted.Amount,
+			PoolId:       pool.GetId(),
 		},
 	)
 
@@ -322,7 +315,7 @@ func (k msgServer) AddLiquidity(goCtx context.Context, msg *types.MsgAddLiquidit
 	}
 
 	return &types.MsgAddLiquidityResponse{
-		MintedAmount: minted.Amount.Uint64(),
+		MintedAmount: minted.Amount,
 	}, nil
 }
 
@@ -375,7 +368,7 @@ func (k msgServer) RemoveLiquidity(goCtx context.Context, msg *types.MsgRemoveLi
 		return nil, errors.Wrapf(types.ErrInvalidDenom, "could not find supply for pool %s", pool.GetId())
 	}
 
-	toRemove := sdk.NewInt64Coin(pool.GetLpDenom(), int64(msg.GetLpTokens()))
+	toRemove := sdk.NewCoin(pool.GetLpDenom(), msg.LpTokens)
 	if !toRemove.IsPositive() {
 		return nil, fmt.Errorf("provided LP tokens is not positive %s", toRemove)
 	}
@@ -391,12 +384,12 @@ func (k msgServer) RemoveLiquidity(goCtx context.Context, msg *types.MsgRemoveLi
 	quote := sdk.NewDecFromInt(pool.ReserveQuote).Mul(userShare).TruncateInt()
 
 	// Validate minimum amounts
-	if base.LT(sdk.NewIntFromUint64(msg.MinBase)) {
-		return nil, errors.Wrapf(types.ErrResultedAmountTooLow, "base amount too low, got %s, minimum %d", base, msg.MinBase)
+	if base.LT(msg.MinBase) {
+		return nil, errors.Wrapf(types.ErrResultedAmountTooLow, "base amount too low, got %s, minimum %s", base, msg.MinBase.String())
 	}
 
-	if quote.LT(sdk.NewIntFromUint64(msg.MinQuote)) {
-		return nil, errors.Wrapf(types.ErrResultedAmountTooLow, "quote amount too low, got %s, minimum %d", quote, msg.MinQuote)
+	if quote.LT(msg.MinQuote) {
+		return nil, errors.Wrapf(types.ErrResultedAmountTooLow, "quote amount too low, got %s, minimum %s", quote, msg.MinQuote.String())
 	}
 
 	//burn lp tokens
@@ -419,8 +412,9 @@ func (k msgServer) RemoveLiquidity(goCtx context.Context, msg *types.MsgRemoveLi
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.LiquidityRemovedEvent{
 			Creator:     msg.Creator,
-			BaseAmount:  base.Uint64(),
-			QuoteAmount: quote.Uint64(),
+			BaseAmount:  base,
+			QuoteAmount: quote,
+			PoolId:      pool.GetId(),
 		},
 	)
 
@@ -429,7 +423,7 @@ func (k msgServer) RemoveLiquidity(goCtx context.Context, msg *types.MsgRemoveLi
 	}
 
 	return &types.MsgRemoveLiquidityResponse{
-		Base:  base.Uint64(),
-		Quote: quote.Uint64(),
+		Base:  base,
+		Quote: quote,
 	}, nil
 }

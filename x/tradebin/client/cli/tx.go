@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cast"
 	"strconv"
 	"time"
@@ -203,13 +204,15 @@ func CmdCreateLiquidityPool() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argInitialBase, err := cast.ToUint64E(args[5])
-			if err != nil {
-				return err
+
+			argInitialBase, ok := sdk.NewIntFromString(args[5])
+			if !ok {
+				return fmt.Errorf("invalid initial base value")
 			}
-			argInitialQuote, err := cast.ToUint64E(args[6])
-			if err != nil {
-				return err
+
+			argInitialQuote, ok := sdk.NewIntFromString(args[6])
+			if !ok {
+				return fmt.Errorf("invalid initial quote value")
 			}
 
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -230,6 +233,7 @@ func CmdCreateLiquidityPool() *cobra.Command {
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -246,17 +250,19 @@ func CmdAddLiquidity() *cobra.Command {
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argPoolId := args[0]
-			argBaseAmount, err := cast.ToUint64E(args[1])
-			if err != nil {
-				return err
+			argBaseAmount, ok := sdk.NewIntFromString(args[1])
+			if !ok {
+				return fmt.Errorf("invalid base amount")
 			}
-			argQuoteAmount, err := cast.ToUint64E(args[2])
-			if err != nil {
-				return err
+
+			argQuoteAmount, ok := sdk.NewIntFromString(args[2])
+			if !ok {
+				return fmt.Errorf("invalid quote amount")
 			}
-			argMinLpTokens, err := cast.ToUint64E(args[3])
-			if err != nil {
-				return err
+
+			argMinLpTokens, ok := sdk.NewIntFromString(args[3])
+			if !ok {
+				return fmt.Errorf("invalid min lp tokens")
 			}
 
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -291,21 +297,19 @@ func CmdRemoveLiquidity() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argPoolId := args[0]
 
-			lpTokens, err := strconv.ParseUint(args[1], 10, 64)
-			if err != nil {
-				return fmt.Errorf("invalid LP tokens amount: %v", err)
+			lpTokens, ok := sdk.NewIntFromString(args[1])
+			if !ok {
+				return fmt.Errorf("invalid lp tokens")
 			}
 
-			// Parse min base as uint64
-			minBase, err := strconv.ParseUint(args[2], 10, 64)
-			if err != nil {
-				return fmt.Errorf("invalid min base amount: %v", err)
+			minBase, ok := sdk.NewIntFromString(args[2])
+			if !ok {
+				return fmt.Errorf("invalid min base")
 			}
 
-			// Parse min quote as uint64
-			minQuote, err := strconv.ParseUint(args[3], 10, 64)
-			if err != nil {
-				return fmt.Errorf("invalid min quote amount: %v", err)
+			minQuote, ok := sdk.NewIntFromString(args[3])
+			if !ok {
+				return fmt.Errorf("invalid min quote")
 			}
 
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -348,7 +352,16 @@ func CmdMultiSwap() *cobra.Command {
 			}
 
 			argInput := args[1]
+			inputCoins, err := sdk.ParseCoinNormalized(argInput)
+			if err != nil {
+				return fmt.Errorf("failed to parse input coins: %w", err)
+			}
+
 			argMinOutput := args[2]
+			outputMinCoins, err := sdk.ParseCoinNormalized(argMinOutput)
+			if err != nil {
+				return fmt.Errorf("failed to parse output coins: %w", err)
+			}
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -358,8 +371,8 @@ func CmdMultiSwap() *cobra.Command {
 			msg := types.NewMsgMultiSwap(
 				clientCtx.GetFromAddress().String(),
 				routes,
-				argInput,
-				argMinOutput,
+				inputCoins,
+				outputMinCoins,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

@@ -2,6 +2,8 @@ syntax = "proto3";
 package bze.tradebin.v1;
 
 import "tradebin/amm.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 // this line is used by starport scaffolding # proto/tx/import
 
@@ -71,8 +73,14 @@ message MsgCreateLiquidityPool {
   string fee = 4;
   string feeDest = 5;
   bool stable = 6;
-  uint64 initialBase = 7;
-  uint64 initialQuote = 8;
+  string initialBase = 7 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string initialQuote = 8 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 message MsgCreateLiquidityPoolResponse {
@@ -82,37 +90,76 @@ message MsgCreateLiquidityPoolResponse {
 message MsgAddLiquidity {
   string creator = 1;
   string poolId = 2;
-  uint64 baseAmount = 3;
-  uint64 quoteAmount = 4;
-  uint64 minLpTokens = 5;
+  string baseAmount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string quoteAmount = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string minLpTokens = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 message MsgAddLiquidityResponse {
-  uint64 mintedAmount = 1;
+  string mintedAmount = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 message MsgRemoveLiquidity {
   string creator = 1;
   string poolId = 2;
-  uint64 lpTokens = 3;
-  uint64 minBase = 4;
-  uint64 minQuote = 5;
+  string lpTokens = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string minBase = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string minQuote = 5 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 message MsgRemoveLiquidityResponse {
-  uint64 base = 1;
-  uint64 quote = 2;
+  string base = 1 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string quote = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 message MsgMultiSwap {
   string creator = 1;
   repeated string routes = 2;
-  string input = 3;
-  string minOutput = 4;
+  cosmos.base.v1beta1.Coin input = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"input\"",
+    (gogoproto.jsontag)      = "input,omitempty"
+  ];
+  cosmos.base.v1beta1.Coin minOutput = 4 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"min_output\"",
+    (gogoproto.jsontag)      = "min_output,omitempty"
+  ];
 }
 
 message MsgMultiSwapResponse {
-  string output = 1;
+  cosmos.base.v1beta1.Coin output = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"output\"",
+    (gogoproto.jsontag)      = "output,omitempty"
+  ];
 }
 
 // this line is used by starport scaffolding # proto/tx/message

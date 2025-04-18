@@ -277,18 +277,18 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_InvalidFeeDestination
 func (suite *IntegrationTestSuite) TestCreateLiquidityPool_InvalidReserves() {
 	tc := []struct {
 		Name         string
-		InitialBase  uint64
-		InitialQuote uint64
+		InitialBase  sdk.Int
+		InitialQuote sdk.Int
 	}{
 		{
 			Name:         "zero base",
-			InitialBase:  0,
-			InitialQuote: 123456,
+			InitialBase:  sdk.ZeroInt(),
+			InitialQuote: sdk.NewInt(123456),
 		},
 		{
 			Name:         "zero quote",
-			InitialBase:  2123321,
-			InitialQuote: 0,
+			InitialBase:  sdk.NewInt(2123321),
+			InitialQuote: sdk.ZeroInt(),
 		},
 	}
 
@@ -322,8 +322,8 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_StableNotSupported() 
 		Creator:      getTestAddress(),
 		Fee:          "0.002",
 		FeeDest:      getFeeDestinationString("0.25", "0.25", "0.25", "0.25"),
-		InitialBase:  123,
-		InitialQuote: 456,
+		InitialBase:  sdk.NewInt(123),
+		InitialQuote: sdk.NewInt(456),
 		Stable:       true,
 	}
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Base).Return(true).Times(1)
@@ -342,8 +342,8 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_FundCommunityPoolErr(
 		Creator:      getTestAddress(),
 		Fee:          "0.002",
 		FeeDest:      getFeeDestinationString("0.25", "0.25", "0.25", "0.25"),
-		InitialBase:  123,
-		InitialQuote: 345,
+		InitialBase:  sdk.NewInt(123),
+		InitialQuote: sdk.NewInt(345),
 	}
 
 	createMarketFeeCoin, err := sdk.ParseCoinsNormalized(suite.k.CreateMarketFee(suite.ctx))
@@ -365,8 +365,8 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_Success() {
 		Creator:      getTestAddress(),
 		Fee:          "0.002",
 		FeeDest:      getFeeDestinationString("0.25", "0.25", "0.25", "0.25"),
-		InitialBase:  123,
-		InitialQuote: 345,
+		InitialBase:  sdk.NewInt(123),
+		InitialQuote: sdk.NewInt(345),
 	}
 
 	denomMetaData := banktypes.Metadata{
@@ -448,7 +448,7 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_InvalidCoins() {
 
 	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
 	suite.Require().Error(err)
-	suite.Require().Contains(err.Error(), "failed to create optimal reserves")
+	suite.Require().Contains(err.Error(), "failed to calculate provided amounts")
 }
 
 func (suite *IntegrationTestSuite) TestAddLiquidity_CoinCaptureFailure() {
@@ -460,9 +460,9 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_CoinCaptureFailure() {
 	msg := &types.MsgAddLiquidity{
 		Creator:     testAcc.String(),
 		PoolId:      testLp.Id,
-		BaseAmount:  100,
-		QuoteAmount: 200,
-		MinLpTokens: 321,
+		BaseAmount:  sdk.NewInt(100),
+		QuoteAmount: sdk.NewInt(200),
+		MinLpTokens: sdk.NewInt(321),
 	}
 
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), testAcc, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ubze", 100), sdk.NewInt64Coin("uusdc", 200))).Times(1).Return(fmt.Errorf("invalid balance test"))
@@ -481,9 +481,9 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_MissingLpTokenSupply() {
 	msg := &types.MsgAddLiquidity{
 		Creator:     testAcc.String(),
 		PoolId:      testLp.Id,
-		BaseAmount:  100,
-		QuoteAmount: 200,
-		MinLpTokens: 321,
+		BaseAmount:  sdk.NewInt(100),
+		QuoteAmount: sdk.NewInt(200),
+		MinLpTokens: sdk.NewInt(321),
 	}
 
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), testAcc, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ubze", 100), sdk.NewInt64Coin("uusdc", 200))).Times(1).Return(nil)
@@ -503,9 +503,9 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_LpMintError() {
 	msg := &types.MsgAddLiquidity{
 		Creator:     testAcc.String(),
 		PoolId:      testLp.Id,
-		BaseAmount:  100,
-		QuoteAmount: 200,
-		MinLpTokens: 321,
+		BaseAmount:  sdk.NewInt(100),
+		QuoteAmount: sdk.NewInt(200),
+		MinLpTokens: sdk.NewInt(321),
 	}
 
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), testAcc, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ubze", 100), sdk.NewInt64Coin("uusdc", 200))).Times(1).Return(nil)
@@ -527,9 +527,9 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_MinLpTokensNotMet() {
 	msg := &types.MsgAddLiquidity{
 		Creator:     testAcc.String(),
 		PoolId:      testLp.Id,
-		BaseAmount:  100,
-		QuoteAmount: 200,
-		MinLpTokens: 11,
+		BaseAmount:  sdk.NewInt(100),
+		QuoteAmount: sdk.NewInt(200),
+		MinLpTokens: sdk.NewInt(11),
 	}
 
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), testAcc, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ubze", 100), sdk.NewInt64Coin("uusdc", 200))).Times(1).Return(nil)
@@ -550,9 +550,9 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_ErrorOnSendingLpTokens() {
 	msg := &types.MsgAddLiquidity{
 		Creator:     testAcc.String(),
 		PoolId:      testLp.Id,
-		BaseAmount:  100,
-		QuoteAmount: 200,
-		MinLpTokens: 9,
+		BaseAmount:  sdk.NewInt(100),
+		QuoteAmount: sdk.NewInt(200),
+		MinLpTokens: sdk.NewInt(9),
 	}
 
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), testAcc, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ubze", 100), sdk.NewInt64Coin("uusdc", 200))).Times(1).Return(nil)
@@ -574,153 +574,153 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_Success() {
 	testCases := []struct {
 		name         string
 		poolReserves struct {
-			base  uint64
-			quote uint64
+			base  sdk.Int
+			quote sdk.Int
 		}
 		userDeposit struct {
-			base  uint64
-			quote uint64
+			base  sdk.Int
+			quote sdk.Int
 		}
 		lpSupply        uint64
-		minLpTokens     uint64
+		minLpTokens     sdk.Int
 		expectedDeposit struct {
-			base  uint64
-			quote uint64
+			base  sdk.Int
+			quote sdk.Int
 		}
 		expectedMint uint64
 	}{
 		{
 			name: "balanced deposit - same ratio as pool",
 			poolReserves: struct {
-				base  uint64
-				quote uint64
+				base  sdk.Int
+				quote sdk.Int
 			}{
-				base:  1000,
-				quote: 2000,
+				base:  sdk.NewInt(1000),
+				quote: sdk.NewInt(2000),
 			},
 			userDeposit: struct {
-				base  uint64
-				quote uint64
+				base  sdk.Int
+				quote sdk.Int
 			}{
-				base:  100,
-				quote: 200,
+				base:  sdk.NewInt(100),
+				quote: sdk.NewInt(200),
 			},
 			lpSupply:    1000,
-			minLpTokens: 90,
+			minLpTokens: sdk.NewInt(90),
 			expectedDeposit: struct {
-				base  uint64
-				quote uint64
+				base  sdk.Int
+				quote sdk.Int
 			}{
-				base:  100,
-				quote: 200,
+				base:  sdk.NewInt(100),
+				quote: sdk.NewInt(200),
 			},
 			expectedMint: 100, // 10% of reserves = 10% of LP supply
 		},
 		{
 			name: "unbalanced deposit - base limiting",
 			poolReserves: struct {
-				base  uint64
-				quote uint64
+				base  sdk.Int
+				quote sdk.Int
 			}{
-				base:  1000,
-				quote: 3000,
+				base:  sdk.NewInt(1000),
+				quote: sdk.NewInt(3000),
 			},
 			userDeposit: struct {
-				base  uint64
-				quote uint64
+				base  sdk.Int
+				quote sdk.Int
 			}{
-				base:  100,
-				quote: 500, // More than needed for 100 base
+				base:  sdk.NewInt(100),
+				quote: sdk.NewInt(500), // More than needed for 100 base
 			},
 			lpSupply:    1500,
-			minLpTokens: 100,
+			minLpTokens: sdk.NewInt(100),
 			expectedDeposit: struct {
-				base  uint64
-				quote uint64
+				base  sdk.Int
+				quote sdk.Int
 			}{
-				base:  100,
-				quote: 300, // Adjusted to maintain pool ratio
+				base:  sdk.NewInt(100),
+				quote: sdk.NewInt(300), // Adjusted to maintain pool ratio
 			},
 			expectedMint: 150, // 10% of reserves = 10% of LP supply
 		},
 		{
 			name: "unbalanced deposit - quote limiting",
 			poolReserves: struct {
-				base  uint64
-				quote uint64
+				base  sdk.Int
+				quote sdk.Int
 			}{
-				base:  2000,
-				quote: 1000,
+				base:  sdk.NewInt(2000),
+				quote: sdk.NewInt(1000),
 			},
 			userDeposit: struct {
-				base  uint64
-				quote uint64
+				base  sdk.Int
+				quote sdk.Int
 			}{
-				base:  500, // More than needed for 100 quote
-				quote: 100,
+				base:  sdk.NewInt(500), // More than needed for 100 quote
+				quote: sdk.NewInt(100),
 			},
 			lpSupply:    2000,
-			minLpTokens: 150,
+			minLpTokens: sdk.NewInt(150),
 			expectedDeposit: struct {
-				base  uint64
-				quote uint64
+				base  sdk.Int
+				quote sdk.Int
 			}{
-				base:  200, // Adjusted to maintain pool ratio
-				quote: 100,
+				base:  sdk.NewInt(200), // Adjusted to maintain pool ratio
+				quote: sdk.NewInt(100),
 			},
 			expectedMint: 200, // 10% of reserves = 10% of LP supply
 		},
 		{
 			name: "small deposit with uneven ratio",
 			poolReserves: struct {
-				base  uint64
-				quote uint64
+				base  sdk.Int
+				quote sdk.Int
 			}{
-				base:  5000,
-				quote: 7500,
+				base:  sdk.NewInt(5000),
+				quote: sdk.NewInt(7500),
 			},
 			userDeposit: struct {
-				base  uint64
-				quote uint64
+				base  sdk.Int
+				quote sdk.Int
 			}{
-				base:  50,
-				quote: 80,
+				base:  sdk.NewInt(50),
+				quote: sdk.NewInt(80),
 			},
 			lpSupply:    10000,
-			minLpTokens: 90,
+			minLpTokens: sdk.NewInt(90),
 			expectedDeposit: struct {
-				base  uint64
-				quote uint64
+				base  sdk.Int
+				quote sdk.Int
 			}{
-				base:  50,
-				quote: 75, // Adjusted to maintain pool ratio
+				base:  sdk.NewInt(50),
+				quote: sdk.NewInt(75), // Adjusted to maintain pool ratio
 			},
 			expectedMint: 100, // 1% of reserves = 1% of LP supply
 		},
 		{
 			name: "large deposit",
 			poolReserves: struct {
-				base  uint64
-				quote uint64
+				base  sdk.Int
+				quote sdk.Int
 			}{
-				base:  10000,
-				quote: 20000,
+				base:  sdk.NewInt(10000),
+				quote: sdk.NewInt(20000),
 			},
 			userDeposit: struct {
-				base  uint64
-				quote uint64
+				base  sdk.Int
+				quote sdk.Int
 			}{
-				base:  10000, // Doubling the pool
-				quote: 20000,
+				base:  sdk.NewInt(10000), // Doubling the pool
+				quote: sdk.NewInt(20000),
 			},
 			lpSupply:    5000,
-			minLpTokens: 4000,
+			minLpTokens: sdk.NewInt(4000),
 			expectedDeposit: struct {
-				base  uint64
-				quote uint64
+				base  sdk.Int
+				quote sdk.Int
 			}{
-				base:  10000,
-				quote: 20000,
+				base:  sdk.NewInt(10000),
+				quote: sdk.NewInt(20000),
 			},
 			expectedMint: 5000, // 100% increase = 100% of LP supply
 		},
@@ -735,8 +735,8 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_Success() {
 				Base:         "ubze",
 				Quote:        "uusdc",
 				LpDenom:      "lp_ubze_uusdc",
-				ReserveBase:  sdk.NewInt(int64(tc.poolReserves.base)),
-				ReserveQuote: sdk.NewInt(int64(tc.poolReserves.quote)),
+				ReserveBase:  tc.poolReserves.base,
+				ReserveQuote: tc.poolReserves.quote,
 				Creator:      testAcc.String(),
 				Fee:          sdk.NewDecWithPrec(3, 3),
 				Stable:       false,
@@ -753,8 +753,8 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_Success() {
 			}
 
 			// Expected coins that will be sent from user to module
-			expectedBaseCoin := sdk.NewInt64Coin("ubze", int64(tc.expectedDeposit.base))
-			expectedQuoteCoin := sdk.NewInt64Coin("uusdc", int64(tc.expectedDeposit.quote))
+			expectedBaseCoin := sdk.NewCoin("ubze", tc.expectedDeposit.base)
+			expectedQuoteCoin := sdk.NewCoin("uusdc", tc.expectedDeposit.quote)
 			expectedCoins := sdk.NewCoins(expectedBaseCoin, expectedQuoteCoin)
 
 			// Mock the bank keeper methods
@@ -791,13 +791,13 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_Success() {
 			// Verify no errors and correct response
 			suite.Require().NoError(err)
 			suite.Require().NotNil(resp)
-			suite.Require().Equal(tc.expectedMint, resp.MintedAmount)
+			suite.Require().EqualValues(tc.expectedMint, resp.MintedAmount.Uint64())
 
 			// Verify the pool has been updated correctly
 			updatedPool, found := suite.k.GetLiquidityPool(ctx, testLp.Id)
 			suite.Require().True(found)
-			suite.Require().Equal(tc.poolReserves.base+tc.expectedDeposit.base, updatedPool.ReserveBase.Uint64())
-			suite.Require().Equal(tc.poolReserves.quote+tc.expectedDeposit.quote, updatedPool.ReserveQuote.Uint64())
+			suite.Require().Equal(tc.poolReserves.base.Add(tc.expectedDeposit.base).String(), updatedPool.ReserveBase.String())
+			suite.Require().Equal(tc.poolReserves.quote.Add(tc.expectedDeposit.quote).String(), updatedPool.ReserveQuote.String())
 
 			// Verify that the event was emitted correctly
 			events := ctx.EventManager().Events()
@@ -854,9 +854,9 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Errors() {
 			msg: &types.MsgRemoveLiquidity{
 				Creator:  "invalid_address",
 				PoolId:   "ubze_uusdc",
-				LpTokens: 100,
-				MinBase:  10,
-				MinQuote: 20,
+				LpTokens: sdk.NewInt(100),
+				MinBase:  sdk.NewInt(10),
+				MinQuote: sdk.NewInt(20),
 			},
 			expectedError: "invalid creator address",
 			errorType:     sdkerrors.ErrUnauthorized,
@@ -867,9 +867,9 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Errors() {
 			msg: &types.MsgRemoveLiquidity{
 				Creator:  testAcc.String(),
 				PoolId:   "nonexistent_pool",
-				LpTokens: 100,
-				MinBase:  10,
-				MinQuote: 20,
+				LpTokens: sdk.NewInt(100),
+				MinBase:  sdk.NewInt(10),
+				MinQuote: sdk.NewInt(20),
 			},
 			expectedError: "pool nonexistent_pool not found",
 			errorType:     types.ErrMarketNotFound,
@@ -881,9 +881,9 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Errors() {
 			msg: &types.MsgRemoveLiquidity{
 				Creator:  testAcc.String(),
 				PoolId:   "ubze_uusdc",
-				LpTokens: 100,
-				MinBase:  10,
-				MinQuote: 20,
+				LpTokens: sdk.NewInt(100),
+				MinBase:  sdk.NewInt(10),
+				MinQuote: sdk.NewInt(20),
 			},
 			expectedError: "could not find supply for pool",
 			errorType:     types.ErrInvalidDenom,
@@ -900,9 +900,9 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Errors() {
 			msg: &types.MsgRemoveLiquidity{
 				Creator:  testAcc.String(),
 				PoolId:   "ubze_uusdc",
-				LpTokens: 100,
-				MinBase:  10,
-				MinQuote: 20,
+				LpTokens: sdk.NewInt(100),
+				MinBase:  sdk.NewInt(10),
+				MinQuote: sdk.NewInt(20),
 			},
 			expectedError: "failed to send LP Tokens to module account",
 			errorType:     nil, // This is a wrapped error so we don't check the type
@@ -929,9 +929,9 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Errors() {
 			msg: &types.MsgRemoveLiquidity{
 				Creator:  testAcc.String(),
 				PoolId:   "ubze_uusdc",
-				LpTokens: 100,
-				MinBase:  500, // Too high - would get only 100 (10%)
-				MinQuote: 10,
+				LpTokens: sdk.NewInt(100),
+				MinBase:  sdk.NewInt(500), // Too high - would get only 100 (10%)
+				MinQuote: sdk.NewInt(10),
 			},
 			expectedError: "base amount too low",
 			errorType:     types.ErrResultedAmountTooLow,
@@ -960,9 +960,9 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Errors() {
 			msg: &types.MsgRemoveLiquidity{
 				Creator:  testAcc.String(),
 				PoolId:   "ubze_uusdc",
-				LpTokens: 100,
-				MinBase:  10,
-				MinQuote: 500, // Too high - would get only 200 (10%)
+				LpTokens: sdk.NewInt(100),
+				MinBase:  sdk.NewInt(10),
+				MinQuote: sdk.NewInt(500), // Too high - would get only 200 (10%)
 			},
 			expectedError: "quote amount too low",
 			errorType:     types.ErrResultedAmountTooLow,
@@ -991,9 +991,9 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Errors() {
 			msg: &types.MsgRemoveLiquidity{
 				Creator:  testAcc.String(),
 				PoolId:   "ubze_uusdc",
-				LpTokens: 100,
-				MinBase:  10,
-				MinQuote: 20,
+				LpTokens: sdk.NewInt(100),
+				MinBase:  sdk.NewInt(10),
+				MinQuote: sdk.NewInt(20),
 			},
 			expectedError: "failed to burn LP Tokens",
 			errorType:     nil, // This is a wrapped error so we don't check the type
@@ -1031,9 +1031,9 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Errors() {
 			msg: &types.MsgRemoveLiquidity{
 				Creator:  testAcc.String(),
 				PoolId:   "ubze_uusdc",
-				LpTokens: 100,
-				MinBase:  10,
-				MinQuote: 20,
+				LpTokens: sdk.NewInt(100),
+				MinBase:  sdk.NewInt(10),
+				MinQuote: sdk.NewInt(20),
 			},
 			expectedError: "failed to send resulted coins to user account",
 			errorType:     nil, // This is a wrapped error so we don't check the type
@@ -1114,10 +1114,10 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
 	testCases := []struct {
 		name          string
 		pool          types.LiquidityPool
-		lpTokens      uint64
+		lpTokens      sdk.Int
 		lpSupply      uint64
-		minBase       uint64
-		minQuote      uint64
+		minBase       sdk.Int
+		minQuote      sdk.Int
 		expectedBase  uint64
 		expectedQuote uint64
 	}{
@@ -1134,12 +1134,12 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
 				Fee:          sdk.NewDecWithPrec(3, 3),
 				Stable:       false,
 			},
-			lpTokens:      100,
-			lpSupply:      1000, // 10% removal
-			minBase:       90,   // Slightly below expected
-			minQuote:      190,  // Slightly below expected
-			expectedBase:  100,  // 10% of 1000
-			expectedQuote: 200,  // 10% of 2000
+			lpTokens:      sdk.NewInt(100),
+			lpSupply:      1000,            // 10% removal
+			minBase:       sdk.NewInt(90),  // Slightly below expected
+			minQuote:      sdk.NewInt(190), // Slightly below expected
+			expectedBase:  100,             // 10% of 1000
+			expectedQuote: 200,             // 10% of 2000
 		},
 		{
 			name: "remove 50% of liquidity",
@@ -1154,12 +1154,12 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
 				Fee:          sdk.NewDecWithPrec(3, 3),
 				Stable:       false,
 			},
-			lpTokens:      500,
-			lpSupply:      1000, // 50% removal
-			minBase:       2400, // Slightly below expected
-			minQuote:      4900, // Slightly below expected
-			expectedBase:  2500, // 50% of 5000
-			expectedQuote: 5000, // 50% of 10000
+			lpTokens:      sdk.NewInt(500),
+			lpSupply:      1000,             // 50% removal
+			minBase:       sdk.NewInt(2400), // Slightly below expected
+			minQuote:      sdk.NewInt(4900), // Slightly below expected
+			expectedBase:  2500,             // 50% of 5000
+			expectedQuote: 5000,             // 50% of 10000
 		},
 		{
 			name: "remove small amount of liquidity",
@@ -1174,12 +1174,12 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
 				Fee:          sdk.NewDecWithPrec(3, 3),
 				Stable:       false,
 			},
-			lpTokens:      1,
-			lpSupply:      1000, // 0.1% removal
-			minBase:       9,    // Slightly below expected
-			minQuote:      19,   // Slightly below expected
-			expectedBase:  10,   // 0.1% of 10000
-			expectedQuote: 20,   // 0.1% of 20000
+			lpTokens:      sdk.NewInt(1),
+			lpSupply:      1000,           // 0.1% removal
+			minBase:       sdk.NewInt(9),  // Slightly below expected
+			minQuote:      sdk.NewInt(19), // Slightly below expected
+			expectedBase:  10,             // 0.1% of 10000
+			expectedQuote: 20,             // 0.1% of 20000
 		},
 		{
 			name: "remove all liquidity",
@@ -1194,12 +1194,12 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
 				Fee:          sdk.NewDecWithPrec(3, 3),
 				Stable:       false,
 			},
-			lpTokens:      1000,
-			lpSupply:      1000, // 100% removal
-			minBase:       2900, // Slightly below expected
-			minQuote:      5900, // Slightly below expected
-			expectedBase:  3000, // 100% of 3000
-			expectedQuote: 6000, // 100% of 6000
+			lpTokens:      sdk.NewInt(1000),
+			lpSupply:      1000,             // 100% removal
+			minBase:       sdk.NewInt(2900), // Slightly below expected
+			minQuote:      sdk.NewInt(5900), // Slightly below expected
+			expectedBase:  3000,             // 100% of 3000
+			expectedQuote: 6000,             // 100% of 6000
 		},
 		{
 			name: "uneven pool reserves",
@@ -1214,12 +1214,12 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
 				Fee:          sdk.NewDecWithPrec(3, 3),
 				Stable:       false,
 			},
-			lpTokens:      200,
-			lpSupply:      1000, // 20% removal
-			minBase:       290,  // Slightly below expected
-			minQuote:      890,  // Slightly below expected
-			expectedBase:  300,  // 20% of 1500
-			expectedQuote: 900,  // 20% of 4500
+			lpTokens:      sdk.NewInt(200),
+			lpSupply:      1000,            // 20% removal
+			minBase:       sdk.NewInt(290), // Slightly below expected
+			minQuote:      sdk.NewInt(890), // Slightly below expected
+			expectedBase:  300,             // 20% of 1500
+			expectedQuote: 900,             // 20% of 4500
 		},
 	}
 
@@ -1252,7 +1252,7 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
 					suite.ctx,
 					testAcc,
 					types.ModuleName,
-					sdk.NewCoins(sdk.NewCoin(tc.pool.LpDenom, sdk.NewInt(int64(tc.lpTokens)))),
+					sdk.NewCoins(sdk.NewCoin(tc.pool.LpDenom, tc.lpTokens)),
 				).
 				Return(nil).
 				Times(1)
@@ -1261,7 +1261,7 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
 				BurnCoins(
 					suite.ctx,
 					types.ModuleName,
-					sdk.NewCoins(sdk.NewCoin(tc.pool.LpDenom, sdk.NewInt(int64(tc.lpTokens)))),
+					sdk.NewCoins(sdk.NewCoin(tc.pool.LpDenom, tc.lpTokens)),
 				).
 				Return(nil).
 				Times(1)
@@ -1290,8 +1290,8 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
 			// Verify success
 			suite.Require().NoError(err)
 			suite.Require().NotNil(resp)
-			suite.Require().Equal(tc.expectedBase, resp.Base)
-			suite.Require().Equal(tc.expectedQuote, resp.Quote)
+			suite.Require().Equal(tc.expectedBase, resp.Base.Uint64())
+			suite.Require().Equal(tc.expectedQuote, resp.Quote.Uint64())
 
 			// Verify the pool has been updated correctly
 			updatedPool, found := suite.k.GetLiquidityPool(ctx, tc.pool.Id)

@@ -1,6 +1,7 @@
 package types
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 
 	"github.com/bze-alphateam/bze/testutil/sample"
@@ -22,9 +23,9 @@ func TestMsgAddLiquidity_ValidateBasic(t *testing.T) {
 			msg: MsgAddLiquidity{
 				Creator:     validAddr,
 				PoolId:      "pool1",
-				BaseAmount:  100,
-				QuoteAmount: 200,
-				MinLpTokens: 10,
+				BaseAmount:  sdk.NewInt(100),
+				QuoteAmount: sdk.NewInt(200),
+				MinLpTokens: sdk.NewInt(10),
 			},
 			err: nil,
 		},
@@ -33,9 +34,9 @@ func TestMsgAddLiquidity_ValidateBasic(t *testing.T) {
 			msg: MsgAddLiquidity{
 				Creator:     "invalid_address",
 				PoolId:      "pool1",
-				BaseAmount:  100,
-				QuoteAmount: 200,
-				MinLpTokens: 10,
+				BaseAmount:  sdk.NewInt(100),
+				QuoteAmount: sdk.NewInt(200),
+				MinLpTokens: sdk.NewInt(10),
 			},
 			err:    sdkerrors.ErrInvalidAddress,
 			errMsg: "invalid creator address",
@@ -45,9 +46,9 @@ func TestMsgAddLiquidity_ValidateBasic(t *testing.T) {
 			msg: MsgAddLiquidity{
 				Creator:     validAddr,
 				PoolId:      "",
-				BaseAmount:  100,
-				QuoteAmount: 200,
-				MinLpTokens: 10,
+				BaseAmount:  sdk.NewInt(100),
+				QuoteAmount: sdk.NewInt(200),
+				MinLpTokens: sdk.NewInt(10),
 			},
 			err:    sdkerrors.ErrInvalidRequest,
 			errMsg: "pool id cannot be empty",
@@ -57,9 +58,9 @@ func TestMsgAddLiquidity_ValidateBasic(t *testing.T) {
 			msg: MsgAddLiquidity{
 				Creator:     validAddr,
 				PoolId:      "pool1",
-				BaseAmount:  100,
-				QuoteAmount: 200,
-				MinLpTokens: 0,
+				BaseAmount:  sdk.NewInt(100),
+				QuoteAmount: sdk.NewInt(200),
+				MinLpTokens: sdk.ZeroInt(),
 			},
 			err:    sdkerrors.ErrInvalidRequest,
 			errMsg: "min lp tokens must be positive",
@@ -69,9 +70,9 @@ func TestMsgAddLiquidity_ValidateBasic(t *testing.T) {
 			msg: MsgAddLiquidity{
 				Creator:     validAddr,
 				PoolId:      "pool1",
-				BaseAmount:  0,
-				QuoteAmount: 200,
-				MinLpTokens: 10,
+				BaseAmount:  sdk.ZeroInt(),
+				QuoteAmount: sdk.NewInt(200),
+				MinLpTokens: sdk.NewInt(10),
 			},
 			err:    sdkerrors.ErrInvalidRequest,
 			errMsg: "base amount must be positive",
@@ -81,9 +82,9 @@ func TestMsgAddLiquidity_ValidateBasic(t *testing.T) {
 			msg: MsgAddLiquidity{
 				Creator:     validAddr,
 				PoolId:      "pool1",
-				BaseAmount:  100,
-				QuoteAmount: 0,
-				MinLpTokens: 10,
+				BaseAmount:  sdk.NewInt(100),
+				QuoteAmount: sdk.ZeroInt(),
+				MinLpTokens: sdk.NewInt(10),
 			},
 			err:    sdkerrors.ErrInvalidRequest,
 			errMsg: "quote amount must be positive",
@@ -93,9 +94,9 @@ func TestMsgAddLiquidity_ValidateBasic(t *testing.T) {
 			msg: MsgAddLiquidity{
 				Creator:     "invalid_address",
 				PoolId:      "",
-				BaseAmount:  0,
-				QuoteAmount: 0,
-				MinLpTokens: 0,
+				BaseAmount:  sdk.ZeroInt(),
+				QuoteAmount: sdk.ZeroInt(),
+				MinLpTokens: sdk.ZeroInt(),
 			},
 			err:    sdkerrors.ErrInvalidAddress, // First error encountered
 			errMsg: "invalid creator address",

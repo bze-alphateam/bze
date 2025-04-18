@@ -2,6 +2,7 @@ syntax = "proto3";
 package bze.tradebin.v1;
 
 import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
 
@@ -54,7 +55,7 @@ message OrderSavedEvent {
   string owner = 6;
 }
 
-message LpCreatedEvent {
+message PoolCreatedEvent {
   string creator = 1;
   string base = 2;
   string quote = 3;
@@ -62,20 +63,45 @@ message LpCreatedEvent {
 
 message LiquidityAddedEvent {
   string creator = 1;
-  uint64 baseAmount = 2;
-  uint64 quoteAmount = 3;
-  uint64 mintedAmount = 4;
+  string baseAmount = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string quoteAmount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string mintedAmount = 4 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string pool_id = 5;
 }
 
 message LiquidityRemovedEvent {
   string creator = 1;
-  uint64 baseAmount = 2;
-  uint64 quoteAmount = 3;
+  string baseAmount = 2 [ // Fee ex: 0.001 = 0.1%
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string quoteAmount = 3 [ // Fee ex: 0.001 = 0.1%
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string pool_id = 4;
 }
 
 message SwapEvent {
   string creator = 1;
-  string in = 2;
-  string out = 3;
+  cosmos.base.v1beta1.Coin in = 2 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"in\"",
+    (gogoproto.jsontag)      = "in,omitempty"
+  ];
+  cosmos.base.v1beta1.Coin out = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"out\"",
+    (gogoproto.jsontag)      = "out,omitempty"
+  ];
   string pool_id = 4;
 }

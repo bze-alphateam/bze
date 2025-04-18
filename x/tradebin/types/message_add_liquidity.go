@@ -10,7 +10,7 @@ const TypeMsgAddLiquidity = "add_liquidity"
 
 var _ sdk.Msg = &MsgAddLiquidity{}
 
-func NewMsgAddLiquidity(creator, poolId string, baseAmount, quoteAmount, minLpTokens uint64) *MsgAddLiquidity {
+func NewMsgAddLiquidity(creator, poolId string, baseAmount, quoteAmount, minLpTokens sdk.Int) *MsgAddLiquidity {
 	return &MsgAddLiquidity{
 		Creator:     creator,
 		PoolId:      poolId,
@@ -60,15 +60,15 @@ func (msg *MsgAddLiquidity) ValidateBasic() error {
 		return errors.Wrap(sdkerrors.ErrInvalidRequest, "pool id cannot be empty")
 	}
 
-	if msg.MinLpTokens <= 0 {
+	if !msg.MinLpTokens.IsPositive() {
 		return errors.Wrap(sdkerrors.ErrInvalidRequest, "min lp tokens must be positive")
 	}
 
-	if msg.BaseAmount <= 0 {
+	if !msg.BaseAmount.IsPositive() {
 		return errors.Wrap(sdkerrors.ErrInvalidRequest, "base amount must be positive")
 	}
 
-	if msg.QuoteAmount <= 0 {
+	if !msg.QuoteAmount.IsPositive() {
 		return errors.Wrap(sdkerrors.ErrInvalidRequest, "quote amount must be positive")
 	}
 

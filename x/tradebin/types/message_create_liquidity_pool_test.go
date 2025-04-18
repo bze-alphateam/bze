@@ -3,12 +3,13 @@ package types
 import (
 	"testing"
 
+	"github.com/bze-alphateam/bze/testutil/sample"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
-	"github.com/bze-alphateam/bze/testutil/sample"
 )
 
 func TestMsgCreateLiquidityPool_ValidateBasic(t *testing.T) {
+	//todo: proper tests to cover all test cases
 	tests := []struct {
 		name string
 		msg  MsgCreateLiquidityPool

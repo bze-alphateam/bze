@@ -1,6 +1,7 @@
 package types
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"math"
 	"testing"
 
@@ -23,9 +24,9 @@ func TestMsgRemoveLiquidity_ValidateBasic(t *testing.T) {
 			msg: MsgRemoveLiquidity{
 				Creator:  validAddr,
 				PoolId:   "pool1",
-				LpTokens: 100,
-				MinBase:  50,
-				MinQuote: 100,
+				LpTokens: sdk.NewInt(100),
+				MinBase:  sdk.NewInt(50),
+				MinQuote: sdk.NewInt(100),
 			},
 			err: nil,
 		},
@@ -34,9 +35,9 @@ func TestMsgRemoveLiquidity_ValidateBasic(t *testing.T) {
 			msg: MsgRemoveLiquidity{
 				Creator:  "invalid_address",
 				PoolId:   "pool1",
-				LpTokens: 100,
-				MinBase:  50,
-				MinQuote: 100,
+				LpTokens: sdk.NewInt(100),
+				MinBase:  sdk.NewInt(50),
+				MinQuote: sdk.NewInt(100),
 			},
 			err:    sdkerrors.ErrInvalidAddress,
 			errMsg: "invalid creator address",
@@ -46,9 +47,9 @@ func TestMsgRemoveLiquidity_ValidateBasic(t *testing.T) {
 			msg: MsgRemoveLiquidity{
 				Creator:  validAddr,
 				PoolId:   "",
-				LpTokens: 100,
-				MinBase:  50,
-				MinQuote: 100,
+				LpTokens: sdk.NewInt(100),
+				MinBase:  sdk.NewInt(50),
+				MinQuote: sdk.NewInt(100),
 			},
 			err:    sdkerrors.ErrInvalidRequest,
 			errMsg: "pool id cannot be empty",
@@ -58,9 +59,9 @@ func TestMsgRemoveLiquidity_ValidateBasic(t *testing.T) {
 			msg: MsgRemoveLiquidity{
 				Creator:  validAddr,
 				PoolId:   "pool1",
-				LpTokens: 0,
-				MinBase:  50,
-				MinQuote: 100,
+				LpTokens: sdk.ZeroInt(),
+				MinBase:  sdk.NewInt(50),
+				MinQuote: sdk.NewInt(100),
 			},
 			err:    sdkerrors.ErrInvalidRequest,
 			errMsg: "invalid lpTokens 0",
@@ -70,9 +71,9 @@ func TestMsgRemoveLiquidity_ValidateBasic(t *testing.T) {
 			msg: MsgRemoveLiquidity{
 				Creator:  validAddr,
 				PoolId:   "pool1",
-				LpTokens: 100,
-				MinBase:  0,
-				MinQuote: 100,
+				LpTokens: sdk.NewInt(100),
+				MinBase:  sdk.ZeroInt(),
+				MinQuote: sdk.NewInt(100),
 			},
 			err:    sdkerrors.ErrInvalidRequest,
 			errMsg: "invalid minBase 0",
@@ -82,9 +83,9 @@ func TestMsgRemoveLiquidity_ValidateBasic(t *testing.T) {
 			msg: MsgRemoveLiquidity{
 				Creator:  validAddr,
 				PoolId:   "pool1",
-				LpTokens: 100,
-				MinBase:  50,
-				MinQuote: 0,
+				LpTokens: sdk.NewInt(100),
+				MinBase:  sdk.NewInt(50),
+				MinQuote: sdk.ZeroInt(),
 			},
 			err:    sdkerrors.ErrInvalidRequest,
 			errMsg: "invalid minQuote 0",
@@ -94,9 +95,9 @@ func TestMsgRemoveLiquidity_ValidateBasic(t *testing.T) {
 			msg: MsgRemoveLiquidity{
 				Creator:  "invalid_address",
 				PoolId:   "",
-				LpTokens: 0,
-				MinBase:  0,
-				MinQuote: 0,
+				LpTokens: sdk.ZeroInt(),
+				MinBase:  sdk.ZeroInt(),
+				MinQuote: sdk.ZeroInt(),
 			},
 			err:    sdkerrors.ErrInvalidAddress, // First error encountered
 			errMsg: "invalid creator address",
@@ -106,9 +107,9 @@ func TestMsgRemoveLiquidity_ValidateBasic(t *testing.T) {
 			msg: MsgRemoveLiquidity{
 				Creator:  validAddr,
 				PoolId:   "pool1",
-				LpTokens: math.MaxUint64,
-				MinBase:  math.MaxUint64,
-				MinQuote: math.MaxUint64,
+				LpTokens: sdk.NewIntFromUint64(math.MaxUint64),
+				MinBase:  sdk.NewIntFromUint64(math.MaxUint64),
+				MinQuote: sdk.NewIntFromUint64(math.MaxUint64),
 			},
 			err: nil, // Should be valid as these are positive numbers
 		},
