@@ -62,7 +62,7 @@ func (msg *MsgMultiSwap) ValidateBasic() error {
 		return errors.Wrapf(ErrInvalidRoutes, "routes length must be between 0 and %d", MaxRoutes)
 	}
 
-	if !msg.Input.IsValid() && !msg.Input.IsPositive() {
+	if !msg.Input.IsValid() || !msg.Input.IsPositive() {
 		return errors.Wrapf(ErrInvalidOrderAmount, "input amount (%s) is not valid", msg.GetInput().String())
 	}
 
@@ -70,15 +70,12 @@ func (msg *MsgMultiSwap) ValidateBasic() error {
 		return errors.Wrapf(ErrInvalidOrderAmount, "minimum output (%s) is not valid", msg.GetMinOutput().String())
 	}
 
-	//make sure to validate the input coin and output min coin
-	ic := msg.GetInput()
-	if !ic.IsPositive() {
-		return errors.Wrapf(ErrInvalidOrderAmount, "input is not positive (%s)", ic.String())
+	if !msg.Input.IsPositive() {
+		return errors.Wrapf(ErrInvalidOrderAmount, "input is not positive (%s)", msg.Input.String())
 	}
 
-	moc := msg.GetMinOutput()
-	if !moc.IsPositive() {
-		return errors.Wrapf(ErrInvalidOrderAmount, "minimum output is not positive (%s)", moc.String())
+	if !msg.MinOutput.IsPositive() {
+		return errors.Wrapf(ErrInvalidOrderAmount, "minimum output is not positive (%s)", msg.MinOutput.String())
 	}
 
 	return nil

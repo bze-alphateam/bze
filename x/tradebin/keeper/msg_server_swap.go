@@ -148,7 +148,15 @@ func (k msgServer) getRoutesPools(ctx sdk.Context, msg *types.MsgMultiSwap) (poo
 // it should never return an error as the same validations are handled in ValidateBasic
 func (k msgServer) getMessageCoins(msg *types.MsgMultiSwap) (*sdk.Coin, *sdk.Coin, error) {
 	ic := msg.GetInput()
+	if !ic.IsValid() {
+		return nil, nil, fmt.Errorf("invalid input")
+	}
+
 	moc := msg.GetMinOutput()
+	if !moc.IsValid() {
+		return nil, nil, fmt.Errorf("invalid minimum output")
+	}
+
 	if !ic.IsPositive() || !moc.IsPositive() {
 		return nil, nil, errors.Wrap(sdkerrors.ErrInvalidCoins, "invalid input or min output")
 	}

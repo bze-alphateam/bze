@@ -70,7 +70,7 @@ func TestMsgMultiSwap_ValidateBasic(t *testing.T) {
 				MinOutput: sdk.NewInt64Coin("uusdc", 200),
 			},
 			err:    ErrInvalidOrderAmount,
-			errMsg: "not positive",
+			errMsg: "input",
 		},
 		{
 			name: "empty min output",
