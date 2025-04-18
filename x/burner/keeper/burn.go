@@ -17,7 +17,8 @@ func (k Keeper) burnModuleCoins(ctx sdk.Context) error {
 	// filter out IBC tokens
 	coins := sdk.NewCoins()
 	for _, c := range allCoins {
-		if bzeutils.IsIBCDenom(c.Denom) {
+		//make sure IBC and LP Tokens are not burned
+		if bzeutils.IsIBCDenom(c.Denom) || bzeutils.IsLpTokenDenom(c.Denom) {
 			continue
 		}
 
