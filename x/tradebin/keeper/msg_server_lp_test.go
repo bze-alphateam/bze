@@ -23,7 +23,6 @@ func getValidLp() types.LiquidityPool {
 			Treasury:  sdk.NewDec(1),
 			Burner:    sdk.ZeroDec(),
 			Providers: sdk.ZeroDec(),
-			Liquidity: sdk.ZeroDec(),
 		},
 		ReserveBase:  sdk.NewInt(1000),
 		ReserveQuote: sdk.NewInt(2000),
@@ -31,13 +30,12 @@ func getValidLp() types.LiquidityPool {
 	}
 }
 
-func getFeeDestinationString(burner, treasury, providers, liquidity string) string {
+func getFeeDestinationString(burner, treasury, providers string) string {
 	return fmt.Sprintf(
-		"{\"treasury\":\"%s\",\"burner\":\"%s\",\"providers\":\"%s\",\"liquidity\":\"%s\"}",
+		"{\"treasury\":\"%s\",\"burner\":\"%s\",\"providers\":\"%s\"}",
 		treasury,
 		burner,
 		providers,
-		liquidity,
 	)
 }
 
@@ -189,67 +187,52 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_InvalidFeeDestination
 		},
 		{
 			Name:          "parse fee error - NaN",
-			FeeDest:       getFeeDestinationString("ceva_fin", "dasadsa", "0.25", "0.25"),
+			FeeDest:       getFeeDestinationString("ceva_fin", "dasadsa", "0.25"),
 			ExpectedError: types.ErrInvalidFeeDestination,
 		},
 		{
 			Name:          "total fee destination is bigger than 1 - treasury high",
-			FeeDest:       getFeeDestinationString("0.25", "0.251", "0.25", "0.25"),
+			FeeDest:       getFeeDestinationString("0.25", "0.251", "0.25"),
 			ExpectedError: types.ErrInvalidFeeDestination,
 		},
 		{
 			Name:          "total fee destination is bigger than 1 - treasury all",
-			FeeDest:       getFeeDestinationString("0", "1.01", "0", "0"),
+			FeeDest:       getFeeDestinationString("0", "1.01", "0"),
 			ExpectedError: types.ErrInvalidFeeDestination,
 		},
 		{
 			Name:          "total fee destination is bigger than 1 - burner",
-			FeeDest:       getFeeDestinationString("0.11", "0.9", "0", "0"),
+			FeeDest:       getFeeDestinationString("0.11", "0.9", "0"),
 			ExpectedError: types.ErrInvalidFeeDestination,
 		},
 		{
 			Name:          "total fee destination is bigger than 1 - providers",
-			FeeDest:       getFeeDestinationString("0.1", "0.9", "0.001", "0"),
-			ExpectedError: types.ErrInvalidFeeDestination,
-		},
-		{
-			Name:          "total fee destination is bigger than 1 - providers",
-			FeeDest:       getFeeDestinationString("0.05", "0.9", "0.05", "0.0001"),
+			FeeDest:       getFeeDestinationString("0.1", "0.9", "0.001"),
 			ExpectedError: types.ErrInvalidFeeDestination,
 		},
 		{
 			Name:          "total fee destination is smaller than 1 - total 0.90001",
-			FeeDest:       getFeeDestinationString("0", "0.9", "0", "0.0001"),
-			ExpectedError: types.ErrInvalidFeeDestination,
-		},
-		{
-			Name:          "total fee destination is smaller than 1 - total 0.1",
-			FeeDest:       getFeeDestinationString("0", "0", "0", "0.1"),
+			FeeDest:       getFeeDestinationString("0", "0.9", "0"),
 			ExpectedError: types.ErrInvalidFeeDestination,
 		},
 		{
 			Name:          "total fee destination is smaller than 1 - total 0",
-			FeeDest:       getFeeDestinationString("0", "0", "0", "0.00"),
+			FeeDest:       getFeeDestinationString("0", "0", "0"),
 			ExpectedError: types.ErrInvalidFeeDestination,
 		},
 		{
 			Name:          "negative treasury fee",
-			FeeDest:       getFeeDestinationString("1", "-0.1", "0.1", "0"),
+			FeeDest:       getFeeDestinationString("1", "-0.1", "0.1"),
 			ExpectedError: types.ErrNegativeFeeDestination,
 		},
 		{
 			Name:          "negative burner fee",
-			FeeDest:       getFeeDestinationString("-0.1", "1", "0.1", "0"),
+			FeeDest:       getFeeDestinationString("-0.1", "1", "0.1"),
 			ExpectedError: types.ErrNegativeFeeDestination,
 		},
 		{
 			Name:          "negative providers fee",
-			FeeDest:       getFeeDestinationString("1", "0.1", "-0.1", "0"),
-			ExpectedError: types.ErrNegativeFeeDestination,
-		},
-		{
-			Name:          "negative liquidity fee",
-			FeeDest:       getFeeDestinationString("0.1", "1", "0.1", "-0.20"),
+			FeeDest:       getFeeDestinationString("1", "0.1", "-0.1"),
 			ExpectedError: types.ErrNegativeFeeDestination,
 		},
 	}
@@ -300,7 +283,7 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_InvalidReserves() {
 				Quote:        "def",
 				Creator:      getTestAddress(),
 				Fee:          "0.002",
-				FeeDest:      getFeeDestinationString("0.25", "0.25", "0.25", "0.25"),
+				FeeDest:      getFeeDestinationString("0.5", "0.25", "0.25"),
 				InitialBase:  c.InitialBase,
 				InitialQuote: c.InitialQuote,
 			}
@@ -321,7 +304,7 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_StableNotSupported() 
 		Quote:        "def",
 		Creator:      getTestAddress(),
 		Fee:          "0.002",
-		FeeDest:      getFeeDestinationString("0.25", "0.25", "0.25", "0.25"),
+		FeeDest:      getFeeDestinationString("0.25", "0.25", "0.5"),
 		InitialBase:  sdk.NewInt(123),
 		InitialQuote: sdk.NewInt(456),
 		Stable:       true,
@@ -341,7 +324,7 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_FundCommunityPoolErr(
 		Quote:        "def",
 		Creator:      getTestAddress(),
 		Fee:          "0.002",
-		FeeDest:      getFeeDestinationString("0.25", "0.25", "0.25", "0.25"),
+		FeeDest:      getFeeDestinationString("0.25", "0.25", "0.5"),
 		InitialBase:  sdk.NewInt(123),
 		InitialQuote: sdk.NewInt(345),
 	}
@@ -364,7 +347,7 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_Success() {
 		Quote:        "def",
 		Creator:      getTestAddress(),
 		Fee:          "0.002",
-		FeeDest:      getFeeDestinationString("0.25", "0.25", "0.25", "0.25"),
+		FeeDest:      getFeeDestinationString("0.25", "0.5", "0.25"),
 		InitialBase:  sdk.NewInt(123),
 		InitialQuote: sdk.NewInt(345),
 	}

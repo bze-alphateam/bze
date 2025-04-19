@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetParams(t *testing.T) {
-	k, ctx := testkeeper.TradebinKeeper(t, nil, nil)
+	k, ctx := testkeeper.TradebinKeeper(t, nil, nil, nil)
 	params := types.DefaultParams()
 
 	k.SetParams(ctx, params)

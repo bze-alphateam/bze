@@ -38,7 +38,10 @@ func TestGenesis(t *testing.T) {
 	mockDistr := testutil.NewMockDistrKeeper(mockCtrl)
 	require.NotNil(t, mockBank)
 
-	k, ctx := keepertest.TradebinKeeper(t, mockBank, mockDistr)
+	mockAccount := testutil.NewMockAccountKeeper(mockCtrl)
+	require.NotNil(t, mockAccount)
+
+	k, ctx := keepertest.TradebinKeeper(t, mockBank, mockDistr, mockAccount)
 	tradebin.InitGenesis(ctx, *k, genesisState)
 	got := tradebin.ExportGenesis(ctx, *k)
 	require.NotNil(t, got)

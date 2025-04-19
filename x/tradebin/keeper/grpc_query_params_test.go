@@ -21,7 +21,10 @@ func TestParamsQuery(t *testing.T) {
 	mockDistr := testutil.NewMockDistrKeeper(mockCtrl)
 	require.NotNil(t, mockBank)
 
-	k, ctx := testkeeper.TradebinKeeper(t, mockBank, mockDistr)
+	mockAccount := testutil.NewMockAccountKeeper(mockCtrl)
+	require.NotNil(t, mockAccount)
+
+	k, ctx := testkeeper.TradebinKeeper(t, mockBank, mockDistr, mockAccount)
 
 	wctx := sdk.WrapSDKContext(ctx)
 	params := types.DefaultParams()

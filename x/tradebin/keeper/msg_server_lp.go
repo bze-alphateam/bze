@@ -187,12 +187,12 @@ func (k msgServer) validatePoolId(ctx sdk.Context, poolId string) error {
 
 func (k msgServer) validateFeeDestination(feeDest *types.FeeDestination) error {
 	//the sum of elements must be 1
-	if !feeDest.Burner.Add(feeDest.Treasury).Add(feeDest.Liquidity).Add(feeDest.Providers).Equal(sdk.NewDecWithPrec(1, 0)) {
+	if !feeDest.Burner.Add(feeDest.Treasury).Add(feeDest.Providers).Equal(sdk.NewDecWithPrec(1, 0)) {
 		return types.ErrInvalidFeeDestination
 	}
 
 	//do not allow any of the destinations to be negative
-	if feeDest.Treasury.IsNegative() || feeDest.Burner.IsNegative() || feeDest.Providers.IsNegative() || feeDest.Liquidity.IsNegative() {
+	if feeDest.Treasury.IsNegative() || feeDest.Burner.IsNegative() || feeDest.Providers.IsNegative() {
 		return types.ErrNegativeFeeDestination
 	}
 

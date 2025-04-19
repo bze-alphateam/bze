@@ -477,6 +477,7 @@ func New(
 		app.GetSubspace(tradebintypes.ModuleName),
 		app.BankKeeper,
 		app.DistrKeeper,
+		app.AccountKeeper,
 	)
 
 	app.RewardsKeeper = *rewardskeeper.NewKeeper(

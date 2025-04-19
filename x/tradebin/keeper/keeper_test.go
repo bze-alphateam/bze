@@ -49,7 +49,10 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	mockDistr := testutil.NewMockDistrKeeper(mockCtrl)
 	require.NotNil(t, mockBank)
 
-	k, ctx := keepertest.TradebinKeeper(t, mockBank, mockDistr)
+	mockAccount := testutil.NewMockAccountKeeper(mockCtrl)
+	require.NotNil(t, mockAccount)
+
+	k, ctx := keepertest.TradebinKeeper(t, mockBank, mockDistr, mockAccount)
 
 	suite.ctx = ctx
 

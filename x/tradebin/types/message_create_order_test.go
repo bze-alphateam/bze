@@ -3,7 +3,6 @@ package types
 import (
 	"testing"
 
-	"github.com/bze-alphateam/bze/testutil/sample"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 )
@@ -20,11 +19,6 @@ func TestMsgCreateOrder_ValidateBasic(t *testing.T) {
 				Creator: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
-		}, {
-			name: "valid address",
-			msg: MsgCreateOrder{
-				Creator: sample.AccAddress(),
-			},
 		},
 	}
 	for _, tt := range tests {

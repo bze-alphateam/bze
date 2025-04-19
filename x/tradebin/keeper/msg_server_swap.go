@@ -4,6 +4,7 @@ import (
 	"context"
 	"cosmossdk.io/errors"
 	"fmt"
+	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/bze-alphateam/bze/x/tradebin/types"
@@ -69,7 +70,7 @@ func (k msgServer) swapTokens(ctx sdk.Context, input sdk.Coin, pool *types.Liqui
 	}
 
 	realInput, fee := k.calculateSwapInputAndFee(input, pool)
-	err = k.collectSwapFee(ctx, fee, pool)
+	feeToPool, err := k.collectSwapFee(ctx, fee, pool)
 	if err != nil {
 		return output, err
 	}
@@ -87,7 +88,8 @@ func (k msgServer) swapTokens(ctx sdk.Context, input sdk.Coin, pool *types.Liqui
 
 	outputAmount := prod.Quo(quo).TruncateInt()
 	output = sdk.NewCoin(outputReserve.Denom, outputAmount)
-	err = pool.ChangeReserves(realInput, output)
+	//add the part of the fee that should remain in the LP (as LP Reward to LP providers)
+	err = pool.ChangeReserves(realInput.Add(feeToPool), output)
 	if err != nil {
 		return output, err
 	}
@@ -110,13 +112,36 @@ func (k msgServer) swapTokens(ctx sdk.Context, input sdk.Coin, pool *types.Liqui
 	return output, nil
 }
 
-func (k msgServer) collectSwapFee(ctx sdk.Context, fee sdk.Coin, pool *types.LiquidityPool) error {
-	//string treasury = community pool
-	//string burner = burner module
-	//string providers = add to LP reserve directly
-	//string liquidity = add LP periodically with the tokens captured by this part.
+// collectSwapFee - calculates the distribution of the fee, and it returns the part of the fee that should be added to
+// LP (for LP Providers rewards)
+func (k msgServer) collectSwapFee(ctx sdk.Context, fee sdk.Coin, pool *types.LiquidityPool) (sdk.Coin, error) {
+	feeDec := sdk.NewDecFromInt(fee.Amount)
+	treasury := sdk.NewCoin(fee.Denom, feeDec.Mul(pool.FeeDest.Treasury).TruncateInt())
+	if treasury.IsPositive() {
+		fee = fee.Sub(treasury)
+		moduleAcc := k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
+		err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(treasury), moduleAcc.GetAddress())
+		if err != nil {
+			return sdk.Coin{}, err
+		}
+	}
 
-	return nil
+	burner := sdk.NewCoin(fee.Denom, feeDec.Mul(pool.FeeDest.Burner).TruncateInt())
+	if burner.IsPositive() {
+		fee = fee.Sub(burner)
+		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, burnermoduletypes.ModuleName, sdk.NewCoins(burner))
+		if err != nil {
+			return sdk.Coin{}, err
+		}
+	}
+
+	//just to make sure it's never negative (thinking that truncating the Dec might result in 0 or even negative value)
+	if !fee.IsPositive() {
+		//return 0 coin
+		return sdk.NewCoin(fee.Denom, sdk.ZeroInt()), nil
+	}
+
+	return fee, nil
 }
 
 func (k msgServer) calculateSwapInputAndFee(input sdk.Coin, pool *types.LiquidityPool) (remainingInput, fee sdk.Coin) {
