@@ -20,7 +20,7 @@ type (
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
 		authority string
-
+		//TODO: add other dependencies
 		bankKeeper    types.BankKeeper
 		accountKeeper types.AccountKeeper
 	}

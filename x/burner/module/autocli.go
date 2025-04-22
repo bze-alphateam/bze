@@ -8,6 +8,8 @@ import (
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
+	//TODO: add CLI commands
+
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
 			Service: modulev1.Query_ServiceDesc.ServiceName,
