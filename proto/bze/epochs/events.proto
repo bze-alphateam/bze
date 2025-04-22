@@ -1,0 +1,16 @@
+syntax = "proto3";
+package bze.epochs;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/epochs/types";
+
+message EpochStartEvent {
+  string identifier = 1;
+  string epoch = 2;
+}
+
+message EpochEndEvent {
+  string identifier = 1;
+  string epoch = 2;
+}

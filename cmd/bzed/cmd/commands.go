@@ -24,7 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"beezee/app"
+	"github.com/bze-alphateam/bze/app"
 )
 
 func initRootCmd(

@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"beezee/app"
+	"github.com/bze-alphateam/bze/app"
 )
 
 // NewRootCmd creates a new root command for beezeed. It is called once in the main function.

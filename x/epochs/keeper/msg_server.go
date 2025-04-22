@@ -1,18 +1,11 @@
 package keeper
 
 import (
-	"context"
-
-	"github.com/bze-alphateam/bze/x/burner/types"
+	"github.com/bze-alphateam/bze/x/epochs/types"
 )
 
 type msgServer struct {
 	Keeper
-}
-
-func (k msgServer) FundBurner(ctx context.Context, burner *types.MsgFundBurner) (*types.MsgFundBurnerResponse, error) {
-	//TODO implement me
-	panic("implement me")
 }
 
 // NewMsgServerImpl returns an implementation of the MsgServer interface

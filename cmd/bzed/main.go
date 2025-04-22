@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/bze-alphateam/bze/cmd/bzed/cmd"
 	"os"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
-	"beezee/app"
-	"beezee/cmd/beezeed/cmd"
+	"github.com/bze-alphateam/bze/app"
 )
 
 func main() {

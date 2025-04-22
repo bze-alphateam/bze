@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
-	"beezee/app"
+	"github.com/bze-alphateam/bze/app"
 )
 
 const (

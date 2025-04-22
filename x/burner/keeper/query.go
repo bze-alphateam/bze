@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	"github.com/bze-alphateam/bze/x/burner/types"
 )
 

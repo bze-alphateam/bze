@@ -1,8 +1,9 @@
 package app
 
 import (
-	"github.com/bze-alphateam/bze/docs"
 	"io"
+
+	"github.com/bze-alphateam/bze/docs"
 
 	_ "cosmossdk.io/api/cosmos/tx/config/v1" // import for side-effects
 	clienthelpers "cosmossdk.io/client/v2/helpers"
@@ -77,12 +78,13 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
 	burnermodulekeeper "github.com/bze-alphateam/bze/x/burner/keeper"
+	epochmodulekeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
 const (
-	AccountAddressPrefix = "cosmos"
-	Name                 = "beezee"
+	AccountAddressPrefix = "bze"
+	Name                 = "bze"
 )
 
 var (
@@ -141,6 +143,7 @@ type App struct {
 	ScopedKeepers             map[string]capabilitykeeper.ScopedKeeper
 
 	BurnerKeeper burnermodulekeeper.Keeper
+	EpochKeeper  epochmodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
@@ -245,6 +248,7 @@ func New(
 		&app.GroupKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.BurnerKeeper,
+		&app.EpochKeeper,
 		// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	); err != nil {
 		panic(err)
