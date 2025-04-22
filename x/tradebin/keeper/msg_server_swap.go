@@ -115,6 +115,11 @@ func (k msgServer) swapTokens(ctx sdk.Context, input sdk.Coin, pool *types.Liqui
 // collectSwapFee - calculates the distribution of the fee, and it returns the part of the fee that should be added to
 // LP (for LP Providers rewards)
 func (k msgServer) collectSwapFee(ctx sdk.Context, fee sdk.Coin, pool *types.LiquidityPool) (sdk.Coin, error) {
+	if !fee.IsPositive() {
+		//return 0 coin
+		return sdk.NewCoin(fee.Denom, sdk.ZeroInt()), nil
+	}
+
 	feeDec := sdk.NewDecFromInt(fee.Amount)
 	treasury := sdk.NewCoin(fee.Denom, feeDec.Mul(pool.FeeDest.Treasury).TruncateInt())
 	if treasury.IsPositive() {
@@ -123,6 +128,11 @@ func (k msgServer) collectSwapFee(ctx sdk.Context, fee sdk.Coin, pool *types.Liq
 		err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(treasury), moduleAcc.GetAddress())
 		if err != nil {
 			return sdk.Coin{}, err
+		}
+
+		if !fee.IsPositive() {
+
+			return sdk.NewCoin(fee.Denom, sdk.ZeroInt()), nil
 		}
 	}
 

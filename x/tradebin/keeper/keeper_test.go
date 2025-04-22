@@ -31,11 +31,12 @@ func getMarketId() string {
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	bankMock  *testutil.MockBankKeeper
-	distrMock *testutil.MockDistrKeeper
-	ctx       sdk.Context
-	k         *keeper.Keeper
-	msgServer types.MsgServer
+	bankMock    *testutil.MockBankKeeper
+	distrMock   *testutil.MockDistrKeeper
+	accountMock *testutil.MockAccountKeeper
+	ctx         sdk.Context
+	k           *keeper.Keeper
+	msgServer   types.MsgServer
 }
 
 func (suite *IntegrationTestSuite) SetupTest() {
@@ -59,6 +60,7 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	suite.k = k
 	suite.bankMock = mockBank
 	suite.distrMock = mockDistr
+	suite.accountMock = mockAccount
 	suite.msgServer = keeper.NewMsgServerImpl(*k)
 }
 
