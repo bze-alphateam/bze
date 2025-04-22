@@ -6,6 +6,8 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "bze/burner/params.proto";
+import "bze/burner/burned_coins.proto";
+import "bze/burner/raffle.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/burner/types";
 
@@ -13,7 +15,16 @@ option go_package = "github.com/bze-alphateam/bze/x/burner/types";
 service Query {
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/bze-alphateam/bze/burner/params";
+    option (google.api.http).get = "/bze/burner/params";
+  }
+  rpc Raffles(QueryRafflesRequest) returns (QueryRafflesResponse) {
+    option (google.api.http).get = "/bze/burner/raffles";
+  }
+  rpc RaffleWinners(QueryRaffleWinnersRequest) returns (QueryRaffleWinnersResponse) {
+    option (google.api.http).get = "/bze/burner/raffle_winners";
+  }
+  rpc AllBurnedCoins(QueryAllBurnedCoinsRequest) returns (QueryAllBurnedCoinsResponse) {
+    option (google.api.http).get = "/bze/burner/all_burned_coins";
   }
 }
 
@@ -27,4 +38,32 @@ message QueryParamsResponse {
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
   ];
+}
+
+message QueryAllBurnedCoinsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllBurnedCoinsResponse {
+  repeated BurnedCoins burnedCoins = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryRafflesRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryRafflesResponse {
+  repeated Raffle list = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryRaffleWinnersRequest {
+  string denom = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryRaffleWinnersResponse {
+  repeated RaffleWinner list = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

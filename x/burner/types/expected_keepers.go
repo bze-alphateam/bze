@@ -2,20 +2,29 @@ package types
 
 import (
 	"context"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// EpochKeeper defines expected keeper that can return the current epoch
+type EpochKeeper interface {
+	GetEpochCountByIdentifier(ctx sdk.Context, identifier string) int64
+}
+
 // AccountKeeper defines the expected interface for the Account module.
 type AccountKeeper interface {
-	GetAccount(context.Context, sdk.AccAddress) sdk.AccountI // only used for simulation
-	// Methods imported from account should be defined here
+	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
+	HasAccount(ctx context.Context, addr sdk.AccAddress) bool
 }
 
 // BankKeeper defines the expected interface for the Bank module.
 type BankKeeper interface {
-	SpendableCoins(context.Context, sdk.AccAddress) sdk.Coins
-	// Methods imported from bank should be defined here
+	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	BurnCoins(ctx context.Context, moduleName string, amounts sdk.Coins) error
+	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	HasSupply(ctx context.Context, denom string) bool
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
 // ParamSubspace defines the expected Subspace interface for parameters.

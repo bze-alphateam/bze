@@ -6,11 +6,7 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	io "io"
-	math "math"
-	math_bits "math/bits"
-
-	_ "github.com/cosmos/cosmos-sdk/types/query"
+	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
@@ -19,6 +15,9 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	io "io"
+	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -115,35 +114,356 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
+type QueryAllBurnedCoinsRequest struct {
+	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryAllBurnedCoinsRequest) Reset()         { *m = QueryAllBurnedCoinsRequest{} }
+func (m *QueryAllBurnedCoinsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAllBurnedCoinsRequest) ProtoMessage()    {}
+func (*QueryAllBurnedCoinsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d9497513046a3ebd, []int{2}
+}
+func (m *QueryAllBurnedCoinsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllBurnedCoinsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllBurnedCoinsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllBurnedCoinsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllBurnedCoinsRequest.Merge(m, src)
+}
+func (m *QueryAllBurnedCoinsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllBurnedCoinsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllBurnedCoinsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllBurnedCoinsRequest proto.InternalMessageInfo
+
+func (m *QueryAllBurnedCoinsRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+type QueryAllBurnedCoinsResponse struct {
+	BurnedCoins []BurnedCoins       `protobuf:"bytes,1,rep,name=burnedCoins,proto3" json:"burnedCoins"`
+	Pagination  *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryAllBurnedCoinsResponse) Reset()         { *m = QueryAllBurnedCoinsResponse{} }
+func (m *QueryAllBurnedCoinsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAllBurnedCoinsResponse) ProtoMessage()    {}
+func (*QueryAllBurnedCoinsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d9497513046a3ebd, []int{3}
+}
+func (m *QueryAllBurnedCoinsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllBurnedCoinsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllBurnedCoinsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllBurnedCoinsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllBurnedCoinsResponse.Merge(m, src)
+}
+func (m *QueryAllBurnedCoinsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllBurnedCoinsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllBurnedCoinsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllBurnedCoinsResponse proto.InternalMessageInfo
+
+func (m *QueryAllBurnedCoinsResponse) GetBurnedCoins() []BurnedCoins {
+	if m != nil {
+		return m.BurnedCoins
+	}
+	return nil
+}
+
+func (m *QueryAllBurnedCoinsResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+type QueryRafflesRequest struct {
+	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryRafflesRequest) Reset()         { *m = QueryRafflesRequest{} }
+func (m *QueryRafflesRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryRafflesRequest) ProtoMessage()    {}
+func (*QueryRafflesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d9497513046a3ebd, []int{4}
+}
+func (m *QueryRafflesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryRafflesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryRafflesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryRafflesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRafflesRequest.Merge(m, src)
+}
+func (m *QueryRafflesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryRafflesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRafflesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryRafflesRequest proto.InternalMessageInfo
+
+func (m *QueryRafflesRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+type QueryRafflesResponse struct {
+	List       []Raffle            `protobuf:"bytes,1,rep,name=list,proto3" json:"list"`
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryRafflesResponse) Reset()         { *m = QueryRafflesResponse{} }
+func (m *QueryRafflesResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryRafflesResponse) ProtoMessage()    {}
+func (*QueryRafflesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d9497513046a3ebd, []int{5}
+}
+func (m *QueryRafflesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryRafflesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryRafflesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryRafflesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRafflesResponse.Merge(m, src)
+}
+func (m *QueryRafflesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryRafflesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRafflesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryRafflesResponse proto.InternalMessageInfo
+
+func (m *QueryRafflesResponse) GetList() []Raffle {
+	if m != nil {
+		return m.List
+	}
+	return nil
+}
+
+func (m *QueryRafflesResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+type QueryRaffleWinnersRequest struct {
+	Denom      string             `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryRaffleWinnersRequest) Reset()         { *m = QueryRaffleWinnersRequest{} }
+func (m *QueryRaffleWinnersRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryRaffleWinnersRequest) ProtoMessage()    {}
+func (*QueryRaffleWinnersRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d9497513046a3ebd, []int{6}
+}
+func (m *QueryRaffleWinnersRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryRaffleWinnersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryRaffleWinnersRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryRaffleWinnersRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRaffleWinnersRequest.Merge(m, src)
+}
+func (m *QueryRaffleWinnersRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryRaffleWinnersRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRaffleWinnersRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryRaffleWinnersRequest proto.InternalMessageInfo
+
+func (m *QueryRaffleWinnersRequest) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *QueryRaffleWinnersRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+type QueryRaffleWinnersResponse struct {
+	List       []RaffleWinner      `protobuf:"bytes,1,rep,name=list,proto3" json:"list"`
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryRaffleWinnersResponse) Reset()         { *m = QueryRaffleWinnersResponse{} }
+func (m *QueryRaffleWinnersResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryRaffleWinnersResponse) ProtoMessage()    {}
+func (*QueryRaffleWinnersResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d9497513046a3ebd, []int{7}
+}
+func (m *QueryRaffleWinnersResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryRaffleWinnersResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryRaffleWinnersResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryRaffleWinnersResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryRaffleWinnersResponse.Merge(m, src)
+}
+func (m *QueryRaffleWinnersResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryRaffleWinnersResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryRaffleWinnersResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryRaffleWinnersResponse proto.InternalMessageInfo
+
+func (m *QueryRaffleWinnersResponse) GetList() []RaffleWinner {
+	if m != nil {
+		return m.List
+	}
+	return nil
+}
+
+func (m *QueryRaffleWinnersResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "bze.burner.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "bze.burner.QueryParamsResponse")
+	proto.RegisterType((*QueryAllBurnedCoinsRequest)(nil), "bze.burner.QueryAllBurnedCoinsRequest")
+	proto.RegisterType((*QueryAllBurnedCoinsResponse)(nil), "bze.burner.QueryAllBurnedCoinsResponse")
+	proto.RegisterType((*QueryRafflesRequest)(nil), "bze.burner.QueryRafflesRequest")
+	proto.RegisterType((*QueryRafflesResponse)(nil), "bze.burner.QueryRafflesResponse")
+	proto.RegisterType((*QueryRaffleWinnersRequest)(nil), "bze.burner.QueryRaffleWinnersRequest")
+	proto.RegisterType((*QueryRaffleWinnersResponse)(nil), "bze.burner.QueryRaffleWinnersResponse")
 }
 
 func init() { proto.RegisterFile("bze/burner/query.proto", fileDescriptor_d9497513046a3ebd) }
 
 var fileDescriptor_d9497513046a3ebd = []byte{
-	// 315 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x50, 0x4f, 0x4a, 0x33, 0x31,
-	0x14, 0x9f, 0xf9, 0xe0, 0x2b, 0x18, 0x57, 0xc6, 0xa2, 0x52, 0x24, 0x2d, 0xb3, 0x2a, 0x15, 0x27,
-	0xb4, 0xe2, 0x05, 0x0a, 0xee, 0x5c, 0x68, 0x97, 0xee, 0x92, 0xf2, 0x98, 0x0e, 0x74, 0xf2, 0xd2,
-	0x49, 0x46, 0x6c, 0x71, 0xe5, 0x09, 0x04, 0x2f, 0xe1, 0xd2, 0x63, 0x74, 0x59, 0x70, 0xe3, 0x4a,
-	0xa4, 0x23, 0x78, 0x0d, 0x69, 0x32, 0x62, 0xa5, 0xba, 0x09, 0x8f, 0xdf, 0xbf, 0xfc, 0xde, 0x23,
-	0x7b, 0x72, 0x06, 0x5c, 0x16, 0xb9, 0x82, 0x9c, 0x4f, 0x0a, 0xc8, 0xa7, 0xb1, 0xce, 0xd1, 0x22,
-	0x25, 0x72, 0x06, 0xb1, 0xc7, 0x1b, 0x3b, 0x22, 0x4b, 0x15, 0x72, 0xf7, 0x7a, 0xba, 0x51, 0x4f,
-	0x30, 0x41, 0x37, 0xf2, 0xd5, 0x54, 0xa1, 0x87, 0x09, 0x62, 0x32, 0x06, 0x2e, 0x74, 0xca, 0x85,
-	0x52, 0x68, 0x85, 0x4d, 0x51, 0x99, 0x8a, 0xed, 0x0c, 0xd1, 0x64, 0x68, 0xb8, 0x14, 0x06, 0xfc,
-	0x5f, 0xfc, 0xba, 0x2b, 0xc1, 0x8a, 0x2e, 0xd7, 0x22, 0x49, 0x95, 0x13, 0x57, 0xda, 0xfd, 0xb5,
-	0x5a, 0x5a, 0xe4, 0x22, 0xab, 0x42, 0xa2, 0x3a, 0xa1, 0x97, 0x2b, 0xeb, 0x85, 0x03, 0x07, 0x30,
-	0x29, 0xc0, 0xd8, 0xe8, 0x9c, 0xec, 0xfe, 0x40, 0x8d, 0x46, 0x65, 0x80, 0x9e, 0x92, 0x9a, 0x37,
-	0x1f, 0x84, 0xad, 0xb0, 0xbd, 0xdd, 0xa3, 0xf1, 0xf7, 0x56, 0xb1, 0xd7, 0xf6, 0xb7, 0xe6, 0xaf,
-	0xcd, 0xe0, 0xf1, 0xe3, 0xa9, 0x13, 0x0e, 0x2a, 0x71, 0xef, 0x96, 0xfc, 0x77, 0x69, 0xd4, 0x90,
-	0x9a, 0x57, 0x51, 0xb6, 0xee, 0xdc, 0x2c, 0xd0, 0x68, 0xfe, 0xc9, 0xfb, 0x2a, 0x51, 0xfb, 0xee,
-	0xf9, 0xfd, 0xe1, 0x5f, 0x44, 0x5b, 0x5c, 0xce, 0xe0, 0x58, 0x8c, 0xf5, 0x48, 0x58, 0x10, 0x19,
-	0xdf, 0xd8, 0xb3, 0x7f, 0x36, 0x5f, 0xb2, 0x70, 0xb1, 0x64, 0xe1, 0xdb, 0x92, 0x85, 0xf7, 0x25,
-	0x0b, 0x16, 0x25, 0x0b, 0x5e, 0x4a, 0x16, 0x5c, 0x1d, 0x25, 0xa9, 0x1d, 0x15, 0x32, 0x1e, 0x62,
-	0xf6, 0x4b, 0xca, 0xcd, 0x57, 0x8e, 0x9d, 0x6a, 0x30, 0xb2, 0xe6, 0xee, 0x75, 0xf2, 0x19, 0x00,
-	0x00, 0xff, 0xff, 0x28, 0xc6, 0x74, 0x42, 0xe1, 0x01, 0x00, 0x00,
+	// 610 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x54, 0x41, 0x6b, 0x13, 0x41,
+	0x18, 0xcd, 0xa4, 0x6d, 0xa4, 0x13, 0x14, 0x9c, 0x46, 0x1b, 0xb7, 0x71, 0x1b, 0x16, 0x6d, 0x4b,
+	0xd5, 0x1d, 0x1a, 0xf1, 0x2c, 0x46, 0xd4, 0x8b, 0x87, 0xba, 0x17, 0x41, 0x90, 0x30, 0x9b, 0x4c,
+	0xb7, 0x0b, 0x9b, 0x9d, 0xed, 0xee, 0x46, 0x4d, 0x8f, 0xbd, 0x78, 0x12, 0x04, 0x4f, 0xfe, 0x02,
+	0x3d, 0xfa, 0x33, 0x7a, 0x2c, 0x78, 0xf1, 0x24, 0x92, 0x08, 0xfa, 0x33, 0x64, 0x67, 0xbe, 0x36,
+	0xb3, 0xdd, 0x86, 0x80, 0xb4, 0x97, 0x64, 0x77, 0xe6, 0x7d, 0xef, 0xbd, 0xef, 0xed, 0xcc, 0x87,
+	0xaf, 0xbb, 0xfb, 0x9c, 0xba, 0x83, 0x38, 0xe4, 0x31, 0xdd, 0x1b, 0xf0, 0x78, 0x68, 0x47, 0xb1,
+	0x48, 0x05, 0xc1, 0xee, 0x3e, 0xb7, 0xd5, 0xba, 0x71, 0x95, 0xf5, 0xfd, 0x50, 0x50, 0xf9, 0xab,
+	0xb6, 0x8d, 0x9a, 0x27, 0x3c, 0x21, 0x1f, 0x69, 0xf6, 0x04, 0xab, 0x0d, 0x4f, 0x08, 0x2f, 0xe0,
+	0x94, 0x45, 0x3e, 0x65, 0x61, 0x28, 0x52, 0x96, 0xfa, 0x22, 0x4c, 0x60, 0x77, 0xb3, 0x2b, 0x92,
+	0xbe, 0x48, 0xa8, 0xcb, 0x12, 0xae, 0xb4, 0xe8, 0x9b, 0x2d, 0x97, 0xa7, 0x6c, 0x8b, 0x46, 0xcc,
+	0xf3, 0x43, 0x09, 0x06, 0xec, 0xb2, 0x66, 0x2b, 0x62, 0x31, 0xeb, 0x1f, 0x93, 0xdc, 0xd4, 0x36,
+	0xe4, 0x5f, 0xaf, 0xd3, 0x15, 0xfe, 0x89, 0x86, 0x5e, 0x17, 0xb3, 0x9d, 0x9d, 0x80, 0xab, 0x0d,
+	0xab, 0x86, 0xc9, 0x8b, 0x4c, 0x72, 0x5b, 0x92, 0x39, 0x7c, 0x6f, 0xc0, 0x93, 0xd4, 0x7a, 0x8e,
+	0x97, 0x72, 0xab, 0x49, 0x24, 0xc2, 0x84, 0x93, 0x07, 0xb8, 0xa2, 0x44, 0xeb, 0xa8, 0x89, 0x36,
+	0xaa, 0x2d, 0x62, 0x4f, 0xd2, 0xb0, 0x15, 0xb6, 0xbd, 0x78, 0xf8, 0x73, 0xb5, 0xf4, 0xf5, 0xcf,
+	0xb7, 0x4d, 0xe4, 0x00, 0xd8, 0xea, 0x61, 0x43, 0xb2, 0x3d, 0x0a, 0x82, 0xb6, 0xb4, 0xf6, 0x38,
+	0x73, 0x06, 0x5a, 0xe4, 0x29, 0xc6, 0x93, 0x36, 0x81, 0x78, 0xcd, 0x56, 0x99, 0xd8, 0x59, 0x26,
+	0xb6, 0xca, 0x1f, 0x32, 0xb1, 0xb7, 0x99, 0xc7, 0xa1, 0xd6, 0xd1, 0x2a, 0xad, 0x2f, 0x08, 0xaf,
+	0x9c, 0x29, 0x03, 0xe6, 0x1f, 0xe2, 0xaa, 0x3b, 0x59, 0xae, 0xa3, 0xe6, 0xdc, 0x46, 0xb5, 0xb5,
+	0xac, 0x77, 0xa0, 0x55, 0xb5, 0xe7, 0xb3, 0x36, 0x1c, 0xbd, 0x82, 0x3c, 0xcb, 0x19, 0x2d, 0x4b,
+	0xa3, 0xeb, 0x33, 0x8d, 0x2a, 0xf5, 0x9c, 0xd3, 0xd7, 0x90, 0xae, 0x23, 0x3f, 0xc4, 0xb9, 0x07,
+	0xf1, 0x01, 0xe1, 0x5a, 0x9e, 0x1f, 0x12, 0xb8, 0x8b, 0xe7, 0x03, 0x3f, 0x49, 0xa1, 0xf5, 0xdc,
+	0xc7, 0x53, 0x50, 0xe8, 0x5a, 0xa2, 0xce, 0xaf, 0xdd, 0x21, 0xbe, 0xa1, 0xd9, 0x79, 0xe9, 0x87,
+	0x21, 0x8f, 0x4f, 0x9a, 0xae, 0xe1, 0x85, 0x1e, 0x0f, 0x45, 0x5f, 0xf6, 0xbb, 0xe8, 0xa8, 0x97,
+	0x53, 0x51, 0x94, 0xff, 0x3b, 0x8a, 0xcf, 0x08, 0x8e, 0xde, 0x29, 0x6d, 0x08, 0xa4, 0x95, 0x0b,
+	0xa4, 0x5e, 0x0c, 0x44, 0x15, 0x5c, 0x48, 0x2c, 0xad, 0xbf, 0x73, 0x78, 0x41, 0x7a, 0x23, 0x1c,
+	0x57, 0xd4, 0xe5, 0x21, 0xa6, 0x6e, 0xa1, 0x78, 0x2f, 0x8d, 0xd5, 0xa9, 0xfb, 0x4a, 0xc0, 0x32,
+	0x0e, 0xbe, 0xff, 0xfe, 0x54, 0xae, 0x11, 0x42, 0x0b, 0x83, 0x82, 0xf8, 0xf8, 0x12, 0x9c, 0x08,
+	0x52, 0xe4, 0xc9, 0x9f, 0x45, 0xa3, 0x39, 0x1d, 0x00, 0x4a, 0x2b, 0x52, 0xe9, 0x1a, 0x59, 0xa2,
+	0x85, 0xd1, 0x92, 0x90, 0x03, 0x84, 0x2f, 0xe7, 0x22, 0x27, 0xb7, 0xa7, 0x10, 0xe6, 0x8f, 0x83,
+	0xb1, 0x36, 0x0b, 0x06, 0xea, 0x96, 0x54, 0x6f, 0x10, 0xa3, 0xa8, 0xde, 0x79, 0x0b, 0x92, 0xef,
+	0x11, 0xbe, 0x92, 0x9f, 0x05, 0xa4, 0x48, 0x7f, 0xe6, 0x4c, 0x32, 0xd6, 0x67, 0xe2, 0xc0, 0xc7,
+	0x2d, 0xe9, 0xc3, 0x24, 0x0d, 0xdd, 0x07, 0x0b, 0x82, 0x8e, 0x3e, 0x83, 0xdb, 0x4f, 0x0e, 0x47,
+	0x26, 0x3a, 0x1a, 0x99, 0xe8, 0xd7, 0xc8, 0x44, 0x1f, 0xc7, 0x66, 0xe9, 0x68, 0x6c, 0x96, 0x7e,
+	0x8c, 0xcd, 0xd2, 0xab, 0x3b, 0x9e, 0x9f, 0xee, 0x0e, 0x5c, 0xbb, 0x2b, 0xfa, 0x19, 0xc3, 0x3d,
+	0x16, 0x44, 0xbb, 0x2c, 0xe5, 0x4c, 0xbe, 0xd1, 0x77, 0xc7, 0x8c, 0xe9, 0x30, 0xe2, 0x89, 0x5b,
+	0x91, 0x23, 0xfb, 0xfe, 0xbf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xf4, 0x4c, 0x07, 0x0d, 0x9c, 0x06,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -160,6 +480,9 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Parameters queries the parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	Raffles(ctx context.Context, in *QueryRafflesRequest, opts ...grpc.CallOption) (*QueryRafflesResponse, error)
+	RaffleWinners(ctx context.Context, in *QueryRaffleWinnersRequest, opts ...grpc.CallOption) (*QueryRaffleWinnersResponse, error)
+	AllBurnedCoins(ctx context.Context, in *QueryAllBurnedCoinsRequest, opts ...grpc.CallOption) (*QueryAllBurnedCoinsResponse, error)
 }
 
 type queryClient struct {
@@ -179,10 +502,40 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) Raffles(ctx context.Context, in *QueryRafflesRequest, opts ...grpc.CallOption) (*QueryRafflesResponse, error) {
+	out := new(QueryRafflesResponse)
+	err := c.cc.Invoke(ctx, "/bze.burner.Query/Raffles", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) RaffleWinners(ctx context.Context, in *QueryRaffleWinnersRequest, opts ...grpc.CallOption) (*QueryRaffleWinnersResponse, error) {
+	out := new(QueryRaffleWinnersResponse)
+	err := c.cc.Invoke(ctx, "/bze.burner.Query/RaffleWinners", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AllBurnedCoins(ctx context.Context, in *QueryAllBurnedCoinsRequest, opts ...grpc.CallOption) (*QueryAllBurnedCoinsResponse, error) {
+	out := new(QueryAllBurnedCoinsResponse)
+	err := c.cc.Invoke(ctx, "/bze.burner.Query/AllBurnedCoins", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	Raffles(context.Context, *QueryRafflesRequest) (*QueryRafflesResponse, error)
+	RaffleWinners(context.Context, *QueryRaffleWinnersRequest) (*QueryRaffleWinnersResponse, error)
+	AllBurnedCoins(context.Context, *QueryAllBurnedCoinsRequest) (*QueryAllBurnedCoinsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -191,6 +544,15 @@ type UnimplementedQueryServer struct {
 
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (*UnimplementedQueryServer) Raffles(ctx context.Context, req *QueryRafflesRequest) (*QueryRafflesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Raffles not implemented")
+}
+func (*UnimplementedQueryServer) RaffleWinners(ctx context.Context, req *QueryRaffleWinnersRequest) (*QueryRaffleWinnersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RaffleWinners not implemented")
+}
+func (*UnimplementedQueryServer) AllBurnedCoins(ctx context.Context, req *QueryAllBurnedCoinsRequest) (*QueryAllBurnedCoinsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllBurnedCoins not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -215,6 +577,60 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Raffles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRafflesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Raffles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.burner.Query/Raffles",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Raffles(ctx, req.(*QueryRafflesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_RaffleWinners_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRaffleWinnersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).RaffleWinners(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.burner.Query/RaffleWinners",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).RaffleWinners(ctx, req.(*QueryRaffleWinnersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AllBurnedCoins_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllBurnedCoinsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllBurnedCoins(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.burner.Query/AllBurnedCoins",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllBurnedCoins(ctx, req.(*QueryAllBurnedCoinsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "bze.burner.Query",
@@ -223,6 +639,18 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "Raffles",
+			Handler:    _Query_Raffles_Handler,
+		},
+		{
+			MethodName: "RaffleWinners",
+			Handler:    _Query_RaffleWinners_Handler,
+		},
+		{
+			MethodName: "AllBurnedCoins",
+			Handler:    _Query_AllBurnedCoins_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -285,6 +713,265 @@ func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryAllBurnedCoinsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllBurnedCoinsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllBurnedCoinsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllBurnedCoinsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllBurnedCoinsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllBurnedCoinsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.BurnedCoins) > 0 {
+		for iNdEx := len(m.BurnedCoins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.BurnedCoins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryRafflesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryRafflesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryRafflesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryRafflesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryRafflesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryRafflesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.List) > 0 {
+		for iNdEx := len(m.List) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.List[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryRaffleWinnersRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryRaffleWinnersRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryRaffleWinnersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryRaffleWinnersResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryRaffleWinnersResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryRaffleWinnersResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.List) > 0 {
+		for iNdEx := len(m.List) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.List[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -313,6 +1000,106 @@ func (m *QueryParamsResponse) Size() (n int) {
 	_ = l
 	l = m.Params.Size()
 	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryAllBurnedCoinsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryAllBurnedCoinsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.BurnedCoins) > 0 {
+		for _, e := range m.BurnedCoins {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryRafflesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryRafflesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.List) > 0 {
+		for _, e := range m.List {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryRaffleWinnersRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryRaffleWinnersResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.List) > 0 {
+		for _, e := range m.List {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -431,6 +1218,656 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllBurnedCoinsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllBurnedCoinsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllBurnedCoinsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllBurnedCoinsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllBurnedCoinsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllBurnedCoinsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BurnedCoins", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BurnedCoins = append(m.BurnedCoins, BurnedCoins{})
+			if err := m.BurnedCoins[len(m.BurnedCoins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryRafflesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryRafflesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryRafflesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryRafflesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryRafflesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryRafflesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field List", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.List = append(m.List, Raffle{})
+			if err := m.List[len(m.List)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryRaffleWinnersRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryRaffleWinnersRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryRaffleWinnersRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryRaffleWinnersResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryRaffleWinnersResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryRaffleWinnersResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field List", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.List = append(m.List, RaffleWinner{})
+			if err := m.List[len(m.List)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

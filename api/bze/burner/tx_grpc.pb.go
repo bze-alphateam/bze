@@ -8,7 +8,6 @@ package burner
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -21,6 +20,9 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	Msg_UpdateParams_FullMethodName = "/bze.burner.Msg/UpdateParams"
+	Msg_FundBurner_FullMethodName   = "/bze.burner.Msg/FundBurner"
+	Msg_StartRaffle_FullMethodName  = "/bze.burner.Msg/StartRaffle"
+	Msg_JoinRaffle_FullMethodName   = "/bze.burner.Msg/JoinRaffle"
 )
 
 // MsgClient is the client API for Msg service.
@@ -30,6 +32,9 @@ type MsgClient interface {
 	// UpdateParams defines a (governance) operation for updating the module
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	FundBurner(ctx context.Context, in *MsgFundBurner, opts ...grpc.CallOption) (*MsgFundBurnerResponse, error)
+	StartRaffle(ctx context.Context, in *MsgStartRaffle, opts ...grpc.CallOption) (*MsgStartRaffleResponse, error)
+	JoinRaffle(ctx context.Context, in *MsgJoinRaffle, opts ...grpc.CallOption) (*MsgJoinRaffleResponse, error)
 }
 
 type msgClient struct {
@@ -49,6 +54,33 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
+func (c *msgClient) FundBurner(ctx context.Context, in *MsgFundBurner, opts ...grpc.CallOption) (*MsgFundBurnerResponse, error) {
+	out := new(MsgFundBurnerResponse)
+	err := c.cc.Invoke(ctx, Msg_FundBurner_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) StartRaffle(ctx context.Context, in *MsgStartRaffle, opts ...grpc.CallOption) (*MsgStartRaffleResponse, error) {
+	out := new(MsgStartRaffleResponse)
+	err := c.cc.Invoke(ctx, Msg_StartRaffle_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) JoinRaffle(ctx context.Context, in *MsgJoinRaffle, opts ...grpc.CallOption) (*MsgJoinRaffleResponse, error) {
+	out := new(MsgJoinRaffleResponse)
+	err := c.cc.Invoke(ctx, Msg_JoinRaffle_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -56,6 +88,9 @@ type MsgServer interface {
 	// UpdateParams defines a (governance) operation for updating the module
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	FundBurner(context.Context, *MsgFundBurner) (*MsgFundBurnerResponse, error)
+	StartRaffle(context.Context, *MsgStartRaffle) (*MsgStartRaffleResponse, error)
+	JoinRaffle(context.Context, *MsgJoinRaffle) (*MsgJoinRaffleResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -65,6 +100,15 @@ type UnimplementedMsgServer struct {
 
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+}
+func (UnimplementedMsgServer) FundBurner(context.Context, *MsgFundBurner) (*MsgFundBurnerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FundBurner not implemented")
+}
+func (UnimplementedMsgServer) StartRaffle(context.Context, *MsgStartRaffle) (*MsgStartRaffleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StartRaffle not implemented")
+}
+func (UnimplementedMsgServer) JoinRaffle(context.Context, *MsgJoinRaffle) (*MsgJoinRaffleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JoinRaffle not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -97,6 +141,60 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_FundBurner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgFundBurner)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).FundBurner(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_FundBurner_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).FundBurner(ctx, req.(*MsgFundBurner))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_StartRaffle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgStartRaffle)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).StartRaffle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_StartRaffle_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).StartRaffle(ctx, req.(*MsgStartRaffle))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_JoinRaffle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgJoinRaffle)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).JoinRaffle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_JoinRaffle_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).JoinRaffle(ctx, req.(*MsgJoinRaffle))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -107,6 +205,18 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateParams",
 			Handler:    _Msg_UpdateParams_Handler,
+		},
+		{
+			MethodName: "FundBurner",
+			Handler:    _Msg_FundBurner_Handler,
+		},
+		{
+			MethodName: "StartRaffle",
+			Handler:    _Msg_StartRaffle_Handler,
+		},
+		{
+			MethodName: "JoinRaffle",
+			Handler:    _Msg_JoinRaffle_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

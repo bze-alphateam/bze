@@ -8,7 +8,6 @@ package burner
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -20,7 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Query_Params_FullMethodName = "/bze.burner.Query/Params"
+	Query_Params_FullMethodName         = "/bze.burner.Query/Params"
+	Query_Raffles_FullMethodName        = "/bze.burner.Query/Raffles"
+	Query_RaffleWinners_FullMethodName  = "/bze.burner.Query/RaffleWinners"
+	Query_AllBurnedCoins_FullMethodName = "/bze.burner.Query/AllBurnedCoins"
 )
 
 // QueryClient is the client API for Query service.
@@ -29,6 +31,9 @@ const (
 type QueryClient interface {
 	// Parameters queries the parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	Raffles(ctx context.Context, in *QueryRafflesRequest, opts ...grpc.CallOption) (*QueryRafflesResponse, error)
+	RaffleWinners(ctx context.Context, in *QueryRaffleWinnersRequest, opts ...grpc.CallOption) (*QueryRaffleWinnersResponse, error)
+	AllBurnedCoins(ctx context.Context, in *QueryAllBurnedCoinsRequest, opts ...grpc.CallOption) (*QueryAllBurnedCoinsResponse, error)
 }
 
 type queryClient struct {
@@ -48,12 +53,42 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) Raffles(ctx context.Context, in *QueryRafflesRequest, opts ...grpc.CallOption) (*QueryRafflesResponse, error) {
+	out := new(QueryRafflesResponse)
+	err := c.cc.Invoke(ctx, Query_Raffles_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) RaffleWinners(ctx context.Context, in *QueryRaffleWinnersRequest, opts ...grpc.CallOption) (*QueryRaffleWinnersResponse, error) {
+	out := new(QueryRaffleWinnersResponse)
+	err := c.cc.Invoke(ctx, Query_RaffleWinners_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AllBurnedCoins(ctx context.Context, in *QueryAllBurnedCoinsRequest, opts ...grpc.CallOption) (*QueryAllBurnedCoinsResponse, error) {
+	out := new(QueryAllBurnedCoinsResponse)
+	err := c.cc.Invoke(ctx, Query_AllBurnedCoins_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	Raffles(context.Context, *QueryRafflesRequest) (*QueryRafflesResponse, error)
+	RaffleWinners(context.Context, *QueryRaffleWinnersRequest) (*QueryRaffleWinnersResponse, error)
+	AllBurnedCoins(context.Context, *QueryAllBurnedCoinsRequest) (*QueryAllBurnedCoinsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -63,6 +98,15 @@ type UnimplementedQueryServer struct {
 
 func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (UnimplementedQueryServer) Raffles(context.Context, *QueryRafflesRequest) (*QueryRafflesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Raffles not implemented")
+}
+func (UnimplementedQueryServer) RaffleWinners(context.Context, *QueryRaffleWinnersRequest) (*QueryRaffleWinnersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RaffleWinners not implemented")
+}
+func (UnimplementedQueryServer) AllBurnedCoins(context.Context, *QueryAllBurnedCoinsRequest) (*QueryAllBurnedCoinsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllBurnedCoins not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -95,6 +139,60 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Raffles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRafflesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Raffles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Raffles_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Raffles(ctx, req.(*QueryRafflesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_RaffleWinners_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRaffleWinnersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).RaffleWinners(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_RaffleWinners_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).RaffleWinners(ctx, req.(*QueryRaffleWinnersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AllBurnedCoins_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllBurnedCoinsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllBurnedCoins(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_AllBurnedCoins_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllBurnedCoins(ctx, req.(*QueryAllBurnedCoinsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -105,6 +203,18 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "Raffles",
+			Handler:    _Query_Raffles_Handler,
+		},
+		{
+			MethodName: "RaffleWinners",
+			Handler:    _Query_RaffleWinners_Handler,
+		},
+		{
+			MethodName: "AllBurnedCoins",
+			Handler:    _Query_AllBurnedCoins_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

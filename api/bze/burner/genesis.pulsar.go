@@ -2,28 +2,241 @@
 package burner
 
 import (
-	fmt "fmt"
-	io "io"
-	reflect "reflect"
-	sync "sync"
-
 	_ "cosmossdk.io/api/amino"
+	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	io "io"
+	reflect "reflect"
+	sync "sync"
 )
 
+var _ protoreflect.List = (*_GenesisState_2_list)(nil)
+
+type _GenesisState_2_list struct {
+	list *[]*BurnedCoins
+}
+
+func (x *_GenesisState_2_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_2_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_2_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*BurnedCoins)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_2_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*BurnedCoins)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_2_list) AppendMutable() protoreflect.Value {
+	v := new(BurnedCoins)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_2_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_2_list) NewElement() protoreflect.Value {
+	v := new(BurnedCoins)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_2_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_3_list)(nil)
+
+type _GenesisState_3_list struct {
+	list *[]*Raffle
+}
+
+func (x *_GenesisState_3_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_3_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_3_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*Raffle)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_3_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*Raffle)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_3_list) AppendMutable() protoreflect.Value {
+	v := new(Raffle)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_3_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_3_list) NewElement() protoreflect.Value {
+	v := new(Raffle)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_3_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_4_list)(nil)
+
+type _GenesisState_4_list struct {
+	list *[]*RaffleWinner
+}
+
+func (x *_GenesisState_4_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_4_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_4_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*RaffleWinner)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_4_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*RaffleWinner)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_4_list) AppendMutable() protoreflect.Value {
+	v := new(RaffleWinner)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_4_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_4_list) NewElement() protoreflect.Value {
+	v := new(RaffleWinner)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_4_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_5_list)(nil)
+
+type _GenesisState_5_list struct {
+	list *[]*RaffleParticipant
+}
+
+func (x *_GenesisState_5_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_5_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_5_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*RaffleParticipant)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_5_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*RaffleParticipant)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_5_list) AppendMutable() protoreflect.Value {
+	v := new(RaffleParticipant)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_5_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_5_list) NewElement() protoreflect.Value {
+	v := new(RaffleParticipant)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_5_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
-	md_GenesisState        protoreflect.MessageDescriptor
-	fd_GenesisState_params protoreflect.FieldDescriptor
+	md_GenesisState                            protoreflect.MessageDescriptor
+	fd_GenesisState_params                     protoreflect.FieldDescriptor
+	fd_GenesisState_burned_coins_list          protoreflect.FieldDescriptor
+	fd_GenesisState_raffle_list                protoreflect.FieldDescriptor
+	fd_GenesisState_raffle_winners_list        protoreflect.FieldDescriptor
+	fd_GenesisState_raffle_participants_list   protoreflect.FieldDescriptor
+	fd_GenesisState_raffle_participant_counter protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_bze_burner_genesis_proto_init()
 	md_GenesisState = File_bze_burner_genesis_proto.Messages().ByName("GenesisState")
 	fd_GenesisState_params = md_GenesisState.Fields().ByName("params")
+	fd_GenesisState_burned_coins_list = md_GenesisState.Fields().ByName("burned_coins_list")
+	fd_GenesisState_raffle_list = md_GenesisState.Fields().ByName("raffle_list")
+	fd_GenesisState_raffle_winners_list = md_GenesisState.Fields().ByName("raffle_winners_list")
+	fd_GenesisState_raffle_participants_list = md_GenesisState.Fields().ByName("raffle_participants_list")
+	fd_GenesisState_raffle_participant_counter = md_GenesisState.Fields().ByName("raffle_participant_counter")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -97,6 +310,36 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
+	if len(x.BurnedCoinsList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_2_list{list: &x.BurnedCoinsList})
+		if !f(fd_GenesisState_burned_coins_list, value) {
+			return
+		}
+	}
+	if len(x.RaffleList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_3_list{list: &x.RaffleList})
+		if !f(fd_GenesisState_raffle_list, value) {
+			return
+		}
+	}
+	if len(x.RaffleWinnersList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_4_list{list: &x.RaffleWinnersList})
+		if !f(fd_GenesisState_raffle_winners_list, value) {
+			return
+		}
+	}
+	if len(x.RaffleParticipantsList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_5_list{list: &x.RaffleParticipantsList})
+		if !f(fd_GenesisState_raffle_participants_list, value) {
+			return
+		}
+	}
+	if x.RaffleParticipantCounter != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.RaffleParticipantCounter)
+		if !f(fd_GenesisState_raffle_participant_counter, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -114,6 +357,16 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 	switch fd.FullName() {
 	case "bze.burner.GenesisState.params":
 		return x.Params != nil
+	case "bze.burner.GenesisState.burned_coins_list":
+		return len(x.BurnedCoinsList) != 0
+	case "bze.burner.GenesisState.raffle_list":
+		return len(x.RaffleList) != 0
+	case "bze.burner.GenesisState.raffle_winners_list":
+		return len(x.RaffleWinnersList) != 0
+	case "bze.burner.GenesisState.raffle_participants_list":
+		return len(x.RaffleParticipantsList) != 0
+	case "bze.burner.GenesisState.raffle_participant_counter":
+		return x.RaffleParticipantCounter != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.burner.GenesisState"))
@@ -132,6 +385,16 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "bze.burner.GenesisState.params":
 		x.Params = nil
+	case "bze.burner.GenesisState.burned_coins_list":
+		x.BurnedCoinsList = nil
+	case "bze.burner.GenesisState.raffle_list":
+		x.RaffleList = nil
+	case "bze.burner.GenesisState.raffle_winners_list":
+		x.RaffleWinnersList = nil
+	case "bze.burner.GenesisState.raffle_participants_list":
+		x.RaffleParticipantsList = nil
+	case "bze.burner.GenesisState.raffle_participant_counter":
+		x.RaffleParticipantCounter = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.burner.GenesisState"))
@@ -151,6 +414,33 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 	case "bze.burner.GenesisState.params":
 		value := x.Params
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "bze.burner.GenesisState.burned_coins_list":
+		if len(x.BurnedCoinsList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_2_list{})
+		}
+		listValue := &_GenesisState_2_list{list: &x.BurnedCoinsList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.burner.GenesisState.raffle_list":
+		if len(x.RaffleList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_3_list{})
+		}
+		listValue := &_GenesisState_3_list{list: &x.RaffleList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.burner.GenesisState.raffle_winners_list":
+		if len(x.RaffleWinnersList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_4_list{})
+		}
+		listValue := &_GenesisState_4_list{list: &x.RaffleWinnersList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.burner.GenesisState.raffle_participants_list":
+		if len(x.RaffleParticipantsList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_5_list{})
+		}
+		listValue := &_GenesisState_5_list{list: &x.RaffleParticipantsList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.burner.GenesisState.raffle_participant_counter":
+		value := x.RaffleParticipantCounter
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.burner.GenesisState"))
@@ -173,6 +463,24 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 	switch fd.FullName() {
 	case "bze.burner.GenesisState.params":
 		x.Params = value.Message().Interface().(*Params)
+	case "bze.burner.GenesisState.burned_coins_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_2_list)
+		x.BurnedCoinsList = *clv.list
+	case "bze.burner.GenesisState.raffle_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_3_list)
+		x.RaffleList = *clv.list
+	case "bze.burner.GenesisState.raffle_winners_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_4_list)
+		x.RaffleWinnersList = *clv.list
+	case "bze.burner.GenesisState.raffle_participants_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_5_list)
+		x.RaffleParticipantsList = *clv.list
+	case "bze.burner.GenesisState.raffle_participant_counter":
+		x.RaffleParticipantCounter = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.burner.GenesisState"))
@@ -198,6 +506,32 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 			x.Params = new(Params)
 		}
 		return protoreflect.ValueOfMessage(x.Params.ProtoReflect())
+	case "bze.burner.GenesisState.burned_coins_list":
+		if x.BurnedCoinsList == nil {
+			x.BurnedCoinsList = []*BurnedCoins{}
+		}
+		value := &_GenesisState_2_list{list: &x.BurnedCoinsList}
+		return protoreflect.ValueOfList(value)
+	case "bze.burner.GenesisState.raffle_list":
+		if x.RaffleList == nil {
+			x.RaffleList = []*Raffle{}
+		}
+		value := &_GenesisState_3_list{list: &x.RaffleList}
+		return protoreflect.ValueOfList(value)
+	case "bze.burner.GenesisState.raffle_winners_list":
+		if x.RaffleWinnersList == nil {
+			x.RaffleWinnersList = []*RaffleWinner{}
+		}
+		value := &_GenesisState_4_list{list: &x.RaffleWinnersList}
+		return protoreflect.ValueOfList(value)
+	case "bze.burner.GenesisState.raffle_participants_list":
+		if x.RaffleParticipantsList == nil {
+			x.RaffleParticipantsList = []*RaffleParticipant{}
+		}
+		value := &_GenesisState_5_list{list: &x.RaffleParticipantsList}
+		return protoreflect.ValueOfList(value)
+	case "bze.burner.GenesisState.raffle_participant_counter":
+		panic(fmt.Errorf("field raffle_participant_counter of message bze.burner.GenesisState is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.burner.GenesisState"))
@@ -214,6 +548,20 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	case "bze.burner.GenesisState.params":
 		m := new(Params)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "bze.burner.GenesisState.burned_coins_list":
+		list := []*BurnedCoins{}
+		return protoreflect.ValueOfList(&_GenesisState_2_list{list: &list})
+	case "bze.burner.GenesisState.raffle_list":
+		list := []*Raffle{}
+		return protoreflect.ValueOfList(&_GenesisState_3_list{list: &list})
+	case "bze.burner.GenesisState.raffle_winners_list":
+		list := []*RaffleWinner{}
+		return protoreflect.ValueOfList(&_GenesisState_4_list{list: &list})
+	case "bze.burner.GenesisState.raffle_participants_list":
+		list := []*RaffleParticipant{}
+		return protoreflect.ValueOfList(&_GenesisState_5_list{list: &list})
+	case "bze.burner.GenesisState.raffle_participant_counter":
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.burner.GenesisState"))
@@ -287,6 +635,33 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			l = options.Size(x.Params)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		if len(x.BurnedCoinsList) > 0 {
+			for _, e := range x.BurnedCoinsList {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.RaffleList) > 0 {
+			for _, e := range x.RaffleList {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.RaffleWinnersList) > 0 {
+			for _, e := range x.RaffleWinnersList {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.RaffleParticipantsList) > 0 {
+			for _, e := range x.RaffleParticipantsList {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.RaffleParticipantCounter != 0 {
+			n += 1 + runtime.Sov(uint64(x.RaffleParticipantCounter))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -315,6 +690,75 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.RaffleParticipantCounter != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.RaffleParticipantCounter))
+			i--
+			dAtA[i] = 0x30
+		}
+		if len(x.RaffleParticipantsList) > 0 {
+			for iNdEx := len(x.RaffleParticipantsList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.RaffleParticipantsList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x2a
+			}
+		}
+		if len(x.RaffleWinnersList) > 0 {
+			for iNdEx := len(x.RaffleWinnersList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.RaffleWinnersList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x22
+			}
+		}
+		if len(x.RaffleList) > 0 {
+			for iNdEx := len(x.RaffleList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.RaffleList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x1a
+			}
+		}
+		if len(x.BurnedCoinsList) > 0 {
+			for iNdEx := len(x.BurnedCoinsList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.BurnedCoinsList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x12
+			}
 		}
 		if x.Params != nil {
 			encoded, err := options.Marshal(x.Params)
@@ -415,6 +859,161 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BurnedCoinsList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.BurnedCoinsList = append(x.BurnedCoinsList, &BurnedCoins{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.BurnedCoinsList[len(x.BurnedCoinsList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field RaffleList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.RaffleList = append(x.RaffleList, &Raffle{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.RaffleList[len(x.RaffleList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field RaffleWinnersList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.RaffleWinnersList = append(x.RaffleWinnersList, &RaffleWinner{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.RaffleWinnersList[len(x.RaffleWinnersList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field RaffleParticipantsList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.RaffleParticipantsList = append(x.RaffleParticipantsList, &RaffleParticipant{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.RaffleParticipantsList[len(x.RaffleParticipantsList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 6:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field RaffleParticipantCounter", wireType)
+				}
+				x.RaffleParticipantCounter = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.RaffleParticipantCounter |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -470,7 +1069,12 @@ type GenesisState struct {
 	unknownFields protoimpl.UnknownFields
 
 	// params defines all the parameters of the module.
-	Params *Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
+	Params                   *Params              `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
+	BurnedCoinsList          []*BurnedCoins       `protobuf:"bytes,2,rep,name=burned_coins_list,json=burnedCoinsList,proto3" json:"burned_coins_list,omitempty"`
+	RaffleList               []*Raffle            `protobuf:"bytes,3,rep,name=raffle_list,json=raffleList,proto3" json:"raffle_list,omitempty"`
+	RaffleWinnersList        []*RaffleWinner      `protobuf:"bytes,4,rep,name=raffle_winners_list,json=raffleWinnersList,proto3" json:"raffle_winners_list,omitempty"`
+	RaffleParticipantsList   []*RaffleParticipant `protobuf:"bytes,5,rep,name=raffle_participants_list,json=raffleParticipantsList,proto3" json:"raffle_participants_list,omitempty"`
+	RaffleParticipantCounter uint64               `protobuf:"varint,6,opt,name=raffle_participant_counter,json=raffleParticipantCounter,proto3" json:"raffle_participant_counter,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -500,6 +1104,41 @@ func (x *GenesisState) GetParams() *Params {
 	return nil
 }
 
+func (x *GenesisState) GetBurnedCoinsList() []*BurnedCoins {
+	if x != nil {
+		return x.BurnedCoinsList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetRaffleList() []*Raffle {
+	if x != nil {
+		return x.RaffleList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetRaffleWinnersList() []*RaffleWinner {
+	if x != nil {
+		return x.RaffleWinnersList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetRaffleParticipantsList() []*RaffleParticipant {
+	if x != nil {
+		return x.RaffleParticipantsList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetRaffleParticipantCounter() uint64 {
+	if x != nil {
+		return x.RaffleParticipantCounter
+	}
+	return 0
+}
+
 var File_bze_burner_genesis_proto protoreflect.FileDescriptor
 
 var file_bze_burner_genesis_proto_rawDesc = []byte{
@@ -509,20 +1148,57 @@ var file_bze_burner_genesis_proto_rawDesc = []byte{
 	0x69, 0x6e, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a,
 	0x17, 0x62, 0x7a, 0x65, 0x2f, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x72, 0x2f, 0x70, 0x61, 0x72, 0x61,
-	0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x45, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65,
-	0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x35, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61,
-	0x6d, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x62,
-	0x75, 0x72, 0x6e, 0x65, 0x72, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x09, 0xc8, 0xde,
-	0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42,
-	0x7e, 0x0a, 0x0e, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x62, 0x75, 0x72, 0x6e, 0x65,
-	0x72, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
-	0x01, 0x5a, 0x15, 0x62, 0x65, 0x65, 0x7a, 0x65, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a,
-	0x65, 0x2f, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x72, 0xa2, 0x02, 0x03, 0x42, 0x42, 0x58, 0xaa, 0x02,
-	0x0a, 0x42, 0x7a, 0x65, 0x2e, 0x42, 0x75, 0x72, 0x6e, 0x65, 0x72, 0xca, 0x02, 0x0a, 0x42, 0x7a,
-	0x65, 0x5c, 0x42, 0x75, 0x72, 0x6e, 0x65, 0x72, 0xe2, 0x02, 0x16, 0x42, 0x7a, 0x65, 0x5c, 0x42,
-	0x75, 0x72, 0x6e, 0x65, 0x72, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0xea, 0x02, 0x0b, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x42, 0x75, 0x72, 0x6e, 0x65, 0x72, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1d, 0x62, 0x7a, 0x65, 0x2f, 0x62, 0x75,
+	0x72, 0x6e, 0x65, 0x72, 0x2f, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x64, 0x5f, 0x63, 0x6f, 0x69, 0x6e,
+	0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x17, 0x62, 0x7a, 0x65, 0x2f, 0x62, 0x75, 0x72,
+	0x6e, 0x65, 0x72, 0x2f, 0x72, 0x61, 0x66, 0x66, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x22, 0xd8, 0x04, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74,
+	0x65, 0x12, 0x35, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x12, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x72, 0x2e, 0x50,
+	0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01,
+	0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x68, 0x0a, 0x11, 0x62, 0x75, 0x72, 0x6e,
+	0x65, 0x64, 0x5f, 0x63, 0x6f, 0x69, 0x6e, 0x73, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x02, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x17, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x72,
+	0x2e, 0x42, 0x75, 0x72, 0x6e, 0x65, 0x64, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x42, 0x23, 0xc8, 0xde,
+	0x1f, 0x00, 0xea, 0xde, 0x1f, 0x1b, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x64, 0x5f, 0x63, 0x6f, 0x69,
+	0x6e, 0x73, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74,
+	0x79, 0x52, 0x0f, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x64, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x4c, 0x69,
+	0x73, 0x74, 0x12, 0x52, 0x0a, 0x0b, 0x72, 0x61, 0x66, 0x66, 0x6c, 0x65, 0x5f, 0x6c, 0x69, 0x73,
+	0x74, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x62, 0x75,
+	0x72, 0x6e, 0x65, 0x72, 0x2e, 0x52, 0x61, 0x66, 0x66, 0x6c, 0x65, 0x42, 0x1d, 0xc8, 0xde, 0x1f,
+	0x00, 0xea, 0xde, 0x1f, 0x15, 0x72, 0x61, 0x66, 0x66, 0x6c, 0x65, 0x5f, 0x6c, 0x69, 0x73, 0x74,
+	0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x0a, 0x72, 0x61, 0x66, 0x66,
+	0x6c, 0x65, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x6f, 0x0a, 0x13, 0x72, 0x61, 0x66, 0x66, 0x6c, 0x65,
+	0x5f, 0x77, 0x69, 0x6e, 0x6e, 0x65, 0x72, 0x73, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x04, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x72,
+	0x2e, 0x52, 0x61, 0x66, 0x66, 0x6c, 0x65, 0x57, 0x69, 0x6e, 0x6e, 0x65, 0x72, 0x42, 0x25, 0xc8,
+	0xde, 0x1f, 0x00, 0xea, 0xde, 0x1f, 0x1d, 0x72, 0x61, 0x66, 0x66, 0x6c, 0x65, 0x5f, 0x77, 0x69,
+	0x6e, 0x6e, 0x65, 0x72, 0x73, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65,
+	0x6d, 0x70, 0x74, 0x79, 0x52, 0x11, 0x72, 0x61, 0x66, 0x66, 0x6c, 0x65, 0x57, 0x69, 0x6e, 0x6e,
+	0x65, 0x72, 0x73, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x83, 0x01, 0x0a, 0x18, 0x72, 0x61, 0x66, 0x66,
+	0x6c, 0x65, 0x5f, 0x70, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x73, 0x5f,
+	0x6c, 0x69, 0x73, 0x74, 0x18, 0x05, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x62, 0x7a, 0x65,
+	0x2e, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x72, 0x2e, 0x52, 0x61, 0x66, 0x66, 0x6c, 0x65, 0x50, 0x61,
+	0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x42, 0x2a, 0xc8, 0xde, 0x1f, 0x00, 0xea,
+	0xde, 0x1f, 0x22, 0x72, 0x61, 0x66, 0x66, 0x6c, 0x65, 0x5f, 0x70, 0x61, 0x72, 0x74, 0x69, 0x63,
+	0x69, 0x70, 0x61, 0x6e, 0x74, 0x73, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x2c, 0x6f, 0x6d, 0x69, 0x74,
+	0x65, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x16, 0x72, 0x61, 0x66, 0x66, 0x6c, 0x65, 0x50, 0x61, 0x72,
+	0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x73, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x5c, 0x0a,
+	0x1a, 0x72, 0x61, 0x66, 0x66, 0x6c, 0x65, 0x5f, 0x70, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70,
+	0x61, 0x6e, 0x74, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72, 0x18, 0x06, 0x20, 0x01, 0x28,
+	0x04, 0x42, 0x1e, 0xea, 0xde, 0x1f, 0x1a, 0x72, 0x61, 0x66, 0x66, 0x6c, 0x65, 0x5f, 0x70, 0x61,
+	0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x65,
+	0x72, 0x52, 0x18, 0x72, 0x61, 0x66, 0x66, 0x6c, 0x65, 0x50, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69,
+	0x70, 0x61, 0x6e, 0x74, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72, 0x42, 0x7e, 0x0a, 0x0e, 0x63,
+	0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x72, 0x42, 0x0c, 0x47,
+	0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x15, 0x62,
+	0x65, 0x65, 0x7a, 0x65, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x62, 0x75,
+	0x72, 0x6e, 0x65, 0x72, 0xa2, 0x02, 0x03, 0x42, 0x42, 0x58, 0xaa, 0x02, 0x0a, 0x42, 0x7a, 0x65,
+	0x2e, 0x42, 0x75, 0x72, 0x6e, 0x65, 0x72, 0xca, 0x02, 0x0a, 0x42, 0x7a, 0x65, 0x5c, 0x42, 0x75,
+	0x72, 0x6e, 0x65, 0x72, 0xe2, 0x02, 0x16, 0x42, 0x7a, 0x65, 0x5c, 0x42, 0x75, 0x72, 0x6e, 0x65,
+	0x72, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0b,
+	0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x42, 0x75, 0x72, 0x6e, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
@@ -539,16 +1215,24 @@ func file_bze_burner_genesis_proto_rawDescGZIP() []byte {
 
 var file_bze_burner_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_bze_burner_genesis_proto_goTypes = []interface{}{
-	(*GenesisState)(nil), // 0: bze.burner.GenesisState
-	(*Params)(nil),       // 1: bze.burner.Params
+	(*GenesisState)(nil),      // 0: bze.burner.GenesisState
+	(*Params)(nil),            // 1: bze.burner.Params
+	(*BurnedCoins)(nil),       // 2: bze.burner.BurnedCoins
+	(*Raffle)(nil),            // 3: bze.burner.Raffle
+	(*RaffleWinner)(nil),      // 4: bze.burner.RaffleWinner
+	(*RaffleParticipant)(nil), // 5: bze.burner.RaffleParticipant
 }
 var file_bze_burner_genesis_proto_depIdxs = []int32{
 	1, // 0: bze.burner.GenesisState.params:type_name -> bze.burner.Params
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	2, // 1: bze.burner.GenesisState.burned_coins_list:type_name -> bze.burner.BurnedCoins
+	3, // 2: bze.burner.GenesisState.raffle_list:type_name -> bze.burner.Raffle
+	4, // 3: bze.burner.GenesisState.raffle_winners_list:type_name -> bze.burner.RaffleWinner
+	5, // 4: bze.burner.GenesisState.raffle_participants_list:type_name -> bze.burner.RaffleParticipant
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_bze_burner_genesis_proto_init() }
@@ -557,6 +1241,8 @@ func file_bze_burner_genesis_proto_init() {
 		return
 	}
 	file_bze_burner_params_proto_init()
+	file_bze_burner_burned_coins_proto_init()
+	file_bze_burner_raffle_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_bze_burner_genesis_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GenesisState); i {
