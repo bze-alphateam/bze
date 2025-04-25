@@ -11,7 +11,6 @@ import (
 )
 
 func SimulateMsgSavePublisher(
-	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k keeper.Keeper,
 ) simtypes.Operation {
@@ -19,7 +18,7 @@ func SimulateMsgSavePublisher(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		msg := &types.MsgSavePublisher{
-			Creator: simAccount.Address.String(),
+			Authority: simAccount.Address.String(),
 		}
 
 		// TODO: Handling the SavePublisher simulation

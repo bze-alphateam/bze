@@ -11,7 +11,6 @@ import (
 )
 
 func SimulateMsgAddArticle(
-	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k keeper.Keeper,
 ) simtypes.Operation {
@@ -19,7 +18,7 @@ func SimulateMsgAddArticle(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		msg := &types.MsgAddArticle{
-			Creator: simAccount.Address.String(),
+			Publisher: simAccount.Address.String(),
 		}
 
 		// TODO: Handling the AddArticle simulation

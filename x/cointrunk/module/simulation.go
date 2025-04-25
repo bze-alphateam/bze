@@ -70,7 +70,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgAddArticle,
-		cointrunksimulation.SimulateMsgAddArticle(am.accountKeeper, am.bankKeeper, am.keeper),
+		cointrunksimulation.SimulateMsgAddArticle(am.bankKeeper, am.keeper),
 	))
 
 	var weightMsgPayPublisherRespect int
@@ -81,7 +81,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgPayPublisherRespect,
-		cointrunksimulation.SimulateMsgPayPublisherRespect(am.accountKeeper, am.bankKeeper, am.keeper),
+		cointrunksimulation.SimulateMsgPayPublisherRespect(am.bankKeeper, am.keeper),
 	))
 
 	var weightMsgAcceptDomain int
@@ -92,7 +92,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgAcceptDomain,
-		cointrunksimulation.SimulateMsgAcceptDomain(am.accountKeeper, am.bankKeeper, am.keeper),
+		cointrunksimulation.SimulateMsgAcceptDomain(am.bankKeeper, am.keeper),
 	))
 
 	var weightMsgSavePublisher int
@@ -103,7 +103,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgSavePublisher,
-		cointrunksimulation.SimulateMsgSavePublisher(am.accountKeeper, am.bankKeeper, am.keeper),
+		cointrunksimulation.SimulateMsgSavePublisher(am.bankKeeper, am.keeper),
 	))
 
 	// this line is used by starport scaffolding # simapp/module/operation
@@ -118,7 +118,7 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			opWeightMsgAddArticle,
 			defaultWeightMsgAddArticle,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-				cointrunksimulation.SimulateMsgAddArticle(am.accountKeeper, am.bankKeeper, am.keeper)
+				cointrunksimulation.SimulateMsgAddArticle(am.bankKeeper, am.keeper)
 				return nil
 			},
 		),
@@ -126,7 +126,7 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			opWeightMsgPayPublisherRespect,
 			defaultWeightMsgPayPublisherRespect,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-				cointrunksimulation.SimulateMsgPayPublisherRespect(am.accountKeeper, am.bankKeeper, am.keeper)
+				cointrunksimulation.SimulateMsgPayPublisherRespect(am.bankKeeper, am.keeper)
 				return nil
 			},
 		),
@@ -134,7 +134,7 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			opWeightMsgAcceptDomain,
 			defaultWeightMsgAcceptDomain,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-				cointrunksimulation.SimulateMsgAcceptDomain(am.accountKeeper, am.bankKeeper, am.keeper)
+				cointrunksimulation.SimulateMsgAcceptDomain(am.bankKeeper, am.keeper)
 				return nil
 			},
 		),
@@ -142,7 +142,7 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			opWeightMsgSavePublisher,
 			defaultWeightMsgSavePublisher,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-				cointrunksimulation.SimulateMsgSavePublisher(am.accountKeeper, am.bankKeeper, am.keeper)
+				cointrunksimulation.SimulateMsgSavePublisher(am.bankKeeper, am.keeper)
 				return nil
 			},
 		),

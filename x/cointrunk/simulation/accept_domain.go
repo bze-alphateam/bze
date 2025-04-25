@@ -11,7 +11,6 @@ import (
 )
 
 func SimulateMsgAcceptDomain(
-	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k keeper.Keeper,
 ) simtypes.Operation {
@@ -19,7 +18,7 @@ func SimulateMsgAcceptDomain(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		msg := &types.MsgAcceptDomain{
-			Creator: simAccount.Address.String(),
+			Authority: simAccount.Address.String(),
 		}
 
 		// TODO: Handling the AcceptDomain simulation

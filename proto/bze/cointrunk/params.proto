@@ -22,7 +22,7 @@ message Params {
   option (amino.name) = "bze/x/cointrunk/Params";
   option (gogoproto.equal) = true;
 
-  uint64 anonArticleLimit = 1 [(gogoproto.moretags) = "yaml:\"anon_article_limit\""];
+  uint64 anon_article_limit = 1 [(gogoproto.moretags) = "yaml:\"anon_article_limit\""];
 
   cosmos.base.v1beta1.Coin anon_article_cost = 2 [
     (gogoproto.nullable)     = false,

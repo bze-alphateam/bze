@@ -118,7 +118,7 @@ func validatePublisherRespectParams(v interface{}) error {
 		return fmt.Errorf("invalid parameter publisherRespectParams type: %T", v)
 	}
 
-	if publisherRespectParams.Tax {
+	if !publisherRespectParams.Tax.IsPositive() {
 		return fmt.Errorf("publisherRespectParams tax should be positive: %s", publisherRespectParams.Tax.String())
 	}
 
