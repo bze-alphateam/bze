@@ -30,7 +30,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service:              modulev1.Msg_ServiceDesc.ServiceName,
 			EnhanceCustomCommand: true, // only required if you want to use the custom command
-			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			RpcCommandOptions:    []*autocliv1.RpcCommandOptions{
 				//{
 				//	RpcMethod: "UpdateParams",
 				//	Skip:      true, // skipped because authority gated

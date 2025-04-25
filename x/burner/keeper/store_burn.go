@@ -1,10 +1,11 @@
 package keeper
 
 import (
+	"strconv"
+
 	storetypes "cosmossdk.io/store/types"
 	"github.com/bze-alphateam/bze/x/burner/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"strconv"
 )
 
 func (k Keeper) GetAllBurnedCoins(ctx sdk.Context) (list []types.BurnedCoins) {

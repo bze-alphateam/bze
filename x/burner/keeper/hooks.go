@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	"strings"
+
 	"github.com/bze-alphateam/bze/x/burner/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"strings"
 )
 
 const (

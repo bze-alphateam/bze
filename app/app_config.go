@@ -32,9 +32,12 @@ import (
 	"cosmossdk.io/x/nft"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	burnermodulev1 "github.com/bze-alphateam/bze/api/bze/burner/module"
+	cointrunkmodulev1 "github.com/bze-alphateam/bze/api/bze/cointrunk/module"
 	epochmodulev1 "github.com/bze-alphateam/bze/api/bze/epoch/module"
 	_ "github.com/bze-alphateam/bze/x/burner/module" // import for side-effects
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
+	_ "github.com/bze-alphateam/bze/x/cointrunk/module" // import for side-effects
+	cointrunkmoduletypes "github.com/bze-alphateam/bze/x/cointrunk/types"
 	_ "github.com/bze-alphateam/bze/x/epochs/module" // import for side-effects
 	epochmoduletypes "github.com/bze-alphateam/bze/x/epochs/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -97,6 +100,7 @@ var (
 		// chain modules
 		burnermoduletypes.ModuleName,
 		epochmoduletypes.ModuleName,
+		cointrunkmoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 
@@ -123,6 +127,7 @@ var (
 		// chain modules
 		burnermoduletypes.ModuleName,
 		epochmoduletypes.ModuleName,
+		cointrunkmoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/beginBlockers
 	}
 
@@ -143,6 +148,7 @@ var (
 		// chain modules
 		burnermoduletypes.ModuleName,
 		epochmoduletypes.ModuleName,
+		cointrunkmoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/endBlockers
 	}
 
@@ -306,6 +312,10 @@ var (
 			{
 				Name:   epochmoduletypes.ModuleName,
 				Config: appconfig.WrapAny(&epochmodulev1.Module{}),
+			},
+			{
+				Name:   cointrunkmoduletypes.ModuleName,
+				Config: appconfig.WrapAny(&cointrunkmodulev1.Module{}),
 			},
 			// this line is used by starport scaffolding # stargate/app/moduleConfig
 		},

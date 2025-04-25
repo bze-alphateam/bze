@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	"encoding/binary"
+
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-	"encoding/binary"
 	"github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"

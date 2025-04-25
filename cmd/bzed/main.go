@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/bze-alphateam/bze/cmd/bzed/cmd"
 	"os"
+
+	"github.com/bze-alphateam/bze/cmd/bzed/cmd"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"

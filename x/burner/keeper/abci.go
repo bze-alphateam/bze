@@ -1,10 +1,11 @@
 package keeper
 
 import (
+	"strconv"
+
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/burner/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"strconv"
 )
 
 func (k Keeper) WithdrawLuckyRaffleParticipants(ctx sdk.Context, height int64) {

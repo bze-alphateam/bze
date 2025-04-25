@@ -1,13 +1,14 @@
 package keeper
 
 import (
+	"fmt"
+	"time"
+
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-	"fmt"
 	"github.com/bze-alphateam/bze/x/epochs/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"time"
 )
 
 func (k Keeper) getEpochsStore(ctx sdk.Context) prefix.Store {
