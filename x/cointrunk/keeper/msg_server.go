@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"context"
-	"cosmossdk.io/errors"
 	"fmt"
+
+	"cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/bze-alphateam/bze/x/cointrunk/types"

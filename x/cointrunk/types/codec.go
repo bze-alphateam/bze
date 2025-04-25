@@ -10,14 +10,11 @@ import (
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgAddArticle{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgPayPublisherRespect{},
-	)
-	// this line is used by starport scaffolding # 3
-
-	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgAcceptDomain{},
+		&MsgSavePublisher{},
 		&MsgUpdateParams{},
 	)
+	
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

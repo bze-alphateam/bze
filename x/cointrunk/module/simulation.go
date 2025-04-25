@@ -31,6 +31,14 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgPayPublisherRespect int = 100
 
+	opWeightMsgAcceptDomain = "op_weight_msg_accept_domain"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgAcceptDomain int = 100
+
+	opWeightMsgSavePublisher = "op_weight_msg_save_publisher"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgSavePublisher int = 100
+
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -76,6 +84,28 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		cointrunksimulation.SimulateMsgPayPublisherRespect(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
+	var weightMsgAcceptDomain int
+	simState.AppParams.GetOrGenerate(opWeightMsgAcceptDomain, &weightMsgAcceptDomain, nil,
+		func(_ *rand.Rand) {
+			weightMsgAcceptDomain = defaultWeightMsgAcceptDomain
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgAcceptDomain,
+		cointrunksimulation.SimulateMsgAcceptDomain(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
+	var weightMsgSavePublisher int
+	simState.AppParams.GetOrGenerate(opWeightMsgSavePublisher, &weightMsgSavePublisher, nil,
+		func(_ *rand.Rand) {
+			weightMsgSavePublisher = defaultWeightMsgSavePublisher
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgSavePublisher,
+		cointrunksimulation.SimulateMsgSavePublisher(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
 	// this line is used by starport scaffolding # simapp/module/operation
 
 	return operations
@@ -97,6 +127,22 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			defaultWeightMsgPayPublisherRespect,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
 				cointrunksimulation.SimulateMsgPayPublisherRespect(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgAcceptDomain,
+			defaultWeightMsgAcceptDomain,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				cointrunksimulation.SimulateMsgAcceptDomain(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgSavePublisher,
+			defaultWeightMsgSavePublisher,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				cointrunksimulation.SimulateMsgSavePublisher(am.accountKeeper, am.bankKeeper, am.keeper)
 				return nil
 			},
 		),

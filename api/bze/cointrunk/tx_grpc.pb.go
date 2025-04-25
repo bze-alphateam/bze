@@ -22,6 +22,8 @@ const (
 	Msg_UpdateParams_FullMethodName        = "/bze.cointrunk.Msg/UpdateParams"
 	Msg_AddArticle_FullMethodName          = "/bze.cointrunk.Msg/AddArticle"
 	Msg_PayPublisherRespect_FullMethodName = "/bze.cointrunk.Msg/PayPublisherRespect"
+	Msg_AcceptDomain_FullMethodName        = "/bze.cointrunk.Msg/AcceptDomain"
+	Msg_SavePublisher_FullMethodName       = "/bze.cointrunk.Msg/SavePublisher"
 )
 
 // MsgClient is the client API for Msg service.
@@ -33,6 +35,8 @@ type MsgClient interface {
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	AddArticle(ctx context.Context, in *MsgAddArticle, opts ...grpc.CallOption) (*MsgAddArticleResponse, error)
 	PayPublisherRespect(ctx context.Context, in *MsgPayPublisherRespect, opts ...grpc.CallOption) (*MsgPayPublisherRespectResponse, error)
+	AcceptDomain(ctx context.Context, in *MsgAcceptDomain, opts ...grpc.CallOption) (*MsgAcceptDomainResponse, error)
+	SavePublisher(ctx context.Context, in *MsgSavePublisher, opts ...grpc.CallOption) (*MsgSavePublisherResponse, error)
 }
 
 type msgClient struct {
@@ -70,6 +74,24 @@ func (c *msgClient) PayPublisherRespect(ctx context.Context, in *MsgPayPublisher
 	return out, nil
 }
 
+func (c *msgClient) AcceptDomain(ctx context.Context, in *MsgAcceptDomain, opts ...grpc.CallOption) (*MsgAcceptDomainResponse, error) {
+	out := new(MsgAcceptDomainResponse)
+	err := c.cc.Invoke(ctx, Msg_AcceptDomain_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) SavePublisher(ctx context.Context, in *MsgSavePublisher, opts ...grpc.CallOption) (*MsgSavePublisherResponse, error) {
+	out := new(MsgSavePublisherResponse)
+	err := c.cc.Invoke(ctx, Msg_SavePublisher_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -79,6 +101,8 @@ type MsgServer interface {
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	AddArticle(context.Context, *MsgAddArticle) (*MsgAddArticleResponse, error)
 	PayPublisherRespect(context.Context, *MsgPayPublisherRespect) (*MsgPayPublisherRespectResponse, error)
+	AcceptDomain(context.Context, *MsgAcceptDomain) (*MsgAcceptDomainResponse, error)
+	SavePublisher(context.Context, *MsgSavePublisher) (*MsgSavePublisherResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -94,6 +118,12 @@ func (UnimplementedMsgServer) AddArticle(context.Context, *MsgAddArticle) (*MsgA
 }
 func (UnimplementedMsgServer) PayPublisherRespect(context.Context, *MsgPayPublisherRespect) (*MsgPayPublisherRespectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PayPublisherRespect not implemented")
+}
+func (UnimplementedMsgServer) AcceptDomain(context.Context, *MsgAcceptDomain) (*MsgAcceptDomainResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AcceptDomain not implemented")
+}
+func (UnimplementedMsgServer) SavePublisher(context.Context, *MsgSavePublisher) (*MsgSavePublisherResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SavePublisher not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -162,6 +192,42 @@ func _Msg_PayPublisherRespect_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_AcceptDomain_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAcceptDomain)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).AcceptDomain(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_AcceptDomain_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).AcceptDomain(ctx, req.(*MsgAcceptDomain))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_SavePublisher_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSavePublisher)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SavePublisher(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_SavePublisher_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SavePublisher(ctx, req.(*MsgSavePublisher))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -180,6 +246,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PayPublisherRespect",
 			Handler:    _Msg_PayPublisherRespect_Handler,
+		},
+		{
+			MethodName: "AcceptDomain",
+			Handler:    _Msg_AcceptDomain_Handler,
+		},
+		{
+			MethodName: "SavePublisher",
+			Handler:    _Msg_SavePublisher_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

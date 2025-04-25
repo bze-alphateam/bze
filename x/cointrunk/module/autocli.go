@@ -75,6 +75,18 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Send a pay-publisher-respect tx",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}, {ProtoField: "amount"}},
 				},
+				{
+					RpcMethod:      "AcceptDomain",
+					Use:            "accept-domain [domain] [active]",
+					Short:          "Send a accept-domain tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "domain"}, {ProtoField: "active"}},
+				},
+				{
+					RpcMethod:      "SavePublisher",
+					Use:            "save-publisher [name] [address] [active]",
+					Short:          "Send a save-publisher tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "name"}, {ProtoField: "address"}, {ProtoField: "active"}},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},
