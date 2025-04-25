@@ -32,11 +32,8 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	for i, acc := range simState.Accounts {
 		accs[i] = acc.Address.String()
 	}
-	epochGenesis := types.GenesisState{
-		Params: types.DefaultParams(),
-		// this line is used by starport scaffolding # simapp/module/genesisState
-	}
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&epochGenesis)
+	epochGenesis := types.DefaultGenesis()
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(epochGenesis)
 }
 
 // RegisterStoreDecoder registers a decoder.

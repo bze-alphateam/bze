@@ -4,18 +4,12 @@ package bze.epochs;
 import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "cosmos/base/query/v1beta1/pagination.proto";
-import "bze/epochs/params.proto";
 import "bze/epochs/epoch.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/epochs/types";
 
 // Query defines the gRPC querier service.
 service Query {
-  // Parameters queries the parameters of the module.
-  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/bze/epochs/params";
-  }
   rpc EpochInfos(QueryEpochsInfoRequest) returns (QueryEpochsInfoResponse) {
     option (google.api.http).get = "/bze/epochs/epochs";
   }
@@ -23,18 +17,6 @@ service Query {
       returns (QueryCurrentEpochResponse) {
     option (google.api.http).get = "/bze/epochs/current_epoch";
   }
-}
-
-// QueryParamsRequest is request type for the Query/Params RPC method.
-message QueryParamsRequest {}
-
-// QueryParamsResponse is response type for the Query/Params RPC method.
-message QueryParamsResponse {
-  // params holds all the parameters of this module.
-  Params params = 1 [
-    (gogoproto.nullable) = false,
-    (amino.dont_omitempty) = true
-  ];
 }
 
 message QueryEpochsInfoRequest {}

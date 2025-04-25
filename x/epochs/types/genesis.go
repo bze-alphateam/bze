@@ -7,9 +7,6 @@ import (
 
 // this line is used by starport scaffolding # genesis/types/import
 
-// DefaultIndex is the default global index
-const DefaultIndex uint64 = 1
-
 // DefaultGenesis returns the default genesis state
 func DefaultGenesis() *GenesisState {
 	epochs := []EpochInfo{
@@ -19,8 +16,6 @@ func DefaultGenesis() *GenesisState {
 	}
 
 	return &GenesisState{
-		// this line is used by starport scaffolding # genesis/types/default
-		Params: DefaultParams(),
 		Epochs: epochs,
 	}
 }
@@ -39,9 +34,9 @@ func (gs GenesisState) Validate() error {
 		if epochIdentifiers[epoch.Identifier] {
 			return errors.New("epoch identifier should be unique")
 		}
-		
+
 		epochIdentifiers[epoch.Identifier] = true
 	}
 
-	return gs.Params.Validate()
+	return nil
 }
