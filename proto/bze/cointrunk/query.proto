@@ -7,6 +7,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "bze/cointrunk/params.proto";
+import "bze/cointrunk/store.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
 
@@ -62,25 +63,25 @@ message QueryParamsResponse {
 message QueryAcceptedDomainRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
-
 message QueryAcceptedDomainResponse {
-  cosmos.base.query.v1beta1.PageResponse pagination = 1;
+  repeated AcceptedDomain acceptedDomain = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryAllAnonArticlesCountersRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
-
 message QueryAllAnonArticlesCountersResponse {
-  cosmos.base.query.v1beta1.PageResponse pagination = 1;
+  repeated AnonArticlesCounter AnonArticlesCounters = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryAllArticlesRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
-
 message QueryAllArticlesResponse {
-  cosmos.base.query.v1beta1.PageResponse pagination = 1;
+  repeated Article article = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryPublishersRequest {
@@ -88,12 +89,15 @@ message QueryPublishersRequest {
 }
 
 message QueryPublishersResponse {
-  cosmos.base.query.v1beta1.PageResponse pagination = 1;
+  repeated Publisher publisher = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryPublisherRequest {
   string address = 1;
 }
 
-message QueryPublisherResponse {}
+message QueryPublisherResponse {
+  Publisher publisher = 1;
+}
 
