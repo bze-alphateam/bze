@@ -9,13 +9,12 @@ import (
 )
 
 const (
-	TypeMsgStartRaffle = "start_raffle"
-	DurationMin        = 1
-	DurationMax        = 180
-	RatioMin           = "0.01"
-	RatioMax           = "1.00"
-	ChancesMin         = 1
-	ChancesMax         = 1_000_000
+	DurationMin = 1
+	DurationMax = 180
+	RatioMin    = "0.01"
+	RatioMax    = "1.00"
+	ChancesMin  = 1
+	ChancesMax  = 1_000_000
 )
 
 var _ sdk.Msg = &MsgStartRaffle{}
