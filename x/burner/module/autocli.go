@@ -8,8 +8,6 @@ import (
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
-	//TODO: add CLI commands
-
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
 			Service: modulev1.Query_ServiceDesc.ServiceName,
@@ -18,6 +16,22 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "Params",
 					Use:       "params",
 					Short:     "Shows the parameters of the module",
+				},
+				{
+					RpcMethod: "Raffles",
+					Use:       "raffles",
+					Short:     "Query running raffles",
+				},
+				{
+					RpcMethod:      "RaffleWinners",
+					Use:            "raffle-winners [denom]",
+					Short:          "Query raffle winners by denomination",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
+				{
+					RpcMethod: "AllBurnedCoins",
+					Use:       "all-burned-coins",
+					Short:     "Query all coins burnings",
 				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
@@ -29,6 +43,28 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "UpdateParams",
 					Skip:      true, // skipped because authority gated
+				},
+				{
+					RpcMethod:      "FundBurner",
+					Use:            "fund-burner [amount]",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "amount"}},
+				},
+				{
+					RpcMethod: "StartRaffle",
+					Use:       "start-raffle [pot] [duration] [chances] [ratio] [ticket-price] [denom]",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "pot"},
+						{ProtoField: "duration"},
+						{ProtoField: "chances"},
+						{ProtoField: "ratio"},
+						{ProtoField: "ticket_price"},
+						{ProtoField: "denom"},
+					},
+				},
+				{
+					RpcMethod:      "JoinRaffle",
+					Use:            "join-raffle [denom]",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
 				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
