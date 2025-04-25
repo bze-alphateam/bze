@@ -40,7 +40,7 @@ func NewKeeper(
 		cdc:          cdc,
 		storeService: storeService,
 		authority:    authority,
-		logger:       logger.With("module", fmt.Sprintf("x/%s", types.ModuleName)),
+		logger:       logger,
 	}
 }
 
@@ -51,7 +51,7 @@ func (k Keeper) GetAuthority() string {
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger() log.Logger {
-	return k.logger
+	return k.logger.With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 func (k *Keeper) SetHooks(h []types.EpochHook) {

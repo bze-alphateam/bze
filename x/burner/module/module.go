@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/bze-alphateam/bze/bzeutils"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	"time"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
@@ -98,6 +101,7 @@ type AppModule struct {
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
+	epochKeeper   types.EpochKeeper
 }
 
 func NewAppModule(
@@ -105,12 +109,14 @@ func NewAppModule(
 	keeper keeper.Keeper,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
+	epochKeeper types.EpochKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
+		epochKeeper:    epochKeeper,
 	}
 }
 
@@ -151,7 +157,21 @@ func (am AppModule) BeginBlock(_ context.Context) error {
 
 // EndBlock contains the logic that is automatically triggered at the end of each block.
 // The end block implementation is optional.
-func (am AppModule) EndBlock(_ context.Context) error {
+func (am AppModule) EndBlock(ctx context.Context) error {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	wrappedFunc := func(ctx sdk.Context) error {
+		am.keeper.WithdrawLuckyRaffleParticipants(ctx, ctx.BlockHeight())
+
+		return nil
+	}
+
+	err := bzeutils.ApplyFuncIfNoError(sdkCtx, wrappedFunc)
+	if err != nil {
+		am.keeper.Logger().Error("error on burner module EndBlock", "err", err)
+	}
+
 	return nil
 }
 
@@ -182,6 +202,7 @@ type ModuleInputs struct {
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
+	EpochKeeper   types.EpochKeeper
 }
 
 type ModuleOutputs struct {
@@ -204,12 +225,14 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority.String(),
 		in.BankKeeper,
 		in.AccountKeeper,
+		in.EpochKeeper,
 	)
 	m := NewAppModule(
 		in.Cdc,
 		k,
 		in.AccountKeeper,
 		in.BankKeeper,
+		in.EpochKeeper,
 	)
 
 	return ModuleOutputs{BurnerKeeper: k, Module: m}

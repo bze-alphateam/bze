@@ -20,9 +20,10 @@ type (
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
 		authority string
-		//TODO: add other dependencies
+
 		bankKeeper    types.BankKeeper
 		accountKeeper types.AccountKeeper
+		epochKeeper   types.EpochKeeper
 	}
 )
 
@@ -34,6 +35,7 @@ func NewKeeper(
 
 	bankKeeper types.BankKeeper,
 	accountKeeper types.AccountKeeper,
+	epochKeeper types.EpochKeeper,
 ) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
@@ -43,10 +45,11 @@ func NewKeeper(
 		cdc:          cdc,
 		storeService: storeService,
 		authority:    authority,
-		logger:       logger.With("module", fmt.Sprintf("x/%s", types.ModuleName)),
+		logger:       logger,
 
 		bankKeeper:    bankKeeper,
 		accountKeeper: accountKeeper,
+		epochKeeper:   epochKeeper,
 	}
 }
 
@@ -57,5 +60,5 @@ func (k Keeper) GetAuthority() string {
 
 // Logger returns a module-specific logger.
 func (k Keeper) Logger() log.Logger {
-	return k.logger
+	return k.logger.With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }

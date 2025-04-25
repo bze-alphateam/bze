@@ -1,6 +1,7 @@
 package app
 
 import (
+	epochmoduletypes "github.com/bze-alphateam/bze/x/epochs/types"
 	"io"
 
 	"github.com/bze-alphateam/bze/docs"
@@ -281,6 +282,7 @@ func New(
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 	app.sm.RegisterStoreDecoders()
+	app.setEpochsHooks()
 
 	// A custom InitChainer sets if extra pre-init-genesis logic is required.
 	// This is necessary for manually registered modules that do not support app wiring.
@@ -394,6 +396,16 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 
 	// register app's OpenAPI routes.
 	docs.RegisterOpenAPIService(Name, apiSvr.Router)
+}
+
+// setEpochsHooks sets up the hooks for the EpochKeeper by adding specific hooks from other keepers.
+func (app *App) setEpochsHooks() {
+	app.EpochKeeper.SetHooks(
+		[]epochmoduletypes.EpochHook{
+			app.BurnerKeeper.GetBurnerRaffleCleanupHook(),
+			app.BurnerKeeper.GetBurnerPeriodicBurnHook(),
+		},
+	)
 }
 
 // GetMaccPerms returns a copy of the module account permissions
