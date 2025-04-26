@@ -170,6 +170,7 @@ var (
 		{Account: ibcfeetypes.ModuleName},
 		{Account: icatypes.ModuleName},
 		{Account: burnermoduletypes.ModuleName, Permissions: []string{authtypes.Burner}},
+		{Account: burnermoduletypes.RaffleModuleName, Permissions: []string{authtypes.Burner}},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 
