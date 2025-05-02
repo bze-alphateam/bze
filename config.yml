@@ -26,3 +26,11 @@ validators:
   bonded: 200000000stake
 - name: validator3
   bonded: 300000000stake
+
+genesis:
+  app_state:
+    tokenfactory:
+      params:
+        createDenomFee:
+          denom: "ubze"
+          amount: "12345"

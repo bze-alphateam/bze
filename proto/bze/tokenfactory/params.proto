@@ -12,9 +12,9 @@ message Params {
   option (amino.name) = "bze/x/tokenfactory/Params";
   option (gogoproto.equal) = true;
 
-  cosmos.base.v1beta1.Coin createDenomFee = 1 [
-    (gogoproto.nullable)     = false,
+  cosmos.base.v1beta1.Coin create_denom_fee = 1 [
+    (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"create_denom_fee\"",
-    (gogoproto.jsontag)      = "anon_article_cost,omitempty"
+    (gogoproto.jsontag)  = "create_denom_fee,omitempty"
   ];
 }
