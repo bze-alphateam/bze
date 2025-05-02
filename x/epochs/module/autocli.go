@@ -4,7 +4,7 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"github.com/bze-alphateam/bze/x/epochs/types"
 
-	modulev1 "github.com/bze-alphateam/bze/api/bze/epoch"
+	modulev1 "github.com/bze-alphateam/bze/api/bze/epochs"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.

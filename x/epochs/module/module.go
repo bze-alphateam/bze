@@ -20,7 +20,7 @@ import (
 
 	// this line is used by starport scaffolding # 1
 
-	modulev1 "github.com/bze-alphateam/bze/api/bze/epoch/module"
+	modulev1 "github.com/bze-alphateam/bze/api/bze/epochs/module"
 	"github.com/bze-alphateam/bze/x/epochs/keeper"
 	"github.com/bze-alphateam/bze/x/epochs/types"
 )
