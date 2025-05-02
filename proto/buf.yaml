@@ -1,4 +1,4 @@
-name: bug.build/bze-alphateam/bze
+name: buf.build/bze-alphateam/bze
 breaking:
   use:
   - FILE
