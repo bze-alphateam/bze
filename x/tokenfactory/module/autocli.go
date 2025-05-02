@@ -61,9 +61,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "SetDenomMetadata",
-					Use:            "set-denom-metadata [metadada]",
+					Use:            "set-denom-metadata [metadata]",
 					Short:          "Send a set-denom-metadata tx",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "metadada"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "metadata"}},
 				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
