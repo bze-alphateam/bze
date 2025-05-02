@@ -15,6 +15,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgSavePublisher{},
 		&MsgUpdateParams{},
 	)
-	
+
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

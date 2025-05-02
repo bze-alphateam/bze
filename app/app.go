@@ -82,6 +82,7 @@ import (
 	burnermodulekeeper "github.com/bze-alphateam/bze/x/burner/keeper"
 	cointrunkmodulekeeper "github.com/bze-alphateam/bze/x/cointrunk/keeper"
 	epochmodulekeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
+	tokenfactorymodulekeeper "github.com/bze-alphateam/bze/x/tokenfactory/keeper"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
@@ -145,9 +146,10 @@ type App struct {
 	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
 	ScopedKeepers             map[string]capabilitykeeper.ScopedKeeper
 
-	BurnerKeeper    burnermodulekeeper.Keeper
-	EpochKeeper     epochmodulekeeper.Keeper
-	CointrunkKeeper cointrunkmodulekeeper.Keeper
+	BurnerKeeper       burnermodulekeeper.Keeper
+	EpochKeeper        epochmodulekeeper.Keeper
+	CointrunkKeeper    cointrunkmodulekeeper.Keeper
+	TokenfactoryKeeper tokenfactorymodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
@@ -254,6 +256,7 @@ func New(
 		&app.BurnerKeeper,
 		&app.EpochKeeper,
 		&app.CointrunkKeeper,
+		&app.TokenfactoryKeeper,
 		// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	); err != nil {
 		panic(err)

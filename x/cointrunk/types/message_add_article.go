@@ -1,12 +1,13 @@
 package types
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"fmt"
+	"net/url"
+
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"net/url"
 )
 
 var _ sdk.Msg = &MsgAddArticle{}

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/bze-alphateam/bze/x/cointrunk/types"

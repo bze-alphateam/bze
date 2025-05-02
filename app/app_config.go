@@ -34,12 +34,15 @@ import (
 	burnermodulev1 "github.com/bze-alphateam/bze/api/bze/burner/module"
 	cointrunkmodulev1 "github.com/bze-alphateam/bze/api/bze/cointrunk/module"
 	epochmodulev1 "github.com/bze-alphateam/bze/api/bze/epoch/module"
+	tokenfactorymodulev1 "github.com/bze-alphateam/bze/api/bze/tokenfactory/module"
 	_ "github.com/bze-alphateam/bze/x/burner/module" // import for side-effects
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	_ "github.com/bze-alphateam/bze/x/cointrunk/module" // import for side-effects
 	cointrunkmoduletypes "github.com/bze-alphateam/bze/x/cointrunk/types"
 	_ "github.com/bze-alphateam/bze/x/epochs/module" // import for side-effects
 	epochmoduletypes "github.com/bze-alphateam/bze/x/epochs/types"
+	_ "github.com/bze-alphateam/bze/x/tokenfactory/module" // import for side-effects
+	tokenfactorymoduletypes "github.com/bze-alphateam/bze/x/tokenfactory/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -101,6 +104,7 @@ var (
 		burnermoduletypes.ModuleName,
 		epochmoduletypes.ModuleName,
 		cointrunkmoduletypes.ModuleName,
+		tokenfactorymoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 
@@ -128,6 +132,7 @@ var (
 		burnermoduletypes.ModuleName,
 		epochmoduletypes.ModuleName,
 		cointrunkmoduletypes.ModuleName,
+		tokenfactorymoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/beginBlockers
 	}
 
@@ -149,6 +154,7 @@ var (
 		burnermoduletypes.ModuleName,
 		epochmoduletypes.ModuleName,
 		cointrunkmoduletypes.ModuleName,
+		tokenfactorymoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/endBlockers
 	}
 
@@ -317,6 +323,10 @@ var (
 			{
 				Name:   cointrunkmoduletypes.ModuleName,
 				Config: appconfig.WrapAny(&cointrunkmodulev1.Module{}),
+			},
+			{
+				Name:   tokenfactorymoduletypes.ModuleName,
+				Config: appconfig.WrapAny(&tokenfactorymodulev1.Module{}),
 			},
 			// this line is used by starport scaffolding # stargate/app/moduleConfig
 		},

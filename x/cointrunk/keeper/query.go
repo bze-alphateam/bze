@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"encoding/binary"
+
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"

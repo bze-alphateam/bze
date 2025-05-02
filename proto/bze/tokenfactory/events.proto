@@ -1,0 +1,17 @@
+syntax = "proto3";
+package bze.tokenfactory;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/tokenfactory/types";
+
+message DenomAdminChangeEvent {
+  string admin = 1;
+  string new_admin = 2;
+  string denom = 3;
+}
+
+message DenomMetadataChangeEvent {
+  string denom = 1;
+}
+
