@@ -177,6 +177,7 @@ var (
 		{Account: icatypes.ModuleName},
 		{Account: burnermoduletypes.ModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: burnermoduletypes.RaffleModuleName, Permissions: []string{authtypes.Burner}},
+		{Account: tokenfactorymoduletypes.ModuleName, Permissions: []string{authtypes.Burner, authtypes.Minter}},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 
