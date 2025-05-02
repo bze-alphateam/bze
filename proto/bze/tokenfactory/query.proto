@@ -22,7 +22,7 @@ service Query {
   
   // Queries the DenomAuthority of a denom
   rpc DenomAuthority (QueryDenomAuthorityRequest) returns (QueryDenomAuthorityResponse) {
-    option (google.api.http).get = "/bze/tokenfactory/denom_authority/{denom}";
+    option (google.api.http).get = "/bze/tokenfactory/denom_authority";
   
   }
 }

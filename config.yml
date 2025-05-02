@@ -4,10 +4,12 @@ accounts:
 - name: alice
   coins:
   - 20000token
+  - 10000ubze
   - 200000000stake
 - name: bob
   coins:
   - 10000token
+  - 1000000000ubze
   - 100000000stake
 client:
   openapi:
