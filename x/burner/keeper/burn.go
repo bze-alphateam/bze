@@ -20,6 +20,7 @@ func (k Keeper) burnModuleCoins(ctx sdk.Context) error {
 		//make sure IBC and LP Tokens are not burned
 		if bzeutils.IsIBCDenom(c.Denom) || bzeutils.IsLpTokenDenom(c.Denom) {
 			//TODO: swap IBC tokens for BZE to burn them
+			//TODO: take into consideration that external apps might not have trading module
 			continue
 		}
 

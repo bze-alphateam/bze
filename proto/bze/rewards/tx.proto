@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package bze.rewards;
+
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "bze/rewards/params.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
+
+// Msg defines the Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+  
+  // UpdateParams defines a (governance) operation for updating the module
+  // parameters. The authority defaults to the x/gov module account.
+  rpc UpdateParams             (MsgUpdateParams            ) returns (MsgUpdateParamsResponse            );
+  rpc CreateStakingReward      (MsgCreateStakingReward     ) returns (MsgCreateStakingRewardResponse     );
+  rpc UpdateStakingReward      (MsgUpdateStakingReward     ) returns (MsgUpdateStakingRewardResponse     );
+  rpc JoinStaking              (MsgJoinStaking             ) returns (MsgJoinStakingResponse             );
+  rpc ExitStaking              (MsgExitStaking             ) returns (MsgExitStakingResponse             );
+  rpc ClaimStakingRewards      (MsgClaimStakingRewards     ) returns (MsgClaimStakingRewardsResponse     );
+  rpc DistributeStakingRewards (MsgDistributeStakingRewards) returns (MsgDistributeStakingRewardsResponse);
+}
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) =                     "authority";
+  option           (amino.name) = "bze/x/rewards/MsgUpdateParams";
+  
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params defines the module parameters to update.
+  
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+message MsgUpdateParamsResponse {}
+
+message MsgCreateStakingReward {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator       = 1;
+  string prize_amount  = 2;
+  string prize_denom   = 3;
+  string staking_denom = 4;
+  string duration      = 5;
+  string min_stake     = 6;
+  string lock          = 7;
+}
+
+message MsgCreateStakingRewardResponse {
+  string reward_id = 1;
+}
+
+message MsgUpdateStakingReward {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator   = 1;
+  string reward_id = 2;
+  string duration  = 3;
+}
+
+message MsgUpdateStakingRewardResponse {}
+
+message MsgJoinStaking {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator   = 1;
+  string reward_id = 2;
+  string amount    = 3;
+}
+
+message MsgJoinStakingResponse {}
+
+message MsgExitStaking {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator   = 1;
+  string reward_id = 2;
+}
+
+message MsgExitStakingResponse {}
+
+message MsgClaimStakingRewards {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator  = 1;
+  string reward_id = 2;
+}
+
+message MsgClaimStakingRewardsResponse {
+  string amount = 1;
+}
+
+message MsgDistributeStakingRewards {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator  = 1;
+  string reward_id = 2;
+  string amount   = 3;
+}
+
+message MsgDistributeStakingRewardsResponse {}
+

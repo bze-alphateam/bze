@@ -64,7 +64,10 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	"google.golang.org/protobuf/types/known/durationpb"
-	// this line is used by starport scaffolding # stargate/app/moduleImport
+	rewardsmodulev1 "github.com/bze-alphateam/bze/api/bze/rewards/module"
+_ "github.com/bze-alphateam/bze/x/rewards/module" // import for side-effects
+rewardsmoduletypes "github.com/bze-alphateam/bze/x/rewards/types"
+// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
 var (
@@ -105,7 +108,8 @@ var (
 		epochmoduletypes.ModuleName,
 		cointrunkmoduletypes.ModuleName,
 		tokenfactorymoduletypes.ModuleName,
-		// this line is used by starport scaffolding # stargate/app/initGenesis
+		rewardsmoduletypes.ModuleName,
+// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -133,7 +137,8 @@ var (
 		epochmoduletypes.ModuleName,
 		cointrunkmoduletypes.ModuleName,
 		tokenfactorymoduletypes.ModuleName,
-		// this line is used by starport scaffolding # stargate/app/beginBlockers
+		rewardsmoduletypes.ModuleName,
+// this line is used by starport scaffolding # stargate/app/beginBlockers
 	}
 
 	endBlockers = []string{
@@ -155,7 +160,8 @@ var (
 		epochmoduletypes.ModuleName,
 		cointrunkmoduletypes.ModuleName,
 		tokenfactorymoduletypes.ModuleName,
-		// this line is used by starport scaffolding # stargate/app/endBlockers
+		rewardsmoduletypes.ModuleName,
+// this line is used by starport scaffolding # stargate/app/endBlockers
 	}
 
 	preBlockers = []string{
@@ -329,7 +335,11 @@ var (
 				Name:   tokenfactorymoduletypes.ModuleName,
 				Config: appconfig.WrapAny(&tokenfactorymodulev1.Module{}),
 			},
-			// this line is used by starport scaffolding # stargate/app/moduleConfig
+			{
+				Name:   rewardsmoduletypes.ModuleName,
+				Config: appconfig.WrapAny(&rewardsmodulev1.Module{}),
+			},
+// this line is used by starport scaffolding # stargate/app/moduleConfig
 		},
 	})
 )
