@@ -190,7 +190,7 @@ type ModuleInputs struct {
 	BankKeeper    types.BankKeeper
 	DistrKeeper   types.DistrKeeper
 	EpochKeeper   types.EpochKeeper
-	TradeKeeper   types.TradingKeeper
+	TradeKeeper   types.TradingKeeper `optional:"true"`
 }
 
 type ModuleOutputs struct {

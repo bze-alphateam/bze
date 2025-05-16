@@ -2,25 +2,18 @@ package types
 
 import (
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
 
-
 var (
-	KeyCreateStakingRewardFee = []byte("CreateStakingRewardFee")
-	// TODO: Determine the default value
-	DefaultCreateStakingRewardFee string = "create_staking_reward_fee"
+	KeyCreateTradingRewardFee          = []byte("CreateTradingRewardFee")
+	KeyCreateStakingRewardFee          = []byte("CreateStakingRewardFee")
+	DefaultCreateRewardFee    sdk.Coin = sdk.NewInt64Coin("ubze", 25_000_000000)
 )
-
-var (
-	KeyCreateTradingRewardFee = []byte("CreateTradingRewardFee")
-	// TODO: Determine the default value
-	DefaultCreateTradingRewardFee string = "create_trading_reward_fee"
-)
-
 
 // ParamKeyTable the param key table for launch module
 func ParamKeyTable() paramtypes.KeyTable {
@@ -29,20 +22,20 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams creates a new Params instance
 func NewParams(
-	createStakingRewardFee string,
-	createTradingRewardFee string,
+	createStakingRewardFee sdk.Coin,
+	createTradingRewardFee sdk.Coin,
 ) Params {
 	return Params{
-        CreateStakingRewardFee: createStakingRewardFee,
-        CreateTradingRewardFee: createTradingRewardFee,
+		CreateStakingRewardFee: createStakingRewardFee,
+		CreateTradingRewardFee: createTradingRewardFee,
 	}
 }
 
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
 	return NewParams(
-        DefaultCreateStakingRewardFee,
-        DefaultCreateTradingRewardFee,
+		DefaultCreateRewardFee,
+		DefaultCreateRewardFee,
 	)
 }
 
@@ -56,40 +49,41 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 
 // Validate validates the set of params
 func (p Params) Validate() error {
-   	if err := validateCreateStakingRewardFee(p.CreateStakingRewardFee); err != nil {
-   		return err
-   	}
-   	
-   	if err := validateCreateTradingRewardFee(p.CreateTradingRewardFee); err != nil {
-   		return err
-   	}
-   	
+	if err := validateCreateStakingRewardFee(p.CreateStakingRewardFee); err != nil {
+		return err
+	}
+
+	if err := validateCreateTradingRewardFee(p.CreateTradingRewardFee); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-
 // validateCreateStakingRewardFee validates the CreateStakingRewardFee param
 func validateCreateStakingRewardFee(v interface{}) error {
-	createStakingRewardFee, ok := v.(string)
+	createStakingRewardFee, ok := v.(sdk.Coin)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
-	// TODO implement validation
-	_ = createStakingRewardFee
+	if !createStakingRewardFee.IsValid() {
+		return fmt.Errorf("invalid CreateStakingRewardFee: %s", createStakingRewardFee)
+	}
 
 	return nil
 }
 
 // validateCreateTradingRewardFee validates the CreateTradingRewardFee param
 func validateCreateTradingRewardFee(v interface{}) error {
-	createTradingRewardFee, ok := v.(string)
+	createTradingRewardFee, ok := v.(sdk.Coin)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
-	// TODO implement validation
-	_ = createTradingRewardFee
+	if !createTradingRewardFee.IsValid() {
+		return fmt.Errorf("invalid createTradingRewardFee: %s", createTradingRewardFee)
+	}
 
 	return nil
 }
