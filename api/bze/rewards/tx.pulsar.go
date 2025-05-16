@@ -4744,16 +4744,16 @@ func (x *fastReflection_MsgExitStakingResponse) ProtoMethods() *protoiface.Metho
 }
 
 var (
-	md_MsgClaimStakingRewards          protoreflect.MessageDescriptor
-	fd_MsgClaimStakingRewards_creator  protoreflect.FieldDescriptor
-	fd_MsgClaimStakingRewards_rewardId protoreflect.FieldDescriptor
+	md_MsgClaimStakingRewards           protoreflect.MessageDescriptor
+	fd_MsgClaimStakingRewards_creator   protoreflect.FieldDescriptor
+	fd_MsgClaimStakingRewards_reward_id protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_bze_rewards_tx_proto_init()
 	md_MsgClaimStakingRewards = File_bze_rewards_tx_proto.Messages().ByName("MsgClaimStakingRewards")
 	fd_MsgClaimStakingRewards_creator = md_MsgClaimStakingRewards.Fields().ByName("creator")
-	fd_MsgClaimStakingRewards_rewardId = md_MsgClaimStakingRewards.Fields().ByName("rewardId")
+	fd_MsgClaimStakingRewards_reward_id = md_MsgClaimStakingRewards.Fields().ByName("reward_id")
 }
 
 var _ protoreflect.Message = (*fastReflection_MsgClaimStakingRewards)(nil)
@@ -4829,7 +4829,7 @@ func (x *fastReflection_MsgClaimStakingRewards) Range(f func(protoreflect.FieldD
 	}
 	if x.RewardId != "" {
 		value := protoreflect.ValueOfString(x.RewardId)
-		if !f(fd_MsgClaimStakingRewards_rewardId, value) {
+		if !f(fd_MsgClaimStakingRewards_reward_id, value) {
 			return
 		}
 	}
@@ -4850,7 +4850,7 @@ func (x *fastReflection_MsgClaimStakingRewards) Has(fd protoreflect.FieldDescrip
 	switch fd.FullName() {
 	case "bze.rewards.MsgClaimStakingRewards.creator":
 		return x.Creator != ""
-	case "bze.rewards.MsgClaimStakingRewards.rewardId":
+	case "bze.rewards.MsgClaimStakingRewards.reward_id":
 		return x.RewardId != ""
 	default:
 		if fd.IsExtension() {
@@ -4870,7 +4870,7 @@ func (x *fastReflection_MsgClaimStakingRewards) Clear(fd protoreflect.FieldDescr
 	switch fd.FullName() {
 	case "bze.rewards.MsgClaimStakingRewards.creator":
 		x.Creator = ""
-	case "bze.rewards.MsgClaimStakingRewards.rewardId":
+	case "bze.rewards.MsgClaimStakingRewards.reward_id":
 		x.RewardId = ""
 	default:
 		if fd.IsExtension() {
@@ -4891,7 +4891,7 @@ func (x *fastReflection_MsgClaimStakingRewards) Get(descriptor protoreflect.Fiel
 	case "bze.rewards.MsgClaimStakingRewards.creator":
 		value := x.Creator
 		return protoreflect.ValueOfString(value)
-	case "bze.rewards.MsgClaimStakingRewards.rewardId":
+	case "bze.rewards.MsgClaimStakingRewards.reward_id":
 		value := x.RewardId
 		return protoreflect.ValueOfString(value)
 	default:
@@ -4916,7 +4916,7 @@ func (x *fastReflection_MsgClaimStakingRewards) Set(fd protoreflect.FieldDescrip
 	switch fd.FullName() {
 	case "bze.rewards.MsgClaimStakingRewards.creator":
 		x.Creator = value.Interface().(string)
-	case "bze.rewards.MsgClaimStakingRewards.rewardId":
+	case "bze.rewards.MsgClaimStakingRewards.reward_id":
 		x.RewardId = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
@@ -4940,8 +4940,8 @@ func (x *fastReflection_MsgClaimStakingRewards) Mutable(fd protoreflect.FieldDes
 	switch fd.FullName() {
 	case "bze.rewards.MsgClaimStakingRewards.creator":
 		panic(fmt.Errorf("field creator of message bze.rewards.MsgClaimStakingRewards is not mutable"))
-	case "bze.rewards.MsgClaimStakingRewards.rewardId":
-		panic(fmt.Errorf("field rewardId of message bze.rewards.MsgClaimStakingRewards is not mutable"))
+	case "bze.rewards.MsgClaimStakingRewards.reward_id":
+		panic(fmt.Errorf("field reward_id of message bze.rewards.MsgClaimStakingRewards is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgClaimStakingRewards"))
@@ -4957,7 +4957,7 @@ func (x *fastReflection_MsgClaimStakingRewards) NewField(fd protoreflect.FieldDe
 	switch fd.FullName() {
 	case "bze.rewards.MsgClaimStakingRewards.creator":
 		return protoreflect.ValueOfString("")
-	case "bze.rewards.MsgClaimStakingRewards.rewardId":
+	case "bze.rewards.MsgClaimStakingRewards.reward_id":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -5648,17 +5648,17 @@ func (x *fastReflection_MsgClaimStakingRewardsResponse) ProtoMethods() *protoifa
 }
 
 var (
-	md_MsgDistributeStakingRewards          protoreflect.MessageDescriptor
-	fd_MsgDistributeStakingRewards_creator  protoreflect.FieldDescriptor
-	fd_MsgDistributeStakingRewards_rewardId protoreflect.FieldDescriptor
-	fd_MsgDistributeStakingRewards_amount   protoreflect.FieldDescriptor
+	md_MsgDistributeStakingRewards           protoreflect.MessageDescriptor
+	fd_MsgDistributeStakingRewards_creator   protoreflect.FieldDescriptor
+	fd_MsgDistributeStakingRewards_reward_id protoreflect.FieldDescriptor
+	fd_MsgDistributeStakingRewards_amount    protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_bze_rewards_tx_proto_init()
 	md_MsgDistributeStakingRewards = File_bze_rewards_tx_proto.Messages().ByName("MsgDistributeStakingRewards")
 	fd_MsgDistributeStakingRewards_creator = md_MsgDistributeStakingRewards.Fields().ByName("creator")
-	fd_MsgDistributeStakingRewards_rewardId = md_MsgDistributeStakingRewards.Fields().ByName("rewardId")
+	fd_MsgDistributeStakingRewards_reward_id = md_MsgDistributeStakingRewards.Fields().ByName("reward_id")
 	fd_MsgDistributeStakingRewards_amount = md_MsgDistributeStakingRewards.Fields().ByName("amount")
 }
 
@@ -5735,7 +5735,7 @@ func (x *fastReflection_MsgDistributeStakingRewards) Range(f func(protoreflect.F
 	}
 	if x.RewardId != "" {
 		value := protoreflect.ValueOfString(x.RewardId)
-		if !f(fd_MsgDistributeStakingRewards_rewardId, value) {
+		if !f(fd_MsgDistributeStakingRewards_reward_id, value) {
 			return
 		}
 	}
@@ -5762,7 +5762,7 @@ func (x *fastReflection_MsgDistributeStakingRewards) Has(fd protoreflect.FieldDe
 	switch fd.FullName() {
 	case "bze.rewards.MsgDistributeStakingRewards.creator":
 		return x.Creator != ""
-	case "bze.rewards.MsgDistributeStakingRewards.rewardId":
+	case "bze.rewards.MsgDistributeStakingRewards.reward_id":
 		return x.RewardId != ""
 	case "bze.rewards.MsgDistributeStakingRewards.amount":
 		return x.Amount != ""
@@ -5784,7 +5784,7 @@ func (x *fastReflection_MsgDistributeStakingRewards) Clear(fd protoreflect.Field
 	switch fd.FullName() {
 	case "bze.rewards.MsgDistributeStakingRewards.creator":
 		x.Creator = ""
-	case "bze.rewards.MsgDistributeStakingRewards.rewardId":
+	case "bze.rewards.MsgDistributeStakingRewards.reward_id":
 		x.RewardId = ""
 	case "bze.rewards.MsgDistributeStakingRewards.amount":
 		x.Amount = ""
@@ -5807,7 +5807,7 @@ func (x *fastReflection_MsgDistributeStakingRewards) Get(descriptor protoreflect
 	case "bze.rewards.MsgDistributeStakingRewards.creator":
 		value := x.Creator
 		return protoreflect.ValueOfString(value)
-	case "bze.rewards.MsgDistributeStakingRewards.rewardId":
+	case "bze.rewards.MsgDistributeStakingRewards.reward_id":
 		value := x.RewardId
 		return protoreflect.ValueOfString(value)
 	case "bze.rewards.MsgDistributeStakingRewards.amount":
@@ -5835,7 +5835,7 @@ func (x *fastReflection_MsgDistributeStakingRewards) Set(fd protoreflect.FieldDe
 	switch fd.FullName() {
 	case "bze.rewards.MsgDistributeStakingRewards.creator":
 		x.Creator = value.Interface().(string)
-	case "bze.rewards.MsgDistributeStakingRewards.rewardId":
+	case "bze.rewards.MsgDistributeStakingRewards.reward_id":
 		x.RewardId = value.Interface().(string)
 	case "bze.rewards.MsgDistributeStakingRewards.amount":
 		x.Amount = value.Interface().(string)
@@ -5861,8 +5861,8 @@ func (x *fastReflection_MsgDistributeStakingRewards) Mutable(fd protoreflect.Fie
 	switch fd.FullName() {
 	case "bze.rewards.MsgDistributeStakingRewards.creator":
 		panic(fmt.Errorf("field creator of message bze.rewards.MsgDistributeStakingRewards is not mutable"))
-	case "bze.rewards.MsgDistributeStakingRewards.rewardId":
-		panic(fmt.Errorf("field rewardId of message bze.rewards.MsgDistributeStakingRewards is not mutable"))
+	case "bze.rewards.MsgDistributeStakingRewards.reward_id":
+		panic(fmt.Errorf("field reward_id of message bze.rewards.MsgDistributeStakingRewards is not mutable"))
 	case "bze.rewards.MsgDistributeStakingRewards.amount":
 		panic(fmt.Errorf("field amount of message bze.rewards.MsgDistributeStakingRewards is not mutable"))
 	default:
@@ -5880,7 +5880,7 @@ func (x *fastReflection_MsgDistributeStakingRewards) NewField(fd protoreflect.Fi
 	switch fd.FullName() {
 	case "bze.rewards.MsgDistributeStakingRewards.creator":
 		return protoreflect.ValueOfString("")
-	case "bze.rewards.MsgDistributeStakingRewards.rewardId":
+	case "bze.rewards.MsgDistributeStakingRewards.reward_id":
 		return protoreflect.ValueOfString("")
 	case "bze.rewards.MsgDistributeStakingRewards.amount":
 		return protoreflect.ValueOfString("")
@@ -6551,6 +6551,1166 @@ func (x *fastReflection_MsgDistributeStakingRewardsResponse) ProtoMethods() *pro
 	}
 }
 
+var (
+	md_MsgCreateTradingReward              protoreflect.MessageDescriptor
+	fd_MsgCreateTradingReward_creator      protoreflect.FieldDescriptor
+	fd_MsgCreateTradingReward_prize_amount protoreflect.FieldDescriptor
+	fd_MsgCreateTradingReward_prize_denom  protoreflect.FieldDescriptor
+	fd_MsgCreateTradingReward_duration     protoreflect.FieldDescriptor
+	fd_MsgCreateTradingReward_market_id    protoreflect.FieldDescriptor
+	fd_MsgCreateTradingReward_slots        protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_rewards_tx_proto_init()
+	md_MsgCreateTradingReward = File_bze_rewards_tx_proto.Messages().ByName("MsgCreateTradingReward")
+	fd_MsgCreateTradingReward_creator = md_MsgCreateTradingReward.Fields().ByName("creator")
+	fd_MsgCreateTradingReward_prize_amount = md_MsgCreateTradingReward.Fields().ByName("prize_amount")
+	fd_MsgCreateTradingReward_prize_denom = md_MsgCreateTradingReward.Fields().ByName("prize_denom")
+	fd_MsgCreateTradingReward_duration = md_MsgCreateTradingReward.Fields().ByName("duration")
+	fd_MsgCreateTradingReward_market_id = md_MsgCreateTradingReward.Fields().ByName("market_id")
+	fd_MsgCreateTradingReward_slots = md_MsgCreateTradingReward.Fields().ByName("slots")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgCreateTradingReward)(nil)
+
+type fastReflection_MsgCreateTradingReward MsgCreateTradingReward
+
+func (x *MsgCreateTradingReward) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCreateTradingReward)(x)
+}
+
+func (x *MsgCreateTradingReward) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_rewards_tx_proto_msgTypes[14]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgCreateTradingReward_messageType fastReflection_MsgCreateTradingReward_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCreateTradingReward_messageType{}
+
+type fastReflection_MsgCreateTradingReward_messageType struct{}
+
+func (x fastReflection_MsgCreateTradingReward_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCreateTradingReward)(nil)
+}
+func (x fastReflection_MsgCreateTradingReward_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateTradingReward)
+}
+func (x fastReflection_MsgCreateTradingReward_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateTradingReward
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgCreateTradingReward) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateTradingReward
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgCreateTradingReward) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCreateTradingReward_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgCreateTradingReward) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateTradingReward)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgCreateTradingReward) Interface() protoreflect.ProtoMessage {
+	return (*MsgCreateTradingReward)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgCreateTradingReward) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Creator != "" {
+		value := protoreflect.ValueOfString(x.Creator)
+		if !f(fd_MsgCreateTradingReward_creator, value) {
+			return
+		}
+	}
+	if x.PrizeAmount != "" {
+		value := protoreflect.ValueOfString(x.PrizeAmount)
+		if !f(fd_MsgCreateTradingReward_prize_amount, value) {
+			return
+		}
+	}
+	if x.PrizeDenom != "" {
+		value := protoreflect.ValueOfString(x.PrizeDenom)
+		if !f(fd_MsgCreateTradingReward_prize_denom, value) {
+			return
+		}
+	}
+	if x.Duration != "" {
+		value := protoreflect.ValueOfString(x.Duration)
+		if !f(fd_MsgCreateTradingReward_duration, value) {
+			return
+		}
+	}
+	if x.MarketId != "" {
+		value := protoreflect.ValueOfString(x.MarketId)
+		if !f(fd_MsgCreateTradingReward_market_id, value) {
+			return
+		}
+	}
+	if x.Slots != "" {
+		value := protoreflect.ValueOfString(x.Slots)
+		if !f(fd_MsgCreateTradingReward_slots, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgCreateTradingReward) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.rewards.MsgCreateTradingReward.creator":
+		return x.Creator != ""
+	case "bze.rewards.MsgCreateTradingReward.prize_amount":
+		return x.PrizeAmount != ""
+	case "bze.rewards.MsgCreateTradingReward.prize_denom":
+		return x.PrizeDenom != ""
+	case "bze.rewards.MsgCreateTradingReward.duration":
+		return x.Duration != ""
+	case "bze.rewards.MsgCreateTradingReward.market_id":
+		return x.MarketId != ""
+	case "bze.rewards.MsgCreateTradingReward.slots":
+		return x.Slots != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgCreateTradingReward"))
+		}
+		panic(fmt.Errorf("message bze.rewards.MsgCreateTradingReward does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateTradingReward) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.rewards.MsgCreateTradingReward.creator":
+		x.Creator = ""
+	case "bze.rewards.MsgCreateTradingReward.prize_amount":
+		x.PrizeAmount = ""
+	case "bze.rewards.MsgCreateTradingReward.prize_denom":
+		x.PrizeDenom = ""
+	case "bze.rewards.MsgCreateTradingReward.duration":
+		x.Duration = ""
+	case "bze.rewards.MsgCreateTradingReward.market_id":
+		x.MarketId = ""
+	case "bze.rewards.MsgCreateTradingReward.slots":
+		x.Slots = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgCreateTradingReward"))
+		}
+		panic(fmt.Errorf("message bze.rewards.MsgCreateTradingReward does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgCreateTradingReward) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.rewards.MsgCreateTradingReward.creator":
+		value := x.Creator
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.MsgCreateTradingReward.prize_amount":
+		value := x.PrizeAmount
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.MsgCreateTradingReward.prize_denom":
+		value := x.PrizeDenom
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.MsgCreateTradingReward.duration":
+		value := x.Duration
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.MsgCreateTradingReward.market_id":
+		value := x.MarketId
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.MsgCreateTradingReward.slots":
+		value := x.Slots
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgCreateTradingReward"))
+		}
+		panic(fmt.Errorf("message bze.rewards.MsgCreateTradingReward does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateTradingReward) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.rewards.MsgCreateTradingReward.creator":
+		x.Creator = value.Interface().(string)
+	case "bze.rewards.MsgCreateTradingReward.prize_amount":
+		x.PrizeAmount = value.Interface().(string)
+	case "bze.rewards.MsgCreateTradingReward.prize_denom":
+		x.PrizeDenom = value.Interface().(string)
+	case "bze.rewards.MsgCreateTradingReward.duration":
+		x.Duration = value.Interface().(string)
+	case "bze.rewards.MsgCreateTradingReward.market_id":
+		x.MarketId = value.Interface().(string)
+	case "bze.rewards.MsgCreateTradingReward.slots":
+		x.Slots = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgCreateTradingReward"))
+		}
+		panic(fmt.Errorf("message bze.rewards.MsgCreateTradingReward does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateTradingReward) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.rewards.MsgCreateTradingReward.creator":
+		panic(fmt.Errorf("field creator of message bze.rewards.MsgCreateTradingReward is not mutable"))
+	case "bze.rewards.MsgCreateTradingReward.prize_amount":
+		panic(fmt.Errorf("field prize_amount of message bze.rewards.MsgCreateTradingReward is not mutable"))
+	case "bze.rewards.MsgCreateTradingReward.prize_denom":
+		panic(fmt.Errorf("field prize_denom of message bze.rewards.MsgCreateTradingReward is not mutable"))
+	case "bze.rewards.MsgCreateTradingReward.duration":
+		panic(fmt.Errorf("field duration of message bze.rewards.MsgCreateTradingReward is not mutable"))
+	case "bze.rewards.MsgCreateTradingReward.market_id":
+		panic(fmt.Errorf("field market_id of message bze.rewards.MsgCreateTradingReward is not mutable"))
+	case "bze.rewards.MsgCreateTradingReward.slots":
+		panic(fmt.Errorf("field slots of message bze.rewards.MsgCreateTradingReward is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgCreateTradingReward"))
+		}
+		panic(fmt.Errorf("message bze.rewards.MsgCreateTradingReward does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgCreateTradingReward) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.rewards.MsgCreateTradingReward.creator":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.MsgCreateTradingReward.prize_amount":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.MsgCreateTradingReward.prize_denom":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.MsgCreateTradingReward.duration":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.MsgCreateTradingReward.market_id":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.MsgCreateTradingReward.slots":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgCreateTradingReward"))
+		}
+		panic(fmt.Errorf("message bze.rewards.MsgCreateTradingReward does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgCreateTradingReward) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.rewards.MsgCreateTradingReward", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgCreateTradingReward) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateTradingReward) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgCreateTradingReward) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgCreateTradingReward) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgCreateTradingReward)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Creator)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.PrizeAmount)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.PrizeDenom)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Duration)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.MarketId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Slots)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCreateTradingReward)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Slots) > 0 {
+			i -= len(x.Slots)
+			copy(dAtA[i:], x.Slots)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Slots)))
+			i--
+			dAtA[i] = 0x32
+		}
+		if len(x.MarketId) > 0 {
+			i -= len(x.MarketId)
+			copy(dAtA[i:], x.MarketId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MarketId)))
+			i--
+			dAtA[i] = 0x2a
+		}
+		if len(x.Duration) > 0 {
+			i -= len(x.Duration)
+			copy(dAtA[i:], x.Duration)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Duration)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if len(x.PrizeDenom) > 0 {
+			i -= len(x.PrizeDenom)
+			copy(dAtA[i:], x.PrizeDenom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.PrizeDenom)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.PrizeAmount) > 0 {
+			i -= len(x.PrizeAmount)
+			copy(dAtA[i:], x.PrizeAmount)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.PrizeAmount)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Creator) > 0 {
+			i -= len(x.Creator)
+			copy(dAtA[i:], x.Creator)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Creator)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCreateTradingReward)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateTradingReward: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateTradingReward: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Creator = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PrizeAmount", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PrizeAmount = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PrizeDenom", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PrizeDenom = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Duration", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Duration = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.MarketId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Slots", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Slots = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgCreateTradingRewardResponse           protoreflect.MessageDescriptor
+	fd_MsgCreateTradingRewardResponse_reward_id protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_rewards_tx_proto_init()
+	md_MsgCreateTradingRewardResponse = File_bze_rewards_tx_proto.Messages().ByName("MsgCreateTradingRewardResponse")
+	fd_MsgCreateTradingRewardResponse_reward_id = md_MsgCreateTradingRewardResponse.Fields().ByName("reward_id")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgCreateTradingRewardResponse)(nil)
+
+type fastReflection_MsgCreateTradingRewardResponse MsgCreateTradingRewardResponse
+
+func (x *MsgCreateTradingRewardResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCreateTradingRewardResponse)(x)
+}
+
+func (x *MsgCreateTradingRewardResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_rewards_tx_proto_msgTypes[15]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgCreateTradingRewardResponse_messageType fastReflection_MsgCreateTradingRewardResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCreateTradingRewardResponse_messageType{}
+
+type fastReflection_MsgCreateTradingRewardResponse_messageType struct{}
+
+func (x fastReflection_MsgCreateTradingRewardResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCreateTradingRewardResponse)(nil)
+}
+func (x fastReflection_MsgCreateTradingRewardResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateTradingRewardResponse)
+}
+func (x fastReflection_MsgCreateTradingRewardResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateTradingRewardResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgCreateTradingRewardResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateTradingRewardResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgCreateTradingRewardResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCreateTradingRewardResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgCreateTradingRewardResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateTradingRewardResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgCreateTradingRewardResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgCreateTradingRewardResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgCreateTradingRewardResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.RewardId != "" {
+		value := protoreflect.ValueOfString(x.RewardId)
+		if !f(fd_MsgCreateTradingRewardResponse_reward_id, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgCreateTradingRewardResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.rewards.MsgCreateTradingRewardResponse.reward_id":
+		return x.RewardId != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgCreateTradingRewardResponse"))
+		}
+		panic(fmt.Errorf("message bze.rewards.MsgCreateTradingRewardResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateTradingRewardResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.rewards.MsgCreateTradingRewardResponse.reward_id":
+		x.RewardId = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgCreateTradingRewardResponse"))
+		}
+		panic(fmt.Errorf("message bze.rewards.MsgCreateTradingRewardResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgCreateTradingRewardResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.rewards.MsgCreateTradingRewardResponse.reward_id":
+		value := x.RewardId
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgCreateTradingRewardResponse"))
+		}
+		panic(fmt.Errorf("message bze.rewards.MsgCreateTradingRewardResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateTradingRewardResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.rewards.MsgCreateTradingRewardResponse.reward_id":
+		x.RewardId = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgCreateTradingRewardResponse"))
+		}
+		panic(fmt.Errorf("message bze.rewards.MsgCreateTradingRewardResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateTradingRewardResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.rewards.MsgCreateTradingRewardResponse.reward_id":
+		panic(fmt.Errorf("field reward_id of message bze.rewards.MsgCreateTradingRewardResponse is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgCreateTradingRewardResponse"))
+		}
+		panic(fmt.Errorf("message bze.rewards.MsgCreateTradingRewardResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgCreateTradingRewardResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.rewards.MsgCreateTradingRewardResponse.reward_id":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgCreateTradingRewardResponse"))
+		}
+		panic(fmt.Errorf("message bze.rewards.MsgCreateTradingRewardResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgCreateTradingRewardResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.rewards.MsgCreateTradingRewardResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgCreateTradingRewardResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateTradingRewardResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgCreateTradingRewardResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgCreateTradingRewardResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgCreateTradingRewardResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.RewardId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCreateTradingRewardResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.RewardId) > 0 {
+			i -= len(x.RewardId)
+			copy(dAtA[i:], x.RewardId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.RewardId)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCreateTradingRewardResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateTradingRewardResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateTradingRewardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field RewardId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.RewardId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -6985,7 +8145,7 @@ type MsgClaimStakingRewards struct {
 	unknownFields protoimpl.UnknownFields
 
 	Creator  string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	RewardId string `protobuf:"bytes,2,opt,name=rewardId,proto3" json:"rewardId,omitempty"`
+	RewardId string `protobuf:"bytes,2,opt,name=reward_id,json=rewardId,proto3" json:"reward_id,omitempty"`
 }
 
 func (x *MsgClaimStakingRewards) Reset() {
@@ -7063,7 +8223,7 @@ type MsgDistributeStakingRewards struct {
 	unknownFields protoimpl.UnknownFields
 
 	Creator  string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	RewardId string `protobuf:"bytes,2,opt,name=rewardId,proto3" json:"rewardId,omitempty"`
+	RewardId string `protobuf:"bytes,2,opt,name=reward_id,json=rewardId,proto3" json:"reward_id,omitempty"`
 	Amount   string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 
@@ -7132,6 +8292,116 @@ func (*MsgDistributeStakingRewardsResponse) ProtoMessage() {}
 // Deprecated: Use MsgDistributeStakingRewardsResponse.ProtoReflect.Descriptor instead.
 func (*MsgDistributeStakingRewardsResponse) Descriptor() ([]byte, []int) {
 	return file_bze_rewards_tx_proto_rawDescGZIP(), []int{13}
+}
+
+type MsgCreateTradingReward struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Creator     string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	PrizeAmount string `protobuf:"bytes,2,opt,name=prize_amount,json=prizeAmount,proto3" json:"prize_amount,omitempty"`
+	PrizeDenom  string `protobuf:"bytes,3,opt,name=prize_denom,json=prizeDenom,proto3" json:"prize_denom,omitempty"`
+	Duration    string `protobuf:"bytes,4,opt,name=duration,proto3" json:"duration,omitempty"`
+	MarketId    string `protobuf:"bytes,5,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	Slots       string `protobuf:"bytes,6,opt,name=slots,proto3" json:"slots,omitempty"`
+}
+
+func (x *MsgCreateTradingReward) Reset() {
+	*x = MsgCreateTradingReward{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_rewards_tx_proto_msgTypes[14]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgCreateTradingReward) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgCreateTradingReward) ProtoMessage() {}
+
+// Deprecated: Use MsgCreateTradingReward.ProtoReflect.Descriptor instead.
+func (*MsgCreateTradingReward) Descriptor() ([]byte, []int) {
+	return file_bze_rewards_tx_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *MsgCreateTradingReward) GetCreator() string {
+	if x != nil {
+		return x.Creator
+	}
+	return ""
+}
+
+func (x *MsgCreateTradingReward) GetPrizeAmount() string {
+	if x != nil {
+		return x.PrizeAmount
+	}
+	return ""
+}
+
+func (x *MsgCreateTradingReward) GetPrizeDenom() string {
+	if x != nil {
+		return x.PrizeDenom
+	}
+	return ""
+}
+
+func (x *MsgCreateTradingReward) GetDuration() string {
+	if x != nil {
+		return x.Duration
+	}
+	return ""
+}
+
+func (x *MsgCreateTradingReward) GetMarketId() string {
+	if x != nil {
+		return x.MarketId
+	}
+	return ""
+}
+
+func (x *MsgCreateTradingReward) GetSlots() string {
+	if x != nil {
+		return x.Slots
+	}
+	return ""
+}
+
+type MsgCreateTradingRewardResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	RewardId string `protobuf:"bytes,1,opt,name=reward_id,json=rewardId,proto3" json:"reward_id,omitempty"`
+}
+
+func (x *MsgCreateTradingRewardResponse) Reset() {
+	*x = MsgCreateTradingRewardResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_rewards_tx_proto_msgTypes[15]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgCreateTradingRewardResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgCreateTradingRewardResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgCreateTradingRewardResponse.ProtoReflect.Descriptor instead.
+func (*MsgCreateTradingRewardResponse) Descriptor() ([]byte, []int) {
+	return file_bze_rewards_tx_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *MsgCreateTradingRewardResponse) GetRewardId() string {
+	if x != nil {
+		return x.RewardId
+	}
+	return ""
 }
 
 var File_bze_rewards_tx_proto protoreflect.FileDescriptor
@@ -7204,69 +8474,93 @@ var file_bze_rewards_tx_proto_rawDesc = []byte{
 	0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64,
 	0x49, 0x64, 0x3a, 0x0c, 0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72,
 	0x22, 0x18, 0x0a, 0x16, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x69, 0x74, 0x53, 0x74, 0x61, 0x6b, 0x69,
-	0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x5c, 0x0a, 0x16, 0x4d, 0x73,
+	0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x5d, 0x0a, 0x16, 0x4d, 0x73,
 	0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77,
 	0x61, 0x72, 0x64, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x1a,
-	0x0a, 0x08, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x08, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x49, 0x64, 0x3a, 0x0c, 0x82, 0xe7, 0xb0, 0x2a,
-	0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x22, 0x38, 0x0a, 0x1e, 0x4d, 0x73, 0x67, 0x43,
-	0x6c, 0x61, 0x69, 0x6d, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72,
-	0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d,
-	0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75,
-	0x6e, 0x74, 0x22, 0x79, 0x0a, 0x1b, 0x4d, 0x73, 0x67, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62,
-	0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64,
-	0x73, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x1a, 0x0a, 0x08, 0x72,
-	0x65, 0x77, 0x61, 0x72, 0x64, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72,
-	0x65, 0x77, 0x61, 0x72, 0x64, 0x49, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e,
-	0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x3a,
-	0x0c, 0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x22, 0x25, 0x0a,
-	0x23, 0x4d, 0x73, 0x67, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x53, 0x74,
-	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x32, 0xb5, 0x05, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x52, 0x0a, 0x0c,
-	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x1c, 0x2e, 0x62,
-	0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70,
-	0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x1a, 0x24, 0x2e, 0x62, 0x7a, 0x65,
-	0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61,
-	0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x67, 0x0a, 0x13, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e,
-	0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x12, 0x23, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65,
-	0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x53,
-	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x1a, 0x2b, 0x2e, 0x62,
-	0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72,
-	0x65, 0x61, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72,
-	0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x67, 0x0a, 0x13, 0x55, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64,
-	0x12, 0x23, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d,
-	0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52,
-	0x65, 0x77, 0x61, 0x72, 0x64, 0x1a, 0x2b, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61,
-	0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53, 0x74, 0x61,
-	0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x4f, 0x0a, 0x0b, 0x4a, 0x6f, 0x69, 0x6e, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e,
-	0x67, 0x12, 0x1b, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e,
-	0x4d, 0x73, 0x67, 0x4a, 0x6f, 0x69, 0x6e, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x1a, 0x23,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x1b,
+	0x0a, 0x09, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x08, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x49, 0x64, 0x3a, 0x0c, 0x82, 0xe7, 0xb0,
+	0x2a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x22, 0x38, 0x0a, 0x1e, 0x4d, 0x73, 0x67,
+	0x43, 0x6c, 0x61, 0x69, 0x6d, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61,
+	0x72, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x61,
+	0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f,
+	0x75, 0x6e, 0x74, 0x22, 0x7a, 0x0a, 0x1b, 0x4d, 0x73, 0x67, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69,
+	0x62, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72,
+	0x64, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x1b, 0x0a, 0x09,
+	0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x08, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x49, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f,
+	0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e,
+	0x74, 0x3a, 0x0c, 0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x22,
+	0x25, 0x0a, 0x23, 0x4d, 0x73, 0x67, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65,
+	0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xd3, 0x01, 0x0a, 0x16, 0x4d, 0x73, 0x67, 0x43, 0x72,
+	0x65, 0x61, 0x74, 0x65, 0x54, 0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72,
+	0x64, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x21, 0x0a, 0x0c, 0x70,
+	0x72, 0x69, 0x7a, 0x65, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0b, 0x70, 0x72, 0x69, 0x7a, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x1f,
+	0x0a, 0x0b, 0x70, 0x72, 0x69, 0x7a, 0x65, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x0a, 0x70, 0x72, 0x69, 0x7a, 0x65, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12,
+	0x1a, 0x0a, 0x08, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x08, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1b, 0x0a, 0x09, 0x6d,
+	0x61, 0x72, 0x6b, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08,
+	0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x49, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x73, 0x6c, 0x6f, 0x74,
+	0x73, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x73, 0x6c, 0x6f, 0x74, 0x73, 0x3a, 0x0c,
+	0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x22, 0x3d, 0x0a, 0x1e,
+	0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x72, 0x61, 0x64, 0x69, 0x6e, 0x67,
+	0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1b,
+	0x0a, 0x09, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x08, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x49, 0x64, 0x32, 0x9e, 0x06, 0x0a, 0x03,
+	0x4d, 0x73, 0x67, 0x12, 0x52, 0x0a, 0x0c, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x12, 0x1c, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64,
+	0x73, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d,
+	0x73, 0x1a, 0x24, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e,
+	0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x67, 0x0a, 0x13, 0x43, 0x72, 0x65, 0x61, 0x74,
+	0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x12, 0x23,
 	0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67,
-	0x4a, 0x6f, 0x69, 0x6e, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x4f, 0x0a, 0x0b, 0x45, 0x78, 0x69, 0x74, 0x53, 0x74, 0x61, 0x6b, 0x69,
-	0x6e, 0x67, 0x12, 0x1b, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73,
-	0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x69, 0x74, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x1a,
-	0x23, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73,
-	0x67, 0x45, 0x78, 0x69, 0x74, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x67, 0x0a, 0x13, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x53, 0x74, 0x61,
-	0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x12, 0x23, 0x2e, 0x62, 0x7a,
-	0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61,
-	0x69, 0x6d, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73,
-	0x1a, 0x2b, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d,
-	0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65,
-	0x77, 0x61, 0x72, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x76, 0x0a,
-	0x18, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69,
-	0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x12, 0x28, 0x2e, 0x62, 0x7a, 0x65, 0x2e,
-	0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x44, 0x69, 0x73, 0x74, 0x72,
-	0x69, 0x62, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61,
-	0x72, 0x64, 0x73, 0x1a, 0x30, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64,
-	0x73, 0x2e, 0x4d, 0x73, 0x67, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x53,
-	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x52, 0x65, 0x73,
+	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77,
+	0x61, 0x72, 0x64, 0x1a, 0x2b, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64,
+	0x73, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69,
+	0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x67, 0x0a, 0x13, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e,
+	0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x12, 0x23, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65,
+	0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53,
+	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x1a, 0x2b, 0x2e, 0x62,
+	0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70,
+	0x64, 0x61, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72,
+	0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4f, 0x0a, 0x0b, 0x4a, 0x6f, 0x69,
+	0x6e, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x12, 0x1b, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72,
+	0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x4a, 0x6f, 0x69, 0x6e, 0x53, 0x74,
+	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x1a, 0x23, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61,
+	0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x4a, 0x6f, 0x69, 0x6e, 0x53, 0x74, 0x61, 0x6b, 0x69,
+	0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4f, 0x0a, 0x0b, 0x45, 0x78,
+	0x69, 0x74, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x12, 0x1b, 0x2e, 0x62, 0x7a, 0x65, 0x2e,
+	0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x69, 0x74, 0x53,
+	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x1a, 0x23, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77,
+	0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x69, 0x74, 0x53, 0x74, 0x61, 0x6b,
+	0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x67, 0x0a, 0x13, 0x43,
+	0x6c, 0x61, 0x69, 0x6d, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72,
+	0x64, 0x73, 0x12, 0x23, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73,
+	0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
+	0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x1a, 0x2b, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65,
+	0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x53, 0x74,
+	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x76, 0x0a, 0x18, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75,
+	0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73,
+	0x12, 0x28, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d,
+	0x73, 0x67, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b,
+	0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x1a, 0x30, 0x2e, 0x62, 0x7a, 0x65,
+	0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x44, 0x69, 0x73, 0x74,
+	0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77,
+	0x61, 0x72, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x67, 0x0a, 0x13,
+	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77,
+	0x61, 0x72, 0x64, 0x12, 0x23, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64,
+	0x73, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x54, 0x72, 0x61, 0x64, 0x69,
+	0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x1a, 0x2b, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72,
+	0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x54, 0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x52, 0x65, 0x73,
 	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x7f, 0x0a, 0x0f,
 	0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x42,
 	0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x16, 0x62, 0x65, 0x65, 0x7a,
@@ -7291,7 +8585,7 @@ func file_bze_rewards_tx_proto_rawDescGZIP() []byte {
 	return file_bze_rewards_tx_proto_rawDescData
 }
 
-var file_bze_rewards_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_bze_rewards_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_bze_rewards_tx_proto_goTypes = []interface{}{
 	(*MsgUpdateParams)(nil),                     // 0: bze.rewards.MsgUpdateParams
 	(*MsgUpdateParamsResponse)(nil),             // 1: bze.rewards.MsgUpdateParamsResponse
@@ -7307,10 +8601,12 @@ var file_bze_rewards_tx_proto_goTypes = []interface{}{
 	(*MsgClaimStakingRewardsResponse)(nil),      // 11: bze.rewards.MsgClaimStakingRewardsResponse
 	(*MsgDistributeStakingRewards)(nil),         // 12: bze.rewards.MsgDistributeStakingRewards
 	(*MsgDistributeStakingRewardsResponse)(nil), // 13: bze.rewards.MsgDistributeStakingRewardsResponse
-	(*Params)(nil),                              // 14: bze.rewards.Params
+	(*MsgCreateTradingReward)(nil),              // 14: bze.rewards.MsgCreateTradingReward
+	(*MsgCreateTradingRewardResponse)(nil),      // 15: bze.rewards.MsgCreateTradingRewardResponse
+	(*Params)(nil),                              // 16: bze.rewards.Params
 }
 var file_bze_rewards_tx_proto_depIdxs = []int32{
-	14, // 0: bze.rewards.MsgUpdateParams.params:type_name -> bze.rewards.Params
+	16, // 0: bze.rewards.MsgUpdateParams.params:type_name -> bze.rewards.Params
 	0,  // 1: bze.rewards.Msg.UpdateParams:input_type -> bze.rewards.MsgUpdateParams
 	2,  // 2: bze.rewards.Msg.CreateStakingReward:input_type -> bze.rewards.MsgCreateStakingReward
 	4,  // 3: bze.rewards.Msg.UpdateStakingReward:input_type -> bze.rewards.MsgUpdateStakingReward
@@ -7318,15 +8614,17 @@ var file_bze_rewards_tx_proto_depIdxs = []int32{
 	8,  // 5: bze.rewards.Msg.ExitStaking:input_type -> bze.rewards.MsgExitStaking
 	10, // 6: bze.rewards.Msg.ClaimStakingRewards:input_type -> bze.rewards.MsgClaimStakingRewards
 	12, // 7: bze.rewards.Msg.DistributeStakingRewards:input_type -> bze.rewards.MsgDistributeStakingRewards
-	1,  // 8: bze.rewards.Msg.UpdateParams:output_type -> bze.rewards.MsgUpdateParamsResponse
-	3,  // 9: bze.rewards.Msg.CreateStakingReward:output_type -> bze.rewards.MsgCreateStakingRewardResponse
-	5,  // 10: bze.rewards.Msg.UpdateStakingReward:output_type -> bze.rewards.MsgUpdateStakingRewardResponse
-	7,  // 11: bze.rewards.Msg.JoinStaking:output_type -> bze.rewards.MsgJoinStakingResponse
-	9,  // 12: bze.rewards.Msg.ExitStaking:output_type -> bze.rewards.MsgExitStakingResponse
-	11, // 13: bze.rewards.Msg.ClaimStakingRewards:output_type -> bze.rewards.MsgClaimStakingRewardsResponse
-	13, // 14: bze.rewards.Msg.DistributeStakingRewards:output_type -> bze.rewards.MsgDistributeStakingRewardsResponse
-	8,  // [8:15] is the sub-list for method output_type
-	1,  // [1:8] is the sub-list for method input_type
+	14, // 8: bze.rewards.Msg.CreateTradingReward:input_type -> bze.rewards.MsgCreateTradingReward
+	1,  // 9: bze.rewards.Msg.UpdateParams:output_type -> bze.rewards.MsgUpdateParamsResponse
+	3,  // 10: bze.rewards.Msg.CreateStakingReward:output_type -> bze.rewards.MsgCreateStakingRewardResponse
+	5,  // 11: bze.rewards.Msg.UpdateStakingReward:output_type -> bze.rewards.MsgUpdateStakingRewardResponse
+	7,  // 12: bze.rewards.Msg.JoinStaking:output_type -> bze.rewards.MsgJoinStakingResponse
+	9,  // 13: bze.rewards.Msg.ExitStaking:output_type -> bze.rewards.MsgExitStakingResponse
+	11, // 14: bze.rewards.Msg.ClaimStakingRewards:output_type -> bze.rewards.MsgClaimStakingRewardsResponse
+	13, // 15: bze.rewards.Msg.DistributeStakingRewards:output_type -> bze.rewards.MsgDistributeStakingRewardsResponse
+	15, // 16: bze.rewards.Msg.CreateTradingReward:output_type -> bze.rewards.MsgCreateTradingRewardResponse
+	9,  // [9:17] is the sub-list for method output_type
+	1,  // [1:9] is the sub-list for method input_type
 	1,  // [1:1] is the sub-list for extension type_name
 	1,  // [1:1] is the sub-list for extension extendee
 	0,  // [0:1] is the sub-list for field type_name
@@ -7507,6 +8805,30 @@ func file_bze_rewards_tx_proto_init() {
 				return nil
 			}
 		}
+		file_bze_rewards_tx_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgCreateTradingReward); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bze_rewards_tx_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgCreateTradingRewardResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -7514,7 +8836,7 @@ func file_bze_rewards_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_bze_rewards_tx_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

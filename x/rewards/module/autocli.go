@@ -64,6 +64,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Send a distribute-staking-rewards tx",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reward_id"}, {ProtoField: "amount"}},
 				},
+				{
+					RpcMethod:      "CreateTradingReward",
+					Use:            "create-trading-reward [prize-amount] [prize-denom] [duration] [market-id] [slots]",
+					Short:          "Send a create-trading-reward tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "prize_amount"}, {ProtoField: "prize_denom"}, {ProtoField: "duration"}, {ProtoField: "market_id"}, {ProtoField: "slots"}},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},

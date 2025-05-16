@@ -99,6 +99,7 @@ type AppModule struct {
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	distrKeeper   types.DistrKeeper
+	tradeKeeper   types.TradingKeeper
 }
 
 func NewAppModule(
@@ -107,6 +108,7 @@ func NewAppModule(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	distrKeeper types.DistrKeeper,
+	tradeKeeper types.TradingKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
@@ -114,6 +116,7 @@ func NewAppModule(
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 		distrKeeper:    distrKeeper,
+		tradeKeeper:    tradeKeeper,
 	}
 }
 
@@ -187,6 +190,7 @@ type ModuleInputs struct {
 	BankKeeper    types.BankKeeper
 	DistrKeeper   types.DistrKeeper
 	EpochKeeper   types.EpochKeeper
+	TradeKeeper   types.TradingKeeper
 }
 
 type ModuleOutputs struct {
@@ -210,6 +214,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.BankKeeper,
 		in.DistrKeeper,
 		in.EpochKeeper,
+		in.TradeKeeper,
 	)
 	m := NewAppModule(
 		in.Cdc,
@@ -217,6 +222,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 		in.DistrKeeper,
+		in.TradeKeeper,
 	)
 
 	return ModuleOutputs{RewardsKeeper: k, Module: m}

@@ -47,6 +47,10 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgDistributeStakingRewards int = 100
 
+	opWeightMsgCreateTradingReward = "op_weight_msg_create_trading_reward"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgCreateTradingReward int = 100
+
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -136,6 +140,17 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		rewardssimulation.SimulateMsgDistributeStakingRewards(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
+	var weightMsgCreateTradingReward int
+	simState.AppParams.GetOrGenerate(opWeightMsgCreateTradingReward, &weightMsgCreateTradingReward, nil,
+		func(_ *rand.Rand) {
+			weightMsgCreateTradingReward = defaultWeightMsgCreateTradingReward
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgCreateTradingReward,
+		rewardssimulation.SimulateMsgCreateTradingReward(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
 	// this line is used by starport scaffolding # simapp/module/operation
 
 	return operations
@@ -189,6 +204,14 @@ simulation.NewWeightedProposalMsg(
 	defaultWeightMsgDistributeStakingRewards,
 	func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
 		rewardssimulation.SimulateMsgDistributeStakingRewards(am.accountKeeper, am.bankKeeper, am.keeper)
+		return nil
+	},
+),
+simulation.NewWeightedProposalMsg(
+	opWeightMsgCreateTradingReward,
+	defaultWeightMsgCreateTradingReward,
+	func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+		rewardssimulation.SimulateMsgCreateTradingReward(am.accountKeeper, am.bankKeeper, am.keeper)
 		return nil
 	},
 ),

@@ -14,15 +14,549 @@ import (
 	sync "sync"
 )
 
+var _ protoreflect.List = (*_GenesisState_2_list)(nil)
+
+type _GenesisState_2_list struct {
+	list *[]*StakingReward
+}
+
+func (x *_GenesisState_2_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_2_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_2_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*StakingReward)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_2_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*StakingReward)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_2_list) AppendMutable() protoreflect.Value {
+	v := new(StakingReward)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_2_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_2_list) NewElement() protoreflect.Value {
+	v := new(StakingReward)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_2_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_5_list)(nil)
+
+type _GenesisState_5_list struct {
+	list *[]*TradingReward
+}
+
+func (x *_GenesisState_5_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_5_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_5_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TradingReward)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_5_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TradingReward)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_5_list) AppendMutable() protoreflect.Value {
+	v := new(TradingReward)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_5_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_5_list) NewElement() protoreflect.Value {
+	v := new(TradingReward)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_5_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_6_list)(nil)
+
+type _GenesisState_6_list struct {
+	list *[]*TradingReward
+}
+
+func (x *_GenesisState_6_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_6_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_6_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TradingReward)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_6_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TradingReward)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_6_list) AppendMutable() protoreflect.Value {
+	v := new(TradingReward)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_6_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_6_list) NewElement() protoreflect.Value {
+	v := new(TradingReward)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_6_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_7_list)(nil)
+
+type _GenesisState_7_list struct {
+	list *[]*StakingRewardParticipant
+}
+
+func (x *_GenesisState_7_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_7_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_7_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*StakingRewardParticipant)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_7_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*StakingRewardParticipant)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_7_list) AppendMutable() protoreflect.Value {
+	v := new(StakingRewardParticipant)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_7_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_7_list) NewElement() protoreflect.Value {
+	v := new(StakingRewardParticipant)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_7_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_8_list)(nil)
+
+type _GenesisState_8_list struct {
+	list *[]*PendingUnlockParticipant
+}
+
+func (x *_GenesisState_8_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_8_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_8_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*PendingUnlockParticipant)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_8_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*PendingUnlockParticipant)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_8_list) AppendMutable() protoreflect.Value {
+	v := new(PendingUnlockParticipant)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_8_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_8_list) NewElement() protoreflect.Value {
+	v := new(PendingUnlockParticipant)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_8_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_9_list)(nil)
+
+type _GenesisState_9_list struct {
+	list *[]*TradingRewardLeaderboard
+}
+
+func (x *_GenesisState_9_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_9_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_9_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TradingRewardLeaderboard)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_9_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TradingRewardLeaderboard)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_9_list) AppendMutable() protoreflect.Value {
+	v := new(TradingRewardLeaderboard)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_9_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_9_list) NewElement() protoreflect.Value {
+	v := new(TradingRewardLeaderboard)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_9_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_10_list)(nil)
+
+type _GenesisState_10_list struct {
+	list *[]*TradingRewardCandidate
+}
+
+func (x *_GenesisState_10_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_10_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_10_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TradingRewardCandidate)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_10_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TradingRewardCandidate)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_10_list) AppendMutable() protoreflect.Value {
+	v := new(TradingRewardCandidate)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_10_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_10_list) NewElement() protoreflect.Value {
+	v := new(TradingRewardCandidate)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_10_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_11_list)(nil)
+
+type _GenesisState_11_list struct {
+	list *[]*MarketIdTradingRewardId
+}
+
+func (x *_GenesisState_11_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_11_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_11_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*MarketIdTradingRewardId)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_11_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*MarketIdTradingRewardId)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_11_list) AppendMutable() protoreflect.Value {
+	v := new(MarketIdTradingRewardId)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_11_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_11_list) NewElement() protoreflect.Value {
+	v := new(MarketIdTradingRewardId)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_11_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_12_list)(nil)
+
+type _GenesisState_12_list struct {
+	list *[]*TradingRewardExpiration
+}
+
+func (x *_GenesisState_12_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_12_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_12_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TradingRewardExpiration)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_12_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TradingRewardExpiration)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_12_list) AppendMutable() protoreflect.Value {
+	v := new(TradingRewardExpiration)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_12_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_12_list) NewElement() protoreflect.Value {
+	v := new(TradingRewardExpiration)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_12_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_13_list)(nil)
+
+type _GenesisState_13_list struct {
+	list *[]*TradingRewardExpiration
+}
+
+func (x *_GenesisState_13_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_13_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_13_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TradingRewardExpiration)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_13_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*TradingRewardExpiration)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_13_list) AppendMutable() protoreflect.Value {
+	v := new(TradingRewardExpiration)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_13_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_13_list) NewElement() protoreflect.Value {
+	v := new(TradingRewardExpiration)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_13_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
-	md_GenesisState        protoreflect.MessageDescriptor
-	fd_GenesisState_params protoreflect.FieldDescriptor
+	md_GenesisState                                        protoreflect.MessageDescriptor
+	fd_GenesisState_params                                 protoreflect.FieldDescriptor
+	fd_GenesisState_staking_reward_list                    protoreflect.FieldDescriptor
+	fd_GenesisState_staking_rewards_counter                protoreflect.FieldDescriptor
+	fd_GenesisState_trading_rewards_counter                protoreflect.FieldDescriptor
+	fd_GenesisState_active_trading_reward_list             protoreflect.FieldDescriptor
+	fd_GenesisState_pending_trading_reward_list            protoreflect.FieldDescriptor
+	fd_GenesisState_staking_reward_participant_list        protoreflect.FieldDescriptor
+	fd_GenesisState_pending_unlock_participant_list        protoreflect.FieldDescriptor
+	fd_GenesisState_trading_reward_leaderboard_list        protoreflect.FieldDescriptor
+	fd_GenesisState_trading_reward_candidate_list          protoreflect.FieldDescriptor
+	fd_GenesisState_market_id_trading_reward_id_list       protoreflect.FieldDescriptor
+	fd_GenesisState_pending_trading_reward_expiration_list protoreflect.FieldDescriptor
+	fd_GenesisState_active_trading_reward_expiration_list  protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_bze_rewards_genesis_proto_init()
 	md_GenesisState = File_bze_rewards_genesis_proto.Messages().ByName("GenesisState")
 	fd_GenesisState_params = md_GenesisState.Fields().ByName("params")
+	fd_GenesisState_staking_reward_list = md_GenesisState.Fields().ByName("staking_reward_list")
+	fd_GenesisState_staking_rewards_counter = md_GenesisState.Fields().ByName("staking_rewards_counter")
+	fd_GenesisState_trading_rewards_counter = md_GenesisState.Fields().ByName("trading_rewards_counter")
+	fd_GenesisState_active_trading_reward_list = md_GenesisState.Fields().ByName("active_trading_reward_list")
+	fd_GenesisState_pending_trading_reward_list = md_GenesisState.Fields().ByName("pending_trading_reward_list")
+	fd_GenesisState_staking_reward_participant_list = md_GenesisState.Fields().ByName("staking_reward_participant_list")
+	fd_GenesisState_pending_unlock_participant_list = md_GenesisState.Fields().ByName("pending_unlock_participant_list")
+	fd_GenesisState_trading_reward_leaderboard_list = md_GenesisState.Fields().ByName("trading_reward_leaderboard_list")
+	fd_GenesisState_trading_reward_candidate_list = md_GenesisState.Fields().ByName("trading_reward_candidate_list")
+	fd_GenesisState_market_id_trading_reward_id_list = md_GenesisState.Fields().ByName("market_id_trading_reward_id_list")
+	fd_GenesisState_pending_trading_reward_expiration_list = md_GenesisState.Fields().ByName("pending_trading_reward_expiration_list")
+	fd_GenesisState_active_trading_reward_expiration_list = md_GenesisState.Fields().ByName("active_trading_reward_expiration_list")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -96,6 +630,78 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
+	if len(x.StakingRewardList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_2_list{list: &x.StakingRewardList})
+		if !f(fd_GenesisState_staking_reward_list, value) {
+			return
+		}
+	}
+	if x.StakingRewardsCounter != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.StakingRewardsCounter)
+		if !f(fd_GenesisState_staking_rewards_counter, value) {
+			return
+		}
+	}
+	if x.TradingRewardsCounter != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.TradingRewardsCounter)
+		if !f(fd_GenesisState_trading_rewards_counter, value) {
+			return
+		}
+	}
+	if len(x.ActiveTradingRewardList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_5_list{list: &x.ActiveTradingRewardList})
+		if !f(fd_GenesisState_active_trading_reward_list, value) {
+			return
+		}
+	}
+	if len(x.PendingTradingRewardList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_6_list{list: &x.PendingTradingRewardList})
+		if !f(fd_GenesisState_pending_trading_reward_list, value) {
+			return
+		}
+	}
+	if len(x.StakingRewardParticipantList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_7_list{list: &x.StakingRewardParticipantList})
+		if !f(fd_GenesisState_staking_reward_participant_list, value) {
+			return
+		}
+	}
+	if len(x.PendingUnlockParticipantList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_8_list{list: &x.PendingUnlockParticipantList})
+		if !f(fd_GenesisState_pending_unlock_participant_list, value) {
+			return
+		}
+	}
+	if len(x.TradingRewardLeaderboardList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_9_list{list: &x.TradingRewardLeaderboardList})
+		if !f(fd_GenesisState_trading_reward_leaderboard_list, value) {
+			return
+		}
+	}
+	if len(x.TradingRewardCandidateList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_10_list{list: &x.TradingRewardCandidateList})
+		if !f(fd_GenesisState_trading_reward_candidate_list, value) {
+			return
+		}
+	}
+	if len(x.MarketIdTradingRewardIdList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_11_list{list: &x.MarketIdTradingRewardIdList})
+		if !f(fd_GenesisState_market_id_trading_reward_id_list, value) {
+			return
+		}
+	}
+	if len(x.PendingTradingRewardExpirationList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_12_list{list: &x.PendingTradingRewardExpirationList})
+		if !f(fd_GenesisState_pending_trading_reward_expiration_list, value) {
+			return
+		}
+	}
+	if len(x.ActiveTradingRewardExpirationList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_13_list{list: &x.ActiveTradingRewardExpirationList})
+		if !f(fd_GenesisState_active_trading_reward_expiration_list, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -113,6 +719,30 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 	switch fd.FullName() {
 	case "bze.rewards.GenesisState.params":
 		return x.Params != nil
+	case "bze.rewards.GenesisState.staking_reward_list":
+		return len(x.StakingRewardList) != 0
+	case "bze.rewards.GenesisState.staking_rewards_counter":
+		return x.StakingRewardsCounter != uint64(0)
+	case "bze.rewards.GenesisState.trading_rewards_counter":
+		return x.TradingRewardsCounter != uint64(0)
+	case "bze.rewards.GenesisState.active_trading_reward_list":
+		return len(x.ActiveTradingRewardList) != 0
+	case "bze.rewards.GenesisState.pending_trading_reward_list":
+		return len(x.PendingTradingRewardList) != 0
+	case "bze.rewards.GenesisState.staking_reward_participant_list":
+		return len(x.StakingRewardParticipantList) != 0
+	case "bze.rewards.GenesisState.pending_unlock_participant_list":
+		return len(x.PendingUnlockParticipantList) != 0
+	case "bze.rewards.GenesisState.trading_reward_leaderboard_list":
+		return len(x.TradingRewardLeaderboardList) != 0
+	case "bze.rewards.GenesisState.trading_reward_candidate_list":
+		return len(x.TradingRewardCandidateList) != 0
+	case "bze.rewards.GenesisState.market_id_trading_reward_id_list":
+		return len(x.MarketIdTradingRewardIdList) != 0
+	case "bze.rewards.GenesisState.pending_trading_reward_expiration_list":
+		return len(x.PendingTradingRewardExpirationList) != 0
+	case "bze.rewards.GenesisState.active_trading_reward_expiration_list":
+		return len(x.ActiveTradingRewardExpirationList) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.GenesisState"))
@@ -131,6 +761,30 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "bze.rewards.GenesisState.params":
 		x.Params = nil
+	case "bze.rewards.GenesisState.staking_reward_list":
+		x.StakingRewardList = nil
+	case "bze.rewards.GenesisState.staking_rewards_counter":
+		x.StakingRewardsCounter = uint64(0)
+	case "bze.rewards.GenesisState.trading_rewards_counter":
+		x.TradingRewardsCounter = uint64(0)
+	case "bze.rewards.GenesisState.active_trading_reward_list":
+		x.ActiveTradingRewardList = nil
+	case "bze.rewards.GenesisState.pending_trading_reward_list":
+		x.PendingTradingRewardList = nil
+	case "bze.rewards.GenesisState.staking_reward_participant_list":
+		x.StakingRewardParticipantList = nil
+	case "bze.rewards.GenesisState.pending_unlock_participant_list":
+		x.PendingUnlockParticipantList = nil
+	case "bze.rewards.GenesisState.trading_reward_leaderboard_list":
+		x.TradingRewardLeaderboardList = nil
+	case "bze.rewards.GenesisState.trading_reward_candidate_list":
+		x.TradingRewardCandidateList = nil
+	case "bze.rewards.GenesisState.market_id_trading_reward_id_list":
+		x.MarketIdTradingRewardIdList = nil
+	case "bze.rewards.GenesisState.pending_trading_reward_expiration_list":
+		x.PendingTradingRewardExpirationList = nil
+	case "bze.rewards.GenesisState.active_trading_reward_expiration_list":
+		x.ActiveTradingRewardExpirationList = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.GenesisState"))
@@ -150,6 +804,72 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 	case "bze.rewards.GenesisState.params":
 		value := x.Params
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "bze.rewards.GenesisState.staking_reward_list":
+		if len(x.StakingRewardList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_2_list{})
+		}
+		listValue := &_GenesisState_2_list{list: &x.StakingRewardList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.rewards.GenesisState.staking_rewards_counter":
+		value := x.StakingRewardsCounter
+		return protoreflect.ValueOfUint64(value)
+	case "bze.rewards.GenesisState.trading_rewards_counter":
+		value := x.TradingRewardsCounter
+		return protoreflect.ValueOfUint64(value)
+	case "bze.rewards.GenesisState.active_trading_reward_list":
+		if len(x.ActiveTradingRewardList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_5_list{})
+		}
+		listValue := &_GenesisState_5_list{list: &x.ActiveTradingRewardList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.rewards.GenesisState.pending_trading_reward_list":
+		if len(x.PendingTradingRewardList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_6_list{})
+		}
+		listValue := &_GenesisState_6_list{list: &x.PendingTradingRewardList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.rewards.GenesisState.staking_reward_participant_list":
+		if len(x.StakingRewardParticipantList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_7_list{})
+		}
+		listValue := &_GenesisState_7_list{list: &x.StakingRewardParticipantList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.rewards.GenesisState.pending_unlock_participant_list":
+		if len(x.PendingUnlockParticipantList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_8_list{})
+		}
+		listValue := &_GenesisState_8_list{list: &x.PendingUnlockParticipantList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.rewards.GenesisState.trading_reward_leaderboard_list":
+		if len(x.TradingRewardLeaderboardList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_9_list{})
+		}
+		listValue := &_GenesisState_9_list{list: &x.TradingRewardLeaderboardList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.rewards.GenesisState.trading_reward_candidate_list":
+		if len(x.TradingRewardCandidateList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_10_list{})
+		}
+		listValue := &_GenesisState_10_list{list: &x.TradingRewardCandidateList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.rewards.GenesisState.market_id_trading_reward_id_list":
+		if len(x.MarketIdTradingRewardIdList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_11_list{})
+		}
+		listValue := &_GenesisState_11_list{list: &x.MarketIdTradingRewardIdList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.rewards.GenesisState.pending_trading_reward_expiration_list":
+		if len(x.PendingTradingRewardExpirationList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_12_list{})
+		}
+		listValue := &_GenesisState_12_list{list: &x.PendingTradingRewardExpirationList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.rewards.GenesisState.active_trading_reward_expiration_list":
+		if len(x.ActiveTradingRewardExpirationList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_13_list{})
+		}
+		listValue := &_GenesisState_13_list{list: &x.ActiveTradingRewardExpirationList}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.GenesisState"))
@@ -172,6 +892,50 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 	switch fd.FullName() {
 	case "bze.rewards.GenesisState.params":
 		x.Params = value.Message().Interface().(*Params)
+	case "bze.rewards.GenesisState.staking_reward_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_2_list)
+		x.StakingRewardList = *clv.list
+	case "bze.rewards.GenesisState.staking_rewards_counter":
+		x.StakingRewardsCounter = value.Uint()
+	case "bze.rewards.GenesisState.trading_rewards_counter":
+		x.TradingRewardsCounter = value.Uint()
+	case "bze.rewards.GenesisState.active_trading_reward_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_5_list)
+		x.ActiveTradingRewardList = *clv.list
+	case "bze.rewards.GenesisState.pending_trading_reward_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_6_list)
+		x.PendingTradingRewardList = *clv.list
+	case "bze.rewards.GenesisState.staking_reward_participant_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_7_list)
+		x.StakingRewardParticipantList = *clv.list
+	case "bze.rewards.GenesisState.pending_unlock_participant_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_8_list)
+		x.PendingUnlockParticipantList = *clv.list
+	case "bze.rewards.GenesisState.trading_reward_leaderboard_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_9_list)
+		x.TradingRewardLeaderboardList = *clv.list
+	case "bze.rewards.GenesisState.trading_reward_candidate_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_10_list)
+		x.TradingRewardCandidateList = *clv.list
+	case "bze.rewards.GenesisState.market_id_trading_reward_id_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_11_list)
+		x.MarketIdTradingRewardIdList = *clv.list
+	case "bze.rewards.GenesisState.pending_trading_reward_expiration_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_12_list)
+		x.PendingTradingRewardExpirationList = *clv.list
+	case "bze.rewards.GenesisState.active_trading_reward_expiration_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_13_list)
+		x.ActiveTradingRewardExpirationList = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.GenesisState"))
@@ -197,6 +961,70 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 			x.Params = new(Params)
 		}
 		return protoreflect.ValueOfMessage(x.Params.ProtoReflect())
+	case "bze.rewards.GenesisState.staking_reward_list":
+		if x.StakingRewardList == nil {
+			x.StakingRewardList = []*StakingReward{}
+		}
+		value := &_GenesisState_2_list{list: &x.StakingRewardList}
+		return protoreflect.ValueOfList(value)
+	case "bze.rewards.GenesisState.active_trading_reward_list":
+		if x.ActiveTradingRewardList == nil {
+			x.ActiveTradingRewardList = []*TradingReward{}
+		}
+		value := &_GenesisState_5_list{list: &x.ActiveTradingRewardList}
+		return protoreflect.ValueOfList(value)
+	case "bze.rewards.GenesisState.pending_trading_reward_list":
+		if x.PendingTradingRewardList == nil {
+			x.PendingTradingRewardList = []*TradingReward{}
+		}
+		value := &_GenesisState_6_list{list: &x.PendingTradingRewardList}
+		return protoreflect.ValueOfList(value)
+	case "bze.rewards.GenesisState.staking_reward_participant_list":
+		if x.StakingRewardParticipantList == nil {
+			x.StakingRewardParticipantList = []*StakingRewardParticipant{}
+		}
+		value := &_GenesisState_7_list{list: &x.StakingRewardParticipantList}
+		return protoreflect.ValueOfList(value)
+	case "bze.rewards.GenesisState.pending_unlock_participant_list":
+		if x.PendingUnlockParticipantList == nil {
+			x.PendingUnlockParticipantList = []*PendingUnlockParticipant{}
+		}
+		value := &_GenesisState_8_list{list: &x.PendingUnlockParticipantList}
+		return protoreflect.ValueOfList(value)
+	case "bze.rewards.GenesisState.trading_reward_leaderboard_list":
+		if x.TradingRewardLeaderboardList == nil {
+			x.TradingRewardLeaderboardList = []*TradingRewardLeaderboard{}
+		}
+		value := &_GenesisState_9_list{list: &x.TradingRewardLeaderboardList}
+		return protoreflect.ValueOfList(value)
+	case "bze.rewards.GenesisState.trading_reward_candidate_list":
+		if x.TradingRewardCandidateList == nil {
+			x.TradingRewardCandidateList = []*TradingRewardCandidate{}
+		}
+		value := &_GenesisState_10_list{list: &x.TradingRewardCandidateList}
+		return protoreflect.ValueOfList(value)
+	case "bze.rewards.GenesisState.market_id_trading_reward_id_list":
+		if x.MarketIdTradingRewardIdList == nil {
+			x.MarketIdTradingRewardIdList = []*MarketIdTradingRewardId{}
+		}
+		value := &_GenesisState_11_list{list: &x.MarketIdTradingRewardIdList}
+		return protoreflect.ValueOfList(value)
+	case "bze.rewards.GenesisState.pending_trading_reward_expiration_list":
+		if x.PendingTradingRewardExpirationList == nil {
+			x.PendingTradingRewardExpirationList = []*TradingRewardExpiration{}
+		}
+		value := &_GenesisState_12_list{list: &x.PendingTradingRewardExpirationList}
+		return protoreflect.ValueOfList(value)
+	case "bze.rewards.GenesisState.active_trading_reward_expiration_list":
+		if x.ActiveTradingRewardExpirationList == nil {
+			x.ActiveTradingRewardExpirationList = []*TradingRewardExpiration{}
+		}
+		value := &_GenesisState_13_list{list: &x.ActiveTradingRewardExpirationList}
+		return protoreflect.ValueOfList(value)
+	case "bze.rewards.GenesisState.staking_rewards_counter":
+		panic(fmt.Errorf("field staking_rewards_counter of message bze.rewards.GenesisState is not mutable"))
+	case "bze.rewards.GenesisState.trading_rewards_counter":
+		panic(fmt.Errorf("field trading_rewards_counter of message bze.rewards.GenesisState is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.GenesisState"))
@@ -213,6 +1041,40 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	case "bze.rewards.GenesisState.params":
 		m := new(Params)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "bze.rewards.GenesisState.staking_reward_list":
+		list := []*StakingReward{}
+		return protoreflect.ValueOfList(&_GenesisState_2_list{list: &list})
+	case "bze.rewards.GenesisState.staking_rewards_counter":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "bze.rewards.GenesisState.trading_rewards_counter":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "bze.rewards.GenesisState.active_trading_reward_list":
+		list := []*TradingReward{}
+		return protoreflect.ValueOfList(&_GenesisState_5_list{list: &list})
+	case "bze.rewards.GenesisState.pending_trading_reward_list":
+		list := []*TradingReward{}
+		return protoreflect.ValueOfList(&_GenesisState_6_list{list: &list})
+	case "bze.rewards.GenesisState.staking_reward_participant_list":
+		list := []*StakingRewardParticipant{}
+		return protoreflect.ValueOfList(&_GenesisState_7_list{list: &list})
+	case "bze.rewards.GenesisState.pending_unlock_participant_list":
+		list := []*PendingUnlockParticipant{}
+		return protoreflect.ValueOfList(&_GenesisState_8_list{list: &list})
+	case "bze.rewards.GenesisState.trading_reward_leaderboard_list":
+		list := []*TradingRewardLeaderboard{}
+		return protoreflect.ValueOfList(&_GenesisState_9_list{list: &list})
+	case "bze.rewards.GenesisState.trading_reward_candidate_list":
+		list := []*TradingRewardCandidate{}
+		return protoreflect.ValueOfList(&_GenesisState_10_list{list: &list})
+	case "bze.rewards.GenesisState.market_id_trading_reward_id_list":
+		list := []*MarketIdTradingRewardId{}
+		return protoreflect.ValueOfList(&_GenesisState_11_list{list: &list})
+	case "bze.rewards.GenesisState.pending_trading_reward_expiration_list":
+		list := []*TradingRewardExpiration{}
+		return protoreflect.ValueOfList(&_GenesisState_12_list{list: &list})
+	case "bze.rewards.GenesisState.active_trading_reward_expiration_list":
+		list := []*TradingRewardExpiration{}
+		return protoreflect.ValueOfList(&_GenesisState_13_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.GenesisState"))
@@ -286,6 +1148,72 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			l = options.Size(x.Params)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		if len(x.StakingRewardList) > 0 {
+			for _, e := range x.StakingRewardList {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.StakingRewardsCounter != 0 {
+			n += 1 + runtime.Sov(uint64(x.StakingRewardsCounter))
+		}
+		if x.TradingRewardsCounter != 0 {
+			n += 1 + runtime.Sov(uint64(x.TradingRewardsCounter))
+		}
+		if len(x.ActiveTradingRewardList) > 0 {
+			for _, e := range x.ActiveTradingRewardList {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.PendingTradingRewardList) > 0 {
+			for _, e := range x.PendingTradingRewardList {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.StakingRewardParticipantList) > 0 {
+			for _, e := range x.StakingRewardParticipantList {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.PendingUnlockParticipantList) > 0 {
+			for _, e := range x.PendingUnlockParticipantList {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.TradingRewardLeaderboardList) > 0 {
+			for _, e := range x.TradingRewardLeaderboardList {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.TradingRewardCandidateList) > 0 {
+			for _, e := range x.TradingRewardCandidateList {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.MarketIdTradingRewardIdList) > 0 {
+			for _, e := range x.MarketIdTradingRewardIdList {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.PendingTradingRewardExpirationList) > 0 {
+			for _, e := range x.PendingTradingRewardExpirationList {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.ActiveTradingRewardExpirationList) > 0 {
+			for _, e := range x.ActiveTradingRewardExpirationList {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -314,6 +1242,176 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.ActiveTradingRewardExpirationList) > 0 {
+			for iNdEx := len(x.ActiveTradingRewardExpirationList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.ActiveTradingRewardExpirationList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x6a
+			}
+		}
+		if len(x.PendingTradingRewardExpirationList) > 0 {
+			for iNdEx := len(x.PendingTradingRewardExpirationList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.PendingTradingRewardExpirationList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x62
+			}
+		}
+		if len(x.MarketIdTradingRewardIdList) > 0 {
+			for iNdEx := len(x.MarketIdTradingRewardIdList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.MarketIdTradingRewardIdList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x5a
+			}
+		}
+		if len(x.TradingRewardCandidateList) > 0 {
+			for iNdEx := len(x.TradingRewardCandidateList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.TradingRewardCandidateList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x52
+			}
+		}
+		if len(x.TradingRewardLeaderboardList) > 0 {
+			for iNdEx := len(x.TradingRewardLeaderboardList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.TradingRewardLeaderboardList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x4a
+			}
+		}
+		if len(x.PendingUnlockParticipantList) > 0 {
+			for iNdEx := len(x.PendingUnlockParticipantList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.PendingUnlockParticipantList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x42
+			}
+		}
+		if len(x.StakingRewardParticipantList) > 0 {
+			for iNdEx := len(x.StakingRewardParticipantList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.StakingRewardParticipantList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x3a
+			}
+		}
+		if len(x.PendingTradingRewardList) > 0 {
+			for iNdEx := len(x.PendingTradingRewardList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.PendingTradingRewardList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x32
+			}
+		}
+		if len(x.ActiveTradingRewardList) > 0 {
+			for iNdEx := len(x.ActiveTradingRewardList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.ActiveTradingRewardList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x2a
+			}
+		}
+		if x.TradingRewardsCounter != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.TradingRewardsCounter))
+			i--
+			dAtA[i] = 0x20
+		}
+		if x.StakingRewardsCounter != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.StakingRewardsCounter))
+			i--
+			dAtA[i] = 0x18
+		}
+		if len(x.StakingRewardList) > 0 {
+			for iNdEx := len(x.StakingRewardList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.StakingRewardList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x12
+			}
 		}
 		if x.Params != nil {
 			encoded, err := options.Marshal(x.Params)
@@ -414,6 +1512,384 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StakingRewardList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.StakingRewardList = append(x.StakingRewardList, &StakingReward{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.StakingRewardList[len(x.StakingRewardList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StakingRewardsCounter", wireType)
+				}
+				x.StakingRewardsCounter = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.StakingRewardsCounter |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 4:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TradingRewardsCounter", wireType)
+				}
+				x.TradingRewardsCounter = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.TradingRewardsCounter |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ActiveTradingRewardList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ActiveTradingRewardList = append(x.ActiveTradingRewardList, &TradingReward{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ActiveTradingRewardList[len(x.ActiveTradingRewardList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PendingTradingRewardList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PendingTradingRewardList = append(x.PendingTradingRewardList, &TradingReward{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PendingTradingRewardList[len(x.PendingTradingRewardList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 7:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StakingRewardParticipantList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.StakingRewardParticipantList = append(x.StakingRewardParticipantList, &StakingRewardParticipant{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.StakingRewardParticipantList[len(x.StakingRewardParticipantList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 8:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PendingUnlockParticipantList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PendingUnlockParticipantList = append(x.PendingUnlockParticipantList, &PendingUnlockParticipant{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PendingUnlockParticipantList[len(x.PendingUnlockParticipantList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 9:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TradingRewardLeaderboardList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.TradingRewardLeaderboardList = append(x.TradingRewardLeaderboardList, &TradingRewardLeaderboard{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.TradingRewardLeaderboardList[len(x.TradingRewardLeaderboardList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 10:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TradingRewardCandidateList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.TradingRewardCandidateList = append(x.TradingRewardCandidateList, &TradingRewardCandidate{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.TradingRewardCandidateList[len(x.TradingRewardCandidateList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 11:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MarketIdTradingRewardIdList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.MarketIdTradingRewardIdList = append(x.MarketIdTradingRewardIdList, &MarketIdTradingRewardId{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.MarketIdTradingRewardIdList[len(x.MarketIdTradingRewardIdList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 12:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PendingTradingRewardExpirationList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PendingTradingRewardExpirationList = append(x.PendingTradingRewardExpirationList, &TradingRewardExpiration{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PendingTradingRewardExpirationList[len(x.PendingTradingRewardExpirationList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 13:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ActiveTradingRewardExpirationList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ActiveTradingRewardExpirationList = append(x.ActiveTradingRewardExpirationList, &TradingRewardExpiration{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ActiveTradingRewardExpirationList[len(x.ActiveTradingRewardExpirationList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -469,7 +1945,19 @@ type GenesisState struct {
 	unknownFields protoimpl.UnknownFields
 
 	// params defines all the parameters of the module.
-	Params *Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
+	Params                             *Params                     `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
+	StakingRewardList                  []*StakingReward            `protobuf:"bytes,2,rep,name=staking_reward_list,json=stakingRewardList,proto3" json:"staking_reward_list,omitempty"`
+	StakingRewardsCounter              uint64                      `protobuf:"varint,3,opt,name=staking_rewards_counter,json=stakingRewardsCounter,proto3" json:"staking_rewards_counter,omitempty"`
+	TradingRewardsCounter              uint64                      `protobuf:"varint,4,opt,name=trading_rewards_counter,json=tradingRewardsCounter,proto3" json:"trading_rewards_counter,omitempty"`
+	ActiveTradingRewardList            []*TradingReward            `protobuf:"bytes,5,rep,name=active_trading_reward_list,json=activeTradingRewardList,proto3" json:"active_trading_reward_list,omitempty"`
+	PendingTradingRewardList           []*TradingReward            `protobuf:"bytes,6,rep,name=pending_trading_reward_list,json=pendingTradingRewardList,proto3" json:"pending_trading_reward_list,omitempty"`
+	StakingRewardParticipantList       []*StakingRewardParticipant `protobuf:"bytes,7,rep,name=staking_reward_participant_list,json=stakingRewardParticipantList,proto3" json:"staking_reward_participant_list,omitempty"`
+	PendingUnlockParticipantList       []*PendingUnlockParticipant `protobuf:"bytes,8,rep,name=pending_unlock_participant_list,json=pendingUnlockParticipantList,proto3" json:"pending_unlock_participant_list,omitempty"`
+	TradingRewardLeaderboardList       []*TradingRewardLeaderboard `protobuf:"bytes,9,rep,name=trading_reward_leaderboard_list,json=tradingRewardLeaderboardList,proto3" json:"trading_reward_leaderboard_list,omitempty"`
+	TradingRewardCandidateList         []*TradingRewardCandidate   `protobuf:"bytes,10,rep,name=trading_reward_candidate_list,json=tradingRewardCandidateList,proto3" json:"trading_reward_candidate_list,omitempty"`
+	MarketIdTradingRewardIdList        []*MarketIdTradingRewardId  `protobuf:"bytes,11,rep,name=market_id_trading_reward_id_list,json=marketIdTradingRewardIdList,proto3" json:"market_id_trading_reward_id_list,omitempty"`
+	PendingTradingRewardExpirationList []*TradingRewardExpiration  `protobuf:"bytes,12,rep,name=pending_trading_reward_expiration_list,json=pendingTradingRewardExpirationList,proto3" json:"pending_trading_reward_expiration_list,omitempty"`
+	ActiveTradingRewardExpirationList  []*TradingRewardExpiration  `protobuf:"bytes,13,rep,name=active_trading_reward_expiration_list,json=activeTradingRewardExpirationList,proto3" json:"active_trading_reward_expiration_list,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -499,6 +1987,90 @@ func (x *GenesisState) GetParams() *Params {
 	return nil
 }
 
+func (x *GenesisState) GetStakingRewardList() []*StakingReward {
+	if x != nil {
+		return x.StakingRewardList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetStakingRewardsCounter() uint64 {
+	if x != nil {
+		return x.StakingRewardsCounter
+	}
+	return 0
+}
+
+func (x *GenesisState) GetTradingRewardsCounter() uint64 {
+	if x != nil {
+		return x.TradingRewardsCounter
+	}
+	return 0
+}
+
+func (x *GenesisState) GetActiveTradingRewardList() []*TradingReward {
+	if x != nil {
+		return x.ActiveTradingRewardList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetPendingTradingRewardList() []*TradingReward {
+	if x != nil {
+		return x.PendingTradingRewardList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetStakingRewardParticipantList() []*StakingRewardParticipant {
+	if x != nil {
+		return x.StakingRewardParticipantList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetPendingUnlockParticipantList() []*PendingUnlockParticipant {
+	if x != nil {
+		return x.PendingUnlockParticipantList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetTradingRewardLeaderboardList() []*TradingRewardLeaderboard {
+	if x != nil {
+		return x.TradingRewardLeaderboardList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetTradingRewardCandidateList() []*TradingRewardCandidate {
+	if x != nil {
+		return x.TradingRewardCandidateList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetMarketIdTradingRewardIdList() []*MarketIdTradingRewardId {
+	if x != nil {
+		return x.MarketIdTradingRewardIdList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetPendingTradingRewardExpirationList() []*TradingRewardExpiration {
+	if x != nil {
+		return x.PendingTradingRewardExpirationList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetActiveTradingRewardExpirationList() []*TradingRewardExpiration {
+	if x != nil {
+		return x.ActiveTradingRewardExpirationList
+	}
+	return nil
+}
+
 var File_bze_rewards_genesis_proto protoreflect.FileDescriptor
 
 var file_bze_rewards_genesis_proto_rawDesc = []byte{
@@ -508,21 +2080,98 @@ var file_bze_rewards_genesis_proto_rawDesc = []byte{
 	0x61, 0x6d, 0x69, 0x6e, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67,
 	0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x1a, 0x18, 0x62, 0x7a, 0x65, 0x2f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2f, 0x70,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x46, 0x0a, 0x0c, 0x47,
-	0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x36, 0x0a, 0x06, 0x70,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x62, 0x7a,
-	0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
-	0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x06, 0x70, 0x61, 0x72,
-	0x61, 0x6d, 0x73, 0x42, 0x84, 0x01, 0x0a, 0x0f, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e,
-	0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73,
-	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x16, 0x62, 0x65, 0x65, 0x7a, 0x65, 0x65, 0x2f,
-	0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xa2,
-	0x02, 0x03, 0x42, 0x52, 0x58, 0xaa, 0x02, 0x0b, 0x42, 0x7a, 0x65, 0x2e, 0x52, 0x65, 0x77, 0x61,
-	0x72, 0x64, 0x73, 0xca, 0x02, 0x0b, 0x42, 0x7a, 0x65, 0x5c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64,
-	0x73, 0xe2, 0x02, 0x17, 0x42, 0x7a, 0x65, 0x5c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x5c,
-	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0c, 0x42, 0x7a,
-	0x65, 0x3a, 0x3a, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x61, 0x72, 0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x17, 0x62, 0x7a, 0x65,
+	0x2f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x22, 0x83, 0x0a, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73,
+	0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x36, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61,
+	0x72, 0x64, 0x73, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00,
+	0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x50, 0x0a,
+	0x13, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f,
+	0x6c, 0x69, 0x73, 0x74, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x62, 0x7a, 0x65,
+	0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
+	0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x11, 0x73, 0x74,
+	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x4c, 0x69, 0x73, 0x74, 0x12,
+	0x36, 0x0a, 0x17, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72,
+	0x64, 0x73, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04,
+	0x52, 0x15, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73,
+	0x43, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72, 0x12, 0x36, 0x0a, 0x17, 0x74, 0x72, 0x61, 0x64, 0x69,
+	0x6e, 0x67, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+	0x65, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x15, 0x74, 0x72, 0x61, 0x64, 0x69, 0x6e,
+	0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72, 0x12,
+	0x5d, 0x0a, 0x1a, 0x61, 0x63, 0x74, 0x69, 0x76, 0x65, 0x5f, 0x74, 0x72, 0x61, 0x64, 0x69, 0x6e,
+	0x67, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x05, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64,
+	0x73, 0x2e, 0x54, 0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x42,
+	0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x17, 0x61, 0x63, 0x74, 0x69, 0x76, 0x65, 0x54, 0x72, 0x61,
+	0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x5f,
+	0x0a, 0x1b, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x5f, 0x74, 0x72, 0x61, 0x64, 0x69, 0x6e,
+	0x67, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x06, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64,
+	0x73, 0x2e, 0x54, 0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x42,
+	0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x18, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x54, 0x72,
+	0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x4c, 0x69, 0x73, 0x74, 0x12,
+	0x72, 0x0a, 0x1f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72,
+	0x64, 0x5f, 0x70, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x5f, 0x6c, 0x69,
+	0x73, 0x74, 0x18, 0x07, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72,
+	0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65,
+	0x77, 0x61, 0x72, 0x64, 0x50, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x42,
+	0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x1c, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65,
+	0x77, 0x61, 0x72, 0x64, 0x50, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x4c,
+	0x69, 0x73, 0x74, 0x12, 0x72, 0x0a, 0x1f, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x5f, 0x75,
+	0x6e, 0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x70, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e,
+	0x74, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x08, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x62,
+	0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69,
+	0x6e, 0x67, 0x55, 0x6e, 0x6c, 0x6f, 0x63, 0x6b, 0x50, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70,
+	0x61, 0x6e, 0x74, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x1c, 0x70, 0x65, 0x6e, 0x64, 0x69,
+	0x6e, 0x67, 0x55, 0x6e, 0x6c, 0x6f, 0x63, 0x6b, 0x50, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70,
+	0x61, 0x6e, 0x74, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x72, 0x0a, 0x1f, 0x74, 0x72, 0x61, 0x64, 0x69,
+	0x6e, 0x67, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x6c, 0x65, 0x61, 0x64, 0x65, 0x72,
+	0x62, 0x6f, 0x61, 0x72, 0x64, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x09, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x25, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x54,
+	0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x4c, 0x65, 0x61, 0x64,
+	0x65, 0x72, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x1c, 0x74,
+	0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x4c, 0x65, 0x61, 0x64,
+	0x65, 0x72, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x6c, 0x0a, 0x1d, 0x74,
+	0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x63, 0x61,
+	0x6e, 0x64, 0x69, 0x64, 0x61, 0x74, 0x65, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x0a, 0x20, 0x03,
+	0x28, 0x0b, 0x32, 0x23, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73,
+	0x2e, 0x54, 0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x43, 0x61,
+	0x6e, 0x64, 0x69, 0x64, 0x61, 0x74, 0x65, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x1a, 0x74,
+	0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x43, 0x61, 0x6e, 0x64,
+	0x69, 0x64, 0x61, 0x74, 0x65, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x71, 0x0a, 0x20, 0x6d, 0x61, 0x72,
+	0x6b, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x5f, 0x74, 0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x5f, 0x72,
+	0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x69, 0x64, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x0b, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x24, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64,
+	0x73, 0x2e, 0x4d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x49, 0x64, 0x54, 0x72, 0x61, 0x64, 0x69, 0x6e,
+	0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x49, 0x64, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52,
+	0x1b, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x49, 0x64, 0x54, 0x72, 0x61, 0x64, 0x69, 0x6e, 0x67,
+	0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x49, 0x64, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x7e, 0x0a, 0x26,
+	0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x5f, 0x74, 0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x5f,
+	0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x65, 0x78, 0x70, 0x69, 0x72, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x0c, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x24, 0x2e, 0x62,
+	0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x54, 0x72, 0x61, 0x64, 0x69,
+	0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x45, 0x78, 0x70, 0x69, 0x72, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x22, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e,
+	0x67, 0x54, 0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x45, 0x78,
+	0x70, 0x69, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x7c, 0x0a, 0x25,
+	0x61, 0x63, 0x74, 0x69, 0x76, 0x65, 0x5f, 0x74, 0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x5f, 0x72,
+	0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x65, 0x78, 0x70, 0x69, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x0d, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x24, 0x2e, 0x62, 0x7a,
+	0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x54, 0x72, 0x61, 0x64, 0x69, 0x6e,
+	0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x45, 0x78, 0x70, 0x69, 0x72, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x21, 0x61, 0x63, 0x74, 0x69, 0x76, 0x65, 0x54,
+	0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x45, 0x78, 0x70, 0x69,
+	0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x84, 0x01, 0x0a, 0x0f, 0x63,
+	0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x42, 0x0c,
+	0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x16,
+	0x62, 0x65, 0x65, 0x7a, 0x65, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x72,
+	0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xa2, 0x02, 0x03, 0x42, 0x52, 0x58, 0xaa, 0x02, 0x0b, 0x42,
+	0x7a, 0x65, 0x2e, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xca, 0x02, 0x0b, 0x42, 0x7a, 0x65,
+	0x5c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xe2, 0x02, 0x17, 0x42, 0x7a, 0x65, 0x5c, 0x52,
+	0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
+	0x74, 0x61, 0xea, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64,
+	0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -539,16 +2188,34 @@ func file_bze_rewards_genesis_proto_rawDescGZIP() []byte {
 
 var file_bze_rewards_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_bze_rewards_genesis_proto_goTypes = []interface{}{
-	(*GenesisState)(nil), // 0: bze.rewards.GenesisState
-	(*Params)(nil),       // 1: bze.rewards.Params
+	(*GenesisState)(nil),             // 0: bze.rewards.GenesisState
+	(*Params)(nil),                   // 1: bze.rewards.Params
+	(*StakingReward)(nil),            // 2: bze.rewards.StakingReward
+	(*TradingReward)(nil),            // 3: bze.rewards.TradingReward
+	(*StakingRewardParticipant)(nil), // 4: bze.rewards.StakingRewardParticipant
+	(*PendingUnlockParticipant)(nil), // 5: bze.rewards.PendingUnlockParticipant
+	(*TradingRewardLeaderboard)(nil), // 6: bze.rewards.TradingRewardLeaderboard
+	(*TradingRewardCandidate)(nil),   // 7: bze.rewards.TradingRewardCandidate
+	(*MarketIdTradingRewardId)(nil),  // 8: bze.rewards.MarketIdTradingRewardId
+	(*TradingRewardExpiration)(nil),  // 9: bze.rewards.TradingRewardExpiration
 }
 var file_bze_rewards_genesis_proto_depIdxs = []int32{
-	1, // 0: bze.rewards.GenesisState.params:type_name -> bze.rewards.Params
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	1,  // 0: bze.rewards.GenesisState.params:type_name -> bze.rewards.Params
+	2,  // 1: bze.rewards.GenesisState.staking_reward_list:type_name -> bze.rewards.StakingReward
+	3,  // 2: bze.rewards.GenesisState.active_trading_reward_list:type_name -> bze.rewards.TradingReward
+	3,  // 3: bze.rewards.GenesisState.pending_trading_reward_list:type_name -> bze.rewards.TradingReward
+	4,  // 4: bze.rewards.GenesisState.staking_reward_participant_list:type_name -> bze.rewards.StakingRewardParticipant
+	5,  // 5: bze.rewards.GenesisState.pending_unlock_participant_list:type_name -> bze.rewards.PendingUnlockParticipant
+	6,  // 6: bze.rewards.GenesisState.trading_reward_leaderboard_list:type_name -> bze.rewards.TradingRewardLeaderboard
+	7,  // 7: bze.rewards.GenesisState.trading_reward_candidate_list:type_name -> bze.rewards.TradingRewardCandidate
+	8,  // 8: bze.rewards.GenesisState.market_id_trading_reward_id_list:type_name -> bze.rewards.MarketIdTradingRewardId
+	9,  // 9: bze.rewards.GenesisState.pending_trading_reward_expiration_list:type_name -> bze.rewards.TradingRewardExpiration
+	9,  // 10: bze.rewards.GenesisState.active_trading_reward_expiration_list:type_name -> bze.rewards.TradingRewardExpiration
+	11, // [11:11] is the sub-list for method output_type
+	11, // [11:11] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_bze_rewards_genesis_proto_init() }
@@ -557,6 +2224,7 @@ func file_bze_rewards_genesis_proto_init() {
 		return
 	}
 	file_bze_rewards_params_proto_init()
+	file_bze_rewards_store_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_bze_rewards_genesis_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GenesisState); i {

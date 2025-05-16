@@ -18,4 +18,5 @@ var (
 	ErrInvalidSlots        = sdkerrors.Register(ModuleName, 5008, "invalid slots")
 	ErrInvalidRewardId     = sdkerrors.Register(ModuleName, 5009, "invalid reward_id")
 	ErrRewardAlreadyExists = sdkerrors.Register(ModuleName, 5010, "a reward is already running for this market")
+	ErrInvalidSigner       = sdkerrors.Register(ModuleName, 5011, "invalid signer")
 )

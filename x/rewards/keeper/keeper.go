@@ -30,6 +30,7 @@ type (
 		bankKeeper   types.BankKeeper
 		distrKeeper  types.DistrKeeper
 		epochKeeper  types.EpochKeeper
+		tradeKeeper  types.TradingKeeper
 
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
@@ -45,6 +46,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	distrKeeper types.DistrKeeper,
 	epochKeeper types.EpochKeeper,
+	tradeKeeper types.TradingKeeper,
 
 ) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
@@ -59,6 +61,7 @@ func NewKeeper(
 		bankKeeper:   bankKeeper,
 		distrKeeper:  distrKeeper,
 		epochKeeper:  epochKeeper,
+		tradeKeeper:  tradeKeeper,
 	}
 }
 
@@ -96,4 +99,10 @@ func (k Keeper) getPrefixedStore(ctx sdk.Context, p []byte) prefix.Store {
 	storeAdapter := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 
 	return prefix.NewStore(storeAdapter, p)
+}
+
+func (k Keeper) getNewTradingRewardExpireAt(ctx sdk.Context) uint32 {
+	cnt := uint32(k.epochKeeper.GetEpochCountByIdentifier(ctx, expirationEpoch))
+
+	return cnt + expirationPeriodInHours
 }

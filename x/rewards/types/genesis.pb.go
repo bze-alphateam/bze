@@ -27,7 +27,19 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // GenesisState defines the rewards module's genesis state.
 type GenesisState struct {
 	// params defines all the parameters of the module.
-	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	Params                             Params                     `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	StakingRewardList                  []StakingReward            `protobuf:"bytes,2,rep,name=staking_reward_list,json=stakingRewardList,proto3" json:"staking_reward_list"`
+	StakingRewardsCounter              uint64                     `protobuf:"varint,3,opt,name=staking_rewards_counter,json=stakingRewardsCounter,proto3" json:"staking_rewards_counter,omitempty"`
+	TradingRewardsCounter              uint64                     `protobuf:"varint,4,opt,name=trading_rewards_counter,json=tradingRewardsCounter,proto3" json:"trading_rewards_counter,omitempty"`
+	ActiveTradingRewardList            []TradingReward            `protobuf:"bytes,5,rep,name=active_trading_reward_list,json=activeTradingRewardList,proto3" json:"active_trading_reward_list"`
+	PendingTradingRewardList           []TradingReward            `protobuf:"bytes,6,rep,name=pending_trading_reward_list,json=pendingTradingRewardList,proto3" json:"pending_trading_reward_list"`
+	StakingRewardParticipantList       []StakingRewardParticipant `protobuf:"bytes,7,rep,name=staking_reward_participant_list,json=stakingRewardParticipantList,proto3" json:"staking_reward_participant_list"`
+	PendingUnlockParticipantList       []PendingUnlockParticipant `protobuf:"bytes,8,rep,name=pending_unlock_participant_list,json=pendingUnlockParticipantList,proto3" json:"pending_unlock_participant_list"`
+	TradingRewardLeaderboardList       []TradingRewardLeaderboard `protobuf:"bytes,9,rep,name=trading_reward_leaderboard_list,json=tradingRewardLeaderboardList,proto3" json:"trading_reward_leaderboard_list"`
+	TradingRewardCandidateList         []TradingRewardCandidate   `protobuf:"bytes,10,rep,name=trading_reward_candidate_list,json=tradingRewardCandidateList,proto3" json:"trading_reward_candidate_list"`
+	MarketIdTradingRewardIdList        []MarketIdTradingRewardId  `protobuf:"bytes,11,rep,name=market_id_trading_reward_id_list,json=marketIdTradingRewardIdList,proto3" json:"market_id_trading_reward_id_list"`
+	PendingTradingRewardExpirationList []TradingRewardExpiration  `protobuf:"bytes,12,rep,name=pending_trading_reward_expiration_list,json=pendingTradingRewardExpirationList,proto3" json:"pending_trading_reward_expiration_list"`
+	ActiveTradingRewardExpirationList  []TradingRewardExpiration  `protobuf:"bytes,13,rep,name=active_trading_reward_expiration_list,json=activeTradingRewardExpirationList,proto3" json:"active_trading_reward_expiration_list"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -70,6 +82,90 @@ func (m *GenesisState) GetParams() Params {
 	return Params{}
 }
 
+func (m *GenesisState) GetStakingRewardList() []StakingReward {
+	if m != nil {
+		return m.StakingRewardList
+	}
+	return nil
+}
+
+func (m *GenesisState) GetStakingRewardsCounter() uint64 {
+	if m != nil {
+		return m.StakingRewardsCounter
+	}
+	return 0
+}
+
+func (m *GenesisState) GetTradingRewardsCounter() uint64 {
+	if m != nil {
+		return m.TradingRewardsCounter
+	}
+	return 0
+}
+
+func (m *GenesisState) GetActiveTradingRewardList() []TradingReward {
+	if m != nil {
+		return m.ActiveTradingRewardList
+	}
+	return nil
+}
+
+func (m *GenesisState) GetPendingTradingRewardList() []TradingReward {
+	if m != nil {
+		return m.PendingTradingRewardList
+	}
+	return nil
+}
+
+func (m *GenesisState) GetStakingRewardParticipantList() []StakingRewardParticipant {
+	if m != nil {
+		return m.StakingRewardParticipantList
+	}
+	return nil
+}
+
+func (m *GenesisState) GetPendingUnlockParticipantList() []PendingUnlockParticipant {
+	if m != nil {
+		return m.PendingUnlockParticipantList
+	}
+	return nil
+}
+
+func (m *GenesisState) GetTradingRewardLeaderboardList() []TradingRewardLeaderboard {
+	if m != nil {
+		return m.TradingRewardLeaderboardList
+	}
+	return nil
+}
+
+func (m *GenesisState) GetTradingRewardCandidateList() []TradingRewardCandidate {
+	if m != nil {
+		return m.TradingRewardCandidateList
+	}
+	return nil
+}
+
+func (m *GenesisState) GetMarketIdTradingRewardIdList() []MarketIdTradingRewardId {
+	if m != nil {
+		return m.MarketIdTradingRewardIdList
+	}
+	return nil
+}
+
+func (m *GenesisState) GetPendingTradingRewardExpirationList() []TradingRewardExpiration {
+	if m != nil {
+		return m.PendingTradingRewardExpirationList
+	}
+	return nil
+}
+
+func (m *GenesisState) GetActiveTradingRewardExpirationList() []TradingRewardExpiration {
+	if m != nil {
+		return m.ActiveTradingRewardExpirationList
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "bze.rewards.GenesisState")
 }
@@ -77,21 +173,42 @@ func init() {
 func init() { proto.RegisterFile("bze/rewards/genesis.proto", fileDescriptor_70f2660d8c54ec09) }
 
 var fileDescriptor_70f2660d8c54ec09 = []byte{
-	// 210 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4c, 0xaa, 0x4a, 0xd5,
-	0x2f, 0x4a, 0x2d, 0x4f, 0x2c, 0x4a, 0x29, 0xd6, 0x4f, 0x4f, 0xcd, 0x4b, 0x2d, 0xce, 0x2c, 0xd6,
-	0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x4e, 0xaa, 0x4a, 0xd5, 0x83, 0x4a, 0x49, 0x09, 0x26,
-	0xe6, 0x66, 0xe6, 0xe5, 0xeb, 0x83, 0x49, 0x88, 0xbc, 0x94, 0x48, 0x7a, 0x7e, 0x7a, 0x3e, 0x98,
-	0xa9, 0x0f, 0x62, 0x41, 0x45, 0x25, 0x90, 0x0d, 0x2c, 0x48, 0x2c, 0x4a, 0xcc, 0x85, 0x9a, 0xa7,
-	0xe4, 0xc6, 0xc5, 0xe3, 0x0e, 0xb1, 0x20, 0xb8, 0x24, 0xb1, 0x24, 0x55, 0xc8, 0x8c, 0x8b, 0x0d,
-	0x22, 0x2f, 0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0x6d, 0x24, 0xac, 0x87, 0x64, 0xa1, 0x5e, 0x00, 0x58,
-	0xca, 0x89, 0xf3, 0xc4, 0x3d, 0x79, 0x86, 0x15, 0xcf, 0x37, 0x68, 0x31, 0x06, 0x41, 0x55, 0x3b,
-	0xb9, 0x9d, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c, 0x13, 0x1e,
-	0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7, 0x70, 0xe3, 0xb1, 0x1c, 0x43, 0x94, 0x4e, 0x7a, 0x66, 0x49,
-	0x46, 0x69, 0x92, 0x5e, 0x72, 0x7e, 0xae, 0x7e, 0x52, 0x55, 0xaa, 0x6e, 0x62, 0x4e, 0x41, 0x46,
-	0x62, 0x49, 0x6a, 0x22, 0x98, 0xa7, 0x5f, 0x01, 0x77, 0x56, 0x49, 0x65, 0x41, 0x6a, 0x71, 0x12,
-	0x1b, 0xd8, 0x59, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0x66, 0x21, 0x62, 0x6c, 0x03, 0x01,
-	0x00, 0x00,
+	// 556 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x94, 0x4f, 0x6f, 0xd3, 0x30,
+	0x18, 0xc6, 0x1b, 0x36, 0x0a, 0x73, 0xc7, 0x61, 0x1d, 0xa8, 0x25, 0x83, 0xac, 0x0c, 0x86, 0x2a,
+	0x04, 0x8d, 0x34, 0xa4, 0x7d, 0x80, 0x4e, 0x80, 0x26, 0x81, 0x54, 0x75, 0x70, 0x41, 0x42, 0x91,
+	0x93, 0x58, 0x9d, 0xd5, 0x36, 0x0e, 0xf6, 0x5b, 0x18, 0x15, 0xe2, 0xc2, 0x17, 0xe0, 0x63, 0x70,
+	0xe4, 0x63, 0xec, 0xb8, 0x23, 0x27, 0x84, 0xda, 0x03, 0x5f, 0x03, 0xd5, 0x76, 0xda, 0x38, 0x73,
+	0x24, 0xb8, 0x54, 0xb1, 0x9f, 0xf7, 0x79, 0x7e, 0x7d, 0xfd, 0x0f, 0xdd, 0x0e, 0xa7, 0xc4, 0xe7,
+	0xe4, 0x23, 0xe6, 0xb1, 0xf0, 0x07, 0x24, 0x21, 0x82, 0x8a, 0x4e, 0xca, 0x19, 0xb0, 0x7a, 0x2d,
+	0x9c, 0x92, 0x8e, 0x96, 0xdc, 0x2d, 0x3c, 0xa6, 0x09, 0xf3, 0xe5, 0xaf, 0xd2, 0xdd, 0x9b, 0x03,
+	0x36, 0x60, 0xf2, 0xd3, 0x5f, 0x7c, 0xe9, 0xd9, 0x66, 0x3e, 0x30, 0xc5, 0x1c, 0x8f, 0x75, 0x9e,
+	0xdb, 0xc8, 0x2b, 0x02, 0x18, 0x27, 0x4a, 0xd8, 0xfb, 0x8a, 0xd0, 0xe6, 0x0b, 0x85, 0x3e, 0x01,
+	0x0c, 0xa4, 0x7e, 0x88, 0xaa, 0xca, 0xd9, 0x74, 0x5a, 0x4e, 0xbb, 0x76, 0xb0, 0xdd, 0xc9, 0xfd,
+	0x95, 0x4e, 0x4f, 0x4a, 0xdd, 0x8d, 0xf3, 0x5f, 0xbb, 0x95, 0xef, 0x7f, 0x7e, 0x3c, 0x72, 0xfa,
+	0xba, 0xba, 0xde, 0x43, 0xdb, 0x02, 0xf0, 0x90, 0x26, 0x83, 0x40, 0x15, 0x07, 0x23, 0x2a, 0xa0,
+	0x79, 0xa5, 0xb5, 0xd6, 0xae, 0x1d, 0xb8, 0x46, 0xc8, 0x89, 0xaa, 0xeb, 0xcb, 0x61, 0x77, 0x7d,
+	0x91, 0xd5, 0xdf, 0x12, 0xf9, 0xc9, 0x97, 0x54, 0x40, 0xfd, 0x10, 0x35, 0xcc, 0x44, 0x11, 0x44,
+	0x6c, 0x92, 0x00, 0xe1, 0xcd, 0xb5, 0x96, 0xd3, 0x5e, 0xef, 0xdf, 0x32, 0x3c, 0xe2, 0x48, 0x89,
+	0x0b, 0x1f, 0x70, 0x1c, 0xdb, 0x7c, 0xeb, 0xca, 0xa7, 0xe5, 0x82, 0xef, 0x1d, 0x72, 0x71, 0x04,
+	0xf4, 0x03, 0x09, 0x4c, 0xbb, 0x6a, 0xe4, 0xaa, 0xa5, 0x91, 0xd7, 0xf9, 0x1c, 0xdd, 0x48, 0x43,
+	0x65, 0x18, 0x92, 0x6c, 0x27, 0x40, 0x3b, 0x29, 0x49, 0x64, 0xae, 0x2d, 0xbf, 0xfa, 0x8f, 0xf9,
+	0x4d, 0x1d, 0x72, 0x19, 0xc0, 0xd1, 0x6e, 0x61, 0x07, 0x52, 0xcc, 0x81, 0x46, 0x34, 0xc5, 0x09,
+	0x28, 0xc8, 0x35, 0x09, 0xd9, 0x2f, 0xdf, 0x8d, 0xde, 0xca, 0xa1, 0x79, 0x77, 0x44, 0x89, 0x9e,
+	0x31, 0xb3, 0xa6, 0x26, 0xc9, 0x88, 0x45, 0xc3, 0xcb, 0xcc, 0xeb, 0x16, 0x66, 0x4f, 0x79, 0xde,
+	0x48, 0x8b, 0x85, 0x99, 0x96, 0xe8, 0x19, 0xb3, 0xb8, 0x80, 0x04, 0xc7, 0x84, 0x87, 0x6c, 0xb9,
+	0x98, 0x1b, 0x16, 0xa6, 0xb9, 0x60, 0x2b, 0x47, 0xc6, 0x84, 0x12, 0x5d, 0x32, 0x47, 0xe8, 0x6e,
+	0x81, 0x19, 0xe1, 0x24, 0xa6, 0x31, 0x06, 0xa2, 0x88, 0x48, 0x12, 0xef, 0x97, 0x13, 0x8f, 0xb2,
+	0x7a, 0xcd, 0x73, 0xc1, 0xaa, 0x4a, 0xda, 0x7b, 0xd4, 0x1a, 0x63, 0x3e, 0x24, 0x10, 0xd0, 0xb8,
+	0x78, 0x58, 0xa8, 0x6e, 0xb1, 0x26, 0x81, 0x0f, 0x0c, 0xe0, 0x2b, 0x69, 0x3a, 0x8e, 0x0d, 0xf0,
+	0x71, 0xd6, 0xe1, 0xce, 0xd8, 0x2e, 0x4b, 0xe4, 0x17, 0xf4, 0xb0, 0xe4, 0x74, 0x92, 0xb3, 0x94,
+	0x72, 0x0c, 0x94, 0x25, 0x0a, 0xbc, 0x69, 0x01, 0x1b, 0x89, 0xcf, 0x96, 0x06, 0x0d, 0xde, 0xb3,
+	0x1d, 0xd9, 0x55, 0x95, 0xe4, 0x7f, 0x46, 0xfb, 0xf6, 0xcb, 0x57, 0xc4, 0xdf, 0xf8, 0x6f, 0xfc,
+	0x3d, 0xcb, 0x8d, 0x34, 0xe9, 0xdd, 0xe7, 0xe7, 0x33, 0xcf, 0xb9, 0x98, 0x79, 0xce, 0xef, 0x99,
+	0xe7, 0x7c, 0x9b, 0x7b, 0x95, 0x8b, 0xb9, 0x57, 0xf9, 0x39, 0xf7, 0x2a, 0x6f, 0x1f, 0x0f, 0x28,
+	0x9c, 0x4e, 0xc2, 0x4e, 0xc4, 0xc6, 0x7e, 0x38, 0x25, 0x4f, 0xf0, 0x28, 0x3d, 0xc5, 0x40, 0xb0,
+	0x1c, 0xf9, 0x67, 0xcb, 0x37, 0x15, 0x3e, 0xa5, 0x44, 0x84, 0x55, 0xf9, 0xa8, 0x3e, 0xfd, 0x1b,
+	0x00, 0x00, 0xff, 0xff, 0xcb, 0xbe, 0x4f, 0xb0, 0xda, 0x05, 0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -114,6 +231,156 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.ActiveTradingRewardExpirationList) > 0 {
+		for iNdEx := len(m.ActiveTradingRewardExpirationList) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ActiveTradingRewardExpirationList[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x6a
+		}
+	}
+	if len(m.PendingTradingRewardExpirationList) > 0 {
+		for iNdEx := len(m.PendingTradingRewardExpirationList) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PendingTradingRewardExpirationList[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x62
+		}
+	}
+	if len(m.MarketIdTradingRewardIdList) > 0 {
+		for iNdEx := len(m.MarketIdTradingRewardIdList) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.MarketIdTradingRewardIdList[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x5a
+		}
+	}
+	if len(m.TradingRewardCandidateList) > 0 {
+		for iNdEx := len(m.TradingRewardCandidateList) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.TradingRewardCandidateList[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x52
+		}
+	}
+	if len(m.TradingRewardLeaderboardList) > 0 {
+		for iNdEx := len(m.TradingRewardLeaderboardList) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.TradingRewardLeaderboardList[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x4a
+		}
+	}
+	if len(m.PendingUnlockParticipantList) > 0 {
+		for iNdEx := len(m.PendingUnlockParticipantList) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PendingUnlockParticipantList[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x42
+		}
+	}
+	if len(m.StakingRewardParticipantList) > 0 {
+		for iNdEx := len(m.StakingRewardParticipantList) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.StakingRewardParticipantList[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x3a
+		}
+	}
+	if len(m.PendingTradingRewardList) > 0 {
+		for iNdEx := len(m.PendingTradingRewardList) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PendingTradingRewardList[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x32
+		}
+	}
+	if len(m.ActiveTradingRewardList) > 0 {
+		for iNdEx := len(m.ActiveTradingRewardList) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ActiveTradingRewardList[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if m.TradingRewardsCounter != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.TradingRewardsCounter))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.StakingRewardsCounter != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.StakingRewardsCounter))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.StakingRewardList) > 0 {
+		for iNdEx := len(m.StakingRewardList) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.StakingRewardList[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
 	{
 		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -146,6 +413,72 @@ func (m *GenesisState) Size() (n int) {
 	_ = l
 	l = m.Params.Size()
 	n += 1 + l + sovGenesis(uint64(l))
+	if len(m.StakingRewardList) > 0 {
+		for _, e := range m.StakingRewardList {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if m.StakingRewardsCounter != 0 {
+		n += 1 + sovGenesis(uint64(m.StakingRewardsCounter))
+	}
+	if m.TradingRewardsCounter != 0 {
+		n += 1 + sovGenesis(uint64(m.TradingRewardsCounter))
+	}
+	if len(m.ActiveTradingRewardList) > 0 {
+		for _, e := range m.ActiveTradingRewardList {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.PendingTradingRewardList) > 0 {
+		for _, e := range m.PendingTradingRewardList {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.StakingRewardParticipantList) > 0 {
+		for _, e := range m.StakingRewardParticipantList {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.PendingUnlockParticipantList) > 0 {
+		for _, e := range m.PendingUnlockParticipantList {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.TradingRewardLeaderboardList) > 0 {
+		for _, e := range m.TradingRewardLeaderboardList {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.TradingRewardCandidateList) > 0 {
+		for _, e := range m.TradingRewardCandidateList {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.MarketIdTradingRewardIdList) > 0 {
+		for _, e := range m.MarketIdTradingRewardIdList {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.PendingTradingRewardExpirationList) > 0 {
+		for _, e := range m.PendingTradingRewardExpirationList {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.ActiveTradingRewardExpirationList) > 0 {
+		for _, e := range m.ActiveTradingRewardExpirationList {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -214,6 +547,384 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StakingRewardList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.StakingRewardList = append(m.StakingRewardList, StakingReward{})
+			if err := m.StakingRewardList[len(m.StakingRewardList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StakingRewardsCounter", wireType)
+			}
+			m.StakingRewardsCounter = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.StakingRewardsCounter |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TradingRewardsCounter", wireType)
+			}
+			m.TradingRewardsCounter = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TradingRewardsCounter |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ActiveTradingRewardList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ActiveTradingRewardList = append(m.ActiveTradingRewardList, TradingReward{})
+			if err := m.ActiveTradingRewardList[len(m.ActiveTradingRewardList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingTradingRewardList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PendingTradingRewardList = append(m.PendingTradingRewardList, TradingReward{})
+			if err := m.PendingTradingRewardList[len(m.PendingTradingRewardList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StakingRewardParticipantList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.StakingRewardParticipantList = append(m.StakingRewardParticipantList, StakingRewardParticipant{})
+			if err := m.StakingRewardParticipantList[len(m.StakingRewardParticipantList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingUnlockParticipantList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PendingUnlockParticipantList = append(m.PendingUnlockParticipantList, PendingUnlockParticipant{})
+			if err := m.PendingUnlockParticipantList[len(m.PendingUnlockParticipantList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TradingRewardLeaderboardList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TradingRewardLeaderboardList = append(m.TradingRewardLeaderboardList, TradingRewardLeaderboard{})
+			if err := m.TradingRewardLeaderboardList[len(m.TradingRewardLeaderboardList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TradingRewardCandidateList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TradingRewardCandidateList = append(m.TradingRewardCandidateList, TradingRewardCandidate{})
+			if err := m.TradingRewardCandidateList[len(m.TradingRewardCandidateList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MarketIdTradingRewardIdList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MarketIdTradingRewardIdList = append(m.MarketIdTradingRewardIdList, MarketIdTradingRewardId{})
+			if err := m.MarketIdTradingRewardIdList[len(m.MarketIdTradingRewardIdList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingTradingRewardExpirationList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PendingTradingRewardExpirationList = append(m.PendingTradingRewardExpirationList, TradingRewardExpiration{})
+			if err := m.PendingTradingRewardExpirationList[len(m.PendingTradingRewardExpirationList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ActiveTradingRewardExpirationList", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ActiveTradingRewardExpirationList = append(m.ActiveTradingRewardExpirationList, TradingRewardExpiration{})
+			if err := m.ActiveTradingRewardExpirationList[len(m.ActiveTradingRewardExpirationList)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

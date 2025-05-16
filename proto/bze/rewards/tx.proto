@@ -23,6 +23,7 @@ service Msg {
   rpc ExitStaking              (MsgExitStaking             ) returns (MsgExitStakingResponse             );
   rpc ClaimStakingRewards      (MsgClaimStakingRewards     ) returns (MsgClaimStakingRewardsResponse     );
   rpc DistributeStakingRewards (MsgDistributeStakingRewards) returns (MsgDistributeStakingRewardsResponse);
+  rpc CreateTradingReward      (MsgCreateTradingReward     ) returns (MsgCreateTradingRewardResponse     );
 }
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
@@ -85,7 +86,7 @@ message MsgExitStakingResponse {}
 
 message MsgClaimStakingRewards {
   option (cosmos.msg.v1.signer) = "creator";
-  string creator  = 1;
+  string creator   = 1;
   string reward_id = 2;
 }
 
@@ -95,10 +96,24 @@ message MsgClaimStakingRewardsResponse {
 
 message MsgDistributeStakingRewards {
   option (cosmos.msg.v1.signer) = "creator";
-  string creator  = 1;
+  string creator   = 1;
   string reward_id = 2;
-  string amount   = 3;
+  string amount    = 3;
 }
 
 message MsgDistributeStakingRewardsResponse {}
+
+message MsgCreateTradingReward {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator     = 1;
+  string prize_amount = 2;
+  string prize_denom  = 3;
+  string duration    = 4;
+  string market_id    = 5;
+  string slots       = 6;
+}
+
+message MsgCreateTradingRewardResponse {
+  string reward_id = 1;
+}
 

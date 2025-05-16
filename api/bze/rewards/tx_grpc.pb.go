@@ -26,6 +26,7 @@ const (
 	Msg_ExitStaking_FullMethodName              = "/bze.rewards.Msg/ExitStaking"
 	Msg_ClaimStakingRewards_FullMethodName      = "/bze.rewards.Msg/ClaimStakingRewards"
 	Msg_DistributeStakingRewards_FullMethodName = "/bze.rewards.Msg/DistributeStakingRewards"
+	Msg_CreateTradingReward_FullMethodName      = "/bze.rewards.Msg/CreateTradingReward"
 )
 
 // MsgClient is the client API for Msg service.
@@ -41,6 +42,7 @@ type MsgClient interface {
 	ExitStaking(ctx context.Context, in *MsgExitStaking, opts ...grpc.CallOption) (*MsgExitStakingResponse, error)
 	ClaimStakingRewards(ctx context.Context, in *MsgClaimStakingRewards, opts ...grpc.CallOption) (*MsgClaimStakingRewardsResponse, error)
 	DistributeStakingRewards(ctx context.Context, in *MsgDistributeStakingRewards, opts ...grpc.CallOption) (*MsgDistributeStakingRewardsResponse, error)
+	CreateTradingReward(ctx context.Context, in *MsgCreateTradingReward, opts ...grpc.CallOption) (*MsgCreateTradingRewardResponse, error)
 }
 
 type msgClient struct {
@@ -114,6 +116,15 @@ func (c *msgClient) DistributeStakingRewards(ctx context.Context, in *MsgDistrib
 	return out, nil
 }
 
+func (c *msgClient) CreateTradingReward(ctx context.Context, in *MsgCreateTradingReward, opts ...grpc.CallOption) (*MsgCreateTradingRewardResponse, error) {
+	out := new(MsgCreateTradingRewardResponse)
+	err := c.cc.Invoke(ctx, Msg_CreateTradingReward_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -127,6 +138,7 @@ type MsgServer interface {
 	ExitStaking(context.Context, *MsgExitStaking) (*MsgExitStakingResponse, error)
 	ClaimStakingRewards(context.Context, *MsgClaimStakingRewards) (*MsgClaimStakingRewardsResponse, error)
 	DistributeStakingRewards(context.Context, *MsgDistributeStakingRewards) (*MsgDistributeStakingRewardsResponse, error)
+	CreateTradingReward(context.Context, *MsgCreateTradingReward) (*MsgCreateTradingRewardResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -154,6 +166,9 @@ func (UnimplementedMsgServer) ClaimStakingRewards(context.Context, *MsgClaimStak
 }
 func (UnimplementedMsgServer) DistributeStakingRewards(context.Context, *MsgDistributeStakingRewards) (*MsgDistributeStakingRewardsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DistributeStakingRewards not implemented")
+}
+func (UnimplementedMsgServer) CreateTradingReward(context.Context, *MsgCreateTradingReward) (*MsgCreateTradingRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateTradingReward not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -294,6 +309,24 @@ func _Msg_DistributeStakingRewards_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreateTradingReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateTradingReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateTradingReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_CreateTradingReward_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateTradingReward(ctx, req.(*MsgCreateTradingReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -328,6 +361,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DistributeStakingRewards",
 			Handler:    _Msg_DistributeStakingRewards_Handler,
+		},
+		{
+			MethodName: "CreateTradingReward",
+			Handler:    _Msg_CreateTradingReward_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
