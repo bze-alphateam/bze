@@ -82,9 +82,9 @@ import (
 	burnermodulekeeper "github.com/bze-alphateam/bze/x/burner/keeper"
 	cointrunkmodulekeeper "github.com/bze-alphateam/bze/x/cointrunk/keeper"
 	epochmodulekeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
-	tokenfactorymodulekeeper "github.com/bze-alphateam/bze/x/tokenfactory/keeper"
 	rewardsmodulekeeper "github.com/bze-alphateam/bze/x/rewards/keeper"
-// this line is used by starport scaffolding # stargate/app/moduleImport
+	tokenfactorymodulekeeper "github.com/bze-alphateam/bze/x/tokenfactory/keeper"
+	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
 const (
@@ -151,8 +151,8 @@ type App struct {
 	EpochKeeper        epochmodulekeeper.Keeper
 	CointrunkKeeper    cointrunkmodulekeeper.Keeper
 	TokenfactoryKeeper tokenfactorymodulekeeper.Keeper
-	RewardsKeeper rewardsmodulekeeper.Keeper
-// this line is used by starport scaffolding # stargate/app/keeperDeclaration
+	RewardsKeeper      rewardsmodulekeeper.Keeper
+	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -412,6 +412,10 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 func (app *App) setEpochsHooks() {
 	app.EpochKeeper.SetHooks(
 		[]epochmoduletypes.EpochHook{
+			app.RewardsKeeper.GetDistributeAllStakingRewardsHook(),
+			app.RewardsKeeper.GetUnlockPendingUnlockParticipantsHook(),
+			app.RewardsKeeper.GetRemoveExpiredPendingTradingRewardsHook(),
+			app.RewardsKeeper.GetTradingRewardsDistributionHook(),
 			app.BurnerKeeper.GetBurnerRaffleCleanupHook(),
 			app.BurnerKeeper.GetBurnerPeriodicBurnHook(),
 		},

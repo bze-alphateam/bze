@@ -23,7 +23,7 @@ var (
 )
 
 const (
-    opWeightMsgCreateStakingReward = "op_weight_msg_create_staking_reward"
+	opWeightMsgCreateStakingReward = "op_weight_msg_create_staking_reward"
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgCreateStakingReward int = 100
 
@@ -51,6 +51,10 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgCreateTradingReward int = 100
 
+	opWeightMsgActivateTradingReward = "op_weight_msg_activate_trading_reward"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgActivateTradingReward int = 100
+
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -61,7 +65,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 		accs[i] = acc.Address.String()
 	}
 	rewardsGenesis := types.GenesisState{
-		Params:	types.DefaultParams(),
+		Params: types.DefaultParams(),
 		// this line is used by starport scaffolding # simapp/module/genesisState
 	}
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&rewardsGenesis)
@@ -151,6 +155,17 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		rewardssimulation.SimulateMsgCreateTradingReward(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
+	var weightMsgActivateTradingReward int
+	simState.AppParams.GetOrGenerate(opWeightMsgActivateTradingReward, &weightMsgActivateTradingReward, nil,
+		func(_ *rand.Rand) {
+			weightMsgActivateTradingReward = defaultWeightMsgActivateTradingReward
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgActivateTradingReward,
+		rewardssimulation.SimulateMsgActivateTradingReward(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
 	// this line is used by starport scaffolding # simapp/module/operation
 
 	return operations
@@ -159,62 +174,71 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 // ProposalMsgs returns msgs used for governance proposals for simulations.
 func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
 	return []simtypes.WeightedProposalMsg{
-	    simulation.NewWeightedProposalMsg(
-	opWeightMsgCreateStakingReward,
-	defaultWeightMsgCreateStakingReward,
-	func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-		rewardssimulation.SimulateMsgCreateStakingReward(am.accountKeeper, am.bankKeeper, am.keeper)
-		return nil
-	},
-),
-simulation.NewWeightedProposalMsg(
-	opWeightMsgUpdateStakingReward,
-	defaultWeightMsgUpdateStakingReward,
-	func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-		rewardssimulation.SimulateMsgUpdateStakingReward(am.accountKeeper, am.bankKeeper, am.keeper)
-		return nil
-	},
-),
-simulation.NewWeightedProposalMsg(
-	opWeightMsgJoinStaking,
-	defaultWeightMsgJoinStaking,
-	func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-		rewardssimulation.SimulateMsgJoinStaking(am.accountKeeper, am.bankKeeper, am.keeper)
-		return nil
-	},
-),
-simulation.NewWeightedProposalMsg(
-	opWeightMsgExitStaking,
-	defaultWeightMsgExitStaking,
-	func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-		rewardssimulation.SimulateMsgExitStaking(am.accountKeeper, am.bankKeeper, am.keeper)
-		return nil
-	},
-),
-simulation.NewWeightedProposalMsg(
-	opWeightMsgClaimStakingRewards,
-	defaultWeightMsgClaimStakingRewards,
-	func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-		rewardssimulation.SimulateMsgClaimStakingRewards(am.accountKeeper, am.bankKeeper, am.keeper)
-		return nil
-	},
-),
-simulation.NewWeightedProposalMsg(
-	opWeightMsgDistributeStakingRewards,
-	defaultWeightMsgDistributeStakingRewards,
-	func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-		rewardssimulation.SimulateMsgDistributeStakingRewards(am.accountKeeper, am.bankKeeper, am.keeper)
-		return nil
-	},
-),
-simulation.NewWeightedProposalMsg(
-	opWeightMsgCreateTradingReward,
-	defaultWeightMsgCreateTradingReward,
-	func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-		rewardssimulation.SimulateMsgCreateTradingReward(am.accountKeeper, am.bankKeeper, am.keeper)
-		return nil
-	},
-),
-// this line is used by starport scaffolding # simapp/module/OpMsg
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgCreateStakingReward,
+			defaultWeightMsgCreateStakingReward,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				rewardssimulation.SimulateMsgCreateStakingReward(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgUpdateStakingReward,
+			defaultWeightMsgUpdateStakingReward,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				rewardssimulation.SimulateMsgUpdateStakingReward(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgJoinStaking,
+			defaultWeightMsgJoinStaking,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				rewardssimulation.SimulateMsgJoinStaking(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgExitStaking,
+			defaultWeightMsgExitStaking,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				rewardssimulation.SimulateMsgExitStaking(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgClaimStakingRewards,
+			defaultWeightMsgClaimStakingRewards,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				rewardssimulation.SimulateMsgClaimStakingRewards(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgDistributeStakingRewards,
+			defaultWeightMsgDistributeStakingRewards,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				rewardssimulation.SimulateMsgDistributeStakingRewards(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgCreateTradingReward,
+			defaultWeightMsgCreateTradingReward,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				rewardssimulation.SimulateMsgCreateTradingReward(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgActivateTradingReward,
+			defaultWeightMsgActivateTradingReward,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				rewardssimulation.SimulateMsgActivateTradingReward(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+
+		// this line is used by starport scaffolding # simapp/module/OpMsg
 	}
 }

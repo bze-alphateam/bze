@@ -31,6 +31,9 @@ registry.RegisterImplementations((*sdk.Msg)(nil),
 registry.RegisterImplementations((*sdk.Msg)(nil),
 	&MsgCreateTradingReward{},
 )
+registry.RegisterImplementations((*sdk.Msg)(nil),
+	&MsgActivateTradingReward{},
+)
 // this line is used by starport scaffolding # 3
 
 	registry.RegisterImplementations((*sdk.Msg)(nil),

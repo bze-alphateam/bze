@@ -27,6 +27,7 @@ const (
 	Msg_ClaimStakingRewards_FullMethodName      = "/bze.rewards.Msg/ClaimStakingRewards"
 	Msg_DistributeStakingRewards_FullMethodName = "/bze.rewards.Msg/DistributeStakingRewards"
 	Msg_CreateTradingReward_FullMethodName      = "/bze.rewards.Msg/CreateTradingReward"
+	Msg_ActivateTradingReward_FullMethodName    = "/bze.rewards.Msg/ActivateTradingReward"
 )
 
 // MsgClient is the client API for Msg service.
@@ -43,6 +44,7 @@ type MsgClient interface {
 	ClaimStakingRewards(ctx context.Context, in *MsgClaimStakingRewards, opts ...grpc.CallOption) (*MsgClaimStakingRewardsResponse, error)
 	DistributeStakingRewards(ctx context.Context, in *MsgDistributeStakingRewards, opts ...grpc.CallOption) (*MsgDistributeStakingRewardsResponse, error)
 	CreateTradingReward(ctx context.Context, in *MsgCreateTradingReward, opts ...grpc.CallOption) (*MsgCreateTradingRewardResponse, error)
+	ActivateTradingReward(ctx context.Context, in *MsgActivateTradingReward, opts ...grpc.CallOption) (*MsgActivateTradingRewardResponse, error)
 }
 
 type msgClient struct {
@@ -125,6 +127,15 @@ func (c *msgClient) CreateTradingReward(ctx context.Context, in *MsgCreateTradin
 	return out, nil
 }
 
+func (c *msgClient) ActivateTradingReward(ctx context.Context, in *MsgActivateTradingReward, opts ...grpc.CallOption) (*MsgActivateTradingRewardResponse, error) {
+	out := new(MsgActivateTradingRewardResponse)
+	err := c.cc.Invoke(ctx, Msg_ActivateTradingReward_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -139,6 +150,7 @@ type MsgServer interface {
 	ClaimStakingRewards(context.Context, *MsgClaimStakingRewards) (*MsgClaimStakingRewardsResponse, error)
 	DistributeStakingRewards(context.Context, *MsgDistributeStakingRewards) (*MsgDistributeStakingRewardsResponse, error)
 	CreateTradingReward(context.Context, *MsgCreateTradingReward) (*MsgCreateTradingRewardResponse, error)
+	ActivateTradingReward(context.Context, *MsgActivateTradingReward) (*MsgActivateTradingRewardResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -169,6 +181,9 @@ func (UnimplementedMsgServer) DistributeStakingRewards(context.Context, *MsgDist
 }
 func (UnimplementedMsgServer) CreateTradingReward(context.Context, *MsgCreateTradingReward) (*MsgCreateTradingRewardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTradingReward not implemented")
+}
+func (UnimplementedMsgServer) ActivateTradingReward(context.Context, *MsgActivateTradingReward) (*MsgActivateTradingRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ActivateTradingReward not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -327,6 +342,24 @@ func _Msg_CreateTradingReward_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_ActivateTradingReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgActivateTradingReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ActivateTradingReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_ActivateTradingReward_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ActivateTradingReward(ctx, req.(*MsgActivateTradingReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -365,6 +398,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateTradingReward",
 			Handler:    _Msg_CreateTradingReward_Handler,
+		},
+		{
+			MethodName: "ActivateTradingReward",
+			Handler:    _Msg_ActivateTradingReward_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
