@@ -17,6 +17,62 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "params",
 					Short:     "Shows the parameters of the module",
 				},
+				{
+					RpcMethod:      "StakingReward",
+					Use:            "get-staking-reward [reward-id]",
+					Short:          "Query get-staking-reward",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reward_id"}},
+				},
+				{
+					RpcMethod:      "AllStakingRewards",
+					Use:            "all-staking-rewards",
+					Short:          "Query all-staking-rewards",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
+				{
+					RpcMethod:      "TradingReward",
+					Use:            "trading-reward [reward-id]",
+					Short:          "Query trading-reward",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reward_id"}},
+				},
+				{
+					RpcMethod:      "AllTradingRewards",
+					Use:            "all-trading-rewards",
+					Short:          "Query all-trading-rewards",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
+				{
+					RpcMethod:      "StakingRewardParticipant",
+					Use:            "staking-reward-participant [address]",
+					Short:          "Query staking-reward-participant",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
+				},
+				{
+					RpcMethod:      "AllStakingRewardParticipants",
+					Use:            "all-staking-reward-participants",
+					Short:          "Query all-staking-reward-participants",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
+				{
+					RpcMethod:      "TradingRewardLeaderboard",
+					Use:            "trading-reward-leaderboard [reward-id]",
+					Short:          "Query trading-reward-leaderboard",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reward_id"}},
+				},
+				{
+					RpcMethod:      "MarketTradingReward",
+					Use:            "market-trading-reward [market-id]",
+					Short:          "Query market-trading-reward",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "market_id"}},
+				},
+
+				{
+					RpcMethod: "AllPendingUnlockParticipants",
+					Use: "all-pending-unlock-participants",
+					Short: "Query all-pending-unlock-participants",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
+
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},
