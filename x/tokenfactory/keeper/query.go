@@ -25,9 +25,8 @@ func (k Keeper) DenomAuthority(goCtx context.Context, req *types.QueryDenomAutho
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	denom := req.GetDenom()
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	dAuth, err := k.GetDenomAuthority(ctx, denom)
+	dAuth, err := k.GetDenomAuthority(ctx, req.GetDenom())
 	if err != nil {
 		return nil, err
 	}

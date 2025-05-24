@@ -1,17 +1,22 @@
 package keeper
 
 import (
+	"fmt"
 	"github.com/bze-alphateam/bze/x/tokenfactory/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k Keeper) GetDenomAuthority(ctx sdk.Context, denom string) (types.DenomAuthority, error) {
 	bz := k.GetDenomPrefixStore(ctx, denom).Get([]byte(types.DenomAuthorityMetadataKey))
+	if bz == nil {
+		return types.DenomAuthority{}, fmt.Errorf("denom authority not found for denom %s", denom)
+	}
 
 	dAuth := types.DenomAuthority{}
 	err := k.cdc.Unmarshal(bz, &dAuth)
 	if err != nil {
-		return types.DenomAuthority{}, err
+
+		return types.DenomAuthority{}, fmt.Errorf("failed to unmarshal denom authority: %w", err)
 	}
 
 	return dAuth, nil
@@ -30,6 +35,6 @@ func (k Keeper) SetDenomAuthority(ctx sdk.Context, denom string, dAuth types.Den
 	}
 
 	store.Set([]byte(types.DenomAuthorityMetadataKey), bz)
-	return nil
 
+	return nil
 }
