@@ -2,12 +2,11 @@ package network
 
 import (
 	"fmt"
+	"github.com/bze-alphateam/bze/app"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/stretchr/testify/require"
-
-	"beezee/app"
 )
 
 type (

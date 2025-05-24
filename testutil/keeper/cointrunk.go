@@ -21,7 +21,7 @@ import (
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
 )
 
-func CointrunkKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
+func CointrunkKeeper(t testing.TB, bank types.BankKeeper, distr types.DistrKeeper) (keeper.Keeper, sdk.Context) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	db := dbm.NewMemDB()
@@ -38,8 +38,8 @@ func CointrunkKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 		runtime.NewKVStoreService(storeKey),
 		log.NewNopLogger(),
 		authority.String(),
-		nil,
-		nil,
+		bank,
+		distr,
 	)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())

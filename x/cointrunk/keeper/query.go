@@ -96,7 +96,7 @@ func (k Keeper) Publisher(goCtx context.Context, req *types.QueryPublisherReques
 
 	publisher, found := k.GetPublisher(ctx, req.Address)
 	if !found {
-		return nil, status.Error(codes.InvalidArgument, "not found")
+		return nil, status.Error(codes.NotFound, "not found")
 	}
 
 	return &types.QueryPublisherResponse{Publisher: &publisher}, nil
