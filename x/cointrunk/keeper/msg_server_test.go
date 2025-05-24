@@ -16,7 +16,7 @@ func (suite *IntegrationTestSuite) TestAddArticle_ValidRequest_PublishedByActive
 		Active:        true,
 		ArticlesCount: 5,
 		CreatedAt:     1234567890,
-		Respect:       100,
+		Respect:       "100",
 	}
 	suite.k.SetPublisher(suite.ctx, publisher)
 
@@ -224,7 +224,7 @@ func (suite *IntegrationTestSuite) TestPayPublisherRespect_ValidRequest() {
 		Active:        true,
 		ArticlesCount: 5,
 		CreatedAt:     1234567890,
-		Respect:       100,
+		Respect:       "100",
 	}
 	suite.k.SetPublisher(suite.ctx, publisher)
 
@@ -271,7 +271,7 @@ func (suite *IntegrationTestSuite) TestPayPublisherRespect_ValidRequest() {
 	// Verify publisher respect was updated
 	updatedPublisher, found := suite.k.GetPublisher(suite.ctx, publisher.Address)
 	suite.Require().True(found)
-	suite.Require().Equal(int64(1100), updatedPublisher.Respect) // 100 + 1000
+	suite.Require().Equal("1100", updatedPublisher.Respect) // "100" + 1000
 }
 
 func (suite *IntegrationTestSuite) TestPayPublisherRespect_InvalidAmount() {
@@ -374,7 +374,7 @@ func (suite *IntegrationTestSuite) TestPayPublisherRespect_BankError() {
 		Active:        true,
 		ArticlesCount: 5,
 		CreatedAt:     1234567890,
-		Respect:       100,
+		Respect:       "100",
 	}
 	suite.k.SetPublisher(suite.ctx, publisher)
 

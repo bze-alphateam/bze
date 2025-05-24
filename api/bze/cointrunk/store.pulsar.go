@@ -1832,8 +1832,8 @@ func (x *fastReflection_Publisher) Range(f func(protoreflect.FieldDescriptor, pr
 			return
 		}
 	}
-	if x.Respect != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Respect)
+	if x.Respect != "" {
+		value := protoreflect.ValueOfString(x.Respect)
 		if !f(fd_Publisher_respect, value) {
 			return
 		}
@@ -1864,7 +1864,7 @@ func (x *fastReflection_Publisher) Has(fd protoreflect.FieldDescriptor) bool {
 	case "bze.cointrunk.Publisher.created_at":
 		return x.CreatedAt != int64(0)
 	case "bze.cointrunk.Publisher.respect":
-		return x.Respect != int64(0)
+		return x.Respect != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.cointrunk.Publisher"))
@@ -1892,7 +1892,7 @@ func (x *fastReflection_Publisher) Clear(fd protoreflect.FieldDescriptor) {
 	case "bze.cointrunk.Publisher.created_at":
 		x.CreatedAt = int64(0)
 	case "bze.cointrunk.Publisher.respect":
-		x.Respect = int64(0)
+		x.Respect = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.cointrunk.Publisher"))
@@ -1926,7 +1926,7 @@ func (x *fastReflection_Publisher) Get(descriptor protoreflect.FieldDescriptor) 
 		return protoreflect.ValueOfInt64(value)
 	case "bze.cointrunk.Publisher.respect":
 		value := x.Respect
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.cointrunk.Publisher"))
@@ -1958,7 +1958,7 @@ func (x *fastReflection_Publisher) Set(fd protoreflect.FieldDescriptor, value pr
 	case "bze.cointrunk.Publisher.created_at":
 		x.CreatedAt = value.Int()
 	case "bze.cointrunk.Publisher.respect":
-		x.Respect = value.Int()
+		x.Respect = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.cointrunk.Publisher"))
@@ -2015,7 +2015,7 @@ func (x *fastReflection_Publisher) NewField(fd protoreflect.FieldDescriptor) pro
 	case "bze.cointrunk.Publisher.created_at":
 		return protoreflect.ValueOfInt64(int64(0))
 	case "bze.cointrunk.Publisher.respect":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.cointrunk.Publisher"))
@@ -2102,8 +2102,9 @@ func (x *fastReflection_Publisher) ProtoMethods() *protoiface.Methods {
 		if x.CreatedAt != 0 {
 			n += 1 + runtime.Sov(uint64(x.CreatedAt))
 		}
-		if x.Respect != 0 {
-			n += 1 + runtime.Sov(uint64(x.Respect))
+		l = len(x.Respect)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -2134,10 +2135,12 @@ func (x *fastReflection_Publisher) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.Respect != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Respect))
+		if len(x.Respect) > 0 {
+			i -= len(x.Respect)
+			copy(dAtA[i:], x.Respect)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Respect)))
 			i--
-			dAtA[i] = 0x30
+			dAtA[i] = 0x32
 		}
 		if x.CreatedAt != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.CreatedAt))
@@ -2345,10 +2348,10 @@ func (x *fastReflection_Publisher) ProtoMethods() *protoiface.Methods {
 					}
 				}
 			case 6:
-				if wireType != 0 {
+				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Respect", wireType)
 				}
-				x.Respect = 0
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -2358,11 +2361,24 @@ func (x *fastReflection_Publisher) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Respect |= int64(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Respect = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -2590,7 +2606,7 @@ type Publisher struct {
 	Active        bool   `protobuf:"varint,3,opt,name=active,proto3" json:"active,omitempty"`
 	ArticlesCount uint32 `protobuf:"varint,4,opt,name=articles_count,json=articlesCount,proto3" json:"articles_count,omitempty"`
 	CreatedAt     int64  `protobuf:"varint,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	Respect       int64  `protobuf:"varint,6,opt,name=respect,proto3" json:"respect,omitempty"`
+	Respect       string `protobuf:"bytes,6,opt,name=respect,proto3" json:"respect,omitempty"`
 }
 
 func (x *Publisher) Reset() {
@@ -2648,11 +2664,11 @@ func (x *Publisher) GetCreatedAt() int64 {
 	return 0
 }
 
-func (x *Publisher) GetRespect() int64 {
+func (x *Publisher) GetRespect() string {
 	if x != nil {
 		return x.Respect
 	}
-	return 0
+	return ""
 }
 
 var File_bze_cointrunk_store_proto protoreflect.FileDescriptor
@@ -2690,7 +2706,7 @@ var file_bze_cointrunk_store_proto_rawDesc = []byte{
 	0x63, 0x6c, 0x65, 0x73, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x63, 0x72, 0x65,
 	0x61, 0x74, 0x65, 0x64, 0x5f, 0x61, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x63,
 	0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x72, 0x65, 0x73, 0x70,
-	0x65, 0x63, 0x74, 0x18, 0x06, 0x20, 0x01, 0x28, 0x03, 0x52, 0x07, 0x72, 0x65, 0x73, 0x70, 0x65,
+	0x65, 0x63, 0x74, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x72, 0x65, 0x73, 0x70, 0x65,
 	0x63, 0x74, 0x42, 0x8e, 0x01, 0x0a, 0x11, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x63,
 	0x6f, 0x69, 0x6e, 0x74, 0x72, 0x75, 0x6e, 0x6b, 0x42, 0x0a, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x50,
 	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x18, 0x62, 0x65, 0x65, 0x7a, 0x65, 0x65, 0x2f, 0x61,

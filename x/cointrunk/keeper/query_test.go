@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -173,7 +174,7 @@ func (suite *IntegrationTestSuite) TestPublisher_ValidRequest() {
 		Active:        true,
 		ArticlesCount: 5,
 		CreatedAt:     1234567890,
-		Respect:       100,
+		Respect:       "100",
 	}
 
 	suite.k.SetPublisher(suite.ctx, publisher)
@@ -224,7 +225,7 @@ func (suite *IntegrationTestSuite) TestPublishers_ValidRequest() {
 			Active:        true,
 			ArticlesCount: 10,
 			CreatedAt:     1234567890,
-			Respect:       50,
+			Respect:       "50",
 		},
 		{
 			Name:          "Publisher 2",
@@ -232,7 +233,7 @@ func (suite *IntegrationTestSuite) TestPublishers_ValidRequest() {
 			Active:        false,
 			ArticlesCount: 5,
 			CreatedAt:     1234567891,
-			Respect:       75,
+			Respect:       "75",
 		},
 	}
 
@@ -267,7 +268,7 @@ func (suite *IntegrationTestSuite) TestPublishers_WithPagination() {
 			Active:        i%2 == 0,
 			ArticlesCount: uint32(i * 5),
 			CreatedAt:     1234567890 + int64(i),
-			Respect:       int64(i * 10),
+			Respect:       fmt.Sprintf("%d", i*10),
 		}
 		suite.k.SetPublisher(suite.ctx, publisher)
 	}

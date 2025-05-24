@@ -14,7 +14,7 @@ func (suite *IntegrationTestSuite) TestSetAndGetPublisher() {
 		Active:        true,
 		ArticlesCount: 5,
 		CreatedAt:     1234567890,
-		Respect:       100,
+		Respect:       "100",
 	}
 
 	// Test SetPublisher
@@ -44,7 +44,7 @@ func (suite *IntegrationTestSuite) TestGetAllPublisher() {
 			Active:        true,
 			ArticlesCount: 10,
 			CreatedAt:     1234567890,
-			Respect:       50,
+			Respect:       "50",
 		},
 		{
 			Name:          "Publisher 2",
@@ -52,7 +52,7 @@ func (suite *IntegrationTestSuite) TestGetAllPublisher() {
 			Active:        false,
 			ArticlesCount: 5,
 			CreatedAt:     1234567891,
-			Respect:       75,
+			Respect:       "75",
 		},
 		{
 			Name:          "Publisher 3",
@@ -60,7 +60,7 @@ func (suite *IntegrationTestSuite) TestGetAllPublisher() {
 			Active:        true,
 			ArticlesCount: 20,
 			CreatedAt:     1234567892,
-			Respect:       125,
+			Respect:       "125",
 		},
 	}
 
@@ -99,7 +99,7 @@ func (suite *IntegrationTestSuite) TestSetPublisher_UpdateExisting() {
 		Active:        false,
 		ArticlesCount: 5,
 		CreatedAt:     1234567890,
-		Respect:       50,
+		Respect:       "50",
 	}
 
 	// Set initial publisher
@@ -111,7 +111,7 @@ func (suite *IntegrationTestSuite) TestSetPublisher_UpdateExisting() {
 	suite.Require().Equal("Original Name", retrievedPublisher.Name)
 	suite.Require().False(retrievedPublisher.Active)
 	suite.Require().Equal(uint32(5), retrievedPublisher.ArticlesCount)
-	suite.Require().Equal(int64(50), retrievedPublisher.Respect)
+	suite.Require().Equal("50", retrievedPublisher.Respect)
 
 	// Update publisher
 	updatedPublisher := types.Publisher{
@@ -120,7 +120,7 @@ func (suite *IntegrationTestSuite) TestSetPublisher_UpdateExisting() {
 		Active:        true,
 		ArticlesCount: 15,
 		CreatedAt:     1234567890,
-		Respect:       150,
+		Respect:       "150",
 	}
 
 	suite.k.SetPublisher(suite.ctx, updatedPublisher)
@@ -131,7 +131,7 @@ func (suite *IntegrationTestSuite) TestSetPublisher_UpdateExisting() {
 	suite.Require().Equal("Updated Name", retrievedPublisher.Name)
 	suite.Require().True(retrievedPublisher.Active)
 	suite.Require().Equal(uint32(15), retrievedPublisher.ArticlesCount)
-	suite.Require().Equal(int64(150), retrievedPublisher.Respect)
+	suite.Require().Equal("150", retrievedPublisher.Respect)
 
 	// Verify only one publisher exists
 	allPublishers := suite.k.GetAllPublisher(suite.ctx)
@@ -159,7 +159,7 @@ func (suite *IntegrationTestSuite) TestSetPublisher_EmptyFields() {
 		Active:        false,
 		ArticlesCount: 0,
 		CreatedAt:     0,
-		Respect:       0,
+		Respect:       "0",
 	}
 
 	suite.k.SetPublisher(suite.ctx, publisher)
@@ -171,5 +171,5 @@ func (suite *IntegrationTestSuite) TestSetPublisher_EmptyFields() {
 	suite.Require().False(retrievedPublisher.Active)
 	suite.Require().Equal(uint32(0), retrievedPublisher.ArticlesCount)
 	suite.Require().Equal(int64(0), retrievedPublisher.CreatedAt)
-	suite.Require().Equal(int64(0), retrievedPublisher.Respect)
+	suite.Require().Equal("0", retrievedPublisher.Respect)
 }

@@ -48,7 +48,7 @@ func (k msgServer) SavePublisher(goCtx context.Context, msg *types.MsgSavePublis
 		publisher.Address = msg.Address
 		publisher.CreatedAt = ctx.BlockHeader().Time.Unix()
 		publisher.ArticlesCount = 0
-		publisher.Respect = 0
+		publisher.Respect = "0"
 	}
 
 	k.SetPublisher(ctx, publisher)

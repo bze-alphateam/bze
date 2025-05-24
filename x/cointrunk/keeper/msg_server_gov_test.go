@@ -159,7 +159,7 @@ func (suite *IntegrationTestSuite) TestSavePublisher_ValidRequest_NewPublisher()
 	suite.Require().Equal("Test Publisher", publisher.Name)
 	suite.Require().True(publisher.Active)
 	suite.Require().Equal(uint32(0), publisher.ArticlesCount)
-	suite.Require().Equal(int64(0), publisher.Respect)
+	suite.Require().Equal("0", publisher.Respect)
 	suite.Require().NotZero(publisher.CreatedAt) // Just check it's not zero
 }
 
@@ -174,7 +174,7 @@ func (suite *IntegrationTestSuite) TestSavePublisher_ValidRequest_UpdateExisting
 		Active:        false,
 		ArticlesCount: 10,
 		CreatedAt:     1234567890,
-		Respect:       50,
+		Respect:       "50",
 	}
 	suite.k.SetPublisher(suite.ctx, initialPublisher)
 
@@ -200,7 +200,7 @@ func (suite *IntegrationTestSuite) TestSavePublisher_ValidRequest_UpdateExisting
 	// These should be preserved from original
 	suite.Require().Equal(uint32(10), publisher.ArticlesCount)
 	suite.Require().Equal(int64(1234567890), publisher.CreatedAt)
-	suite.Require().Equal(int64(50), publisher.Respect)
+	suite.Require().Equal("50", publisher.Respect)
 }
 
 func (suite *IntegrationTestSuite) TestSavePublisher_InvalidAuthority() {

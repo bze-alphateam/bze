@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/math"
 	"fmt"
 
 	"cosmossdk.io/errors"
@@ -39,11 +40,7 @@ func (k msgServer) AddArticle(goCtx context.Context, msg *types.MsgAddArticle) (
 		}
 
 		articleCost := sdk.NewCoins(k.AnonArticleCost(ctx))
-		publisherAcc, err := sdk.AccAddressFromBech32(msg.Publisher)
-		if err != nil {
-			panic(err)
-		}
-
+		publisherAcc := sdk.MustAccAddressFromBech32(msg.Publisher)
 		sdkErr := k.distrKeeper.FundCommunityPool(ctx, articleCost, publisherAcc)
 		if sdkErr != nil {
 			return nil, sdkErr
@@ -71,8 +68,6 @@ func (k msgServer) AddArticle(goCtx context.Context, msg *types.MsgAddArticle) (
 	if err != nil {
 		return nil, err
 	}
-
-	_ = ctx
 
 	return &types.MsgAddArticleResponse{}, nil
 }
@@ -188,7 +183,13 @@ func (k msgServer) PayPublisherRespect(goCtx context.Context, msg *types.MsgPayP
 		}
 	}
 
-	publisher.Respect += coin.Amount.Int64()
+	respInt, ok := math.NewIntFromString(publisher.Respect)
+	if !ok {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "Could not parse publisher respect")
+	}
+
+	respInt = respInt.Add(coin.Amount)
+	publisher.Respect = respInt.String()
 	k.SetPublisher(ctx, publisher)
 
 	err = ctx.EventManager().EmitTypedEvent(&types.PublisherRespectPaidEvent{
@@ -200,8 +201,6 @@ func (k msgServer) PayPublisherRespect(goCtx context.Context, msg *types.MsgPayP
 	if err != nil {
 		return nil, err
 	}
-
-	_ = ctx
 
 	return &types.MsgPayPublisherRespectResponse{
 		RespectPaid:        coin.Amount.Uint64(),
