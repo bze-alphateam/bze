@@ -67,6 +67,9 @@ import (
 	rewardsmodulev1 "github.com/bze-alphateam/bze/api/bze/rewards/module"
 _ "github.com/bze-alphateam/bze/x/rewards/module" // import for side-effects
 rewardsmoduletypes "github.com/bze-alphateam/bze/x/rewards/types"
+tradebinmodulev1 "github.com/bze-alphateam/bze/api/bze/tradebin/module"
+_ "github.com/bze-alphateam/bze/x/tradebin/module" // import for side-effects
+tradebinmoduletypes "github.com/bze-alphateam/bze/x/tradebin/types"
 // this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
@@ -109,6 +112,7 @@ var (
 		cointrunkmoduletypes.ModuleName,
 		tokenfactorymoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
+tradebinmoduletypes.ModuleName,
 // this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 
@@ -138,6 +142,7 @@ var (
 		cointrunkmoduletypes.ModuleName,
 		tokenfactorymoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
+tradebinmoduletypes.ModuleName,
 // this line is used by starport scaffolding # stargate/app/beginBlockers
 	}
 
@@ -161,6 +166,7 @@ var (
 		cointrunkmoduletypes.ModuleName,
 		tokenfactorymoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
+tradebinmoduletypes.ModuleName,
 // this line is used by starport scaffolding # stargate/app/endBlockers
 	}
 
@@ -338,6 +344,10 @@ var (
 			{
 				Name:   rewardsmoduletypes.ModuleName,
 				Config: appconfig.WrapAny(&rewardsmodulev1.Module{}),
+			},
+{
+				Name:   tradebinmoduletypes.ModuleName,
+				Config: appconfig.WrapAny(&tradebinmodulev1.Module{}),
 			},
 // this line is used by starport scaffolding # stargate/app/moduleConfig
 		},

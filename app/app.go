@@ -84,7 +84,8 @@ import (
 	epochmodulekeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
 	rewardsmodulekeeper "github.com/bze-alphateam/bze/x/rewards/keeper"
 	tokenfactorymodulekeeper "github.com/bze-alphateam/bze/x/tokenfactory/keeper"
-	// this line is used by starport scaffolding # stargate/app/moduleImport
+	tradebinmodulekeeper "github.com/bze-alphateam/bze/x/tradebin/keeper"
+// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
 const (
@@ -152,7 +153,8 @@ type App struct {
 	CointrunkKeeper    cointrunkmodulekeeper.Keeper
 	TokenfactoryKeeper tokenfactorymodulekeeper.Keeper
 	RewardsKeeper      rewardsmodulekeeper.Keeper
-	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
+	TradebinKeeper tradebinmodulekeeper.Keeper
+// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -260,6 +262,7 @@ func New(
 		&app.CointrunkKeeper,
 		&app.TokenfactoryKeeper,
 		&app.RewardsKeeper,
+		&app.TradebinKeeper,
 		// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	); err != nil {
 		panic(err)
