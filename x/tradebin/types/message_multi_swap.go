@@ -6,22 +6,44 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+const MaxRoutes = 5
+
 var _ sdk.Msg = &MsgMultiSwap{}
 
-func NewMsgMultiSwap(creator string, routes string, input string, minOutput string) *MsgMultiSwap {
-  return &MsgMultiSwap{
-		Creator: creator,
-    Routes: routes,
-    Input: input,
-    MinOutput: minOutput,
+func NewMsgMultiSwap(creator string, routes []string, input, minOutput sdk.Coin) *MsgMultiSwap {
+	return &MsgMultiSwap{
+		Creator:   creator,
+		Routes:    routes,
+		Input:     input,
+		MinOutput: minOutput,
 	}
 }
 
 func (msg *MsgMultiSwap) ValidateBasic() error {
-  _, err := sdk.AccAddressFromBech32(msg.Creator)
-  	if err != nil {
-  		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
-  	}
-  return nil
-}
+	_, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
 
+	if len(msg.GetRoutes()) <= 0 || len(msg.GetRoutes()) > MaxRoutes {
+		return errorsmod.Wrapf(ErrInvalidRoutes, "routes length must be between 0 and %d", MaxRoutes)
+	}
+
+	if !msg.Input.IsValid() || !msg.Input.IsPositive() {
+		return errorsmod.Wrapf(ErrInvalidOrderAmount, "input amount (%s) is not valid", msg.GetInput().String())
+	}
+
+	if !msg.MinOutput.IsValid() || !msg.MinOutput.IsPositive() {
+		return errorsmod.Wrapf(ErrInvalidOrderAmount, "minimum output (%s) is not valid", msg.GetMinOutput().String())
+	}
+
+	if !msg.Input.IsPositive() {
+		return errorsmod.Wrapf(ErrInvalidOrderAmount, "input is not positive (%s)", msg.Input.String())
+	}
+
+	if !msg.MinOutput.IsPositive() {
+		return errorsmod.Wrapf(ErrInvalidOrderAmount, "minimum output is not positive (%s)", msg.MinOutput.String())
+	}
+
+	return nil
+}

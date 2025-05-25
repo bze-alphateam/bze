@@ -2,6 +2,9 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/math"
+	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,9 +12,43 @@ import (
 
 func (k msgServer) CreateMarket(goCtx context.Context, msg *types.MsgCreateMarket) (*types.MsgCreateMarketResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	_, found := k.GetMarket(ctx, msg.Base, msg.Quote)
+	if found {
+		return nil, types.ErrMarketAlreadyExists
+	}
 
-	// TODO: Handling the message
-	_ = ctx
+	creatorAcc, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return nil, err
+	}
+
+	//check aliases too: user can try to create a market that exists
+	_, found = k.GetMarketAlias(ctx, msg.Base, msg.Quote)
+	if found {
+		return nil, types.ErrMarketAlreadyExists
+	}
+
+	err = k.validateMarketAssets(ctx, msg.Base, msg.Quote)
+	if err != nil {
+		return nil, err
+	}
+
+	err = k.payMarketCreateFee(ctx, creatorAcc)
+	if err != nil {
+		return nil, err
+	}
+
+	market := types.Market{
+		Base:    msg.Base,
+		Quote:   msg.Quote,
+		Creator: msg.Creator,
+	}
+	k.SetMarket(ctx, market)
+
+	err = k.emitMarketCreatedEvent(ctx, &market)
+	if err != nil {
+		k.Logger().Error(err.Error())
+	}
 
 	return &types.MsgCreateMarketResponse{}, nil
 }
@@ -19,17 +56,106 @@ func (k msgServer) CreateMarket(goCtx context.Context, msg *types.MsgCreateMarke
 func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder) (*types.MsgCreateOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO: Handling the message
-	_ = ctx
+	err := k.checkPrice(ctx, msg)
+	if err != nil {
+		return nil, types.ErrInvalidOrderPrice.Wrapf("check price failed: %v", err)
+	}
+
+	minAmt := CalculateMinAmount(msg.Price)
+	amtInt, ok := math.NewIntFromString(msg.Amount)
+	if !ok {
+		return nil, types.ErrInvalidOrderAmount.Wrapf("amount could not be converted to Int")
+	}
+	if minAmt.GT(amtInt) {
+		return nil, types.ErrInvalidOrderAmount.Wrapf("amount should be bigger than: %s", minAmt.String())
+	}
+
+	market, found := k.GetMarketById(ctx, msg.MarketId)
+	if !found {
+		return nil, types.ErrMarketNotFound.Wrapf("market id: %s", msg.MarketId)
+	}
+
+	accAddr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return nil, err
+	}
+
+	//calculate needed funds for this order
+	ocReq := types.OrderCoinsArguments{
+		OrderType:    msg.OrderType,
+		OrderPrice:   msg.Price,
+		OrderAmount:  amtInt,
+		Market:       &market,
+		UserAddress:  msg.Creator,
+		UserReceives: false,
+	}
+
+	orderCoins, err := k.GetOrderCoinsWithDust(ctx, ocReq)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = k.captureMsgFees(ctx, msg, accAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	//capture user funds for this order
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAddr, types.ModuleName, sdk.NewCoins(orderCoins.Coin))
+	if err != nil {
+		return nil, err
+	}
+
+	qm := types.QueueMessage{
+		MarketId:    msg.MarketId,
+		OrderType:   msg.OrderType,
+		MessageType: msg.OrderType,
+		Amount:      msg.Amount,
+		Price:       msg.Price,
+		Owner:       msg.Creator,
+	}
+
+	k.SetQueueMessage(ctx, qm)
+	k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
+
+	err = k.emitOrderCreateMessageEvent(ctx, &qm)
+	if err != nil {
+		k.Logger().Error(err.Error())
+	}
 
 	return &types.MsgCreateOrderResponse{}, nil
 }
 
 func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder) (*types.MsgCancelOrderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	_, found := k.GetMarketById(ctx, msg.MarketId)
+	if !found {
+		return nil, types.ErrMarketNotFound
+	}
 
-	// TODO: Handling the message
-	_ = ctx
+	order, found := k.GetOrder(ctx, msg.MarketId, msg.OrderType, msg.OrderId)
+	if !found {
+		return nil, types.ErrOrderNotFound
+	}
+
+	if order.Owner != msg.Creator {
+		return nil, types.ErrUnauthorizedOrder
+	}
+
+	qm := types.QueueMessage{
+		MarketId:    msg.MarketId,
+		MessageType: types.MessageTypeCancel,
+		OrderId:     msg.OrderId,
+		OrderType:   msg.OrderType,
+		Owner:       msg.Creator,
+	}
+
+	k.SetQueueMessage(ctx, qm)
+
+	err := k.emitOrderCancelMessageEvent(ctx, &order)
+	if err != nil {
+		k.Logger().Error(err.Error())
+	}
 
 	return &types.MsgCancelOrderResponse{}, nil
 }
@@ -37,8 +163,320 @@ func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder)
 func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (*types.MsgFillOrdersResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO: Handling the message
-	_ = ctx
+	accAddr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return nil, err
+	}
+
+	market, found := k.GetMarketById(ctx, msg.MarketId)
+	if !found {
+		return nil, types.ErrMarketNotFound.Wrapf("market id: %s", msg.MarketId)
+	}
+
+	ctx.GasMeter().ConsumeGas(types.FillOrdersExtraGas, "fill_orders")
+	totalCoins := sdk.NewCoins()
+	for _, fo := range msg.Orders {
+		minAmt := CalculateMinAmount(fo.Price)
+		amtInt, ok := math.NewIntFromString(fo.Amount)
+		if !ok {
+			return nil, types.ErrInvalidOrderAmount.Wrapf("amount could not be converted to Int")
+		}
+		if minAmt.GT(amtInt) {
+			ctx.Logger().Debug("order amount is smaller than minimum", "order_to_fill", fo)
+
+			continue
+		}
+
+		//calculate needed funds for this order
+		//inverse the order type because the message specifies what kind of orders it wants to fill
+		//so if user says he wants to fill buy orders, we need to act like he's selling, and vice versa
+		ocReq := types.OrderCoinsArguments{
+			OrderType:    types.TheOtherOrderType(msg.OrderType),
+			OrderPrice:   fo.Price,
+			OrderAmount:  amtInt,
+			Market:       &market,
+			UserAddress:  msg.Creator,
+			UserReceives: false,
+		}
+
+		orderCoins, err := k.GetOrderCoinsWithDust(ctx, ocReq)
+		if err != nil {
+			return nil, err
+		}
+		//messages of type "buy" are added on queue as messageType = "fill_buy"
+		//messages of type "sell" are added on queue as messageType = "fill_sell"
+		//orderType is the opposite of the orders we want to fill: if we fill "buy" it means we "sell", and vice versa.
+		qm := types.QueueMessage{
+			MarketId:    msg.MarketId,
+			OrderType:   ocReq.OrderType, // already inversed when ocReq was built a few lines above
+			MessageType: types.OrderTypeToMessageTypeFill(msg.OrderType),
+			Amount:      fo.Amount,
+			Price:       fo.Price,
+			Owner:       msg.Creator,
+		}
+
+		k.SetQueueMessage(ctx, qm)
+		k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
+
+		totalCoins = totalCoins.Add(orderCoins.Coin)
+		//take extra gas for each order to fill
+		ctx.GasMeter().ConsumeGas(types.FillOrdersExtraGas, "fill_orders")
+	}
+
+	if totalCoins.IsZero() {
+		return nil, types.ErrInvalidOrdersToFill
+	}
+
+	_, err = k.captureTradingFees(ctx, accAddr, true)
+	if err != nil {
+		return nil, err
+	}
+
+	//capture user funds for this order
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAddr, types.ModuleName, totalCoins)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.MsgFillOrdersResponse{}, nil
+}
+
+func (k msgServer) payMarketCreateFee(ctx sdk.Context, payer sdk.AccAddress) error {
+	if payer == nil {
+		return fmt.Errorf("could not get payer address")
+	}
+
+	createMarketFee, err := sdk.ParseCoinsNormalized(k.CreateMarketFee(ctx))
+	if err != nil {
+		return err
+	}
+
+	if createMarketFee.IsAllPositive() {
+		sendErr := k.distrKeeper.FundCommunityPool(ctx, createMarketFee, payer)
+		if sendErr != nil {
+			return sendErr
+		}
+	}
+
+	return nil
+}
+
+func (k msgServer) emitMarketCreatedEvent(ctx sdk.Context, market *types.Market) error {
+	return ctx.EventManager().EmitTypedEvent(
+		&types.MarketCreatedEvent{
+			Creator: market.Creator,
+			Base:    market.Base,
+			Quote:   market.Quote,
+		},
+	)
+}
+
+func (k msgServer) emitOrderCancelMessageEvent(ctx sdk.Context, order *types.Order) error {
+	return ctx.EventManager().EmitTypedEvent(
+		&types.OrderCancelMessageEvent{
+			Creator:   order.Owner,
+			MarketId:  order.MarketId,
+			OrderId:   order.Id,
+			OrderType: order.OrderType,
+		},
+	)
+}
+
+func (k msgServer) emitOrderCreateMessageEvent(ctx sdk.Context, qm *types.QueueMessage) error {
+	return ctx.EventManager().EmitTypedEvent(
+		&types.OrderCreateMessageEvent{
+			Creator:   qm.Owner,
+			MarketId:  qm.MarketId,
+			OrderType: qm.OrderType,
+			Amount:    qm.Amount,
+			Price:     qm.Price,
+		},
+	)
+}
+
+func (k msgServer) captureMsgFees(ctx sdk.Context, msg *types.MsgCreateOrder, sender sdk.AccAddress) (sdk.Coin, error) {
+	//used to decide if it's market taker or market maker
+	_, found := k.GetAggregatedOrder(ctx, msg.MarketId, types.TheOtherOrderType(msg.OrderType), msg.Price)
+
+	return k.captureTradingFees(ctx, sender, found)
+}
+
+func (k msgServer) captureTradingFees(ctx sdk.Context, sender sdk.AccAddress, isTaker bool) (coin sdk.Coin, err error) {
+	params := k.GetParams(ctx)
+	var fee string
+	var destination string
+	if isTaker {
+		//is market taker
+		fee = params.GetMarketTakerFee()
+		destination = params.GetTakerFeeDestination()
+	} else {
+		//is market maker
+		fee = params.GetMarketMakerFee()
+		destination = params.GetMakerFeeDestination()
+	}
+
+	coin, err = sdk.ParseCoinNormalized(fee)
+	if err != nil {
+		k.Logger().
+			With("err", err).
+			With("param_fee", fee).
+			Error("could not parse fee coin. trading fee not captured")
+
+		//do not return error!! if we have a wrong fee parameter we don't want to stall the trading process
+		return coin, nil
+	}
+
+	if !coin.IsPositive() {
+		k.Logger().
+			With("param_fee", fee).
+			Debug("not capturing order create fee because it is not a positive value")
+
+		return
+	}
+
+	if destination == types.FeeDestinationBurnerModule {
+		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.FeeDestinationBurnerModule, sdk.NewCoins(coin))
+
+		return
+	}
+
+	err = k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(coin), sender)
+
+	return
+}
+
+// checkPrice - validates the price of a message in order to make sure orders prices don't get messed up.
+// Ensures users are not allowed to submit an order with a price lower/higher than first buy/sell
+// in descending/ascending order by price.
+//
+// A price is valid if:
+// - has an opposite order that can match and the order is filled immediately (market taker)
+// OR
+//   - if order type is "buy":
+//   - price is lower than the first "sell" order found
+//     AND
+//   - price is lower than ALL queue messages of type "sell"
+//   - if order type is "sell":
+//   - price is higher than the first "buy" order found
+//     AND
+//   - price is higher than ALL queue messages of type "buy"
+func (k msgServer) checkPrice(ctx sdk.Context, msg *types.MsgCreateOrder) error {
+	oppositeType := types.TheOtherOrderType(msg.OrderType)
+	//if order can be filled then the price is valid
+	_, found := k.GetAggregatedOrder(ctx, msg.MarketId, oppositeType, msg.Price)
+	if found {
+
+		return nil
+	}
+
+	currentPrice, err := math.LegacyNewDecFromStr(msg.Price)
+	if err != nil {
+		//should never happen! Message should be validated before this function is called
+		return fmt.Errorf("could not parse current price: %s", msg.Price)
+	}
+
+	err = k.checkPriceInQueueMessages(ctx, msg, &currentPrice)
+	if err != nil {
+		return err
+	}
+
+	err = k.checkPriceInOrderBook(ctx, msg, &currentPrice)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (k Keeper) checkPriceInOrderBook(ctx sdk.Context, msg *types.MsgCreateOrder, currentPrice *math.LegacyDec) error {
+	oppositeType := types.TheOtherOrderType(msg.OrderType)
+	if msg.OrderType == types.OrderTypeBuy {
+		sells, _, err := k.getMarketAggregatedOrdersPaginated(ctx, msg.MarketId, oppositeType, &query.PageRequest{Limit: 1, Reverse: false})
+		if err != nil {
+
+			return fmt.Errorf("could not get buy orders pagination query: %w", err)
+		}
+
+		if len(sells) == 0 {
+
+			return nil
+		}
+
+		sPrice, err := math.LegacyNewDecFromStr(sells[0].Price)
+		if err != nil {
+
+			return fmt.Errorf("could not parse sell price: %s", sells[0].Price)
+		}
+
+		if currentPrice.GT(sPrice) {
+
+			return fmt.Errorf("buying price is invalid. A better price is available: %s", sPrice.String())
+		}
+
+	} else if msg.OrderType == types.OrderTypeSell {
+		buys, _, err := k.getMarketAggregatedOrdersPaginated(ctx, msg.MarketId, oppositeType, &query.PageRequest{Limit: 1, Reverse: true})
+		if err != nil {
+
+			return fmt.Errorf("could not get buy orders pagination query: %w", err)
+		}
+
+		if len(buys) == 0 {
+			return nil
+		}
+
+		bPrice, err := math.LegacyNewDecFromStr(buys[0].Price)
+		if err != nil {
+			return fmt.Errorf("could not parse sell price: %s", buys[0].Price)
+		}
+
+		if currentPrice.LT(bPrice) {
+			return fmt.Errorf("selling price is invalid. A better price is available: %s", bPrice.String())
+		}
+	}
+
+	return nil
+}
+
+func (k Keeper) checkPriceInQueueMessages(ctx sdk.Context, msg *types.MsgCreateOrder, currentPrice *math.LegacyDec) error {
+	oppositeType := types.TheOtherOrderType(msg.OrderType)
+	queueMessages := k.GetAllQueueMessage(ctx)
+	msgsPrice := math.LegacyZeroDec()
+	for _, queueMessage := range queueMessages {
+		//check against MessageType because we have "cancel" type besides "buy" and "sell"
+		if queueMessage.MarketId != msg.MarketId || queueMessage.MessageType != oppositeType {
+			continue
+		}
+
+		p, err := math.LegacyNewDecFromStr(queueMessage.Price)
+		if err != nil {
+			k.Logger().With("func", "checkPrice").Error(fmt.Sprintf("could not parse message price: %s", err.Error()))
+			continue
+		}
+
+		if msgsPrice.IsZero() {
+			msgsPrice = p
+			continue
+		}
+
+		if oppositeType == types.OrderTypeBuy && p.GT(msgsPrice) {
+			//save the biggest price for "buy" type
+			msgsPrice = p
+		} else if oppositeType == types.OrderTypeSell && p.LT(msgsPrice) {
+			//save the lowest price for "sell" type
+			msgsPrice = p
+		}
+	}
+
+	//if we found opposite type messages
+	if msgsPrice.IsPositive() {
+		if oppositeType == types.OrderTypeBuy && currentPrice.LT(msgsPrice) {
+
+			return fmt.Errorf("price is outdated. Better price is available: %s", msgsPrice.String())
+		} else if oppositeType == types.OrderTypeSell && currentPrice.GT(msgsPrice) {
+
+			return fmt.Errorf("price is outdated. Better price is available: %s", msgsPrice.String())
+		}
+	}
+
+	return nil
 }

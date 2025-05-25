@@ -85,7 +85,8 @@ import (
 	rewardsmodulekeeper "github.com/bze-alphateam/bze/x/rewards/keeper"
 	tokenfactorymodulekeeper "github.com/bze-alphateam/bze/x/tokenfactory/keeper"
 	tradebinmodulekeeper "github.com/bze-alphateam/bze/x/tradebin/keeper"
-// this line is used by starport scaffolding # stargate/app/moduleImport
+	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
+	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
 const (
@@ -153,8 +154,8 @@ type App struct {
 	CointrunkKeeper    cointrunkmodulekeeper.Keeper
 	TokenfactoryKeeper tokenfactorymodulekeeper.Keeper
 	RewardsKeeper      rewardsmodulekeeper.Keeper
-	TradebinKeeper tradebinmodulekeeper.Keeper
-// this line is used by starport scaffolding # stargate/app/keeperDeclaration
+	TradebinKeeper     tradebinmodulekeeper.Keeper
+	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -296,6 +297,7 @@ func New(
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 	app.sm.RegisterStoreDecoders()
 	app.setEpochsHooks()
+	app.setTradebinHooks()
 
 	// A custom InitChainer sets if extra pre-init-genesis logic is required.
 	// This is necessary for manually registered modules that do not support app wiring.
@@ -421,6 +423,14 @@ func (app *App) setEpochsHooks() {
 			app.RewardsKeeper.GetTradingRewardsDistributionHook(),
 			app.BurnerKeeper.GetBurnerRaffleCleanupHook(),
 			app.BurnerKeeper.GetBurnerPeriodicBurnHook(),
+		},
+	)
+}
+
+func (app *App) setTradebinHooks() {
+	app.TradebinKeeper.SetOnOrderFillHooks(
+		[]tradebintypes.OnMarketOrderFill{
+			app.RewardsKeeper.GetOnOrderFillHook(),
 		},
 	)
 }
