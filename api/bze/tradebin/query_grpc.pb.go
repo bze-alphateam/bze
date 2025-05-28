@@ -28,6 +28,8 @@ const (
 	Query_MarketHistory_FullMethodName          = "/bze.tradebin.Query/MarketHistory"
 	Query_MarketOrder_FullMethodName            = "/bze.tradebin.Query/MarketOrder"
 	Query_AllUserDust_FullMethodName            = "/bze.tradebin.Query/AllUserDust"
+	Query_AllLiquidityPools_FullMethodName      = "/bze.tradebin.Query/AllLiquidityPools"
+	Query_LiquidityPool_FullMethodName          = "/bze.tradebin.Query/LiquidityPool"
 )
 
 // QueryClient is the client API for Query service.
@@ -52,6 +54,10 @@ type QueryClient interface {
 	MarketOrder(ctx context.Context, in *QueryMarketOrderRequest, opts ...grpc.CallOption) (*QueryMarketOrderResponse, error)
 	// Queries a list of AllUserDust items.
 	AllUserDust(ctx context.Context, in *QueryAllUserDustRequest, opts ...grpc.CallOption) (*QueryAllUserDustResponse, error)
+	// Queries a list of AllLiquidityPools items.
+	AllLiquidityPools(ctx context.Context, in *QueryAllLiquidityPoolsRequest, opts ...grpc.CallOption) (*QueryAllLiquidityPoolsResponse, error)
+	// Queries a list of LiquidityPool items.
+	LiquidityPool(ctx context.Context, in *QueryLiquidityPoolRequest, opts ...grpc.CallOption) (*QueryLiquidityPoolResponse, error)
 }
 
 type queryClient struct {
@@ -143,6 +149,24 @@ func (c *queryClient) AllUserDust(ctx context.Context, in *QueryAllUserDustReque
 	return out, nil
 }
 
+func (c *queryClient) AllLiquidityPools(ctx context.Context, in *QueryAllLiquidityPoolsRequest, opts ...grpc.CallOption) (*QueryAllLiquidityPoolsResponse, error) {
+	out := new(QueryAllLiquidityPoolsResponse)
+	err := c.cc.Invoke(ctx, Query_AllLiquidityPools_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) LiquidityPool(ctx context.Context, in *QueryLiquidityPoolRequest, opts ...grpc.CallOption) (*QueryLiquidityPoolResponse, error) {
+	out := new(QueryLiquidityPoolResponse)
+	err := c.cc.Invoke(ctx, Query_LiquidityPool_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -165,6 +189,10 @@ type QueryServer interface {
 	MarketOrder(context.Context, *QueryMarketOrderRequest) (*QueryMarketOrderResponse, error)
 	// Queries a list of AllUserDust items.
 	AllUserDust(context.Context, *QueryAllUserDustRequest) (*QueryAllUserDustResponse, error)
+	// Queries a list of AllLiquidityPools items.
+	AllLiquidityPools(context.Context, *QueryAllLiquidityPoolsRequest) (*QueryAllLiquidityPoolsResponse, error)
+	// Queries a list of LiquidityPool items.
+	LiquidityPool(context.Context, *QueryLiquidityPoolRequest) (*QueryLiquidityPoolResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -198,6 +226,12 @@ func (UnimplementedQueryServer) MarketOrder(context.Context, *QueryMarketOrderRe
 }
 func (UnimplementedQueryServer) AllUserDust(context.Context, *QueryAllUserDustRequest) (*QueryAllUserDustResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllUserDust not implemented")
+}
+func (UnimplementedQueryServer) AllLiquidityPools(context.Context, *QueryAllLiquidityPoolsRequest) (*QueryAllLiquidityPoolsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllLiquidityPools not implemented")
+}
+func (UnimplementedQueryServer) LiquidityPool(context.Context, *QueryLiquidityPoolRequest) (*QueryLiquidityPoolResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LiquidityPool not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -374,6 +408,42 @@ func _Query_AllUserDust_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_AllLiquidityPools_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllLiquidityPoolsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllLiquidityPools(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_AllLiquidityPools_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllLiquidityPools(ctx, req.(*QueryAllLiquidityPoolsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_LiquidityPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryLiquidityPoolRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).LiquidityPool(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_LiquidityPool_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).LiquidityPool(ctx, req.(*QueryLiquidityPoolRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -416,6 +486,14 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AllUserDust",
 			Handler:    _Query_AllUserDust_Handler,
+		},
+		{
+			MethodName: "AllLiquidityPools",
+			Handler:    _Query_AllLiquidityPools_Handler,
+		},
+		{
+			MethodName: "LiquidityPool",
+			Handler:    _Query_LiquidityPool_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

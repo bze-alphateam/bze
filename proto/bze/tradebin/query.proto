@@ -67,6 +67,18 @@ service Query {
     option (google.api.http).get = "/bze/tradebin/all_user_dust";
   
   }
+  
+  // Queries a list of AllLiquidityPools items.
+  rpc AllLiquidityPools (QueryAllLiquidityPoolsRequest) returns (QueryAllLiquidityPoolsResponse) {
+    option (google.api.http).get = "/bze/tradebin/all_liquidity_pools";
+  
+  }
+  
+  // Queries a list of LiquidityPool items.
+  rpc LiquidityPool (QueryLiquidityPoolRequest) returns (QueryLiquidityPoolResponse) {
+    option (google.api.http).get = "/bze/tradebin/liquidity_pool";
+  
+  }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.
 message QueryParamsRequest {}
@@ -153,5 +165,22 @@ message QueryAllUserDustRequest {
 
 message QueryAllUserDustResponse {
   repeated UserDust list = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllLiquidityPoolsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllLiquidityPoolsResponse {
+  repeated LiquidityPool list = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryLiquidityPoolRequest {
+  string pool_id = 1;
+}
+
+message QueryLiquidityPoolResponse {
+  LiquidityPool pool = 1;
 }
 
