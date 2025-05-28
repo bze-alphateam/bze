@@ -1,9 +1,9 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"fmt"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"time"
 )
 
@@ -116,10 +116,10 @@ func (suite *IntegrationTestSuite) TestNewOrder() {
 }
 
 func (suite *IntegrationTestSuite) TestGetOrderSdkCoin_Error() {
-	_, _, err := suite.k.GetOrderSdkCoin("NOT_A_TYPE", "100", sdk.NewInt(2), &market)
+	_, _, err := suite.k.GetOrderSdkCoin("NOT_A_TYPE", "100", math.NewInt(2), &market)
 	suite.Require().NotNil(err)
 
-	_, _, err = suite.k.GetOrderSdkCoin(types.OrderTypeBuy, "0.", sdk.NewInt(1), &market)
+	_, _, err = suite.k.GetOrderSdkCoin(types.OrderTypeBuy, "0.", math.NewInt(1), &market)
 	suite.Require().NotNil(err)
 }
 

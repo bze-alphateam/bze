@@ -17,6 +17,55 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "params",
 					Short:     "Shows the parameters of the module",
 				},
+				{
+					RpcMethod:      "Market",
+					Use:            "market",
+					Short:          "Query market",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "base"}, {ProtoField: "quote"}},
+				},
+				{
+					RpcMethod:      "AllMarkets",
+					Use:            "all-markets",
+					Short:          "Query all-markets",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
+				{
+					RpcMethod:      "AssetMarkets",
+					Use:            "asset-markets",
+					Short:          "Query asset-markets",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "asset"}},
+				},
+				{
+					RpcMethod:      "UserMarketOrders",
+					Use:            "user-market-orders",
+					Short:          "Query user-market-orders",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}, {ProtoField: "market"}},
+				},
+				{
+					RpcMethod:      "MarketAggregatedOrders",
+					Use:            "market-aggregated-orders",
+					Short:          "Query market-aggregated-orders",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "market"}, {ProtoField: "order_type"}},
+				},
+				{
+					RpcMethod:      "MarketHistory",
+					Use:            "market-history",
+					Short:          "Query market-history",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "market"}},
+				},
+				{
+					RpcMethod:      "MarketOrder",
+					Use:            "market-order",
+					Short:          "Query market-order",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "market"}, {ProtoField: "order_type"}, {ProtoField: "order_id"}},
+				},
+				{
+					RpcMethod:      "AllUserDust",
+					Use:            "all-user-dust",
+					Short:          "Query all-user-dust",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
+				},
+
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -88,7 +89,7 @@ func (suite *IntegrationTestSuite) TestStoreProcessedUserDust_WithZeroDust() {
 	}
 	suite.k.SetUserDust(suite.ctx, ud1)
 
-	zeroDec := sdk.ZeroDec()
+	zeroDec := math.LegacyZeroDec()
 	suite.k.StoreProcessedUserDust(suite.ctx, &ud1, &zeroDec)
 
 	_, ok := suite.k.GetUserDust(suite.ctx, ud1.Owner, ud1.Denom)
@@ -96,35 +97,35 @@ func (suite *IntegrationTestSuite) TestStoreProcessedUserDust_WithZeroDust() {
 }
 
 func (suite *IntegrationTestSuite) TestCollectUserDust_ZeroDust() {
-	coin := sdk.NewCoin("ubze", sdk.NewInt(100))
-	dust := sdk.ZeroDec()
+	coin := sdk.NewCoin("ubze", math.NewInt(100))
+	dust := math.LegacyZeroDec()
 	addr := "addr1"
 	res, userDust, dust, err := suite.k.CollectUserDust(suite.ctx, addr, coin, dust, false)
 	suite.Require().NoError(err)
 	suite.Require().Nil(userDust)
 	suite.Require().Equal(res, coin)
-	suite.Require().Equal(dust, sdk.ZeroDec())
+	suite.Require().Equal(dust, math.LegacyZeroDec())
 }
 
 func (suite *IntegrationTestSuite) TestCollectUserDust_PayerFirstDust() {
-	coin := sdk.NewCoin("ubze", sdk.NewInt(100))
-	dust, err := sdk.NewDecFromStr("0.032121123123123")
+	coin := sdk.NewCoin("ubze", math.NewInt(100))
+	dust, err := math.LegacyNewDecFromStr("0.032121123123123")
 	suite.Require().Nil(err)
 	addr := "addr1"
 	res, userDust, dustResulted, err := suite.k.CollectUserDust(suite.ctx, addr, coin, dust, false)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(userDust)
-	suite.Require().Equal(res, coin.AddAmount(sdk.OneInt()))
+	suite.Require().Equal(res, coin.AddAmount(math.OneInt()))
 	suite.Require().NotEqual(dustResulted, dust)
 	suite.Require().Equal(userDust.Owner, addr)
 	suite.Require().Equal(userDust.Denom, coin.Denom)
-	suite.Require().Equal(userDust.Amount, sdk.OneDec().Sub(dust).String())
-	suite.Require().Equal(dustResulted.String(), sdk.OneDec().Sub(dust).String())
+	suite.Require().Equal(userDust.Amount, math.LegacyOneDec().Sub(dust).String())
+	suite.Require().Equal(dustResulted.String(), math.LegacyOneDec().Sub(dust).String())
 }
 
 func (suite *IntegrationTestSuite) TestCollectUserDust_PayerDust_AddedFromStorage() {
 	addr := "addr1"
-	storageDust, err := sdk.NewDecFromStr("0.1")
+	storageDust, err := math.LegacyNewDecFromStr("0.1")
 	suite.Require().Nil(err)
 	ud1 := types.UserDust{
 		Owner:  addr,
@@ -133,24 +134,24 @@ func (suite *IntegrationTestSuite) TestCollectUserDust_PayerDust_AddedFromStorag
 	}
 	suite.k.SetUserDust(suite.ctx, ud1)
 
-	coin := sdk.NewCoin("ubze", sdk.NewInt(100))
-	dust, err := sdk.NewDecFromStr("0.35")
+	coin := sdk.NewCoin("ubze", math.NewInt(100))
+	dust, err := math.LegacyNewDecFromStr("0.35")
 	suite.Require().Nil(err)
 
 	res, userDust, dustResulted, err := suite.k.CollectUserDust(suite.ctx, addr, coin, dust, false)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(userDust)
-	suite.Require().Equal(res, coin.AddAmount(sdk.OneInt()))
+	suite.Require().Equal(res, coin.AddAmount(math.OneInt()))
 	suite.Require().NotEqual(dustResulted, dust)
 	suite.Require().Equal(userDust.Owner, addr)
 	suite.Require().Equal(userDust.Denom, coin.Denom)
-	suite.Require().Equal(userDust.Amount, sdk.OneDec().Sub(dust).Add(storageDust).String())
-	suite.Require().Equal(dustResulted.String(), sdk.OneDec().Sub(dust).Add(storageDust).String())
+	suite.Require().Equal(userDust.Amount, math.LegacyOneDec().Sub(dust).Add(storageDust).String())
+	suite.Require().Equal(dustResulted.String(), math.LegacyOneDec().Sub(dust).Add(storageDust).String())
 }
 
 func (suite *IntegrationTestSuite) TestCollectUserDust_PayerDust_PaidFromStorage() {
 	addr := "addr1"
-	storageDust, err := sdk.NewDecFromStr("0.36662")
+	storageDust, err := math.LegacyNewDecFromStr("0.36662")
 	suite.Require().Nil(err)
 	ud1 := types.UserDust{
 		Owner:  addr,
@@ -159,8 +160,8 @@ func (suite *IntegrationTestSuite) TestCollectUserDust_PayerDust_PaidFromStorage
 	}
 	suite.k.SetUserDust(suite.ctx, ud1)
 
-	coin := sdk.NewCoin("ubze", sdk.NewInt(100))
-	dust, err := sdk.NewDecFromStr("0.35")
+	coin := sdk.NewCoin("ubze", math.NewInt(100))
+	dust, err := math.LegacyNewDecFromStr("0.35")
 	suite.Require().Nil(err)
 
 	res, userDust, dustResulted, err := suite.k.CollectUserDust(suite.ctx, addr, coin, dust, false)
@@ -175,8 +176,8 @@ func (suite *IntegrationTestSuite) TestCollectUserDust_PayerDust_PaidFromStorage
 }
 
 func (suite *IntegrationTestSuite) TestCollectUserDust_ReceiverFirstDust() {
-	coin := sdk.NewCoin("ubze", sdk.NewInt(100))
-	dust, err := sdk.NewDecFromStr("0.032121123123123")
+	coin := sdk.NewCoin("ubze", math.NewInt(100))
+	dust, err := math.LegacyNewDecFromStr("0.032121123123123")
 	suite.Require().Nil(err)
 	addr := "addr1"
 	res, userDust, dustResulted, err := suite.k.CollectUserDust(suite.ctx, addr, coin, dust, true)
@@ -192,7 +193,7 @@ func (suite *IntegrationTestSuite) TestCollectUserDust_ReceiverFirstDust() {
 
 func (suite *IntegrationTestSuite) TestCollectUserDust_ReceiverDust_AddedFromStorage() {
 	addr := "addr1"
-	storageDust, err := sdk.NewDecFromStr("0.1")
+	storageDust, err := math.LegacyNewDecFromStr("0.1")
 	suite.Require().Nil(err)
 	ud1 := types.UserDust{
 		Owner:  addr,
@@ -201,8 +202,8 @@ func (suite *IntegrationTestSuite) TestCollectUserDust_ReceiverDust_AddedFromSto
 	}
 	suite.k.SetUserDust(suite.ctx, ud1)
 
-	coin := sdk.NewCoin("ubze", sdk.NewInt(100))
-	dust, err := sdk.NewDecFromStr("0.032121123123123")
+	coin := sdk.NewCoin("ubze", math.NewInt(100))
+	dust, err := math.LegacyNewDecFromStr("0.032121123123123")
 	suite.Require().Nil(err)
 	res, userDust, dustResulted, err := suite.k.CollectUserDust(suite.ctx, addr, coin, dust, true)
 	suite.Require().NoError(err)
@@ -217,7 +218,7 @@ func (suite *IntegrationTestSuite) TestCollectUserDust_ReceiverDust_AddedFromSto
 
 func (suite *IntegrationTestSuite) TestCollectUserDust_ReceiverDust_AddedFromStorageToCoin() {
 	addr := "addr1"
-	storageDust, err := sdk.NewDecFromStr("0.1")
+	storageDust, err := math.LegacyNewDecFromStr("0.1")
 	suite.Require().Nil(err)
 	ud1 := types.UserDust{
 		Owner:  addr,
@@ -226,16 +227,16 @@ func (suite *IntegrationTestSuite) TestCollectUserDust_ReceiverDust_AddedFromSto
 	}
 	suite.k.SetUserDust(suite.ctx, ud1)
 
-	coin := sdk.NewCoin("ubze", sdk.NewInt(100))
-	dust, err := sdk.NewDecFromStr("0.9")
+	coin := sdk.NewCoin("ubze", math.NewInt(100))
+	dust, err := math.LegacyNewDecFromStr("0.9")
 	suite.Require().Nil(err)
 	res, userDust, dustResulted, err := suite.k.CollectUserDust(suite.ctx, addr, coin, dust, true)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(userDust)
-	suite.Require().Equal(res, coin.AddAmount(sdk.OneInt()))
+	suite.Require().Equal(res, coin.AddAmount(math.OneInt()))
 	suite.Require().NotEqual(dustResulted, dust)
 	suite.Require().Equal(userDust.Owner, addr)
 	suite.Require().Equal(userDust.Denom, coin.Denom)
-	suite.Require().Equal(userDust.Amount, sdk.OneDec().Sub(dust.Add(storageDust)).String())
-	suite.Require().Equal(dustResulted.String(), sdk.OneDec().Sub(dust.Add(storageDust)).String())
+	suite.Require().Equal(userDust.Amount, math.LegacyOneDec().Sub(dust.Add(storageDust)).String())
+	suite.Require().Equal(dustResulted.String(), math.LegacyOneDec().Sub(dust.Add(storageDust)).String())
 }

@@ -19,7 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Query_Params_FullMethodName = "/bze.tradebin.Query/Params"
+	Query_Params_FullMethodName                 = "/bze.tradebin.Query/Params"
+	Query_Market_FullMethodName                 = "/bze.tradebin.Query/Market"
+	Query_AllMarkets_FullMethodName             = "/bze.tradebin.Query/AllMarkets"
+	Query_AssetMarkets_FullMethodName           = "/bze.tradebin.Query/AssetMarkets"
+	Query_UserMarketOrders_FullMethodName       = "/bze.tradebin.Query/UserMarketOrders"
+	Query_MarketAggregatedOrders_FullMethodName = "/bze.tradebin.Query/MarketAggregatedOrders"
+	Query_MarketHistory_FullMethodName          = "/bze.tradebin.Query/MarketHistory"
+	Query_MarketOrder_FullMethodName            = "/bze.tradebin.Query/MarketOrder"
+	Query_AllUserDust_FullMethodName            = "/bze.tradebin.Query/AllUserDust"
 )
 
 // QueryClient is the client API for Query service.
@@ -28,6 +36,22 @@ const (
 type QueryClient interface {
 	// Parameters queries the parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// Queries a list of Market items.
+	Market(ctx context.Context, in *QueryMarketRequest, opts ...grpc.CallOption) (*QueryMarketResponse, error)
+	// Queries a list of AllMarkets items.
+	AllMarkets(ctx context.Context, in *QueryAllMarketsRequest, opts ...grpc.CallOption) (*QueryAllMarketsResponse, error)
+	// Queries a list of AssetMarkets items.
+	AssetMarkets(ctx context.Context, in *QueryAssetMarketsRequest, opts ...grpc.CallOption) (*QueryAssetMarketsResponse, error)
+	// Queries a list of UserMarketOrders items.
+	UserMarketOrders(ctx context.Context, in *QueryUserMarketOrdersRequest, opts ...grpc.CallOption) (*QueryUserMarketOrdersResponse, error)
+	// Queries a list of MarketAggregatedOrders items.
+	MarketAggregatedOrders(ctx context.Context, in *QueryMarketAggregatedOrdersRequest, opts ...grpc.CallOption) (*QueryMarketAggregatedOrdersResponse, error)
+	// Queries a list of MarketHistory items.
+	MarketHistory(ctx context.Context, in *QueryMarketHistoryRequest, opts ...grpc.CallOption) (*QueryMarketHistoryResponse, error)
+	// Queries a list of MarketOrder items.
+	MarketOrder(ctx context.Context, in *QueryMarketOrderRequest, opts ...grpc.CallOption) (*QueryMarketOrderResponse, error)
+	// Queries a list of AllUserDust items.
+	AllUserDust(ctx context.Context, in *QueryAllUserDustRequest, opts ...grpc.CallOption) (*QueryAllUserDustResponse, error)
 }
 
 type queryClient struct {
@@ -47,12 +71,100 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) Market(ctx context.Context, in *QueryMarketRequest, opts ...grpc.CallOption) (*QueryMarketResponse, error) {
+	out := new(QueryMarketResponse)
+	err := c.cc.Invoke(ctx, Query_Market_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AllMarkets(ctx context.Context, in *QueryAllMarketsRequest, opts ...grpc.CallOption) (*QueryAllMarketsResponse, error) {
+	out := new(QueryAllMarketsResponse)
+	err := c.cc.Invoke(ctx, Query_AllMarkets_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AssetMarkets(ctx context.Context, in *QueryAssetMarketsRequest, opts ...grpc.CallOption) (*QueryAssetMarketsResponse, error) {
+	out := new(QueryAssetMarketsResponse)
+	err := c.cc.Invoke(ctx, Query_AssetMarkets_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) UserMarketOrders(ctx context.Context, in *QueryUserMarketOrdersRequest, opts ...grpc.CallOption) (*QueryUserMarketOrdersResponse, error) {
+	out := new(QueryUserMarketOrdersResponse)
+	err := c.cc.Invoke(ctx, Query_UserMarketOrders_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) MarketAggregatedOrders(ctx context.Context, in *QueryMarketAggregatedOrdersRequest, opts ...grpc.CallOption) (*QueryMarketAggregatedOrdersResponse, error) {
+	out := new(QueryMarketAggregatedOrdersResponse)
+	err := c.cc.Invoke(ctx, Query_MarketAggregatedOrders_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) MarketHistory(ctx context.Context, in *QueryMarketHistoryRequest, opts ...grpc.CallOption) (*QueryMarketHistoryResponse, error) {
+	out := new(QueryMarketHistoryResponse)
+	err := c.cc.Invoke(ctx, Query_MarketHistory_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) MarketOrder(ctx context.Context, in *QueryMarketOrderRequest, opts ...grpc.CallOption) (*QueryMarketOrderResponse, error) {
+	out := new(QueryMarketOrderResponse)
+	err := c.cc.Invoke(ctx, Query_MarketOrder_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AllUserDust(ctx context.Context, in *QueryAllUserDustRequest, opts ...grpc.CallOption) (*QueryAllUserDustResponse, error) {
+	out := new(QueryAllUserDustResponse)
+	err := c.cc.Invoke(ctx, Query_AllUserDust_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// Queries a list of Market items.
+	Market(context.Context, *QueryMarketRequest) (*QueryMarketResponse, error)
+	// Queries a list of AllMarkets items.
+	AllMarkets(context.Context, *QueryAllMarketsRequest) (*QueryAllMarketsResponse, error)
+	// Queries a list of AssetMarkets items.
+	AssetMarkets(context.Context, *QueryAssetMarketsRequest) (*QueryAssetMarketsResponse, error)
+	// Queries a list of UserMarketOrders items.
+	UserMarketOrders(context.Context, *QueryUserMarketOrdersRequest) (*QueryUserMarketOrdersResponse, error)
+	// Queries a list of MarketAggregatedOrders items.
+	MarketAggregatedOrders(context.Context, *QueryMarketAggregatedOrdersRequest) (*QueryMarketAggregatedOrdersResponse, error)
+	// Queries a list of MarketHistory items.
+	MarketHistory(context.Context, *QueryMarketHistoryRequest) (*QueryMarketHistoryResponse, error)
+	// Queries a list of MarketOrder items.
+	MarketOrder(context.Context, *QueryMarketOrderRequest) (*QueryMarketOrderResponse, error)
+	// Queries a list of AllUserDust items.
+	AllUserDust(context.Context, *QueryAllUserDustRequest) (*QueryAllUserDustResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -62,6 +174,30 @@ type UnimplementedQueryServer struct {
 
 func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (UnimplementedQueryServer) Market(context.Context, *QueryMarketRequest) (*QueryMarketResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Market not implemented")
+}
+func (UnimplementedQueryServer) AllMarkets(context.Context, *QueryAllMarketsRequest) (*QueryAllMarketsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllMarkets not implemented")
+}
+func (UnimplementedQueryServer) AssetMarkets(context.Context, *QueryAssetMarketsRequest) (*QueryAssetMarketsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AssetMarkets not implemented")
+}
+func (UnimplementedQueryServer) UserMarketOrders(context.Context, *QueryUserMarketOrdersRequest) (*QueryUserMarketOrdersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UserMarketOrders not implemented")
+}
+func (UnimplementedQueryServer) MarketAggregatedOrders(context.Context, *QueryMarketAggregatedOrdersRequest) (*QueryMarketAggregatedOrdersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MarketAggregatedOrders not implemented")
+}
+func (UnimplementedQueryServer) MarketHistory(context.Context, *QueryMarketHistoryRequest) (*QueryMarketHistoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MarketHistory not implemented")
+}
+func (UnimplementedQueryServer) MarketOrder(context.Context, *QueryMarketOrderRequest) (*QueryMarketOrderResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MarketOrder not implemented")
+}
+func (UnimplementedQueryServer) AllUserDust(context.Context, *QueryAllUserDustRequest) (*QueryAllUserDustResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllUserDust not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -94,6 +230,150 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Market_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryMarketRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Market(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Market_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Market(ctx, req.(*QueryMarketRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AllMarkets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllMarketsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllMarkets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_AllMarkets_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllMarkets(ctx, req.(*QueryAllMarketsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AssetMarkets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAssetMarketsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AssetMarkets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_AssetMarkets_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AssetMarkets(ctx, req.(*QueryAssetMarketsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_UserMarketOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryUserMarketOrdersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).UserMarketOrders(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_UserMarketOrders_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).UserMarketOrders(ctx, req.(*QueryUserMarketOrdersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_MarketAggregatedOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryMarketAggregatedOrdersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).MarketAggregatedOrders(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_MarketAggregatedOrders_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).MarketAggregatedOrders(ctx, req.(*QueryMarketAggregatedOrdersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_MarketHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryMarketHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).MarketHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_MarketHistory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).MarketHistory(ctx, req.(*QueryMarketHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_MarketOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryMarketOrderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).MarketOrder(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_MarketOrder_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).MarketOrder(ctx, req.(*QueryMarketOrderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AllUserDust_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllUserDustRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllUserDust(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_AllUserDust_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllUserDust(ctx, req.(*QueryAllUserDustRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -104,6 +384,38 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "Market",
+			Handler:    _Query_Market_Handler,
+		},
+		{
+			MethodName: "AllMarkets",
+			Handler:    _Query_AllMarkets_Handler,
+		},
+		{
+			MethodName: "AssetMarkets",
+			Handler:    _Query_AssetMarkets_Handler,
+		},
+		{
+			MethodName: "UserMarketOrders",
+			Handler:    _Query_UserMarketOrders_Handler,
+		},
+		{
+			MethodName: "MarketAggregatedOrders",
+			Handler:    _Query_MarketAggregatedOrders_Handler,
+		},
+		{
+			MethodName: "MarketHistory",
+			Handler:    _Query_MarketHistory_Handler,
+		},
+		{
+			MethodName: "MarketOrder",
+			Handler:    _Query_MarketOrder_Handler,
+		},
+		{
+			MethodName: "AllUserDust",
+			Handler:    _Query_AllUserDust_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

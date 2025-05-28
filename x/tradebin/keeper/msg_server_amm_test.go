@@ -404,7 +404,7 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_InvalidCreator() {
 
 	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
 	suite.Require().Error(err)
-	suite.Require().Contains(err.Error(), fmt.Sprintf("creator"))
+	suite.Require().Contains(err.Error(), fmt.Sprintf("unauthorized"))
 }
 
 func (suite *IntegrationTestSuite) TestAddLiquidity_PoolNotFound() {
@@ -844,7 +844,7 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Errors() {
 				MinBase:  math.NewInt(10),
 				MinQuote: math.NewInt(20),
 			},
-			expectedError: "invalid creator address",
+			expectedError: "unauthorized",
 			errorType:     sdkerrors.ErrUnauthorized,
 			setupMock:     func() {},
 		},
@@ -1577,7 +1577,7 @@ func (suite *IntegrationTestSuite) TestMultiSwap_InvalidCreator() {
 
 	// Verify error
 	suite.Require().Error(err)
-	suite.Require().Contains(err.Error(), "invalid creator address")
+	suite.Require().Contains(err.Error(), "unauthorized")
 }
 
 func (suite *IntegrationTestSuite) TestMultiSwap_PoolNotFound() {

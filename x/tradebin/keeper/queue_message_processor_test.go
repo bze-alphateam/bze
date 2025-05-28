@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/tradebin/keeper"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,7 +17,7 @@ func newBzeCoin(amt int64) sdk.Coin {
 }
 
 func (suite *IntegrationTestSuite) TestQueueMessageProcessor_AddMakerOrder() {
-	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger(suite.ctx))
+	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
 
 	addr1 := sdk.AccAddress("addr1_______________")
@@ -94,7 +95,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_AddMakerOrder() {
 func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 	//create test market
 	suite.k.SetMarket(suite.ctx, market)
-	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger(suite.ctx))
+	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
 
 	//create an user account
@@ -119,21 +120,21 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 		Owner:       addr1.String(),
 	}
 
-	totalBuyAmount := sdk.ZeroInt()
-	totalSellAmount := sdk.ZeroInt()
-	totalBuyCoins := sdk.NewCoin(market.Quote, sdk.ZeroInt())
-	totalSellCoins := sdk.NewCoin(market.Base, sdk.ZeroInt())
+	totalBuyAmount := math.ZeroInt()
+	totalSellAmount := math.ZeroInt()
+	totalBuyCoins := sdk.NewCoin(market.Quote, math.ZeroInt())
+	totalSellCoins := sdk.NewCoin(market.Base, math.ZeroInt())
 	//set messages in queue
 	for i := 0; i < 3; i++ {
 		suite.k.SetQueueMessage(suite.ctx, mBuy)
-		buyAmtInt, _ := sdk.NewIntFromString(mBuy.Amount)
+		buyAmtInt, _ := math.NewIntFromString(mBuy.Amount)
 		totalBuyAmount = totalBuyAmount.Add(buyAmtInt)
 		buyCoins, _, err := suite.k.GetOrderSdkCoin(mBuy.OrderType, mBuy.Price, buyAmtInt, &market)
 		suite.Require().Nil(err)
 		totalBuyCoins = totalBuyCoins.Add(buyCoins)
 
 		suite.k.SetQueueMessage(suite.ctx, mSell)
-		sellAmtInt, _ := sdk.NewIntFromString(mSell.Amount)
+		sellAmtInt, _ := math.NewIntFromString(mSell.Amount)
 		totalSellAmount = totalSellAmount.Add(sellAmtInt)
 		sellCoins, _, err := suite.k.GetOrderSdkCoin(mSell.OrderType, mSell.Price, sellAmtInt, &market)
 		suite.Require().Nil(err)
@@ -169,7 +170,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 	for _, or := range allUserOrders.List {
 		toCancelOrder, ok := suite.k.GetOrder(suite.ctx, or.MarketId, or.OrderType, or.Id)
 		suite.Require().True(ok)
-		canceledAmount, ok := sdk.NewIntFromString(toCancelOrder.Amount)
+		canceledAmount, ok := math.NewIntFromString(toCancelOrder.Amount)
 		suite.Require().True(ok)
 		canceledCoins, _, err := suite.k.GetOrderSdkCoin(toCancelOrder.OrderType, toCancelOrder.Price, canceledAmount, &market)
 		suite.Require().Nil(err)
@@ -215,7 +216,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	//create test market
 	suite.k.SetMarket(suite.ctx, market)
-	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger(suite.ctx))
+	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
 
 	//create accounts
@@ -379,7 +380,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	var smallOrders []types.Order
 	for _, ord := range allOrders {
 		suite.Require().Equal(ord.OrderType, types.OrderTypeBuy)
-		ordAmtInt, _ := sdk.NewIntFromString(ord.Amount)
+		ordAmtInt, _ := math.NewIntFromString(ord.Amount)
 		if ordAmtInt.LT(sellAmt) {
 			smallOrders = append(smallOrders, ord)
 		}
@@ -390,7 +391,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	suite.Require().Equal(smallOrders[0].Amount, sellAmt.MulRaw(3).QuoRaw(4).String())
 	suite.Require().Equal(smallOrders[0].Price, sellPriceStr)
 
-	smallOrdAmt, _ := sdk.NewIntFromString(smallOrders[0].Amount)
+	smallOrdAmt, _ := math.NewIntFromString(smallOrders[0].Amount)
 
 	newOrderMakerCoins, _, err := suite.k.GetOrderSdkCoin(types.TheOtherOrderType(smallOrders[0].OrderType), smallOrders[0].Price, smallOrdAmt, &market)
 	newOrderTakerCoins, _, err := suite.k.GetOrderSdkCoin(smallOrders[0].OrderType, smallOrders[0].Price, smallOrdAmt, &market)
@@ -440,7 +441,7 @@ func (suite *IntegrationTestSuite) checkAggregatedOrder(marketId, orderType, pri
 func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching_WithDust() {
 	//create test market
 	suite.k.SetMarket(suite.ctx, market)
-	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger(suite.ctx))
+	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
 
 	//create accounts
@@ -533,7 +534,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching_WithD
 	suite.Require().Equal(len(allOrders), int(orderCounter*2))
 
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt.MulRaw(orderCounter).String())
-	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, sellPriceStr, sellAmt.MulRaw(orderCounter).Sub(sdk.NewInt(15)).String())
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, sellPriceStr, sellAmt.MulRaw(orderCounter).Sub(math.NewInt(15)).String())
 
 	//3. fill 200% of orders (2 * order amount) -> check all of the above again
 	qmAmountInt = sellAmt.MulRaw(2)
@@ -554,7 +555,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching_WithD
 	suite.Require().Equal(len(allOrders), int(orderCounter*2)-2)
 
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt.MulRaw(orderCounter).String())
-	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, sellPriceStr, sellAmt.MulRaw(orderCounter).Sub(sdk.NewInt(55)).String())
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, sellPriceStr, sellAmt.MulRaw(orderCounter).Sub(math.NewInt(55)).String())
 
 	//4. fill the rest + some amount to also create an order
 	qmAmountInt = sellAmt.MulRaw(8)
@@ -578,7 +579,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching_WithD
 	var smallOrders []types.Order
 	for _, ord := range allOrders {
 		suite.Require().Equal(ord.OrderType, types.OrderTypeBuy)
-		ordAmtInt, _ := sdk.NewIntFromString(ord.Amount)
+		ordAmtInt, _ := math.NewIntFromString(ord.Amount)
 		if ordAmtInt.LT(sellAmt) {
 			smallOrders = append(smallOrders, ord)
 		}
