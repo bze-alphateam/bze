@@ -1,6 +1,6 @@
 package keeper_test
 
-func (suite *IntegrationTestSuite) TestQueueMessageCounter() {
+func (suite *IntegrationTestSuite) TestStore_QueueMessageCounter() {
 	initial := suite.k.GetQueueMessageCounter(suite.ctx)
 	suite.Require().Equal(initial, uint64(0))
 
@@ -11,7 +11,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageCounter() {
 	suite.Require().Equal(end, nextValue)
 }
 
-func (suite *IntegrationTestSuite) TestOrderCounter() {
+func (suite *IntegrationTestSuite) TestStore_OrderCounter() {
 	initial := suite.k.GetOrderCounter(suite.ctx)
 	suite.Require().Equal(initial, uint64(0))
 

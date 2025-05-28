@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *IntegrationTestSuite) TestUserDustStorage() {
+func (suite *IntegrationTestSuite) TestStore_UserDustStorage() {
 	ud1 := types.UserDust{
 		Owner:  "addr1",
 		Amount: "0.321312231",
@@ -67,7 +67,7 @@ func (suite *IntegrationTestSuite) TestUserDustStorage() {
 	suite.Require().Len(byAddress, 0)
 }
 
-func (suite *IntegrationTestSuite) TestStoreProcessedUserDust_WithNilDustDec() {
+func (suite *IntegrationTestSuite) TestStore_StoreProcessedUserDust_WithNilDustDec() {
 	ud1 := types.UserDust{
 		Owner:  "addr1",
 		Amount: "0.321312231",
@@ -81,7 +81,7 @@ func (suite *IntegrationTestSuite) TestStoreProcessedUserDust_WithNilDustDec() {
 	suite.Require().Equal(fromStorage, ud1)
 }
 
-func (suite *IntegrationTestSuite) TestStoreProcessedUserDust_WithZeroDust() {
+func (suite *IntegrationTestSuite) TestStore_StoreProcessedUserDust_WithZeroDust() {
 	ud1 := types.UserDust{
 		Owner:  "addr1",
 		Amount: "0.321312231",
@@ -96,7 +96,7 @@ func (suite *IntegrationTestSuite) TestStoreProcessedUserDust_WithZeroDust() {
 	suite.Require().False(ok)
 }
 
-func (suite *IntegrationTestSuite) TestCollectUserDust_ZeroDust() {
+func (suite *IntegrationTestSuite) TestStore_CollectUserDust_ZeroDust() {
 	coin := sdk.NewCoin("ubze", math.NewInt(100))
 	dust := math.LegacyZeroDec()
 	addr := "addr1"
@@ -107,7 +107,7 @@ func (suite *IntegrationTestSuite) TestCollectUserDust_ZeroDust() {
 	suite.Require().Equal(dust, math.LegacyZeroDec())
 }
 
-func (suite *IntegrationTestSuite) TestCollectUserDust_PayerFirstDust() {
+func (suite *IntegrationTestSuite) TestStore_CollectUserDust_PayerFirstDust() {
 	coin := sdk.NewCoin("ubze", math.NewInt(100))
 	dust, err := math.LegacyNewDecFromStr("0.032121123123123")
 	suite.Require().Nil(err)
@@ -123,7 +123,7 @@ func (suite *IntegrationTestSuite) TestCollectUserDust_PayerFirstDust() {
 	suite.Require().Equal(dustResulted.String(), math.LegacyOneDec().Sub(dust).String())
 }
 
-func (suite *IntegrationTestSuite) TestCollectUserDust_PayerDust_AddedFromStorage() {
+func (suite *IntegrationTestSuite) TestStore_CollectUserDust_PayerDust_AddedFromStorage() {
 	addr := "addr1"
 	storageDust, err := math.LegacyNewDecFromStr("0.1")
 	suite.Require().Nil(err)
@@ -149,7 +149,7 @@ func (suite *IntegrationTestSuite) TestCollectUserDust_PayerDust_AddedFromStorag
 	suite.Require().Equal(dustResulted.String(), math.LegacyOneDec().Sub(dust).Add(storageDust).String())
 }
 
-func (suite *IntegrationTestSuite) TestCollectUserDust_PayerDust_PaidFromStorage() {
+func (suite *IntegrationTestSuite) TestStore_CollectUserDust_PayerDust_PaidFromStorage() {
 	addr := "addr1"
 	storageDust, err := math.LegacyNewDecFromStr("0.36662")
 	suite.Require().Nil(err)
@@ -175,7 +175,7 @@ func (suite *IntegrationTestSuite) TestCollectUserDust_PayerDust_PaidFromStorage
 	suite.Require().Equal(dustResulted.String(), storageDust.Sub(dust).String())
 }
 
-func (suite *IntegrationTestSuite) TestCollectUserDust_ReceiverFirstDust() {
+func (suite *IntegrationTestSuite) TestStore_CollectUserDust_ReceiverFirstDust() {
 	coin := sdk.NewCoin("ubze", math.NewInt(100))
 	dust, err := math.LegacyNewDecFromStr("0.032121123123123")
 	suite.Require().Nil(err)
@@ -191,7 +191,7 @@ func (suite *IntegrationTestSuite) TestCollectUserDust_ReceiverFirstDust() {
 	suite.Require().Equal(dustResulted.String(), dust.String())
 }
 
-func (suite *IntegrationTestSuite) TestCollectUserDust_ReceiverDust_AddedFromStorage() {
+func (suite *IntegrationTestSuite) TestStore_CollectUserDust_ReceiverDust_AddedFromStorage() {
 	addr := "addr1"
 	storageDust, err := math.LegacyNewDecFromStr("0.1")
 	suite.Require().Nil(err)
@@ -216,7 +216,7 @@ func (suite *IntegrationTestSuite) TestCollectUserDust_ReceiverDust_AddedFromSto
 	suite.Require().Equal(dustResulted.String(), dust.Add(storageDust).String())
 }
 
-func (suite *IntegrationTestSuite) TestCollectUserDust_ReceiverDust_AddedFromStorageToCoin() {
+func (suite *IntegrationTestSuite) TestStore_CollectUserDust_ReceiverDust_AddedFromStorageToCoin() {
 	addr := "addr1"
 	storageDust, err := math.LegacyNewDecFromStr("0.1")
 	suite.Require().Nil(err)

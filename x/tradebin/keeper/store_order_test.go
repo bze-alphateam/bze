@@ -57,7 +57,7 @@ func (suite *IntegrationTestSuite) getPriceOrderRef(order types.Order) (types.Or
 	return ordRef, found
 }
 
-func (suite *IntegrationTestSuite) TestNewOrder() {
+func (suite *IntegrationTestSuite) TestStore_NewOrder() {
 	cases := map[string]struct {
 		MarketId  string
 		OrderType string
@@ -115,7 +115,7 @@ func (suite *IntegrationTestSuite) TestNewOrder() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestGetOrderSdkCoin_Error() {
+func (suite *IntegrationTestSuite) TestStore_GetOrderSdkCoin_Error() {
 	_, _, err := suite.k.GetOrderSdkCoin("NOT_A_TYPE", "100", math.NewInt(2), &market)
 	suite.Require().NotNil(err)
 
@@ -123,7 +123,7 @@ func (suite *IntegrationTestSuite) TestGetOrderSdkCoin_Error() {
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) TestGetAllOrders() {
+func (suite *IntegrationTestSuite) TestStore_GetAllOrders() {
 	initial := suite.k.GetAllOrder(suite.ctx)
 	addedOrders := 7
 	randCol := getRandomOrderCollection(addedOrders)
@@ -135,7 +135,7 @@ func (suite *IntegrationTestSuite) TestGetAllOrders() {
 	suite.Require().Equal(len(res), len(initial)+addedOrders)
 }
 
-func (suite *IntegrationTestSuite) TestRemoveOrder() {
+func (suite *IntegrationTestSuite) TestStore_RemoveOrder() {
 	order := getRandomOrder(int64(2))
 	savedOrder := suite.k.NewOrder(suite.ctx, order)
 	suite.Require().NotEmpty(savedOrder.Id)
@@ -151,7 +151,7 @@ func (suite *IntegrationTestSuite) TestRemoveOrder() {
 	suite.Require().False(ok)
 }
 
-func (suite *IntegrationTestSuite) TestGetAllPriceOrder() {
+func (suite *IntegrationTestSuite) TestStore_GetAllPriceOrder() {
 	initial := suite.k.GetAllOrder(suite.ctx)
 	addedOrders := 7
 	randCol := getRandomOrderCollection(addedOrders)
@@ -163,7 +163,7 @@ func (suite *IntegrationTestSuite) TestGetAllPriceOrder() {
 	suite.Require().Equal(len(res), len(initial)+addedOrders)
 }
 
-func (suite *IntegrationTestSuite) TestAggregatedOrder() {
+func (suite *IntegrationTestSuite) TestStore_AggregatedOrder() {
 	agg := types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeBuy,

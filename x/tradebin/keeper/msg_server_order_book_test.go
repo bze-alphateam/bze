@@ -12,9 +12,9 @@ import (
 	"time"
 )
 
-func (suite *IntegrationTestSuite) TestCancelOrder_MarketNotFound() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.CancelOrder(goCtx, &types.MsgCancelOrder{
+func (suite *IntegrationTestSuite) Msg_TestCancelOrder_MarketNotFound() {
+
+	_, err := suite.msgServer.CancelOrder(suite.ctx, &types.MsgCancelOrder{
 		Creator:   "me",
 		MarketId:  "me/me",
 		OrderId:   "",
@@ -23,10 +23,10 @@ func (suite *IntegrationTestSuite) TestCancelOrder_MarketNotFound() {
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) TestCancelOrder_OrderNotFound() {
+func (suite *IntegrationTestSuite) Msg_TestCancelOrder_OrderNotFound() {
 	suite.k.SetMarket(suite.ctx, market)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.CancelOrder(goCtx, &types.MsgCancelOrder{
+
+	_, err := suite.msgServer.CancelOrder(suite.ctx, &types.MsgCancelOrder{
 		Creator:   "me",
 		MarketId:  getMarketId(),
 		OrderId:   "123",
@@ -35,7 +35,7 @@ func (suite *IntegrationTestSuite) TestCancelOrder_OrderNotFound() {
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) TestCancelOrder_Unauthorized() {
+func (suite *IntegrationTestSuite) Msg_TestCancelOrder_Unauthorized() {
 	suite.k.SetMarket(suite.ctx, market)
 	order := suite.k.NewOrder(suite.ctx, types.Order{
 		MarketId:  getMarketId(),
@@ -45,8 +45,7 @@ func (suite *IntegrationTestSuite) TestCancelOrder_Unauthorized() {
 		Owner:     "me",
 	})
 
-	goCtx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.CancelOrder(goCtx, &types.MsgCancelOrder{
+	_, err := suite.msgServer.CancelOrder(suite.ctx, &types.MsgCancelOrder{
 		Creator:   "not_me",
 		MarketId:  getMarketId(),
 		OrderId:   order.Id,
@@ -55,7 +54,7 @@ func (suite *IntegrationTestSuite) TestCancelOrder_Unauthorized() {
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) TestCancelOrder_CancelBuy_Success() {
+func (suite *IntegrationTestSuite) Msg_TestCancelOrder_CancelBuy_Success() {
 	suite.k.SetMarket(suite.ctx, market)
 	order := suite.k.NewOrder(suite.ctx, types.Order{
 		MarketId:  getMarketId(),
@@ -65,8 +64,7 @@ func (suite *IntegrationTestSuite) TestCancelOrder_CancelBuy_Success() {
 		Owner:     "me",
 	})
 
-	goCtx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.CancelOrder(goCtx, &types.MsgCancelOrder{
+	_, err := suite.msgServer.CancelOrder(suite.ctx, &types.MsgCancelOrder{
 		Creator:   "me",
 		MarketId:  getMarketId(),
 		OrderId:   order.Id,
@@ -84,7 +82,7 @@ func (suite *IntegrationTestSuite) TestCancelOrder_CancelBuy_Success() {
 	suite.Require().Equal(qms[0].Owner, order.Owner)
 }
 
-func (suite *IntegrationTestSuite) TestCancelOrder_CancelSell_Success() {
+func (suite *IntegrationTestSuite) Msg_TestCancelOrder_CancelSell_Success() {
 	suite.k.SetMarket(suite.ctx, market)
 	order := suite.k.NewOrder(suite.ctx, types.Order{
 		MarketId:  getMarketId(),
@@ -94,8 +92,7 @@ func (suite *IntegrationTestSuite) TestCancelOrder_CancelSell_Success() {
 		Owner:     "me",
 	})
 
-	goCtx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.CancelOrder(goCtx, &types.MsgCancelOrder{
+	_, err := suite.msgServer.CancelOrder(suite.ctx, &types.MsgCancelOrder{
 		Creator:   "me",
 		MarketId:  getMarketId(),
 		OrderId:   order.Id,
@@ -113,11 +110,10 @@ func (suite *IntegrationTestSuite) TestCancelOrder_CancelSell_Success() {
 	suite.Require().Equal(qms[0].Owner, order.Owner)
 }
 
-func (suite *IntegrationTestSuite) TestCreateMarket_InvalidDenom() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+func (suite *IntegrationTestSuite) Msg_TestCreateMarket_InvalidDenom() {
 
 	//same denom for both
-	_, err := suite.msgServer.CreateMarket(goCtx, &types.MsgCreateMarket{
+	_, err := suite.msgServer.CreateMarket(suite.ctx, &types.MsgCreateMarket{
 		Creator: "me",
 		Base:    denomBze,
 		Quote:   denomBze,
@@ -126,7 +122,7 @@ func (suite *IntegrationTestSuite) TestCreateMarket_InvalidDenom() {
 
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), gomock.AnyOf(denomStake, denomBze)).Return(false).Times(1)
 	//denom has no supply
-	_, err = suite.msgServer.CreateMarket(goCtx, &types.MsgCreateMarket{
+	_, err = suite.msgServer.CreateMarket(suite.ctx, &types.MsgCreateMarket{
 		Creator: "me",
 		Base:    denomStake,
 		Quote:   denomBze,
@@ -134,17 +130,17 @@ func (suite *IntegrationTestSuite) TestCreateMarket_InvalidDenom() {
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) TestCreateMarket_MarketAlreadyExist() {
+func (suite *IntegrationTestSuite) Msg_TestCreateMarket_MarketAlreadyExist() {
 	suite.k.SetMarket(suite.ctx, market)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.CreateMarket(goCtx, &types.MsgCreateMarket{
+
+	_, err := suite.msgServer.CreateMarket(suite.ctx, &types.MsgCreateMarket{
 		Creator: "me",
 		Base:    denomStake,
 		Quote:   denomBze,
 	})
 	suite.Require().NotNil(err)
 
-	_, err = suite.msgServer.CreateMarket(goCtx, &types.MsgCreateMarket{
+	_, err = suite.msgServer.CreateMarket(suite.ctx, &types.MsgCreateMarket{
 		Creator: "me",
 		Base:    denomBze,
 		Quote:   denomStake,
@@ -152,8 +148,8 @@ func (suite *IntegrationTestSuite) TestCreateMarket_MarketAlreadyExist() {
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) TestCreateMarket_NotEnoughCoinsForFee() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+func (suite *IntegrationTestSuite) Msg_TestCreateMarket_NotEnoughCoinsForFee() {
+
 	addr1 := sdk.AccAddress("addr1_______________")
 
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), denomStake).Return(true).Times(1)
@@ -164,7 +160,7 @@ func (suite *IntegrationTestSuite) TestCreateMarket_NotEnoughCoinsForFee() {
 		Times(1).
 		Return(fmt.Errorf("not enough balance"))
 
-	_, err := suite.msgServer.CreateMarket(goCtx, &types.MsgCreateMarket{
+	_, err := suite.msgServer.CreateMarket(suite.ctx, &types.MsgCreateMarket{
 		Creator: addr1.String(),
 		Base:    denomStake,
 		Quote:   denomBze,
@@ -172,8 +168,8 @@ func (suite *IntegrationTestSuite) TestCreateMarket_NotEnoughCoinsForFee() {
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) TestCreateMarket_Success() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+func (suite *IntegrationTestSuite) Msg_TestCreateMarket_Success() {
+
 	addr1 := sdk.AccAddress("addr1_______________")
 
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), denomStake).Return(true).Times(1)
@@ -189,7 +185,7 @@ func (suite *IntegrationTestSuite) TestCreateMarket_Success() {
 		Base:    denomStake,
 		Quote:   denomBze,
 	}
-	_, err := suite.msgServer.CreateMarket(goCtx, &types.MsgCreateMarket{
+	_, err := suite.msgServer.CreateMarket(suite.ctx, &types.MsgCreateMarket{
 		Creator: addr1.String(),
 		Base:    denomStake,
 		Quote:   denomBze,
@@ -201,9 +197,9 @@ func (suite *IntegrationTestSuite) TestCreateMarket_Success() {
 	suite.Require().Equal(newMarket, storageMarket)
 }
 
-func (suite *IntegrationTestSuite) TestCreateOrder_InvalidAmount() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.CreateOrder(goCtx, &types.MsgCreateOrder{
+func (suite *IntegrationTestSuite) Msg_TestCreateOrder_InvalidAmount() {
+
+	_, err := suite.msgServer.CreateOrder(suite.ctx, &types.MsgCreateOrder{
 		Amount: "hdsihdshdshids",
 		Price:  "1",
 	})
@@ -212,9 +208,9 @@ func (suite *IntegrationTestSuite) TestCreateOrder_InvalidAmount() {
 	suite.Require().Contains(err.Error(), "amount could not be converted to Int")
 }
 
-func (suite *IntegrationTestSuite) TestCreateOrder_AmountTooLow() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.CreateOrder(goCtx, &types.MsgCreateOrder{
+func (suite *IntegrationTestSuite) Msg_TestCreateOrder_AmountTooLow() {
+
+	_, err := suite.msgServer.CreateOrder(suite.ctx, &types.MsgCreateOrder{
 		Amount: "1",
 		Price:  "1",
 	})
@@ -224,9 +220,9 @@ func (suite *IntegrationTestSuite) TestCreateOrder_AmountTooLow() {
 	suite.Require().Contains(err.Error(), "amount should be bigger than")
 }
 
-func (suite *IntegrationTestSuite) TestCreateOrder_MarketNotFound() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.CreateOrder(goCtx, &types.MsgCreateOrder{
+func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketNotFound() {
+
+	_, err := suite.msgServer.CreateOrder(suite.ctx, &types.MsgCreateOrder{
 		Amount:   "1000000",
 		Price:    "1",
 		MarketId: "notamarket/notatall",
@@ -237,12 +233,11 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketNotFound() {
 	suite.Require().Contains(err.Error(), "market id")
 }
 
-func (suite *IntegrationTestSuite) TestCreateOrder_InvalidOrderType() {
+func (suite *IntegrationTestSuite) Msg_TestCreateOrder_InvalidOrderType() {
 	suite.k.SetMarket(suite.ctx, market)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	addr1 := sdk.AccAddress("addr1_______________")
-	_, err := suite.msgServer.CreateOrder(goCtx, &types.MsgCreateOrder{
+	_, err := suite.msgServer.CreateOrder(suite.ctx, &types.MsgCreateOrder{
 		Amount:    "1000000",
 		Price:     "1",
 		MarketId:  getMarketId(),
@@ -254,10 +249,10 @@ func (suite *IntegrationTestSuite) TestCreateOrder_InvalidOrderType() {
 	suite.Require().Contains(err.Error(), "order type")
 }
 
-func (suite *IntegrationTestSuite) TestCreateOrder_InvalidCreator() {
+func (suite *IntegrationTestSuite) Msg_TestCreateOrder_InvalidCreator() {
 	suite.k.SetMarket(suite.ctx, market)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.CreateOrder(goCtx, &types.MsgCreateOrder{
+
+	_, err := suite.msgServer.CreateOrder(suite.ctx, &types.MsgCreateOrder{
 		Amount:    "1000000",
 		Price:     "1",
 		MarketId:  getMarketId(),
@@ -269,9 +264,9 @@ func (suite *IntegrationTestSuite) TestCreateOrder_InvalidCreator() {
 	suite.Require().Contains(err.Error(), "bech32")
 }
 
-func (suite *IntegrationTestSuite) TestCreateOrder_MarketMaker_Buy_Success_ZeroDust() {
+func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketMaker_Buy_Success_ZeroDust() {
 	suite.k.SetMarket(suite.ctx, market)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+
 	addr1 := sdk.AccAddress("addr1_______________")
 	//fee should be captured
 	params := suite.k.GetParams(suite.ctx)
@@ -289,7 +284,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketMaker_Buy_Success_ZeroD
 		OrderType: types.OrderTypeBuy,
 		Creator:   addr1.String(),
 	}
-	_, err = suite.msgServer.CreateOrder(goCtx, &orderMsg)
+	_, err = suite.msgServer.CreateOrder(suite.ctx, &orderMsg)
 	suite.Require().Nil(err)
 
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
@@ -308,7 +303,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketMaker_Buy_Success_ZeroD
 	suite.Require().False(ok)
 }
 
-func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Buy_Success_ZeroDust() {
+func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_Buy_Success_ZeroDust() {
 	suite.k.SetMarket(suite.ctx, market)
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
@@ -317,7 +312,6 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Buy_Success_ZeroD
 		Price:     "2",
 	})
 
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 	addr1 := sdk.AccAddress("addr1_______________")
 	//fee should be captured
 	params := suite.k.GetParams(suite.ctx)
@@ -335,7 +329,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Buy_Success_ZeroD
 		OrderType: types.OrderTypeBuy,
 		Creator:   addr1.String(),
 	}
-	_, err = suite.msgServer.CreateOrder(goCtx, &orderMsg)
+	_, err = suite.msgServer.CreateOrder(suite.ctx, &orderMsg)
 
 	suite.Require().Nil(err)
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
@@ -354,7 +348,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Buy_Success_ZeroD
 	suite.Require().False(ok)
 }
 
-func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Buy_Success_WithDust() {
+func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_Buy_Success_WithDust() {
 	suite.k.SetMarket(suite.ctx, market)
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
@@ -363,7 +357,6 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Buy_Success_WithD
 		Price:     "0.02331",
 	})
 
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 	addr1 := sdk.AccAddress("addr1_______________")
 	//fee should be captured
 	params := suite.k.GetParams(suite.ctx)
@@ -380,7 +373,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Buy_Success_WithD
 		OrderType: types.OrderTypeBuy,
 		Creator:   addr1.String(),
 	}
-	_, err = suite.msgServer.CreateOrder(goCtx, &orderMsg)
+	_, err = suite.msgServer.CreateOrder(suite.ctx, &orderMsg)
 	suite.Require().Nil(err)
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
 	suite.Require().Len(qmList, 1)
@@ -401,9 +394,9 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Buy_Success_WithD
 	suite.Require().False(ok)
 }
 
-func (suite *IntegrationTestSuite) TestCreateOrder_MarketMaker_Sell_Success() {
+func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketMaker_Sell_Success() {
 	suite.k.SetMarket(suite.ctx, market)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+
 	addr1 := sdk.AccAddress("addr1_______________")
 
 	//fee should be captured
@@ -421,7 +414,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketMaker_Sell_Success() {
 		OrderType: types.OrderTypeSell,
 		Creator:   addr1.String(),
 	}
-	_, err = suite.msgServer.CreateOrder(goCtx, &orderMsg)
+	_, err = suite.msgServer.CreateOrder(suite.ctx, &orderMsg)
 
 	suite.Require().Nil(err)
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
@@ -441,7 +434,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketMaker_Sell_Success() {
 	suite.Require().False(ok)
 }
 
-func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Sell_Success() {
+func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_Sell_Success() {
 	suite.k.SetMarket(suite.ctx, market)
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
@@ -450,7 +443,6 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Sell_Success() {
 		Price:     "1",
 	})
 
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 	addr1 := sdk.AccAddress("addr1_______________")
 
 	//fee should be captured
@@ -468,7 +460,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Sell_Success() {
 		OrderType: types.OrderTypeSell,
 		Creator:   addr1.String(),
 	}
-	_, err = suite.msgServer.CreateOrder(goCtx, &orderMsg)
+	_, err = suite.msgServer.CreateOrder(suite.ctx, &orderMsg)
 	suite.Require().Nil(err)
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
 	suite.Require().Len(qmList, 1)
@@ -489,7 +481,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_Sell_Success() {
 	suite.Require().False(ok)
 }
 
-func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_StressBalance() {
+func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_StressBalance() {
 	suite.k.SetMarket(suite.ctx, market)
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
@@ -607,7 +599,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_StressBalance() {
 	suite.Require().Equal(allPaid, amounts)
 }
 
-func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_CheckPrice_Fail() {
+func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_CheckPrice_Fail() {
 	suite.k.SetMarket(suite.ctx, market)
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
@@ -622,7 +614,6 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_CheckPrice_Fail()
 		Price:     "5",
 	})
 
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 	addr1 := sdk.AccAddress("addr1_______________")
 
 	//check price error on sell order
@@ -633,7 +624,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_CheckPrice_Fail()
 		OrderType: types.OrderTypeSell,
 		Creator:   addr1.String(),
 	}
-	_, err := suite.msgServer.CreateOrder(goCtx, &orderMsg)
+	_, err := suite.msgServer.CreateOrder(suite.ctx, &orderMsg)
 	suite.Require().Error(err)
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
 	suite.Require().Len(qmList, 0)
@@ -646,7 +637,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_CheckPrice_Fail()
 		OrderType: types.OrderTypeBuy,
 		Creator:   addr1.String(),
 	}
-	_, err = suite.msgServer.CreateOrder(goCtx, &orderMsg)
+	_, err = suite.msgServer.CreateOrder(suite.ctx, &orderMsg)
 	suite.Require().Error(err)
 
 	qmList = suite.k.GetAllQueueMessage(suite.ctx)
@@ -668,7 +659,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_CheckPrice_Fail()
 		OrderType: types.OrderTypeBuy,
 		Creator:   addr1.String(),
 	}
-	_, err = suite.msgServer.CreateOrder(goCtx, &orderMsg)
+	_, err = suite.msgServer.CreateOrder(suite.ctx, &orderMsg)
 	suite.Require().NoError(err)
 
 	paidCoins = sdk.NewCoins(sdk.NewCoin(denomStake, math.NewInt(1000000)))
@@ -681,7 +672,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_CheckPrice_Fail()
 		OrderType: types.OrderTypeSell,
 		Creator:   addr1.String(),
 	}
-	_, err = suite.msgServer.CreateOrder(goCtx, &orderMsg)
+	_, err = suite.msgServer.CreateOrder(suite.ctx, &orderMsg)
 	suite.Require().NoError(err)
 
 	orderMsg = types.MsgCreateOrder{
@@ -691,7 +682,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_CheckPrice_Fail()
 		OrderType: types.OrderTypeSell,
 		Creator:   addr1.String(),
 	}
-	_, err = suite.msgServer.CreateOrder(goCtx, &orderMsg)
+	_, err = suite.msgServer.CreateOrder(suite.ctx, &orderMsg)
 	suite.Require().Error(err)
 
 	orderMsg = types.MsgCreateOrder{
@@ -701,14 +692,14 @@ func (suite *IntegrationTestSuite) TestCreateOrder_MarketTaker_CheckPrice_Fail()
 		OrderType: types.OrderTypeBuy,
 		Creator:   addr1.String(),
 	}
-	_, err = suite.msgServer.CreateOrder(goCtx, &orderMsg)
+	_, err = suite.msgServer.CreateOrder(suite.ctx, &orderMsg)
 	suite.Require().Error(err)
 }
 
 func (suite *IntegrationTestSuite) randomOrderCreateMessages(count int, creators []string, market types.Market) ([]types.MsgCreateOrder, sdk.Coins) {
 	var msgs []types.MsgCreateOrder
 	orderTypes := []string{types.OrderTypeBuy, types.OrderTypeSell}
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+
 	allPaid := sdk.NewCoins()
 	const ExecPrice = 15
 	for i := 0; i < count; i++ {
@@ -749,7 +740,7 @@ func (suite *IntegrationTestSuite) randomOrderCreateMessages(count int, creators
 		suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), creatorAcc, gomock.AnyOf(params.TakerFeeDestination, params.MakerFeeDestination), gomock.AnyOf(takerFee, makerFee)).Return(nil).Times(1)
 		suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), creatorAcc, types.ModuleName, paidCoins).Return(nil).Times(1)
 
-		_, err = suite.msgServer.CreateOrder(goCtx, &orderMsg)
+		_, err = suite.msgServer.CreateOrder(suite.ctx, &orderMsg)
 		suite.Require().NoError(err)
 	}
 
@@ -770,7 +761,6 @@ func (suite *IntegrationTestSuite) randomNumber(to int) int {
 func (suite *IntegrationTestSuite) msgOrderFillSetup(orderType string) (allPrices []string, addr1, addr2 sdk.AccAddress) {
 	suite.k.SetMarket(suite.ctx, market)
 
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 	addr1 = sdk.AccAddress("addr1_______________")
 	addr2 = sdk.AccAddress("addr2_______________")
 	params := suite.k.GetParams(suite.ctx)
@@ -798,7 +788,7 @@ func (suite *IntegrationTestSuite) msgOrderFillSetup(orderType string) (allPrice
 
 		suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, params.MakerFeeDestination, makerFee).Return(nil).Times(1)
 		suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, paidCoins).Return(nil).Times(1)
-		_, err := suite.msgServer.CreateOrder(goCtx, &orderMsg)
+		_, err := suite.msgServer.CreateOrder(suite.ctx, &orderMsg)
 		suite.Require().NoError(err)
 
 		allPrices = append(allPrices, initialPrice.String())
@@ -807,9 +797,8 @@ func (suite *IntegrationTestSuite) msgOrderFillSetup(orderType string) (allPrice
 	return
 }
 
-func (suite *IntegrationTestSuite) TestMsgOrderFill_OneOrderPartialFill_Sell() {
+func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderPartialFill_Sell() {
 	_, addr1, addr2 := suite.msgOrderFillSetup(types.OrderTypeSell)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
@@ -837,7 +826,7 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_OneOrderPartialFill_Sell() {
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, params.MakerFeeDestination, takerFee).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, types.ModuleName, paidCoins).Return(nil).Times(1)
 
-	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	_, err = suite.msgServer.FillOrders(suite.ctx, &fillOrder)
 	suite.Require().NoError(err)
 
 	//check that the new message is saved accordingly to queue messages storage
@@ -874,9 +863,8 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_OneOrderPartialFill_Sell() {
 	suite.Require().True(remainingOrderChecked)
 }
 
-func (suite *IntegrationTestSuite) TestMsgOrderFill_OneOrderPartialFill_Buy() {
+func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderPartialFill_Buy() {
 	_, addr1, addr2 := suite.msgOrderFillSetup(types.OrderTypeBuy)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
@@ -901,7 +889,7 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_OneOrderPartialFill_Buy() {
 	paidCoins := sdk.NewCoins(sdk.NewCoin(market.Base, math.NewInt(500000)))
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, params.MakerFeeDestination, takerFee).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, types.ModuleName, paidCoins).Return(nil).Times(1)
-	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	_, err = suite.msgServer.FillOrders(suite.ctx, &fillOrder)
 	suite.Require().NoError(err)
 
 	//check that the new message is saved accordingly to queue messages storage
@@ -939,9 +927,8 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_OneOrderPartialFill_Buy() {
 	suite.Require().True(remainingOrderChecked)
 }
 
-func (suite *IntegrationTestSuite) TestMsgOrderFill_OneOrderFullFill_Sell() {
+func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderFullFill_Sell() {
 	_, addr1, addr2 := suite.msgOrderFillSetup(types.OrderTypeSell)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
@@ -968,7 +955,7 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_OneOrderFullFill_Sell() {
 	paidCoins := sdk.NewCoins(sdk.NewCoin(market.Quote, math.NewInt(1000000)))
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, params.TakerFeeDestination, takerFee).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, types.ModuleName, paidCoins).Return(nil).Times(1)
-	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	_, err = suite.msgServer.FillOrders(suite.ctx, &fillOrder)
 	suite.Require().NoError(err)
 
 	//check that the new message is saved accordingly to queue messages storage
@@ -996,9 +983,8 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_OneOrderFullFill_Sell() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestMsgOrderFill_OneOrderFullFill_Buy() {
+func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderFullFill_Buy() {
 	_, addr1, addr2 := suite.msgOrderFillSetup(types.OrderTypeBuy)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
@@ -1023,7 +1009,7 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_OneOrderFullFill_Buy() {
 	paidCoins := sdk.NewCoins(sdk.NewCoin(market.Base, math.NewInt(1000000)))
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, params.MakerFeeDestination, takerFee).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, types.ModuleName, paidCoins).Return(nil).Times(1)
-	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	_, err = suite.msgServer.FillOrders(suite.ctx, &fillOrder)
 	suite.Require().NoError(err)
 
 	//check that the new message is saved accordingly to queue messages storage
@@ -1052,9 +1038,8 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_OneOrderFullFill_Buy() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoOrdersOnePartialFill_Sell() {
+func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoOrdersOnePartialFill_Sell() {
 	allPrices, addr1, addr2 := suite.msgOrderFillSetup(types.OrderTypeSell)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
@@ -1085,7 +1070,7 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoOrdersOnePartialFill_Sell
 	paidCoins := sdk.NewCoins(sdk.NewCoin(market.Quote, math.NewInt(2500000)))
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, params.TakerFeeDestination, takerFee).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, types.ModuleName, paidCoins).Return(nil).Times(1)
-	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	_, err = suite.msgServer.FillOrders(suite.ctx, &fillOrder)
 	suite.Require().NoError(err)
 
 	//check that the new message is saved accordingly to queue messages storage
@@ -1131,9 +1116,8 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoOrdersOnePartialFill_Sell
 	suite.Require().True(remainingOrderChecked)
 }
 
-func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoOrdersOnePartialFill_Buy() {
+func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoOrdersOnePartialFill_Buy() {
 	allPrices, addr1, addr2 := suite.msgOrderFillSetup(types.OrderTypeBuy)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
@@ -1164,7 +1148,7 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoOrdersOnePartialFill_Buy(
 	paidCoins := sdk.NewCoins(sdk.NewCoin(market.Base, math.NewInt(1500000)))
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, params.TakerFeeDestination, takerFee).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, types.ModuleName, paidCoins).Return(nil).Times(1)
-	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	_, err = suite.msgServer.FillOrders(suite.ctx, &fillOrder)
 	suite.Require().NoError(err)
 
 	agg := suite.k.GetAllAggregatedOrder(suite.ctx)
@@ -1212,9 +1196,8 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoOrdersOnePartialFill_Buy(
 	suite.Require().True(remainingOrderChecked)
 }
 
-func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoFullyFilledOrders_Buy() {
+func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoFullyFilledOrders_Buy() {
 	allPrices, addr1, addr2 := suite.msgOrderFillSetup(types.OrderTypeBuy)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
@@ -1245,7 +1228,7 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoFullyFilledOrders_Buy() {
 	paidCoins := sdk.NewCoins(sdk.NewCoin(market.Base, math.NewInt(2000000)))
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, params.MakerFeeDestination, takerFee).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, types.ModuleName, paidCoins).Return(nil).Times(1)
-	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	_, err = suite.msgServer.FillOrders(suite.ctx, &fillOrder)
 	suite.Require().NoError(err)
 
 	agg := suite.k.GetAllAggregatedOrder(suite.ctx)
@@ -1283,9 +1266,8 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoFullyFilledOrders_Buy() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoFullyFilledOrders_Sell() {
+func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoFullyFilledOrders_Sell() {
 	allPrices, addr1, addr2 := suite.msgOrderFillSetup(types.OrderTypeSell)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
@@ -1316,7 +1298,7 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoFullyFilledOrders_Sell() 
 	paidCoins := sdk.NewCoins(sdk.NewCoin(market.Quote, math.NewInt(4000000)))
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, params.TakerFeeDestination, takerFee).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, types.ModuleName, paidCoins).Return(nil).Times(1)
-	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	_, err = suite.msgServer.FillOrders(suite.ctx, &fillOrder)
 	suite.Require().NoError(err)
 
 	//check that the new message is saved accordingly to queue messages storage
@@ -1352,9 +1334,8 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoFullyFilledOrders_Sell() 
 	}
 }
 
-func (suite *IntegrationTestSuite) TestMsgOrderFill_OneFullyFilledOrderWithExtraAmount_Buy() {
+func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneFullyFilledOrderWithExtraAmount_Buy() {
 	allPrices, addr1, addr2 := suite.msgOrderFillSetup(types.OrderTypeBuy)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
@@ -1380,7 +1361,7 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_OneFullyFilledOrderWithExtra
 	paidCoins := sdk.NewCoins(sdk.NewCoin(market.Base, math.NewInt(1500000)))
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, params.MakerFeeDestination, takerFee).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, types.ModuleName, paidCoins).Return(nil).Times(1)
-	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	_, err = suite.msgServer.FillOrders(suite.ctx, &fillOrder)
 	suite.Require().NoError(err)
 
 	//check that the new message is saved accordingly to queue messages storage
@@ -1409,9 +1390,8 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_OneFullyFilledOrderWithExtra
 	}
 }
 
-func (suite *IntegrationTestSuite) TestMsgOrderFill_OneFullyFilledOrderWithExtraAmount_Sell() {
+func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneFullyFilledOrderWithExtraAmount_Sell() {
 	allPrices, addr1, addr2 := suite.msgOrderFillSetup(types.OrderTypeSell)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
@@ -1437,7 +1417,7 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_OneFullyFilledOrderWithExtra
 	paidCoins := sdk.NewCoins(sdk.NewCoin(market.Quote, math.NewInt(1500000)))
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, params.MakerFeeDestination, takerFee).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, types.ModuleName, paidCoins).Return(nil).Times(1)
-	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	_, err = suite.msgServer.FillOrders(suite.ctx, &fillOrder)
 	suite.Require().NoError(err)
 
 	//check that the new message is saved accordingly to queue messages storage
@@ -1465,9 +1445,8 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_OneFullyFilledOrderWithExtra
 	}
 }
 
-func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoFullyFilledOrdersWithExtraAmounts_Buy() {
+func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoFullyFilledOrdersWithExtraAmounts_Buy() {
 	allPrices, addr1, addr2 := suite.msgOrderFillSetup(types.OrderTypeBuy)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
@@ -1496,7 +1475,7 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoFullyFilledOrdersWithExtr
 	paidCoins := sdk.NewCoins(sdk.NewCoin(market.Base, math.NewInt(3500000)))
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, params.MakerFeeDestination, takerFee).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, types.ModuleName, paidCoins).Return(nil).Times(1)
-	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	_, err = suite.msgServer.FillOrders(suite.ctx, &fillOrder)
 	suite.Require().NoError(err)
 
 	//check that the new message is saved accordingly to queue messages storage
@@ -1535,9 +1514,8 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoFullyFilledOrdersWithExtr
 	}
 }
 
-func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoFullyFilledOrdersWithExtraAmounts_Sell() {
+func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoFullyFilledOrdersWithExtraAmounts_Sell() {
 	allPrices, addr1, addr2 := suite.msgOrderFillSetup(types.OrderTypeSell)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
@@ -1567,7 +1545,7 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoFullyFilledOrdersWithExtr
 	paidCoins := sdk.NewCoins(sdk.NewCoin(market.Quote, math.NewInt(6500000)))
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, params.TakerFeeDestination, takerFee).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, types.ModuleName, paidCoins).Return(nil).Times(1)
-	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	_, err = suite.msgServer.FillOrders(suite.ctx, &fillOrder)
 	suite.Require().NoError(err)
 
 	//check that the new message is saved accordingly to queue messages storage
@@ -1606,10 +1584,9 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_TwoFullyFilledOrdersWithExtr
 	}
 }
 
-func (suite *IntegrationTestSuite) TestMsgOrderFill_FillAllWithExtraAmounts_Sell() {
+func (suite *IntegrationTestSuite) TestMsg_OrderFill_FillAllWithExtraAmounts_Sell() {
 	allPrices, addr1, addr2 := suite.msgOrderFillSetup(types.OrderTypeSell)
 	suite.Require().NotEmpty(allPrices)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
@@ -1649,7 +1626,7 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_FillAllWithExtraAmounts_Sell
 	paidCoins := sdk.NewCoins(sdk.NewCoin(market.Quote, quoteAmount))
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, types.ModuleName, paidCoins).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, params.TakerFeeDestination, takerFee).Return(nil).Times(1)
-	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	_, err = suite.msgServer.FillOrders(suite.ctx, &fillOrder)
 	suite.Require().NoError(err)
 
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
@@ -1679,11 +1656,9 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_FillAllWithExtraAmounts_Sell
 	suite.Require().Empty(all)
 }
 
-func (suite *IntegrationTestSuite) TestMsgOrderFill_FillAllWithExtraAmounts_Buy() {
+func (suite *IntegrationTestSuite) TestMsg_OrderFill_FillAllWithExtraAmounts_Buy() {
 	allPrices, addr1, addr2 := suite.msgOrderFillSetup(types.OrderTypeBuy)
 	suite.Require().NotEmpty(allPrices)
-
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
@@ -1723,7 +1698,7 @@ func (suite *IntegrationTestSuite) TestMsgOrderFill_FillAllWithExtraAmounts_Buy(
 	paidCoins := sdk.NewCoins(sdk.NewCoin(market.Base, baseAmount))
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, types.ModuleName, paidCoins).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr2, params.TakerFeeDestination, takerFee).Return(nil).Times(1)
-	_, err = suite.msgServer.FillOrders(goCtx, &fillOrder)
+	_, err = suite.msgServer.FillOrders(suite.ctx, &fillOrder)
 	suite.Require().NoError(err)
 
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)

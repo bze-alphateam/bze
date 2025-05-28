@@ -50,7 +50,7 @@ func getTestAddress() string {
 	return getTestAccount().String()
 }
 
-func (suite *IntegrationTestSuite) TestCreateLiquidityPool_InvalidAssets() {
+func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidAssets() {
 	tc := []struct {
 		Name          string
 		Base          string
@@ -106,7 +106,7 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_InvalidAssets() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestCreateLiquidityPool_PoolAlreadyExists() {
+func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_PoolAlreadyExists() {
 	msg := &types.MsgCreateLiquidityPool{
 		Base:    "def",
 		Quote:   "abc",
@@ -125,7 +125,7 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_PoolAlreadyExists() {
 	suite.Require().ErrorIs(err, types.ErrMarketAlreadyExists)
 }
 
-func (suite *IntegrationTestSuite) TestCreateLiquidityPool_InvalidFee() {
+func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidFee() {
 	tc := []struct {
 		Name          string
 		Fee           string
@@ -177,7 +177,7 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_InvalidFee() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestCreateLiquidityPool_InvalidFeeDestination() {
+func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidFeeDestination() {
 	tc := []struct {
 		Name          string
 		FeeDest       string
@@ -260,7 +260,7 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_InvalidFeeDestination
 	}
 }
 
-func (suite *IntegrationTestSuite) TestCreateLiquidityPool_InvalidReserves() {
+func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidReserves() {
 	tc := []struct {
 		Name         string
 		InitialBase  math.Int
@@ -299,7 +299,7 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_InvalidReserves() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestCreateLiquidityPool_StableNotSupported() {
+func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_StableNotSupported() {
 	//TODO: improve test when stable swap implemented (TODO: implement stable swap)
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 	msg := &types.MsgCreateLiquidityPool{
@@ -320,7 +320,7 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_StableNotSupported() 
 	suite.Require().ErrorIs(err, sdkerrors.ErrNotSupported)
 }
 
-func (suite *IntegrationTestSuite) TestCreateLiquidityPool_FundCommunityPoolErr() {
+func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_FundCommunityPoolErr() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 	msg := &types.MsgCreateLiquidityPool{
 		Base:         "abc",
@@ -343,7 +343,7 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_FundCommunityPoolErr(
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) TestCreateLiquidityPool_Success() {
+func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_Success() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 	msg := &types.MsgCreateLiquidityPool{
 		Base:         "abc",
@@ -395,7 +395,7 @@ func (suite *IntegrationTestSuite) TestCreateLiquidityPool_Success() {
 	suite.Require().EqualValues(stored.ReserveQuote.Int64(), 345)
 }
 
-func (suite *IntegrationTestSuite) TestAddLiquidity_InvalidCreator() {
+func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_InvalidCreator() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	msg := &types.MsgAddLiquidity{
@@ -407,7 +407,7 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_InvalidCreator() {
 	suite.Require().Contains(err.Error(), fmt.Sprintf("unauthorized"))
 }
 
-func (suite *IntegrationTestSuite) TestAddLiquidity_PoolNotFound() {
+func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_PoolNotFound() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 	testLp := getValidLp()
 	suite.k.SetLiquidityPool(suite.ctx, testLp)
@@ -422,7 +422,7 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_PoolNotFound() {
 	suite.Require().Contains(err.Error(), "pool pool_1 not found")
 }
 
-func (suite *IntegrationTestSuite) TestAddLiquidity_InvalidCoins() {
+func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_InvalidCoins() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 	testLp := getValidLp()
 	suite.k.SetLiquidityPool(suite.ctx, testLp)
@@ -437,7 +437,7 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_InvalidCoins() {
 	suite.Require().Contains(err.Error(), "failed to calculate provided amounts")
 }
 
-func (suite *IntegrationTestSuite) TestAddLiquidity_CoinCaptureFailure() {
+func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_CoinCaptureFailure() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 	testLp := getValidLp()
 	testAcc := getTestAccount()
@@ -458,7 +458,7 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_CoinCaptureFailure() {
 	suite.Require().Contains(err.Error(), "invalid balance test")
 }
 
-func (suite *IntegrationTestSuite) TestAddLiquidity_MissingLpTokenSupply() {
+func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_MissingLpTokenSupply() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 	testLp := getValidLp()
 	testAcc := getTestAccount()
@@ -480,7 +480,7 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_MissingLpTokenSupply() {
 	suite.Require().Contains(err.Error(), "could not find supply for pool")
 }
 
-func (suite *IntegrationTestSuite) TestAddLiquidity_LpMintError() {
+func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_LpMintError() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 	testLp := getValidLp()
 	testAcc := getTestAccount()
@@ -504,7 +504,7 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_LpMintError() {
 	suite.Require().Contains(err.Error(), "lp minting error")
 }
 
-func (suite *IntegrationTestSuite) TestAddLiquidity_MinLpTokensNotMet() {
+func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_MinLpTokensNotMet() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 	testLp := getValidLp()
 	testAcc := getTestAccount()
@@ -527,7 +527,7 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_MinLpTokensNotMet() {
 	suite.Require().Contains(err.Error(), "could not mint the minimum expected lp tokens")
 }
 
-func (suite *IntegrationTestSuite) TestAddLiquidity_ErrorOnSendingLpTokens() {
+func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_ErrorOnSendingLpTokens() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 	testLp := getValidLp()
 	testAcc := getTestAccount()
@@ -554,7 +554,7 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_ErrorOnSendingLpTokens() {
 	suite.Require().Contains(err.Error(), "error on sending lp tokens test")
 }
 
-func (suite *IntegrationTestSuite) TestAddLiquidity_Success() {
+func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_Success() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	testCases := []struct {
@@ -812,7 +812,7 @@ func (suite *IntegrationTestSuite) TestAddLiquidity_Success() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestRemoveLiquidity_Errors() {
+func (suite *IntegrationTestSuite) TestMsgAmm_RemoveLiquidity_Errors() {
 	goCtx := sdk.WrapSDKContext(suite.ctx)
 	testLp := types.LiquidityPool{
 		Id:           "ubze_uusdc",
@@ -1094,7 +1094,7 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Errors() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
+func (suite *IntegrationTestSuite) TestMsgAmm_RemoveLiquidity_Success() {
 	testAcc := getTestAccount()
 
 	testCases := []struct {
@@ -1310,7 +1310,7 @@ func (suite *IntegrationTestSuite) TestRemoveLiquidity_Success() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestMultiSwap_SinglePool_Success() {
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SinglePool_Success() {
 	// Setup a test account
 	creator := sdk.AccAddress("creator")
 
@@ -1429,7 +1429,7 @@ func (suite *IntegrationTestSuite) TestMultiSwap_SinglePool_Success() {
 	suite.Require().Equal(math.NewInt(1998008), updatedPool.ReserveQuote)
 }
 
-func (suite *IntegrationTestSuite) TestMultiSwap_MultiPool_Success() {
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_MultiPool_Success() {
 	// Setup a test account
 	creator := sdk.AccAddress("creator")
 
@@ -1562,7 +1562,7 @@ func (suite *IntegrationTestSuite) TestMultiSwap_MultiPool_Success() {
 	suite.Require().True(updatedPool2.ReserveQuote.LT(pool2.ReserveQuote))
 }
 
-func (suite *IntegrationTestSuite) TestMultiSwap_InvalidCreator() {
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_InvalidCreator() {
 	// Create swap message with invalid creator
 	msg := types.MsgMultiSwap{
 		Creator:   "invalid_address",
@@ -1580,7 +1580,7 @@ func (suite *IntegrationTestSuite) TestMultiSwap_InvalidCreator() {
 	suite.Require().Contains(err.Error(), "unauthorized")
 }
 
-func (suite *IntegrationTestSuite) TestMultiSwap_PoolNotFound() {
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_PoolNotFound() {
 	// Setup a test account
 	creator := sdk.AccAddress("creator")
 
@@ -1602,7 +1602,7 @@ func (suite *IntegrationTestSuite) TestMultiSwap_PoolNotFound() {
 	suite.Require().Contains(err.Error(), "not found")
 }
 
-func (suite *IntegrationTestSuite) TestMultiSwap_InsufficientFunds() {
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_InsufficientFunds() {
 	// Setup a test account
 	creator := sdk.AccAddress("creator")
 
@@ -1650,7 +1650,7 @@ func (suite *IntegrationTestSuite) TestMultiSwap_InsufficientFunds() {
 	suite.Require().Contains(err.Error(), "insufficient funds")
 }
 
-func (suite *IntegrationTestSuite) TestMultiSwap_DenomNotInPool() {
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_DenomNotInPool() {
 	// Setup a test account
 	creator := sdk.AccAddress([]byte("creator"))
 
@@ -1698,7 +1698,7 @@ func (suite *IntegrationTestSuite) TestMultiSwap_DenomNotInPool() {
 	suite.Require().Contains(err.Error(), "does not exist in pool")
 }
 
-func (suite *IntegrationTestSuite) TestMultiSwap_OutputTooLow() {
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_OutputTooLow() {
 	// Setup a test account
 	creator := sdk.AccAddress([]byte("creator"))
 
@@ -1775,7 +1775,7 @@ func (suite *IntegrationTestSuite) TestMultiSwap_OutputTooLow() {
 	suite.Require().Contains(err.Error(), "got")
 }
 
-func (suite *IntegrationTestSuite) TestMultiSwap_OutputDenomMismatch() {
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_OutputDenomMismatch() {
 	// Setup a test account
 	creator := sdk.AccAddress("creator")
 
@@ -1851,7 +1851,7 @@ func (suite *IntegrationTestSuite) TestMultiSwap_OutputDenomMismatch() {
 	suite.Require().Contains(err.Error(), "expected wrong_denom output, got stake")
 }
 
-func (suite *IntegrationTestSuite) TestMultiSwap_ZeroFeeDest() {
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_ZeroFeeDest() {
 	// Setup a test account
 	creator := sdk.AccAddress("creator")
 
@@ -1939,7 +1939,7 @@ func (suite *IntegrationTestSuite) TestMultiSwap_ZeroFeeDest() {
 	suite.Require().Equal(math.NewInt(1998008), updatedPool.ReserveQuote)
 }
 
-func (suite *IntegrationTestSuite) TestMultiSwap_FeeDistribution() {
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_FeeDistribution() {
 	// Setup a test account
 	creator := sdk.AccAddress("creator")
 
@@ -2056,7 +2056,7 @@ func (suite *IntegrationTestSuite) TestMultiSwap_FeeDistribution() {
 	suite.Require().True(updatedPool.ReserveQuote.LT(pool.ReserveQuote))
 }
 
-func (suite *IntegrationTestSuite) TestMultiSwap_SmallFeeAmount() {
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SmallFeeAmount() {
 	// Setup a test account
 	creator := sdk.AccAddress("creator")
 
@@ -2142,7 +2142,7 @@ func (suite *IntegrationTestSuite) TestMultiSwap_SmallFeeAmount() {
 	suite.Require().Equal(math.NewInt(1000010), updatedPool.ReserveBase)
 }
 
-func (suite *IntegrationTestSuite) TestMultiSwap_TreasuryFeeError() {
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_TreasuryFeeError() {
 	// Setup a test account
 	creator := sdk.AccAddress([]byte("creator"))
 
@@ -2210,7 +2210,7 @@ func (suite *IntegrationTestSuite) TestMultiSwap_TreasuryFeeError() {
 	suite.Require().Contains(err.Error(), "treasury fee transfer failed")
 }
 
-func (suite *IntegrationTestSuite) TestMultiSwap_BurnerFeeError() {
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_BurnerFeeError() {
 	// Setup a test account
 	creator := sdk.AccAddress("creator")
 
@@ -2274,7 +2274,7 @@ func (suite *IntegrationTestSuite) TestMultiSwap_BurnerFeeError() {
 	suite.Require().Contains(err.Error(), "burner fee transfer failed")
 }
 
-func (suite *IntegrationTestSuite) TestMultiSwap_EmptyRoutes() {
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_EmptyRoutes() {
 	// Setup a test account
 	creator := sdk.AccAddress("creator")
 
@@ -2296,7 +2296,7 @@ func (suite *IntegrationTestSuite) TestMultiSwap_EmptyRoutes() {
 	suite.Require().Contains(err.Error(), "does not contain any routes")
 }
 
-func (suite *IntegrationTestSuite) TestMultiSwap_InvalidCoins() {
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_InvalidCoins() {
 	// Setup a test account
 	creator := sdk.AccAddress("creator")
 
@@ -2345,7 +2345,7 @@ func (suite *IntegrationTestSuite) TestMultiSwap_InvalidCoins() {
 	suite.Require().Contains(err.Error(), "invalid coins provided")
 }
 
-func (suite *IntegrationTestSuite) TestMultiSwap_SendOutputError() {
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SendOutputError() {
 	// Setup a test account
 	creator := sdk.AccAddress("creator")
 

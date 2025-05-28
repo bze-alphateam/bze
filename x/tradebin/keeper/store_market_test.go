@@ -1,6 +1,6 @@
 package keeper_test
 
-func (suite *IntegrationTestSuite) TestMarket() {
+func (suite *IntegrationTestSuite) TestStore_Market() {
 	//create market
 	suite.k.SetMarket(suite.ctx, market)
 

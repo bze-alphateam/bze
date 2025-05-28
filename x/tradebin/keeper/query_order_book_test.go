@@ -4,18 +4,18 @@ import (
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 )
 
-func (suite *IntegrationTestSuite) TestAssetMarkets_InvalidRequest() {
+func (suite *IntegrationTestSuite) Query_Query_TestAssetMarkets_InvalidRequest() {
 	_, err := suite.k.AssetMarkets(suite.ctx, nil)
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) TestAssetMarkets_InvalidRequest_InvalidAsset() {
+func (suite *IntegrationTestSuite) TestQueryAssetMarkets_InvalidRequest_InvalidAsset() {
 
 	_, err := suite.k.AssetMarkets(suite.ctx, &types.QueryAssetMarketsRequest{Asset: ""})
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) TestAssetMarkets_OneMarketAsBaseDenom_Success() {
+func (suite *IntegrationTestSuite) TestQueryAssetMarkets_OneMarketAsBaseDenom_Success() {
 
 	suite.k.SetMarket(suite.ctx, market)
 
@@ -28,7 +28,7 @@ func (suite *IntegrationTestSuite) TestAssetMarkets_OneMarketAsBaseDenom_Success
 	suite.Require().Equal(res.Base[0], market)
 }
 
-func (suite *IntegrationTestSuite) TestAssetMarkets_OneMarketAsQuoteDenom_Success() {
+func (suite *IntegrationTestSuite) TestQueryAssetMarkets_OneMarketAsQuoteDenom_Success() {
 
 	suite.k.SetMarket(suite.ctx, market)
 
@@ -41,7 +41,7 @@ func (suite *IntegrationTestSuite) TestAssetMarkets_OneMarketAsQuoteDenom_Succes
 	suite.Require().Equal(res.Quote[0], market)
 }
 
-func (suite *IntegrationTestSuite) TestAssetMarkets_MoreMarket_Success() {
+func (suite *IntegrationTestSuite) TestQueryAssetMarkets_MoreMarket_Success() {
 
 	fakeDenom1 := types.Market{
 		Base:    "fake1",
@@ -68,19 +68,19 @@ func (suite *IntegrationTestSuite) TestAssetMarkets_MoreMarket_Success() {
 	suite.Require().Equal(res.Quote[1], market)
 }
 
-func (suite *IntegrationTestSuite) TestMarketAggregatedOrders_InvalidRequest() {
+func (suite *IntegrationTestSuite) TestQueryMarketAggregatedOrders_InvalidRequest() {
 
 	_, err := suite.k.MarketAggregatedOrders(suite.ctx, nil)
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) TestMarketAggregatedOrders_InvalidMarket() {
+func (suite *IntegrationTestSuite) TestQueryMarketAggregatedOrders_InvalidMarket() {
 
 	_, err := suite.k.MarketAggregatedOrders(suite.ctx, &types.QueryMarketAggregatedOrdersRequest{Market: ""})
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) TestMarketAggregatedOrders_InvalidOrderType() {
+func (suite *IntegrationTestSuite) TestQueryMarketAggregatedOrders_InvalidOrderType() {
 
 	suite.k.SetMarket(suite.ctx, market)
 
@@ -88,7 +88,7 @@ func (suite *IntegrationTestSuite) TestMarketAggregatedOrders_InvalidOrderType()
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) TestMarketAggregatedOrders_Success() {
+func (suite *IntegrationTestSuite) TestQueryMarketAggregatedOrders_Success() {
 
 	suite.k.SetMarket(suite.ctx, market)
 	aggBuy := types.AggregatedOrder{
@@ -119,13 +119,13 @@ func (suite *IntegrationTestSuite) TestMarketAggregatedOrders_Success() {
 	suite.Require().Equal(res.List[0], aggSell)
 }
 
-func (suite *IntegrationTestSuite) TestMarketAll_InvalidRequest() {
+func (suite *IntegrationTestSuite) TestQueryMarketAll_InvalidRequest() {
 
 	_, err := suite.k.Market(suite.ctx, nil)
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) TestMarketAll_Success() {
+func (suite *IntegrationTestSuite) TestQueryMarketAll_Success() {
 
 	fakeDenom1 := types.Market{
 		Base:    "fake1",
@@ -147,13 +147,13 @@ func (suite *IntegrationTestSuite) TestMarketAll_Success() {
 	suite.Require().Equal(len(res.Market), 3)
 }
 
-func (suite *IntegrationTestSuite) TestMarket_InvalidRequest() {
+func (suite *IntegrationTestSuite) TestQueryMarket_InvalidRequest() {
 
 	_, err := suite.k.Market(suite.ctx, nil)
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) TestMarket_InvalidArguments() {
+func (suite *IntegrationTestSuite) TestQueryMarket_InvalidArguments() {
 
 	_, err := suite.k.Market(suite.ctx, &types.QueryMarketRequest{Base: denomStake, Quote: ""})
 	suite.Require().NotNil(err)
@@ -162,7 +162,7 @@ func (suite *IntegrationTestSuite) TestMarket_InvalidArguments() {
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) TestMarket_Success() {
+func (suite *IntegrationTestSuite) TestQueryMarket_Success() {
 
 	fakeDenom1 := types.Market{
 		Base:    "fake1",
