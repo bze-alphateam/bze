@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/bze-alphateam/bze/x/cointrunk/exported"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
@@ -23,6 +24,10 @@ import (
 	modulev1 "github.com/bze-alphateam/bze/api/bze/cointrunk/module"
 	"github.com/bze-alphateam/bze/x/cointrunk/keeper"
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
+)
+
+const (
+	ConsensusVersion = 2
 )
 
 var (
@@ -98,6 +103,9 @@ type AppModule struct {
 	keeper      keeper.Keeper
 	bankKeeper  types.BankKeeper
 	distrKeeper types.DistrKeeper
+
+	// LegacySubspace is used solely for migration of x/params managed parameters
+	legacySubspace exported.Subspace
 }
 
 func NewAppModule(
@@ -105,12 +113,15 @@ func NewAppModule(
 	keeper keeper.Keeper,
 	bankKeeper types.BankKeeper,
 	distrKeeper types.DistrKeeper,
+
+	legacySubspace exported.Subspace,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         keeper,
 		bankKeeper:     bankKeeper,
 		distrKeeper:    distrKeeper,
+		legacySubspace: legacySubspace,
 	}
 }
 
@@ -118,6 +129,12 @@ func NewAppModule(
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+
+	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
+
+	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+	}
 }
 
 // RegisterInvariants registers the invariants of the module. If an invariant deviates from its predicted value, the InvariantRegistry triggers appropriate logic (most often the chain will be halted)
@@ -141,7 +158,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // ConsensusVersion is a sequence number for state-breaking change of the module.
 // It should be incremented on each consensus-breaking change introduced by the module.
 // To avoid wrong/empty versions, the initial version should be set to 1.
-func (AppModule) ConsensusVersion() uint64 { return 1 }
+func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock contains the logic that is automatically triggered at the beginning of each block.
 // The begin block implementation is optional.
@@ -182,6 +199,9 @@ type ModuleInputs struct {
 
 	DistrKeeper types.DistrKeeper
 	BankKeeper  types.BankKeeper
+
+	// LegacySubspace is used solely for migration of x/params managed parameters
+	LegacySubspace exported.Subspace
 }
 
 type ModuleOutputs struct {
@@ -211,6 +231,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		k,
 		in.BankKeeper,
 		in.DistrKeeper,
+		in.LegacySubspace,
 	)
 
 	return ModuleOutputs{CointrunkKeeper: k, Module: m}

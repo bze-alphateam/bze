@@ -11,11 +11,7 @@ import (
 )
 
 func TestGenesis(t *testing.T) {
-	genesisState := types.GenesisState{
-		Params: types.DefaultParams(),
-
-		// this line is used by starport scaffolding # genesis/test/state
-	}
+	genesisState := types.GenesisState{}
 
 	k, ctx := keepertest.EpochKeeper(t)
 	epoch.InitGenesis(ctx, k, genesisState)

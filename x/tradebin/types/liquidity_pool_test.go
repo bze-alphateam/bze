@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/math"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -74,12 +75,12 @@ func TestLiquidityPool_GetReservesCoinsByDenom(t *testing.T) {
 			pool: LiquidityPool{
 				Base:         "ubze",
 				Quote:        "uusdc",
-				ReserveBase:  sdk.NewInt(1000),
-				ReserveQuote: sdk.NewInt(2000),
+				ReserveBase:  math.NewInt(1000),
+				ReserveQuote: math.NewInt(2000),
 			},
 			denom:             "ubze",
-			expectedDenomCoin: sdk.NewCoin("ubze", sdk.NewInt(1000)),
-			expectedCounter:   sdk.NewCoin("uusdc", sdk.NewInt(2000)),
+			expectedDenomCoin: sdk.NewCoin("ubze", math.NewInt(1000)),
+			expectedCounter:   sdk.NewCoin("uusdc", math.NewInt(2000)),
 			hasDenom:          true,
 		},
 		{
@@ -87,12 +88,12 @@ func TestLiquidityPool_GetReservesCoinsByDenom(t *testing.T) {
 			pool: LiquidityPool{
 				Base:         "ubze",
 				Quote:        "uusdc",
-				ReserveBase:  sdk.NewInt(1000),
-				ReserveQuote: sdk.NewInt(2000),
+				ReserveBase:  math.NewInt(1000),
+				ReserveQuote: math.NewInt(2000),
 			},
 			denom:             "uusdc",
-			expectedDenomCoin: sdk.NewCoin("uusdc", sdk.NewInt(2000)),
-			expectedCounter:   sdk.NewCoin("ubze", sdk.NewInt(1000)),
+			expectedDenomCoin: sdk.NewCoin("uusdc", math.NewInt(2000)),
+			expectedCounter:   sdk.NewCoin("ubze", math.NewInt(1000)),
 			hasDenom:          true,
 		},
 		{
@@ -100,8 +101,8 @@ func TestLiquidityPool_GetReservesCoinsByDenom(t *testing.T) {
 			pool: LiquidityPool{
 				Base:         "ubze",
 				Quote:        "uusdc",
-				ReserveBase:  sdk.NewInt(1000),
-				ReserveQuote: sdk.NewInt(2000),
+				ReserveBase:  math.NewInt(1000),
+				ReserveQuote: math.NewInt(2000),
 			},
 			denom:             "uatom",
 			expectedDenomCoin: sdk.Coin{},
@@ -113,12 +114,12 @@ func TestLiquidityPool_GetReservesCoinsByDenom(t *testing.T) {
 			pool: LiquidityPool{
 				Base:         "ubze",
 				Quote:        "uusdc",
-				ReserveBase:  sdk.NewInt(0),
-				ReserveQuote: sdk.NewInt(0),
+				ReserveBase:  math.NewInt(0),
+				ReserveQuote: math.NewInt(0),
 			},
 			denom:             "ubze",
-			expectedDenomCoin: sdk.NewCoin("ubze", sdk.NewInt(0)),
-			expectedCounter:   sdk.NewCoin("uusdc", sdk.NewInt(0)),
+			expectedDenomCoin: sdk.NewCoin("ubze", math.NewInt(0)),
+			expectedCounter:   sdk.NewCoin("uusdc", math.NewInt(0)),
 			hasDenom:          true,
 		},
 	}
@@ -150,8 +151,8 @@ func TestLiquidityPool_ChangeReserves(t *testing.T) {
 		subtract      sdk.Coin
 		expectError   bool
 		errorContains string
-		expectedBase  sdk.Int
-		expectedQuote sdk.Int
+		expectedBase  math.Int
+		expectedQuote math.Int
 	}{
 		{
 			name: "add to base, subtract from quote",
@@ -159,14 +160,14 @@ func TestLiquidityPool_ChangeReserves(t *testing.T) {
 				Id:           "pool1",
 				Base:         "ubze",
 				Quote:        "uusdc",
-				ReserveBase:  sdk.NewInt(1000),
-				ReserveQuote: sdk.NewInt(2000),
+				ReserveBase:  math.NewInt(1000),
+				ReserveQuote: math.NewInt(2000),
 			},
-			add:           sdk.NewCoin("ubze", sdk.NewInt(500)),
-			subtract:      sdk.NewCoin("uusdc", sdk.NewInt(300)),
+			add:           sdk.NewCoin("ubze", math.NewInt(500)),
+			subtract:      sdk.NewCoin("uusdc", math.NewInt(300)),
 			expectError:   false,
-			expectedBase:  sdk.NewInt(1500),
-			expectedQuote: sdk.NewInt(1700),
+			expectedBase:  math.NewInt(1500),
+			expectedQuote: math.NewInt(1700),
 		},
 		{
 			name: "add to quote, subtract from base",
@@ -174,14 +175,14 @@ func TestLiquidityPool_ChangeReserves(t *testing.T) {
 				Id:           "pool1",
 				Base:         "ubze",
 				Quote:        "uusdc",
-				ReserveBase:  sdk.NewInt(1000),
-				ReserveQuote: sdk.NewInt(2000),
+				ReserveBase:  math.NewInt(1000),
+				ReserveQuote: math.NewInt(2000),
 			},
-			add:           sdk.NewCoin("uusdc", sdk.NewInt(500)),
-			subtract:      sdk.NewCoin("ubze", sdk.NewInt(300)),
+			add:           sdk.NewCoin("uusdc", math.NewInt(500)),
+			subtract:      sdk.NewCoin("ubze", math.NewInt(300)),
 			expectError:   false,
-			expectedBase:  sdk.NewInt(700),
-			expectedQuote: sdk.NewInt(2500),
+			expectedBase:  math.NewInt(700),
+			expectedQuote: math.NewInt(2500),
 		},
 		{
 			name: "same denom error",
@@ -189,11 +190,11 @@ func TestLiquidityPool_ChangeReserves(t *testing.T) {
 				Id:           "pool1",
 				Base:         "ubze",
 				Quote:        "uusdc",
-				ReserveBase:  sdk.NewInt(1000),
-				ReserveQuote: sdk.NewInt(2000),
+				ReserveBase:  math.NewInt(1000),
+				ReserveQuote: math.NewInt(2000),
 			},
-			add:           sdk.NewCoin("ubze", sdk.NewInt(500)),
-			subtract:      sdk.NewCoin("ubze", sdk.NewInt(300)),
+			add:           sdk.NewCoin("ubze", math.NewInt(500)),
+			subtract:      sdk.NewCoin("ubze", math.NewInt(300)),
 			expectError:   true,
 			errorContains: "can not change reserves with amounts of the same denom",
 		},
@@ -203,11 +204,11 @@ func TestLiquidityPool_ChangeReserves(t *testing.T) {
 				Id:           "pool1",
 				Base:         "ubze",
 				Quote:        "uusdc",
-				ReserveBase:  sdk.NewInt(1000),
-				ReserveQuote: sdk.NewInt(2000),
+				ReserveBase:  math.NewInt(1000),
+				ReserveQuote: math.NewInt(2000),
 			},
-			add:           sdk.NewCoin("uatom", sdk.NewInt(500)),
-			subtract:      sdk.NewCoin("uusdc", sdk.NewInt(300)),
+			add:           sdk.NewCoin("uatom", math.NewInt(500)),
+			subtract:      sdk.NewCoin("uusdc", math.NewInt(300)),
 			expectError:   true,
 			errorContains: "can not change reserves of pool",
 		},
@@ -217,11 +218,11 @@ func TestLiquidityPool_ChangeReserves(t *testing.T) {
 				Id:           "pool1",
 				Base:         "ubze",
 				Quote:        "uusdc",
-				ReserveBase:  sdk.NewInt(1000),
-				ReserveQuote: sdk.NewInt(2000),
+				ReserveBase:  math.NewInt(1000),
+				ReserveQuote: math.NewInt(2000),
 			},
-			add:           sdk.NewCoin("ubze", sdk.NewInt(500)),
-			subtract:      sdk.NewCoin("uatom", sdk.NewInt(300)),
+			add:           sdk.NewCoin("ubze", math.NewInt(500)),
+			subtract:      sdk.NewCoin("uatom", math.NewInt(300)),
 			expectError:   true,
 			errorContains: "can not change reserves of pool",
 		},
@@ -231,11 +232,11 @@ func TestLiquidityPool_ChangeReserves(t *testing.T) {
 				Id:           "pool1",
 				Base:         "ubze",
 				Quote:        "uusdc",
-				ReserveBase:  sdk.NewInt(1000),
-				ReserveQuote: sdk.NewInt(2000),
+				ReserveBase:  math.NewInt(1000),
+				ReserveQuote: math.NewInt(2000),
 			},
-			add:           sdk.NewCoin("ubze", sdk.NewInt(500)),
-			subtract:      sdk.NewCoin("uusdc", sdk.NewInt(3000)),
+			add:           sdk.NewCoin("ubze", math.NewInt(500)),
+			subtract:      sdk.NewCoin("uusdc", math.NewInt(3000)),
 			expectError:   true,
 			errorContains: "insufficient quote reserve",
 		},
@@ -245,11 +246,11 @@ func TestLiquidityPool_ChangeReserves(t *testing.T) {
 				Id:           "pool1",
 				Base:         "ubze",
 				Quote:        "uusdc",
-				ReserveBase:  sdk.NewInt(1000),
-				ReserveQuote: sdk.NewInt(2000),
+				ReserveBase:  math.NewInt(1000),
+				ReserveQuote: math.NewInt(2000),
 			},
-			add:           sdk.NewCoin("uusdc", sdk.NewInt(500)),
-			subtract:      sdk.NewCoin("ubze", sdk.NewInt(1500)),
+			add:           sdk.NewCoin("uusdc", math.NewInt(500)),
+			subtract:      sdk.NewCoin("ubze", math.NewInt(1500)),
 			expectError:   true,
 			errorContains: "insufficient base reserve",
 		},
@@ -259,14 +260,14 @@ func TestLiquidityPool_ChangeReserves(t *testing.T) {
 				Id:           "pool1",
 				Base:         "ubze",
 				Quote:        "uusdc",
-				ReserveBase:  sdk.NewInt(1000),
-				ReserveQuote: sdk.NewInt(2000),
+				ReserveBase:  math.NewInt(1000),
+				ReserveQuote: math.NewInt(2000),
 			},
-			add:           sdk.NewCoin("ubze", sdk.ZeroInt()),
-			subtract:      sdk.NewCoin("uusdc", sdk.NewInt(300)),
+			add:           sdk.NewCoin("ubze", math.ZeroInt()),
+			subtract:      sdk.NewCoin("uusdc", math.NewInt(300)),
 			expectError:   false,
-			expectedBase:  sdk.NewInt(1000),
-			expectedQuote: sdk.NewInt(1700),
+			expectedBase:  math.NewInt(1000),
+			expectedQuote: math.NewInt(1700),
 		},
 		{
 			name: "zero subtract amount",
@@ -274,14 +275,14 @@ func TestLiquidityPool_ChangeReserves(t *testing.T) {
 				Id:           "pool1",
 				Base:         "ubze",
 				Quote:        "uusdc",
-				ReserveBase:  sdk.NewInt(1000),
-				ReserveQuote: sdk.NewInt(2000),
+				ReserveBase:  math.NewInt(1000),
+				ReserveQuote: math.NewInt(2000),
 			},
-			add:           sdk.NewCoin("ubze", sdk.NewInt(500)),
-			subtract:      sdk.NewCoin("uusdc", sdk.ZeroInt()),
+			add:           sdk.NewCoin("ubze", math.NewInt(500)),
+			subtract:      sdk.NewCoin("uusdc", math.ZeroInt()),
 			expectError:   false,
-			expectedBase:  sdk.NewInt(1500),
-			expectedQuote: sdk.NewInt(2000),
+			expectedBase:  math.NewInt(1500),
+			expectedQuote: math.NewInt(2000),
 		},
 		{
 			name: "large amounts",
@@ -289,14 +290,14 @@ func TestLiquidityPool_ChangeReserves(t *testing.T) {
 				Id:           "pool1",
 				Base:         "ubze",
 				Quote:        "uusdc",
-				ReserveBase:  sdk.NewInt(1000000),
-				ReserveQuote: sdk.NewInt(2000000),
+				ReserveBase:  math.NewInt(1000000),
+				ReserveQuote: math.NewInt(2000000),
 			},
-			add:           sdk.NewCoin("ubze", sdk.NewInt(500000)),
-			subtract:      sdk.NewCoin("uusdc", sdk.NewInt(300000)),
+			add:           sdk.NewCoin("ubze", math.NewInt(500000)),
+			subtract:      sdk.NewCoin("uusdc", math.NewInt(300000)),
 			expectError:   false,
-			expectedBase:  sdk.NewInt(1500000),
-			expectedQuote: sdk.NewInt(1700000),
+			expectedBase:  math.NewInt(1500000),
+			expectedQuote: math.NewInt(1700000),
 		},
 	}
 
@@ -326,26 +327,26 @@ func TestLiquidityPool_ChangeReserves_EdgeCases(t *testing.T) {
 	// Test for very large numbers
 	t.Run("very large numbers", func(t *testing.T) {
 		// Create a large number but one that can be safely represented
-		largeNumber := sdk.NewInt(9223372036854775807) // Max int64
+		largeNumber := math.NewInt(9223372036854775807) // Max int64
 
 		pool := LiquidityPool{
 			Id:           "pool1",
 			Base:         "ubze",
 			Quote:        "uusdc",
-			ReserveBase:  sdk.NewInt(1000),
+			ReserveBase:  math.NewInt(1000),
 			ReserveQuote: largeNumber,
 		}
 
 		// Add a more modest amount that won't cause issues
-		add := sdk.NewCoin("uusdc", sdk.NewInt(2000))
-		subtract := sdk.NewCoin("ubze", sdk.NewInt(500))
+		add := sdk.NewCoin("uusdc", math.NewInt(2000))
+		subtract := sdk.NewCoin("ubze", math.NewInt(500))
 
 		err := pool.ChangeReserves(add, subtract)
 		require.NoError(t, err)
 
 		// Calculate expected values more explicitly
-		expectedBase := sdk.NewInt(500) // 1000 - 500
-		expectedQuote := largeNumber.Add(sdk.NewInt(2000))
+		expectedBase := math.NewInt(500) // 1000 - 500
+		expectedQuote := largeNumber.Add(math.NewInt(2000))
 
 		require.True(t, expectedBase.Equal(pool.ReserveBase))
 		require.True(t, expectedQuote.Equal(pool.ReserveQuote))
@@ -357,17 +358,17 @@ func TestLiquidityPool_ChangeReserves_EdgeCases(t *testing.T) {
 			Id:           "pool1",
 			Base:         "ubze",
 			Quote:        "uusdc",
-			ReserveBase:  sdk.NewInt(1000),
-			ReserveQuote: sdk.NewInt(2000),
+			ReserveBase:  math.NewInt(1000),
+			ReserveQuote: math.NewInt(2000),
 		}
 
 		// Subtract exactly the available amount
-		add := sdk.NewCoin("ubze", sdk.NewInt(500))
-		subtract := sdk.NewCoin("uusdc", sdk.NewInt(2000))
+		add := sdk.NewCoin("ubze", math.NewInt(500))
+		subtract := sdk.NewCoin("uusdc", math.NewInt(2000))
 
 		err := pool.ChangeReserves(add, subtract)
 		require.NoError(t, err)
-		require.True(t, sdk.NewInt(1500).Equal(pool.ReserveBase))
-		require.True(t, sdk.ZeroInt().Equal(pool.ReserveQuote))
+		require.True(t, math.NewInt(1500).Equal(pool.ReserveBase))
+		require.True(t, math.ZeroInt().Equal(pool.ReserveQuote))
 	})
 }

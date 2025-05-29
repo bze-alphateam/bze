@@ -24,13 +24,14 @@ const (
 
 type (
 	Keeper struct {
-		cdc          codec.BinaryCodec
-		storeService store.KVStoreService
-		logger       log.Logger
-		bankKeeper   types.BankKeeper
-		distrKeeper  types.DistrKeeper
-		epochKeeper  types.EpochKeeper
-		tradeKeeper  types.TradingKeeper
+		cdc           codec.BinaryCodec
+		storeService  store.KVStoreService
+		logger        log.Logger
+		bankKeeper    types.BankKeeper
+		distrKeeper   types.DistrKeeper
+		epochKeeper   types.EpochKeeper
+		tradeKeeper   types.TradingKeeper
+		accountKeeper types.AccountKeeper
 
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
@@ -47,21 +48,22 @@ func NewKeeper(
 	distrKeeper types.DistrKeeper,
 	epochKeeper types.EpochKeeper,
 	tradeKeeper types.TradingKeeper,
-
+	accountKeeper types.AccountKeeper,
 ) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
 	}
 
 	return Keeper{
-		cdc:          cdc,
-		storeService: storeService,
-		authority:    authority,
-		logger:       logger,
-		bankKeeper:   bankKeeper,
-		distrKeeper:  distrKeeper,
-		epochKeeper:  epochKeeper,
-		tradeKeeper:  tradeKeeper,
+		cdc:           cdc,
+		storeService:  storeService,
+		authority:     authority,
+		logger:        logger,
+		bankKeeper:    bankKeeper,
+		distrKeeper:   distrKeeper,
+		epochKeeper:   epochKeeper,
+		tradeKeeper:   tradeKeeper,
+		accountKeeper: accountKeeper,
 	}
 }
 
@@ -105,4 +107,9 @@ func (k Keeper) getNewTradingRewardExpireAt(ctx sdk.Context) uint32 {
 	cnt := uint32(k.epochKeeper.GetEpochCountByIdentifier(ctx, expirationEpoch))
 
 	return cnt + expirationPeriodInHours
+}
+
+// InitGenesis initializes module accounts
+func (k Keeper) InitGenesis(ctx sdk.Context) {
+	_ = k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 }

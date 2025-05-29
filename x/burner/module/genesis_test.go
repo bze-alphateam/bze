@@ -1,6 +1,8 @@
 package burner_test
 
 import (
+	"github.com/bze-alphateam/bze/x/burner/testutil"
+	"go.uber.org/mock/gomock"
 	"testing"
 
 	keepertest "github.com/bze-alphateam/bze/testutil/keeper"
@@ -17,7 +19,12 @@ func TestGenesis(t *testing.T) {
 		// this line is used by starport scaffolding # genesis/test/state
 	}
 
-	k, ctx := keepertest.BurnerKeeper(t)
+	ctrl := gomock.NewController(t)
+	acc := testutil.NewMockAccountKeeper(ctrl)
+	k, ctx := keepertest.BurnerKeeper(t, nil, acc, nil)
+
+	acc.EXPECT().GetModuleAccount(gomock.Any(), gomock.AnyOf(types.ModuleName, types.RaffleModuleName)).Return(nil).Times(2)
+
 	burner.InitGenesis(ctx, k, genesisState)
 	got := burner.ExportGenesis(ctx, k)
 	require.NotNil(t, got)

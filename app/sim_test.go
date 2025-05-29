@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/bze-alphateam/bze/app"
 	"math/rand"
 	"os"
 	"runtime/debug"
@@ -31,8 +32,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-
-	"beezee/app"
 )
 
 const (

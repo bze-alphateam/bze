@@ -1,6 +1,8 @@
 package tokenfactory_test
 
 import (
+	"github.com/bze-alphateam/bze/x/tokenfactory/testutil"
+	"go.uber.org/mock/gomock"
 	"testing"
 
 	keepertest "github.com/bze-alphateam/bze/testutil/keeper"
@@ -17,7 +19,12 @@ func TestGenesis(t *testing.T) {
 		// this line is used by starport scaffolding # genesis/test/state
 	}
 
-	k, ctx := keepertest.TokenfactoryKeeper(t)
+	ctrl := gomock.NewController(t)
+	acc := testutil.NewMockAccountKeeper(ctrl)
+
+	acc.EXPECT().GetModuleAccount(gomock.Any(), gomock.AnyOf(types.ModuleName)).Return(nil).Times(1)
+
+	k, ctx := keepertest.TokenfactoryKeeper(t, nil, nil, acc)
 	tokenfactory.InitGenesis(ctx, k, genesisState)
 	got := tokenfactory.ExportGenesis(ctx, k)
 	require.NotNil(t, got)

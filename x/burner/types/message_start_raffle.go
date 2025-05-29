@@ -59,11 +59,11 @@ func (msg *MsgStartRaffle) ToStorageRaffle() (raffle Raffle, err error) {
 
 	duration, ok := math.NewIntFromString(msg.Duration)
 	if !ok {
-		return raffle, errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid duration (%s)", duration.String())
+		return raffle, errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid duration (%s)", msg.Duration)
 	}
 
 	if !duration.IsPositive() {
-		return raffle, errors.Wrapf(sdkerrors.ErrInvalidRequest, "duration should be positive (%s)", duration.String())
+		return raffle, errors.Wrapf(sdkerrors.ErrInvalidRequest, "duration should be positive (%s)", msg.Duration)
 	}
 
 	if duration.GT(math.NewInt(DurationMax)) || duration.LT(math.NewInt(DurationMin)) {

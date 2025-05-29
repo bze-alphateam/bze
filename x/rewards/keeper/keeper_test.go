@@ -37,8 +37,10 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	require.NotNil(t, mockEpoch)
 	trade := testutil.NewMockTradingKeeper(mockCtrl)
 	require.NotNil(t, trade)
+	mockAcc := testutil.NewMockAccountKeeper(mockCtrl)
+	require.NotNil(t, mockAcc)
 
-	k, ctx := keeper2.RewardsKeeper(t, mockBank, mockDistr, mockEpoch, trade)
+	k, ctx := keeper2.RewardsKeeper(t, mockBank, mockDistr, mockEpoch, trade, mockAcc)
 	suite.ctx = ctx
 	suite.k = &k
 	suite.bank = mockBank

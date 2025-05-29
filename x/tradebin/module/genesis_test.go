@@ -1,6 +1,8 @@
 package tradebin_test
 
 import (
+	"github.com/bze-alphateam/bze/x/tradebin/testutil"
+	"go.uber.org/mock/gomock"
 	"testing"
 
 	keepertest "github.com/bze-alphateam/bze/testutil/keeper"
@@ -12,20 +14,23 @@ import (
 
 func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
-		Params:	types.DefaultParams(),
-		
+		Params: types.DefaultParams(),
+
 		// this line is used by starport scaffolding # genesis/test/state
 	}
 
-	k, ctx := keepertest.TradebinKeeper(t)
+	ctrl := gomock.NewController(t)
+	acc := testutil.NewMockAccountKeeper(ctrl)
+
+	acc.EXPECT().GetModuleAccount(gomock.Any(), gomock.AnyOf(types.ModuleName)).Return(nil).Times(1)
+
+	k, ctx := keepertest.TradebinKeeper(t, nil, acc, nil)
 	tradebin.InitGenesis(ctx, k, genesisState)
 	got := tradebin.ExportGenesis(ctx, k)
 	require.NotNil(t, got)
 
 	nullify.Fill(&genesisState)
 	nullify.Fill(got)
-
-	
 
 	// this line is used by starport scaffolding # genesis/test/assert
 }

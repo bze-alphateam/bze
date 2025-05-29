@@ -90,10 +90,9 @@ func validateAnonArticleLimit(v interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
-	if anonArticleLimit < 1 {
-		return fmt.Errorf("invalid anonArticleLimit. Expected uint64 higher than 0 received %v", anonArticleLimit)
+	if anonArticleLimit < 0 {
+		return fmt.Errorf("invalid anonArticleLimit. Expected uint64 higher than or equal with 0 received %v", anonArticleLimit)
 	}
-	_ = anonArticleLimit
 
 	return nil
 }

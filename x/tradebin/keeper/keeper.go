@@ -25,7 +25,7 @@ type (
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
 		authority string
-		
+
 		onOrderFillHooks []types.OnMarketOrderFill
 	}
 )
@@ -84,4 +84,9 @@ func (k *Keeper) SetOnOrderFillHooks(hooks []types.OnMarketOrderFill) {
 
 func (k Keeper) GetOnOrderFillHooks() []types.OnMarketOrderFill {
 	return k.onOrderFillHooks
+}
+
+// InitGenesis initializes module accounts
+func (k Keeper) InitGenesis(ctx sdk.Context) {
+	_ = k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 }

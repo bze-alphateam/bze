@@ -2,6 +2,7 @@ package app_test
 
 import (
 	"fmt"
+	"github.com/bze-alphateam/bze/app"
 	"os"
 	"testing"
 
@@ -13,8 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	"github.com/stretchr/testify/require"
-
-	"beezee/app"
 )
 
 // Profile with:

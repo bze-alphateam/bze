@@ -13,6 +13,7 @@ type DistrKeeper interface {
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
 type AccountKeeper interface {
 	GetAccount(context.Context, sdk.AccAddress) sdk.AccountI // only used for simulation
+	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
 	// Methods imported from account should be defined here
 }
 

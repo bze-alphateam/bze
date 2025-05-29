@@ -10,6 +10,7 @@ var _ sdk.Msg = &MsgSavePublisher{}
 
 const (
 	nameMinLen = 3
+	nameMaxLen = 256
 )
 
 func NewMsgSavePublisher(creator string, name string, address string, active bool) *MsgSavePublisher {
@@ -28,7 +29,11 @@ func (msg *MsgSavePublisher) ValidateBasic() error {
 	}
 
 	if len(msg.Name) < nameMinLen {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid name: expecting at least 3 characters")
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid name: expecting at least %d characters", nameMinLen)
+	}
+
+	if len(msg.Name) > nameMaxLen {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid name: expecting not more than %d characters", nameMaxLen)
 	}
 
 	_, err = sdk.AccAddressFromBech32(msg.Address)

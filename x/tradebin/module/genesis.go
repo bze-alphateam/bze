@@ -43,6 +43,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 	k.SetQueueMessageCounter(ctx, qmCounter)
 	k.SetOrderCounter(ctx, uint64(genState.OrderCounter))
+	k.InitGenesis(ctx)
 }
 
 // ExportGenesis returns the module's exported genesis.
