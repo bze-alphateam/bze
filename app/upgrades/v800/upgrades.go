@@ -3,6 +3,8 @@ package v800
 import (
 	"context"
 	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/nft"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	rTypes "github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,6 +12,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	"github.com/cosmos/cosmos-sdk/x/group"
 )
 
 const UpgradeName = "v8.0.0"
@@ -24,6 +27,10 @@ func CreateUpgradeHandler(
 
 	return func(c context.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		ctx := sdk.UnwrapSDKContext(c)
+		newVm, err := mm.RunMigrations(ctx, cfg, vm)
+		if err != nil {
+			return newVm, err
+		}
 
 		//we had a bug that sent staking reward fee to the Rewards module.
 		//We need to move those funds from rewards module to community pool
@@ -32,7 +39,7 @@ func CreateUpgradeHandler(
 		rBal := bank.GetBalance(ctx, rAcc, "ubze")
 		if rBal.Amount.GTE(math.NewInt(50_000_000000)) {
 			toSend := sdk.NewCoins(sdk.NewInt64Coin("ubze", 50_000_000000))
-			err := distr.FundCommunityPool(ctx, toSend, rAcc)
+			err = distr.FundCommunityPool(ctx, toSend, rAcc)
 			if err != nil {
 				ctx.Logger().Error("could not migrate funds from rewards module to community pool", "error", err)
 			} else {
@@ -40,6 +47,13 @@ func CreateUpgradeHandler(
 			}
 		}
 
-		return mm.RunMigrations(ctx, cfg, vm)
+		return newVm, nil
+	}
+}
+
+func GetStoreUpgrades() *storetypes.StoreUpgrades {
+	return &storetypes.StoreUpgrades{
+		Added:   []string{nft.ModuleName, group.ModuleName},
+		Deleted: []string{"scavenge"},
 	}
 }

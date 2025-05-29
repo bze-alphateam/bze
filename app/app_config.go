@@ -34,15 +34,21 @@ import (
 	burnermodulev1 "github.com/bze-alphateam/bze/api/bze/burner/module"
 	cointrunkmodulev1 "github.com/bze-alphateam/bze/api/bze/cointrunk/module"
 	epochmodulev1 "github.com/bze-alphateam/bze/api/bze/epochs/module"
+	rewardsmodulev1 "github.com/bze-alphateam/bze/api/bze/rewards/module"
 	tokenfactorymodulev1 "github.com/bze-alphateam/bze/api/bze/tokenfactory/module"
+	tradebinmodulev1 "github.com/bze-alphateam/bze/api/bze/tradebin/module"
 	_ "github.com/bze-alphateam/bze/x/burner/module" // import for side-effects
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	_ "github.com/bze-alphateam/bze/x/cointrunk/module" // import for side-effects
 	cointrunkmoduletypes "github.com/bze-alphateam/bze/x/cointrunk/types"
 	_ "github.com/bze-alphateam/bze/x/epochs/module" // import for side-effects
 	epochmoduletypes "github.com/bze-alphateam/bze/x/epochs/types"
+	_ "github.com/bze-alphateam/bze/x/rewards/module" // import for side-effects
+	rewardsmoduletypes "github.com/bze-alphateam/bze/x/rewards/types"
 	_ "github.com/bze-alphateam/bze/x/tokenfactory/module" // import for side-effects
 	tokenfactorymoduletypes "github.com/bze-alphateam/bze/x/tokenfactory/types"
+	_ "github.com/bze-alphateam/bze/x/tradebin/module" // import for side-effects
+	tradebinmoduletypes "github.com/bze-alphateam/bze/x/tradebin/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -64,13 +70,7 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	"google.golang.org/protobuf/types/known/durationpb"
-	rewardsmodulev1 "github.com/bze-alphateam/bze/api/bze/rewards/module"
-_ "github.com/bze-alphateam/bze/x/rewards/module" // import for side-effects
-rewardsmoduletypes "github.com/bze-alphateam/bze/x/rewards/types"
-tradebinmodulev1 "github.com/bze-alphateam/bze/api/bze/tradebin/module"
-_ "github.com/bze-alphateam/bze/x/tradebin/module" // import for side-effects
-tradebinmoduletypes "github.com/bze-alphateam/bze/x/tradebin/types"
-// this line is used by starport scaffolding # stargate/app/moduleImport
+	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
 var (
@@ -112,8 +112,8 @@ var (
 		cointrunkmoduletypes.ModuleName,
 		tokenfactorymoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
-tradebinmoduletypes.ModuleName,
-// this line is used by starport scaffolding # stargate/app/initGenesis
+		tradebinmoduletypes.ModuleName,
+		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -142,8 +142,8 @@ tradebinmoduletypes.ModuleName,
 		cointrunkmoduletypes.ModuleName,
 		tokenfactorymoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
-tradebinmoduletypes.ModuleName,
-// this line is used by starport scaffolding # stargate/app/beginBlockers
+		tradebinmoduletypes.ModuleName,
+		// this line is used by starport scaffolding # stargate/app/beginBlockers
 	}
 
 	endBlockers = []string{
@@ -166,8 +166,8 @@ tradebinmoduletypes.ModuleName,
 		cointrunkmoduletypes.ModuleName,
 		tokenfactorymoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
-tradebinmoduletypes.ModuleName,
-// this line is used by starport scaffolding # stargate/app/endBlockers
+		tradebinmoduletypes.ModuleName,
+		// this line is used by starport scaffolding # stargate/app/endBlockers
 	}
 
 	preBlockers = []string{
@@ -190,6 +190,7 @@ tradebinmoduletypes.ModuleName,
 		{Account: burnermoduletypes.ModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: burnermoduletypes.RaffleModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: tokenfactorymoduletypes.ModuleName, Permissions: []string{authtypes.Burner, authtypes.Minter}},
+		{Account: tradebinmoduletypes.ModuleName, Permissions: []string{authtypes.Burner, authtypes.Minter}},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 
@@ -345,11 +346,11 @@ tradebinmoduletypes.ModuleName,
 				Name:   rewardsmoduletypes.ModuleName,
 				Config: appconfig.WrapAny(&rewardsmodulev1.Module{}),
 			},
-{
+			{
 				Name:   tradebinmoduletypes.ModuleName,
 				Config: appconfig.WrapAny(&tradebinmodulev1.Module{}),
 			},
-// this line is used by starport scaffolding # stargate/app/moduleConfig
+			// this line is used by starport scaffolding # stargate/app/moduleConfig
 		},
 	})
 )

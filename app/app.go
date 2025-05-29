@@ -1,6 +1,7 @@
 package app
 
 import (
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	v800 "github.com/bze-alphateam/bze/app/upgrades/v800"
 	"io"
 
@@ -323,6 +324,16 @@ func (app *App) setupUpgradeHandlers() {
 		v800.UpgradeName,
 		v800.CreateUpgradeHandler(app.Configurator(), app.ModuleManager, app.BankKeeper, app.DistrKeeper, app.AccountKeeper),
 	)
+
+	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(err)
+	}
+
+	if upgradeInfo.Name == v800.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := v800.GetStoreUpgrades()
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
+	}
 }
 
 // LegacyAmino returns App's amino codec.
