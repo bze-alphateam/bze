@@ -1,6 +1,7 @@
 package v610
 
 import (
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/bze-alphateam/bze/app/upgrades"
 )
 

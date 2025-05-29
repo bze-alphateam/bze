@@ -1,6 +1,7 @@
 package app
 
 import (
+	v800 "github.com/bze-alphateam/bze/app/upgrades/v800"
 	"io"
 
 	epochmoduletypes "github.com/bze-alphateam/bze/x/epochs/types"
@@ -287,7 +288,6 @@ func New(
 	}
 
 	/****  Module Options ****/
-
 	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
@@ -298,6 +298,7 @@ func New(
 	app.sm.RegisterStoreDecoders()
 	app.setEpochsHooks()
 	app.setTradebinHooks()
+	app.setupUpgradeHandlers()
 
 	// A custom InitChainer sets if extra pre-init-genesis logic is required.
 	// This is necessary for manually registered modules that do not support app wiring.
@@ -315,6 +316,13 @@ func New(
 	}
 
 	return app, nil
+}
+
+func (app *App) setupUpgradeHandlers() {
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v800.UpgradeName,
+		v800.CreateUpgradeHandler(app.Configurator(), app.ModuleManager, app.BankKeeper, app.DistrKeeper, app.AccountKeeper),
+	)
 }
 
 // LegacyAmino returns App's amino codec.
