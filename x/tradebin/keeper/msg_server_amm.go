@@ -5,6 +5,7 @@ import (
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"fmt"
+	"github.com/bze-alphateam/bze/bzeutils"
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -310,6 +311,12 @@ func (k msgServer) MultiSwap(goCtx context.Context, msg *types.MsgMultiSwap) (*t
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidCoins, "could not send bought coins %s", err.Error())
 	}
 
+	//capture market taker trading fee
+	_, err = k.captureTradingFees(ctx, creatorAcc, true)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to pay trading fees")
+	}
+
 	return &types.MsgMultiSwapResponse{
 		Output: outputCoin,
 	}, nil
@@ -515,7 +522,14 @@ func (k msgServer) swapTokens(ctx sdk.Context, input sdk.Coin, pool *types.Liqui
 
 	k.SetLiquidityPool(ctx, *pool)
 
-	err = ctx.EventManager().EmitTypedEvent(
+	//emit event and call order executed hooks
+	k.onSwapSuccess(ctx, pool, userAddress, input, output)
+
+	return output, nil
+}
+
+func (k msgServer) onSwapSuccess(ctx sdk.Context, pool *types.LiquidityPool, userAddress sdk.AccAddress, input, output sdk.Coin) {
+	err := ctx.EventManager().EmitTypedEvent(
 		&types.SwapEvent{
 			Creator: userAddress.String(),
 			PoolId:  pool.GetId(),
@@ -528,7 +542,25 @@ func (k msgServer) swapTokens(ctx sdk.Context, input sdk.Coin, pool *types.Liqui
 		k.Logger().Error(err.Error())
 	}
 
-	return output, nil
+	//order hooks should be called with the amount traded of the base denomination
+	baseAmount := input.Amount
+	if pool.GetBase() == output.Denom {
+		baseAmount = output.Amount
+	}
+
+	//call hooks for the filled order
+	for _, h := range k.GetOnOrderFillHooks() {
+		wrappedFn := func(ctx sdk.Context) error {
+			h(ctx, pool.GetId(), baseAmount.String(), userAddress.String())
+
+			return nil
+		}
+
+		err = bzeutils.ApplyFuncIfNoError(ctx, wrappedFn)
+		if err != nil {
+			k.Logger().Error(err.Error())
+		}
+	}
 }
 
 // collectSwapFee - calculates the distribution of the fee, and it returns the part of the fee that should be added to
