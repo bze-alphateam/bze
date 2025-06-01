@@ -44,6 +44,7 @@ message MsgUpdateParamsResponse {}
 
 
 message MsgFundBurner {
+  option (amino.name) = "bze/x/burner/MsgFundBurner";
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string amount = 2;
@@ -53,6 +54,7 @@ message MsgFundBurnerResponse {
 }
 
 message MsgStartRaffle {
+  option (amino.name) = "bze/x/burner/MsgStartRaffle";
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string pot = 2;
@@ -67,6 +69,7 @@ message MsgStartRaffleResponse {
 }
 
 message MsgJoinRaffle {
+  option (amino.name) = "bze/x/burner/MsgJoinRaffle";
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string denom = 2;

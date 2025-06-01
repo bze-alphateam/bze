@@ -43,6 +43,7 @@ message MsgUpdateParams {
 message MsgUpdateParamsResponse {}
 
 message MsgCreateDenom {
+  option           (amino.name) = "bze/x/tokenfactory/MsgCreateDenom";
   option (cosmos.msg.v1.signer) = "creator";
   string creator  = 1;
   string subdenom = 2;
@@ -53,6 +54,7 @@ message MsgCreateDenomResponse {
 }
 
 message MsgMint {
+  option           (amino.name) = "bze/x/tokenfactory/MsgMint";
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string coins   = 2;
@@ -61,6 +63,7 @@ message MsgMint {
 message MsgMintResponse {}
 
 message MsgBurn {
+  option           (amino.name) = "bze/x/tokenfactory/MsgBurn";
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string coins   = 2;
@@ -69,6 +72,7 @@ message MsgBurn {
 message MsgBurnResponse {}
 
 message MsgChangeAdmin {
+  option           (amino.name) = "bze/x/tokenfactory/MsgChangeAdmin";
   option (cosmos.msg.v1.signer) = "creator";
   string creator  = 1;
   string denom    = 2;
@@ -78,6 +82,7 @@ message MsgChangeAdmin {
 message MsgChangeAdminResponse {}
 
 message MsgSetDenomMetadata {
+  option           (amino.name) = "bze/x/tokenfactory/MsgSetDenomMetadata";
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
 

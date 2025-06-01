@@ -45,6 +45,7 @@ message MsgUpdateParams {
 message MsgUpdateParamsResponse {}
 
 message MsgCreateStakingReward {
+  option           (amino.name) = "bze/x/rewards/MsgCreateStakingReward";
   option (cosmos.msg.v1.signer) = "creator";
   string creator       = 1;
   string prize_amount  = 2;
@@ -60,6 +61,7 @@ message MsgCreateStakingRewardResponse {
 }
 
 message MsgUpdateStakingReward {
+  option           (amino.name) = "bze/x/rewards/MsgUpdateStakingReward";
   option (cosmos.msg.v1.signer) = "creator";
   string creator   = 1;
   string reward_id = 2;
@@ -69,6 +71,7 @@ message MsgUpdateStakingReward {
 message MsgUpdateStakingRewardResponse {}
 
 message MsgJoinStaking {
+  option           (amino.name) = "bze/x/rewards/MsgJoinStaking";
   option (cosmos.msg.v1.signer) = "creator";
   string creator   = 1;
   string reward_id = 2;
@@ -78,6 +81,7 @@ message MsgJoinStaking {
 message MsgJoinStakingResponse {}
 
 message MsgExitStaking {
+  option           (amino.name) = "bze/x/rewards/MsgExitStaking";
   option (cosmos.msg.v1.signer) = "creator";
   string creator   = 1;
   string reward_id = 2;
@@ -86,6 +90,7 @@ message MsgExitStaking {
 message MsgExitStakingResponse {}
 
 message MsgClaimStakingRewards {
+  option           (amino.name) = "bze/x/rewards/MsgClaimStakingRewards";
   option (cosmos.msg.v1.signer) = "creator";
   string creator   = 1;
   string reward_id = 2;
@@ -96,6 +101,7 @@ message MsgClaimStakingRewardsResponse {
 }
 
 message MsgDistributeStakingRewards {
+  option           (amino.name) = "bze/x/rewards/MsgDistributeStakingRewards";
   option (cosmos.msg.v1.signer) = "creator";
   string creator   = 1;
   string reward_id = 2;
@@ -105,6 +111,7 @@ message MsgDistributeStakingRewards {
 message MsgDistributeStakingRewardsResponse {}
 
 message MsgCreateTradingReward {
+  option           (amino.name) = "bze/x/rewards/MsgCreateTradingReward";
   option (cosmos.msg.v1.signer) = "creator";
   string creator      = 1;
   string prize_amount = 2;
@@ -119,6 +126,7 @@ message MsgCreateTradingRewardResponse {
 }
 
 message MsgActivateTradingReward {
+  option           (amino.name) = "bze/x/rewards/MsgActivateTradingReward";
   option (cosmos.msg.v1.signer) = "creator";
   string creator  = 1;
   string reward_id = 2;
