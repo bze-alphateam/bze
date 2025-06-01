@@ -62,9 +62,3 @@ func (k Keeper) GetAuthority() string {
 func (k Keeper) Logger() log.Logger {
 	return k.logger.With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
-
-// InitGenesis initializes module accounts
-func (k Keeper) InitGenesis(ctx sdk.Context) {
-	_ = k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
-	_ = k.accountKeeper.GetModuleAccount(ctx, types.RaffleModuleName)
-}

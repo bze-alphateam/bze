@@ -108,8 +108,3 @@ func (k Keeper) getNewTradingRewardExpireAt(ctx sdk.Context) uint32 {
 
 	return cnt + expirationPeriodInHours
 }
-
-// InitGenesis initializes module accounts
-func (k Keeper) InitGenesis(ctx sdk.Context) {
-	_ = k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
-}

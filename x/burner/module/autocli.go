@@ -63,8 +63,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "JoinRaffle",
-					Use:            "join-raffle [denom]",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+					Use:            "join-raffle [denom] [tickets]",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}, {ProtoField: "tickets"}},
 				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},

@@ -60,7 +60,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// this line is used by starport scaffolding # genesis/module/init
 	k.SetTradingRewardsCounter(ctx, genState.TradingRewardsCounter)
 	k.SetStakingRewardsCounter(ctx, genState.StakingRewardsCounter)
-	k.InitGenesis(ctx)
 }
 
 // ExportGenesis returns the module's exported genesis.

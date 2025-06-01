@@ -35,7 +35,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	k.SetParticipantCounter(ctx, genState.RaffleParticipantCounter)
-	k.InitGenesis(ctx)
 }
 
 // ExportGenesis returns the module's exported genesis.
