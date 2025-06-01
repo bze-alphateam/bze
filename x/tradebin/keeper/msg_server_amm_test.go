@@ -1365,6 +1365,15 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SinglePool_Success() {
 		).
 		Return(nil)
 
+	expectedFee, _ := sdk.ParseCoinsNormalized(types.DefaultMarketTakerFee)
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(
+			suite.ctx,
+			creator,
+			types.FeeDestinationBurnerModule,
+			expectedFee,
+		).
+		Return(nil)
 	// Since the fee is so small, treasury and burner parts round to 0
 	// But verify that any fee would be handled correctly
 	suite.bankMock.EXPECT().
@@ -1495,6 +1504,15 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_MultiPool_Success() {
 		Times(1).
 		Return(nil)
 
+	expectedFee, _ := sdk.ParseCoinsNormalized(types.DefaultMarketTakerFee)
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(
+			suite.ctx,
+			creator,
+			types.FeeDestinationBurnerModule,
+			expectedFee,
+		).
+		Return(nil)
 	// Mock fee handling
 	suite.bankMock.EXPECT().
 		SendCoinsFromModuleToModule(
@@ -1912,6 +1930,15 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_ZeroFeeDest() {
 			sdk.NewCoins(expectedOutput),
 		).
 		Return(nil)
+	expectedFee, _ := sdk.ParseCoinsNormalized(types.DefaultMarketTakerFee)
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(
+			suite.ctx,
+			creator,
+			types.FeeDestinationBurnerModule,
+			expectedFee,
+		).
+		Return(nil)
 
 	// Execute swap
 	ctx := sdk.WrapSDKContext(suite.ctx)
@@ -1991,6 +2018,16 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_FeeDistribution() {
 			creator,
 			types.ModuleName,
 			sdk.NewCoins(inputCoin),
+		).
+		Return(nil)
+
+	expectedFee, _ := sdk.ParseCoinsNormalized(types.DefaultMarketTakerFee)
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(
+			suite.ctx,
+			creator,
+			types.FeeDestinationBurnerModule,
+			expectedFee,
 		).
 		Return(nil)
 
@@ -2078,6 +2115,16 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SmallFeeAmount() {
 		Creator: creator.String(),
 	}
 	suite.k.SetLiquidityPool(suite.ctx, pool)
+
+	expectedFee, _ := sdk.ParseCoinsNormalized(types.DefaultMarketTakerFee)
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(
+			suite.ctx,
+			creator,
+			types.FeeDestinationBurnerModule,
+			expectedFee,
+		).
+		Return(nil)
 
 	// Create swap message with very small amount
 	// Fee would be 10 * 0.003 = 0.03, which should result in all parts being truncated to 0
