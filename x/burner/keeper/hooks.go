@@ -76,7 +76,7 @@ func (k Keeper) burnerRaffleCleanup(ctx sdk.Context, epochNumber int64) {
 			continue
 		}
 
-		err := k.bankKeeper.BurnCoins(ctx, types.RaffleModuleName, sdk.NewCoins(currentPot))
+		err := k.BurnAnyCoins(ctx, types.RaffleModuleName, sdk.NewCoins(currentPot))
 		if err != nil {
 			logger.Error("failed to burn raffle remaining coins", "error", err)
 			continue

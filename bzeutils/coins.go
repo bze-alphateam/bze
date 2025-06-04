@@ -9,3 +9,7 @@ func IsIBCDenom(denom string) bool {
 func IsLpTokenDenom(denom string) bool {
 	return strings.HasPrefix(denom, "ulp_")
 }
+
+func IsTokenFactoryDenom(denom string) bool {
+	return strings.HasPrefix(denom, "factory/")
+}

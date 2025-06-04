@@ -5,7 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func (suite *IntegrationTestSuite) TestSetAndGetRaffle() {
+func (suite *IntegrationTestSuite) TestStoreRaffle_SetAndGetRaffle() {
 	// Test data
 	raffle := types.Raffle{
 		Pot:         "1000utoken",
@@ -40,7 +40,7 @@ func (suite *IntegrationTestSuite) TestSetAndGetRaffle() {
 	require.False(suite.T(), found)
 }
 
-func (suite *IntegrationTestSuite) TestGetAllRaffle() {
+func (suite *IntegrationTestSuite) TestStoreRaffle_GetAllRaffle() {
 	// Create multiple raffles
 	raffles := []types.Raffle{
 		{
@@ -107,7 +107,7 @@ func (suite *IntegrationTestSuite) TestGetAllRaffle() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestRemoveRaffle() {
+func (suite *IntegrationTestSuite) TestStoreRaffle_RemoveRaffle() {
 	// Create and set a raffle
 	raffle := types.Raffle{
 		Pot:         "1000utoken",
@@ -138,7 +138,7 @@ func (suite *IntegrationTestSuite) TestRemoveRaffle() {
 	require.Len(suite.T(), allRaffles, 0)
 }
 
-func (suite *IntegrationTestSuite) TestSetAndRemoveRaffleDeleteHook() {
+func (suite *IntegrationTestSuite) TestStoreRaffle_SetAndRemoveRaffleDeleteHook() {
 	// Test data
 	deleteHook := types.RaffleDeleteHook{
 		Denom: "utoken",
@@ -162,7 +162,7 @@ func (suite *IntegrationTestSuite) TestSetAndRemoveRaffleDeleteHook() {
 	require.Len(suite.T(), hooks, 0)
 }
 
-func (suite *IntegrationTestSuite) TestGetRaffleDeleteHookByEndAtPrefix() {
+func (suite *IntegrationTestSuite) TestStoreRaffle_GetRaffleDeleteHookByEndAtPrefix() {
 	// Create multiple delete hooks with same EndAt
 	endAt := uint64(12345)
 	hooks := []types.RaffleDeleteHook{
@@ -197,7 +197,7 @@ func (suite *IntegrationTestSuite) TestGetRaffleDeleteHookByEndAtPrefix() {
 	require.False(suite.T(), denomMap["utoken4"])
 }
 
-func (suite *IntegrationTestSuite) TestSetAndGetRaffleWinners() {
+func (suite *IntegrationTestSuite) TestStoreRaffle_SetAndGetRaffleWinners() {
 	denom := "utoken"
 	winners := []types.RaffleWinner{
 		{Index: "1", Denom: denom, Amount: "100utoken", Winner: "addr1"},
@@ -229,7 +229,7 @@ func (suite *IntegrationTestSuite) TestSetAndGetRaffleWinners() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestRemoveRaffleWinner() {
+func (suite *IntegrationTestSuite) TestStoreRaffle_RemoveRaffleWinner() {
 	// Create and set winners
 	winner1 := types.RaffleWinner{Index: "1", Denom: "utoken", Amount: "100utoken", Winner: "addr1"}
 	winner2 := types.RaffleWinner{Index: "2", Denom: "utoken", Amount: "200utoken", Winner: "addr2"}
@@ -252,7 +252,7 @@ func (suite *IntegrationTestSuite) TestRemoveRaffleWinner() {
 	require.Equal(suite.T(), winner2.Winner, winners[0].Winner)
 }
 
-func (suite *IntegrationTestSuite) TestSetAndGetRaffleParticipants() {
+func (suite *IntegrationTestSuite) TestStoreRaffle_SetAndGetRaffleParticipants() {
 	executeAt := int64(12345)
 	participants := []types.RaffleParticipant{
 		{Index: 1, Denom: "utoken", Participant: "addr1", ExecuteAt: executeAt},
@@ -284,7 +284,7 @@ func (suite *IntegrationTestSuite) TestSetAndGetRaffleParticipants() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestGetAllRaffleParticipants() {
+func (suite *IntegrationTestSuite) TestStoreRaffle_GetAllRaffleParticipants() {
 	// Create participants with different ExecuteAt values
 	participants := []types.RaffleParticipant{
 		{Index: 1, Denom: "utoken1", Participant: "addr1", ExecuteAt: 100},
@@ -316,7 +316,7 @@ func (suite *IntegrationTestSuite) TestGetAllRaffleParticipants() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestRemoveRaffleParticipant() {
+func (suite *IntegrationTestSuite) TestStoreRaffle_RemoveRaffleParticipant() {
 	// Create and set participants
 	participant1 := types.RaffleParticipant{Index: 1, Denom: "utoken", Participant: "addr1", ExecuteAt: 12345}
 	participant2 := types.RaffleParticipant{Index: 2, Denom: "utoken", Participant: "addr2", ExecuteAt: 12345}
@@ -339,7 +339,7 @@ func (suite *IntegrationTestSuite) TestRemoveRaffleParticipant() {
 	require.Equal(suite.T(), participant2.Participant, participants[0].Participant)
 }
 
-func (suite *IntegrationTestSuite) TestParticipantCounter() {
+func (suite *IntegrationTestSuite) TestStoreRaffle_ParticipantCounter() {
 	// Test initial counter value
 	counter := suite.k.GetParticipantCounter(suite.ctx)
 	require.Equal(suite.T(), uint64(0), counter)
@@ -374,7 +374,7 @@ func (suite *IntegrationTestSuite) TestParticipantCounter() {
 	require.Equal(suite.T(), uint64(102), counter)
 }
 
-func (suite *IntegrationTestSuite) TestParticipantCounterBinaryEncoding() {
+func (suite *IntegrationTestSuite) TestStoreRaffle_ParticipantCounterBinaryEncoding() {
 	// Test edge cases for binary encoding
 	testValues := []uint64{0, 1, 255, 256, 65535, 65536, 4294967295, 4294967296}
 

@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *IntegrationTestSuite) TestFundBurner_ValidRequest() {
+func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_ValidRequest() {
 	creator := sdk.AccAddress("creator").String()
 	amount := "1000utoken,500stake"
 
@@ -36,7 +36,7 @@ func (suite *IntegrationTestSuite) TestFundBurner_ValidRequest() {
 	suite.Require().NotNil(res)
 }
 
-func (suite *IntegrationTestSuite) TestFundBurner_InvalidAmount() {
+func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_InvalidAmount() {
 	msg := &types.MsgFundBurner{
 		Creator: sdk.AccAddress("creator").String(),
 		Amount:  "invalid-amount",
@@ -48,7 +48,7 @@ func (suite *IntegrationTestSuite) TestFundBurner_InvalidAmount() {
 	suite.Require().Nil(res)
 }
 
-func (suite *IntegrationTestSuite) TestFundBurner_InvalidCreatorAddress() {
+func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_InvalidCreatorAddress() {
 	msg := &types.MsgFundBurner{
 		Creator: "invalid-address",
 		Amount:  "1000utoken",
@@ -60,7 +60,7 @@ func (suite *IntegrationTestSuite) TestFundBurner_InvalidCreatorAddress() {
 	suite.Require().Nil(res)
 }
 
-func (suite *IntegrationTestSuite) TestFundBurner_BankKeeperError() {
+func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_BankKeeperError() {
 	creator := sdk.AccAddress("creator").String()
 	amount := "1000utoken"
 
@@ -91,7 +91,7 @@ func (suite *IntegrationTestSuite) TestFundBurner_BankKeeperError() {
 	suite.Require().Equal(bankError, err)
 }
 
-func (suite *IntegrationTestSuite) TestFundBurner_EmptyAmount() {
+func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_EmptyAmount() {
 	creator := sdk.AccAddress("creator").String()
 
 	msg := &types.MsgFundBurner{
@@ -115,7 +115,7 @@ func (suite *IntegrationTestSuite) TestFundBurner_EmptyAmount() {
 	suite.Require().NotNil(res)
 }
 
-func (suite *IntegrationTestSuite) TestFundBurner_MultipleDenoms() {
+func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_MultipleDenoms() {
 	creator := sdk.AccAddress("creator").String()
 	amount := "1000utoken,500stake,100atom"
 

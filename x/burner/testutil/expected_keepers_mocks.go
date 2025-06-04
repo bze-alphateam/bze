@@ -215,6 +215,20 @@ func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderMo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToAccount", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToAccount), ctx, senderModule, recipientAddr, amt)
 }
 
+// SendCoinsFromModuleToModule mocks base method.
+func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt types.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendCoinsFromModuleToModule", ctx, senderModule, recipientModule, amt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendCoinsFromModuleToModule indicates an expected call of SendCoinsFromModuleToModule.
+func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, amt any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToModule", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToModule), ctx, senderModule, recipientModule, amt)
+}
+
 // SpendableCoins mocks base method.
 func (m *MockBankKeeper) SpendableCoins(ctx context.Context, addr types.AccAddress) types.Coins {
 	m.ctrl.T.Helper()
@@ -227,6 +241,73 @@ func (m *MockBankKeeper) SpendableCoins(ctx context.Context, addr types.AccAddre
 func (mr *MockBankKeeperMockRecorder) SpendableCoins(ctx, addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpendableCoins", reflect.TypeOf((*MockBankKeeper)(nil).SpendableCoins), ctx, addr)
+}
+
+// MockTradeKeeper is a mock of TradeKeeper interface.
+type MockTradeKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockTradeKeeperMockRecorder
+	isgomock struct{}
+}
+
+// MockTradeKeeperMockRecorder is the mock recorder for MockTradeKeeper.
+type MockTradeKeeperMockRecorder struct {
+	mock *MockTradeKeeper
+}
+
+// NewMockTradeKeeper creates a new mock instance.
+func NewMockTradeKeeper(ctrl *gomock.Controller) *MockTradeKeeper {
+	mock := &MockTradeKeeper{ctrl: ctrl}
+	mock.recorder = &MockTradeKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockTradeKeeper) EXPECT() *MockTradeKeeperMockRecorder {
+	return m.recorder
+}
+
+// CanSwapForNativeDenom mocks base method.
+func (m *MockTradeKeeper) CanSwapForNativeDenom(ctx types.Context, denom string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CanSwapForNativeDenom", ctx, denom)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// CanSwapForNativeDenom indicates an expected call of CanSwapForNativeDenom.
+func (mr *MockTradeKeeperMockRecorder) CanSwapForNativeDenom(ctx, denom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CanSwapForNativeDenom", reflect.TypeOf((*MockTradeKeeper)(nil).CanSwapForNativeDenom), ctx, denom)
+}
+
+// IsNativeDenom mocks base method.
+func (m *MockTradeKeeper) IsNativeDenom(ctx types.Context, denom string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsNativeDenom", ctx, denom)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsNativeDenom indicates an expected call of IsNativeDenom.
+func (mr *MockTradeKeeperMockRecorder) IsNativeDenom(ctx, denom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsNativeDenom", reflect.TypeOf((*MockTradeKeeper)(nil).IsNativeDenom), ctx, denom)
+}
+
+// ModuleSwapForNativeDenom mocks base method.
+func (m *MockTradeKeeper) ModuleSwapForNativeDenom(ctx types.Context, toModule string, coins types.Coins) (types.Coin, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ModuleSwapForNativeDenom", ctx, toModule, coins)
+	ret0, _ := ret[0].(types.Coin)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ModuleSwapForNativeDenom indicates an expected call of ModuleSwapForNativeDenom.
+func (mr *MockTradeKeeperMockRecorder) ModuleSwapForNativeDenom(ctx, toModule, coins any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModuleSwapForNativeDenom", reflect.TypeOf((*MockTradeKeeper)(nil).ModuleSwapForNativeDenom), ctx, toModule, coins)
 }
 
 // MockParamSubspace is a mock of ParamSubspace interface.

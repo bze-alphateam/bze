@@ -29,6 +29,8 @@ var (
 
 	KeyTakerFeeDestination     = []byte("TakerFeeDestination")
 	DefaultTakerFeeDestination = FeeDestinationBurnerModule
+
+	DefaultNativeDenom = "ubze"
 )
 
 // ParamKeyTable the param key table for launch module
@@ -43,6 +45,7 @@ func NewParams(
 	marketTakerFee string,
 	makerFeeDestination string,
 	takerFeeDestination string,
+	nativeDenom string,
 ) Params {
 	return Params{
 		CreateMarketFee:     createMarketFee,
@@ -50,6 +53,7 @@ func NewParams(
 		MarketTakerFee:      marketTakerFee,
 		MakerFeeDestination: makerFeeDestination,
 		TakerFeeDestination: takerFeeDestination,
+		NativeDenom:         nativeDenom,
 	}
 }
 
@@ -61,6 +65,7 @@ func DefaultParams() Params {
 		DefaultMarketTakerFee,
 		DefaultMakerFeeDestination,
 		DefaultTakerFeeDestination,
+		DefaultNativeDenom,
 	)
 }
 
@@ -94,6 +99,10 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateTakerFeeDestination(p.TakerFeeDestination); err != nil {
+		return err
+	}
+
+	if err := validateNativeDenom(p.NativeDenom); err != nil {
 		return err
 	}
 
@@ -180,6 +189,19 @@ func validateTakerFeeDestination(v interface{}) error {
 func validateFeeDestination(dest string) error {
 	if dest != FeeDestinationCommunityPool && dest != FeeDestinationBurnerModule {
 		return fmt.Errorf("invalid fee destination: %s", dest)
+	}
+
+	return nil
+}
+
+func validateNativeDenom(v interface{}) error {
+	nativeDenom, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("invalid native denom parameter type: %T", v)
+	}
+
+	if nativeDenom == "" {
+		return fmt.Errorf("native denom cannot be an empty string")
 	}
 
 	return nil

@@ -18,6 +18,8 @@ func Migrate(
 	var currParams types.Params
 	legacySubspace.GetParamSet(ctx, &currParams)
 
+	currParams.NativeDenom = types.DefaultNativeDenom
+	
 	if err := currParams.Validate(); err != nil {
 		return err
 	}

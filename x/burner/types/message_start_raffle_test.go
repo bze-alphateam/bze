@@ -391,7 +391,7 @@ func TestMsgStartRaffle_ValidateBasic(t *testing.T) {
 				TicketPrice: validTicketPrice,
 				Denom:       "ibc/ABC123",
 			},
-			err: sdkerrors.ErrInvalidCoins,
+			err: nil,
 		},
 		{
 			name: "valid message - minimum values",
@@ -474,47 +474,4 @@ func TestMsgStartRaffle_ToStorageRaffle(t *testing.T) {
 	require.Equal(t, "0.5", raffle.Ratio)
 	require.Equal(t, "10", raffle.TicketPrice)
 	require.Equal(t, "utoken", raffle.Denom)
-}
-
-func TestMsgStartRaffle_isAllowedDenomForRaffle(t *testing.T) {
-	msg := &MsgStartRaffle{}
-
-	tests := []struct {
-		name     string
-		denom    string
-		expected bool
-	}{
-		{
-			name:     "allowed denom - utoken",
-			denom:    "utoken",
-			expected: true,
-		},
-		{
-			name:     "allowed denom - ustake",
-			denom:    "ustake",
-			expected: true,
-		},
-		{
-			name:     "not allowed denom - ibc token",
-			denom:    "ibc/ABC123",
-			expected: false,
-		},
-		{
-			name:     "not allowed denom - ibc token long",
-			denom:    "ibc/ABCDEF1234567890",
-			expected: false,
-		},
-		{
-			name:     "allowed denom - contains ibc but not prefix",
-			denom:    "uibc",
-			expected: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := msg.isAllowedDenomForRaffle(tt.denom)
-			require.Equal(t, tt.expected, result)
-		})
-	}
 }

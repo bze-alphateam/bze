@@ -22,8 +22,6 @@ func TestGenesis(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	acc := testutil.NewMockAccountKeeper(ctrl)
 
-	acc.EXPECT().GetModuleAccount(gomock.Any(), gomock.AnyOf(types.ModuleName)).Return(nil).Times(1)
-
 	k, ctx := keepertest.TokenfactoryKeeper(t, nil, nil, acc)
 	tokenfactory.InitGenesis(ctx, k, genesisState)
 	got := tokenfactory.ExportGenesis(ctx, k)

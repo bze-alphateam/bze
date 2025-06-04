@@ -222,6 +222,7 @@ type ModuleInputs struct {
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
 	EpochKeeper   types.EpochKeeper
+	TradeKeeper   types.TradeKeeper `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
@@ -248,6 +249,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.BankKeeper,
 		in.AccountKeeper,
 		in.EpochKeeper,
+		in.TradeKeeper,
 	)
 	m := NewAppModule(
 		in.Cdc,

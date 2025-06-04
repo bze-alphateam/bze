@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *IntegrationTestSuite) TestSetAndGetBurnedCoins() {
+func (suite *IntegrationTestSuite) TestStoreBurn_SetAndGetBurnedCoins() {
 	// Test data
 	burnedCoins := types.BurnedCoins{
 		Burned: "1000utoken,500stake",
@@ -26,7 +26,7 @@ func (suite *IntegrationTestSuite) TestSetAndGetBurnedCoins() {
 	suite.Require().False(found)
 }
 
-func (suite *IntegrationTestSuite) TestGetAllBurnedCoins() {
+func (suite *IntegrationTestSuite) TestStoreBurn_GetAllBurnedCoins() {
 	// Create multiple burned coins entries
 	burnedCoinsEntries := []types.BurnedCoins{
 		{
@@ -65,7 +65,7 @@ func (suite *IntegrationTestSuite) TestGetAllBurnedCoins() {
 	}
 }
 
-func (suite *IntegrationTestSuite) TestSaveBurnedCoins_NewEntry() {
+func (suite *IntegrationTestSuite) TestStoreBurn_SaveBurnedCoins_NewEntry() {
 	// Create coins to burn
 	coins := sdk.NewCoins(
 		sdk.NewInt64Coin("utoken", 1000),
@@ -88,7 +88,7 @@ func (suite *IntegrationTestSuite) TestSaveBurnedCoins_NewEntry() {
 	suite.Require().Equal("500stake,1000utoken", burnedCoins.Burned)
 }
 
-func (suite *IntegrationTestSuite) TestSaveBurnedCoins_ExistingEntry() {
+func (suite *IntegrationTestSuite) TestStoreBurn_SaveBurnedCoins_ExistingEntry() {
 	// Set up initial burned coins entry
 	initialBurnedCoins := types.BurnedCoins{
 		Burned: "1000utoken,500stake",
@@ -129,7 +129,7 @@ func (suite *IntegrationTestSuite) TestSaveBurnedCoins_ExistingEntry() {
 	suite.Require().True(totalBurned.Equal(expectedCoins))
 }
 
-func (suite *IntegrationTestSuite) TestSaveBurnedCoins_EmptyCoins() {
+func (suite *IntegrationTestSuite) TestStoreBurn_SaveBurnedCoins_EmptyCoins() {
 	// Create empty coins
 	emptyCoins := sdk.NewCoins()
 
@@ -149,7 +149,7 @@ func (suite *IntegrationTestSuite) TestSaveBurnedCoins_EmptyCoins() {
 	suite.Require().Equal("", burnedCoins.Burned)
 }
 
-func (suite *IntegrationTestSuite) TestSaveBurnedCoins_MultipleHeights() {
+func (suite *IntegrationTestSuite) TestStoreBurn_SaveBurnedCoins_MultipleHeights() {
 	// Test saving burned coins at different heights
 	testCases := []struct {
 		height int64
@@ -196,7 +196,7 @@ func (suite *IntegrationTestSuite) TestSaveBurnedCoins_MultipleHeights() {
 	suite.Require().Len(allBurnedCoins, 3)
 }
 
-func (suite *IntegrationTestSuite) TestSaveBurnedCoins_LargeHeight() {
+func (suite *IntegrationTestSuite) TestStoreBurn_SaveBurnedCoins_LargeHeight() {
 	// Test with very large height number
 	largeHeight := "999999999999999999"
 	coins := sdk.NewCoins(sdk.NewInt64Coin("ubze", 1000000))

@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/math"
 	"fmt"
 	"github.com/bze-alphateam/bze/bzeutils"
-	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -290,10 +289,16 @@ func (k msgServer) MultiSwap(goCtx context.Context, msg *types.MsgMultiSwap) (*t
 	outputCoin := *ic
 	for _, pool := range pools {
 		//use the result as outputCoin for next pool swap
-		outputCoin, err = k.swapTokens(ctx, outputCoin, &pool, creatorAcc)
+		oc, err := k.swapTokens(ctx, outputCoin, &pool)
 		if err != nil {
 			return nil, errors.Wrapf(types.ErrInvalidPoolSwap, "swap failed on pool %s: %s", pool.GetId(), err.Error())
 		}
+
+		//emit event and call order executed hooks
+		k.onSwapSuccess(ctx, &pool, creatorAcc, outputCoin, oc)
+
+		//modify output coin (which becomes input in next interation) with the resulted coins from the swap
+		outputCoin = oc
 	}
 
 	//last outputCoin should be expected output
@@ -353,6 +358,11 @@ func (k msgServer) mintInitialLpTokens(ctx sdk.Context, baseCoin, quoteCoin sdk.
 	// Scale by a multiplier to preserve precision
 	multiplier := math.LegacyNewDec(10).Power(sharesScaleExponent)
 	scaledLiquidity := sqrtProduct.Mul(multiplier).TruncateInt()
+	if !scaledLiquidity.IsPositive() {
+		err = errors.Wrap(sdkerrors.ErrInvalidCoins, "initial liquidity provided is too low to mint LP tokens")
+		return
+	}
+
 	//create the LP coin
 	lpTokens = sdk.NewCoin(lp.GetLpDenom(), scaledLiquidity)
 	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(lpTokens))
@@ -490,44 +500,6 @@ func (k msgServer) mintDepositLpTokens(ctx sdk.Context, baseAmount, quoteAmount,
 	return mintedLp, nil
 }
 
-func (k msgServer) swapTokens(ctx sdk.Context, input sdk.Coin, pool *types.LiquidityPool, userAddress sdk.AccAddress) (output sdk.Coin, err error) {
-	if !pool.HasDenom(input.Denom) {
-		return output, fmt.Errorf("denom %s does not exist in pool %s", input.Denom, pool.GetId())
-	}
-
-	realInput, fee := k.calculateSwapInputAndFee(input, pool)
-	feeToPool, err := k.collectSwapFee(ctx, fee, pool)
-	if err != nil {
-		return output, err
-	}
-
-	inputReserve, outputReserve := pool.GetReservesCoinsByDenom(input.Denom)
-
-	//output_reserve x real_input (the input - fee)
-	prod := math.LegacyNewDecFromInt(outputReserve.Amount.Mul(realInput.Amount))
-
-	//input_reserve + real_input (the input - fee)
-	quo := math.LegacyNewDecFromInt(inputReserve.Amount.Add(realInput.Amount))
-	if !quo.IsPositive() || !prod.IsPositive() {
-		return output, fmt.Errorf("non positive product or quotient on swap tokens")
-	}
-
-	outputAmount := prod.Quo(quo).TruncateInt()
-	output = sdk.NewCoin(outputReserve.Denom, outputAmount)
-	//add the part of the fee that should remain in the LP (as LP Reward to LP providers)
-	err = pool.ChangeReserves(realInput.Add(feeToPool), output)
-	if err != nil {
-		return output, err
-	}
-
-	k.SetLiquidityPool(ctx, *pool)
-
-	//emit event and call order executed hooks
-	k.onSwapSuccess(ctx, pool, userAddress, input, output)
-
-	return output, nil
-}
-
 func (k msgServer) onSwapSuccess(ctx sdk.Context, pool *types.LiquidityPool, userAddress sdk.AccAddress, input, output sdk.Coin) {
 	err := ctx.EventManager().EmitTypedEvent(
 		&types.SwapEvent{
@@ -561,55 +533,6 @@ func (k msgServer) onSwapSuccess(ctx sdk.Context, pool *types.LiquidityPool, use
 			k.Logger().Error(err.Error())
 		}
 	}
-}
-
-// collectSwapFee - calculates the distribution of the fee, and it returns the part of the fee that should be added to
-// LP (for LP Providers rewards)
-func (k msgServer) collectSwapFee(ctx sdk.Context, fee sdk.Coin, pool *types.LiquidityPool) (sdk.Coin, error) {
-	if !fee.IsPositive() {
-		//return 0 coin
-		return sdk.NewCoin(fee.Denom, math.ZeroInt()), nil
-	}
-
-	feeDec := math.LegacyNewDecFromInt(fee.Amount)
-	treasury := sdk.NewCoin(fee.Denom, feeDec.Mul(pool.FeeDest.Treasury).TruncateInt())
-	if treasury.IsPositive() {
-		fee = fee.Sub(treasury)
-		moduleAcc := k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
-		err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(treasury), moduleAcc.GetAddress())
-		if err != nil {
-			return sdk.Coin{}, err
-		}
-
-		if !fee.IsPositive() {
-
-			return sdk.NewCoin(fee.Denom, math.ZeroInt()), nil
-		}
-	}
-
-	burner := sdk.NewCoin(fee.Denom, feeDec.Mul(pool.FeeDest.Burner).TruncateInt())
-	if burner.IsPositive() {
-		fee = fee.Sub(burner)
-		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, burnermoduletypes.ModuleName, sdk.NewCoins(burner))
-		if err != nil {
-			return sdk.Coin{}, err
-		}
-	}
-
-	//just to make sure it's never negative (thinking that truncating the Dec might result in 0 or even negative value)
-	if !fee.IsPositive() {
-		//return 0 coin
-		return sdk.NewCoin(fee.Denom, math.ZeroInt()), nil
-	}
-
-	return fee, nil
-}
-
-func (k msgServer) calculateSwapInputAndFee(input sdk.Coin, pool *types.LiquidityPool) (remainingInput, fee sdk.Coin) {
-	feeAmount := math.LegacyNewDecFromInt(input.Amount).Mul(pool.Fee).TruncateInt()
-	rAmount := input.Amount.Sub(feeAmount)
-
-	return sdk.NewCoin(input.GetDenom(), rAmount), sdk.NewCoin(input.GetDenom(), feeAmount)
 }
 
 func (k msgServer) getRoutesPools(ctx sdk.Context, msg *types.MsgMultiSwap) (pools []types.LiquidityPool, err error) {

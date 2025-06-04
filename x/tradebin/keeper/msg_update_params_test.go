@@ -14,12 +14,16 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_ValidAuthority() {
 		MarketTakerFee:      "0.002",
 		MakerFeeDestination: "community_pool",
 		TakerFeeDestination: "burn",
+		NativeDenom:         denomBze,
 	}
 
 	msg := &types.MsgUpdateParams{
 		Authority: authority,
 		Params:    params,
 	}
+
+	// Mock bank supply check
+	suite.bankMock.EXPECT().HasSupply(suite.ctx, denomBze).Return(true).Times(1)
 
 	response, err := suite.msgServer.UpdateParams(suite.ctx, msg)
 	suite.Require().NoError(err)
@@ -32,6 +36,7 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_ValidAuthority() {
 	suite.Require().Equal(params.MarketTakerFee, retrievedParams.MarketTakerFee)
 	suite.Require().Equal(params.MakerFeeDestination, retrievedParams.MakerFeeDestination)
 	suite.Require().Equal(params.TakerFeeDestination, retrievedParams.TakerFeeDestination)
+	suite.Require().Equal(params.NativeDenom, retrievedParams.NativeDenom)
 }
 
 func (suite *IntegrationTestSuite) TestMsgUpdateParams_InvalidAuthority() {
@@ -42,6 +47,7 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_InvalidAuthority() {
 		MarketTakerFee:      "0.002",
 		MakerFeeDestination: "community_pool",
 		TakerFeeDestination: "burn",
+		NativeDenom:         denomBze,
 	}
 
 	msg := &types.MsgUpdateParams{
@@ -62,6 +68,7 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_EmptyAuthority() {
 		MarketTakerFee:      "0.002",
 		MakerFeeDestination: "community_pool",
 		TakerFeeDestination: "burn",
+		NativeDenom:         denomBze,
 	}
 
 	msg := &types.MsgUpdateParams{
@@ -75,6 +82,32 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_EmptyAuthority() {
 	suite.Require().Contains(err.Error(), "invalid authority")
 }
 
+func (suite *IntegrationTestSuite) TestMsgUpdateParams_InvalidNativeDenom() {
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	invalidDenom := "invalidenom"
+	params := types.Params{
+		CreateMarketFee:     "1000",
+		MarketMakerFee:      "0.001",
+		MarketTakerFee:      "0.002",
+		MakerFeeDestination: "community_pool",
+		TakerFeeDestination: "burn",
+		NativeDenom:         invalidDenom,
+	}
+
+	msg := &types.MsgUpdateParams{
+		Authority: authority,
+		Params:    params,
+	}
+
+	// Mock bank supply check returning false for invalid denom
+	suite.bankMock.EXPECT().HasSupply(suite.ctx, invalidDenom).Return(false).Times(1)
+
+	response, err := suite.msgServer.UpdateParams(suite.ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().Contains(err.Error(), "invalid native denom provided")
+}
+
 func (suite *IntegrationTestSuite) TestMsgUpdateParams_ZeroFees() {
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 	params := types.Params{
@@ -83,12 +116,16 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_ZeroFees() {
 		MarketTakerFee:      "0",
 		MakerFeeDestination: "",
 		TakerFeeDestination: "",
+		NativeDenom:         denomBze,
 	}
 
 	msg := &types.MsgUpdateParams{
 		Authority: authority,
 		Params:    params,
 	}
+
+	// Mock bank supply check
+	suite.bankMock.EXPECT().HasSupply(suite.ctx, denomBze).Return(true).Times(1)
 
 	response, err := suite.msgServer.UpdateParams(suite.ctx, msg)
 	suite.Require().NoError(err)
@@ -101,6 +138,7 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_ZeroFees() {
 	suite.Require().Equal("0", retrievedParams.MarketTakerFee)
 	suite.Require().Equal("", retrievedParams.MakerFeeDestination)
 	suite.Require().Equal("", retrievedParams.TakerFeeDestination)
+	suite.Require().Equal(denomBze, retrievedParams.NativeDenom)
 }
 
 func (suite *IntegrationTestSuite) TestMsgUpdateParams_DifferentDestinations() {
@@ -111,12 +149,16 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_DifferentDestinations() {
 		MarketTakerFee:      "0.001",
 		MakerFeeDestination: "validator_rewards",
 		TakerFeeDestination: "community_pool",
+		NativeDenom:         denomBze,
 	}
 
 	msg := &types.MsgUpdateParams{
 		Authority: authority,
 		Params:    params,
 	}
+
+	// Mock bank supply check
+	suite.bankMock.EXPECT().HasSupply(suite.ctx, denomBze).Return(true).Times(1)
 
 	response, err := suite.msgServer.UpdateParams(suite.ctx, msg)
 	suite.Require().NoError(err)
@@ -126,6 +168,7 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_DifferentDestinations() {
 	retrievedParams := suite.k.GetParams(suite.ctx)
 	suite.Require().Equal("validator_rewards", retrievedParams.MakerFeeDestination)
 	suite.Require().Equal("community_pool", retrievedParams.TakerFeeDestination)
+	suite.Require().Equal(denomBze, retrievedParams.NativeDenom)
 }
 
 func (suite *IntegrationTestSuite) TestMsgUpdateParams_HighFees() {
@@ -136,12 +179,16 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_HighFees() {
 		MarketTakerFee:      "0.02", // 2%
 		MakerFeeDestination: "burn",
 		TakerFeeDestination: "burn",
+		NativeDenom:         denomBze,
 	}
 
 	msg := &types.MsgUpdateParams{
 		Authority: authority,
 		Params:    params,
 	}
+
+	// Mock bank supply check
+	suite.bankMock.EXPECT().HasSupply(suite.ctx, denomBze).Return(true).Times(1)
 
 	response, err := suite.msgServer.UpdateParams(suite.ctx, msg)
 	suite.Require().NoError(err)
@@ -152,6 +199,7 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_HighFees() {
 	suite.Require().Equal("10000", retrievedParams.CreateMarketFee)
 	suite.Require().Equal("0.01", retrievedParams.MarketMakerFee)
 	suite.Require().Equal("0.02", retrievedParams.MarketTakerFee)
+	suite.Require().Equal(denomBze, retrievedParams.NativeDenom)
 }
 
 func (suite *IntegrationTestSuite) TestMsgUpdateParams_MultipleUpdates() {
@@ -164,12 +212,16 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_MultipleUpdates() {
 		MarketTakerFee:      "0.0002",
 		MakerFeeDestination: "community_pool",
 		TakerFeeDestination: "burn",
+		NativeDenom:         denomBze,
 	}
 
 	msg1 := &types.MsgUpdateParams{
 		Authority: authority,
 		Params:    params1,
 	}
+
+	// Mock bank supply check for first update
+	suite.bankMock.EXPECT().HasSupply(suite.ctx, denomBze).Return(true).Times(1)
 
 	response1, err := suite.msgServer.UpdateParams(suite.ctx, msg1)
 	suite.Require().NoError(err)
@@ -186,12 +238,16 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_MultipleUpdates() {
 		MarketTakerFee:      "0.0006",
 		MakerFeeDestination: "validator_rewards",
 		TakerFeeDestination: "community_pool",
+		NativeDenom:         denomBze,
 	}
 
 	msg2 := &types.MsgUpdateParams{
 		Authority: authority,
 		Params:    params2,
 	}
+
+	// Mock bank supply check for second update
+	suite.bankMock.EXPECT().HasSupply(suite.ctx, denomBze).Return(true).Times(1)
 
 	response2, err := suite.msgServer.UpdateParams(suite.ctx, msg2)
 	suite.Require().NoError(err)
@@ -204,6 +260,7 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_MultipleUpdates() {
 	suite.Require().Equal(params2.MarketTakerFee, retrievedParams2.MarketTakerFee)
 	suite.Require().Equal(params2.MakerFeeDestination, retrievedParams2.MakerFeeDestination)
 	suite.Require().Equal(params2.TakerFeeDestination, retrievedParams2.TakerFeeDestination)
+	suite.Require().Equal(params2.NativeDenom, retrievedParams2.NativeDenom)
 }
 
 func (suite *IntegrationTestSuite) TestMsgUpdateParams_PartialUpdate() {
@@ -216,6 +273,7 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_PartialUpdate() {
 		MarketTakerFee:      "0.002",
 		MakerFeeDestination: "community_pool",
 		TakerFeeDestination: "burn",
+		NativeDenom:         denomBze,
 	}
 
 	err := suite.k.SetParams(suite.ctx, initialParams)
@@ -228,12 +286,16 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_PartialUpdate() {
 		MarketTakerFee:      "0.002",             // Keep same
 		MakerFeeDestination: "validator_rewards", // Changed
 		TakerFeeDestination: "burn",              // Keep same
+		NativeDenom:         denomBze,            // Keep same
 	}
 
 	msg := &types.MsgUpdateParams{
 		Authority: authority,
 		Params:    updatedParams,
 	}
+
+	// Mock bank supply check
+	suite.bankMock.EXPECT().HasSupply(suite.ctx, denomBze).Return(true).Times(1)
 
 	response, err := suite.msgServer.UpdateParams(suite.ctx, msg)
 	suite.Require().NoError(err)
@@ -246,25 +308,29 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_PartialUpdate() {
 	suite.Require().Equal("0.002", retrievedParams.MarketTakerFee)
 	suite.Require().Equal("validator_rewards", retrievedParams.MakerFeeDestination)
 	suite.Require().Equal("burn", retrievedParams.TakerFeeDestination)
+	suite.Require().Equal(denomBze, retrievedParams.NativeDenom)
 }
 
-func (suite *IntegrationTestSuite) TestMsgUpdateParams_EmptyParams() {
+func (suite *IntegrationTestSuite) TestMsgUpdateParams_EmptyNativeDenom() {
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
 	msg := &types.MsgUpdateParams{
 		Authority: authority,
-		Params:    types.Params{}, // Empty params
+		Params: types.Params{
+			CreateMarketFee:     "1000",
+			MarketMakerFee:      "0.001",
+			MarketTakerFee:      "0.002",
+			MakerFeeDestination: "community_pool",
+			TakerFeeDestination: "burn",
+			NativeDenom:         "", // Empty native denom
+		},
 	}
 
-	response, err := suite.msgServer.UpdateParams(suite.ctx, msg)
-	suite.Require().NoError(err)
-	suite.Require().NotNil(response)
+	// Mock bank supply check for empty denom (should return false)
+	suite.bankMock.EXPECT().HasSupply(suite.ctx, "").Return(false).Times(1)
 
-	// Verify empty params were set
-	retrievedParams := suite.k.GetParams(suite.ctx)
-	suite.Require().Equal("", retrievedParams.CreateMarketFee)
-	suite.Require().Equal("", retrievedParams.MarketMakerFee)
-	suite.Require().Equal("", retrievedParams.MarketTakerFee)
-	suite.Require().Equal("", retrievedParams.MakerFeeDestination)
-	suite.Require().Equal("", retrievedParams.TakerFeeDestination)
+	response, err := suite.msgServer.UpdateParams(suite.ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().Contains(err.Error(), "invalid native denom provided")
 }

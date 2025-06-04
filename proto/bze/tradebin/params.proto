@@ -17,4 +17,5 @@ message Params {
   string marketTakerFee = 3 [(gogoproto.moretags) = "yaml:\"market_taker_fee\""];
   string makerFeeDestination = 4 [(gogoproto.moretags) = "yaml:\"maker_fee_destination\""];
   string takerFeeDestination = 5 [(gogoproto.moretags) = "yaml:\"taker_fee_destination\""];
+  string native_denom = 6 [(gogoproto.moretags) = "yaml:\"native_denom\""];
 }

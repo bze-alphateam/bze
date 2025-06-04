@@ -1,8 +1,6 @@
 package types
 
 import (
-	"strings"
-
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -107,15 +105,11 @@ func (msg *MsgStartRaffle) ToStorageRaffle() (raffle Raffle, err error) {
 
 	raffle.TicketPrice = msg.TicketPrice
 
-	if !msg.isAllowedDenomForRaffle(msg.Denom) {
-		return raffle, errors.Wrapf(sdkerrors.ErrInvalidCoins, "coin not allowed in raffles")
+	if msg.Denom == "" {
+		return raffle, errors.Wrapf(sdkerrors.ErrInvalidCoins, "no denom provided")
 	}
 
 	raffle.Denom = msg.Denom
 
 	return raffle, nil
-}
-
-func (msg *MsgStartRaffle) isAllowedDenomForRaffle(denom string) bool {
-	return !strings.HasPrefix(denom, "ibc/")
 }

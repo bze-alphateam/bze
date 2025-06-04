@@ -21,7 +21,7 @@ import (
 	"github.com/bze-alphateam/bze/x/burner/types"
 )
 
-func BurnerKeeper(t testing.TB, bank types.BankKeeper, acc types.AccountKeeper, epoch types.EpochKeeper) (keeper.Keeper, sdk.Context) {
+func BurnerKeeper(t testing.TB, bank types.BankKeeper, acc types.AccountKeeper, epoch types.EpochKeeper, trade types.TradeKeeper) (keeper.Keeper, sdk.Context) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	db := dbm.NewMemDB()
@@ -41,6 +41,7 @@ func BurnerKeeper(t testing.TB, bank types.BankKeeper, acc types.AccountKeeper, 
 		bank,
 		acc,
 		epoch,
+		trade,
 	)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())

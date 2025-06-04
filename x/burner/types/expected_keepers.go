@@ -26,6 +26,13 @@ type BankKeeper interface {
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
+}
+
+type TradeKeeper interface {
+	IsNativeDenom(ctx sdk.Context, denom string) bool
+	CanSwapForNativeDenom(ctx sdk.Context, denom string) bool
+	ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins sdk.Coins) (sdk.Coin, error)
 }
 
 // ParamSubspace defines the expected Subspace interface for parameters.

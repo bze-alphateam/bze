@@ -9,7 +9,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func (suite *IntegrationTestSuite) TestStartRaffle_ValidRequest() {
+func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_ValidRequest() {
 	creator := sdk.AccAddress("creator").String()
 	denom := "utoken"
 	pot := "1000"
@@ -50,7 +50,7 @@ func (suite *IntegrationTestSuite) TestStartRaffle_ValidRequest() {
 	suite.Require().Equal(denom, raffle.Denom)
 }
 
-func (suite *IntegrationTestSuite) TestStartRaffle_DenomNotExists() {
+func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_DenomNotExists() {
 	msg := &types.MsgStartRaffle{
 		Creator: sdk.AccAddress("creator").String(),
 		Denom:   "nonexistent",
@@ -65,7 +65,7 @@ func (suite *IntegrationTestSuite) TestStartRaffle_DenomNotExists() {
 	suite.Require().Contains(err.Error(), "denom nonexistent does not exist")
 }
 
-func (suite *IntegrationTestSuite) TestStartRaffle_RaffleAlreadyExists() {
+func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_RaffleAlreadyExists() {
 	denom := "utoken"
 
 	// Set existing raffle
@@ -86,7 +86,7 @@ func (suite *IntegrationTestSuite) TestStartRaffle_RaffleAlreadyExists() {
 	suite.Require().Contains(err.Error(), "raffle already running for this coin")
 }
 
-func (suite *IntegrationTestSuite) TestStartRaffle_InsufficientBalance() {
+func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_InsufficientBalance() {
 	creator := sdk.AccAddress("creator").String()
 	denom := "utoken"
 
@@ -117,7 +117,7 @@ func (suite *IntegrationTestSuite) TestStartRaffle_InsufficientBalance() {
 	suite.Require().Contains(err.Error(), "not enough balance")
 }
 
-func (suite *IntegrationTestSuite) TestStartRaffle_BankKeeperError() {
+func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_BankKeeperError() {
 	creator := sdk.AccAddress("creator").String()
 	denom := "utoken"
 
@@ -151,7 +151,7 @@ func (suite *IntegrationTestSuite) TestStartRaffle_BankKeeperError() {
 	suite.Require().Contains(err.Error(), "could not capture pot")
 }
 
-func (suite *IntegrationTestSuite) TestJoinRaffle_ValidRequest() {
+func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_ValidRequest() {
 	creator := sdk.AccAddress("creator").String()
 	denom := "utoken"
 	tickets := uint64(2)
@@ -205,7 +205,7 @@ func (suite *IntegrationTestSuite) TestJoinRaffle_ValidRequest() {
 	suite.Require().Len(participants, 2)
 }
 
-func (suite *IntegrationTestSuite) TestJoinRaffle_DenomNotExists() {
+func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_DenomNotExists() {
 	msg := &types.MsgJoinRaffle{
 		Creator: sdk.AccAddress("creator").String(),
 		Denom:   "nonexistent",
@@ -221,7 +221,7 @@ func (suite *IntegrationTestSuite) TestJoinRaffle_DenomNotExists() {
 	suite.Require().Contains(err.Error(), "denom nonexistent does not exist")
 }
 
-func (suite *IntegrationTestSuite) TestJoinRaffle_RaffleNotFound() {
+func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_RaffleNotFound() {
 	denom := "utoken"
 	msg := &types.MsgJoinRaffle{
 		Creator: sdk.AccAddress("creator").String(),
@@ -238,7 +238,7 @@ func (suite *IntegrationTestSuite) TestJoinRaffle_RaffleNotFound() {
 	suite.Require().Contains(err.Error(), "raffle not found for provided denom")
 }
 
-func (suite *IntegrationTestSuite) TestJoinRaffle_RaffleExpired() {
+func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_RaffleExpired() {
 	denom := "utoken"
 
 	// Set up expired raffle
@@ -264,7 +264,7 @@ func (suite *IntegrationTestSuite) TestJoinRaffle_RaffleExpired() {
 	suite.Require().Contains(err.Error(), "raffle has expired")
 }
 
-func (suite *IntegrationTestSuite) TestJoinRaffle_InsufficientBalance() {
+func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_InsufficientBalance() {
 	creator := sdk.AccAddress("creator").String()
 	denom := "utoken"
 
@@ -298,7 +298,7 @@ func (suite *IntegrationTestSuite) TestJoinRaffle_InsufficientBalance() {
 	suite.Require().Contains(err.Error(), "not enough balance")
 }
 
-func (suite *IntegrationTestSuite) TestJoinRaffle_NoPot() {
+func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_NoPot() {
 	creator := sdk.AccAddress("creator").String()
 	denom := "utoken"
 

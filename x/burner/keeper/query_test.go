@@ -7,7 +7,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (suite *IntegrationTestSuite) TestRaffles_ValidRequest() {
+func (suite *IntegrationTestSuite) TestQuery_Raffles_ValidRequest() {
 	// Create test raffles
 	raffles := []types.Raffle{
 		{
@@ -37,7 +37,7 @@ func (suite *IntegrationTestSuite) TestRaffles_ValidRequest() {
 	suite.Require().NotNil(res.Pagination)
 }
 
-func (suite *IntegrationTestSuite) TestRaffles_NilRequest() {
+func (suite *IntegrationTestSuite) TestQuery_Raffles_NilRequest() {
 	res, err := suite.k.Raffles(suite.ctx, nil)
 
 	suite.Require().Error(err)
@@ -46,7 +46,7 @@ func (suite *IntegrationTestSuite) TestRaffles_NilRequest() {
 	suite.Require().Contains(err.Error(), "invalid request")
 }
 
-func (suite *IntegrationTestSuite) TestRaffles_WithPagination() {
+func (suite *IntegrationTestSuite) TestQuery_Raffles_WithPagination() {
 	// Create multiple raffles
 	for i := 0; i < 5; i++ {
 		raffle := types.Raffle{
@@ -71,7 +71,7 @@ func (suite *IntegrationTestSuite) TestRaffles_WithPagination() {
 	suite.Require().NotNil(res.Pagination)
 }
 
-func (suite *IntegrationTestSuite) TestRaffleWinners_ValidRequest() {
+func (suite *IntegrationTestSuite) TestQuery_RaffleWinners_ValidRequest() {
 	// Create test winners
 	denom := "utoken"
 	winners := []types.RaffleWinner{
@@ -94,7 +94,7 @@ func (suite *IntegrationTestSuite) TestRaffleWinners_ValidRequest() {
 	suite.Require().NotNil(res.Pagination)
 }
 
-func (suite *IntegrationTestSuite) TestRaffleWinners_NilRequest() {
+func (suite *IntegrationTestSuite) TestQuery_RaffleWinners_NilRequest() {
 	res, err := suite.k.RaffleWinners(suite.ctx, nil)
 
 	suite.Require().Error(err)
@@ -103,7 +103,7 @@ func (suite *IntegrationTestSuite) TestRaffleWinners_NilRequest() {
 	suite.Require().Contains(err.Error(), "invalid request")
 }
 
-func (suite *IntegrationTestSuite) TestRaffleWinners_EmptyDenom() {
+func (suite *IntegrationTestSuite) TestQuery_RaffleWinners_EmptyDenom() {
 	req := &types.QueryRaffleWinnersRequest{
 		Denom: "",
 	}
@@ -115,7 +115,7 @@ func (suite *IntegrationTestSuite) TestRaffleWinners_EmptyDenom() {
 	suite.Require().Contains(err.Error(), "denom required")
 }
 
-func (suite *IntegrationTestSuite) TestRaffleWinners_WithPagination() {
+func (suite *IntegrationTestSuite) TestQuery_RaffleWinners_WithPagination() {
 	denom := "utoken"
 	// Create multiple winners
 	for i := 0; i < 5; i++ {
@@ -142,7 +142,7 @@ func (suite *IntegrationTestSuite) TestRaffleWinners_WithPagination() {
 	suite.Require().NotNil(res.Pagination)
 }
 
-func (suite *IntegrationTestSuite) TestAllBurnedCoins_ValidRequest() {
+func (suite *IntegrationTestSuite) TestQuery_AllBurnedCoins_ValidRequest() {
 	// Create test burned coins
 	burnedCoins := []types.BurnedCoins{
 		{Burned: "1000utoken", Height: "100"},
@@ -162,7 +162,7 @@ func (suite *IntegrationTestSuite) TestAllBurnedCoins_ValidRequest() {
 	suite.Require().NotNil(res.Pagination)
 }
 
-func (suite *IntegrationTestSuite) TestAllBurnedCoins_NilRequest() {
+func (suite *IntegrationTestSuite) TestQuery_AllBurnedCoins_NilRequest() {
 	res, err := suite.k.AllBurnedCoins(suite.ctx, nil)
 
 	suite.Require().Error(err)
@@ -171,7 +171,7 @@ func (suite *IntegrationTestSuite) TestAllBurnedCoins_NilRequest() {
 	suite.Require().Contains(err.Error(), "invalid request")
 }
 
-func (suite *IntegrationTestSuite) TestAllBurnedCoins_WithPagination() {
+func (suite *IntegrationTestSuite) TestQuery_AllBurnedCoins_WithPagination() {
 	// Create multiple burned coins entries
 	for i := 0; i < 5; i++ {
 		entry := types.BurnedCoins{
@@ -194,7 +194,7 @@ func (suite *IntegrationTestSuite) TestAllBurnedCoins_WithPagination() {
 	suite.Require().NotNil(res.Pagination)
 }
 
-func (suite *IntegrationTestSuite) TestAllBurnedCoins_EmptyStore() {
+func (suite *IntegrationTestSuite) TestQuery_AllBurnedCoins_EmptyStore() {
 	req := &types.QueryAllBurnedCoinsRequest{}
 	res, err := suite.k.AllBurnedCoins(suite.ctx, req)
 

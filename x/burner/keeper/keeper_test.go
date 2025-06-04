@@ -21,6 +21,7 @@ type IntegrationTestSuite struct {
 	epoch     *testutil.MockEpochKeeper
 	bank      *testutil.MockBankKeeper
 	acc       *testutil.MockAccountKeeper
+	trade     *testutil.MockTradeKeeper
 }
 
 func (suite *IntegrationTestSuite) SetupTest() {
@@ -34,13 +35,16 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	require.NotNil(t, mockAcc)
 	mockEpoch := testutil.NewMockEpochKeeper(mockCtrl)
 	require.NotNil(t, mockEpoch)
+	mockTrade := testutil.NewMockTradeKeeper(mockCtrl)
+	require.NotNil(t, mockTrade)
 
-	k, ctx := keeper2.BurnerKeeper(t, mockBank, mockAcc, mockEpoch)
+	k, ctx := keeper2.BurnerKeeper(t, mockBank, mockAcc, mockEpoch, mockTrade)
 	suite.ctx = ctx
 	suite.k = &k
 	suite.epoch = mockEpoch
 	suite.bank = mockBank
 	suite.acc = mockAcc
+	suite.trade = mockTrade
 	suite.msgServer = keeper.NewMsgServerImpl(k)
 }
 

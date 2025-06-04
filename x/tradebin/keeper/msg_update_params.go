@@ -6,7 +6,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-    "github.com/bze-alphateam/bze/x/tradebin/types"
+	"github.com/bze-alphateam/bze/x/tradebin/types"
 )
 
 func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
@@ -15,6 +15,11 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	exists := k.bankKeeper.HasSupply(ctx, req.Params.NativeDenom)
+	if !exists {
+		return nil, errorsmod.Wrapf(types.ErrInvalidDenom, "invalid native denom provided: %s", req.Params.NativeDenom)
+	}
+
 	if err := k.SetParams(ctx, req.Params); err != nil {
 		return nil, err
 	}

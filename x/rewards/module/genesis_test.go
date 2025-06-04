@@ -21,7 +21,6 @@ func TestGenesis(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	acc := testutil.NewMockAccountKeeper(ctrl)
 
-	acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(nil).Times(1)
 	k, ctx := keepertest.RewardsKeeper(t, nil, nil, nil, nil, acc)
 	rewards.InitGenesis(ctx, k, genesisState)
 	got := rewards.ExportGenesis(ctx, k)

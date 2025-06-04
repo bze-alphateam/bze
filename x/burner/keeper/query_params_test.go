@@ -6,7 +6,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (suite *IntegrationTestSuite) TestParams_ValidRequest() {
+func (suite *IntegrationTestSuite) TestQueryParams_Params_ValidRequest() {
 	req := &types.QueryParamsRequest{}
 
 	res, err := suite.k.Params(suite.ctx, req)
@@ -16,7 +16,7 @@ func (suite *IntegrationTestSuite) TestParams_ValidRequest() {
 	suite.Require().NotNil(res.Params)
 }
 
-func (suite *IntegrationTestSuite) TestParams_NilRequest() {
+func (suite *IntegrationTestSuite) TestQueryParams_Params_NilRequest() {
 	res, err := suite.k.Params(suite.ctx, nil)
 
 	suite.Require().Error(err)
@@ -25,7 +25,7 @@ func (suite *IntegrationTestSuite) TestParams_NilRequest() {
 	suite.Require().Contains(err.Error(), "invalid request")
 }
 
-func (suite *IntegrationTestSuite) TestParams_ContextUnwrapping() {
+func (suite *IntegrationTestSuite) TestQueryParams_Params_ContextUnwrapping() {
 	req := &types.QueryParamsRequest{}
 
 	// Test with different context types

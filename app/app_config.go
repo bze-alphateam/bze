@@ -189,6 +189,7 @@ var (
 		{Account: icatypes.ModuleName},
 		{Account: rewardsmoduletypes.ModuleName},
 		{Account: burnermoduletypes.ModuleName, Permissions: []string{authtypes.Burner}},
+		{Account: burnermoduletypes.BlackHoleModuleName},
 		{Account: burnermoduletypes.RaffleModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: tokenfactorymoduletypes.ModuleName, Permissions: []string{authtypes.Burner, authtypes.Minter}},
 		{Account: tradebinmoduletypes.ModuleName, Permissions: []string{authtypes.Burner, authtypes.Minter}},
