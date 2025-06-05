@@ -79,7 +79,7 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_OnlyIBCCoins() {
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, "ibc/DEF456").Return(true).Times(1)
 
 	// Mock swap operation - note: the method is called with the original coins, not individual coins
-	suite.trade.EXPECT().SwapForNativeDenom(suite.ctx, fromModule, coins).Return(swappedCoin, nil).Times(1)
+	suite.trade.EXPECT().ModuleSwapForNativeDenom(suite.ctx, fromModule, coins).Return(swappedCoin, nil).Times(1)
 
 	// Mock burn operation with swapped coins
 	suite.bank.EXPECT().BurnCoins(suite.ctx, fromModule, sdk.NewCoins(swappedCoin)).Return(nil).Times(1)
@@ -110,7 +110,7 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_MixedCoins() {
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, "ibc/ABC123").Return(true).Times(1)
 
 	// Mock swap operation
-	suite.trade.EXPECT().SwapForNativeDenom(suite.ctx, fromModule, coins).Return(swappedCoin, nil).Times(1)
+	suite.trade.EXPECT().ModuleSwapForNativeDenom(suite.ctx, fromModule, coins).Return(swappedCoin, nil).Times(1)
 
 	// Mock send LP tokens to black hole
 	suite.bank.EXPECT().SendCoinsFromModuleToModule(suite.ctx, fromModule, types.BlackHoleModuleName, lockableCoins).Return(nil).Times(1)
@@ -162,7 +162,7 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_SwapError() {
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, "ibc/ABC123").Return(true).Times(1)
 
 	// Mock swap operation failure - returns empty coin and error
-	suite.trade.EXPECT().SwapForNativeDenom(suite.ctx, fromModule, coins).Return(sdk.Coin{}, swapError).Times(1)
+	suite.trade.EXPECT().ModuleSwapForNativeDenom(suite.ctx, fromModule, coins).Return(sdk.Coin{}, swapError).Times(1)
 
 	err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().Error(err)

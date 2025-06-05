@@ -357,7 +357,7 @@ func (suite *IntegrationTestSuite) TestHooks_TestBurnModuleCoins_ValidExecution(
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "utoken").Return(true).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/ABC123").Return(false).Times(1)
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, "ibc/ABC123").Return(true).Times(1)
-	suite.trade.EXPECT().SwapForNativeDenom(suite.ctx, types.ModuleName, allCoins).Return(swappedCoin, nil).Times(1)
+	suite.trade.EXPECT().ModuleSwapForNativeDenom(suite.ctx, types.ModuleName, allCoins).Return(swappedCoin, nil).Times(1)
 
 	suite.bank.EXPECT().BurnCoins(suite.ctx, types.ModuleName, expectedBurnCoins).Return(nil).Times(1)
 
@@ -417,7 +417,7 @@ func (suite *IntegrationTestSuite) TestHooks_TestBurnModuleCoins_OnlyIBCTokens()
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/DEF456").Return(false).Times(1)
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, "ibc/ABC123").Return(true).Times(1)
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, "ibc/DEF456").Return(true).Times(1)
-	suite.trade.EXPECT().SwapForNativeDenom(suite.ctx, types.ModuleName, ibcOnlyCoins).Return(swappedCoin, nil).Times(1)
+	suite.trade.EXPECT().ModuleSwapForNativeDenom(suite.ctx, types.ModuleName, ibcOnlyCoins).Return(swappedCoin, nil).Times(1)
 
 	suite.bank.EXPECT().BurnCoins(suite.ctx, types.ModuleName, sdk.NewCoins(swappedCoin)).Return(nil).Times(1)
 
