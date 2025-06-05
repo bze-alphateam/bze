@@ -17,7 +17,7 @@ func (k Keeper) IsNativeDenom(ctx sdk.Context, denom string) bool {
 	return k.getNativeDenom(ctx) == denom
 }
 
-func (k Keeper) CanSwapForNativeDenom(ctx sdk.Context, denom string) bool {
+func (k Keeper) HasLiquidityWithNativeDenom(ctx sdk.Context, denom string) bool {
 	nativeDenom := k.getNativeDenom(ctx)
 	if nativeDenom == denom {
 		return false
@@ -34,9 +34,42 @@ func (k Keeper) CanSwapForNativeDenom(ctx sdk.Context, denom string) bool {
 		return false
 	}
 
-	return nativeLpCoins.Amount.GT(minNativeAmountForSwap)
+	return true
 }
 
+func (k Keeper) CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool {
+	nativeDenom := k.getNativeDenom(ctx)
+	if nativeDenom == coin.Denom {
+		return false
+	}
+
+	_, _, poolId := k.CreatePoolId(nativeDenom, coin.Denom)
+	pool, exists := k.GetLiquidityPool(ctx, poolId)
+	if !exists {
+		return false
+	}
+
+	nativeLpCoins, _ := pool.GetReservesCoinsByDenom(nativeDenom)
+	if !nativeLpCoins.IsPositive() {
+		return false
+	}
+
+	if nativeLpCoins.Amount.LT(minNativeAmountForSwap) {
+		return false
+	}
+
+	//check if the amount is too low
+	_, fee := k.calculateSwapInputAndFee(coin, &pool)
+	if pool.Fee.IsPositive() && !fee.IsPositive() {
+		return false
+	}
+
+	return true
+}
+
+// ModuleSwapForNativeDenom swaps a specified set of coins from a module account to the native denomination if liquidity exists.
+// It ensures the proper liquidity pool is available and updates account balances accordingly.
+// Returns the resulting native denomination coin and an error if the process is unsuccessful.
 func (k Keeper) ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins sdk.Coins) (sdk.Coin, error) {
 	nativeDenom := k.getNativeDenom(ctx)
 	if nativeDenom == "" {

@@ -31,8 +31,9 @@ type BankKeeper interface {
 
 type TradeKeeper interface {
 	IsNativeDenom(ctx sdk.Context, denom string) bool
-	CanSwapForNativeDenom(ctx sdk.Context, denom string) bool
+	CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool
 	ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins sdk.Coins) (sdk.Coin, error)
+	HasLiquidityWithNativeDenom(ctx sdk.Context, denom string) bool
 }
 
 // ParamSubspace defines the expected Subspace interface for parameters.

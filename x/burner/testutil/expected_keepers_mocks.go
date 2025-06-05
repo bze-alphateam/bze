@@ -268,9 +268,9 @@ func (m *MockTradeKeeper) EXPECT() *MockTradeKeeperMockRecorder {
 }
 
 // CanSwapForNativeDenom mocks base method.
-func (m *MockTradeKeeper) CanSwapForNativeDenom(ctx types.Context, denom string) bool {
+func (m *MockTradeKeeper) CanSwapForNativeDenom(ctx types.Context, coin types.Coin) bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CanSwapForNativeDenom", ctx, denom)
+	ret := m.ctrl.Call(m, "CanSwapForNativeDenom", ctx, coin)
 	ret0, _ := ret[0].(bool)
 	return ret0
 }

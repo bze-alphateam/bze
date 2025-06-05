@@ -60,12 +60,17 @@ func (k Keeper) BurnAnyCoins(ctx sdk.Context, fromModule string, coins sdk.Coins
 		}
 
 		//not native, not LP share, not token factory -> it should be an IBC denom
-		if k.tradeKeeper.CanSwapForNativeDenom(ctx, c.Denom) {
+		if k.tradeKeeper.CanSwapForNativeDenom(ctx, c) {
 			exchangeable = exchangeable.Add(c)
 			continue
 		}
 
-		//this should never be reached, but in case it does, let's keep these coins locked
+		if k.tradeKeeper.HasLiquidityWithNativeDenom(ctx, c.Denom) {
+			//if the coin has liquidity with native denom, but it cannot be swapped yet (previous if statement checks this)
+			//we let the coins be burned in the next run
+			continue
+		}
+
 		lockable = lockable.Add(c)
 	}
 
