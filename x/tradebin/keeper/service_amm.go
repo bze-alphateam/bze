@@ -72,6 +72,10 @@ func (k Keeper) swapTokens(ctx sdk.Context, input sdk.Coin, pool *types.Liquidit
 	}
 
 	realInput, fee := k.calculateSwapInputAndFee(input, pool)
+	if pool.Fee.IsPositive() && !fee.IsPositive() {
+		return output, fmt.Errorf("amount is too low to be traded")
+	}
+
 	feeToPool, err := k.collectSwapFee(ctx, fee, pool)
 	if err != nil {
 		return output, err
@@ -90,6 +94,10 @@ func (k Keeper) swapTokens(ctx sdk.Context, input sdk.Coin, pool *types.Liquidit
 
 	outputAmount := prod.Quo(quo).TruncateInt()
 	output = sdk.NewCoin(outputReserve.Denom, outputAmount)
+	if !output.IsPositive() {
+		return output, fmt.Errorf("non positive output on swap tokens")
+	}
+
 	//add the part of the fee that should remain in the LP (as LP Reward to LP providers)
 	err = pool.ChangeReserves(realInput.Add(feeToPool), output)
 	if err != nil {

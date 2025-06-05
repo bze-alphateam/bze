@@ -3,14 +3,14 @@ validation: sovereign
 accounts: 
 - name: alice
   coins:
-  - 20000token
-  - 10000ubze
-  - 200000000stake
+  - 12000000000000token
+  - 12000000000000ubze
+  - 12000000000000stake
 - name: bob
   coins:
-  - 10000token
-  - 1000000000ubze
-  - 100000000stake
+  - 12000000000000token
+  - 12000000000000ubze
+  - 12000000000000stake
 client:
   openapi:
     path: docs/static/openapi.yml

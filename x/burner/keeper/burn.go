@@ -73,10 +73,10 @@ func (k Keeper) BurnAnyCoins(ctx sdk.Context, fromModule string, coins sdk.Coins
 		//swap coins to native and add them to burn
 		swapped, err := k.tradeKeeper.ModuleSwapForNativeDenom(ctx, fromModule, coins)
 		if err != nil {
-			return err
+			k.Logger().Error("error on swapping coins to burn", "error", err)
+		} else {
+			burnable = burnable.Add(swapped)
 		}
-
-		burnable = burnable.Add(swapped)
 	}
 
 	//lock coins in black hole address
