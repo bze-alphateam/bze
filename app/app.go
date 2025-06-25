@@ -3,11 +3,12 @@ package app
 import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	v800 "github.com/bze-alphateam/bze/app/upgrades/v800"
+	"github.com/gorilla/mux"
+	"github.com/rakyll/statik/fs"
 	"io"
+	"net/http"
 
 	epochmoduletypes "github.com/bze-alphateam/bze/x/epochs/types"
-
-	"github.com/bze-alphateam/bze/docs"
 
 	_ "cosmossdk.io/api/cosmos/tx/config/v1" // import for side-effects
 	clienthelpers "cosmossdk.io/client/v2/helpers"
@@ -31,7 +32,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -88,6 +88,8 @@ import (
 	tokenfactorymodulekeeper "github.com/bze-alphateam/bze/x/tokenfactory/keeper"
 	tradebinmodulekeeper "github.com/bze-alphateam/bze/x/tradebin/keeper"
 	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
+
+	_ "github.com/bze-alphateam/bze/client/docs/statik"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
@@ -424,12 +426,22 @@ func (app *App) SimulationManager() *module.SimulationManager {
 func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	app.App.RegisterAPIRoutes(apiSvr, apiConfig)
 	// register swagger API in app.go so that other applications can override easily
-	if err := server.RegisterSwaggerAPI(apiSvr.ClientCtx, apiSvr.Router, apiConfig.Swagger); err != nil {
+
+	if apiConfig.Swagger {
+		RegisterSwaggerAPI(apiSvr.ClientCtx, apiSvr.Router)
+	}
+}
+
+// RegisterSwaggerAPI registers swagger route with API Server.
+func RegisterSwaggerAPI(_ client.Context, rtr *mux.Router) {
+	statikFS, err := fs.New()
+	if err != nil {
 		panic(err)
 	}
 
-	// register app's OpenAPI routes.
-	docs.RegisterOpenAPIService(Name, apiSvr.Router)
+	staticServer := http.FileServer(statikFS)
+	rtr.PathPrefix("/static/").Handler(http.StripPrefix("/static/", staticServer))
+	rtr.PathPrefix("/swagger/").Handler(staticServer)
 }
 
 // setEpochsHooks sets up the hooks for the EpochKeeper by adding specific hooks from other keepers.
