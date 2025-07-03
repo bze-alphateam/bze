@@ -21,7 +21,7 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_OnlyNativeCoins() {
 	// Mock burn operation
 	suite.bank.EXPECT().BurnCoins(suite.ctx, fromModule, coins).Return(nil).Times(1)
 
-	err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
+	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
 }
 
@@ -39,7 +39,7 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_OnlyFactoryTokens()
 	// Mock burn operation
 	suite.bank.EXPECT().BurnCoins(suite.ctx, fromModule, coins).Return(nil).Times(1)
 
-	err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
+	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
 }
 
@@ -57,7 +57,7 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_OnlyLPTokens() {
 	// Mock send to black hole module
 	suite.bank.EXPECT().SendCoinsFromModuleToModule(suite.ctx, fromModule, types.BlackHoleModuleName, coins).Return(nil).Times(1)
 
-	err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
+	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
 }
 
@@ -84,7 +84,7 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_OnlyIBCCoins() {
 	// Mock burn operation with swapped coins
 	suite.bank.EXPECT().BurnCoins(suite.ctx, fromModule, sdk.NewCoins(swappedCoin)).Return(nil).Times(1)
 
-	err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
+	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
 }
 
@@ -118,7 +118,7 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_MixedCoins() {
 	// Mock burn operation
 	suite.bank.EXPECT().BurnCoins(suite.ctx, fromModule, expectedBurnCoins).Return(nil).Times(1)
 
-	err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
+	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
 }
 
@@ -129,7 +129,7 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_EmptyCoins() {
 	// Mock burn with empty coins - the method always calls BurnCoins even with empty set
 	suite.bank.EXPECT().BurnCoins(suite.ctx, fromModule, gomock.Any()).Return(nil).Times(1)
 
-	err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
+	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
 }
 
@@ -146,7 +146,7 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_ZeroAmountCoins() {
 	expectedBurnCoins := sdk.NewCoins(sdk.NewInt64Coin("uother", 1000))
 	suite.bank.EXPECT().BurnCoins(suite.ctx, fromModule, expectedBurnCoins).Return(nil).Times(1)
 
-	err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
+	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
 }
 
@@ -164,7 +164,7 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_SwapError() {
 	// Mock swap operation failure - returns empty coin and error
 	suite.trade.EXPECT().ModuleSwapForNativeDenom(suite.ctx, fromModule, coins).Return(sdk.Coin{}, swapError).Times(1)
 
-	err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
+	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().Error(err)
 	suite.Require().Equal(swapError, err)
 }
@@ -180,7 +180,7 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_SendToBlackHoleErro
 	// Mock send to black hole failure
 	suite.bank.EXPECT().SendCoinsFromModuleToModule(suite.ctx, fromModule, types.BlackHoleModuleName, coins).Return(sendError).Times(1)
 
-	err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
+	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().Error(err)
 	suite.Require().Equal(sendError, err)
 }
@@ -196,7 +196,7 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_BurnError() {
 	// Mock burn operation failure
 	suite.bank.EXPECT().BurnCoins(suite.ctx, fromModule, coins).Return(burnError).Times(1)
 
-	err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
+	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().Error(err)
 	suite.Require().Equal(burnError, err)
 }
@@ -217,7 +217,7 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_UnknownDenomFallsBa
 	// Mock burn with empty coins
 	suite.bank.EXPECT().BurnCoins(suite.ctx, fromModule, gomock.Any()).Return(nil).Times(1)
 
-	err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
+	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
 }
 
@@ -237,6 +237,6 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_IBCNotSwappable() {
 	// Mock burn with empty coins
 	suite.bank.EXPECT().BurnCoins(suite.ctx, fromModule, gomock.Any()).Return(nil).Times(1)
 
-	err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
+	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
 }

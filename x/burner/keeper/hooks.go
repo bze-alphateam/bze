@@ -74,18 +74,18 @@ func (k Keeper) burnerRaffleCleanup(ctx sdk.Context, epochNumber int64) {
 			continue
 		}
 
-		err := k.BurnAnyCoins(ctx, types.RaffleModuleName, sdk.NewCoins(currentPot))
+		burned, err := k.BurnAnyCoins(ctx, types.RaffleModuleName, sdk.NewCoins(currentPot))
 		if err != nil {
 			logger.Error("failed to burn raffle remaining coins", "error", err)
 			continue
 		}
 
-		err = k.SaveBurnedCoins(ctx, sdk.NewCoins(currentPot))
+		err = k.SaveBurnedCoins(ctx, burned)
 		if err != nil {
 			logger.Error("failed to save burned coins", "error", err)
 		}
 
-		logger.Debug("burned raffle coins", "burned_current_pot", currentPot)
+		logger.Debug("burned raffle coins", "burned_current_pot", burned)
 
 		err = ctx.EventManager().EmitTypedEvent(&types.RaffleFinishedEvent{Denom: item.Denom})
 		if err != nil {

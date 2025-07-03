@@ -14,29 +14,30 @@ func (k Keeper) burnModuleCoins(ctx sdk.Context) error {
 		return nil
 	}
 
-	err := k.BurnAnyCoins(ctx, types.ModuleName, allCoins)
+	burned, err := k.BurnAnyCoins(ctx, types.ModuleName, allCoins)
 	if err != nil {
 		return err
 	}
 
-	err = k.SaveBurnedCoins(ctx, allCoins)
+	err = k.SaveBurnedCoins(ctx, burned)
 	if err != nil {
 		ctx.Logger().Error("error saving burned coins", "error", err)
 	}
 
-	err = ctx.EventManager().EmitTypedEvent(&types.CoinsBurnedEvent{Burned: allCoins.String()})
+	err = ctx.EventManager().EmitTypedEvent(&types.CoinsBurnedEvent{Burned: burned.String()})
 	if err != nil {
 		return err
 	}
 
-	k.Logger().With("coins", allCoins.String()).Info("coins successfully burned")
+	k.Logger().With("coins", burned.String()).Info("coins successfully burned")
 
 	return nil
 }
 
 // BurnAnyCoins attempts to burn, lock, or exchange specified coins from a module account.
 // It directly burns native and token factory denominations, locks LP tokens, and exchanges IBC tokens for native ones.
-func (k Keeper) BurnAnyCoins(ctx sdk.Context, fromModule string, coins sdk.Coins) error {
+// It returns the coins that were successfully burned.
+func (k Keeper) BurnAnyCoins(ctx sdk.Context, fromModule string, coins sdk.Coins) (sdk.Coins, error) {
 	//holds coins that can be burned from bank module
 	var burnable sdk.Coins
 	//holds coins that can not be burned (IBC coins) but can be exchanged to native coin and burned
@@ -60,6 +61,7 @@ func (k Keeper) BurnAnyCoins(ctx sdk.Context, fromModule string, coins sdk.Coins
 			lockable = lockable.Add(c)
 			continue
 		}
+		//it must be an IBC token
 
 		//not native, not LP share, not token factory -> it should be an IBC denom
 		if k.tradeKeeper.CanSwapForNativeDenom(ctx, c) {
@@ -69,7 +71,7 @@ func (k Keeper) BurnAnyCoins(ctx sdk.Context, fromModule string, coins sdk.Coins
 
 		if k.tradeKeeper.HasLiquidityWithNativeDenom(ctx, c.Denom) {
 			//if the coin has liquidity with native denom, but it cannot be swapped yet (previous if statement checks this)
-			//we let the coins be burned in the next run
+			//we let the coins be burned in the next run, hoping that the liquidity will be added by then soon
 			continue
 		}
 
@@ -77,8 +79,8 @@ func (k Keeper) BurnAnyCoins(ctx sdk.Context, fromModule string, coins sdk.Coins
 	}
 
 	if len(exchangeable) > 0 {
-		//swap coins to native and add them to burn
-		swapped, err := k.tradeKeeper.ModuleSwapForNativeDenom(ctx, fromModule, coins)
+		//swap exchangeable coins to native and add them to burn
+		swapped, err := k.tradeKeeper.ModuleSwapForNativeDenom(ctx, fromModule, exchangeable)
 		if err != nil {
 			k.Logger().Error("error on swapping coins to burn", "error", err)
 		} else {
@@ -90,7 +92,7 @@ func (k Keeper) BurnAnyCoins(ctx sdk.Context, fromModule string, coins sdk.Coins
 	if len(lockable) > 0 {
 		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, fromModule, types.BlackHoleModuleName, lockable)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -98,9 +100,9 @@ func (k Keeper) BurnAnyCoins(ctx sdk.Context, fromModule string, coins sdk.Coins
 		//burn coins eligible to burn
 		err := k.bankKeeper.BurnCoins(ctx, fromModule, burnable)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return burnable, nil
 }
