@@ -34,6 +34,8 @@ func (k Keeper) burnModuleCoins(ctx sdk.Context) error {
 	return nil
 }
 
+// BurnAnyCoins attempts to burn, lock, or exchange specified coins from a module account.
+// It directly burns native and token factory denominations, locks LP tokens, and exchanges IBC tokens for native ones.
 func (k Keeper) BurnAnyCoins(ctx sdk.Context, fromModule string, coins sdk.Coins) error {
 	//holds coins that can be burned from bank module
 	var burnable sdk.Coins
