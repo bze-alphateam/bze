@@ -37,6 +37,7 @@ import (
 	rewardsmodulev1 "github.com/bze-alphateam/bze/api/bze/rewards/module"
 	tokenfactorymodulev1 "github.com/bze-alphateam/bze/api/bze/tokenfactory/module"
 	tradebinmodulev1 "github.com/bze-alphateam/bze/api/bze/tradebin/module"
+	txfeecollectormodulev1 "github.com/bze-alphateam/bze/api/bze/txfeecollector/module"
 	_ "github.com/bze-alphateam/bze/x/burner/module" // import for side-effects
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	_ "github.com/bze-alphateam/bze/x/cointrunk/module" // import for side-effects
@@ -49,6 +50,8 @@ import (
 	tokenfactorymoduletypes "github.com/bze-alphateam/bze/x/tokenfactory/types"
 	_ "github.com/bze-alphateam/bze/x/tradebin/module" // import for side-effects
 	tradebinmoduletypes "github.com/bze-alphateam/bze/x/tradebin/types"
+	_ "github.com/bze-alphateam/bze/x/txfeecollector/module" // import for side-effects
+	txfeecollectormoduletypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -113,6 +116,7 @@ var (
 		tokenfactorymoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		tradebinmoduletypes.ModuleName,
+		txfeecollectormoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 
@@ -143,6 +147,7 @@ var (
 		tokenfactorymoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		tradebinmoduletypes.ModuleName,
+		txfeecollectormoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/beginBlockers
 	}
 
@@ -167,6 +172,7 @@ var (
 		tokenfactorymoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		tradebinmoduletypes.ModuleName,
+		txfeecollectormoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/endBlockers
 	}
 
@@ -193,6 +199,7 @@ var (
 		{Account: burnermoduletypes.RaffleModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: tokenfactorymoduletypes.ModuleName, Permissions: []string{authtypes.Burner, authtypes.Minter}},
 		{Account: tradebinmoduletypes.ModuleName, Permissions: []string{authtypes.Burner, authtypes.Minter}},
+		{Account: txfeecollectormoduletypes.ModuleName},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 
@@ -351,6 +358,10 @@ var (
 			{
 				Name:   tradebinmoduletypes.ModuleName,
 				Config: appconfig.WrapAny(&tradebinmodulev1.Module{}),
+			},
+			{
+				Name:   txfeecollectormoduletypes.ModuleName,
+				Config: appconfig.WrapAny(&txfeecollectormodulev1.Module{}),
 			},
 			// this line is used by starport scaffolding # stargate/app/moduleConfig
 		},

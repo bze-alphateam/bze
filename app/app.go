@@ -91,12 +91,14 @@ import (
 	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
 
 	_ "github.com/bze-alphateam/bze/client/docs/statik"
+	txfeecollectormodulekeeper "github.com/bze-alphateam/bze/x/txfeecollector/keeper"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
 const (
 	AccountAddressPrefix = "bze"
 	Name                 = "bze"
+	MainDenom            = "ubze"
 )
 
 var (
@@ -154,12 +156,13 @@ type App struct {
 	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
 	ScopedKeepers             map[string]capabilitykeeper.ScopedKeeper
 
-	BurnerKeeper       burnermodulekeeper.Keeper
-	EpochKeeper        epochmodulekeeper.Keeper
-	CointrunkKeeper    cointrunkmodulekeeper.Keeper
-	TokenfactoryKeeper tokenfactorymodulekeeper.Keeper
-	RewardsKeeper      rewardsmodulekeeper.Keeper
-	TradebinKeeper     tradebinmodulekeeper.Keeper
+	BurnerKeeper         burnermodulekeeper.Keeper
+	EpochKeeper          epochmodulekeeper.Keeper
+	CointrunkKeeper      cointrunkmodulekeeper.Keeper
+	TokenfactoryKeeper   tokenfactorymodulekeeper.Keeper
+	RewardsKeeper        rewardsmodulekeeper.Keeper
+	TradebinKeeper       tradebinmodulekeeper.Keeper
+	TxfeecollectorKeeper txfeecollectormodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
@@ -269,6 +272,7 @@ func New(
 		&app.TokenfactoryKeeper,
 		&app.RewardsKeeper,
 		&app.TradebinKeeper,
+		&app.TxfeecollectorKeeper,
 		// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	); err != nil {
 		panic(err)
@@ -312,7 +316,13 @@ func New(
 		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 	}
 
-	anteHandler, err := NewAnteHandler(anteOptions)
+	customAnte := AnteHandlerOptions{
+		MainDenom:   MainDenom,
+		TradeKeeper: app.TradebinKeeper,
+		BankKeeper:  app.BankKeeper,
+	}
+
+	anteHandler, err := NewAnteHandler(anteOptions, customAnte)
 	if err != nil {
 		return nil, err
 	}
@@ -469,6 +479,7 @@ func (app *App) setEpochsHooks() {
 			app.RewardsKeeper.GetTradingRewardsDistributionHook(),
 			app.BurnerKeeper.GetBurnerRaffleCleanupHook(),
 			app.BurnerKeeper.GetBurnerPeriodicBurnHook(),
+			app.TxfeecollectorKeeper.GetTxFeeConverterHook(),
 		},
 	)
 }

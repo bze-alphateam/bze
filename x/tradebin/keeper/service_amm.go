@@ -66,6 +66,8 @@ func (k Keeper) BalanceProvidedAmounts(base, quote, reserveBase, reserveQuote ma
 	return optimalBase, optimalQuote, nil
 }
 
+// swapTokens swaps `input` tokens for `output` tokens within the specified `pool` based on the pool's reserves and fees.
+// Returns the `output` tokens and a potential error if the operation cannot be completed.
 func (k Keeper) swapTokens(ctx sdk.Context, input sdk.Coin, pool *types.LiquidityPool) (output sdk.Coin, err error) {
 	if !pool.HasDenom(input.Denom) {
 		return output, fmt.Errorf("denom %s does not exist in pool %s", input.Denom, pool.GetId())
