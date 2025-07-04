@@ -7,6 +7,14 @@
   },
   "apis": [
     {
+      "url": "../../tmp-swagger-gen/bze/txfeecollector/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "TxFeeCollectorParams"
+        }
+      }
+    },
+    {
       "url": "../../tmp-swagger-gen/bze/burner/query.swagger.json",
       "operationIds": {
         "rename": {
