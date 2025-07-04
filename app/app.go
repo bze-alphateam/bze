@@ -3,6 +3,7 @@ package app
 import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	v800 "github.com/bze-alphateam/bze/app/upgrades/v800"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"io"
@@ -302,6 +303,20 @@ func New(
 	app.setEpochsHooks()
 	app.setTradebinHooks()
 	app.setupUpgradeHandlers()
+
+	anteOptions := ante.HandlerOptions{
+		AccountKeeper:   app.AccountKeeper,
+		BankKeeper:      app.BankKeeper,
+		FeegrantKeeper:  app.FeeGrantKeeper,
+		SignModeHandler: app.txConfig.SignModeHandler(),
+		SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+	}
+
+	anteHandler, err := NewAnteHandler(anteOptions)
+	if err != nil {
+		return nil, err
+	}
+	app.SetAnteHandler(anteHandler)
 
 	// A custom InitChainer sets if extra pre-init-genesis logic is required.
 	// This is necessary for manually registered modules that do not support app wiring.

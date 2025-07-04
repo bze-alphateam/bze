@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 var minNativeAmountForSwap = math.NewInt(50_000_000_000)
@@ -71,20 +72,22 @@ func (k Keeper) CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool {
 // It ensures the proper liquidity pool is available and updates account balances accordingly.
 // Returns the resulting native denomination coin and an error if the process is unsuccessful.
 func (k Keeper) ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins sdk.Coins) (sdk.Coin, error) {
-	nativeDenom := k.getNativeDenom(ctx)
+	cached, flush := ctx.CacheContext()
+	nativeDenom := k.getNativeDenom(cached)
 	if nativeDenom == "" {
 		return sdk.Coin{}, fmt.Errorf("native denom not set")
 	}
 
-	toModuleAcc := k.accountKeeper.GetModuleAccount(ctx, toModule)
+	toModuleAcc := k.accountKeeper.GetModuleAccount(cached, toModule)
 	swapResult := sdk.NewInt64Coin(nativeDenom, 0)
+	var events []proto.Message
 	for _, coin := range coins {
 		if nativeDenom == coin.Denom {
 			return swapResult, fmt.Errorf("cannot swap native coin to native coin")
 		}
 
 		_, _, poolId := k.CreatePoolId(nativeDenom, coin.Denom)
-		pool, exists := k.GetLiquidityPool(ctx, poolId)
+		pool, exists := k.GetLiquidityPool(cached, poolId)
 		if !exists {
 			return swapResult, fmt.Errorf("cannot find liquidity pool between native denom %s and provided denom %s", nativeDenom, coin.Denom)
 		}
@@ -94,37 +97,37 @@ func (k Keeper) ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins
 			return swapResult, fmt.Errorf("not enough liquidity available to swap coin %s to native coin", coin.Denom)
 		}
 
-		sr, err := k.swapTokens(ctx, coin, &pool)
+		sr, err := k.swapTokens(cached, coin, &pool)
 		if err != nil {
 			return swapResult, err
 		}
 
 		swapResult = swapResult.Add(sr)
-
-		err = ctx.EventManager().EmitTypedEvent(
-			&types.SwapEvent{
-				Creator: toModuleAcc.GetAddress().String(),
-				PoolId:  poolId,
-				In:      coin,
-				Out:     sr,
-			},
-		)
-
-		if err != nil {
-			k.Logger().Error(err.Error())
-		}
+		events = append(events, &types.SwapEvent{
+			Creator: toModuleAcc.GetAddress().String(),
+			PoolId:  poolId,
+			In:      coin,
+			Out:     sr,
+		})
 	}
 
 	//capture swapped coins from calling module
-	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, toModule, types.ModuleName, coins)
+	err := k.bankKeeper.SendCoinsFromModuleToModule(cached, toModule, types.ModuleName, coins)
 	if err != nil {
 		return swapResult, err
 	}
 
 	//send swap resulting coins to the calling module
-	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, toModule, sdk.NewCoins(swapResult))
+	err = k.bankKeeper.SendCoinsFromModuleToModule(cached, types.ModuleName, toModule, sdk.NewCoins(swapResult))
 	if err != nil {
 		return swapResult, err
+	}
+
+	flush()
+
+	err = ctx.EventManager().EmitTypedEvents(events...)
+	if err != nil {
+		k.Logger().Error(err.Error())
 	}
 
 	return swapResult, nil
