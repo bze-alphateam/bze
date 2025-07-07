@@ -23,6 +23,7 @@ func CreateUpgradeHandler(
 	bank bankkeeper.Keeper,
 	distr distrkeeper.Keeper,
 	acc authkeeper.AccountKeeper,
+	mainDenom string,
 ) upgradetypes.UpgradeHandler {
 
 	return func(c context.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -36,9 +37,9 @@ func CreateUpgradeHandler(
 		//We need to move those funds from rewards module to community pool
 		rAcc := acc.GetModuleAddress(rTypes.ModuleName)
 		//hardcoded denom to run it only for mainnet
-		rBal := bank.GetBalance(ctx, rAcc, "ubze")
+		rBal := bank.GetBalance(ctx, rAcc, mainDenom)
 		if rBal.Amount.GTE(math.NewInt(50_000_000000)) {
-			toSend := sdk.NewCoins(sdk.NewInt64Coin("ubze", 50_000_000000))
+			toSend := sdk.NewCoins(sdk.NewInt64Coin(mainDenom, 50_000_000000))
 			err = distr.FundCommunityPool(ctx, toSend, rAcc)
 			if err != nil {
 				ctx.Logger().Error("could not migrate funds from rewards module to community pool", "error", err)

@@ -349,7 +349,7 @@ func New(
 func (app *App) setupUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v800.UpgradeName,
-		v800.CreateUpgradeHandler(app.Configurator(), app.ModuleManager, app.BankKeeper, app.DistrKeeper, app.AccountKeeper),
+		v800.CreateUpgradeHandler(app.Configurator(), app.ModuleManager, app.BankKeeper, app.DistrKeeper, app.AccountKeeper, MainDenom),
 	)
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
