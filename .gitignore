@@ -9,3 +9,6 @@ release/
 *.ign
 
 **/*/node_modules
+
+cmd/.DS_Store
+build/*

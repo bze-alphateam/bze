@@ -1,109 +1,300 @@
-BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+PACKAGES=$(shell go list ./... | grep -v '/simulation')
+PACKAGE_NAME:=github.com/bze-alphateam/bze-v5
+GOLANG_CROSS_VERSION  = v1.23
+VERSION := $(shell echo $(shell git describe --tags 2>/dev/null ) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
-APPNAME := bzed
+NETWORK ?= mainnet
+COVERAGE ?= coverage.txt
+BUILDDIR ?= $(CURDIR)/build
+LEDGER_ENABLED ?= false
 
-# don't override user values
-ifeq (,$(VERSION))
-  VERSION := $(shell git describe --exact-match 2>/dev/null)
-  # if VERSION is empty, then populate it with branch's name and raw commit hash
-  ifeq (,$(VERSION))
-    VERSION := $(BRANCH)-$(COMMIT)
-  endif
-endif
-
-# Update the ldflags with the app, client & server names
-ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=$(APPNAME) \
-	-X github.com/cosmos/cosmos-sdk/version.AppName=$(APPNAME)d \
+ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=bze \
+	-X github.com/cosmos/cosmos-sdk/version.AppName=bzed \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
-	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT)
+	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
+	-w -s
 
 BUILD_FLAGS := -ldflags '$(ldflags)'
+TESTNET_FLAGS ?=
 
-##############
-###  Test  ###
-##############
+ledger ?= HID
+ifeq ($(LEDGER_ENABLED),true)
+	BUILD_TAGS := -tags cgo,ledger,!test_ledger_mock,!ledger_mock
+	ifeq ($(ledger), ZEMU)
+		BUILD_TAGS := $(BUILD_TAGS),ledger_zemu
+	else
+		BUILD_TAGS := $(BUILD_TAGS),!ledger_zemu
+	endif
+endif
 
-test-unit:
-	@echo Running unit tests...
-	@go test -mod=readonly -v -timeout 30m ./...
+ifeq ($(NETWORK),testnet)
+	BUILD_TAGS := $(BUILD_TAGS),testnet
+	TEST_TAGS := "--tags=testnet"
+endif
 
-test-race:
-	@echo Running unit tests with race condition reporting...
-	@go test -mod=readonly -v -race -timeout 30m ./...
+SIMAPP = github.com/bze-alphateam/bze-v5
+BINDIR ?= ~/go/bin
 
-test-cover:
-	@echo Running unit tests and creating coverage report...
-	@go test -mod=readonly -v -timeout 30m -coverprofile=$(COVER_FILE) -covermode=atomic ./...
-	@go tool cover -html=$(COVER_FILE) -o $(COVER_HTML_FILE)
-	@rm $(COVER_FILE)
+OS := $(shell uname)
 
-bench:
-	@echo Running unit tests with benchmarking...
-	@go test -mod=readonly -v -timeout 30m -bench=. ./...
+all: download install
 
-test: govet govulncheck test-unit
+download:
+	git submodule update --init --recursive
 
-.PHONY: test test-unit test-race test-cover bench
+install: check-version lint check-network go.sum
+		go install -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) ./cmd/bzed
 
-#################
-###  Install  ###
-#################
+build: check-version check-network go.sum
+		go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/bzed ./cmd/bzed
 
-all: install
+build-win64: check-version check-network go.sum
+		go build -buildmode=exe -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/win64/bzed.exe ./cmd/bzed
 
-install:
-	@echo "--> ensure dependencies have not been modified"
-	@go mod verify
-	@echo "--> installing $(APPNAME)d"
-	@go install $(BUILD_FLAGS) -mod=readonly ./cmd/$(APPNAME)d
+.PHONY: build
 
-.PHONY: all install
+build-linux: check-version check-network go.sum
+ifeq ($(OS), Linux)
+		GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-amd64/bzed ./cmd/bzed
+else
+		LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-amd64/bzed ./cmd/bzed
+endif
 
-##################
-###  Protobuf  ###
-##################
+build-linux-arm64: check-version check-network go.sum
+ifeq ($(OS), Linux)
+		GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-arm64/bzed ./cmd/bzed
+else
+		LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-arm64/bzed ./cmd/bzed
+endif
 
-# Use this proto-image if you do not want to use Ignite for generating proto files
-protoVer=0.15.1
-protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
-protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
+build-mac: check-version check-network go.sum
+ifeq ($(OS), Darwin)
+		GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-amd64/bzed ./cmd/bzed
+else
+		LEDGER_ENABLED=false GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-amd64/bzed ./cmd/bzed
+endif
 
-proto-gen:
-	@echo "Generating protobuf files..."
-	@ignite generate proto-go --yes
+build-mac-arm64: check-version check-network go.sum
+ifeq ($(OS), Darwin)
+		GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-arm64/bzed ./cmd/bzed
+else
+		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-arm64/bzed ./cmd/bzed
+endif
 
-.PHONY: proto-gen
+build-all: check-version lint all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
 
-#################
-###  Linting  ###
-#################
+compress-build:
+	rm -rf $(BUILDDIR)/compressed
+	mkdir $(BUILDDIR)/compressed
+	zip -j $(BUILDDIR)/compressed/bze-$(VERSION)-win64.zip $(BUILDDIR)/win64/bzed.exe
+	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-darwin-arm64.tar.gz -C $(BUILDDIR)/darwin-arm64/ .
+	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-darwin-amd64.tar.gz -C $(BUILDDIR)/darwin-amd64/ .
+	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-linux-arm64.tar.gz -C $(BUILDDIR)/linux-arm64/ .
+	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-linux-amd64.tar.gz -C $(BUILDDIR)/linux-amd64/ .
 
-golangci_lint_cmd=golangci-lint
-golangci_version=v1.61.0
+go.sum: go.mod
+		@echo "--> Ensure dependencies have not been modified"
+		GO111MODULE=on go mod verify
 
+test: check-network
+	@go test $(TEST_TAGS) -v -mod=readonly $(PACKAGES) -coverprofile=$(COVERAGE) -covermode=atomic
+.PHONY: test
+
+# look into .golangci.yml for enabling / disabling linters
 lint:
-	@echo "--> Running linter"
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
-	@$(golangci_lint_cmd) run ./... --timeout 15m
+	@#echo "--> Running linter"
+	@#golangci-lint run
+	@#go mod verify
 
-lint-fix:
-	@echo "--> Running linter and fixing issues"
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
-	@$(golangci_lint_cmd) run ./... --fix --timeout 15m
+# a trick to make all the lint commands execute, return error when at least one fails.
+# golangci-lint is run in standalone job in ci
+lint-ci:
+	@echo "--> Running linter for CI"
+	@nix run -f ./. lint-env -c lint-ci
 
-.PHONY: lint lint-fix
+# Add check to make sure we are using the proper Go version before proceeding with anything
+check-version:
+	@if ! go version | grep -q "go1.23"; then \
+		echo "\033[0;31mERROR:\033[0m Go version 1.23 is required for compiling bzed. It looks like you are using" "$(shell go version) \nThere are potential consensus-breaking changes that can occur when running binaries compiled with different versions of Go. Please download Go version 1.23 and retry. Thank you!"; \
+		exit 1; \
+	fi
 
-###################
-### Development ###
-###################
+test-sim-nondeterminism: check-network
+	@echo "Running non-determinism test..."
+	@go test $(TEST_TAGS) -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
+		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h
 
-govet:
-	@echo Running go vet...
-	@go vet ./...
+test-sim-custom-genesis-fast: check-network
+	@echo "Running custom genesis simulation..."
+	@echo "By default, ${HOME}/.bze/config/genesis.json will be used."
+	@go test $(TEST_TAGS) -mod=readonly $(SIMAPP) -run TestFullAppSimulation -Genesis=${HOME}/.bze/config/genesis.json \
+		-Enabled=true -NumBlocks=100 -BlockSize=200 -Commit=true -Seed=99 -Period=5 -v -timeout 24h
 
-govulncheck:
-	@echo Running govulncheck...
-	@go install golang.org/x/vuln/cmd/govulncheck@latest
-	@govulncheck ./...
+test-sim-import-export:
+	@echo "Running Chain import/export simulation. This may take several minutes..."
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 25 5 TestAppImportExport
 
-.PHONY: govet govulncheck
+test-sim-after-import:
+	@echo "Running application simulation-after-import. This may take several minutes..."
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) 50 5 TestAppSimulationAfterImport
+
+###############################################################################
+###                                Localnet                                 ###
+###############################################################################
+start-localnet-ci: build
+	rm -rf ~/.bzed-liveness
+	./build/bzed init liveness --staking-bond-denom ubze --chain-id liveness --home ~/.bzed-liveness
+	./build/bzed config chain-id liveness --home ~/.bzed-liveness
+	./build/bzed config keyring-backend test --home ~/.bzed-liveness
+	./build/bzed keys add val --home ~/.bzed-liveness
+	./build/bzed genesis add-genesis-account val 1000000000000ubze --home ~/.bzed-liveness --keyring-backend test
+	./build/bzed keys add user --home ~/.bzed-liveness
+	./build/bzed genesis add-genesis-account user 1000000000ubze --home ~/.bzed-liveness --keyring-backend test
+	./build/bzed genesis gentx val 1000000000ubze --home ~/.bzed-liveness --chain-id liveness
+	./build/bzed genesis collect-gentxs --home ~/.bzed-liveness
+	sed -i.bak 's#^minimum-gas-prices = .*#minimum-gas-prices = "0.001ubze,0.0001stake"#g' ~/.bzed-liveness/config/app.toml
+	./build/bzed start --home ~/.bzed-liveness --x-crisis-skip-assert-invariants
+.PHONY: start-localnet-ci
+
+build-docker-bzednode:
+	$(MAKE) -C check-networks/local
+
+# Run a 4-node testnet locally
+localnet-start: build-linux build-docker-testbzednode localnet-stop
+	@if ! [ -f $(BUILDDIR)/node0/.testbze/config/genesis.json ]; \
+	then docker run --rm -v $(BUILDDIR):/testbzed:Z bze/testbzednode testnet --v 4 -o . --starting-ip-address 192.168.10.2 $(TESTNET_FLAGS); \
+	fi
+	BUILDDIR=$(BUILDDIR) docker-compose up -d
+
+# Stop testnet
+localnet-stop:
+	docker-compose down
+	docker check-network prune -f
+
+# local build pystarport
+build-pystarport:
+	pip install ./pystarport
+
+# Run a local testnet by pystarport
+localnet-pystartport: build-pystarport
+	pystarport serve
+
+clean:
+	rm -rf $(BUILDDIR)/
+
+clean-docker-compose: localnet-stop
+	rm -rf $(BUILDDIR)/node* $(BUILDDIR)/gentxs
+
+create-systemd:
+	./networks/create-service.sh
+
+make-proto:
+	./makeproto.sh
+###############################################################################
+###                                Nix                                      ###
+###############################################################################
+# nix installation: https://nixos.org/download.html
+nix-integration-test: check-network make-proto
+	nix run -f ./default.nix run-integration-tests -c run-integration-tests
+
+nix-integration-test-upgrade: check-network
+	nix run -f ./default.nix run-integration-tests -c run-integration-tests "pytest -v -m upgrade"
+
+nix-integration-test-ledger: check-network
+	nix run -f ./default.nix run-integration-tests-zemu -c run-integration-tests "pytest -v -m ledger"
+
+nix-integration-test-slow: check-network
+	nix run -f ./default.nix run-integration-tests -c run-integration-tests "pytest -v -m slow"
+
+nix-integration-test-ibc: check-network
+	nix run -f ./default.nix run-integration-tests -c run-integration-tests "pytest -v -m ibc"
+
+nix-integration-test-byzantine: check-network
+	nix run -f ./default.nix run-integration-tests -c run-integration-tests "pytest -v -m byzantine"
+
+nix-integration-test-gov: check-network
+	nix run -f ./default.nix run-integration-tests -c run-integration-tests "pytest -v -m gov"
+
+nix-integration-test-grpc: check-network make-proto
+	nix run -f ./default.nix run-integration-tests -c run-integration-tests "pytest -v -m grpc"
+
+nix-integration-test-all: check-network make-proto
+	nix run -f ./default.nix run-integration-tests -c run-integration-tests "pytest -v"
+
+
+nix-build-%: check-network check-os
+	@if [ -e ~/.nix/remote-build-env ]; then \
+		. ~/.nix/remote-build-env; \
+	fi && \
+	nix-build -o $* -A $* docker.nix;
+	docker load < $*;
+
+chaindImage: nix-build-chaindImage
+pystarportImage: nix-build-pystarportImage
+
+check-network:
+ifeq ($(NETWORK),mainnet)
+else ifeq ($(NETWORK),testnet)
+else
+	@echo "Unrecognized network: ${NETWORK}"
+endif
+	@echo "building network: ${NETWORK}"
+
+check-os:
+ifeq ($(OS), Darwin)
+ifneq ("$(wildcard ~/.nix/remote-build-env))","")
+	@echo "installed nix-remote-builder before" && \
+	docker run --restart always --name nix-docker -d -p 3022:22 lnl7/nix:ssh 2> /dev/null || echo "nix-docker is already running"
+else
+	@echo install nix-remote-builder
+	git clone https://github.com/holidaycheck/nix-remote-builder.git
+	cd nix-remote-builder && ./init.sh
+	rm -rf nix-remote-builder
+endif
+endif
+
+###############################################################################
+###                              Release                                    ###
+###############################################################################
+.PHONY: release-dry-run
+release-dry-run:
+	docker run \
+		--rm \
+		--privileged \
+		-e CGO_ENABLED=1 \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/$(PACKAGE_NAME) \
+		-v ${GOPATH}/pkg:/go/pkg \
+		-w /go/src/$(PACKAGE_NAME) \
+		troian/golang-cross:${GOLANG_CROSS_VERSION} \
+		--rm-dist --skip-validate --skip-publish
+
+.PHONY: release
+release:
+	@if [ ! -f ".release-env" ]; then \
+		echo "\033[91m.release-env is required for release\033[0m";\
+		exit 1;\
+	fi
+	docker run \
+		--rm \
+		--privileged \
+		-e CGO_ENABLED=1 \
+		--env-file .release-env \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/$(PACKAGE_NAME) \
+		-w /go/src/$(PACKAGE_NAME) \
+		troian/golang-cross:${GOLANG_CROSS_VERSION} \
+		release --rm-dist --skip-validate
+
+###############################################################################
+###                              Documentation                              ###
+###############################################################################
+
+# generate api swagger document
+document:
+	make all -f MakefileDoc
+
+# generate protobuf files
+# ./proto -> ./x
+proto-all:
+	make proto-all -f MakefileDoc

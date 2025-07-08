@@ -1,6 +1,6 @@
 module github.com/bze-alphateam/bze
 
-go 1.22.7
+go 1.23
 
 replace (
 	// fix upstream GHSA-h395-qcrw-5vmq vulnerability.
