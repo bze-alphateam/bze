@@ -2,7 +2,7 @@
 
 set -e
 
-BZE_CMD="./bzed-old"
+BZE_CMD="./build/bzed-old"
 BZE_HOME_DIR="$HOME/.bzelocalnet"
 CHAIN_ID="testing"
 
