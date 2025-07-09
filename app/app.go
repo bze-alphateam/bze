@@ -96,9 +96,9 @@ import (
 )
 
 const (
-	AccountAddressPrefix = "bze"
-	Name                 = "bze"
-	MainDenom            = "ubze"
+	AccountAddressPrefix = "testbz"
+	Name                 = "tbze"
+	MainDenom            = "utbz"
 )
 
 var (
