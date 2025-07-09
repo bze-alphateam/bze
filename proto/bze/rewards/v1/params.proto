@@ -1,0 +1,12 @@
+syntax = "proto3";
+package bze.rewards.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/rewards/v1types";
+
+// Params defines the parameters for the module.
+message Params {
+  string createStakingRewardFee = 1 [(gogoproto.moretags) = "yaml:\"create_staking_reward_fee\""];
+  string createTradingRewardFee = 2 [(gogoproto.moretags) = "yaml:\"create_trading_reward_fee\""];
+}

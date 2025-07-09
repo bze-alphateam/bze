@@ -10,7 +10,9 @@ import (
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	cointrunkmoduletypes "github.com/bze-alphateam/bze/x/cointrunk/types"
 	rTypes "github.com/bze-alphateam/bze/x/rewards/types"
+	rv1Types "github.com/bze-alphateam/bze/x/rewards/v1types"
 	tokenfactorytypes "github.com/bze-alphateam/bze/x/tokenfactory/types"
+	tokenfactoryv1types "github.com/bze-alphateam/bze/x/tokenfactory/v1types"
 	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
 	txfeecollectormoduletypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -97,9 +99,9 @@ func CreateUpgradeHandler(
 			case tradebintypes.ModuleName:
 				keyTable = tradebintypes.ParamKeyTable()
 			case rTypes.ModuleName:
-				keyTable = rTypes.ParamKeyTable()
+				keyTable = rv1Types.ParamKeyTable()
 			case tokenfactorytypes.ModuleName:
-				keyTable = tokenfactorytypes.ParamKeyTable()
+				keyTable = tokenfactoryv1types.ParamKeyTable()
 
 			default:
 				continue

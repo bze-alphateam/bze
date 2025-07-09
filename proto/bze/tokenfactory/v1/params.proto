@@ -1,0 +1,11 @@
+syntax = "proto3";
+package bze.tokenfactory.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/tokenfactory/v1types";
+
+// Params defines the parameters for the module.
+message Params {
+  string createDenomFee = 1 [(gogoproto.moretags) = "yaml:\"create_denom_fee\""];
+}
