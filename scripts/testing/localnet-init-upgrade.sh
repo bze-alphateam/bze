@@ -40,4 +40,13 @@ jq '.app_state.gov.deposit_params.min_deposit[0].amount = "100"' "$BZE_HOME_DIR/
 # Set voting period
 jq '.app_state.gov.voting_params.voting_period = "120s"' "$BZE_HOME_DIR/config/genesis.json" > "$BZE_HOME_DIR/config/tmp_genesis.json" && mv "$BZE_HOME_DIR/config/tmp_genesis.json" "$BZE_HOME_DIR/config/genesis.json"
 
+jq '.app_state.cointrunk.publisher_list[0] = {
+  name: "CosmosBG",
+  address: "bze1edwj9fhuugzggcv5magm9j4vnur4hzsf26s2ws",
+  active: true,
+  articles_count: 90,
+  created_at: "1744098925",
+  respect: "40500000000"
+}' "$BZE_HOME_DIR/config/genesis.json" > "$BZE_HOME_DIR/config/tmp_genesis.json" && mv "$BZE_HOME_DIR/config/tmp_genesis.json" "$BZE_HOME_DIR/config/genesis.json"
+
 $BZE_CMD start --home="$BZE_HOME_DIR"
