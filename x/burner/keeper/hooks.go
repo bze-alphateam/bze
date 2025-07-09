@@ -8,8 +8,6 @@ import (
 const (
 	hookName             = "burner_raffle_cleanup"
 	periodicBurnHookName = "periodic_burner"
-
-	BurnInterval = 4
 )
 
 func (k Keeper) GetBurnerPeriodicBurnHook() types.EpochHook {
@@ -18,7 +16,8 @@ func (k Keeper) GetBurnerPeriodicBurnHook() types.EpochHook {
 			return nil
 		}
 
-		if epochNumber%BurnInterval != 0 {
+		params := k.GetParams(ctx)
+		if epochNumber%params.PeriodicBurningWeeks != 0 {
 			return nil
 		}
 

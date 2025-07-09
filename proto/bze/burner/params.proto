@@ -11,5 +11,5 @@ message Params {
   option (amino.name) = "bze/x/burner/Params";
   option (gogoproto.equal) = true;
 
-  
+  int64 periodic_burning_weeks = 1 [(gogoproto.moretags) = "yaml:\"periodic_burning_weeks\""];
 }
