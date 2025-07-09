@@ -30,5 +30,5 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 
 	m.keeper.Logger().Info("migrating x/burner state from consensus version 1 to version 2")
 
-	return v2.Migrate(ctx, store, m.legacySubspace, m.keeper.cdc)
+	return v2.Migrate(store, m.keeper.cdc)
 }
