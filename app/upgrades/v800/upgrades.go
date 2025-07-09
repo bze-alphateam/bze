@@ -54,7 +54,6 @@ func CreateUpgradeHandler(
 
 	return func(c context.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		ctx := sdk.UnwrapSDKContext(c)
-		vm[burnermoduletypes.ModuleName] = 1
 		baseAppLegacySS := paramsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
 		for _, subspace := range paramsKeeper.GetSubspaces() {
 			s := subspace
