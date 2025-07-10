@@ -11,7 +11,7 @@ func Migrate(
 	store prefix.Store,
 	cdc codec.BinaryCodec,
 ) error {
-	currParams := types.NewParams(4)
+	currParams := types.NewParams(1)
 
 	bz := cdc.MustMarshal(&currParams)
 	store.Set(types.ParamsKey, bz)
