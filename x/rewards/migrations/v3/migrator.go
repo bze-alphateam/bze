@@ -1,4 +1,4 @@
-package v2
+package v3
 
 import (
 	"cosmossdk.io/store/prefix"
@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Migrate migrates params from x/params module to x/cointrunk own subspace
+// Migrate migrates params from x/params module to x/rewards own subspace
 func Migrate(
 	ctx sdk.Context,
 	store prefix.Store,

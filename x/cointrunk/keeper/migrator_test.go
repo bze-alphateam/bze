@@ -45,7 +45,7 @@ func TestMigrator_Migrate1to2(t *testing.T) {
 	migrator := keeper.NewMigrator(k, legacySubspace)
 
 	// Run migration (testing with empty publisher store since we can't inject v1 data)
-	require.NoError(t, migrator.Migrate1to2(ctx))
+	require.NoError(t, migrator.Migrate2to3(ctx))
 
 	// Verify params were migrated
 	params := k.GetParams(ctx)

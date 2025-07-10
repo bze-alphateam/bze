@@ -1,7 +1,7 @@
-package v2_test
+package v3_test
 
 import (
-	ct "github.com/bze-alphateam/bze/x/tradebin/module"
+	ct "github.com/bze-alphateam/bze/x/tokenfactory/module"
 	"testing"
 
 	"cosmossdk.io/store/prefix"
@@ -11,9 +11,9 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/stretchr/testify/require"
 
-	"github.com/bze-alphateam/bze/x/tradebin/exported"
-	v2 "github.com/bze-alphateam/bze/x/tradebin/migrations/v2"
-	"github.com/bze-alphateam/bze/x/tradebin/types"
+	"github.com/bze-alphateam/bze/x/tokenfactory/exported"
+	v2 "github.com/bze-alphateam/bze/x/tokenfactory/migrations/v3"
+	"github.com/bze-alphateam/bze/x/tokenfactory/types"
 )
 
 // mockSubspace implements the exported.Subspace interface for testing

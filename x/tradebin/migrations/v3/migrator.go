@@ -1,4 +1,4 @@
-package v2
+package v3
 
 import (
 	"cosmossdk.io/store/prefix"
@@ -19,7 +19,7 @@ func Migrate(
 	legacySubspace.GetParamSet(ctx, &currParams)
 
 	currParams.NativeDenom = types.DefaultNativeDenom
-	
+
 	if err := currParams.Validate(); err != nil {
 		return err
 	}
