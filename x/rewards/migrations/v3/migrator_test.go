@@ -1,4 +1,4 @@
-package v2_test
+package v3_test
 
 import (
 	ct "github.com/bze-alphateam/bze/x/rewards/module"
@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/bze-alphateam/bze/x/rewards/exported"
-	v2 "github.com/bze-alphateam/bze/x/rewards/migrations/v2"
+	v2 "github.com/bze-alphateam/bze/x/rewards/migrations/v3"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 )
 

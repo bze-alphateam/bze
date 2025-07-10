@@ -23,12 +23,14 @@ if [ -d "$BZE_HOME_DIR" ]; then
 fi
 
 $BZE_CMD init --chain-id=$CHAIN_ID testing --home="$BZE_HOME_DIR"
-$BZE_CMD keys add validator --keyring-backend=os --home="$BZE_HOME_DIR"
-VALIDATOR_ADDR=$($BZE_CMD keys show validator -a --keyring-backend=os --home="$BZE_HOME_DIR")
+# Delete the key if it already exists (useful for reruns)
+$BZE_CMD keys delete validator --keyring-backend=test --home="$BZE_HOME_DIR" -y || true
+$BZE_CMD keys add validator --keyring-backend=test --home="$BZE_HOME_DIR"
+VALIDATOR_ADDR=$($BZE_CMD keys show validator -a --keyring-backend=test --home="$BZE_HOME_DIR")
 
 $BZE_CMD add-genesis-account "$VALIDATOR_ADDR" 1000000000ubze,1000000000valtoken --home="$BZE_HOME_DIR"
 sed -i -e "s/stake/ubze/g" "$BZE_HOME_DIR/config/genesis.json"
-$BZE_CMD gentx validator 500000000ubze --commission-rate="0.0" --keyring-backend=os --home="$BZE_HOME_DIR" --chain-id=$CHAIN_ID
+$BZE_CMD gentx validator 500000000ubze --commission-rate="0.0" --keyring-backend=test --home="$BZE_HOME_DIR" --chain-id=$CHAIN_ID
 $BZE_CMD collect-gentxs --home="$BZE_HOME_DIR"
 
 # Set initial height
@@ -49,4 +51,4 @@ jq '.app_state.cointrunk.publisher_list[0] = {
   respect: "40500000000"
 }' "$BZE_HOME_DIR/config/genesis.json" > "$BZE_HOME_DIR/config/tmp_genesis.json" && mv "$BZE_HOME_DIR/config/tmp_genesis.json" "$BZE_HOME_DIR/config/genesis.json"
 
-$BZE_CMD start --home="$BZE_HOME_DIR"
+#$BZE_CMD start --home="$BZE_HOME_DIR"

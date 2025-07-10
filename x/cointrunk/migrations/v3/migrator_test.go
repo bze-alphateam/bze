@@ -1,4 +1,4 @@
-package v2_test
+package v3_test
 
 import (
 	ct "github.com/bze-alphateam/bze/x/cointrunk/module"
@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/bze-alphateam/bze/x/cointrunk/exported"
-	v2 "github.com/bze-alphateam/bze/x/cointrunk/migrations/v2"
+	v2 "github.com/bze-alphateam/bze/x/cointrunk/migrations/v3"
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
 	"github.com/bze-alphateam/bze/x/cointrunk/v1types"
 )

@@ -1,7 +1,7 @@
-package v2_test
+package v4_test
 
 import (
-	ct "github.com/bze-alphateam/bze/x/tokenfactory/module"
+	burner2 "github.com/bze-alphateam/bze/x/burner/module"
 	"testing"
 
 	"cosmossdk.io/store/prefix"
@@ -11,9 +11,9 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/stretchr/testify/require"
 
-	"github.com/bze-alphateam/bze/x/tokenfactory/exported"
-	v2 "github.com/bze-alphateam/bze/x/tokenfactory/migrations/v2"
-	"github.com/bze-alphateam/bze/x/tokenfactory/types"
+	"github.com/bze-alphateam/bze/x/burner/exported"
+	v2 "github.com/bze-alphateam/bze/x/burner/migrations/v4"
+	"github.com/bze-alphateam/bze/x/burner/types"
 )
 
 // mockSubspace implements the exported.Subspace interface for testing
@@ -25,13 +25,13 @@ func newMockSubspace(ps types.Params) mockSubspace {
 	return mockSubspace{ps: ps}
 }
 
-func (ms mockSubspace) GetParamSet(_ sdk.Context, ps exported.ParamSet) {
+func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps exported.ParamSet) {
 	*ps.(*types.Params) = ms.ps
 }
 
 // TestMigrate tests the successful migration of params from legacy subspace to module store
 func TestMigrate(t *testing.T) {
-	encCfg := moduletestutil.MakeTestEncodingConfig(ct.AppModuleBasic{})
+	encCfg := moduletestutil.MakeTestEncodingConfig(burner2.AppModuleBasic{})
 	cdc := encCfg.Codec
 
 	storeKey := storetypes.NewKVStoreKey(types.ModuleName)
