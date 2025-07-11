@@ -5,6 +5,7 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	// this line is used by starport scaffolding # 1
 )
 
@@ -18,13 +19,13 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	)
 	registry.RegisterInterface(
 		"bze.cointrunk.v1.AcceptedDomainProposal",
-		(*v1types.AcceptedDomainProposal)(nil),
+		(*v1beta1.Content)(nil),
 		&v1types.AcceptedDomainProposal{},
 	)
 
 	registry.RegisterInterface(
 		"bze.cointrunk.v1.PublisherProposal",
-		(*v1types.PublisherProposal)(nil),
+		(*v1beta1.Content)(nil),
 		&v1types.PublisherProposal{},
 	)
 
