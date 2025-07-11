@@ -15,7 +15,17 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgAcceptDomain{},
 		&MsgSavePublisher{},
 		&MsgUpdateParams{},
+	)
+	registry.RegisterInterface(
+		"bze.cointrunk.v1.AcceptedDomainProposal",
+		(*v1types.AcceptedDomainProposal)(nil),
 		&v1types.AcceptedDomainProposal{},
+	)
+
+	registry.RegisterInterface(
+		"bze.cointrunk.v1.PublisherProposal",
+		(*v1types.PublisherProposal)(nil),
+		&v1types.PublisherProposal{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
