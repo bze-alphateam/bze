@@ -1,13 +1,14 @@
 package app
 
 import (
+	"io"
+	"net/http"
+
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	v800 "github.com/bze-alphateam/bze/app/upgrades/v800"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
-	"io"
-	"net/http"
 
 	epochmoduletypes "github.com/bze-alphateam/bze/x/epochs/types"
 
@@ -157,7 +158,7 @@ type App struct {
 	ScopedKeepers             map[string]capabilitykeeper.ScopedKeeper
 
 	BurnerKeeper         burnermodulekeeper.Keeper
-	EpochKeeper          epochmodulekeeper.Keeper
+	EpochKeeper          *epochmodulekeeper.Keeper
 	CointrunkKeeper      cointrunkmodulekeeper.Keeper
 	TokenfactoryKeeper   tokenfactorymodulekeeper.Keeper
 	RewardsKeeper        rewardsmodulekeeper.Keeper
