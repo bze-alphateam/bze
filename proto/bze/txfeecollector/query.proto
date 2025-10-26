@@ -13,7 +13,7 @@ option go_package = "github.com/bze-alphateam/bze/x/txfeecollector/types";
 service Query {
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/bze-alphateam/bze/txfeecollector/params";
+    option (google.api.http).get = "/bze/txfeecollector/params";
   }
 }
 

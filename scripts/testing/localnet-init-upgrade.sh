@@ -51,4 +51,4 @@ jq '.app_state.cointrunk.publisher_list[0] = {
   respect: "40500000000"
 }' "$BZE_HOME_DIR/config/genesis.json" > "$BZE_HOME_DIR/config/tmp_genesis.json" && mv "$BZE_HOME_DIR/config/tmp_genesis.json" "$BZE_HOME_DIR/config/genesis.json"
 
-#$BZE_CMD start --home="$BZE_HOME_DIR"
+$BZE_CMD start --home="$BZE_HOME_DIR"
