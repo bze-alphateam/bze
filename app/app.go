@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/bze-alphateam/bze/app/upgrades"
 	v800 "github.com/bze-alphateam/bze/app/upgrades/v800"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/gorilla/mux"
@@ -349,17 +350,8 @@ func New(
 
 func (app *App) setupUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v800.UpgradeName,
-		v800.CreateUpgradeHandler(
-			app.Configurator(),
-			app.ModuleManager,
-			app.BankKeeper,
-			app.DistrKeeper,
-			app.AccountKeeper,
-			MainDenom,
-			&app.ParamsKeeper,
-			&app.ConsensusParamsKeeper,
-		),
+		"v8.0.0-rc2",
+		upgrades.EmptyUpgradeHandler(),
 	)
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
