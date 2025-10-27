@@ -23,7 +23,7 @@ var (
 )
 
 const (
-    opWeightMsgCreateMarket = "op_weight_msg_create_market"
+	opWeightMsgCreateMarket = "op_weight_msg_create_market"
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgCreateMarket int = 100
 
@@ -65,7 +65,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 		accs[i] = acc.Address.String()
 	}
 	tradebinGenesis := types.GenesisState{
-		Params:	types.DefaultParams(),
+		Params: types.DefaultParams(),
 		// this line is used by starport scaffolding # simapp/module/genesisState
 	}
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&tradebinGenesis)
@@ -86,7 +86,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgCreateMarket,
-		tradebinsimulation.SimulateMsgCreateMarket(am.accountKeeper, am.bankKeeper, am.keeper),
+		tradebinsimulation.SimulateMsgCreateMarket(am.accountKeeper, am.bankKeeper, *am.keeper),
 	))
 
 	var weightMsgCreateOrder int
@@ -97,7 +97,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgCreateOrder,
-		tradebinsimulation.SimulateMsgCreateOrder(am.accountKeeper, am.bankKeeper, am.keeper),
+		tradebinsimulation.SimulateMsgCreateOrder(am.accountKeeper, am.bankKeeper, *am.keeper),
 	))
 
 	var weightMsgCancelOrder int
@@ -108,7 +108,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgCancelOrder,
-		tradebinsimulation.SimulateMsgCancelOrder(am.accountKeeper, am.bankKeeper, am.keeper),
+		tradebinsimulation.SimulateMsgCancelOrder(am.accountKeeper, am.bankKeeper, *am.keeper),
 	))
 
 	var weightMsgFillOrders int
@@ -119,7 +119,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgFillOrders,
-		tradebinsimulation.SimulateMsgFillOrders(am.accountKeeper, am.bankKeeper, am.keeper),
+		tradebinsimulation.SimulateMsgFillOrders(am.accountKeeper, am.bankKeeper, *am.keeper),
 	))
 
 	var weightMsgCreateLiquidityPool int
@@ -130,7 +130,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgCreateLiquidityPool,
-		tradebinsimulation.SimulateMsgCreateLiquidityPool(am.accountKeeper, am.bankKeeper, am.keeper),
+		tradebinsimulation.SimulateMsgCreateLiquidityPool(am.accountKeeper, am.bankKeeper, *am.keeper),
 	))
 
 	var weightMsgAddLiquidity int
@@ -141,7 +141,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgAddLiquidity,
-		tradebinsimulation.SimulateMsgAddLiquidity(am.accountKeeper, am.bankKeeper, am.keeper),
+		tradebinsimulation.SimulateMsgAddLiquidity(am.accountKeeper, am.bankKeeper, *am.keeper),
 	))
 
 	var weightMsgRemoveLiquidity int
@@ -152,7 +152,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgRemoveLiquidity,
-		tradebinsimulation.SimulateMsgRemoveLiquidity(am.accountKeeper, am.bankKeeper, am.keeper),
+		tradebinsimulation.SimulateMsgRemoveLiquidity(am.accountKeeper, am.bankKeeper, *am.keeper),
 	))
 
 	var weightMsgMultiSwap int
@@ -163,7 +163,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgMultiSwap,
-		tradebinsimulation.SimulateMsgMultiSwap(am.accountKeeper, am.bankKeeper, am.keeper),
+		tradebinsimulation.SimulateMsgMultiSwap(am.accountKeeper, am.bankKeeper, *am.keeper),
 	))
 
 	// this line is used by starport scaffolding # simapp/module/operation
@@ -172,72 +172,72 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 }
 
 // ProposalMsgs returns msgs used for governance proposals for simulations.
-func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
+func (am AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
 	return []simtypes.WeightedProposalMsg{
-	    simulation.NewWeightedProposalMsg(
-	opWeightMsgCreateMarket,
-	defaultWeightMsgCreateMarket,
-	func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-		tradebinsimulation.SimulateMsgCreateMarket(am.accountKeeper, am.bankKeeper, am.keeper)
-		return nil
-	},
-),
-simulation.NewWeightedProposalMsg(
-	opWeightMsgCreateOrder,
-	defaultWeightMsgCreateOrder,
-	func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-		tradebinsimulation.SimulateMsgCreateOrder(am.accountKeeper, am.bankKeeper, am.keeper)
-		return nil
-	},
-),
-simulation.NewWeightedProposalMsg(
-	opWeightMsgCancelOrder,
-	defaultWeightMsgCancelOrder,
-	func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-		tradebinsimulation.SimulateMsgCancelOrder(am.accountKeeper, am.bankKeeper, am.keeper)
-		return nil
-	},
-),
-simulation.NewWeightedProposalMsg(
-	opWeightMsgFillOrders,
-	defaultWeightMsgFillOrders,
-	func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-		tradebinsimulation.SimulateMsgFillOrders(am.accountKeeper, am.bankKeeper, am.keeper)
-		return nil
-	},
-),
-simulation.NewWeightedProposalMsg(
-	opWeightMsgCreateLiquidityPool,
-	defaultWeightMsgCreateLiquidityPool,
-	func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-		tradebinsimulation.SimulateMsgCreateLiquidityPool(am.accountKeeper, am.bankKeeper, am.keeper)
-		return nil
-	},
-),
-simulation.NewWeightedProposalMsg(
-	opWeightMsgAddLiquidity,
-	defaultWeightMsgAddLiquidity,
-	func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-		tradebinsimulation.SimulateMsgAddLiquidity(am.accountKeeper, am.bankKeeper, am.keeper)
-		return nil
-	},
-),
-simulation.NewWeightedProposalMsg(
-	opWeightMsgRemoveLiquidity,
-	defaultWeightMsgRemoveLiquidity,
-	func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-		tradebinsimulation.SimulateMsgRemoveLiquidity(am.accountKeeper, am.bankKeeper, am.keeper)
-		return nil
-	},
-),
-simulation.NewWeightedProposalMsg(
-	opWeightMsgMultiSwap,
-	defaultWeightMsgMultiSwap,
-	func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-		tradebinsimulation.SimulateMsgMultiSwap(am.accountKeeper, am.bankKeeper, am.keeper)
-		return nil
-	},
-),
-// this line is used by starport scaffolding # simapp/module/OpMsg
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgCreateMarket,
+			defaultWeightMsgCreateMarket,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				tradebinsimulation.SimulateMsgCreateMarket(am.accountKeeper, am.bankKeeper, *am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgCreateOrder,
+			defaultWeightMsgCreateOrder,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				tradebinsimulation.SimulateMsgCreateOrder(am.accountKeeper, am.bankKeeper, *am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgCancelOrder,
+			defaultWeightMsgCancelOrder,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				tradebinsimulation.SimulateMsgCancelOrder(am.accountKeeper, am.bankKeeper, *am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgFillOrders,
+			defaultWeightMsgFillOrders,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				tradebinsimulation.SimulateMsgFillOrders(am.accountKeeper, am.bankKeeper, *am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgCreateLiquidityPool,
+			defaultWeightMsgCreateLiquidityPool,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				tradebinsimulation.SimulateMsgCreateLiquidityPool(am.accountKeeper, am.bankKeeper, *am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgAddLiquidity,
+			defaultWeightMsgAddLiquidity,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				tradebinsimulation.SimulateMsgAddLiquidity(am.accountKeeper, am.bankKeeper, *am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgRemoveLiquidity,
+			defaultWeightMsgRemoveLiquidity,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				tradebinsimulation.SimulateMsgRemoveLiquidity(am.accountKeeper, am.bankKeeper, *am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgMultiSwap,
+			defaultWeightMsgMultiSwap,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				tradebinsimulation.SimulateMsgMultiSwap(am.accountKeeper, am.bankKeeper, *am.keeper)
+				return nil
+			},
+		),
+		// this line is used by starport scaffolding # simapp/module/OpMsg
 	}
 }

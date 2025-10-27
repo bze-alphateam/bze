@@ -162,7 +162,7 @@ type App struct {
 	CointrunkKeeper      cointrunkmodulekeeper.Keeper
 	TokenfactoryKeeper   tokenfactorymodulekeeper.Keeper
 	RewardsKeeper        rewardsmodulekeeper.Keeper
-	TradebinKeeper       tradebinmodulekeeper.Keeper
+	TradebinKeeper       *tradebinmodulekeeper.Keeper
 	TxfeecollectorKeeper txfeecollectormodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 

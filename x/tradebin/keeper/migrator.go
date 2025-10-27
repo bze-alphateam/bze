@@ -9,11 +9,11 @@ import (
 )
 
 type Migrator struct {
-	keeper         Keeper
+	keeper         *Keeper
 	legacySubspace exported.Subspace
 }
 
-func NewMigrator(k Keeper, ss exported.Subspace) Migrator {
+func NewMigrator(k *Keeper, ss exported.Subspace) Migrator {
 	return Migrator{
 		keeper:         k,
 		legacySubspace: ss,
