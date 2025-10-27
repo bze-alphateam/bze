@@ -1,15 +1,16 @@
 package tradebin
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strconv"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bze-alphateam/bze/x/tradebin/keeper"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 )
 
 // InitGenesis initializes the module's state from a provided genesis state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState) {
 	// Set all the market
 	for _, elem := range genState.MarketList {
 		k.SetMarket(ctx, elem)
@@ -46,7 +47,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 }
 
 // ExportGenesis returns the module's exported genesis.
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
+func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 	genesis.Params = k.GetParams(ctx)
 	genesis.MarketList = k.GetAllMarket(ctx)
