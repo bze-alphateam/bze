@@ -2,12 +2,14 @@ package types
 
 import (
 	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type TradeKeeper interface {
 	CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool
 	ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins sdk.Coins) (sdk.Coin, error)
+	IsNativeDenom(ctx sdk.Context, denom string) bool
 }
 
 type AccountKeeper interface {

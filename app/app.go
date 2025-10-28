@@ -318,7 +318,6 @@ func New(
 	}
 
 	customAnte := AnteHandlerOptions{
-		MainDenom:   MainDenom,
 		TradeKeeper: app.TradebinKeeper,
 		BankKeeper:  app.BankKeeper,
 	}

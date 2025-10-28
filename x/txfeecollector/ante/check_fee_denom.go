@@ -9,13 +9,11 @@ import (
 
 // ValidateTxFeeDenomsDecorator will check if denominations used for tx fees are allowed and returns an error otherwise
 type ValidateTxFeeDenomsDecorator struct {
-	mainDenom   string
 	tradeKeeper types.TradeKeeper
 }
 
-func NewValidateTxFeeDenomsDecorator(mainDenom string, tradeKeeper types.TradeKeeper) ValidateTxFeeDenomsDecorator {
+func NewValidateTxFeeDenomsDecorator(tradeKeeper types.TradeKeeper) ValidateTxFeeDenomsDecorator {
 	return ValidateTxFeeDenomsDecorator{
-		mainDenom:   mainDenom,
 		tradeKeeper: tradeKeeper,
 	}
 }
@@ -32,7 +30,7 @@ func (vbd ValidateTxFeeDenomsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	}
 
 	for _, c := range feeTx.GetFee() {
-		if c.Denom == vbd.mainDenom {
+		if vbd.tradeKeeper.IsNativeDenom(ctx, c.Denom) {
 			continue
 		}
 
