@@ -193,7 +193,7 @@ var (
 		{Account: ibctransfertypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner}},
 		{Account: ibcfeetypes.ModuleName},
 		{Account: icatypes.ModuleName},
-		{Account: rewardsmoduletypes.ModuleName},
+		{Account: rewardsmoduletypes.ModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: burnermoduletypes.ModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: burnermoduletypes.BlackHoleModuleName},
 		{Account: burnermoduletypes.RaffleModuleName, Permissions: []string{authtypes.Burner}},
