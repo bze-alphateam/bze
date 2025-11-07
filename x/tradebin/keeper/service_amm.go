@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
+
+	"cosmossdk.io/math"
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -69,6 +70,8 @@ func (k Keeper) BalanceProvidedAmounts(base, quote, reserveBase, reserveQuote ma
 // swapTokens swaps `input` tokens for `output` tokens within the specified `pool` based on the pool's reserves and fees.
 // Returns the `output` tokens and a potential error if the operation cannot be completed.
 func (k Keeper) swapTokens(ctx sdk.Context, input sdk.Coin, pool *types.LiquidityPool) (output sdk.Coin, err error) {
+	// MAKE SURE YOU CAPTURED THE FUNDS BEFORE CALLING THIS FUNCTION.
+	// THE MODULE WILL SEND FEES TO THEIR DESTINATION AND IT NEEDS TO BE CAPTURED BEFORE THIS FUNCTION IS CALLED.
 	if !pool.HasDenom(input.Denom) {
 		return output, fmt.Errorf("denom %s does not exist in pool %s", input.Denom, pool.GetId())
 	}

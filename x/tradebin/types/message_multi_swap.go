@@ -29,6 +29,14 @@ func (msg *MsgMultiSwap) ValidateBasic() error {
 		return errorsmod.Wrapf(ErrInvalidRoutes, "routes length must be between 0 and %d", MaxRoutes)
 	}
 
+	tempMap := make(map[string]struct{})
+	for _, route := range msg.GetRoutes() {
+		if _, ok := tempMap[route]; ok {
+			return errorsmod.Wrapf(ErrInvalidRoutes, "duplicate route %s", route)
+		}
+		tempMap[route] = struct{}{}
+	}
+
 	if !msg.Input.IsValid() || !msg.Input.IsPositive() {
 		return errorsmod.Wrapf(ErrInvalidOrderAmount, "input amount (%s) is not valid", msg.GetInput().String())
 	}
