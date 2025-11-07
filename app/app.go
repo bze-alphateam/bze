@@ -4,8 +4,6 @@ import (
 	"io"
 	"net/http"
 
-	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/bze-alphateam/bze/app/upgrades"
 	v800 "github.com/bze-alphateam/bze/app/upgrades/v800"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/gorilla/mux"
@@ -349,19 +347,11 @@ func New(
 
 func (app *App) setupUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
-		"v8.0.0-rc2",
-		upgrades.EmptyUpgradeHandler(),
+		v800.UpgradeName,
+		v800.CreateUpgradeHandler(
+			&app.AccountKeeper,
+		),
 	)
-
-	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-	if err != nil {
-		panic(err)
-	}
-
-	if upgradeInfo.Name == v800.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := v800.GetStoreUpgrades()
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
-	}
 }
 
 // LegacyAmino returns App's amino codec.
