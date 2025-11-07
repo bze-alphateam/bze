@@ -79,6 +79,11 @@ func (k Keeper) burnerRaffleCleanup(ctx sdk.Context, epochNumber int64) {
 			continue
 		}
 
+		if burned.IsZero() {
+			logger.Info("no raffle coins to burn")
+			continue
+		}
+
 		err = k.SaveBurnedCoins(ctx, burned)
 		if err != nil {
 			logger.Error("failed to save burned coins", "error", err)

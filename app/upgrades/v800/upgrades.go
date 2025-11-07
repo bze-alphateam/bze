@@ -2,6 +2,7 @@ package v800
 
 import (
 	"context"
+
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	circuittypes "cosmossdk.io/x/circuit/types"
@@ -133,6 +134,21 @@ func CreateUpgradeHandler(
 			} else {
 				ctx.Logger().Info("migrated funds from rewards module to community pool")
 			}
+		}
+
+		//migrate modules permissions
+		//{Account: tradebinmoduletypes.ModuleName, Permissions: []string{authtypes.Burner, authtypes.Minter}},
+		tradebinAcc := acc.GetModuleAccount(ctx, tradebintypes.ModuleName)
+		if tradebinAcc != nil {
+			if modAcc, ok := tradebinAcc.(*authtypes.ModuleAccount); ok {
+				ctx.Logger().Info("migrating permissions for tradebin module account")
+				modAcc.Permissions = []string{authtypes.Minter, authtypes.Burner}
+				acc.SetModuleAccount(ctx, modAcc)
+			} else {
+				ctx.Logger().Error("could not migrate permissions for tradebin module account")
+			}
+		} else {
+			ctx.Logger().Error("could not update tradebin module account permission. not found")
 		}
 
 		return newVm, nil

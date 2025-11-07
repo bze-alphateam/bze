@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"context"
+	"fmt"
+
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"fmt"
 	"github.com/bze-alphateam/bze/bzeutils"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -414,14 +415,18 @@ func (k msgServer) validatePoolId(ctx sdk.Context, poolId string) error {
 }
 
 func (k msgServer) validateFeeDestination(feeDest *types.FeeDestination) error {
-	//the sum of elements must be 1
-	if !feeDest.Burner.Add(feeDest.Treasury).Add(feeDest.Providers).Equal(math.LegacyNewDecWithPrec(1, 0)) {
-		return types.ErrInvalidFeeDestination
-	}
-
 	//do not allow any of the destinations to be negative
 	if feeDest.Treasury.IsNegative() || feeDest.Burner.IsNegative() || feeDest.Providers.IsNegative() {
 		return types.ErrNegativeFeeDestination
+	}
+
+	//the sum of elements must be 1
+	//we allow a small error of 1e-6 for the sum
+	one := math.LegacyNewDec(1)
+	sum := feeDest.Burner.Add(feeDest.Treasury).Add(feeDest.Providers)
+	//check that the difference is not greater than 1e-6
+	if sum.Sub(one).Abs().GT(math.LegacyNewDecWithPrec(1, 6)) {
+		return types.ErrInvalidFeeDestination
 	}
 
 	return nil
@@ -540,7 +545,13 @@ func (k msgServer) getRoutesPools(ctx sdk.Context, msg *types.MsgMultiSwap) (poo
 		return nil, fmt.Errorf("msg does not contain any routes")
 	}
 
+	tempMap := make(map[string]struct{})
 	for _, route := range msg.Routes {
+		//this should not happen because it's already validated in ValidateBasic
+		if _, ok := tempMap[route]; ok {
+			return nil, fmt.Errorf("route %s is duplicated", route)
+		}
+
 		p, ok := k.GetLiquidityPool(ctx, route)
 		if !ok {
 			//stop if any pool is missing
@@ -548,6 +559,7 @@ func (k msgServer) getRoutesPools(ctx sdk.Context, msg *types.MsgMultiSwap) (poo
 		}
 
 		pools = append(pools, p)
+		tempMap[route] = struct{}{}
 	}
 
 	return pools, nil

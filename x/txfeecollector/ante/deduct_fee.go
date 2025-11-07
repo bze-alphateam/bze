@@ -3,6 +3,7 @@ package ante
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/bze-alphateam/bze/x/txfeecollector/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -18,20 +19,20 @@ import (
 // Call next AnteHandler if fees successfully deducted.
 // CONTRACT: Tx must implement FeeTx interface to use DeductFeeDecorator
 type DeductFeeDecorator struct {
-	mainDenom      string
 	accountKeeper  types.AccountKeeper
 	bankKeeper     types.BankKeeper
 	feegrantKeeper types.FeegrantKeeper
 	txFeeChecker   ante.TxFeeChecker
+	tradeKeeper    types.TradeKeeper
 }
 
-func NewDeductFeeDecorator(mainDenom string, ak types.AccountKeeper, bk types.BankKeeper, fk types.FeegrantKeeper, tfc ante.TxFeeChecker) DeductFeeDecorator {
+func NewDeductFeeDecorator(tk types.TradeKeeper, ak types.AccountKeeper, bk types.BankKeeper, fk types.FeegrantKeeper, tfc ante.TxFeeChecker) DeductFeeDecorator {
 	if tfc == nil {
 		tfc = checkTxFeeWithValidatorMinGasPrices
 	}
 
 	return DeductFeeDecorator{
-		mainDenom:      mainDenom,
+		tradeKeeper:    tk,
 		accountKeeper:  ak,
 		bankKeeper:     bk,
 		feegrantKeeper: fk,
@@ -135,7 +136,7 @@ func (dfd DeductFeeDecorator) DeductFees(bankKeeper types.BankKeeper, ctx sdk.Co
 	nativeFees := sdk.NewCoins()
 	nonNativeFees := sdk.NewCoins()
 	for _, fee := range fees {
-		if fee.Denom == dfd.mainDenom {
+		if dfd.tradeKeeper.IsNativeDenom(ctx, fee.Denom) {
 			nativeFees = nativeFees.Add(fee)
 		} else {
 			nonNativeFees = nonNativeFees.Add(fee)
