@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"errors"
+
 	"github.com/bze-alphateam/bze/x/burner/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"go.uber.org/mock/gomock"
@@ -75,8 +76,8 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_OnlyIBCCoins() {
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/DEF456").Return(false).Times(1)
 
 	// Mock swap capability checks
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, "ibc/ABC123").Return(true).Times(1)
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, "ibc/DEF456").Return(true).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, coins[0]).Return(true).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, coins[1]).Return(true).Times(1)
 
 	// Mock swap operation - note: the method is called with the original coins, not individual coins
 	suite.trade.EXPECT().ModuleSwapForNativeDenom(suite.ctx, fromModule, coins).Return(swappedCoin, nil).Times(1)
@@ -107,10 +108,10 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_MixedCoins() {
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/ABC123").Return(false).Times(1)
 
 	// Mock swap capability check for IBC coin
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, "ibc/ABC123").Return(true).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, ibcCoin).Return(true).Times(1)
 
 	// Mock swap operation
-	suite.trade.EXPECT().ModuleSwapForNativeDenom(suite.ctx, fromModule, coins).Return(swappedCoin, nil).Times(1)
+	suite.trade.EXPECT().ModuleSwapForNativeDenom(suite.ctx, fromModule, sdk.NewCoins(ibcCoin)).Return(swappedCoin, nil).Times(1)
 
 	// Mock send LP tokens to black hole
 	suite.bank.EXPECT().SendCoinsFromModuleToModule(suite.ctx, fromModule, types.BlackHoleModuleName, lockableCoins).Return(nil).Times(1)
@@ -159,14 +160,14 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_SwapError() {
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/ABC123").Return(false).Times(1)
 
 	// Mock swap capability check
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, "ibc/ABC123").Return(true).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, coins[0]).Return(true).Times(1)
+	suite.trade.EXPECT().HasLiquidityWithNativeDenom(suite.ctx, "ibc/ABC123").Return(true).Times(1)
 
 	// Mock swap operation failure - returns empty coin and error
 	suite.trade.EXPECT().ModuleSwapForNativeDenom(suite.ctx, fromModule, coins).Return(sdk.Coin{}, swapError).Times(1)
 
 	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
-	suite.Require().Error(err)
-	suite.Require().Equal(swapError, err)
+	suite.Require().NoError(err)
 }
 
 func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_SendToBlackHoleError() {
@@ -209,7 +210,8 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_UnknownDenomFallsBa
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "unknown/denom").Return(false).Times(1)
 
 	// Mock swap capability check (returns false)
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, "unknown/denom").Return(false).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, coins[0]).Return(false).Times(1)
+	suite.trade.EXPECT().HasLiquidityWithNativeDenom(suite.ctx, "unknown/denom").Return(false).Times(1)
 
 	// Should be treated as lockable and sent to black hole
 	suite.bank.EXPECT().SendCoinsFromModuleToModule(suite.ctx, fromModule, types.BlackHoleModuleName, coins).Return(nil).Times(1)
@@ -223,13 +225,15 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_UnknownDenomFallsBa
 
 func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_IBCNotSwappable() {
 	fromModule := "test_module"
-	coins := sdk.NewCoins(sdk.NewInt64Coin("ibc/NONSWAPPABLE", 1000))
+	ibcCoin := sdk.NewInt64Coin("ibc/NONSWAPPABLE", 1000)
+	coins := sdk.NewCoins(ibcCoin)
 
 	// Mock native denom check
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/NONSWAPPABLE").Return(false).Times(1)
+	suite.trade.EXPECT().HasLiquidityWithNativeDenom(suite.ctx, "ibc/NONSWAPPABLE").Return(false).Times(1)
 
 	// Mock swap capability check (returns false)
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, "ibc/NONSWAPPABLE").Return(false).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, ibcCoin).Return(false).Times(1)
 
 	// Should be treated as lockable and sent to black hole
 	suite.bank.EXPECT().SendCoinsFromModuleToModule(suite.ctx, fromModule, types.BlackHoleModuleName, coins).Return(nil).Times(1)

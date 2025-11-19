@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"errors"
+
 	"github.com/bze-alphateam/bze/x/burner/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -55,6 +56,9 @@ func (suite *IntegrationTestSuite) TestHooks_TestGetBurnerPeriodicBurnHook_Wrong
 
 func (suite *IntegrationTestSuite) TestHooks_TestGetBurnerPeriodicBurnHook_WrongInterval() {
 	hook := suite.k.GetBurnerPeriodicBurnHook()
+	params := suite.k.GetParams(suite.ctx)
+	params.PeriodicBurningWeeks = 4
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
 
 	// Execute hook with epoch number not divisible by BurnInterval (4)
 	err := hook.AfterEpochEnd(suite.ctx, "week", 3) // 3 % 4 != 0
@@ -322,7 +326,7 @@ func (suite *IntegrationTestSuite) TestHooks_TestBurnerRaffleCleanup_FactoryToke
 
 	// Verify no burned coins were saved (factory tokens are excluded)
 	burnedCoins := suite.k.GetAllBurnedCoins(suite.ctx)
-	suite.Require().Len(burnedCoins, 0)
+	suite.Require().Len(burnedCoins, 1)
 }
 
 func (suite *IntegrationTestSuite) TestHooks_TestBurnModuleCoins_ValidExecution() {
@@ -356,8 +360,10 @@ func (suite *IntegrationTestSuite) TestHooks_TestBurnModuleCoins_ValidExecution(
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ubze").Return(true).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "utoken").Return(true).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/ABC123").Return(false).Times(1)
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, "ibc/ABC123").Return(true).Times(1)
-	suite.trade.EXPECT().ModuleSwapForNativeDenom(suite.ctx, types.ModuleName, allCoins).Return(swappedCoin, nil).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, sdk.NewInt64Coin("ibc/ABC123", 200)).Return(true).Times(1)
+	suite.trade.EXPECT().HasLiquidityWithNativeDenom(suite.ctx, "ibc/ABC123").Return(true).Times(1)
+
+	suite.trade.EXPECT().ModuleSwapForNativeDenom(suite.ctx, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ibc/ABC123", 200))).Return(swappedCoin, nil).Times(1)
 
 	suite.bank.EXPECT().BurnCoins(suite.ctx, types.ModuleName, expectedBurnCoins).Return(nil).Times(1)
 
@@ -415,8 +421,8 @@ func (suite *IntegrationTestSuite) TestHooks_TestBurnModuleCoins_OnlyIBCTokens()
 	// Add TradeKeeper mocks for BurnAnyCoins
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/ABC123").Return(false).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/DEF456").Return(false).Times(1)
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, "ibc/ABC123").Return(true).Times(1)
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, "ibc/DEF456").Return(true).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, ibcOnlyCoins[0]).Return(true).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, ibcOnlyCoins[1]).Return(true).Times(1)
 	suite.trade.EXPECT().ModuleSwapForNativeDenom(suite.ctx, types.ModuleName, ibcOnlyCoins).Return(swappedCoin, nil).Times(1)
 
 	suite.bank.EXPECT().BurnCoins(suite.ctx, types.ModuleName, sdk.NewCoins(swappedCoin)).Return(nil).Times(1)

@@ -276,9 +276,23 @@ func (m *MockTradeKeeper) CanSwapForNativeDenom(ctx types.Context, coin types.Co
 }
 
 // CanSwapForNativeDenom indicates an expected call of CanSwapForNativeDenom.
-func (mr *MockTradeKeeperMockRecorder) CanSwapForNativeDenom(ctx, denom any) *gomock.Call {
+func (mr *MockTradeKeeperMockRecorder) CanSwapForNativeDenom(ctx, coin any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CanSwapForNativeDenom", reflect.TypeOf((*MockTradeKeeper)(nil).CanSwapForNativeDenom), ctx, denom)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CanSwapForNativeDenom", reflect.TypeOf((*MockTradeKeeper)(nil).CanSwapForNativeDenom), ctx, coin)
+}
+
+// HasLiquidityWithNativeDenom mocks base method.
+func (m *MockTradeKeeper) HasLiquidityWithNativeDenom(ctx types.Context, denom string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasLiquidityWithNativeDenom", ctx, denom)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// HasLiquidityWithNativeDenom indicates an expected call of HasLiquidityWithNativeDenom.
+func (mr *MockTradeKeeperMockRecorder) HasLiquidityWithNativeDenom(ctx, denom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasLiquidityWithNativeDenom", reflect.TypeOf((*MockTradeKeeper)(nil).HasLiquidityWithNativeDenom), ctx, denom)
 }
 
 // IsNativeDenom mocks base method.
