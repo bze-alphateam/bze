@@ -1,0 +1,33 @@
+syntax = "proto3";
+package bze.cointrunk;
+
+option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
+
+message AcceptedDomain {
+  string domain = 1;
+  bool active = 2;
+}
+
+message AnonArticlesCounter {
+  string key = 1;
+  uint64 counter = 2;
+}
+
+message Article {
+  uint64 id = 1;
+  string title = 2;
+  string url = 3;
+  string picture = 4;
+  string publisher = 5;
+  bool paid = 6;
+  int64 created_at = 7;
+}
+
+message Publisher {
+  string name = 1;
+  string address = 2;
+  bool active = 3;
+  uint32 articles_count = 4;
+  int64 created_at = 5;
+  string respect = 6;
+}

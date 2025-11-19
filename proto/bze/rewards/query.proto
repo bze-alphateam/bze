@@ -1,0 +1,165 @@
+syntax = "proto3";
+
+package bze.rewards;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "bze/rewards/params.proto";
+import "bze/rewards/store.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  
+  // Parameters queries the parameters of the module.
+  rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/bze/rewards/params";
+  
+  }
+  
+  // Queries a list of GetStakingReward items.
+  rpc StakingReward (QueryGetStakingRewardRequest) returns (QueryGetStakingRewardResponse) {
+    option (google.api.http).get = "/bze/rewards/staking_reward/{reward_id}";
+  
+  }
+  
+  // Queries a list of AllStakingRewards items.
+  rpc AllStakingRewards (QueryAllStakingRewardsRequest) returns (QueryAllStakingRewardsResponse) {
+    option (google.api.http).get = "/bze/rewards/all_staking_rewards";
+  
+  }
+  
+  // Queries a list of TradingReward items.
+  rpc TradingReward (QueryTradingRewardRequest) returns (QueryTradingRewardResponse) {
+    option (google.api.http).get = "/bze/rewards/trading_reward/{reward_id}";
+  
+  }
+  
+  // Queries a list of AllTradingRewards items.
+  rpc AllTradingRewards (QueryAllTradingRewardsRequest) returns (QueryAllTradingRewardsResponse) {
+    option (google.api.http).get = "/bze/rewards/all_trading_rewards";
+  
+  }
+  
+  // Queries a list of StakingRewardParticipant items.
+  rpc StakingRewardParticipant (QueryStakingRewardParticipantRequest) returns (QueryStakingRewardParticipantResponse) {
+    option (google.api.http).get = "/bze/rewards/staking_reward_participant/{address}";
+  
+  }
+  
+  // Queries a list of AllStakingRewardParticipants items.
+  rpc AllStakingRewardParticipants (QueryAllStakingRewardParticipantsRequest) returns (QueryAllStakingRewardParticipantsResponse) {
+    option (google.api.http).get = "/bze/rewards/all_staking_reward_participants";
+  
+  }
+  
+  // Queries a list of TradingRewardLeaderboard items.
+  rpc TradingRewardLeaderboard (QueryTradingRewardLeaderboardRequest) returns (QueryTradingRewardLeaderboardResponse) {
+    option (google.api.http).get = "/bze/rewards/trading_reward_leaderboard/{reward_id}";
+  
+  }
+  
+  // Queries a list of MarketTradingReward items.
+  rpc MarketTradingReward (QueryMarketTradingRewardRequest) returns (QueryMarketTradingRewardResponse) {
+    option (google.api.http).get = "/bze/rewards/market_trading_reward";
+  
+  }
+  
+  // Queries a list of AllPendingUnlockParticipants items.
+  rpc AllPendingUnlockParticipants (QueryAllPendingUnlockParticipantsRequest) returns (QueryAllPendingUnlockParticipantsResponse) {
+    option (google.api.http).get = "/bze/rewards/all_pending_unlock_participants";
+  
+  }
+}
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+message QueryGetStakingRewardRequest {
+  string reward_id = 1;
+}
+
+message QueryGetStakingRewardResponse {
+  StakingReward staking_reward = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllStakingRewardsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllStakingRewardsResponse {
+  repeated StakingReward                          list       = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryTradingRewardRequest {
+  string reward_id = 1;
+}
+
+message QueryTradingRewardResponse {
+  TradingReward trading_reward = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllTradingRewardsRequest {
+  string                                state      = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryAllTradingRewardsResponse {
+  repeated TradingReward                          list       = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryStakingRewardParticipantRequest {
+  string                                address    = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryStakingRewardParticipantResponse {
+  repeated StakingRewardParticipant               list       = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllStakingRewardParticipantsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllStakingRewardParticipantsResponse {
+  repeated StakingRewardParticipant               list       = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryTradingRewardLeaderboardRequest {
+  string reward_id = 1;
+}
+
+message QueryTradingRewardLeaderboardResponse {
+  TradingRewardLeaderboard leaderboard = 1;
+}
+
+message QueryMarketTradingRewardRequest {
+  string market_id = 1;
+}
+
+message QueryMarketTradingRewardResponse {
+  MarketIdTradingRewardId market_reward = 1;
+}
+
+message QueryAllPendingUnlockParticipantsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllPendingUnlockParticipantsResponse {
+  repeated PendingUnlockParticipant list = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+

@@ -24,6 +24,6 @@ func SimulateMsgBurn(
 
 		// TODO: Handling the Burn simulation
 
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "Burn simulation not implemented"), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "Burn simulation not implemented"), nil, nil
 	}
 }

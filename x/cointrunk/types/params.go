@@ -3,10 +3,10 @@ package types
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"gopkg.in/yaml.v2"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -19,18 +19,14 @@ const (
 var (
 	KeyAnonArticleLimit            = []byte("AnonArticleLimit")
 	DefaultAnonArticleLimit uint64 = 5
-)
 
-var (
 	KeyAnonArticleCost     = []byte("AnonArticleCost")
-	DefaultAnonArticleCost = sdk.NewCoin(DefaultDenom, sdk.NewInt(DefaultAnonArticleCostAmount))
-)
+	DefaultAnonArticleCost = sdk.NewCoin(DefaultDenom, math.NewInt(DefaultAnonArticleCostAmount))
 
-var (
 	KeyPublisherRespectParams     = []byte("PublisherRespectParams")
 	DefaultPublisherRespectParams = PublisherRespectParams{
 		Denom: DefaultDenom,
-		Tax:   sdk.NewDecWithPrec(20, 2), //20%
+		Tax:   math.LegacyNewDecWithPrec(20, 2), //20%
 	}
 )
 
@@ -87,12 +83,6 @@ func (p Params) Validate() error {
 	return nil
 }
 
-// String implements the Stringer interface.
-func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
-}
-
 // validateAnonArticleLimit validates the AnonArticleLimit param
 func validateAnonArticleLimit(v interface{}) error {
 	anonArticleLimit, ok := v.(uint64)
@@ -100,10 +90,9 @@ func validateAnonArticleLimit(v interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
-	if anonArticleLimit < 1 {
-		return fmt.Errorf("invalid anonArticleLimit. Expected uint64 higher than 0 received %v", anonArticleLimit)
+	if anonArticleLimit < 0 {
+		return fmt.Errorf("invalid anonArticleLimit. Expected uint64 higher than or equal with 0 received %v", anonArticleLimit)
 	}
-	_ = anonArticleLimit
 
 	return nil
 }
@@ -128,7 +117,7 @@ func validatePublisherRespectParams(v interface{}) error {
 		return fmt.Errorf("invalid parameter publisherRespectParams type: %T", v)
 	}
 
-	if publisherRespectParams.Tax.IsNegative() {
+	if !publisherRespectParams.Tax.IsPositive() {
 		return fmt.Errorf("publisherRespectParams tax should be positive: %s", publisherRespectParams.Tax.String())
 	}
 

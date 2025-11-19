@@ -24,6 +24,6 @@ func SimulateMsgExitStaking(
 
 		// TODO: Handling the ExitStaking simulation
 
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "ExitStaking simulation not implemented"), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "ExitStaking simulation not implemented"), nil, nil
 	}
 }

@@ -1,0 +1,35 @@
+syntax = "proto3";
+package bze.cointrunk;
+
+import "bze/cointrunk/store.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
+
+message ArticleAddedEvent {
+  string publisher = 1;
+  uint64 article_id = 2;
+  bool paid = 3;
+}
+
+message PublisherAddedEvent {
+  Publisher publisher = 1;
+}
+
+message PublisherUpdatedEvent {
+  Publisher publisher = 1;
+}
+
+message AcceptedDomainAddedEvent {
+  AcceptedDomain accepted_domain = 1;
+}
+
+message AcceptedDomainUpdatedEvent {
+  AcceptedDomain accepted_domain = 1;
+}
+
+message PublisherRespectPaidEvent {
+  uint64 respect_paid = 1;
+  uint64 publisher_reward = 2;
+  uint64 community_pool_funds = 3;
+  string publisher = 4;
+}

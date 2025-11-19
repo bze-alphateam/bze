@@ -1,8 +1,8 @@
 package v610
 
 import (
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/bze-alphateam/bze/app/upgrades"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const UpgradeName = "v6.1.0"

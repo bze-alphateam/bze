@@ -1,0 +1,28 @@
+syntax = "proto3";
+package bze.epochs;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "bze/epochs/epoch.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/epochs/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  rpc EpochInfos(QueryEpochsInfoRequest) returns (QueryEpochsInfoResponse) {
+    option (google.api.http).get = "/bze/epochs/epochs";
+  }
+  rpc CurrentEpoch(QueryCurrentEpochRequest)
+      returns (QueryCurrentEpochResponse) {
+    option (google.api.http).get = "/bze/epochs/current_epoch";
+  }
+}
+
+message QueryEpochsInfoRequest {}
+message QueryEpochsInfoResponse {
+  repeated EpochInfo epochs = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryCurrentEpochRequest { string identifier = 1; }
+message QueryCurrentEpochResponse { int64 current_epoch = 1; }

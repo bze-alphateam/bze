@@ -24,6 +24,6 @@ func SimulateMsgChangeAdmin(
 
 		// TODO: Handling the ChangeAdmin simulation
 
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "ChangeAdmin simulation not implemented"), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "ChangeAdmin simulation not implemented"), nil, nil
 	}
 }

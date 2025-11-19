@@ -1,8 +1,9 @@
 package types
 
 import (
+	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // EpochKeeper defines expected keeper that can return the current epoch
@@ -10,21 +11,33 @@ type EpochKeeper interface {
 	GetEpochCountByIdentifier(ctx sdk.Context, identifier string) int64
 }
 
-// AccountKeeper defines the expected account keeper used for simulations (noalias)
+// AccountKeeper defines the expected interface for the Account module.
 type AccountKeeper interface {
-	GetModuleAccount(ctx sdk.Context, moduleName string) types.ModuleAccountI
-	HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool
-	// Methods imported from account should be defined here
+	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
+	HasAccount(ctx context.Context, addr sdk.AccAddress) bool
 }
 
-// BankKeeper defines the expected interface needed to retrieve account balances.
+// BankKeeper defines the expected interface for the Bank module.
 type BankKeeper interface {
-	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	BurnCoins(ctx sdk.Context, moduleName string, amounts sdk.Coins) error
-	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-	HasSupply(ctx sdk.Context, denom string) bool
-	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
-	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	// Methods imported from bank should be defined here
+	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	BurnCoins(ctx context.Context, moduleName string, amounts sdk.Coins) error
+	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	HasSupply(ctx context.Context, denom string) bool
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
+}
+
+type TradeKeeper interface {
+	IsNativeDenom(ctx sdk.Context, denom string) bool
+	CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool
+	ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins sdk.Coins) (sdk.Coin, error)
+	HasLiquidityWithNativeDenom(ctx sdk.Context, denom string) bool
+}
+
+// ParamSubspace defines the expected Subspace interface for parameters.
+type ParamSubspace interface {
+	Get(context.Context, []byte, interface{})
+	Set(context.Context, []byte, interface{})
 }

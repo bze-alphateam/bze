@@ -1,0 +1,13 @@
+syntax = "proto3";
+package bze.epochs;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "bze/epochs/epoch.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/epochs/types";
+
+// GenesisState defines the epoch module's genesis state.
+message GenesisState {
+  repeated EpochInfo epochs = 1 [ (gogoproto.nullable) = false ];
+}

@@ -1,15 +1,14 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const TypeMsgChangeAdmin = "change_admin"
-
 var _ sdk.Msg = &MsgChangeAdmin{}
 
-func NewMsgChangeAdmin(creator string, denom string, newAdmin string) *MsgChangeAdmin {
+func NewMsgChangeAdmin(creator, denom, newAdmin string) *MsgChangeAdmin {
 	return &MsgChangeAdmin{
 		Creator:  creator,
 		Denom:    denom,
@@ -17,39 +16,23 @@ func NewMsgChangeAdmin(creator string, denom string, newAdmin string) *MsgChange
 	}
 }
 
-func (msg *MsgChangeAdmin) Route() string {
-	return RouterKey
-}
-
-func (msg *MsgChangeAdmin) Type() string {
-	return TypeMsgChangeAdmin
-}
-
-func (msg *MsgChangeAdmin) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{creator}
-}
-
-func (msg *MsgChangeAdmin) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(msg)
-	return sdk.MustSortJSON(bz)
-}
-
 func (msg *MsgChangeAdmin) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	if msg.NewAdmin != "" {
-		// try to validate only if one was provided
-		_, err = sdk.AccAddressFromBech32(msg.NewAdmin)
-		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid new admin address (%s)", err)
-		}
+	_, err = sdk.AccAddressFromBech32(msg.NewAdmin)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid new admin address (%s)", err)
+	}
+
+	if msg.Creator == msg.NewAdmin {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "new admin must be different from creator")
+	}
+
+	if msg.Denom == "" {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "denom must not be empty")
 	}
 
 	return nil

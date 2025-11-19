@@ -1,20 +1,23 @@
 package keeper
 
 import (
+	"strconv"
+	"time"
+
 	"github.com/bze-alphateam/bze/x/epochs/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"strconv"
-	"time"
 )
 
 // BeginBlocker of epochs module.
-func (k Keeper) BeginBlocker(ctx sdk.Context) {
+func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+
 	k.IterateEpochInfo(ctx, func(index int64, epochInfo types.EpochInfo) (stop bool) {
-		logger := k.Logger(ctx).With("epoch_identifier", epochInfo.Identifier).
+		logger := k.Logger().With("epoch_identifier", epochInfo.Identifier).
 			With("current_epoch", epochInfo.CurrentEpoch)
 
+		logger.Debug("iterating through epochs", "hooks_len", len(k.hooks))
 		// If block time < initial epoch start time, return
 		if ctx.BlockTime().Before(epochInfo.StartTime) {
 			return

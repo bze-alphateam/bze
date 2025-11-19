@@ -1,0 +1,33 @@
+syntax = "proto3";
+package bze.cointrunk;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "bze/cointrunk/params.proto";
+import "bze/cointrunk/store.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
+
+// GenesisState defines the cointrunk module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+  repeated Publisher publisher_list = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)      = "publishers_list,omitempty"
+  ];
+  repeated AcceptedDomain accepted_domain_list = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)      = "accepted_domain_list,omitempty"
+  ];
+  repeated Article article_list = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)      = "article_list,omitempty"
+  ];
+  uint64 articles_counter = 5 [
+    (gogoproto.jsontag)      = "articles_counter,omitempty"
+  ];
+}

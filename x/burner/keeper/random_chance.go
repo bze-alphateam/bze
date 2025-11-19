@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"crypto/sha256"
+	"math/big"
+
 	"github.com/bze-alphateam/bze/x/burner/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"math/big"
 )
 
 const (

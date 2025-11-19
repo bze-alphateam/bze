@@ -1,6 +1,6 @@
 PACKAGES=$(shell go list ./... | grep -v '/simulation')
 PACKAGE_NAME:=github.com/bze-alphateam/bze-v5
-GOLANG_CROSS_VERSION  = v1.20.8
+GOLANG_CROSS_VERSION  = v1.23
 VERSION := $(shell echo $(shell git describe --tags 2>/dev/null ) | sed 's/^v//')
 COMMIT := $(shell git log -1 --format='%H')
 NETWORK ?= mainnet
@@ -11,7 +11,8 @@ LEDGER_ENABLED ?= false
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=bze \
 	-X github.com/cosmos/cosmos-sdk/version.AppName=bzed \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
-	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT)
+	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
+	-w -s
 
 BUILD_FLAGS := -ldflags '$(ldflags)'
 TESTNET_FLAGS ?=
@@ -45,39 +46,39 @@ install: check-version lint check-network go.sum
 		go install -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) ./cmd/bzed
 
 build: check-version check-network go.sum
-		go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/bzed ./cmd/bzed
+		go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/bzed ./cmd/bzed
 
 build-win64: check-version check-network go.sum
-		go build -buildmode=exe -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/win64/bzed.exe ./cmd/bzed
+		go build -buildmode=exe -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/win64/bzed.exe ./cmd/bzed
 
 .PHONY: build
 
 build-linux: check-version check-network go.sum
 ifeq ($(OS), Linux)
-		GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/linux-amd64/bzed ./cmd/bzed
+		GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-amd64/bzed ./cmd/bzed
 else
-		LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/linux-amd64/bzed ./cmd/bzed
+		LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-amd64/bzed ./cmd/bzed
 endif
 
 build-linux-arm64: check-version check-network go.sum
 ifeq ($(OS), Linux)
-		GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/linux-arm64/bzed ./cmd/bzed
+		GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-arm64/bzed ./cmd/bzed
 else
-		LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/linux-arm64/bzed ./cmd/bzed
+		LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-arm64/bzed ./cmd/bzed
 endif
 
 build-mac: check-version check-network go.sum
 ifeq ($(OS), Darwin)
-		GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/darwin-amd64/bzed ./cmd/bzed
+		GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-amd64/bzed ./cmd/bzed
 else
-		LEDGER_ENABLED=false GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/darwin-amd64/bzed ./cmd/bzed
+		LEDGER_ENABLED=false GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-amd64/bzed ./cmd/bzed
 endif
 
 build-mac-arm64: check-version check-network go.sum
 ifeq ($(OS), Darwin)
-		GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/darwin-arm64/bzed ./cmd/bzed
+		GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-arm64/bzed ./cmd/bzed
 else
-		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -o $(BUILDDIR)/darwin-arm64/bzed ./cmd/bzed
+		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-arm64/bzed ./cmd/bzed
 endif
 
 build-all: check-version lint all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
@@ -113,8 +114,8 @@ lint-ci:
 
 # Add check to make sure we are using the proper Go version before proceeding with anything
 check-version:
-	@if ! go version | grep -q "go1.20"; then \
-		echo "\033[0;31mERROR:\033[0m Go version 1.20 is required for compiling bzed. It looks like you are using" "$(shell go version) \nThere are potential consensus-breaking changes that can occur when running binaries compiled with different versions of Go. Please download Go version 1.20 and retry. Thank you!"; \
+	@if ! go version | grep -q "go1.23"; then \
+		echo "\033[0;31mERROR:\033[0m Go version 1.23 is required for compiling bzed. It looks like you are using" "$(shell go version) \nThere are potential consensus-breaking changes that can occur when running binaries compiled with different versions of Go. Please download Go version 1.23 and retry. Thank you!"; \
 		exit 1; \
 	fi
 
@@ -140,6 +141,20 @@ test-sim-after-import:
 ###############################################################################
 ###                                Localnet                                 ###
 ###############################################################################
+start-localnet-ci: build
+	rm -rf ~/.bzed-liveness
+	./build/bzed init liveness --staking-bond-denom ubze --chain-id liveness --home ~/.bzed-liveness
+	./build/bzed config chain-id liveness --home ~/.bzed-liveness
+	./build/bzed config keyring-backend test --home ~/.bzed-liveness
+	./build/bzed keys add val --home ~/.bzed-liveness
+	./build/bzed genesis add-genesis-account val 1000000000000ubze --home ~/.bzed-liveness --keyring-backend test
+	./build/bzed keys add user --home ~/.bzed-liveness
+	./build/bzed genesis add-genesis-account user 1000000000ubze --home ~/.bzed-liveness --keyring-backend test
+	./build/bzed genesis gentx val 1000000000ubze --home ~/.bzed-liveness --chain-id liveness
+	./build/bzed genesis collect-gentxs --home ~/.bzed-liveness
+	sed -i.bak 's#^minimum-gas-prices = .*#minimum-gas-prices = "0.001ubze,0.0001stake"#g' ~/.bzed-liveness/config/app.toml
+	./build/bzed start --home ~/.bzed-liveness --x-crisis-skip-assert-invariants
+.PHONY: start-localnet-ci
 
 build-docker-bzednode:
 	$(MAKE) -C check-networks/local

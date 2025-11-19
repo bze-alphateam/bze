@@ -1,0 +1,21 @@
+syntax = "proto3";
+package bze.tradebin;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (amino.name) = "bze/x/tradebin/Params";
+  option (gogoproto.equal) = true;
+
+  
+  string createMarketFee = 1 [(gogoproto.moretags) = "yaml:\"create_market_fee\""];
+  string marketMakerFee = 2 [(gogoproto.moretags) = "yaml:\"market_maker_fee\""];
+  string marketTakerFee = 3 [(gogoproto.moretags) = "yaml:\"market_taker_fee\""];
+  string makerFeeDestination = 4 [(gogoproto.moretags) = "yaml:\"maker_fee_destination\""];
+  string takerFeeDestination = 5 [(gogoproto.moretags) = "yaml:\"taker_fee_destination\""];
+  string native_denom = 6 [(gogoproto.moretags) = "yaml:\"native_denom\""];
+}

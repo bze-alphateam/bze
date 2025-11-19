@@ -47,11 +47,11 @@ bzed query burner all-burned-coins
 ## HTTP API Endpoints
 ### Query All Burned Coins
 - **GET** `/bze/burner/v1/all_burned_coins`
-  - Fetches details about all coins burned by the module.
+    - Fetches details about all coins burned by the module.
 
 ### Query Module Parameters
 - **GET** `/bze/burner/v1/params`
-  - Retrieves the current parameters of the Burner module.
+    - Retrieves the current parameters of the Burner module.
 
 ## Event Logging
 - **CoinsBurnedEvent**: Dispatched when the burning of coins occurs.

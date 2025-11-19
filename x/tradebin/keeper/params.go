@@ -1,52 +1,65 @@
 package keeper
 
 import (
-	"github.com/bze-alphateam/bze/x/tradebin/types"
+	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
+
+	"github.com/bze-alphateam/bze/x/tradebin/types"
 )
 
 // GetParams get all parameters as types.Params
-func (k Keeper) GetParams(ctx sdk.Context) types.Params {
-	return types.NewParams(
-		k.CreateMarketFee(ctx),
-		k.MarketMakerFee(ctx),
-		k.MarketTakerFee(ctx),
-		k.MakerFeeDestination(ctx),
-		k.TakerFeeDestination(ctx),
-	)
+func (k Keeper) GetParams(ctx context.Context) (params types.Params) {
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	bz := store.Get(types.ParamsKey)
+	if bz == nil {
+		return params
+	}
+
+	k.cdc.MustUnmarshal(bz, &params)
+	return params
 }
 
 // SetParams set the params
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramstore.SetParamSet(ctx, &params)
+func (k Keeper) SetParams(ctx context.Context, params types.Params) error {
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	bz, err := k.cdc.Marshal(&params)
+	if err != nil {
+		return err
+	}
+	store.Set(types.ParamsKey, bz)
+
+	return nil
 }
 
 // CreateMarketFee returns the CreateMarketFee param
 func (k Keeper) CreateMarketFee(ctx sdk.Context) (res string) {
-	k.paramstore.Get(ctx, types.KeyCreateMarketFee, &res)
-	return
+	params := k.GetParams(ctx)
+	return params.CreateMarketFee
 }
 
 // MarketMakerFee returns the MarketMakerFee param
 func (k Keeper) MarketMakerFee(ctx sdk.Context) (res string) {
-	k.paramstore.Get(ctx, types.KeyMarketMakerFee, &res)
-	return
+	params := k.GetParams(ctx)
+	return params.MarketMakerFee
 }
 
 // MarketTakerFee returns the MarketTakerFee param
 func (k Keeper) MarketTakerFee(ctx sdk.Context) (res string) {
-	k.paramstore.Get(ctx, types.KeyMarketTakerFee, &res)
-	return
+	params := k.GetParams(ctx)
+	return params.MarketTakerFee
 }
 
 // MakerFeeDestination returns the MakerFeeDestination param
 func (k Keeper) MakerFeeDestination(ctx sdk.Context) (res string) {
-	k.paramstore.Get(ctx, types.KeyMakerFeeDestination, &res)
-	return
+	params := k.GetParams(ctx)
+	return params.MakerFeeDestination
 }
 
 // TakerFeeDestination returns the TakerFeeDestination param
 func (k Keeper) TakerFeeDestination(ctx sdk.Context) (res string) {
-	k.paramstore.Get(ctx, types.KeyTakerFeeDestination, &res)
-	return
+	params := k.GetParams(ctx)
+	return params.TakerFeeDestination
 }

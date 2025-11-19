@@ -64,22 +64,13 @@ func (k Keeper) chargeForCreateDenom(ctx sdk.Context, creatorAddr string) (err e
 
 	// if DenomCreationFee is non-zero, transfer the tokens from the creator
 	// account to community pool
-	if params.CreateDenomFee != "" {
+	if params.CreateDenomFee.IsPositive() {
 		accAddr, err := sdk.AccAddressFromBech32(creatorAddr)
 		if err != nil {
 			return err
 		}
-		normCoins, err := sdk.ParseCoinsNormalized(params.CreateDenomFee)
-		if err != nil {
-			return err
-		}
 
-		//don't try to fund the community pool if the tax is 0
-		if normCoins.IsZero() {
-			return nil
-		}
-
-		if err := k.distrKeeper.FundCommunityPool(ctx, normCoins, accAddr); err != nil {
+		if err := k.distrkeeper.FundCommunityPool(ctx, sdk.NewCoins(params.CreateDenomFee), accAddr); err != nil {
 			return err
 		}
 	}

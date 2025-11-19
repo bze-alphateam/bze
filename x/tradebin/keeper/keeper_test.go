@@ -2,14 +2,15 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/bze-alphateam/bze/testutil/simapp"
+	keeper2 "github.com/bze-alphateam/bze/testutil/keeper"
 	"github.com/bze-alphateam/bze/x/tradebin/keeper"
+	"github.com/bze-alphateam/bze/x/tradebin/testutil"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"go.uber.org/mock/gomock"
 	"testing"
-	"time"
 )
 
 const (
@@ -17,34 +18,46 @@ const (
 	denomStake = "stake"
 )
 
+func getMarketId() string {
+	return fmt.Sprintf("%s/%s", market.Base, market.Quote)
+}
+
 var market = types.Market{
 	Base:    denomStake,
 	Quote:   denomBze,
 	Creator: "bze1m33n82r5x3eyjmjtwjkl82zzdlrnv8pevd8u9r",
 }
 
-func getMarketId() string {
-	return fmt.Sprintf("%s/%s", market.Base, market.Quote)
-}
-
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	app       *simapp.SimApp
-	ctx       sdk.Context
-	k         *keeper.Keeper
-	msgServer types.MsgServer
+	ctx         sdk.Context
+	k           *keeper.Keeper
+	msgServer   types.MsgServer
+	bankMock    *testutil.MockBankKeeper
+	distrMock   *testutil.MockDistrKeeper
+	accountMock *testutil.MockAccountKeeper
 }
 
 func (suite *IntegrationTestSuite) SetupTest() {
-	app := simapp.Setup(false, true)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
+	t := suite.T()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 
-	suite.app = app
+	mockBank := testutil.NewMockBankKeeper(mockCtrl)
+	require.NotNil(t, mockBank)
+	mockDistr := testutil.NewMockDistrKeeper(mockCtrl)
+	require.NotNil(t, mockDistr)
+	mockAccount := testutil.NewMockAccountKeeper(mockCtrl)
+	require.NotNil(t, mockAccount)
+
+	k, ctx := keeper2.TradebinKeeper(t, mockBank, mockAccount, mockDistr)
 	suite.ctx = ctx
-
-	suite.k = &app.TradebinKeeper
-	suite.msgServer = keeper.NewMsgServerImpl(app.TradebinKeeper)
+	suite.k = &k
+	suite.bankMock = mockBank
+	suite.distrMock = mockDistr
+	suite.accountMock = mockAccount
+	suite.msgServer = keeper.NewMsgServerImpl(k)
 }
 
 func TestKeeperSuite(t *testing.T) {

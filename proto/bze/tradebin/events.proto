@@ -1,0 +1,108 @@
+syntax = "proto3";
+package bze.tradebin;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
+
+message OrderCreateMessageEvent {
+  string creator = 1;
+  string market_id = 2;
+  string order_type = 3;
+  string amount = 4;
+  string price = 5;
+}
+
+message OrderCancelMessageEvent {
+  string creator = 1;
+  string marketId = 2;
+  string orderId = 3;
+  string order_type = 4;
+}
+
+message MarketCreatedEvent {
+  string creator = 1;
+  string base = 2;
+  string quote = 3;
+}
+
+message OrderExecutedEvent {
+  string id = 1;
+  string market_id = 2;
+  string order_type = 3;
+  string amount = 4;
+  string price = 5;
+  string maker = 6;
+  string taker = 7;
+}
+
+message OrderCanceledEvent {
+  string id = 1;
+  string market_id = 2;
+  string order_type = 3;
+  string amount = 4;
+  string price = 5;
+  string owner = 6;
+}
+
+message OrderSavedEvent {
+  string id = 1;
+  string market_id = 2;
+  string order_type = 3;
+  string amount = 4;
+  string price = 5;
+  string owner = 6;
+}
+
+message PoolCreatedEvent {
+  string creator = 1;
+  string base = 2;
+  string quote = 3;
+}
+
+message LiquidityAddedEvent {
+  string creator = 1;
+  string baseAmount = 2 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string quoteAmount = 3 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string mintedAmount = 4 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string pool_id = 5;
+}
+
+message LiquidityRemovedEvent {
+  string creator = 1;
+  string baseAmount = 2 [ // Fee ex: 0.001 = 0.1%
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string quoteAmount = 3 [ // Fee ex: 0.001 = 0.1%
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string pool_id = 4;
+}
+
+message SwapEvent {
+  string creator = 1;
+  cosmos.base.v1beta1.Coin in = 2 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"in\"",
+    (gogoproto.jsontag)      = "in,omitempty"
+  ];
+  cosmos.base.v1beta1.Coin out = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"out\"",
+    (gogoproto.jsontag)      = "out,omitempty"
+  ];
+  string pool_id = 4;
+}

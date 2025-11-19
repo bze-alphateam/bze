@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package bze.cointrunk;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "bze/cointrunk/params.proto";
+import "bze/cointrunk/store.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  
+  // Parameters queries the parameters of the module.
+  rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/bze/cointrunk/params";
+  
+  }
+  
+  // Queries a list of AcceptedDomain items.
+  rpc AcceptedDomain (QueryAcceptedDomainRequest) returns (QueryAcceptedDomainResponse) {
+    option (google.api.http).get = "/bze/cointrunk/accepted_domain";
+  
+  }
+  
+  // Queries a list of AllAnonArticlesCounters items.
+  rpc AllAnonArticlesCounters (QueryAllAnonArticlesCountersRequest) returns (QueryAllAnonArticlesCountersResponse) {
+    option (google.api.http).get = "/bze/cointrunk/all_anon_articles_counters";
+  
+  }
+  
+  // Queries a list of AllArticles items.
+  rpc AllArticles (QueryAllArticlesRequest) returns (QueryAllArticlesResponse) {
+    option (google.api.http).get = "/bze/cointrunk/all_articles";
+  
+  }
+  
+  // Queries a list of Publishers items.
+  rpc Publishers (QueryPublishersRequest) returns (QueryPublishersResponse) {
+    option (google.api.http).get = "/bze/cointrunk/publishers";
+  
+  }
+  
+  // Queries a list of Publisher items.
+  rpc Publisher (QueryPublisherRequest) returns (QueryPublisherResponse) {
+    option (google.api.http).get = "/bze/cointrunk/publisher/{address}";
+  
+  }
+}
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+message QueryAcceptedDomainRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+message QueryAcceptedDomainResponse {
+  repeated AcceptedDomain acceptedDomain = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllAnonArticlesCountersRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+message QueryAllAnonArticlesCountersResponse {
+  repeated AnonArticlesCounter AnonArticlesCounters = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllArticlesRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+message QueryAllArticlesResponse {
+  repeated Article article = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPublishersRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryPublishersResponse {
+  repeated Publisher publisher = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPublisherRequest {
+  string address = 1;
+}
+
+message QueryPublisherResponse {
+  Publisher publisher = 1;
+}
+

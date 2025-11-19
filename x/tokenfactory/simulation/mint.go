@@ -24,6 +24,6 @@ func SimulateMsgMint(
 
 		// TODO: Handling the Mint simulation
 
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "Mint simulation not implemented"), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "Mint simulation not implemented"), nil, nil
 	}
 }

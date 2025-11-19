@@ -1,5 +1,0 @@
-*.css linguist-detectable=false
-*.go linguist-detectable=true
-*.tsx linguist-detectable=false
-*.js linguist-detectable=false
-*.ts linguist-detectable=false

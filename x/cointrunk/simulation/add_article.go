@@ -11,7 +11,6 @@ import (
 )
 
 func SimulateMsgAddArticle(
-	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k keeper.Keeper,
 ) simtypes.Operation {
@@ -24,6 +23,6 @@ func SimulateMsgAddArticle(
 
 		// TODO: Handling the AddArticle simulation
 
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "AddArticle simulation not implemented"), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "AddArticle simulation not implemented"), nil, nil
 	}
 }

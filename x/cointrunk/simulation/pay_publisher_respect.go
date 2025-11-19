@@ -11,7 +11,6 @@ import (
 )
 
 func SimulateMsgPayPublisherRespect(
-	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k keeper.Keeper,
 ) simtypes.Operation {
@@ -24,6 +23,6 @@ func SimulateMsgPayPublisherRespect(
 
 		// TODO: Handling the PayPublisherRespect simulation
 
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "PayPublisherRespect simulation not implemented"), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "PayPublisherRespect simulation not implemented"), nil, nil
 	}
 }
