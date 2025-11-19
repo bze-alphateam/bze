@@ -1,33 +1,42 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"context"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type DistrKeeper interface {
-	// Methods imported from distr should be defined here
-	FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+// AccountKeeper defines the expected interface for the Account module.
+type AccountKeeper interface {
+	GetAccount(context.Context, sdk.AccAddress) sdk.AccountI // only used for simulation
+	GetModuleAccount(context.Context, string) sdk.ModuleAccountI
+	// Methods imported from account should be defined here
 }
 
 type BankKeeper interface {
 	// Methods imported from bank should be defined here
-	GetDenomMetaData(ctx sdk.Context, denom string) (banktypes.Metadata, bool)
-	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
+	GetDenomMetaData(ctx context.Context, denom string) (banktypes.Metadata, bool)
+	SetDenomMetaData(ctx context.Context, denomMetaData banktypes.Metadata)
 
-	HasSupply(ctx sdk.Context, denom string) bool
+	HasSupply(ctx context.Context, denom string) bool
 
-	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+	BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 
-	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
-	HasBalance(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coin) bool
+	SendCoins(ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
+	HasBalance(ctx context.Context, addr sdk.AccAddress, amt sdk.Coin) bool
 }
 
-type AccountKeeper interface {
-	GetAccount(sdk.Context, sdk.AccAddress) authtypes.AccountI
-	GetModuleAccount(ctx sdk.Context, moduleName string) authtypes.ModuleAccountI
+type DistrKeeper interface {
+	// Methods imported from distr should be defined here
+	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}
+
+// ParamSubspace defines the expected Subspace interface for parameters.
+type ParamSubspace interface {
+	Get(context.Context, []byte, interface{})
+	Set(context.Context, []byte, interface{})
 }

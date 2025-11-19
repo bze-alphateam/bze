@@ -1,0 +1,47 @@
+syntax = "proto3";
+package bze.tradebin;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "bze/tradebin/params.proto";
+import "bze/tradebin/store.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
+
+// GenesisState defines the tradebin module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+  repeated Market market_list = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)      = "market_list,omitempty"
+  ];
+  repeated QueueMessage queue_message_list = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)      = "queue_message_list,omitempty"
+  ];
+  repeated Order order_list = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)      = "order_list,omitempty"
+  ];
+  repeated AggregatedOrder aggregated_order_list = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)      = "aggregated_order_list,omitempty"
+  ];
+  repeated HistoryOrder history_order_list = 6 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag) = "history_order_list,omitempty"
+  ];
+
+  int64 order_counter = 7 [
+    (gogoproto.jsontag) = "order_counter"
+  ];
+
+  repeated UserDust all_users_dust = 8 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "all_users_dust,omitempty"
+  ];
+}

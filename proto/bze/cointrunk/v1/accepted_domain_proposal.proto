@@ -1,0 +1,15 @@
+syntax = "proto3";
+package bze.cointrunk.v1;
+
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/cointrunk/v1types";
+
+message AcceptedDomainProposal {
+  option (cosmos_proto.implements_interface) = "cosmos.gov.v1beta1.Content";
+
+  string title = 1; 
+  string description = 2; 
+  string domain = 3; 
+  bool active = 4; 
+}

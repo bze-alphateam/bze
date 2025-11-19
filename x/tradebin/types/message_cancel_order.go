@@ -1,16 +1,9 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
-
-const (
-	TypeMsgCancelOrder = "cancel_order"
-
-	MessageTypeCancel   = "cancel"
-	MessageTypeFillBuy  = "fill_buy"
-	MessageTypeFillSell = "fill_sell"
 )
 
 var _ sdk.Msg = &MsgCancelOrder{}
@@ -24,63 +17,23 @@ func NewMsgCancelOrder(creator string, marketId string, orderId string, orderTyp
 	}
 }
 
-func (msg *MsgCancelOrder) Route() string {
-	return RouterKey
-}
-
-func (msg *MsgCancelOrder) Type() string {
-	return TypeMsgCancelOrder
-}
-
-func (msg *MsgCancelOrder) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{creator}
-}
-
-func (msg *MsgCancelOrder) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(msg)
-	return sdk.MustSortJSON(bz)
-}
-
 func (msg *MsgCancelOrder) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
 	if msg.MarketId == "" {
-		return sdkerrors.Wrapf(ErrInvalidOrderMarketId, "empty market_id")
+		return errorsmod.Wrapf(ErrInvalidOrderMarketId, "empty market_id")
 	}
 
 	if msg.OrderId == "" {
-		return sdkerrors.Wrapf(ErrInvalidOrderId, "empty order_id")
+		return errorsmod.Wrapf(ErrInvalidOrderId, "empty order_id")
 	}
 
 	if msg.OrderType != OrderTypeSell && msg.OrderType != OrderTypeBuy {
-		return sdkerrors.Wrapf(ErrInvalidOrderType, "invalid order type")
+		return errorsmod.Wrapf(ErrInvalidOrderType, "invalid order type")
 	}
 
 	return nil
-}
-
-func MessageTypeToOrderType(messageType string) string {
-	switch messageType {
-	case MessageTypeFillSell:
-		return OrderTypeBuy
-	case MessageTypeFillBuy:
-		return OrderTypeSell
-	default:
-		return messageType
-	}
-}
-
-func OrderTypeToMessageTypeFill(orderType string) string {
-	if orderType == OrderTypeBuy {
-		return MessageTypeFillBuy
-	}
-	
-	return MessageTypeFillSell
 }

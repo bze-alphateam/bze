@@ -1,8 +1,14 @@
 vue/node_modules
 vue/dist
 release/
-
-.idea
+.idea/
+.vscode/
 .DS_Store
+*.dot
+*.log
+*.ign
+
+**/*/node_modules
+
 cmd/.DS_Store
 build/*

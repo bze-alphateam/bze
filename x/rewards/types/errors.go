@@ -3,7 +3,7 @@ package types
 // DONTCOVER
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "cosmossdk.io/errors"
 )
 
 // x/rewards module sentinel errors
@@ -18,4 +18,5 @@ var (
 	ErrInvalidSlots        = sdkerrors.Register(ModuleName, 5008, "invalid slots")
 	ErrInvalidRewardId     = sdkerrors.Register(ModuleName, 5009, "invalid reward_id")
 	ErrRewardAlreadyExists = sdkerrors.Register(ModuleName, 5010, "a reward is already running for this market")
+	ErrInvalidSigner       = sdkerrors.Register(ModuleName, 5011, "invalid signer")
 )

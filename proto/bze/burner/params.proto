@@ -1,0 +1,15 @@
+syntax = "proto3";
+package bze.burner;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/burner/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (amino.name) = "bze/x/burner/Params";
+  option (gogoproto.equal) = true;
+
+  int64 periodic_burning_weeks = 1 [(gogoproto.moretags) = "yaml:\"periodic_burning_weeks\""];
+}

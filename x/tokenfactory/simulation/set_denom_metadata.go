@@ -24,6 +24,6 @@ func SimulateMsgSetDenomMetadata(
 
 		// TODO: Handling the SetDenomMetadata simulation
 
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "SetDenomMetadata simulation not implemented"), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "SetDenomMetadata simulation not implemented"), nil, nil
 	}
 }

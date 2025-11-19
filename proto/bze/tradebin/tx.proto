@@ -1,0 +1,167 @@
+syntax = "proto3";
+
+package bze.tradebin;
+
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "bze/tradebin/params.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
+
+// Msg defines the Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+  
+  // UpdateParams defines a (governance) operation for updating the module
+  // parameters. The authority defaults to the x/gov module account.
+  rpc UpdateParams        (MsgUpdateParams       ) returns (MsgUpdateParamsResponse       );
+  rpc CreateMarket        (MsgCreateMarket       ) returns (MsgCreateMarketResponse       );
+  rpc CreateOrder         (MsgCreateOrder        ) returns (MsgCreateOrderResponse        );
+  rpc CancelOrder         (MsgCancelOrder        ) returns (MsgCancelOrderResponse        );
+  rpc FillOrders          (MsgFillOrders         ) returns (MsgFillOrdersResponse         );
+  rpc CreateLiquidityPool (MsgCreateLiquidityPool) returns (MsgCreateLiquidityPoolResponse);
+  rpc AddLiquidity        (MsgAddLiquidity       ) returns (MsgAddLiquidityResponse       );
+  rpc RemoveLiquidity     (MsgRemoveLiquidity    ) returns (MsgRemoveLiquidityResponse    );
+  rpc MultiSwap           (MsgMultiSwap          ) returns (MsgMultiSwapResponse          );
+}
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) =                      "authority";
+  option           (amino.name) = "bze/x/tradebin/MsgUpdateParams";
+  
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params defines the module parameters to update.
+  
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+message MsgUpdateParamsResponse {}
+
+message MsgCreateMarket {
+  option           (amino.name) = "bze/x/tradebin/MsgCreateMarket";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string base    = 2;
+  string quote   = 3;
+}
+
+message MsgCreateMarketResponse {}
+
+message MsgCreateOrder {
+  option           (amino.name) = "bze/x/tradebin/MsgCreateOrder";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator    = 1;
+  string order_type = 2;
+  string amount     = 3;
+  string price      = 4;
+  string market_id  = 5;
+}
+
+message MsgCreateOrderResponse {}
+
+message MsgCancelOrder {
+  option           (amino.name) = "bze/x/tradebin/MsgCancelOrder";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator    = 1;
+  string market_id  = 2;
+  string order_id   = 3;
+  string order_type = 4;
+}
+
+message MsgCancelOrderResponse {}
+
+message MsgFillOrders {
+  option           (amino.name) = "bze/x/tradebin/MsgFillOrders";
+  option (cosmos.msg.v1.signer) = "creator";
+           string        creator    = 1;
+           string        market_id  = 2;
+           string        order_type = 3;
+  repeated FillOrderItem orders     = 4;
+}
+
+message FillOrderItem {
+  string price  = 1;
+  string amount = 2;
+}
+
+message MsgFillOrdersResponse {}
+
+message MsgCreateLiquidityPool {
+  option           (amino.name) = "bze/x/tradebin/MsgCreateLiquidityPool";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator       = 1;
+  string base          = 2;
+  string quote         = 3;
+  string fee           = 4;
+  string fee_dest      = 5;
+  bool   stable        = 6;
+  string initial_base  = 7 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  string initial_quote = 8 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+}
+
+message MsgCreateLiquidityPoolResponse {
+  string id = 1;
+}
+
+message MsgAddLiquidity {
+  option           (amino.name) = "bze/x/tradebin/MsgAddLiquidity";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator       = 1;
+  string pool_id       = 2;
+  string base_amount   = 3 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  string quote_amount  = 4 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  string min_lp_tokens = 5 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+}
+
+message MsgAddLiquidityResponse {
+  string minted_amount = 1 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+}
+
+message MsgRemoveLiquidity {
+  option           (amino.name) = "bze/x/tradebin/MsgRemoveLiquidity";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator   = 1;
+  string pool_id   = 2;
+  string lp_tokens = 3 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  string min_base  = 4 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  string min_quote = 5 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+}
+
+message MsgRemoveLiquidityResponse {
+  string base  = 1 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  string quote = 2 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+}
+
+message MsgMultiSwap {
+  option           (amino.name) = "bze/x/tradebin/MsgMultiSwap";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator   = 1;
+  repeated string routes = 2;
+  cosmos.base.v1beta1.Coin input = 3 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"input\"",
+    (gogoproto.jsontag)      = "input,omitempty"
+  ];
+  cosmos.base.v1beta1.Coin min_output = 4 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"min_output\"",
+    (gogoproto.jsontag)      = "min_output,omitempty"
+  ];
+}
+
+message MsgMultiSwapResponse {
+  cosmos.base.v1beta1.Coin output = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"output\"",
+    (gogoproto.jsontag)      = "output,omitempty"
+  ];
+}
+

@@ -5,7 +5,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"gopkg.in/yaml.v2"
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -18,26 +17,20 @@ const (
 var (
 	KeyCreateMarketFee     = []byte("CreateMarketFee")
 	DefaultCreateMarketFee = "25000000000ubze"
-)
 
-var (
 	KeyMarketMakerFee     = []byte("MarketMakerFee")
 	DefaultMarketMakerFee = "1000ubze"
-)
 
-var (
 	KeyMarketTakerFee     = []byte("MarketTakerFee")
 	DefaultMarketTakerFee = "100000ubze"
-)
 
-var (
 	KeyMakerFeeDestination     = []byte("MakerFeeDestination")
 	DefaultMakerFeeDestination = FeeDestinationBurnerModule
-)
 
-var (
 	KeyTakerFeeDestination     = []byte("TakerFeeDestination")
 	DefaultTakerFeeDestination = FeeDestinationBurnerModule
+
+	DefaultNativeDenom = "ubze"
 )
 
 // ParamKeyTable the param key table for launch module
@@ -52,6 +45,7 @@ func NewParams(
 	marketTakerFee string,
 	makerFeeDestination string,
 	takerFeeDestination string,
+	nativeDenom string,
 ) Params {
 	return Params{
 		CreateMarketFee:     createMarketFee,
@@ -59,6 +53,7 @@ func NewParams(
 		MarketTakerFee:      marketTakerFee,
 		MakerFeeDestination: makerFeeDestination,
 		TakerFeeDestination: takerFeeDestination,
+		NativeDenom:         nativeDenom,
 	}
 }
 
@@ -70,6 +65,7 @@ func DefaultParams() Params {
 		DefaultMarketTakerFee,
 		DefaultMakerFeeDestination,
 		DefaultTakerFeeDestination,
+		DefaultNativeDenom,
 	)
 }
 
@@ -106,13 +102,11 @@ func (p Params) Validate() error {
 		return err
 	}
 
-	return nil
-}
+	if err := validateNativeDenom(p.NativeDenom); err != nil {
+		return err
+	}
 
-// String implements the Stringer interface.
-func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
+	return nil
 }
 
 // validateCreateMarketFee validates the CreateMarketFee param
@@ -195,6 +189,19 @@ func validateTakerFeeDestination(v interface{}) error {
 func validateFeeDestination(dest string) error {
 	if dest != FeeDestinationCommunityPool && dest != FeeDestinationBurnerModule {
 		return fmt.Errorf("invalid fee destination: %s", dest)
+	}
+
+	return nil
+}
+
+func validateNativeDenom(v interface{}) error {
+	nativeDenom, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("invalid native denom parameter type: %T", v)
+	}
+
+	if nativeDenom == "" {
+		return fmt.Errorf("native denom cannot be an empty string")
 	}
 
 	return nil

@@ -5,19 +5,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"gopkg.in/yaml.v2"
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
 
 var (
-	KeyCreateStakingRewardFee     = []byte("CreateStakingRewardFee")
-	DefaultCreateStakingRewardFee = "25000000000ubze"
-)
-
-var (
-	KeyCreateTradingRewardFee     = []byte("CreateTradingRewardFee")
-	DefaultCreateTradingRewardFee = "50000000000ubze"
+	KeyCreateTradingRewardFee          = []byte("CreateTradingRewardFee")
+	KeyCreateStakingRewardFee          = []byte("CreateStakingRewardFee")
+	DefaultCreateRewardFee    sdk.Coin = sdk.NewInt64Coin("ubze", 25_000_000000)
 )
 
 // ParamKeyTable the param key table for launch module
@@ -27,8 +22,8 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams creates a new Params instance
 func NewParams(
-	createStakingRewardFee string,
-	createTradingRewardFee string,
+	createStakingRewardFee sdk.Coin,
+	createTradingRewardFee sdk.Coin,
 ) Params {
 	return Params{
 		CreateStakingRewardFee: createStakingRewardFee,
@@ -39,8 +34,8 @@ func NewParams(
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
 	return NewParams(
-		DefaultCreateStakingRewardFee,
-		DefaultCreateTradingRewardFee,
+		DefaultCreateRewardFee,
+		DefaultCreateRewardFee,
 	)
 }
 
@@ -65,26 +60,15 @@ func (p Params) Validate() error {
 	return nil
 }
 
-// String implements the Stringer interface.
-func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
-	return string(out)
-}
-
 // validateCreateStakingRewardFee validates the CreateStakingRewardFee param
 func validateCreateStakingRewardFee(v interface{}) error {
-	createStakingRewardFee, ok := v.(string)
+	createStakingRewardFee, ok := v.(sdk.Coin)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
-	normCoins, err := sdk.ParseCoinNormalized(createStakingRewardFee)
-	if err != nil {
-		return err
-	}
-
-	if normCoins.IsNegative() {
-		return fmt.Errorf("negative amount provided")
+	if !createStakingRewardFee.IsValid() {
+		return fmt.Errorf("invalid CreateStakingRewardFee: %s", createStakingRewardFee)
 	}
 
 	return nil
@@ -92,18 +76,13 @@ func validateCreateStakingRewardFee(v interface{}) error {
 
 // validateCreateTradingRewardFee validates the CreateTradingRewardFee param
 func validateCreateTradingRewardFee(v interface{}) error {
-	createTradingRewardFee, ok := v.(string)
+	createTradingRewardFee, ok := v.(sdk.Coin)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
-	normCoins, err := sdk.ParseCoinNormalized(createTradingRewardFee)
-	if err != nil {
-		return err
-	}
-
-	if normCoins.IsNegative() {
-		return fmt.Errorf("negative amount provided")
+	if !createTradingRewardFee.IsValid() {
+		return fmt.Errorf("invalid createTradingRewardFee: %s", createTradingRewardFee)
 	}
 
 	return nil

@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package bze.cointrunk;
+
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "bze/cointrunk/params.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
+
+// Msg defines the Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+  
+  // UpdateParams defines a (governance) operation for updating the module
+  // parameters. The authority defaults to the x/gov module account.
+  rpc UpdateParams        (MsgUpdateParams       ) returns (MsgUpdateParamsResponse       );
+  rpc AddArticle          (MsgAddArticle         ) returns (MsgAddArticleResponse         );
+  rpc PayPublisherRespect (MsgPayPublisherRespect) returns (MsgPayPublisherRespectResponse);
+  rpc AcceptDomain        (MsgAcceptDomain       ) returns (MsgAcceptDomainResponse       );
+  rpc SavePublisher       (MsgSavePublisher      ) returns (MsgSavePublisherResponse      );
+}
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) =                       "authority";
+  option           (amino.name) = "bze/x/cointrunk/MsgUpdateParams";
+  
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params defines the module parameters to update.
+  
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+message MsgUpdateParamsResponse {}
+
+message MsgAddArticle {
+  option           (amino.name) = "bze/x/cointrunk/MsgAddArticle";
+  option (cosmos.msg.v1.signer) = "publisher";
+  string publisher = 1;
+  string title     = 2;
+  string url       = 3;
+  string picture   = 4;
+}
+
+message MsgAddArticleResponse {}
+
+message MsgPayPublisherRespect {
+  option           (amino.name) = "bze/x/cointrunk/MsgPayPublisherRespect";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string address = 2;
+  string amount  = 3;
+}
+
+message MsgPayPublisherRespectResponse {
+  uint64 respect_paid         = 1;
+  uint64 publisher_reward     = 2;
+  uint64 community_pool_funds = 3;
+}
+
+message MsgAcceptDomain {
+  option           (amino.name) = "bze/x/cointrunk/MsgAcceptDomain";
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string domain  = 2;
+  bool   active  = 3;
+}
+
+message MsgAcceptDomainResponse {}
+
+message MsgSavePublisher {
+  option           (amino.name) = "bze/x/cointrunk/MsgSavePublisher";
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string name    = 2;
+  string address = 3;
+  bool   active  = 4;
+}
+
+message MsgSavePublisherResponse {}
+

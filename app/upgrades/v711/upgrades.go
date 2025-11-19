@@ -1,9 +1,9 @@
 package v711
 
 import (
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/bze-alphateam/bze/app/upgrades"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const UpgradeName = "v7.1.1"

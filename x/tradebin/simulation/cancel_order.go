@@ -11,6 +11,7 @@ import (
 )
 
 func SimulateMsgCancelOrder(
+	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k keeper.Keeper,
 ) simtypes.Operation {
@@ -23,6 +24,6 @@ func SimulateMsgCancelOrder(
 
 		// TODO: Handling the CancelOrder simulation
 
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "CancelOrder simulation not implemented"), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "CancelOrder simulation not implemented"), nil, nil
 	}
 }

@@ -1,31 +1,33 @@
 package keeper
 
 import (
+	"context"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
+
 	"github.com/bze-alphateam/bze/x/rewards/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GetParams get all parameters as types.Params
-func (k Keeper) GetParams(ctx sdk.Context) types.Params {
-	return types.NewParams(
-		k.CreateStakingRewardFee(ctx),
-		k.CreateTradingRewardFee(ctx),
-	)
+func (k Keeper) GetParams(ctx context.Context) (params types.Params) {
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	bz := store.Get(types.ParamsKey)
+	if bz == nil {
+		return params
+	}
+
+	k.cdc.MustUnmarshal(bz, &params)
+	return params
 }
 
 // SetParams set the params
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramstore.SetParamSet(ctx, &params)
-}
+func (k Keeper) SetParams(ctx context.Context, params types.Params) error {
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	bz, err := k.cdc.Marshal(&params)
+	if err != nil {
+		return err
+	}
+	store.Set(types.ParamsKey, bz)
 
-// CreateStakingRewardFee returns the CreateStakingRewardFee param
-func (k Keeper) CreateStakingRewardFee(ctx sdk.Context) (res string) {
-	k.paramstore.Get(ctx, types.KeyCreateStakingRewardFee, &res)
-	return
-}
-
-// CreateTradingRewardFee returns the CreateTradingRewardFee param
-func (k Keeper) CreateTradingRewardFee(ctx sdk.Context) (res string) {
-	k.paramstore.Get(ctx, types.KeyCreateTradingRewardFee, &res)
-	return
+	return nil
 }

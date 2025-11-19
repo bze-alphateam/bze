@@ -1,71 +1,85 @@
 package keeper
 
 import (
+	"cosmossdk.io/store/prefix"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/runtime"
 
-	"github.com/tendermint/tendermint/libs/log"
-
-	"github.com/bze-alphateam/bze/x/tokenfactory/types"
+	"cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	"github.com/bze-alphateam/bze/x/tokenfactory/types"
 )
 
 type (
 	Keeper struct {
-		cdc        codec.BinaryCodec
-		storeKey   sdk.StoreKey
-		memKey     sdk.StoreKey
-		paramstore paramtypes.Subspace
+		cdc          codec.BinaryCodec
+		storeService store.KVStoreService
+		logger       log.Logger
 
 		bankKeeper    types.BankKeeper
+		distrkeeper   types.DistrKeeper
 		accountKeeper types.AccountKeeper
-		distrKeeper   types.DistrKeeper
+
+		// the address capable of executing a MsgUpdateParams message. Typically, this
+		// should be the x/gov module account.
+		authority string
 	}
 )
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	storeKey,
-	memKey sdk.StoreKey,
-	ps paramtypes.Subspace,
-
-	bankKeeper types.BankKeeper, accountKeeper types.AccountKeeper, distrKeeper types.DistrKeeper,
-) *Keeper {
-	// set KeyTable if it has not already been set
-	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(types.ParamKeyTable())
+	storeService store.KVStoreService,
+	logger log.Logger,
+	authority string,
+	bankKeeper types.BankKeeper,
+	distrKeeper types.DistrKeeper,
+	accountKeeper types.AccountKeeper,
+) Keeper {
+	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		panic(fmt.Sprintf("invalid authority address: %s", authority))
 	}
 
-	return &Keeper{
-
-		cdc:        cdc,
-		storeKey:   storeKey,
-		memKey:     memKey,
-		paramstore: ps,
-		bankKeeper: bankKeeper, accountKeeper: accountKeeper, distrKeeper: distrKeeper,
+	return Keeper{
+		cdc:           cdc,
+		storeService:  storeService,
+		authority:     authority,
+		logger:        logger,
+		bankKeeper:    bankKeeper,
+		distrkeeper:   distrKeeper,
+		accountKeeper: accountKeeper,
 	}
 }
 
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+// GetAuthority returns the module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
+}
+
+// Logger returns a module-specific logger.
+func (k Keeper) Logger() log.Logger {
+	return k.logger.With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k Keeper) getPrefixedStore(ctx sdk.Context, p []byte) prefix.Store {
+	storeAdapter := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+
+	return prefix.NewStore(storeAdapter, p)
 }
 
 // GetDenomPrefixStore returns the substore for a specific denom
-func (k Keeper) GetDenomPrefixStore(ctx sdk.Context, denom string) sdk.KVStore {
-	store := ctx.KVStore(k.storeKey)
-	return prefix.NewStore(store, types.GetDenomPrefixStore(denom))
+func (k Keeper) GetDenomPrefixStore(ctx sdk.Context, denom string) prefix.Store {
+	return k.getPrefixedStore(ctx, types.GetDenomPrefixStore(denom))
 }
 
 // GetCreatorPrefixStore returns the substore for a specific creator address
-func (k Keeper) GetCreatorPrefixStore(ctx sdk.Context, creator string) sdk.KVStore {
-	store := ctx.KVStore(k.storeKey)
-	return prefix.NewStore(store, types.GetCreatorPrefix(creator))
+func (k Keeper) GetCreatorPrefixStore(ctx sdk.Context, creator string) prefix.Store {
+	return k.getPrefixedStore(ctx, types.GetCreatorPrefix(creator))
 }
 
 // GetCreatorsPrefixStore returns the substore that contains a list of creators
-func (k Keeper) GetCreatorsPrefixStore(ctx sdk.Context) sdk.KVStore {
-	store := ctx.KVStore(k.storeKey)
-	return prefix.NewStore(store, types.GetCreatorsPrefix())
+func (k Keeper) GetCreatorsPrefixStore(ctx sdk.Context) prefix.Store {
+	return k.getPrefixedStore(ctx, types.GetCreatorsPrefix())
 }

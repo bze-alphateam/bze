@@ -1,40 +1,51 @@
 package keeper_test
 
 import (
-	"github.com/bze-alphateam/bze/testutil/simapp"
+	keeper2 "github.com/bze-alphateam/bze/testutil/keeper"
 	"github.com/bze-alphateam/bze/x/burner/keeper"
+	"github.com/bze-alphateam/bze/x/burner/testutil"
 	"github.com/bze-alphateam/bze/x/burner/types"
-	epochskeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"go.uber.org/mock/gomock"
 	"testing"
-	"time"
 )
 
 type IntegrationTestSuite struct {
 	suite.Suite
 
-	app       *simapp.SimApp
 	ctx       sdk.Context
 	k         *keeper.Keeper
 	msgServer types.MsgServer
-	ek        *epochskeeper.Keeper
-	bank      *bankkeeper.Keeper
+	epoch     *testutil.MockEpochKeeper
+	bank      *testutil.MockBankKeeper
+	acc       *testutil.MockAccountKeeper
+	trade     *testutil.MockTradeKeeper
 }
 
 func (suite *IntegrationTestSuite) SetupTest() {
-	app := simapp.Setup(false, true)
-	ctx := app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()})
+	t := suite.T()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
 
-	suite.app = app
+	mockBank := testutil.NewMockBankKeeper(mockCtrl)
+	require.NotNil(t, mockBank)
+	mockAcc := testutil.NewMockAccountKeeper(mockCtrl)
+	require.NotNil(t, mockAcc)
+	mockEpoch := testutil.NewMockEpochKeeper(mockCtrl)
+	require.NotNil(t, mockEpoch)
+	mockTrade := testutil.NewMockTradeKeeper(mockCtrl)
+	require.NotNil(t, mockTrade)
+
+	k, ctx := keeper2.BurnerKeeper(t, mockBank, mockAcc, mockEpoch, mockTrade)
 	suite.ctx = ctx
-
-	suite.k = &app.BurnerKeeper
-	suite.ek = &app.EpochsKeeper
-	suite.bank = &app.BankKeeper
-	suite.msgServer = keeper.NewMsgServerImpl(app.BurnerKeeper)
+	suite.k = &k
+	suite.epoch = mockEpoch
+	suite.bank = mockBank
+	suite.acc = mockAcc
+	suite.trade = mockTrade
+	suite.msgServer = keeper.NewMsgServerImpl(k)
 }
 
 func TestKeeperSuite(t *testing.T) {

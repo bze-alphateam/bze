@@ -24,6 +24,6 @@ func SimulateMsgJoinStaking(
 
 		// TODO: Handling the JoinStaking simulation
 
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "JoinStaking simulation not implemented"), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "JoinStaking simulation not implemented"), nil, nil
 	}
 }

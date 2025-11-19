@@ -1,45 +1,29 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/bze-alphateam/bze/x/burner/v1types"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	// this line is used by starport scaffolding # 1
 )
-
-func RegisterCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&BurnCoinsProposal{}, "burner/BurnCoinsProposal", nil)
-	cdc.RegisterConcrete(&MsgFundBurner{}, "burner/FundBurner", nil)
-	cdc.RegisterConcrete(&MsgStartRaffle{}, "burner/StartRaffle", nil)
-	cdc.RegisterConcrete(&MsgJoinRaffle{}, "burner/JoinRaffle", nil)
-	// this line is used by starport scaffolding # 2
-}
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
+	// this line is used by starport scaffolding # 3
+
 	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgUpdateParams{},
 		&MsgFundBurner{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgStartRaffle{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgJoinRaffle{},
 	)
-	// this line is used by starport scaffolding # 3
-	registry.RegisterImplementations(
-		(*govtypes.Content)(nil),
-		&BurnCoinsProposal{},
+
+	registry.RegisterInterface(
+		"bze.burner.v1.BurnCoinsProposal",
+		(*v1beta1.Content)(nil),
+		&v1types.BurnCoinsProposal{},
 	)
+
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
-}
-
-var (
-	Amino     = codec.NewLegacyAmino()
-	ModuleCdc = codec.NewAminoCodec(Amino)
-)
-
-func init() {
-	RegisterCodec(Amino)
 }

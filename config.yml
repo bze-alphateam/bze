@@ -1,46 +1,38 @@
-accounts:
-  - name: alice
-    coins: ["1000000000000utestbze", "1000000000000000000ubze", "100000000000000stake"]
-  - name: bob
-    coins: ["1000000000000utestbze", "1000000000000000000ubze", "100000000000000stake"]
-validator:
-  name: alice
-  staked: "10000000000utestbze"
-  app:
-    swagger: true
+version: 1
+validation: sovereign
+accounts: 
+- name: alice
+  coins:
+  - 12000000000000token
+  - 12000000000000ubze
+  - 12000000000000stake
+- name: bob
+  coins:
+  - 12000000000000token
+  - 12000000000000ubze
+  - 12000000000000stake
 client:
   openapi:
-    path: "docs/static/openapi.yml"
-  vuex:
-    path: "vue/src/store"
+    path: docs/static/openapi.yml
 faucet:
   name: bob
-  coins: ["100000000000utestbze"]
-build:
-  binary: "bzed"
+  coins:
+  - 5token
+  - 100000stake
+validators:
+- name: alice
+  bonded: 100000000stake
+- name: validator1
+  bonded: 100000000stake
+- name: validator2
+  bonded: 200000000stake
+- name: validator3
+  bonded: 300000000stake
+
 genesis:
   app_state:
-    staking:
+    tokenfactory:
       params:
-        bond_denom: "utestbze"
-    gov:
-      voting_params:
-        voting_period: "120s"
-      deposit_params:
-        min_deposit:
-          -
-            denom: "utestbze"
-            amount: "1000000"
-      tally_params:
-        quorum: "0.00001"
-        threshold: "0.001"
-        veto_threshold: "0.01"
-    cointrunk:
-      params:
-        anonArticleLimit: 5
-        anonArticleCost:
-          denom: "utestbze"
-          amount: "25000000000"
-        publisher_respect_params:
-          denom: "utestbze"
-          tax: "0.200000000000"
+        createDenomFee:
+          denom: "ubze"
+          amount: "12345"

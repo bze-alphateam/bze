@@ -3,10 +3,11 @@ package types
 // DONTCOVER
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "cosmossdk.io/errors"
 )
 
 // x/cointrunk module sentinel errors
 var (
-	ErrInvalidProposalContent = sdkerrors.Register(ModuleName, 5, "invalid proposal content")
+	ErrInvalidSigner          = sdkerrors.Register(ModuleName, 1001, "expected gov account as only signer for proposal message")
+	ErrInvalidProposalContent = sdkerrors.Register(ModuleName, 1002, "invalid proposal content")
 )

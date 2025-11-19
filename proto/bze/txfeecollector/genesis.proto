@@ -1,0 +1,17 @@
+syntax = "proto3";
+package bze.txfeecollector;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "bze/txfeecollector/params.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/txfeecollector/types";
+
+// GenesisState defines the txfeecollector module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}

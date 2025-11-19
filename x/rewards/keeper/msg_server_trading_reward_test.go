@@ -1,262 +1,466 @@
 package keeper_test
 
 import (
-	"github.com/bze-alphateam/bze/testutil/simapp"
+	"cosmossdk.io/math"
+	"fmt"
 	"github.com/bze-alphateam/bze/x/rewards/types"
-	types2 "github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func (suite *IntegrationTestSuite) TestCreateTradingReward_InvalidRequest() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardSuccess() {
+	creator := sdk.AccAddress("creator")
 
-	_, err := suite.msgServer.CreateTradingReward(goCtx, nil)
-	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
-}
-
-func (suite *IntegrationTestSuite) TestCreateTradingReward_InvalidCreator() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
-
-	req := &types.MsgCreateTradingReward{Creator: ""}
-
-	_, err := suite.msgServer.CreateTradingReward(goCtx, req)
-	suite.Require().NotNil(err)
-}
-
-func (suite *IntegrationTestSuite) TestCreateTradingReward_InvalidTradingReward() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
-	addr1 := sdk.AccAddress("addr1_______________")
-	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
-
-	tests := []struct {
-		name string
-		msg  types.MsgCreateTradingReward
-	}{
-		{
-			name: "empty prize amount",
-			msg: types.MsgCreateTradingReward{
-				Creator:     addr1.String(),
-				PrizeAmount: "",
-			},
-		},
-		{
-			name: "zero prize amount",
-			msg: types.MsgCreateTradingReward{
-				Creator:     addr1.String(),
-				PrizeAmount: "0",
-			},
-		},
-		{
-			name: "negative prize amount",
-			msg: types.MsgCreateTradingReward{
-				Creator:     addr1.String(),
-				PrizeAmount: "-10",
-			},
-		},
-		{
-			name: "empty prize denom",
-			msg: types.MsgCreateTradingReward{
-				Creator:     addr1.String(),
-				PrizeAmount: "10",
-				PrizeDenom:  "",
-			},
-		},
-		{
-			name: "missing market id",
-			msg: types.MsgCreateTradingReward{
-				Creator:     addr1.String(),
-				PrizeAmount: "10",
-				PrizeDenom:  "ubze",
-				MarketId:    "not_a_market_id",
-			},
-		},
-		{
-			name: "invalid duration",
-			msg: types.MsgCreateTradingReward{
-				Creator:     addr1.String(),
-				PrizeAmount: "10",
-				PrizeDenom:  "ubze",
-				MarketId:    "stake/ubze",
-				Duration:    "",
-			},
-		},
-		{
-			name: "zero duration",
-			msg: types.MsgCreateTradingReward{
-				Creator:     addr1.String(),
-				PrizeAmount: "10",
-				PrizeDenom:  "ubze",
-				Duration:    "0",
-				MarketId:    "stake/ubze",
-			},
-		},
-		{
-			name: "negative duration",
-			msg: types.MsgCreateTradingReward{
-				Creator:     addr1.String(),
-				PrizeAmount: "10",
-				PrizeDenom:  "ubze",
-				Duration:    "-11",
-				MarketId:    "stake/ubze",
-			},
-		},
-		{
-			name: "duration too high",
-			msg: types.MsgCreateTradingReward{
-				Creator:     addr1.String(),
-				PrizeAmount: "10",
-				PrizeDenom:  "ubze",
-				Duration:    "3213132131231",
-				MarketId:    "stake/ubze",
-			},
-		},
-		{
-			name: "invalid slots",
-			msg: types.MsgCreateTradingReward{
-				Creator:     addr1.String(),
-				PrizeAmount: "10",
-				PrizeDenom:  "ubze",
-				Duration:    "100",
-				MarketId:    "stake/ubze",
-				Slots:       "",
-			},
-		},
-		{
-			name: "zero slots",
-			msg: types.MsgCreateTradingReward{
-				Creator:     addr1.String(),
-				PrizeAmount: "10",
-				PrizeDenom:  "ubze",
-				Duration:    "100",
-				MarketId:    "stake/ubze",
-				Slots:       "0",
-			},
-		},
-		{
-			name: "negative slots",
-			msg: types.MsgCreateTradingReward{
-				Creator:     addr1.String(),
-				PrizeAmount: "10",
-				PrizeDenom:  "ubze",
-				Duration:    "100",
-				MarketId:    "stake/ubze",
-				Slots:       "-3",
-			},
-		},
-		{
-			name: "too many slots slots",
-			msg: types.MsgCreateTradingReward{
-				Creator:     addr1.String(),
-				PrizeAmount: "10",
-				PrizeDenom:  "ubze",
-				Duration:    "100",
-				MarketId:    "stake/ubze",
-				Slots:       "101",
-			},
-		},
+	// Set up params with fee
+	params := types.Params{
+		CreateStakingRewardFee: sdk.NewCoin("ubze", math.NewInt(100)),
+		CreateTradingRewardFee: sdk.NewCoin("ubze", math.NewInt(200)),
 	}
-
-	for _, tt := range tests {
-		_, err := suite.msgServer.CreateTradingReward(goCtx, &tt.msg)
-		suite.Require().NotNil(err, tt.name)
-	}
-}
-
-func (suite *IntegrationTestSuite) TestCreateTradingReward_MissingSupply() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
-	addr1 := sdk.AccAddress("addr1_______________")
-	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
-
-	msg := types.MsgCreateTradingReward{
-		Creator:     addr1.String(),
-		PrizeAmount: "10",
-		PrizeDenom:  "ubzesd",
-		Duration:    "100",
-		MarketId:    "stake/ubze",
-		Slots:       "1",
-	}
-
-	_, err := suite.msgServer.CreateTradingReward(goCtx, &msg)
-	suite.Require().ErrorIs(err, types.ErrInvalidPrizeDenom)
-}
-
-func (suite *IntegrationTestSuite) TestCreateTradingReward_NotEnoughBalance() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
-
-	addr1 := sdk.AccAddress("addr1_______________")
-	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
-
-	//initial balances need to be 0
-	initialUserBalances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
-	suite.Require().True(initialUserBalances.IsZero())
-
-	balances := sdk.NewCoins(sdk.NewInt64Coin("ubze", 1))
-	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, balances))
-	//create market
-	suite.app.TradebinKeeper.SetMarket(suite.ctx, types2.Market{
-		Base:    "stake",
-		Quote:   "ubze",
-		Creator: "",
-	})
-
-	msg := types.MsgCreateTradingReward{
-		Creator:     addr1.String(),
-		PrizeAmount: "10",
-		PrizeDenom:  "ubze",
-		Duration:    "100",
-		MarketId:    "stake/ubze",
-		Slots:       "100",
-	}
-
-	_, err := suite.msgServer.CreateTradingReward(goCtx, &msg)
-	suite.Require().Error(err)
-}
-
-func (suite *IntegrationTestSuite) TestCreateTradingReward_Success() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
-
-	addr1 := sdk.AccAddress("addr1_______________")
-	acc1 := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr1)
-	suite.app.AccountKeeper.SetAccount(suite.ctx, acc1)
-
-	//initial balances need to be 0
-	initialUserBalances := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
-	suite.Require().True(initialUserBalances.IsZero())
-
-	balances := sdk.NewCoins(sdk.NewInt64Coin("ubze", 50000002000))
-	suite.Require().NoError(simapp.FundAccount(suite.app.BankKeeper, suite.ctx, addr1, balances))
-	suite.app.TradebinKeeper.SetMarket(suite.ctx, types2.Market{
-		Base:    "stake",
-		Quote:   "ubze",
-		Creator: "",
-	})
-
-	msg := types.MsgCreateTradingReward{
-		Creator:     addr1.String(),
-		PrizeAmount: "200",
-		PrizeDenom:  "ubze",
-		Duration:    "100",
-		MarketId:    "stake/ubze",
-		Slots:       "10",
-	}
-
-	res, err := suite.msgServer.CreateTradingReward(goCtx, &msg)
+	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
-	storeTradingReward, ok := suite.k.GetPendingTradingReward(suite.ctx, res.RewardId)
-	suite.Require().True(ok)
+	// Mock bank keeper calls
+	suite.bank.EXPECT().
+		HasSupply(suite.ctx, "ubze").
+		Return(true).
+		Times(1)
 
-	suite.Require().EqualValues(msg.PrizeAmount, storeTradingReward.PrizeAmount)
-	suite.Require().EqualValues(msg.PrizeDenom, storeTradingReward.PrizeDenom)
-	suite.Require().EqualValues(uint32(100), storeTradingReward.Duration)
-	suite.Require().EqualValues(msg.MarketId, storeTradingReward.MarketId)
-	suite.Require().EqualValues(uint32(10), storeTradingReward.Slots)
+	// Mock trade keeper call
+	suite.trade.EXPECT().
+		MarketExists(suite.ctx, "market-1").
+		Return(true).
+		Times(1)
 
-	expectedRemainingBalance := sdk.NewCoins(sdk.NewInt64Coin("ubze", 0))
-	actualRemainingBalance := suite.app.BankKeeper.GetAllBalances(suite.ctx, addr1)
-	suite.Require().True(actualRemainingBalance.IsEqual(expectedRemainingBalance))
+	// Mock spendable coins check
+	suite.bank.EXPECT().
+		SpendableCoins(suite.ctx, creator).
+		Return(sdk.NewCoins(
+			sdk.NewCoin("ubze", math.NewInt(10000)),
+		)).
+		Times(1)
+
+	// Mock sending coins to module
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(
+			suite.ctx,
+			creator,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(5000))), // 1000 * 5 slots
+		).
+		Return(nil).
+		Times(1)
+
+	// Mock community pool funding for fee
+	suite.distr.EXPECT().
+		FundCommunityPool(
+			suite.ctx,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(200))),
+			creator,
+		).
+		Return(nil).
+		Times(1)
+
+	// Mock epoch keeper call for expiration calculation
+	suite.epoch.EXPECT().
+		GetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(100)).
+		Times(1)
+
+	msg := &types.MsgCreateTradingReward{
+		Creator:     creator.String(),
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    "30",
+		MarketId:    "market-1",
+		Slots:       "5",
+	}
+
+	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(response)
+	suite.Require().NotEmpty(response.RewardId)
+
+	// Verify trading reward was created
+	tradingReward, found := suite.k.GetPendingTradingReward(suite.ctx, response.RewardId)
+	suite.Require().True(found)
+	suite.Require().Equal("1000", tradingReward.PrizeAmount)
+	suite.Require().Equal("ubze", tradingReward.PrizeDenom)
+	suite.Require().Equal("market-1", tradingReward.MarketId)
+	suite.Require().Equal(uint32(30), tradingReward.Duration)
+	suite.Require().Equal(uint32(5), tradingReward.Slots)
+
+	// Verify expiration was created
+	expirations := suite.k.GetAllPendingTradingRewardExpirationByExpireAt(suite.ctx, tradingReward.ExpireAt)
+	suite.Require().Len(expirations, 1)
+	suite.Require().Equal(response.RewardId, expirations[0].RewardId)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardNilRequest() {
+	response, err := suite.msgServer.CreateTradingReward(suite.ctx, nil)
+
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().Equal(sdkerrors.ErrInvalidRequest, err)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardInvalidCreator() {
+	msg := &types.MsgCreateTradingReward{
+		Creator:     "invalid-address",
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    "30",
+		MarketId:    "market-1",
+		Slots:       "5",
+	}
+
+	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
+
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardInvalidPrizeDenom() {
+	creator := sdk.AccAddress("creator")
+
+	// Mock bank keeper to return false for prize denom
+	suite.bank.EXPECT().
+		HasSupply(suite.ctx, "invalid-denom").
+		Return(false).
+		Times(1)
+
+	msg := &types.MsgCreateTradingReward{
+		Creator:     creator.String(),
+		PrizeAmount: "1000",
+		PrizeDenom:  "invalid-denom",
+		Duration:    "30",
+		MarketId:    "market-1",
+		Slots:       "5",
+	}
+
+	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
+
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().Equal(types.ErrInvalidPrizeDenom, err)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardInvalidMarketId() {
+	creator := sdk.AccAddress("creator")
+
+	// Mock bank keeper call
+	suite.bank.EXPECT().
+		HasSupply(suite.ctx, "ubze").
+		Return(true).
+		Times(1)
+
+	// Mock trade keeper to return false for market existence
+	suite.trade.EXPECT().
+		MarketExists(suite.ctx, "invalid-market").
+		Return(false).
+		Times(1)
+
+	msg := &types.MsgCreateTradingReward{
+		Creator:     creator.String(),
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    "30",
+		MarketId:    "invalid-market",
+		Slots:       "5",
+	}
+
+	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
+
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().Equal(types.ErrInvalidMarketId, err)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardAlreadyExists() {
+	creator := sdk.AccAddress("creator")
+
+	// Set up existing market mapping
+	existingMapping := types.MarketIdTradingRewardId{
+		RewardId: "existing-reward",
+		MarketId: "market-1",
+	}
+	suite.k.SetMarketIdRewardId(suite.ctx, existingMapping)
+
+	// Mock bank keeper call
+	suite.bank.EXPECT().
+		HasSupply(suite.ctx, "ubze").
+		Return(true).
+		Times(1)
+
+	// Mock trade keeper call
+	suite.trade.EXPECT().
+		MarketExists(suite.ctx, "market-1").
+		Return(true).
+		Times(1)
+
+	msg := &types.MsgCreateTradingReward{
+		Creator:     creator.String(),
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    "30",
+		MarketId:    "market-1",
+		Slots:       "5",
+	}
+
+	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
+
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().Equal(types.ErrRewardAlreadyExists, err)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardInsufficientFunds() {
+	creator := sdk.AccAddress("creator")
+
+	// Set up params with fee
+	params := types.Params{
+		CreateStakingRewardFee: sdk.NewCoin("ubze", math.NewInt(100)),
+		CreateTradingRewardFee: sdk.NewCoin("ubze", math.NewInt(200)),
+	}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	// Mock bank keeper calls
+	suite.bank.EXPECT().
+		HasSupply(suite.ctx, "ubze").
+		Return(true).
+		Times(1)
+
+	// Mock trade keeper call
+	suite.trade.EXPECT().
+		MarketExists(suite.ctx, "market-1").
+		Return(true).
+		Times(1)
+
+	// Mock insufficient spendable coins
+	suite.bank.EXPECT().
+		SpendableCoins(suite.ctx, creator).
+		Return(sdk.NewCoins(
+			sdk.NewCoin("ubze", math.NewInt(100)), // Not enough for 5000 + 200 fee
+		)).
+		Times(1)
+
+	msg := &types.MsgCreateTradingReward{
+		Creator:     creator.String(),
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    "30",
+		MarketId:    "market-1",
+		Slots:       "5",
+	}
+
+	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
+
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().Contains(err.Error(), "user balance is too low")
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardNoFee() {
+	creator := sdk.AccAddress("creator")
+
+	// Set up params with zero fee
+	params := types.Params{
+		CreateStakingRewardFee: sdk.NewCoin("ubze", math.ZeroInt()),
+		CreateTradingRewardFee: sdk.NewCoin("ubze", math.ZeroInt()),
+	}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	// Mock bank keeper calls
+	suite.bank.EXPECT().
+		HasSupply(suite.ctx, "ubze").
+		Return(true).
+		Times(1)
+
+	// Mock trade keeper call
+	suite.trade.EXPECT().
+		MarketExists(suite.ctx, "market-1").
+		Return(true).
+		Times(1)
+
+	// Mock spendable coins check
+	suite.bank.EXPECT().
+		SpendableCoins(suite.ctx, creator).
+		Return(sdk.NewCoins(
+			sdk.NewCoin("ubze", math.NewInt(10000)),
+		)).
+		Times(1)
+
+	// Mock sending coins to module (no fee)
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(
+			suite.ctx,
+			creator,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(5000))), // 1000 * 5 slots
+		).
+		Return(nil).
+		Times(1)
+
+	// No community pool funding expectation since fee is zero
+
+	// Mock epoch keeper call for expiration calculation
+	suite.epoch.EXPECT().
+		GetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(150)).
+		Times(1)
+
+	msg := &types.MsgCreateTradingReward{
+		Creator:     creator.String(),
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    "30",
+		MarketId:    "market-1",
+		Slots:       "5",
+	}
+
+	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(response)
+	suite.Require().NotEmpty(response.RewardId)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardBankError() {
+	creator := sdk.AccAddress("creator")
+
+	// Set up params with fee
+	params := types.Params{
+		CreateStakingRewardFee: sdk.NewCoin("ubze", math.NewInt(100)),
+		CreateTradingRewardFee: sdk.NewCoin("ubze", math.NewInt(200)),
+	}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	// Mock bank keeper calls
+	suite.bank.EXPECT().
+		HasSupply(suite.ctx, "ubze").
+		Return(true).
+		Times(1)
+
+	// Mock trade keeper call
+	suite.trade.EXPECT().
+		MarketExists(suite.ctx, "market-1").
+		Return(true).
+		Times(1)
+
+	// Mock spendable coins check
+	suite.bank.EXPECT().
+		SpendableCoins(suite.ctx, creator).
+		Return(sdk.NewCoins(
+			sdk.NewCoin("ubze", math.NewInt(10000)),
+		)).
+		Times(1)
+
+	// Mock bank error when sending coins
+	bankError := fmt.Errorf("bank transfer failed")
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(
+			suite.ctx,
+			creator,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(5000))),
+		).
+		Return(bankError).
+		Times(1)
+
+	// Mock epoch keeper call for expiration calculation
+	suite.epoch.EXPECT().
+		GetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(200)).
+		Times(1)
+
+	msg := &types.MsgCreateTradingReward{
+		Creator:     creator.String(),
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    "30",
+		MarketId:    "market-1",
+		Slots:       "5",
+	}
+
+	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
+
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().Equal(bankError, err)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardCommunityPoolError() {
+	creator := sdk.AccAddress("creator")
+
+	// Set up params with fee
+	params := types.Params{
+		CreateStakingRewardFee: sdk.NewCoin("ubze", math.NewInt(100)),
+		CreateTradingRewardFee: sdk.NewCoin("ubze", math.NewInt(200)),
+	}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	// Mock bank keeper calls
+	suite.bank.EXPECT().
+		HasSupply(suite.ctx, "ubze").
+		Return(true).
+		Times(1)
+
+	// Mock trade keeper call
+	suite.trade.EXPECT().
+		MarketExists(suite.ctx, "market-1").
+		Return(true).
+		Times(1)
+
+	// Mock spendable coins check
+	suite.bank.EXPECT().
+		SpendableCoins(suite.ctx, creator).
+		Return(sdk.NewCoins(
+			sdk.NewCoin("ubze", math.NewInt(10000)),
+		)).
+		Times(1)
+
+	// Mock successful coin transfer
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(
+			suite.ctx,
+			creator,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(5000))),
+		).
+		Return(nil).
+		Times(1)
+
+	// Mock community pool funding error
+	poolError := fmt.Errorf("community pool funding failed")
+	suite.distr.EXPECT().
+		FundCommunityPool(
+			suite.ctx,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(200))),
+			creator,
+		).
+		Return(poolError).
+		Times(1)
+
+	// Mock epoch keeper call for expiration calculation
+	suite.epoch.EXPECT().
+		GetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(250)).
+		Times(1)
+
+	msg := &types.MsgCreateTradingReward{
+		Creator:     creator.String(),
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    "30",
+		MarketId:    "market-1",
+		Slots:       "5",
+	}
+
+	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
+
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().Equal(poolError, err)
 }

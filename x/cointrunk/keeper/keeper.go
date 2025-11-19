@@ -3,57 +3,57 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/tendermint/tendermint/libs/log"
-
-	"github.com/bze-alphateam/bze/x/cointrunk/types"
+	"cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	"github.com/bze-alphateam/bze/x/cointrunk/types"
 )
 
 type (
 	Keeper struct {
-		cdc        codec.BinaryCodec
-		storeKey   sdk.StoreKey
-		memKey     sdk.StoreKey
-		paramstore paramtypes.Subspace
+		cdc          codec.BinaryCodec
+		storeService store.KVStoreService
+		logger       log.Logger
+
+		// the address capable of executing a MsgUpdateParams message. Typically, this
+		// should be the x/gov module account.
+		authority string
 
 		bankKeeper  types.BankKeeper
-		govKeeper   types.GovKeeper
-		accKeeper   types.AccountKeeper
 		distrKeeper types.DistrKeeper
 	}
 )
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	storeKey,
-	memKey sdk.StoreKey,
-	ps paramtypes.Subspace,
-
+	storeService store.KVStoreService,
+	logger log.Logger,
+	authority string,
 	bankKeeper types.BankKeeper,
-	govKeeper types.GovKeeper,
-	accKeeper types.AccountKeeper,
 	distrKeeper types.DistrKeeper,
-) *Keeper {
-	// set KeyTable if it has not already been set
-	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(types.ParamKeyTable())
+) Keeper {
+	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		panic(fmt.Sprintf("invalid authority address: %s", authority))
 	}
 
-	return &Keeper{
-
-		cdc:         cdc,
-		storeKey:    storeKey,
-		memKey:      memKey,
-		paramstore:  ps,
-		bankKeeper:  bankKeeper,
-		govKeeper:   govKeeper,
-		accKeeper:   accKeeper,
-		distrKeeper: distrKeeper,
+	return Keeper{
+		cdc:          cdc,
+		storeService: storeService,
+		authority:    authority,
+		logger:       logger,
+		bankKeeper:   bankKeeper,
+		distrKeeper:  distrKeeper,
 	}
 }
 
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+// GetAuthority returns the module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
+}
+
+// Logger returns a module-specific logger.
+func (k Keeper) Logger() log.Logger {
+	return k.logger.With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }

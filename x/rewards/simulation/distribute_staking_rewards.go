@@ -24,6 +24,6 @@ func SimulateMsgDistributeStakingRewards(
 
 		// TODO: Handling the DistributeStakingRewards simulation
 
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "DistributeStakingRewards simulation not implemented"), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "DistributeStakingRewards simulation not implemented"), nil, nil
 	}
 }

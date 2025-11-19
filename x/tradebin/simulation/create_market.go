@@ -11,6 +11,7 @@ import (
 )
 
 func SimulateMsgCreateMarket(
+	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k keeper.Keeper,
 ) simtypes.Operation {
@@ -23,6 +24,6 @@ func SimulateMsgCreateMarket(
 
 		// TODO: Handling the CreateMarket simulation
 
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "CreateMarket simulation not implemented"), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "CreateMarket simulation not implemented"), nil, nil
 	}
 }

@@ -2,10 +2,11 @@ package keeper
 
 import (
 	"context"
-	"fmt"
+	"cosmossdk.io/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -13,6 +14,10 @@ const (
 )
 
 func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCreateTradingReward) (*types.MsgCreateTradingRewardResponse, error) {
+	if k.tradeKeeper == nil {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "trade keeper is not available")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if msg == nil {
 		return nil, sdkerrors.ErrInvalidRequest
@@ -34,7 +39,7 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 		return nil, types.ErrInvalidPrizeDenom
 	}
 
-	if !k.tradingKeeper.MarketExists(ctx, tradingReward.MarketId) {
+	if !k.tradeKeeper.MarketExists(ctx, tradingReward.MarketId) {
 		return nil, types.ErrInvalidMarketId
 	}
 
@@ -44,13 +49,18 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 		return nil, types.ErrRewardAlreadyExists
 	}
 
-	feeParam := k.GetParams(ctx).CreateTradingRewardFee
-	toCapture, err := k.getAmountToCapture(feeParam, tradingReward.PrizeDenom, tradingReward.PrizeAmount, int64(tradingReward.Slots))
+	toCapture, err := k.getAmountToCapture(tradingReward.PrizeDenom, tradingReward.PrizeAmount, int64(tradingReward.Slots))
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "could not calculate amount needed to create the reward")
+		return nil, errors.Wrapf(err, "could not calculate amount needed to create the reward")
 	}
 
-	err = k.checkUserBalances(ctx, toCapture, acc)
+	fee := k.getRewardCreationFee(ctx, k.GetParams(ctx).CreateTradingRewardFee)
+	neededBalance := toCapture
+	if fee != nil {
+		neededBalance = neededBalance.Add(fee...)
+	}
+
+	err = k.checkUserBalances(ctx, neededBalance, acc)
 	if err != nil {
 		return nil, err
 	}
@@ -58,6 +68,13 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.ModuleName, toCapture)
 	if err != nil {
 		return nil, err
+	}
+
+	if fee != nil {
+		err = k.distrKeeper.FundCommunityPool(ctx, fee, acc)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	//add ID
@@ -88,17 +105,8 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 	)
 
 	if err != nil {
-		k.Logger(ctx).Error(err.Error())
+		k.Logger().Error(err.Error())
 	}
 
 	return &types.MsgCreateTradingRewardResponse{RewardId: tradingReward.RewardId}, nil
-}
-
-func (k msgServer) checkUserBalances(ctx sdk.Context, neededCoins sdk.Coins, address sdk.AccAddress) error {
-	spendable := k.bankKeeper.SpendableCoins(ctx, address)
-	if !spendable.IsAllGTE(neededCoins) {
-		return fmt.Errorf("user balance is too low")
-	}
-
-	return nil
 }

@@ -1,11 +1,10 @@
 package types
 
 import (
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
-
-const TypeMsgFundBurner = "fund_burner"
 
 var _ sdk.Msg = &MsgFundBurner{}
 
@@ -16,31 +15,20 @@ func NewMsgFundBurner(creator string, amount string) *MsgFundBurner {
 	}
 }
 
-func (msg *MsgFundBurner) Route() string {
-	return RouterKey
-}
-
-func (msg *MsgFundBurner) Type() string {
-	return TypeMsgFundBurner
-}
-
-func (msg *MsgFundBurner) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{creator}
-}
-
-func (msg *MsgFundBurner) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(msg)
-	return sdk.MustSortJSON(bz)
-}
-
 func (msg *MsgFundBurner) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
+
+	amount, err := sdk.ParseCoinsNormalized(msg.Amount)
+	if err != nil {
+		return errors.Wrapf(sdkerrors.ErrInvalidCoins, "invalid amount (%s)", err)
+	}
+
+	if !amount.IsAllPositive() {
+		return errors.Wrap(sdkerrors.ErrInvalidCoins, "amounts must be positive")
+	}
+
 	return nil
 }

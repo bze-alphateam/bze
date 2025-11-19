@@ -1,0 +1,40 @@
+syntax = "proto3";
+package bze.burner;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "bze/burner/params.proto";
+import "bze/burner/burned_coins.proto";
+import "bze/burner/raffle.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/burner/types";
+
+// GenesisState defines the burner module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+
+  repeated BurnedCoins burned_coins_list = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)      = "burned_coins_list,omitempty"
+  ];
+  repeated Raffle raffle_list = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "raffle_list,omitempty"
+  ];
+  repeated RaffleWinner raffle_winners_list = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "raffle_winners_list,omitempty"
+  ];
+  repeated RaffleParticipant raffle_participants_list = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "raffle_participants_list,omitempty"
+  ];
+
+  uint64 raffle_participant_counter = 6 [
+    (gogoproto.jsontag) = "raffle_participant_counter"
+  ];
+}

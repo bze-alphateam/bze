@@ -24,6 +24,6 @@ func SimulateMsgCreateDenom(
 
 		// TODO: Handling the CreateDenom simulation
 
-		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "CreateDenom simulation not implemented"), nil, nil
+		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "CreateDenom simulation not implemented"), nil, nil
 	}
 }

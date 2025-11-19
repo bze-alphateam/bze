@@ -1,27 +1,22 @@
 package keeper
 
 import (
+	"strconv"
+
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/burner/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"strconv"
 )
 
 func (k Keeper) WithdrawLuckyRaffleParticipants(ctx sdk.Context, height int64) {
 	participants := k.GetAllPrefixedRaffleParticipants(ctx, height)
 	if len(participants) == 0 {
-		k.Logger(ctx).Info("no raffle participants found.")
+		k.Logger().Info("no raffle participants found.")
 		return
 	}
 
-	//get raffle module account
-	raffleAcc := k.accKeeper.GetModuleAccount(ctx, types.RaffleModuleName)
-	if raffleAcc == nil {
-		k.Logger(ctx).Error("could not find raffle module account")
-
-		return
-	}
 	for _, participant := range participants {
-		logger := k.Logger(ctx).With("participant", participant)
+		logger := k.Logger().With("participant", participant)
 		raffle, found := k.GetRaffle(ctx, participant.Denom)
 		if !found {
 			logger.Error("could not find raffle for this participant")
@@ -36,30 +31,18 @@ func (k Keeper) WithdrawLuckyRaffleParticipants(ctx sdk.Context, height int64) {
 			continue
 		}
 
-		//get raffle module balance for the raffle denom before capturing the ticket price
-		currentPot := k.bankKeeper.GetBalance(ctx, raffleAcc.GetAddress(), raffle.Denom)
-		if !currentPot.IsPositive() {
-			logger.Error("current pot is not positive")
+		potInt, ok := math.NewIntFromString(raffle.GetPot())
+		if !ok {
+			logger.Error("could not parse pot to sdk int", err)
 			k.RemoveRaffleParticipant(ctx, participant)
 			continue
 		}
 
-		//get ticket price to enter the raffle
-		ticketPriceInt, ok := sdk.NewIntFromString(raffle.TicketPrice)
-		if !ok {
-			//should never happen
-			logger.Error("could not parse ticket price")
-		}
-
-		if k.IsLucky(ctx, &raffle, creatorAddr.String()) {
+		currentPot := sdk.NewCoin(raffle.GetDenom(), potInt)
+		if currentPot.IsPositive() && k.IsLucky(ctx, &raffle, creatorAddr.String()) {
 			logger.With("address", creatorAddr.String(), "denom", raffle.Denom).Info("user won raffle")
 			//user won
-			winRatio := sdk.MustNewDecFromStr(raffle.Ratio)
-			wonAmount := currentPot.Amount.Sub(ticketPriceInt).ToDec().Mul(winRatio).TruncateInt()
-			if !wonAmount.IsPositive() {
-				wonAmount = currentPot.Amount.Sub(ticketPriceInt)
-			}
-			wonCoin := sdk.NewCoin(currentPot.Denom, wonAmount)
+			wonCoin := k.getWonCoin(&raffle, currentPot)
 
 			err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.RaffleModuleName, creatorAddr, sdk.NewCoins(wonCoin))
 			if err != nil {
@@ -69,12 +52,13 @@ func (k Keeper) WithdrawLuckyRaffleParticipants(ctx sdk.Context, height int64) {
 			}
 
 			raffle.Winners += 1
-			raffleWon, ok := sdk.NewIntFromString(raffle.TotalWon)
+			totalWonInt, ok := math.NewIntFromString(raffle.TotalWon)
 			if !ok {
 				logger.Error("could not parse total won")
 			} else {
-				raffleWon = raffleWon.Add(wonCoin.Amount)
-				raffle.TotalWon = raffleWon.String()
+				totalWonInt = totalWonInt.Add(wonCoin.Amount)
+				raffle.TotalWon = totalWonInt.String()
+				raffle.Pot = currentPot.Amount.Sub(wonCoin.Amount).String()
 			}
 
 			k.SetRaffle(ctx, raffle)
@@ -92,21 +76,43 @@ func (k Keeper) WithdrawLuckyRaffleParticipants(ctx sdk.Context, height int64) {
 			})
 			if err != nil {
 				//just log it, don't hinder the response for this error
-				k.Logger(ctx).Error("failed to emit raffle winner event", err.Error())
+				k.Logger().Error("failed to emit raffle winner event", err.Error())
 			}
 
 		} else {
 			logger.With("address", creatorAddr.String(), "denom", raffle.Denom).Info("user lost raffle")
+
+			//add ticket price to pot
+			ticketPrice, ok := math.NewIntFromString(raffle.TicketPrice)
+			if !ok {
+				logger.Error("could not parse ticket price to sdk int")
+			} else {
+				raffle.Pot = currentPot.Amount.Add(ticketPrice).String()
+				k.SetRaffle(ctx, raffle)
+			}
+
 			err = ctx.EventManager().EmitTypedEvent(&types.RaffleLostEvent{
 				Denom:       raffle.Denom,
 				Participant: participant.Participant,
 			})
 			if err != nil {
 				//just log it, don't hinder the response for this error
-				k.Logger(ctx).Error("failed to emit raffle lost event", err.Error())
+				k.Logger().Error("failed to emit raffle lost event", err.Error())
 			}
 		}
 
 		k.RemoveRaffleParticipant(ctx, participant)
 	}
+}
+
+func (k Keeper) getWonCoin(raffle *types.Raffle, pot sdk.Coin) sdk.Coin {
+	winRatio := math.LegacyMustNewDecFromStr(raffle.Ratio)
+	potAmount := math.LegacyNewDecFromInt(pot.Amount)
+
+	prize := potAmount.Mul(winRatio).TruncateInt()
+	if !prize.IsPositive() {
+		prize = math.ZeroInt()
+	}
+
+	return sdk.NewCoin(pot.Denom, prize)
 }

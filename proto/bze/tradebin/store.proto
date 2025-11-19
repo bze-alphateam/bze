@@ -1,0 +1,101 @@
+syntax = "proto3";
+package bze.tradebin;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
+
+message Market {
+  string base = 1;
+  string quote = 2;
+  string creator = 3;
+}
+
+message QueueMessage {
+  string message_id = 1;
+  string market_id = 2;
+  string message_type = 3;
+  string amount = 4;
+  string price = 5;
+  int64 created_at = 6;
+  string order_id = 7;
+  string order_type = 8;
+  string owner = 9;
+}
+
+message Order {
+  string id = 1;
+  string market_id = 2;
+  string order_type = 3;
+  string amount = 4;
+  string price = 5;
+  int64 created_at = 6;
+  string owner = 7;
+}
+
+message OrderReference {
+  string id = 1;
+  string market_id = 2;
+  string order_type = 3;
+}
+
+message AggregatedOrder {
+  string market_id = 1;
+  string order_type = 2;
+  string amount = 3;
+  string price = 4;
+}
+
+message HistoryOrder {
+  string market_id = 1;
+  string order_type = 2;
+  string amount = 3;
+  string price = 4;
+  int64 executed_at = 5;
+  string maker = 6;
+  string taker = 7;
+}
+
+message UserDust {
+  string owner = 1;
+  string amount = 2;
+  string denom = 3;
+}
+
+message LiquidityPool {
+  string id = 1; // Unique pool identifier (e.g., "atom/usdc")
+  string base = 2;
+  string quote = 3;
+  string lp_denom = 4; // e.g., "lp/atom/usdc"
+  string creator = 5;
+  string fee = 6 [ // Fee ex: 0.001 = 0.1%
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
+  FeeDestination fee_dest = 7;
+  string reserve_base = 8 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string reserve_quote = 9 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
+  bool stable = 10; // true/false
+}
+
+message FeeDestination {
+  string treasury = 1 [ // % of the total fee of 1.000
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
+  string burner = 2 [ // % of the total fee of 1.000
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
+  string providers = 3 [ // % of the total fee of 1.000
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
+}

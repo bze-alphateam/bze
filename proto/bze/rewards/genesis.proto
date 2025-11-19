@@ -1,0 +1,31 @@
+syntax = "proto3";
+package bze.rewards;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "bze/rewards/params.proto";
+import "bze/rewards/store.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
+
+// GenesisState defines the rewards module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+  repeated StakingReward staking_reward_list = 2 [(gogoproto.nullable) = false];
+  uint64 staking_rewards_counter = 3;
+  uint64 trading_rewards_counter = 4;
+
+  repeated TradingReward active_trading_reward_list = 5 [(gogoproto.nullable) = false];
+  repeated TradingReward pending_trading_reward_list = 6 [(gogoproto.nullable) = false];
+  repeated StakingRewardParticipant staking_reward_participant_list = 7 [(gogoproto.nullable) = false];
+  repeated PendingUnlockParticipant pending_unlock_participant_list = 8 [(gogoproto.nullable) = false];
+  repeated TradingRewardLeaderboard trading_reward_leaderboard_list = 9 [(gogoproto.nullable) = false];
+  repeated TradingRewardCandidate trading_reward_candidate_list = 10 [(gogoproto.nullable) = false];
+  repeated MarketIdTradingRewardId market_id_trading_reward_id_list = 11 [(gogoproto.nullable) = false];
+  repeated TradingRewardExpiration pending_trading_reward_expiration_list = 12 [(gogoproto.nullable) = false];
+  repeated TradingRewardExpiration active_trading_reward_expiration_list = 13 [(gogoproto.nullable) = false];
+}
