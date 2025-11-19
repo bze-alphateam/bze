@@ -126,8 +126,8 @@ func CreateUpgradeHandler(
 		rAcc := acc.GetModuleAddress(rTypes.ModuleName)
 		//hardcoded denom to run it only for mainnet
 		rBal := bank.GetBalance(ctx, rAcc, mainDenom)
-		if rBal.Amount.GTE(math.NewInt(50_000_000000)) {
-			toSend := sdk.NewCoins(sdk.NewInt64Coin(mainDenom, 50_000_000000))
+		if rBal.Amount.GTE(math.NewInt(75_000_000000)) {
+			toSend := sdk.NewCoins(sdk.NewInt64Coin(mainDenom, 75_000_000000))
 			err = distr.FundCommunityPool(ctx, toSend, rAcc)
 			if err != nil {
 				ctx.Logger().Error("could not migrate funds from rewards module to community pool", "error", err)
