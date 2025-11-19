@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
 	"errors"
 	"fmt"
+
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -13,7 +14,8 @@ import (
 func (suite *IntegrationTestSuite) TestServiceDenom_IsNativeDenom_True() {
 	nativeDenom := "ubze"
 	params := types.Params{NativeDenom: nativeDenom}
-	suite.k.SetParams(suite.ctx, params)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
 
 	result := suite.k.IsNativeDenom(suite.ctx, nativeDenom)
 	suite.Require().True(result)
@@ -22,7 +24,8 @@ func (suite *IntegrationTestSuite) TestServiceDenom_IsNativeDenom_True() {
 func (suite *IntegrationTestSuite) TestServiceDenom_IsNativeDenom_False() {
 	nativeDenom := "ubze"
 	params := types.Params{NativeDenom: nativeDenom}
-	suite.k.SetParams(suite.ctx, params)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
 
 	result := suite.k.IsNativeDenom(suite.ctx, "uother")
 	suite.Require().False(result)
@@ -31,10 +34,11 @@ func (suite *IntegrationTestSuite) TestServiceDenom_IsNativeDenom_False() {
 func (suite *IntegrationTestSuite) TestServiceDenom_CanSwapForNativeDenom_SameDenom() {
 	nativeDenom := "ubze"
 	params := types.Params{NativeDenom: nativeDenom}
-	suite.k.SetParams(suite.ctx, params)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
 
 	// Should return false when trying to swap native denom for itself
-	result := suite.k.CanSwapForNativeDenom(suite.ctx, nativeDenom)
+	result := suite.k.CanSwapForNativeDenom(suite.ctx, sdk.NewInt64Coin(nativeDenom, 1000))
 	suite.Require().False(result)
 }
 
@@ -42,10 +46,11 @@ func (suite *IntegrationTestSuite) TestServiceDenom_CanSwapForNativeDenom_PoolNo
 	nativeDenom := "ubze"
 	otherDenom := "uother"
 	params := types.Params{NativeDenom: nativeDenom}
-	suite.k.SetParams(suite.ctx, params)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
 
 	// Pool doesn't exist - should return false
-	result := suite.k.CanSwapForNativeDenom(suite.ctx, otherDenom)
+	result := suite.k.CanSwapForNativeDenom(suite.ctx, sdk.NewInt64Coin(otherDenom, 1000))
 	suite.Require().False(result)
 }
 
@@ -53,7 +58,8 @@ func (suite *IntegrationTestSuite) TestServiceDenom_CanSwapForNativeDenom_Insuff
 	nativeDenom := "ubze"
 	otherDenom := "uother"
 	params := types.Params{NativeDenom: nativeDenom}
-	suite.k.SetParams(suite.ctx, params)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
 
 	// Create pool with insufficient native liquidity
 	pool := types.LiquidityPool{
@@ -65,7 +71,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_CanSwapForNativeDenom_Insuff
 	}
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	result := suite.k.CanSwapForNativeDenom(suite.ctx, otherDenom)
+	result := suite.k.CanSwapForNativeDenom(suite.ctx, sdk.NewInt64Coin(otherDenom, 1000))
 	suite.Require().False(result)
 }
 
@@ -73,7 +79,8 @@ func (suite *IntegrationTestSuite) TestServiceDenom_CanSwapForNativeDenom_Suffic
 	nativeDenom := "ubze"
 	otherDenom := "uother"
 	params := types.Params{NativeDenom: nativeDenom}
-	suite.k.SetParams(suite.ctx, params)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
 
 	// Create pool with sufficient native liquidity
 	pool := types.LiquidityPool{
@@ -85,18 +92,19 @@ func (suite *IntegrationTestSuite) TestServiceDenom_CanSwapForNativeDenom_Suffic
 	}
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	result := suite.k.CanSwapForNativeDenom(suite.ctx, otherDenom)
+	result := suite.k.CanSwapForNativeDenom(suite.ctx, sdk.NewInt64Coin(otherDenom, 1000))
 	suite.Require().True(result)
 }
 
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_EmptyNativeDenom() {
 	// Set empty native denom
 	params := types.Params{NativeDenom: ""}
-	suite.k.SetParams(suite.ctx, params)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin("uother", 1000))
 
-	_, err := suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
+	_, err = suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "native denom not set")
 }
@@ -104,7 +112,8 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Emp
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_SwapNativeToNative() {
 	nativeDenom := "ubze"
 	params := types.Params{NativeDenom: nativeDenom}
-	suite.k.SetParams(suite.ctx, params)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
 
 	// Mock module account
 	addr := sdk.AccAddress("moduleacc")
@@ -114,11 +123,11 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Swa
 		},
 		Name: "test_module",
 	}
-	suite.accountMock.EXPECT().GetModuleAccount(suite.ctx, "test_module").Return(&moduleAcc).Times(1)
+	suite.accountMock.EXPECT().GetModuleAccount(gomock.Any(), "test_module").Return(&moduleAcc).Times(1)
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin(nativeDenom, 1000))
 
-	_, err := suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
+	_, err = suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "cannot swap native coin to native coin")
 }
@@ -127,7 +136,8 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Poo
 	nativeDenom := "ubze"
 	otherDenom := "uother"
 	params := types.Params{NativeDenom: nativeDenom}
-	suite.k.SetParams(suite.ctx, params)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
 
 	// Mock module account
 	addr := sdk.AccAddress("moduleacc")
@@ -137,11 +147,11 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Poo
 		},
 		Name: "test_module",
 	}
-	suite.accountMock.EXPECT().GetModuleAccount(suite.ctx, "test_module").Return(&moduleAcc).Times(1)
+	suite.accountMock.EXPECT().GetModuleAccount(gomock.Any(), "test_module").Return(&moduleAcc).Times(1)
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin(otherDenom, 1000))
 
-	_, err := suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
+	_, err = suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "cannot find liquidity pool")
 }
@@ -150,7 +160,8 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Ins
 	nativeDenom := "ubze"
 	otherDenom := "uother"
 	params := types.Params{NativeDenom: nativeDenom}
-	suite.k.SetParams(suite.ctx, params)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
 
 	// Mock module account
 	addr := sdk.AccAddress("moduleacc")
@@ -160,7 +171,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Ins
 		},
 		Name: "test_module",
 	}
-	suite.accountMock.EXPECT().GetModuleAccount(suite.ctx, "test_module").Return(&moduleAcc).Times(1)
+	suite.accountMock.EXPECT().GetModuleAccount(gomock.Any(), "test_module").Return(&moduleAcc).Times(1)
 
 	// Create pool with insufficient liquidity
 	pool := types.LiquidityPool{
@@ -174,7 +185,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Ins
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin(otherDenom, 1000))
 
-	_, err := suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
+	_, err = suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "not enough liquidity available")
 }
@@ -183,7 +194,8 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Swa
 	nativeDenom := "ubze"
 	otherDenom := "uother"
 	params := types.Params{NativeDenom: nativeDenom}
-	suite.k.SetParams(suite.ctx, params)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
 
 	// Mock module account for the calling module
 	addr := sdk.AccAddress("moduleacc")
@@ -193,7 +205,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Swa
 		},
 		Name: "test_module",
 	}
-	suite.accountMock.EXPECT().GetModuleAccount(suite.ctx, "test_module").Return(&moduleAcc).Times(1)
+	suite.accountMock.EXPECT().GetModuleAccount(gomock.Any(), "test_module").Return(&moduleAcc).Times(1)
 
 	// Mock tradebin module account (used internally)
 	tradebinAddr := sdk.AccAddress("tradebinmodule")
@@ -203,7 +215,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Swa
 		},
 		Name: types.ModuleName,
 	}
-	suite.accountMock.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(&tradebinModuleAcc).Times(1)
+	suite.accountMock.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&tradebinModuleAcc).Times(1)
 
 	// Create pool with sufficient liquidity but will cause swap error
 	pool := types.LiquidityPool{
@@ -218,11 +230,11 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Swa
 	coins := sdk.NewCoins(sdk.NewInt64Coin(otherDenom, 1000))
 
 	// Mock first send coins call to succeed
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, "burner", coins).Return(nil).Times(1)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(suite.ctx, "test_module", types.ModuleName, coins).Return(nil).Times(1)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, "test_module", gomock.Any()).Return(fmt.Errorf("test err")).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "burner", coins).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "test_module", types.ModuleName, coins).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "test_module", gomock.Any()).Return(fmt.Errorf("test err")).Times(1)
 
-	_, err := suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
+	_, err = suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().Error(err)
 }
 
@@ -230,7 +242,8 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Sen
 	nativeDenom := "ubze"
 	otherDenom := "uother"
 	params := types.Params{NativeDenom: nativeDenom}
-	suite.k.SetParams(suite.ctx, params)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
 
 	// Mock module account for the calling module
 	addr := sdk.AccAddress("moduleacc")
@@ -240,8 +253,8 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Sen
 		},
 		Name: "test_module",
 	}
-	suite.accountMock.EXPECT().GetModuleAccount(suite.ctx, "test_module").Return(&moduleAcc).Times(1)
-	suite.accountMock.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(&moduleAcc).Times(1)
+	suite.accountMock.EXPECT().GetModuleAccount(gomock.Any(), "test_module").Return(&moduleAcc).Times(1)
+	suite.accountMock.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
 
 	// Create pool with sufficient liquidity
 	pool := types.LiquidityPool{
@@ -263,11 +276,11 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Sen
 	sendError := errors.New("send coins error")
 
 	// Mock first send coins call to fail
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(suite.ctx, "test_module", types.ModuleName, coins).Return(sendError).Times(1)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, "test_module", coins).Return(nil).Times(1)
-	suite.distrMock.EXPECT().FundCommunityPool(suite.ctx, gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "test_module", types.ModuleName, coins).Return(sendError).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "test_module", coins).Return(nil).Times(1)
+	suite.distrMock.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
-	_, err := suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
+	_, err = suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().Error(err)
 	suite.Require().Equal(sendError, err)
 }
@@ -276,7 +289,8 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Sen
 	nativeDenom := "ubze"
 	otherDenom := "uother"
 	params := types.Params{NativeDenom: nativeDenom}
-	suite.k.SetParams(suite.ctx, params)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
 
 	// Mock module account for the calling module
 	addr := sdk.AccAddress("moduleacc")
@@ -286,7 +300,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Sen
 		},
 		Name: "test_module",
 	}
-	suite.accountMock.EXPECT().GetModuleAccount(suite.ctx, "test_module").Return(&moduleAcc).Times(1)
+	suite.accountMock.EXPECT().GetModuleAccount(gomock.Any(), "test_module").Return(&moduleAcc).Times(1)
 
 	// Mock tradebin module account (used internally)
 	tradebinAddr := sdk.AccAddress("tradebinmodule")
@@ -296,7 +310,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Sen
 		},
 		Name: types.ModuleName,
 	}
-	suite.accountMock.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(&tradebinModuleAcc).Times(1)
+	suite.accountMock.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&tradebinModuleAcc).Times(1)
 
 	// Create pool with sufficient liquidity
 	pool := types.LiquidityPool{
@@ -318,14 +332,14 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Sen
 	sendError := errors.New("send swap result error")
 
 	// Mock first send coins call to succeed
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(suite.ctx, "test_module", types.ModuleName, coins).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "test_module", types.ModuleName, coins).Return(nil).Times(1)
 
 	// Mock second send coins call to fail
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, "burner", gomock.Any()).Return(nil).Times(1)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, "test_module", gomock.Any()).Return(sendError).Times(1)
-	suite.distrMock.EXPECT().FundCommunityPool(suite.ctx, gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "burner", gomock.Any()).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "test_module", gomock.Any()).Return(sendError).Times(1)
+	suite.distrMock.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
-	_, err := suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
+	_, err = suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().Error(err)
 	suite.Require().Equal(sendError, err)
 }
@@ -334,7 +348,8 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Suc
 	nativeDenom := "ubze"
 	otherDenom := "uother"
 	params := types.Params{NativeDenom: nativeDenom}
-	suite.k.SetParams(suite.ctx, params)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
 
 	// Mock module account for the calling module
 	addr := sdk.AccAddress("moduleacc")
@@ -344,7 +359,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Suc
 		},
 		Name: "test_module",
 	}
-	suite.accountMock.EXPECT().GetModuleAccount(suite.ctx, "test_module").Return(&moduleAcc).Times(1)
+	suite.accountMock.EXPECT().GetModuleAccount(gomock.Any(), "test_module").Return(&moduleAcc).Times(1)
 
 	// Mock tradebin module account (used internally)
 	tradebinAddr := sdk.AccAddress("tradebinmodule")
@@ -354,7 +369,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Suc
 		},
 		Name: types.ModuleName,
 	}
-	suite.accountMock.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(&tradebinModuleAcc).Times(1)
+	suite.accountMock.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&tradebinModuleAcc).Times(1)
 
 	// Create pool with sufficient liquidity
 	pool := types.LiquidityPool{
@@ -375,12 +390,13 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Suc
 	coins := sdk.NewCoins(sdk.NewInt64Coin(otherDenom, 1000))
 
 	// Mock both send coins calls to succeed
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, "burner", gomock.Any()).Return(nil).Times(1)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(suite.ctx, "test_module", types.ModuleName, coins).Return(nil).Times(1)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, "test_module", gomock.Any()).Return(nil).Times(1)
-	suite.distrMock.EXPECT().FundCommunityPool(suite.ctx, gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "burner", gomock.Any()).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "test_module", types.ModuleName, coins).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "test_module", gomock.Any()).Return(nil).Times(1)
+	suite.distrMock.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
-	result, err := suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
+	var result sdk.Coin
+	result, err = suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().NoError(err)
 	suite.Require().Equal(nativeDenom, result.Denom)
 	suite.Require().True(result.Amount.IsPositive())
@@ -402,7 +418,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Mul
 		},
 		Name: "test_module",
 	}
-	suite.accountMock.EXPECT().GetModuleAccount(suite.ctx, "test_module").Return(&moduleAcc).Times(1)
+	suite.accountMock.EXPECT().GetModuleAccount(gomock.Any(), "test_module").Return(&moduleAcc).Times(1)
 
 	// Mock tradebin module account (used internally)
 	tradebinAddr := sdk.AccAddress("tradebinmodule")
@@ -412,7 +428,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Mul
 		},
 		Name: types.ModuleName,
 	}
-	suite.accountMock.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(&tradebinModuleAcc).Times(2)
+	suite.accountMock.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&tradebinModuleAcc).Times(2)
 
 	// Create pools for both denoms
 	pool1 := types.LiquidityPool{
@@ -450,12 +466,13 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Mul
 	)
 
 	// Mock both send coins calls to succeed
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(suite.ctx, "test_module", types.ModuleName, coins).Return(nil).Times(1)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, "test_module", gomock.Any()).Return(nil).Times(1)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, "burner", gomock.Any()).Return(nil).Times(1)
-	suite.distrMock.EXPECT().FundCommunityPool(suite.ctx, gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "test_module", types.ModuleName, coins).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "test_module", gomock.Any()).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "burner", gomock.Any()).Return(nil).Times(1)
+	suite.distrMock.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
-	result, err := suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
+	var result sdk.Coin
+	result, err = suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().NoError(err)
 	suite.Require().Equal(nativeDenom, result.Denom)
 	suite.Require().True(result.Amount.IsPositive())

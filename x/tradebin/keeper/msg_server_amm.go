@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/bzeutils"
+	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -87,7 +88,11 @@ func (k msgServer) CreateLiquidityPool(goCtx context.Context, msg *types.MsgCrea
 	if !lpTokens.IsPositive() {
 		return nil, errors.Wrap(sdkerrors.ErrInvalidCoins, "resulted LP tokens must be positive")
 	}
-	//initial LP is forever locked - that's why we don't send the minted tokens anywhere
+	//initial LP is forever locked
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, burnermoduletypes.BlackHoleModuleName, sdk.NewCoins(lpTokens))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to send initial LP tokens to burner black hole")
+	}
 
 	k.SetLiquidityPool(ctx, lp)
 	//emit LP Created event

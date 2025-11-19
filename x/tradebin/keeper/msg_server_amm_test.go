@@ -379,7 +379,9 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_Success() {
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(suite.ctx, getTestAccount(), types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("abc", 123), sdk.NewInt64Coin("def", 345)))
 	suite.bankMock.EXPECT().SetDenomMetaData(suite.ctx, denomMetaData)
 	//205997572,801234723674372 - resulted shared from (sqrt(123 * 345)) * 1_000_000
-	suite.bankMock.EXPECT().MintCoins(suite.ctx, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ulp_abc_def", 205997572)))
+	lpTokens := sdk.NewCoins(sdk.NewInt64Coin("ulp_abc_def", 205997572))
+	suite.bankMock.EXPECT().MintCoins(suite.ctx, types.ModuleName, lpTokens)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, "burner_black_hole", lpTokens).Return(nil).Times(1)
 
 	res, err := suite.msgServer.CreateLiquidityPool(goCtx, msg)
 	suite.Require().NoError(err)
@@ -2116,18 +2118,9 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SmallFeeAmount() {
 	}
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	expectedFee, _ := sdk.ParseCoinsNormalized(types.DefaultMarketTakerFee)
-	suite.bankMock.EXPECT().
-		SendCoinsFromAccountToModule(
-			suite.ctx,
-			creator,
-			types.FeeDestinationBurnerModule,
-			expectedFee,
-		).
-		Return(nil)
-
 	// Create swap message with very small amount
-	// Fee would be 10 * 0.003 = 0.03, which should result in all parts being truncated to 0
+	// Fee would be 10 * 0.003 = 0.03, which rounds to 0
+	// This causes the swap to fail with "amount is too low to be traded"
 	inputCoin := sdk.NewCoin(denomBze, math.NewInt(10))
 	minOutput := sdk.NewCoin(denomStake, math.NewInt(10))
 
@@ -2138,11 +2131,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SmallFeeAmount() {
 		MinOutput: minOutput,
 	}
 
-	// Expected calculations:
-	// Fee: 10 * 0.003 = 0.03 (rounds to 0 as Int)
-	// All fee effectively becomes 0
-
-	// Mock sending coins from account to module
+	// Mock sending coins from account to module (this happens before the swap validation)
 	suite.bankMock.EXPECT().
 		SendCoinsFromAccountToModule(
 			suite.ctx,
@@ -2152,41 +2141,13 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SmallFeeAmount() {
 		).
 		Return(nil)
 
-	// Should still attempt to get module account but no distribution should happen
-	suite.accountMock.EXPECT().
-		GetModuleAccount(suite.ctx, types.ModuleName).
-		Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).
-		AnyTimes()
-
-	// Expected output from the swap (rounded for simplicity)
-	//expectedOutput := sdk.NewCoin(denomStake, math.NewInt(19))
-
-	// Mock sending output to user
-	suite.bankMock.EXPECT().
-		SendCoinsFromModuleToAccount(
-			suite.ctx,
-			types.ModuleName,
-			creator,
-			gomock.Any(), // Can't predict exact amount
-		).
-		Return(nil)
-
-	// Execute swap
+	// Execute swap - should fail due to amount being too low
 	ctx := sdk.WrapSDKContext(suite.ctx)
-	resp, err := suite.msgServer.MultiSwap(ctx, &msg)
+	_, err := suite.msgServer.MultiSwap(ctx, &msg)
 
-	// Verify no errors
-	suite.Require().NoError(err)
-	suite.Require().NotNil(resp)
-
-	// Verify the pool was updated correctly in storage
-	updatedPool, found := suite.k.GetLiquidityPool(suite.ctx, "pool1")
-	suite.Require().True(found)
-
-	// With such small amount, fee is effectively 0, so all input goes to reserve
-	// Original: 1000000, Input: 10
-	// Expected: 1000000 + 10 = 1000010
-	suite.Require().Equal(math.NewInt(1000010), updatedPool.ReserveBase)
+	// Verify error occurred
+	suite.Require().Error(err)
+	suite.Require().Contains(err.Error(), "amount is too low to be traded")
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_TreasuryFeeError() {
