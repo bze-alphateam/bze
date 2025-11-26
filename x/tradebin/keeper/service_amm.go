@@ -17,14 +17,13 @@ const (
 
 // CreatePoolId - orders assets alphabetically and returns them in current order and their respective pool id
 func (k Keeper) CreatePoolId(base, quote string) (newBase, newQuote, id string) {
-	newBase = base
-	newQuote = quote
+	//sort assets alphabetically
 	if base > quote {
-		newBase = quote
-		newQuote = base
+		//reverse the order of assets
+		base, quote = quote, base
 	}
 
-	return newBase, newQuote, k.getPoolId(newBase, newQuote)
+	return base, quote, k.getPoolId(base, quote)
 }
 
 // getPoolId - creates Pool ID from given assets

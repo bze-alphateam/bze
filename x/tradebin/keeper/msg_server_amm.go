@@ -27,7 +27,15 @@ func (k msgServer) CreateLiquidityPool(goCtx context.Context, msg *types.MsgCrea
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	initialBase := msg.InitialBase
+	initialQuote := msg.InitialQuote
 	base, quote, poolId := k.CreatePoolId(msg.Base, msg.Quote)
+	//if the base and quote are different from in the message, it means that CreatePoolId has reversed them in
+	//alphabetical order. In this case we also have to reverse the provided amounts
+	if base != msg.Base {
+		initialBase, initialQuote = initialQuote, initialBase
+	}
+
 	err = k.validateMarketAssets(ctx, base, quote)
 	if err != nil {
 		return nil, err
@@ -43,7 +51,7 @@ func (k msgServer) CreateLiquidityPool(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	rBase, rQuote, err := k.getProvidedReserves(base, quote, msg.InitialBase, msg.InitialQuote)
+	rBase, rQuote, err := k.getProvidedReserves(base, quote, initialBase, initialQuote)
 	if err != nil {
 		return nil, err
 	}
