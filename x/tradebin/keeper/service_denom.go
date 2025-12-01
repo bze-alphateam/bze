@@ -256,12 +256,7 @@ func (k Keeper) ModuleAddLiquidityWithNativeDenom(ctx sdk.Context, fromModule st
 		if err != nil {
 			return nil, nil, fmt.Errorf("cannot add liquidity with native denom: failed to mint LP tokens: %w", err)
 		}
-
-		//send LP tokens to the caller module
-		err = k.bankKeeper.SendCoinsFromModuleToModule(cached, types.ModuleName, fromModule, sdk.NewCoins(minted))
-		if err != nil {
-			return nil, nil, fmt.Errorf("cannot add liquidity with native denom: failed to send LP tokens to black hole: %w", err)
-		}
+		refundedCoins = refundedCoins.Add(minted)
 
 		//update pool reserves
 		pool.ReserveBase = currentBaseReserve.Add(optimalBase)
