@@ -390,22 +390,6 @@ func (k msgServer) mintInitialLpTokens(ctx sdk.Context, baseCoin, quoteCoin sdk.
 	return
 }
 
-func (k msgServer) getProvidedReserves(baseDenom, quoteDenom string, baseAmt, quoteAmt math.Int) (baseCoin, quoteCoin sdk.Coin, err error) {
-	baseCoin = sdk.NewCoin(baseDenom, baseAmt)
-	quoteCoin = sdk.NewCoin(quoteDenom, quoteAmt)
-	if !baseCoin.IsValid() || !quoteCoin.IsValid() {
-		err = errors.Wrap(sdkerrors.ErrInvalidCoins, "invalid reserve")
-		return
-	}
-
-	if !baseCoin.IsPositive() || !quoteCoin.IsPositive() {
-		err = errors.Wrap(sdkerrors.ErrInvalidCoins, "non positive reserve provided")
-		return
-	}
-
-	return
-}
-
 func (k msgServer) validateMarketAssets(ctx sdk.Context, base, quote string) error {
 	if base == quote {
 		return errors.Wrap(types.ErrInvalidDenom, "base and quote must be different")
@@ -485,37 +469,6 @@ func (k msgServer) parseValidPoolFees(msg *types.MsgCreateLiquidityPool) (fee ma
 	}
 
 	return
-}
-
-func (k msgServer) mintDepositLpTokens(ctx sdk.Context, baseAmount, quoteAmount, poolBaseReserve, poolQuoteReserve *math.Int, lp *types.LiquidityPool) (mintedLp sdk.Coin, err error) {
-	lpSupply := k.bankKeeper.GetSupply(ctx, lp.GetLpDenom())
-	if !lpSupply.IsPositive() {
-		return mintedLp, errors.Wrapf(types.ErrInvalidDenom, "could not find supply for pool %s", lp.GetId())
-	}
-
-	baseRatio := math.LegacyNewDecFromInt(*baseAmount).Quo(math.LegacyNewDecFromInt(*poolBaseReserve))
-	quoteRatio := math.LegacyNewDecFromInt(*quoteAmount).Quo(math.LegacyNewDecFromInt(*poolQuoteReserve))
-
-	var mintRatio math.LegacyDec
-	if baseRatio.LT(quoteRatio) {
-		mintRatio = baseRatio
-	} else {
-		mintRatio = quoteRatio
-	}
-
-	tokensToMint := mintRatio.Mul(math.LegacyNewDecFromInt(lpSupply.Amount)).TruncateInt()
-	if !tokensToMint.IsPositive() {
-		return mintedLp, errors.Wrap(sdkerrors.ErrInvalidCoins, "resulted LP shares is not positive")
-	}
-
-	mintedLp = sdk.NewCoin(lp.GetLpDenom(), tokensToMint)
-	// Mint the LP tokens
-	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(mintedLp))
-	if err != nil {
-		return mintedLp, errors.Wrapf(err, "could not mint liquidity pool tokens %s", lp.GetId())
-	}
-
-	return mintedLp, nil
 }
 
 func (k msgServer) onSwapSuccess(ctx sdk.Context, pool *types.LiquidityPool, userAddress sdk.AccAddress, input, output sdk.Coin) {
