@@ -345,11 +345,11 @@ func (suite *IntegrationTestSuite) TestHooks_TestBurnModuleCoins_ValidExecution(
 		sdk.NewInt64Coin("ibc/ABC123", 200), // IBC token
 	)
 
-	swappedCoin := sdk.NewInt64Coin("uother", 180) // Swapped IBC value - different denom to avoid duplicate
+	addedCoins := sdk.NewCoins(sdk.NewInt64Coin("ibc/ABC123", 180))
+	refundedCoins := sdk.NewCoins()
 	expectedBurnCoins := sdk.NewCoins(
 		sdk.NewInt64Coin("ubze", 1000),
 		sdk.NewInt64Coin("utoken", 500),
-		swappedCoin,
 	)
 
 	// Mock expectations
@@ -361,9 +361,8 @@ func (suite *IntegrationTestSuite) TestHooks_TestBurnModuleCoins_ValidExecution(
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "utoken").Return(true).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/ABC123").Return(false).Times(1)
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, sdk.NewInt64Coin("ibc/ABC123", 200)).Return(true).Times(1)
-	suite.trade.EXPECT().HasLiquidityWithNativeDenom(suite.ctx, "ibc/ABC123").Return(true).Times(1)
 
-	suite.trade.EXPECT().ModuleSwapForNativeDenom(suite.ctx, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ibc/ABC123", 200))).Return(swappedCoin, nil).Times(1)
+	suite.trade.EXPECT().ModuleAddLiquidityWithNativeDenom(suite.ctx, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ibc/ABC123", 200))).Return(addedCoins, refundedCoins, nil).Times(1)
 
 	suite.bank.EXPECT().BurnCoins(suite.ctx, types.ModuleName, expectedBurnCoins).Return(nil).Times(1)
 
@@ -412,7 +411,11 @@ func (suite *IntegrationTestSuite) TestHooks_TestBurnModuleCoins_OnlyIBCTokens()
 		sdk.NewInt64Coin("ibc/DEF456", 500),
 	)
 
-	swappedCoin := sdk.NewInt64Coin("ubze", 1350) // Total swapped value
+	addedCoins := sdk.NewCoins(
+		sdk.NewInt64Coin("ibc/ABC123", 900),
+		sdk.NewInt64Coin("ibc/DEF456", 450),
+	)
+	refundedCoins := sdk.NewCoins()
 
 	// Mock expectations
 	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(&moduleAcc).Times(1)
@@ -423,9 +426,9 @@ func (suite *IntegrationTestSuite) TestHooks_TestBurnModuleCoins_OnlyIBCTokens()
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/DEF456").Return(false).Times(1)
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, ibcOnlyCoins[0]).Return(true).Times(1)
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, ibcOnlyCoins[1]).Return(true).Times(1)
-	suite.trade.EXPECT().ModuleSwapForNativeDenom(suite.ctx, types.ModuleName, ibcOnlyCoins).Return(swappedCoin, nil).Times(1)
+	suite.trade.EXPECT().ModuleAddLiquidityWithNativeDenom(suite.ctx, types.ModuleName, ibcOnlyCoins).Return(addedCoins, refundedCoins, nil).Times(1)
 
-	suite.bank.EXPECT().BurnCoins(suite.ctx, types.ModuleName, sdk.NewCoins(swappedCoin)).Return(nil).Times(1)
+	// No burn operation expected - IBC coins are added to liquidity
 
 	// Execute burn
 	hook := suite.k.GetBurnerPeriodicBurnHook()

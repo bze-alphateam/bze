@@ -64,14 +64,14 @@ func (k Keeper) BurnAnyCoins(ctx sdk.Context, fromModule string, coins sdk.Coins
 		// native coins can be burned directly
 		// factory tokens can be burned directly
 		if k.tradeKeeper.IsNativeDenom(ctx, c.Denom) || bzeutils.IsTokenFactoryDenom(c.Denom) {
-			logger.Debug("coin is native or factory token, can be burned directly")
+			logger.Debug("coin is native or factory token, can be burned directly", "coin", c.String())
 			burnable = burnable.Add(c)
 			continue
 		}
 
 		//LP shares cannot be burned, but they can be locked
 		if bzeutils.IsLpTokenDenom(c.Denom) {
-			logger.Debug("coin is LP token, can be locked")
+			logger.Debug("coin is LP token, can be locked", "coin", c.String())
 			lockable = lockable.Add(c)
 			continue
 		}
@@ -79,31 +79,23 @@ func (k Keeper) BurnAnyCoins(ctx sdk.Context, fromModule string, coins sdk.Coins
 
 		//not native, not LP share, not token factory -> it should be an IBC denom
 		if k.tradeKeeper.CanSwapForNativeDenom(ctx, c) {
-			logger.Debug("coin is IBC token, can be exchanged to native coin for burning")
+			logger.Debug("coin is IBC token, can be exchanged to native coin for burning", "coin", c.String())
 			exchangeable = exchangeable.Add(c)
 			continue
 		}
 
-		if k.tradeKeeper.HasLiquidityWithNativeDenom(ctx, c.Denom) {
-			logger.Debug("coin is IBC token, it has liquidity with native denom, CAN NOT be exchanged to native coin for burning. Will be burned in next run.")
-			//if the coin has liquidity with native denom, but it cannot be swapped yet (previous if statement checks this)
-			//we let the coins be burned in the next run, hoping that the liquidity will be added by then soon
-			continue
-		}
-
-		logger.Debug("coin is IBC token, cannot be burned or exchanged to native coin. Will be locked forever")
-		lockable = lockable.Add(c)
+		logger.Debug("coin is IBC token, cannot be burned or exchanged to native coin. Will skip for now", "coin", c.String())
 	}
 
 	if len(exchangeable) > 0 {
-		logger.Debug("there are coins that can be exchanged to native coin for burning")
-		//swap exchangeable coins to native and add them to burn
-		swapped, err := k.tradeKeeper.ModuleSwapForNativeDenom(ctx, fromModule, exchangeable)
+		logger.Debug("there are coins that can be added to liquidity with native denom")
+
+		//use exchangeable coins to add liquidity with native denom
+		added, refunded, err := k.tradeKeeper.ModuleAddLiquidityWithNativeDenom(ctx, fromModule, exchangeable)
 		if err != nil {
-			logger.Error("error on swapping coins to burn", "error", err)
+			logger.Error("error on module add liquidity with native", "error", err)
 		} else {
-			logger.Debug("swapped coins to burn", "swapped", swapped.String())
-			burnable = burnable.Add(swapped)
+			logger.Debug("added liquidity with native denom", "added", added.String(), "refunded", refunded.String())
 		}
 	}
 
