@@ -558,11 +558,8 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNative
 	// Mock LP token minting
 	suite.bankMock.EXPECT().MintCoins(gomock.Any(), types.ModuleName, gomock.Any()).Return(nil).Times(1)
 
-	// Mock LP token send to caller module
+	// Mock single refund send at the end (includes LP tokens + native leftovers)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "test_module", gomock.Any()).Return(nil).Times(1)
-
-	// Mock leftover native refund (combined with refundedCoins)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "test_module", gomock.Any()).Return(nil).MaxTimes(1)
 
 	addedCoins, refundedCoins, err := suite.k.ModuleAddLiquidityWithNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().NoError(err)
@@ -640,32 +637,24 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNative
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "test_module", types.ModuleName, coins).Return(nil).Times(1)
 
 	// Mock LP token minting
+	var mintedLPTokens sdk.Coins
 	suite.bankMock.EXPECT().MintCoins(gomock.Any(), types.ModuleName, gomock.Any()).DoAndReturn(
 		func(_ sdk.Context, _ string, mintedCoins sdk.Coins) error {
 			suite.T().Logf("Minted LP tokens: %s", mintedCoins)
+			mintedLPTokens = mintedCoins
 			return nil
 		},
 	).Times(1)
 
-	// Mock LP token send to caller module
-	var receivedLPTokens sdk.Coins
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "test_module", gomock.Any()).DoAndReturn(
-		func(_ sdk.Context, _ string, _ string, sentCoins sdk.Coins) error {
-			suite.T().Logf("LP tokens sent to module: %s", sentCoins)
-			receivedLPTokens = sentCoins
-			return nil
-		},
-	).Times(1)
-
-	// Mock leftover native refund (combined in refundedCoins)
-	var receivedLeftover sdk.Coins
+	// Mock single refund send at the end (includes LP tokens + native leftovers)
+	var receivedRefunds sdk.Coins
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "test_module", gomock.Any()).DoAndReturn(
 		func(_ sdk.Context, _ string, _ string, sentCoins sdk.Coins) error {
 			suite.T().Logf("Refunded coins sent to module: %s", sentCoins)
-			receivedLeftover = sentCoins
+			receivedRefunds = sentCoins
 			return nil
 		},
-	).MaxTimes(1)
+	).Times(1)
 
 	addedCoins, refundedCoins, err := suite.k.ModuleAddLiquidityWithNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().NoError(err)
@@ -680,35 +669,47 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNative
 	// Math validation
 	suite.T().Logf("=== Math Validation ===")
 	suite.T().Logf("Input: %s %s", inputAmount, otherDenom)
-	suite.T().Logf("Received LP tokens: %s", receivedLPTokens)
-	suite.T().Logf("Received leftover: %s", receivedLeftover)
+	suite.T().Logf("Minted LP tokens: %s", mintedLPTokens)
+	suite.T().Logf("Received refunds (LP + native leftovers): %s", receivedRefunds)
 
-	// Verify LP tokens were received
-	suite.Require().NotEmpty(receivedLPTokens, "Should receive LP tokens")
-	suite.Require().True(receivedLPTokens[0].Amount.IsPositive(), "LP tokens should be positive")
+	// Verify refunded coins include LP tokens and native leftovers
+	suite.Require().NotEmpty(refundedCoins, "Should have refunded coins (LP tokens + native leftovers)")
+	suite.Require().Equal(receivedRefunds, refundedCoins, "Refunded coins should match what was sent")
 
-	// Verify refunded coins (if any) are in native denom
-	if len(refundedCoins) > 0 {
-		suite.Require().Equal(nativeDenom, refundedCoins[0].Denom, "Refunded coins should be in native denom")
-		suite.T().Logf("Refunded amount: %s (%.2f%% of input value)",
-			refundedCoins[0].Amount,
-			float64(refundedCoins[0].Amount.Int64())/float64(inputAmount.Int64())*100)
+	// Find LP tokens in refunded coins
+	var hasLPTokens bool
+	var hasNativeLeftover bool
+	for _, coin := range refundedCoins {
+		if coin.Denom == pool.LpDenom {
+			hasLPTokens = true
+			suite.Require().True(coin.Amount.IsPositive(), "LP token amount should be positive")
+		}
+		if coin.Denom == nativeDenom {
+			hasNativeLeftover = true
+			suite.T().Logf("Native leftover amount: %s (%.2f%% of input value)",
+				coin.Amount,
+				float64(coin.Amount.Int64())/float64(inputAmount.Int64())*100)
+		}
 	}
+	suite.Require().True(hasLPTokens, "Refunded coins should include LP tokens")
+	// Native leftover is optional depending on the math
 
 	// Verify quote reserve increased
 	suite.Require().True(updatedPool.ReserveQuote.GT(initialQuoteReserve),
 		"Quote reserve should increase")
 
-	// Base reserve may decrease slightly if refunds are returned
-	// The decrease should match the refunded amount (accounting for swaps)
+	// Base reserve may decrease slightly if native refunds are returned
 	baseChange := updatedPool.ReserveBase.Sub(initialBaseReserve)
-	if len(refundedCoins) > 0 && baseChange.IsNegative() {
-		// If base decreased, the refund should account for it
-		suite.T().Logf("Base decreased by %s, refunded: %s", baseChange.Abs(), refundedCoins[0].Amount)
-		// The refund should be reasonable (< 1% of input)
-		maxReasonableRefund := inputAmount.Quo(math.NewInt(100))
-		suite.Require().True(refundedCoins[0].Amount.LTE(maxReasonableRefund),
-			"Refund should be small (< 1%% of input)")
+	if hasNativeLeftover && baseChange.IsNegative() {
+		suite.T().Logf("Base decreased by %s (native leftover was refunded)", baseChange.Abs())
+		// The native leftover should be reasonable (< 1% of input)
+		for _, coin := range refundedCoins {
+			if coin.Denom == nativeDenom {
+				maxReasonableRefund := inputAmount.Quo(math.NewInt(100))
+				suite.Require().True(coin.Amount.LTE(maxReasonableRefund),
+					"Native leftover should be small (< 1%% of input)")
+			}
+		}
 	}
 }
 
@@ -777,9 +778,8 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNative
 	// Mock LP token minting (2 times, one for each coin)
 	suite.bankMock.EXPECT().MintCoins(gomock.Any(), types.ModuleName, gomock.Any()).Return(nil).Times(2)
 
-	// Mock LP token sends (2 times) + combined refund (up to 1 time)
-	// Total: could be 2-3 sends depending on whether there are refunds
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "test_module", gomock.Any()).Return(nil).MinTimes(2).MaxTimes(3)
+	// Mock single refund send at the end (includes both LP tokens + any native leftovers)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "test_module", gomock.Any()).Return(nil).Times(1)
 
 	addedCoins, refundedCoins, err := suite.k.ModuleAddLiquidityWithNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().NoError(err)
@@ -853,8 +853,8 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNative
 	// Mock LP token minting (only 1 time for successful coin)
 	suite.bankMock.EXPECT().MintCoins(gomock.Any(), types.ModuleName, gomock.Any()).Return(nil).Times(1)
 
-	// Mock LP token send + combined refund send
-	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "test_module", gomock.Any()).Return(nil).MinTimes(1).MaxTimes(2)
+	// Mock single refund send at the end (includes LP tokens + refunded coins + native leftover)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "test_module", gomock.Any()).Return(nil).Times(1)
 
 	addedCoins, refundedCoins, err := suite.k.ModuleAddLiquidityWithNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().NoError(err, "Should not error even when some coins fail")
