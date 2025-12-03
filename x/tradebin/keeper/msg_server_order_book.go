@@ -440,11 +440,13 @@ func (k Keeper) checkPriceInOrderBook(ctx sdk.Context, msg *types.MsgCreateOrder
 
 func (k Keeper) checkPriceInQueueMessages(ctx sdk.Context, msg *types.MsgCreateOrder, currentPrice *math.LegacyDec) error {
 	oppositeType := types.TheOtherOrderType(msg.OrderType)
-	queueMessages := k.GetAllQueueMessage(ctx)
+	// Use market-filtered lookup to get only messages for this market
+	// This is O(M) where M is messages for this market, instead of O(N) for all messages
+	queueMessages := k.GetQueueMessagesByMarket(ctx, msg.MarketId)
 	msgsPrice := math.LegacyZeroDec()
 	for _, queueMessage := range queueMessages {
-		//check against MessageType because we have "cancel" type besides "buy" and "sell"
-		if queueMessage.MarketId != msg.MarketId || queueMessage.MessageType != oppositeType {
+		// Filter by message type (only check opposite type orders)
+		if queueMessage.MessageType != oppositeType {
 			continue
 		}
 

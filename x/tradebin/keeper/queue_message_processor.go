@@ -14,7 +14,7 @@ import (
 type ProcessingKeeper interface {
 	//queue messages
 	IterateAllQueueMessages(ctx sdk.Context, msgHandler func(ctx sdk.Context, message types.QueueMessage))
-	RemoveQueueMessage(ctx sdk.Context, messageId string)
+	RemoveQueueMessage(ctx sdk.Context, marketId, messageId string)
 	ResetQueueMessageCounter(ctx sdk.Context)
 
 	//orders
@@ -47,8 +47,13 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
+type queueMessageRef struct {
+	marketId  string
+	messageId string
+}
+
 type ProcessingEngine struct {
-	msgsToDelete []string
+	msgsToDelete []queueMessageRef
 
 	k    ProcessingKeeper
 	bank BankKeeper
@@ -80,8 +85,8 @@ func (pe *ProcessingEngine) ProcessQueueMessages(ctx sdk.Context) {
 	}
 
 	logger.Info("preparing to delete processed queue messages", "number_of_messages", len(pe.msgsToDelete))
-	for _, msgId := range pe.msgsToDelete {
-		pe.k.RemoveQueueMessage(ctx, msgId)
+	for _, msgRef := range pe.msgsToDelete {
+		pe.k.RemoveQueueMessage(ctx, msgRef.marketId, msgRef.messageId)
 	}
 
 	pe.k.ResetQueueMessageCounter(ctx)
@@ -116,7 +121,10 @@ func (pe *ProcessingEngine) getMessageHandler() func(ctx sdk.Context, message ty
 			return
 		}
 
-		pe.msgsToDelete = append(pe.msgsToDelete, message.MessageId)
+		pe.msgsToDelete = append(pe.msgsToDelete, queueMessageRef{
+			marketId:  message.MarketId,
+			messageId: message.MessageId,
+		})
 	}
 }
 
