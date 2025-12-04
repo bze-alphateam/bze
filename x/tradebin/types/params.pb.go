@@ -27,16 +27,15 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Params defines the parameters for the module.
 type Params struct {
-	CreateMarketFee         string `protobuf:"bytes,1,opt,name=createMarketFee,proto3" json:"createMarketFee,omitempty" yaml:"create_market_fee"`
-	MarketMakerFee          string `protobuf:"bytes,2,opt,name=marketMakerFee,proto3" json:"marketMakerFee,omitempty" yaml:"market_maker_fee"`
-	MarketTakerFee          string `protobuf:"bytes,3,opt,name=marketTakerFee,proto3" json:"marketTakerFee,omitempty" yaml:"market_taker_fee"`
-	MakerFeeDestination     string `protobuf:"bytes,4,opt,name=makerFeeDestination,proto3" json:"makerFeeDestination,omitempty" yaml:"maker_fee_destination"`
-	TakerFeeDestination     string `protobuf:"bytes,5,opt,name=takerFeeDestination,proto3" json:"takerFeeDestination,omitempty" yaml:"taker_fee_destination"`
-	NativeDenom             string `protobuf:"bytes,6,opt,name=native_denom,json=nativeDenom,proto3" json:"native_denom,omitempty" yaml:"native_denom"`
-	OrderBookExtraGasWindow uint64 `protobuf:"varint,7,opt,name=orderBookExtraGasWindow,proto3" json:"orderBookExtraGasWindow,omitempty" yaml:"order_book_extra_gas_window"`
-	OrderBookQueueExtraGas  uint64 `protobuf:"varint,8,opt,name=orderBookQueueExtraGas,proto3" json:"orderBookQueueExtraGas,omitempty" yaml:"order_book_queue_extra_gas"`
-	FillOrdersExtraGas      uint64 `protobuf:"varint,9,opt,name=fillOrdersExtraGas,proto3" json:"fillOrdersExtraGas,omitempty" yaml:"fill_orders_extra_gas"`
-	//[(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+	CreateMarketFee                 string                `protobuf:"bytes,1,opt,name=createMarketFee,proto3" json:"createMarketFee,omitempty" yaml:"create_market_fee"`
+	MarketMakerFee                  string                `protobuf:"bytes,2,opt,name=marketMakerFee,proto3" json:"marketMakerFee,omitempty" yaml:"market_maker_fee"`
+	MarketTakerFee                  string                `protobuf:"bytes,3,opt,name=marketTakerFee,proto3" json:"marketTakerFee,omitempty" yaml:"market_taker_fee"`
+	MakerFeeDestination             string                `protobuf:"bytes,4,opt,name=makerFeeDestination,proto3" json:"makerFeeDestination,omitempty" yaml:"maker_fee_destination"`
+	TakerFeeDestination             string                `protobuf:"bytes,5,opt,name=takerFeeDestination,proto3" json:"takerFeeDestination,omitempty" yaml:"taker_fee_destination"`
+	NativeDenom                     string                `protobuf:"bytes,6,opt,name=native_denom,json=nativeDenom,proto3" json:"native_denom,omitempty" yaml:"native_denom"`
+	OrderBookExtraGasWindow         uint64                `protobuf:"varint,7,opt,name=orderBookExtraGasWindow,proto3" json:"orderBookExtraGasWindow,omitempty" yaml:"order_book_extra_gas_window"`
+	OrderBookQueueExtraGas          uint64                `protobuf:"varint,8,opt,name=orderBookQueueExtraGas,proto3" json:"orderBookQueueExtraGas,omitempty" yaml:"order_book_queue_extra_gas"`
+	FillOrdersExtraGas              uint64                `protobuf:"varint,9,opt,name=fillOrdersExtraGas,proto3" json:"fillOrdersExtraGas,omitempty" yaml:"fill_orders_extra_gas"`
 	MinNativeLiquidityForModuleSwap cosmossdk_io_math.Int `protobuf:"bytes,10,opt,name=minNativeLiquidityForModuleSwap,proto3,customtype=cosmossdk.io/math.Int" json:"minNativeLiquidityForModuleSwap" yaml:"min_native_liquidity_for_module_swap"`
 }
 

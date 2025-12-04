@@ -44,4 +44,9 @@ message GenesisState {
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "all_users_dust,omitempty"
   ];
+
+  repeated LiquidityPool liquidity_pools = 9 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "liquidity_pools,omitempty"
+  ];
 }

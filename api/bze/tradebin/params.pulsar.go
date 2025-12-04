@@ -981,16 +981,15 @@ type Params struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	CreateMarketFee         string `protobuf:"bytes,1,opt,name=createMarketFee,proto3" json:"createMarketFee,omitempty"`
-	MarketMakerFee          string `protobuf:"bytes,2,opt,name=marketMakerFee,proto3" json:"marketMakerFee,omitempty"`
-	MarketTakerFee          string `protobuf:"bytes,3,opt,name=marketTakerFee,proto3" json:"marketTakerFee,omitempty"`
-	MakerFeeDestination     string `protobuf:"bytes,4,opt,name=makerFeeDestination,proto3" json:"makerFeeDestination,omitempty"`
-	TakerFeeDestination     string `protobuf:"bytes,5,opt,name=takerFeeDestination,proto3" json:"takerFeeDestination,omitempty"`
-	NativeDenom             string `protobuf:"bytes,6,opt,name=native_denom,json=nativeDenom,proto3" json:"native_denom,omitempty"`
-	OrderBookExtraGasWindow uint64 `protobuf:"varint,7,opt,name=orderBookExtraGasWindow,proto3" json:"orderBookExtraGasWindow,omitempty"`
-	OrderBookQueueExtraGas  uint64 `protobuf:"varint,8,opt,name=orderBookQueueExtraGas,proto3" json:"orderBookQueueExtraGas,omitempty"`
-	FillOrdersExtraGas      uint64 `protobuf:"varint,9,opt,name=fillOrdersExtraGas,proto3" json:"fillOrdersExtraGas,omitempty"`
-	// [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+	CreateMarketFee                 string `protobuf:"bytes,1,opt,name=createMarketFee,proto3" json:"createMarketFee,omitempty"`
+	MarketMakerFee                  string `protobuf:"bytes,2,opt,name=marketMakerFee,proto3" json:"marketMakerFee,omitempty"`
+	MarketTakerFee                  string `protobuf:"bytes,3,opt,name=marketTakerFee,proto3" json:"marketTakerFee,omitempty"`
+	MakerFeeDestination             string `protobuf:"bytes,4,opt,name=makerFeeDestination,proto3" json:"makerFeeDestination,omitempty"`
+	TakerFeeDestination             string `protobuf:"bytes,5,opt,name=takerFeeDestination,proto3" json:"takerFeeDestination,omitempty"`
+	NativeDenom                     string `protobuf:"bytes,6,opt,name=native_denom,json=nativeDenom,proto3" json:"native_denom,omitempty"`
+	OrderBookExtraGasWindow         uint64 `protobuf:"varint,7,opt,name=orderBookExtraGasWindow,proto3" json:"orderBookExtraGasWindow,omitempty"`
+	OrderBookQueueExtraGas          uint64 `protobuf:"varint,8,opt,name=orderBookQueueExtraGas,proto3" json:"orderBookQueueExtraGas,omitempty"`
+	FillOrdersExtraGas              uint64 `protobuf:"varint,9,opt,name=fillOrdersExtraGas,proto3" json:"fillOrdersExtraGas,omitempty"`
 	MinNativeLiquidityForModuleSwap string `protobuf:"bytes,10,opt,name=minNativeLiquidityForModuleSwap,proto3" json:"minNativeLiquidityForModuleSwap,omitempty"`
 }
 
