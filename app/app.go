@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	v800 "github.com/bze-alphateam/bze/app/upgrades/v800"
+	v810 "github.com/bze-alphateam/bze/app/upgrades/v810"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -99,7 +99,6 @@ import (
 const (
 	AccountAddressPrefix = "bze"
 	Name                 = "bze"
-	MainDenom            = "ubze"
 )
 
 var (
@@ -348,16 +347,11 @@ func New(
 
 func (app *App) setupUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v800.UpgradeName,
-		v800.CreateUpgradeHandler(
+		v810.UpgradeName,
+		v810.CreateUpgradeHandler(
 			app.Configurator(),
 			app.ModuleManager,
-			app.BankKeeper,
-			app.DistrKeeper,
-			app.AccountKeeper,
-			MainDenom,
 			&app.ParamsKeeper,
-			&app.ConsensusParamsKeeper,
 		),
 	)
 
@@ -366,8 +360,8 @@ func (app *App) setupUpgradeHandlers() {
 		panic(err)
 	}
 
-	if upgradeInfo.Name == v800.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := v800.GetStoreUpgrades()
+	if upgradeInfo.Name == v810.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := v810.GetStoreUpgrades()
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
 	}
 }

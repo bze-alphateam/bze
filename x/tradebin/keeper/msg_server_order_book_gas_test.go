@@ -16,6 +16,9 @@ func (suite *IntegrationTestSuite) TestMsgCreateOrder_QueueSpamProtectionGas() {
 	// Create test account
 	addr1 := sdk.AccAddress("addr1_______________")
 
+	// Get current params to use in test cases
+	params := suite.k.GetParams(suite.ctx)
+
 	testCases := []struct {
 		name             string
 		queueCounter     uint64
@@ -30,32 +33,32 @@ func (suite *IntegrationTestSuite) TestMsgCreateOrder_QueueSpamProtectionGas() {
 		},
 		{
 			name:             "No extra gas when queue is at threshold",
-			queueCounter:     types.OrderBookExtraGasWindow,
+			queueCounter:     params.OrderBookExtraGasWindow,
 			expectedExtraGas: 0,
 			description:      "Queue counter at threshold, no extra gas",
 		},
 		{
 			name:             "Extra gas when queue exceeds threshold by 1",
-			queueCounter:     types.OrderBookExtraGasWindow + 1,
-			expectedExtraGas: types.OrderBookQueueExtraGas,
+			queueCounter:     params.OrderBookExtraGasWindow + 1,
+			expectedExtraGas: params.OrderBookQueueExtraGas,
 			description:      "Queue counter exceeds threshold by 1",
 		},
 		{
 			name:             "Extra gas when queue has 20 messages",
-			queueCounter:     types.OrderBookExtraGasWindow + 10,
-			expectedExtraGas: 10 * types.OrderBookQueueExtraGas,
+			queueCounter:     params.OrderBookExtraGasWindow + 10,
+			expectedExtraGas: 10 * params.OrderBookQueueExtraGas,
 			description:      "Queue counter = threshold + 10",
 		},
 		{
 			name:             "Extra gas when queue has 50 messages",
-			queueCounter:     types.OrderBookExtraGasWindow + 40,
-			expectedExtraGas: 40 * types.OrderBookQueueExtraGas,
+			queueCounter:     params.OrderBookExtraGasWindow + 40,
+			expectedExtraGas: 40 * params.OrderBookQueueExtraGas,
 			description:      "Queue counter = threshold + 40",
 		},
 		{
 			name:             "Extra gas when queue has 100 messages",
-			queueCounter:     types.OrderBookExtraGasWindow + 90,
-			expectedExtraGas: 90 * types.OrderBookQueueExtraGas,
+			queueCounter:     params.OrderBookExtraGasWindow + 90,
+			expectedExtraGas: 90 * params.OrderBookQueueExtraGas,
 			description:      "Queue counter = threshold + 90",
 		},
 	}
@@ -116,6 +119,9 @@ func (suite *IntegrationTestSuite) TestMsgCreateOrder_QueueSpamProtectionGas_Pro
 	// Create test account
 	addr1 := sdk.AccAddress("addr1_______________")
 
+	// Get current params to use in calculations
+	params := suite.k.GetParams(suite.ctx)
+
 	// Setup mocks for all operations (15 orders)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, types.FeeDestinationBurnerModule, gomock.Any()).Return(nil).AnyTimes()
 	suite.distrMock.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), addr1).Return(nil).AnyTimes()
@@ -153,7 +159,7 @@ func (suite *IntegrationTestSuite) TestMsgCreateOrder_QueueSpamProtectionGas_Pro
 	// Orders (threshold+2)+ should have increasing gas (counter threshold+1: spam protection kicks in)
 
 	// Calculate how many orders are within the free window
-	freeOrders := int(types.OrderBookExtraGasWindow + 1)
+	freeOrders := int(params.OrderBookExtraGasWindow + 1)
 
 	// Check that orders after free window consumed more gas than orders within free window
 	avgGasFreeOrders := uint64(0)
@@ -168,7 +174,7 @@ func (suite *IntegrationTestSuite) TestMsgCreateOrder_QueueSpamProtectionGas_Pro
 	// etc.
 	for i := freeOrders; i < 15; i++ {
 		queueCounterAtStart := uint64(i) // Counter value when this order starts
-		expectedExtraGas := (queueCounterAtStart - types.OrderBookExtraGasWindow) * types.OrderBookQueueExtraGas
+		expectedExtraGas := (queueCounterAtStart - params.OrderBookExtraGasWindow) * params.OrderBookQueueExtraGas
 		suite.T().Logf("Order %d: Queue counter at start = %d, Expected extra gas = %d, Actual gas = %d, Avg first %d = %d",
 			i+1, queueCounterAtStart, expectedExtraGas, gasConsumptions[i], freeOrders, avgGasFreeOrders)
 

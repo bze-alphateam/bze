@@ -30,6 +30,15 @@ var (
 	KeyTakerFeeDestination     = []byte("TakerFeeDestination")
 	DefaultTakerFeeDestination = FeeDestinationBurnerModule
 
+	KeyOrderBookExtraGasWindow     = []byte("OrderBookExtraGasWindow")
+	DefaultOrderBookExtraGasWindow = uint64(100)
+
+	KeyOrderBookQueueExtraGas     = []byte("OrderBookQueueExtraGas")
+	DefaultOrderBookQueueExtraGas = uint64(25000)
+
+	KeyFillOrdersExtraGas     = []byte("FillOrdersExtraGas")
+	DefaultFillOrdersExtraGas = uint64(5000)
+
 	DefaultNativeDenom = "ubze"
 )
 
@@ -46,14 +55,20 @@ func NewParams(
 	makerFeeDestination string,
 	takerFeeDestination string,
 	nativeDenom string,
+	orderBookExtraGasWindow uint64,
+	orderBookQueueExtraGas uint64,
+	fillOrdersExtraGas uint64,
 ) Params {
 	return Params{
-		CreateMarketFee:     createMarketFee,
-		MarketMakerFee:      marketMakerFee,
-		MarketTakerFee:      marketTakerFee,
-		MakerFeeDestination: makerFeeDestination,
-		TakerFeeDestination: takerFeeDestination,
-		NativeDenom:         nativeDenom,
+		CreateMarketFee:         createMarketFee,
+		MarketMakerFee:          marketMakerFee,
+		MarketTakerFee:          marketTakerFee,
+		MakerFeeDestination:     makerFeeDestination,
+		TakerFeeDestination:     takerFeeDestination,
+		NativeDenom:             nativeDenom,
+		OrderBookExtraGasWindow: orderBookExtraGasWindow,
+		OrderBookQueueExtraGas:  orderBookQueueExtraGas,
+		FillOrdersExtraGas:      fillOrdersExtraGas,
 	}
 }
 
@@ -66,6 +81,9 @@ func DefaultParams() Params {
 		DefaultMakerFeeDestination,
 		DefaultTakerFeeDestination,
 		DefaultNativeDenom,
+		DefaultOrderBookExtraGasWindow,
+		DefaultOrderBookQueueExtraGas,
+		DefaultFillOrdersExtraGas,
 	)
 }
 
@@ -77,6 +95,9 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyMarketTakerFee, &p.MarketTakerFee, validateMarketTakerFee),
 		paramtypes.NewParamSetPair(KeyMakerFeeDestination, &p.MakerFeeDestination, validateMakerFeeDestination),
 		paramtypes.NewParamSetPair(KeyTakerFeeDestination, &p.TakerFeeDestination, validateTakerFeeDestination),
+		paramtypes.NewParamSetPair(KeyOrderBookExtraGasWindow, &p.OrderBookExtraGasWindow, validateOrderBookExtraGasWindow),
+		paramtypes.NewParamSetPair(KeyOrderBookQueueExtraGas, &p.OrderBookQueueExtraGas, validateOrderBookQueueExtraGas),
+		paramtypes.NewParamSetPair(KeyFillOrdersExtraGas, &p.FillOrdersExtraGas, validateFillOrdersExtraGas),
 	}
 }
 
@@ -103,6 +124,18 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateNativeDenom(p.NativeDenom); err != nil {
+		return err
+	}
+
+	if err := validateOrderBookExtraGasWindow(p.OrderBookExtraGasWindow); err != nil {
+		return err
+	}
+
+	if err := validateOrderBookQueueExtraGas(p.OrderBookQueueExtraGas); err != nil {
+		return err
+	}
+
+	if err := validateFillOrdersExtraGas(p.FillOrdersExtraGas); err != nil {
 		return err
 	}
 
@@ -202,6 +235,33 @@ func validateNativeDenom(v interface{}) error {
 
 	if nativeDenom == "" {
 		return fmt.Errorf("native denom cannot be an empty string")
+	}
+
+	return nil
+}
+
+func validateOrderBookExtraGasWindow(v interface{}) error {
+	_, ok := v.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
+	}
+
+	return nil
+}
+
+func validateOrderBookQueueExtraGas(v interface{}) error {
+	_, ok := v.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
+	}
+
+	return nil
+}
+
+func validateFillOrdersExtraGas(v interface{}) error {
+	_, ok := v.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
 	return nil

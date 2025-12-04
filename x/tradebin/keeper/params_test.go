@@ -6,11 +6,14 @@ import (
 
 func (suite *IntegrationTestSuite) TestParams_GetAndSet() {
 	params := types.Params{
-		CreateMarketFee:     "1000",
-		MarketMakerFee:      "0.001",
-		MarketTakerFee:      "0.002",
-		MakerFeeDestination: "community_pool",
-		TakerFeeDestination: "burn",
+		CreateMarketFee:         "1000",
+		MarketMakerFee:          "0.001",
+		MarketTakerFee:          "0.002",
+		MakerFeeDestination:     "community_pool",
+		TakerFeeDestination:     "burn",
+		OrderBookExtraGasWindow: 200,
+		OrderBookQueueExtraGas:  30000,
+		FillOrdersExtraGas:      6000,
 	}
 
 	// Test SetParams
@@ -24,6 +27,9 @@ func (suite *IntegrationTestSuite) TestParams_GetAndSet() {
 	suite.Require().Equal(params.MarketTakerFee, retrievedParams.MarketTakerFee)
 	suite.Require().Equal(params.MakerFeeDestination, retrievedParams.MakerFeeDestination)
 	suite.Require().Equal(params.TakerFeeDestination, retrievedParams.TakerFeeDestination)
+	suite.Require().Equal(params.OrderBookExtraGasWindow, retrievedParams.OrderBookExtraGasWindow)
+	suite.Require().Equal(params.OrderBookQueueExtraGas, retrievedParams.OrderBookQueueExtraGas)
+	suite.Require().Equal(params.FillOrdersExtraGas, retrievedParams.FillOrdersExtraGas)
 }
 
 func (suite *IntegrationTestSuite) TestParams_GetDefault() {
@@ -36,23 +42,32 @@ func (suite *IntegrationTestSuite) TestParams_GetDefault() {
 	suite.Require().Equal("100000ubze", retrievedParams.MarketTakerFee)
 	suite.Require().Equal("burner", retrievedParams.MakerFeeDestination)
 	suite.Require().Equal("burner", retrievedParams.TakerFeeDestination)
+	suite.Require().Equal(uint64(100), retrievedParams.OrderBookExtraGasWindow)
+	suite.Require().Equal(uint64(25000), retrievedParams.OrderBookQueueExtraGas)
+	suite.Require().Equal(uint64(5000), retrievedParams.FillOrdersExtraGas)
 }
 
 func (suite *IntegrationTestSuite) TestParams_SetMultipleTimes() {
 	params1 := types.Params{
-		CreateMarketFee:     "500",
-		MarketMakerFee:      "0.0005",
-		MarketTakerFee:      "0.001",
-		MakerFeeDestination: "community_pool",
-		TakerFeeDestination: "burn",
+		CreateMarketFee:         "500",
+		MarketMakerFee:          "0.0005",
+		MarketTakerFee:          "0.001",
+		MakerFeeDestination:     "community_pool",
+		TakerFeeDestination:     "burn",
+		OrderBookExtraGasWindow: 150,
+		OrderBookQueueExtraGas:  20000,
+		FillOrdersExtraGas:      4000,
 	}
 
 	params2 := types.Params{
-		CreateMarketFee:     "2000",
-		MarketMakerFee:      "0.002",
-		MarketTakerFee:      "0.004",
-		MakerFeeDestination: "burn",
-		TakerFeeDestination: "community_pool",
+		CreateMarketFee:         "2000",
+		MarketMakerFee:          "0.002",
+		MarketTakerFee:          "0.004",
+		MakerFeeDestination:     "burn",
+		TakerFeeDestination:     "community_pool",
+		OrderBookExtraGasWindow: 250,
+		OrderBookQueueExtraGas:  35000,
+		FillOrdersExtraGas:      7000,
 	}
 
 	// Set first params
@@ -75,6 +90,9 @@ func (suite *IntegrationTestSuite) TestParams_SetMultipleTimes() {
 	suite.Require().Equal(params2.MarketTakerFee, retrieved2.MarketTakerFee)
 	suite.Require().Equal(params2.MakerFeeDestination, retrieved2.MakerFeeDestination)
 	suite.Require().Equal(params2.TakerFeeDestination, retrieved2.TakerFeeDestination)
+	suite.Require().Equal(params2.OrderBookExtraGasWindow, retrieved2.OrderBookExtraGasWindow)
+	suite.Require().Equal(params2.OrderBookQueueExtraGas, retrieved2.OrderBookQueueExtraGas)
+	suite.Require().Equal(params2.FillOrdersExtraGas, retrieved2.FillOrdersExtraGas)
 }
 
 func (suite *IntegrationTestSuite) TestParams_CreateMarketFee() {
@@ -232,11 +250,14 @@ func (suite *IntegrationTestSuite) TestParams_UpdateIndividualFields() {
 
 func (suite *IntegrationTestSuite) TestParams_Persistence() {
 	params := types.Params{
-		CreateMarketFee:     "800",
-		MarketMakerFee:      "0.0008",
-		MarketTakerFee:      "0.0016",
-		MakerFeeDestination: "community_pool",
-		TakerFeeDestination: "burn",
+		CreateMarketFee:         "800",
+		MarketMakerFee:          "0.0008",
+		MarketTakerFee:          "0.0016",
+		MakerFeeDestination:     "community_pool",
+		TakerFeeDestination:     "burn",
+		OrderBookExtraGasWindow: 120,
+		OrderBookQueueExtraGas:  28000,
+		FillOrdersExtraGas:      5500,
 	}
 
 	err := suite.k.SetParams(suite.ctx, params)
@@ -250,5 +271,65 @@ func (suite *IntegrationTestSuite) TestParams_Persistence() {
 		suite.Require().Equal(params.MarketTakerFee, retrievedParams.MarketTakerFee)
 		suite.Require().Equal(params.MakerFeeDestination, retrievedParams.MakerFeeDestination)
 		suite.Require().Equal(params.TakerFeeDestination, retrievedParams.TakerFeeDestination)
+		suite.Require().Equal(params.OrderBookExtraGasWindow, retrievedParams.OrderBookExtraGasWindow)
+		suite.Require().Equal(params.OrderBookQueueExtraGas, retrievedParams.OrderBookQueueExtraGas)
+		suite.Require().Equal(params.FillOrdersExtraGas, retrievedParams.FillOrdersExtraGas)
 	}
+}
+
+func (suite *IntegrationTestSuite) TestParams_OrderBookExtraGasWindow() {
+	params := types.Params{
+		CreateMarketFee:         "1000",
+		MarketMakerFee:          "0.001",
+		MarketTakerFee:          "0.002",
+		MakerFeeDestination:     "community_pool",
+		TakerFeeDestination:     "burn",
+		OrderBookExtraGasWindow: 150,
+		OrderBookQueueExtraGas:  25000,
+		FillOrdersExtraGas:      5000,
+	}
+
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	retrievedParams := suite.k.GetParams(suite.ctx)
+	suite.Require().Equal(uint64(150), retrievedParams.OrderBookExtraGasWindow)
+}
+
+func (suite *IntegrationTestSuite) TestParams_OrderBookQueueExtraGas() {
+	params := types.Params{
+		CreateMarketFee:         "1000",
+		MarketMakerFee:          "0.001",
+		MarketTakerFee:          "0.002",
+		MakerFeeDestination:     "community_pool",
+		TakerFeeDestination:     "burn",
+		OrderBookExtraGasWindow: 100,
+		OrderBookQueueExtraGas:  30000,
+		FillOrdersExtraGas:      5000,
+	}
+
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	retrievedParams := suite.k.GetParams(suite.ctx)
+	suite.Require().Equal(uint64(30000), retrievedParams.OrderBookQueueExtraGas)
+}
+
+func (suite *IntegrationTestSuite) TestParams_FillOrdersExtraGas() {
+	params := types.Params{
+		CreateMarketFee:         "1000",
+		MarketMakerFee:          "0.001",
+		MarketTakerFee:          "0.002",
+		MakerFeeDestination:     "community_pool",
+		TakerFeeDestination:     "burn",
+		OrderBookExtraGasWindow: 100,
+		OrderBookQueueExtraGas:  25000,
+		FillOrdersExtraGas:      6000,
+	}
+
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	retrievedParams := suite.k.GetParams(suite.ctx)
+	suite.Require().Equal(uint64(6000), retrievedParams.FillOrdersExtraGas)
 }

@@ -77,11 +77,12 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 	}
 
 	// Apply dynamic gas cost based on queue size to prevent spam attacks
-	// Formula: max(queue_size - 10, 0) * types.OrderBookQueueExtraGas
+	// Formula: max(queue_size - window, 0) * queueExtraGas
 	// This makes it progressively more expensive to submit orders when the queue is full
+	params := k.GetParams(ctx)
 	queueCounter := k.GetQueueMessageCounter(ctx)
-	if queueCounter > types.OrderBookExtraGasWindow {
-		extraGas := (queueCounter - types.OrderBookExtraGasWindow) * types.OrderBookQueueExtraGas
+	if queueCounter > params.OrderBookExtraGasWindow {
+		extraGas := (queueCounter - params.OrderBookExtraGasWindow) * params.OrderBookQueueExtraGas
 		ctx.GasMeter().ConsumeGas(extraGas, "queue spam protection")
 	}
 
@@ -183,7 +184,8 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 		return nil, types.ErrMarketNotFound.Wrapf("market id: %s", msg.MarketId)
 	}
 
-	ctx.GasMeter().ConsumeGas(types.FillOrdersExtraGas, "fill_orders")
+	params := k.GetParams(ctx)
+	ctx.GasMeter().ConsumeGas(params.FillOrdersExtraGas, "fill_orders")
 	totalCoins := sdk.NewCoins()
 	for _, fo := range msg.Orders {
 		minAmt := CalculateMinAmount(fo.Price)
@@ -230,7 +232,7 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 
 		totalCoins = totalCoins.Add(orderCoins.Coin)
 		//take extra gas for each order to fill
-		ctx.GasMeter().ConsumeGas(types.FillOrdersExtraGas, "fill_orders")
+		ctx.GasMeter().ConsumeGas(params.FillOrdersExtraGas, "fill_orders")
 	}
 
 	if totalCoins.IsZero() {
