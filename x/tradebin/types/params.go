@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -39,6 +41,9 @@ var (
 	KeyFillOrdersExtraGas     = []byte("FillOrdersExtraGas")
 	DefaultFillOrdersExtraGas = uint64(5000)
 
+	KeyMinNativeLiquidityForModuleSwap     = []byte("MinNativeLiquidityForModuleSwap")
+	DefaultMinNativeLiquidityForModuleSwap = math.NewInt(100000000000)
+
 	DefaultNativeDenom = "ubze"
 )
 
@@ -58,17 +63,19 @@ func NewParams(
 	orderBookExtraGasWindow uint64,
 	orderBookQueueExtraGas uint64,
 	fillOrdersExtraGas uint64,
+	minNativeLiquidityForModuleSwap math.Int,
 ) Params {
 	return Params{
-		CreateMarketFee:         createMarketFee,
-		MarketMakerFee:          marketMakerFee,
-		MarketTakerFee:          marketTakerFee,
-		MakerFeeDestination:     makerFeeDestination,
-		TakerFeeDestination:     takerFeeDestination,
-		NativeDenom:             nativeDenom,
-		OrderBookExtraGasWindow: orderBookExtraGasWindow,
-		OrderBookQueueExtraGas:  orderBookQueueExtraGas,
-		FillOrdersExtraGas:      fillOrdersExtraGas,
+		CreateMarketFee:                 createMarketFee,
+		MarketMakerFee:                  marketMakerFee,
+		MarketTakerFee:                  marketTakerFee,
+		MakerFeeDestination:             makerFeeDestination,
+		TakerFeeDestination:             takerFeeDestination,
+		NativeDenom:                     nativeDenom,
+		OrderBookExtraGasWindow:         orderBookExtraGasWindow,
+		OrderBookQueueExtraGas:          orderBookQueueExtraGas,
+		FillOrdersExtraGas:              fillOrdersExtraGas,
+		MinNativeLiquidityForModuleSwap: minNativeLiquidityForModuleSwap,
 	}
 }
 
@@ -84,6 +91,7 @@ func DefaultParams() Params {
 		DefaultOrderBookExtraGasWindow,
 		DefaultOrderBookQueueExtraGas,
 		DefaultFillOrdersExtraGas,
+		DefaultMinNativeLiquidityForModuleSwap,
 	)
 }
 
@@ -98,6 +106,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyOrderBookExtraGasWindow, &p.OrderBookExtraGasWindow, validateOrderBookExtraGasWindow),
 		paramtypes.NewParamSetPair(KeyOrderBookQueueExtraGas, &p.OrderBookQueueExtraGas, validateOrderBookQueueExtraGas),
 		paramtypes.NewParamSetPair(KeyFillOrdersExtraGas, &p.FillOrdersExtraGas, validateFillOrdersExtraGas),
+		paramtypes.NewParamSetPair(KeyMinNativeLiquidityForModuleSwap, &p.MinNativeLiquidityForModuleSwap, validateMinNativeLiquidityForModuleSwap),
 	}
 }
 
@@ -136,6 +145,10 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateFillOrdersExtraGas(p.FillOrdersExtraGas); err != nil {
+		return err
+	}
+
+	if err := validateMinNativeLiquidityForModuleSwap(p.MinNativeLiquidityForModuleSwap); err != nil {
 		return err
 	}
 
@@ -262,6 +275,19 @@ func validateFillOrdersExtraGas(v interface{}) error {
 	_, ok := v.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)
+	}
+
+	return nil
+}
+
+func validateMinNativeLiquidityForModuleSwap(v interface{}) error {
+	minLiquidity, ok := v.(math.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
+	}
+
+	if !minLiquidity.IsPositive() {
+		return fmt.Errorf("min native liquidity for module swap must be positive")
 	}
 
 	return nil

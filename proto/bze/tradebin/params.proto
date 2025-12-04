@@ -21,4 +21,5 @@ message Params {
   uint64 orderBookExtraGasWindow = 7 [(gogoproto.moretags) = "yaml:\"order_book_extra_gas_window\""];
   uint64 orderBookQueueExtraGas = 8 [(gogoproto.moretags) = "yaml:\"order_book_queue_extra_gas\""];
   uint64 fillOrdersExtraGas = 9 [(gogoproto.moretags) = "yaml:\"fill_orders_extra_gas\""];
+  string minNativeLiquidityForModuleSwap = 10 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"min_native_liquidity_for_module_swap\""];
 }

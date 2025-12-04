@@ -49,6 +49,7 @@ func migrateTradebinParams(ctx sdk.Context, paramsKeeper *paramskeeper.Keeper) {
 	params.OrderBookExtraGasWindow = tradebintypes.DefaultOrderBookExtraGasWindow
 	params.OrderBookQueueExtraGas = tradebintypes.DefaultOrderBookQueueExtraGas
 	params.FillOrdersExtraGas = tradebintypes.DefaultFillOrdersExtraGas
+	params.MinNativeLiquidityForModuleSwap = tradebintypes.DefaultMinNativeLiquidityForModuleSwap
 
 	// Save updated parameters
 	tradebinSubspace.SetParamSet(ctx, &params)
@@ -57,6 +58,7 @@ func migrateTradebinParams(ctx sdk.Context, paramsKeeper *paramskeeper.Keeper) {
 		"orderBookExtraGasWindow", params.OrderBookExtraGasWindow,
 		"orderBookQueueExtraGas", params.OrderBookQueueExtraGas,
 		"fillOrdersExtraGas", params.FillOrdersExtraGas,
+		"minNativeLiquidityForModuleSwap", params.MinNativeLiquidityForModuleSwap,
 	)
 }
 

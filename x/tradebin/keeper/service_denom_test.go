@@ -57,7 +57,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_CanSwapForNativeDenom_PoolNo
 func (suite *IntegrationTestSuite) TestServiceDenom_CanSwapForNativeDenom_InsufficientLiquidity() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: math.NewInt(2_000_000_000)}
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -159,7 +159,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Poo
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_InsufficientLiquidity() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: math.NewInt(2_000_000_000)}
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 

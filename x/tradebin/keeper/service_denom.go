@@ -9,8 +9,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
-var minNativeAmountForSwap = math.NewInt(50_000_000_000)
-
 func (k Keeper) getNativeDenom(ctx sdk.Context) string {
 	return k.GetParams(ctx).NativeDenom
 }
@@ -56,7 +54,8 @@ func (k Keeper) CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool {
 		return false
 	}
 
-	if nativeLpCoins.Amount.LT(minNativeAmountForSwap) {
+	params := k.GetParams(ctx)
+	if nativeLpCoins.Amount.LT(params.MinNativeLiquidityForModuleSwap) {
 		return false
 	}
 
@@ -79,6 +78,7 @@ func (k Keeper) ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins
 		return sdk.Coin{}, fmt.Errorf("native denom not set")
 	}
 
+	params := k.GetParams(cached)
 	toModuleAcc := k.accountKeeper.GetModuleAccount(cached, toModule)
 	swapResult := sdk.NewInt64Coin(nativeDenom, 0)
 	var events []proto.Message
@@ -94,7 +94,7 @@ func (k Keeper) ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins
 		}
 
 		nativeLpCoins, _ := pool.GetReservesCoinsByDenom(nativeDenom)
-		if !nativeLpCoins.IsPositive() || !nativeLpCoins.Amount.GT(minNativeAmountForSwap) {
+		if !nativeLpCoins.IsPositive() || !nativeLpCoins.Amount.GT(params.MinNativeLiquidityForModuleSwap) {
 			return swapResult, fmt.Errorf("not enough liquidity available to swap coin %s to native coin", coin.Denom)
 		}
 
