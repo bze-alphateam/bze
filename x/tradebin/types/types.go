@@ -7,6 +7,9 @@ import (
 
 const (
 	FillOrdersExtraGas = 5000
+
+	OrderBookExtraGasWindow = 100
+	OrderBookQueueExtraGas  = 25000
 )
 
 type MsgCreator interface {

@@ -76,6 +76,15 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 		return nil, types.ErrMarketNotFound.Wrapf("market id: %s", msg.MarketId)
 	}
 
+	// Apply dynamic gas cost based on queue size to prevent spam attacks
+	// Formula: max(queue_size - 10, 0) * types.OrderBookQueueExtraGas
+	// This makes it progressively more expensive to submit orders when the queue is full
+	queueCounter := k.GetQueueMessageCounter(ctx)
+	if queueCounter > types.OrderBookExtraGasWindow {
+		extraGas := (queueCounter - types.OrderBookExtraGasWindow) * types.OrderBookQueueExtraGas
+		ctx.GasMeter().ConsumeGas(extraGas, "queue spam protection")
+	}
+
 	accAddr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return nil, err
