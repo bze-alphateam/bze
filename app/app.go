@@ -352,6 +352,7 @@ func (app *App) setupUpgradeHandlers() {
 			app.Configurator(),
 			app.ModuleManager,
 			&app.ParamsKeeper,
+			app.TradebinKeeper,
 		),
 	)
 
