@@ -483,7 +483,6 @@ func (app *App) setEpochsHooks() {
 			app.RewardsKeeper.GetTradingRewardsDistributionHook(),
 			app.BurnerKeeper.GetBurnerRaffleCleanupHook(),
 			app.BurnerKeeper.GetBurnerPeriodicBurnHook(),
-			app.TxfeecollectorKeeper.GetTxFeeConverterHook(),
 		},
 	)
 }

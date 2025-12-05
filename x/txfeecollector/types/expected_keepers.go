@@ -31,6 +31,10 @@ type BankKeeper interface {
 	// Methods imported from bank should be defined here
 }
 
+type DistrKeeper interface {
+	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}
+
 // ParamSubspace defines the expected Subspace interface for parameters.
 type ParamSubspace interface {
 	Get(context.Context, []byte, interface{})
