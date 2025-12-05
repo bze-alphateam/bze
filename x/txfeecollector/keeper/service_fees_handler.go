@@ -85,7 +85,7 @@ func (k Keeper) convertFees(ctx sdk.Context, fromModule string) (*sdk.Coin, erro
 		return nil, err
 	}
 
-	if nativeCoin.IsPositive() {
+	if !nativeCoin.IsNil() && nativeCoin.IsPositive() {
 		swapped = swapped.Add(nativeCoin)
 	}
 
