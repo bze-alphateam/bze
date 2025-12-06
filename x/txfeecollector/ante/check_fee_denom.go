@@ -29,11 +29,16 @@ func (vbd ValidateTxFeeDenomsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		return ctx, sdkerrors.Wrap(storeTypes.ErrTxDecode, "ValidateTxFeeDenomsDecorator requires tx to be a FeeTx")
 	}
 
-	for _, c := range feeTx.GetFee() {
-		if vbd.tradeKeeper.IsNativeDenom(ctx, c.Denom) {
-			continue
-		}
+	if feeTx.GetFee().Len() > 1 {
+		return ctx, sdkerrors.Wrap(storeTypes.ErrInvalidRequest, "multiple denominations for same transaction fee are not supported")
+	}
 
+	if feeTx.GetFee().Empty() {
+		return ctx, sdkerrors.Wrap(storeTypes.ErrInvalidRequest, "no fee supplied")
+	}
+
+	c := feeTx.GetFee()[0]
+	if !vbd.tradeKeeper.IsNativeDenom(ctx, c.Denom) {
 		//if trading module (keeper) is not available we do not allow anything else than the main denom
 		if vbd.tradeKeeper == nil {
 			return ctx, sdkerrors.Wrapf(
@@ -51,6 +56,8 @@ func (vbd ValidateTxFeeDenomsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 			)
 		}
 	}
+
+	ctx = ctx.WithValue("fee_denom", c.Denom)
 
 	return next(ctx, tx, simulate)
 }
