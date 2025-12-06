@@ -16,6 +16,8 @@ const (
 	MessageTypeFillSell = "fill_sell"
 )
 
+var minPrice = math.LegacyNewDecWithPrec(1, 10)
+
 var _ sdk.Msg = &MsgCreateOrder{}
 
 func NewMsgCreateOrder(creator string, orderType string, amount string, price string, marketId string) *MsgCreateOrder {
@@ -51,8 +53,8 @@ func (msg *MsgCreateOrder) ValidateBasic() error {
 		return errorsmod.Wrapf(ErrInvalidOrderPrice, "invalid price provided")
 	}
 
-	if priceDec.LTE(math.LegacyZeroDec()) {
-		return errorsmod.Wrapf(ErrInvalidOrderPrice, "price should be higher than 0")
+	if priceDec.LTE(minPrice) {
+		return errorsmod.Wrapf(ErrInvalidOrderPrice, "price should be higher than %s", minPrice.String())
 	}
 
 	return nil

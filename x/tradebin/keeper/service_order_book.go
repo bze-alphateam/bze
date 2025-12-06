@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	"fmt"
+
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"fmt"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -43,7 +44,7 @@ func (k Keeper) GetOrderSdkCoin(orderType, orderPrice string, orderAmount math.I
 	switch orderType {
 	case types.OrderTypeBuy:
 		denom = market.Quote
-		oAmount := math.LegacyNewDec(orderAmount.Int64())
+		oAmount := math.LegacyNewDecFromInt(orderAmount)
 		oPrice, err := math.LegacyNewDecFromStr(orderPrice)
 		if err != nil {
 			return coin, dust, errors.Wrapf(types.ErrInvalidOrderPrice, "error when transforming order price: %v", err)
