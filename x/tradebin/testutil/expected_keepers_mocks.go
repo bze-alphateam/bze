@@ -18,44 +18,6 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockDistrKeeper is a mock of DistrKeeper interface.
-type MockDistrKeeper struct {
-	ctrl     *gomock.Controller
-	recorder *MockDistrKeeperMockRecorder
-	isgomock struct{}
-}
-
-// MockDistrKeeperMockRecorder is the mock recorder for MockDistrKeeper.
-type MockDistrKeeperMockRecorder struct {
-	mock *MockDistrKeeper
-}
-
-// NewMockDistrKeeper creates a new mock instance.
-func NewMockDistrKeeper(ctrl *gomock.Controller) *MockDistrKeeper {
-	mock := &MockDistrKeeper{ctrl: ctrl}
-	mock.recorder = &MockDistrKeeperMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockDistrKeeper) EXPECT() *MockDistrKeeperMockRecorder {
-	return m.recorder
-}
-
-// FundCommunityPool mocks base method.
-func (m *MockDistrKeeper) FundCommunityPool(ctx context.Context, amount types.Coins, sender types.AccAddress) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FundCommunityPool", ctx, amount, sender)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// FundCommunityPool indicates an expected call of FundCommunityPool.
-func (mr *MockDistrKeeperMockRecorder) FundCommunityPool(ctx, amount, sender any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FundCommunityPool", reflect.TypeOf((*MockDistrKeeper)(nil).FundCommunityPool), ctx, amount, sender)
-}
-
 // MockAccountKeeper is a mock of AccountKeeper interface.
 type MockAccountKeeper struct {
 	ctrl     *gomock.Controller

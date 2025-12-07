@@ -338,7 +338,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_FundCommunityP
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Base).Return(true).Times(1)
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Quote).Return(true).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), getTestAccount(), types.ModuleName, createMarketFeeCoin).Return(nil).Times(1)
-	suite.distrMock.EXPECT().FundCommunityPool(gomock.Any(), createMarketFeeCoin, getTestAccount()).Return(fmt.Errorf("test error")).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), createMarketFeeCoin).Return(fmt.Errorf("test error")).Times(1)
 
 	_, err = suite.msgServer.CreateLiquidityPool(goCtx, msg)
 	suite.Require().NotNil(err)
@@ -377,7 +377,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_Success() {
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Base).Return(true).Times(1)
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Quote).Return(true).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), getTestAccount(), types.ModuleName, createMarketFeeCoin).Return(nil).Times(1)
-	suite.distrMock.EXPECT().FundCommunityPool(gomock.Any(), createMarketFeeCoin, getTestAccount()).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), createMarketFeeCoin).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(suite.ctx, getTestAccount(), types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("abc", 123), sdk.NewInt64Coin("def", 345)))
 	suite.bankMock.EXPECT().SetDenomMetaData(suite.ctx, denomMetaData)
 	//205997572,801234723674372 - resulted shared from (sqrt(123 * 345)) * 1_000_000
@@ -1374,9 +1374,12 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SinglePool_Success() {
 		SendCoinsFromAccountToModule(
 			suite.ctx,
 			creator,
-			types.FeeDestinationBurnerModule,
+			types.ModuleName,
 			expectedFee,
 		).
+		Return(nil)
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, gomock.Any(), expectedFee).
 		Return(nil)
 	// Since the fee is so small, treasury and burner parts round to 0
 	// But verify that any fee would be handled correctly
@@ -1390,12 +1393,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SinglePool_Success() {
 		Return(nil).
 		AnyTimes()
 
-	suite.distrMock.EXPECT().
-		FundCommunityPool(
-			gomock.Any(),
-			gomock.Any(),
-			gomock.Any(),
-		).
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).
 		Return(nil).
 		AnyTimes()
 
@@ -1513,9 +1512,12 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_MultiPool_Success() {
 		SendCoinsFromAccountToModule(
 			suite.ctx,
 			creator,
-			types.FeeDestinationBurnerModule,
+			types.ModuleName,
 			expectedFee,
 		).
+		Return(nil)
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, gomock.Any(), expectedFee).
 		Return(nil)
 	// Mock fee handling
 	suite.bankMock.EXPECT().
@@ -1528,12 +1530,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_MultiPool_Success() {
 		Return(nil).
 		Times(2)
 
-	suite.distrMock.EXPECT().
-		FundCommunityPool(
-			gomock.Any(),
-			gomock.Any(),
-			moduleAcc.GetAddress(),
-		).
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).
 		Return(nil).
 		Times(2)
 
@@ -1773,12 +1771,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_OutputTooLow() {
 		Return(nil).
 		AnyTimes()
 
-	suite.distrMock.EXPECT().
-		FundCommunityPool(
-			gomock.Any(),
-			gomock.Any(),
-			gomock.Any(),
-		).
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).
 		Return(nil).
 		AnyTimes()
 
@@ -1850,12 +1844,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_OutputDenomMismatch() {
 		Return(nil).
 		AnyTimes()
 
-	suite.distrMock.EXPECT().
-		FundCommunityPool(
-			gomock.Any(),
-			gomock.Any(),
-			gomock.Any(),
-		).
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).
 		Return(nil).
 		AnyTimes()
 
@@ -1939,9 +1929,12 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_ZeroFeeDest() {
 		SendCoinsFromAccountToModule(
 			suite.ctx,
 			creator,
-			types.FeeDestinationBurnerModule,
+			types.ModuleName,
 			expectedFee,
 		).
+		Return(nil)
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, gomock.Any(), expectedFee).
 		Return(nil)
 
 	// Execute swap
@@ -2030,9 +2023,12 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_FeeDistribution() {
 		SendCoinsFromAccountToModule(
 			suite.ctx,
 			creator,
-			types.FeeDestinationBurnerModule,
+			types.ModuleName,
 			expectedFee,
 		).
+		Return(nil)
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, gomock.Any(), expectedFee).
 		Return(nil)
 
 	// Mock getting module account
@@ -2042,12 +2038,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_FeeDistribution() {
 
 	// Mock treasury fee - expect 90 ubze
 	treasuryFee := sdk.NewCoin(denomBze, math.NewInt(90))
-	suite.distrMock.EXPECT().
-		FundCommunityPool(
-			suite.ctx,
-			sdk.NewCoins(treasuryFee),
-			gomock.Any(),
-		).
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, gomock.Any(), sdk.NewCoins(treasuryFee)).
 		Return(nil)
 
 	// Mock burner fee - expect 90 ubze
@@ -2202,12 +2194,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_TreasuryFeeError() {
 
 	// Mock treasury fee failing
 	treasuryFee := sdk.NewCoin(denomBze, math.NewInt(30)) // 10000 * 0.003 = 30
-	suite.distrMock.EXPECT().
-		FundCommunityPool(
-			suite.ctx,
-			sdk.NewCoins(treasuryFee),
-			gomock.Any(),
-		).
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, gomock.Any(), sdk.NewCoins(treasuryFee)).
 		Return(fmt.Errorf("treasury fee transfer failed"))
 
 	// Execute swap
@@ -2408,12 +2396,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SendOutputError() {
 		AnyTimes()
 
 	// Mock fee collection operations - simplified for this test
-	suite.distrMock.EXPECT().
-		FundCommunityPool(
-			gomock.Any(),
-			gomock.Any(),
-			gomock.Any(),
-		).
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).
 		Return(nil).
 		AnyTimes()
 

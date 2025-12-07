@@ -278,7 +278,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Sen
 	// Mock first send coins call to fail
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "test_module", types.ModuleName, coins).Return(sendError).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "test_module", coins).Return(nil).Times(1)
-	suite.distrMock.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 	_, err = suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().Error(err)
@@ -337,7 +337,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Sen
 	// Mock second send coins call to fail
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "burner", gomock.Any()).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "test_module", gomock.Any()).Return(sendError).Times(1)
-	suite.distrMock.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 	_, err = suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().Error(err)
@@ -393,7 +393,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Suc
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "burner", gomock.Any()).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "test_module", types.ModuleName, coins).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "test_module", gomock.Any()).Return(nil).Times(1)
-	suite.distrMock.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 	var result sdk.Coin
 	result, err = suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
@@ -952,7 +952,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Mul
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), "test_module", types.ModuleName, coins).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "test_module", gomock.Any()).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, "burner", gomock.Any()).Return(nil).Times(1)
-	suite.distrMock.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
 	var result sdk.Coin
 	result, err = suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)

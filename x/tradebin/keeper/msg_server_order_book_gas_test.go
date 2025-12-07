@@ -74,10 +74,8 @@ func (suite *IntegrationTestSuite) TestMsgCreateOrder_QueueSpamProtectionGas() {
 
 			// Setup mocks for all operations CreateOrder performs
 			// 1. Fee capture (either to burner or community pool)
-			suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, types.FeeDestinationBurnerModule, gomock.Any()).Return(nil).AnyTimes()
-			suite.distrMock.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), addr1).Return(nil).AnyTimes()
-			// 2. Order coins capture
-			suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, gomock.Any()).Return(nil)
+			suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, gomock.Any()).Return(nil).AnyTimes()
+			suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 			// Record gas before CreateOrder
 			gasBefore := suite.ctx.GasMeter().GasConsumed()
@@ -123,9 +121,10 @@ func (suite *IntegrationTestSuite) TestMsgCreateOrder_QueueSpamProtectionGas_Pro
 	params := suite.k.GetParams(suite.ctx)
 
 	// Setup mocks for all operations (15 orders)
-	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, types.FeeDestinationBurnerModule, gomock.Any()).Return(nil).AnyTimes()
-	suite.distrMock.EXPECT().FundCommunityPool(gomock.Any(), gomock.Any(), addr1).Return(nil).AnyTimes()
-	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, gomock.Any()).Times(15).Return(nil)
+	// Each order: 1 fee capture + 1 order coins capture = 2 SendCoinsFromAccountToModule calls
+	// Each order: 1 fee forwarding = 1 SendCoinsFromModuleToModule call
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, gomock.Any()).Return(nil).AnyTimes()
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	// Submit 15 orders and verify gas increases progressively
 	var gasConsumptions []uint64

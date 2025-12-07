@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"go.uber.org/mock/gomock"
 )
 
@@ -137,21 +136,6 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SwapSuccess() {
 		Return(nil)
 
 	// Mock fee distribution during swap - swap will distribute fees
-	moduleAddr := sdk.AccAddress("module______________")
-	tradebinModuleAcc := authtypes.ModuleAccount{
-		BaseAccount: &authtypes.BaseAccount{
-			Address: moduleAddr.String(),
-		},
-		Name: types.ModuleName,
-	}
-	suite.accountMock.EXPECT().
-		GetModuleAccount(gomock.Any(), types.ModuleName).
-		Return(&tradebinModuleAcc).
-		AnyTimes()
-	suite.distrMock.EXPECT().
-		FundCommunityPool(gomock.Any(), gomock.Any(), moduleAddr).
-		Return(nil).
-		AnyTimes()
 	suite.bankMock.EXPECT().
 		SendCoinsFromModuleToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(nil).
@@ -214,21 +198,6 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SwapWithMultipleFee
 		Return(nil)
 
 	// Mock fee distribution during swap - swap will distribute fees
-	moduleAddr := sdk.AccAddress("module______________")
-	tradebinModuleAcc := authtypes.ModuleAccount{
-		BaseAccount: &authtypes.BaseAccount{
-			Address: moduleAddr.String(),
-		},
-		Name: types.ModuleName,
-	}
-	suite.accountMock.EXPECT().
-		GetModuleAccount(gomock.Any(), types.ModuleName).
-		Return(&tradebinModuleAcc).
-		AnyTimes()
-	suite.distrMock.EXPECT().
-		FundCommunityPool(gomock.Any(), gomock.Any(), moduleAddr).
-		Return(nil).
-		AnyTimes()
 	suite.bankMock.EXPECT().
 		SendCoinsFromModuleToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(nil).
