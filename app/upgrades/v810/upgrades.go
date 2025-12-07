@@ -27,9 +27,6 @@ func CreateUpgradeHandler(
 		// Migrate tradebin module parameters
 		migrateTradebinParams(ctx, paramsKeeper)
 
-		// Create initial snapshots for all existing liquidity pools
-		snapshotExistingLiquidityPools(ctx, tradebinKeeper)
-
 		// Migrate order keys to new precision format
 		migrateOrderKeys(ctx, tradebinKeeper)
 
@@ -67,35 +64,6 @@ func migrateTradebinParams(ctx sdk.Context, paramsKeeper *paramskeeper.Keeper) {
 		"orderBookQueueExtraGas", params.OrderBookQueueExtraGas,
 		"fillOrdersExtraGas", params.FillOrdersExtraGas,
 		"minNativeLiquidityForModuleSwap", params.MinNativeLiquidityForModuleSwap,
-	)
-}
-
-func snapshotExistingLiquidityPools(ctx sdk.Context, tradebinKeeper *tradebinkeeper.Keeper) {
-	// Get all existing liquidity pools
-	allPools := tradebinKeeper.GetAllLiquidityPool(ctx)
-
-	ctx.Logger().Info("starting liquidity pool snapshots migration",
-		"totalPools", len(allPools),
-	)
-
-	// Create snapshots for all pools
-	snapshotCount := 0
-	for _, pool := range allPools {
-		tradebinKeeper.SetLiquidityPoolSnapshot(ctx, pool)
-		snapshotCount++
-
-		ctx.Logger().Info("liquidity pool snapshot created",
-			"poolId", pool.Id,
-			"base", pool.Base,
-			"quote", pool.Quote,
-			"reserveBase", pool.ReserveBase.String(),
-			"reserveQuote", pool.ReserveQuote.String(),
-		)
-	}
-
-	ctx.Logger().Info("liquidity pool snapshots migration completed",
-		"totalPools", len(allPools),
-		"snapshotsCreated", snapshotCount,
 	)
 }
 
