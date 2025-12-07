@@ -162,7 +162,7 @@ type App struct {
 	TokenfactoryKeeper   tokenfactorymodulekeeper.Keeper
 	RewardsKeeper        rewardsmodulekeeper.Keeper
 	TradebinKeeper       *tradebinmodulekeeper.Keeper
-	TxfeecollectorKeeper txfeecollectormodulekeeper.Keeper
+	TxfeecollectorKeeper *txfeecollectormodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
@@ -317,8 +317,9 @@ func New(
 	}
 
 	customAnte := AnteHandlerOptions{
-		TradeKeeper: app.TradebinKeeper,
-		BankKeeper:  app.BankKeeper,
+		TradeKeeper:       app.TradebinKeeper,
+		BankKeeper:        app.BankKeeper,
+		TxCollectorKeeper: app.TxfeecollectorKeeper,
 	}
 
 	anteHandler, err := NewAnteHandler(anteOptions, customAnte)

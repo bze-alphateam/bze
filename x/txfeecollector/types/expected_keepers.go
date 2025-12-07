@@ -10,6 +10,8 @@ type TradeKeeper interface {
 	CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool
 	ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins sdk.Coins) (sdk.Coin, error)
 	IsNativeDenom(ctx sdk.Context, denom string) bool
+	HasDeepLiquidityWithNativeDenom(ctx sdk.Context, denom string) bool
+	GetDenomSpotPriceInNativeCoin(ctx sdk.Context, denom string) (sdk.DecCoin, error)
 }
 
 type AccountKeeper interface {

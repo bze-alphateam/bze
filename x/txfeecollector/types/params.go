@@ -1,6 +1,10 @@
 package types
 
 import (
+	"fmt"
+
+	sdkmath "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -12,13 +16,17 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams() Params {
-	return Params{}
+func NewParams(validatorMinGasFee sdk.DecCoin) Params {
+	return Params{
+		ValidatorMinGasFee: validatorMinGasFee,
+	}
 }
 
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
-	return NewParams()
+	return NewParams(
+		sdk.NewDecCoinFromDec("ubze", sdkmath.LegacyNewDecWithPrec(1, 2)), // 0.01ubze
+	)
 }
 
 // ParamSetPairs get the params.ParamSet
@@ -28,5 +36,30 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 
 // Validate validates the set of params
 func (p Params) Validate() error {
+	if err := validateValidatorMinGasFee(p.ValidatorMinGasFee); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func validateValidatorMinGasFee(i interface{}) error {
+	v, ok := i.(sdk.DecCoin)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.Denom == "" {
+		return fmt.Errorf("validator min gas fee denom cannot be empty")
+	}
+
+	if v.Amount.IsNegative() {
+		return fmt.Errorf("validator min gas fee amount cannot be negative: %s", v.Amount)
+	}
+
+	if !v.IsValid() {
+		return fmt.Errorf("invalid validator min gas fee: %s", v)
+	}
+
 	return nil
 }

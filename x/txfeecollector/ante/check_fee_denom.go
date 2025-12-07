@@ -7,6 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	FeeDenomKey = "fee_denom"
+)
+
 // ValidateTxFeeDenomsDecorator will check if denominations used for tx fees are allowed and returns an error otherwise
 type ValidateTxFeeDenomsDecorator struct {
 	tradeKeeper types.TradeKeeper
@@ -38,6 +42,10 @@ func (vbd ValidateTxFeeDenomsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	}
 
 	c := feeTx.GetFee()[0]
+	if !c.IsPositive() {
+		return ctx, sdkerrors.Wrap(storeTypes.ErrInvalidRequest, "the provided transaction fee must be positive")
+	}
+
 	if !vbd.tradeKeeper.IsNativeDenom(ctx, c.Denom) {
 		//if trading module (keeper) is not available we do not allow anything else than the main denom
 		if vbd.tradeKeeper == nil {
@@ -48,7 +56,7 @@ func (vbd ValidateTxFeeDenomsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 			)
 		}
 
-		if !vbd.tradeKeeper.CanSwapForNativeDenom(ctx, c) {
+		if !vbd.tradeKeeper.HasDeepLiquidityWithNativeDenom(ctx, c.Denom) {
 			return ctx, sdkerrors.Wrapf(
 				storeTypes.ErrInvalidRequest,
 				"%s can be used to pay for fees only if enough liquidity is available",
@@ -57,7 +65,7 @@ func (vbd ValidateTxFeeDenomsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		}
 	}
 
-	ctx = ctx.WithValue("fee_denom", c.Denom)
+	ctx = ctx.WithValue(FeeDenomKey, c.Denom)
 
 	return next(ctx, tx, simulate)
 }

@@ -7,6 +7,7 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	tradebinkeeper "github.com/bze-alphateam/bze/x/tradebin/keeper"
 	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
+	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -26,6 +27,9 @@ func CreateUpgradeHandler(
 
 		// Migrate tradebin module parameters
 		migrateTradebinParams(ctx, paramsKeeper)
+
+		// Migrate txfeecollector module parameters
+		migrateTxFeeCollectorParams(ctx, paramsKeeper)
 
 		// Migrate order keys to new precision format
 		migrateOrderKeys(ctx, tradebinKeeper)
@@ -64,6 +68,24 @@ func migrateTradebinParams(ctx sdk.Context, paramsKeeper *paramskeeper.Keeper) {
 		"orderBookQueueExtraGas", params.OrderBookQueueExtraGas,
 		"fillOrdersExtraGas", params.FillOrdersExtraGas,
 		"minNativeLiquidityForModuleSwap", params.MinNativeLiquidityForModuleSwap,
+	)
+}
+
+func migrateTxFeeCollectorParams(ctx sdk.Context, paramsKeeper *paramskeeper.Keeper) {
+	txFeeCollectorSubspace, found := paramsKeeper.GetSubspace(txfeecollectortypes.ModuleName)
+	if !found {
+		ctx.Logger().Error("txfeecollector subspace not found during parameter migration")
+		return
+	}
+
+	// Set default parameters (module is new or has empty params before this upgrade)
+	defaultParams := txfeecollectortypes.DefaultParams()
+
+	// Save parameters with default values
+	txFeeCollectorSubspace.SetParamSet(ctx, &defaultParams)
+
+	ctx.Logger().Info("txfeecollector module parameters migrated successfully",
+		"validatorMinGasFee", defaultParams.ValidatorMinGasFee.String(),
 	)
 }
 

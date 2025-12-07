@@ -70,6 +70,31 @@ func (k Keeper) HasDeepLiquidityWithNativeDenom(ctx sdk.Context, denom string) b
 	return true
 }
 
+func (k Keeper) GetDenomSpotPriceInNativeCoin(ctx sdk.Context, denom string) (sdk.DecCoin, error) {
+	nativeDenom := k.getNativeDenom(ctx)
+
+	// Return 1:1 for native denom or empty denom
+	if denom == "" || nativeDenom == denom || nativeDenom == "" {
+		return sdk.NewDecCoinFromDec(nativeDenom, math.LegacyOneDec()), nil
+	}
+
+	pool, exists := k.getDenomsLp(ctx, nativeDenom, denom)
+	if !exists {
+		return sdk.DecCoin{}, fmt.Errorf("no liquidity pool exists for %s/%s", denom, nativeDenom)
+	}
+
+	nativeCoin, otherCoin := pool.GetReservesCoinsByDenom(nativeDenom)
+	if !nativeCoin.IsPositive() || !otherCoin.IsPositive() {
+		return sdk.DecCoin{}, fmt.Errorf("pool has insufficient reserves")
+	}
+
+	// Spot price: how many native coins per 1 unit of denom
+	// = native_reserve / other_reserve
+	spotPrice := math.LegacyNewDecFromInt(nativeCoin.Amount).Quo(math.LegacyNewDecFromInt(otherCoin.Amount))
+
+	return sdk.NewDecCoinFromDec(nativeDenom, spotPrice), nil
+}
+
 // CanSwapForNativeDenom determines if a given coin can be swapped for the native denomination in an existing liquidity pool.
 func (k Keeper) CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool {
 	nativeDenom := k.getNativeDenom(ctx)
