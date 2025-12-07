@@ -263,11 +263,18 @@ func (k msgServer) payMarketCreateFee(ctx sdk.Context, payer sdk.AccAddress) err
 		return err
 	}
 
-	if createMarketFee.IsAllPositive() {
-		sendErr := k.distrKeeper.FundCommunityPool(ctx, createMarketFee, payer)
-		if sendErr != nil {
-			return sendErr
-		}
+	if !createMarketFee.IsAllPositive() {
+		return nil
+	}
+
+	coinsCaptured, err := k.CaptureAndSwapUserFee(ctx, payer, createMarketFee)
+	if err != nil {
+		return err
+	}
+
+	sendErr := k.distrKeeper.FundCommunityPool(ctx, coinsCaptured, payer)
+	if sendErr != nil {
+		return sendErr
 	}
 
 	return nil

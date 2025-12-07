@@ -337,6 +337,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_FundCommunityP
 
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Base).Return(true).Times(1)
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Quote).Return(true).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), getTestAccount(), types.ModuleName, createMarketFeeCoin).Return(nil).Times(1)
 	suite.distrMock.EXPECT().FundCommunityPool(gomock.Any(), createMarketFeeCoin, getTestAccount()).Return(fmt.Errorf("test error")).Times(1)
 
 	_, err = suite.msgServer.CreateLiquidityPool(goCtx, msg)
@@ -375,6 +376,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_Success() {
 
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Base).Return(true).Times(1)
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Quote).Return(true).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), getTestAccount(), types.ModuleName, createMarketFeeCoin).Return(nil).Times(1)
 	suite.distrMock.EXPECT().FundCommunityPool(gomock.Any(), createMarketFeeCoin, getTestAccount()).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(suite.ctx, getTestAccount(), types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("abc", 123), sdk.NewInt64Coin("def", 345)))
 	suite.bankMock.EXPECT().SetDenomMetaData(suite.ctx, denomMetaData)

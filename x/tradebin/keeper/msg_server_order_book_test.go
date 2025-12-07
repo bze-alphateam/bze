@@ -151,12 +151,20 @@ func (suite *IntegrationTestSuite) Msg_TestCreateMarket_MarketAlreadyExist() {
 func (suite *IntegrationTestSuite) Msg_TestCreateMarket_NotEnoughCoinsForFee() {
 
 	addr1 := sdk.AccAddress("addr1_______________")
+	marketFee := sdk.NewCoins(sdk.NewCoin(denomBze, math.NewInt(25000000000)))
 
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), denomStake).Return(true).Times(1)
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), denomBze).Return(true).Times(1)
+
+	//expect fee capture to module
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, marketFee).
+		Times(1).
+		Return(nil)
+
 	//expect market fee to be paid
 	suite.distrMock.EXPECT().
-		FundCommunityPool(gomock.Any(), sdk.NewCoins(sdk.NewCoin(denomBze, math.NewInt(25000000000))), addr1).
+		FundCommunityPool(gomock.Any(), marketFee, addr1).
 		Times(1).
 		Return(fmt.Errorf("not enough balance"))
 
@@ -171,12 +179,20 @@ func (suite *IntegrationTestSuite) Msg_TestCreateMarket_NotEnoughCoinsForFee() {
 func (suite *IntegrationTestSuite) Msg_TestCreateMarket_Success() {
 
 	addr1 := sdk.AccAddress("addr1_______________")
+	marketFee := sdk.NewCoins(sdk.NewCoin(denomBze, math.NewInt(25000000000)))
 
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), denomStake).Return(true).Times(1)
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), denomBze).Return(true).Times(1)
+
+	//expect fee capture to module
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, marketFee).
+		Times(1).
+		Return(nil)
+
 	//expect market fee to be paid
 	suite.distrMock.EXPECT().
-		FundCommunityPool(gomock.Any(), sdk.NewCoins(sdk.NewCoin(denomBze, math.NewInt(25000000000))), addr1).
+		FundCommunityPool(gomock.Any(), marketFee, addr1).
 		Times(1).
 		Return(nil)
 

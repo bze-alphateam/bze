@@ -243,6 +243,20 @@ func (mr *MockBankKeeperMockRecorder) SetDenomMetaData(ctx, denomMetaData any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDenomMetaData", reflect.TypeOf((*MockBankKeeper)(nil).SetDenomMetaData), ctx, denomMetaData)
 }
 
+// SpendableCoins mocks base method.
+func (m *MockBankKeeper) SpendableCoins(ctx context.Context, addr types.AccAddress) types.Coins {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SpendableCoins", ctx, addr)
+	ret0, _ := ret[0].(types.Coins)
+	return ret0
+}
+
+// SpendableCoins indicates an expected call of SpendableCoins.
+func (mr *MockBankKeeperMockRecorder) SpendableCoins(ctx, addr any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpendableCoins", reflect.TypeOf((*MockBankKeeper)(nil).SpendableCoins), ctx, addr)
+}
+
 // MockParamSubspace is a mock of ParamSubspace interface.
 type MockParamSubspace struct {
 	ctrl     *gomock.Controller
