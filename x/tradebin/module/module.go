@@ -104,7 +104,6 @@ type AppModule struct {
 	keeper        *keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
-	distrKeeper   types.DistrKeeper
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	legacySubspace exported.Subspace
@@ -115,7 +114,6 @@ func NewAppModule(
 	keeper *keeper.Keeper,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
-	distrKeeper types.DistrKeeper,
 
 	legacySubspace exported.Subspace,
 ) AppModule {
@@ -124,7 +122,6 @@ func NewAppModule(
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
-		distrKeeper:    distrKeeper,
 		legacySubspace: legacySubspace,
 	}
 }
@@ -213,7 +210,6 @@ type ModuleInputs struct {
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
-	DistrKeeper   types.DistrKeeper
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
@@ -239,14 +235,12 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority.String(),
 		in.AccountKeeper,
 		in.BankKeeper,
-		in.DistrKeeper,
 	)
 	m := NewAppModule(
 		in.Cdc,
 		&k,
 		in.AccountKeeper,
 		in.BankKeeper,
-		in.DistrKeeper,
 		in.LegacySubspace,
 	)
 

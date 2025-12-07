@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
+	txfeecollectormoduletypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -129,8 +130,7 @@ func (k Keeper) collectSwapFee(ctx sdk.Context, fee sdk.Coin, pool *types.Liquid
 	treasury := sdk.NewCoin(fee.Denom, feeDec.Mul(pool.FeeDest.Treasury).TruncateInt())
 	if treasury.IsPositive() {
 		fee = fee.Sub(treasury)
-		moduleAcc := k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
-		err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(treasury), moduleAcc.GetAddress())
+		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, txfeecollectormoduletypes.CpFeeCollector, sdk.NewCoins(treasury))
 		if err != nil {
 			return sdk.Coin{}, err
 		}

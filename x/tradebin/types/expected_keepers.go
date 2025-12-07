@@ -8,10 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type DistrKeeper interface {
-	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
-}
-
 type AccountKeeper interface {
 	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
 	// Methods imported from account should be defined here
