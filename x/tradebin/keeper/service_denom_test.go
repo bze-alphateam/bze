@@ -960,3 +960,154 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Mul
 	suite.Require().Equal(nativeDenom, result.Denom)
 	suite.Require().True(result.Amount.IsPositive())
 }
+func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDenom_SameDenom() {
+	nativeDenom := "ubze"
+	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: math.NewInt(2_000_000_000)}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	// Should return false when checking native denom against itself
+	result := suite.k.HasDeepLiquidityWithNativeDenom(suite.ctx, nativeDenom)
+	suite.Require().False(result)
+}
+
+func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDenom_PoolNotExists() {
+	nativeDenom := "ubze"
+	otherDenom := "uother"
+	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: math.NewInt(2_000_000_000)}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	// Pool doesn't exist - should return false
+	result := suite.k.HasDeepLiquidityWithNativeDenom(suite.ctx, otherDenom)
+	suite.Require().False(result)
+}
+
+func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDenom_ZeroNativeReserves() {
+	nativeDenom := "ubze"
+	otherDenom := "uother"
+	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: math.NewInt(2_000_000_000)}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	// Create pool with zero native reserves
+	pool := types.LiquidityPool{
+		Id:           "ubze_uother",
+		Base:         nativeDenom,
+		Quote:        otherDenom,
+		ReserveBase:  math.NewInt(0), // Zero native reserves
+		ReserveQuote: math.NewInt(1_000_000_000),
+	}
+	suite.k.SetLiquidityPool(suite.ctx, pool)
+
+	result := suite.k.HasDeepLiquidityWithNativeDenom(suite.ctx, otherDenom)
+	suite.Require().False(result)
+}
+
+func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDenom_InsufficientLiquidity() {
+	nativeDenom := "ubze"
+	otherDenom := "uother"
+	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: math.NewInt(5_000_000_000)}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	// Create pool with native liquidity below the minimum threshold
+	pool := types.LiquidityPool{
+		Id:           "ubze_uother",
+		Base:         nativeDenom,
+		Quote:        otherDenom,
+		ReserveBase:  math.NewInt(2_000_000_000), // Less than MinNativeLiquidityForModuleSwap
+		ReserveQuote: math.NewInt(1_000_000_000),
+	}
+	suite.k.SetLiquidityPool(suite.ctx, pool)
+
+	result := suite.k.HasDeepLiquidityWithNativeDenom(suite.ctx, otherDenom)
+	suite.Require().False(result)
+}
+
+func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDenom_SufficientLiquidity() {
+	nativeDenom := "ubze"
+	otherDenom := "uother"
+	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: math.NewInt(2_000_000_000)}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	// Create pool with sufficient native liquidity
+	pool := types.LiquidityPool{
+		Id:           "ubze_uother",
+		Base:         nativeDenom,
+		Quote:        otherDenom,
+		ReserveBase:  math.NewInt(10_000_000_000), // Greater than MinNativeLiquidityForModuleSwap
+		ReserveQuote: math.NewInt(5_000_000_000),
+	}
+	suite.k.SetLiquidityPool(suite.ctx, pool)
+
+	result := suite.k.HasDeepLiquidityWithNativeDenom(suite.ctx, otherDenom)
+	suite.Require().True(result)
+}
+
+func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDenom_NativeInQuotePosition() {
+	nativeDenom := "ubze"
+	otherDenom := "aaa" // Comes before "ubze" alphabetically, so ubze will be in quote position
+	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: math.NewInt(2_000_000_000)}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	// Create pool with native denom in quote position (alphabetically sorted: aaa < ubze)
+	pool := types.LiquidityPool{
+		Id:           "aaa_ubze",
+		Base:         otherDenom,  // "aaa"
+		Quote:        nativeDenom, // "ubze"
+		ReserveBase:  math.NewInt(5_000_000_000),
+		ReserveQuote: math.NewInt(10_000_000_000), // Native reserves in quote position
+	}
+	suite.k.SetLiquidityPool(suite.ctx, pool)
+
+	result := suite.k.HasDeepLiquidityWithNativeDenom(suite.ctx, otherDenom)
+	suite.Require().True(result)
+}
+
+func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDenom_ExactlyAtThreshold() {
+	nativeDenom := "ubze"
+	otherDenom := "uother"
+	minLiquidity := math.NewInt(5_000_000_000)
+	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: minLiquidity}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	// Create pool with native liquidity exactly at the minimum threshold
+	pool := types.LiquidityPool{
+		Id:           "ubze_uother",
+		Base:         nativeDenom,
+		Quote:        otherDenom,
+		ReserveBase:  minLiquidity, // Exactly at threshold
+		ReserveQuote: math.NewInt(1_000_000_000),
+	}
+	suite.k.SetLiquidityPool(suite.ctx, pool)
+
+	// Should return true because amount >= threshold (LT check passes when amount is NOT less than threshold)
+	result := suite.k.HasDeepLiquidityWithNativeDenom(suite.ctx, otherDenom)
+	suite.Require().True(result)
+}
+
+func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDenom_JustAboveThreshold() {
+	nativeDenom := "ubze"
+	otherDenom := "uother"
+	minLiquidity := math.NewInt(5_000_000_000)
+	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: minLiquidity}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	// Create pool with native liquidity just above the minimum threshold
+	pool := types.LiquidityPool{
+		Id:           "ubze_uother",
+		Base:         nativeDenom,
+		Quote:        otherDenom,
+		ReserveBase:  minLiquidity.Add(math.NewInt(1)), // One unit above threshold
+		ReserveQuote: math.NewInt(1_000_000_000),
+	}
+	suite.k.SetLiquidityPool(suite.ctx, pool)
+
+	result := suite.k.HasDeepLiquidityWithNativeDenom(suite.ctx, otherDenom)
+	suite.Require().True(result)
+}

@@ -17,14 +17,20 @@ func (k Keeper) IsNativeDenom(ctx sdk.Context, denom string) bool {
 	return k.getNativeDenom(ctx) == denom
 }
 
+func (k Keeper) getDenomsLp(ctx sdk.Context, denom1, denom2 string) (lp types.LiquidityPool, exists bool) {
+	_, _, poolId := k.CreatePoolId(denom1, denom2)
+
+	return k.GetLiquidityPool(ctx, poolId)
+}
+
+// HasLiquidityWithNativeDenom checks if the provided denom has a liquidity pool with the native denom.
 func (k Keeper) HasLiquidityWithNativeDenom(ctx sdk.Context, denom string) bool {
 	nativeDenom := k.getNativeDenom(ctx)
 	if nativeDenom == denom {
 		return false
 	}
 
-	_, _, poolId := k.CreatePoolId(nativeDenom, denom)
-	pool, exists := k.GetLiquidityPool(ctx, poolId)
+	pool, exists := k.getDenomsLp(ctx, nativeDenom, denom)
 	if !exists {
 		return false
 	}
@@ -37,14 +43,41 @@ func (k Keeper) HasLiquidityWithNativeDenom(ctx sdk.Context, denom string) bool 
 	return true
 }
 
+// HasDeepLiquidityWithNativeDenom checks if the specified denom has sufficient liquidity when paired with the native denom.
+// This function is the same as CanSwapForNativeDenom - except that it doesn't check the amount can be swapped.
+// This function is useful when we DO NOT want to also check that the amount can be swapped.
+func (k Keeper) HasDeepLiquidityWithNativeDenom(ctx sdk.Context, denom string) bool {
+	nativeDenom := k.getNativeDenom(ctx)
+	if nativeDenom == denom {
+		return false
+	}
+
+	pool, exists := k.getDenomsLp(ctx, nativeDenom, denom)
+	if !exists {
+		return false
+	}
+
+	nativeLpCoins, _ := pool.GetReservesCoinsByDenom(nativeDenom)
+	if !nativeLpCoins.IsPositive() {
+		return false
+	}
+
+	params := k.GetParams(ctx)
+	if nativeLpCoins.Amount.LT(params.MinNativeLiquidityForModuleSwap) {
+		return false
+	}
+
+	return true
+}
+
+// CanSwapForNativeDenom determines if a given coin can be swapped for the native denomination in an existing liquidity pool.
 func (k Keeper) CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool {
 	nativeDenom := k.getNativeDenom(ctx)
 	if nativeDenom == coin.Denom {
 		return false
 	}
 
-	_, _, poolId := k.CreatePoolId(nativeDenom, coin.Denom)
-	pool, exists := k.GetLiquidityPool(ctx, poolId)
+	pool, exists := k.getDenomsLp(ctx, nativeDenom, coin.Denom)
 	if !exists {
 		return false
 	}
