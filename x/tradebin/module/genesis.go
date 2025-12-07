@@ -47,7 +47,6 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 
 	for _, elem := range genState.LiquidityPools {
 		k.SetLiquidityPool(ctx, elem)
-		k.SetLiquidityPoolSnapshot(ctx, elem)
 	}
 }
 
