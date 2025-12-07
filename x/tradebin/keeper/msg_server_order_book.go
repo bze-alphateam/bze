@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+	txfeecollectormoduletypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/bze-alphateam/bze/x/tradebin/types"
@@ -272,7 +273,7 @@ func (k msgServer) payMarketCreateFee(ctx sdk.Context, payer sdk.AccAddress) err
 		return err
 	}
 
-	sendErr := k.distrKeeper.FundCommunityPool(ctx, coinsCaptured, payer)
+	sendErr := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, txfeecollectormoduletypes.CpFeeCollector, coinsCaptured)
 	if sendErr != nil {
 		return sendErr
 	}
@@ -353,13 +354,17 @@ func (k msgServer) captureTradingFees(ctx sdk.Context, sender sdk.AccAddress, is
 		return
 	}
 
-	if destination == types.FeeDestinationBurnerModule {
-		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.FeeDestinationBurnerModule, sdk.NewCoins(coin))
-
+	captured, err := k.CaptureAndSwapUserFee(ctx, sender, sdk.NewCoins(coin))
+	if err != nil {
 		return
 	}
 
-	err = k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(coin), sender)
+	destModule := txfeecollectormoduletypes.CpFeeCollector
+	if destination == types.FeeDestinationBurnerModule {
+		destModule = txfeecollectormoduletypes.BurnerFeeCollector
+	}
+
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, destModule, captured)
 
 	return
 }

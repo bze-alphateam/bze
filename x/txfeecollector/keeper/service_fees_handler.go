@@ -8,17 +8,24 @@ import (
 )
 
 func (k Keeper) ConvertCollectedFeesToNativeDenom(ctx sdk.Context) error {
-	return k.convertFeesAndSend(ctx, types.ModuleName, authtypes.FeeCollectorName)
+	return k.convertFeesAndSend(ctx, types.ModuleName, authtypes.FeeCollectorName, false)
 }
 
 func (k Keeper) ConvertBurnerFeesToNativeDenom(ctx sdk.Context) error {
-	return k.convertFeesAndSend(ctx, types.BurnerFeeCollector, burnermoduletypes.ModuleName)
+	return k.convertFeesAndSend(ctx, types.BurnerFeeCollector, burnermoduletypes.ModuleName, true)
 }
 
 func (k Keeper) ConvertCommunityPoolFeesToNativeDenom(ctx sdk.Context) error {
-	toSend, err := k.convertFees(ctx, types.CpFeeCollector)
+	toSend, skipped, err := k.convertFees(ctx, types.CpFeeCollector)
 	if err != nil {
 		return err
+	}
+	if skipped.Len() > 0 {
+		//if some coins were skipped because we couldn't convert them, send them to the buner module
+		err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.CpFeeCollector, burnermoduletypes.ModuleName, skipped)
+		if err != nil {
+			return err
+		}
 	}
 
 	if toSend == nil || toSend.IsZero() {
@@ -26,39 +33,41 @@ func (k Keeper) ConvertCommunityPoolFeesToNativeDenom(ctx sdk.Context) error {
 	}
 
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.CpFeeCollector)
-	err = k.distrKeeper.FundCommunityPool(ctx, *toSend, moduleAddr)
+	err = k.distrKeeper.FundCommunityPool(ctx, toSend, moduleAddr)
 
 	return err
 }
 
 // convertFeesAndSend transfers converted fees from one module to another if fees are available and conversion is successful.
-func (k Keeper) convertFeesAndSend(ctx sdk.Context, fromModule, toModule string) error {
-	toSend, err := k.convertFees(ctx, fromModule)
+func (k Keeper) convertFeesAndSend(ctx sdk.Context, fromModule, toModule string, sendSkipped bool) error {
+	toSend, skipped, err := k.convertFees(ctx, fromModule)
 	if err != nil {
 		return err
+	}
+	if sendSkipped && skipped.Len() > 0 {
+		toSend = toSend.Add(skipped...)
 	}
 
 	if toSend == nil || toSend.IsZero() {
 		return nil
 	}
 
-	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, fromModule, toModule, *toSend)
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, fromModule, toModule, toSend)
 
 	return err
 }
 
 // convertFees converts all non-native module account fees into the native denomination and returns the total as a coin.
-func (k Keeper) convertFees(ctx sdk.Context, fromModule string) (*sdk.Coins, error) {
+func (k Keeper) convertFees(ctx sdk.Context, fromModule string) (toSend, skipped sdk.Coins, err error) {
 	moduleAddr := k.accountKeeper.GetModuleAddress(fromModule)
 	allCoins := k.bankKeeper.GetAllBalances(ctx, moduleAddr)
 	if allCoins.IsZero() {
 		//nothing to burn at this moment
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	//group swappable coins to one collection
 	toSwap := sdk.NewCoins()
-	toSend := sdk.NewCoins()
 	for _, c := range allCoins {
 		if k.tradeKeeper.IsNativeDenom(ctx, c.Denom) {
 			toSend = toSend.Add(c)
@@ -71,22 +80,23 @@ func (k Keeper) convertFees(ctx sdk.Context, fromModule string) (*sdk.Coins, err
 
 		if k.tradeKeeper.CanSwapForNativeDenom(ctx, c) {
 			toSwap = toSwap.Add(c)
+		} else {
+			skipped = skipped.Add(c)
 		}
 	}
 
 	if !toSwap.IsZero() {
 		swapped, err := k.tradeKeeper.ModuleSwapForNativeDenom(ctx, fromModule, toSwap)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		toSend = toSend.Add(swapped)
 	}
 
-	//if no swap happened we can try again next time
 	if !toSend.IsAllPositive() {
-		return nil, nil
+		return nil, skipped, nil
 	}
 
-	return &toSend, nil
+	return toSend, skipped, nil
 }
