@@ -1378,6 +1378,7 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneFullyFilledOrderWithExtr
 	engine.ProcessQueueMessages(suite.ctx)
 	params := suite.k.GetParams(suite.ctx)
 	takerFee, err := sdk.ParseCoinsNormalized(params.MarketTakerFee)
+	suite.Require().Nil(err)
 	engine.ProcessQueueMessages(suite.ctx)
 
 	//Let's fill 1 order with amount lower than the available order
@@ -1436,6 +1437,7 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneFullyFilledOrderWithExtr
 
 	params := suite.k.GetParams(suite.ctx)
 	takerFee, err := sdk.ParseCoinsNormalized(params.MarketTakerFee)
+	suite.Require().Nil(err)
 
 	//Let's fill 1 order with amount lower than the available order
 	fillOrder := types.MsgFillOrders{
@@ -1491,6 +1493,7 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoFullyFilledOrdersWithExt
 	engine.ProcessQueueMessages(suite.ctx)
 	params := suite.k.GetParams(suite.ctx)
 	takerFee, err := sdk.ParseCoinsNormalized(params.MarketTakerFee)
+	suite.Require().Nil(err)
 
 	//Let's fill 1 order with amount lower than the available order
 	fillOrder := types.MsgFillOrders{

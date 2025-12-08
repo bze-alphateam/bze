@@ -21,21 +21,7 @@ jobs:
           go-version: '1.23'
 
       - name: Run keeper and types tests
-        run: |
-          # Get all packages in x/ directory that end with /keeper or /types
-          PACKAGES=$(go list ./x/... | grep -E '/(keeper|types|ante)$')
-
-          if [ -z "$PACKAGES" ]; then
-            echo "No keeper or types packages found"
-            exit 1
-          fi
-
-          echo "Running tests for:"
-          echo "$PACKAGES"
-          echo ""
-
-          # Run tests with verbose output and race detection
-          go test -v -race -timeout 10m $PACKAGES
+        run: ./scripts/testing/test-package.sh
 
       - name: Test Summary
         if: always()

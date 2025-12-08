@@ -137,7 +137,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 	engine.ProcessQueueMessages(suite.ctx)
 
 	//check orders were created
-	allUserOrders, err := suite.k.UserMarketOrders(sdk.WrapSDKContext(suite.ctx), &types.QueryUserMarketOrdersRequest{
+	allUserOrders, err := suite.k.UserMarketOrders(suite.ctx, &types.QueryUserMarketOrdersRequest{
 		Address:    addr1.String(),
 		Market:     getMarketId(),
 		Pagination: nil,
@@ -180,7 +180,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 		engine.ProcessQueueMessages(suite.ctx)
 		cancelCount++
 		//check user order were canceled
-		checkUserOrders, err := suite.k.UserMarketOrders(sdk.WrapSDKContext(suite.ctx), &types.QueryUserMarketOrdersRequest{
+		checkUserOrders, err := suite.k.UserMarketOrders(suite.ctx, &types.QueryUserMarketOrdersRequest{
 			Address:    addr1.String(),
 			Market:     getMarketId(),
 			Pagination: nil,
