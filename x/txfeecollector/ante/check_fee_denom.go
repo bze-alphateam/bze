@@ -46,16 +46,17 @@ func (vbd ValidateTxFeeDenomsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		return ctx, sdkerrors.Wrap(storeTypes.ErrInvalidRequest, "the provided transaction fee must be positive")
 	}
 
-	if !vbd.tradeKeeper.IsNativeDenom(ctx, c.Denom) {
-		//if trading module (keeper) is not available we do not allow anything else than the main denom
-		if vbd.tradeKeeper == nil {
-			return ctx, sdkerrors.Wrapf(
-				storeTypes.ErrInvalidRequest,
-				"invalid fee supplied. can not use %s denom as tx fee",
-				c.Denom,
-			)
-		}
+	// Check if tradeKeeper is available before calling its methods
+	if vbd.tradeKeeper == nil {
+		// Without tradeKeeper, we can't validate non-native denoms
+		// This should ideally not happen in production
+		return ctx, sdkerrors.Wrap(
+			storeTypes.ErrInvalidRequest,
+			"invalid fee supplied. can not use %s denom as tx fee",
+		)
+	}
 
+	if !vbd.tradeKeeper.IsNativeDenom(ctx, c.Denom) {
 		if !vbd.tradeKeeper.HasDeepLiquidityWithNativeDenom(ctx, c.Denom) {
 			return ctx, sdkerrors.Wrapf(
 				storeTypes.ErrInvalidRequest,
