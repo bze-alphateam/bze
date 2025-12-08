@@ -268,7 +268,6 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	takerCoins, _, err := suite.k.GetOrderSdkCoin(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
 
-	tradedUbzeCoins := makerCoins
 	tradedStakeCoins := takerCoins
 
 	suite.k.SetQueueMessage(suite.ctx, qmBuy)
@@ -308,7 +307,6 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	allOrders = suite.k.GetAllOrder(suite.ctx)
 	suite.Require().Equal(len(allOrders), int(orderCounter*2))
 
-	tradedUbzeCoins = tradedUbzeCoins.Add(makerCoins)
 	tradedStakeCoins = tradedStakeCoins.Add(takerCoins)
 
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt.MulRaw(orderCounter).String())
@@ -338,7 +336,6 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	allOrders = suite.k.GetAllOrder(suite.ctx)
 	suite.Require().Equal(len(allOrders), int(orderCounter*2)-2)
 
-	tradedUbzeCoins = tradedUbzeCoins.Add(makerCoins)
 	tradedStakeCoins = tradedStakeCoins.Add(takerCoins)
 
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt.MulRaw(orderCounter).String())
