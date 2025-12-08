@@ -12,6 +12,7 @@
 
 ## Inter-module Hooks
 - `native_denom` and `min_native_liquidity_for_module_swap` gate module-initiated swaps used by other modules (e.g., burner/fee conversion).
+- Trading fees and the create-market fee are captured via the trade module fee paths, optionally swapped to native, then forwarded to fee collector (community pool) or burner depending on configured destinations.
 - Fees sent to `burner` are later destroyed or swapped through burner logic depending on denom type.
 
 ## Storage / Queries

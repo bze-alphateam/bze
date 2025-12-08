@@ -6,6 +6,7 @@ import (
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"go.uber.org/mock/gomock"
 )
 
 func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardSuccess() {
@@ -50,12 +51,24 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 		Return(nil).
 		Times(1)
 
-	// Mock community pool funding for fee
-	suite.distr.EXPECT().
-		FundCommunityPool(
+	// Mock fee capture and swap
+	suite.trade.EXPECT().
+		CaptureAndSwapUserFee(
 			suite.ctx,
-			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(200))),
 			creator,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(200))),
+			types.ModuleName,
+		).
+		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(200))), nil).
+		Times(1)
+
+	// Mock sending fee to fee collector
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToModule(
+			suite.ctx,
+			types.ModuleName,
+			gomock.Any(),
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(200))),
 		).
 		Return(nil).
 		Times(1)
@@ -390,7 +403,7 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 	suite.Require().Equal(bankError, err)
 }
 
-func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardCommunityPoolError() {
+func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardFeeSwapError() {
 	creator := sdk.AccAddress("creator")
 
 	// Set up params with fee
@@ -432,15 +445,16 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 		Return(nil).
 		Times(1)
 
-	// Mock community pool funding error
-	poolError := fmt.Errorf("community pool funding failed")
-	suite.distr.EXPECT().
-		FundCommunityPool(
+	// Mock fee swap error
+	swapError := fmt.Errorf("fee swap failed")
+	suite.trade.EXPECT().
+		CaptureAndSwapUserFee(
 			suite.ctx,
-			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(200))),
 			creator,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(200))),
+			types.ModuleName,
 		).
-		Return(poolError).
+		Return(nil, swapError).
 		Times(1)
 
 	// Mock epoch keeper call for expiration calculation
@@ -462,5 +476,5 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	suite.Require().Error(err)
 	suite.Require().Nil(response)
-	suite.Require().Equal(poolError, err)
+	suite.Require().Equal(swapError, err)
 }

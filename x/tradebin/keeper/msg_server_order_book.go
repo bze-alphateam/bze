@@ -268,7 +268,7 @@ func (k msgServer) payMarketCreateFee(ctx sdk.Context, payer sdk.AccAddress) err
 		return nil
 	}
 
-	coinsCaptured, err := k.CaptureAndSwapUserFee(ctx, payer, createMarketFee)
+	coinsCaptured, err := k.CaptureAndSwapUserFee(ctx, payer, createMarketFee, types.ModuleName)
 	if err != nil {
 		return err
 	}
@@ -354,7 +354,7 @@ func (k msgServer) captureTradingFees(ctx sdk.Context, sender sdk.AccAddress, is
 		return
 	}
 
-	captured, err := k.CaptureAndSwapUserFee(ctx, sender, sdk.NewCoins(coin))
+	captured, err := k.CaptureAndSwapUserFee(ctx, sender, sdk.NewCoins(coin), types.ModuleName)
 	if err != nil {
 		return
 	}

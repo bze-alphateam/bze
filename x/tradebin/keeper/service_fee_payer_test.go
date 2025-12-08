@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
+
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"go.uber.org/mock/gomock"
@@ -12,13 +13,13 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_InvalidFee() {
 	addr1 := sdk.AccAddress("addr1_______________")
 
 	// Test with zero fee
-	_, err := suite.k.CaptureAndSwapUserFee(suite.ctx, addr1, sdk.NewCoins())
+	_, err := suite.k.CaptureAndSwapUserFee(suite.ctx, addr1, sdk.NewCoins(), types.ModuleName)
 	suite.Require().NotNil(err)
 	suite.Require().Contains(err.Error(), "can not capture user fees that are not all positive")
 
 	// Test with negative fee (create invalid coins)
 	invalidFee := sdk.Coins{sdk.Coin{Denom: "ubze", Amount: math.NewInt(-100)}}
-	_, err = suite.k.CaptureAndSwapUserFee(suite.ctx, addr1, invalidFee)
+	_, err = suite.k.CaptureAndSwapUserFee(suite.ctx, addr1, invalidFee, types.ModuleName)
 	suite.Require().NotNil(err)
 }
 
@@ -33,7 +34,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_NoPreferredDenom() 
 		Return(nil)
 
 	// No preferred denom in context, should capture fee directly
-	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(suite.ctx, addr1, fee)
+	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(suite.ctx, addr1, fee, types.ModuleName)
 	suite.Require().Nil(err)
 	suite.Require().Equal(fee, coinsCaptured)
 }
@@ -51,7 +52,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_PreferredDenomSameA
 		Times(1).
 		Return(nil)
 
-	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(ctx, addr1, fee)
+	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(ctx, addr1, fee, types.ModuleName)
 	suite.Require().Nil(err)
 	suite.Require().Equal(fee, coinsCaptured)
 }
@@ -70,7 +71,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_NoNativeFeeInCoins(
 		Times(1).
 		Return(nil)
 
-	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(ctx, addr1, fee)
+	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(ctx, addr1, fee, types.ModuleName)
 	suite.Require().Nil(err)
 	suite.Require().Equal(fee, coinsCaptured)
 }
@@ -88,7 +89,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_PoolNotFound() {
 		Times(1).
 		Return(nil)
 
-	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(ctx, addr1, fee)
+	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(ctx, addr1, fee, types.ModuleName)
 	suite.Require().Nil(err)
 	suite.Require().Equal(fee, coinsCaptured)
 }
@@ -141,7 +142,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SwapSuccess() {
 		Return(nil).
 		AnyTimes()
 
-	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(ctx, addr1, fee)
+	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(ctx, addr1, fee, types.ModuleName)
 	suite.Require().Nil(err)
 
 	// Should return only native denom after swap
@@ -203,7 +204,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SwapWithMultipleFee
 		Return(nil).
 		AnyTimes()
 
-	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(ctx, addr1, fee)
+	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(ctx, addr1, fee, types.ModuleName)
 	suite.Require().Nil(err)
 
 	// Should return ubze (from swap) + uosmo (unchanged)
@@ -260,7 +261,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_InsufficientBalance
 		Times(1).
 		Return(nil)
 
-	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(ctx, addr1, fee)
+	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(ctx, addr1, fee, types.ModuleName)
 	suite.Require().Nil(err)
 	suite.Require().Equal(fee, coinsCaptured)
 }
@@ -275,7 +276,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_CaptureFails() {
 		Times(1).
 		Return(fmt.Errorf("insufficient funds"))
 
-	_, err := suite.k.CaptureAndSwapUserFee(suite.ctx, addr1, fee)
+	_, err := suite.k.CaptureAndSwapUserFee(suite.ctx, addr1, fee, types.ModuleName)
 	suite.Require().NotNil(err)
 	suite.Require().Contains(err.Error(), "insufficient funds")
 }
@@ -322,7 +323,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SwapFails() {
 			Return(nil)
 
 		// Swap will fail due to low reserves
-		_, err = suite.k.CaptureAndSwapUserFee(ctx, addr1, fee)
+		_, err = suite.k.CaptureAndSwapUserFee(ctx, addr1, fee, types.ModuleName)
 		suite.Require().NotNil(err)
 	}
 }

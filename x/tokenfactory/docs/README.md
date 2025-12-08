@@ -3,7 +3,7 @@
 The tokenfactory lets any account create and manage custom denoms under their own admin key.
 
 ## What You Can Do
-- **Create a denom** (`MsgCreateDenom`): pays the configured creation fee, creates `factory/<creator>/<subdenom>`, and sets you as admin.
+- **Create a denom** (`MsgCreateDenom`): pays the configured creation fee (captured and swapped to native, then sent to the fee collector), creates `factory/<creator>/<subdenom>`, and sets you as admin.
 - **Mint** (`MsgMint`): admin-only; mints the specified amount to the admin’s account.
 - **Burn** (`MsgBurn`): admin-only; burns tokens from the admin’s balance.
 - **Change admin** (`MsgChangeAdmin`): optionally transfer admin rights (or clear admin to lock the supply).

@@ -42,4 +42,4 @@ bzed tx tradebin multi-swap '["<pool1>","<pool2>"]' \
 
 ## Fees and Destinations
 - Maker/taker fees and the create-market fee come from params.
-- Fee destinations can be the community pool or burner module; pools also carry their own fee and destination.
+- Fees are captured (and swapped to native if needed) then sent to the configured destination: fee collector community pool or burner module. Pools also carry their own fee and destination.

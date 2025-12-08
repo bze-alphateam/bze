@@ -17,44 +17,6 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockDistrKeeper is a mock of DistrKeeper interface.
-type MockDistrKeeper struct {
-	ctrl     *gomock.Controller
-	recorder *MockDistrKeeperMockRecorder
-	isgomock struct{}
-}
-
-// MockDistrKeeperMockRecorder is the mock recorder for MockDistrKeeper.
-type MockDistrKeeperMockRecorder struct {
-	mock *MockDistrKeeper
-}
-
-// NewMockDistrKeeper creates a new mock instance.
-func NewMockDistrKeeper(ctrl *gomock.Controller) *MockDistrKeeper {
-	mock := &MockDistrKeeper{ctrl: ctrl}
-	mock.recorder = &MockDistrKeeperMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockDistrKeeper) EXPECT() *MockDistrKeeperMockRecorder {
-	return m.recorder
-}
-
-// FundCommunityPool mocks base method.
-func (m *MockDistrKeeper) FundCommunityPool(ctx context.Context, amount types.Coins, sender types.AccAddress) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FundCommunityPool", ctx, amount, sender)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// FundCommunityPool indicates an expected call of FundCommunityPool.
-func (mr *MockDistrKeeperMockRecorder) FundCommunityPool(ctx, amount, sender any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FundCommunityPool", reflect.TypeOf((*MockDistrKeeper)(nil).FundCommunityPool), ctx, amount, sender)
-}
-
 // MockAccountKeeper is a mock of AccountKeeper interface.
 type MockAccountKeeper struct {
 	ctrl     *gomock.Controller
@@ -187,6 +149,20 @@ func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderMo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToAccount", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToAccount), ctx, senderModule, recipientAddr, amt)
 }
 
+// SendCoinsFromModuleToModule mocks base method.
+func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt types.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendCoinsFromModuleToModule", ctx, senderModule, recipientModule, amt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendCoinsFromModuleToModule indicates an expected call of SendCoinsFromModuleToModule.
+func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, amt any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToModule", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToModule), ctx, senderModule, recipientModule, amt)
+}
+
 // SpendableCoins mocks base method.
 func (m *MockBankKeeper) SpendableCoins(ctx context.Context, addr types.AccAddress) types.Coins {
 	m.ctrl.T.Helper()
@@ -223,6 +199,21 @@ func NewMockTradingKeeper(ctrl *gomock.Controller) *MockTradingKeeper {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockTradingKeeper) EXPECT() *MockTradingKeeperMockRecorder {
 	return m.recorder
+}
+
+// CaptureAndSwapUserFee mocks base method.
+func (m *MockTradingKeeper) CaptureAndSwapUserFee(ctx types.Context, payer types.AccAddress, fee types.Coins, toModule string) (types.Coins, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CaptureAndSwapUserFee", ctx, payer, fee, toModule)
+	ret0, _ := ret[0].(types.Coins)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CaptureAndSwapUserFee indicates an expected call of CaptureAndSwapUserFee.
+func (mr *MockTradingKeeperMockRecorder) CaptureAndSwapUserFee(ctx, payer, fee, toModule any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CaptureAndSwapUserFee", reflect.TypeOf((*MockTradingKeeper)(nil).CaptureAndSwapUserFee), ctx, payer, fee, toModule)
 }
 
 // MarketExists mocks base method.

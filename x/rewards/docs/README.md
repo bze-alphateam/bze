@@ -6,7 +6,7 @@ The rewards module runs two incentive types:
 
 ## Staking Rewards
 What you can do:
-- **Create a reward** (`MsgCreateStakingReward`): lock a prize amount/denom, choose staking denom, duration (days), minimum stake, and optional lock period. A creation fee may apply.
+- **Create a reward** (`MsgCreateStakingReward`): lock a prize amount/denom, choose staking denom, duration (days), minimum stake, and optional lock period. A creation fee may apply (it’s swapped to native via the trade module and forwarded to the fee collector).
 - **Extend a reward** (`MsgUpdateStakingReward`): add duration by supplying extra prize funds.
 - **Join** (`MsgJoinStaking`): stake the required denom into the reward.
 - **Claim earnings** (`MsgClaimStakingRewards`): withdraw accrued prize tokens without exiting.
@@ -29,7 +29,7 @@ bzed tx rewards claim-staking-rewards <reward-id> --from mykey
 
 ## Trading Rewards
 What you can do:
-- **Create a reward** (`MsgCreateTradingReward`): fund a prize pool/denom, pick target `market_id`, set duration and number of slots (payout rounds). A creation fee may apply.
+- **Create a reward** (`MsgCreateTradingReward`): fund a prize pool/denom, pick target `market_id`, set duration and number of slots (payout rounds). A creation fee may apply (swapped to native and sent to the fee collector module).
 - **Activate** (`MsgActivateTradingReward`): governance/authority-only step that moves a pending reward into the active set for its market.
 - Traders earn according to on-chain trading volume/logic of the module; leaderboard and distribution run automatically from the funded pool.
 
