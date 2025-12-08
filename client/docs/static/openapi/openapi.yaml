@@ -4,7 +4,7 @@ info:
   description: A REST interface for state queries, legacy transactions
   version: 1.0.0
 paths:
-  /bze-alphateam/bze/txfeecollector/params:
+  /bze/txfeecollector/params:
     get:
       summary: Parameters queries the parameters of the module.
       operationId: TxFeeCollectorParams
@@ -19,6 +19,22 @@ paths:
                   params:
                     description: params holds all the parameters of this module.
                     type: object
+                    properties:
+                      ValidatorMinGasFee:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          DecCoin defines a token with a denomination and a
+                          decimal amount.
+
+
+                          NOTE: The amount field is an Dec which implements the custom method
+
+                          signatures required by gogoproto.
                 description: QueryParamsResponse is response type for the Query/Params RPC
                   method.
         default:
@@ -197,6 +213,10 @@ paths:
                   params:
                     description: params holds all the parameters of this module.
                     type: object
+                    properties:
+                      periodic_burning_weeks:
+                        type: string
+                        format: int64
                 description: QueryParamsResponse is response type for the Query/Params RPC
                   method.
         default:
@@ -3336,6 +3356,17 @@ paths:
                       takerFeeDestination:
                         type: string
                       native_denom:
+                        type: string
+                      orderBookExtraGasWindow:
+                        type: string
+                        format: uint64
+                      orderBookQueueExtraGas:
+                        type: string
+                        format: uint64
+                      fillOrdersExtraGas:
+                        type: string
+                        format: uint64
+                      minNativeLiquidityForModuleSwap:
                         type: string
                 description: QueryParamsResponse is response type for the Query/Params RPC
                   method.
@@ -28782,6 +28813,19 @@ components:
   schemas:
     bze.txfeecollector.Params:
       type: object
+      properties:
+        ValidatorMinGasFee:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is an Dec which implements the custom method
+            signatures required by gogoproto.
       description: Params defines the parameters for the module.
     bze.txfeecollector.QueryParamsResponse:
       type: object
@@ -28789,7 +28833,35 @@ components:
         params:
           description: params holds all the parameters of this module.
           type: object
+          properties:
+            ValidatorMinGasFee:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                DecCoin defines a token with a denomination and a decimal
+                amount.
+
+
+                NOTE: The amount field is an Dec which implements the custom method
+
+                signatures required by gogoproto.
       description: QueryParamsResponse is response type for the Query/Params RPC method.
+    cosmos.base.v1beta1.DecCoin:
+      type: object
+      properties:
+        denom:
+          type: string
+        amount:
+          type: string
+      description: |-
+        DecCoin defines a token with a denomination and a decimal amount.
+
+        NOTE: The amount field is an Dec which implements the custom method
+        signatures required by gogoproto.
     google.protobuf.Any:
       type: object
       properties:
@@ -29129,6 +29201,10 @@ components:
           type: string
     bze.burner.Params:
       type: object
+      properties:
+        periodic_burning_weeks:
+          type: string
+          format: int64
       description: Params defines the parameters for the module.
     bze.burner.QueryAllBurnedCoinsResponse:
       type: object
@@ -29174,6 +29250,10 @@ components:
         params:
           description: params holds all the parameters of this module.
           type: object
+          properties:
+            periodic_burning_weeks:
+              type: string
+              format: int64
       description: QueryParamsResponse is response type for the Query/Params RPC method.
     bze.burner.QueryRaffleWinnersResponse:
       type: object
@@ -30372,6 +30452,17 @@ components:
           type: string
         native_denom:
           type: string
+        orderBookExtraGasWindow:
+          type: string
+          format: uint64
+        orderBookQueueExtraGas:
+          type: string
+          format: uint64
+        fillOrdersExtraGas:
+          type: string
+          format: uint64
+        minNativeLiquidityForModuleSwap:
+          type: string
       description: Params defines the parameters for the module.
     bze.tradebin.QueryAllLiquidityPoolsResponse:
       type: object
@@ -30688,6 +30779,17 @@ components:
             takerFeeDestination:
               type: string
             native_denom:
+              type: string
+            orderBookExtraGasWindow:
+              type: string
+              format: uint64
+            orderBookQueueExtraGas:
+              type: string
+              format: uint64
+            fillOrdersExtraGas:
+              type: string
+              format: uint64
+            minNativeLiquidityForModuleSwap:
               type: string
       description: QueryParamsResponse is response type for the Query/Params RPC method.
     bze.tradebin.QueryUserMarketOrdersResponse:
@@ -39908,18 +40010,6 @@ components:
         including all blockchain data structures and the rules of the application's
 
         state transition machine.
-    cosmos.base.v1beta1.DecCoin:
-      type: object
-      properties:
-        denom:
-          type: string
-        amount:
-          type: string
-      description: |-
-        DecCoin defines a token with a denomination and a decimal amount.
-
-        NOTE: The amount field is an Dec which implements the custom method
-        signatures required by gogoproto.
     cosmos.distribution.v1beta1.DelegationDelegatorReward:
       type: object
       properties:
