@@ -218,3 +218,15 @@ func (k Keeper) RemoveAggregatedOrder(ctx sdk.Context, order types.AggregatedOrd
 	store := k.getAggregatedOrderStore(ctx)
 	store.Delete(key)
 }
+
+// GetPriceOrderStoreForMigration returns the price order store for migration purposes
+// This is needed to delete old keys during upgrade migrations
+func (k Keeper) GetPriceOrderStoreForMigration(ctx sdk.Context) prefix.Store {
+	return k.getPriceOrderStore(ctx)
+}
+
+// GetAggregatedOrderStoreForMigration returns the aggregated order store for migration purposes
+// This is needed to delete old keys during upgrade migrations
+func (k Keeper) GetAggregatedOrderStoreForMigration(ctx sdk.Context) prefix.Store {
+	return k.getAggregatedOrderStore(ctx)
+}

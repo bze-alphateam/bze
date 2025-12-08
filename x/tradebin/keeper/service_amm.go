@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
+	txfeecollectormoduletypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -129,8 +130,7 @@ func (k Keeper) collectSwapFee(ctx sdk.Context, fee sdk.Coin, pool *types.Liquid
 	treasury := sdk.NewCoin(fee.Denom, feeDec.Mul(pool.FeeDest.Treasury).TruncateInt())
 	if treasury.IsPositive() {
 		fee = fee.Sub(treasury)
-		moduleAcc := k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
-		err := k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(treasury), moduleAcc.GetAddress())
+		err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, txfeecollectormoduletypes.CpFeeCollector, sdk.NewCoins(treasury))
 		if err != nil {
 			return sdk.Coin{}, err
 		}
@@ -265,6 +265,100 @@ func (k Keeper) CalculateOptimalSwapAmount(pool types.LiquidityPool, inputCoin s
 	swapAmount = swapAmountDec.TruncateInt()
 
 	return swapAmount, nil
+}
+
+// CalculateOptimalInputForOutput calculates the required input amount to obtain a desired output amount
+// from a liquidity pool, accounting for fees.
+//
+// The function uses the constant product AMM formula (x * y = k) in reverse to determine
+// the input amount needed to receive a specific output amount.
+//
+// Mathematical derivation:
+// Given the swap formula:
+//
+//	output = (output_reserve * real_input) / (input_reserve + real_input)
+//
+// Where real_input = input * (1 - fee), we need to solve for input given a desired output.
+//
+// Rearranging:
+//
+//	output * (input_reserve + real_input) = output_reserve * real_input
+//	output * input_reserve = real_input * (output_reserve - output)
+//	real_input = (output * input_reserve) / (output_reserve - output)
+//
+// Since real_input = input * f, where f = (1 - fee):
+//
+//	input = real_input / f
+//
+// Parameters:
+//   - pool: the liquidity pool to swap from
+//   - outputCoin: the desired output token and amount
+//
+// Returns:
+//   - inputCoin: the required input token and amount (including fees)
+//   - error: if the output coin denom is not in the pool, output exceeds reserves, or calculation fails
+func (k Keeper) CalculateOptimalInputForOutput(pool types.LiquidityPool, outputCoin sdk.Coin) (requiredInput sdk.Coin, err error) {
+	if !pool.HasDenom(outputCoin.Denom) {
+		return requiredInput, fmt.Errorf("denom %s does not exist in pool %s", outputCoin.Denom, pool.GetId())
+	}
+
+	if !outputCoin.IsPositive() {
+		return requiredInput, fmt.Errorf("output amount must be positive")
+	}
+
+	// Get reserves - outputReserve is for the token we want to receive
+	// inputReserve is for the token we need to provide
+	outputReserve, inputReserve := pool.GetReservesCoinsByDenom(outputCoin.Denom)
+
+	// explicit reserve sanity
+	if !outputReserve.Amount.IsPositive() || !inputReserve.Amount.IsPositive() {
+		return requiredInput, fmt.Errorf("pool %s has insufficient liquidity", pool.GetId())
+	}
+
+	// Check if the desired output exceeds the available reserve
+	if outputCoin.Amount.GTE(outputReserve.Amount) {
+		return requiredInput, fmt.Errorf("desired output %s exceeds available reserve %s", outputCoin.Amount.String(), outputReserve.Amount.String())
+	}
+
+	// Convert to Dec for precise calculation
+	outputAmount := math.LegacyNewDecFromInt(outputCoin.Amount)
+	outputReserveAmount := math.LegacyNewDecFromInt(outputReserve.Amount)
+	inputReserveAmount := math.LegacyNewDecFromInt(inputReserve.Amount)
+
+	// Calculate the denominator: (output_reserve - output)
+	denominator := outputReserveAmount.Sub(outputAmount)
+	if !denominator.IsPositive() {
+		return requiredInput, fmt.Errorf("invalid denominator in calculation")
+	}
+
+	// Calculate real_input needed (after fee deduction):
+	// real_input = (output * input_reserve) / (output_reserve - output)
+	numerator := outputAmount.Mul(inputReserveAmount)
+	realInput := numerator.Quo(denominator)
+
+	// f = 1 - fee (the multiplier for the net input after fee)
+	f := math.LegacyOneDec().Sub(pool.Fee)
+
+	// If fee is 1 (100%), no swap is possible
+	if !f.IsPositive() {
+		return requiredInput, fmt.Errorf("fee is too high, cannot calculate required input")
+	}
+
+	// Calculate the actual input needed (before fee deduction):
+	// input = real_input / f
+	inputAmount := realInput.Quo(f)
+
+	// Round up to ensure we get at least the desired output
+	// (using Ceil to avoid truncation that might result in slightly less output)
+	inputAmountInt := inputAmount.Ceil().TruncateInt()
+
+	requiredInput = sdk.NewCoin(inputReserve.Denom, inputAmountInt)
+
+	if !requiredInput.IsPositive() {
+		return requiredInput, fmt.Errorf("calculated input amount is not positive")
+	}
+
+	return requiredInput, nil
 }
 
 func (k Keeper) getProvidedReserves(baseDenom, quoteDenom string, baseAmt, quoteAmt math.Int) (baseCoin, quoteCoin sdk.Coin, err error) {

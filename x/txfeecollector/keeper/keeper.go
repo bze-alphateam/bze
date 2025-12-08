@@ -24,6 +24,7 @@ type (
 		bankKeeper    types.BankKeeper
 		accountKeeper types.AccountKeeper
 		tradeKeeper   types.TradeKeeper
+		distrKeeper   types.DistrKeeper
 	}
 )
 
@@ -32,9 +33,10 @@ func NewKeeper(
 	storeService store.KVStoreService,
 	logger log.Logger,
 	authority string,
-	bandKeeper types.BankKeeper,
+	bankKeeper types.BankKeeper,
 	accountKeeper types.AccountKeeper,
 	tradeKeeper types.TradeKeeper,
+	distrKeeper types.DistrKeeper,
 ) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
@@ -45,9 +47,10 @@ func NewKeeper(
 		storeService:  storeService,
 		authority:     authority,
 		logger:        logger,
-		bankKeeper:    bandKeeper,
+		bankKeeper:    bankKeeper,
 		accountKeeper: accountKeeper,
 		tradeKeeper:   tradeKeeper,
+		distrKeeper:   distrKeeper,
 	}
 }
 

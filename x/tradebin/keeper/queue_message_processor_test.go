@@ -8,14 +8,6 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func newStakeCoin(amt int64) sdk.Coin {
-	return sdk.NewInt64Coin(denomStake, amt)
-}
-
-func newBzeCoin(amt int64) sdk.Coin {
-	return sdk.NewInt64Coin(denomBze, amt)
-}
-
 func (suite *IntegrationTestSuite) TestQueueMessageProcessor_AddMakerOrder() {
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
@@ -145,7 +137,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 	engine.ProcessQueueMessages(suite.ctx)
 
 	//check orders were created
-	allUserOrders, err := suite.k.UserMarketOrders(sdk.WrapSDKContext(suite.ctx), &types.QueryUserMarketOrdersRequest{
+	allUserOrders, err := suite.k.UserMarketOrders(suite.ctx, &types.QueryUserMarketOrdersRequest{
 		Address:    addr1.String(),
 		Market:     getMarketId(),
 		Pagination: nil,
@@ -188,7 +180,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 		engine.ProcessQueueMessages(suite.ctx)
 		cancelCount++
 		//check user order were canceled
-		checkUserOrders, err := suite.k.UserMarketOrders(sdk.WrapSDKContext(suite.ctx), &types.QueryUserMarketOrdersRequest{
+		checkUserOrders, err := suite.k.UserMarketOrders(suite.ctx, &types.QueryUserMarketOrdersRequest{
 			Address:    addr1.String(),
 			Market:     getMarketId(),
 			Pagination: nil,
@@ -276,7 +268,6 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	takerCoins, _, err := suite.k.GetOrderSdkCoin(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
 
-	tradedUbzeCoins := makerCoins
 	tradedStakeCoins := takerCoins
 
 	suite.k.SetQueueMessage(suite.ctx, qmBuy)
@@ -316,7 +307,6 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	allOrders = suite.k.GetAllOrder(suite.ctx)
 	suite.Require().Equal(len(allOrders), int(orderCounter*2))
 
-	tradedUbzeCoins = tradedUbzeCoins.Add(makerCoins)
 	tradedStakeCoins = tradedStakeCoins.Add(takerCoins)
 
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt.MulRaw(orderCounter).String())
@@ -346,7 +336,6 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	allOrders = suite.k.GetAllOrder(suite.ctx)
 	suite.Require().Equal(len(allOrders), int(orderCounter*2)-2)
 
-	tradedUbzeCoins = tradedUbzeCoins.Add(makerCoins)
 	tradedStakeCoins = tradedStakeCoins.Add(takerCoins)
 
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt.MulRaw(orderCounter).String())
@@ -396,7 +385,6 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	newOrderMakerCoins, _, err := suite.k.GetOrderSdkCoin(types.TheOtherOrderType(smallOrders[0].OrderType), smallOrders[0].Price, smallOrdAmt, &market)
 	newOrderTakerCoins, _, err := suite.k.GetOrderSdkCoin(smallOrders[0].OrderType, smallOrders[0].Price, smallOrdAmt, &market)
 	suite.Require().Nil(err)
-	tradedUbzeCoins = tradedUbzeCoins.Add(makerCoins).Sub(newOrderTakerCoins)
 	suite.Require().Nil(err)
 	tradedStakeCoins = tradedStakeCoins.Add(takerCoins).Sub(newOrderMakerCoins)
 

@@ -2,13 +2,15 @@ package keeper
 
 import (
 	"context"
+	"fmt"
+	"strconv"
+
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"fmt"
 	"github.com/bze-alphateam/bze/x/rewards/types"
+	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"strconv"
 )
 
 func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCreateStakingReward) (*types.MsgCreateStakingRewardResponse, error) {
@@ -59,7 +61,12 @@ func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCrea
 	}
 
 	if fee != nil {
-		err = k.distrKeeper.FundCommunityPool(ctx, fee, acc)
+		capturedFee, err := k.tradeKeeper.CaptureAndSwapUserFee(ctx, acc, fee, types.ModuleName)
+		if err != nil {
+			return nil, err
+		}
+
+		err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, capturedFee)
 		if err != nil {
 			return nil, err
 		}

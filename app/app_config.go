@@ -200,6 +200,8 @@ var (
 		{Account: tokenfactorymoduletypes.ModuleName, Permissions: []string{authtypes.Burner, authtypes.Minter}},
 		{Account: tradebinmoduletypes.ModuleName, Permissions: []string{authtypes.Burner, authtypes.Minter}},
 		{Account: txfeecollectormoduletypes.ModuleName},
+		{Account: txfeecollectormoduletypes.BurnerFeeCollector},
+		{Account: txfeecollectormoduletypes.CpFeeCollector},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 

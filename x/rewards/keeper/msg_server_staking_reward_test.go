@@ -6,6 +6,7 @@ import (
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"go.uber.org/mock/gomock"
 )
 
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewardSuccess() {
@@ -44,12 +45,24 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 		Return(nil).
 		Times(1)
 
-	// Mock community pool funding for fee
-	suite.distr.EXPECT().
-		FundCommunityPool(
+	// Mock fee capture and swap
+	suite.trade.EXPECT().
+		CaptureAndSwapUserFee(
 			suite.ctx,
-			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100))),
 			creator,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100))),
+			types.ModuleName,
+		).
+		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100))), nil).
+		Times(1)
+
+	// Mock sending fee to fee collector
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToModule(
+			suite.ctx,
+			types.ModuleName,
+			gomock.Any(),
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100))),
 		).
 		Return(nil).
 		Times(1)

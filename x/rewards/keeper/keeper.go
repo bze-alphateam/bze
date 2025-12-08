@@ -29,7 +29,6 @@ type (
 		storeService  store.KVStoreService
 		logger        log.Logger
 		bankKeeper    types.BankKeeper
-		distrKeeper   types.DistrKeeper
 		epochKeeper   types.EpochKeeper
 		tradeKeeper   types.TradingKeeper
 		accountKeeper types.AccountKeeper
@@ -46,7 +45,6 @@ func NewKeeper(
 	logger log.Logger,
 	authority string,
 	bankKeeper types.BankKeeper,
-	distrKeeper types.DistrKeeper,
 	epochKeeper types.EpochKeeper,
 	tradeKeeper types.TradingKeeper,
 	accountKeeper types.AccountKeeper,
@@ -61,7 +59,6 @@ func NewKeeper(
 		authority:     authority,
 		logger:        logger,
 		bankKeeper:    bankKeeper,
-		distrKeeper:   distrKeeper,
 		epochKeeper:   epochKeeper,
 		tradeKeeper:   tradeKeeper,
 		accountKeeper: accountKeeper,

@@ -85,13 +85,9 @@ func (p Params) Validate() error {
 
 // validateAnonArticleLimit validates the AnonArticleLimit param
 func validateAnonArticleLimit(v interface{}) error {
-	anonArticleLimit, ok := v.(uint64)
+	_, ok := v.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)
-	}
-
-	if anonArticleLimit < 0 {
-		return fmt.Errorf("invalid anonArticleLimit. Expected uint64 higher than or equal with 0 received %v", anonArticleLimit)
 	}
 
 	return nil

@@ -12,7 +12,7 @@ import (
 
 // checkTxFeeWithValidatorMinGasPrices implements the default fee logic, where the minimum price per
 // unit of gas is fixed and set by each validator, can the tx priority is computed from the gas price.
-func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error) {
+func (dfd DeductFeeDecorator) checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return nil, 0, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
@@ -25,7 +25,7 @@ func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) (sdk.Coins,
 	// if this is a CheckTx. This is only for local mempool purposes, and thus
 	// is only ran on check tx.
 	if ctx.IsCheckTx() {
-		minGasPrices := ctx.MinGasPrices()
+		minGasPrices := dfd.getContextMinGasPrices(ctx)
 		if !minGasPrices.IsZero() {
 			requiredFees := make(sdk.Coins, len(minGasPrices))
 
@@ -45,6 +45,60 @@ func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) (sdk.Coins,
 
 	priority := getTxPriority(feeCoins, int64(gas))
 	return feeCoins, priority, nil
+}
+
+func (dfd DeductFeeDecorator) getContextMinGasPrices(ctx sdk.Context) sdk.DecCoins {
+	params := dfd.txCollectorKeeper.GetParams(ctx)
+	txDenom := getContextFeeDenom(ctx)
+	if txDenom == "" {
+		txDenom = params.ValidatorMinGasFee.Denom
+	}
+
+	localGasPrice := ctx.MinGasPrices().AmountOf(txDenom)
+	//if the denom is the native one (the one in our params) then we need to make sure it meets the minimum fee
+	if txDenom == params.ValidatorMinGasFee.Denom {
+		if localGasPrice.LT(params.ValidatorMinGasFee.Amount) {
+			localGasPrice = params.ValidatorMinGasFee.Amount
+		}
+
+		return sdk.NewDecCoins(sdk.NewDecCoinFromDec(txDenom, localGasPrice))
+	}
+
+	//get local native gas price (ubze)
+	localNativeGasPrice := ctx.MinGasPrices().AmountOf(params.ValidatorMinGasFee.Denom)
+	if localNativeGasPrice.LT(params.ValidatorMinGasFee.Amount) {
+		//ensure it meets the minimum fee in the params
+		localNativeGasPrice = params.ValidatorMinGasFee.Amount
+	}
+
+	txDenomPrice, err := dfd.tradeKeeper.GetDenomSpotPriceInNativeCoin(ctx, txDenom)
+	if err != nil || txDenomPrice.IsZero() {
+		dfd.txCollectorKeeper.Logger().Error("failed to get denom spot price", "denom", txDenom, "error", err)
+
+		// we failed to get the spot price, so we return the minimum gas price either from local or from params
+		return sdk.NewDecCoins(sdk.NewDecCoinFromDec(params.ValidatorMinGasFee.Denom, localNativeGasPrice))
+	}
+
+	txDenomGasPrice := localNativeGasPrice.Quo(txDenomPrice.Amount)
+	if txDenomGasPrice.LT(localGasPrice) {
+		txDenomGasPrice = localGasPrice
+	}
+
+	return sdk.NewDecCoins(sdk.NewDecCoinFromDec(txDenom, txDenomGasPrice))
+}
+
+func getContextFeeDenom(ctx sdk.Context) string {
+	feeDenomVal := ctx.Value(FeeDenomKey)
+	if feeDenomVal == nil {
+		return ""
+	}
+
+	feeDenom, ok := feeDenomVal.(string)
+	if !ok {
+		return ""
+	}
+
+	return feeDenom
 }
 
 // getTxPriority returns a naive tx priority based on the amount of the smallest denomination of the gas price

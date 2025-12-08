@@ -14,8 +14,8 @@ func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{}
 
 	k, ctx := keepertest.EpochKeeper(t)
-	epoch.InitGenesis(ctx, k, genesisState)
-	got := epoch.ExportGenesis(ctx, k)
+	epoch.InitGenesis(ctx, &k, genesisState)
+	got := epoch.ExportGenesis(ctx, &k)
 	require.NotNil(t, got)
 
 	nullify.Fill(&genesisState)
