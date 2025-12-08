@@ -8,14 +8,6 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func newStakeCoin(amt int64) sdk.Coin {
-	return sdk.NewInt64Coin(denomStake, amt)
-}
-
-func newBzeCoin(amt int64) sdk.Coin {
-	return sdk.NewInt64Coin(denomBze, amt)
-}
-
 func (suite *IntegrationTestSuite) TestQueueMessageProcessor_AddMakerOrder() {
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
@@ -396,7 +388,6 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	newOrderMakerCoins, _, err := suite.k.GetOrderSdkCoin(types.TheOtherOrderType(smallOrders[0].OrderType), smallOrders[0].Price, smallOrdAmt, &market)
 	newOrderTakerCoins, _, err := suite.k.GetOrderSdkCoin(smallOrders[0].OrderType, smallOrders[0].Price, smallOrdAmt, &market)
 	suite.Require().Nil(err)
-	tradedUbzeCoins = tradedUbzeCoins.Add(makerCoins).Sub(newOrderTakerCoins)
 	suite.Require().Nil(err)
 	tradedStakeCoins = tradedStakeCoins.Add(takerCoins).Sub(newOrderMakerCoins)
 

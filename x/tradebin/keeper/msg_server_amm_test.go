@@ -1,8 +1,12 @@
+//nolint:staticcheck // tests use legacy sdk helpers and context wrappers
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
+	"strings"
+	"testing"
+
+	"cosmossdk.io/math"
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,8 +14,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"go.uber.org/mock/gomock"
-	"strings"
-	"testing"
 )
 
 func getValidLp() types.LiquidityPool {
@@ -408,7 +410,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_InvalidCreator() {
 
 	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
 	suite.Require().Error(err)
-	suite.Require().Contains(err.Error(), fmt.Sprintf("unauthorized"))
+	suite.Require().Contains(err.Error(), "unauthorized")
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_PoolNotFound() {

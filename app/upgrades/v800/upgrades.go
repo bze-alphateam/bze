@@ -65,6 +65,7 @@ func CreateUpgradeHandler(
 			}
 
 			var keyTable paramstypes.KeyTable
+			//nolint:staticcheck // using legacy ParamKeyTable for upgrade compatibility
 			switch s.Name() {
 			// sdk
 			case authtypes.ModuleName:

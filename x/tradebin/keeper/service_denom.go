@@ -36,11 +36,7 @@ func (k Keeper) HasLiquidityWithNativeDenom(ctx sdk.Context, denom string) bool 
 	}
 
 	nativeLpCoins, _ := pool.GetReservesCoinsByDenom(nativeDenom)
-	if !nativeLpCoins.IsPositive() {
-		return false
-	}
-
-	return true
+	return nativeLpCoins.IsPositive()
 }
 
 // HasDeepLiquidityWithNativeDenom checks if the specified denom has sufficient liquidity when paired with the native denom.
@@ -63,11 +59,7 @@ func (k Keeper) HasDeepLiquidityWithNativeDenom(ctx sdk.Context, denom string) b
 	}
 
 	params := k.GetParams(ctx)
-	if nativeLpCoins.Amount.LT(params.MinNativeLiquidityForModuleSwap) {
-		return false
-	}
-
-	return true
+	return !nativeLpCoins.Amount.LT(params.MinNativeLiquidityForModuleSwap)
 }
 
 func (k Keeper) GetDenomSpotPriceInNativeCoin(ctx sdk.Context, denom string) (sdk.DecCoin, error) {

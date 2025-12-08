@@ -1,15 +1,16 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
+	"strconv"
+	"time"
+
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/tradebin/keeper"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	"github.com/cometbft/cometbft/libs/rand"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"go.uber.org/mock/gomock"
-	"strconv"
-	"time"
 )
 
 func (suite *IntegrationTestSuite) Msg_TestCancelOrder_MarketNotFound() {
@@ -898,7 +899,7 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderPartialFill_Buy() {
 
 	engine.ProcessQueueMessages(suite.ctx)
 	params := suite.k.GetParams(suite.ctx)
-	takerFee, err := sdk.ParseCoinsNormalized(params.MarketTakerFee)
+	takerFee, _ := sdk.ParseCoinsNormalized(params.MarketTakerFee)
 	suite.Require().NoError(err)
 	//Let's fill 1 order with amount lower than the available order
 	fillOrder := types.MsgFillOrders{
@@ -964,7 +965,7 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderFullFill_Sell() {
 	engine.ProcessQueueMessages(suite.ctx)
 
 	params := suite.k.GetParams(suite.ctx)
-	takerFee, err := sdk.ParseCoinsNormalized(params.MarketTakerFee)
+	takerFee, _ := sdk.ParseCoinsNormalized(params.MarketTakerFee)
 	suite.Require().NoError(err)
 
 	//Let's fill 1 order with amount lower than the available order
@@ -1020,7 +1021,7 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderFullFill_Buy() {
 
 	engine.ProcessQueueMessages(suite.ctx)
 	params := suite.k.GetParams(suite.ctx)
-	takerFee, err := sdk.ParseCoinsNormalized(params.MarketTakerFee)
+	takerFee, _ := sdk.ParseCoinsNormalized(params.MarketTakerFee)
 
 	//Let's fill 1 order with amount lower than the available order
 	fillOrder := types.MsgFillOrders{
