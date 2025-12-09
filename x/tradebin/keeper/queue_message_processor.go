@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"context"
-	"cosmossdk.io/math"
 	"fmt"
+
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/bzeutils"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -322,7 +323,9 @@ func (pe *ProcessingEngine) addHistoryOrder(ctx sdk.Context, order *types.Order,
 		Taker:      message.Owner,
 	}
 
-	pe.k.SetHistoryOrder(ctx, history, fmt.Sprintf("%s%s", order.Id, message.MessageId[len(message.MessageId)-5:]))
+	// Index format: {messageId}{orderId}
+	index := fmt.Sprintf("%s%s", message.MessageId, order.Id)
+	pe.k.SetHistoryOrder(ctx, history, index)
 }
 
 func (pe *ProcessingEngine) getExecutedAmount(messageAmount, orderAmount, minAmount math.Int) math.Int {
