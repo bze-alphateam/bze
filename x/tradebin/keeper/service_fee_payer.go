@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -53,7 +54,9 @@ func (k Keeper) CaptureAndSwapUserFee(ctx sdk.Context, payer sdk.AccAddress, fee
 		//if the user has enough balance to pay the required fee in his preferred fee denom, we just remove the native
 		//fee and add the required fee.
 		//capture the amount and swap the fee to the native denom
-		_, err = k.payerCoinsToModule(ctx, payer, toCapture, toModule)
+
+		//capture the entire amount in tradebin so we can perform the swap
+		_, err = k.payerCoinsToModule(ctx, payer, toCapture, types.ModuleName)
 		if err != nil {
 			return nil, err
 		}
@@ -65,13 +68,25 @@ func (k Keeper) CaptureAndSwapUserFee(ctx sdk.Context, payer sdk.AccAddress, fee
 
 		k.Logger().Info("swapped user fee to native denom", "input", requiredFeeCoins.String(), "output", swapOutput.String(), "payer", payer.String())
 
+		//we subtract the required fee that we swapped from the entire capture amount and add the swap output
+		capturedAndSwapped := toCapture.Sub(requiredFeeCoins).Add(swapOutput)
+
+		//send swapped coins back to the caller module if the caller is not tradebin module
+		if toModule != types.ModuleName {
+			err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, toModule, capturedAndSwapped)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		//we return to the caller the fee that was provided to this function plus the fee that was swapped to native
 		//denom from preferred denom
-		return toCapture.Sub(requiredFeeCoins).Add(swapOutput), nil
+		return capturedAndSwapped, nil
 	}
 
 	//the user can not pay the required fee in his preferred fee denom, so we just try to capture the fee in native denom
 	k.Logger().Debug("insufficient balance for preferred denom, falling back to native", "required", toCapture.String())
+
 	return k.payerCoinsToModule(ctx, payer, fee, toModule)
 }
 

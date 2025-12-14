@@ -366,7 +366,7 @@ func (k msgServer) captureTradingFees(ctx sdk.Context, sender sdk.AccAddress, is
 
 	captured, err := k.CaptureAndSwapUserFee(ctx, sender, sdk.NewCoins(coin), types.ModuleName)
 	if err != nil {
-		return
+		return coin, err
 	}
 
 	destModule := txfeecollectormoduletypes.CpFeeCollector
