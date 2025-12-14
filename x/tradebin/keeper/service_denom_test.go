@@ -127,6 +127,12 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Swa
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin(nativeDenom, 1000))
 
+	// Mock the initial coin transfer from module to tradebin
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), "test_module", types.ModuleName, coins).
+		Times(1).
+		Return(nil)
+
 	_, err = suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "cannot swap native coin to native coin")
@@ -150,6 +156,12 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Poo
 	suite.accountMock.EXPECT().GetModuleAccount(gomock.Any(), "test_module").Return(&moduleAcc).Times(1)
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin(otherDenom, 1000))
+
+	// Mock the initial coin transfer from module to tradebin
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), "test_module", types.ModuleName, coins).
+		Times(1).
+		Return(nil)
 
 	_, err = suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().Error(err)
@@ -184,6 +196,12 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Ins
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
 	coins := sdk.NewCoins(sdk.NewInt64Coin(otherDenom, 1000))
+
+	// Mock the initial coin transfer from module to tradebin
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), "test_module", types.ModuleName, coins).
+		Times(1).
+		Return(nil)
 
 	_, err = suite.k.ModuleSwapForNativeDenom(suite.ctx, "test_module", coins)
 	suite.Require().Error(err)

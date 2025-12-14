@@ -182,6 +182,11 @@ func (suite *IntegrationTestSuite) TestConvertCollectedFeesToNativeDenom_OnlyUns
 		Times(1)
 
 	suite.tradeMock.EXPECT().
+		HasDeepLiquidityWithNativeDenom(suite.ctx, denomStake).
+		Return(false).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
 		ModuleSwapForNativeDenom(suite.ctx, types.ModuleName, sdk.NewCoins()).
 		Return(sdk.NewCoin(denomBze, math.ZeroInt()), nil).
 		Times(1)
