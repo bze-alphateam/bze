@@ -53,7 +53,7 @@ func (k Keeper) RemoveQueueMessage(ctx sdk.Context, marketId, messageId string) 
 	store.Delete(key)
 }
 
-func (k Keeper) IterateAllQueueMessages(ctx sdk.Context, msgHandler func(ctx sdk.Context, message types.QueueMessage)) {
+func (k Keeper) IterateAllQueueMessages(ctx sdk.Context, msgHandler func(ctx sdk.Context, message types.QueueMessage) bool) {
 	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.QueueMessagePrefix))
 	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
@@ -61,8 +61,21 @@ func (k Keeper) IterateAllQueueMessages(ctx sdk.Context, msgHandler func(ctx sdk
 	for ; iterator.Valid(); iterator.Next() {
 		var msg types.QueueMessage
 		k.cdc.MustUnmarshal(iterator.Value(), &msg)
-		msgHandler(ctx, msg)
+		if !msgHandler(ctx, msg) {
+			break
+		}
 	}
+}
+
+// HasQueueMessages checks if there are any messages in the queue
+// Returns true if at least one message exists, false otherwise
+// This is an O(1) operation as it stops at the first message
+func (k Keeper) HasQueueMessages(ctx sdk.Context) bool {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.QueueMessagePrefix))
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
+	defer iterator.Close()
+
+	return iterator.Valid()
 }
 
 // GetQueueMessagesByMarket returns all queue messages for a specific market

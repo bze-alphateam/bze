@@ -83,6 +83,16 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 	params := k.GetParams(ctx)
 	queueCounter := k.GetQueueMessageCounter(ctx)
 	if queueCounter > params.OrderBookExtraGasWindow {
+		// The queue surcharge is extraGas = (queueCounter - window) * queueExtraGas with defaults window=100 and queueExtraGas=25,000. Baseline per trade is 100,000 gas. So for n trades in the block:
+		//
+		//  - First 100 trades: each 100,000 → 10,000,000 gas.
+		//  - For the next m = n-100 trades: each costs 100,000 + (i*25,000) for i=1..m.
+		//    Total = 10,000,000 + 100,000*m + 25,000 * m(m+1)/2
+		//    = 10,000,000 + 112,500*m + 12,500*m^2.
+		//
+		//  Solving 12,500*m^2 + 112,500*m + 10,000,000 ≤ 1,000,000,000 gives m ≈ 276. (m=277 pushes the block slightly over the 1,000,000,000 limit - the limit at the time of this writing.),
+		//
+		//  So with those assumptions, the block can fit about 376 trades (100 before the surcharge kicks in, plus ~276 more with increasing gas).
 		extraGas := (queueCounter - params.OrderBookExtraGasWindow) * params.OrderBookQueueExtraGas
 		ctx.GasMeter().ConsumeGas(extraGas, "queue spam protection")
 	}

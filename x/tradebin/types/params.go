@@ -44,6 +44,9 @@ var (
 	KeyMinNativeLiquidityForModuleSwap     = []byte("MinNativeLiquidityForModuleSwap")
 	DefaultMinNativeLiquidityForModuleSwap = math.NewInt(100000000000)
 
+	KeyOrderBookPerBlockMessages     = []byte("OrderBookPerBlockMessages")
+	DefaultOrderBookPerBlockMessages = uint64(500)
+
 	DefaultNativeDenom = "ubze"
 )
 
@@ -64,6 +67,7 @@ func NewParams(
 	orderBookQueueExtraGas uint64,
 	fillOrdersExtraGas uint64,
 	minNativeLiquidityForModuleSwap math.Int,
+	orderBookPerBlockMessages uint64,
 ) Params {
 	return Params{
 		CreateMarketFee:                 createMarketFee,
@@ -76,6 +80,7 @@ func NewParams(
 		OrderBookQueueExtraGas:          orderBookQueueExtraGas,
 		FillOrdersExtraGas:              fillOrdersExtraGas,
 		MinNativeLiquidityForModuleSwap: minNativeLiquidityForModuleSwap,
+		OrderBookPerBlockMessages:       orderBookPerBlockMessages,
 	}
 }
 
@@ -92,6 +97,7 @@ func DefaultParams() Params {
 		DefaultOrderBookQueueExtraGas,
 		DefaultFillOrdersExtraGas,
 		DefaultMinNativeLiquidityForModuleSwap,
+		DefaultOrderBookPerBlockMessages,
 	)
 }
 
@@ -107,6 +113,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyOrderBookQueueExtraGas, &p.OrderBookQueueExtraGas, validateOrderBookQueueExtraGas),
 		paramtypes.NewParamSetPair(KeyFillOrdersExtraGas, &p.FillOrdersExtraGas, validateFillOrdersExtraGas),
 		paramtypes.NewParamSetPair(KeyMinNativeLiquidityForModuleSwap, &p.MinNativeLiquidityForModuleSwap, validateMinNativeLiquidityForModuleSwap),
+		paramtypes.NewParamSetPair(KeyOrderBookPerBlockMessages, &p.OrderBookPerBlockMessages, validateOrderBookPerBlockMessages),
 	}
 }
 
@@ -149,6 +156,10 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateMinNativeLiquidityForModuleSwap(p.MinNativeLiquidityForModuleSwap); err != nil {
+		return err
+	}
+
+	if err := validateOrderBookPerBlockMessages(p.OrderBookPerBlockMessages); err != nil {
 		return err
 	}
 
@@ -288,6 +299,19 @@ func validateMinNativeLiquidityForModuleSwap(v interface{}) error {
 
 	if !minLiquidity.IsPositive() {
 		return fmt.Errorf("min native liquidity for module swap must be positive")
+	}
+
+	return nil
+}
+
+func validateOrderBookPerBlockMessages(v interface{}) error {
+	orderBookPerBlockMessages, ok := v.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
+	}
+
+	if orderBookPerBlockMessages < 1 {
+		return fmt.Errorf("order book per block messages must be at least 1")
 	}
 
 	return nil

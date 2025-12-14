@@ -26,6 +26,7 @@ var (
 	fd_Params_orderBookQueueExtraGas          protoreflect.FieldDescriptor
 	fd_Params_fillOrdersExtraGas              protoreflect.FieldDescriptor
 	fd_Params_minNativeLiquidityForModuleSwap protoreflect.FieldDescriptor
+	fd_Params_orderBookPerBlockMessages       protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -41,6 +42,7 @@ func init() {
 	fd_Params_orderBookQueueExtraGas = md_Params.Fields().ByName("orderBookQueueExtraGas")
 	fd_Params_fillOrdersExtraGas = md_Params.Fields().ByName("fillOrdersExtraGas")
 	fd_Params_minNativeLiquidityForModuleSwap = md_Params.Fields().ByName("minNativeLiquidityForModuleSwap")
+	fd_Params_orderBookPerBlockMessages = md_Params.Fields().ByName("orderBookPerBlockMessages")
 }
 
 var _ protoreflect.Message = (*fastReflection_Params)(nil)
@@ -168,6 +170,12 @@ func (x *fastReflection_Params) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
+	if x.OrderBookPerBlockMessages != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.OrderBookPerBlockMessages)
+		if !f(fd_Params_orderBookPerBlockMessages, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -203,6 +211,8 @@ func (x *fastReflection_Params) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.FillOrdersExtraGas != uint64(0)
 	case "bze.tradebin.Params.minNativeLiquidityForModuleSwap":
 		return x.MinNativeLiquidityForModuleSwap != ""
+	case "bze.tradebin.Params.orderBookPerBlockMessages":
+		return x.OrderBookPerBlockMessages != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.Params"))
@@ -239,6 +249,8 @@ func (x *fastReflection_Params) Clear(fd protoreflect.FieldDescriptor) {
 		x.FillOrdersExtraGas = uint64(0)
 	case "bze.tradebin.Params.minNativeLiquidityForModuleSwap":
 		x.MinNativeLiquidityForModuleSwap = ""
+	case "bze.tradebin.Params.orderBookPerBlockMessages":
+		x.OrderBookPerBlockMessages = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.Params"))
@@ -285,6 +297,9 @@ func (x *fastReflection_Params) Get(descriptor protoreflect.FieldDescriptor) pro
 	case "bze.tradebin.Params.minNativeLiquidityForModuleSwap":
 		value := x.MinNativeLiquidityForModuleSwap
 		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.Params.orderBookPerBlockMessages":
+		value := x.OrderBookPerBlockMessages
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.Params"))
@@ -325,6 +340,8 @@ func (x *fastReflection_Params) Set(fd protoreflect.FieldDescriptor, value proto
 		x.FillOrdersExtraGas = value.Uint()
 	case "bze.tradebin.Params.minNativeLiquidityForModuleSwap":
 		x.MinNativeLiquidityForModuleSwap = value.Interface().(string)
+	case "bze.tradebin.Params.orderBookPerBlockMessages":
+		x.OrderBookPerBlockMessages = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.Params"))
@@ -365,6 +382,8 @@ func (x *fastReflection_Params) Mutable(fd protoreflect.FieldDescriptor) protore
 		panic(fmt.Errorf("field fillOrdersExtraGas of message bze.tradebin.Params is not mutable"))
 	case "bze.tradebin.Params.minNativeLiquidityForModuleSwap":
 		panic(fmt.Errorf("field minNativeLiquidityForModuleSwap of message bze.tradebin.Params is not mutable"))
+	case "bze.tradebin.Params.orderBookPerBlockMessages":
+		panic(fmt.Errorf("field orderBookPerBlockMessages of message bze.tradebin.Params is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.Params"))
@@ -398,6 +417,8 @@ func (x *fastReflection_Params) NewField(fd protoreflect.FieldDescriptor) protor
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "bze.tradebin.Params.minNativeLiquidityForModuleSwap":
 		return protoreflect.ValueOfString("")
+	case "bze.tradebin.Params.orderBookPerBlockMessages":
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.Params"))
@@ -504,6 +525,9 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		if x.OrderBookPerBlockMessages != 0 {
+			n += 1 + runtime.Sov(uint64(x.OrderBookPerBlockMessages))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -532,6 +556,11 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.OrderBookPerBlockMessages != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.OrderBookPerBlockMessages))
+			i--
+			dAtA[i] = 0x58
 		}
 		if len(x.MinNativeLiquidityForModuleSwap) > 0 {
 			i -= len(x.MinNativeLiquidityForModuleSwap)
@@ -927,6 +956,25 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 				}
 				x.MinNativeLiquidityForModuleSwap = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
+			case 11:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OrderBookPerBlockMessages", wireType)
+				}
+				x.OrderBookPerBlockMessages = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.OrderBookPerBlockMessages |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -991,6 +1039,7 @@ type Params struct {
 	OrderBookQueueExtraGas          uint64 `protobuf:"varint,8,opt,name=orderBookQueueExtraGas,proto3" json:"orderBookQueueExtraGas,omitempty"`
 	FillOrdersExtraGas              uint64 `protobuf:"varint,9,opt,name=fillOrdersExtraGas,proto3" json:"fillOrdersExtraGas,omitempty"`
 	MinNativeLiquidityForModuleSwap string `protobuf:"bytes,10,opt,name=minNativeLiquidityForModuleSwap,proto3" json:"minNativeLiquidityForModuleSwap,omitempty"`
+	OrderBookPerBlockMessages       uint64 `protobuf:"varint,11,opt,name=orderBookPerBlockMessages,proto3" json:"orderBookPerBlockMessages,omitempty"`
 }
 
 func (x *Params) Reset() {
@@ -1083,6 +1132,13 @@ func (x *Params) GetMinNativeLiquidityForModuleSwap() string {
 	return ""
 }
 
+func (x *Params) GetOrderBookPerBlockMessages() uint64 {
+	if x != nil {
+		return x.OrderBookPerBlockMessages
+	}
+	return 0
+}
+
 var File_bze_tradebin_params_proto protoreflect.FileDescriptor
 
 var file_bze_tradebin_params_proto_rawDesc = []byte{
@@ -1091,7 +1147,7 @@ var file_bze_tradebin_params_proto_rawDesc = []byte{
 	0x2e, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x1a, 0x11, 0x61, 0x6d, 0x69, 0x6e, 0x6f,
 	0x2f, 0x61, 0x6d, 0x69, 0x6e, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f,
 	0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x22, 0x8a, 0x07, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x46, 0x0a,
+	0x74, 0x6f, 0x22, 0xea, 0x07, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x46, 0x0a,
 	0x0f, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x4d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x46, 0x65, 0x65,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x1c, 0xf2, 0xde, 0x1f, 0x18, 0x79, 0x61, 0x6d, 0x6c,
 	0x3a, 0x22, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x5f, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x5f,
@@ -1145,7 +1201,13 @@ var file_bze_tradebin_params_proto_rawDesc = []byte{
 	0x69, 0x76, 0x65, 0x5f, 0x6c, 0x69, 0x71, 0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x5f, 0x66, 0x6f,
 	0x72, 0x5f, 0x6d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x5f, 0x73, 0x77, 0x61, 0x70, 0x22, 0x52, 0x1f,
 	0x6d, 0x69, 0x6e, 0x4e, 0x61, 0x74, 0x69, 0x76, 0x65, 0x4c, 0x69, 0x71, 0x75, 0x69, 0x64, 0x69,
-	0x74, 0x79, 0x46, 0x6f, 0x72, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x3a,
+	0x74, 0x79, 0x46, 0x6f, 0x72, 0x4d, 0x6f, 0x64, 0x75, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x12,
+	0x5e, 0x0a, 0x19, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x42, 0x6f, 0x6f, 0x6b, 0x50, 0x65, 0x72, 0x42,
+	0x6c, 0x6f, 0x63, 0x6b, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x18, 0x0b, 0x20, 0x01,
+	0x28, 0x04, 0x42, 0x20, 0xf2, 0xde, 0x1f, 0x1c, 0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x66, 0x69,
+	0x6c, 0x6c, 0x5f, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x73, 0x5f, 0x65, 0x78, 0x74, 0x72, 0x61, 0x5f,
+	0x67, 0x61, 0x73, 0x22, 0x52, 0x19, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x42, 0x6f, 0x6f, 0x6b, 0x50,
+	0x65, 0x72, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x3a,
 	0x1e, 0xe8, 0xa0, 0x1f, 0x01, 0x8a, 0xe7, 0xb0, 0x2a, 0x15, 0x62, 0x7a, 0x65, 0x2f, 0x78, 0x2f,
 	0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x2f, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42,
 	0x89, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64,

@@ -14,9 +14,13 @@ import (
 
 type ProcessingKeeper interface {
 	//queue messages
-	IterateAllQueueMessages(ctx sdk.Context, msgHandler func(ctx sdk.Context, message types.QueueMessage))
+	IterateAllQueueMessages(ctx sdk.Context, msgHandler func(ctx sdk.Context, message types.QueueMessage) bool)
 	RemoveQueueMessage(ctx sdk.Context, marketId, messageId string)
 	ResetQueueMessageCounter(ctx sdk.Context)
+	HasQueueMessages(ctx sdk.Context) bool
+
+	//params
+	GetParams(ctx context.Context) types.Params
 
 	//orders
 	GetPriceOrderByPrice(ctx sdk.Context, marketId, orderType, price string) (list []types.OrderReference)
@@ -78,10 +82,31 @@ func (pe *ProcessingEngine) ProcessQueueMessages(ctx sdk.Context) {
 	logger := pe.logger.With(
 		"method", "ProcessQueueMessages",
 	)
-	pe.k.IterateAllQueueMessages(ctx, pe.getMessageHandler())
+
+	// Get params and set max messages per block
+	params := pe.k.GetParams(ctx)
+	maxPerBlock := params.OrderBookPerBlockMessages
+	processedCount := uint64(0)
+
+	messageHandler := pe.getMessageHandler()
+
+	// Wrapper function that checks the counter before processing
+	pe.k.IterateAllQueueMessages(ctx, func(ctx sdk.Context, message types.QueueMessage) bool {
+		// Check if we've reached the max messages per block limit
+		if processedCount >= maxPerBlock {
+			logger.Info("reached max messages per block limit, stopping iteration", "processed", processedCount, "limit", maxPerBlock)
+			return false
+		}
+
+		// Process the message
+		shouldContinue := messageHandler(ctx, message)
+		processedCount++
+
+		return shouldContinue
+	})
 
 	if len(pe.msgsToDelete) == 0 {
-		logger.Info("no queue message to process")
+		logger.Info("no queue message to delete")
 		return
 	}
 
@@ -90,12 +115,17 @@ func (pe *ProcessingEngine) ProcessQueueMessages(ctx sdk.Context) {
 		pe.k.RemoveQueueMessage(ctx, msgRef.marketId, msgRef.messageId)
 	}
 
-	pe.k.ResetQueueMessageCounter(ctx)
-	logger.Info("queue message counter reset")
+	// Only reset counter if queue is empty
+	if !pe.k.HasQueueMessages(ctx) {
+		pe.k.ResetQueueMessageCounter(ctx)
+		logger.Info("queue message counter reset")
+	} else {
+		logger.Info("queue still has messages, counter not reset")
+	}
 }
 
-func (pe *ProcessingEngine) getMessageHandler() func(ctx sdk.Context, message types.QueueMessage) {
-	return func(ctx sdk.Context, message types.QueueMessage) {
+func (pe *ProcessingEngine) getMessageHandler() func(ctx sdk.Context, message types.QueueMessage) bool {
+	return func(ctx sdk.Context, message types.QueueMessage) bool {
 		var wrappingFn func(ctx sdk.Context) error
 
 		switch message.MessageType {
@@ -119,13 +149,17 @@ func (pe *ProcessingEngine) getMessageHandler() func(ctx sdk.Context, message ty
 		if err != nil {
 			//leave the message on queue until we discover what the issue was.
 			pe.logger.Error("error on handling queue message", "message", message)
-			return
+			//let the iteration continue, we don't want to block the entire processing engine.
+			//the message will be processed again on the next block.
+
+			return true
 		}
 
 		pe.msgsToDelete = append(pe.msgsToDelete, queueMessageRef{
 			marketId:  message.MarketId,
 			messageId: message.MessageId,
 		})
+		return true
 	}
 }
 
