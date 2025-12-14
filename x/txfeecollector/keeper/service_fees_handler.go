@@ -20,6 +20,9 @@ func (k Keeper) ConvertCommunityPoolFeesToNativeDenom(ctx sdk.Context) error {
 	if err != nil {
 		return err
 	}
+
+	//TODO: non native coins should be sent to the token's community pool (NOT BZE Community Pool) when they are available.
+	// For now we just send them to burner module if they can't be swapped to native denom.
 	if skipped.Len() > 0 {
 		//if some coins were skipped because we couldn't convert them, send them to the buner module
 		err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.CpFeeCollector, burnermoduletypes.ModuleName, skipped)
@@ -57,8 +60,9 @@ func (k Keeper) convertFeesAndSend(ctx sdk.Context, fromModule, toModule string,
 	return err
 }
 
-// convertFees converts all non-native module account fees into the native denomination and returns the total as a coin.
-func (k Keeper) convertFees(ctx sdk.Context, fromModule string) (toSend, skipped sdk.Coins, err error) {
+// convertFees converts module-held fees into native denominations and categorizes them as swappable or non-swappable.
+// Returns the swappable fees, non-swappable fees, and any error encountered during the process.
+func (k Keeper) convertFees(ctx sdk.Context, fromModule string) (toSend, nonSwapable sdk.Coins, err error) {
 	moduleAddr := k.accountKeeper.GetModuleAddress(fromModule)
 	allCoins := k.bankKeeper.GetAllBalances(ctx, moduleAddr)
 	if allCoins.IsZero() {
@@ -79,9 +83,19 @@ func (k Keeper) convertFees(ctx sdk.Context, fromModule string) (toSend, skipped
 		}
 
 		if k.tradeKeeper.CanSwapForNativeDenom(ctx, c) {
+			//swap if you can
 			toSwap = toSwap.Add(c)
+		} else if k.tradeKeeper.HasDeepLiquidityWithNativeDenom(ctx, c.Denom) {
+			//if you can't swap, but there is deep liquidity, it means the amount is too low to be swapped at the moment,
+			//so we ignore it.
+			//we let the coins live here until the amount is big enough to be swapped.
+			//we do NOT return them as nonSwapable, because they are swapable, but we need a bigger amount to swap them.
+			continue
 		} else {
-			skipped = skipped.Add(c)
+			//coins that don't have deep liquidity should not reach this point
+			//if they do, they should be sent to burner module, to avoid iterating through them every time this function
+			//is called (usually at EndBlock)
+			nonSwapable = nonSwapable.Add(c)
 		}
 	}
 
@@ -95,8 +109,8 @@ func (k Keeper) convertFees(ctx sdk.Context, fromModule string) (toSend, skipped
 	}
 
 	if !toSend.IsAllPositive() {
-		return nil, skipped, nil
+		return nil, nonSwapable, nil
 	}
 
-	return toSend, skipped, nil
+	return toSend, nonSwapable, nil
 }

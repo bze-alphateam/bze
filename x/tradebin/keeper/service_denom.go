@@ -128,6 +128,12 @@ func (k Keeper) ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins
 		return sdk.Coin{}, fmt.Errorf("native denom not set")
 	}
 
+	//capture swapped coins from calling module
+	err := k.bankKeeper.SendCoinsFromModuleToModule(cached, toModule, types.ModuleName, coins)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+
 	params := k.GetParams(cached)
 	toModuleAcc := k.accountKeeper.GetModuleAccount(cached, toModule)
 	swapResult := sdk.NewInt64Coin(nativeDenom, 0)
@@ -160,12 +166,6 @@ func (k Keeper) ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins
 			In:      coin,
 			Out:     sr,
 		})
-	}
-
-	//capture swapped coins from calling module
-	err := k.bankKeeper.SendCoinsFromModuleToModule(cached, toModule, types.ModuleName, coins)
-	if err != nil {
-		return swapResult, err
 	}
 
 	//send swap resulting coins to the calling module
