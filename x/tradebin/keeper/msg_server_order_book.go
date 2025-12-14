@@ -476,8 +476,12 @@ func (k Keeper) checkPriceInQueueMessages(ctx sdk.Context, msg *types.MsgCreateO
 	// Use market-filtered lookup to get only messages for this market
 	// This is O(M) where M is messages for this market, instead of O(N) for all messages
 	queueMessages := k.GetQueueMessagesByMarket(ctx, msg.MarketId)
+	params := k.GetParams(ctx)
 	msgsPrice := math.LegacyZeroDec()
 	for _, queueMessage := range queueMessages {
+		// Consume extra gas for each queue message scan
+		ctx.GasMeter().ConsumeGas(params.OrderBookQueueMessageScanExtraGas, "queue_message_scan")
+
 		// Filter by message type (only check opposite type orders)
 		if queueMessage.MessageType != oppositeType {
 			continue

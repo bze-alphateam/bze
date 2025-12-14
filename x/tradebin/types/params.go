@@ -41,6 +41,9 @@ var (
 	KeyFillOrdersExtraGas     = []byte("FillOrdersExtraGas")
 	DefaultFillOrdersExtraGas = uint64(5000)
 
+	KeyOrderBookQueueMessageScanExtraGas     = []byte("OrderBookQueueMessageScanExtraGas")
+	DefaultOrderBookQueueMessageScanExtraGas = uint64(5000)
+
 	KeyMinNativeLiquidityForModuleSwap     = []byte("MinNativeLiquidityForModuleSwap")
 	DefaultMinNativeLiquidityForModuleSwap = math.NewInt(100000000000)
 
@@ -66,21 +69,23 @@ func NewParams(
 	orderBookExtraGasWindow uint64,
 	orderBookQueueExtraGas uint64,
 	fillOrdersExtraGas uint64,
+	orderBookQueueMessageScanExtraGas uint64,
 	minNativeLiquidityForModuleSwap math.Int,
 	orderBookPerBlockMessages uint64,
 ) Params {
 	return Params{
-		CreateMarketFee:                 createMarketFee,
-		MarketMakerFee:                  marketMakerFee,
-		MarketTakerFee:                  marketTakerFee,
-		MakerFeeDestination:             makerFeeDestination,
-		TakerFeeDestination:             takerFeeDestination,
-		NativeDenom:                     nativeDenom,
-		OrderBookExtraGasWindow:         orderBookExtraGasWindow,
-		OrderBookQueueExtraGas:          orderBookQueueExtraGas,
-		FillOrdersExtraGas:              fillOrdersExtraGas,
-		MinNativeLiquidityForModuleSwap: minNativeLiquidityForModuleSwap,
-		OrderBookPerBlockMessages:       orderBookPerBlockMessages,
+		CreateMarketFee:                   createMarketFee,
+		MarketMakerFee:                    marketMakerFee,
+		MarketTakerFee:                    marketTakerFee,
+		MakerFeeDestination:               makerFeeDestination,
+		TakerFeeDestination:               takerFeeDestination,
+		NativeDenom:                       nativeDenom,
+		OrderBookExtraGasWindow:           orderBookExtraGasWindow,
+		OrderBookQueueExtraGas:            orderBookQueueExtraGas,
+		FillOrdersExtraGas:                fillOrdersExtraGas,
+		OrderBookQueueMessageScanExtraGas: orderBookQueueMessageScanExtraGas,
+		MinNativeLiquidityForModuleSwap:   minNativeLiquidityForModuleSwap,
+		OrderBookPerBlockMessages:         orderBookPerBlockMessages,
 	}
 }
 
@@ -96,6 +101,7 @@ func DefaultParams() Params {
 		DefaultOrderBookExtraGasWindow,
 		DefaultOrderBookQueueExtraGas,
 		DefaultFillOrdersExtraGas,
+		DefaultOrderBookQueueMessageScanExtraGas,
 		DefaultMinNativeLiquidityForModuleSwap,
 		DefaultOrderBookPerBlockMessages,
 	)
@@ -112,6 +118,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyOrderBookExtraGasWindow, &p.OrderBookExtraGasWindow, validateOrderBookExtraGasWindow),
 		paramtypes.NewParamSetPair(KeyOrderBookQueueExtraGas, &p.OrderBookQueueExtraGas, validateOrderBookQueueExtraGas),
 		paramtypes.NewParamSetPair(KeyFillOrdersExtraGas, &p.FillOrdersExtraGas, validateFillOrdersExtraGas),
+		paramtypes.NewParamSetPair(KeyOrderBookQueueMessageScanExtraGas, &p.OrderBookQueueMessageScanExtraGas, validateOrderBookQueueMessageScanExtraGas),
 		paramtypes.NewParamSetPair(KeyMinNativeLiquidityForModuleSwap, &p.MinNativeLiquidityForModuleSwap, validateMinNativeLiquidityForModuleSwap),
 		paramtypes.NewParamSetPair(KeyOrderBookPerBlockMessages, &p.OrderBookPerBlockMessages, validateOrderBookPerBlockMessages),
 	}
@@ -152,6 +159,10 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateFillOrdersExtraGas(p.FillOrdersExtraGas); err != nil {
+		return err
+	}
+
+	if err := validateOrderBookQueueMessageScanExtraGas(p.OrderBookQueueMessageScanExtraGas); err != nil {
 		return err
 	}
 
@@ -283,6 +294,15 @@ func validateOrderBookQueueExtraGas(v interface{}) error {
 }
 
 func validateFillOrdersExtraGas(v interface{}) error {
+	_, ok := v.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
+	}
+
+	return nil
+}
+
+func validateOrderBookQueueMessageScanExtraGas(v interface{}) error {
 	_, ok := v.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)
