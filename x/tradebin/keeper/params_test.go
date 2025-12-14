@@ -7,15 +7,17 @@ import (
 
 func (suite *IntegrationTestSuite) TestParams_GetAndSet() {
 	params := types.Params{
-		CreateMarketFee:                 "1000",
-		MarketMakerFee:                  "0.001",
-		MarketTakerFee:                  "0.002",
-		MakerFeeDestination:             "community_pool",
-		TakerFeeDestination:             "burn",
-		OrderBookExtraGasWindow:         200,
-		OrderBookQueueExtraGas:          30000,
-		FillOrdersExtraGas:              6000,
-		MinNativeLiquidityForModuleSwap: math.NewInt(60000000000),
+		CreateMarketFee:                   "1000",
+		MarketMakerFee:                    "0.001",
+		MarketTakerFee:                    "0.002",
+		MakerFeeDestination:               "community_pool",
+		TakerFeeDestination:               "burn",
+		OrderBookExtraGasWindow:           200,
+		OrderBookQueueExtraGas:            30000,
+		FillOrdersExtraGas:                6000,
+		OrderBookQueueMessageScanExtraGas: 5500,
+		MinNativeLiquidityForModuleSwap:   math.NewInt(60000000000),
+		OrderBookPerBlockMessages:         750,
 	}
 
 	// Test SetParams
@@ -32,7 +34,9 @@ func (suite *IntegrationTestSuite) TestParams_GetAndSet() {
 	suite.Require().Equal(params.OrderBookExtraGasWindow, retrievedParams.OrderBookExtraGasWindow)
 	suite.Require().Equal(params.OrderBookQueueExtraGas, retrievedParams.OrderBookQueueExtraGas)
 	suite.Require().Equal(params.FillOrdersExtraGas, retrievedParams.FillOrdersExtraGas)
+	suite.Require().Equal(params.OrderBookQueueMessageScanExtraGas, retrievedParams.OrderBookQueueMessageScanExtraGas)
 	suite.Require().Equal(params.MinNativeLiquidityForModuleSwap, retrievedParams.MinNativeLiquidityForModuleSwap)
+	suite.Require().Equal(params.OrderBookPerBlockMessages, retrievedParams.OrderBookPerBlockMessages)
 }
 
 func (suite *IntegrationTestSuite) TestParams_GetDefault() {
@@ -48,7 +52,9 @@ func (suite *IntegrationTestSuite) TestParams_GetDefault() {
 	suite.Require().Equal(uint64(100), retrievedParams.OrderBookExtraGasWindow)
 	suite.Require().Equal(uint64(25000), retrievedParams.OrderBookQueueExtraGas)
 	suite.Require().Equal(uint64(5000), retrievedParams.FillOrdersExtraGas)
+	suite.Require().Equal(uint64(5000), retrievedParams.OrderBookQueueMessageScanExtraGas)
 	suite.Require().EqualValues(math.NewInt(100_000_000000), retrievedParams.MinNativeLiquidityForModuleSwap)
+	suite.Require().Equal(uint64(500), retrievedParams.OrderBookPerBlockMessages)
 }
 
 func (suite *IntegrationTestSuite) TestParams_SetMultipleTimes() {
@@ -362,4 +368,66 @@ func (suite *IntegrationTestSuite) TestParams_MinNativeLiquidityForModuleSwap() 
 
 	retrievedParams := suite.k.GetParams(suite.ctx)
 	suite.Require().Equal("75000000000", retrievedParams.MinNativeLiquidityForModuleSwap.String())
+}
+
+func (suite *IntegrationTestSuite) TestParams_OrderBookPerBlockMessages() {
+	params := types.Params{
+		CreateMarketFee:                   "1000",
+		MarketMakerFee:                    "0.001",
+		MarketTakerFee:                    "0.002",
+		MakerFeeDestination:               "community_pool",
+		TakerFeeDestination:               "burn",
+		OrderBookExtraGasWindow:           100,
+		OrderBookQueueExtraGas:            25000,
+		FillOrdersExtraGas:                5000,
+		OrderBookQueueMessageScanExtraGas: 6000,
+		MinNativeLiquidityForModuleSwap:   math.NewInt(50000000000),
+		OrderBookPerBlockMessages:         1000,
+	}
+
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	retrievedParams := suite.k.GetParams(suite.ctx)
+	suite.Require().Equal(uint64(1000), retrievedParams.OrderBookPerBlockMessages)
+}
+
+func (suite *IntegrationTestSuite) TestParams_OrderBookQueueMessageScanExtraGas() {
+	params := types.Params{
+		CreateMarketFee:                   "1000",
+		MarketMakerFee:                    "0.001",
+		MarketTakerFee:                    "0.002",
+		MakerFeeDestination:               "community_pool",
+		TakerFeeDestination:               "burn",
+		OrderBookExtraGasWindow:           100,
+		OrderBookQueueExtraGas:            25000,
+		FillOrdersExtraGas:                5000,
+		OrderBookQueueMessageScanExtraGas: 7500,
+		MinNativeLiquidityForModuleSwap:   math.NewInt(50000000000),
+		OrderBookPerBlockMessages:         500,
+	}
+
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	retrievedParams := suite.k.GetParams(suite.ctx)
+	suite.Require().Equal(uint64(7500), retrievedParams.OrderBookQueueMessageScanExtraGas)
+}
+
+func (suite *IntegrationTestSuite) TestParams_GetDefault_AllFields() {
+	// Test GetParams when no params are set (should return all default values)
+	retrievedParams := suite.k.GetParams(suite.ctx)
+
+	// Default values from constants
+	suite.Require().Equal("25000000000ubze", retrievedParams.CreateMarketFee)
+	suite.Require().Equal("1000ubze", retrievedParams.MarketMakerFee)
+	suite.Require().Equal("100000ubze", retrievedParams.MarketTakerFee)
+	suite.Require().Equal("burner", retrievedParams.MakerFeeDestination)
+	suite.Require().Equal("burner", retrievedParams.TakerFeeDestination)
+	suite.Require().Equal(uint64(100), retrievedParams.OrderBookExtraGasWindow)
+	suite.Require().Equal(uint64(25000), retrievedParams.OrderBookQueueExtraGas)
+	suite.Require().Equal(uint64(5000), retrievedParams.FillOrdersExtraGas)
+	suite.Require().Equal(uint64(5000), retrievedParams.OrderBookQueueMessageScanExtraGas)
+	suite.Require().EqualValues(math.NewInt(100_000_000000), retrievedParams.MinNativeLiquidityForModuleSwap)
+	suite.Require().Equal(uint64(500), retrievedParams.OrderBookPerBlockMessages)
 }

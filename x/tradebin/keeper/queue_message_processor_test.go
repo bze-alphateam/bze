@@ -601,3 +601,141 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching_WithD
 	allOrders = suite.k.GetAllOrder(suite.ctx)
 	suite.Require().Equal(len(allOrders), 2)
 }
+
+func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderBookPerBlockMessagesLimit() {
+	suite.k.SetMarket(suite.ctx, market)
+	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
+	suite.Require().Nil(err)
+
+	addr1 := sdk.AccAddress("addr1_______________")
+
+	// Create more messages than the limit allows
+	messageCount := 10
+	limit := uint64(5)
+
+	// Update params to set a lower limit for testing
+	params := suite.k.GetParams(suite.ctx)
+	params.OrderBookPerBlockMessages = limit
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
+
+	// Add messages to queue
+	for i := 0; i < messageCount; i++ {
+		mBuy := types.QueueMessage{
+			MarketId:    getMarketId(),
+			MessageType: types.OrderTypeBuy,
+			Amount:      keeper.CalculateMinAmount("100").String(),
+			Price:       "100",
+			OrderType:   types.OrderTypeBuy,
+			Owner:       addr1.String(),
+		}
+		suite.k.SetQueueMessage(suite.ctx, mBuy)
+	}
+
+	// Check message counter was incremented
+	mCnt := suite.k.GetQueueMessageCounter(suite.ctx)
+	suite.Require().Equal(uint64(messageCount), mCnt)
+
+	// Process queue messages
+	engine.ProcessQueueMessages(suite.ctx)
+
+	// Check that only 'limit' orders were created (not all messages were processed)
+	allOrders := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().Equal(int(limit), len(allOrders))
+
+	// Check that HasQueueMessages returns true (remaining messages in queue)
+	hasMessages := suite.k.HasQueueMessages(suite.ctx)
+	suite.Require().True(hasMessages)
+
+	// Check that counter was NOT reset (because queue still has messages)
+	// Counter should still be at the original value since we didn't reset
+	mCnt = suite.k.GetQueueMessageCounter(suite.ctx)
+	suite.Require().Equal(uint64(messageCount), mCnt)
+
+	// Process remaining messages
+	engine.ProcessQueueMessages(suite.ctx)
+
+	// Now all orders should be created
+	allOrders = suite.k.GetAllOrder(suite.ctx)
+	suite.Require().Equal(messageCount, len(allOrders))
+
+	// Queue should be empty now
+	hasMessages = suite.k.HasQueueMessages(suite.ctx)
+	suite.Require().False(hasMessages)
+
+	// Counter should be reset now
+	mCnt = suite.k.GetQueueMessageCounter(suite.ctx)
+	suite.Require().Equal(uint64(0), mCnt)
+}
+
+func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CounterResetOnlyWhenEmpty() {
+	suite.k.SetMarket(suite.ctx, market)
+	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
+	suite.Require().Nil(err)
+
+	addr1 := sdk.AccAddress("addr1_______________")
+
+	// Add one message
+	mBuy := types.QueueMessage{
+		MarketId:    getMarketId(),
+		MessageType: types.OrderTypeBuy,
+		Amount:      keeper.CalculateMinAmount("100").String(),
+		Price:       "100",
+		OrderType:   types.OrderTypeBuy,
+		Owner:       addr1.String(),
+	}
+	suite.k.SetQueueMessage(suite.ctx, mBuy)
+
+	// Check counter is 1
+	mCnt := suite.k.GetQueueMessageCounter(suite.ctx)
+	suite.Require().Equal(uint64(1), mCnt)
+
+	// Process the message
+	engine.ProcessQueueMessages(suite.ctx)
+
+	// Queue should be empty
+	hasMessages := suite.k.HasQueueMessages(suite.ctx)
+	suite.Require().False(hasMessages)
+
+	// Counter should be reset to 0
+	mCnt = suite.k.GetQueueMessageCounter(suite.ctx)
+	suite.Require().Equal(uint64(0), mCnt)
+
+	// Add another message to verify counter starts from 0
+	suite.k.SetQueueMessage(suite.ctx, mBuy)
+	mCnt = suite.k.GetQueueMessageCounter(suite.ctx)
+	suite.Require().Equal(uint64(1), mCnt)
+}
+
+func (suite *IntegrationTestSuite) TestHasQueueMessages() {
+	// Initially empty queue
+	hasMessages := suite.k.HasQueueMessages(suite.ctx)
+	suite.Require().False(hasMessages)
+
+	addr1 := sdk.AccAddress("addr1_______________")
+
+	// Add a message
+	mBuy := types.QueueMessage{
+		MarketId:    getMarketId(),
+		MessageType: types.OrderTypeBuy,
+		Amount:      keeper.CalculateMinAmount("100").String(),
+		Price:       "100",
+		OrderType:   types.OrderTypeBuy,
+		Owner:       addr1.String(),
+	}
+	suite.k.SetQueueMessage(suite.ctx, mBuy)
+
+	// Should have messages now
+	hasMessages = suite.k.HasQueueMessages(suite.ctx)
+	suite.Require().True(hasMessages)
+
+	// Get all messages to retrieve the actual messageId
+	allMessages := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(allMessages, 1)
+
+	// Remove the message using the retrieved messageId
+	suite.k.RemoveQueueMessage(suite.ctx, allMessages[0].MarketId, allMessages[0].MessageId)
+
+	// Should be empty again
+	hasMessages = suite.k.HasQueueMessages(suite.ctx)
+	suite.Require().False(hasMessages)
+}
