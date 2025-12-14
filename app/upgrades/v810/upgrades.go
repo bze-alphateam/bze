@@ -2,15 +2,16 @@ package v810
 
 import (
 	"context"
+	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	tradebinkeeper "github.com/bze-alphateam/bze/x/tradebin/keeper"
 	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
+	txfeecollectorkeeper "github.com/bze-alphateam/bze/x/txfeecollector/keeper"
 	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 )
 
 const UpgradeName = "v8.1.0"
@@ -18,21 +19,27 @@ const UpgradeName = "v8.1.0"
 func CreateUpgradeHandler(
 	cfg module.Configurator,
 	mm *module.Manager,
-	paramsKeeper *paramskeeper.Keeper,
 	tradebinKeeper *tradebinkeeper.Keeper,
+	txfeecollectorKeeper *txfeecollectorkeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
 
 	return func(c context.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		ctx := sdk.UnwrapSDKContext(c)
 
 		// Migrate tradebin module parameters
-		migrateTradebinParams(ctx, paramsKeeper)
+		if err := migrateTradebinParams(ctx, tradebinKeeper); err != nil {
+			return nil, err
+		}
 
 		// Migrate txfeecollector module parameters
-		migrateTxFeeCollectorParams(ctx, paramsKeeper)
+		if err := migrateTxFeeCollectorParams(ctx, txfeecollectorKeeper); err != nil {
+			return nil, err
+		}
 
 		// Migrate order keys to new precision format
-		migrateOrderKeys(ctx, tradebinKeeper)
+		if err := migrateOrderKeys(ctx, tradebinKeeper); err != nil {
+			return nil, err
+		}
 
 		newVm, err := mm.RunMigrations(ctx, cfg, vm)
 		if err != nil {
@@ -43,16 +50,9 @@ func CreateUpgradeHandler(
 	}
 }
 
-func migrateTradebinParams(ctx sdk.Context, paramsKeeper *paramskeeper.Keeper) {
-	tradebinSubspace, found := paramsKeeper.GetSubspace(tradebintypes.ModuleName)
-	if !found {
-		ctx.Logger().Error("tradebin subspace not found during parameter migration")
-		return
-	}
-
+func migrateTradebinParams(ctx sdk.Context, tradebinKeeper *tradebinkeeper.Keeper) error {
 	// Get existing parameters
-	var params tradebintypes.Params
-	tradebinSubspace.GetParamSet(ctx, &params)
+	params := tradebinKeeper.GetParams(ctx)
 
 	// Set new parameters with default values
 	params.OrderBookExtraGasWindow = tradebintypes.DefaultOrderBookExtraGasWindow
@@ -63,96 +63,110 @@ func migrateTradebinParams(ctx sdk.Context, paramsKeeper *paramskeeper.Keeper) {
 	params.OrderBookQueueMessageScanExtraGas = tradebintypes.DefaultOrderBookQueueMessageScanExtraGas
 
 	// Save updated parameters
-	tradebinSubspace.SetParamSet(ctx, &params)
+	if err := tradebinKeeper.SetParams(ctx, params); err != nil {
+		ctx.Logger().Error("failed to migrate tradebin module parameters", "error", err)
+		return err
+	}
 
 	ctx.Logger().Info("tradebin module parameters migrated successfully",
 		"orderBookExtraGasWindow", params.OrderBookExtraGasWindow,
 		"orderBookQueueExtraGas", params.OrderBookQueueExtraGas,
 		"fillOrdersExtraGas", params.FillOrdersExtraGas,
 		"minNativeLiquidityForModuleSwap", params.MinNativeLiquidityForModuleSwap,
+		"orderBookPerBlockMessages", params.OrderBookPerBlockMessages,
+		"orderBookQueueMessageScanExtraGas", params.OrderBookQueueMessageScanExtraGas,
 	)
+
+	return nil
 }
 
-func migrateTxFeeCollectorParams(ctx sdk.Context, paramsKeeper *paramskeeper.Keeper) {
-	txFeeCollectorSubspace, found := paramsKeeper.GetSubspace(txfeecollectortypes.ModuleName)
-	if !found {
-		ctx.Logger().Error("txfeecollector subspace not found during parameter migration")
-		return
-	}
-
+func migrateTxFeeCollectorParams(ctx sdk.Context, txfeecollectorKeeper *txfeecollectorkeeper.Keeper) error {
 	// Set default parameters (module is new or has empty params before this upgrade)
 	defaultParams := txfeecollectortypes.DefaultParams()
 
 	// Save parameters with default values
-	txFeeCollectorSubspace.SetParamSet(ctx, &defaultParams)
+	if err := txfeecollectorKeeper.SetParams(ctx, defaultParams); err != nil {
+		ctx.Logger().Error("failed to migrate txfeecollector module parameters", "error", err)
+		return err
+	}
 
 	ctx.Logger().Info("txfeecollector module parameters migrated successfully",
 		"validatorMinGasFee", defaultParams.ValidatorMinGasFee.String(),
 	)
+
+	return nil
 }
 
-func migrateOrderKeys(ctx sdk.Context, tradebinKeeper *tradebinkeeper.Keeper) {
+func migrateOrderKeys(ctx sdk.Context, tradebinKeeper *tradebinkeeper.Keeper) error {
 	ctx.Logger().Info("starting order key migration to new precision format")
 
 	// Migrate PriceOrder keys
-	migratePriceOrders(ctx, tradebinKeeper)
+	if err := migratePriceOrders(ctx, tradebinKeeper); err != nil {
+		return err
+	}
 
 	// Migrate AggregatedOrder keys
-	migrateAggregatedOrders(ctx, tradebinKeeper)
+	if err := migrateAggregatedOrders(ctx, tradebinKeeper); err != nil {
+		return err
+	}
 
 	ctx.Logger().Info("order key migration completed")
+	return nil
 }
 
-func migratePriceOrders(ctx sdk.Context, k *tradebinkeeper.Keeper) {
+func migratePriceOrders(ctx sdk.Context, k *tradebinkeeper.Keeper) error {
 	// Get all price order references
 	allPriceOrders := k.GetAllPriceOrder(ctx)
-
+	priceOrdersCount := len(allPriceOrders)
 	ctx.Logger().Info("starting price order migration",
-		"totalOrders", len(allPriceOrders),
+		"totalOrders", priceOrdersCount,
 	)
 
 	// Get the price order store directly
 	store := k.GetPriceOrderStoreForMigration(ctx)
 
-	migratedCount := 0
-	for _, orderRef := range allPriceOrders {
+	for i, orderRef := range allPriceOrders {
 		// Get the actual order to retrieve the price
 		order, found := k.GetOrder(ctx, orderRef.MarketId, orderRef.OrderType, orderRef.Id)
 		if !found {
-			ctx.Logger().Error("order not found during migration",
+			// Orphaned order reference - this indicates data corruption
+			ctx.Logger().Error("order not found during migration - data corruption detected",
 				"marketId", orderRef.MarketId,
 				"orderType", orderRef.OrderType,
 				"orderId", orderRef.Id,
 			)
-			continue
+			return fmt.Errorf("orphaned order reference found: marketId=%s orderType=%s orderId=%s",
+				orderRef.MarketId, orderRef.OrderType, orderRef.Id)
 		}
 
-		// Delete using old key format (24 chars, 10 decimals)
+		// First, write using new key format (32 chars, 18 decimals)
+		// This ensures we don't lose data if the write fails
+		k.SetPriceOrder(ctx, orderRef, order.Price)
+
+		// Only after successful write, delete the old key format (24 chars, 10 decimals)
 		oldKey := oldPriceOrderKey(order.MarketId, order.OrderType, order.Price, order.Id)
 		store.Delete(oldKey)
 
-		// Set using new key format (32 chars, 18 decimals)
-		k.SetPriceOrder(ctx, orderRef, order.Price)
-
-		migratedCount++
-
-		if migratedCount%100 == 0 {
+		if i%100 == 0 {
 			ctx.Logger().Info("price order migration progress",
-				"migrated", migratedCount,
-				"total", len(allPriceOrders),
+				"item_index", i,
+				"total", priceOrdersCount,
 			)
 		}
 	}
 
 	ctx.Logger().Info("price order migration completed",
-		"totalMigrated", migratedCount,
+		"totalMigrated", priceOrdersCount,
 	)
+
+	return nil
 }
 
-func migrateAggregatedOrders(ctx sdk.Context, k *tradebinkeeper.Keeper) {
+func migrateAggregatedOrders(ctx sdk.Context, k *tradebinkeeper.Keeper) error {
 	// Get all aggregated orders using the current store iteration
 	// These will have the old key format
 	allAggOrders := k.GetAllAggregatedOrder(ctx)
+	allAggOrdersCount := len(allAggOrders)
 
 	ctx.Logger().Info("starting aggregated order migration",
 		"totalOrders", len(allAggOrders),
@@ -161,28 +175,28 @@ func migrateAggregatedOrders(ctx sdk.Context, k *tradebinkeeper.Keeper) {
 	// Get the aggregated order store directly
 	store := k.GetAggregatedOrderStoreForMigration(ctx)
 
-	migratedCount := 0
-	for _, aggOrder := range allAggOrders {
-		// Delete using old key format (24 chars, 10 decimals)
+	for i, aggOrder := range allAggOrders {
+		// First, write using new key format (32 chars, 18 decimals)
+		// This ensures we don't lose data if the write fails
+		k.SetAggregatedOrder(ctx, aggOrder)
+
+		// Only after successful write, delete the old key format (24 chars, 10 decimals)
 		oldKey := oldAggOrderKey(aggOrder.MarketId, aggOrder.OrderType, aggOrder.Price)
 		store.Delete(oldKey)
 
-		// Set using new key format (32 chars, 18 decimals)
-		k.SetAggregatedOrder(ctx, aggOrder)
-
-		migratedCount++
-
-		if migratedCount%100 == 0 {
+		if i%100 == 0 {
 			ctx.Logger().Info("aggregated order migration progress",
-				"migrated", migratedCount,
-				"total", len(allAggOrders),
+				"item_index", i,
+				"total", allAggOrdersCount,
 			)
 		}
 	}
 
 	ctx.Logger().Info("aggregated order migration completed",
-		"totalMigrated", migratedCount,
+		"totalMigrated", allAggOrdersCount,
 	)
+
+	return nil
 }
 
 func GetStoreUpgrades() *storetypes.StoreUpgrades {
