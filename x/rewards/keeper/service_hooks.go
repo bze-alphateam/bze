@@ -1,10 +1,11 @@
 package keeper
 
 import (
+	"slices"
+
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"sort"
 )
 
 func (k Keeper) GetDistributeAllStakingRewardsHook() types.EpochHook {
@@ -131,6 +132,7 @@ func (k Keeper) GetOnOrderFillHook() func(ctx sdk.Context, marketId, amountTrade
 		}
 
 		addedToList := false
+		//safe to iterate over the slice since it's limited to 10 entries
 		for i, entry := range leaderboard.List {
 			if candidate.Address != entry.Address {
 				continue
@@ -157,17 +159,29 @@ func (k Keeper) GetOnOrderFillHook() func(ctx sdk.Context, marketId, amountTrade
 		}
 
 		//sort the slice
-		sort.SliceStable(leaderboard.List[:], func(i, j int) bool {
-			iAmt, _ := math.NewIntFromString(amountTraded)
-			jAmt, _ := math.NewIntFromString(amountTraded)
-			if iAmt.GT(jAmt) {
-				return true
-			}
-			if iAmt.LT(jAmt) {
-				return false
+		slices.SortStableFunc(leaderboard.List, func(a, b types.TradingRewardLeaderboardEntry) int {
+			aAmt, _ := math.NewIntFromString(a.Amount)
+			bAmt, _ := math.NewIntFromString(b.Amount)
+
+			//if the amounts are equal, use CreatedAt to sort
+			if aAmt.Equal(bAmt) {
+				if a.CreatedAt == b.CreatedAt {
+					//keep the original order -> ensures deterministic leaderboard
+					return 0
+				}
+
+				if a.CreatedAt < b.CreatedAt {
+					return -1
+				}
+
+				return 1
 			}
 
-			return leaderboard.List[i].CreatedAt < leaderboard.List[j].CreatedAt
+			if aAmt.GT(bAmt) {
+				return -1
+			}
+
+			return 1
 		})
 
 		//trim slice if it's longer than the rewarded slots
