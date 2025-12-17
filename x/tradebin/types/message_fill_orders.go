@@ -6,6 +6,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+const (
+	maxFillOrders = 50
+)
+
 var _ sdk.Msg = &MsgFillOrders{}
 
 func NewMsgFillOrders(creator string, marketId string, orderType string, orders []*FillOrderItem) *MsgFillOrders {
@@ -33,6 +37,10 @@ func (msg *MsgFillOrders) ValidateBasic() error {
 
 	if len(msg.Orders) == 0 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "no orders to fill provided")
+	}
+
+	if len(msg.Orders) > maxFillOrders {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "too many orders to fill, max %d orders allowed", maxFillOrders)
 	}
 
 	return nil
