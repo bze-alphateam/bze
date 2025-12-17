@@ -1,9 +1,10 @@
 package types
 
 import (
+	"encoding/json"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"encoding/json"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -33,12 +34,20 @@ func (msg *MsgCreateLiquidityPool) ValidateBasic() error {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "missing assets")
 	}
 
+	if msg.Base == msg.Quote {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "base and quote cannot be the same")
+	}
+
 	if len(msg.Fee) == 0 || len(msg.FeeDest) == 0 {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "missing fee parameters")
 	}
 
 	if !msg.InitialBase.IsPositive() || !msg.InitialQuote.IsPositive() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "missing initial liquidity")
+	}
+
+	if msg.Stable {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "stable pools are not supported yet")
 	}
 
 	return nil

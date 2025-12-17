@@ -36,6 +36,10 @@ func (msg *MsgCreateOrder) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
+	if msg.MarketId == "" {
+		return errorsmod.Wrapf(ErrInvalidOrderMarketId, "no market id provided")
+	}
+
 	if msg.OrderType != OrderTypeSell && msg.OrderType != OrderTypeBuy {
 		return errorsmod.Wrapf(ErrInvalidOrderType, "invalid order type")
 	}
