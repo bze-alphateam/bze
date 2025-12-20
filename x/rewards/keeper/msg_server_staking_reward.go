@@ -78,6 +78,7 @@ func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCrea
 		ctx,
 		stakingReward,
 	)
+	k.incrementStakingRewardsCounter(ctx)
 
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.StakingRewardCreateEvent{

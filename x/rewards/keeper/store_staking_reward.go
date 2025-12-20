@@ -11,8 +11,6 @@ func (k Keeper) SetStakingReward(ctx sdk.Context, stakingReward types.StakingRew
 	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.StakingRewardKeyPrefix))
 	b := k.cdc.MustMarshal(&stakingReward)
 	store.Set(types.StakingRewardKey(stakingReward.RewardId), b)
-
-	k.incrementStakingRewardsCounter(ctx)
 }
 
 // GetStakingReward returns a stakingReward from its index

@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
+
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -77,10 +78,13 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 		Lock:         "7",
 	}
 
+	counter := suite.k.GetStakingRewardsCounter(suite.ctx)
 	response, err := suite.msgServer.CreateStakingReward(suite.ctx, msg)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(response)
 	suite.Require().NotEmpty(response.RewardId)
+	newCounter := suite.k.GetStakingRewardsCounter(suite.ctx)
+	suite.Require().Equal(counter+1, newCounter)
 
 	// Verify staking reward was created
 	stakingReward, found := suite.k.GetStakingReward(suite.ctx, response.RewardId)
@@ -259,9 +263,13 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_UpdateStakingRewar
 		Duration: "3",
 	}
 
+	counter := suite.k.GetStakingRewardsCounter(suite.ctx)
 	response, err := suite.msgServer.UpdateStakingReward(suite.ctx, msg)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(response)
+	newCounter := suite.k.GetStakingRewardsCounter(suite.ctx)
+	//check the counter was not incremented when the staking reward was updated
+	suite.Require().Equal(counter, newCounter)
 
 	// Verify duration was updated
 	updatedReward, found := suite.k.GetStakingReward(suite.ctx, "update-test-reward")
@@ -327,9 +335,13 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingSuccess
 		Amount:   "500",
 	}
 
+	counter := suite.k.GetStakingRewardsCounter(suite.ctx)
 	response, err := suite.msgServer.JoinStaking(suite.ctx, msg)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(response)
+	newCounter := suite.k.GetStakingRewardsCounter(suite.ctx)
+	//check the counter was NOT incremented when the staking reward was joined
+	suite.Require().Equal(counter, newCounter)
 
 	// Verify participant was created
 	participant, found := suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), "join-test-reward")
