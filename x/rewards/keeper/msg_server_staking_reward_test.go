@@ -441,9 +441,13 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStakingSuccess
 		RewardId: "exit-test-reward",
 	}
 
+	counter := suite.k.GetStakingRewardsCounter(suite.ctx)
 	response, err := suite.msgServer.ExitStaking(suite.ctx, msg)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(response)
+	newCounter := suite.k.GetStakingRewardsCounter(suite.ctx)
+	//check the counter was NOT incremented when the user exited staking
+	suite.Require().Equal(counter, newCounter)
 
 	// Verify participant was removed
 	_, found := suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), "exit-test-reward")
@@ -603,9 +607,13 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_DistributeStakingR
 		Amount:   "500",
 	}
 
+	counter := suite.k.GetStakingRewardsCounter(suite.ctx)
 	response, err := suite.msgServer.DistributeStakingRewards(suite.ctx, msg)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(response)
+	newCounter := suite.k.GetStakingRewardsCounter(suite.ctx)
+	//check the counter was NOT incremented when distributing rewards
+	suite.Require().Equal(counter, newCounter)
 
 	// Verify distributed stake was updated
 	updatedReward, found := suite.k.GetStakingReward(suite.ctx, "distribute-test-reward")

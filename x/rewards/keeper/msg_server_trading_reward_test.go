@@ -88,10 +88,13 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 		Slots:       "5",
 	}
 
+	counter := suite.k.GetTradingRewardsCounter(suite.ctx)
 	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(response)
 	suite.Require().NotEmpty(response.RewardId)
+	newCounter := suite.k.GetTradingRewardsCounter(suite.ctx)
+	suite.Require().Equal(counter+1, newCounter)
 
 	// Verify trading reward was created
 	tradingReward, found := suite.k.GetPendingTradingReward(suite.ctx, response.RewardId)

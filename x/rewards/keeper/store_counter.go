@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"cosmossdk.io/store/prefix"
 	"encoding/binary"
+
+	"cosmossdk.io/store/prefix"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -50,6 +51,10 @@ func (k Keeper) SetStakingRewardsCounter(ctx sdk.Context, counter uint64) {
 
 func (k Keeper) incrementStakingRewardsCounter(ctx sdk.Context) uint64 {
 	return k.incrementCounter(ctx, types.StakingRewardCounterKey())
+}
+
+func (k Keeper) ReserveTradingRewardsCounter(ctx sdk.Context) uint64 {
+	return k.incrementTradingRewardsCounter(ctx)
 }
 
 func (k Keeper) GetTradingRewardsCounter(ctx sdk.Context) uint64 {
