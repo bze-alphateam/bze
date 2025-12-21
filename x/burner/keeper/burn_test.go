@@ -5,7 +5,6 @@ import (
 
 	"github.com/bze-alphateam/bze/x/burner/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"go.uber.org/mock/gomock"
 )
 
 func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_OnlyNativeCoins() {
@@ -131,8 +130,8 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_EmptyCoins() {
 	fromModule := "test_module"
 	coins := sdk.NewCoins()
 
-	// Mock burn with empty coins - the method always calls BurnCoins even with empty set
-	suite.bank.EXPECT().BurnCoins(suite.ctx, fromModule, gomock.Any()).Return(nil).Times(1)
+	// With empty coins, no burn operation should be called since IsAllPositive() returns false for empty coins
+	// No mocks needed as the function should return early
 
 	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)

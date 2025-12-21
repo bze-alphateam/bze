@@ -49,44 +49,7 @@ func (k Keeper) BurnAnyCoins(ctx sdk.Context, fromModule string, coins sdk.Coins
 	logger := k.Logger().With("method", "BurnAnyCoins", "fromModule", fromModule)
 	logger.Debug("iterating through provided coins")
 
-	//holds coins that can be burned from bank module
-	var burnable sdk.Coins
-	//holds coins that can not be burned (IBC coins) but can be exchanged to native coin and burned
-	var exchangeable sdk.Coins
-	//holds coins that should not be burned because the total supply in bank module should not be modified
-	var lockable sdk.Coins
-	for _, c := range coins {
-		logger.Debug("checking coin", "coin", c.String())
-		if !c.IsPositive() {
-			continue
-		}
-
-		// native coins can be burned directly
-		// factory tokens can be burned directly
-		if k.tradeKeeper.IsNativeDenom(ctx, c.Denom) || bzeutils.IsTokenFactoryDenom(c.Denom) {
-			logger.Debug("coin is native or factory token, can be burned directly", "coin", c.String())
-			burnable = burnable.Add(c)
-			continue
-		}
-
-		//LP shares cannot be burned, but they can be locked
-		if bzeutils.IsLpTokenDenom(c.Denom) {
-			logger.Debug("coin is LP token, can be locked", "coin", c.String())
-			lockable = lockable.Add(c)
-			continue
-		}
-		//it must be an IBC token
-
-		//not native, not LP share, not token factory -> it should be an IBC denom
-		if k.tradeKeeper.CanSwapForNativeDenom(ctx, c) {
-			logger.Debug("coin is IBC token, can be exchanged to native coin for burning", "coin", c.String())
-			exchangeable = exchangeable.Add(c)
-			continue
-		}
-
-		logger.Debug("coin is IBC token, cannot be burned or exchanged to native coin. Will skip for now", "coin", c.String())
-	}
-
+	burnable, exchangeable, lockable := k.filterCoinsToBurn(ctx, coins)
 	if len(exchangeable) > 0 {
 		logger.Debug("there are coins that can be added to liquidity with native denom")
 
@@ -118,4 +81,41 @@ func (k Keeper) BurnAnyCoins(ctx sdk.Context, fromModule string, coins sdk.Coins
 	}
 
 	return burnable, nil
+}
+
+func (k Keeper) filterCoinsToBurn(ctx sdk.Context, toBurn sdk.Coins) (burnable, exchangeable, lockable sdk.Coins) {
+	logger := k.Logger().With("method", "filterCoinsToBurn")
+	for _, c := range toBurn {
+		logger.Debug("checking coin", "coin", c.String())
+		if !c.IsPositive() {
+			continue
+		}
+
+		// native coins can be burned directly
+		// factory tokens can be burned directly
+		if k.tradeKeeper.IsNativeDenom(ctx, c.Denom) || bzeutils.IsTokenFactoryDenom(c.Denom) {
+			logger.Debug("coin is native or factory token, can be burned directly", "coin", c.String())
+			burnable = burnable.Add(c)
+			continue
+		}
+
+		//LP shares cannot be burned, but they can be locked
+		if bzeutils.IsLpTokenDenom(c.Denom) {
+			logger.Debug("coin is LP token, can be locked", "coin", c.String())
+			lockable = lockable.Add(c)
+			continue
+		}
+		//it must be an IBC token
+
+		//not native, not LP share, not token factory -> it should be an IBC denom
+		if k.tradeKeeper.CanSwapForNativeDenom(ctx, c) {
+			logger.Debug("coin is IBC token, can be exchanged to native coin for burning", "coin", c.String())
+			exchangeable = exchangeable.Add(c)
+			continue
+		}
+
+		logger.Debug("coin is IBC token, cannot be burned or exchanged to native coin. Will skip for now", "coin", c.String())
+	}
+
+	return burnable, exchangeable, lockable
 }
