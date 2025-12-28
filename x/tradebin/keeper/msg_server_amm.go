@@ -418,11 +418,10 @@ func (k msgServer) validateFeeDestination(feeDest *types.FeeDestination) error {
 	}
 
 	//the sum of elements must be 1
-	//we allow a small error of 1e-6 for the sum
 	one := math.LegacyNewDec(1)
 	sum := feeDest.Burner.Add(feeDest.Treasury).Add(feeDest.Providers)
 	//check that the difference is not greater than 1e-6
-	if sum.Sub(one).Abs().GT(math.LegacyNewDecWithPrec(1, 6)) {
+	if !sum.Equal(one) {
 		return types.ErrInvalidFeeDestination
 	}
 
