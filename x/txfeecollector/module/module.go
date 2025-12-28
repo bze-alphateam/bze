@@ -215,7 +215,7 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	TxfeecollectorKeeper keeper.Keeper
+	TxfeecollectorKeeper *keeper.Keeper
 	Module               appmodule.AppModule
 }
 
@@ -243,5 +243,5 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.DistrKeeper,
 	)
 
-	return ModuleOutputs{TxfeecollectorKeeper: k, Module: m}
+	return ModuleOutputs{TxfeecollectorKeeper: &k, Module: m}
 }

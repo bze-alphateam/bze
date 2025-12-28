@@ -37,7 +37,11 @@ func (vbd ValidateTxFeeDenomsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		return ctx, sdkerrors.Wrap(storeTypes.ErrInvalidRequest, "multiple denominations for same transaction fee are not supported")
 	}
 
+	// Allow empty fees during genesis or simulation
 	if feeTx.GetFee().Empty() {
+		if simulate || ctx.BlockHeight() == 0 {
+			return next(ctx, tx, simulate)
+		}
 		return ctx, sdkerrors.Wrap(storeTypes.ErrInvalidRequest, "no fee supplied")
 	}
 

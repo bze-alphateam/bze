@@ -103,32 +103,92 @@ func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_MultipleDenominatio
 func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_EmptyFee() {
 	decorator := ante.NewValidateTxFeeDenomsDecorator(suite.tradeMock)
 
-	// Empty fee should fail
+	// Empty fee should fail in normal conditions (not genesis, not simulation)
 	tx := &mockFeeTx{
 		fee: sdk.NewCoins(),
 		gas: 100000,
 	}
 
-	_, err := decorator.AnteHandle(suite.ctx, tx, false, suite.mockNext())
+	ctx := suite.ctx.WithBlockHeight(1)
+
+	_, err := decorator.AnteHandle(ctx, tx, false, suite.mockNext())
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "no fee supplied")
 	suite.Require().False(suite.nextCalled)
+}
+
+func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_EmptyFee_Genesis() {
+	decorator := ante.NewValidateTxFeeDenomsDecorator(suite.tradeMock)
+
+	// Empty fee should pass during genesis (block height 0)
+	genesisCtx := suite.ctx.WithBlockHeight(0)
+	tx := &mockFeeTx{
+		fee: sdk.NewCoins(),
+		gas: 100000,
+	}
+
+	_, err := decorator.AnteHandle(genesisCtx, tx, false, suite.mockNext())
+	suite.Require().NoError(err)
+	suite.Require().True(suite.nextCalled)
+}
+
+func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_EmptyFee_Simulation() {
+	decorator := ante.NewValidateTxFeeDenomsDecorator(suite.tradeMock)
+
+	// Empty fee should pass during simulation
+	tx := &mockFeeTx{
+		fee: sdk.NewCoins(),
+		gas: 100000,
+	}
+
+	_, err := decorator.AnteHandle(suite.ctx, tx, true, suite.mockNext())
+	suite.Require().NoError(err)
+	suite.Require().True(suite.nextCalled)
 }
 
 func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_ZeroFee() {
 	decorator := ante.NewValidateTxFeeDenomsDecorator(suite.tradeMock)
 
 	// Zero fee coins are filtered out by sdk.NewCoins, resulting in empty fee
-	// So this test actually validates the empty fee scenario
+	// So this test actually validates the empty fee scenario in normal conditions
 	tx := &mockFeeTx{
 		fee: sdk.NewCoins(sdk.NewCoin(denomBze, sdkmath.NewInt(0))),
 		gas: 100000,
 	}
 
-	_, err := decorator.AnteHandle(suite.ctx, tx, false, suite.mockNext())
+	_, err := decorator.AnteHandle(suite.ctx.WithBlockHeight(10), tx, false, suite.mockNext())
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "no fee supplied")
 	suite.Require().False(suite.nextCalled)
+}
+
+func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_ZeroFee_Genesis() {
+	decorator := ante.NewValidateTxFeeDenomsDecorator(suite.tradeMock)
+
+	// Zero fee should pass during genesis
+	genesisCtx := suite.ctx.WithBlockHeight(0)
+	tx := &mockFeeTx{
+		fee: sdk.NewCoins(sdk.NewCoin(denomBze, sdkmath.NewInt(0))),
+		gas: 100000,
+	}
+
+	_, err := decorator.AnteHandle(genesisCtx, tx, false, suite.mockNext())
+	suite.Require().NoError(err)
+	suite.Require().True(suite.nextCalled)
+}
+
+func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_ZeroFee_Simulation() {
+	decorator := ante.NewValidateTxFeeDenomsDecorator(suite.tradeMock)
+
+	// Zero fee should pass during simulation
+	tx := &mockFeeTx{
+		fee: sdk.NewCoins(sdk.NewCoin(denomBze, sdkmath.NewInt(0))),
+		gas: 100000,
+	}
+
+	_, err := decorator.AnteHandle(suite.ctx, tx, true, suite.mockNext())
+	suite.Require().NoError(err)
+	suite.Require().True(suite.nextCalled)
 }
 
 func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_NilTradeKeeper() {
