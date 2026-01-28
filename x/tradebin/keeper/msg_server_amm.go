@@ -22,7 +22,7 @@ func (k msgServer) CreateLiquidityPool(goCtx context.Context, msg *types.MsgCrea
 
 	creatorAcc, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, err.Error())
+		return nil, errors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -125,7 +125,7 @@ func (k msgServer) RemoveLiquidity(goCtx context.Context, msg *types.MsgRemoveLi
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	creatorAcc, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, err.Error())
+		return nil, errors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
 	}
 
 	pool, found := k.GetLiquidityPool(ctx, msg.GetPoolId())
@@ -202,7 +202,7 @@ func (k msgServer) AddLiquidity(goCtx context.Context, msg *types.MsgAddLiquidit
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	creatorAcc, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, err.Error())
+		return nil, errors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
 	}
 
 	pool, found := k.GetLiquidityPool(ctx, msg.GetPoolId())
@@ -280,7 +280,7 @@ func (k msgServer) MultiSwap(goCtx context.Context, msg *types.MsgMultiSwap) (*t
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	creatorAcc, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return nil, errors.Wrapf(sdkerrors.ErrUnauthorized, err.Error())
+		return nil, errors.Wrap(sdkerrors.ErrUnauthorized, err.Error())
 	}
 
 	ic, moc, err := k.getMessageCoins(msg)

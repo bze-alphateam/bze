@@ -142,14 +142,14 @@ func (dfd DeductFeeDecorator) DeductFees(bankKeeper types.BankKeeper, ctx sdk.Co
 	if len(nativeFees) > 0 {
 		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authtypes.FeeCollectorName, nativeFees)
 		if err != nil {
-			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			return errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	}
 
 	if len(nonNativeFees) > 0 {
 		err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.ModuleName, nonNativeFees)
 		if err != nil {
-			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			return errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	}
 
