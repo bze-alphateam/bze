@@ -92,6 +92,7 @@ func migrateTxFeeCollectorParams(ctx sdk.Context, txfeecollectorKeeper *txfeecol
 
 	ctx.Logger().Info("txfeecollector module parameters migrated successfully",
 		"validatorMinGasFee", defaultParams.ValidatorMinGasFee.String(),
+		"maxBalanceIterations", defaultParams.MaxBalanceIterations,
 	)
 
 	return nil

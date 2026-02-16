@@ -17,4 +17,9 @@ message Params {
     (gogoproto.moretags)      = "yaml:\"validator_min_gas_fee\"",
     (gogoproto.jsontag)      = "validator_min_gas_fee,omitempty"
   ];
+
+  uint64 MaxBalanceIterations = 2 [
+    (gogoproto.moretags) = "yaml:\"max_balance_iterations\"",
+    (gogoproto.jsontag)      = "max_balance_iterations,omitempty"
+  ];
 }
