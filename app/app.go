@@ -160,7 +160,7 @@ type App struct {
 	EpochKeeper          *epochmodulekeeper.Keeper
 	CointrunkKeeper      cointrunkmodulekeeper.Keeper
 	TokenfactoryKeeper   tokenfactorymodulekeeper.Keeper
-	RewardsKeeper        rewardsmodulekeeper.Keeper
+	RewardsKeeper        *rewardsmodulekeeper.Keeper
 	TradebinKeeper       *tradebinmodulekeeper.Keeper
 	TxfeecollectorKeeper *txfeecollectormodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
@@ -354,6 +354,7 @@ func (app *App) setupUpgradeHandlers() {
 			app.ModuleManager,
 			app.TradebinKeeper,
 			app.TxfeecollectorKeeper,
+			app.RewardsKeeper,
 		),
 	)
 

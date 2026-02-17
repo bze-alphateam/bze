@@ -173,7 +173,10 @@ func (am AppModule) BeginBlock(_ context.Context) error {
 
 // EndBlock contains the logic that is automatically triggered at the end of each block.
 // The end block implementation is optional.
-func (am AppModule) EndBlock(_ context.Context) error {
+func (am AppModule) EndBlock(gotCtx context.Context) error {
+	ctx := sdk.UnwrapSDKContext(gotCtx)
+	am.keeper.ProcessUnlockParticipantsQueue(ctx)
+
 	return nil
 }
 
@@ -214,7 +217,7 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	RewardsKeeper keeper.Keeper
+	RewardsKeeper *keeper.Keeper
 	Module        appmodule.AppModule
 }
 
@@ -243,5 +246,5 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.LegacySubspace,
 	)
 
-	return ModuleOutputs{RewardsKeeper: k, Module: m}
+	return ModuleOutputs{RewardsKeeper: &k, Module: m}
 }

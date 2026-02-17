@@ -247,6 +247,10 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 		return nil, sdkerrors.ErrInvalidRequest
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	params := k.GetParams(ctx)
+	ctx.GasMeter().ConsumeGas(params.ExtraGasForExitStake, "exit_stake_extra_gas")
+
 	stakingReward, found := k.GetStakingReward(ctx, msg.RewardId)
 	if !found {
 		return nil, errors.Wrapf(types.ErrInvalidRewardId, "reward with provided id not found")

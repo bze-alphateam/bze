@@ -10,6 +10,7 @@ var _ binary.ByteOrder
 const (
 	// PendingUnlockParticipantKeyPrefix is the prefix to retrieve all PendingUnlockParticipant
 	PendingUnlockParticipantKeyPrefix = "pup/v/"
+	PendingUnlockQueueKey             = "pup/q/"
 )
 
 // PendingUnlockParticipantKey returns the store key to retrieve a PendingUnlockParticipant from the index fields

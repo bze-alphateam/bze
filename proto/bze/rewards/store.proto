@@ -32,6 +32,9 @@ message PendingUnlockParticipant {
   string denom = 4;
 }
 
+message UnlockParticipantsQueue {
+  repeated uint64 unlockEpochs = 1;
+}
 
 message TradingReward {
   string reward_id = 1;
