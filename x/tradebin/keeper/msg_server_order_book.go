@@ -198,7 +198,7 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 	params := k.GetParams(ctx)
 	ctx.GasMeter().ConsumeGas(params.FillOrdersExtraGas, "fill_orders")
 	totalCoins := sdk.NewCoins()
-	for _, fo := range msg.Orders {
+	for key, fo := range msg.Orders {
 		minAmt := CalculateMinAmount(fo.Price)
 		amtInt, ok := math.NewIntFromString(fo.Amount)
 		if !ok {
@@ -243,7 +243,8 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 
 		totalCoins = totalCoins.Add(orderCoins.Coin)
 		//take extra gas for each order to fill
-		ctx.GasMeter().ConsumeGas(params.FillOrdersExtraGas, "fill_orders")
+		//increase the gas based on the number of orders to fill
+		ctx.GasMeter().ConsumeGas(params.FillOrdersExtraGas*uint64(key), "fill_orders")
 	}
 
 	if totalCoins.IsZero() {

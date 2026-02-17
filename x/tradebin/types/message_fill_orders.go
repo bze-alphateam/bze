@@ -43,5 +43,13 @@ func (msg *MsgFillOrders) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "too many orders to fill, max %d orders allowed", maxFillOrders)
 	}
 
+	pricesMap := make(map[string]struct{})
+	for _, fo := range msg.Orders {
+		if _, ok := pricesMap[fo.Price]; ok {
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "duplicate price %s found in items", fo.Price)
+		}
+		pricesMap[fo.Price] = struct{}{}
+	}
+
 	return nil
 }
