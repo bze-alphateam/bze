@@ -6,6 +6,8 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	rewardskeeper "github.com/bze-alphateam/bze/x/rewards/keeper"
+	rewardstypes "github.com/bze-alphateam/bze/x/rewards/types"
 	tradebinkeeper "github.com/bze-alphateam/bze/x/tradebin/keeper"
 	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
 	txfeecollectorkeeper "github.com/bze-alphateam/bze/x/txfeecollector/keeper"
@@ -21,6 +23,7 @@ func CreateUpgradeHandler(
 	mm *module.Manager,
 	tradebinKeeper *tradebinkeeper.Keeper,
 	txfeecollectorKeeper *txfeecollectorkeeper.Keeper,
+	rewardsKeeper *rewardskeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
 
 	return func(c context.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -33,6 +36,11 @@ func CreateUpgradeHandler(
 
 		// Migrate txfeecollector module parameters
 		if err := migrateTxFeeCollectorParams(ctx, txfeecollectorKeeper); err != nil {
+			return nil, err
+		}
+
+		// Migrate rewards module parameters
+		if err := migrateRewardsParams(ctx, rewardsKeeper); err != nil {
 			return nil, err
 		}
 
@@ -93,6 +101,23 @@ func migrateTxFeeCollectorParams(ctx sdk.Context, txfeecollectorKeeper *txfeecol
 	ctx.Logger().Info("txfeecollector module parameters migrated successfully",
 		"validatorMinGasFee", defaultParams.ValidatorMinGasFee.String(),
 		"maxBalanceIterations", defaultParams.MaxBalanceIterations,
+	)
+
+	return nil
+}
+
+func migrateRewardsParams(ctx sdk.Context, rewardsKeeper *rewardskeeper.Keeper) error {
+	params := rewardsKeeper.GetParams(ctx)
+
+	params.ExtraGasForExitStake = rewardstypes.DefaultExtraGasForExitStake
+
+	if err := rewardsKeeper.SetParams(ctx, params); err != nil {
+		ctx.Logger().Error("failed to migrate rewards module parameters", "error", err)
+		return err
+	}
+
+	ctx.Logger().Info("rewards module parameters migrated successfully",
+		"extraGasForExitStake", params.ExtraGasForExitStake,
 	)
 
 	return nil

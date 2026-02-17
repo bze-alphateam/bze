@@ -15,6 +15,10 @@ var (
 	DefaultCreateRewardFee    sdk.Coin = sdk.NewInt64Coin("ubze", 25_000_000000)
 )
 
+const (
+	DefaultExtraGasForExitStake uint64 = 1_000_000
+)
+
 // ParamKeyTable the param key table for launch module
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
@@ -24,10 +28,12 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams(
 	createStakingRewardFee sdk.Coin,
 	createTradingRewardFee sdk.Coin,
+	extraGasForExitStake uint64,
 ) Params {
 	return Params{
 		CreateStakingRewardFee: createStakingRewardFee,
 		CreateTradingRewardFee: createTradingRewardFee,
+		ExtraGasForExitStake:   extraGasForExitStake,
 	}
 }
 
@@ -36,6 +42,7 @@ func DefaultParams() Params {
 	return NewParams(
 		DefaultCreateRewardFee,
 		DefaultCreateRewardFee,
+		DefaultExtraGasForExitStake,
 	)
 }
 

@@ -48,7 +48,11 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetUnlockPendingUnlockPartic
 	err := hook.AfterEpochEnd(suite.ctx, "wrong-epoch", 100)
 	suite.Require().NoError(err)
 
-	// Test with correct epoch identifier
+	// Queue should not exist after wrong epoch
+	_, found := suite.k.GetUnlockParticipantsQueue(suite.ctx)
+	suite.Require().False(found)
+
+	// Test with correct epoch identifier - hook should only enqueue, not process
 	epochNumber := int64(100)
 	addr := sdk.AccAddress("addr1")
 	participant := types.PendingUnlockParticipant{
@@ -58,24 +62,20 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetUnlockPendingUnlockPartic
 		Denom:   "ubze",
 	}
 
-	suite.bank.EXPECT().
-		SendCoinsFromModuleToAccount(
-			suite.ctx,
-			types.ModuleName,
-			addr,
-			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(1000))),
-		).
-		Return(nil).
-		Times(1)
-
 	suite.k.SetPendingUnlockParticipant(suite.ctx, participant)
 
 	err = hook.AfterEpochEnd(suite.ctx, "hour", epochNumber)
 	suite.Require().NoError(err)
 
-	// Verify participant was processed
+	// Verify epoch was added to queue (not processed directly)
+	queue, found := suite.k.GetUnlockParticipantsQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.UnlockEpochs, 1)
+	suite.Require().Equal(uint64(epochNumber), queue.UnlockEpochs[0])
+
+	// Verify participant is still in store (hook only enqueues, doesn't process)
 	participants := suite.k.GetAllEpochPendingUnlockParticipant(suite.ctx, epochNumber)
-	suite.Require().Empty(participants)
+	suite.Require().Len(participants, 1)
 }
 
 func (suite *IntegrationTestSuite) TestServiceHooks_GetRemoveExpiredPendingTradingRewardsHook() {

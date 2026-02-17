@@ -5,16 +5,22 @@ import (
 	"fmt"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"go.uber.org/mock/gomock"
 )
 
-func (suite *IntegrationTestSuite) TestServiceUnlock_UnlockAllPendingUnlockParticipantsByEpochEmpty() {
-	// Test with no pending unlock participants
-	suite.Require().NotPanics(func() {
-		suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, 100)
-	})
+// --- UnlockAllPendingUnlockParticipantsByEpoch tests ---
+// This function now only enqueues the epoch number into the UnlockParticipantsQueue.
+// It does NOT process bank sends or remove participants.
+
+func (suite *IntegrationTestSuite) TestServiceUnlock_EnqueueEmpty() {
+	// No pending participants - should not add epoch to queue
+	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, 100)
+
+	_, found := suite.k.GetUnlockParticipantsQueue(suite.ctx)
+	suite.Require().False(found)
 }
 
-func (suite *IntegrationTestSuite) TestServiceUnlock_UnlockAllPendingUnlockParticipantsByEpochSingle() {
+func (suite *IntegrationTestSuite) TestServiceUnlock_EnqueueSingle() {
 	epochNumber := int64(50)
 	addr := sdk.AccAddress("addr1")
 	participant := types.PendingUnlockParticipant{
@@ -24,10 +30,62 @@ func (suite *IntegrationTestSuite) TestServiceUnlock_UnlockAllPendingUnlockParti
 		Denom:   "ubze",
 	}
 
-	// Set up mock expectations
+	suite.k.SetPendingUnlockParticipant(suite.ctx, participant)
+	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epochNumber)
+
+	// Verify epoch was added to queue
+	queue, found := suite.k.GetUnlockParticipantsQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.UnlockEpochs, 1)
+	suite.Require().Equal(uint64(epochNumber), queue.UnlockEpochs[0])
+
+	// Verify participants are still in store (not processed yet)
+	participants := suite.k.GetAllEpochPendingUnlockParticipant(suite.ctx, epochNumber)
+	suite.Require().Len(participants, 1)
+}
+
+func (suite *IntegrationTestSuite) TestServiceUnlock_EnqueueMultipleEpochs() {
+	addr := sdk.AccAddress("addr1")
+
+	for _, epoch := range []int64{100, 200} {
+		suite.k.SetPendingUnlockParticipant(suite.ctx, types.PendingUnlockParticipant{
+			Index:   fmt.Sprintf("%d/%s", epoch, fmt.Sprintf("%s/%s", "reward_1", addr.String())),
+			Address: addr.String(),
+			Amount:  "500",
+			Denom:   "ubze",
+		})
+		suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epoch)
+	}
+
+	queue, found := suite.k.GetUnlockParticipantsQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.UnlockEpochs, 2)
+	suite.Require().Equal(uint64(100), queue.UnlockEpochs[0])
+	suite.Require().Equal(uint64(200), queue.UnlockEpochs[1])
+}
+
+// --- ProcessUnlockParticipantsQueue tests ---
+
+func (suite *IntegrationTestSuite) TestProcessQueue_EmptyQueue() {
+	// No queue at all - should not panic
+	suite.Require().NotPanics(func() {
+		suite.k.ProcessUnlockParticipantsQueue(suite.ctx)
+	})
+}
+
+func (suite *IntegrationTestSuite) TestProcessQueue_SingleEntry() {
+	epochNumber := int64(50)
+	addr := sdk.AccAddress("addr1")
+	participant := types.PendingUnlockParticipant{
+		Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("%s/%s", "reward_1", addr.String())),
+		Address: addr.String(),
+		Amount:  "1000",
+		Denom:   "ubze",
+	}
+
 	suite.bank.EXPECT().
 		SendCoinsFromModuleToAccount(
-			suite.ctx,
+			gomock.Any(),
 			types.ModuleName,
 			addr,
 			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(1000))),
@@ -35,18 +93,22 @@ func (suite *IntegrationTestSuite) TestServiceUnlock_UnlockAllPendingUnlockParti
 		Return(nil).
 		Times(1)
 
-	// Set pending unlock participant
 	suite.k.SetPendingUnlockParticipant(suite.ctx, participant)
-
-	// Execute unlock
 	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epochNumber)
+
+	suite.k.ProcessUnlockParticipantsQueue(suite.ctx)
 
 	// Verify participant was removed
 	participants := suite.k.GetAllEpochPendingUnlockParticipant(suite.ctx, epochNumber)
 	suite.Require().Empty(participants)
+
+	// Verify epoch was removed from queue
+	queue, found := suite.k.GetUnlockParticipantsQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Empty(queue.UnlockEpochs)
 }
 
-func (suite *IntegrationTestSuite) TestServiceUnlock_UnlockAllPendingUnlockParticipantsByEpochMultiple() {
+func (suite *IntegrationTestSuite) TestProcessQueue_MultipleEntries() {
 	epochNumber := int64(75)
 	addr1 := sdk.AccAddress("addr1")
 	addr2 := sdk.AccAddress("addr2")
@@ -73,51 +135,28 @@ func (suite *IntegrationTestSuite) TestServiceUnlock_UnlockAllPendingUnlockParti
 		},
 	}
 
-	// Set up mock expectations for each participant
 	suite.bank.EXPECT().
-		SendCoinsFromModuleToAccount(
-			suite.ctx,
-			types.ModuleName,
-			addr1,
-			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500))),
-		).
-		Return(nil).
-		Times(1)
-
+		SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, addr1, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500)))).
+		Return(nil).Times(1)
 	suite.bank.EXPECT().
-		SendCoinsFromModuleToAccount(
-			suite.ctx,
-			types.ModuleName,
-			addr2,
-			sdk.NewCoins(sdk.NewCoin("utoken", math.NewInt(750))),
-		).
-		Return(nil).
-		Times(1)
-
+		SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, addr2, sdk.NewCoins(sdk.NewCoin("utoken", math.NewInt(750)))).
+		Return(nil).Times(1)
 	suite.bank.EXPECT().
-		SendCoinsFromModuleToAccount(
-			suite.ctx,
-			types.ModuleName,
-			addr3,
-			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(1000))),
-		).
-		Return(nil).
-		Times(1)
+		SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, addr3, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(1000)))).
+		Return(nil).Times(1)
 
-	// Set all pending unlock participants
-	for _, participant := range participants {
-		suite.k.SetPendingUnlockParticipant(suite.ctx, participant)
+	for _, p := range participants {
+		suite.k.SetPendingUnlockParticipant(suite.ctx, p)
 	}
-
-	// Execute unlock
 	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epochNumber)
 
-	// Verify all participants were removed
-	remainingParticipants := suite.k.GetAllEpochPendingUnlockParticipant(suite.ctx, epochNumber)
-	suite.Require().Empty(remainingParticipants)
+	suite.k.ProcessUnlockParticipantsQueue(suite.ctx)
+
+	remaining := suite.k.GetAllEpochPendingUnlockParticipant(suite.ctx, epochNumber)
+	suite.Require().Empty(remaining)
 }
 
-func (suite *IntegrationTestSuite) TestServiceUnlock_UnlockAllPendingUnlockParticipantsByEpochBankError() {
+func (suite *IntegrationTestSuite) TestProcessQueue_BankErrorKeepsEpochInQueue() {
 	epochNumber := int64(100)
 	addr := sdk.AccAddress("addr1")
 	participant := types.PendingUnlockParticipant{
@@ -127,33 +166,30 @@ func (suite *IntegrationTestSuite) TestServiceUnlock_UnlockAllPendingUnlockParti
 		Denom:   "ubze",
 	}
 
-	// Set up mock to return error
-	bankError := fmt.Errorf("insufficient funds")
 	suite.bank.EXPECT().
-		SendCoinsFromModuleToAccount(
-			suite.ctx,
-			types.ModuleName,
-			addr,
-			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500))),
-		).
-		Return(bankError).
+		SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, addr, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500)))).
+		Return(fmt.Errorf("insufficient funds")).
 		Times(1)
 
-	// Set pending unlock participant
 	suite.k.SetPendingUnlockParticipant(suite.ctx, participant)
+	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epochNumber)
 
-	// Execute unlock (should not panic despite error)
 	suite.Require().NotPanics(func() {
-		suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epochNumber)
+		suite.k.ProcessUnlockParticipantsQueue(suite.ctx)
 	})
 
-	// Verify participant was still removed (error is logged but process continues)
+	// Participant should still be in store (bank send failed)
 	participants := suite.k.GetAllEpochPendingUnlockParticipant(suite.ctx, epochNumber)
-	//should not work since bank sending returned an error
-	suite.Require().NotEmpty(participants)
+	suite.Require().Len(participants, 1)
+
+	// Epoch should remain in queue for retry
+	queue, found := suite.k.GetUnlockParticipantsQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.UnlockEpochs, 1)
+	suite.Require().Equal(uint64(epochNumber), queue.UnlockEpochs[0])
 }
 
-func (suite *IntegrationTestSuite) TestServiceUnlock_UnlockAllPendingUnlockParticipantsByEpochInvalidAddress() {
+func (suite *IntegrationTestSuite) TestProcessQueue_InvalidAddressKeepsEpochInQueue() {
 	epochNumber := int64(125)
 	participant := types.PendingUnlockParticipant{
 		Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("%s/%s", "reward_1", "invalid-address")),
@@ -162,20 +198,22 @@ func (suite *IntegrationTestSuite) TestServiceUnlock_UnlockAllPendingUnlockParti
 		Denom:   "ubze",
 	}
 
-	// No bank expectation since address parsing should fail
-
-	// Set pending unlock participant
 	suite.k.SetPendingUnlockParticipant(suite.ctx, participant)
-
 	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epochNumber)
 
-	// Verify participant was still removed (error is logged but process continues)
+	suite.k.ProcessUnlockParticipantsQueue(suite.ctx)
+
+	// Participant should remain (invalid address = error)
 	participants := suite.k.GetAllEpochPendingUnlockParticipant(suite.ctx, epochNumber)
-	//should not be empty since the participant has an invalid address. should be ignored
-	suite.Require().NotEmpty(participants)
+	suite.Require().Len(participants, 1)
+
+	// Epoch should remain in queue
+	queue, found := suite.k.GetUnlockParticipantsQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.UnlockEpochs, 1)
 }
 
-func (suite *IntegrationTestSuite) TestServiceUnlock_UnlockAllPendingUnlockParticipantsByEpochMixedSuccess() {
+func (suite *IntegrationTestSuite) TestProcessQueue_MixedSuccessAndFailure() {
 	epochNumber := int64(150)
 	addr1 := sdk.AccAddress("addr1")
 	addr2 := sdk.AccAddress("addr2")
@@ -201,89 +239,67 @@ func (suite *IntegrationTestSuite) TestServiceUnlock_UnlockAllPendingUnlockParti
 		},
 	}
 
-	// Set up mock expectations only for valid addresses
 	suite.bank.EXPECT().
-		SendCoinsFromModuleToAccount(
-			suite.ctx,
-			types.ModuleName,
-			addr1,
-			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500))),
-		).
-		Return(nil).
-		Times(1)
-
+		SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, addr1, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500)))).
+		Return(nil).Times(1)
 	suite.bank.EXPECT().
-		SendCoinsFromModuleToAccount(
-			suite.ctx,
-			types.ModuleName,
-			addr2,
-			sdk.NewCoins(sdk.NewCoin("utoken", math.NewInt(1000))),
-		).
-		Return(nil).
-		Times(1)
+		SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, addr2, sdk.NewCoins(sdk.NewCoin("utoken", math.NewInt(1000)))).
+		Return(nil).Times(1)
 
-	// Set all pending unlock participants
-	for _, participant := range participants {
-		suite.k.SetPendingUnlockParticipant(suite.ctx, participant)
+	for _, p := range participants {
+		suite.k.SetPendingUnlockParticipant(suite.ctx, p)
 	}
+	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epochNumber)
 
-	// Execute unlock (should not panic despite mixed results)
-	suite.Require().NotPanics(func() {
-		suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epochNumber)
-	})
+	suite.k.ProcessUnlockParticipantsQueue(suite.ctx)
 
-	// Verify all participants were removed
-	remainingParticipants := suite.k.GetAllEpochPendingUnlockParticipant(suite.ctx, epochNumber)
-	suite.Require().Len(remainingParticipants, 1)
+	// Only the invalid-address participant should remain
+	remaining := suite.k.GetAllEpochPendingUnlockParticipant(suite.ctx, epochNumber)
+	suite.Require().Len(remaining, 1)
+	suite.Require().Equal("invalid-address", remaining[0].Address)
+
+	// Epoch should stay in queue (had errors)
+	queue, found := suite.k.GetUnlockParticipantsQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.UnlockEpochs, 1)
 }
 
-func (suite *IntegrationTestSuite) TestServiceUnlock_UnlockAllPendingUnlockParticipantsByEpochDifferentEpochs() {
-	// Set participants for different epochs
+func (suite *IntegrationTestSuite) TestProcessQueue_DifferentEpochsOnlyRequestedProcessed() {
 	addr1 := sdk.AccAddress("addr1")
 	addr2 := sdk.AccAddress("addr2")
 
-	participant1 := types.PendingUnlockParticipant{
+	suite.k.SetPendingUnlockParticipant(suite.ctx, types.PendingUnlockParticipant{
 		Index:   fmt.Sprintf("%d/%s", 200, fmt.Sprintf("%s/%s", "reward_1", addr1.String())),
 		Address: addr1.String(),
 		Amount:  "500",
 		Denom:   "ubze",
-	}
-
-	participant2 := types.PendingUnlockParticipant{
+	})
+	suite.k.SetPendingUnlockParticipant(suite.ctx, types.PendingUnlockParticipant{
 		Index:   fmt.Sprintf("%d/%s", 201, fmt.Sprintf("%s/%s", "reward_2", addr2.String())),
 		Address: addr2.String(),
 		Amount:  "750",
 		Denom:   "ubze",
-	}
+	})
 
-	// Set up mock expectation only for epoch 200
-	suite.bank.EXPECT().
-		SendCoinsFromModuleToAccount(
-			suite.ctx,
-			types.ModuleName,
-			addr1,
-			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500))),
-		).
-		Return(nil).
-		Times(1)
-
-	// Set participants in different epochs
-	suite.k.SetPendingUnlockParticipant(suite.ctx, participant1)
-	suite.k.SetPendingUnlockParticipant(suite.ctx, participant2)
-
-	// Execute unlock for epoch 200 only
+	// Only enqueue epoch 200
 	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, 200)
 
-	// Verify only epoch 200 participant was removed
-	epoch200Participants := suite.k.GetAllEpochPendingUnlockParticipant(suite.ctx, 200)
-	suite.Require().Empty(epoch200Participants)
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, addr1, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500)))).
+		Return(nil).Times(1)
 
-	epoch201Participants := suite.k.GetAllEpochPendingUnlockParticipant(suite.ctx, 201)
-	suite.Require().Len(epoch201Participants, 1)
-	suite.Require().Equal(addr2.String(), epoch201Participants[0].Address)
+	suite.k.ProcessUnlockParticipantsQueue(suite.ctx)
+
+	// Epoch 200 should be processed
+	epoch200 := suite.k.GetAllEpochPendingUnlockParticipant(suite.ctx, 200)
+	suite.Require().Empty(epoch200)
+
+	// Epoch 201 should be untouched
+	epoch201 := suite.k.GetAllEpochPendingUnlockParticipant(suite.ctx, 201)
+	suite.Require().Len(epoch201, 1)
 }
 
-func (suite *IntegrationTestSuite) TestServiceUnlock_UnlockAllPendingUnlockParticipantsByEpochZeroAmount() {
+func (suite *IntegrationTestSuite) TestProcessQueue_ZeroAmountKeepsEpochInQueue() {
 	epochNumber := int64(250)
 	addr := sdk.AccAddress("addr1")
 	participant := types.PendingUnlockParticipant{
@@ -293,14 +309,61 @@ func (suite *IntegrationTestSuite) TestServiceUnlock_UnlockAllPendingUnlockParti
 		Denom:   "ubze",
 	}
 
-	// Set pending unlock participant
 	suite.k.SetPendingUnlockParticipant(suite.ctx, participant)
-
-	// Execute unlock
 	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epochNumber)
 
-	// Verify participant was removed
+	suite.k.ProcessUnlockParticipantsQueue(suite.ctx)
+
+	// Zero amount fails in getAmountToCapture, so participant should remain
 	participants := suite.k.GetAllEpochPendingUnlockParticipant(suite.ctx, epochNumber)
-	//amount is 0 and can not be sent, so the participant should remain untouched
 	suite.Require().Len(participants, 1)
+
+	// Epoch should remain in queue
+	queue, found := suite.k.GetUnlockParticipantsQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.UnlockEpochs, 1)
+}
+
+// --- Store tests for new functions ---
+
+func (suite *IntegrationTestSuite) TestStore_UnlockParticipantsQueue_SetAndGet() {
+	queue := types.UnlockParticipantsQueue{UnlockEpochs: []uint64{10, 20, 30}}
+	suite.k.SetUnlockParticipantsQueue(suite.ctx, queue)
+
+	result, found := suite.k.GetUnlockParticipantsQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Equal(queue.UnlockEpochs, result.UnlockEpochs)
+}
+
+func (suite *IntegrationTestSuite) TestStore_UnlockParticipantsQueue_NotFound() {
+	_, found := suite.k.GetUnlockParticipantsQueue(suite.ctx)
+	suite.Require().False(found)
+}
+
+func (suite *IntegrationTestSuite) TestStore_GetBatchEpochPendingUnlockParticipant() {
+	epochNumber := int64(100)
+	addr1 := sdk.AccAddress("addr1")
+	addr2 := sdk.AccAddress("addr2")
+	addr3 := sdk.AccAddress("addr3")
+
+	for i, addr := range []sdk.AccAddress{addr1, addr2, addr3} {
+		suite.k.SetPendingUnlockParticipant(suite.ctx, types.PendingUnlockParticipant{
+			Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("reward_%d/%s", i+1, addr.String())),
+			Address: addr.String(),
+			Amount:  "100",
+			Denom:   "ubze",
+		})
+	}
+
+	// Limit to 2 - should return only 2
+	batch := suite.k.GetBatchEpochPendingUnlockParticipant(suite.ctx, epochNumber, 2)
+	suite.Require().Len(batch, 2)
+
+	// Limit higher than entries - should return all 3
+	batch = suite.k.GetBatchEpochPendingUnlockParticipant(suite.ctx, epochNumber, 10)
+	suite.Require().Len(batch, 3)
+
+	// Empty epoch
+	batch = suite.k.GetBatchEpochPendingUnlockParticipant(suite.ctx, 999, 10)
+	suite.Require().Empty(batch)
 }
