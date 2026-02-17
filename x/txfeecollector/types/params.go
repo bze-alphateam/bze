@@ -8,6 +8,8 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
+const DefaultMaxBalanceIterations = uint64(100)
+
 var _ paramtypes.ParamSet = (*Params)(nil)
 
 // ParamKeyTable the param key table for launch module
@@ -16,9 +18,10 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(validatorMinGasFee sdk.DecCoin) Params {
+func NewParams(validatorMinGasFee sdk.DecCoin, maxBalanceIterations uint64) Params {
 	return Params{
-		ValidatorMinGasFee: validatorMinGasFee,
+		ValidatorMinGasFee:   validatorMinGasFee,
+		MaxBalanceIterations: maxBalanceIterations,
 	}
 }
 
@@ -26,6 +29,7 @@ func NewParams(validatorMinGasFee sdk.DecCoin) Params {
 func DefaultParams() Params {
 	return NewParams(
 		sdk.NewDecCoinFromDec("ubze", sdkmath.LegacyNewDecWithPrec(1, 2)), // 0.01ubze
+		DefaultMaxBalanceIterations,
 	)
 }
 
@@ -37,6 +41,10 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 // Validate validates the set of params
 func (p Params) Validate() error {
 	if err := validateValidatorMinGasFee(p.ValidatorMinGasFee); err != nil {
+		return err
+	}
+
+	if err := validateMaxBalanceIterations(p.MaxBalanceIterations); err != nil {
 		return err
 	}
 
@@ -59,6 +67,19 @@ func validateValidatorMinGasFee(i interface{}) error {
 
 	if !v.IsValid() {
 		return fmt.Errorf("invalid validator min gas fee: %s", v)
+	}
+
+	return nil
+}
+
+func validateMaxBalanceIterations(i interface{}) error {
+	v, ok := i.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v == 0 {
+		return fmt.Errorf("max balance iterations must be greater than 0")
 	}
 
 	return nil

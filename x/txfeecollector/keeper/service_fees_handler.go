@@ -8,7 +8,17 @@ import (
 )
 
 func (k Keeper) ConvertCollectedFeesToNativeDenom(ctx sdk.Context) error {
-	return k.convertFeesAndSend(ctx, types.ModuleName, authtypes.FeeCollectorName, false)
+	// change code to use sendSkipped = true here because:
+	// 1. the skipped coins are only the ones that cannot be swapped for native denom
+	// 2. the coins that cannot be swapped are those that don't have a LP with BZE or the LP is not deep enough
+	// 3. the coins that can not be swapped should never reach this module's address because the ante handler that sends
+	// them here is usually checking the LP
+	// 4. In case we have such coins (there are edge cases that can allow this) we should send them to the SDK's fee
+	// collector for performance on the end block of this module.
+	//
+	// Bottom line is: we allow the coins to be sent to validator/stakers instead of letting them grow here to be forever checked
+	// in each block.
+	return k.convertFeesAndSend(ctx, types.ModuleName, authtypes.FeeCollectorName, true)
 }
 
 func (k Keeper) ConvertBurnerFeesToNativeDenom(ctx sdk.Context) error {
@@ -62,6 +72,9 @@ func (k Keeper) convertFeesAndSend(ctx sdk.Context, fromModule, toModule string,
 
 // convertFees converts module-held fees into native denominations and categorizes them as swappable or non-swappable.
 // Returns the swappable fees, non-swappable fees, and any error encountered during the process.
+//
+// The coins that have deep enough liquidity but can't be swapped due to the amount being too low remain untouched
+// until they can be swapped.
 func (k Keeper) convertFees(ctx sdk.Context, fromModule string) (toSend, nonSwapable sdk.Coins, err error) {
 	moduleAddr := k.accountKeeper.GetModuleAddress(fromModule)
 	allCoins := k.bankKeeper.GetAllBalances(ctx, moduleAddr)
@@ -70,9 +83,19 @@ func (k Keeper) convertFees(ctx sdk.Context, fromModule string) (toSend, nonSwap
 		return nil, nil, nil
 	}
 
+	params := k.GetParams(ctx)
+	maxIterations := int(params.MaxBalanceIterations)
+
 	//group swappable coins to one collection
 	toSwap := sdk.NewCoins()
-	for _, c := range allCoins {
+	for i, c := range allCoins {
+		if i >= maxIterations {
+			if toSwap.IsZero() && nonSwapable.IsZero() {
+				k.Logger().Warn("max iterations reached without finding any coins to swap or non-swapable coins.")
+			}
+			break
+		}
+
 		if k.tradeKeeper.IsNativeDenom(ctx, c.Denom) {
 			toSend = toSend.Add(c)
 			continue

@@ -213,6 +213,9 @@ var (
 		stakingtypes.BondedPoolName,
 		stakingtypes.NotBondedPoolName,
 		nft.ModuleName,
+		txfeecollectormoduletypes.ModuleName,
+		txfeecollectormoduletypes.BurnerFeeCollector,
+		txfeecollectormoduletypes.CpFeeCollector,
 		// We allow the following module accounts to receive funds:
 		// govtypes.ModuleName
 	}
