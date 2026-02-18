@@ -65,25 +65,22 @@ func (k Keeper) IterateAllStakingRewards(ctx sdk.Context, msgHandler func(ctx sd
 
 // GetBatchStakingRewards returns up to limit StakingReward entries starting after the given cursor.
 // If cursor is empty, it starts from the beginning.
-func (k Keeper) GetBatchStakingRewards(ctx sdk.Context, cursor string, limit int) []types.StakingReward {
+func (k Keeper) GetBatchStakingRewards(ctx sdk.Context, startAtRewardId string, limit int) []types.StakingReward {
 	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.StakingRewardKeyPrefix))
-	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
+
+	var startKey []byte
+	if startAtRewardId != "" {
+		// Start right after the startAtRewardId key by appending 0x00
+		startKey = append(types.StakingRewardKey(startAtRewardId), 0x00)
+	}
+
+	iterator := store.Iterator(startKey, nil)
 	defer iterator.Close()
 
 	var list []types.StakingReward
-	pastCursor := cursor == ""
-
 	for ; iterator.Valid() && len(list) < limit; iterator.Next() {
 		var sr types.StakingReward
 		k.cdc.MustUnmarshal(iterator.Value(), &sr)
-
-		if !pastCursor {
-			if sr.RewardId == cursor {
-				pastCursor = true
-			}
-			continue
-		}
-
 		list = append(list, sr)
 	}
 

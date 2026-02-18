@@ -206,7 +206,7 @@ func (suite *IntegrationTestSuite) TestProcessStakingDistributionQueue_MultiBloc
 
 	for i := 1; i <= totalRewards; i++ {
 		suite.k.SetStakingReward(suite.ctx, types.StakingReward{
-			RewardId:         fmt.Sprintf("drain-reward-%03d", i), // zero-padded for deterministic ordering
+			RewardId:         fmt.Sprintf("drain-reward-%03d", i), // zero-padded for deterministic lexicographic ordering
 			PrizeAmount:      "1000",
 			PrizeDenom:       "ubze",
 			StakingDenom:     "ubze",
@@ -221,29 +221,28 @@ func (suite *IntegrationTestSuite) TestProcessStakingDistributionQueue_MultiBloc
 
 	suite.k.EnqueueStakingRewardsDistribution(suite.ctx)
 
-	// First block: should process MaxStakingDistributionsPerBlock entries
+	// First block: should process the first MaxStakingDistributionsPerBlock entries in order
 	suite.k.ProcessStakingRewardsDistributionQueue(suite.ctx)
 
-	// Queue should still be pending with a cursor set
+	// Queue should still be pending with cursor pointing to the last processed reward
 	queue, found := suite.k.GetStakingRewardsDistributionQueue(suite.ctx)
 	suite.Require().True(found)
 	suite.Require().True(queue.Pending)
-	suite.Require().NotEmpty(queue.Cursor)
+	suite.Require().Equal(fmt.Sprintf("drain-reward-%03d", types.MaxStakingDistributionsPerBlock), queue.Cursor)
 
-	// Count processed (payouts == 1) vs unprocessed (payouts == 0)
-	processedCount := 0
-	unprocessedCount := 0
-	for i := 1; i <= totalRewards; i++ {
+	// First 100 rewards should be processed (payouts == 1)
+	for i := 1; i <= types.MaxStakingDistributionsPerBlock; i++ {
 		reward, found := suite.k.GetStakingReward(suite.ctx, fmt.Sprintf("drain-reward-%03d", i))
 		suite.Require().True(found)
-		if reward.Payouts == 1 {
-			processedCount++
-		} else {
-			unprocessedCount++
-		}
+		suite.Require().Equal(uint32(1), reward.Payouts, "reward %03d should have been processed in first batch", i)
 	}
-	suite.Require().Equal(types.MaxStakingDistributionsPerBlock, processedCount)
-	suite.Require().Equal(50, unprocessedCount)
+
+	// Remaining 50 rewards should be untouched (payouts == 0)
+	for i := types.MaxStakingDistributionsPerBlock + 1; i <= totalRewards; i++ {
+		reward, found := suite.k.GetStakingReward(suite.ctx, fmt.Sprintf("drain-reward-%03d", i))
+		suite.Require().True(found)
+		suite.Require().Equal(uint32(0), reward.Payouts, "reward %03d should NOT have been processed yet", i)
+	}
 
 	// Second block: should process remaining 50 and remove queue
 	suite.k.ProcessStakingRewardsDistributionQueue(suite.ctx)
@@ -255,7 +254,7 @@ func (suite *IntegrationTestSuite) TestProcessStakingDistributionQueue_MultiBloc
 	for i := 1; i <= totalRewards; i++ {
 		reward, found := suite.k.GetStakingReward(suite.ctx, fmt.Sprintf("drain-reward-%03d", i))
 		suite.Require().True(found)
-		suite.Require().Equal(uint32(1), reward.Payouts)
+		suite.Require().Equal(uint32(1), reward.Payouts, "reward %03d should have been processed", i)
 	}
 }
 
