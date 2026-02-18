@@ -185,6 +185,144 @@ func (suite *IntegrationTestSuite) TestCancelOrder_PendingCancelClearedAfterProc
 	suite.Require().False(suite.k.HasPendingCancel(suite.ctx, getMarketId(), types.OrderTypeBuy, order.Id))
 }
 
+func (suite *IntegrationTestSuite) TestCreateOrder_BuyAtMatchingSellPrice_OnlySell_Succeeds() {
+	suite.k.SetMarket(suite.ctx, market)
+	// Single sell aggregated order at price 2
+	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeSell,
+		Amount:    "10000",
+		Price:     "2",
+	})
+
+	addr1 := sdk.AccAddress("addr1_______________")
+	params := suite.k.GetParams(suite.ctx)
+	takerFee, err := sdk.ParseCoinsNormalized(params.MarketTakerFee)
+	suite.Require().NoError(err)
+	paidCoins := sdk.NewCoins(sdk.NewCoin(denomBze, math.NewInt(2_000_000)))
+
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, takerFee).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), takerFee).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, paidCoins).Return(nil).Times(1)
+
+	// Buy at price 2 matches the only sell - should succeed
+	orderMsg := types.MsgCreateOrder{
+		Amount:    "1000000",
+		Price:     "2",
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Creator:   addr1.String(),
+	}
+	_, err = suite.msgServer.CreateOrder(suite.ctx, &orderMsg)
+	suite.Require().Nil(err)
+
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 1)
+}
+
+func (suite *IntegrationTestSuite) TestCreateOrder_BuyAtHigherSellPrice_BetterSellExists_Fails() {
+	suite.k.SetMarket(suite.ctx, market)
+	// Two sell aggregated orders: one at price 3 (better) and one at price 5
+	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeSell,
+		Amount:    "10000",
+		Price:     "3",
+	})
+	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeSell,
+		Amount:    "10000",
+		Price:     "5",
+	})
+
+	addr1 := sdk.AccAddress("addr1_______________")
+
+	// Buy at price 5 should fail because a better sell at price 3 exists
+	orderMsg := types.MsgCreateOrder{
+		Amount:    "1000000",
+		Price:     "5",
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Creator:   addr1.String(),
+	}
+	_, err := suite.msgServer.CreateOrder(suite.ctx, &orderMsg)
+	suite.Require().Error(err)
+
+	// No queue message should be created
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 0)
+}
+
+func (suite *IntegrationTestSuite) TestCreateOrder_SellAtMatchingBuyPrice_OnlyBuy_Succeeds() {
+	suite.k.SetMarket(suite.ctx, market)
+	// Single buy aggregated order at price 1
+	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Amount:    "10000",
+		Price:     "1",
+	})
+
+	addr1 := sdk.AccAddress("addr1_______________")
+	params := suite.k.GetParams(suite.ctx)
+	takerFee, err := sdk.ParseCoinsNormalized(params.MarketTakerFee)
+	suite.Require().NoError(err)
+	paidCoins := sdk.NewCoins(sdk.NewCoin(denomStake, math.NewInt(1000000)))
+
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, takerFee).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), takerFee).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, paidCoins).Return(nil).Times(1)
+
+	// Sell at price 1 matches the only buy - should succeed
+	orderMsg := types.MsgCreateOrder{
+		Amount:    "1000000",
+		Price:     "1",
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeSell,
+		Creator:   addr1.String(),
+	}
+	_, err = suite.msgServer.CreateOrder(suite.ctx, &orderMsg)
+	suite.Require().Nil(err)
+
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 1)
+}
+
+func (suite *IntegrationTestSuite) TestCreateOrder_SellAtLowerBuyPrice_BetterBuyExists_Fails() {
+	suite.k.SetMarket(suite.ctx, market)
+	// Two buy aggregated orders: one at price 1 and one at price 5 (better for seller)
+	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Amount:    "10000",
+		Price:     "1",
+	})
+	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Amount:    "10000",
+		Price:     "5",
+	})
+
+	addr1 := sdk.AccAddress("addr1_______________")
+
+	// Sell at price 1 should fail because a better buy at price 5 exists
+	orderMsg := types.MsgCreateOrder{
+		Amount:    "1000000",
+		Price:     "1",
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeSell,
+		Creator:   addr1.String(),
+	}
+	_, err := suite.msgServer.CreateOrder(suite.ctx, &orderMsg)
+	suite.Require().Error(err)
+
+	// No queue message should be created
+	qmList := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qmList, 0)
+}
+
 func (suite *IntegrationTestSuite) Msg_TestCreateMarket_InvalidDenom() {
 
 	//same denom for both

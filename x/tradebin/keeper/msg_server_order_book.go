@@ -391,8 +391,6 @@ func (k msgServer) captureTradingFees(ctx sdk.Context, sender sdk.AccAddress, is
 // in descending/ascending order by price.
 //
 // A price is valid if:
-// - has an opposite order that can match and the order is filled immediately (market taker)
-// OR
 //   - if order type is "buy":
 //   - price is lower than the first "sell" order found
 //     AND
@@ -401,15 +399,9 @@ func (k msgServer) captureTradingFees(ctx sdk.Context, sender sdk.AccAddress, is
 //   - price is higher than the first "buy" order found
 //     AND
 //   - price is higher than ALL queue messages of type "buy"
+//
+// TODO: implement a proper price "oracle" for bid and ask. We could store them on each market
 func (k msgServer) checkPrice(ctx sdk.Context, msg *types.MsgCreateOrder) error {
-	oppositeType := types.TheOtherOrderType(msg.OrderType)
-	//if order can be filled then the price is valid
-	_, found := k.GetAggregatedOrder(ctx, msg.MarketId, oppositeType, msg.Price)
-	if found {
-
-		return nil
-	}
-
 	currentPrice, err := math.LegacyNewDecFromStr(msg.Price)
 	if err != nil {
 		//should never happen! Message should be validated before this function is called
