@@ -210,7 +210,7 @@ func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_NilTradeKeeper() {
 func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_ReCheckTx() {
 	decorator := ante.NewValidateTxFeeDenomsDecorator(suite.tradeMock)
 
-	// ReCheckTx should bypass validation and call next handler directly
+	// ReCheckTx should bypass validation but still set FeeDenomKey in context
 	recheckCtx := suite.ctx.WithIsReCheckTx(true)
 
 	tx := &mockFeeTx{
@@ -218,10 +218,34 @@ func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_ReCheckTx() {
 		gas: 100000,
 	}
 
-	// No mocks should be called for ReCheckTx
+	// No trade keeper mocks should be called for ReCheckTx (validation is skipped)
 	_, err := decorator.AnteHandle(recheckCtx, tx, false, suite.mockNext())
 	suite.Require().NoError(err)
 	suite.Require().True(suite.nextCalled)
+
+	// Verify FeeDenomKey was set in the context passed to the next handler
+	feeDenom := suite.nextCalledWith.Value(ante.FeeDenomKey)
+	suite.Require().Equal(denomOther, feeDenom)
+}
+
+func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_ReCheckTx_EmptyFee() {
+	decorator := ante.NewValidateTxFeeDenomsDecorator(suite.tradeMock)
+
+	// ReCheckTx with empty fee should still pass without setting FeeDenomKey
+	recheckCtx := suite.ctx.WithIsReCheckTx(true)
+
+	tx := &mockFeeTx{
+		fee: sdk.NewCoins(),
+		gas: 100000,
+	}
+
+	_, err := decorator.AnteHandle(recheckCtx, tx, false, suite.mockNext())
+	suite.Require().NoError(err)
+	suite.Require().True(suite.nextCalled)
+
+	// FeeDenomKey should not be set when fee is empty
+	feeDenom := suite.nextCalledWith.Value(ante.FeeDenomKey)
+	suite.Require().Nil(feeDenom)
 }
 
 // nonFeeTxImpl implements sdk.Tx but not sdk.FeeTx

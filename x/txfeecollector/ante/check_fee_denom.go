@@ -23,14 +23,19 @@ func NewValidateTxFeeDenomsDecorator(tradeKeeper types.TradeKeeper) ValidateTxFe
 }
 
 func (vbd ValidateTxFeeDenomsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
-	// no need to validate basic on recheck tx, call next antehandler
-	if ctx.IsReCheckTx() {
-		return next(ctx, tx, simulate)
-	}
-
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
 		return ctx, sdkerrors.Wrap(storeTypes.ErrTxDecode, "ValidateTxFeeDenomsDecorator requires tx to be a FeeTx")
+	}
+
+	// On ReCheckTx, skip validation but still set FeeDenomKey in context
+	// so that downstream handlers (DeductFeeDecorator) can compute min gas prices
+	// in the correct denomination.
+	if ctx.IsReCheckTx() {
+		if !feeTx.GetFee().Empty() {
+			ctx = ctx.WithValue(FeeDenomKey, feeTx.GetFee()[0].Denom)
+		}
+		return next(ctx, tx, simulate)
 	}
 
 	if feeTx.GetFee().Len() > 1 {
