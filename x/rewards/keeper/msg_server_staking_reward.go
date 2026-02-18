@@ -461,15 +461,27 @@ func (k msgServer) claimPending(ctx sdk.Context, sr types.StakingReward, partici
 		return nil, err
 	}
 
+	zeroCoins := sdk.NewCoin(sr.PrizeDenom, math.NewInt(0))
 	//user has nothing to claim
 	if distributedStake.Equal(joinedAt) {
-		zeroCoins := sdk.NewCoin(sr.PrizeDenom, math.NewInt(0))
 		return &zeroCoins, nil
 	}
 
-	reward := deposited.Mul(distributedStake.Sub(joinedAt)).TruncateInt()
-	if !reward.IsPositive() {
+	//the user might have a small amount to claim, like 0.01 ubze. We can't send him this reward, but we must NOT
+	// update his JoinedAt because that will make him lose funds.
+	// 1. so we check if the decimal is positive, if not return an error
+	rewardDec := deposited.Mul(distributedStake.Sub(joinedAt))
+	if !rewardDec.IsPositive() {
 		return nil, fmt.Errorf("no rewards to claim")
+	}
+
+	reward := rewardDec.TruncateInt()
+	//2. if the previous "if" statement was false, it means the reward is bigger than 0.
+	//we truncate it to get the amount we can actually send, which should be an int.
+	if !reward.IsPositive() {
+		//truncation of the decimal resulted in a number <= 0.
+		//this means he has nothing to claim.
+		return &zeroCoins, nil
 	}
 
 	acc, err := sdk.AccAddressFromBech32(participant.Address)
