@@ -618,6 +618,180 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingReward
 	suite.Require().Equal("1.0", updatedParticipant.JoinedAt)
 }
 
+func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingRewardsTruncatedZero() {
+	creator := sdk.AccAddress("creator")
+
+	// Set up staking reward where a small participant has a fractional reward (0 < reward < 1)
+	// deposited=1, distributedStake="0.5", joinedAt="0" → reward = 1 * (0.5 - 0) = 0.5, truncates to 0
+	stakingReward := types.StakingReward{
+		RewardId:         "claim-truncated-reward",
+		PrizeAmount:      "1000",
+		PrizeDenom:       "ubze",
+		StakingDenom:     "ubze",
+		Duration:         5,
+		Payouts:          2,
+		MinStake:         1,
+		Lock:             7,
+		StakedAmount:     "10000",
+		DistributedStake: "0.5",
+	}
+	suite.k.SetStakingReward(suite.ctx, stakingReward)
+
+	participant := types.StakingRewardParticipant{
+		Address:  creator.String(),
+		RewardId: "claim-truncated-reward",
+		Amount:   "1", // Small participant
+		JoinedAt: "0",
+	}
+	suite.k.SetStakingRewardParticipant(suite.ctx, participant)
+
+	// No bank keeper mock needed - no coins should be sent when reward truncates to zero
+
+	msg := &types.MsgClaimStakingRewards{
+		Creator:  creator.String(),
+		RewardId: "claim-truncated-reward",
+	}
+
+	response, err := suite.msgServer.ClaimStakingRewards(suite.ctx, msg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(response)
+	suite.Require().Equal("0", response.Amount)
+
+	// Verify participant's JoinedAt was NOT updated (so fractional rewards are preserved)
+	updatedParticipant, found := suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), "claim-truncated-reward")
+	suite.Require().True(found)
+	suite.Require().Equal("0", updatedParticipant.JoinedAt)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStakingTruncatedZero() {
+	creator := sdk.AccAddress("creator")
+
+	// Set up staking reward where reward truncates to zero
+	// deposited=1, distributedStake="0.5", joinedAt="0" → reward = 0.5, truncates to 0
+	stakingReward := types.StakingReward{
+		RewardId:         "exit-truncated-reward",
+		PrizeAmount:      "1000",
+		PrizeDenom:       "ubze",
+		StakingDenom:     "ubze",
+		Duration:         5,
+		Payouts:          2,
+		MinStake:         1,
+		Lock:             0,
+		StakedAmount:     "10000",
+		DistributedStake: "0.5",
+	}
+	suite.k.SetStakingReward(suite.ctx, stakingReward)
+
+	participant := types.StakingRewardParticipant{
+		Address:  creator.String(),
+		RewardId: "exit-truncated-reward",
+		Amount:   "1",
+		JoinedAt: "0",
+	}
+	suite.k.SetStakingRewardParticipant(suite.ctx, participant)
+
+	// Mock epoch keeper call (beginUnlock still calls it)
+	suite.epoch.EXPECT().
+		GetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(100)).
+		Times(1)
+
+	// Mock bank keeper call for unlock (immediate since lock = 0) - only the staked amount, no reward
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(
+			suite.ctx,
+			types.ModuleName,
+			creator,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(1))),
+		).
+		Return(nil).
+		Times(1)
+
+	msg := &types.MsgExitStaking{
+		Creator:  creator.String(),
+		RewardId: "exit-truncated-reward",
+	}
+
+	response, err := suite.msgServer.ExitStaking(suite.ctx, msg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(response)
+
+	// Verify participant was removed
+	_, found := suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), "exit-truncated-reward")
+	suite.Require().False(found)
+
+	// Verify staked amount was updated
+	updatedReward, found := suite.k.GetStakingReward(suite.ctx, "exit-truncated-reward")
+	suite.Require().True(found)
+	suite.Require().Equal("9999", updatedReward.StakedAmount)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingExistingParticipantTruncatedZero() {
+	creator := sdk.AccAddress("creator")
+
+	// Set up staking reward where existing participant's pending reward truncates to zero
+	// deposited=1, distributedStake="0.5", joinedAt="0" → reward = 0.5, truncates to 0
+	stakingReward := types.StakingReward{
+		RewardId:         "join-truncated-reward",
+		PrizeAmount:      "1000",
+		PrizeDenom:       "ubze",
+		StakingDenom:     "ubze",
+		Duration:         5,
+		Payouts:          2,
+		MinStake:         1,
+		Lock:             7,
+		StakedAmount:     "10000",
+		DistributedStake: "0.5",
+	}
+	suite.k.SetStakingReward(suite.ctx, stakingReward)
+
+	participant := types.StakingRewardParticipant{
+		Address:  creator.String(),
+		RewardId: "join-truncated-reward",
+		Amount:   "1",
+		JoinedAt: "0",
+	}
+	suite.k.SetStakingRewardParticipant(suite.ctx, participant)
+
+	// Mock bank keeper calls for the new join amount
+	suite.bank.EXPECT().
+		SpendableCoins(suite.ctx, creator).
+		Return(sdk.NewCoins(
+			sdk.NewCoin("ubze", math.NewInt(10000)),
+		)).
+		Times(1)
+
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(
+			suite.ctx,
+			creator,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100))),
+		).
+		Return(nil).
+		Times(1)
+
+	msg := &types.MsgJoinStaking{
+		Creator:  creator.String(),
+		RewardId: "join-truncated-reward",
+		Amount:   "100",
+	}
+
+	response, err := suite.msgServer.JoinStaking(suite.ctx, msg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(response)
+
+	// Verify participant's amount was updated (1 + 100 = 101)
+	updatedParticipant, found := suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), "join-truncated-reward")
+	suite.Require().True(found)
+	suite.Require().Equal("101", updatedParticipant.Amount)
+
+	// Verify staked amount was updated
+	updatedReward, found := suite.k.GetStakingReward(suite.ctx, "join-truncated-reward")
+	suite.Require().True(found)
+	suite.Require().Equal("10100", updatedReward.StakedAmount)
+}
+
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_DistributeStakingRewardsSuccess() {
 	creator := sdk.AccAddress("creator")
 
