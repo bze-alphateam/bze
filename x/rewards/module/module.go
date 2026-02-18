@@ -176,6 +176,8 @@ func (am AppModule) BeginBlock(_ context.Context) error {
 func (am AppModule) EndBlock(gotCtx context.Context) error {
 	ctx := sdk.UnwrapSDKContext(gotCtx)
 	am.keeper.ProcessUnlockParticipantsQueue(ctx)
+	am.keeper.ProcessStakingRewardsDistributionQueue(ctx)
+	am.keeper.ProcessExpiredTradingRewardRemovalQueue(ctx)
 
 	return nil
 }

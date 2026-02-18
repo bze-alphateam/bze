@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -299,6 +300,227 @@ func (suite *IntegrationTestSuite) TestStoreStakingReward_IterateAllMultiple() {
 
 	suite.Require().True(rewardIds["iter-reward-1"])
 	suite.Require().True(rewardIds["iter-reward-2"])
+}
+
+// --- GetBatchStakingRewards tests ---
+
+func (suite *IntegrationTestSuite) TestStoreStakingReward_GetBatchFromBeginning() {
+	for i := 1; i <= 5; i++ {
+		suite.k.SetStakingReward(suite.ctx, types.StakingReward{
+			RewardId:         fmt.Sprintf("batch-reward-%d", i),
+			PrizeAmount:      "1000",
+			PrizeDenom:       "ubze",
+			StakingDenom:     "ubze",
+			Duration:         5,
+			Payouts:          0,
+			MinStake:         100,
+			Lock:             7,
+			StakedAmount:     "5000",
+			DistributedStake: "0",
+		})
+	}
+
+	// Get first 3 from the beginning (empty cursor)
+	batch := suite.k.GetBatchStakingRewards(suite.ctx, "", 3)
+	suite.Require().Len(batch, 3)
+}
+
+func (suite *IntegrationTestSuite) TestStoreStakingReward_GetBatchWithCursor() {
+	for i := 1; i <= 5; i++ {
+		suite.k.SetStakingReward(suite.ctx, types.StakingReward{
+			RewardId:         fmt.Sprintf("cursor-reward-%d", i),
+			PrizeAmount:      "1000",
+			PrizeDenom:       "ubze",
+			StakingDenom:     "ubze",
+			Duration:         5,
+			Payouts:          0,
+			MinStake:         100,
+			Lock:             7,
+			StakedAmount:     "5000",
+			DistributedStake: "0",
+		})
+	}
+
+	// Get first batch
+	batch1 := suite.k.GetBatchStakingRewards(suite.ctx, "", 2)
+	suite.Require().Len(batch1, 2)
+
+	// Get second batch using cursor from first batch
+	cursor := batch1[len(batch1)-1].RewardId
+	batch2 := suite.k.GetBatchStakingRewards(suite.ctx, cursor, 2)
+	suite.Require().Len(batch2, 2)
+
+	// Verify no overlap between batches
+	for _, r1 := range batch1 {
+		for _, r2 := range batch2 {
+			suite.Require().NotEqual(r1.RewardId, r2.RewardId)
+		}
+	}
+
+	// Get third batch - should return remaining 1
+	cursor2 := batch2[len(batch2)-1].RewardId
+	batch3 := suite.k.GetBatchStakingRewards(suite.ctx, cursor2, 10)
+	suite.Require().Len(batch3, 1)
+
+	// All 5 rewards should be covered across batches
+	allIds := make(map[string]bool)
+	for _, r := range batch1 {
+		allIds[r.RewardId] = true
+	}
+	for _, r := range batch2 {
+		allIds[r.RewardId] = true
+	}
+	for _, r := range batch3 {
+		allIds[r.RewardId] = true
+	}
+	suite.Require().Len(allIds, 5)
+}
+
+func (suite *IntegrationTestSuite) TestStoreStakingReward_GetBatchCursorAtEnd() {
+	suite.k.SetStakingReward(suite.ctx, types.StakingReward{
+		RewardId:         "last-reward",
+		PrizeAmount:      "1000",
+		PrizeDenom:       "ubze",
+		StakingDenom:     "ubze",
+		Duration:         5,
+		Payouts:          0,
+		MinStake:         100,
+		Lock:             7,
+		StakedAmount:     "5000",
+		DistributedStake: "0",
+	})
+
+	// Cursor points to the last (and only) reward - nothing after it
+	batch := suite.k.GetBatchStakingRewards(suite.ctx, "last-reward", 10)
+	suite.Require().Empty(batch)
+}
+
+func (suite *IntegrationTestSuite) TestStoreStakingReward_GetBatchEmptyStore() {
+	batch := suite.k.GetBatchStakingRewards(suite.ctx, "", 10)
+	suite.Require().Empty(batch)
+}
+
+func (suite *IntegrationTestSuite) TestStoreStakingReward_GetBatchLimitHigherThanEntries() {
+	for i := 1; i <= 3; i++ {
+		suite.k.SetStakingReward(suite.ctx, types.StakingReward{
+			RewardId:         fmt.Sprintf("limit-reward-%d", i),
+			PrizeAmount:      "1000",
+			PrizeDenom:       "ubze",
+			StakingDenom:     "ubze",
+			Duration:         5,
+			Payouts:          0,
+			MinStake:         100,
+			Lock:             7,
+			StakedAmount:     "5000",
+			DistributedStake: "0",
+		})
+	}
+
+	// Limit is higher than total entries
+	batch := suite.k.GetBatchStakingRewards(suite.ctx, "", 100)
+	suite.Require().Len(batch, 3)
+}
+
+func (suite *IntegrationTestSuite) TestStoreStakingReward_GetBatchCursorNotFound() {
+	suite.k.SetStakingReward(suite.ctx, types.StakingReward{
+		RewardId:         "existing-reward",
+		PrizeAmount:      "1000",
+		PrizeDenom:       "ubze",
+		StakingDenom:     "ubze",
+		Duration:         5,
+		Payouts:          0,
+		MinStake:         100,
+		Lock:             7,
+		StakedAmount:     "5000",
+		DistributedStake: "0",
+	})
+
+	// Cursor points to a non-existent reward - should return nothing since cursor is never matched
+	batch := suite.k.GetBatchStakingRewards(suite.ctx, "non-existent-cursor", 10)
+	suite.Require().Empty(batch)
+}
+
+// --- StakingRewardsDistributionQueue store tests ---
+
+func (suite *IntegrationTestSuite) TestStoreStakingReward_DistributionQueue_SetAndGet() {
+	queue := types.StakingRewardsDistributionQueue{
+		Pending: true,
+		Cursor:  "reward-5",
+	}
+	suite.k.SetStakingRewardsDistributionQueue(suite.ctx, queue)
+
+	result, found := suite.k.GetStakingRewardsDistributionQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().True(result.Pending)
+	suite.Require().Equal("reward-5", result.Cursor)
+}
+
+func (suite *IntegrationTestSuite) TestStoreStakingReward_DistributionQueue_NotFound() {
+	_, found := suite.k.GetStakingRewardsDistributionQueue(suite.ctx)
+	suite.Require().False(found)
+}
+
+func (suite *IntegrationTestSuite) TestStoreStakingReward_DistributionQueue_Remove() {
+	suite.k.SetStakingRewardsDistributionQueue(suite.ctx, types.StakingRewardsDistributionQueue{
+		Pending: true,
+		Cursor:  "some-cursor",
+	})
+
+	_, found := suite.k.GetStakingRewardsDistributionQueue(suite.ctx)
+	suite.Require().True(found)
+
+	suite.k.RemoveStakingRewardsDistributionQueue(suite.ctx)
+
+	_, found = suite.k.GetStakingRewardsDistributionQueue(suite.ctx)
+	suite.Require().False(found)
+}
+
+func (suite *IntegrationTestSuite) TestStoreStakingReward_DistributionQueue_Update() {
+	suite.k.SetStakingRewardsDistributionQueue(suite.ctx, types.StakingRewardsDistributionQueue{
+		Pending: true,
+		Cursor:  "",
+	})
+
+	// Update the queue
+	suite.k.SetStakingRewardsDistributionQueue(suite.ctx, types.StakingRewardsDistributionQueue{
+		Pending: true,
+		Cursor:  "reward-10",
+	})
+
+	result, found := suite.k.GetStakingRewardsDistributionQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().True(result.Pending)
+	suite.Require().Equal("reward-10", result.Cursor)
+}
+
+func (suite *IntegrationTestSuite) TestStoreStakingReward_DistributionQueue_EmptyCursor() {
+	suite.k.SetStakingRewardsDistributionQueue(suite.ctx, types.StakingRewardsDistributionQueue{
+		Pending: true,
+		Cursor:  "",
+	})
+
+	result, found := suite.k.GetStakingRewardsDistributionQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().True(result.Pending)
+	suite.Require().Equal("", result.Cursor)
+}
+
+func (suite *IntegrationTestSuite) TestStoreStakingReward_DistributionQueue_NotPending() {
+	suite.k.SetStakingRewardsDistributionQueue(suite.ctx, types.StakingRewardsDistributionQueue{
+		Pending: false,
+		Cursor:  "",
+	})
+
+	result, found := suite.k.GetStakingRewardsDistributionQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().False(result.Pending)
+}
+
+func (suite *IntegrationTestSuite) TestStoreStakingReward_DistributionQueue_RemoveNonExistent() {
+	// Removing non-existent queue should not panic
+	suite.Require().NotPanics(func() {
+		suite.k.RemoveStakingRewardsDistributionQueue(suite.ctx)
+	})
 }
 
 func (suite *IntegrationTestSuite) TestStoreStakingReward_IterateAllEarlyStop() {

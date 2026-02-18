@@ -1,5 +1,8 @@
 package types
 
 const (
-	MaxUnlocksPerBlock = 100
+	//TODO: move them to module params
+	MaxUnlocksPerBlock               = 100
+	MaxStakingDistributionsPerBlock  = 100
+	MaxTradingRewardRemovalsPerBlock = 100
 )

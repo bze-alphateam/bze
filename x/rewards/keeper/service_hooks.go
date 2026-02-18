@@ -19,7 +19,7 @@ func (k Keeper) GetDistributeAllStakingRewardsHook() types.EpochHook {
 			With("epoch", epochIdentifier, "epoch_number", epochNumber, "hook_name", hookName).
 			Debug("preparing to execute hook")
 
-		k.DistributeAllStakingRewards(ctx)
+		k.EnqueueStakingRewardsDistribution(ctx)
 
 		return nil
 	})
@@ -53,7 +53,7 @@ func (k Keeper) GetRemoveExpiredPendingTradingRewardsHook() types.EpochHook {
 			With("epoch", epochIdentifier, "epoch_number", epochNumber, "hook_name", hookName).
 			Debug("preparing to execute hook")
 
-		k.removeExpiredPendingTradingRewards(ctx, epochNumber)
+		k.EnqueueExpiredTradingRewardRemoval(ctx, epochNumber)
 
 		return nil
 	})

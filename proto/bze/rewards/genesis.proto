@@ -28,4 +28,7 @@ message GenesisState {
   repeated MarketIdTradingRewardId market_id_trading_reward_id_list = 11 [(gogoproto.nullable) = false];
   repeated TradingRewardExpiration pending_trading_reward_expiration_list = 12 [(gogoproto.nullable) = false];
   repeated TradingRewardExpiration active_trading_reward_expiration_list = 13 [(gogoproto.nullable) = false];
+  UnlockParticipantsQueue unlock_participants_queue = 14;
+  StakingRewardsDistributionQueue staking_rewards_distribution_queue = 15;
+  TradingRewardExpirationQueue trading_reward_expiration_queue = 16;
 }

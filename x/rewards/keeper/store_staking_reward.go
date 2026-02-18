@@ -62,3 +62,53 @@ func (k Keeper) IterateAllStakingRewards(ctx sdk.Context, msgHandler func(ctx sd
 		}
 	}
 }
+
+// GetBatchStakingRewards returns up to limit StakingReward entries starting after the given cursor.
+// If cursor is empty, it starts from the beginning.
+func (k Keeper) GetBatchStakingRewards(ctx sdk.Context, cursor string, limit int) []types.StakingReward {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.StakingRewardKeyPrefix))
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
+	defer iterator.Close()
+
+	var list []types.StakingReward
+	pastCursor := cursor == ""
+
+	for ; iterator.Valid() && len(list) < limit; iterator.Next() {
+		var sr types.StakingReward
+		k.cdc.MustUnmarshal(iterator.Value(), &sr)
+
+		if !pastCursor {
+			if sr.RewardId == cursor {
+				pastCursor = true
+			}
+			continue
+		}
+
+		list = append(list, sr)
+	}
+
+	return list
+}
+
+func (k Keeper) SetStakingRewardsDistributionQueue(ctx sdk.Context, q types.StakingRewardsDistributionQueue) {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.StakingRewardDistributionQueueKey))
+	b := k.cdc.MustMarshal(&q)
+	store.Set([]byte{1}, b)
+}
+
+func (k Keeper) GetStakingRewardsDistributionQueue(ctx sdk.Context) (val types.StakingRewardsDistributionQueue, found bool) {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.StakingRewardDistributionQueueKey))
+
+	b := store.Get([]byte{1})
+	if b == nil {
+		return val, false
+	}
+
+	k.cdc.MustUnmarshal(b, &val)
+	return val, true
+}
+
+func (k Keeper) RemoveStakingRewardsDistributionQueue(ctx sdk.Context) {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.StakingRewardDistributionQueueKey))
+	store.Delete([]byte{1})
+}

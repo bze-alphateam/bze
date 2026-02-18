@@ -15,8 +15,11 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetDistributeAllStakingRewar
 	err := hook.AfterEpochEnd(suite.ctx, "wrong-epoch", 100)
 	suite.Require().NoError(err)
 
-	// Test with correct epoch identifier - should call DistributeAllStakingRewards
-	// Since it's a private method, we test by setting up a staking reward and checking state changes
+	// Queue should not exist after wrong epoch
+	_, found := suite.k.GetStakingRewardsDistributionQueue(suite.ctx)
+	suite.Require().False(found)
+
+	// Test with correct epoch identifier - should enqueue, not process directly
 	stakingReward := types.StakingReward{
 		RewardId:         "hook-test-reward",
 		PrizeAmount:      "1000",
@@ -35,10 +38,16 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetDistributeAllStakingRewar
 	err = hook.AfterEpochEnd(suite.ctx, "day", 100)
 	suite.Require().NoError(err)
 
-	// Verify reward was processed (payouts incremented)
+	// Verify distribution was enqueued (not processed directly)
+	queue, found := suite.k.GetStakingRewardsDistributionQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().True(queue.Pending)
+	suite.Require().Equal("", queue.Cursor)
+
+	// Verify reward was NOT yet processed (payouts should still be 2)
 	retrievedReward, found := suite.k.GetStakingReward(suite.ctx, "hook-test-reward")
 	suite.Require().True(found)
-	suite.Require().Equal(uint32(3), retrievedReward.Payouts)
+	suite.Require().Equal(uint32(2), retrievedReward.Payouts)
 }
 
 func (suite *IntegrationTestSuite) TestServiceHooks_GetUnlockPendingUnlockParticipantsHook() {
@@ -85,6 +94,10 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetRemoveExpiredPendingTradi
 	err := hook.AfterEpochEnd(suite.ctx, "wrong-epoch", 100)
 	suite.Require().NoError(err)
 
+	// Queue should not exist after wrong epoch
+	_, found := suite.k.GetTradingRewardExpirationQueue(suite.ctx)
+	suite.Require().False(found)
+
 	// Test with correct epoch identifier
 	epochNumber := int64(100)
 
@@ -107,25 +120,21 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetRemoveExpiredPendingTradi
 	suite.k.SetPendingTradingReward(suite.ctx, tradingReward)
 	suite.k.SetPendingTradingRewardExpiration(suite.ctx, expiration)
 
-	// Set up mock expectation for burning coins
-	suite.bank.EXPECT().
-		BurnCoins(
-			suite.ctx,
-			types.ModuleName,
-			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(5000))), // 1000 * 5 slots
-		).
-		Return(nil).
-		Times(1)
-
 	err = hook.AfterEpochEnd(suite.ctx, "hour", epochNumber)
 	suite.Require().NoError(err)
 
-	// Verify reward and expiration were removed
-	_, found := suite.k.GetPendingTradingReward(suite.ctx, "expired-reward")
-	suite.Require().False(found)
+	// Verify epoch was enqueued (not processed directly)
+	queue, queueFound := suite.k.GetTradingRewardExpirationQueue(suite.ctx)
+	suite.Require().True(queueFound)
+	suite.Require().Len(queue.RemovalEpochs, 1)
+	suite.Require().Equal(uint32(epochNumber), queue.RemovalEpochs[0])
+
+	// Verify reward and expiration still exist (not processed yet)
+	_, found = suite.k.GetPendingTradingReward(suite.ctx, "expired-reward")
+	suite.Require().True(found)
 
 	expirations := suite.k.GetAllPendingTradingRewardExpirationByExpireAt(suite.ctx, uint32(epochNumber))
-	suite.Require().Empty(expirations)
+	suite.Require().Len(expirations, 1)
 }
 
 func (suite *IntegrationTestSuite) TestServiceHooks_GetTradingRewardsDistributionHook() {
