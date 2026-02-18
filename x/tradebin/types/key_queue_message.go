@@ -8,9 +8,16 @@ const (
 	// QueueMessagePrefix is the prefix to retrieve all QueueMessage
 	QueueMessagePrefix        = "Qm/value/"
 	QueueMessageCounterPrefix = "Qm/counter/"
+	PendingCancelPrefix       = "Qm/pc/"
 
 	counterKey = "cnt"
 )
+
+// PendingCancelKey creates a key for tracking a pending cancel for a specific order
+// Format: {market-id}/{order-type}/{order-id}/
+func PendingCancelKey(marketId, orderType, orderId string) []byte {
+	return []byte(marketId + "/" + orderType + "/" + orderId + "/")
+}
 
 // QueueMessageKey creates a composite key with market ID and message ID
 // Format: {market-id}/{zero-filled-id}/

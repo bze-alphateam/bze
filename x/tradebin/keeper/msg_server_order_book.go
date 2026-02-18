@@ -164,6 +164,12 @@ func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder)
 		return nil, types.ErrUnauthorizedOrder
 	}
 
+	if k.HasPendingCancel(ctx, msg.MarketId, msg.OrderType, msg.OrderId) {
+		return nil, fmt.Errorf("cancel already pending for order %s", msg.OrderId)
+	}
+
+	k.SetPendingCancel(ctx, msg.MarketId, msg.OrderType, msg.OrderId)
+
 	qm := types.QueueMessage{
 		MarketId:    msg.MarketId,
 		MessageType: types.MessageTypeCancel,

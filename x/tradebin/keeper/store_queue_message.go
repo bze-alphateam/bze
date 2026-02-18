@@ -81,6 +81,28 @@ func (k Keeper) HasQueueMessages(ctx sdk.Context) bool {
 // GetQueueMessagesByMarket returns all queue messages for a specific market
 // This uses the composite key with market ID prefix for O(M) performance
 // where M is the number of messages for this market, instead of O(N) where N is total messages across all markets
+func (k Keeper) getPendingCancelStore(ctx sdk.Context) prefix.Store {
+	return k.getPrefixedStore(ctx, types.KeyPrefix(types.PendingCancelPrefix))
+}
+
+func (k Keeper) HasPendingCancel(ctx sdk.Context, marketId, orderType, orderId string) bool {
+	store := k.getPendingCancelStore(ctx)
+	key := types.PendingCancelKey(marketId, orderType, orderId)
+	return store.Has(key)
+}
+
+func (k Keeper) SetPendingCancel(ctx sdk.Context, marketId, orderType, orderId string) {
+	store := k.getPendingCancelStore(ctx)
+	key := types.PendingCancelKey(marketId, orderType, orderId)
+	store.Set(key, []byte{1})
+}
+
+func (k Keeper) RemovePendingCancel(ctx sdk.Context, marketId, orderType, orderId string) {
+	store := k.getPendingCancelStore(ctx)
+	key := types.PendingCancelKey(marketId, orderType, orderId)
+	store.Delete(key)
+}
+
 func (k Keeper) GetQueueMessagesByMarket(ctx sdk.Context, marketId string) (list []types.QueueMessage) {
 	store := k.getQueueMessageStore(ctx)
 

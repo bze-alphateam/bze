@@ -111,6 +111,80 @@ func (suite *IntegrationTestSuite) Msg_TestCancelOrder_CancelSell_Success() {
 	suite.Require().Equal(qms[0].Owner, order.Owner)
 }
 
+func (suite *IntegrationTestSuite) TestCancelOrder_DuplicateCancelRejected() {
+	suite.k.SetMarket(suite.ctx, market)
+	order := suite.k.NewOrder(suite.ctx, types.Order{
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Amount:    "102000",
+		Price:     "1",
+		Owner:     "me",
+	})
+
+	// First cancel should succeed
+	_, err := suite.msgServer.CancelOrder(suite.ctx, &types.MsgCancelOrder{
+		Creator:   "me",
+		MarketId:  getMarketId(),
+		OrderId:   order.Id,
+		OrderType: types.OrderTypeBuy,
+	})
+	suite.Require().Nil(err)
+
+	// Verify pending cancel flag is set
+	suite.Require().True(suite.k.HasPendingCancel(suite.ctx, getMarketId(), types.OrderTypeBuy, order.Id))
+
+	// Second cancel for the same order should be rejected
+	_, err = suite.msgServer.CancelOrder(suite.ctx, &types.MsgCancelOrder{
+		Creator:   "me",
+		MarketId:  getMarketId(),
+		OrderId:   order.Id,
+		OrderType: types.OrderTypeBuy,
+	})
+	suite.Require().NotNil(err)
+	suite.Require().Contains(err.Error(), "cancel already pending")
+
+	// Only one queue message should exist
+	qms := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(qms, 1)
+}
+
+func (suite *IntegrationTestSuite) TestCancelOrder_PendingCancelClearedAfterProcessing() {
+	suite.k.SetMarket(suite.ctx, market)
+	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
+	suite.Require().Nil(err)
+
+	addr1 := sdk.AccAddress("addr1_______________")
+	order := suite.k.NewOrder(suite.ctx, types.Order{
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Amount:    "102000",
+		Price:     "1",
+		Owner:     addr1.String(),
+	})
+
+	// Cancel the order
+	_, err = suite.msgServer.CancelOrder(suite.ctx, &types.MsgCancelOrder{
+		Creator:   addr1.String(),
+		MarketId:  getMarketId(),
+		OrderId:   order.Id,
+		OrderType: types.OrderTypeBuy,
+	})
+	suite.Require().Nil(err)
+
+	// Verify pending cancel flag is set
+	suite.Require().True(suite.k.HasPendingCancel(suite.ctx, getMarketId(), types.OrderTypeBuy, order.Id))
+
+	// Process the cancel message
+	canceledAmount, _ := math.NewIntFromString(order.Amount)
+	canceledCoins, _, err := suite.k.GetOrderSdkCoin(order.OrderType, order.Price, canceledAmount, &market)
+	suite.Require().Nil(err)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, addr1, sdk.NewCoins(canceledCoins))
+	engine.ProcessQueueMessages(suite.ctx)
+
+	// Verify pending cancel flag is cleared after processing
+	suite.Require().False(suite.k.HasPendingCancel(suite.ctx, getMarketId(), types.OrderTypeBuy, order.Id))
+}
+
 func (suite *IntegrationTestSuite) Msg_TestCreateMarket_InvalidDenom() {
 
 	//same denom for both

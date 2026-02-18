@@ -18,6 +18,7 @@ type ProcessingKeeper interface {
 	RemoveQueueMessage(ctx sdk.Context, marketId, messageId string)
 	ResetQueueMessageCounter(ctx sdk.Context)
 	HasQueueMessages(ctx sdk.Context) bool
+	RemovePendingCancel(ctx sdk.Context, marketId, orderType, orderId string)
 
 	//params
 	GetParams(ctx context.Context) types.Params
@@ -169,6 +170,8 @@ func (pe *ProcessingEngine) cancelOrder(ctx sdk.Context, message types.QueueMess
 		"func", "cancelOrder",
 	)
 	logger.Info("cancelling order")
+
+	pe.k.RemovePendingCancel(ctx, message.MarketId, message.OrderType, message.OrderId)
 
 	order, found := pe.k.GetOrder(ctx, message.MarketId, message.OrderType, message.OrderId)
 	if !found {
