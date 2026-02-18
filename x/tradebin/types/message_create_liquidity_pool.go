@@ -30,7 +30,7 @@ func (msg *MsgCreateLiquidityPool) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	if len(msg.Base) == 0 && len(msg.Quote) == 0 {
+	if len(msg.Base) == 0 || len(msg.Quote) == 0 {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "missing assets")
 	}
 
