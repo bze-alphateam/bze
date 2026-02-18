@@ -140,6 +140,10 @@ func (k msgServer) UpdateStakingReward(goCtx context.Context, msg *types.MsgUpda
 	}
 
 	stakingReward.Duration += uint32(durationInt)
+	if stakingReward.Duration > types.HundredYearsInDays {
+		return nil, errors.Wrapf(types.ErrInvalidDuration, "the new duration exceeds the maximum allowed of %d days", types.HundredYearsInDays)
+	}
+
 	k.SetStakingReward(ctx, stakingReward)
 
 	err = ctx.EventManager().EmitTypedEvent(

@@ -1,18 +1,20 @@
 package types
 
 import (
+	"strconv"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"strconv"
 )
 
 const (
 	TypeMsgCreateStakingReward = "create_staking_reward"
 	TypeMsgUpdateStakingReward = "update_staking_reward"
 
-	tenYearsInDays = 365 * 10
+	tenYearsInDays     = 365 * 10
+	HundredYearsInDays = 365 * 100
 
 	defaultStakedAmount     = "0"
 	defaultDistributedStake = "0"
@@ -64,8 +66,8 @@ func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 	if err != nil {
 		return sr, errorsmod.Wrapf(ErrInvalidDuration, "could not convert duration to int: %s", err.Error())
 	}
-	if durationInt <= 0 || durationInt > tenYearsInDays {
-		return sr, ErrInvalidDuration
+	if durationInt <= 0 || durationInt > HundredYearsInDays {
+		return sr, errorsmod.Wrapf(ErrInvalidDuration, "duration should be between 1 and %d days", HundredYearsInDays)
 	}
 	sr.Duration = uint32(durationInt)
 
@@ -74,7 +76,7 @@ func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 		return sr, errorsmod.Wrapf(ErrInvalidLockingTime, "could not convert string to int: %s", err.Error())
 	}
 	if lockInt < 0 || lockInt > tenYearsInDays {
-		return sr, ErrInvalidLockingTime
+		return sr, errorsmod.Wrapf(ErrInvalidLockingTime, "locking time should be between 0 and %d days", tenYearsInDays)
 	}
 	sr.Lock = uint32(lockInt)
 

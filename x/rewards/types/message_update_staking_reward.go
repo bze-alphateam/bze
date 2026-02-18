@@ -1,10 +1,11 @@
 package types
 
 import (
+	"strconv"
+
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"strconv"
 )
 
 var _ sdk.Msg = &MsgUpdateStakingReward{}
@@ -28,7 +29,7 @@ func (msg *MsgUpdateStakingReward) ValidateBasic() error {
 		return errorsmod.Wrapf(ErrInvalidDuration, "could not convert duration to int: %s", err.Error())
 	}
 
-	if durationInt <= 0 {
+	if durationInt <= 0 || durationInt > HundredYearsInDays {
 		return ErrInvalidDuration
 	}
 

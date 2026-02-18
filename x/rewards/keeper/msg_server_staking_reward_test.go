@@ -277,6 +277,59 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_UpdateStakingRewar
 	suite.Require().Equal(uint32(8), updatedReward.Duration) // 5 + 3
 }
 
+func (suite *IntegrationTestSuite) TestMsgServerStakingReward_UpdateStakingRewardExceedsMaxDuration() {
+	creator := sdk.AccAddress("creator")
+
+	// Set up existing staking reward with duration close to max
+	existingReward := types.StakingReward{
+		RewardId:         "update-max-duration-reward",
+		PrizeAmount:      "1000",
+		PrizeDenom:       "ubze",
+		StakingDenom:     "ubze",
+		Duration:         36000,
+		Payouts:          0,
+		MinStake:         100,
+		Lock:             7,
+		StakedAmount:     "0",
+		DistributedStake: "0",
+	}
+	suite.k.SetStakingReward(suite.ctx, existingReward)
+
+	// Mock bank keeper calls - these happen before the duration check
+	suite.bank.EXPECT().
+		SpendableCoins(suite.ctx, creator).
+		Return(sdk.NewCoins(
+			sdk.NewCoin("ubze", math.NewInt(10000000)),
+		)).
+		Times(1)
+
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(
+			suite.ctx,
+			creator,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(1000000))), // 1000 * 1000 duration
+		).
+		Return(nil).
+		Times(1)
+
+	msg := &types.MsgUpdateStakingReward{
+		Creator:  creator.String(),
+		RewardId: "update-max-duration-reward",
+		Duration: "1000", // 36000 + 1000 = 37000 > 36500
+	}
+
+	response, err := suite.msgServer.UpdateStakingReward(suite.ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().Contains(err.Error(), "the new duration exceeds the maximum allowed")
+
+	// Verify the staking reward was NOT updated (duration should remain 36000)
+	unchangedReward, found := suite.k.GetStakingReward(suite.ctx, "update-max-duration-reward")
+	suite.Require().True(found)
+	suite.Require().Equal(uint32(36000), unchangedReward.Duration)
+}
+
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_UpdateStakingRewardNotFound() {
 	creator := sdk.AccAddress("creator")
 

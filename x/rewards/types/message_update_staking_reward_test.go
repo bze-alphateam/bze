@@ -110,11 +110,29 @@ func TestMsgUpdateStakingReward_ValidateBasic(t *testing.T) {
 			},
 		},
 		{
-			name: "valid message - large duration",
+			name: "invalid duration - above maximum",
 			msg: MsgUpdateStakingReward{
 				Creator:  validCreator,
 				RewardId: validRewardId,
-				Duration: "4294967295", // max uint32
+				Duration: "36501",
+			},
+			err: ErrInvalidDuration,
+		},
+		{
+			name: "invalid duration - max uint32",
+			msg: MsgUpdateStakingReward{
+				Creator:  validCreator,
+				RewardId: validRewardId,
+				Duration: "4294967295",
+			},
+			err: ErrInvalidDuration,
+		},
+		{
+			name: "valid message - maximum duration",
+			msg: MsgUpdateStakingReward{
+				Creator:  validCreator,
+				RewardId: validRewardId,
+				Duration: "36500",
 			},
 		},
 		{
