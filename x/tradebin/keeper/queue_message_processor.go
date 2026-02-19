@@ -378,11 +378,14 @@ func (pe *ProcessingEngine) getExecutedAmount(messageAmount, orderAmount, minAmo
 
 	orderRemaining := orderAmount.Sub(messageAmount)
 	//if orderRemaining >= minAmount {
+	// check if the order amount resulted after match with message amount is still greater than min amount for future
+	// trades.
 	if orderRemaining.GTE(minAmount) {
 		return messageAmount
 	}
 
-	//order amount remains too low. keep min amount for it
+	//order amount remains too low if we fill the entire message amount. keep min the minimum amount required for this
+	// order to be filled later.
 	executedAmount := orderAmount.Sub(minAmount)
 	if executedAmount.GTE(minAmount) {
 		return executedAmount
@@ -619,6 +622,13 @@ func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.Aggr
 			break
 		}
 
+		// msgAmountInt changes after each iteration. In case it goes too low to be executed we can stop trying.
+		// The caller of this function will refund the msg owner's coins.
+		if msgAmountInt.LT(minAmount) {
+			pe.logger.Debug("msg amount is too low. exiting oppositeOrderRefs iteration", "amount", msgAmountInt.String(), "minAmount", minAmount.String())
+			break
+		}
+
 		orderToFill, _ := pe.k.GetOrder(ctx, orderRef.MarketId, orderRef.OrderType, orderRef.Id)
 		pe.logger.Debug("preparing to fill message with order", "orderToFill", orderToFill)
 		orderAmountInt, ok := math.NewIntFromString(orderToFill.Amount)
@@ -630,7 +640,7 @@ func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.Aggr
 		//find how much to send to the found order's owner
 		amountToExecute := pe.getExecutedAmount(msgAmountInt, orderAmountInt, minAmount)
 		if amountToExecute.IsZero() {
-			break
+			continue
 		}
 
 		msgAmountInt = msgAmountInt.Sub(amountToExecute)
