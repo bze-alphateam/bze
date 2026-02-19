@@ -84,6 +84,38 @@ func TestMsgCreateDenom_ValidateBasic(t *testing.T) {
 			err: sdkerrors.ErrInvalidRequest,
 		},
 		{
+			name: "subdenom contains slash - single",
+			msg: MsgCreateDenom{
+				Creator:  validCreator,
+				Subdenom: "my/token",
+			},
+			err: sdkerrors.ErrInvalidRequest,
+		},
+		{
+			name: "subdenom contains slash - multiple",
+			msg: MsgCreateDenom{
+				Creator:  validCreator,
+				Subdenom: "my/test/token",
+			},
+			err: sdkerrors.ErrInvalidRequest,
+		},
+		{
+			name: "subdenom contains slash - at start",
+			msg: MsgCreateDenom{
+				Creator:  validCreator,
+				Subdenom: "/mytoken",
+			},
+			err: sdkerrors.ErrInvalidRequest,
+		},
+		{
+			name: "subdenom contains slash - at end",
+			msg: MsgCreateDenom{
+				Creator:  validCreator,
+				Subdenom: "mytoken/",
+			},
+			err: sdkerrors.ErrInvalidRequest,
+		},
+		{
 			name: "valid message - typical subdenom",
 			msg: MsgCreateDenom{
 				Creator:  validCreator,
