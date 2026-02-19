@@ -33,6 +33,12 @@ func (k msgServer) ActivateTradingReward(goCtx context.Context, msg *types.MsgAc
 		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "trading reward not found")
 	}
 
+	//if there is already an active reward for this market id do not allow adding another one
+	_, found = k.GetMarketIdRewardId(ctx, r.MarketId)
+	if found {
+		return nil, types.ErrRewardAlreadyExists
+	}
+
 	//remove the pending reward expiration because we're moving this one to active trading reward
 	k.RemovePendingTradingRewardExpiration(ctx, r.ExpireAt, r.RewardId)
 	k.RemovePendingTradingReward(ctx, r.RewardId)

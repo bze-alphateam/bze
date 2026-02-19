@@ -181,7 +181,7 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardPending
 func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardWithExistingMarketMapping() {
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
-	// Set up existing market mapping
+	// Set up existing market mapping (simulates another active reward on this market)
 	existingMapping := types.MarketIdTradingRewardId{
 		RewardId: "existing-reward",
 		MarketId: "market-1",
@@ -199,19 +199,7 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardWithExi
 		ExpireAt:    1000,
 	}
 
-	pendingExpiration := types.TradingRewardExpiration{
-		RewardId: "new-reward",
-		ExpireAt: 1000,
-	}
-
 	suite.k.SetPendingTradingReward(suite.ctx, pendingReward)
-	suite.k.SetPendingTradingRewardExpiration(suite.ctx, pendingExpiration)
-
-	// Mock epoch keeper call
-	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(150)).
-		Times(1)
 
 	msg := &types.MsgActivateTradingReward{
 		Creator:  authority,
@@ -219,13 +207,90 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardWithExi
 	}
 
 	response, err := suite.msgServer.ActivateTradingReward(suite.ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().ErrorIs(err, types.ErrRewardAlreadyExists)
+
+	// Verify existing market mapping was NOT overwritten
+	marketMapping, found := suite.k.GetMarketIdRewardId(suite.ctx, "market-1")
+	suite.Require().True(found)
+	suite.Require().Equal("existing-reward", marketMapping.RewardId)
+
+	// Verify the pending reward was NOT removed
+	_, found = suite.k.GetPendingTradingReward(suite.ctx, "new-reward")
+	suite.Require().True(found)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardSecondMarketRewardBlocked() {
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+
+	// Set up first pending reward for market-1
+	pendingReward1 := types.TradingReward{
+		RewardId:    "first-reward",
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    30,
+		MarketId:    "market-1",
+		Slots:       5,
+		ExpireAt:    1000,
+	}
+	pendingExpiration1 := types.TradingRewardExpiration{
+		RewardId: "first-reward",
+		ExpireAt: 1000,
+	}
+	suite.k.SetPendingTradingReward(suite.ctx, pendingReward1)
+	suite.k.SetPendingTradingRewardExpiration(suite.ctx, pendingExpiration1)
+
+	// Set up second pending reward for the same market
+	pendingReward2 := types.TradingReward{
+		RewardId:    "second-reward",
+		PrizeAmount: "2000",
+		PrizeDenom:  "ubze",
+		Duration:    60,
+		MarketId:    "market-1",
+		Slots:       10,
+		ExpireAt:    1000,
+	}
+	pendingExpiration2 := types.TradingRewardExpiration{
+		RewardId: "second-reward",
+		ExpireAt: 1000,
+	}
+	suite.k.SetPendingTradingReward(suite.ctx, pendingReward2)
+	suite.k.SetPendingTradingRewardExpiration(suite.ctx, pendingExpiration2)
+
+	// Mock epoch keeper - only first activation should reach this
+	suite.epoch.EXPECT().
+		GetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(100)).
+		Times(1)
+
+	// Activate first reward - should succeed
+	msg1 := &types.MsgActivateTradingReward{
+		Creator:  authority,
+		RewardId: "first-reward",
+	}
+	response, err := suite.msgServer.ActivateTradingReward(suite.ctx, msg1)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(response)
 
-	// Verify market mapping was updated to new reward
+	// Try to activate second reward for same market - should fail
+	msg2 := &types.MsgActivateTradingReward{
+		Creator:  authority,
+		RewardId: "second-reward",
+	}
+	response, err = suite.msgServer.ActivateTradingReward(suite.ctx, msg2)
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().ErrorIs(err, types.ErrRewardAlreadyExists)
+
+	// Verify market mapping still points to first reward
 	marketMapping, found := suite.k.GetMarketIdRewardId(suite.ctx, "market-1")
 	suite.Require().True(found)
-	suite.Require().Equal("new-reward", marketMapping.RewardId)
+	suite.Require().Equal("first-reward", marketMapping.RewardId)
+
+	// Verify second pending reward was NOT removed
+	_, found = suite.k.GetPendingTradingReward(suite.ctx, "second-reward")
+	suite.Require().True(found)
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardPreservesRewardData() {
