@@ -653,14 +653,57 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingReward
 	}
 
 	response, err := suite.msgServer.ClaimStakingRewards(suite.ctx, msg)
-	suite.Require().NoError(err)
-	suite.Require().NotNil(response)
-	suite.Require().Equal("0", response.Amount)
+	suite.Require().ErrorIs(err, types.ErrNoRewardsToClaim)
+	suite.Require().Nil(response)
 
 	// Verify participant's JoinedAt was NOT updated (so fractional rewards are preserved)
 	updatedParticipant, found := suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), "claim-truncated-reward")
 	suite.Require().True(found)
 	suite.Require().Equal("0", updatedParticipant.JoinedAt)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingRewardsNoDistribution() {
+	creator := sdk.AccAddress("creator")
+
+	// Set up staking reward where no distribution has happened since the participant joined
+	// distributedStake == joinedAt → claimPending returns zero immediately
+	stakingReward := types.StakingReward{
+		RewardId:         "claim-no-dist-reward",
+		PrizeAmount:      "1000",
+		PrizeDenom:       "ubze",
+		StakingDenom:     "ubze",
+		Duration:         5,
+		Payouts:          2,
+		MinStake:         1,
+		Lock:             7,
+		StakedAmount:     "10000",
+		DistributedStake: "1.0",
+	}
+	suite.k.SetStakingReward(suite.ctx, stakingReward)
+
+	participant := types.StakingRewardParticipant{
+		Address:  creator.String(),
+		RewardId: "claim-no-dist-reward",
+		Amount:   "500",
+		JoinedAt: "1.0", // Joined at current distribution point
+	}
+	suite.k.SetStakingRewardParticipant(suite.ctx, participant)
+
+	// No bank keeper mock needed - no coins should be sent
+
+	msg := &types.MsgClaimStakingRewards{
+		Creator:  creator.String(),
+		RewardId: "claim-no-dist-reward",
+	}
+
+	response, err := suite.msgServer.ClaimStakingRewards(suite.ctx, msg)
+	suite.Require().ErrorIs(err, types.ErrNoRewardsToClaim)
+	suite.Require().Nil(response)
+
+	// Verify participant's JoinedAt was NOT updated
+	updatedParticipant, found := suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), "claim-no-dist-reward")
+	suite.Require().True(found)
+	suite.Require().Equal("1.0", updatedParticipant.JoinedAt)
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStakingTruncatedZero() {

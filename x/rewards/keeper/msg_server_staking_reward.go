@@ -343,6 +343,10 @@ func (k msgServer) ClaimStakingRewards(goCtx context.Context, msg *types.MsgClai
 		return nil, err
 	}
 
+	if paid.IsZero() {
+		return nil, types.ErrNoRewardsToClaim
+	}
+
 	k.SetStakingRewardParticipant(ctx, participant)
 
 	err = ctx.EventManager().EmitTypedEvent(
