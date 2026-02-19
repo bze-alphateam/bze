@@ -99,13 +99,14 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SwapSuccess() {
 	nativeFee := sdk.NewCoin(denomBze, math.NewInt(100000000)) // 100 ubze
 	fee := sdk.NewCoins(nativeFee)
 
-	// Create a liquidity pool for ubze/stake
+	// Create a liquidity pool with reserves above the deep liquidity threshold
+	// (75% of DefaultMinNativeLiquidityForModuleSwap = 75B ubze)
 	pool := types.LiquidityPool{
 		Id:           "stake_ubze",
 		Base:         denomStake,
 		Quote:        denomBze,
-		ReserveBase:  math.NewInt(1000000000),         // 1000 stake
-		ReserveQuote: math.NewInt(2000000000),         // 2000 ubze (ratio 1:2)
+		ReserveBase:  math.NewInt(50_000_000_000),     // 50B stake
+		ReserveQuote: math.NewInt(100_000_000_000),    // 100B ubze (ratio 1:2)
 		Fee:          math.LegacyNewDecWithPrec(3, 3), // 0.3% fee
 		FeeDest: &types.FeeDestination{
 			Treasury:  math.LegacyNewDecWithPrec(5, 1), // 50% to treasury
@@ -128,7 +129,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SwapSuccess() {
 	suite.bankMock.EXPECT().
 		SpendableCoins(gomock.Any(), addr1).
 		Times(1).
-		Return(sdk.NewCoins(sdk.NewCoin(denomStake, math.NewInt(1000000000))))
+		Return(sdk.NewCoins(sdk.NewCoin(denomStake, math.NewInt(50_000_000_000))))
 
 	// Mock bank transfer - capture stake from user
 	suite.bankMock.EXPECT().
@@ -158,13 +159,13 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SwapWithMultipleFee
 	otherFee := sdk.NewCoin("uosmo", math.NewInt(50000000))    // 50 uosmo
 	fee := sdk.NewCoins(nativeFee, otherFee)
 
-	// Create a liquidity pool for ubze/stake
+	// Create a liquidity pool with reserves above the deep liquidity threshold
 	pool := types.LiquidityPool{
 		Id:           "stake_ubze",
 		Base:         denomStake,
 		Quote:        denomBze,
-		ReserveBase:  math.NewInt(1000000000),
-		ReserveQuote: math.NewInt(2000000000),
+		ReserveBase:  math.NewInt(50_000_000_000),
+		ReserveQuote: math.NewInt(100_000_000_000),
 		Fee:          math.LegacyNewDecWithPrec(3, 3),
 		FeeDest: &types.FeeDestination{
 			Treasury:  math.LegacyNewDecWithPrec(5, 1),
@@ -188,7 +189,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SwapWithMultipleFee
 		SpendableCoins(gomock.Any(), addr1).
 		Times(1).
 		Return(sdk.NewCoins(
-			sdk.NewCoin(denomStake, math.NewInt(1000000000)),
+			sdk.NewCoin(denomStake, math.NewInt(50_000_000_000)),
 			sdk.NewCoin("uosmo", math.NewInt(100000000)),
 		))
 
@@ -231,13 +232,13 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_InsufficientBalance
 	nativeFee := sdk.NewCoin(denomBze, math.NewInt(100000000))
 	fee := sdk.NewCoins(nativeFee)
 
-	// Create a liquidity pool
+	// Create a liquidity pool with reserves above the deep liquidity threshold
 	pool := types.LiquidityPool{
 		Id:           "stake_ubze",
 		Base:         denomStake,
 		Quote:        denomBze,
-		ReserveBase:  math.NewInt(1000000000),
-		ReserveQuote: math.NewInt(2000000000),
+		ReserveBase:  math.NewInt(50_000_000_000),
+		ReserveQuote: math.NewInt(100_000_000_000),
 		Fee:          math.LegacyNewDecWithPrec(3, 3),
 		FeeDest: &types.FeeDestination{
 			Treasury:  math.LegacyNewDecWithPrec(5, 1),
@@ -281,18 +282,20 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_CaptureFails() {
 	suite.Require().Contains(err.Error(), "insufficient funds")
 }
 
-func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SwapFails() {
+func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SwapCalculationFails() {
 	addr1 := sdk.AccAddress("addr1_______________")
-	nativeFee := sdk.NewCoin(denomBze, math.NewInt(100000000))
+	// Use a fee amount that equals the pool reserve, causing CalculateOptimalInputForOutput to fail
+	// (output >= reserve triggers an error)
+	nativeFee := sdk.NewCoin(denomBze, math.NewInt(100_000_000_000))
 	fee := sdk.NewCoins(nativeFee)
 
-	// Create a pool with very low reserves to cause swap failure
+	// Create a pool with reserves above the liquidity threshold but equal to the fee amount
 	pool := types.LiquidityPool{
 		Id:           "stake_ubze",
 		Base:         denomStake,
 		Quote:        denomBze,
-		ReserveBase:  math.NewInt(10), // Very low reserves
-		ReserveQuote: math.NewInt(10),
+		ReserveBase:  math.NewInt(50_000_000_000),
+		ReserveQuote: math.NewInt(100_000_000_000), // equals nativeFee → CalculateOptimalInputForOutput fails
 		Fee:          math.LegacyNewDecWithPrec(3, 3),
 		FeeDest: &types.FeeDestination{
 			Treasury:  math.LegacyNewDecWithPrec(5, 1),
@@ -304,28 +307,16 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SwapFails() {
 
 	ctx := suite.ctx.WithValue("fee_denom", denomStake)
 
-	// Calculate required amount
-	requiredStake, err := suite.k.CalculateOptimalInputForOutput(pool, nativeFee)
-	// This might fail or succeed depending on calculation
-	if err == nil {
-		toCapture := sdk.NewCoins(requiredStake)
+	// When CalculateOptimalInputForOutput fails inside CaptureAndSwapUserFee,
+	// the function falls back to capturing fee in native denom
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, fee).
+		Times(1).
+		Return(nil)
 
-		// Mock user balance check
-		suite.bankMock.EXPECT().
-			SpendableCoins(gomock.Any(), addr1).
-			Times(1).
-			Return(sdk.NewCoins(sdk.NewCoin(denomStake, math.NewInt(1000000000))))
-
-		// Mock bank transfer
-		suite.bankMock.EXPECT().
-			SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, toCapture).
-			Times(1).
-			Return(nil)
-
-		// Swap will fail due to low reserves
-		_, err = suite.k.CaptureAndSwapUserFee(ctx, addr1, fee, types.ModuleName)
-		suite.Require().NotNil(err)
-	}
+	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(ctx, addr1, fee, types.ModuleName)
+	suite.Require().Nil(err)
+	suite.Require().Equal(fee, coinsCaptured)
 }
 
 func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_CrossModuleSwap() {
@@ -335,13 +326,13 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_CrossModuleSwap() {
 	fee := sdk.NewCoins(nativeFee)
 	targetModule := "rewards" // Different from tradebin
 
-	// Create a liquidity pool for ubze/stake
+	// Create a liquidity pool with reserves above the deep liquidity threshold
 	pool := types.LiquidityPool{
 		Id:           "stake_ubze",
 		Base:         denomStake,
 		Quote:        denomBze,
-		ReserveBase:  math.NewInt(1000000000),         // 1000 stake
-		ReserveQuote: math.NewInt(2000000000),         // 2000 ubze (ratio 1:2)
+		ReserveBase:  math.NewInt(50_000_000_000),     // 50B stake
+		ReserveQuote: math.NewInt(100_000_000_000),    // 100B ubze (ratio 1:2)
 		Fee:          math.LegacyNewDecWithPrec(3, 3), // 0.3% fee
 		FeeDest: &types.FeeDestination{
 			Treasury:  math.LegacyNewDecWithPrec(5, 1), // 50% to treasury
@@ -364,7 +355,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_CrossModuleSwap() {
 	suite.bankMock.EXPECT().
 		SpendableCoins(gomock.Any(), addr1).
 		Times(1).
-		Return(sdk.NewCoins(sdk.NewCoin(denomStake, math.NewInt(1000000000))))
+		Return(sdk.NewCoins(sdk.NewCoin(denomStake, math.NewInt(50_000_000_000))))
 
 	// Mock bank transfer - capture stake from user to tradebin module
 	suite.bankMock.EXPECT().
@@ -394,13 +385,13 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SameModuleOptimizat
 	nativeFee := sdk.NewCoin(denomBze, math.NewInt(100000000)) // 100 ubze
 	fee := sdk.NewCoins(nativeFee)
 
-	// Create a liquidity pool for ubze/stake
+	// Create a liquidity pool with reserves above the deep liquidity threshold
 	pool := types.LiquidityPool{
 		Id:           "stake_ubze",
 		Base:         denomStake,
 		Quote:        denomBze,
-		ReserveBase:  math.NewInt(1000000000),         // 1000 stake
-		ReserveQuote: math.NewInt(2000000000),         // 2000 ubze (ratio 1:2)
+		ReserveBase:  math.NewInt(50_000_000_000),     // 50B stake
+		ReserveQuote: math.NewInt(100_000_000_000),    // 100B ubze (ratio 1:2)
 		Fee:          math.LegacyNewDecWithPrec(3, 3), // 0.3% fee
 		FeeDest: &types.FeeDestination{
 			Treasury:  math.LegacyNewDecWithPrec(5, 1), // 50% to treasury
@@ -423,7 +414,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SameModuleOptimizat
 	suite.bankMock.EXPECT().
 		SpendableCoins(gomock.Any(), addr1).
 		Times(1).
-		Return(sdk.NewCoins(sdk.NewCoin(denomStake, math.NewInt(1000000000))))
+		Return(sdk.NewCoins(sdk.NewCoin(denomStake, math.NewInt(50_000_000_000))))
 
 	// Mock bank transfer - capture stake from user to tradebin module
 	suite.bankMock.EXPECT().
@@ -449,4 +440,135 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SameModuleOptimizat
 
 	// The optimization means we didn't do an extra transfer from tradebin to tradebin
 	// The mock with AnyTimes() will catch the fee distribution calls but not fail on missing transfer
+}
+
+// TestCaptureAndSwapUserFee_ZeroNativeReserves verifies that when the pool has zero native reserves,
+// the function falls back to capturing the fee in native denom instead of attempting a swap.
+func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_ZeroNativeReserves() {
+	addr1 := sdk.AccAddress("addr1_______________")
+	nativeFee := sdk.NewCoin(denomBze, math.NewInt(100000000))
+	fee := sdk.NewCoins(nativeFee)
+
+	// Create a pool with zero native (ubze) reserves
+	pool := types.LiquidityPool{
+		Id:           "stake_ubze",
+		Base:         denomStake,
+		Quote:        denomBze,
+		ReserveBase:  math.NewInt(1_000_000_000),
+		ReserveQuote: math.ZeroInt(), // zero native reserves
+		Fee:          math.LegacyNewDecWithPrec(3, 3),
+		FeeDest: &types.FeeDestination{
+			Treasury:  math.LegacyNewDecWithPrec(5, 1),
+			Burner:    math.LegacyNewDecWithPrec(3, 1),
+			Providers: math.LegacyNewDecWithPrec(2, 1),
+		},
+	}
+	suite.k.SetLiquidityPool(suite.ctx, pool)
+
+	ctx := suite.ctx.WithValue("fee_denom", denomStake)
+
+	// Should fall back to native denom since pool has no native reserves
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, fee).
+		Times(1).
+		Return(nil)
+
+	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(ctx, addr1, fee, types.ModuleName)
+	suite.Require().Nil(err)
+	suite.Require().Equal(fee, coinsCaptured)
+}
+
+// TestCaptureAndSwapUserFee_InsufficientLiquidity verifies that when the pool's native reserves are below
+// the 75% threshold of MinNativeLiquidityForModuleSwap, the function falls back to native denom.
+// This addresses the TOCTOU gap where a prior swap in the same tx could drain pool reserves.
+func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_InsufficientLiquidity() {
+	addr1 := sdk.AccAddress("addr1_______________")
+	nativeFee := sdk.NewCoin(denomBze, math.NewInt(100000000))
+	fee := sdk.NewCoins(nativeFee)
+
+	// The threshold is MinNativeLiquidityForModuleSwap * 3/4 = 100B * 3/4 = 75B
+	// Create a pool with native reserves just below the threshold
+	pool := types.LiquidityPool{
+		Id:           "stake_ubze",
+		Base:         denomStake,
+		Quote:        denomBze,
+		ReserveBase:  math.NewInt(37_000_000_000),
+		ReserveQuote: math.NewInt(74_999_999_999), // just below 75B threshold
+		Fee:          math.LegacyNewDecWithPrec(3, 3),
+		FeeDest: &types.FeeDestination{
+			Treasury:  math.LegacyNewDecWithPrec(5, 1),
+			Burner:    math.LegacyNewDecWithPrec(3, 1),
+			Providers: math.LegacyNewDecWithPrec(2, 1),
+		},
+	}
+	suite.k.SetLiquidityPool(suite.ctx, pool)
+
+	ctx := suite.ctx.WithValue("fee_denom", denomStake)
+
+	// Should fall back to native denom since pool liquidity is below threshold
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, fee).
+		Times(1).
+		Return(nil)
+
+	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(ctx, addr1, fee, types.ModuleName)
+	suite.Require().Nil(err)
+	suite.Require().Equal(fee, coinsCaptured)
+}
+
+// TestCaptureAndSwapUserFee_LiquidityAtThreshold verifies that when the pool's native reserves are exactly
+// at the 75% threshold, the function proceeds with the swap (GTE check).
+func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_LiquidityAtThreshold() {
+	addr1 := sdk.AccAddress("addr1_______________")
+	nativeFee := sdk.NewCoin(denomBze, math.NewInt(100000000))
+	fee := sdk.NewCoins(nativeFee)
+
+	// The threshold is MinNativeLiquidityForModuleSwap * 3/4 = 100B * 3/4 = 75B
+	// Create a pool with native reserves exactly at the threshold
+	pool := types.LiquidityPool{
+		Id:           "stake_ubze",
+		Base:         denomStake,
+		Quote:        denomBze,
+		ReserveBase:  math.NewInt(37_500_000_000),
+		ReserveQuote: math.NewInt(75_000_000_000), // exactly at threshold
+		Fee:          math.LegacyNewDecWithPrec(3, 3),
+		FeeDest: &types.FeeDestination{
+			Treasury:  math.LegacyNewDecWithPrec(5, 1),
+			Burner:    math.LegacyNewDecWithPrec(3, 1),
+			Providers: math.LegacyNewDecWithPrec(2, 1),
+		},
+	}
+	suite.k.SetLiquidityPool(suite.ctx, pool)
+
+	ctx := suite.ctx.WithValue("fee_denom", denomStake)
+
+	// Calculate what amount is needed in stake to get the native fee
+	requiredStake, err := suite.k.CalculateOptimalInputForOutput(pool, nativeFee)
+	suite.Require().Nil(err)
+
+	toCapture := sdk.NewCoins(requiredStake)
+
+	// Should proceed with swap since reserves are at the threshold (not below)
+	suite.bankMock.EXPECT().
+		SpendableCoins(gomock.Any(), addr1).
+		Times(1).
+		Return(sdk.NewCoins(sdk.NewCoin(denomStake, math.NewInt(50_000_000_000))))
+
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, toCapture).
+		Times(1).
+		Return(nil)
+
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		Return(nil).
+		AnyTimes()
+
+	coinsCaptured, err := suite.k.CaptureAndSwapUserFee(ctx, addr1, fee, types.ModuleName)
+	suite.Require().Nil(err)
+
+	// Should return native denom after successful swap
+	suite.Require().Len(coinsCaptured, 1)
+	suite.Require().Equal(denomBze, coinsCaptured[0].Denom)
+	suite.Require().True(coinsCaptured[0].Amount.GT(math.ZeroInt()))
 }

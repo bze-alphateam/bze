@@ -39,6 +39,24 @@ func (k Keeper) CaptureAndSwapUserFee(ctx sdk.Context, payer sdk.AccAddress, fee
 		return k.payerCoinsToModule(ctx, payer, fee, toModule)
 	}
 
+	nativeLpCoins, _ := pool.GetReservesCoinsByDenom(nativeDenom)
+	if !nativeLpCoins.IsPositive() {
+		k.Logger().Debug("no liquidity available, falling back to native denom", "pool", poolId)
+		return k.payerCoinsToModule(ctx, payer, fee, toModule)
+	}
+
+	params := k.GetParams(ctx)
+	// check the liquidity available still meets the criteria of minimum liquidity.
+	// At this point the check was already done by tx ante handlers, so we allow the liquidity to be at least 75% (appx)
+	// of the liquidity required. This decision assumes that params.MinNativeLiquidityForModuleSwap will always be a
+	// big amount (changed via gov proposals, and it should be {BIGGEST_BZE_TAX} * 2 at least).
+	// we decide to allow going below the threshold to ensure smooth experience for in-flight transactions that already
+	// passed the ante-handler.
+	if nativeLpCoins.Amount.LT(params.MinNativeLiquidityForModuleSwap.QuoRaw(4).MulRaw(3)) {
+		k.Logger().Debug("insufficient liquidity available, falling back to native denom", "pool", poolId)
+		return k.payerCoinsToModule(ctx, payer, fee, toModule)
+	}
+
 	//for the required native coin, we calculate the amount the user needs to pay in his preferred fee denom
 	requiredFeeCoins, err := k.CalculateOptimalInputForOutput(pool, nativeFee)
 	if err != nil {
