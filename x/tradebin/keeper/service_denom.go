@@ -140,23 +140,23 @@ func (k Keeper) ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins
 	var events []proto.Message
 	for _, coin := range coins {
 		if nativeDenom == coin.Denom {
-			return swapResult, fmt.Errorf("cannot swap native coin to native coin")
+			return sdk.Coin{}, fmt.Errorf("cannot swap native coin to native coin")
 		}
 
 		_, _, poolId := k.CreatePoolId(nativeDenom, coin.Denom)
 		pool, exists := k.GetLiquidityPool(cached, poolId)
 		if !exists {
-			return swapResult, fmt.Errorf("cannot find liquidity pool between native denom %s and provided denom %s", nativeDenom, coin.Denom)
+			return sdk.Coin{}, fmt.Errorf("cannot find liquidity pool between native denom %s and provided denom %s", nativeDenom, coin.Denom)
 		}
 
 		nativeLpCoins, _ := pool.GetReservesCoinsByDenom(nativeDenom)
 		if !nativeLpCoins.IsPositive() || !nativeLpCoins.Amount.GT(params.MinNativeLiquidityForModuleSwap) {
-			return swapResult, fmt.Errorf("not enough liquidity available to swap coin %s to native coin", coin.Denom)
+			return sdk.Coin{}, fmt.Errorf("not enough liquidity available to swap coin %s to native coin", coin.Denom)
 		}
 
 		sr, err := k.swapTokens(cached, coin, &pool)
 		if err != nil {
-			return swapResult, err
+			return sdk.Coin{}, err
 		}
 
 		swapResult = swapResult.Add(sr)
@@ -171,7 +171,7 @@ func (k Keeper) ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins
 	//send swap resulting coins to the calling module
 	err = k.bankKeeper.SendCoinsFromModuleToModule(cached, types.ModuleName, toModule, sdk.NewCoins(swapResult))
 	if err != nil {
-		return swapResult, err
+		return sdk.Coin{}, err
 	}
 
 	flush()
