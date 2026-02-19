@@ -105,10 +105,78 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 	suite.Require().Equal(uint32(30), tradingReward.Duration)
 	suite.Require().Equal(uint32(5), tradingReward.Slots)
 
+	// Verify pending expiration uses fixed 30-day timeout, not user-specified Duration
+	suite.Require().Equal(uint32(100+(30*24)), tradingReward.ExpireAt) // epoch(100) + 30 days * 24 hours
+
 	// Verify expiration was created
 	expirations := suite.k.GetAllPendingTradingRewardExpirationByExpireAt(suite.ctx, tradingReward.ExpireAt)
 	suite.Require().Len(expirations, 1)
 	suite.Require().Equal(response.RewardId, expirations[0].RewardId)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardPendingExpirationIgnoresDuration() {
+	creator := sdk.AccAddress("creator")
+
+	// Set up params with zero fee for simplicity
+	params := types.Params{
+		CreateStakingRewardFee: sdk.NewCoin("ubze", math.ZeroInt()),
+		CreateTradingRewardFee: sdk.NewCoin("ubze", math.ZeroInt()),
+	}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	suite.bank.EXPECT().
+		HasSupply(suite.ctx, "ubze").
+		Return(true).
+		Times(1)
+
+	suite.trade.EXPECT().
+		MarketExists(suite.ctx, "market-1").
+		Return(true).
+		Times(1)
+
+	suite.bank.EXPECT().
+		SpendableCoins(suite.ctx, creator).
+		Return(sdk.NewCoins(
+			sdk.NewCoin("ubze", math.NewInt(100000)),
+		)).
+		Times(1)
+
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(
+			suite.ctx,
+			creator,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(5000))), // 1000 * 5 slots
+		).
+		Return(nil).
+		Times(1)
+
+	// Mock epoch keeper - current epoch is 300
+	suite.epoch.EXPECT().
+		GetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(300)).
+		Times(1)
+
+	// Create with Duration=7, but pending expiration should still be 30 days
+	msg := &types.MsgCreateTradingReward{
+		Creator:     creator.String(),
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    "7",
+		MarketId:    "market-1",
+		Slots:       "5",
+	}
+
+	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(response)
+
+	// Verify pending expiration uses fixed 30-day timeout, NOT the 7-day user Duration
+	tradingReward, found := suite.k.GetPendingTradingReward(suite.ctx, response.RewardId)
+	suite.Require().True(found)
+	suite.Require().Equal(uint32(7), tradingReward.Duration)
+	suite.Require().Equal(uint32(300+(30*24)), tradingReward.ExpireAt) // epoch(300) + 30 days * 24 = 1020
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardNilRequest() {

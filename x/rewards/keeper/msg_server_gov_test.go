@@ -58,7 +58,8 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardSuccess
 	suite.Require().Equal(pendingReward.RewardId, activeReward.RewardId)
 	suite.Require().Equal(pendingReward.PrizeAmount, activeReward.PrizeAmount)
 	suite.Require().Equal(pendingReward.MarketId, activeReward.MarketId)
-	suite.Require().NotEqual(uint32(1000), activeReward.ExpireAt) // Should have new expiration
+	suite.Require().NotEqual(uint32(1000), activeReward.ExpireAt)     // Should have new expiration
+	suite.Require().Equal(uint32(100+(30*24)), activeReward.ExpireAt) // epoch(100) + Duration(30) * 24
 
 	// Verify active expiration was created
 	activeExpirations := suite.k.GetAllActiveTradingRewardExpirationByExpireAt(suite.ctx, activeReward.ExpireAt)
@@ -274,6 +275,56 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardPreserv
 	suite.Require().Equal(pendingReward.MarketId, activeReward.MarketId)
 	suite.Require().Equal(pendingReward.Slots, activeReward.Slots)
 	suite.Require().NotEqual(pendingReward.ExpireAt, activeReward.ExpireAt) // Should be updated
+	suite.Require().Equal(uint32(200+(120*24)), activeReward.ExpireAt)      // epoch(200) + Duration(120) * 24
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardUsesRewardDuration() {
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+
+	// Set up pending trading reward with Duration=7 (7-day competition)
+	pendingReward := types.TradingReward{
+		RewardId:    "short-duration-reward",
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    7,
+		MarketId:    "market-1",
+		Slots:       5,
+		ExpireAt:    1000,
+	}
+
+	pendingExpiration := types.TradingRewardExpiration{
+		RewardId: "short-duration-reward",
+		ExpireAt: 1000,
+	}
+
+	suite.k.SetPendingTradingReward(suite.ctx, pendingReward)
+	suite.k.SetPendingTradingRewardExpiration(suite.ctx, pendingExpiration)
+
+	// Mock epoch keeper call - current epoch is 500
+	suite.epoch.EXPECT().
+		GetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(500)).
+		Times(1)
+
+	msg := &types.MsgActivateTradingReward{
+		Creator:  authority,
+		RewardId: "short-duration-reward",
+	}
+
+	response, err := suite.msgServer.ActivateTradingReward(suite.ctx, msg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(response)
+
+	// Verify active reward uses Duration for expiration: epoch(500) + Duration(7) * 24 = 668
+	activeReward, found := suite.k.GetActiveTradingReward(suite.ctx, "short-duration-reward")
+	suite.Require().True(found)
+	suite.Require().Equal(uint32(500+(7*24)), activeReward.ExpireAt)
+	suite.Require().Equal(uint32(668), activeReward.ExpireAt)
+
+	// Verify active expiration was created at the correct time
+	activeExpirations := suite.k.GetAllActiveTradingRewardExpirationByExpireAt(suite.ctx, activeReward.ExpireAt)
+	suite.Require().Len(activeExpirations, 1)
+	suite.Require().Equal("short-duration-reward", activeExpirations[0].RewardId)
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardCleanup() {

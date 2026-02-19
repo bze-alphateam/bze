@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"context"
-	"cosmossdk.io/errors"
 	"fmt"
+
+	"cosmossdk.io/errors"
 
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,7 +38,7 @@ func (k msgServer) ActivateTradingReward(goCtx context.Context, msg *types.MsgAc
 	k.RemovePendingTradingReward(ctx, r.RewardId)
 
 	//move the trading reward to active
-	r.ExpireAt = k.getNewTradingRewardExpireAt(ctx)
+	r.ExpireAt = k.getNewTradingRewardExpireAt(ctx, r.Duration)
 	k.SetActiveTradingReward(ctx, r)
 
 	//save expiration

@@ -101,8 +101,8 @@ func (k Keeper) getPrefixedStore(ctx sdk.Context, p []byte) prefix.Store {
 	return prefix.NewStore(storeAdapter, p)
 }
 
-func (k Keeper) getNewTradingRewardExpireAt(ctx sdk.Context) uint32 {
+func (k Keeper) getNewTradingRewardExpireAt(ctx sdk.Context, durationInDays uint32) uint32 {
 	cnt := uint32(k.epochKeeper.GetEpochCountByIdentifier(ctx, expirationEpoch))
 
-	return cnt + expirationPeriodInHours
+	return cnt + (durationInDays * 24)
 }

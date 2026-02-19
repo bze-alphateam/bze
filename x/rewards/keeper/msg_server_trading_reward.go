@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	expirationPeriodInHours uint32 = 30 * 24
+	pendingExpirationPeriodInDays uint32 = 30
 )
 
 func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCreateTradingReward) (*types.MsgCreateTradingRewardResponse, error) {
@@ -86,7 +86,7 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 
 	//add ID
 	tradingReward.RewardId = k.smallZeroFillId(k.ReserveTradingRewardsCounter(ctx))
-	tradingReward.ExpireAt = k.getNewTradingRewardExpireAt(ctx)
+	tradingReward.ExpireAt = k.getNewTradingRewardExpireAt(ctx, pendingExpirationPeriodInDays)
 	k.SetPendingTradingReward(
 		ctx,
 		tradingReward,
