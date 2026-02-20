@@ -172,7 +172,11 @@ func (k Keeper) distributeTradingRewards(ctx sdk.Context, epochNumber int64) {
 				panic(err)
 			}
 
-			_ = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, acc, rewardPerSlot)
+			err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, acc, rewardPerSlot)
+			if err != nil {
+				//should never happen
+				logger.Error("error sending coins to winner", "winner", winner.Address, "err", err.Error())
+			}
 			eventWinners = append(eventWinners, winner.Address)
 		}
 
