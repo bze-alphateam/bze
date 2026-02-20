@@ -121,6 +121,7 @@ func (k Keeper) CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool {
 // ModuleSwapForNativeDenom swaps a specified set of coins from a module account to the native denomination if liquidity exists.
 // It ensures the proper liquidity pool is available and updates account balances accordingly.
 // Returns the resulting native denomination coin and an error if the process is unsuccessful.
+// It fails if ANY swap of the provided coins fails.
 func (k Keeper) ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins sdk.Coins) (sdk.Coin, error) {
 	cached, flush := ctx.CacheContext()
 	nativeDenom := k.getNativeDenom(cached)
