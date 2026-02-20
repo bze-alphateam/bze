@@ -252,7 +252,7 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 
 	//should always exist
 	market, _ := pe.k.GetMarketById(ctx, message.MarketId)
-	minAmount := CalculateMinAmount(message.Price)
+	minAmount, _ := CalculateMinAmount(message.Price)
 	msgOwnerAddr, _ := sdk.AccAddressFromBech32(message.Owner)
 
 	remaining, err := pe.fillAggregatedOrder(ctx, &agg, &message, msgAmountInt, &market)
@@ -614,7 +614,11 @@ func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.Aggr
 
 	oppositeOrderRefs := pe.k.GetPriceOrderByPrice(ctx, message.MarketId, types.TheOtherOrderType(message.OrderType), message.Price)
 	pe.logger.Info("found orders to fill", "number_of_orders", len(oppositeOrderRefs))
-	minAmount := CalculateMinAmount(message.Price)
+	minAmount, err := CalculateMinAmount(message.Price)
+	if err != nil {
+		return nil, fmt.Errorf("could not calculate min amount: %v", err)
+	}
+
 	for _, orderRef := range oppositeOrderRefs {
 		//stop when all message amount was spent
 		if !msgAmountInt.IsPositive() {

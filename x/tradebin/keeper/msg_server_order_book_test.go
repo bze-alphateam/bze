@@ -947,7 +947,8 @@ func (suite *IntegrationTestSuite) randomOrderCreateMessages(count int, creators
 			randomPrice = ExecPrice
 		}
 		randomPriceStr := strconv.Itoa(randomPrice)
-		minAmount := keeper.CalculateMinAmount(randomPriceStr)
+		minAmount, err := keeper.CalculateMinAmount(randomPriceStr)
+		suite.Require().NoError(err)
 		orderAmount := minAmount.AddRaw(int64(suite.randomNumber(1000)))
 		orderMsg := types.MsgCreateOrder{
 			Amount:    orderAmount.String(),

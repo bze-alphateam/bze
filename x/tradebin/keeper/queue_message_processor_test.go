@@ -14,7 +14,8 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_AddMakerOrder() {
 
 	addr1 := sdk.AccAddress("addr1_______________")
 
-	mBuyAmt := keeper.CalculateMinAmount("100")
+	mBuyAmt, err := keeper.CalculateMinAmount("100")
+	suite.Require().NoError(err)
 	mBuy := types.QueueMessage{
 		MarketId:    getMarketId(),
 		MessageType: types.OrderTypeBuy,
@@ -23,7 +24,8 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_AddMakerOrder() {
 		OrderType:   types.OrderTypeBuy,
 		Owner:       addr1.String(),
 	}
-	mSellAmt := keeper.CalculateMinAmount("10")
+	mSellAmt, err := keeper.CalculateMinAmount("10")
+	suite.Require().NoError(err)
 	mSell := types.QueueMessage{
 		MarketId:    getMarketId(),
 		MessageType: types.OrderTypeSell,
@@ -217,10 +219,14 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 
 	//sellPrice := int64(10)
 	sellPriceStr := "1"
-	sellAmt := keeper.CalculateMinAmount(sellPriceStr).MulRaw(5)
+	sellAmt, err := keeper.CalculateMinAmount(sellPriceStr)
+	suite.Require().NoError(err)
+	sellAmt = sellAmt.MulRaw(5)
 	//buyPrice := int64(20)
 	buyPriceStr := "2"
-	buyAmt := keeper.CalculateMinAmount(buyPriceStr).MulRaw(5)
+	buyAmt, err := keeper.CalculateMinAmount(buyPriceStr)
+	suite.Require().NoError(err)
+	buyAmt = buyAmt.MulRaw(5)
 	orderCounter := int64(10)
 	for i := int64(0); i < orderCounter; i++ {
 		qmSell := types.QueueMessage{
@@ -438,10 +444,14 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching_WithD
 
 	//sellPrice := int64(10)
 	sellPriceStr := "0.7612"
-	sellAmt := keeper.CalculateMinAmount(sellPriceStr).MulRaw(5)
+	sellAmt, err := keeper.CalculateMinAmount(sellPriceStr)
+	suite.Require().NoError(err)
+	sellAmt = sellAmt.MulRaw(5)
 	//buyPrice := int64(20)
 	buyPriceStr := "0.950012"
-	buyAmt := keeper.CalculateMinAmount(buyPriceStr).MulRaw(6)
+	buyAmt, err := keeper.CalculateMinAmount(buyPriceStr)
+	suite.Require().NoError(err)
+	buyAmt = buyAmt.MulRaw(6)
 	orderCounter := int64(10)
 	for i := int64(0); i < orderCounter; i++ {
 		qmSell := types.QueueMessage{
@@ -619,11 +629,13 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderBookPerBlockMe
 	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
 
 	// Add messages to queue
+	minAmt, err := keeper.CalculateMinAmount("100")
+	suite.Require().NoError(err)
 	for i := 0; i < messageCount; i++ {
 		mBuy := types.QueueMessage{
 			MarketId:    getMarketId(),
 			MessageType: types.OrderTypeBuy,
-			Amount:      keeper.CalculateMinAmount("100").String(),
+			Amount:      minAmt.String(),
 			Price:       "100",
 			OrderType:   types.OrderTypeBuy,
 			Owner:       addr1.String(),
@@ -675,10 +687,12 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CounterResetOnlyWhe
 	addr1 := sdk.AccAddress("addr1_______________")
 
 	// Add one message
+	minAmt, err := keeper.CalculateMinAmount("100")
+	suite.Require().NoError(err)
 	mBuy := types.QueueMessage{
 		MarketId:    getMarketId(),
 		MessageType: types.OrderTypeBuy,
-		Amount:      keeper.CalculateMinAmount("100").String(),
+		Amount:      minAmt.String(),
 		Price:       "100",
 		OrderType:   types.OrderTypeBuy,
 		Owner:       addr1.String(),
@@ -714,10 +728,12 @@ func (suite *IntegrationTestSuite) TestHasQueueMessages() {
 	addr1 := sdk.AccAddress("addr1_______________")
 
 	// Add a message
+	minAmt, err := keeper.CalculateMinAmount("100")
+	suite.Require().NoError(err)
 	mBuy := types.QueueMessage{
 		MarketId:    getMarketId(),
 		MessageType: types.OrderTypeBuy,
-		Amount:      keeper.CalculateMinAmount("100").String(),
+		Amount:      minAmt.String(),
 		Price:       "100",
 		OrderType:   types.OrderTypeBuy,
 		Owner:       addr1.String(),
@@ -753,7 +769,8 @@ func (suite *IntegrationTestSuite) TestFillAggregatedOrder_ContinuePastUnfillabl
 	takerAddr := sdk.AccAddress("addr2_______________")
 
 	price := "1"
-	minAmount := keeper.CalculateMinAmount(price) // ceil(1/1)*2 = 2
+	minAmount, err := keeper.CalculateMinAmount(price) // ceil(1/1)*2 = 2
+	suite.Require().NoError(err)
 
 	// Create a small sell order with amount between minAmount and 2*minAmount.
 	// For msgAmount=minAmount=2 and orderAmount=3:
@@ -843,7 +860,8 @@ func (suite *IntegrationTestSuite) TestFillAggregatedOrder_EarlyExitMsgBelowMinA
 	takerAddr := sdk.AccAddress("addr2_______________")
 
 	price := "1"
-	minAmount := keeper.CalculateMinAmount(price) // 2
+	minAmount, err := keeper.CalculateMinAmount(price) // 2
+	suite.Require().NoError(err)
 
 	// Create two sell orders at the same price, each with amount = minAmount (fully fillable)
 	sellAmount := minAmount // 2
@@ -912,7 +930,8 @@ func (suite *IntegrationTestSuite) TestFillAggregatedOrder_ContinueThenEarlyExit
 
 	// Use price "0.1" for a larger minAmount, giving more room for the test scenario
 	price := "0.1"
-	minAmount := keeper.CalculateMinAmount(price) // ceil(1/0.1)*2 = 20
+	minAmount, err := keeper.CalculateMinAmount(price) // ceil(1/0.1)*2 = 20
+	suite.Require().NoError(err)
 
 	// Order 1: unfillable (amount between minAmount and 2*minAmount)
 	// For msgAmount=25 and orderAmount=30:

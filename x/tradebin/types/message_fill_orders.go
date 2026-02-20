@@ -2,6 +2,7 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -45,6 +46,19 @@ func (msg *MsgFillOrders) ValidateBasic() error {
 
 	pricesMap := make(map[string]struct{})
 	for _, fo := range msg.Orders {
+		decPrice, err := math.LegacyNewDecFromStr(fo.Price)
+		if err != nil {
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid price %s: %s", fo.Price, err.Error())
+		}
+
+		if !decPrice.IsPositive() {
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "price should be positive: %s", fo.Price)
+		}
+
+		if decPrice.LTE(minPrice) {
+			return errorsmod.Wrapf(ErrInvalidOrderPrice, "price should be higher than %s", minPrice.String())
+		}
+
 		if _, ok := pricesMap[fo.Price]; ok {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "duplicate price %s found in items", fo.Price)
 		}

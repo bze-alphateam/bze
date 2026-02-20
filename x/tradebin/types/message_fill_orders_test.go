@@ -190,7 +190,7 @@ func TestMsgFillOrders_ValidateBasic(t *testing.T) {
 			},
 		},
 		{
-			name: "valid message - orders with empty values",
+			name: "invalid price - empty value",
 			msg: MsgFillOrders{
 				Creator:   validCreator,
 				MarketId:  validMarketId,
@@ -199,6 +199,7 @@ func TestMsgFillOrders_ValidateBasic(t *testing.T) {
 					{Price: "", Amount: ""},
 				},
 			},
+			err: sdkerrors.ErrInvalidRequest,
 		},
 		{
 			name: "duplicate prices in orders",

@@ -63,7 +63,11 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 		return nil, types.ErrInvalidOrderPrice.Wrapf("check price failed: %v", err)
 	}
 
-	minAmt := CalculateMinAmount(msg.Price)
+	minAmt, err := CalculateMinAmount(msg.Price)
+	if err != nil {
+		return nil, types.ErrInvalidOrderPrice.Wrapf("could not calculate minimum amount: %v", err)
+	}
+
 	amtInt, ok := math.NewIntFromString(msg.Amount)
 	if !ok {
 		return nil, types.ErrInvalidOrderAmount.Wrapf("amount could not be converted to Int")
@@ -205,7 +209,11 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 	ctx.GasMeter().ConsumeGas(params.FillOrdersExtraGas, "fill_orders")
 	totalCoins := sdk.NewCoins()
 	for key, fo := range msg.Orders {
-		minAmt := CalculateMinAmount(fo.Price)
+		minAmt, err := CalculateMinAmount(fo.Price)
+		if err != nil {
+			return nil, types.ErrInvalidOrdersToFill.Wrapf("could not calculate minimum amount: %v", err)
+		}
+
 		amtInt, ok := math.NewIntFromString(fo.Amount)
 		if !ok {
 			return nil, types.ErrInvalidOrderAmount.Wrapf("amount could not be converted to Int")

@@ -9,15 +9,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func CalculateMinAmount(price string) math.Int {
+func CalculateMinAmount(price string) (math.Int, error) {
 	// Convert the price string to a Dec
 	priceDec, err := math.LegacyNewDecFromStr(price)
 	if err != nil {
-		fmt.Println("Error converting price to Dec:", err)
-		return math.ZeroInt()
+		return math.ZeroInt(), fmt.Errorf("error converting price to Dec: %w", err)
 	}
 	if priceDec.IsZero() {
-		return math.ZeroInt()
+		return math.ZeroInt(), fmt.Errorf("price cannot be zero")
 	}
 
 	// The denominator for our operation, represented as a Dec
@@ -32,7 +31,7 @@ func CalculateMinAmount(price string) math.Int {
 	// as described in your comment.
 	amtDec = amtDec.MulInt64(2)
 
-	return amtDec.TruncateInt()
+	return amtDec.TruncateInt(), nil
 }
 
 // GetOrderSdkCoin - returns the needed coins for an order
