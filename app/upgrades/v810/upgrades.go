@@ -14,6 +14,7 @@ import (
 	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 const UpgradeName = "v8.1.0"
@@ -228,6 +229,6 @@ func migrateAggregatedOrders(ctx sdk.Context, k *tradebinkeeper.Keeper) error {
 func GetStoreUpgrades() *storetypes.StoreUpgrades {
 	return &storetypes.StoreUpgrades{
 		Added:   []string{},
-		Deleted: []string{},
+		Deleted: []string{crisistypes.ModuleName},
 	}
 }

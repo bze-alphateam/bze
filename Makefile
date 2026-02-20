@@ -153,7 +153,7 @@ start-localnet-ci: build
 	./build/bzed genesis gentx val 1000000000ubze --home ~/.bzed-liveness --chain-id liveness
 	./build/bzed genesis collect-gentxs --home ~/.bzed-liveness
 	sed -i.bak 's#^minimum-gas-prices = .*#minimum-gas-prices = "0.001ubze,0.0001stake"#g' ~/.bzed-liveness/config/app.toml
-	./build/bzed start --home ~/.bzed-liveness --x-crisis-skip-assert-invariants
+	./build/bzed start --home ~/.bzed-liveness
 .PHONY: start-localnet-ci
 
 build-docker-bzednode:
