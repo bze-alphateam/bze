@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"cosmossdk.io/math"
 	"fmt"
+	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"go.uber.org/mock/gomock"
@@ -83,9 +84,10 @@ func (suite *IntegrationTestSuite) TestProcessExpiredTradingRewardQueue_SingleEn
 
 	// Set up mock expectation for burning coins
 	suite.bank.EXPECT().
-		BurnCoins(
+		SendCoinsFromModuleToModule(
 			gomock.Any(),
 			types.ModuleName,
+			burnermoduletypes.ModuleName,
 			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(5000))), // 1000 * 5 slots
 		).
 		Return(nil).
@@ -128,9 +130,10 @@ func (suite *IntegrationTestSuite) TestProcessExpiredTradingRewardQueue_Multiple
 	suite.k.EnqueueExpiredTradingRewardRemoval(suite.ctx, epochNumber)
 
 	suite.bank.EXPECT().
-		BurnCoins(
+		SendCoinsFromModuleToModule(
 			gomock.Any(),
 			types.ModuleName,
+			burnermoduletypes.ModuleName,
 			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(2000))), // 1000 * 2 slots
 		).
 		Return(nil).
@@ -170,9 +173,10 @@ func (suite *IntegrationTestSuite) TestProcessExpiredTradingRewardQueue_BurnErro
 	suite.k.EnqueueExpiredTradingRewardRemoval(suite.ctx, epochNumber)
 
 	suite.bank.EXPECT().
-		BurnCoins(
+		SendCoinsFromModuleToModule(
 			gomock.Any(),
 			types.ModuleName,
+			burnermoduletypes.ModuleName,
 			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(5000))),
 		).
 		Return(fmt.Errorf("burn failed")).
@@ -219,7 +223,7 @@ func (suite *IntegrationTestSuite) TestProcessExpiredTradingRewardQueue_BurnErro
 
 	// First call fails
 	suite.bank.EXPECT().
-		BurnCoins(gomock.Any(), types.ModuleName, burnCoins).
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, burnermoduletypes.ModuleName, burnCoins).
 		Return(fmt.Errorf("burn failed")).
 		Times(1)
 
@@ -235,7 +239,7 @@ func (suite *IntegrationTestSuite) TestProcessExpiredTradingRewardQueue_BurnErro
 
 	// Second call succeeds
 	suite.bank.EXPECT().
-		BurnCoins(gomock.Any(), types.ModuleName, burnCoins).
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, burnermoduletypes.ModuleName, burnCoins).
 		Return(nil).
 		Times(1)
 
@@ -273,9 +277,10 @@ func (suite *IntegrationTestSuite) TestProcessExpiredTradingRewardQueue_Multiple
 	}
 
 	suite.bank.EXPECT().
-		BurnCoins(
+		SendCoinsFromModuleToModule(
 			gomock.Any(),
 			types.ModuleName,
+			burnermoduletypes.ModuleName,
 			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(1000))), // 500 * 2 slots
 		).
 		Return(nil).
@@ -322,7 +327,7 @@ func (suite *IntegrationTestSuite) TestProcessExpiredTradingRewardQueue_MultiBlo
 
 	// First block: process MaxTradingRewardRemovalsPerBlock entries
 	suite.bank.EXPECT().
-		BurnCoins(gomock.Any(), types.ModuleName, burnCoins).
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, burnermoduletypes.ModuleName, burnCoins).
 		Return(nil).
 		Times(types.MaxTradingRewardRemovalsPerBlock)
 
@@ -339,7 +344,7 @@ func (suite *IntegrationTestSuite) TestProcessExpiredTradingRewardQueue_MultiBlo
 
 	// Second block: process remaining 50 entries
 	suite.bank.EXPECT().
-		BurnCoins(gomock.Any(), types.ModuleName, burnCoins).
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, burnermoduletypes.ModuleName, burnCoins).
 		Return(nil).
 		Times(50)
 
@@ -382,9 +387,10 @@ func (suite *IntegrationTestSuite) TestProcessExpiredTradingRewardQueue_Differen
 	suite.k.EnqueueExpiredTradingRewardRemoval(suite.ctx, 100)
 
 	suite.bank.EXPECT().
-		BurnCoins(
+		SendCoinsFromModuleToModule(
 			gomock.Any(),
 			types.ModuleName,
+			burnermoduletypes.ModuleName,
 			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(1000))),
 		).
 		Return(nil).

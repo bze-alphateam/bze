@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"github.com/bze-alphateam/bze/bzeutils"
+	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -110,7 +111,7 @@ func (k Keeper) processExpiredPendingTradingReward(ctx sdk.Context, exp types.Tr
 		return err
 	}
 
-	err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, toBurn)
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, burnermoduletypes.ModuleName, toBurn)
 	if err != nil {
 		logger.With("trading_reward", tr, "to_burn", toBurn).Error("could not burn coins for trading reward")
 		return err
