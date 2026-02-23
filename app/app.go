@@ -346,8 +346,6 @@ func (app *App) setupUpgradeHandlers() {
 			app.Configurator(),
 			app.ModuleManager,
 			app.TradebinKeeper,
-			app.TxfeecollectorKeeper,
-			app.RewardsKeeper,
 		),
 	)
 
