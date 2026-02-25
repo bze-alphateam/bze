@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+	"github.com/bze-alphateam/bze/x/tradebin/keeper"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"go.uber.org/mock/gomock"
@@ -44,7 +45,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_PreferredDenomSameA
 	fee := sdk.NewCoins(sdk.NewCoin(denomBze, math.NewInt(1000000)))
 
 	// Set context with preferred denom same as native
-	ctx := suite.ctx.WithValue("fee_denom", denomBze)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomBze)
 
 	// Mock bank transfer
 	suite.bankMock.EXPECT().
@@ -63,7 +64,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_NoNativeFeeInCoins(
 	fee := sdk.NewCoins(sdk.NewCoin(denomStake, math.NewInt(1000000)))
 
 	// Set context with preferred denom
-	ctx := suite.ctx.WithValue("fee_denom", "uatom")
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, "uatom")
 
 	// Mock bank transfer - should capture as-is since no native fee to swap
 	suite.bankMock.EXPECT().
@@ -81,7 +82,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_PoolNotFound() {
 	fee := sdk.NewCoins(sdk.NewCoin(denomBze, math.NewInt(1000000)))
 
 	// Set context with preferred denom that has no pool
-	ctx := suite.ctx.WithValue("fee_denom", "uatom")
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, "uatom")
 
 	// Mock bank transfer - should fall back to native denom
 	suite.bankMock.EXPECT().
@@ -117,7 +118,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SwapSuccess() {
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
 	// Set context with preferred denom stake
-	ctx := suite.ctx.WithValue("fee_denom", denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
 
 	// Calculate what amount is needed in stake to get 100 ubze
 	requiredStake, err := suite.k.CalculateOptimalInputForOutput(pool, nativeFee)
@@ -176,7 +177,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SwapWithMultipleFee
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
 	// Set context with preferred denom stake
-	ctx := suite.ctx.WithValue("fee_denom", denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
 
 	// Calculate required stake for native fee
 	requiredStake, err := suite.k.CalculateOptimalInputForOutput(pool, nativeFee)
@@ -248,7 +249,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_InsufficientBalance
 	}
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	ctx := suite.ctx.WithValue("fee_denom", denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
 
 	// Mock user balance check - insufficient balance
 	suite.bankMock.EXPECT().
@@ -305,7 +306,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SwapCalculationFail
 	}
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	ctx := suite.ctx.WithValue("fee_denom", denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
 
 	// When CalculateOptimalInputForOutput fails inside CaptureAndSwapUserFee,
 	// the function falls back to capturing fee in native denom
@@ -343,7 +344,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_CrossModuleSwap() {
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
 	// Set context with preferred denom stake
-	ctx := suite.ctx.WithValue("fee_denom", denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
 
 	// Calculate what amount is needed in stake to get 100 ubze
 	requiredStake, err := suite.k.CalculateOptimalInputForOutput(pool, nativeFee)
@@ -402,7 +403,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_SameModuleOptimizat
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
 	// Set context with preferred denom stake
-	ctx := suite.ctx.WithValue("fee_denom", denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
 
 	// Calculate what amount is needed in stake to get 100 ubze
 	requiredStake, err := suite.k.CalculateOptimalInputForOutput(pool, nativeFee)
@@ -465,7 +466,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_ZeroNativeReserves(
 	}
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	ctx := suite.ctx.WithValue("fee_denom", denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
 
 	// Should fall back to native denom since pool has no native reserves
 	suite.bankMock.EXPECT().
@@ -503,7 +504,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_InsufficientLiquidi
 	}
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	ctx := suite.ctx.WithValue("fee_denom", denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
 
 	// Should fall back to native denom since pool liquidity is below threshold
 	suite.bankMock.EXPECT().
@@ -540,7 +541,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_LiquidityAtThreshol
 	}
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	ctx := suite.ctx.WithValue("fee_denom", denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
 
 	// Calculate what amount is needed in stake to get the native fee
 	requiredStake, err := suite.k.CalculateOptimalInputForOutput(pool, nativeFee)

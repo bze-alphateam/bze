@@ -4,8 +4,13 @@ import (
 	"fmt"
 
 	"github.com/bze-alphateam/bze/x/tradebin/types"
+	"github.com/bze-alphateam/bze/x/txfeecollector/ante"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+// CtxFeeDenomKey mirrors the txfeecollector ante.FeeDenomKey constant.
+// Kept as a local constant to avoid a cross-module import dependency.
+const CtxFeeDenomKey = ante.FeeDenomKey
 
 func (k Keeper) CaptureAndSwapUserFee(ctx sdk.Context, payer sdk.AccAddress, fee sdk.Coins, toModule string) (coins sdk.Coins, err error) {
 	if !fee.IsAllPositive() {
@@ -118,7 +123,7 @@ func (k Keeper) payerCoinsToModule(ctx sdk.Context, payer sdk.AccAddress, coins 
 }
 
 func (k Keeper) getCtxDenom(ctx sdk.Context) string {
-	ctxDenom := ctx.Value("fee_denom")
+	ctxDenom := ctx.Value(CtxFeeDenomKey)
 	if ctxDenom == nil {
 		return ""
 	}
