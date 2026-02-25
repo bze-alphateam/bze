@@ -300,20 +300,23 @@ func (k msgServer) MultiSwap(goCtx context.Context, msg *types.MsgMultiSwap) (*t
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidCoins, "could not capture user input coins %s", err.Error())
 	}
 
-	outputCoin := *ic
+	inputCoin := *ic
 	for _, pool := range pools {
 		//use the result as outputCoin for next pool swap
-		oc, err := k.swapTokens(ctx, outputCoin, &pool)
+		swapResult, err := k.swapTokens(ctx, inputCoin, &pool)
 		if err != nil {
 			return nil, errors.Wrapf(types.ErrInvalidPoolSwap, "swap failed on pool %s: %s", pool.GetId(), err.Error())
 		}
 
 		//emit event and call order executed hooks
-		k.onSwapSuccess(ctx, &pool, creatorAcc, outputCoin, oc)
+		k.onSwapSuccess(ctx, &pool, creatorAcc, inputCoin, swapResult)
 
-		//modify output coin (which becomes input in next interation) with the resulted coins from the swap
-		outputCoin = oc
+		//modify input coin with the resulted coins from the swap to be used as input on the next pool in this slice
+		inputCoin = swapResult
 	}
+
+	//the final output coin is the result of the last swap from the list of pools
+	outputCoin := inputCoin
 
 	//last outputCoin should be expected output
 	if outputCoin.Denom != moc.Denom {
