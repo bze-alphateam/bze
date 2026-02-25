@@ -26,7 +26,7 @@ func (msg *MsgMultiSwap) ValidateBasic() error {
 	}
 
 	if len(msg.GetRoutes()) <= 0 || len(msg.GetRoutes()) > MaxRoutes {
-		return errorsmod.Wrapf(ErrInvalidRoutes, "routes length must be between 0 and %d", MaxRoutes)
+		return errorsmod.Wrapf(ErrInvalidRoutes, "routes length must be between 1 and %d", MaxRoutes)
 	}
 
 	tempMap := make(map[string]struct{})
