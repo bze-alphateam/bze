@@ -9,6 +9,7 @@ import (
 )
 
 func TestMsgDistributeStakingRewards_ValidateBasic(t *testing.T) {
+	validCreator := sample.AccAddress()
 	tests := []struct {
 		name string
 		msg  MsgDistributeStakingRewards
@@ -20,10 +21,44 @@ func TestMsgDistributeStakingRewards_ValidateBasic(t *testing.T) {
 				Creator: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
-		}, {
-			name: "valid address",
+		},
+		{
+			name: "invalid amount - empty",
 			msg: MsgDistributeStakingRewards{
-				Creator: sample.AccAddress(),
+				Creator: validCreator,
+				Amount:  "",
+			},
+			err: ErrInvalidAmount,
+		},
+		{
+			name: "invalid amount - not a number",
+			msg: MsgDistributeStakingRewards{
+				Creator: validCreator,
+				Amount:  "invalid",
+			},
+			err: ErrInvalidAmount,
+		},
+		{
+			name: "invalid amount - negative",
+			msg: MsgDistributeStakingRewards{
+				Creator: validCreator,
+				Amount:  "-100",
+			},
+			err: ErrInvalidAmount,
+		},
+		{
+			name: "invalid amount - zero",
+			msg: MsgDistributeStakingRewards{
+				Creator: validCreator,
+				Amount:  "0",
+			},
+			err: ErrInvalidAmount,
+		},
+		{
+			name: "valid message",
+			msg: MsgDistributeStakingRewards{
+				Creator: validCreator,
+				Amount:  "100",
 			},
 		},
 	}
