@@ -177,7 +177,7 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 
 	stakedAmount := math.ZeroInt()
 	if stakingReward.StakedAmount != "" {
-		ok := false
+		var ok bool
 		stakedAmount, ok = math.NewIntFromString(stakingReward.StakedAmount)
 		if !ok {
 			return nil, fmt.Errorf("could not transform staked amount from storage into int")
