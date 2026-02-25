@@ -505,6 +505,16 @@ func (k msgServer) claimPending(ctx sdk.Context, sr types.StakingReward, partici
 }
 
 func (k msgServer) beginUnlock(ctx sdk.Context, p types.StakingRewardParticipant, sr types.StakingReward) error {
+	//in case the lock is 0 send the funds immediately without accumulating pending unlocks
+	if sr.Lock == 0 {
+		pending := types.PendingUnlockParticipant{
+			Address: p.Address,
+			Amount:  p.Amount,
+			Denom:   sr.StakingDenom,
+		}
+		return k.performUnlock(ctx, &pending)
+	}
+
 	lockedUntil := k.epochKeeper.GetEpochCountByIdentifier(ctx, expirationEpoch)
 	lockedUntil += int64(sr.Lock) * 24
 	pendingKey := types.CreatePendingUnlockParticipantKey(lockedUntil, fmt.Sprintf("%s/%s", sr.RewardId, p.Address))
@@ -522,11 +532,6 @@ func (k msgServer) beginUnlock(ctx sdk.Context, p types.StakingRewardParticipant
 		inStoreAmount, _ := math.NewIntFromString(inStore.Amount)
 		pendingAmount, _ := math.NewIntFromString(pending.Amount)
 		pending.Amount = pendingAmount.Add(inStoreAmount).String()
-	}
-
-	//in case the lock is 0 send the funds immediately
-	if sr.Lock == 0 {
-		return k.performUnlock(ctx, &pending)
 	}
 
 	k.SetPendingUnlockParticipant(ctx, pending)
