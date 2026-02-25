@@ -48,7 +48,7 @@ func TestMsgMultiSwap_ValidateBasic(t *testing.T) {
 				MinOutput: sdk.NewInt64Coin("uusdc", 200),
 			},
 			err:    ErrInvalidRoutes,
-			errMsg: "routes length must be between 0 and",
+			errMsg: "routes length must be between 1 and",
 		},
 		{
 			name: "too many routes",
@@ -59,7 +59,7 @@ func TestMsgMultiSwap_ValidateBasic(t *testing.T) {
 				MinOutput: sdk.NewInt64Coin("uusdc", 200),
 			},
 			err:    ErrInvalidRoutes,
-			errMsg: "routes length must be between 0 and",
+			errMsg: "routes length must be between 1 and",
 		},
 		{
 			name: "empty input",
