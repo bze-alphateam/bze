@@ -403,7 +403,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_InvalidCreator() {
 
 	_, err := suite.msgServer.AddLiquidity(suite.ctx, msg)
 	suite.Require().Error(err)
-	suite.Require().Contains(err.Error(), "unauthorized")
+	suite.Require().Contains(err.Error(), "invalid address")
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_PoolNotFound() {
@@ -841,8 +841,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_RemoveLiquidity_Errors() {
 				MinBase:  math.NewInt(10),
 				MinQuote: math.NewInt(20),
 			},
-			expectedError: "unauthorized",
-			errorType:     sdkerrors.ErrUnauthorized,
+			expectedError: "invalid address",
+			errorType:     sdkerrors.ErrInvalidAddress,
 			setupMock:     func() {},
 		},
 		{
@@ -1586,7 +1586,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_InvalidCreator() {
 
 	// Verify error
 	suite.Require().Error(err)
-	suite.Require().Contains(err.Error(), "unauthorized")
+	suite.Require().Contains(err.Error(), "invalid address")
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_PoolNotFound() {
