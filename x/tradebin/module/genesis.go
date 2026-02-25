@@ -1,8 +1,10 @@
 package tradebin
 
 import (
+	"fmt"
 	"strconv"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bze-alphateam/bze/x/tradebin/keeper"
@@ -23,6 +25,9 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 	}
 
 	for _, elem := range genState.OrderList {
+		if _, err := math.LegacyNewDecFromStr(elem.Price); err != nil {
+			panic(fmt.Sprintf("invalid order price %q for order %s: %s", elem.Price, elem.Id, err))
+		}
 		k.SaveOrder(ctx, elem)
 	}
 
