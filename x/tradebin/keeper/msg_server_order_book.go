@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/bze-alphateam/bze/x/tradebin/types"
+	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -284,16 +285,12 @@ func (k msgServer) payMarketCreateFee(ctx sdk.Context, payer sdk.AccAddress) err
 		return fmt.Errorf("could not get payer address")
 	}
 
-	createMarketFee, err := sdk.ParseCoinsNormalized(k.CreateMarketFee(ctx))
-	if err != nil {
-		return err
-	}
-
-	if !createMarketFee.IsAllPositive() {
+	createMarketFee := k.CreateMarketFee(ctx)
+	if !createMarketFee.IsPositive() {
 		return nil
 	}
 
-	coinsCaptured, err := k.CaptureAndSwapUserFee(ctx, payer, createMarketFee, types.ModuleName)
+	coinsCaptured, err := k.CaptureAndSwapUserFee(ctx, payer, sdk.NewCoins(createMarketFee), types.ModuleName)
 	if err != nil {
 		return err
 	}
@@ -348,50 +345,39 @@ func (k msgServer) captureMsgFees(ctx sdk.Context, msg *types.MsgCreateOrder, se
 
 func (k msgServer) captureTradingFees(ctx sdk.Context, sender sdk.AccAddress, isTaker bool) (coin sdk.Coin, err error) {
 	params := k.GetParams(ctx)
-	var fee string
+	var fee sdk.Coin
 	var destination string
 	if isTaker {
 		//is market taker
-		fee = params.GetMarketTakerFee()
-		destination = params.GetTakerFeeDestination()
+		fee = params.MarketTakerFee
+		destination = params.TakerFeeDestination
 	} else {
 		//is market maker
-		fee = params.GetMarketMakerFee()
-		destination = params.GetMakerFeeDestination()
+		fee = params.MarketMakerFee
+		destination = params.MakerFeeDestination
 	}
 
-	coin, err = sdk.ParseCoinNormalized(fee)
-	if err != nil {
-		k.Logger().
-			With("err", err).
-			With("param_fee", fee).
-			Error("could not parse fee coin. trading fee not captured")
-
-		//do not return error!! if we have a wrong fee parameter we don't want to stall the trading process
-		return coin, nil
-	}
-
-	if !coin.IsPositive() {
+	if !fee.IsPositive() {
 		k.Logger().
 			With("param_fee", fee).
 			Debug("not capturing order create fee because it is not a positive value")
 
-		return
+		return fee, nil
 	}
 
-	captured, err := k.CaptureAndSwapUserFee(ctx, sender, sdk.NewCoins(coin), types.ModuleName)
+	captured, err := k.CaptureAndSwapUserFee(ctx, sender, sdk.NewCoins(fee), types.ModuleName)
 	if err != nil {
-		return coin, err
+		return fee, err
 	}
 
 	destModule := txfeecollectormoduletypes.CpFeeCollector
-	if destination == types.FeeDestinationBurnerModule {
+	if destination == v2types.FeeDestinationBurnerModule {
 		destModule = txfeecollectormoduletypes.BurnerFeeCollector
 	}
 
 	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, destModule, captured)
 
-	return
+	return fee, err
 }
 
 // checkPrice - validates the price of a message in order to make sure orders prices don't get messed up.

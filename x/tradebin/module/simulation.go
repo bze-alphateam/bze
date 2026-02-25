@@ -11,6 +11,7 @@ import (
 	"github.com/bze-alphateam/bze/testutil/sample"
 	tradebinsimulation "github.com/bze-alphateam/bze/x/tradebin/simulation"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
+	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 )
 
 // avoid unused import issue
@@ -65,7 +66,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 		accs[i] = acc.Address.String()
 	}
 	tradebinGenesis := types.GenesisState{
-		Params: types.DefaultParams(),
+		Params: v2types.DefaultParams(),
 		// this line is used by starport scaffolding # simapp/module/genesisState
 	}
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&tradebinGenesis)

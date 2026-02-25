@@ -9,12 +9,13 @@ import (
 	"github.com/bze-alphateam/bze/testutil/nullify"
 	tradebin "github.com/bze-alphateam/bze/x/tradebin/module"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
+	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
-		Params: types.DefaultParams(),
+		Params: v2types.DefaultParams(),
 
 		// this line is used by starport scaffolding # genesis/test/state
 	}
