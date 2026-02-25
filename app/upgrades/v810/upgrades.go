@@ -6,12 +6,7 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	rewardskeeper "github.com/bze-alphateam/bze/x/rewards/keeper"
-	rewardstypes "github.com/bze-alphateam/bze/x/rewards/types"
 	tradebinkeeper "github.com/bze-alphateam/bze/x/tradebin/keeper"
-	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
-	txfeecollectorkeeper "github.com/bze-alphateam/bze/x/txfeecollector/keeper"
-	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
@@ -23,33 +18,19 @@ func CreateUpgradeHandler(
 	cfg module.Configurator,
 	mm *module.Manager,
 	tradebinKeeper *tradebinkeeper.Keeper,
-	txfeecollectorKeeper *txfeecollectorkeeper.Keeper,
-	rewardsKeeper *rewardskeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
 
 	return func(c context.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		ctx := sdk.UnwrapSDKContext(c)
-
-		// Migrate tradebin module parameters
-		if err := migrateTradebinParams(ctx, tradebinKeeper); err != nil {
-			return nil, err
-		}
-
-		// Migrate txfeecollector module parameters
-		if err := migrateTxFeeCollectorParams(ctx, txfeecollectorKeeper); err != nil {
-			return nil, err
-		}
-
-		// Migrate rewards module parameters
-		if err := migrateRewardsParams(ctx, rewardsKeeper); err != nil {
-			return nil, err
-		}
 
 		// Migrate order keys to new precision format
 		if err := migrateOrderKeys(ctx, tradebinKeeper); err != nil {
 			return nil, err
 		}
 
+		// RunMigrations will trigger module-level migrations (param migrations for
+		// tradebin v3->v4, rewards v3->v4, txfeecollector v1->v2) based on
+		// ConsensusVersion changes.
 		newVm, err := mm.RunMigrations(ctx, cfg, vm)
 		if err != nil {
 			return newVm, err
@@ -57,71 +38,6 @@ func CreateUpgradeHandler(
 
 		return newVm, nil
 	}
-}
-
-func migrateTradebinParams(ctx sdk.Context, tradebinKeeper *tradebinkeeper.Keeper) error {
-	// Get existing parameters
-	params := tradebinKeeper.GetParams(ctx)
-
-	// Set new parameters with default values
-	params.OrderBookExtraGasWindow = tradebintypes.DefaultOrderBookExtraGasWindow
-	params.OrderBookQueueExtraGas = tradebintypes.DefaultOrderBookQueueExtraGas
-	params.FillOrdersExtraGas = tradebintypes.DefaultFillOrdersExtraGas
-	params.MinNativeLiquidityForModuleSwap = tradebintypes.DefaultMinNativeLiquidityForModuleSwap
-	params.OrderBookPerBlockMessages = tradebintypes.DefaultOrderBookPerBlockMessages
-	params.OrderBookQueueMessageScanExtraGas = tradebintypes.DefaultOrderBookQueueMessageScanExtraGas
-
-	// Save updated parameters
-	if err := tradebinKeeper.SetParams(ctx, params); err != nil {
-		ctx.Logger().Error("failed to migrate tradebin module parameters", "error", err)
-		return err
-	}
-
-	ctx.Logger().Info("tradebin module parameters migrated successfully",
-		"orderBookExtraGasWindow", params.OrderBookExtraGasWindow,
-		"orderBookQueueExtraGas", params.OrderBookQueueExtraGas,
-		"fillOrdersExtraGas", params.FillOrdersExtraGas,
-		"minNativeLiquidityForModuleSwap", params.MinNativeLiquidityForModuleSwap,
-		"orderBookPerBlockMessages", params.OrderBookPerBlockMessages,
-		"orderBookQueueMessageScanExtraGas", params.OrderBookQueueMessageScanExtraGas,
-	)
-
-	return nil
-}
-
-func migrateTxFeeCollectorParams(ctx sdk.Context, txfeecollectorKeeper *txfeecollectorkeeper.Keeper) error {
-	// Set default parameters (module is new or has empty params before this upgrade)
-	defaultParams := txfeecollectortypes.DefaultParams()
-
-	// Save parameters with default values
-	if err := txfeecollectorKeeper.SetParams(ctx, defaultParams); err != nil {
-		ctx.Logger().Error("failed to migrate txfeecollector module parameters", "error", err)
-		return err
-	}
-
-	ctx.Logger().Info("txfeecollector module parameters migrated successfully",
-		"validatorMinGasFee", defaultParams.ValidatorMinGasFee.String(),
-		"maxBalanceIterations", defaultParams.MaxBalanceIterations,
-	)
-
-	return nil
-}
-
-func migrateRewardsParams(ctx sdk.Context, rewardsKeeper *rewardskeeper.Keeper) error {
-	params := rewardsKeeper.GetParams(ctx)
-
-	params.ExtraGasForExitStake = rewardstypes.DefaultExtraGasForExitStake
-
-	if err := rewardsKeeper.SetParams(ctx, params); err != nil {
-		ctx.Logger().Error("failed to migrate rewards module parameters", "error", err)
-		return err
-	}
-
-	ctx.Logger().Info("rewards module parameters migrated successfully",
-		"extraGasForExitStake", params.ExtraGasForExitStake,
-	)
-
-	return nil
 }
 
 func migrateOrderKeys(ctx sdk.Context, tradebinKeeper *tradebinkeeper.Keeper) error {

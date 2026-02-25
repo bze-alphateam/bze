@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/bzeutils"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
+	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"cosmossdk.io/log"
@@ -21,7 +22,7 @@ type ProcessingKeeper interface {
 	RemovePendingCancel(ctx sdk.Context, marketId, orderType, orderId string)
 
 	//params
-	GetParams(ctx context.Context) types.Params
+	GetParams(ctx context.Context) v2types.Params
 
 	//orders
 	GetPriceOrderByPrice(ctx sdk.Context, marketId, orderType, price string) (list []types.OrderReference)

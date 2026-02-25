@@ -34,6 +34,9 @@ paths:
                       custom method
 
                       signatures required by gogoproto.
+                  MaxBalanceIterations:
+                    type: string
+                    format: uint64
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -1817,6 +1820,9 @@ paths:
                       custom method
 
                       signatures required by gogoproto.
+                  extraGasForExitStake:
+                    type: string
+                    format: uint64
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -3138,11 +3144,50 @@ paths:
                 type: object
                 properties:
                   createMarketFee:
-                    type: string
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
                   marketMakerFee:
-                    type: string
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
                   marketTakerFee:
-                    type: string
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
                   makerFeeDestination:
                     type: string
                   takerFeeDestination:
@@ -3160,6 +3205,12 @@ paths:
                     format: uint64
                   minNativeLiquidityForModuleSwap:
                     type: string
+                  orderBookPerBlockMessages:
+                    type: string
+                    format: uint64
+                  orderBookQueueMessageScanExtraGas:
+                    type: string
+                    format: uint64
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -30704,6 +30755,9 @@ definitions:
 
           NOTE: The amount field is an Dec which implements the custom method
           signatures required by gogoproto.
+      MaxBalanceIterations:
+        type: string
+        format: uint64
     description: Params defines the parameters for the module.
   bze.txfeecollector.QueryParamsResponse:
     type: object
@@ -30727,6 +30781,9 @@ definitions:
               method
 
               signatures required by gogoproto.
+          MaxBalanceIterations:
+            type: string
+            format: uint64
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   cosmos.base.v1beta1.DecCoin:
     type: object
@@ -31722,6 +31779,9 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
+      extraGasForExitStake:
+        type: string
+        format: uint64
     description: Params defines the parameters for the module.
   bze.rewards.PendingUnlockParticipant:
     type: object
@@ -32004,6 +32064,9 @@ definitions:
               method
 
               signatures required by gogoproto.
+          extraGasForExitStake:
+            type: string
+            format: uint64
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   bze.rewards.QueryStakingRewardParticipantResponse:
     type: object
@@ -32333,33 +32396,6 @@ definitions:
         type: string
       order_type:
         type: string
-  bze.tradebin.Params:
-    type: object
-    properties:
-      createMarketFee:
-        type: string
-      marketMakerFee:
-        type: string
-      marketTakerFee:
-        type: string
-      makerFeeDestination:
-        type: string
-      takerFeeDestination:
-        type: string
-      native_denom:
-        type: string
-      orderBookExtraGasWindow:
-        type: string
-        format: uint64
-      orderBookQueueExtraGas:
-        type: string
-        format: uint64
-      fillOrdersExtraGas:
-        type: string
-        format: uint64
-      minNativeLiquidityForModuleSwap:
-        type: string
-    description: Params defines the parameters for the module.
   bze.tradebin.QueryAllLiquidityPoolsResponse:
     type: object
     properties:
@@ -32665,11 +32701,50 @@ definitions:
         type: object
         properties:
           createMarketFee:
-            type: string
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
           marketMakerFee:
-            type: string
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
           marketTakerFee:
-            type: string
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
           makerFeeDestination:
             type: string
           takerFeeDestination:
@@ -32687,6 +32762,12 @@ definitions:
             format: uint64
           minNativeLiquidityForModuleSwap:
             type: string
+          orderBookPerBlockMessages:
+            type: string
+            format: uint64
+          orderBookQueueMessageScanExtraGas:
+            type: string
+            format: uint64
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   bze.tradebin.QueryUserMarketOrdersResponse:
     type: object
@@ -32737,6 +32818,71 @@ definitions:
         type: string
       denom:
         type: string
+  bze.tradebin.v2.Params:
+    type: object
+    properties:
+      createMarketFee:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      marketMakerFee:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      marketTakerFee:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      makerFeeDestination:
+        type: string
+      takerFeeDestination:
+        type: string
+      native_denom:
+        type: string
+      orderBookExtraGasWindow:
+        type: string
+        format: uint64
+      orderBookQueueExtraGas:
+        type: string
+        format: uint64
+      fillOrdersExtraGas:
+        type: string
+        format: uint64
+      minNativeLiquidityForModuleSwap:
+        type: string
+      orderBookPerBlockMessages:
+        type: string
+        format: uint64
+      orderBookQueueMessageScanExtraGas:
+        type: string
+        format: uint64
+    description: |-
+      Params defines the parameters for the module with proper types
+      for fee fields (migrated from string to cosmos.base.v1beta1.Coin).
   cosmos.auth.v1beta1.AddressBytesToStringResponse:
     type: object
     properties:

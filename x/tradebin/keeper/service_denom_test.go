@@ -6,14 +6,28 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
+	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"go.uber.org/mock/gomock"
 )
 
+func denomTestParams(nativeDenom string) v2types.Params {
+	p := v2types.DefaultParams()
+	p.NativeDenom = nativeDenom
+	return p
+}
+
+func denomTestParamsWithLiquidity(nativeDenom string, minLiquidity math.Int) v2types.Params {
+	p := v2types.DefaultParams()
+	p.NativeDenom = nativeDenom
+	p.MinNativeLiquidityForModuleSwap = minLiquidity
+	return p
+}
+
 func (suite *IntegrationTestSuite) TestServiceDenom_IsNativeDenom_True() {
 	nativeDenom := "ubze"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -23,7 +37,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_IsNativeDenom_True() {
 
 func (suite *IntegrationTestSuite) TestServiceDenom_IsNativeDenom_False() {
 	nativeDenom := "ubze"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -33,7 +47,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_IsNativeDenom_False() {
 
 func (suite *IntegrationTestSuite) TestServiceDenom_CanSwapForNativeDenom_SameDenom() {
 	nativeDenom := "ubze"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -45,7 +59,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_CanSwapForNativeDenom_SameDe
 func (suite *IntegrationTestSuite) TestServiceDenom_CanSwapForNativeDenom_PoolNotExists() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -57,7 +71,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_CanSwapForNativeDenom_PoolNo
 func (suite *IntegrationTestSuite) TestServiceDenom_CanSwapForNativeDenom_InsufficientLiquidity() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: math.NewInt(2_000_000_000)}
+	params := denomTestParamsWithLiquidity(nativeDenom, math.NewInt(2_000_000_000))
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -78,7 +92,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_CanSwapForNativeDenom_Insuff
 func (suite *IntegrationTestSuite) TestServiceDenom_CanSwapForNativeDenom_SufficientLiquidity() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -98,7 +112,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_CanSwapForNativeDenom_Suffic
 
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_EmptyNativeDenom() {
 	// Set empty native denom
-	params := types.Params{NativeDenom: ""}
+	params := denomTestParams("")
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -112,7 +126,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Emp
 
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_SwapNativeToNative() {
 	nativeDenom := "ubze"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -143,7 +157,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Swa
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_PoolNotExists() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -174,7 +188,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Poo
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_InsufficientLiquidity() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: math.NewInt(2_000_000_000)}
+	params := denomTestParamsWithLiquidity(nativeDenom, math.NewInt(2_000_000_000))
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -215,7 +229,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Ins
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_SwapTokensError() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -264,7 +278,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Swa
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_SendCoinsFromModuleError() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -312,7 +326,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Sen
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_SendSwapResultError() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -336,12 +350,12 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Sen
 	}
 	suite.accountMock.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&tradebinModuleAcc).Times(1)
 
-	// Create pool with sufficient liquidity
+	// Create pool with sufficient liquidity (must be > MinNativeLiquidityForModuleSwap)
 	pool := types.LiquidityPool{
 		Id:           "ubze_uother",
 		Base:         nativeDenom,
 		Quote:        otherDenom,
-		ReserveBase:  math.NewInt(100_000_000_000),
+		ReserveBase:  math.NewInt(200_000_000_000),
 		ReserveQuote: math.NewInt(1_000_000_000),
 		Fee:          math.LegacyNewDecWithPrec(3, 3), // 0.3%
 		FeeDest: &types.FeeDestination{
@@ -372,7 +386,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Sen
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Success() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -396,12 +410,12 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Suc
 	}
 	suite.accountMock.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&tradebinModuleAcc).Times(1)
 
-	// Create pool with sufficient liquidity
+	// Create pool with sufficient liquidity (must be > MinNativeLiquidityForModuleSwap)
 	pool := types.LiquidityPool{
 		Id:           "ubze_uother",
 		Base:         nativeDenom,
 		Quote:        otherDenom,
-		ReserveBase:  math.NewInt(100_000_000_000),
+		ReserveBase:  math.NewInt(200_000_000_000),
 		ReserveQuote: math.NewInt(1_000_000_000),
 		Fee:          math.LegacyNewDecWithPrec(3, 3), // 0.3%
 		FeeDest: &types.FeeDestination{
@@ -431,7 +445,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Suc
 
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNativeDenom_EmptyNativeDenom() {
 	// Set empty native denom
-	params := types.Params{NativeDenom: ""}
+	params := denomTestParams("")
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -444,7 +458,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNative
 
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNativeDenom_CoinIsNativeDenom() {
 	nativeDenom := "ubze"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -465,7 +479,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNative
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNativeDenom_PoolNotExists() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -486,7 +500,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNative
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNativeDenom_PoolIsEmpty() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -517,7 +531,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNative
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNativeDenom_SendCoinsError() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -535,7 +549,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNative
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNativeDenom_Success_SingleCoin() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -616,7 +630,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNative
 func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNativeDenom_MathValidation() {
 	nativeDenom := "ubze"
 	otherDenom := "utoken"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -742,7 +756,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNative
 	nativeDenom := "ubze"
 	token1 := "utoken1"
 	token2 := "utoken2"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -831,7 +845,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleAddLiquidityWithNative
 	nativeDenom := "ubze"
 	token1 := "utoken1" // Has pool - should succeed
 	token2 := "utoken2" // No pool - should refund
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -914,7 +928,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Mul
 	nativeDenom := "ubze"
 	otherDenom1 := "uother1"
 	otherDenom2 := "uother2"
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -938,12 +952,12 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Mul
 	}
 	suite.accountMock.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&tradebinModuleAcc).Times(2)
 
-	// Create pools for both denoms
+	// Create pools for both denoms (reserves must be > MinNativeLiquidityForModuleSwap)
 	pool1 := types.LiquidityPool{
 		Id:           "ubze_uother1",
 		Base:         nativeDenom,
 		Quote:        otherDenom1,
-		ReserveBase:  math.NewInt(100_000_000_000),
+		ReserveBase:  math.NewInt(200_000_000_000),
 		ReserveQuote: math.NewInt(1_000_000_000),
 		Fee:          math.LegacyNewDecWithPrec(3, 3),
 		FeeDest: &types.FeeDestination{
@@ -956,7 +970,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Mul
 		Id:           "ubze_uother2",
 		Base:         nativeDenom,
 		Quote:        otherDenom2,
-		ReserveBase:  math.NewInt(100_000_000_000),
+		ReserveBase:  math.NewInt(200_000_000_000),
 		ReserveQuote: math.NewInt(1_000_000_000),
 		Fee:          math.LegacyNewDecWithPrec(3, 3),
 		FeeDest: &types.FeeDestination{
@@ -995,7 +1009,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Par
 	nativeDenom := "ubze"
 	otherDenom1 := "uother1" // Has pool - swap will succeed
 	otherDenom2 := "uother2" // No pool - will cause error
-	params := types.Params{NativeDenom: nativeDenom}
+	params := denomTestParams(nativeDenom)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -1024,7 +1038,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Par
 		Id:           "ubze_uother1",
 		Base:         nativeDenom,
 		Quote:        otherDenom1,
-		ReserveBase:  math.NewInt(100_000_000_000),
+		ReserveBase:  math.NewInt(200_000_000_000),
 		ReserveQuote: math.NewInt(1_000_000_000),
 		Fee:          math.LegacyNewDecWithPrec(3, 3),
 		FeeDest: &types.FeeDestination{
@@ -1056,7 +1070,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_ModuleSwapForNativeDenom_Par
 
 func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDenom_SameDenom() {
 	nativeDenom := "ubze"
-	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: math.NewInt(2_000_000_000)}
+	params := denomTestParamsWithLiquidity(nativeDenom, math.NewInt(2_000_000_000))
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -1068,7 +1082,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDe
 func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDenom_PoolNotExists() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: math.NewInt(2_000_000_000)}
+	params := denomTestParamsWithLiquidity(nativeDenom, math.NewInt(2_000_000_000))
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -1080,7 +1094,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDe
 func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDenom_ZeroNativeReserves() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: math.NewInt(2_000_000_000)}
+	params := denomTestParamsWithLiquidity(nativeDenom, math.NewInt(2_000_000_000))
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -1101,7 +1115,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDe
 func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDenom_InsufficientLiquidity() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: math.NewInt(5_000_000_000)}
+	params := denomTestParamsWithLiquidity(nativeDenom, math.NewInt(5_000_000_000))
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -1122,7 +1136,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDe
 func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDenom_SufficientLiquidity() {
 	nativeDenom := "ubze"
 	otherDenom := "uother"
-	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: math.NewInt(2_000_000_000)}
+	params := denomTestParamsWithLiquidity(nativeDenom, math.NewInt(2_000_000_000))
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -1143,7 +1157,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDe
 func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDenom_NativeInQuotePosition() {
 	nativeDenom := "ubze"
 	otherDenom := "aaa" // Comes before "ubze" alphabetically, so ubze will be in quote position
-	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: math.NewInt(2_000_000_000)}
+	params := denomTestParamsWithLiquidity(nativeDenom, math.NewInt(2_000_000_000))
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -1165,7 +1179,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDe
 	nativeDenom := "ubze"
 	otherDenom := "uother"
 	minLiquidity := math.NewInt(5_000_000_000)
-	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: minLiquidity}
+	params := denomTestParamsWithLiquidity(nativeDenom, minLiquidity)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
@@ -1188,7 +1202,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDe
 	nativeDenom := "ubze"
 	otherDenom := "uother"
 	minLiquidity := math.NewInt(5_000_000_000)
-	params := types.Params{NativeDenom: nativeDenom, MinNativeLiquidityForModuleSwap: minLiquidity}
+	params := denomTestParamsWithLiquidity(nativeDenom, minLiquidity)
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 

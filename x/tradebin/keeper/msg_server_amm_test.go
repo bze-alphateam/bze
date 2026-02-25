@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/math"
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
+	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -329,15 +330,14 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_FundCommunityP
 		InitialQuote: math.NewInt(345),
 	}
 
-	createMarketFeeCoin, err := sdk.ParseCoinsNormalized(suite.k.CreateMarketFee(suite.ctx))
-	suite.Require().NoError(err)
+	createMarketFeeCoin := sdk.NewCoins(suite.k.CreateMarketFee(suite.ctx))
 
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Base).Return(true).Times(1)
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Quote).Return(true).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), getTestAccount(), types.ModuleName, createMarketFeeCoin).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), createMarketFeeCoin).Return(fmt.Errorf("test error")).Times(1)
 
-	_, err = suite.msgServer.CreateLiquidityPool(suite.ctx, msg)
+	_, err := suite.msgServer.CreateLiquidityPool(suite.ctx, msg)
 	suite.Require().NotNil(err)
 }
 
@@ -368,8 +368,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_Success() {
 		Display: "lp_abc_def",
 	}
 
-	createMarketFeeCoin, err := sdk.ParseCoinsNormalized(suite.k.CreateMarketFee(suite.ctx))
-	suite.Require().NoError(err)
+	createMarketFeeCoin := sdk.NewCoins(suite.k.CreateMarketFee(suite.ctx))
 
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Base).Return(true).Times(1)
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Quote).Return(true).Times(1)
@@ -1362,7 +1361,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SinglePool_Success() {
 		).
 		Return(nil)
 
-	expectedFee, _ := sdk.ParseCoinsNormalized(types.DefaultMarketTakerFee)
+	expectedFee := sdk.NewCoins(v2types.DefaultMarketTakerFee)
 	suite.bankMock.EXPECT().
 		SendCoinsFromAccountToModule(
 			suite.ctx,
@@ -1499,7 +1498,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_MultiPool_Success() {
 		Times(1).
 		Return(nil)
 
-	expectedFee, _ := sdk.ParseCoinsNormalized(types.DefaultMarketTakerFee)
+	expectedFee := sdk.NewCoins(v2types.DefaultMarketTakerFee)
 	suite.bankMock.EXPECT().
 		SendCoinsFromAccountToModule(
 			suite.ctx,
@@ -1913,7 +1912,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_ZeroFeeDest() {
 			sdk.NewCoins(expectedOutput),
 		).
 		Return(nil)
-	expectedFee, _ := sdk.ParseCoinsNormalized(types.DefaultMarketTakerFee)
+	expectedFee := sdk.NewCoins(v2types.DefaultMarketTakerFee)
 	suite.bankMock.EXPECT().
 		SendCoinsFromAccountToModule(
 			suite.ctx,
@@ -2007,7 +2006,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_FeeDistribution() {
 		).
 		Return(nil)
 
-	expectedFee, _ := sdk.ParseCoinsNormalized(types.DefaultMarketTakerFee)
+	expectedFee := sdk.NewCoins(v2types.DefaultMarketTakerFee)
 	suite.bankMock.EXPECT().
 		SendCoinsFromAccountToModule(
 			suite.ctx,

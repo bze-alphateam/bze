@@ -64,6 +64,10 @@ func (p Params) Validate() error {
 		return err
 	}
 
+	if err := validateExtraGasForExitStake(p.ExtraGasForExitStake); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -90,6 +94,16 @@ func validateCreateTradingRewardFee(v interface{}) error {
 
 	if !createTradingRewardFee.IsValid() {
 		return fmt.Errorf("invalid createTradingRewardFee: %s", createTradingRewardFee)
+	}
+
+	return nil
+}
+
+// validateExtraGasForExitStake validates the ExtraGasForExitStake param
+func validateExtraGasForExitStake(v interface{}) error {
+	_, ok := v.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
 	return nil
