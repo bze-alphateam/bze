@@ -49,7 +49,7 @@ func (k Keeper) BalanceProvidedAmounts(base, quote, reserveBase, reserveQuote ma
 		return math.ZeroInt(), math.ZeroInt(), fmt.Errorf("can not balance with non positive base or quote")
 	}
 
-	if reserveBase.IsZero() || reserveQuote.IsZero() {
+	if !reserveBase.IsPositive() || !reserveQuote.IsPositive() {
 		//pools should not be empty, they are created with a desired price
 		return math.ZeroInt(), math.ZeroInt(), fmt.Errorf("pool is empty")
 	}
