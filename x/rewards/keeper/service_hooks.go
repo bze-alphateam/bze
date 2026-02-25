@@ -116,6 +116,11 @@ func (k Keeper) GetOnOrderFillHook() func(ctx sdk.Context, marketId, amountTrade
 			return
 		}
 
+		if !tradedAmount.IsPositive() {
+			logger.Error("traded amount is not positive")
+			return
+		}
+
 		candidateAmount = candidateAmount.Add(tradedAmount)
 		candidate.Amount = candidateAmount.String()
 		k.SetTradingRewardCandidate(ctx, candidate)
