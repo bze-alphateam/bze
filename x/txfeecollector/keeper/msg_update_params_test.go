@@ -38,7 +38,7 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params:    types.Params{},
 			},
 			expErr:    true,
-			expErrMsg: "validator min gas fee denom cannot be empty",
+			expErrMsg: "validator min gas fee denom must be ubze",
 		},
 		{
 			name: "all good",
