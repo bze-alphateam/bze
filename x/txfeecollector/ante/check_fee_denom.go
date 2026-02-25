@@ -59,9 +59,10 @@ func (vbd ValidateTxFeeDenomsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	if vbd.tradeKeeper == nil {
 		// Without tradeKeeper, we can't validate non-native denoms
 		// This should ideally not happen in production
-		return ctx, sdkerrors.Wrap(
+		return ctx, sdkerrors.Wrapf(
 			storeTypes.ErrInvalidRequest,
 			"invalid fee supplied. can not use %s denom as tx fee",
+			c.Denom,
 		)
 	}
 
