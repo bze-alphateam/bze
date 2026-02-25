@@ -358,7 +358,11 @@ func (k Keeper) ModuleAddLiquidityWithNativeDenom(ctx sdk.Context, fromModule st
 		totalNativeRefund = totalNativeRefund.Add(totalNativeLeftover)
 
 		//track successfully added coin (non-native only)
-		addedCoins = addedCoins.Add(sdk.NewCoin(coin.Denom, optimalQuote))
+		addedCoinAmount := optimalQuote
+		if pool.GetBase() == coin.Denom {
+			addedCoinAmount = optimalBase
+		}
+		addedCoins = addedCoins.Add(sdk.NewCoin(coin.Denom, addedCoinAmount))
 
 		//prepare liquidity added event
 		events = append(events, &types.LiquidityAddedEvent{
