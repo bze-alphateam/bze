@@ -4,6 +4,9 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+	keeper2 "github.com/bze-alphateam/bze/testutil/keeper"
+	"github.com/bze-alphateam/bze/x/rewards/keeper"
+	"github.com/bze-alphateam/bze/x/rewards/testutil"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -833,6 +836,68 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingExistin
 	updatedReward, found := suite.k.GetStakingReward(suite.ctx, "join-truncated-reward")
 	suite.Require().True(found)
 	suite.Require().Equal("10100", updatedReward.StakedAmount)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewardNilTradeKeeper() {
+	// Create a keeper with nil trade keeper to test the nil guard
+	t := suite.T()
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	mockBank := testutil.NewMockBankKeeper(mockCtrl)
+	mockEpoch := testutil.NewMockEpochKeeper(mockCtrl)
+	mockAcc := testutil.NewMockAccountKeeper(mockCtrl)
+
+	k, ctx := keeper2.RewardsKeeper(t, mockBank, mockEpoch, nil, mockAcc)
+	msgServer := keeper.NewMsgServerImpl(k)
+
+	creator := sdk.AccAddress("creator")
+
+	// Set up params with a positive fee to trigger the fee code path
+	params := types.Params{
+		CreateStakingRewardFee: sdk.NewCoin("ubze", math.NewInt(100)),
+		CreateTradingRewardFee: sdk.NewCoin("ubze", math.NewInt(200)),
+	}
+	err := k.SetParams(ctx, params)
+	suite.Require().NoError(err)
+
+	// Mock bank keeper calls that happen before the nil check
+	mockBank.EXPECT().
+		HasSupply(ctx, "ubze").
+		Return(true).
+		Times(2)
+
+	mockBank.EXPECT().
+		SpendableCoins(ctx, creator).
+		Return(sdk.NewCoins(
+			sdk.NewCoin("ubze", math.NewInt(10000)),
+		)).
+		Times(1)
+
+	mockBank.EXPECT().
+		SendCoinsFromAccountToModule(
+			ctx,
+			creator,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(5000))), // 1000 * 5 duration
+		).
+		Return(nil).
+		Times(1)
+
+	msg := &types.MsgCreateStakingReward{
+		Creator:      creator.String(),
+		PrizeAmount:  "1000",
+		PrizeDenom:   "ubze",
+		StakingDenom: "ubze",
+		Duration:     "5",
+		MinStake:     "100",
+		Lock:         "7",
+	}
+
+	response, err := msgServer.CreateStakingReward(ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().Contains(err.Error(), "trade keeper is not available")
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_DistributeStakingRewardsSuccess() {
