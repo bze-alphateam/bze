@@ -57,8 +57,8 @@ func validateValidatorMinGasFee(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.Denom == "" {
-		return fmt.Errorf("validator min gas fee denom cannot be empty")
+	if v.Denom != "ubze" {
+		return fmt.Errorf("validator min gas fee denom must be ubze")
 	}
 
 	if v.Amount.IsNegative() {
