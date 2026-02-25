@@ -1,6 +1,7 @@
 package types
 
 import (
+	v2types "github.com/bze-alphateam/bze/x/tokenfactory/v2types"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -24,6 +25,11 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgSetDenomMetadata{},
 	)
 	// this line is used by starport scaffolding # 3
+
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&v2types.MsgMint{},
+		&v2types.MsgBurn{},
+	)
 
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgUpdateParams{},

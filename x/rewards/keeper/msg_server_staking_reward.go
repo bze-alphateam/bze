@@ -3,17 +3,17 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
+	v2types "github.com/bze-alphateam/bze/x/rewards/v2types"
 	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCreateStakingReward) (*types.MsgCreateStakingRewardResponse, error) {
+func (k msgServer) CreateStakingReward(goCtx context.Context, msg *v2types.MsgCreateStakingReward) (*v2types.MsgCreateStakingRewardResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if msg == nil {
 		return nil, sdkerrors.ErrInvalidRequest
@@ -24,9 +24,39 @@ func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	stakingReward, err := msg.ToStakingReward()
-	if err != nil {
-		return nil, err
+	if !msg.PrizeAmount.IsPositive() {
+		return nil, errors.Wrapf(types.ErrInvalidAmount, "amount should be greater than 0")
+	}
+
+	if msg.PrizeDenom == "" {
+		return nil, types.ErrInvalidPrizeDenom
+	}
+
+	if msg.StakingDenom == "" {
+		return nil, types.ErrInvalidStakingDenom
+	}
+
+	if msg.Duration == 0 || msg.Duration > types.HundredYearsInDays {
+		return nil, errors.Wrapf(types.ErrInvalidDuration, "duration should be between 1 and %d days", types.HundredYearsInDays)
+	}
+
+	if msg.MinStake.IsNegative() {
+		return nil, types.ErrInvalidMinStake
+	}
+
+	if msg.Lock > types.TenYearsInDays {
+		return nil, errors.Wrapf(types.ErrInvalidLockingTime, "locking time should be between 0 and %d days", types.TenYearsInDays)
+	}
+
+	stakingReward := types.StakingReward{
+		PrizeAmount:      msg.PrizeAmount.String(),
+		PrizeDenom:       msg.PrizeDenom,
+		StakingDenom:     msg.StakingDenom,
+		Duration:         msg.Duration,
+		MinStake:         msg.MinStake.Uint64(),
+		Lock:             msg.Lock,
+		StakedAmount:     "0",
+		DistributedStake: "0",
 	}
 
 	//check denoms
@@ -39,7 +69,7 @@ func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCrea
 		return nil, types.ErrInvalidPrizeDenom
 	}
 
-	toCapture, err := k.getAmountToCapture(stakingReward.PrizeDenom, stakingReward.PrizeAmount, int64(stakingReward.Duration))
+	toCapture, err := k.getAmountToCapture(stakingReward.PrizeDenom, msg.PrizeAmount.String(), int64(msg.Duration))
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not calculate amount needed to create the reward")
 	}
@@ -96,10 +126,10 @@ func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCrea
 		k.Logger().Error(err.Error())
 	}
 
-	return &types.MsgCreateStakingRewardResponse{RewardId: stakingReward.RewardId}, nil
+	return &v2types.MsgCreateStakingRewardResponse{RewardId: stakingReward.RewardId}, nil
 }
 
-func (k msgServer) UpdateStakingReward(goCtx context.Context, msg *types.MsgUpdateStakingReward) (*types.MsgUpdateStakingRewardResponse, error) {
+func (k msgServer) UpdateStakingReward(goCtx context.Context, msg *v2types.MsgUpdateStakingReward) (*v2types.MsgUpdateStakingRewardResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if msg == nil {
 		return nil, sdkerrors.ErrInvalidRequest
@@ -110,12 +140,7 @@ func (k msgServer) UpdateStakingReward(goCtx context.Context, msg *types.MsgUpda
 		return nil, err
 	}
 
-	durationInt, err := strconv.ParseInt(msg.Duration, 10, 32)
-	if err != nil {
-		return nil, errors.Wrapf(types.ErrInvalidDuration, "could not convert duration to int: %s", err.Error())
-	}
-
-	if durationInt <= 0 {
+	if msg.Duration == 0 {
 		return nil, types.ErrInvalidDuration
 	}
 
@@ -124,7 +149,7 @@ func (k msgServer) UpdateStakingReward(goCtx context.Context, msg *types.MsgUpda
 		return nil, errors.Wrap(sdkerrors.ErrKeyNotFound, "staking reward not found")
 	}
 
-	toCapture, err := k.getAmountToCapture(stakingReward.PrizeDenom, stakingReward.PrizeAmount, durationInt)
+	toCapture, err := k.getAmountToCapture(stakingReward.PrizeDenom, stakingReward.PrizeAmount, int64(msg.Duration))
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not calculate amount needed to create the reward")
 	}
@@ -139,7 +164,7 @@ func (k msgServer) UpdateStakingReward(goCtx context.Context, msg *types.MsgUpda
 		return nil, err
 	}
 
-	stakingReward.Duration += uint32(durationInt)
+	stakingReward.Duration += msg.Duration
 	if stakingReward.Duration > types.HundredYearsInDays {
 		return nil, errors.Wrapf(types.ErrInvalidDuration, "the new duration exceeds the maximum allowed of %d days", types.HundredYearsInDays)
 	}
@@ -157,10 +182,10 @@ func (k msgServer) UpdateStakingReward(goCtx context.Context, msg *types.MsgUpda
 		k.Logger().Error(err.Error())
 	}
 
-	return &types.MsgUpdateStakingRewardResponse{}, nil
+	return &v2types.MsgUpdateStakingRewardResponse{}, nil
 }
 
-func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking) (*types.MsgJoinStakingResponse, error) {
+func (k msgServer) JoinStaking(goCtx context.Context, msg *v2types.MsgJoinStaking) (*v2types.MsgJoinStakingResponse, error) {
 	if msg == nil {
 		return nil, sdkerrors.ErrInvalidRequest
 	}
@@ -184,7 +209,7 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 		}
 	}
 
-	toCapture, err := k.getAmountToCapture(stakingReward.StakingDenom, msg.Amount, int64(1))
+	toCapture, err := k.getAmountToCapture(stakingReward.StakingDenom, msg.Amount.String(), int64(1))
 	if err != nil {
 		return nil, err
 	}
@@ -243,7 +268,7 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 		k.Logger().Error(err.Error())
 	}
 
-	return &types.MsgJoinStakingResponse{}, nil
+	return &v2types.MsgJoinStakingResponse{}, nil
 }
 
 func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking) (*types.MsgExitStakingResponse, error) {
@@ -364,7 +389,7 @@ func (k msgServer) ClaimStakingRewards(goCtx context.Context, msg *types.MsgClai
 	return &types.MsgClaimStakingRewardsResponse{Amount: paid.Amount.String()}, nil
 }
 
-func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *types.MsgDistributeStakingRewards) (*types.MsgDistributeStakingRewardsResponse, error) {
+func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *v2types.MsgDistributeStakingRewards) (*v2types.MsgDistributeStakingRewardsResponse, error) {
 	if msg == nil {
 		return nil, sdkerrors.ErrInvalidRequest
 	}
@@ -374,12 +399,7 @@ func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 
-	amtInt, ok := math.NewIntFromString(msg.Amount)
-	if !ok {
-		return nil, errors.Wrapf(types.ErrInvalidAmount, "could not convert order amount")
-	}
-
-	if !amtInt.IsPositive() {
+	if !msg.Amount.IsPositive() {
 		return nil, errors.Wrapf(types.ErrInvalidAmount, "amount should be greater than 0")
 	}
 
@@ -389,7 +409,7 @@ func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *types.Ms
 		return nil, errors.Wrap(sdkerrors.ErrKeyNotFound, "staking reward not found")
 	}
 
-	toCapture, err := k.getAmountToCapture(stakingReward.PrizeDenom, msg.Amount, 1)
+	toCapture, err := k.getAmountToCapture(stakingReward.PrizeDenom, msg.Amount.String(), 1)
 	if err != nil {
 		return nil, errors.Wrap(types.ErrInvalidAmount, "could not create capture amount")
 	}
@@ -399,7 +419,7 @@ func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *types.Ms
 		return nil, sdkerrors.ErrInsufficientFunds
 	}
 
-	err = k.distributeStakingRewards(&stakingReward, msg.Amount)
+	err = k.distributeStakingRewards(&stakingReward, msg.Amount.String())
 	if err != nil {
 		return nil, err
 	}
@@ -414,7 +434,7 @@ func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *types.Ms
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.StakingRewardDistributionEvent{
 			RewardId: stakingReward.RewardId,
-			Amount:   msg.Amount,
+			Amount:   msg.Amount.String(),
 		},
 	)
 
@@ -422,7 +442,7 @@ func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *types.Ms
 		k.Logger().Error(err.Error())
 	}
 
-	return &types.MsgDistributeStakingRewardsResponse{}, nil
+	return &v2types.MsgDistributeStakingRewardsResponse{}, nil
 }
 
 func (k msgServer) getRewardCreationFee(_ sdk.Context, feeParam sdk.Coin) sdk.Coins {

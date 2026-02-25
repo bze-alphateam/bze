@@ -1,25 +1,23 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"errors"
 
 	"github.com/bze-alphateam/bze/x/burner/types"
+	v2types "github.com/bze-alphateam/bze/x/burner/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"go.uber.org/mock/gomock"
 )
 
 func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_ValidRequest() {
 	creator := sdk.AccAddress("creator").String()
-	amount := "1000utoken,500stake"
+	expectedCoins := sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(500)), sdk.NewCoin("utoken", math.NewInt(1000)))
 
-	msg := &types.MsgFundBurner{
+	msg := &v2types.MsgFundBurner{
 		Creator: creator,
-		Amount:  amount,
+		Amount:  expectedCoins,
 	}
-
-	// Parse expected coins
-	expectedCoins, err := sdk.ParseCoinsNormalized(amount)
-	suite.Require().NoError(err)
 
 	// Parse creator address
 	creatorAddr, err := sdk.AccAddressFromBech32(creator)
@@ -42,9 +40,9 @@ func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_ValidRequest() {
 }
 
 func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_InvalidAmount() {
-	msg := &types.MsgFundBurner{
+	msg := &v2types.MsgFundBurner{
 		Creator: sdk.AccAddress("creator").String(),
-		Amount:  "invalid-amount",
+		Amount:  sdk.Coins{},
 	}
 
 	res, err := suite.msgServer.FundBurner(suite.ctx, msg)
@@ -54,9 +52,9 @@ func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_InvalidAmount() {
 }
 
 func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_InvalidCreatorAddress() {
-	msg := &types.MsgFundBurner{
+	msg := &v2types.MsgFundBurner{
 		Creator: "invalid-address",
-		Amount:  "1000utoken",
+		Amount:  sdk.NewCoins(sdk.NewCoin("utoken", math.NewInt(1000))),
 	}
 
 	// Mock trade keeper for filtering (called before address parsing)
@@ -70,16 +68,12 @@ func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_InvalidCreatorAddres
 
 func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_BankKeeperError() {
 	creator := sdk.AccAddress("creator").String()
-	amount := "1000utoken"
+	expectedCoins := sdk.NewCoins(sdk.NewCoin("utoken", math.NewInt(1000)))
 
-	msg := &types.MsgFundBurner{
+	msg := &v2types.MsgFundBurner{
 		Creator: creator,
-		Amount:  amount,
+		Amount:  expectedCoins,
 	}
-
-	// Parse expected coins
-	expectedCoins, err := sdk.ParseCoinsNormalized(amount)
-	suite.Require().NoError(err)
 
 	// Parse creator address
 	creatorAddr, err := sdk.AccAddressFromBech32(creator)
@@ -105,31 +99,31 @@ func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_BankKeeperError() {
 func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_EmptyAmount() {
 	creator := sdk.AccAddress("creator").String()
 
-	msg := &types.MsgFundBurner{
+	msg := &v2types.MsgFundBurner{
 		Creator: creator,
-		Amount:  "",
+		Amount:  sdk.Coins{},
 	}
 
-	// Empty amount should now fail validation since total.IsZero() will be true
+	// Empty amount should fail validation since coins are not positive
 	res, err := suite.msgServer.FundBurner(suite.ctx, msg)
 
 	suite.Require().Error(err)
 	suite.Require().Nil(res)
-	suite.Require().Contains(err.Error(), "provided amounts can not be burned, locked or exchanged")
+	suite.Require().Contains(err.Error(), "provided amounts are not positive")
 }
 
 func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_MultipleDenoms() {
 	creator := sdk.AccAddress("creator").String()
-	amount := "1000utoken,500stake,100atom"
+	expectedCoins := sdk.NewCoins(
+		sdk.NewCoin("atom", math.NewInt(100)),
+		sdk.NewCoin("stake", math.NewInt(500)),
+		sdk.NewCoin("utoken", math.NewInt(1000)),
+	)
 
-	msg := &types.MsgFundBurner{
+	msg := &v2types.MsgFundBurner{
 		Creator: creator,
-		Amount:  amount,
+		Amount:  expectedCoins,
 	}
-
-	// Parse expected coins
-	expectedCoins, err := sdk.ParseCoinsNormalized(amount)
-	suite.Require().NoError(err)
 
 	// Parse creator address
 	creatorAddr, err := sdk.AccAddressFromBech32(creator)
@@ -154,11 +148,14 @@ func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_MultipleDenoms() {
 
 func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_WithLPTokens() {
 	creator := sdk.AccAddress("creator").String()
-	amount := "1000ubze,500ulp_token"
+	coins := sdk.NewCoins(
+		sdk.NewCoin("ubze", math.NewInt(1000)),
+		sdk.NewCoin("ulp_token", math.NewInt(500)),
+	)
 
-	msg := &types.MsgFundBurner{
+	msg := &v2types.MsgFundBurner{
 		Creator: creator,
-		Amount:  amount,
+		Amount:  coins,
 	}
 
 	// Parse creator address
@@ -190,11 +187,10 @@ func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_WithLPTokens() {
 
 func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_OnlyUnprocessableCoins() {
 	creator := sdk.AccAddress("creator").String()
-	amount := "1000ibc/INVALID"
 
-	msg := &types.MsgFundBurner{
+	msg := &v2types.MsgFundBurner{
 		Creator: creator,
-		Amount:  amount,
+		Amount:  sdk.NewCoins(sdk.NewCoin("ibc/INVALID", math.NewInt(1000))),
 	}
 
 	// Mock trade keeper for filtering - coin cannot be processed
@@ -211,16 +207,15 @@ func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_OnlyUnprocessableCoi
 
 func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_WithExchangeableIBC() {
 	creator := sdk.AccAddress("creator").String()
-	amount := "1000ubze,500ibc/ABC123"
+	expectedCoins := sdk.NewCoins(
+		sdk.NewCoin("ibc/ABC123", math.NewInt(500)),
+		sdk.NewCoin("ubze", math.NewInt(1000)),
+	)
 
-	msg := &types.MsgFundBurner{
+	msg := &v2types.MsgFundBurner{
 		Creator: creator,
-		Amount:  amount,
+		Amount:  expectedCoins,
 	}
-
-	// Parse expected coins
-	expectedCoins, err := sdk.ParseCoinsNormalized(amount)
-	suite.Require().NoError(err)
 
 	// Parse creator address
 	creatorAddr, err := sdk.AccAddressFromBech32(creator)
@@ -247,16 +242,12 @@ func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_WithExchangeableIBC(
 
 func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_LockableError() {
 	creator := sdk.AccAddress("creator").String()
-	amount := "1000ulp_token"
+	expectedCoins := sdk.NewCoins(sdk.NewCoin("ulp_token", math.NewInt(1000)))
 
-	msg := &types.MsgFundBurner{
+	msg := &v2types.MsgFundBurner{
 		Creator: creator,
-		Amount:  amount,
+		Amount:  expectedCoins,
 	}
-
-	// Parse expected coins
-	expectedCoins, err := sdk.ParseCoinsNormalized(amount)
-	suite.Require().NoError(err)
 
 	// Parse creator address
 	creatorAddr, err := sdk.AccAddressFromBech32(creator)

@@ -7,20 +7,21 @@ import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "bze/cointrunk/params.proto";
+import "bze/cointrunk/v2/tx.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/cointrunk/types";
 
 // Msg defines the Msg service.
 service Msg {
   option (cosmos.msg.v1.service) = true;
-  
+
   // UpdateParams defines a (governance) operation for updating the module
   // parameters. The authority defaults to the x/gov module account.
-  rpc UpdateParams        (MsgUpdateParams       ) returns (MsgUpdateParamsResponse       );
-  rpc AddArticle          (MsgAddArticle         ) returns (MsgAddArticleResponse         );
-  rpc PayPublisherRespect (MsgPayPublisherRespect) returns (MsgPayPublisherRespectResponse);
-  rpc AcceptDomain        (MsgAcceptDomain       ) returns (MsgAcceptDomainResponse       );
-  rpc SavePublisher       (MsgSavePublisher      ) returns (MsgSavePublisherResponse      );
+  rpc UpdateParams        (MsgUpdateParams                              ) returns (MsgUpdateParamsResponse                              );
+  rpc AddArticle          (MsgAddArticle                                ) returns (MsgAddArticleResponse                                );
+  rpc PayPublisherRespect (bze.cointrunk.v2.MsgPayPublisherRespect      ) returns (bze.cointrunk.v2.MsgPayPublisherRespectResponse      );
+  rpc AcceptDomain        (MsgAcceptDomain                              ) returns (MsgAcceptDomainResponse                              );
+  rpc SavePublisher       (MsgSavePublisher                             ) returns (MsgSavePublisherResponse                             );
 }
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {

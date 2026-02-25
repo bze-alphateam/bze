@@ -1,0 +1,70 @@
+syntax = "proto3";
+package bze.rewards.v2;
+
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/rewards/v2types";
+
+message MsgCreateStakingReward {
+  option           (amino.name) = "bze/x/rewards/v2/MsgCreateStakingReward";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator       = 1;
+  string prize_amount  = 2 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  string prize_denom   = 3;
+  string staking_denom = 4;
+  uint32 duration      = 5;
+  string min_stake     = 6 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  uint32 lock          = 7;
+}
+
+message MsgCreateStakingRewardResponse {
+  string reward_id = 1;
+}
+
+message MsgUpdateStakingReward {
+  option           (amino.name) = "bze/x/rewards/v2/MsgUpdateStakingReward";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator   = 1;
+  string reward_id = 2;
+  uint32 duration  = 3;
+}
+
+message MsgUpdateStakingRewardResponse {}
+
+message MsgJoinStaking {
+  option           (amino.name) = "bze/x/rewards/v2/MsgJoinStaking";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator   = 1;
+  string reward_id = 2;
+  string amount    = 3 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+}
+
+message MsgJoinStakingResponse {}
+
+message MsgDistributeStakingRewards {
+  option           (amino.name) = "bze/x/rewards/v2/MsgDistributeStakingRewards";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator   = 1;
+  string reward_id = 2;
+  string amount    = 3 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+}
+
+message MsgDistributeStakingRewardsResponse {}
+
+message MsgCreateTradingReward {
+  option           (amino.name) = "bze/x/rewards/v2/MsgCreateTradingReward";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator      = 1;
+  string prize_amount = 2 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  string prize_denom  = 3;
+  uint32 duration     = 4;
+  string market_id    = 5;
+  uint32 slots        = 6;
+}
+
+message MsgCreateTradingRewardResponse {
+  string reward_id = 1;
+}

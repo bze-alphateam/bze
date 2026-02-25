@@ -1,9 +1,11 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"errors"
 
 	"github.com/bze-alphateam/bze/x/burner/types"
+	v2types "github.com/bze-alphateam/bze/x/burner/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"go.uber.org/mock/gomock"
@@ -12,16 +14,15 @@ import (
 func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_ValidRequest() {
 	creator := sdk.AccAddress("creator").String()
 	denom := "utoken"
-	pot := "1000"
-	duration := "7"
+	pot := math.NewInt(1000)
 
-	msg := &types.MsgStartRaffle{
+	msg := &v2types.MsgStartRaffle{
 		Creator:     creator,
 		Pot:         pot,
-		Duration:    duration,
-		Chances:     "100",
-		Ratio:       "0.1",
-		TicketPrice: "10",
+		Duration:    7,
+		Chances:     100,
+		Ratio:       math.LegacyMustNewDecFromStr("0.1"),
+		TicketPrice: math.NewInt(10),
 		Denom:       denom,
 	}
 
@@ -46,12 +47,12 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_ValidRequest() {
 	// Verify raffle was stored
 	raffle, found := suite.k.GetRaffle(suite.ctx, denom)
 	suite.Require().True(found)
-	suite.Require().Equal(pot, raffle.Pot)
+	suite.Require().Equal(pot.String(), raffle.Pot)
 	suite.Require().Equal(denom, raffle.Denom)
 }
 
 func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_DenomNotExists() {
-	msg := &types.MsgStartRaffle{
+	msg := &v2types.MsgStartRaffle{
 		Creator: sdk.AccAddress("creator").String(),
 		Denom:   "nonexistent",
 	}
@@ -72,7 +73,7 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_RaffleAlreadyExists
 	existingRaffle := types.Raffle{Denom: denom}
 	suite.k.SetRaffle(suite.ctx, existingRaffle)
 
-	msg := &types.MsgStartRaffle{
+	msg := &v2types.MsgStartRaffle{
 		Creator: sdk.AccAddress("creator").String(),
 		Denom:   denom,
 	}
@@ -90,13 +91,13 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_InsufficientBalance
 	creator := sdk.AccAddress("creator").String()
 	denom := "utoken"
 
-	msg := &types.MsgStartRaffle{
+	msg := &v2types.MsgStartRaffle{
 		Creator:     creator,
-		Pot:         "1000",
-		Duration:    "7",
-		Chances:     "100",
-		Ratio:       "0.1",
-		TicketPrice: "10",
+		Pot:         math.NewInt(1000),
+		Duration:    7,
+		Chances:     100,
+		Ratio:       math.LegacyMustNewDecFromStr("0.1"),
+		TicketPrice: math.NewInt(10),
 		Denom:       denom,
 	}
 
@@ -121,13 +122,13 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_BankKeeperError() {
 	creator := sdk.AccAddress("creator").String()
 	denom := "utoken"
 
-	msg := &types.MsgStartRaffle{
+	msg := &v2types.MsgStartRaffle{
 		Creator:     creator,
-		Pot:         "1000",
-		Duration:    "7",
-		Chances:     "100",
-		Ratio:       "0.1",
-		TicketPrice: "10",
+		Pot:         math.NewInt(1000),
+		Duration:    7,
+		Chances:     100,
+		Ratio:       math.LegacyMustNewDecFromStr("0.1"),
+		TicketPrice: math.NewInt(10),
 		Denom:       denom,
 	}
 

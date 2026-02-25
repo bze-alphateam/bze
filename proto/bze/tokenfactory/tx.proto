@@ -8,21 +8,22 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/bank/v1beta1/bank.proto";
 import "bze/tokenfactory/params.proto";
+import "bze/tokenfactory/v2/tx.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/tokenfactory/types";
 
 // Msg defines the Msg service.
 service Msg {
   option (cosmos.msg.v1.service) = true;
-  
+
   // UpdateParams defines a (governance) operation for updating the module
   // parameters. The authority defaults to the x/gov module account.
-  rpc UpdateParams     (MsgUpdateParams    ) returns (MsgUpdateParamsResponse    );
-  rpc CreateDenom      (MsgCreateDenom     ) returns (MsgCreateDenomResponse     );
-  rpc Mint             (MsgMint            ) returns (MsgMintResponse            );
-  rpc Burn             (MsgBurn            ) returns (MsgBurnResponse            );
-  rpc ChangeAdmin      (MsgChangeAdmin     ) returns (MsgChangeAdminResponse     );
-  rpc SetDenomMetadata (MsgSetDenomMetadata) returns (MsgSetDenomMetadataResponse);
+  rpc UpdateParams     (MsgUpdateParams                    ) returns (MsgUpdateParamsResponse                    );
+  rpc CreateDenom      (MsgCreateDenom                     ) returns (MsgCreateDenomResponse                     );
+  rpc Mint             (bze.tokenfactory.v2.MsgMint        ) returns (bze.tokenfactory.v2.MsgMintResponse        );
+  rpc Burn             (bze.tokenfactory.v2.MsgBurn        ) returns (bze.tokenfactory.v2.MsgBurnResponse        );
+  rpc ChangeAdmin      (MsgChangeAdmin                     ) returns (MsgChangeAdminResponse                     );
+  rpc SetDenomMetadata (MsgSetDenomMetadata                ) returns (MsgSetDenomMetadataResponse                );
 }
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
