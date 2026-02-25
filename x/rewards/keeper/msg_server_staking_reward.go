@@ -61,6 +61,10 @@ func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCrea
 	}
 
 	if fee != nil {
+		//staking rewards with fees can be created only if the trade keeper is available to capture that fee
+		if k.tradeKeeper == nil {
+			return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "trade keeper is not available")
+		}
 		capturedFee, err := k.tradeKeeper.CaptureAndSwapUserFee(ctx, acc, fee, types.ModuleName)
 		if err != nil {
 			return nil, err
