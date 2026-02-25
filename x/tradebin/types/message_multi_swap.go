@@ -45,13 +45,5 @@ func (msg *MsgMultiSwap) ValidateBasic() error {
 		return errorsmod.Wrapf(ErrInvalidOrderAmount, "minimum output (%s) is not valid", msg.GetMinOutput().String())
 	}
 
-	if !msg.Input.IsPositive() {
-		return errorsmod.Wrapf(ErrInvalidOrderAmount, "input is not positive (%s)", msg.Input.String())
-	}
-
-	if !msg.MinOutput.IsPositive() {
-		return errorsmod.Wrapf(ErrInvalidOrderAmount, "minimum output is not positive (%s)", msg.MinOutput.String())
-	}
-
 	return nil
 }
