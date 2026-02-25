@@ -421,7 +421,7 @@ func (k Keeper) checkPriceInOrderBook(ctx sdk.Context, msg *types.MsgCreateOrder
 		sells, _, err := k.getMarketAggregatedOrdersPaginated(ctx, msg.MarketId, oppositeType, &query.PageRequest{Limit: 1, Reverse: false})
 		if err != nil {
 
-			return fmt.Errorf("could not get buy orders pagination query: %w", err)
+			return fmt.Errorf("could not get sell orders pagination query: %w", err)
 		}
 
 		if len(sells) == 0 {
@@ -453,7 +453,7 @@ func (k Keeper) checkPriceInOrderBook(ctx sdk.Context, msg *types.MsgCreateOrder
 
 		bPrice, err := math.LegacyNewDecFromStr(buys[0].Price)
 		if err != nil {
-			return fmt.Errorf("could not parse sell price: %s", buys[0].Price)
+			return fmt.Errorf("could not parse buy price: %s", buys[0].Price)
 		}
 
 		if currentPrice.LT(bPrice) {
