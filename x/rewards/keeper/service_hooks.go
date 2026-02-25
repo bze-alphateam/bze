@@ -165,8 +165,16 @@ func (k Keeper) GetOnOrderFillHook() func(ctx sdk.Context, marketId, amountTrade
 
 		//sort the slice
 		slices.SortStableFunc(leaderboard.List, func(a, b types.TradingRewardLeaderboardEntry) int {
-			aAmt, _ := math.NewIntFromString(a.Amount)
-			bAmt, _ := math.NewIntFromString(b.Amount)
+			aAmt, aOk := math.NewIntFromString(a.Amount)
+			if !aOk {
+				logger.Error("could not parse amount from leaderboard entry", "entry", a)
+				aAmt = math.ZeroInt()
+			}
+			bAmt, bOk := math.NewIntFromString(b.Amount)
+			if !bOk {
+				logger.Error("could not parse amount from leaderboard entry", "entry", b)
+				bAmt = math.ZeroInt()
+			}
 
 			//if the amounts are equal, use CreatedAt to sort
 			if aAmt.Equal(bAmt) {
