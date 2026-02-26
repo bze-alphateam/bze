@@ -206,16 +206,12 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 	ctx.GasMeter().ConsumeGas(params.FillOrdersExtraGas, "fill_orders")
 	totalCoins := sdk.NewCoins()
 	for key, fo := range msg.Orders {
-		minAmt, err := CalculateMinAmount(fo.Price)
+		minAmt, err := CalculateMinAmountFromDecPrice(fo.Price)
 		if err != nil {
 			return nil, types.ErrInvalidOrdersToFill.Wrapf("could not calculate minimum amount: %v", err)
 		}
 
-		amtInt, ok := math.NewIntFromString(fo.Amount)
-		if !ok {
-			return nil, types.ErrInvalidOrderAmount.Wrapf("amount could not be converted to Int")
-		}
-		if minAmt.GT(amtInt) {
+		if minAmt.GT(fo.Amount) {
 			ctx.Logger().Debug("order amount is smaller than minimum", "order_to_fill", fo)
 
 			continue
@@ -226,8 +222,8 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 		//so if user says he wants to fill buy orders, we need to act like he's selling, and vice versa
 		ocReq := types.OrderCoinsArguments{
 			OrderType:    types.TheOtherOrderType(msg.OrderType),
-			OrderPrice:   fo.Price,
-			OrderAmount:  amtInt,
+			OrderPrice:   fo.Price.String(),
+			OrderAmount:  fo.Amount,
 			Market:       &market,
 			UserAddress:  msg.Creator,
 			UserReceives: false,
@@ -237,10 +233,6 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 		if err != nil {
 			return nil, err
 		}
-		foPriceDec, err := math.LegacyNewDecFromStr(fo.Price)
-		if err != nil {
-			return nil, types.ErrInvalidOrderPrice.Wrapf("could not parse fill order price: %v", err)
-		}
 
 		//messages of type "buy" are added on queue as messageType = "fill_buy"
 		//messages of type "sell" are added on queue as messageType = "fill_sell"
@@ -249,8 +241,8 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 			MarketId:    msg.MarketId,
 			OrderType:   ocReq.OrderType, // already inversed when ocReq was built a few lines above
 			MessageType: types.OrderTypeToMessageTypeFill(msg.OrderType),
-			Amount:      amtInt,
-			Price:       foPriceDec,
+			Amount:      fo.Amount,
+			Price:       fo.Price,
 			Owner:       msg.Creator,
 		}
 

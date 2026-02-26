@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/testutil/sample"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
@@ -13,8 +14,8 @@ func TestNewMsgFillOrders(t *testing.T) {
 	marketId := "BTC-USD"
 	orderType := OrderTypeBuy
 	orders := []*FillOrderItem{
-		{Price: "1.5", Amount: "1000"},
-		{Price: "1.6", Amount: "2000"},
+		{Price: math.LegacyMustNewDecFromStr("1.5"), Amount: math.NewInt(1000)},
+		{Price: math.LegacyMustNewDecFromStr("1.6"), Amount: math.NewInt(2000)},
 	}
 
 	msg := NewMsgFillOrders(creator, marketId, orderType, orders)
@@ -30,7 +31,7 @@ func TestMsgFillOrders_ValidateBasic(t *testing.T) {
 	validMarketId := "BTC-USD"
 	validOrderType := OrderTypeBuy
 	validOrders := []*FillOrderItem{
-		{Price: "1.5", Amount: "1000"},
+		{Price: math.LegacyMustNewDecFromStr("1.5"), Amount: math.NewInt(1000)},
 	}
 
 	tests := []struct {
@@ -153,9 +154,9 @@ func TestMsgFillOrders_ValidateBasic(t *testing.T) {
 				MarketId:  validMarketId,
 				OrderType: validOrderType,
 				Orders: []*FillOrderItem{
-					{Price: "1.5", Amount: "1000"},
-					{Price: "1.6", Amount: "2000"},
-					{Price: "1.7", Amount: "3000"},
+					{Price: math.LegacyMustNewDecFromStr("1.5"), Amount: math.NewInt(1000)},
+					{Price: math.LegacyMustNewDecFromStr("1.6"), Amount: math.NewInt(2000)},
+					{Price: math.LegacyMustNewDecFromStr("1.7"), Amount: math.NewInt(3000)},
 				},
 			},
 		},
@@ -184,19 +185,19 @@ func TestMsgFillOrders_ValidateBasic(t *testing.T) {
 				MarketId:  validMarketId,
 				OrderType: validOrderType,
 				Orders: []*FillOrderItem{
-					{Price: "0.001", Amount: "1"},
-					{Price: "999999.999", Amount: "999999999"},
+					{Price: math.LegacyMustNewDecFromStr("0.001"), Amount: math.NewInt(1)},
+					{Price: math.LegacyMustNewDecFromStr("999999.999"), Amount: math.NewInt(999999999)},
 				},
 			},
 		},
 		{
-			name: "invalid price - empty value",
+			name: "invalid price - zero value",
 			msg: MsgFillOrders{
 				Creator:   validCreator,
 				MarketId:  validMarketId,
 				OrderType: validOrderType,
 				Orders: []*FillOrderItem{
-					{Price: "", Amount: ""},
+					{Price: math.LegacyZeroDec(), Amount: math.ZeroInt()},
 				},
 			},
 			err: sdkerrors.ErrInvalidRequest,
@@ -208,8 +209,8 @@ func TestMsgFillOrders_ValidateBasic(t *testing.T) {
 				MarketId:  validMarketId,
 				OrderType: validOrderType,
 				Orders: []*FillOrderItem{
-					{Price: "1.5", Amount: "1000"},
-					{Price: "1.5", Amount: "2000"},
+					{Price: math.LegacyMustNewDecFromStr("1.5"), Amount: math.NewInt(1000)},
+					{Price: math.LegacyMustNewDecFromStr("1.5"), Amount: math.NewInt(2000)},
 				},
 			},
 			err: sdkerrors.ErrInvalidRequest,
@@ -221,22 +222,22 @@ func TestMsgFillOrders_ValidateBasic(t *testing.T) {
 				MarketId:  validMarketId,
 				OrderType: validOrderType,
 				Orders: []*FillOrderItem{
-					{Price: "1.5", Amount: "1000"},
-					{Price: "1.6", Amount: "2000"},
-					{Price: "1.5", Amount: "3000"},
+					{Price: math.LegacyMustNewDecFromStr("1.5"), Amount: math.NewInt(1000)},
+					{Price: math.LegacyMustNewDecFromStr("1.6"), Amount: math.NewInt(2000)},
+					{Price: math.LegacyMustNewDecFromStr("1.5"), Amount: math.NewInt(3000)},
 				},
 			},
 			err: sdkerrors.ErrInvalidRequest,
 		},
 		{
-			name: "duplicate prices in orders - duplicate empty prices",
+			name: "duplicate prices in orders - duplicate zero prices",
 			msg: MsgFillOrders{
 				Creator:   validCreator,
 				MarketId:  validMarketId,
 				OrderType: validOrderType,
 				Orders: []*FillOrderItem{
-					{Price: "", Amount: "1000"},
-					{Price: "", Amount: "2000"},
+					{Price: math.LegacyZeroDec(), Amount: math.NewInt(1000)},
+					{Price: math.LegacyZeroDec(), Amount: math.NewInt(2000)},
 				},
 			},
 			err: sdkerrors.ErrInvalidRequest,

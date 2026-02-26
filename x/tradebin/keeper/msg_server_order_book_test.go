@@ -1038,8 +1038,8 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderPartialFill_Sell() 
 		OrderType: types.OrderTypeSell,
 		Orders: []*types.FillOrderItem{
 			{
-				Amount: "500000",
-				Price:  "1",
+				Amount: math.NewInt(500000),
+				Price:  math.LegacyMustNewDecFromStr("1"),
 			},
 		},
 	}
@@ -1056,10 +1056,10 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderPartialFill_Sell() 
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
 	suite.Require().Len(qmList, 1)
 	suite.Require().Equal(qmList[0].MarketId, getMarketId())
-	suite.Require().Equal(qmList[0].Amount.String(), fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
 	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeBuy)
 	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillSell)
-	suite.Require().Equal(qmList[0].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[0].Price))
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
 	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
 
 	receivedCoins := sdk.NewCoins(sdk.NewCoin(market.Base, math.NewInt(500000)))
@@ -1102,8 +1102,8 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderPartialFill_Buy() {
 		OrderType: types.OrderTypeBuy,
 		Orders: []*types.FillOrderItem{
 			{
-				Amount: "500000",
-				Price:  "1",
+				Amount: math.NewInt(500000),
+				Price:  math.LegacyMustNewDecFromStr("1"),
 			},
 		},
 	}
@@ -1119,10 +1119,10 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderPartialFill_Buy() {
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
 	suite.Require().Len(qmList, 1)
 	suite.Require().Equal(qmList[0].MarketId, getMarketId())
-	suite.Require().Equal(qmList[0].Amount.String(), fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
 	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeSell)
 	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillBuy)
-	suite.Require().Equal(qmList[0].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[0].Price))
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
 	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
 
 	receivedCoins := sdk.NewCoins(sdk.NewCoin(market.Quote, math.NewInt(500000)))
@@ -1168,8 +1168,8 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderFullFill_Sell() {
 		OrderType: types.OrderTypeSell,
 		Orders: []*types.FillOrderItem{
 			{
-				Amount: "1000000",
-				Price:  "1",
+				Amount: math.NewInt(1000000),
+				Price:  math.LegacyMustNewDecFromStr("1"),
 			},
 		},
 	}
@@ -1185,10 +1185,10 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderFullFill_Sell() {
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
 	suite.Require().Len(qmList, 1)
 	suite.Require().Equal(qmList[0].MarketId, getMarketId())
-	suite.Require().Equal(qmList[0].Amount.String(), fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
 	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeBuy)
 	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillSell)
-	suite.Require().Equal(qmList[0].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[0].Price))
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
 	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
 
 	receivedCoins := sdk.NewCoins(sdk.NewCoin(market.Base, math.NewInt(1000000)))
@@ -1223,8 +1223,8 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderFullFill_Buy() {
 		OrderType: types.OrderTypeBuy,
 		Orders: []*types.FillOrderItem{
 			{
-				Amount: "1000000",
-				Price:  "1",
+				Amount: math.NewInt(1000000),
+				Price:  math.LegacyMustNewDecFromStr("1"),
 			},
 		},
 	}
@@ -1240,10 +1240,10 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderFullFill_Buy() {
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
 	suite.Require().Len(qmList, 1)
 	suite.Require().Equal(qmList[0].MarketId, getMarketId())
-	suite.Require().Equal(qmList[0].Amount.String(), fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
 	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeSell)
 	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillBuy)
-	suite.Require().Equal(qmList[0].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[0].Price))
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
 	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
 
 	receivedCoins := sdk.NewCoins(sdk.NewCoin(market.Quote, math.NewInt(1000000)))
@@ -1280,12 +1280,12 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoOrdersOnePartialFill_Sel
 		OrderType: types.OrderTypeSell,
 		Orders: []*types.FillOrderItem{
 			{
-				Amount: "1000000",
-				Price:  allPrices[0],
+				Amount: math.NewInt(1000000),
+				Price:  math.LegacyMustNewDecFromStr(allPrices[0]),
 			},
 			{
-				Amount: "500000",
-				Price:  allPrices[1],
+				Amount: math.NewInt(500000),
+				Price:  math.LegacyMustNewDecFromStr(allPrices[1]),
 			},
 		},
 	}
@@ -1301,16 +1301,16 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoOrdersOnePartialFill_Sel
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
 	suite.Require().Len(qmList, 2)
 	suite.Require().Equal(qmList[0].MarketId, getMarketId())
-	suite.Require().Equal(qmList[0].Amount.String(), fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
 	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeBuy)
 	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillSell)
-	suite.Require().Equal(qmList[0].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[0].Price))
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
 	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
 	suite.Require().Equal(qmList[1].MarketId, getMarketId())
-	suite.Require().Equal(qmList[1].Amount.String(), fillOrder.Orders[1].Amount)
+	suite.Require().Equal(qmList[1].Amount, fillOrder.Orders[1].Amount)
 	suite.Require().Equal(qmList[1].OrderType, types.OrderTypeBuy)
 	suite.Require().Equal(qmList[1].MessageType, types.MessageTypeFillSell)
-	suite.Require().Equal(qmList[1].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[1].Price))
+	suite.Require().Equal(qmList[1].Price, fillOrder.Orders[1].Price)
 	suite.Require().Equal(qmList[1].Owner, fillOrder.Creator)
 
 	//they receive in multiple bank calls: one for each message
@@ -1358,12 +1358,12 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoOrdersOnePartialFill_Buy
 		OrderType: types.OrderTypeBuy,
 		Orders: []*types.FillOrderItem{
 			{
-				Amount: "1000000",
-				Price:  allPrices[0],
+				Amount: math.NewInt(1000000),
+				Price:  math.LegacyMustNewDecFromStr(allPrices[0]),
 			},
 			{
-				Amount: "500000",
-				Price:  allPrices[1],
+				Amount: math.NewInt(500000),
+				Price:  math.LegacyMustNewDecFromStr(allPrices[1]),
 			},
 		},
 	}
@@ -1381,16 +1381,16 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoOrdersOnePartialFill_Buy
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
 	suite.Require().Len(qmList, 2)
 	suite.Require().Equal(qmList[0].MarketId, getMarketId())
-	suite.Require().Equal(qmList[0].Amount.String(), fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
 	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeSell)
 	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillBuy)
-	suite.Require().Equal(qmList[0].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[0].Price))
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
 	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
 	suite.Require().Equal(qmList[1].MarketId, getMarketId())
-	suite.Require().Equal(qmList[1].Amount.String(), fillOrder.Orders[1].Amount)
+	suite.Require().Equal(qmList[1].Amount, fillOrder.Orders[1].Amount)
 	suite.Require().Equal(qmList[1].OrderType, types.OrderTypeSell)
 	suite.Require().Equal(qmList[1].MessageType, types.MessageTypeFillBuy)
-	suite.Require().Equal(qmList[1].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[1].Price))
+	suite.Require().Equal(qmList[1].Price, fillOrder.Orders[1].Price)
 	suite.Require().Equal(qmList[1].Owner, fillOrder.Creator)
 
 	//they receive in multiple bank calls: one for each message
@@ -1438,12 +1438,12 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoFullyFilledOrders_Buy() 
 		OrderType: types.OrderTypeBuy,
 		Orders: []*types.FillOrderItem{
 			{
-				Amount: "1000000",
-				Price:  allPrices[0],
+				Amount: math.NewInt(1000000),
+				Price:  math.LegacyMustNewDecFromStr(allPrices[0]),
 			},
 			{
-				Amount: "1000000",
-				Price:  allPrices[1],
+				Amount: math.NewInt(1000000),
+				Price:  math.LegacyMustNewDecFromStr(allPrices[1]),
 			},
 		},
 	}
@@ -1461,16 +1461,16 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoFullyFilledOrders_Buy() 
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
 	suite.Require().Len(qmList, 2)
 	suite.Require().Equal(qmList[0].MarketId, getMarketId())
-	suite.Require().Equal(qmList[0].Amount.String(), fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
 	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeSell)
 	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillBuy)
-	suite.Require().Equal(qmList[0].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[0].Price))
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
 	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
 	suite.Require().Equal(qmList[1].MarketId, getMarketId())
-	suite.Require().Equal(qmList[1].Amount.String(), fillOrder.Orders[1].Amount)
+	suite.Require().Equal(qmList[1].Amount, fillOrder.Orders[1].Amount)
 	suite.Require().Equal(qmList[1].OrderType, types.OrderTypeSell)
 	suite.Require().Equal(qmList[1].MessageType, types.MessageTypeFillBuy)
-	suite.Require().Equal(qmList[1].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[1].Price))
+	suite.Require().Equal(qmList[1].Price, fillOrder.Orders[1].Price)
 	suite.Require().Equal(qmList[1].Owner, fillOrder.Creator)
 
 	//they receive in multiple bank calls: one for each message
@@ -1508,12 +1508,12 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoFullyFilledOrders_Sell()
 		OrderType: types.OrderTypeSell,
 		Orders: []*types.FillOrderItem{
 			{
-				Amount: "1000000",
-				Price:  allPrices[0],
+				Amount: math.NewInt(1000000),
+				Price:  math.LegacyMustNewDecFromStr(allPrices[0]),
 			},
 			{
-				Amount: "1000000",
-				Price:  allPrices[1],
+				Amount: math.NewInt(1000000),
+				Price:  math.LegacyMustNewDecFromStr(allPrices[1]),
 			},
 		},
 	}
@@ -1529,16 +1529,16 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoFullyFilledOrders_Sell()
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
 	suite.Require().Len(qmList, 2)
 	suite.Require().Equal(qmList[0].MarketId, getMarketId())
-	suite.Require().Equal(qmList[0].Amount.String(), fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
 	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeBuy)
 	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillSell)
-	suite.Require().Equal(qmList[0].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[0].Price))
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
 	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
 	suite.Require().Equal(qmList[1].MarketId, getMarketId())
-	suite.Require().Equal(qmList[1].Amount.String(), fillOrder.Orders[1].Amount)
+	suite.Require().Equal(qmList[1].Amount, fillOrder.Orders[1].Amount)
 	suite.Require().Equal(qmList[1].OrderType, types.OrderTypeBuy)
 	suite.Require().Equal(qmList[1].MessageType, types.MessageTypeFillSell)
-	suite.Require().Equal(qmList[1].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[1].Price))
+	suite.Require().Equal(qmList[1].Price, fillOrder.Orders[1].Price)
 	suite.Require().Equal(qmList[1].Owner, fillOrder.Creator)
 
 	//they receive in multiple bank calls: one for each message
@@ -1576,8 +1576,8 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneFullyFilledOrderWithExtr
 		OrderType: types.OrderTypeBuy,
 		Orders: []*types.FillOrderItem{
 			{
-				Amount: "1500000",
-				Price:  allPrices[0],
+				Amount: math.NewInt(1500000),
+				Price:  math.LegacyMustNewDecFromStr(allPrices[0]),
 			},
 		},
 	}
@@ -1593,10 +1593,10 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneFullyFilledOrderWithExtr
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
 	suite.Require().Len(qmList, 1)
 	suite.Require().Equal(qmList[0].MarketId, getMarketId())
-	suite.Require().Equal(qmList[0].Amount.String(), fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
 	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeSell)
 	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillBuy)
-	suite.Require().Equal(qmList[0].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[0].Price))
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
 	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
 
 	receivedCoins := sdk.NewCoins(sdk.NewCoin(market.Quote, math.NewInt(1000000)))
@@ -1633,8 +1633,8 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneFullyFilledOrderWithExtr
 		OrderType: types.OrderTypeSell,
 		Orders: []*types.FillOrderItem{
 			{
-				Amount: "1500000",
-				Price:  allPrices[0],
+				Amount: math.NewInt(1500000),
+				Price:  math.LegacyMustNewDecFromStr(allPrices[0]),
 			},
 		},
 	}
@@ -1650,10 +1650,10 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneFullyFilledOrderWithExtr
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
 	suite.Require().Len(qmList, 1)
 	suite.Require().Equal(qmList[0].MarketId, getMarketId())
-	suite.Require().Equal(qmList[0].Amount.String(), fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
 	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeBuy)
 	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillSell)
-	suite.Require().Equal(qmList[0].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[0].Price))
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
 	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
 
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, addr2, sdk.NewCoins(sdk.NewCoin(market.Base, math.NewInt(1000000)))).Return(nil).Times(1)
@@ -1688,12 +1688,12 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoFullyFilledOrdersWithExt
 		OrderType: types.OrderTypeBuy,
 		Orders: []*types.FillOrderItem{
 			{
-				Amount: "2000000",
-				Price:  allPrices[0],
+				Amount: math.NewInt(2000000),
+				Price:  math.LegacyMustNewDecFromStr(allPrices[0]),
 			},
 			{
-				Amount: "1500000",
-				Price:  allPrices[1],
+				Amount: math.NewInt(1500000),
+				Price:  math.LegacyMustNewDecFromStr(allPrices[1]),
 			},
 		},
 	}
@@ -1709,16 +1709,16 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoFullyFilledOrdersWithExt
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
 	suite.Require().Len(qmList, 2)
 	suite.Require().Equal(qmList[0].MarketId, getMarketId())
-	suite.Require().Equal(qmList[0].Amount.String(), fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
 	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeSell)
 	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillBuy)
-	suite.Require().Equal(qmList[0].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[0].Price))
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
 	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
 	suite.Require().Equal(qmList[1].MarketId, getMarketId())
-	suite.Require().Equal(qmList[1].Amount.String(), fillOrder.Orders[1].Amount)
+	suite.Require().Equal(qmList[1].Amount, fillOrder.Orders[1].Amount)
 	suite.Require().Equal(qmList[1].OrderType, types.OrderTypeSell)
 	suite.Require().Equal(qmList[1].MessageType, types.MessageTypeFillBuy)
-	suite.Require().Equal(qmList[1].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[1].Price))
+	suite.Require().Equal(qmList[1].Price, fillOrder.Orders[1].Price)
 	suite.Require().Equal(qmList[1].Owner, fillOrder.Creator)
 
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, addr2, sdk.NewCoins(sdk.NewCoin(market.Quote, math.NewInt(1000000)))).Return(nil).Times(1)
@@ -1758,12 +1758,12 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoFullyFilledOrdersWithExt
 		OrderType: types.OrderTypeSell,
 		Orders: []*types.FillOrderItem{
 			{
-				Amount: "2000000",
-				Price:  allPrices[0],
+				Amount: math.NewInt(2000000),
+				Price:  math.LegacyMustNewDecFromStr(allPrices[0]),
 			},
 			{
-				Amount: "1500000",
-				Price:  allPrices[1],
+				Amount: math.NewInt(1500000),
+				Price:  math.LegacyMustNewDecFromStr(allPrices[1]),
 			},
 		},
 	}
@@ -1779,16 +1779,16 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoFullyFilledOrdersWithExt
 	qmList := suite.k.GetAllQueueMessage(suite.ctx)
 	suite.Require().Len(qmList, 2)
 	suite.Require().Equal(qmList[0].MarketId, getMarketId())
-	suite.Require().Equal(qmList[0].Amount.String(), fillOrder.Orders[0].Amount)
+	suite.Require().Equal(qmList[0].Amount, fillOrder.Orders[0].Amount)
 	suite.Require().Equal(qmList[0].OrderType, types.OrderTypeBuy)
 	suite.Require().Equal(qmList[0].MessageType, types.MessageTypeFillSell)
-	suite.Require().Equal(qmList[0].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[0].Price))
+	suite.Require().Equal(qmList[0].Price, fillOrder.Orders[0].Price)
 	suite.Require().Equal(qmList[0].Owner, fillOrder.Creator)
 	suite.Require().Equal(qmList[1].MarketId, getMarketId())
-	suite.Require().Equal(qmList[1].Amount.String(), fillOrder.Orders[1].Amount)
+	suite.Require().Equal(qmList[1].Amount, fillOrder.Orders[1].Amount)
 	suite.Require().Equal(qmList[1].OrderType, types.OrderTypeBuy)
 	suite.Require().Equal(qmList[1].MessageType, types.MessageTypeFillSell)
-	suite.Require().Equal(qmList[1].Price, math.LegacyMustNewDecFromStr(fillOrder.Orders[1].Price))
+	suite.Require().Equal(qmList[1].Price, fillOrder.Orders[1].Price)
 	suite.Require().Equal(qmList[1].Owner, fillOrder.Creator)
 
 	//they receive in multiple bank calls: one for each message
@@ -1836,8 +1836,8 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_FillAllWithExtraAmounts_Sel
 	for _, pr := range allPrices {
 		randAmount := 1000000 + suite.randomNumber(999999)
 		fillOrder.Orders = append(fillOrder.Orders, &types.FillOrderItem{
-			Price:  pr,
-			Amount: fmt.Sprintf("%d", randAmount),
+			Price:  math.LegacyMustNewDecFromStr(pr),
+			Amount: math.NewInt(int64(randAmount)),
 		})
 
 		price := math.LegacyMustNewDecFromStr(pr).TruncateInt()
@@ -1907,8 +1907,8 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_FillAllWithExtraAmounts_Buy
 	for _, pr := range allPrices {
 		randAmount := 1000000 + suite.randomNumber(999999)
 		fillOrder.Orders = append(fillOrder.Orders, &types.FillOrderItem{
-			Price:  pr,
-			Amount: fmt.Sprintf("%d", randAmount),
+			Price:  math.LegacyMustNewDecFromStr(pr),
+			Amount: math.NewInt(int64(randAmount)),
 		})
 
 		price := math.LegacyMustNewDecFromStr(pr).TruncateInt()
