@@ -439,11 +439,7 @@ func (k Keeper) checkPriceInOrderBook(ctx sdk.Context, msg *types.MsgCreateOrder
 			return nil
 		}
 
-		sPrice, err := math.LegacyNewDecFromStr(sells[0].Price)
-		if err != nil {
-
-			return fmt.Errorf("could not parse sell price: %s", sells[0].Price)
-		}
+		sPrice := sells[0].Price
 
 		if currentPrice.GT(sPrice) {
 
@@ -461,10 +457,7 @@ func (k Keeper) checkPriceInOrderBook(ctx sdk.Context, msg *types.MsgCreateOrder
 			return nil
 		}
 
-		bPrice, err := math.LegacyNewDecFromStr(buys[0].Price)
-		if err != nil {
-			return fmt.Errorf("could not parse buy price: %s", buys[0].Price)
-		}
+		bPrice := buys[0].Price
 
 		if currentPrice.LT(bPrice) {
 			return fmt.Errorf("selling price is invalid. A better price is available: %s", bPrice.String())

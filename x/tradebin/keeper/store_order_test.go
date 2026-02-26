@@ -166,17 +166,17 @@ func (suite *IntegrationTestSuite) TestStore_AggregatedOrder() {
 	agg := types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeBuy,
-		Amount:    "10",
-		Price:     "1",
+		Amount:    math.NewInt(10),
+		Price:     math.LegacyMustNewDecFromStr("1"),
 	}
 
 	suite.k.SetAggregatedOrder(suite.ctx, agg)
-	found, ok := suite.k.GetAggregatedOrder(suite.ctx, agg.MarketId, agg.OrderType, agg.Price)
+	found, ok := suite.k.GetAggregatedOrder(suite.ctx, agg.MarketId, agg.OrderType, agg.Price.String())
 	suite.Require().True(ok)
 	suite.Equal(found.MarketId, agg.MarketId)
 	suite.Equal(found.OrderType, agg.OrderType)
-	suite.Equal(found.Amount, agg.Amount)
-	suite.Equal(found.Price, agg.Price)
+	suite.Require().True(found.Amount.Equal(agg.Amount))
+	suite.Require().True(found.Price.Equal(agg.Price))
 
 	list := suite.k.GetAllAggregatedOrder(suite.ctx)
 	suite.Require().NotEmpty(list)
@@ -186,6 +186,6 @@ func (suite *IntegrationTestSuite) TestStore_AggregatedOrder() {
 	list = suite.k.GetAllAggregatedOrder(suite.ctx)
 	suite.Require().Empty(list)
 
-	_, ok = suite.k.GetAggregatedOrder(suite.ctx, agg.MarketId, agg.OrderType, agg.Price)
+	_, ok = suite.k.GetAggregatedOrder(suite.ctx, agg.MarketId, agg.OrderType, agg.Price.String())
 	suite.Require().False(ok)
 }

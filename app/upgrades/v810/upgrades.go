@@ -84,10 +84,10 @@ func migratePriceOrders(ctx sdk.Context, k *tradebinkeeper.Keeper) error {
 
 		// First, write using new key format (32 chars, 18 decimals)
 		// This ensures we don't lose data if the write fails
-		k.SetPriceOrder(ctx, orderRef, order.Price)
+		k.SetPriceOrder(ctx, orderRef, order.Price.String())
 
 		// Only after successful write, delete the old key format (24 chars, 10 decimals)
-		oldKey := oldPriceOrderKey(order.MarketId, order.OrderType, order.Price, order.Id)
+		oldKey := oldPriceOrderKey(order.MarketId, order.OrderType, order.Price.String(), order.Id)
 		store.Delete(oldKey)
 
 		if i%100 == 0 {
@@ -124,7 +124,7 @@ func migrateAggregatedOrders(ctx sdk.Context, k *tradebinkeeper.Keeper) error {
 		k.SetAggregatedOrder(ctx, aggOrder)
 
 		// Only after successful write, delete the old key format (24 chars, 10 decimals)
-		oldKey := oldAggOrderKey(aggOrder.MarketId, aggOrder.OrderType, aggOrder.Price)
+		oldKey := oldAggOrderKey(aggOrder.MarketId, aggOrder.OrderType, aggOrder.Price.String())
 		store.Delete(oldKey)
 
 		if i%100 == 0 {

@@ -196,7 +196,7 @@ func (k Keeper) GetAllAggregatedOrder(ctx sdk.Context) (list []types.AggregatedO
 func (k Keeper) SetAggregatedOrder(ctx sdk.Context, order types.AggregatedOrder) {
 	store := k.getAggregatedOrderStore(ctx)
 	b := k.cdc.MustMarshal(&order)
-	key := types.AggOrderKey(order.MarketId, order.OrderType, order.Price)
+	key := types.AggOrderKey(order.MarketId, order.OrderType, order.Price.String())
 	store.Set(key, b)
 }
 
@@ -214,7 +214,7 @@ func (k Keeper) GetAggregatedOrder(ctx sdk.Context, marketId, orderType, price s
 }
 
 func (k Keeper) RemoveAggregatedOrder(ctx sdk.Context, order types.AggregatedOrder) {
-	key := types.AggOrderKey(order.MarketId, order.OrderType, order.Price)
+	key := types.AggOrderKey(order.MarketId, order.OrderType, order.Price.String())
 	store := k.getAggregatedOrderStore(ctx)
 	store.Delete(key)
 }

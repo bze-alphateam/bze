@@ -190,8 +190,8 @@ func (suite *IntegrationTestSuite) TestCreateOrder_BuyAtMatchingSellPrice_OnlySe
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeSell,
-		Amount:    "10000",
-		Price:     "2",
+		Amount:    math.NewInt(10000),
+		Price:     math.LegacyMustNewDecFromStr("2"),
 	})
 
 	addr1 := sdk.AccAddress("addr1_______________")
@@ -224,14 +224,14 @@ func (suite *IntegrationTestSuite) TestCreateOrder_BuyAtHigherSellPrice_BetterSe
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeSell,
-		Amount:    "10000",
-		Price:     "3",
+		Amount:    math.NewInt(10000),
+		Price:     math.LegacyMustNewDecFromStr("3"),
 	})
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeSell,
-		Amount:    "10000",
-		Price:     "5",
+		Amount:    math.NewInt(10000),
+		Price:     math.LegacyMustNewDecFromStr("5"),
 	})
 
 	addr1 := sdk.AccAddress("addr1_______________")
@@ -258,8 +258,8 @@ func (suite *IntegrationTestSuite) TestCreateOrder_SellAtMatchingBuyPrice_OnlyBu
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeBuy,
-		Amount:    "10000",
-		Price:     "1",
+		Amount:    math.NewInt(10000),
+		Price:     math.LegacyMustNewDecFromStr("1"),
 	})
 
 	addr1 := sdk.AccAddress("addr1_______________")
@@ -292,14 +292,14 @@ func (suite *IntegrationTestSuite) TestCreateOrder_SellAtLowerBuyPrice_BetterBuy
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeBuy,
-		Amount:    "10000",
-		Price:     "1",
+		Amount:    math.NewInt(10000),
+		Price:     math.LegacyMustNewDecFromStr("1"),
 	})
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeBuy,
-		Amount:    "10000",
-		Price:     "5",
+		Amount:    math.NewInt(10000),
+		Price:     math.LegacyMustNewDecFromStr("5"),
 	})
 
 	addr1 := sdk.AccAddress("addr1_______________")
@@ -534,8 +534,8 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_Buy_Success_Z
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeSell,
-		Amount:    "10000",
-		Price:     "2",
+		Amount:    math.NewInt(10000),
+		Price:     math.LegacyMustNewDecFromStr("2"),
 	})
 
 	addr1 := sdk.AccAddress("addr1_______________")
@@ -579,8 +579,8 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_Buy_Success_W
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeSell,
-		Amount:    "100000",
-		Price:     "0.02331",
+		Amount:    math.NewInt(100000),
+		Price:     math.LegacyMustNewDecFromStr("0.02331"),
 	})
 
 	addr1 := sdk.AccAddress("addr1_______________")
@@ -665,8 +665,8 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_Sell_Success(
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeBuy,
-		Amount:    "10000",
-		Price:     "1",
+		Amount:    math.NewInt(10000),
+		Price:     math.LegacyMustNewDecFromStr("1"),
 	})
 
 	addr1 := sdk.AccAddress("addr1_______________")
@@ -803,21 +803,18 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_StressBalance
 			agg = types.AggregatedOrder{
 				MarketId:  or.MarketId,
 				OrderType: or.OrderType,
-				Amount:    "0",
-				Price:     or.Price.String(),
+				Amount:    math.ZeroInt(),
+				Price:     or.Price,
 			}
 		}
-		aggAmt, ok := math.NewIntFromString(agg.Amount)
-		suite.Require().True(ok)
-		aggAmt = aggAmt.Add(or.Amount)
-		agg.Amount = aggAmt.String()
+		agg.Amount = agg.Amount.Add(or.Amount)
 		aggregatedOrders[key] = agg
 	}
 
 	for _, agg := range aggregatedOrders {
-		foundAgg, ok := suite.k.GetAggregatedOrder(suite.ctx, agg.MarketId, agg.OrderType, agg.Price)
+		foundAgg, ok := suite.k.GetAggregatedOrder(suite.ctx, agg.MarketId, agg.OrderType, agg.Price.String())
 		suite.Require().True(ok)
-		suite.Require().Equal(foundAgg.Amount, agg.Amount)
+		suite.Require().True(foundAgg.Amount.Equal(agg.Amount))
 	}
 
 	suite.Require().Equal(allPaid, amounts)
@@ -828,14 +825,14 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_CheckPrice_Fa
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeBuy,
-		Amount:    "10000",
-		Price:     "1",
+		Amount:    math.NewInt(10000),
+		Price:     math.LegacyMustNewDecFromStr("1"),
 	})
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeSell,
-		Amount:    "10000",
-		Price:     "5",
+		Amount:    math.NewInt(10000),
+		Price:     math.LegacyMustNewDecFromStr("5"),
 	})
 
 	addr1 := sdk.AccAddress("addr1_______________")

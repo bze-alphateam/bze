@@ -256,13 +256,8 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 		return nil
 	}
 
-	aggAmountInt, ok := math.NewIntFromString(agg.Amount)
-	if !ok {
-		return fmt.Errorf("could not convert agg amount")
-	}
-
 	//if min amount condition is met and all orders were filled we can proceed to place the order
-	if remaining.GTE(minAmount) && aggAmountInt.IsZero() {
+	if remaining.GTE(minAmount) && agg.Amount.IsZero() {
 		order := pe.saveOrder(ctx, message, message.Amount)
 		pe.addOrderToAggregate(ctx, order)
 
@@ -407,17 +402,9 @@ func (pe *ProcessingEngine) removeOrderFromAggregate(ctx sdk.Context, order *typ
 		return
 	}
 
-	aggAmountInt, ok := math.NewIntFromString(agg.Amount)
-	if !ok {
-		//should never happen
-		pe.logger.Error("could not convert agg amount", "method", "removeOrderFromAggregate")
-		return
-	}
+	agg.Amount = agg.Amount.Sub(order.Amount)
 
-	aggAmountInt = aggAmountInt.Sub(order.Amount)
-
-	if aggAmountInt.GT(math.ZeroInt()) {
-		agg.Amount = aggAmountInt.String()
+	if agg.Amount.GT(math.ZeroInt()) {
 		pe.k.SetAggregatedOrder(ctx, agg)
 	} else {
 		pe.k.RemoveAggregatedOrder(ctx, agg)
@@ -430,19 +417,12 @@ func (pe *ProcessingEngine) addOrderToAggregate(ctx sdk.Context, order *types.Or
 		agg = types.AggregatedOrder{
 			MarketId:  order.MarketId,
 			OrderType: order.OrderType,
-			Amount:    "0", // on purpose. it's added below
-			Price:     order.Price.String(),
+			Amount:    math.ZeroInt(), // on purpose. it's added below
+			Price:     order.Price,
 		}
 	}
 
-	aggAmountInt, ok := math.NewIntFromString(agg.Amount)
-	if !ok {
-		//should never happen
-		pe.logger.Error("could not convert agg amount", "method", "addOrderToAggregate")
-		return
-	}
-
-	agg.Amount = aggAmountInt.Add(order.Amount).String()
+	agg.Amount = agg.Amount.Add(order.Amount)
 
 	pe.k.SetAggregatedOrder(ctx, agg)
 }
@@ -580,10 +560,6 @@ func (pe *ProcessingEngine) refundMessageFunds(ctx sdk.Context, message *types.Q
 func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.AggregatedOrder, message *types.QueueMessage, msgAmountInt math.Int, market *types.Market) (*math.Int, error) {
 	msgOwnerAddr, _ := sdk.AccAddressFromBech32(message.Owner)
 	zeroInt := math.ZeroInt()
-	aggAmountInt, ok := math.NewIntFromString(agg.Amount)
-	if !ok {
-		return nil, fmt.Errorf("could not convert agg amount")
-	}
 
 	oppositeOrderRefs := pe.k.GetPriceOrderByPrice(ctx, message.MarketId, types.TheOtherOrderType(message.OrderType), message.Price.String())
 	pe.logger.Info("found orders to fill", "number_of_orders", len(oppositeOrderRefs))
@@ -620,8 +596,7 @@ func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.Aggr
 
 		orderToFill.Amount = orderToFill.Amount.Sub(amountToExecute)
 
-		aggAmountInt = aggAmountInt.Sub(amountToExecute)
-		agg.Amount = aggAmountInt.String()
+		agg.Amount = agg.Amount.Sub(amountToExecute)
 
 		err := pe.fundUsersAccounts(ctx, &orderToFill, market, amountToExecute, msgOwnerAddr)
 		if err != nil {
@@ -641,7 +616,7 @@ func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.Aggr
 		pe.emitOrderExecutedEvent(ctx, &orderToFill, amountToExecute.String(), message.Owner)
 	}
 
-	if aggAmountInt.GT(zeroInt) {
+	if agg.Amount.GT(zeroInt) {
 		pe.k.SetAggregatedOrder(ctx, *agg)
 		pe.logger.Info("aggregated order updated")
 	} else {

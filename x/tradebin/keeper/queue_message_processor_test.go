@@ -51,13 +51,13 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_AddMakerOrder() {
 	suite.Require().True(ok)
 	suite.Require().Equal(aggBuy.MarketId, mBuy.MarketId)
 	suite.Require().Equal(aggBuy.OrderType, mBuy.OrderType)
-	suite.Require().Equal(aggBuy.Price, mBuy.Price.String())
+	suite.Require().True(aggBuy.Price.Equal(mBuy.Price))
 
 	aggSell, ok := suite.k.GetAggregatedOrder(suite.ctx, mSell.MarketId, mSell.OrderType, mSell.Price.String())
 	suite.Require().True(ok)
 	suite.Require().Equal(aggSell.MarketId, mSell.MarketId)
 	suite.Require().Equal(aggSell.OrderType, mSell.OrderType)
-	suite.Require().Equal(aggSell.Price, mSell.Price.String())
+	suite.Require().True(aggSell.Price.Equal(mSell.Price))
 
 	allOrders := suite.k.GetAllOrder(suite.ctx)
 	suite.Require().NotEmpty(allOrders)
@@ -150,11 +150,11 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 	aggOrderBuy, ok := suite.k.GetAggregatedOrder(suite.ctx, mBuy.MarketId, mBuy.OrderType, mBuy.Price.String())
 	suite.Require().True(ok)
 	//check aggregate total amount is equal tot total amounts of the orders we placed
-	suite.Require().EqualValues(aggOrderBuy.Amount, totalBuyAmount.String())
+	suite.Require().True(aggOrderBuy.Amount.Equal(totalBuyAmount))
 	aggOrderSell, ok := suite.k.GetAggregatedOrder(suite.ctx, mSell.MarketId, mSell.OrderType, mSell.Price.String())
 	suite.Require().True(ok)
 	//check aggregate total amount is equal tot total amounts of the orders we placed
-	suite.Require().EqualValues(aggOrderSell.Amount, totalSellAmount.String())
+	suite.Require().True(aggOrderSell.Amount.Equal(totalSellAmount))
 
 	//create cancel messages and store found orders to check storage later with their details
 	var orders []types.OrderReference
@@ -423,7 +423,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 func (suite *IntegrationTestSuite) checkAggregatedOrder(marketId, orderType, price string, expectedAmount string) {
 	agg, ok := suite.k.GetAggregatedOrder(suite.ctx, marketId, orderType, price)
 	suite.Require().True(ok)
-	suite.Require().Equal(agg.Amount, expectedAmount)
+	suite.Require().Equal(agg.Amount.String(), expectedAmount)
 }
 
 func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching_WithDust() {

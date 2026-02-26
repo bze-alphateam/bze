@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 )
 
@@ -94,15 +95,16 @@ func (suite *IntegrationTestSuite) TestQueryMarketAggregatedOrders_Success() {
 	aggBuy := types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeBuy,
-		Amount:    "100",
-		Price:     "2",
+		Amount:    math.NewInt(100),
+		Price:     math.LegacyMustNewDecFromStr("2"),
 	}
 
+	sellAmt, _ := math.NewIntFromString("92233720368547758061")
 	aggSell := types.AggregatedOrder{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeSell,
-		Amount:    "92233720368547758061",
-		Price:     "232183213232131221313",
+		Amount:    sellAmt,
+		Price:     math.LegacyMustNewDecFromStr("232183213232131221313"),
 	}
 
 	suite.k.SetAggregatedOrder(suite.ctx, aggBuy)
