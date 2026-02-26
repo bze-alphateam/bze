@@ -67,7 +67,7 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetUnlockPendingUnlockPartic
 	participant := types.PendingUnlockParticipant{
 		Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("%s/%s", "reward_1", addr.String())),
 		Address: addr.String(),
-		Amount:  "1000",
+		Amount:  math.NewInt(1000),
 		Denom:   "ubze",
 	}
 

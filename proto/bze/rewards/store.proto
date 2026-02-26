@@ -30,14 +30,23 @@ message StakingReward {
 message StakingRewardParticipant {
   string address = 1;
   string reward_id = 2;
-  string amount = 3; // stake[address]
-  string joined_at = 4; // S0[address]
+  string amount = 3 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ]; // stake[address]
+  string joined_at = 4 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ]; // S0[address]
 }
 
 message PendingUnlockParticipant {
   string index = 1;
   string address = 2;
-  string amount = 3;
+  string amount = 3 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
   string denom = 4;
 }
 

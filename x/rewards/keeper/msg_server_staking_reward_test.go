@@ -402,7 +402,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingSuccess
 	// Verify participant was created
 	participant, found := suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), "join-test-reward")
 	suite.Require().True(found)
-	suite.Require().Equal("500", participant.Amount)
+	suite.Require().Equal(math.NewInt(500), participant.Amount)
 
 	// Verify staked amount was updated
 	updatedReward, found := suite.k.GetStakingReward(suite.ctx, "join-test-reward")
@@ -470,8 +470,8 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStakingSuccess
 	participant := types.StakingRewardParticipant{
 		Address:  creator.String(),
 		RewardId: "exit-test-reward",
-		Amount:   "500",
-		JoinedAt: "0",
+		Amount:   math.NewInt(500),
+		JoinedAt: math.LegacyZeroDec(),
 	}
 	suite.k.SetStakingRewardParticipant(suite.ctx, participant)
 
@@ -536,8 +536,8 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStakingWithLoc
 	participant := types.StakingRewardParticipant{
 		Address:  creator.String(),
 		RewardId: "exit-lock-reward",
-		Amount:   "500",
-		JoinedAt: "0",
+		Amount:   math.NewInt(500),
+		JoinedAt: math.LegacyZeroDec(),
 	}
 	suite.k.SetStakingRewardParticipant(suite.ctx, participant)
 
@@ -565,7 +565,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStakingWithLoc
 	pendingParticipant, found := suite.k.GetPendingUnlockParticipant(suite.ctx, expectedKey)
 	suite.Require().True(found)
 	suite.Require().Equal(creator.String(), pendingParticipant.Address)
-	suite.Require().Equal("500", pendingParticipant.Amount)
+	suite.Require().Equal(math.NewInt(500), pendingParticipant.Amount)
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingRewardsSuccess() {
@@ -589,8 +589,8 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingReward
 	participant := types.StakingRewardParticipant{
 		Address:  creator.String(),
 		RewardId: "claim-test-reward",
-		Amount:   "500",
-		JoinedAt: "0", // Joined before any distribution
+		Amount:   math.NewInt(500),
+		JoinedAt: math.LegacyZeroDec(), // Joined before any distribution
 	}
 	suite.k.SetStakingRewardParticipant(suite.ctx, participant)
 
@@ -618,7 +618,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingReward
 	// Verify participant's JoinedAt was updated
 	updatedParticipant, found := suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), "claim-test-reward")
 	suite.Require().True(found)
-	suite.Require().Equal("1.000000000000000000", updatedParticipant.JoinedAt)
+	suite.Require().Equal(math.LegacyMustNewDecFromStr("1.0"), updatedParticipant.JoinedAt)
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingRewardsTruncatedZero() {
@@ -643,8 +643,8 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingReward
 	participant := types.StakingRewardParticipant{
 		Address:  creator.String(),
 		RewardId: "claim-truncated-reward",
-		Amount:   "1", // Small participant
-		JoinedAt: "0",
+		Amount:   math.NewInt(1), // Small participant
+		JoinedAt: math.LegacyZeroDec(),
 	}
 	suite.k.SetStakingRewardParticipant(suite.ctx, participant)
 
@@ -662,7 +662,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingReward
 	// Verify participant's JoinedAt was NOT updated (so fractional rewards are preserved)
 	updatedParticipant, found := suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), "claim-truncated-reward")
 	suite.Require().True(found)
-	suite.Require().Equal("0", updatedParticipant.JoinedAt)
+	suite.Require().Equal(math.LegacyZeroDec(), updatedParticipant.JoinedAt)
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingRewardsNoDistribution() {
@@ -687,8 +687,8 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingReward
 	participant := types.StakingRewardParticipant{
 		Address:  creator.String(),
 		RewardId: "claim-no-dist-reward",
-		Amount:   "500",
-		JoinedAt: "1.0", // Joined at current distribution point
+		Amount:   math.NewInt(500),
+		JoinedAt: math.LegacyMustNewDecFromStr("1.0"), // Joined at current distribution point
 	}
 	suite.k.SetStakingRewardParticipant(suite.ctx, participant)
 
@@ -706,7 +706,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingReward
 	// Verify participant's JoinedAt was NOT updated
 	updatedParticipant, found := suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), "claim-no-dist-reward")
 	suite.Require().True(found)
-	suite.Require().Equal("1.0", updatedParticipant.JoinedAt)
+	suite.Require().Equal(math.LegacyMustNewDecFromStr("1.0"), updatedParticipant.JoinedAt)
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStakingTruncatedZero() {
@@ -731,8 +731,8 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStakingTruncat
 	participant := types.StakingRewardParticipant{
 		Address:  creator.String(),
 		RewardId: "exit-truncated-reward",
-		Amount:   "1",
-		JoinedAt: "0",
+		Amount:   math.NewInt(1),
+		JoinedAt: math.LegacyZeroDec(),
 	}
 	suite.k.SetStakingRewardParticipant(suite.ctx, participant)
 
@@ -794,8 +794,8 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingExistin
 	participant := types.StakingRewardParticipant{
 		Address:  creator.String(),
 		RewardId: "join-truncated-reward",
-		Amount:   "1",
-		JoinedAt: "0",
+		Amount:   math.NewInt(1),
+		JoinedAt: math.LegacyZeroDec(),
 	}
 	suite.k.SetStakingRewardParticipant(suite.ctx, participant)
 
@@ -830,7 +830,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingExistin
 	// Verify participant's amount was updated (1 + 100 = 101)
 	updatedParticipant, found := suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), "join-truncated-reward")
 	suite.Require().True(found)
-	suite.Require().Equal("101", updatedParticipant.Amount)
+	suite.Require().Equal(math.NewInt(101), updatedParticipant.Amount)
 
 	// Verify staked amount was updated
 	updatedReward, found := suite.k.GetStakingReward(suite.ctx, "join-truncated-reward")

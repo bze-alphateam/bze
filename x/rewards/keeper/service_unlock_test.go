@@ -26,7 +26,7 @@ func (suite *IntegrationTestSuite) TestServiceUnlock_EnqueueSingle() {
 	participant := types.PendingUnlockParticipant{
 		Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("%s/%s", "reward_1", addr.String())),
 		Address: addr.String(),
-		Amount:  "1000",
+		Amount:  math.NewInt(1000),
 		Denom:   "ubze",
 	}
 
@@ -51,7 +51,7 @@ func (suite *IntegrationTestSuite) TestServiceUnlock_EnqueueMultipleEpochs() {
 		suite.k.SetPendingUnlockParticipant(suite.ctx, types.PendingUnlockParticipant{
 			Index:   fmt.Sprintf("%d/%s", epoch, fmt.Sprintf("%s/%s", "reward_1", addr.String())),
 			Address: addr.String(),
-			Amount:  "500",
+			Amount:  math.NewInt(500),
 			Denom:   "ubze",
 		})
 		suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epoch)
@@ -79,7 +79,7 @@ func (suite *IntegrationTestSuite) TestProcessQueue_SingleEntry() {
 	participant := types.PendingUnlockParticipant{
 		Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("%s/%s", "reward_1", addr.String())),
 		Address: addr.String(),
-		Amount:  "1000",
+		Amount:  math.NewInt(1000),
 		Denom:   "ubze",
 	}
 
@@ -118,19 +118,19 @@ func (suite *IntegrationTestSuite) TestProcessQueue_MultipleEntries() {
 		{
 			Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("%s/%s", "reward_1", addr1.String())),
 			Address: addr1.String(),
-			Amount:  "500",
+			Amount:  math.NewInt(500),
 			Denom:   "ubze",
 		},
 		{
 			Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("%s/%s", "reward_2", addr2.String())),
 			Address: addr2.String(),
-			Amount:  "750",
+			Amount:  math.NewInt(750),
 			Denom:   "utoken",
 		},
 		{
 			Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("%s/%s", "reward_3", addr3.String())),
 			Address: addr3.String(),
-			Amount:  "1000",
+			Amount:  math.NewInt(1000),
 			Denom:   "ubze",
 		},
 	}
@@ -162,7 +162,7 @@ func (suite *IntegrationTestSuite) TestProcessQueue_BankErrorKeepsEpochInQueue()
 	participant := types.PendingUnlockParticipant{
 		Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("%s/%s", "reward_1", addr.String())),
 		Address: addr.String(),
-		Amount:  "500",
+		Amount:  math.NewInt(500),
 		Denom:   "ubze",
 	}
 
@@ -194,7 +194,7 @@ func (suite *IntegrationTestSuite) TestProcessQueue_InvalidAddressKeepsEpochInQu
 	participant := types.PendingUnlockParticipant{
 		Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("%s/%s", "reward_1", "invalid-address")),
 		Address: "invalid-address",
-		Amount:  "500",
+		Amount:  math.NewInt(500),
 		Denom:   "ubze",
 	}
 
@@ -222,19 +222,19 @@ func (suite *IntegrationTestSuite) TestProcessQueue_MixedSuccessAndFailure() {
 		{
 			Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("%s/%s", "reward_1", addr1.String())),
 			Address: addr1.String(),
-			Amount:  "500",
+			Amount:  math.NewInt(500),
 			Denom:   "ubze",
 		},
 		{
 			Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("%s/%s", "reward_2", "invalid-address")),
 			Address: "invalid-address",
-			Amount:  "750",
+			Amount:  math.NewInt(750),
 			Denom:   "ubze",
 		},
 		{
 			Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("%s/%s", "reward_3", addr2.String())),
 			Address: addr2.String(),
-			Amount:  "1000",
+			Amount:  math.NewInt(1000),
 			Denom:   "utoken",
 		},
 	}
@@ -271,13 +271,13 @@ func (suite *IntegrationTestSuite) TestProcessQueue_DifferentEpochsOnlyRequested
 	suite.k.SetPendingUnlockParticipant(suite.ctx, types.PendingUnlockParticipant{
 		Index:   fmt.Sprintf("%d/%s", 200, fmt.Sprintf("%s/%s", "reward_1", addr1.String())),
 		Address: addr1.String(),
-		Amount:  "500",
+		Amount:  math.NewInt(500),
 		Denom:   "ubze",
 	})
 	suite.k.SetPendingUnlockParticipant(suite.ctx, types.PendingUnlockParticipant{
 		Index:   fmt.Sprintf("%d/%s", 201, fmt.Sprintf("%s/%s", "reward_2", addr2.String())),
 		Address: addr2.String(),
-		Amount:  "750",
+		Amount:  math.NewInt(750),
 		Denom:   "ubze",
 	})
 
@@ -305,7 +305,7 @@ func (suite *IntegrationTestSuite) TestProcessQueue_ZeroAmountKeepsEpochInQueue(
 	participant := types.PendingUnlockParticipant{
 		Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("%s/%s", "reward_1", addr.String())),
 		Address: addr.String(),
-		Amount:  "0",
+		Amount:  math.ZeroInt(),
 		Denom:   "ubze",
 	}
 
@@ -350,7 +350,7 @@ func (suite *IntegrationTestSuite) TestStore_GetBatchEpochPendingUnlockParticipa
 		suite.k.SetPendingUnlockParticipant(suite.ctx, types.PendingUnlockParticipant{
 			Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("reward_%d/%s", i+1, addr.String())),
 			Address: addr.String(),
-			Amount:  "100",
+			Amount:  math.NewInt(100),
 			Denom:   "ubze",
 		})
 	}

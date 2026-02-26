@@ -201,20 +201,20 @@ func (suite *IntegrationTestSuite) TestQueryStakingReward_StakingRewardParticipa
 		{
 			Address:  "bze1user1",
 			RewardId: "participant-reward-1",
-			Amount:   "1000",
-			JoinedAt: "500",
+			Amount:   math.NewInt(1000),
+			JoinedAt: math.LegacyNewDec(500),
 		},
 		{
 			Address:  "bze1user1",
 			RewardId: "participant-reward-2",
-			Amount:   "2000",
-			JoinedAt: "1000",
+			Amount:   math.NewInt(2000),
+			JoinedAt: math.LegacyNewDec(1000),
 		},
 		{
 			Address:  "bze1user2",
 			RewardId: "participant-reward-1",
-			Amount:   "1500",
-			JoinedAt: "750",
+			Amount:   math.NewInt(1500),
+			JoinedAt: math.LegacyNewDec(750),
 		},
 	}
 
@@ -264,20 +264,20 @@ func (suite *IntegrationTestSuite) TestQueryStakingReward_AllStakingRewardPartic
 		{
 			Address:  "bze1user1",
 			RewardId: "all-participant-reward-1",
-			Amount:   "1000",
-			JoinedAt: "500",
+			Amount:   math.NewInt(1000),
+			JoinedAt: math.LegacyNewDec(500),
 		},
 		{
 			Address:  "bze1user2",
 			RewardId: "all-participant-reward-2",
-			Amount:   "2000",
-			JoinedAt: "1000",
+			Amount:   math.NewInt(2000),
+			JoinedAt: math.LegacyNewDec(1000),
 		},
 		{
 			Address:  "bze1user3",
 			RewardId: "all-participant-reward-3",
-			Amount:   "1500",
-			JoinedAt: "750",
+			Amount:   math.NewInt(1500),
+			JoinedAt: math.LegacyNewDec(750),
 		},
 	}
 
@@ -335,13 +335,13 @@ func (suite *IntegrationTestSuite) TestQueryStakingReward_AllPendingUnlockPartic
 		{
 			Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("%s/%s", "reward_1", addr1.String())),
 			Address: addr1.String(),
-			Amount:  "1000",
+			Amount:  math.NewInt(1000),
 			Denom:   "ubze",
 		},
 		{
 			Index:   fmt.Sprintf("%d/%s", epochNumber+1, fmt.Sprintf("%s/%s", "reward_2", addr2.String())),
 			Address: addr2.String(),
-			Amount:  "2000",
+			Amount:  math.NewInt(2000),
 			Denom:   "utoken",
 		},
 	}
@@ -398,13 +398,13 @@ func (suite *IntegrationTestSuite) TestQueryStakingReward_AllPendingUnlockPartic
 		{
 			Index:   fmt.Sprintf("%d/%s", epochNumber, fmt.Sprintf("%s/%s", "reward_1", addr1.String())),
 			Address: addr1.String(),
-			Amount:  "1000",
+			Amount:  math.NewInt(1000),
 			Denom:   "ubze",
 		},
 		{
 			Index:   fmt.Sprintf("%d/%s", epochNumber+1, fmt.Sprintf("%s/%s", "reward_2", addr2.String())),
 			Address: addr2.String(),
-			Amount:  "2000",
+			Amount:  math.NewInt(2000),
 			Denom:   "utoken",
 		},
 	}

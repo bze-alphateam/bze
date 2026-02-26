@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"fmt"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,7 +11,7 @@ func (suite *IntegrationTestSuite) TestStorePendingUnlockParticipant_SetAndGet()
 	participant := types.PendingUnlockParticipant{
 		Index:   "test-index-1",
 		Address: sdk.AccAddress("participant").String(),
-		Amount:  "1000",
+		Amount:  math.NewInt(1000),
 		Denom:   "ubze",
 	}
 
@@ -39,7 +40,7 @@ func (suite *IntegrationTestSuite) TestStorePendingUnlockParticipant_UpdateExist
 	initialParticipant := types.PendingUnlockParticipant{
 		Index:   index,
 		Address: sdk.AccAddress("participant1").String(),
-		Amount:  "500",
+		Amount:  math.NewInt(500),
 		Denom:   "ubze",
 	}
 	suite.k.SetPendingUnlockParticipant(suite.ctx, initialParticipant)
@@ -48,7 +49,7 @@ func (suite *IntegrationTestSuite) TestStorePendingUnlockParticipant_UpdateExist
 	updatedParticipant := types.PendingUnlockParticipant{
 		Index:   index,
 		Address: sdk.AccAddress("participant2").String(),
-		Amount:  "1500",
+		Amount:  math.NewInt(1500),
 		Denom:   "uatom",
 	}
 	suite.k.SetPendingUnlockParticipant(suite.ctx, updatedParticipant)
@@ -65,7 +66,7 @@ func (suite *IntegrationTestSuite) TestStorePendingUnlockParticipant_Remove() {
 	participant := types.PendingUnlockParticipant{
 		Index:   "remove-test",
 		Address: sdk.AccAddress("participant").String(),
-		Amount:  "750",
+		Amount:  math.NewInt(750),
 		Denom:   "ubze",
 	}
 
@@ -90,19 +91,19 @@ func (suite *IntegrationTestSuite) TestStorePendingUnlockParticipant_GetAllPendi
 		{
 			Index:   "participant-1",
 			Address: sdk.AccAddress("addr1").String(),
-			Amount:  "1000",
+			Amount:  math.NewInt(1000),
 			Denom:   "ubze",
 		},
 		{
 			Index:   "participant-2",
 			Address: sdk.AccAddress("addr2").String(),
-			Amount:  "2000",
+			Amount:  math.NewInt(2000),
 			Denom:   "uatom",
 		},
 		{
 			Index:   "participant-3",
 			Address: sdk.AccAddress("addr3").String(),
-			Amount:  "3000",
+			Amount:  math.NewInt(3000),
 			Denom:   "ustake",
 		},
 	}
@@ -140,19 +141,19 @@ func (suite *IntegrationTestSuite) TestStorePendingUnlockParticipant_GetAllEpoch
 		{
 			Index:   fmt.Sprintf("%d/%s", epoch1, fmt.Sprintf("%s/%s", "reward_1", sdk.AccAddress("addr1").String())),
 			Address: sdk.AccAddress("addr1").String(),
-			Amount:  "1000",
+			Amount:  math.NewInt(1000),
 			Denom:   "ubze",
 		},
 		{
 			Index:   fmt.Sprintf("%d/%s", epoch1, fmt.Sprintf("%s/%s", "reward_2", sdk.AccAddress("addr2").String())),
 			Address: sdk.AccAddress("addr2").String(),
-			Amount:  "2000",
+			Amount:  math.NewInt(2000),
 			Denom:   "ubze",
 		},
 		{
 			Index:   fmt.Sprintf("%d/%s", epoch2, fmt.Sprintf("%s/%s", "reward_3", sdk.AccAddress("addr3").String())),
 			Address: sdk.AccAddress("addr3").String(),
-			Amount:  "3000",
+			Amount:  math.NewInt(3000),
 			Denom:   "ubze",
 		},
 	}
@@ -193,7 +194,7 @@ func (suite *IntegrationTestSuite) TestStorePendingUnlockParticipant_EmptyFields
 	participant := types.PendingUnlockParticipant{
 		Index:   "empty-test",
 		Address: "",
-		Amount:  "",
+		Amount:  math.ZeroInt(),
 		Denom:   "",
 	}
 
@@ -202,16 +203,17 @@ func (suite *IntegrationTestSuite) TestStorePendingUnlockParticipant_EmptyFields
 	retrievedParticipant, found := suite.k.GetPendingUnlockParticipant(suite.ctx, participant.Index)
 	suite.Require().True(found)
 	suite.Require().Equal("", retrievedParticipant.Address)
-	suite.Require().Equal("", retrievedParticipant.Amount)
+	suite.Require().Equal(math.ZeroInt(), retrievedParticipant.Amount)
 	suite.Require().Equal("", retrievedParticipant.Denom)
 }
 
 func (suite *IntegrationTestSuite) TestStorePendingUnlockParticipant_LargeAmounts() {
 	// Test with large amount values
+	largeAmount, _ := math.NewIntFromString("999999999999999999999999999999")
 	participant := types.PendingUnlockParticipant{
 		Index:   "large-amount-test",
 		Address: sdk.AccAddress("participant").String(),
-		Amount:  "999999999999999999999999999999",
+		Amount:  largeAmount,
 		Denom:   "ubze",
 	}
 

@@ -200,15 +200,12 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 		participant = types.StakingRewardParticipant{
 			Address:  msg.Creator,
 			RewardId: msg.RewardId,
-			Amount:   "0",
+			Amount:   math.ZeroInt(),
 		}
 	}
-	participant.JoinedAt = stakingReward.DistributedStake.String()
+	participant.JoinedAt = stakingReward.DistributedStake
 
-	amtInt, ok := math.NewIntFromString(participant.Amount)
-	if !ok {
-		return nil, fmt.Errorf("could not transform amount from storage into int")
-	}
+	amtInt := participant.Amount
 	amtInt = amtInt.Add(toCapture.AmountOf(stakingReward.StakingDenom))
 
 	//check if min stake requirement is met
@@ -216,7 +213,7 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 		return nil, fmt.Errorf("amount is smaller than staking reward min stake")
 	}
 
-	participant.Amount = amtInt.String()
+	participant.Amount = amtInt
 
 	stakedAmount = stakedAmount.Add(toCapture.AmountOf(stakingReward.StakingDenom))
 	stakingReward.StakedAmount = stakedAmount
@@ -262,7 +259,7 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 		return nil, errors.Wrapf(types.ErrInvalidRewardId, "you are not a participant in this staking reward")
 	}
 
-	partCoins, err := k.getAmountToCapture(stakingReward.StakingDenom, participation.Amount, int64(1))
+	partCoins, err := k.getAmountToCapture(stakingReward.StakingDenom, participation.Amount.String(), int64(1))
 	if err != nil {
 		return nil, err
 	}
@@ -446,15 +443,9 @@ func (k msgServer) checkUserBalances(ctx sdk.Context, neededCoins sdk.Coins, add
 // claimPending - sends the pending rewards to the participant and updates the participant.JoinedAt field with current
 // StakingReward.DistributedStake
 func (k msgServer) claimPending(ctx sdk.Context, sr types.StakingReward, participant *types.StakingRewardParticipant) (*sdk.Coin, error) {
-	deposited, err := math.LegacyNewDecFromStr(participant.Amount)
-	if err != nil {
-		return nil, err
-	}
+	deposited := math.LegacyNewDecFromInt(participant.Amount)
 	distributedStake := sr.DistributedStake
-	joinedAt, err := math.LegacyNewDecFromStr(participant.JoinedAt)
-	if err != nil {
-		return nil, err
-	}
+	joinedAt := participant.JoinedAt
 
 	zeroCoins := sdk.NewCoin(sr.PrizeDenom, math.NewInt(0))
 	//user has nothing to claim
@@ -490,7 +481,7 @@ func (k msgServer) claimPending(ctx sdk.Context, sr types.StakingReward, partici
 		return nil, err
 	}
 
-	participant.JoinedAt = sr.DistributedStake.String()
+	participant.JoinedAt = sr.DistributedStake
 
 	return &toSend, nil
 }
@@ -520,9 +511,7 @@ func (k msgServer) beginUnlock(ctx sdk.Context, p types.StakingRewardParticipant
 	if found {
 		//we already have a pending unlock for this reward and participant at the same epoch
 		//update the amount, so it can all be unlocked at once
-		inStoreAmount, _ := math.NewIntFromString(inStore.Amount)
-		pendingAmount, _ := math.NewIntFromString(pending.Amount)
-		pending.Amount = pendingAmount.Add(inStoreAmount).String()
+		pending.Amount = pending.Amount.Add(inStore.Amount)
 	}
 
 	k.SetPendingUnlockParticipant(ctx, pending)

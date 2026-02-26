@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 )
 
@@ -8,8 +9,8 @@ func (suite *IntegrationTestSuite) TestStoreStakingRewardParticipant_SetAndGet()
 	participant := types.StakingRewardParticipant{
 		Address:  "bze1abc123",
 		RewardId: "reward-1",
-		Amount:   "1000",
-		JoinedAt: "500",
+		Amount:   math.NewInt(1000),
+		JoinedAt: math.LegacyNewDec(500),
 	}
 
 	// Test SetStakingRewardParticipant
@@ -33,8 +34,8 @@ func (suite *IntegrationTestSuite) TestStoreStakingRewardParticipant_GetNonExist
 	participant := types.StakingRewardParticipant{
 		Address:  "bze1existing",
 		RewardId: "reward-1",
-		Amount:   "100",
-		JoinedAt: "50",
+		Amount:   math.NewInt(100),
+		JoinedAt: math.LegacyNewDec(50),
 	}
 	suite.k.SetStakingRewardParticipant(suite.ctx, participant)
 
@@ -46,22 +47,22 @@ func (suite *IntegrationTestSuite) TestStoreStakingRewardParticipant_SetMultiple
 	participant1 := types.StakingRewardParticipant{
 		Address:  "bze1user1",
 		RewardId: "reward-1",
-		Amount:   "500",
-		JoinedAt: "100",
+		Amount:   math.NewInt(500),
+		JoinedAt: math.LegacyNewDec(100),
 	}
 
 	participant2 := types.StakingRewardParticipant{
 		Address:  "bze1user2",
 		RewardId: "reward-1",
-		Amount:   "750",
-		JoinedAt: "150",
+		Amount:   math.NewInt(750),
+		JoinedAt: math.LegacyNewDec(150),
 	}
 
 	participant3 := types.StakingRewardParticipant{
 		Address:  "bze1user1",
 		RewardId: "reward-2",
-		Amount:   "1000",
-		JoinedAt: "200",
+		Amount:   math.NewInt(1000),
+		JoinedAt: math.LegacyNewDec(200),
 	}
 
 	// Set multiple participants
@@ -91,15 +92,15 @@ func (suite *IntegrationTestSuite) TestStoreStakingRewardParticipant_UpdateExist
 	originalParticipant := types.StakingRewardParticipant{
 		Address:  "bze1update",
 		RewardId: "reward-update",
-		Amount:   "300",
-		JoinedAt: "75",
+		Amount:   math.NewInt(300),
+		JoinedAt: math.LegacyNewDec(75),
 	}
 
 	updatedParticipant := types.StakingRewardParticipant{
 		Address:  "bze1update",
 		RewardId: "reward-update",
-		Amount:   "800",
-		JoinedAt: "125",
+		Amount:   math.NewInt(800),
+		JoinedAt: math.LegacyNewDec(125),
 	}
 
 	// Set original participant
@@ -119,8 +120,8 @@ func (suite *IntegrationTestSuite) TestStoreStakingRewardParticipant_Remove() {
 	participant := types.StakingRewardParticipant{
 		Address:  "bze1toremove",
 		RewardId: "reward-remove",
-		Amount:   "600",
-		JoinedAt: "90",
+		Amount:   math.NewInt(600),
+		JoinedAt: math.LegacyNewDec(90),
 	}
 
 	// Set the participant
@@ -156,26 +157,26 @@ func (suite *IntegrationTestSuite) TestStoreStakingRewardParticipant_GetAllMulti
 		{
 			Address:  "bze1participant1",
 			RewardId: "reward-1",
-			Amount:   "100",
-			JoinedAt: "10",
+			Amount:   math.NewInt(100),
+			JoinedAt: math.LegacyNewDec(10),
 		},
 		{
 			Address:  "bze1participant2",
 			RewardId: "reward-1",
-			Amount:   "200",
-			JoinedAt: "20",
+			Amount:   math.NewInt(200),
+			JoinedAt: math.LegacyNewDec(20),
 		},
 		{
 			Address:  "bze1participant1",
 			RewardId: "reward-2",
-			Amount:   "300",
-			JoinedAt: "30",
+			Amount:   math.NewInt(300),
+			JoinedAt: math.LegacyNewDec(30),
 		},
 		{
 			Address:  "bze1participant3",
 			RewardId: "reward-2",
-			Amount:   "400",
-			JoinedAt: "40",
+			Amount:   math.NewInt(400),
+			JoinedAt: math.LegacyNewDec(40),
 		},
 	}
 
@@ -206,22 +207,22 @@ func (suite *IntegrationTestSuite) TestStoreStakingRewardParticipant_CompositeKe
 	participant1 := types.StakingRewardParticipant{
 		Address:  "bze1same",
 		RewardId: "reward-A",
-		Amount:   "100",
-		JoinedAt: "10",
+		Amount:   math.NewInt(100),
+		JoinedAt: math.LegacyNewDec(10),
 	}
 
 	participant2 := types.StakingRewardParticipant{
 		Address:  "bze1same",
 		RewardId: "reward-B",
-		Amount:   "200",
-		JoinedAt: "20",
+		Amount:   math.NewInt(200),
+		JoinedAt: math.LegacyNewDec(20),
 	}
 
 	participant3 := types.StakingRewardParticipant{
 		Address:  "bze1different",
 		RewardId: "reward-A",
-		Amount:   "300",
-		JoinedAt: "30",
+		Amount:   math.NewInt(300),
+		JoinedAt: math.LegacyNewDec(30),
 	}
 
 	// Set all participants
@@ -252,15 +253,15 @@ func (suite *IntegrationTestSuite) TestStoreStakingRewardParticipant_RemoveIndep
 	participant1 := types.StakingRewardParticipant{
 		Address:  "bze1user1",
 		RewardId: "reward-1",
-		Amount:   "100",
-		JoinedAt: "10",
+		Amount:   math.NewInt(100),
+		JoinedAt: math.LegacyNewDec(10),
 	}
 
 	participant2 := types.StakingRewardParticipant{
 		Address:  "bze1user2",
 		RewardId: "reward-1",
-		Amount:   "200",
-		JoinedAt: "20",
+		Amount:   math.NewInt(200),
+		JoinedAt: math.LegacyNewDec(20),
 	}
 
 	// Set both participants
