@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"cosmossdk.io/math"
-	"fmt"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	"time"
 )
@@ -11,8 +10,8 @@ func getRandomOrder(amt int64) types.Order {
 	return types.Order{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeBuy,
-		Amount:    fmt.Sprintf("%d", amt),
-		Price:     "1233001",
+		Amount:    math.NewInt(amt),
+		Price:     math.LegacyMustNewDecFromStr("1233001"),
 		Owner:     "test1_____",
 	}
 }
@@ -42,7 +41,7 @@ func (suite *IntegrationTestSuite) getUserOrderRef(order types.Order) (types.Ord
 }
 
 func (suite *IntegrationTestSuite) getPriceOrderRef(order types.Order) (types.OrderReference, bool) {
-	prices := suite.k.GetPriceOrderByPrice(suite.ctx, order.MarketId, order.OrderType, order.Price)
+	prices := suite.k.GetPriceOrderByPrice(suite.ctx, order.MarketId, order.OrderType, order.Price.String())
 
 	found := false
 	var ordRef types.OrderReference
@@ -61,22 +60,22 @@ func (suite *IntegrationTestSuite) TestStore_NewOrder() {
 	cases := map[string]struct {
 		MarketId  string
 		OrderType string
-		Amount    string
-		Price     string
+		Amount    math.Int
+		Price     math.LegacyDec
 		Owner     string
 	}{
 		"buy order": {
 			MarketId:  getMarketId(),
 			OrderType: types.OrderTypeBuy,
-			Amount:    "10",
-			Price:     "100",
+			Amount:    math.NewInt(10),
+			Price:     math.LegacyMustNewDecFromStr("100"),
 			Owner:     "123",
 		},
 		"sell order": {
 			MarketId:  getMarketId(),
 			OrderType: types.OrderTypeSell,
-			Amount:    "100",
-			Price:     "10",
+			Amount:    math.NewInt(100),
+			Price:     math.LegacyMustNewDecFromStr("10"),
 			Owner:     "1234444555666",
 		},
 	}

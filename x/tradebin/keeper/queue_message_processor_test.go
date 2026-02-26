@@ -162,9 +162,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 	for _, or := range allUserOrders.List {
 		toCancelOrder, ok := suite.k.GetOrder(suite.ctx, or.MarketId, or.OrderType, or.Id)
 		suite.Require().True(ok)
-		canceledAmount, ok := math.NewIntFromString(toCancelOrder.Amount)
-		suite.Require().True(ok)
-		canceledCoins, _, err := suite.k.GetOrderSdkCoin(toCancelOrder.OrderType, toCancelOrder.Price, canceledAmount, &market)
+		canceledCoins, _, err := suite.k.GetOrderSdkCoin(toCancelOrder.OrderType, toCancelOrder.Price.String(), toCancelOrder.Amount, &market)
 		suite.Require().Nil(err)
 		qm := types.QueueMessage{
 			MarketId:    or.MarketId,
@@ -375,21 +373,17 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	var smallOrders []types.Order
 	for _, ord := range allOrders {
 		suite.Require().Equal(ord.OrderType, types.OrderTypeBuy)
-		ordAmtInt, _ := math.NewIntFromString(ord.Amount)
-		if ordAmtInt.LT(sellAmt) {
+		if ord.Amount.LT(sellAmt) {
 			smallOrders = append(smallOrders, ord)
 		}
 	}
 
 	//check the smaller order is there, and it has the right values
-	suite.Require().Equal(len(smallOrders), 1)
-	suite.Require().Equal(smallOrders[0].Amount, sellAmt.MulRaw(3).QuoRaw(4).String())
-	suite.Require().Equal(smallOrders[0].Price, sellPriceDec.String())
+	suite.Require().True(smallOrders[0].Amount.Equal(sellAmt.MulRaw(3).QuoRaw(4)))
+	suite.Require().True(smallOrders[0].Price.Equal(sellPriceDec))
 
-	smallOrdAmt, _ := math.NewIntFromString(smallOrders[0].Amount)
-
-	newOrderMakerCoins, _, err := suite.k.GetOrderSdkCoin(types.TheOtherOrderType(smallOrders[0].OrderType), smallOrders[0].Price, smallOrdAmt, &market)
-	newOrderTakerCoins, _, err := suite.k.GetOrderSdkCoin(smallOrders[0].OrderType, smallOrders[0].Price, smallOrdAmt, &market)
+	newOrderMakerCoins, _, err := suite.k.GetOrderSdkCoin(types.TheOtherOrderType(smallOrders[0].OrderType), smallOrders[0].Price.String(), smallOrders[0].Amount, &market)
+	newOrderTakerCoins, _, err := suite.k.GetOrderSdkCoin(smallOrders[0].OrderType, smallOrders[0].Price.String(), smallOrders[0].Amount, &market)
 	suite.Require().Nil(err)
 	suite.Require().Nil(err)
 	tradedStakeCoins = tradedStakeCoins.Add(takerCoins).Sub(newOrderMakerCoins)
@@ -579,16 +573,15 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching_WithD
 	var smallOrders []types.Order
 	for _, ord := range allOrders {
 		suite.Require().Equal(ord.OrderType, types.OrderTypeBuy)
-		ordAmtInt, _ := math.NewIntFromString(ord.Amount)
-		if ordAmtInt.LT(sellAmt) {
+		if ord.Amount.LT(sellAmt) {
 			smallOrders = append(smallOrders, ord)
 		}
 	}
 
 	//check the smaller order is there, and it has the right values
 	suite.Require().Equal(len(smallOrders), 1)
-	suite.Require().Equal(smallOrders[0].Amount, sellAmt.MulRaw(3).QuoRaw(4).String())
-	suite.Require().Equal(smallOrders[0].Price, sellPriceDec.String())
+	suite.Require().True(smallOrders[0].Amount.Equal(sellAmt.MulRaw(3).QuoRaw(4)))
+	suite.Require().True(smallOrders[0].Price.Equal(sellPriceDec))
 
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceDec.String(), buyAmt.MulRaw(orderCounter).String())
 	//sell order should not exist anymore
@@ -836,14 +829,12 @@ func (suite *IntegrationTestSuite) TestFillAggregatedOrder_ContinuePastUnfillabl
 	suite.Require().Len(allOrders, 2)
 
 	for _, ord := range allOrders {
-		ordAmt, ok := math.NewIntFromString(ord.Amount)
-		suite.Require().True(ok)
-		if ordAmt.Equal(smallSellAmount) {
+		if ord.Amount.Equal(smallSellAmount) {
 			// Small order should be untouched
-			suite.Require().Equal(smallSellAmount.String(), ord.Amount)
+			suite.Require().True(ord.Amount.Equal(smallSellAmount))
 		} else {
 			// Large order should be partially filled: 100 - 2 = 98
-			suite.Require().Equal(largeSellAmount.Sub(buyAmount).String(), ord.Amount)
+			suite.Require().True(ord.Amount.Equal(largeSellAmount.Sub(buyAmount)))
 		}
 	}
 
@@ -913,7 +904,7 @@ func (suite *IntegrationTestSuite) TestFillAggregatedOrder_EarlyExitMsgBelowMinA
 	// First sell order should be removed (fully filled), second should remain untouched
 	allOrders = suite.k.GetAllOrder(suite.ctx)
 	suite.Require().Len(allOrders, 1)
-	suite.Require().Equal(sellAmount.String(), allOrders[0].Amount)
+	suite.Require().True(allOrders[0].Amount.Equal(sellAmount))
 
 	// Aggregated sell should be just the remaining second order: 2
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, priceDec.String(), sellAmount.String())
@@ -1027,17 +1018,15 @@ func (suite *IntegrationTestSuite) TestFillAggregatedOrder_ContinueThenEarlyExit
 	// Verify each order's amount
 	executedAmount := minAmount // 20 (what was filled from order 2)
 	for _, ord := range allOrders {
-		ordAmt, ok := math.NewIntFromString(ord.Amount)
-		suite.Require().True(ok)
-		if ordAmt.Equal(unfillableAmount) {
+		if ord.Amount.Equal(unfillableAmount) {
 			// Order 1: untouched at 30
-			suite.Require().Equal(unfillableAmount.String(), ord.Amount)
-		} else if ordAmt.Equal(partialFillAmount.Sub(executedAmount)) {
+			suite.Require().True(ord.Amount.Equal(unfillableAmount))
+		} else if ord.Amount.Equal(partialFillAmount.Sub(executedAmount)) {
 			// Order 2: partially filled, 40 - 20 = 20
-			suite.Require().Equal(partialFillAmount.Sub(executedAmount).String(), ord.Amount)
+			suite.Require().True(ord.Amount.Equal(partialFillAmount.Sub(executedAmount)))
 		} else {
 			// Order 3: untouched at 200
-			suite.Require().Equal(largeAmount.String(), ord.Amount)
+			suite.Require().True(ord.Amount.Equal(largeAmount))
 		}
 	}
 

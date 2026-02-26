@@ -92,7 +92,7 @@ func (k Keeper) SaveOrder(ctx sdk.Context, order types.Order) types.Order {
 		OrderType: order.OrderType,
 	}
 
-	k.SetPriceOrder(ctx, orderRef, order.Price)
+	k.SetPriceOrder(ctx, orderRef, order.Price.String())
 	k.SetUserOrder(ctx, orderRef, order.Owner)
 
 	return order
@@ -103,7 +103,7 @@ func (k Keeper) RemoveOrder(ctx sdk.Context, order types.Order) {
 	key := types.OrderKey(order.MarketId, order.OrderType, order.Id)
 	store.Delete(key)
 
-	k.RemovePriceOrder(ctx, order.MarketId, order.OrderType, order.Price, order.Id)
+	k.RemovePriceOrder(ctx, order.MarketId, order.OrderType, order.Price.String(), order.Id)
 	k.RemoveUserOrder(ctx, order.Owner, order.MarketId, order.OrderType, order.Id)
 }
 

@@ -41,8 +41,8 @@ func (suite *IntegrationTestSuite) Msg_TestCancelOrder_Unauthorized() {
 	order := suite.k.NewOrder(suite.ctx, types.Order{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeBuy,
-		Amount:    "102",
-		Price:     "1",
+		Amount:    math.NewInt(102),
+		Price:     math.LegacyMustNewDecFromStr("1"),
 		Owner:     "me",
 	})
 
@@ -60,8 +60,8 @@ func (suite *IntegrationTestSuite) Msg_TestCancelOrder_CancelBuy_Success() {
 	order := suite.k.NewOrder(suite.ctx, types.Order{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeBuy,
-		Amount:    "102000",
-		Price:     "1",
+		Amount:    math.NewInt(102000),
+		Price:     math.LegacyMustNewDecFromStr("1"),
 		Owner:     "me",
 	})
 
@@ -88,8 +88,8 @@ func (suite *IntegrationTestSuite) Msg_TestCancelOrder_CancelSell_Success() {
 	order := suite.k.NewOrder(suite.ctx, types.Order{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeSell,
-		Amount:    "10200021",
-		Price:     "1000",
+		Amount:    math.NewInt(10200021),
+		Price:     math.LegacyMustNewDecFromStr("1000"),
 		Owner:     "me",
 	})
 
@@ -116,8 +116,8 @@ func (suite *IntegrationTestSuite) TestCancelOrder_DuplicateCancelRejected() {
 	order := suite.k.NewOrder(suite.ctx, types.Order{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeBuy,
-		Amount:    "102000",
-		Price:     "1",
+		Amount:    math.NewInt(102000),
+		Price:     math.LegacyMustNewDecFromStr("1"),
 		Owner:     "me",
 	})
 
@@ -157,8 +157,8 @@ func (suite *IntegrationTestSuite) TestCancelOrder_PendingCancelClearedAfterProc
 	order := suite.k.NewOrder(suite.ctx, types.Order{
 		MarketId:  getMarketId(),
 		OrderType: types.OrderTypeBuy,
-		Amount:    "102000",
-		Price:     "1",
+		Amount:    math.NewInt(102000),
+		Price:     math.LegacyMustNewDecFromStr("1"),
 		Owner:     addr1.String(),
 	})
 
@@ -175,8 +175,7 @@ func (suite *IntegrationTestSuite) TestCancelOrder_PendingCancelClearedAfterProc
 	suite.Require().True(suite.k.HasPendingCancel(suite.ctx, getMarketId(), types.OrderTypeBuy, order.Id))
 
 	// Process the cancel message
-	canceledAmount, _ := math.NewIntFromString(order.Amount)
-	canceledCoins, _, err := suite.k.GetOrderSdkCoin(order.OrderType, order.Price, canceledAmount, &market)
+	canceledCoins, _, err := suite.k.GetOrderSdkCoin(order.OrderType, order.Price.String(), order.Amount, &market)
 	suite.Require().Nil(err)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, addr1, sdk.NewCoins(canceledCoins))
 	engine.ProcessQueueMessages(suite.ctx)
@@ -785,18 +784,16 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_StressBalance
 	for _, or := range allOrders {
 		//search to see if an opposite order with the same price already exists
 		//if so it means the engine failed to match them when they were processed
-		oppositeKey := fmt.Sprintf("%s_%s_%s", or.MarketId, or.Price, types.TheOtherOrderType(or.OrderType))
+		oppositeKey := fmt.Sprintf("%s_%s_%s", or.MarketId, or.Price.String(), types.TheOtherOrderType(or.OrderType))
 		id, ok := foundOrderTypesByPrice[oppositeKey]
-		suite.Require().False(ok, fmt.Sprintf("order [%s] has the same price [%s] as [%s]", id, or.Price, or.Id))
+		suite.Require().False(ok, fmt.Sprintf("order [%s] has the same price [%s] as [%s]", id, or.Price.String(), or.Id))
 
 		//save locally to check later
-		key := fmt.Sprintf("%s_%s_%s", or.MarketId, or.Price, or.OrderType)
+		key := fmt.Sprintf("%s_%s_%s", or.MarketId, or.Price.String(), or.OrderType)
 		foundOrderTypesByPrice[key] = or.Id
-		amtInt, ok := math.NewIntFromString(or.Amount)
-		suite.Require().True(ok)
 		pickMarket, ok := marketsMap[or.MarketId]
 		suite.Require().True(ok)
-		coins, _, err := suite.k.GetOrderSdkCoin(or.OrderType, or.Price, amtInt, &pickMarket)
+		coins, _, err := suite.k.GetOrderSdkCoin(or.OrderType, or.Price.String(), or.Amount, &pickMarket)
 		suite.Require().NoError(err)
 
 		amounts = amounts.Add(coins)
@@ -807,12 +804,12 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_StressBalance
 				MarketId:  or.MarketId,
 				OrderType: or.OrderType,
 				Amount:    "0",
-				Price:     or.Price,
+				Price:     or.Price.String(),
 			}
 		}
 		aggAmt, ok := math.NewIntFromString(agg.Amount)
 		suite.Require().True(ok)
-		aggAmt = aggAmt.Add(amtInt)
+		aggAmt = aggAmt.Add(or.Amount)
 		agg.Amount = aggAmt.String()
 		aggregatedOrders[key] = agg
 	}
@@ -1080,11 +1077,11 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderPartialFill_Sell() 
 	remainingOrderChecked := false
 	for _, order := range all {
 		//let's find our order and check if it contains the correct amount
-		if order.Price != math.LegacyMustNewDecFromStr("1").String() {
+		if !order.Price.Equal(math.LegacyMustNewDecFromStr("1")) {
 			continue
 		}
 
-		suite.Require().EqualValues(order.Amount, fmt.Sprintf("%d", 1000000-500000))
+		suite.Require().True(order.Amount.Equal(math.NewInt(1000000 - 500000)))
 		remainingOrderChecked = true
 		break
 	}
@@ -1144,11 +1141,11 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderPartialFill_Buy() {
 	remainingOrderChecked := false
 	for _, order := range all {
 		//let's find our order and check if it contains the correct amount
-		if order.Price != math.LegacyMustNewDecFromStr("1").String() {
+		if !order.Price.Equal(math.LegacyMustNewDecFromStr("1")) {
 			continue
 		}
 
-		suite.Require().EqualValues(order.Amount, fmt.Sprintf("%d", 1000000-500000))
+		suite.Require().True(order.Amount.Equal(math.NewInt(1000000 - 500000)))
 		remainingOrderChecked = true
 		break
 	}
@@ -1208,7 +1205,7 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderFullFill_Sell() {
 	suite.Require().Len(all, 9)
 	for _, order := range all {
 		//let's find our order and check if it contains the correct amount
-		suite.Require().NotEqual(order.Price, math.LegacyMustNewDecFromStr("1").String())
+		suite.Require().False(order.Price.Equal(math.LegacyMustNewDecFromStr("1")))
 	}
 }
 
@@ -1264,7 +1261,7 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneOrderFullFill_Buy() {
 	suite.Require().Len(all, 9)
 	for _, order := range all {
 		//let's find our order and check if it contains the correct amount
-		suite.Require().NotEqual(order.Price, math.LegacyMustNewDecFromStr("1000000").String())
+		suite.Require().False(order.Price.Equal(math.LegacyMustNewDecFromStr("1000000")))
 	}
 }
 
@@ -1332,13 +1329,13 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoOrdersOnePartialFill_Sel
 	suite.Require().Len(all, 9)
 	remainingOrderChecked := false
 	for _, order := range all {
-		suite.Require().NotEqual(order.Price, allPrices[0])
+		suite.Require().NotEqual(order.Price.String(), allPrices[0])
 		//let's find our order and check if it contains the correct amount
-		if order.Price != allPrices[1] {
+		if order.Price.String() != allPrices[1] {
 			continue
 		}
 
-		suite.Require().EqualValues(order.Amount, fmt.Sprintf("%d", 1000000-500000))
+		suite.Require().True(order.Amount.Equal(math.NewInt(1000000 - 500000)))
 		remainingOrderChecked = true
 		break
 	}
@@ -1412,13 +1409,13 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoOrdersOnePartialFill_Buy
 	suite.Require().Len(all, 9)
 	remainingOrderChecked := false
 	for _, order := range all {
-		suite.Require().NotEqual(order.Price, allPrices[0])
+		suite.Require().NotEqual(order.Price.String(), allPrices[0])
 		//let's find our order and check if it contains the correct amount
-		if order.Price != allPrices[1] {
+		if order.Price.String() != allPrices[1] {
 			continue
 		}
 
-		suite.Require().EqualValues(order.Amount, fmt.Sprintf("%d", 1000000-500000))
+		suite.Require().True(order.Amount.Equal(math.NewInt(1000000 - 500000)))
 		remainingOrderChecked = true
 		break
 	}
@@ -1491,8 +1488,8 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoFullyFilledOrders_Buy() 
 	//the same number of orders should be present (we filled only half of first order)
 	suite.Require().Len(all, 8)
 	for _, order := range all {
-		suite.Require().NotEqual(order.Price, allPrices[0])
-		suite.Require().NotEqual(order.Price, allPrices[1])
+		suite.Require().NotEqual(order.Price.String(), allPrices[0])
+		suite.Require().NotEqual(order.Price.String(), allPrices[1])
 	}
 }
 
@@ -1559,8 +1556,8 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoFullyFilledOrders_Sell()
 	//the same number of orders should be present (we filled only half of first order)
 	suite.Require().Len(all, 8)
 	for _, order := range all {
-		suite.Require().NotEqual(order.Price, allPrices[0])
-		suite.Require().NotEqual(order.Price, allPrices[1])
+		suite.Require().NotEqual(order.Price.String(), allPrices[0])
+		suite.Require().NotEqual(order.Price.String(), allPrices[1])
 	}
 }
 
@@ -1617,7 +1614,7 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneFullyFilledOrderWithExtr
 	//the same number of orders should be present (we filled only half of first order)
 	suite.Require().Len(all, 9)
 	for _, order := range all {
-		suite.Require().NotEqual(order.Price, allPrices[0])
+		suite.Require().NotEqual(order.Price.String(), allPrices[0])
 	}
 }
 
@@ -1673,7 +1670,7 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_OneFullyFilledOrderWithExtr
 	//the same number of orders should be present (we filled only half of first order)
 	suite.Require().Len(all, 9)
 	for _, order := range all {
-		suite.Require().NotEqual(order.Price, allPrices[0])
+		suite.Require().NotEqual(order.Price.String(), allPrices[0])
 	}
 }
 
@@ -1741,9 +1738,9 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoFullyFilledOrdersWithExt
 	//the same number of orders should be present (we filled only half of first order)
 	suite.Require().Len(all, 8)
 	for _, order := range all {
-		suite.Require().NotEqual(order.Price, allPrices[0])
-		suite.Require().NotEqual(order.Price, allPrices[1])
-		suite.Require().Equal(order.Amount, "1000000")
+		suite.Require().NotEqual(order.Price.String(), allPrices[0])
+		suite.Require().NotEqual(order.Price.String(), allPrices[1])
+		suite.Require().True(order.Amount.Equal(math.NewInt(1000000)))
 	}
 }
 
@@ -1811,9 +1808,9 @@ func (suite *IntegrationTestSuite) TestMsg_OrderFill_TwoFullyFilledOrdersWithExt
 	//the same number of orders should be present (we filled only half of first order)
 	suite.Require().Len(all, 8)
 	for _, order := range all {
-		suite.Require().NotEqual(order.Price, allPrices[0])
-		suite.Require().NotEqual(order.Price, allPrices[1])
-		suite.Require().Equal(order.Amount, "1000000")
+		suite.Require().NotEqual(order.Price.String(), allPrices[0])
+		suite.Require().NotEqual(order.Price.String(), allPrices[1])
+		suite.Require().True(order.Amount.Equal(math.NewInt(1000000)))
 	}
 }
 
