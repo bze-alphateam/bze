@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/testutil/sample"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
@@ -11,8 +12,8 @@ import (
 func TestNewMsgCreateOrder(t *testing.T) {
 	creator := sample.AccAddress()
 	orderType := OrderTypeBuy
-	amount := "1000"
-	price := "1.5"
+	amount := math.NewInt(1000)
+	price := math.LegacyMustNewDecFromStr("1.5")
 	marketId := "BTC-USD"
 
 	msg := NewMsgCreateOrder(creator, orderType, amount, price, marketId)
@@ -27,8 +28,8 @@ func TestNewMsgCreateOrder(t *testing.T) {
 func TestMsgCreateOrder_ValidateBasic(t *testing.T) {
 	validCreator := sample.AccAddress()
 	validOrderType := OrderTypeBuy
-	validAmount := "1000"
-	validPrice := "1.5"
+	validAmount := math.NewInt(1000)
+	validPrice := math.LegacyMustNewDecFromStr("1.5")
 	validMarketId := "BTC-USD"
 
 	tests := []struct {
@@ -103,33 +104,11 @@ func TestMsgCreateOrder_ValidateBasic(t *testing.T) {
 			err: ErrInvalidOrderType,
 		},
 		{
-			name: "invalid amount - empty",
-			msg: MsgCreateOrder{
-				Creator:   validCreator,
-				OrderType: validOrderType,
-				Amount:    "",
-				Price:     validPrice,
-				MarketId:  validMarketId,
-			},
-			err: ErrInvalidOrderAmount,
-		},
-		{
-			name: "invalid amount - not a number",
-			msg: MsgCreateOrder{
-				Creator:   validCreator,
-				OrderType: validOrderType,
-				Amount:    "invalid",
-				Price:     validPrice,
-				MarketId:  validMarketId,
-			},
-			err: ErrInvalidOrderAmount,
-		},
-		{
 			name: "invalid amount - negative",
 			msg: MsgCreateOrder{
 				Creator:   validCreator,
 				OrderType: validOrderType,
-				Amount:    "-1000",
+				Amount:    math.NewInt(-1000),
 				Price:     validPrice,
 				MarketId:  validMarketId,
 			},
@@ -140,44 +119,11 @@ func TestMsgCreateOrder_ValidateBasic(t *testing.T) {
 			msg: MsgCreateOrder{
 				Creator:   validCreator,
 				OrderType: validOrderType,
-				Amount:    "0",
+				Amount:    math.NewInt(0),
 				Price:     validPrice,
 				MarketId:  validMarketId,
 			},
 			err: ErrInvalidOrderAmount,
-		},
-		{
-			name: "invalid amount - decimal",
-			msg: MsgCreateOrder{
-				Creator:   validCreator,
-				OrderType: validOrderType,
-				Amount:    "1000.5",
-				Price:     validPrice,
-				MarketId:  validMarketId,
-			},
-			err: ErrInvalidOrderAmount,
-		},
-		{
-			name: "invalid price - empty",
-			msg: MsgCreateOrder{
-				Creator:   validCreator,
-				OrderType: validOrderType,
-				Amount:    validAmount,
-				Price:     "",
-				MarketId:  validMarketId,
-			},
-			err: ErrInvalidOrderPrice,
-		},
-		{
-			name: "invalid price - not a number",
-			msg: MsgCreateOrder{
-				Creator:   validCreator,
-				OrderType: validOrderType,
-				Amount:    validAmount,
-				Price:     "invalid",
-				MarketId:  validMarketId,
-			},
-			err: ErrInvalidOrderPrice,
 		},
 		{
 			name: "invalid price - negative",
@@ -185,7 +131,7 @@ func TestMsgCreateOrder_ValidateBasic(t *testing.T) {
 				Creator:   validCreator,
 				OrderType: validOrderType,
 				Amount:    validAmount,
-				Price:     "-1.5",
+				Price:     math.LegacyMustNewDecFromStr("-1.5"),
 				MarketId:  validMarketId,
 			},
 			err: ErrInvalidOrderPrice,
@@ -196,7 +142,7 @@ func TestMsgCreateOrder_ValidateBasic(t *testing.T) {
 				Creator:   validCreator,
 				OrderType: validOrderType,
 				Amount:    validAmount,
-				Price:     "0",
+				Price:     math.LegacyMustNewDecFromStr("0"),
 				MarketId:  validMarketId,
 			},
 			err: ErrInvalidOrderPrice,
@@ -207,7 +153,7 @@ func TestMsgCreateOrder_ValidateBasic(t *testing.T) {
 				Creator:   validCreator,
 				OrderType: validOrderType,
 				Amount:    validAmount,
-				Price:     "0.0",
+				Price:     math.LegacyMustNewDecFromStr("0.0"),
 				MarketId:  validMarketId,
 			},
 			err: ErrInvalidOrderPrice,
@@ -237,7 +183,7 @@ func TestMsgCreateOrder_ValidateBasic(t *testing.T) {
 			msg: MsgCreateOrder{
 				Creator:   validCreator,
 				OrderType: validOrderType,
-				Amount:    "1",
+				Amount:    math.NewInt(1),
 				Price:     validPrice,
 				MarketId:  validMarketId,
 			},
@@ -247,7 +193,7 @@ func TestMsgCreateOrder_ValidateBasic(t *testing.T) {
 			msg: MsgCreateOrder{
 				Creator:   validCreator,
 				OrderType: validOrderType,
-				Amount:    "999999999999999",
+				Amount:    math.NewInt(999999999999999),
 				Price:     validPrice,
 				MarketId:  validMarketId,
 			},
@@ -258,7 +204,7 @@ func TestMsgCreateOrder_ValidateBasic(t *testing.T) {
 				Creator:   validCreator,
 				OrderType: validOrderType,
 				Amount:    validAmount,
-				Price:     "0.000001",
+				Price:     math.LegacyMustNewDecFromStr("0.000001"),
 				MarketId:  validMarketId,
 			},
 		},
@@ -268,7 +214,7 @@ func TestMsgCreateOrder_ValidateBasic(t *testing.T) {
 				Creator:   validCreator,
 				OrderType: validOrderType,
 				Amount:    validAmount,
-				Price:     "999999.999999",
+				Price:     math.LegacyMustNewDecFromStr("999999.999999"),
 				MarketId:  validMarketId,
 			},
 		},
@@ -278,7 +224,7 @@ func TestMsgCreateOrder_ValidateBasic(t *testing.T) {
 				Creator:   validCreator,
 				OrderType: validOrderType,
 				Amount:    validAmount,
-				Price:     "100",
+				Price:     math.LegacyMustNewDecFromStr("100"),
 				MarketId:  validMarketId,
 			},
 		},

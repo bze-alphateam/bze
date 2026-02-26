@@ -60,8 +60,14 @@ message MsgCreateOrder {
   option (cosmos.msg.v1.signer) = "creator";
   string creator    = 1;
   string order_type = 2;
-  string amount     = 3;
-  string price      = 4;
+  string amount     = 3 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string price      = 4 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
   string market_id  = 5;
 }
 

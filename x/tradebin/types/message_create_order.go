@@ -20,7 +20,7 @@ var minPrice = math.LegacyNewDecWithPrec(1, 10)
 
 var _ sdk.Msg = &MsgCreateOrder{}
 
-func NewMsgCreateOrder(creator string, orderType string, amount string, price string, marketId string) *MsgCreateOrder {
+func NewMsgCreateOrder(creator string, orderType string, amount math.Int, price math.LegacyDec, marketId string) *MsgCreateOrder {
 	return &MsgCreateOrder{
 		Creator:   creator,
 		OrderType: orderType,
@@ -44,20 +44,11 @@ func (msg *MsgCreateOrder) ValidateBasic() error {
 		return errorsmod.Wrapf(ErrInvalidOrderType, "invalid order type")
 	}
 
-	amtInt, ok := math.NewIntFromString(msg.Amount)
-	if !ok {
-		return errorsmod.Wrapf(ErrInvalidOrderAmount, "could not convert order amount")
-	}
-	if !amtInt.IsPositive() {
+	if !msg.Amount.IsPositive() {
 		return errorsmod.Wrapf(ErrInvalidOrderAmount, "invalid order amount")
 	}
 
-	priceDec, err := math.LegacyNewDecFromStr(msg.Price)
-	if err != nil {
-		return errorsmod.Wrapf(ErrInvalidOrderPrice, "invalid price provided")
-	}
-
-	if priceDec.LTE(minPrice) {
+	if msg.Price.LTE(minPrice) {
 		return errorsmod.Wrapf(ErrInvalidOrderPrice, "price should be higher than %s", minPrice.String())
 	}
 

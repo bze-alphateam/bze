@@ -64,16 +64,12 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 		return nil, types.ErrInvalidOrderPrice.Wrapf("check price failed: %v", err)
 	}
 
-	minAmt, err := CalculateMinAmount(msg.Price)
+	minAmt, err := CalculateMinAmountFromDecPrice(msg.Price)
 	if err != nil {
 		return nil, types.ErrInvalidOrderPrice.Wrapf("could not calculate minimum amount: %v", err)
 	}
 
-	amtInt, ok := math.NewIntFromString(msg.Amount)
-	if !ok {
-		return nil, types.ErrInvalidOrderAmount.Wrapf("amount could not be converted to Int")
-	}
-	if minAmt.GT(amtInt) {
+	if minAmt.GT(msg.Amount) {
 		return nil, types.ErrInvalidOrderAmount.Wrapf("amount should be bigger than: %s", minAmt.String())
 	}
 
@@ -110,8 +106,8 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 	//calculate needed funds for this order
 	ocReq := types.OrderCoinsArguments{
 		OrderType:    msg.OrderType,
-		OrderPrice:   msg.Price,
-		OrderAmount:  amtInt,
+		OrderPrice:   msg.Price.String(),
+		OrderAmount:  msg.Amount,
 		Market:       &market,
 		UserAddress:  msg.Creator,
 		UserReceives: false,
@@ -133,17 +129,12 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 		return nil, err
 	}
 
-	priceDec, err := math.LegacyNewDecFromStr(msg.Price)
-	if err != nil {
-		return nil, types.ErrInvalidOrderPrice.Wrapf("could not parse price: %v", err)
-	}
-
 	qm := types.QueueMessage{
 		MarketId:    msg.MarketId,
 		OrderType:   msg.OrderType,
 		MessageType: msg.OrderType,
-		Amount:      amtInt,
-		Price:       priceDec,
+		Amount:      msg.Amount,
+		Price:       msg.Price,
 		Owner:       msg.Creator,
 	}
 
@@ -348,7 +339,7 @@ func (k msgServer) emitOrderCreateMessageEvent(ctx sdk.Context, qm *types.QueueM
 
 func (k msgServer) captureMsgFees(ctx sdk.Context, msg *types.MsgCreateOrder, sender sdk.AccAddress) (sdk.Coin, error) {
 	//used to decide if it's market taker or market maker
-	_, found := k.GetAggregatedOrder(ctx, msg.MarketId, types.TheOtherOrderType(msg.OrderType), msg.Price)
+	_, found := k.GetAggregatedOrder(ctx, msg.MarketId, types.TheOtherOrderType(msg.OrderType), msg.Price.String())
 
 	return k.captureTradingFees(ctx, sender, found)
 }
@@ -406,18 +397,12 @@ func (k msgServer) captureTradingFees(ctx sdk.Context, sender sdk.AccAddress, is
 //
 // TODO: implement a proper price "oracle" for bid and ask. We could store them on each market
 func (k msgServer) checkPrice(ctx sdk.Context, msg *types.MsgCreateOrder) error {
-	currentPrice, err := math.LegacyNewDecFromStr(msg.Price)
-	if err != nil {
-		//should never happen! Message should be validated before this function is called
-		return fmt.Errorf("could not parse current price: %s", msg.Price)
-	}
-
-	err = k.checkPriceInQueueMessages(ctx, msg, &currentPrice)
+	err := k.checkPriceInQueueMessages(ctx, msg, &msg.Price)
 	if err != nil {
 		return err
 	}
 
-	err = k.checkPriceInOrderBook(ctx, msg, &currentPrice)
+	err = k.checkPriceInOrderBook(ctx, msg, &msg.Price)
 	if err != nil {
 		return err
 	}
