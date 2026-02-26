@@ -39,7 +39,7 @@ func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCrea
 		return nil, types.ErrInvalidPrizeDenom
 	}
 
-	toCapture, err := k.getAmountToCapture(stakingReward.PrizeDenom, stakingReward.PrizeAmount, int64(stakingReward.Duration))
+	toCapture, err := k.getAmountToCapture(stakingReward.PrizeDenom, stakingReward.PrizeAmount.String(), int64(stakingReward.Duration))
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not calculate amount needed to create the reward")
 	}
@@ -87,7 +87,7 @@ func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCrea
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.StakingRewardCreateEvent{
 			RewardId:     stakingReward.RewardId,
-			PrizeAmount:  stakingReward.PrizeAmount,
+			PrizeAmount:  stakingReward.PrizeAmount.String(),
 			PrizeDenom:   stakingReward.PrizeDenom,
 			StakingDenom: stakingReward.StakingDenom,
 			Duration:     stakingReward.Duration,
@@ -128,7 +128,7 @@ func (k msgServer) UpdateStakingReward(goCtx context.Context, msg *types.MsgUpda
 		return nil, errors.Wrap(sdkerrors.ErrKeyNotFound, "staking reward not found")
 	}
 
-	toCapture, err := k.getAmountToCapture(stakingReward.PrizeDenom, stakingReward.PrizeAmount, durationInt)
+	toCapture, err := k.getAmountToCapture(stakingReward.PrizeDenom, stakingReward.PrizeAmount.String(), durationInt)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not calculate amount needed to create the reward")
 	}
@@ -179,14 +179,7 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 		return nil, errors.Wrapf(types.ErrInvalidRewardId, "reward with provided id not found")
 	}
 
-	stakedAmount := math.ZeroInt()
-	if stakingReward.StakedAmount != "" {
-		var ok bool
-		stakedAmount, ok = math.NewIntFromString(stakingReward.StakedAmount)
-		if !ok {
-			return nil, fmt.Errorf("could not transform staked amount from storage into int")
-		}
-	}
+	stakedAmount := stakingReward.StakedAmount
 
 	toCapture, err := k.getAmountToCapture(stakingReward.StakingDenom, msg.Amount, int64(1))
 	if err != nil {
@@ -210,7 +203,7 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 			Amount:   "0",
 		}
 	}
-	participant.JoinedAt = stakingReward.DistributedStake
+	participant.JoinedAt = stakingReward.DistributedStake.String()
 
 	amtInt, ok := math.NewIntFromString(participant.Amount)
 	if !ok {
@@ -226,7 +219,7 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 	participant.Amount = amtInt.String()
 
 	stakedAmount = stakedAmount.Add(toCapture.AmountOf(stakingReward.StakingDenom))
-	stakingReward.StakedAmount = stakedAmount.String()
+	stakingReward.StakedAmount = stakedAmount
 
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.ModuleName, toCapture)
 	if err != nil {
@@ -273,10 +266,7 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 	if err != nil {
 		return nil, err
 	}
-	stakedAmountInt, ok := math.NewIntFromString(stakingReward.StakedAmount)
-	if !ok {
-		return nil, fmt.Errorf("could not transform amount from storage into int")
-	}
+	stakedAmountInt := stakingReward.StakedAmount
 	if !stakedAmountInt.IsPositive() {
 		//disaster in this case
 		return nil, fmt.Errorf("no staked amount left")
@@ -296,7 +286,7 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 	k.RemoveStakingRewardParticipant(ctx, participation.Address, participation.RewardId)
 
 	remainingStakedAmount := stakedAmountInt.Sub(partCoins.AmountOf(stakingReward.StakingDenom))
-	stakingReward.StakedAmount = remainingStakedAmount.String()
+	stakingReward.StakedAmount = remainingStakedAmount
 	k.SetStakingReward(ctx, stakingReward)
 
 	//if this staking reward is finished (all funds were distributed and payouts executed) we should remove it
@@ -460,10 +450,7 @@ func (k msgServer) claimPending(ctx sdk.Context, sr types.StakingReward, partici
 	if err != nil {
 		return nil, err
 	}
-	distributedStake, err := math.LegacyNewDecFromStr(sr.DistributedStake)
-	if err != nil {
-		return nil, err
-	}
+	distributedStake := sr.DistributedStake
 	joinedAt, err := math.LegacyNewDecFromStr(participant.JoinedAt)
 	if err != nil {
 		return nil, err
@@ -503,7 +490,7 @@ func (k msgServer) claimPending(ctx sdk.Context, sr types.StakingReward, partici
 		return nil, err
 	}
 
-	participant.JoinedAt = sr.DistributedStake
+	participant.JoinedAt = sr.DistributedStake.String()
 
 	return &toSend, nil
 }

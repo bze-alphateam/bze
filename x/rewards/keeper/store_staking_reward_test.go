@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"fmt"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,15 +10,15 @@ import (
 func (suite *IntegrationTestSuite) TestStoreStakingReward_SetAndGet() {
 	stakingReward := types.StakingReward{
 		RewardId:         "reward-1",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         30,
 		Payouts:          10,
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "0",
-		DistributedStake: "0",
+		StakedAmount:     math.ZeroInt(),
+		DistributedStake: math.LegacyZeroDec(),
 	}
 
 	// Test SetStakingReward
@@ -47,28 +48,28 @@ func (suite *IntegrationTestSuite) TestStoreStakingReward_GetNonExistent() {
 func (suite *IntegrationTestSuite) TestStoreStakingReward_SetMultiple() {
 	reward1 := types.StakingReward{
 		RewardId:         "reward-1",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         30,
 		Payouts:          10,
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "500",
-		DistributedStake: "250",
+		StakedAmount:     math.NewInt(500),
+		DistributedStake: math.LegacyMustNewDecFromStr("250"),
 	}
 
 	reward2 := types.StakingReward{
 		RewardId:         "reward-2",
-		PrizeAmount:      "2000",
+		PrizeAmount:      math.NewInt(2000),
 		PrizeDenom:       "utoken",
 		StakingDenom:     "ustake",
 		Duration:         60,
 		Payouts:          20,
 		MinStake:         200,
 		Lock:             14,
-		StakedAmount:     "1000",
-		DistributedStake: "500",
+		StakedAmount:     math.NewInt(1000),
+		DistributedStake: math.LegacyMustNewDecFromStr("500"),
 	}
 
 	// Set both rewards
@@ -94,28 +95,28 @@ func (suite *IntegrationTestSuite) TestStoreStakingReward_SetMultiple() {
 func (suite *IntegrationTestSuite) TestStoreStakingReward_UpdateExisting() {
 	originalReward := types.StakingReward{
 		RewardId:         "reward-update",
-		PrizeAmount:      "500",
+		PrizeAmount:      math.NewInt(500),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         30,
 		Payouts:          5,
 		MinStake:         50,
 		Lock:             3,
-		StakedAmount:     "100",
-		DistributedStake: "50",
+		StakedAmount:     math.NewInt(100),
+		DistributedStake: math.LegacyMustNewDecFromStr("50"),
 	}
 
 	updatedReward := types.StakingReward{
 		RewardId:         "reward-update",
-		PrizeAmount:      "1500",
+		PrizeAmount:      math.NewInt(1500),
 		PrizeDenom:       "utoken",
 		StakingDenom:     "ustake",
 		Duration:         90,
 		Payouts:          15,
 		MinStake:         150,
 		Lock:             10,
-		StakedAmount:     "300",
-		DistributedStake: "150",
+		StakedAmount:     math.NewInt(300),
+		DistributedStake: math.LegacyMustNewDecFromStr("150"),
 	}
 
 	// Set original reward
@@ -141,15 +142,15 @@ func (suite *IntegrationTestSuite) TestStoreStakingReward_UpdateExisting() {
 func (suite *IntegrationTestSuite) TestStoreStakingReward_Remove() {
 	stakingReward := types.StakingReward{
 		RewardId:         "reward-to-remove",
-		PrizeAmount:      "750",
+		PrizeAmount:      math.NewInt(750),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         45,
 		Payouts:          8,
 		MinStake:         75,
 		Lock:             5,
-		StakedAmount:     "200",
-		DistributedStake: "100",
+		StakedAmount:     math.NewInt(200),
+		DistributedStake: math.LegacyMustNewDecFromStr("100"),
 	}
 
 	// Set the reward
@@ -184,39 +185,39 @@ func (suite *IntegrationTestSuite) TestStoreStakingReward_GetAllMultiple() {
 	rewards := []types.StakingReward{
 		{
 			RewardId:         "reward-1",
-			PrizeAmount:      "100",
+			PrizeAmount:      math.NewInt(100),
 			PrizeDenom:       "ubze",
 			StakingDenom:     "ubze",
 			Duration:         30,
 			Payouts:          5,
 			MinStake:         10,
 			Lock:             1,
-			StakedAmount:     "50",
-			DistributedStake: "25",
+			StakedAmount:     math.NewInt(50),
+			DistributedStake: math.LegacyMustNewDecFromStr("25"),
 		},
 		{
 			RewardId:         "reward-2",
-			PrizeAmount:      "200",
+			PrizeAmount:      math.NewInt(200),
 			PrizeDenom:       "utoken",
 			StakingDenom:     "ustake",
 			Duration:         60,
 			Payouts:          10,
 			MinStake:         20,
 			Lock:             2,
-			StakedAmount:     "100",
-			DistributedStake: "50",
+			StakedAmount:     math.NewInt(100),
+			DistributedStake: math.LegacyMustNewDecFromStr("50"),
 		},
 		{
 			RewardId:         "reward-3",
-			PrizeAmount:      "300",
+			PrizeAmount:      math.NewInt(300),
 			PrizeDenom:       "ucoin",
 			StakingDenom:     "ucoin",
 			Duration:         90,
 			Payouts:          15,
 			MinStake:         30,
 			Lock:             3,
-			StakedAmount:     "150",
-			DistributedStake: "75",
+			StakedAmount:     math.NewInt(150),
+			DistributedStake: math.LegacyMustNewDecFromStr("75"),
 		},
 	}
 
@@ -254,27 +255,27 @@ func (suite *IntegrationTestSuite) TestStoreStakingReward_IterateAllMultiple() {
 	rewards := []types.StakingReward{
 		{
 			RewardId:         "iter-reward-1",
-			PrizeAmount:      "100",
+			PrizeAmount:      math.NewInt(100),
 			PrizeDenom:       "ubze",
 			StakingDenom:     "ubze",
 			Duration:         30,
 			Payouts:          5,
 			MinStake:         10,
 			Lock:             1,
-			StakedAmount:     "50",
-			DistributedStake: "25",
+			StakedAmount:     math.NewInt(50),
+			DistributedStake: math.LegacyMustNewDecFromStr("25"),
 		},
 		{
 			RewardId:         "iter-reward-2",
-			PrizeAmount:      "200",
+			PrizeAmount:      math.NewInt(200),
 			PrizeDenom:       "utoken",
 			StakingDenom:     "ustake",
 			Duration:         60,
 			Payouts:          10,
 			MinStake:         20,
 			Lock:             2,
-			StakedAmount:     "100",
-			DistributedStake: "50",
+			StakedAmount:     math.NewInt(100),
+			DistributedStake: math.LegacyMustNewDecFromStr("50"),
 		},
 	}
 
@@ -308,15 +309,15 @@ func (suite *IntegrationTestSuite) TestStoreStakingReward_GetBatchFromBeginning(
 	for i := 1; i <= 5; i++ {
 		suite.k.SetStakingReward(suite.ctx, types.StakingReward{
 			RewardId:         fmt.Sprintf("batch-reward-%d", i),
-			PrizeAmount:      "1000",
+			PrizeAmount:      math.NewInt(1000),
 			PrizeDenom:       "ubze",
 			StakingDenom:     "ubze",
 			Duration:         5,
 			Payouts:          0,
 			MinStake:         100,
 			Lock:             7,
-			StakedAmount:     "5000",
-			DistributedStake: "0",
+			StakedAmount:     math.NewInt(5000),
+			DistributedStake: math.LegacyZeroDec(),
 		})
 	}
 
@@ -329,15 +330,15 @@ func (suite *IntegrationTestSuite) TestStoreStakingReward_GetBatchWithCursor() {
 	for i := 1; i <= 5; i++ {
 		suite.k.SetStakingReward(suite.ctx, types.StakingReward{
 			RewardId:         fmt.Sprintf("cursor-reward-%d", i),
-			PrizeAmount:      "1000",
+			PrizeAmount:      math.NewInt(1000),
 			PrizeDenom:       "ubze",
 			StakingDenom:     "ubze",
 			Duration:         5,
 			Payouts:          0,
 			MinStake:         100,
 			Lock:             7,
-			StakedAmount:     "5000",
-			DistributedStake: "0",
+			StakedAmount:     math.NewInt(5000),
+			DistributedStake: math.LegacyZeroDec(),
 		})
 	}
 
@@ -379,15 +380,15 @@ func (suite *IntegrationTestSuite) TestStoreStakingReward_GetBatchWithCursor() {
 func (suite *IntegrationTestSuite) TestStoreStakingReward_GetBatchCursorAtEnd() {
 	suite.k.SetStakingReward(suite.ctx, types.StakingReward{
 		RewardId:         "last-reward",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          0,
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "5000",
-		DistributedStake: "0",
+		StakedAmount:     math.NewInt(5000),
+		DistributedStake: math.LegacyZeroDec(),
 	})
 
 	// Cursor points to the last (and only) reward - nothing after it
@@ -404,15 +405,15 @@ func (suite *IntegrationTestSuite) TestStoreStakingReward_GetBatchLimitHigherTha
 	for i := 1; i <= 3; i++ {
 		suite.k.SetStakingReward(suite.ctx, types.StakingReward{
 			RewardId:         fmt.Sprintf("limit-reward-%d", i),
-			PrizeAmount:      "1000",
+			PrizeAmount:      math.NewInt(1000),
 			PrizeDenom:       "ubze",
 			StakingDenom:     "ubze",
 			Duration:         5,
 			Payouts:          0,
 			MinStake:         100,
 			Lock:             7,
-			StakedAmount:     "5000",
-			DistributedStake: "0",
+			StakedAmount:     math.NewInt(5000),
+			DistributedStake: math.LegacyZeroDec(),
 		})
 	}
 
@@ -424,15 +425,15 @@ func (suite *IntegrationTestSuite) TestStoreStakingReward_GetBatchLimitHigherTha
 func (suite *IntegrationTestSuite) TestStoreStakingReward_GetBatchCursorNotFound() {
 	suite.k.SetStakingReward(suite.ctx, types.StakingReward{
 		RewardId:         "existing-reward",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          0,
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "5000",
-		DistributedStake: "0",
+		StakedAmount:     math.NewInt(5000),
+		DistributedStake: math.LegacyZeroDec(),
 	})
 
 	// Cursor points to a non-existent reward - should return nothing since cursor is never matched
@@ -527,39 +528,39 @@ func (suite *IntegrationTestSuite) TestStoreStakingReward_IterateAllEarlyStop() 
 	rewards := []types.StakingReward{
 		{
 			RewardId:         "stop-reward-1",
-			PrizeAmount:      "100",
+			PrizeAmount:      math.NewInt(100),
 			PrizeDenom:       "ubze",
 			StakingDenom:     "ubze",
 			Duration:         30,
 			Payouts:          5,
 			MinStake:         10,
 			Lock:             1,
-			StakedAmount:     "50",
-			DistributedStake: "25",
+			StakedAmount:     math.NewInt(50),
+			DistributedStake: math.LegacyMustNewDecFromStr("25"),
 		},
 		{
 			RewardId:         "stop-reward-2",
-			PrizeAmount:      "200",
+			PrizeAmount:      math.NewInt(200),
 			PrizeDenom:       "utoken",
 			StakingDenom:     "ustake",
 			Duration:         60,
 			Payouts:          10,
 			MinStake:         20,
 			Lock:             2,
-			StakedAmount:     "100",
-			DistributedStake: "50",
+			StakedAmount:     math.NewInt(100),
+			DistributedStake: math.LegacyMustNewDecFromStr("50"),
 		},
 		{
 			RewardId:         "stop-reward-3",
-			PrizeAmount:      "300",
+			PrizeAmount:      math.NewInt(300),
 			PrizeDenom:       "ucoin",
 			StakingDenom:     "ucoin",
 			Duration:         90,
 			Payouts:          15,
 			MinStake:         30,
 			Lock:             3,
-			StakedAmount:     "150",
-			DistributedStake: "75",
+			StakedAmount:     math.NewInt(150),
+			DistributedStake: math.LegacyMustNewDecFromStr("75"),
 		},
 	}
 

@@ -22,15 +22,15 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetDistributeAllStakingRewar
 	// Test with correct epoch identifier - should enqueue, not process directly
 	stakingReward := types.StakingReward{
 		RewardId:         "hook-test-reward",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          2,
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "5000",
-		DistributedStake: "100",
+		StakedAmount:     math.NewInt(5000),
+		DistributedStake: math.LegacyMustNewDecFromStr("100"),
 	}
 
 	suite.k.SetStakingReward(suite.ctx, stakingReward)

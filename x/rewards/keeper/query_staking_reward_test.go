@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"fmt"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,15 +13,15 @@ import (
 func (suite *IntegrationTestSuite) TestQueryStakingReward_StakingReward() {
 	stakingReward := types.StakingReward{
 		RewardId:         "query-test-reward",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         30,
 		Payouts:          5,
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "5000",
-		DistributedStake: "500",
+		StakedAmount:     math.NewInt(5000),
+		DistributedStake: math.LegacyMustNewDecFromStr("500"),
 	}
 
 	suite.k.SetStakingReward(suite.ctx, stakingReward)
@@ -70,39 +71,39 @@ func (suite *IntegrationTestSuite) TestQueryStakingReward_AllStakingRewards() {
 	stakingRewards := []types.StakingReward{
 		{
 			RewardId:         "all-query-reward-1",
-			PrizeAmount:      "1000",
+			PrizeAmount:      math.NewInt(1000),
 			PrizeDenom:       "ubze",
 			StakingDenom:     "ubze",
 			Duration:         30,
 			Payouts:          5,
 			MinStake:         100,
 			Lock:             7,
-			StakedAmount:     "5000",
-			DistributedStake: "500",
+			StakedAmount:     math.NewInt(5000),
+			DistributedStake: math.LegacyMustNewDecFromStr("500"),
 		},
 		{
 			RewardId:         "all-query-reward-2",
-			PrizeAmount:      "2000",
+			PrizeAmount:      math.NewInt(2000),
 			PrizeDenom:       "utoken",
 			StakingDenom:     "ustake",
 			Duration:         60,
 			Payouts:          10,
 			MinStake:         200,
 			Lock:             14,
-			StakedAmount:     "10000",
-			DistributedStake: "1000",
+			StakedAmount:     math.NewInt(10000),
+			DistributedStake: math.LegacyMustNewDecFromStr("1000"),
 		},
 		{
 			RewardId:         "all-query-reward-3",
-			PrizeAmount:      "1500",
+			PrizeAmount:      math.NewInt(1500),
 			PrizeDenom:       "ucoin",
 			StakingDenom:     "ucoin",
 			Duration:         45,
 			Payouts:          8,
 			MinStake:         150,
 			Lock:             10,
-			StakedAmount:     "7500",
-			DistributedStake: "750",
+			StakedAmount:     math.NewInt(7500),
+			DistributedStake: math.LegacyMustNewDecFromStr("750"),
 		},
 	}
 
@@ -154,27 +155,27 @@ func (suite *IntegrationTestSuite) TestQueryStakingReward_AllStakingRewardsPagin
 	stakingRewards := []types.StakingReward{
 		{
 			RewardId:         "page-reward-1",
-			PrizeAmount:      "1000",
+			PrizeAmount:      math.NewInt(1000),
 			PrizeDenom:       "ubze",
 			StakingDenom:     "ubze",
 			Duration:         30,
 			Payouts:          5,
 			MinStake:         100,
 			Lock:             7,
-			StakedAmount:     "5000",
-			DistributedStake: "500",
+			StakedAmount:     math.NewInt(5000),
+			DistributedStake: math.LegacyMustNewDecFromStr("500"),
 		},
 		{
 			RewardId:         "page-reward-2",
-			PrizeAmount:      "2000",
+			PrizeAmount:      math.NewInt(2000),
 			PrizeDenom:       "utoken",
 			StakingDenom:     "ustake",
 			Duration:         60,
 			Payouts:          10,
 			MinStake:         200,
 			Lock:             14,
-			StakedAmount:     "10000",
-			DistributedStake: "1000",
+			StakedAmount:     math.NewInt(10000),
+			DistributedStake: math.LegacyMustNewDecFromStr("1000"),
 		},
 	}
 

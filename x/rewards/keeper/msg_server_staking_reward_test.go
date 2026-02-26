@@ -92,7 +92,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 	// Verify staking reward was created
 	stakingReward, found := suite.k.GetStakingReward(suite.ctx, response.RewardId)
 	suite.Require().True(found)
-	suite.Require().Equal("1000", stakingReward.PrizeAmount)
+	suite.Require().Equal(math.NewInt(1000), stakingReward.PrizeAmount)
 	suite.Require().Equal("ubze", stakingReward.PrizeDenom)
 	suite.Require().Equal("ubze", stakingReward.StakingDenom)
 	suite.Require().Equal(uint32(5), stakingReward.Duration)
@@ -230,15 +230,15 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_UpdateStakingRewar
 	// Set up existing staking reward
 	existingReward := types.StakingReward{
 		RewardId:         "update-test-reward",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          2,
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "0",
-		DistributedStake: "0",
+		StakedAmount:     math.ZeroInt(),
+		DistributedStake: math.LegacyZeroDec(),
 	}
 	suite.k.SetStakingReward(suite.ctx, existingReward)
 
@@ -286,15 +286,15 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_UpdateStakingRewar
 	// Set up existing staking reward with duration close to max
 	existingReward := types.StakingReward{
 		RewardId:         "update-max-duration-reward",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         36000,
 		Payouts:          0,
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "0",
-		DistributedStake: "0",
+		StakedAmount:     math.ZeroInt(),
+		DistributedStake: math.LegacyZeroDec(),
 	}
 	suite.k.SetStakingReward(suite.ctx, existingReward)
 
@@ -355,15 +355,15 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingSuccess
 	// Set up existing staking reward
 	stakingReward := types.StakingReward{
 		RewardId:         "join-test-reward",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          2,
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "0",
-		DistributedStake: "0",
+		StakedAmount:     math.ZeroInt(),
+		DistributedStake: math.LegacyZeroDec(),
 	}
 	suite.k.SetStakingReward(suite.ctx, stakingReward)
 
@@ -407,7 +407,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingSuccess
 	// Verify staked amount was updated
 	updatedReward, found := suite.k.GetStakingReward(suite.ctx, "join-test-reward")
 	suite.Require().True(found)
-	suite.Require().Equal("500", updatedReward.StakedAmount)
+	suite.Require().Equal(math.NewInt(500), updatedReward.StakedAmount)
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingMinStakeNotMet() {
@@ -416,15 +416,15 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingMinStak
 	// Set up existing staking reward with high min stake
 	stakingReward := types.StakingReward{
 		RewardId:         "join-minstake-reward",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          2,
 		MinStake:         1000, // High min stake
 		Lock:             7,
-		StakedAmount:     "0",
-		DistributedStake: "0",
+		StakedAmount:     math.ZeroInt(),
+		DistributedStake: math.LegacyZeroDec(),
 	}
 	suite.k.SetStakingReward(suite.ctx, stakingReward)
 
@@ -455,15 +455,15 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStakingSuccess
 	// Set up existing staking reward and participant
 	stakingReward := types.StakingReward{
 		RewardId:         "exit-test-reward",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          2,
 		MinStake:         100,
 		Lock:             0, // No lock for immediate unlock
-		StakedAmount:     "500",
-		DistributedStake: "0",
+		StakedAmount:     math.NewInt(500),
+		DistributedStake: math.LegacyZeroDec(),
 	}
 	suite.k.SetStakingReward(suite.ctx, stakingReward)
 
@@ -512,7 +512,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStakingSuccess
 	// Verify staked amount was updated
 	updatedReward, found := suite.k.GetStakingReward(suite.ctx, "exit-test-reward")
 	suite.Require().True(found)
-	suite.Require().Equal("0", updatedReward.StakedAmount)
+	suite.Require().Equal(math.ZeroInt(), updatedReward.StakedAmount)
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStakingWithLock() {
@@ -521,15 +521,15 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStakingWithLoc
 	// Set up existing staking reward and participant with lock
 	stakingReward := types.StakingReward{
 		RewardId:         "exit-lock-reward",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          2,
 		MinStake:         100,
 		Lock:             7, // 7 day lock
-		StakedAmount:     "500",
-		DistributedStake: "0",
+		StakedAmount:     math.NewInt(500),
+		DistributedStake: math.LegacyZeroDec(),
 	}
 	suite.k.SetStakingReward(suite.ctx, stakingReward)
 
@@ -574,15 +574,15 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingReward
 	// Set up staking reward with distributed stake
 	stakingReward := types.StakingReward{
 		RewardId:         "claim-test-reward",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          2,
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "500",
-		DistributedStake: "1.0", // Some rewards distributed
+		StakedAmount:     math.NewInt(500),
+		DistributedStake: math.LegacyMustNewDecFromStr("1.0"), // Some rewards distributed
 	}
 	suite.k.SetStakingReward(suite.ctx, stakingReward)
 
@@ -618,7 +618,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingReward
 	// Verify participant's JoinedAt was updated
 	updatedParticipant, found := suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), "claim-test-reward")
 	suite.Require().True(found)
-	suite.Require().Equal("1.0", updatedParticipant.JoinedAt)
+	suite.Require().Equal("1.000000000000000000", updatedParticipant.JoinedAt)
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingRewardsTruncatedZero() {
@@ -628,15 +628,15 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingReward
 	// deposited=1, distributedStake="0.5", joinedAt="0" → reward = 1 * (0.5 - 0) = 0.5, truncates to 0
 	stakingReward := types.StakingReward{
 		RewardId:         "claim-truncated-reward",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          2,
 		MinStake:         1,
 		Lock:             7,
-		StakedAmount:     "10000",
-		DistributedStake: "0.5",
+		StakedAmount:     math.NewInt(10000),
+		DistributedStake: math.LegacyMustNewDecFromStr("0.5"),
 	}
 	suite.k.SetStakingReward(suite.ctx, stakingReward)
 
@@ -672,15 +672,15 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingReward
 	// distributedStake == joinedAt → claimPending returns zero immediately
 	stakingReward := types.StakingReward{
 		RewardId:         "claim-no-dist-reward",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          2,
 		MinStake:         1,
 		Lock:             7,
-		StakedAmount:     "10000",
-		DistributedStake: "1.0",
+		StakedAmount:     math.NewInt(10000),
+		DistributedStake: math.LegacyMustNewDecFromStr("1.0"),
 	}
 	suite.k.SetStakingReward(suite.ctx, stakingReward)
 
@@ -716,15 +716,15 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStakingTruncat
 	// deposited=1, distributedStake="0.5", joinedAt="0" → reward = 0.5, truncates to 0
 	stakingReward := types.StakingReward{
 		RewardId:         "exit-truncated-reward",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          2,
 		MinStake:         1,
 		Lock:             0,
-		StakedAmount:     "10000",
-		DistributedStake: "0.5",
+		StakedAmount:     math.NewInt(10000),
+		DistributedStake: math.LegacyMustNewDecFromStr("0.5"),
 	}
 	suite.k.SetStakingReward(suite.ctx, stakingReward)
 
@@ -769,7 +769,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStakingTruncat
 	// Verify staked amount was updated
 	updatedReward, found := suite.k.GetStakingReward(suite.ctx, "exit-truncated-reward")
 	suite.Require().True(found)
-	suite.Require().Equal("9999", updatedReward.StakedAmount)
+	suite.Require().Equal(math.NewInt(9999), updatedReward.StakedAmount)
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingExistingParticipantTruncatedZero() {
@@ -779,15 +779,15 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingExistin
 	// deposited=1, distributedStake="0.5", joinedAt="0" → reward = 0.5, truncates to 0
 	stakingReward := types.StakingReward{
 		RewardId:         "join-truncated-reward",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          2,
 		MinStake:         1,
 		Lock:             7,
-		StakedAmount:     "10000",
-		DistributedStake: "0.5",
+		StakedAmount:     math.NewInt(10000),
+		DistributedStake: math.LegacyMustNewDecFromStr("0.5"),
 	}
 	suite.k.SetStakingReward(suite.ctx, stakingReward)
 
@@ -835,7 +835,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingExistin
 	// Verify staked amount was updated
 	updatedReward, found := suite.k.GetStakingReward(suite.ctx, "join-truncated-reward")
 	suite.Require().True(found)
-	suite.Require().Equal("10100", updatedReward.StakedAmount)
+	suite.Require().Equal(math.NewInt(10100), updatedReward.StakedAmount)
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewardNilTradeKeeper() {
@@ -906,15 +906,15 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_DistributeStakingR
 	// Set up existing staking reward
 	stakingReward := types.StakingReward{
 		RewardId:         "distribute-test-reward",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          2,
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "1000",
-		DistributedStake: "0",
+		StakedAmount:     math.NewInt(1000),
+		DistributedStake: math.LegacyZeroDec(),
 	}
 	suite.k.SetStakingReward(suite.ctx, stakingReward)
 
@@ -953,5 +953,5 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_DistributeStakingR
 	// Verify distributed stake was updated
 	updatedReward, found := suite.k.GetStakingReward(suite.ctx, "distribute-test-reward")
 	suite.Require().True(found)
-	suite.Require().Equal("0.500000000000000000", updatedReward.DistributedStake) // 500/1000 = 0.5
+	suite.Require().Equal(math.LegacyMustNewDecFromStr("0.5"), updatedReward.DistributedStake) // 500/1000 = 0.5
 }

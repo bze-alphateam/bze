@@ -71,7 +71,7 @@ func (k Keeper) distributeStakingReward(ctx sdk.Context, sr types.StakingReward)
 
 	logger.Debug("preparing to distribute staking reward")
 
-	if sr.StakedAmount == "0" {
+	if sr.StakedAmount.IsZero() {
 		logger.Debug("staking reward has no staked coins. skipping distribution")
 		return
 	}
@@ -81,7 +81,7 @@ func (k Keeper) distributeStakingReward(ctx sdk.Context, sr types.StakingReward)
 		return
 	}
 
-	err := k.distributeStakingRewards(&sr, sr.PrizeAmount)
+	err := k.distributeStakingRewards(&sr, sr.PrizeAmount.String())
 	if err != nil {
 		logger.Error(err.Error())
 		return
@@ -94,7 +94,7 @@ func (k Keeper) distributeStakingReward(ctx sdk.Context, sr types.StakingReward)
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.StakingRewardDistributionEvent{
 			RewardId: sr.RewardId,
-			Amount:   sr.PrizeAmount,
+			Amount:   sr.PrizeAmount.String(),
 		},
 	)
 
@@ -104,10 +104,7 @@ func (k Keeper) distributeStakingReward(ctx sdk.Context, sr types.StakingReward)
 }
 
 func (k Keeper) distributeStakingRewards(sr *types.StakingReward, rewardAmount string) error {
-	stakedAmount, err := math.LegacyNewDecFromStr(sr.StakedAmount)
-	if err != nil {
-		return fmt.Errorf("could not transform staked amount from storage into int: %w", err)
-	}
+	stakedAmount := math.LegacyNewDecFromInt(sr.StakedAmount)
 
 	if !stakedAmount.IsPositive() {
 		return fmt.Errorf("no stakers found")
@@ -122,14 +119,11 @@ func (k Keeper) distributeStakingRewards(sr *types.StakingReward, rewardAmount s
 		return fmt.Errorf("reward amount should be positive")
 	}
 
-	sFloat, err := math.LegacyNewDecFromStr(sr.DistributedStake)
-	if err != nil {
-		return err
-	}
+	sFloat := sr.DistributedStake
 
 	//S = S + r / T;
 	sFloat = sFloat.Add(reward.Quo(stakedAmount))
-	sr.DistributedStake = sFloat.String()
+	sr.DistributedStake = sFloat
 
 	return nil
 }

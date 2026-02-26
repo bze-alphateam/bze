@@ -15,9 +15,6 @@ const (
 
 	tenYearsInDays     = 365 * 10
 	HundredYearsInDays = 365 * 100
-
-	defaultStakedAmount     = "0"
-	defaultDistributedStake = "0"
 )
 
 var _ sdk.Msg = &MsgCreateStakingReward{}
@@ -44,7 +41,7 @@ func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 	if !amtInt.IsPositive() {
 		return sr, errorsmod.Wrapf(ErrInvalidAmount, "amount should be greater than 0")
 	}
-	sr.PrizeAmount = msg.PrizeAmount
+	sr.PrizeAmount = amtInt
 
 	if msg.PrizeDenom == "" {
 		return sr, ErrInvalidPrizeDenom
@@ -80,8 +77,8 @@ func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 	}
 	sr.Lock = uint32(lockInt)
 
-	sr.StakedAmount = defaultStakedAmount
-	sr.DistributedStake = defaultDistributedStake
+	sr.StakedAmount = math.ZeroInt()
+	sr.DistributedStake = math.LegacyZeroDec()
 
 	return sr, nil
 }

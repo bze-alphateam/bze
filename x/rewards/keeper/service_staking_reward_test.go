@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"fmt"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 )
@@ -18,15 +19,15 @@ func (suite *IntegrationTestSuite) TestEnqueueStakingRewardsDistribution_Empty()
 func (suite *IntegrationTestSuite) TestEnqueueStakingRewardsDistribution_WithRewards() {
 	suite.k.SetStakingReward(suite.ctx, types.StakingReward{
 		RewardId:         "reward-1",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          0,
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "5000",
-		DistributedStake: "0",
+		StakedAmount:     math.NewInt(5000),
+		DistributedStake: math.LegacyZeroDec(),
 	})
 
 	suite.k.EnqueueStakingRewardsDistribution(suite.ctx)
@@ -40,15 +41,15 @@ func (suite *IntegrationTestSuite) TestEnqueueStakingRewardsDistribution_WithRew
 func (suite *IntegrationTestSuite) TestEnqueueStakingRewardsDistribution_AlreadyPending() {
 	suite.k.SetStakingReward(suite.ctx, types.StakingReward{
 		RewardId:         "reward-1",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          0,
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "5000",
-		DistributedStake: "0",
+		StakedAmount:     math.NewInt(5000),
+		DistributedStake: math.LegacyZeroDec(),
 	})
 
 	// Enqueue first time
@@ -92,15 +93,15 @@ func (suite *IntegrationTestSuite) TestProcessStakingDistributionQueue_NotPendin
 func (suite *IntegrationTestSuite) TestProcessStakingDistributionQueue_SingleReward() {
 	suite.k.SetStakingReward(suite.ctx, types.StakingReward{
 		RewardId:         "reward-1",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          2,
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "5000",
-		DistributedStake: "100",
+		StakedAmount:     math.NewInt(5000),
+		DistributedStake: math.LegacyMustNewDecFromStr("100"),
 	})
 
 	suite.k.EnqueueStakingRewardsDistribution(suite.ctx)
@@ -120,15 +121,15 @@ func (suite *IntegrationTestSuite) TestProcessStakingDistributionQueue_MultipleR
 	for i := 1; i <= 3; i++ {
 		suite.k.SetStakingReward(suite.ctx, types.StakingReward{
 			RewardId:         fmt.Sprintf("reward-%d", i),
-			PrizeAmount:      "1000",
+			PrizeAmount:      math.NewInt(1000),
 			PrizeDenom:       "ubze",
 			StakingDenom:     "ubze",
 			Duration:         5,
 			Payouts:          0,
 			MinStake:         100,
 			Lock:             7,
-			StakedAmount:     "5000",
-			DistributedStake: "0",
+			StakedAmount:     math.NewInt(5000),
+			DistributedStake: math.LegacyZeroDec(),
 		})
 	}
 
@@ -150,15 +151,15 @@ func (suite *IntegrationTestSuite) TestProcessStakingDistributionQueue_MultipleR
 func (suite *IntegrationTestSuite) TestProcessStakingDistributionQueue_SkipsZeroStaked() {
 	suite.k.SetStakingReward(suite.ctx, types.StakingReward{
 		RewardId:         "reward-1",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          0,
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "0", // no stakers
-		DistributedStake: "0",
+		StakedAmount:     math.ZeroInt(), // no stakers
+		DistributedStake: math.LegacyZeroDec(),
 	})
 
 	suite.k.EnqueueStakingRewardsDistribution(suite.ctx)
@@ -177,15 +178,15 @@ func (suite *IntegrationTestSuite) TestProcessStakingDistributionQueue_SkipsZero
 func (suite *IntegrationTestSuite) TestProcessStakingDistributionQueue_SkipsFinishedReward() {
 	suite.k.SetStakingReward(suite.ctx, types.StakingReward{
 		RewardId:         "reward-1",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          5, // already finished
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "5000",
-		DistributedStake: "100",
+		StakedAmount:     math.NewInt(5000),
+		DistributedStake: math.LegacyMustNewDecFromStr("100"),
 	})
 
 	suite.k.EnqueueStakingRewardsDistribution(suite.ctx)
@@ -207,15 +208,15 @@ func (suite *IntegrationTestSuite) TestProcessStakingDistributionQueue_MultiBloc
 	for i := 1; i <= totalRewards; i++ {
 		suite.k.SetStakingReward(suite.ctx, types.StakingReward{
 			RewardId:         fmt.Sprintf("drain-reward-%03d", i), // zero-padded for deterministic lexicographic ordering
-			PrizeAmount:      "1000",
+			PrizeAmount:      math.NewInt(1000),
 			PrizeDenom:       "ubze",
 			StakingDenom:     "ubze",
 			Duration:         5,
 			Payouts:          0,
 			MinStake:         100,
 			Lock:             7,
-			StakedAmount:     "5000",
-			DistributedStake: "0",
+			StakedAmount:     math.NewInt(5000),
+			DistributedStake: math.LegacyZeroDec(),
 		})
 	}
 
@@ -264,15 +265,15 @@ func (suite *IntegrationTestSuite) TestProcessStakingDistributionQueue_ExactlyAt
 	for i := 1; i <= totalRewards; i++ {
 		suite.k.SetStakingReward(suite.ctx, types.StakingReward{
 			RewardId:         fmt.Sprintf("exact-reward-%03d", i),
-			PrizeAmount:      "1000",
+			PrizeAmount:      math.NewInt(1000),
 			PrizeDenom:       "ubze",
 			StakingDenom:     "ubze",
 			Duration:         5,
 			Payouts:          0,
 			MinStake:         100,
 			Lock:             7,
-			StakedAmount:     "5000",
-			DistributedStake: "0",
+			StakedAmount:     math.NewInt(5000),
+			DistributedStake: math.LegacyZeroDec(),
 		})
 	}
 
@@ -310,28 +311,28 @@ func (suite *IntegrationTestSuite) TestProcessStakingDistributionQueue_CursorRes
 
 	suite.k.SetStakingReward(suite.ctx, types.StakingReward{
 		RewardId:         "reward-1",
-		PrizeAmount:      "1000",
+		PrizeAmount:      math.NewInt(1000),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          1, // already distributed once
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "5000",
-		DistributedStake: "100",
+		StakedAmount:     math.NewInt(5000),
+		DistributedStake: math.LegacyMustNewDecFromStr("100"),
 	})
 
 	suite.k.SetStakingReward(suite.ctx, types.StakingReward{
 		RewardId:         "reward-2",
-		PrizeAmount:      "500",
+		PrizeAmount:      math.NewInt(500),
 		PrizeDenom:       "ubze",
 		StakingDenom:     "ubze",
 		Duration:         5,
 		Payouts:          0,
 		MinStake:         100,
 		Lock:             7,
-		StakedAmount:     "3000",
-		DistributedStake: "0",
+		StakedAmount:     math.NewInt(3000),
+		DistributedStake: math.LegacyZeroDec(),
 	})
 
 	suite.k.ProcessStakingRewardsDistributionQueue(suite.ctx)
