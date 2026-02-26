@@ -2,20 +2,21 @@ package keeper
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/bzeutils"
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
+	"github.com/bze-alphateam/bze/x/tradebin/types"
+	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/bze-alphateam/bze/x/tradebin/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k msgServer) CreateLiquidityPool(goCtx context.Context, msg *types.MsgCreateLiquidityPool) (*types.MsgCreateLiquidityPoolResponse, error) {
+func (k msgServer) CreateLiquidityPool(goCtx context.Context, msg *v2types.MsgCreateLiquidityPool) (*v2types.MsgCreateLiquidityPoolResponse, error) {
 	if msg == nil {
 		return nil, sdkerrors.ErrInvalidRequest
 	}
@@ -116,7 +117,7 @@ func (k msgServer) CreateLiquidityPool(goCtx context.Context, msg *types.MsgCrea
 		k.Logger().Error(err.Error())
 	}
 
-	return &types.MsgCreateLiquidityPoolResponse{
+	return &v2types.MsgCreateLiquidityPoolResponse{
 		Id: poolId,
 	}, nil
 }
@@ -446,19 +447,16 @@ func (k msgServer) validateFee(fee *math.LegacyDec) error {
 	return nil
 }
 
-func (k msgServer) parseValidPoolFees(msg *types.MsgCreateLiquidityPool) (fee math.LegacyDec, feeDest types.FeeDestination, err error) {
-	fee, err = math.LegacyNewDecFromStr(msg.Fee)
-	if err != nil {
-		err = errors.Wrap(sdkerrors.ErrInvalidCoins, err.Error())
-		return
-	}
+func (k msgServer) parseValidPoolFees(msg *v2types.MsgCreateLiquidityPool) (fee math.LegacyDec, feeDest types.FeeDestination, err error) {
+	fee = msg.Fee
 
 	err = k.validateFee(&fee)
 	if err != nil {
 		return
 	}
 
-	feeDest, err = msg.ParseFeeDestination()
+	mdByte := []byte(msg.FeeDest)
+	err = json.Unmarshal(mdByte, &feeDest)
 	if err != nil {
 		err = errors.Wrap(types.ErrInvalidFeeDestination, err.Error())
 		return

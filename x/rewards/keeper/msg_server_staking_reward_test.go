@@ -8,6 +8,7 @@ import (
 	"github.com/bze-alphateam/bze/x/rewards/keeper"
 	"github.com/bze-alphateam/bze/x/rewards/testutil"
 	"github.com/bze-alphateam/bze/x/rewards/types"
+	"github.com/bze-alphateam/bze/x/rewards/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"go.uber.org/mock/gomock"
@@ -71,14 +72,14 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 		Return(nil).
 		Times(1)
 
-	msg := &types.MsgCreateStakingReward{
+	msg := &v2types.MsgCreateStakingReward{
 		Creator:      creator.String(),
-		PrizeAmount:  "1000",
+		PrizeAmount:  math.NewInt(1000),
 		PrizeDenom:   "ubze",
 		StakingDenom: "ubze",
-		Duration:     "5",
-		MinStake:     "100",
-		Lock:         "7",
+		Duration:     5,
+		MinStake:     math.NewInt(100),
+		Lock:         7,
 	}
 
 	counter := suite.k.GetStakingRewardsCounter(suite.ctx)
@@ -101,7 +102,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewardNilRequest() {
-	response, err := suite.msgServer.CreateStakingReward(suite.ctx, nil)
+	response, err := suite.msgServer.CreateStakingReward(suite.ctx, (*v2types.MsgCreateStakingReward)(nil))
 
 	suite.Require().Error(err)
 	suite.Require().Nil(response)
@@ -109,14 +110,14 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewardInvalidCreator() {
-	msg := &types.MsgCreateStakingReward{
+	msg := &v2types.MsgCreateStakingReward{
 		Creator:      "invalid-address",
-		PrizeAmount:  "1000",
+		PrizeAmount:  math.NewInt(1000),
 		PrizeDenom:   "ubze",
 		StakingDenom: "ubze",
-		Duration:     "5",
-		MinStake:     "100",
-		Lock:         "7",
+		Duration:     5,
+		MinStake:     math.NewInt(100),
+		Lock:         7,
 	}
 
 	response, err := suite.msgServer.CreateStakingReward(suite.ctx, msg)
@@ -134,14 +135,14 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 		Return(false).
 		Times(1)
 
-	msg := &types.MsgCreateStakingReward{
+	msg := &v2types.MsgCreateStakingReward{
 		Creator:      creator.String(),
-		PrizeAmount:  "1000",
+		PrizeAmount:  math.NewInt(1000),
 		PrizeDenom:   "ubze",
 		StakingDenom: "invalid-denom",
-		Duration:     "5",
-		MinStake:     "100",
-		Lock:         "7",
+		Duration:     5,
+		MinStake:     math.NewInt(100),
+		Lock:         7,
 	}
 
 	response, err := suite.msgServer.CreateStakingReward(suite.ctx, msg)
@@ -165,14 +166,14 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 		Return(false).
 		Times(1) // Called for prize denom
 
-	msg := &types.MsgCreateStakingReward{
+	msg := &v2types.MsgCreateStakingReward{
 		Creator:      creator.String(),
-		PrizeAmount:  "1000",
+		PrizeAmount:  math.NewInt(1000),
 		PrizeDenom:   "invalid-prize",
 		StakingDenom: "ubze",
-		Duration:     "5",
-		MinStake:     "100",
-		Lock:         "7",
+		Duration:     5,
+		MinStake:     math.NewInt(100),
+		Lock:         7,
 	}
 
 	response, err := suite.msgServer.CreateStakingReward(suite.ctx, msg)
@@ -207,14 +208,14 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 		)).
 		Times(1)
 
-	msg := &types.MsgCreateStakingReward{
+	msg := &v2types.MsgCreateStakingReward{
 		Creator:      creator.String(),
-		PrizeAmount:  "1000",
+		PrizeAmount:  math.NewInt(1000),
 		PrizeDenom:   "ubze",
 		StakingDenom: "ubze",
-		Duration:     "5",
-		MinStake:     "100",
-		Lock:         "7",
+		Duration:     5,
+		MinStake:     math.NewInt(100),
+		Lock:         7,
 	}
 
 	response, err := suite.msgServer.CreateStakingReward(suite.ctx, msg)
@@ -260,10 +261,10 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_UpdateStakingRewar
 		Return(nil).
 		Times(1)
 
-	msg := &types.MsgUpdateStakingReward{
+	msg := &v2types.MsgUpdateStakingReward{
 		Creator:  creator.String(),
 		RewardId: "update-test-reward",
-		Duration: "3",
+		Duration: 3,
 	}
 
 	counter := suite.k.GetStakingRewardsCounter(suite.ctx)
@@ -316,10 +317,10 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_UpdateStakingRewar
 		Return(nil).
 		Times(1)
 
-	msg := &types.MsgUpdateStakingReward{
+	msg := &v2types.MsgUpdateStakingReward{
 		Creator:  creator.String(),
 		RewardId: "update-max-duration-reward",
-		Duration: "1000", // 36000 + 1000 = 37000 > 36500
+		Duration: 1000, // 36000 + 1000 = 37000 > 36500
 	}
 
 	response, err := suite.msgServer.UpdateStakingReward(suite.ctx, msg)
@@ -336,10 +337,10 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_UpdateStakingRewar
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_UpdateStakingRewardNotFound() {
 	creator := sdk.AccAddress("creator")
 
-	msg := &types.MsgUpdateStakingReward{
+	msg := &v2types.MsgUpdateStakingReward{
 		Creator:  creator.String(),
 		RewardId: "non-existent-reward",
-		Duration: "3",
+		Duration: 3,
 	}
 
 	response, err := suite.msgServer.UpdateStakingReward(suite.ctx, msg)
@@ -385,10 +386,10 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingSuccess
 		Return(nil).
 		Times(1)
 
-	msg := &types.MsgJoinStaking{
+	msg := &v2types.MsgJoinStaking{
 		Creator:  creator.String(),
 		RewardId: "join-test-reward",
-		Amount:   "500",
+		Amount:   math.NewInt(500),
 	}
 
 	counter := suite.k.GetStakingRewardsCounter(suite.ctx)
@@ -436,10 +437,10 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingMinStak
 		)).
 		Times(1)
 
-	msg := &types.MsgJoinStaking{
+	msg := &v2types.MsgJoinStaking{
 		Creator:  creator.String(),
 		RewardId: "join-minstake-reward",
-		Amount:   "500", // Less than min stake
+		Amount:   math.NewInt(500), // Less than min stake
 	}
 
 	response, err := suite.msgServer.JoinStaking(suite.ctx, msg)
@@ -817,10 +818,10 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingExistin
 		Return(nil).
 		Times(1)
 
-	msg := &types.MsgJoinStaking{
+	msg := &v2types.MsgJoinStaking{
 		Creator:  creator.String(),
 		RewardId: "join-truncated-reward",
-		Amount:   "100",
+		Amount:   math.NewInt(100),
 	}
 
 	response, err := suite.msgServer.JoinStaking(suite.ctx, msg)
@@ -936,10 +937,10 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_DistributeStakingR
 		Return(nil).
 		Times(1)
 
-	msg := &types.MsgDistributeStakingRewards{
+	msg := &v2types.MsgDistributeStakingRewards{
 		Creator:  creator.String(),
 		RewardId: "distribute-test-reward",
-		Amount:   "500",
+		Amount:   math.NewInt(500),
 	}
 
 	counter := suite.k.GetStakingRewardsCounter(suite.ctx)

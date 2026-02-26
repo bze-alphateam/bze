@@ -1,6 +1,7 @@
 package types
 
 import (
+	v2types "github.com/bze-alphateam/bze/x/rewards/v2types"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -33,6 +34,14 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgActivateTradingReward{},
 	)
 	// this line is used by starport scaffolding # 3
+
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&v2types.MsgCreateStakingReward{},
+		&v2types.MsgUpdateStakingReward{},
+		&v2types.MsgJoinStaking{},
+		&v2types.MsgDistributeStakingRewards{},
+		&v2types.MsgCreateTradingReward{},
+	)
 
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgUpdateParams{},

@@ -8,6 +8,7 @@ package rewards
 
 import (
 	context "context"
+	v2 "github.com/bze-alphateam/bze/api/bze/rewards/v2"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -37,13 +38,13 @@ type MsgClient interface {
 	// UpdateParams defines a (governance) operation for updating the module
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
-	CreateStakingReward(ctx context.Context, in *MsgCreateStakingReward, opts ...grpc.CallOption) (*MsgCreateStakingRewardResponse, error)
-	UpdateStakingReward(ctx context.Context, in *MsgUpdateStakingReward, opts ...grpc.CallOption) (*MsgUpdateStakingRewardResponse, error)
-	JoinStaking(ctx context.Context, in *MsgJoinStaking, opts ...grpc.CallOption) (*MsgJoinStakingResponse, error)
+	CreateStakingReward(ctx context.Context, in *v2.MsgCreateStakingReward, opts ...grpc.CallOption) (*v2.MsgCreateStakingRewardResponse, error)
+	UpdateStakingReward(ctx context.Context, in *v2.MsgUpdateStakingReward, opts ...grpc.CallOption) (*v2.MsgUpdateStakingRewardResponse, error)
+	JoinStaking(ctx context.Context, in *v2.MsgJoinStaking, opts ...grpc.CallOption) (*v2.MsgJoinStakingResponse, error)
 	ExitStaking(ctx context.Context, in *MsgExitStaking, opts ...grpc.CallOption) (*MsgExitStakingResponse, error)
 	ClaimStakingRewards(ctx context.Context, in *MsgClaimStakingRewards, opts ...grpc.CallOption) (*MsgClaimStakingRewardsResponse, error)
-	DistributeStakingRewards(ctx context.Context, in *MsgDistributeStakingRewards, opts ...grpc.CallOption) (*MsgDistributeStakingRewardsResponse, error)
-	CreateTradingReward(ctx context.Context, in *MsgCreateTradingReward, opts ...grpc.CallOption) (*MsgCreateTradingRewardResponse, error)
+	DistributeStakingRewards(ctx context.Context, in *v2.MsgDistributeStakingRewards, opts ...grpc.CallOption) (*v2.MsgDistributeStakingRewardsResponse, error)
+	CreateTradingReward(ctx context.Context, in *v2.MsgCreateTradingReward, opts ...grpc.CallOption) (*v2.MsgCreateTradingRewardResponse, error)
 	ActivateTradingReward(ctx context.Context, in *MsgActivateTradingReward, opts ...grpc.CallOption) (*MsgActivateTradingRewardResponse, error)
 }
 
@@ -64,8 +65,8 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
-func (c *msgClient) CreateStakingReward(ctx context.Context, in *MsgCreateStakingReward, opts ...grpc.CallOption) (*MsgCreateStakingRewardResponse, error) {
-	out := new(MsgCreateStakingRewardResponse)
+func (c *msgClient) CreateStakingReward(ctx context.Context, in *v2.MsgCreateStakingReward, opts ...grpc.CallOption) (*v2.MsgCreateStakingRewardResponse, error) {
+	out := new(v2.MsgCreateStakingRewardResponse)
 	err := c.cc.Invoke(ctx, Msg_CreateStakingReward_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -73,8 +74,8 @@ func (c *msgClient) CreateStakingReward(ctx context.Context, in *MsgCreateStakin
 	return out, nil
 }
 
-func (c *msgClient) UpdateStakingReward(ctx context.Context, in *MsgUpdateStakingReward, opts ...grpc.CallOption) (*MsgUpdateStakingRewardResponse, error) {
-	out := new(MsgUpdateStakingRewardResponse)
+func (c *msgClient) UpdateStakingReward(ctx context.Context, in *v2.MsgUpdateStakingReward, opts ...grpc.CallOption) (*v2.MsgUpdateStakingRewardResponse, error) {
+	out := new(v2.MsgUpdateStakingRewardResponse)
 	err := c.cc.Invoke(ctx, Msg_UpdateStakingReward_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -82,8 +83,8 @@ func (c *msgClient) UpdateStakingReward(ctx context.Context, in *MsgUpdateStakin
 	return out, nil
 }
 
-func (c *msgClient) JoinStaking(ctx context.Context, in *MsgJoinStaking, opts ...grpc.CallOption) (*MsgJoinStakingResponse, error) {
-	out := new(MsgJoinStakingResponse)
+func (c *msgClient) JoinStaking(ctx context.Context, in *v2.MsgJoinStaking, opts ...grpc.CallOption) (*v2.MsgJoinStakingResponse, error) {
+	out := new(v2.MsgJoinStakingResponse)
 	err := c.cc.Invoke(ctx, Msg_JoinStaking_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -109,8 +110,8 @@ func (c *msgClient) ClaimStakingRewards(ctx context.Context, in *MsgClaimStaking
 	return out, nil
 }
 
-func (c *msgClient) DistributeStakingRewards(ctx context.Context, in *MsgDistributeStakingRewards, opts ...grpc.CallOption) (*MsgDistributeStakingRewardsResponse, error) {
-	out := new(MsgDistributeStakingRewardsResponse)
+func (c *msgClient) DistributeStakingRewards(ctx context.Context, in *v2.MsgDistributeStakingRewards, opts ...grpc.CallOption) (*v2.MsgDistributeStakingRewardsResponse, error) {
+	out := new(v2.MsgDistributeStakingRewardsResponse)
 	err := c.cc.Invoke(ctx, Msg_DistributeStakingRewards_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -118,8 +119,8 @@ func (c *msgClient) DistributeStakingRewards(ctx context.Context, in *MsgDistrib
 	return out, nil
 }
 
-func (c *msgClient) CreateTradingReward(ctx context.Context, in *MsgCreateTradingReward, opts ...grpc.CallOption) (*MsgCreateTradingRewardResponse, error) {
-	out := new(MsgCreateTradingRewardResponse)
+func (c *msgClient) CreateTradingReward(ctx context.Context, in *v2.MsgCreateTradingReward, opts ...grpc.CallOption) (*v2.MsgCreateTradingRewardResponse, error) {
+	out := new(v2.MsgCreateTradingRewardResponse)
 	err := c.cc.Invoke(ctx, Msg_CreateTradingReward_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -143,13 +144,13 @@ type MsgServer interface {
 	// UpdateParams defines a (governance) operation for updating the module
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
-	CreateStakingReward(context.Context, *MsgCreateStakingReward) (*MsgCreateStakingRewardResponse, error)
-	UpdateStakingReward(context.Context, *MsgUpdateStakingReward) (*MsgUpdateStakingRewardResponse, error)
-	JoinStaking(context.Context, *MsgJoinStaking) (*MsgJoinStakingResponse, error)
+	CreateStakingReward(context.Context, *v2.MsgCreateStakingReward) (*v2.MsgCreateStakingRewardResponse, error)
+	UpdateStakingReward(context.Context, *v2.MsgUpdateStakingReward) (*v2.MsgUpdateStakingRewardResponse, error)
+	JoinStaking(context.Context, *v2.MsgJoinStaking) (*v2.MsgJoinStakingResponse, error)
 	ExitStaking(context.Context, *MsgExitStaking) (*MsgExitStakingResponse, error)
 	ClaimStakingRewards(context.Context, *MsgClaimStakingRewards) (*MsgClaimStakingRewardsResponse, error)
-	DistributeStakingRewards(context.Context, *MsgDistributeStakingRewards) (*MsgDistributeStakingRewardsResponse, error)
-	CreateTradingReward(context.Context, *MsgCreateTradingReward) (*MsgCreateTradingRewardResponse, error)
+	DistributeStakingRewards(context.Context, *v2.MsgDistributeStakingRewards) (*v2.MsgDistributeStakingRewardsResponse, error)
+	CreateTradingReward(context.Context, *v2.MsgCreateTradingReward) (*v2.MsgCreateTradingRewardResponse, error)
 	ActivateTradingReward(context.Context, *MsgActivateTradingReward) (*MsgActivateTradingRewardResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
@@ -161,13 +162,13 @@ type UnimplementedMsgServer struct {
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
 }
-func (UnimplementedMsgServer) CreateStakingReward(context.Context, *MsgCreateStakingReward) (*MsgCreateStakingRewardResponse, error) {
+func (UnimplementedMsgServer) CreateStakingReward(context.Context, *v2.MsgCreateStakingReward) (*v2.MsgCreateStakingRewardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateStakingReward not implemented")
 }
-func (UnimplementedMsgServer) UpdateStakingReward(context.Context, *MsgUpdateStakingReward) (*MsgUpdateStakingRewardResponse, error) {
+func (UnimplementedMsgServer) UpdateStakingReward(context.Context, *v2.MsgUpdateStakingReward) (*v2.MsgUpdateStakingRewardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateStakingReward not implemented")
 }
-func (UnimplementedMsgServer) JoinStaking(context.Context, *MsgJoinStaking) (*MsgJoinStakingResponse, error) {
+func (UnimplementedMsgServer) JoinStaking(context.Context, *v2.MsgJoinStaking) (*v2.MsgJoinStakingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JoinStaking not implemented")
 }
 func (UnimplementedMsgServer) ExitStaking(context.Context, *MsgExitStaking) (*MsgExitStakingResponse, error) {
@@ -176,10 +177,10 @@ func (UnimplementedMsgServer) ExitStaking(context.Context, *MsgExitStaking) (*Ms
 func (UnimplementedMsgServer) ClaimStakingRewards(context.Context, *MsgClaimStakingRewards) (*MsgClaimStakingRewardsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClaimStakingRewards not implemented")
 }
-func (UnimplementedMsgServer) DistributeStakingRewards(context.Context, *MsgDistributeStakingRewards) (*MsgDistributeStakingRewardsResponse, error) {
+func (UnimplementedMsgServer) DistributeStakingRewards(context.Context, *v2.MsgDistributeStakingRewards) (*v2.MsgDistributeStakingRewardsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DistributeStakingRewards not implemented")
 }
-func (UnimplementedMsgServer) CreateTradingReward(context.Context, *MsgCreateTradingReward) (*MsgCreateTradingRewardResponse, error) {
+func (UnimplementedMsgServer) CreateTradingReward(context.Context, *v2.MsgCreateTradingReward) (*v2.MsgCreateTradingRewardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTradingReward not implemented")
 }
 func (UnimplementedMsgServer) ActivateTradingReward(context.Context, *MsgActivateTradingReward) (*MsgActivateTradingRewardResponse, error) {
@@ -217,7 +218,7 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 }
 
 func _Msg_CreateStakingReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCreateStakingReward)
+	in := new(v2.MsgCreateStakingReward)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -229,13 +230,13 @@ func _Msg_CreateStakingReward_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: Msg_CreateStakingReward_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CreateStakingReward(ctx, req.(*MsgCreateStakingReward))
+		return srv.(MsgServer).CreateStakingReward(ctx, req.(*v2.MsgCreateStakingReward))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_UpdateStakingReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUpdateStakingReward)
+	in := new(v2.MsgUpdateStakingReward)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -247,13 +248,13 @@ func _Msg_UpdateStakingReward_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: Msg_UpdateStakingReward_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateStakingReward(ctx, req.(*MsgUpdateStakingReward))
+		return srv.(MsgServer).UpdateStakingReward(ctx, req.(*v2.MsgUpdateStakingReward))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_JoinStaking_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgJoinStaking)
+	in := new(v2.MsgJoinStaking)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -265,7 +266,7 @@ func _Msg_JoinStaking_Handler(srv interface{}, ctx context.Context, dec func(int
 		FullMethod: Msg_JoinStaking_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).JoinStaking(ctx, req.(*MsgJoinStaking))
+		return srv.(MsgServer).JoinStaking(ctx, req.(*v2.MsgJoinStaking))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -307,7 +308,7 @@ func _Msg_ClaimStakingRewards_Handler(srv interface{}, ctx context.Context, dec 
 }
 
 func _Msg_DistributeStakingRewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgDistributeStakingRewards)
+	in := new(v2.MsgDistributeStakingRewards)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -319,13 +320,13 @@ func _Msg_DistributeStakingRewards_Handler(srv interface{}, ctx context.Context,
 		FullMethod: Msg_DistributeStakingRewards_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).DistributeStakingRewards(ctx, req.(*MsgDistributeStakingRewards))
+		return srv.(MsgServer).DistributeStakingRewards(ctx, req.(*v2.MsgDistributeStakingRewards))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_CreateTradingReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCreateTradingReward)
+	in := new(v2.MsgCreateTradingReward)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -337,7 +338,7 @@ func _Msg_CreateTradingReward_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: Msg_CreateTradingReward_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CreateTradingReward(ctx, req.(*MsgCreateTradingReward))
+		return srv.(MsgServer).CreateTradingReward(ctx, req.(*v2.MsgCreateTradingReward))
 	}
 	return interceptor(ctx, in, info, handler)
 }

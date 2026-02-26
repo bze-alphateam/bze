@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/bze-alphateam/bze/x/burner/types"
+	v2types "github.com/bze-alphateam/bze/x/burner/v2types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type msgServer struct {
@@ -21,11 +21,11 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
-func (k msgServer) FundBurner(goCtx context.Context, msg *types.MsgFundBurner) (*types.MsgFundBurnerResponse, error) {
+func (k msgServer) FundBurner(goCtx context.Context, msg *v2types.MsgFundBurner) (*v2types.MsgFundBurnerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	amount, err := sdk.ParseCoinsNormalized(msg.Amount)
-	if err != nil {
-		return nil, err
+	amount := msg.Amount
+	if !amount.IsAllPositive() {
+		return nil, errors.Wrap(types.ErrInvalidBurnAmount, "provided amounts are not positive")
 	}
 
 	burnable, exchangeable, lockable := k.filterCoinsToBurn(ctx, amount)
@@ -59,5 +59,5 @@ func (k msgServer) FundBurner(goCtx context.Context, msg *types.MsgFundBurner) (
 		ctx.Logger().Error("failed to emit fund burner event", "error", err)
 	}
 
-	return &types.MsgFundBurnerResponse{}, nil
+	return &v2types.MsgFundBurnerResponse{}, nil
 }

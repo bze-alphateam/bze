@@ -2,7 +2,9 @@ package keeper
 
 import (
 	"context"
+
 	"github.com/bze-alphateam/bze/x/tokenfactory/types"
+	v2types "github.com/bze-alphateam/bze/x/tokenfactory/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -36,12 +38,12 @@ func (k msgServer) CreateDenom(goCtx context.Context, msg *types.MsgCreateDenom)
 	return &types.MsgCreateDenomResponse{NewDenom: denom}, err
 }
 
-func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
+func (k msgServer) Mint(goCtx context.Context, msg *v2types.MsgMint) (*v2types.MsgMintResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	coin, err := sdk.ParseCoinNormalized(msg.Coins)
-	if err != nil || !coin.IsPositive() {
-		return nil, types.ErrInvalidAmount.Wrapf("coins: %s", msg.Coins)
+	coin := msg.Coins
+	if !coin.IsPositive() {
+		return nil, types.ErrInvalidAmount.Wrapf("coins: %s", coin)
 	}
 
 	_, denomExists := k.bankKeeper.GetDenomMetaData(ctx, coin.GetDenom())
@@ -50,7 +52,7 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMi
 	}
 
 	//check denom is a tokenfactory denom
-	_, _, err = types.DeconstructDenom(coin.GetDenom())
+	_, _, err := types.DeconstructDenom(coin.GetDenom())
 	if err != nil {
 		return nil, err
 	}
@@ -79,14 +81,14 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMi
 		return nil, err
 	}
 
-	return &types.MsgMintResponse{}, nil
+	return &v2types.MsgMintResponse{}, nil
 }
 
-func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
+func (k msgServer) Burn(goCtx context.Context, msg *v2types.MsgBurn) (*v2types.MsgBurnResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	coin, err := sdk.ParseCoinNormalized(msg.Coins)
-	if err != nil || !coin.IsPositive() {
-		return nil, types.ErrInvalidAmount.Wrapf("coins: %s", msg.Coins)
+	coin := msg.Coins
+	if !coin.IsPositive() {
+		return nil, types.ErrInvalidAmount.Wrapf("coins: %s", coin)
 	}
 
 	dAuth, err := k.Keeper.GetDenomAuthority(ctx, coin.GetDenom())
@@ -120,7 +122,7 @@ func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBu
 		return nil, err
 	}
 
-	return &types.MsgBurnResponse{}, nil
+	return &v2types.MsgBurnResponse{}, nil
 }
 
 func (k msgServer) ChangeAdmin(goCtx context.Context, msg *types.MsgChangeAdmin) (*types.MsgChangeAdminResponse, error) {

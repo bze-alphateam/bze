@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/math"
 	"fmt"
 	"github.com/bze-alphateam/bze/x/rewards/types"
+	"github.com/bze-alphateam/bze/x/rewards/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"go.uber.org/mock/gomock"
@@ -79,13 +80,13 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 		Return(int64(100)).
 		Times(1)
 
-	msg := &types.MsgCreateTradingReward{
+	msg := &v2types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
-		Duration:    "30",
+		Duration:    30,
 		MarketId:    "market-1",
-		Slots:       "5",
+		Slots:       5,
 	}
 
 	counter := suite.k.GetTradingRewardsCounter(suite.ctx)
@@ -159,13 +160,13 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 		Times(1)
 
 	// Create with Duration=7, but pending expiration should still be 30 days
-	msg := &types.MsgCreateTradingReward{
+	msg := &v2types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
-		Duration:    "7",
+		Duration:    7,
 		MarketId:    "market-1",
-		Slots:       "5",
+		Slots:       5,
 	}
 
 	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
@@ -180,7 +181,7 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardNilRequest() {
-	response, err := suite.msgServer.CreateTradingReward(suite.ctx, nil)
+	response, err := suite.msgServer.CreateTradingReward(suite.ctx, (*v2types.MsgCreateTradingReward)(nil))
 
 	suite.Require().Error(err)
 	suite.Require().Nil(response)
@@ -188,13 +189,13 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardInvalidCreator() {
-	msg := &types.MsgCreateTradingReward{
+	msg := &v2types.MsgCreateTradingReward{
 		Creator:     "invalid-address",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
-		Duration:    "30",
+		Duration:    30,
 		MarketId:    "market-1",
-		Slots:       "5",
+		Slots:       5,
 	}
 
 	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
@@ -212,13 +213,13 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 		Return(false).
 		Times(1)
 
-	msg := &types.MsgCreateTradingReward{
+	msg := &v2types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "invalid-denom",
-		Duration:    "30",
+		Duration:    30,
 		MarketId:    "market-1",
-		Slots:       "5",
+		Slots:       5,
 	}
 
 	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
@@ -243,13 +244,13 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 		Return(false).
 		Times(1)
 
-	msg := &types.MsgCreateTradingReward{
+	msg := &v2types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
-		Duration:    "30",
+		Duration:    30,
 		MarketId:    "invalid-market",
-		Slots:       "5",
+		Slots:       5,
 	}
 
 	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
@@ -281,13 +282,13 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 		Return(true).
 		Times(1)
 
-	msg := &types.MsgCreateTradingReward{
+	msg := &v2types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
-		Duration:    "30",
+		Duration:    30,
 		MarketId:    "market-1",
-		Slots:       "5",
+		Slots:       5,
 	}
 
 	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
@@ -328,13 +329,13 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 		)).
 		Times(1)
 
-	msg := &types.MsgCreateTradingReward{
+	msg := &v2types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
-		Duration:    "30",
+		Duration:    30,
 		MarketId:    "market-1",
-		Slots:       "5",
+		Slots:       5,
 	}
 
 	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
@@ -394,13 +395,13 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 		Return(int64(150)).
 		Times(1)
 
-	msg := &types.MsgCreateTradingReward{
+	msg := &v2types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
-		Duration:    "30",
+		Duration:    30,
 		MarketId:    "market-1",
-		Slots:       "5",
+		Slots:       5,
 	}
 
 	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
@@ -458,13 +459,13 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 		Return(int64(200)).
 		Times(1)
 
-	msg := &types.MsgCreateTradingReward{
+	msg := &v2types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
-		Duration:    "30",
+		Duration:    30,
 		MarketId:    "market-1",
-		Slots:       "5",
+		Slots:       5,
 	}
 
 	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
@@ -534,13 +535,13 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 		Return(int64(250)).
 		Times(1)
 
-	msg := &types.MsgCreateTradingReward{
+	msg := &v2types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
-		Duration:    "30",
+		Duration:    30,
 		MarketId:    "market-1",
-		Slots:       "5",
+		Slots:       5,
 	}
 
 	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)

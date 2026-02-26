@@ -1,0 +1,36 @@
+syntax = "proto3";
+package bze.burner.v2;
+
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/burner/v2types";
+
+message MsgFundBurner {
+  option           (amino.name) = "bze/x/burner/v2/MsgFundBurner";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  repeated cosmos.base.v1beta1.Coin amount = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+message MsgFundBurnerResponse {}
+
+message MsgStartRaffle {
+  option           (amino.name) = "bze/x/burner/v2/MsgStartRaffle";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator      = 1;
+  string pot          = 2 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  uint64 duration     = 3;
+  uint64 chances      = 4;
+  string ratio        = 5 [(gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
+  string ticket_price = 6 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  string denom        = 7;
+}
+
+message MsgStartRaffleResponse {}

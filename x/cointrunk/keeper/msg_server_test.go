@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
+	v2types "github.com/bze-alphateam/bze/x/cointrunk/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -254,10 +255,10 @@ func (suite *IntegrationTestSuite) TestPayPublisherRespect_ValidRequest() {
 	suite.bank.EXPECT().SendCoins(suite.ctx, creatorAddr, publisherAddr, publisherReward).Return(nil).Times(1)
 	suite.distr.EXPECT().FundCommunityPool(suite.ctx, taxAmount, creatorAddr).Return(nil).Times(1)
 
-	msg := &types.MsgPayPublisherRespect{
+	msg := &v2types.MsgPayPublisherRespect{
 		Creator: creator,
 		Address: publisher.Address,
-		Amount:  "1000ubze",
+		Amount:  sdk.NewCoin("ubze", math.NewInt(1000)),
 	}
 
 	res, err := suite.msgServer.PayPublisherRespect(suite.ctx, msg)
@@ -275,17 +276,29 @@ func (suite *IntegrationTestSuite) TestPayPublisherRespect_ValidRequest() {
 }
 
 func (suite *IntegrationTestSuite) TestPayPublisherRespect_InvalidAmount() {
-	msg := &types.MsgPayPublisherRespect{
+	// Set up params
+	params := types.Params{
+		AnonArticleLimit: 10,
+		AnonArticleCost:  sdk.NewInt64Coin("ubze", 1000),
+		PublisherRespectParams: types.PublisherRespectParams{
+			Tax:   math.LegacyMustNewDecFromStr("0.1"),
+			Denom: "ubze",
+		},
+	}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	msg := &v2types.MsgPayPublisherRespect{
 		Creator: sdk.AccAddress("creator").String(),
 		Address: sdk.AccAddress("publisher").String(),
-		Amount:  "invalid-amount",
+		Amount:  sdk.Coin{Denom: "ubze", Amount: math.NewInt(-1)},
 	}
 
 	res, err := suite.msgServer.PayPublisherRespect(suite.ctx, msg)
 
 	suite.Require().Error(err)
 	suite.Require().Nil(res)
-	suite.Require().Contains(err.Error(), "invalid amount")
+	suite.Require().Contains(err.Error(), "amount should be positive")
 }
 
 func (suite *IntegrationTestSuite) TestPayPublisherRespect_WrongDenom() {
@@ -301,10 +314,10 @@ func (suite *IntegrationTestSuite) TestPayPublisherRespect_WrongDenom() {
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
-	msg := &types.MsgPayPublisherRespect{
+	msg := &v2types.MsgPayPublisherRespect{
 		Creator: sdk.AccAddress("creator").String(),
 		Address: sdk.AccAddress("publisher").String(),
-		Amount:  "1000uatom", // Wrong denom
+		Amount:  sdk.NewCoin("uatom", math.NewInt(1000)), // Wrong denom
 	}
 
 	res, err := suite.msgServer.PayPublisherRespect(suite.ctx, msg)
@@ -327,10 +340,10 @@ func (suite *IntegrationTestSuite) TestPayPublisherRespect_PublisherNotFound() {
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
-	msg := &types.MsgPayPublisherRespect{
+	msg := &v2types.MsgPayPublisherRespect{
 		Creator: sdk.AccAddress("creator").String(),
 		Address: sdk.AccAddress("nonexistent").String(),
-		Amount:  "1000ubze",
+		Amount:  sdk.NewCoin("ubze", math.NewInt(1000)),
 	}
 
 	res, err := suite.msgServer.PayPublisherRespect(suite.ctx, msg)
@@ -353,10 +366,10 @@ func (suite *IntegrationTestSuite) TestPayPublisherRespect_ZeroAmount() {
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
-	msg := &types.MsgPayPublisherRespect{
+	msg := &v2types.MsgPayPublisherRespect{
 		Creator: sdk.AccAddress("creator").String(),
 		Address: sdk.AccAddress("publisher").String(),
-		Amount:  "0ubze",
+		Amount:  sdk.NewCoin("ubze", math.NewInt(0)),
 	}
 
 	res, err := suite.msgServer.PayPublisherRespect(suite.ctx, msg)
@@ -402,10 +415,10 @@ func (suite *IntegrationTestSuite) TestPayPublisherRespect_BankError() {
 	// Mock bank to return error
 	suite.bank.EXPECT().SendCoins(suite.ctx, creatorAddr, publisherAddr, publisherReward).Return(bankError).Times(1)
 
-	msg := &types.MsgPayPublisherRespect{
+	msg := &v2types.MsgPayPublisherRespect{
 		Creator: creator,
 		Address: publisher.Address,
-		Amount:  "1000ubze",
+		Amount:  sdk.NewCoin("ubze", math.NewInt(1000)),
 	}
 
 	res, err := suite.msgServer.PayPublisherRespect(suite.ctx, msg)

@@ -8,6 +8,7 @@ package tradebin
 
 import (
 	context "context"
+	v2 "github.com/bze-alphateam/bze/api/bze/tradebin/v2"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -38,10 +39,10 @@ type MsgClient interface {
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	CreateMarket(ctx context.Context, in *MsgCreateMarket, opts ...grpc.CallOption) (*MsgCreateMarketResponse, error)
-	CreateOrder(ctx context.Context, in *MsgCreateOrder, opts ...grpc.CallOption) (*MsgCreateOrderResponse, error)
+	CreateOrder(ctx context.Context, in *v2.MsgCreateOrder, opts ...grpc.CallOption) (*v2.MsgCreateOrderResponse, error)
 	CancelOrder(ctx context.Context, in *MsgCancelOrder, opts ...grpc.CallOption) (*MsgCancelOrderResponse, error)
-	FillOrders(ctx context.Context, in *MsgFillOrders, opts ...grpc.CallOption) (*MsgFillOrdersResponse, error)
-	CreateLiquidityPool(ctx context.Context, in *MsgCreateLiquidityPool, opts ...grpc.CallOption) (*MsgCreateLiquidityPoolResponse, error)
+	FillOrders(ctx context.Context, in *v2.MsgFillOrders, opts ...grpc.CallOption) (*v2.MsgFillOrdersResponse, error)
+	CreateLiquidityPool(ctx context.Context, in *v2.MsgCreateLiquidityPool, opts ...grpc.CallOption) (*v2.MsgCreateLiquidityPoolResponse, error)
 	AddLiquidity(ctx context.Context, in *MsgAddLiquidity, opts ...grpc.CallOption) (*MsgAddLiquidityResponse, error)
 	RemoveLiquidity(ctx context.Context, in *MsgRemoveLiquidity, opts ...grpc.CallOption) (*MsgRemoveLiquidityResponse, error)
 	MultiSwap(ctx context.Context, in *MsgMultiSwap, opts ...grpc.CallOption) (*MsgMultiSwapResponse, error)
@@ -73,8 +74,8 @@ func (c *msgClient) CreateMarket(ctx context.Context, in *MsgCreateMarket, opts 
 	return out, nil
 }
 
-func (c *msgClient) CreateOrder(ctx context.Context, in *MsgCreateOrder, opts ...grpc.CallOption) (*MsgCreateOrderResponse, error) {
-	out := new(MsgCreateOrderResponse)
+func (c *msgClient) CreateOrder(ctx context.Context, in *v2.MsgCreateOrder, opts ...grpc.CallOption) (*v2.MsgCreateOrderResponse, error) {
+	out := new(v2.MsgCreateOrderResponse)
 	err := c.cc.Invoke(ctx, Msg_CreateOrder_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -91,8 +92,8 @@ func (c *msgClient) CancelOrder(ctx context.Context, in *MsgCancelOrder, opts ..
 	return out, nil
 }
 
-func (c *msgClient) FillOrders(ctx context.Context, in *MsgFillOrders, opts ...grpc.CallOption) (*MsgFillOrdersResponse, error) {
-	out := new(MsgFillOrdersResponse)
+func (c *msgClient) FillOrders(ctx context.Context, in *v2.MsgFillOrders, opts ...grpc.CallOption) (*v2.MsgFillOrdersResponse, error) {
+	out := new(v2.MsgFillOrdersResponse)
 	err := c.cc.Invoke(ctx, Msg_FillOrders_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -100,8 +101,8 @@ func (c *msgClient) FillOrders(ctx context.Context, in *MsgFillOrders, opts ...g
 	return out, nil
 }
 
-func (c *msgClient) CreateLiquidityPool(ctx context.Context, in *MsgCreateLiquidityPool, opts ...grpc.CallOption) (*MsgCreateLiquidityPoolResponse, error) {
-	out := new(MsgCreateLiquidityPoolResponse)
+func (c *msgClient) CreateLiquidityPool(ctx context.Context, in *v2.MsgCreateLiquidityPool, opts ...grpc.CallOption) (*v2.MsgCreateLiquidityPoolResponse, error) {
+	out := new(v2.MsgCreateLiquidityPoolResponse)
 	err := c.cc.Invoke(ctx, Msg_CreateLiquidityPool_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -144,10 +145,10 @@ type MsgServer interface {
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	CreateMarket(context.Context, *MsgCreateMarket) (*MsgCreateMarketResponse, error)
-	CreateOrder(context.Context, *MsgCreateOrder) (*MsgCreateOrderResponse, error)
+	CreateOrder(context.Context, *v2.MsgCreateOrder) (*v2.MsgCreateOrderResponse, error)
 	CancelOrder(context.Context, *MsgCancelOrder) (*MsgCancelOrderResponse, error)
-	FillOrders(context.Context, *MsgFillOrders) (*MsgFillOrdersResponse, error)
-	CreateLiquidityPool(context.Context, *MsgCreateLiquidityPool) (*MsgCreateLiquidityPoolResponse, error)
+	FillOrders(context.Context, *v2.MsgFillOrders) (*v2.MsgFillOrdersResponse, error)
+	CreateLiquidityPool(context.Context, *v2.MsgCreateLiquidityPool) (*v2.MsgCreateLiquidityPoolResponse, error)
 	AddLiquidity(context.Context, *MsgAddLiquidity) (*MsgAddLiquidityResponse, error)
 	RemoveLiquidity(context.Context, *MsgRemoveLiquidity) (*MsgRemoveLiquidityResponse, error)
 	MultiSwap(context.Context, *MsgMultiSwap) (*MsgMultiSwapResponse, error)
@@ -164,16 +165,16 @@ func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*
 func (UnimplementedMsgServer) CreateMarket(context.Context, *MsgCreateMarket) (*MsgCreateMarketResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateMarket not implemented")
 }
-func (UnimplementedMsgServer) CreateOrder(context.Context, *MsgCreateOrder) (*MsgCreateOrderResponse, error) {
+func (UnimplementedMsgServer) CreateOrder(context.Context, *v2.MsgCreateOrder) (*v2.MsgCreateOrderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateOrder not implemented")
 }
 func (UnimplementedMsgServer) CancelOrder(context.Context, *MsgCancelOrder) (*MsgCancelOrderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelOrder not implemented")
 }
-func (UnimplementedMsgServer) FillOrders(context.Context, *MsgFillOrders) (*MsgFillOrdersResponse, error) {
+func (UnimplementedMsgServer) FillOrders(context.Context, *v2.MsgFillOrders) (*v2.MsgFillOrdersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FillOrders not implemented")
 }
-func (UnimplementedMsgServer) CreateLiquidityPool(context.Context, *MsgCreateLiquidityPool) (*MsgCreateLiquidityPoolResponse, error) {
+func (UnimplementedMsgServer) CreateLiquidityPool(context.Context, *v2.MsgCreateLiquidityPool) (*v2.MsgCreateLiquidityPoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateLiquidityPool not implemented")
 }
 func (UnimplementedMsgServer) AddLiquidity(context.Context, *MsgAddLiquidity) (*MsgAddLiquidityResponse, error) {
@@ -235,7 +236,7 @@ func _Msg_CreateMarket_Handler(srv interface{}, ctx context.Context, dec func(in
 }
 
 func _Msg_CreateOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCreateOrder)
+	in := new(v2.MsgCreateOrder)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -247,7 +248,7 @@ func _Msg_CreateOrder_Handler(srv interface{}, ctx context.Context, dec func(int
 		FullMethod: Msg_CreateOrder_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CreateOrder(ctx, req.(*MsgCreateOrder))
+		return srv.(MsgServer).CreateOrder(ctx, req.(*v2.MsgCreateOrder))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -271,7 +272,7 @@ func _Msg_CancelOrder_Handler(srv interface{}, ctx context.Context, dec func(int
 }
 
 func _Msg_FillOrders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgFillOrders)
+	in := new(v2.MsgFillOrders)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -283,13 +284,13 @@ func _Msg_FillOrders_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: Msg_FillOrders_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).FillOrders(ctx, req.(*MsgFillOrders))
+		return srv.(MsgServer).FillOrders(ctx, req.(*v2.MsgFillOrders))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_CreateLiquidityPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCreateLiquidityPool)
+	in := new(v2.MsgCreateLiquidityPool)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -301,7 +302,7 @@ func _Msg_CreateLiquidityPool_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: Msg_CreateLiquidityPool_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CreateLiquidityPool(ctx, req.(*MsgCreateLiquidityPool))
+		return srv.(MsgServer).CreateLiquidityPool(ctx, req.(*v2.MsgCreateLiquidityPool))
 	}
 	return interceptor(ctx, in, info, handler)
 }

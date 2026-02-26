@@ -8,6 +8,7 @@ package cointrunk
 
 import (
 	context "context"
+	v2 "github.com/bze-alphateam/bze/api/bze/cointrunk/v2"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -34,7 +35,7 @@ type MsgClient interface {
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	AddArticle(ctx context.Context, in *MsgAddArticle, opts ...grpc.CallOption) (*MsgAddArticleResponse, error)
-	PayPublisherRespect(ctx context.Context, in *MsgPayPublisherRespect, opts ...grpc.CallOption) (*MsgPayPublisherRespectResponse, error)
+	PayPublisherRespect(ctx context.Context, in *v2.MsgPayPublisherRespect, opts ...grpc.CallOption) (*v2.MsgPayPublisherRespectResponse, error)
 	AcceptDomain(ctx context.Context, in *MsgAcceptDomain, opts ...grpc.CallOption) (*MsgAcceptDomainResponse, error)
 	SavePublisher(ctx context.Context, in *MsgSavePublisher, opts ...grpc.CallOption) (*MsgSavePublisherResponse, error)
 }
@@ -65,8 +66,8 @@ func (c *msgClient) AddArticle(ctx context.Context, in *MsgAddArticle, opts ...g
 	return out, nil
 }
 
-func (c *msgClient) PayPublisherRespect(ctx context.Context, in *MsgPayPublisherRespect, opts ...grpc.CallOption) (*MsgPayPublisherRespectResponse, error) {
-	out := new(MsgPayPublisherRespectResponse)
+func (c *msgClient) PayPublisherRespect(ctx context.Context, in *v2.MsgPayPublisherRespect, opts ...grpc.CallOption) (*v2.MsgPayPublisherRespectResponse, error) {
+	out := new(v2.MsgPayPublisherRespectResponse)
 	err := c.cc.Invoke(ctx, Msg_PayPublisherRespect_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -100,7 +101,7 @@ type MsgServer interface {
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	AddArticle(context.Context, *MsgAddArticle) (*MsgAddArticleResponse, error)
-	PayPublisherRespect(context.Context, *MsgPayPublisherRespect) (*MsgPayPublisherRespectResponse, error)
+	PayPublisherRespect(context.Context, *v2.MsgPayPublisherRespect) (*v2.MsgPayPublisherRespectResponse, error)
 	AcceptDomain(context.Context, *MsgAcceptDomain) (*MsgAcceptDomainResponse, error)
 	SavePublisher(context.Context, *MsgSavePublisher) (*MsgSavePublisherResponse, error)
 	mustEmbedUnimplementedMsgServer()
@@ -116,7 +117,7 @@ func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*
 func (UnimplementedMsgServer) AddArticle(context.Context, *MsgAddArticle) (*MsgAddArticleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddArticle not implemented")
 }
-func (UnimplementedMsgServer) PayPublisherRespect(context.Context, *MsgPayPublisherRespect) (*MsgPayPublisherRespectResponse, error) {
+func (UnimplementedMsgServer) PayPublisherRespect(context.Context, *v2.MsgPayPublisherRespect) (*v2.MsgPayPublisherRespectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PayPublisherRespect not implemented")
 }
 func (UnimplementedMsgServer) AcceptDomain(context.Context, *MsgAcceptDomain) (*MsgAcceptDomainResponse, error) {
@@ -175,7 +176,7 @@ func _Msg_AddArticle_Handler(srv interface{}, ctx context.Context, dec func(inte
 }
 
 func _Msg_PayPublisherRespect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgPayPublisherRespect)
+	in := new(v2.MsgPayPublisherRespect)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -187,7 +188,7 @@ func _Msg_PayPublisherRespect_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: Msg_PayPublisherRespect_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).PayPublisherRespect(ctx, req.(*MsgPayPublisherRespect))
+		return srv.(MsgServer).PayPublisherRespect(ctx, req.(*v2.MsgPayPublisherRespect))
 	}
 	return interceptor(ctx, in, info, handler)
 }

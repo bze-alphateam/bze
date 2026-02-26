@@ -1,6 +1,7 @@
 package types
 
 import (
+	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -33,6 +34,12 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgMultiSwap{},
 	)
 	// this line is used by starport scaffolding # 3
+
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&v2types.MsgCreateOrder{},
+		&v2types.MsgFillOrders{},
+		&v2types.MsgCreateLiquidityPool{},
+	)
 
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgUpdateParams{},

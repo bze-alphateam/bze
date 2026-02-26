@@ -8,6 +8,7 @@ package tokenfactory
 
 import (
 	context "context"
+	v2 "github.com/bze-alphateam/bze/api/bze/tokenfactory/v2"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -35,8 +36,8 @@ type MsgClient interface {
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	CreateDenom(ctx context.Context, in *MsgCreateDenom, opts ...grpc.CallOption) (*MsgCreateDenomResponse, error)
-	Mint(ctx context.Context, in *MsgMint, opts ...grpc.CallOption) (*MsgMintResponse, error)
-	Burn(ctx context.Context, in *MsgBurn, opts ...grpc.CallOption) (*MsgBurnResponse, error)
+	Mint(ctx context.Context, in *v2.MsgMint, opts ...grpc.CallOption) (*v2.MsgMintResponse, error)
+	Burn(ctx context.Context, in *v2.MsgBurn, opts ...grpc.CallOption) (*v2.MsgBurnResponse, error)
 	ChangeAdmin(ctx context.Context, in *MsgChangeAdmin, opts ...grpc.CallOption) (*MsgChangeAdminResponse, error)
 	SetDenomMetadata(ctx context.Context, in *MsgSetDenomMetadata, opts ...grpc.CallOption) (*MsgSetDenomMetadataResponse, error)
 }
@@ -67,8 +68,8 @@ func (c *msgClient) CreateDenom(ctx context.Context, in *MsgCreateDenom, opts ..
 	return out, nil
 }
 
-func (c *msgClient) Mint(ctx context.Context, in *MsgMint, opts ...grpc.CallOption) (*MsgMintResponse, error) {
-	out := new(MsgMintResponse)
+func (c *msgClient) Mint(ctx context.Context, in *v2.MsgMint, opts ...grpc.CallOption) (*v2.MsgMintResponse, error) {
+	out := new(v2.MsgMintResponse)
 	err := c.cc.Invoke(ctx, Msg_Mint_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -76,8 +77,8 @@ func (c *msgClient) Mint(ctx context.Context, in *MsgMint, opts ...grpc.CallOpti
 	return out, nil
 }
 
-func (c *msgClient) Burn(ctx context.Context, in *MsgBurn, opts ...grpc.CallOption) (*MsgBurnResponse, error) {
-	out := new(MsgBurnResponse)
+func (c *msgClient) Burn(ctx context.Context, in *v2.MsgBurn, opts ...grpc.CallOption) (*v2.MsgBurnResponse, error) {
+	out := new(v2.MsgBurnResponse)
 	err := c.cc.Invoke(ctx, Msg_Burn_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -111,8 +112,8 @@ type MsgServer interface {
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	CreateDenom(context.Context, *MsgCreateDenom) (*MsgCreateDenomResponse, error)
-	Mint(context.Context, *MsgMint) (*MsgMintResponse, error)
-	Burn(context.Context, *MsgBurn) (*MsgBurnResponse, error)
+	Mint(context.Context, *v2.MsgMint) (*v2.MsgMintResponse, error)
+	Burn(context.Context, *v2.MsgBurn) (*v2.MsgBurnResponse, error)
 	ChangeAdmin(context.Context, *MsgChangeAdmin) (*MsgChangeAdminResponse, error)
 	SetDenomMetadata(context.Context, *MsgSetDenomMetadata) (*MsgSetDenomMetadataResponse, error)
 	mustEmbedUnimplementedMsgServer()
@@ -128,10 +129,10 @@ func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*
 func (UnimplementedMsgServer) CreateDenom(context.Context, *MsgCreateDenom) (*MsgCreateDenomResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateDenom not implemented")
 }
-func (UnimplementedMsgServer) Mint(context.Context, *MsgMint) (*MsgMintResponse, error) {
+func (UnimplementedMsgServer) Mint(context.Context, *v2.MsgMint) (*v2.MsgMintResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Mint not implemented")
 }
-func (UnimplementedMsgServer) Burn(context.Context, *MsgBurn) (*MsgBurnResponse, error) {
+func (UnimplementedMsgServer) Burn(context.Context, *v2.MsgBurn) (*v2.MsgBurnResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Burn not implemented")
 }
 func (UnimplementedMsgServer) ChangeAdmin(context.Context, *MsgChangeAdmin) (*MsgChangeAdminResponse, error) {
@@ -190,7 +191,7 @@ func _Msg_CreateDenom_Handler(srv interface{}, ctx context.Context, dec func(int
 }
 
 func _Msg_Mint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgMint)
+	in := new(v2.MsgMint)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -202,13 +203,13 @@ func _Msg_Mint_Handler(srv interface{}, ctx context.Context, dec func(interface{
 		FullMethod: Msg_Mint_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Mint(ctx, req.(*MsgMint))
+		return srv.(MsgServer).Mint(ctx, req.(*v2.MsgMint))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_Burn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgBurn)
+	in := new(v2.MsgBurn)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -220,7 +221,7 @@ func _Msg_Burn_Handler(srv interface{}, ctx context.Context, dec func(interface{
 		FullMethod: Msg_Burn_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Burn(ctx, req.(*MsgBurn))
+		return srv.(MsgServer).Burn(ctx, req.(*v2.MsgBurn))
 	}
 	return interceptor(ctx, in, info, handler)
 }

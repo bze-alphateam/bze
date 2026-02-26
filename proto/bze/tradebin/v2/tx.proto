@@ -1,0 +1,54 @@
+syntax = "proto3";
+package bze.tradebin.v2;
+
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/tradebin/v2types";
+
+message MsgCreateOrder {
+  option           (amino.name) = "bze/x/tradebin/v2/MsgCreateOrder";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator    = 1;
+  string order_type = 2;
+  string amount     = 3 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  string price      = 4 [(gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
+  string market_id  = 5;
+}
+
+message MsgCreateOrderResponse {}
+
+message FillOrderItem {
+  string price  = 1 [(gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
+  string amount = 2 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+}
+
+message MsgFillOrders {
+  option           (amino.name) = "bze/x/tradebin/v2/MsgFillOrders";
+  option (cosmos.msg.v1.signer) = "creator";
+           string        creator    = 1;
+           string        market_id  = 2;
+           string        order_type = 3;
+  repeated FillOrderItem orders     = 4;
+}
+
+message MsgFillOrdersResponse {}
+
+message MsgCreateLiquidityPool {
+  option           (amino.name) = "bze/x/tradebin/v2/MsgCreateLiquidityPool";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator       = 1;
+  string base          = 2;
+  string quote         = 3;
+  string fee           = 4 [(gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
+  string fee_dest      = 5;
+  bool   stable        = 6;
+  string initial_base  = 7 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  string initial_quote = 8 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+}
+
+message MsgCreateLiquidityPoolResponse {
+  string id = 1;
+}

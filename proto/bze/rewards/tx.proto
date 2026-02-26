@@ -7,24 +7,25 @@ import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "bze/rewards/params.proto";
+import "bze/rewards/v2/tx.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
 
 // Msg defines the Msg service.
 service Msg {
   option (cosmos.msg.v1.service) = true;
-  
+
   // UpdateParams defines a (governance) operation for updating the module
   // parameters. The authority defaults to the x/gov module account.
-  rpc UpdateParams             (MsgUpdateParams            ) returns (MsgUpdateParamsResponse            );
-  rpc CreateStakingReward      (MsgCreateStakingReward     ) returns (MsgCreateStakingRewardResponse     );
-  rpc UpdateStakingReward      (MsgUpdateStakingReward     ) returns (MsgUpdateStakingRewardResponse     );
-  rpc JoinStaking              (MsgJoinStaking             ) returns (MsgJoinStakingResponse             );
-  rpc ExitStaking              (MsgExitStaking             ) returns (MsgExitStakingResponse             );
-  rpc ClaimStakingRewards      (MsgClaimStakingRewards     ) returns (MsgClaimStakingRewardsResponse     );
-  rpc DistributeStakingRewards (MsgDistributeStakingRewards) returns (MsgDistributeStakingRewardsResponse);
-  rpc CreateTradingReward      (MsgCreateTradingReward     ) returns (MsgCreateTradingRewardResponse     );
-  rpc ActivateTradingReward    (MsgActivateTradingReward   ) returns (MsgActivateTradingRewardResponse   );
+  rpc UpdateParams             (MsgUpdateParams                        ) returns (MsgUpdateParamsResponse                        );
+  rpc CreateStakingReward      (bze.rewards.v2.MsgCreateStakingReward  ) returns (bze.rewards.v2.MsgCreateStakingRewardResponse  );
+  rpc UpdateStakingReward      (bze.rewards.v2.MsgUpdateStakingReward  ) returns (bze.rewards.v2.MsgUpdateStakingRewardResponse  );
+  rpc JoinStaking              (bze.rewards.v2.MsgJoinStaking          ) returns (bze.rewards.v2.MsgJoinStakingResponse           );
+  rpc ExitStaking              (MsgExitStaking                         ) returns (MsgExitStakingResponse                         );
+  rpc ClaimStakingRewards      (MsgClaimStakingRewards                 ) returns (MsgClaimStakingRewardsResponse                 );
+  rpc DistributeStakingRewards (bze.rewards.v2.MsgDistributeStakingRewards) returns (bze.rewards.v2.MsgDistributeStakingRewardsResponse);
+  rpc CreateTradingReward      (bze.rewards.v2.MsgCreateTradingReward  ) returns (bze.rewards.v2.MsgCreateTradingRewardResponse  );
+  rpc ActivateTradingReward    (MsgActivateTradingReward               ) returns (MsgActivateTradingRewardResponse               );
 }
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {

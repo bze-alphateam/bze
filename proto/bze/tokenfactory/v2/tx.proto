@@ -1,0 +1,28 @@
+syntax = "proto3";
+package bze.tokenfactory.v2;
+
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/tokenfactory/v2types";
+
+message MsgMint {
+  option           (amino.name) = "bze/x/tokenfactory/v2/MsgMint";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  cosmos.base.v1beta1.Coin coins = 2 [(gogoproto.nullable) = false];
+}
+
+message MsgMintResponse {}
+
+message MsgBurn {
+  option           (amino.name) = "bze/x/tokenfactory/v2/MsgBurn";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  cosmos.base.v1beta1.Coin coins = 2 [(gogoproto.nullable) = false];
+}
+
+message MsgBurnResponse {}

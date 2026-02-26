@@ -8,6 +8,7 @@ package burner
 
 import (
 	context "context"
+	v2 "github.com/bze-alphateam/bze/api/bze/burner/v2"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -32,8 +33,8 @@ type MsgClient interface {
 	// UpdateParams defines a (governance) operation for updating the module
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
-	FundBurner(ctx context.Context, in *MsgFundBurner, opts ...grpc.CallOption) (*MsgFundBurnerResponse, error)
-	StartRaffle(ctx context.Context, in *MsgStartRaffle, opts ...grpc.CallOption) (*MsgStartRaffleResponse, error)
+	FundBurner(ctx context.Context, in *v2.MsgFundBurner, opts ...grpc.CallOption) (*v2.MsgFundBurnerResponse, error)
+	StartRaffle(ctx context.Context, in *v2.MsgStartRaffle, opts ...grpc.CallOption) (*v2.MsgStartRaffleResponse, error)
 	JoinRaffle(ctx context.Context, in *MsgJoinRaffle, opts ...grpc.CallOption) (*MsgJoinRaffleResponse, error)
 }
 
@@ -54,8 +55,8 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
-func (c *msgClient) FundBurner(ctx context.Context, in *MsgFundBurner, opts ...grpc.CallOption) (*MsgFundBurnerResponse, error) {
-	out := new(MsgFundBurnerResponse)
+func (c *msgClient) FundBurner(ctx context.Context, in *v2.MsgFundBurner, opts ...grpc.CallOption) (*v2.MsgFundBurnerResponse, error) {
+	out := new(v2.MsgFundBurnerResponse)
 	err := c.cc.Invoke(ctx, Msg_FundBurner_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -63,8 +64,8 @@ func (c *msgClient) FundBurner(ctx context.Context, in *MsgFundBurner, opts ...g
 	return out, nil
 }
 
-func (c *msgClient) StartRaffle(ctx context.Context, in *MsgStartRaffle, opts ...grpc.CallOption) (*MsgStartRaffleResponse, error) {
-	out := new(MsgStartRaffleResponse)
+func (c *msgClient) StartRaffle(ctx context.Context, in *v2.MsgStartRaffle, opts ...grpc.CallOption) (*v2.MsgStartRaffleResponse, error) {
+	out := new(v2.MsgStartRaffleResponse)
 	err := c.cc.Invoke(ctx, Msg_StartRaffle_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -88,8 +89,8 @@ type MsgServer interface {
 	// UpdateParams defines a (governance) operation for updating the module
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
-	FundBurner(context.Context, *MsgFundBurner) (*MsgFundBurnerResponse, error)
-	StartRaffle(context.Context, *MsgStartRaffle) (*MsgStartRaffleResponse, error)
+	FundBurner(context.Context, *v2.MsgFundBurner) (*v2.MsgFundBurnerResponse, error)
+	StartRaffle(context.Context, *v2.MsgStartRaffle) (*v2.MsgStartRaffleResponse, error)
 	JoinRaffle(context.Context, *MsgJoinRaffle) (*MsgJoinRaffleResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
@@ -101,10 +102,10 @@ type UnimplementedMsgServer struct {
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
 }
-func (UnimplementedMsgServer) FundBurner(context.Context, *MsgFundBurner) (*MsgFundBurnerResponse, error) {
+func (UnimplementedMsgServer) FundBurner(context.Context, *v2.MsgFundBurner) (*v2.MsgFundBurnerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FundBurner not implemented")
 }
-func (UnimplementedMsgServer) StartRaffle(context.Context, *MsgStartRaffle) (*MsgStartRaffleResponse, error) {
+func (UnimplementedMsgServer) StartRaffle(context.Context, *v2.MsgStartRaffle) (*v2.MsgStartRaffleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StartRaffle not implemented")
 }
 func (UnimplementedMsgServer) JoinRaffle(context.Context, *MsgJoinRaffle) (*MsgJoinRaffleResponse, error) {
@@ -142,7 +143,7 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 }
 
 func _Msg_FundBurner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgFundBurner)
+	in := new(v2.MsgFundBurner)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -154,13 +155,13 @@ func _Msg_FundBurner_Handler(srv interface{}, ctx context.Context, dec func(inte
 		FullMethod: Msg_FundBurner_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).FundBurner(ctx, req.(*MsgFundBurner))
+		return srv.(MsgServer).FundBurner(ctx, req.(*v2.MsgFundBurner))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_StartRaffle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgStartRaffle)
+	in := new(v2.MsgStartRaffle)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -172,7 +173,7 @@ func _Msg_StartRaffle_Handler(srv interface{}, ctx context.Context, dec func(int
 		FullMethod: Msg_StartRaffle_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).StartRaffle(ctx, req.(*MsgStartRaffle))
+		return srv.(MsgServer).StartRaffle(ctx, req.(*v2.MsgStartRaffle))
 	}
 	return interceptor(ctx, in, info, handler)
 }

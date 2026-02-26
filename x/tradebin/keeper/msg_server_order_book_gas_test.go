@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
+	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"go.uber.org/mock/gomock"
 )
@@ -81,12 +82,12 @@ func (suite *IntegrationTestSuite) TestMsgCreateOrder_QueueSpamProtectionGas() {
 			gasBefore := suite.ctx.GasMeter().GasConsumed()
 
 			// Create order message
-			msg := &types.MsgCreateOrder{
+			msg := &v2types.MsgCreateOrder{
 				Creator:   addr1.String(),
 				MarketId:  getMarketId(),
 				OrderType: types.OrderTypeBuy,
-				Amount:    "1000",
-				Price:     "1.5",
+				Amount:    math.NewInt(1000),
+				Price:     math.LegacyMustNewDecFromStr("1.5"),
 			}
 
 			// Execute CreateOrder
@@ -132,12 +133,12 @@ func (suite *IntegrationTestSuite) TestMsgCreateOrder_QueueSpamProtectionGas_Pro
 	for i := 0; i < 15; i++ {
 		gasBefore := suite.ctx.GasMeter().GasConsumed()
 
-		msg := &types.MsgCreateOrder{
+		msg := &v2types.MsgCreateOrder{
 			Creator:   addr1.String(),
 			MarketId:  getMarketId(),
 			OrderType: types.OrderTypeBuy,
-			Amount:    "1000",
-			Price:     math.LegacyNewDec(int64(100 + i)).String(), // Different prices
+			Amount:    math.NewInt(1000),
+			Price:     math.LegacyNewDec(int64(100 + i)), // Different prices
 		}
 
 		_, err := suite.msgServer.CreateOrder(suite.ctx, msg)

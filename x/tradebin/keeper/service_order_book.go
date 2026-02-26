@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// CalculateMinAmount - Deprecated: use CalculateMinAmountFromPriceDec
 func CalculateMinAmount(price string) (math.Int, error) {
 	// Convert the price string to a Dec
 	priceDec, err := math.LegacyNewDecFromStr(price)
@@ -24,6 +25,22 @@ func CalculateMinAmount(price string) (math.Int, error) {
 
 	// Perform the division (1 / price), ensuring high precision
 	amtDec := oneDec.Quo(priceDec)
+	// Ceil the result to ensure we avoid dust effectively
+	amtDec = amtDec.Ceil()
+
+	// Multiply by 2 to adjust for potential dust and lower loss,
+	// as described in your comment.
+	amtDec = amtDec.MulInt64(2)
+
+	return amtDec.TruncateInt(), nil
+}
+
+func CalculateMinAmountFromPriceDec(price math.LegacyDec) (math.Int, error) {
+	// The denominator for our operation, represented as a Dec
+	oneDec := math.LegacyOneDec()
+
+	// Perform the division (1 / price), ensuring high precision
+	amtDec := oneDec.Quo(price)
 	// Ceil the result to ensure we avoid dust effectively
 	amtDec = amtDec.Ceil()
 

@@ -90,7 +90,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidAssets(
 
 	for _, c := range tc {
 		suite.T().Run(c.Name, func(t *testing.T) {
-			msg := &types.MsgCreateLiquidityPool{
+			msg := &v2types.MsgCreateLiquidityPool{
 				Base:    c.Base,
 				Quote:   c.Quote,
 				Creator: getTestAddress(),
@@ -109,7 +109,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidAssets(
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_PoolAlreadyExists() {
-	msg := &types.MsgCreateLiquidityPool{
+	msg := &v2types.MsgCreateLiquidityPool{
 		Base:    "def",
 		Quote:   "abc",
 		Creator: getTestAddress(),
@@ -129,39 +129,34 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_PoolAlreadyExi
 func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidFee() {
 	tc := []struct {
 		Name          string
-		Fee           string
+		Fee           math.LegacyDec
 		ExpectedError error
 	}{
 		{
-			Name:          "empty fee",
-			Fee:           "",
+			Name:          "zero fee",
+			Fee:           math.LegacyZeroDec(),
 			ExpectedError: sdkerrors.ErrInvalidCoins,
 		},
 		{
 			Name:          "negative fee",
-			Fee:           "-0.001",
-			ExpectedError: sdkerrors.ErrInvalidCoins,
-		},
-		{
-			Name:          "zero fee",
-			Fee:           "0",
+			Fee:           math.LegacyMustNewDecFromStr("-0.001"),
 			ExpectedError: sdkerrors.ErrInvalidCoins,
 		},
 		{
 			Name:          "fee too low",
-			Fee:           "0.000999",
+			Fee:           math.LegacyMustNewDecFromStr("0.000999"),
 			ExpectedError: sdkerrors.ErrInvalidCoins,
 		},
 		{
 			Name:          "fee too high",
-			Fee:           "0.05009",
+			Fee:           math.LegacyMustNewDecFromStr("0.05009"),
 			ExpectedError: sdkerrors.ErrInvalidCoins,
 		},
 	}
 
 	for _, c := range tc {
 		suite.T().Run(c.Name, func(t *testing.T) {
-			msg := &types.MsgCreateLiquidityPool{
+			msg := &v2types.MsgCreateLiquidityPool{
 				Base:    "abc",
 				Quote:   "def",
 				Creator: getTestAddress(),
@@ -242,11 +237,11 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidFeeDest
 
 	for _, c := range tc {
 		suite.T().Run(c.Name, func(t *testing.T) {
-			msg := &types.MsgCreateLiquidityPool{
+			msg := &v2types.MsgCreateLiquidityPool{
 				Base:    "abc",
 				Quote:   "def",
 				Creator: getTestAddress(),
-				Fee:     "0.002",
+				Fee:     math.LegacyMustNewDecFromStr("0.002"),
 				FeeDest: c.FeeDest,
 			}
 			suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Base).Return(true).Times(1)
@@ -279,11 +274,11 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidReserve
 
 	for _, c := range tc {
 		suite.T().Run(c.Name, func(t *testing.T) {
-			msg := &types.MsgCreateLiquidityPool{
+			msg := &v2types.MsgCreateLiquidityPool{
 				Base:         "abc",
 				Quote:        "def",
 				Creator:      getTestAddress(),
-				Fee:          "0.002",
+				Fee:          math.LegacyMustNewDecFromStr("0.002"),
 				FeeDest:      getFeeDestinationString("0.5", "0.25", "0.25"),
 				InitialBase:  c.InitialBase,
 				InitialQuote: c.InitialQuote,
@@ -300,11 +295,11 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidReserve
 func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_StableNotSupported() {
 	//TODO: improve test when stable swap implemented (TODO: implement stable swap)
 
-	msg := &types.MsgCreateLiquidityPool{
+	msg := &v2types.MsgCreateLiquidityPool{
 		Base:         "abc",
 		Quote:        "def",
 		Creator:      getTestAddress(),
-		Fee:          "0.002",
+		Fee:          math.LegacyMustNewDecFromStr("0.002"),
 		FeeDest:      getFeeDestinationString("0.25", "0.25", "0.5"),
 		InitialBase:  math.NewInt(123),
 		InitialQuote: math.NewInt(456),
@@ -320,11 +315,11 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_StableNotSuppo
 
 func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_FundCommunityPoolErr() {
 
-	msg := &types.MsgCreateLiquidityPool{
+	msg := &v2types.MsgCreateLiquidityPool{
 		Base:         "abc",
 		Quote:        "def",
 		Creator:      getTestAddress(),
-		Fee:          "0.002",
+		Fee:          math.LegacyMustNewDecFromStr("0.002"),
 		FeeDest:      getFeeDestinationString("0.25", "0.25", "0.5"),
 		InitialBase:  math.NewInt(123),
 		InitialQuote: math.NewInt(345),
@@ -343,11 +338,11 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_FundCommunityP
 
 func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_Success() {
 
-	msg := &types.MsgCreateLiquidityPool{
+	msg := &v2types.MsgCreateLiquidityPool{
 		Base:         "abc",
 		Quote:        "def",
 		Creator:      getTestAddress(),
-		Fee:          "0.002",
+		Fee:          math.LegacyMustNewDecFromStr("0.002"),
 		FeeDest:      getFeeDestinationString("0.25", "0.5", "0.25"),
 		InitialBase:  math.NewInt(123),
 		InitialQuote: math.NewInt(345),

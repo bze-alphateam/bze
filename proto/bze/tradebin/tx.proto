@@ -8,24 +8,25 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "bze/tradebin/v2/params.proto";
+import "bze/tradebin/v2/tx.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
 
 // Msg defines the Msg service.
 service Msg {
   option (cosmos.msg.v1.service) = true;
-  
+
   // UpdateParams defines a (governance) operation for updating the module
   // parameters. The authority defaults to the x/gov module account.
-  rpc UpdateParams        (MsgUpdateParams       ) returns (MsgUpdateParamsResponse       );
-  rpc CreateMarket        (MsgCreateMarket       ) returns (MsgCreateMarketResponse       );
-  rpc CreateOrder         (MsgCreateOrder        ) returns (MsgCreateOrderResponse        );
-  rpc CancelOrder         (MsgCancelOrder        ) returns (MsgCancelOrderResponse        );
-  rpc FillOrders          (MsgFillOrders         ) returns (MsgFillOrdersResponse         );
-  rpc CreateLiquidityPool (MsgCreateLiquidityPool) returns (MsgCreateLiquidityPoolResponse);
-  rpc AddLiquidity        (MsgAddLiquidity       ) returns (MsgAddLiquidityResponse       );
-  rpc RemoveLiquidity     (MsgRemoveLiquidity    ) returns (MsgRemoveLiquidityResponse    );
-  rpc MultiSwap           (MsgMultiSwap          ) returns (MsgMultiSwapResponse          );
+  rpc UpdateParams        (MsgUpdateParams                          ) returns (MsgUpdateParamsResponse                          );
+  rpc CreateMarket        (MsgCreateMarket                          ) returns (MsgCreateMarketResponse                          );
+  rpc CreateOrder         (bze.tradebin.v2.MsgCreateOrder           ) returns (bze.tradebin.v2.MsgCreateOrderResponse            );
+  rpc CancelOrder         (MsgCancelOrder                           ) returns (MsgCancelOrderResponse                           );
+  rpc FillOrders          (bze.tradebin.v2.MsgFillOrders            ) returns (bze.tradebin.v2.MsgFillOrdersResponse             );
+  rpc CreateLiquidityPool (bze.tradebin.v2.MsgCreateLiquidityPool   ) returns (bze.tradebin.v2.MsgCreateLiquidityPoolResponse    );
+  rpc AddLiquidity        (MsgAddLiquidity                          ) returns (MsgAddLiquidityResponse                          );
+  rpc RemoveLiquidity     (MsgRemoveLiquidity                       ) returns (MsgRemoveLiquidityResponse                       );
+  rpc MultiSwap           (MsgMultiSwap                             ) returns (MsgMultiSwapResponse                             );
 }
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {

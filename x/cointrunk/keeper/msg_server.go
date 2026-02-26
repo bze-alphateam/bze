@@ -2,14 +2,14 @@ package keeper
 
 import (
 	"context"
-	"cosmossdk.io/math"
 	"fmt"
 
 	"cosmossdk.io/errors"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
+	v2types "github.com/bze-alphateam/bze/x/cointrunk/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 type msgServer struct {
@@ -119,13 +119,10 @@ func (k msgServer) validateMessageDomains(ctx sdk.Context, msg *types.MsgAddArti
 	return nil
 }
 
-func (k msgServer) PayPublisherRespect(goCtx context.Context, msg *types.MsgPayPublisherRespect) (*types.MsgPayPublisherRespectResponse, error) {
+func (k msgServer) PayPublisherRespect(goCtx context.Context, msg *v2types.MsgPayPublisherRespect) (*v2types.MsgPayPublisherRespectResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	coin, err := sdk.ParseCoinNormalized(msg.Amount)
-	if err != nil {
-		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid amount (%s)", err)
-	}
+	coin := msg.Amount
 
 	publisherRespectParams := k.PublisherRespectParams(ctx)
 	if coin.Denom != publisherRespectParams.Denom {
@@ -202,7 +199,7 @@ func (k msgServer) PayPublisherRespect(goCtx context.Context, msg *types.MsgPayP
 		return nil, err
 	}
 
-	return &types.MsgPayPublisherRespectResponse{
+	return &v2types.MsgPayPublisherRespectResponse{
 		RespectPaid:        coin.Amount.Uint64(),
 		PublisherReward:    publisherRewardCoin.Amount.Uint64(),
 		CommunityPoolFunds: taxPaidCoin.Amount.Uint64(),

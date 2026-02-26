@@ -6,17 +6,17 @@ import (
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	"github.com/bze-alphateam/bze/x/burner/types"
+	v2types "github.com/bze-alphateam/bze/x/burner/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/bze-alphateam/bze/x/burner/types"
 )
 
 const (
 	raffleDelayHeight = 2
 )
 
-func (k msgServer) StartRaffle(goCtx context.Context, msg *types.MsgStartRaffle) (*types.MsgStartRaffleResponse, error) {
+func (k msgServer) StartRaffle(goCtx context.Context, msg *v2types.MsgStartRaffle) (*v2types.MsgStartRaffleResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if !k.bankKeeper.HasSupply(ctx, msg.Denom) {
@@ -33,14 +33,9 @@ func (k msgServer) StartRaffle(goCtx context.Context, msg *types.MsgStartRaffle)
 		return nil, err
 	}
 
-	raffle, err := k.raffleFromMsgStartRaffle(ctx, msg)
-	if err != nil {
-		return nil, err
-	}
+	raffle := k.raffleFromMsg(ctx, msg)
 
-	//do not check if OK because it is checked in basic validation and in method that converts message to storage struct
-	potAmt, _ := math.NewIntFromString(raffle.Pot)
-	pot := sdk.NewCoin(raffle.Denom, potAmt)
+	pot := sdk.NewCoin(raffle.Denom, msg.Pot)
 	if !k.accountHasCoins(ctx, pot, creatorAcc) {
 		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "not enough balance")
 	}
@@ -55,7 +50,7 @@ func (k msgServer) StartRaffle(goCtx context.Context, msg *types.MsgStartRaffle)
 		EndAt: raffle.EndAt,
 	})
 
-	return &types.MsgStartRaffleResponse{}, nil
+	return &v2types.MsgStartRaffleResponse{}, nil
 }
 
 func (k Keeper) accountHasCoins(ctx sdk.Context, coinsNeeded sdk.Coin, account sdk.AccAddress) bool {
@@ -64,18 +59,22 @@ func (k Keeper) accountHasCoins(ctx sdk.Context, coinsNeeded sdk.Coin, account s
 	return coinsNeeded.Amount.LTE(balances.AmountOf(coinsNeeded.Denom))
 }
 
-func (k Keeper) raffleFromMsgStartRaffle(ctx sdk.Context, msg *types.MsgStartRaffle) (types.Raffle, error) {
-	raffle, err := msg.ToStorageRaffle()
-	if err != nil {
-		return types.Raffle{}, err
+func (k Keeper) raffleFromMsg(ctx sdk.Context, msg *v2types.MsgStartRaffle) types.Raffle {
+	raffle := types.Raffle{
+		Pot:         msg.Pot.String(),
+		Duration:    msg.Duration,
+		Chances:     msg.Chances,
+		Ratio:       msg.Ratio.String(),
+		TicketPrice: msg.TicketPrice.String(),
+		Denom:       msg.Denom,
+		Winners:     0,
+		TotalWon:    math.ZeroInt().String(),
 	}
 
-	raffle.Winners = 0
 	currentEpoch := k.GetRaffleCurrentEpoch(ctx)
 	raffle.EndAt = currentEpoch + (raffle.Duration * 24)
-	raffle.TotalWon = math.ZeroInt().String()
 
-	return raffle, nil
+	return raffle
 }
 
 func (k Keeper) captureRafflePot(ctx sdk.Context, pot sdk.Coin, creator sdk.AccAddress) error {

@@ -13,7 +13,7 @@ const (
 	TypeMsgCreateStakingReward = "create_staking_reward"
 	TypeMsgUpdateStakingReward = "update_staking_reward"
 
-	tenYearsInDays     = 365 * 10
+	TenYearsInDays     = 365 * 10
 	HundredYearsInDays = 365 * 100
 
 	defaultStakedAmount     = "0"
@@ -75,8 +75,8 @@ func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 	if err != nil {
 		return sr, errorsmod.Wrapf(ErrInvalidLockingTime, "could not convert string to int: %s", err.Error())
 	}
-	if lockInt < 0 || lockInt > tenYearsInDays {
-		return sr, errorsmod.Wrapf(ErrInvalidLockingTime, "locking time should be between 0 and %d days", tenYearsInDays)
+	if lockInt < 0 || lockInt > TenYearsInDays {
+		return sr, errorsmod.Wrapf(ErrInvalidLockingTime, "locking time should be between 0 and %d days", TenYearsInDays)
 	}
 	sr.Lock = uint32(lockInt)
 

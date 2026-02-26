@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/bze-alphateam/bze/x/burner/v1types"
+	v2types "github.com/bze-alphateam/bze/x/burner/v2types"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -17,6 +18,11 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgFundBurner{},
 		&MsgStartRaffle{},
 		&MsgJoinRaffle{},
+	)
+
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&v2types.MsgFundBurner{},
+		&v2types.MsgStartRaffle{},
 	)
 
 	registry.RegisterInterface(
