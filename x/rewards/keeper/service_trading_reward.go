@@ -105,7 +105,7 @@ func (k Keeper) processExpiredPendingTradingReward(ctx sdk.Context, exp types.Tr
 	k.RemovePendingTradingReward(ctx, exp.RewardId)
 
 	//burn coins that were captured
-	toBurn, err := k.getAmountToCapture(tr.PrizeDenom, tr.PrizeAmount.String(), int64(tr.Slots))
+	toBurn, err := k.getAmountToCapture(tr.PrizeDenom, tr.PrizeAmount, int64(tr.Slots))
 	if err != nil {
 		logger.With("trading_reward", tr).Error("could not create amount to burn from trading reward")
 		return err
@@ -154,7 +154,7 @@ func (k Keeper) distributeTradingRewards(ctx sdk.Context, epochNumber int64) {
 			continue
 		}
 
-		rewardPerSlot, err := k.getAmountToCapture(tr.PrizeDenom, tr.PrizeAmount.String(), 1)
+		rewardPerSlot, err := k.getAmountToCapture(tr.PrizeDenom, tr.PrizeAmount, 1)
 		if err != nil {
 			logger.Error("could not get reward per slot")
 			continue

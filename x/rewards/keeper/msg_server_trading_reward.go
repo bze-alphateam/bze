@@ -51,7 +51,7 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 		return nil, types.ErrRewardAlreadyExists
 	}
 
-	toCapture, err := k.getAmountToCapture(tradingReward.PrizeDenom, tradingReward.PrizeAmount.String(), int64(tradingReward.Slots))
+	toCapture, err := k.getAmountToCapture(tradingReward.PrizeDenom, tradingReward.PrizeAmount, int64(tradingReward.Slots))
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not calculate amount needed to create the reward")
 	}

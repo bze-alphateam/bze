@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/math"
 	"testing"
 
 	"github.com/bze-alphateam/bze/testutil/sample"
@@ -11,19 +12,19 @@ import (
 func TestNewMsgJoinStaking(t *testing.T) {
 	creator := sample.AccAddress()
 	rewardId := "reward123"
-	amount := "1000"
+	amount := math.NewInt(1000)
 
 	msg := NewMsgJoinStaking(creator, rewardId, amount)
 
 	require.Equal(t, creator, msg.Creator)
 	require.Equal(t, rewardId, msg.RewardId)
-	require.Equal(t, amount, msg.Amount)
+	require.True(t, amount.Equal(msg.Amount))
 }
 
 func TestMsgJoinStaking_ValidateBasic(t *testing.T) {
 	validCreator := sample.AccAddress()
 	validRewardId := "reward123"
-	validAmount := "1000"
+	validAmount := math.NewInt(1000)
 
 	tests := []struct {
 		name string
@@ -58,29 +59,11 @@ func TestMsgJoinStaking_ValidateBasic(t *testing.T) {
 			err: ErrInvalidRewardId,
 		},
 		{
-			name: "empty amount",
-			msg: MsgJoinStaking{
-				Creator:  validCreator,
-				RewardId: validRewardId,
-				Amount:   "",
-			},
-			err: ErrInvalidAmount,
-		},
-		{
-			name: "invalid amount - not a number",
-			msg: MsgJoinStaking{
-				Creator:  validCreator,
-				RewardId: validRewardId,
-				Amount:   "invalid",
-			},
-			err: ErrInvalidAmount,
-		},
-		{
 			name: "invalid amount - negative",
 			msg: MsgJoinStaking{
 				Creator:  validCreator,
 				RewardId: validRewardId,
-				Amount:   "-100",
+				Amount:   math.NewInt(-100),
 			},
 			err: ErrInvalidAmount,
 		},
@@ -89,7 +72,7 @@ func TestMsgJoinStaking_ValidateBasic(t *testing.T) {
 			msg: MsgJoinStaking{
 				Creator:  validCreator,
 				RewardId: validRewardId,
-				Amount:   "0",
+				Amount:   math.ZeroInt(),
 			},
 			err: ErrInvalidAmount,
 		},
@@ -106,7 +89,7 @@ func TestMsgJoinStaking_ValidateBasic(t *testing.T) {
 			msg: MsgJoinStaking{
 				Creator:  validCreator,
 				RewardId: validRewardId,
-				Amount:   "1",
+				Amount:   math.NewInt(1),
 			},
 		},
 		{
@@ -114,7 +97,7 @@ func TestMsgJoinStaking_ValidateBasic(t *testing.T) {
 			msg: MsgJoinStaking{
 				Creator:  validCreator,
 				RewardId: validRewardId,
-				Amount:   "999999999999999",
+				Amount:   math.NewInt(999999999999999),
 			},
 		},
 		{

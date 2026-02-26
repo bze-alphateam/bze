@@ -9,7 +9,7 @@ import (
 
 var _ sdk.Msg = &MsgDistributeStakingRewards{}
 
-func NewMsgDistributeStakingRewards(creator string, rewardId string, amount string) *MsgDistributeStakingRewards {
+func NewMsgDistributeStakingRewards(creator string, rewardId string, amount math.Int) *MsgDistributeStakingRewards {
 	return &MsgDistributeStakingRewards{
 		Creator:  creator,
 		RewardId: rewardId,
@@ -23,12 +23,7 @@ func (msg *MsgDistributeStakingRewards) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	amtInt, ok := math.NewIntFromString(msg.Amount)
-	if !ok {
-		return errorsmod.Wrapf(ErrInvalidAmount, "could not convert amount")
-	}
-
-	if !amtInt.IsPositive() {
+	if !msg.Amount.IsPositive() {
 		return errorsmod.Wrapf(ErrInvalidAmount, "amount should be greater than 0")
 	}
 

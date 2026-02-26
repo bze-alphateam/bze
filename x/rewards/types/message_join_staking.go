@@ -9,7 +9,7 @@ import (
 
 var _ sdk.Msg = &MsgJoinStaking{}
 
-func NewMsgJoinStaking(creator string, rewardId string, amount string) *MsgJoinStaking {
+func NewMsgJoinStaking(creator string, rewardId string, amount math.Int) *MsgJoinStaking {
 	return &MsgJoinStaking{
 		Creator:  creator,
 		RewardId: rewardId,
@@ -27,15 +27,7 @@ func (msg *MsgJoinStaking) ValidateBasic() error {
 		return errorsmod.Wrapf(ErrInvalidRewardId, "empty reward id")
 	}
 
-	if msg.Amount == "" {
-		return errorsmod.Wrapf(ErrInvalidAmount, "empty amount provided")
-	}
-
-	amtInt, ok := math.NewIntFromString(msg.Amount)
-	if !ok {
-		return errorsmod.Wrapf(ErrInvalidAmount, "could not convert amount")
-	}
-	if !amtInt.IsPositive() {
+	if !msg.Amount.IsPositive() {
 		return errorsmod.Wrapf(ErrInvalidAmount, "amount should be greater than 0")
 	}
 

@@ -11,11 +11,11 @@ import (
 
 func TestNewMsgCreateStakingReward(t *testing.T) {
 	creator := sample.AccAddress()
-	prizeAmount := "1000"
+	prizeAmount := math.NewInt(1000)
 	prizeDenom := "utoken"
 	stakingDenom := "ustake"
 	duration := "30"
-	minStake := "100"
+	minStake := math.NewInt(100)
 	lock := "7"
 
 	msg := NewMsgCreateStakingReward(creator, prizeAmount, prizeDenom, stakingDenom, duration, minStake, lock)
@@ -31,11 +31,11 @@ func TestNewMsgCreateStakingReward(t *testing.T) {
 
 func TestMsgCreateStakingReward_ValidateBasic(t *testing.T) {
 	validCreator := sample.AccAddress()
-	validPrizeAmount := "1000"
+	validPrizeAmount := math.NewInt(1000)
 	validPrizeDenom := "utoken"
 	validStakingDenom := "ustake"
 	validDuration := "30"
-	validMinStake := "100"
+	validMinStake := math.NewInt(100)
 	validLock := "7"
 
 	tests := []struct {
@@ -70,36 +70,10 @@ func TestMsgCreateStakingReward_ValidateBasic(t *testing.T) {
 			err: sdkerrors.ErrInvalidAddress,
 		},
 		{
-			name: "invalid prize amount - empty",
-			msg: MsgCreateStakingReward{
-				Creator:      validCreator,
-				PrizeAmount:  "",
-				PrizeDenom:   validPrizeDenom,
-				StakingDenom: validStakingDenom,
-				Duration:     validDuration,
-				MinStake:     validMinStake,
-				Lock:         validLock,
-			},
-			err: ErrInvalidAmount,
-		},
-		{
-			name: "invalid prize amount - not a number",
-			msg: MsgCreateStakingReward{
-				Creator:      validCreator,
-				PrizeAmount:  "invalid",
-				PrizeDenom:   validPrizeDenom,
-				StakingDenom: validStakingDenom,
-				Duration:     validDuration,
-				MinStake:     validMinStake,
-				Lock:         validLock,
-			},
-			err: ErrInvalidAmount,
-		},
-		{
 			name: "invalid prize amount - negative",
 			msg: MsgCreateStakingReward{
 				Creator:      validCreator,
-				PrizeAmount:  "-100",
+				PrizeAmount:  math.NewInt(-100),
 				PrizeDenom:   validPrizeDenom,
 				StakingDenom: validStakingDenom,
 				Duration:     validDuration,
@@ -112,7 +86,7 @@ func TestMsgCreateStakingReward_ValidateBasic(t *testing.T) {
 			name: "invalid prize amount - zero",
 			msg: MsgCreateStakingReward{
 				Creator:      validCreator,
-				PrizeAmount:  "0",
+				PrizeAmount:  math.ZeroInt(),
 				PrizeDenom:   validPrizeDenom,
 				StakingDenom: validStakingDenom,
 				Duration:     validDuration,
@@ -148,32 +122,6 @@ func TestMsgCreateStakingReward_ValidateBasic(t *testing.T) {
 			err: ErrInvalidStakingDenom,
 		},
 		{
-			name: "invalid min stake - empty",
-			msg: MsgCreateStakingReward{
-				Creator:      validCreator,
-				PrizeAmount:  validPrizeAmount,
-				PrizeDenom:   validPrizeDenom,
-				StakingDenom: validStakingDenom,
-				Duration:     validDuration,
-				MinStake:     "",
-				Lock:         validLock,
-			},
-			err: ErrInvalidMinStake,
-		},
-		{
-			name: "invalid min stake - not a number",
-			msg: MsgCreateStakingReward{
-				Creator:      validCreator,
-				PrizeAmount:  validPrizeAmount,
-				PrizeDenom:   validPrizeDenom,
-				StakingDenom: validStakingDenom,
-				Duration:     validDuration,
-				MinStake:     "invalid",
-				Lock:         validLock,
-			},
-			err: ErrInvalidMinStake,
-		},
-		{
 			name: "invalid min stake - negative",
 			msg: MsgCreateStakingReward{
 				Creator:      validCreator,
@@ -181,7 +129,7 @@ func TestMsgCreateStakingReward_ValidateBasic(t *testing.T) {
 				PrizeDenom:   validPrizeDenom,
 				StakingDenom: validStakingDenom,
 				Duration:     validDuration,
-				MinStake:     "-100",
+				MinStake:     math.NewInt(-100),
 				Lock:         validLock,
 			},
 			err: ErrInvalidMinStake,
@@ -319,11 +267,11 @@ func TestMsgCreateStakingReward_ValidateBasic(t *testing.T) {
 			name: "valid message - minimum values",
 			msg: MsgCreateStakingReward{
 				Creator:      validCreator,
-				PrizeAmount:  "1",
+				PrizeAmount:  math.NewInt(1),
 				PrizeDenom:   "u",
 				StakingDenom: "s",
 				Duration:     "1",
-				MinStake:     "0",
+				MinStake:     math.ZeroInt(),
 				Lock:         "0",
 			},
 		},
@@ -331,11 +279,11 @@ func TestMsgCreateStakingReward_ValidateBasic(t *testing.T) {
 			name: "valid message - maximum values",
 			msg: MsgCreateStakingReward{
 				Creator:      validCreator,
-				PrizeAmount:  "999999999999",
+				PrizeAmount:  math.NewInt(999999999999),
 				PrizeDenom:   "longutoken",
 				StakingDenom: "longustake",
 				Duration:     "36500",
-				MinStake:     "999999999999",
+				MinStake:     math.NewInt(999999999999),
 				Lock:         "3650",
 			},
 		},
@@ -368,11 +316,11 @@ func TestMsgCreateStakingReward_ToStakingReward(t *testing.T) {
 	validCreator := sample.AccAddress()
 	validMsg := MsgCreateStakingReward{
 		Creator:      validCreator,
-		PrizeAmount:  "1000",
+		PrizeAmount:  math.NewInt(1000),
 		PrizeDenom:   "utoken",
 		StakingDenom: "ustake",
 		Duration:     "30",
-		MinStake:     "100",
+		MinStake:     math.NewInt(100),
 		Lock:         "7",
 	}
 

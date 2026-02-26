@@ -81,7 +81,7 @@ func (k Keeper) distributeStakingReward(ctx sdk.Context, sr types.StakingReward)
 		return
 	}
 
-	err := k.distributeStakingRewards(&sr, sr.PrizeAmount.String())
+	err := k.distributeStakingRewards(&sr, sr.PrizeAmount)
 	if err != nil {
 		logger.Error(err.Error())
 		return
@@ -103,17 +103,14 @@ func (k Keeper) distributeStakingReward(ctx sdk.Context, sr types.StakingReward)
 	}
 }
 
-func (k Keeper) distributeStakingRewards(sr *types.StakingReward, rewardAmount string) error {
+func (k Keeper) distributeStakingRewards(sr *types.StakingReward, rewardAmount math.Int) error {
 	stakedAmount := math.LegacyNewDecFromInt(sr.StakedAmount)
 
 	if !stakedAmount.IsPositive() {
 		return fmt.Errorf("no stakers found")
 	}
 
-	reward, err := math.LegacyNewDecFromStr(rewardAmount)
-	if err != nil {
-		return fmt.Errorf("could not transform reward amount to int: %w", err)
-	}
+	reward := math.LegacyNewDecFromInt(rewardAmount)
 
 	if !reward.IsPositive() {
 		return fmt.Errorf("reward amount should be positive")

@@ -19,7 +19,7 @@ const (
 
 var _ sdk.Msg = &MsgCreateStakingReward{}
 
-func NewMsgCreateStakingReward(creator string, prizeAmount string, prizeDenom string, stakingDenom string, duration string, minStake string, lock string) *MsgCreateStakingReward {
+func NewMsgCreateStakingReward(creator string, prizeAmount math.Int, prizeDenom string, stakingDenom string, duration string, minStake math.Int, lock string) *MsgCreateStakingReward {
 	return &MsgCreateStakingReward{
 		Creator:      creator,
 		PrizeAmount:  prizeAmount,
@@ -34,14 +34,10 @@ func NewMsgCreateStakingReward(creator string, prizeAmount string, prizeDenom st
 func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 	sr := StakingReward{}
 
-	amtInt, ok := math.NewIntFromString(msg.PrizeAmount)
-	if !ok {
-		return sr, errorsmod.Wrapf(ErrInvalidAmount, "could not convert order amount")
-	}
-	if !amtInt.IsPositive() {
+	if !msg.PrizeAmount.IsPositive() {
 		return sr, errorsmod.Wrapf(ErrInvalidAmount, "amount should be greater than 0")
 	}
-	sr.PrizeAmount = amtInt
+	sr.PrizeAmount = msg.PrizeAmount
 
 	if msg.PrizeDenom == "" {
 		return sr, ErrInvalidPrizeDenom
@@ -53,11 +49,10 @@ func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 	}
 	sr.StakingDenom = msg.StakingDenom
 
-	minStake, ok := math.NewIntFromString(msg.MinStake)
-	if !ok || minStake.IsNegative() {
+	if msg.MinStake.IsNegative() {
 		return sr, ErrInvalidMinStake
 	}
-	sr.MinStake = minStake.Uint64()
+	sr.MinStake = msg.MinStake.Uint64()
 
 	durationInt, err := strconv.Atoi(msg.Duration)
 	if err != nil {

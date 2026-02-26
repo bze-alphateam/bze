@@ -79,13 +79,8 @@ func (k Keeper) smallZeroFillId(id uint64) string {
 	return fmt.Sprintf("%012d", id)
 }
 
-func (k Keeper) getAmountToCapture(denom, amount string, multiplier int64) (sdk.Coins, error) {
-	amtInt, ok := math.NewIntFromString(amount)
-	if !ok {
-		return nil, fmt.Errorf("could not convert povided amount to int: %s", amount)
-	}
-
-	toCapture := sdk.NewCoin(denom, amtInt)
+func (k Keeper) getAmountToCapture(denom string, amount math.Int, multiplier int64) (sdk.Coins, error) {
+	toCapture := sdk.NewCoin(denom, amount)
 	toCapture.Amount = toCapture.Amount.MulRaw(multiplier)
 	if !toCapture.IsValid() || !toCapture.IsPositive() {
 		//should never happen

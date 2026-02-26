@@ -11,7 +11,7 @@ import (
 
 func TestNewMsgCreateTradingReward(t *testing.T) {
 	creator := sample.AccAddress()
-	prizeAmount := "1000"
+	prizeAmount := math.NewInt(1000)
 	prizeDenom := "utoken"
 	duration := "30"
 	marketId := "BTC-USD"
@@ -20,7 +20,7 @@ func TestNewMsgCreateTradingReward(t *testing.T) {
 	msg := NewMsgCreateTradingReward(creator, prizeAmount, prizeDenom, duration, marketId, slots)
 
 	require.Equal(t, creator, msg.Creator)
-	require.Equal(t, prizeAmount, msg.PrizeAmount)
+	require.True(t, prizeAmount.Equal(msg.PrizeAmount))
 	require.Equal(t, prizeDenom, msg.PrizeDenom)
 	require.Equal(t, duration, msg.Duration)
 	require.Equal(t, marketId, msg.MarketId)
@@ -29,7 +29,7 @@ func TestNewMsgCreateTradingReward(t *testing.T) {
 
 func TestMsgCreateTradingReward_ValidateBasic(t *testing.T) {
 	validCreator := sample.AccAddress()
-	validPrizeAmount := "1000"
+	validPrizeAmount := math.NewInt(1000)
 	validPrizeDenom := "utoken"
 	validDuration := "30"
 	validMarketId := "BTC-USD"
@@ -65,34 +65,10 @@ func TestMsgCreateTradingReward_ValidateBasic(t *testing.T) {
 			err: sdkerrors.ErrInvalidAddress,
 		},
 		{
-			name: "invalid prize amount - empty",
-			msg: MsgCreateTradingReward{
-				Creator:     validCreator,
-				PrizeAmount: "",
-				PrizeDenom:  validPrizeDenom,
-				Duration:    validDuration,
-				MarketId:    validMarketId,
-				Slots:       validSlots,
-			},
-			err: ErrInvalidAmount,
-		},
-		{
-			name: "invalid prize amount - not a number",
-			msg: MsgCreateTradingReward{
-				Creator:     validCreator,
-				PrizeAmount: "invalid",
-				PrizeDenom:  validPrizeDenom,
-				Duration:    validDuration,
-				MarketId:    validMarketId,
-				Slots:       validSlots,
-			},
-			err: ErrInvalidAmount,
-		},
-		{
 			name: "invalid prize amount - negative",
 			msg: MsgCreateTradingReward{
 				Creator:     validCreator,
-				PrizeAmount: "-100",
+				PrizeAmount: math.NewInt(-100),
 				PrizeDenom:  validPrizeDenom,
 				Duration:    validDuration,
 				MarketId:    validMarketId,
@@ -104,7 +80,7 @@ func TestMsgCreateTradingReward_ValidateBasic(t *testing.T) {
 			name: "invalid prize amount - zero",
 			msg: MsgCreateTradingReward{
 				Creator:     validCreator,
-				PrizeAmount: "0",
+				PrizeAmount: math.ZeroInt(),
 				PrizeDenom:  validPrizeDenom,
 				Duration:    validDuration,
 				MarketId:    validMarketId,
@@ -271,7 +247,7 @@ func TestMsgCreateTradingReward_ValidateBasic(t *testing.T) {
 			name: "valid message - minimum values",
 			msg: MsgCreateTradingReward{
 				Creator:     validCreator,
-				PrizeAmount: "1",
+				PrizeAmount: math.NewInt(1),
 				PrizeDenom:  "u",
 				Duration:    "1",
 				MarketId:    "A",
@@ -282,7 +258,7 @@ func TestMsgCreateTradingReward_ValidateBasic(t *testing.T) {
 			name: "valid message - maximum values",
 			msg: MsgCreateTradingReward{
 				Creator:     validCreator,
-				PrizeAmount: "999999999999",
+				PrizeAmount: math.NewInt(999999999999),
 				PrizeDenom:  "longutoken",
 				Duration:    "365",
 				MarketId:    "VERY-LONG-MARKET-ID",
@@ -328,7 +304,7 @@ func TestMsgCreateTradingReward_ToTradingReward(t *testing.T) {
 	validCreator := sample.AccAddress()
 	validMsg := MsgCreateTradingReward{
 		Creator:     validCreator,
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "utoken",
 		Duration:    "30",
 		MarketId:    "BTC-USD",

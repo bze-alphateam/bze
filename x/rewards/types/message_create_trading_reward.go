@@ -18,7 +18,7 @@ const (
 
 var _ sdk.Msg = &MsgCreateTradingReward{}
 
-func NewMsgCreateTradingReward(creator string, prizeAmount string, prizeDenom string, duration string, marketId string, slots string) *MsgCreateTradingReward {
+func NewMsgCreateTradingReward(creator string, prizeAmount math.Int, prizeDenom string, duration string, marketId string, slots string) *MsgCreateTradingReward {
 	return &MsgCreateTradingReward{
 		Creator:     creator,
 		PrizeAmount: prizeAmount,
@@ -32,14 +32,10 @@ func NewMsgCreateTradingReward(creator string, prizeAmount string, prizeDenom st
 func (msg *MsgCreateTradingReward) ToTradingReward() (TradingReward, error) {
 	tr := TradingReward{}
 
-	amtInt, ok := math.NewIntFromString(msg.PrizeAmount)
-	if !ok {
-		return tr, errorsmod.Wrapf(ErrInvalidAmount, "could not convert order amount")
-	}
-	if !amtInt.IsPositive() {
+	if !msg.PrizeAmount.IsPositive() {
 		return tr, errorsmod.Wrapf(ErrInvalidAmount, "amount should be greater than 0")
 	}
-	tr.PrizeAmount = amtInt
+	tr.PrizeAmount = msg.PrizeAmount
 
 	if msg.PrizeDenom == "" {
 		return tr, ErrInvalidPrizeDenom

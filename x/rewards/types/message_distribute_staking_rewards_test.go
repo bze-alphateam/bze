@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/math"
 	"testing"
 
 	"github.com/bze-alphateam/bze/testutil/sample"
@@ -19,30 +20,15 @@ func TestMsgDistributeStakingRewards_ValidateBasic(t *testing.T) {
 			name: "invalid address",
 			msg: MsgDistributeStakingRewards{
 				Creator: "invalid_address",
+				Amount:  math.NewInt(100),
 			},
 			err: sdkerrors.ErrInvalidAddress,
-		},
-		{
-			name: "invalid amount - empty",
-			msg: MsgDistributeStakingRewards{
-				Creator: validCreator,
-				Amount:  "",
-			},
-			err: ErrInvalidAmount,
-		},
-		{
-			name: "invalid amount - not a number",
-			msg: MsgDistributeStakingRewards{
-				Creator: validCreator,
-				Amount:  "invalid",
-			},
-			err: ErrInvalidAmount,
 		},
 		{
 			name: "invalid amount - negative",
 			msg: MsgDistributeStakingRewards{
 				Creator: validCreator,
-				Amount:  "-100",
+				Amount:  math.NewInt(-100),
 			},
 			err: ErrInvalidAmount,
 		},
@@ -50,7 +36,7 @@ func TestMsgDistributeStakingRewards_ValidateBasic(t *testing.T) {
 			name: "invalid amount - zero",
 			msg: MsgDistributeStakingRewards{
 				Creator: validCreator,
-				Amount:  "0",
+				Amount:  math.ZeroInt(),
 			},
 			err: ErrInvalidAmount,
 		},
@@ -58,7 +44,7 @@ func TestMsgDistributeStakingRewards_ValidateBasic(t *testing.T) {
 			name: "valid message",
 			msg: MsgDistributeStakingRewards{
 				Creator: validCreator,
-				Amount:  "100",
+				Amount:  math.NewInt(100),
 			},
 		},
 	}

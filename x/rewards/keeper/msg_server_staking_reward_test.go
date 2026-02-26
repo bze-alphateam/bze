@@ -73,11 +73,11 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 
 	msg := &types.MsgCreateStakingReward{
 		Creator:      creator.String(),
-		PrizeAmount:  "1000",
+		PrizeAmount:  math.NewInt(1000),
 		PrizeDenom:   "ubze",
 		StakingDenom: "ubze",
 		Duration:     "5",
-		MinStake:     "100",
+		MinStake:     math.NewInt(100),
 		Lock:         "7",
 	}
 
@@ -111,11 +111,11 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewardInvalidCreator() {
 	msg := &types.MsgCreateStakingReward{
 		Creator:      "invalid-address",
-		PrizeAmount:  "1000",
+		PrizeAmount:  math.NewInt(1000),
 		PrizeDenom:   "ubze",
 		StakingDenom: "ubze",
 		Duration:     "5",
-		MinStake:     "100",
+		MinStake:     math.NewInt(100),
 		Lock:         "7",
 	}
 
@@ -136,11 +136,11 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 
 	msg := &types.MsgCreateStakingReward{
 		Creator:      creator.String(),
-		PrizeAmount:  "1000",
+		PrizeAmount:  math.NewInt(1000),
 		PrizeDenom:   "ubze",
 		StakingDenom: "invalid-denom",
 		Duration:     "5",
-		MinStake:     "100",
+		MinStake:     math.NewInt(100),
 		Lock:         "7",
 	}
 
@@ -167,11 +167,11 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 
 	msg := &types.MsgCreateStakingReward{
 		Creator:      creator.String(),
-		PrizeAmount:  "1000",
+		PrizeAmount:  math.NewInt(1000),
 		PrizeDenom:   "invalid-prize",
 		StakingDenom: "ubze",
 		Duration:     "5",
-		MinStake:     "100",
+		MinStake:     math.NewInt(100),
 		Lock:         "7",
 	}
 
@@ -209,11 +209,11 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 
 	msg := &types.MsgCreateStakingReward{
 		Creator:      creator.String(),
-		PrizeAmount:  "1000",
+		PrizeAmount:  math.NewInt(1000),
 		PrizeDenom:   "ubze",
 		StakingDenom: "ubze",
 		Duration:     "5",
-		MinStake:     "100",
+		MinStake:     math.NewInt(100),
 		Lock:         "7",
 	}
 
@@ -388,7 +388,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingSuccess
 	msg := &types.MsgJoinStaking{
 		Creator:  creator.String(),
 		RewardId: "join-test-reward",
-		Amount:   "500",
+		Amount:   math.NewInt(500),
 	}
 
 	counter := suite.k.GetStakingRewardsCounter(suite.ctx)
@@ -439,7 +439,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingMinStak
 	msg := &types.MsgJoinStaking{
 		Creator:  creator.String(),
 		RewardId: "join-minstake-reward",
-		Amount:   "500", // Less than min stake
+		Amount:   math.NewInt(500), // Less than min stake
 	}
 
 	response, err := suite.msgServer.JoinStaking(suite.ctx, msg)
@@ -613,7 +613,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ClaimStakingReward
 	response, err := suite.msgServer.ClaimStakingRewards(suite.ctx, msg)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(response)
-	suite.Require().Equal("500", response.Amount)
+	suite.Require().Equal(math.NewInt(500), response.Amount)
 
 	// Verify participant's JoinedAt was updated
 	updatedParticipant, found := suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), "claim-test-reward")
@@ -820,7 +820,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingExistin
 	msg := &types.MsgJoinStaking{
 		Creator:  creator.String(),
 		RewardId: "join-truncated-reward",
-		Amount:   "100",
+		Amount:   math.NewInt(100),
 	}
 
 	response, err := suite.msgServer.JoinStaking(suite.ctx, msg)
@@ -886,11 +886,11 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 
 	msg := &types.MsgCreateStakingReward{
 		Creator:      creator.String(),
-		PrizeAmount:  "1000",
+		PrizeAmount:  math.NewInt(1000),
 		PrizeDenom:   "ubze",
 		StakingDenom: "ubze",
 		Duration:     "5",
-		MinStake:     "100",
+		MinStake:     math.NewInt(100),
 		Lock:         "7",
 	}
 
@@ -939,7 +939,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_DistributeStakingR
 	msg := &types.MsgDistributeStakingRewards{
 		Creator:  creator.String(),
 		RewardId: "distribute-test-reward",
-		Amount:   "500",
+		Amount:   math.NewInt(500),
 	}
 
 	counter := suite.k.GetStakingRewardsCounter(suite.ctx)

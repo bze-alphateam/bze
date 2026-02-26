@@ -81,7 +81,7 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	msg := &types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    "30",
 		MarketId:    "market-1",
@@ -161,7 +161,7 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 	// Create with Duration=7, but pending expiration should still be 30 days
 	msg := &types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    "7",
 		MarketId:    "market-1",
@@ -190,7 +190,7 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardInvalidCreator() {
 	msg := &types.MsgCreateTradingReward{
 		Creator:     "invalid-address",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    "30",
 		MarketId:    "market-1",
@@ -214,7 +214,7 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	msg := &types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "invalid-denom",
 		Duration:    "30",
 		MarketId:    "market-1",
@@ -245,7 +245,7 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	msg := &types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    "30",
 		MarketId:    "invalid-market",
@@ -283,7 +283,7 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	msg := &types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    "30",
 		MarketId:    "market-1",
@@ -330,7 +330,7 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	msg := &types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    "30",
 		MarketId:    "market-1",
@@ -396,7 +396,7 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	msg := &types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    "30",
 		MarketId:    "market-1",
@@ -460,7 +460,7 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	msg := &types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    "30",
 		MarketId:    "market-1",
@@ -536,7 +536,7 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	msg := &types.MsgCreateTradingReward{
 		Creator:     creator.String(),
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    "30",
 		MarketId:    "market-1",

@@ -39,7 +39,7 @@ func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCrea
 		return nil, types.ErrInvalidPrizeDenom
 	}
 
-	toCapture, err := k.getAmountToCapture(stakingReward.PrizeDenom, stakingReward.PrizeAmount.String(), int64(stakingReward.Duration))
+	toCapture, err := k.getAmountToCapture(stakingReward.PrizeDenom, stakingReward.PrizeAmount, int64(stakingReward.Duration))
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not calculate amount needed to create the reward")
 	}
@@ -128,7 +128,7 @@ func (k msgServer) UpdateStakingReward(goCtx context.Context, msg *types.MsgUpda
 		return nil, errors.Wrap(sdkerrors.ErrKeyNotFound, "staking reward not found")
 	}
 
-	toCapture, err := k.getAmountToCapture(stakingReward.PrizeDenom, stakingReward.PrizeAmount.String(), durationInt)
+	toCapture, err := k.getAmountToCapture(stakingReward.PrizeDenom, stakingReward.PrizeAmount, durationInt)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not calculate amount needed to create the reward")
 	}
@@ -181,7 +181,7 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 
 	stakedAmount := stakingReward.StakedAmount
 
-	toCapture, err := k.getAmountToCapture(stakingReward.StakingDenom, msg.Amount, int64(1))
+	toCapture, err := k.getAmountToCapture(stakingReward.StakingDenom, msg.Amount, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +259,7 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 		return nil, errors.Wrapf(types.ErrInvalidRewardId, "you are not a participant in this staking reward")
 	}
 
-	partCoins, err := k.getAmountToCapture(stakingReward.StakingDenom, participation.Amount.String(), int64(1))
+	partCoins, err := k.getAmountToCapture(stakingReward.StakingDenom, participation.Amount, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -352,7 +352,7 @@ func (k msgServer) ClaimStakingRewards(goCtx context.Context, msg *types.MsgClai
 		k.Logger().Error(err.Error())
 	}
 
-	return &types.MsgClaimStakingRewardsResponse{Amount: paid.Amount.String()}, nil
+	return &types.MsgClaimStakingRewardsResponse{Amount: paid.Amount}, nil
 }
 
 func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *types.MsgDistributeStakingRewards) (*types.MsgDistributeStakingRewardsResponse, error) {
@@ -365,12 +365,7 @@ func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 
-	amtInt, ok := math.NewIntFromString(msg.Amount)
-	if !ok {
-		return nil, errors.Wrapf(types.ErrInvalidAmount, "could not convert order amount")
-	}
-
-	if !amtInt.IsPositive() {
+	if !msg.Amount.IsPositive() {
 		return nil, errors.Wrapf(types.ErrInvalidAmount, "amount should be greater than 0")
 	}
 
@@ -405,7 +400,7 @@ func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *types.Ms
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.StakingRewardDistributionEvent{
 			RewardId: stakingReward.RewardId,
-			Amount:   msg.Amount,
+			Amount:   msg.Amount.String(),
 		},
 	)
 

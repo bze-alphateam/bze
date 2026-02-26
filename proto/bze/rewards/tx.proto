@@ -48,11 +48,17 @@ message MsgCreateStakingReward {
   option           (amino.name) = "bze/x/rewards/MsgCreateStakingReward";
   option (cosmos.msg.v1.signer) = "creator";
   string creator       = 1;
-  string prize_amount  = 2;
+  string prize_amount  = 2 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
   string prize_denom   = 3;
   string staking_denom = 4;
   string duration      = 5;
-  string min_stake     = 6;
+  string min_stake     = 6 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
   string lock          = 7;
 }
 
@@ -75,7 +81,10 @@ message MsgJoinStaking {
   option (cosmos.msg.v1.signer) = "creator";
   string creator   = 1;
   string reward_id = 2;
-  string amount    = 3;
+  string amount    = 3 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 message MsgJoinStakingResponse {}
@@ -97,7 +106,10 @@ message MsgClaimStakingRewards {
 }
 
 message MsgClaimStakingRewardsResponse {
-  string amount = 1;
+  string amount = 1 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 message MsgDistributeStakingRewards {
@@ -105,7 +117,10 @@ message MsgDistributeStakingRewards {
   option (cosmos.msg.v1.signer) = "creator";
   string creator   = 1;
   string reward_id = 2;
-  string amount    = 3;
+  string amount    = 3 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 message MsgDistributeStakingRewardsResponse {}
@@ -114,7 +129,10 @@ message MsgCreateTradingReward {
   option           (amino.name) = "bze/x/rewards/MsgCreateTradingReward";
   option (cosmos.msg.v1.signer) = "creator";
   string creator      = 1;
-  string prize_amount = 2;
+  string prize_amount = 2 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
   string prize_denom  = 3;
   string duration     = 4;
   string market_id    = 5;
