@@ -234,14 +234,10 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 	logger.Info("adding new order on market")
 
 	zeroInt := math.ZeroInt()
-	msgAmountInt, ok := math.NewIntFromString(message.Amount)
-	if !ok {
-
-		return fmt.Errorf("could not convert queue message amount")
-	}
+	msgAmountInt := message.Amount
 
 	//find opposite orders if they exist
-	agg, found := pe.k.GetAggregatedOrder(ctx, message.MarketId, types.TheOtherOrderType(message.OrderType), message.Price)
+	agg, found := pe.k.GetAggregatedOrder(ctx, message.MarketId, types.TheOtherOrderType(message.OrderType), message.Price.String())
 	//no pending orders to fill. save the order and finish
 	if !found {
 		order := pe.saveOrder(ctx, message, message.Amount)
@@ -253,7 +249,7 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 
 	//should always exist
 	market, _ := pe.k.GetMarketById(ctx, message.MarketId)
-	minAmount, _ := CalculateMinAmount(message.Price)
+	minAmount, _ := CalculateMinAmountFromDecPrice(message.Price)
 	msgOwnerAddr, _ := sdk.AccAddressFromBech32(message.Owner)
 
 	remaining, err := pe.fillAggregatedOrder(ctx, &agg, &message, msgAmountInt, &market)
@@ -395,12 +391,12 @@ func (pe *ProcessingEngine) getExecutedAmount(messageAmount, orderAmount, minAmo
 	return math.ZeroInt()
 }
 
-func (pe *ProcessingEngine) saveOrder(ctx sdk.Context, message types.QueueMessage, amount string) *types.Order {
+func (pe *ProcessingEngine) saveOrder(ctx sdk.Context, message types.QueueMessage, amount math.Int) *types.Order {
 	order := types.Order{
 		MarketId:  message.MarketId,
 		OrderType: message.OrderType,
-		Amount:    amount,
-		Price:     message.Price,
+		Amount:    amount.String(),
+		Price:     message.Price.String(),
 		Owner:     message.Owner,
 	}
 
@@ -544,18 +540,14 @@ func (pe *ProcessingEngine) fillOrder(ctx sdk.Context, message types.QueueMessag
 	)
 	logger.Info("filling order on market")
 
-	msgAmountInt, ok := math.NewIntFromString(message.Amount)
-	if !ok {
-
-		return fmt.Errorf("could not convert queue message amount")
-	}
+	msgAmountInt := message.Amount
 
 	//should always exist
 	market, _ := pe.k.GetMarketById(ctx, message.MarketId)
 	msgOwnerAddr, _ := sdk.AccAddressFromBech32(message.Owner)
 
 	//find opposite orders if they exist
-	agg, found := pe.k.GetAggregatedOrder(ctx, message.MarketId, types.TheOtherOrderType(message.OrderType), message.Price)
+	agg, found := pe.k.GetAggregatedOrder(ctx, message.MarketId, types.TheOtherOrderType(message.OrderType), message.Price.String())
 	if !found {
 		//no pending orders to fill. refund the amount for this order
 		return pe.refundMessageFunds(ctx, &message, msgAmountInt, &market, msgOwnerAddr)
@@ -579,7 +571,7 @@ func (pe *ProcessingEngine) fillOrder(ctx sdk.Context, message types.QueueMessag
 func (pe *ProcessingEngine) refundMessageFunds(ctx sdk.Context, message *types.QueueMessage, refundAmount math.Int, market *types.Market, msgOwnerAddr sdk.AccAddress) error {
 	coinReq := types.OrderCoinsArguments{
 		OrderType:    message.OrderType,
-		OrderPrice:   message.Price,
+		OrderPrice:   message.Price.String(),
 		OrderAmount:  refundAmount,
 		Market:       market,
 		UserAddress:  message.Owner,
@@ -613,9 +605,9 @@ func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.Aggr
 		return nil, fmt.Errorf("could not convert agg amount")
 	}
 
-	oppositeOrderRefs := pe.k.GetPriceOrderByPrice(ctx, message.MarketId, types.TheOtherOrderType(message.OrderType), message.Price)
+	oppositeOrderRefs := pe.k.GetPriceOrderByPrice(ctx, message.MarketId, types.TheOtherOrderType(message.OrderType), message.Price.String())
 	pe.logger.Info("found orders to fill", "number_of_orders", len(oppositeOrderRefs))
-	minAmount, err := CalculateMinAmount(message.Price)
+	minAmount, err := CalculateMinAmountFromDecPrice(message.Price)
 	if err != nil {
 		return nil, fmt.Errorf("could not calculate min amount: %v", err)
 	}
@@ -649,7 +641,7 @@ func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.Aggr
 		}
 
 		msgAmountInt = msgAmountInt.Sub(amountToExecute)
-		message.Amount = msgAmountInt.String()
+		message.Amount = msgAmountInt
 
 		orderAmountInt = orderAmountInt.Sub(amountToExecute)
 		orderToFill.Amount = orderAmountInt.String()

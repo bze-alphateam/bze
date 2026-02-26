@@ -133,12 +133,17 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 		return nil, err
 	}
 
+	priceDec, err := math.LegacyNewDecFromStr(msg.Price)
+	if err != nil {
+		return nil, types.ErrInvalidOrderPrice.Wrapf("could not parse price: %v", err)
+	}
+
 	qm := types.QueueMessage{
 		MarketId:    msg.MarketId,
 		OrderType:   msg.OrderType,
 		MessageType: msg.OrderType,
-		Amount:      msg.Amount,
-		Price:       msg.Price,
+		Amount:      amtInt,
+		Price:       priceDec,
 		Owner:       msg.Creator,
 	}
 
@@ -241,6 +246,11 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 		if err != nil {
 			return nil, err
 		}
+		foPriceDec, err := math.LegacyNewDecFromStr(fo.Price)
+		if err != nil {
+			return nil, types.ErrInvalidOrderPrice.Wrapf("could not parse fill order price: %v", err)
+		}
+
 		//messages of type "buy" are added on queue as messageType = "fill_buy"
 		//messages of type "sell" are added on queue as messageType = "fill_sell"
 		//orderType is the opposite of the orders we want to fill: if we fill "buy" it means we "sell", and vice versa.
@@ -248,8 +258,8 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 			MarketId:    msg.MarketId,
 			OrderType:   ocReq.OrderType, // already inversed when ocReq was built a few lines above
 			MessageType: types.OrderTypeToMessageTypeFill(msg.OrderType),
-			Amount:      fo.Amount,
-			Price:       fo.Price,
+			Amount:      amtInt,
+			Price:       foPriceDec,
 			Owner:       msg.Creator,
 		}
 
@@ -330,8 +340,8 @@ func (k msgServer) emitOrderCreateMessageEvent(ctx sdk.Context, qm *types.QueueM
 			Creator:   qm.Owner,
 			MarketId:  qm.MarketId,
 			OrderType: qm.OrderType,
-			Amount:    qm.Amount,
-			Price:     qm.Price,
+			Amount:    qm.Amount.String(),
+			Price:     qm.Price.String(),
 		},
 	)
 }
@@ -480,11 +490,7 @@ func (k Keeper) checkPriceInQueueMessages(ctx sdk.Context, msg *types.MsgCreateO
 			continue
 		}
 
-		p, err := math.LegacyNewDecFromStr(queueMessage.Price)
-		if err != nil {
-			k.Logger().With("func", "checkPrice").Error(fmt.Sprintf("could not parse message price: %s", err.Error()))
-			continue
-		}
+		p := queueMessage.Price
 
 		if msgsPrice.IsZero() {
 			msgsPrice = p

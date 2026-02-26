@@ -16,8 +16,14 @@ message QueueMessage {
   string message_id = 1;
   string market_id = 2;
   string message_type = 3;
-  string amount = 4;
-  string price = 5;
+  string amount = 4 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string price = 5 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
   int64 created_at = 6;
   string order_id = 7;
   string order_type = 8;

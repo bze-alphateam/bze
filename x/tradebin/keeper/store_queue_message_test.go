@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -16,16 +17,16 @@ func (suite *IntegrationTestSuite) TestStore_QueueMessage_CompositeKey() {
 	msg1 := types.QueueMessage{
 		MarketId:    market1,
 		MessageType: types.OrderTypeBuy,
-		Amount:      "100",
-		Price:       "10",
+		Amount:      math.NewInt(100),
+		Price:       math.LegacyMustNewDecFromStr("10"),
 		OrderType:   types.OrderTypeBuy,
 		Owner:       addr1.String(),
 	}
 	msg2 := types.QueueMessage{
 		MarketId:    market1,
 		MessageType: types.OrderTypeSell,
-		Amount:      "200",
-		Price:       "20",
+		Amount:      math.NewInt(200),
+		Price:       math.LegacyMustNewDecFromStr("20"),
 		OrderType:   types.OrderTypeSell,
 		Owner:       addr1.String(),
 	}
@@ -34,8 +35,8 @@ func (suite *IntegrationTestSuite) TestStore_QueueMessage_CompositeKey() {
 	msg3 := types.QueueMessage{
 		MarketId:    market2,
 		MessageType: types.OrderTypeBuy,
-		Amount:      "300",
-		Price:       "30",
+		Amount:      math.NewInt(300),
+		Price:       math.LegacyMustNewDecFromStr("30"),
 		OrderType:   types.OrderTypeBuy,
 		Owner:       addr1.String(),
 	}
@@ -69,7 +70,7 @@ func (suite *IntegrationTestSuite) TestStore_QueueMessage_CompositeKey() {
 	market2Messages := suite.k.GetQueueMessagesByMarket(suite.ctx, market2)
 	suite.Require().Len(market2Messages, 1)
 	suite.Require().Equal(market2, market2Messages[0].MarketId)
-	suite.Require().Equal("300", market2Messages[0].Amount)
+	suite.Require().Equal(math.NewInt(300), market2Messages[0].Amount)
 }
 
 // TestStore_QueueMessage_TemporalOrderingWithinMarket tests that messages within a market
@@ -83,24 +84,24 @@ func (suite *IntegrationTestSuite) TestStore_QueueMessage_TemporalOrderingWithin
 		{
 			MarketId:    marketId,
 			MessageType: types.OrderTypeBuy,
-			Amount:      "100",
-			Price:       "10",
+			Amount:      math.NewInt(100),
+			Price:       math.LegacyMustNewDecFromStr("10"),
 			OrderType:   types.OrderTypeBuy,
 			Owner:       addr1.String(),
 		},
 		{
 			MarketId:    marketId,
 			MessageType: types.OrderTypeSell,
-			Amount:      "200",
-			Price:       "20",
+			Amount:      math.NewInt(200),
+			Price:       math.LegacyMustNewDecFromStr("20"),
 			OrderType:   types.OrderTypeSell,
 			Owner:       addr1.String(),
 		},
 		{
 			MarketId:    marketId,
 			MessageType: types.OrderTypeBuy,
-			Amount:      "300",
-			Price:       "30",
+			Amount:      math.NewInt(300),
+			Price:       math.LegacyMustNewDecFromStr("30"),
 			OrderType:   types.OrderTypeBuy,
 			Owner:       addr1.String(),
 		},
@@ -148,24 +149,24 @@ func (suite *IntegrationTestSuite) TestStore_QueueMessage_RemoveByMarketAndId() 
 	msg1 := types.QueueMessage{
 		MarketId:    market1,
 		MessageType: types.OrderTypeBuy,
-		Amount:      "100",
-		Price:       "10",
+		Amount:      math.NewInt(100),
+		Price:       math.LegacyMustNewDecFromStr("10"),
 		OrderType:   types.OrderTypeBuy,
 		Owner:       addr1.String(),
 	}
 	msg2 := types.QueueMessage{
 		MarketId:    market1,
 		MessageType: types.OrderTypeSell,
-		Amount:      "200",
-		Price:       "20",
+		Amount:      math.NewInt(200),
+		Price:       math.LegacyMustNewDecFromStr("20"),
 		OrderType:   types.OrderTypeSell,
 		Owner:       addr1.String(),
 	}
 	msg3 := types.QueueMessage{
 		MarketId:    market2,
 		MessageType: types.OrderTypeBuy,
-		Amount:      "300",
-		Price:       "30",
+		Amount:      math.NewInt(300),
+		Price:       math.LegacyMustNewDecFromStr("30"),
 		OrderType:   types.OrderTypeBuy,
 		Owner:       addr1.String(),
 	}
@@ -214,8 +215,8 @@ func (suite *IntegrationTestSuite) TestStore_QueueMessage_MultipleMarketsIndepen
 			msg := types.QueueMessage{
 				MarketId:    marketId,
 				MessageType: types.OrderTypeBuy,
-				Amount:      "100",
-				Price:       "10",
+				Amount:      math.NewInt(100),
+				Price:       math.LegacyMustNewDecFromStr("10"),
 				OrderType:   types.OrderTypeBuy,
 				Owner:       addr1.String(),
 			}
@@ -263,8 +264,8 @@ func (suite *IntegrationTestSuite) TestStore_QueueMessage_FilterByMessageType() 
 		suite.k.SetQueueMessage(suite.ctx, types.QueueMessage{
 			MarketId:    marketId,
 			MessageType: types.OrderTypeBuy,
-			Amount:      "100",
-			Price:       "10",
+			Amount:      math.NewInt(100),
+			Price:       math.LegacyMustNewDecFromStr("10"),
 			OrderType:   types.OrderTypeBuy,
 			Owner:       addr1.String(),
 		})
@@ -274,8 +275,8 @@ func (suite *IntegrationTestSuite) TestStore_QueueMessage_FilterByMessageType() 
 		suite.k.SetQueueMessage(suite.ctx, types.QueueMessage{
 			MarketId:    marketId,
 			MessageType: types.OrderTypeSell,
-			Amount:      "200",
-			Price:       "20",
+			Amount:      math.NewInt(200),
+			Price:       math.LegacyMustNewDecFromStr("20"),
 			OrderType:   types.OrderTypeSell,
 			Owner:       addr1.String(),
 		})

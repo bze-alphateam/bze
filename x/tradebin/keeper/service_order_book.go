@@ -15,7 +15,12 @@ func CalculateMinAmount(price string) (math.Int, error) {
 	if err != nil {
 		return math.ZeroInt(), fmt.Errorf("error converting price to Dec: %w", err)
 	}
-	if priceDec.IsZero() {
+
+	return CalculateMinAmountFromDecPrice(priceDec)
+}
+
+func CalculateMinAmountFromDecPrice(price math.LegacyDec) (math.Int, error) {
+	if price.IsZero() {
 		return math.ZeroInt(), fmt.Errorf("price cannot be zero")
 	}
 
@@ -23,7 +28,7 @@ func CalculateMinAmount(price string) (math.Int, error) {
 	oneDec := math.LegacyOneDec()
 
 	// Perform the division (1 / price), ensuring high precision
-	amtDec := oneDec.Quo(priceDec)
+	amtDec := oneDec.Quo(price)
 	// Ceil the result to ensure we avoid dust effectively
 	amtDec = amtDec.Ceil()
 
