@@ -76,14 +76,7 @@ func (k Keeper) StoreProcessedUserDust(ctx sdk.Context, userDust *types.UserDust
 
 	//if the decimal dust was not received take it from the structure
 	if userDustDec == nil {
-		fromStorage, err := math.LegacyNewDecFromStr(userDust.Amount)
-		if err != nil {
-			ctx.Logger().Error("could not parse user Dust amount", "error", err)
-
-			return
-		}
-
-		userDustDec = &fromStorage
+		userDustDec = &userDust.Amount
 	}
 
 	if userDustDec.IsPositive() {
@@ -103,15 +96,12 @@ func (k Keeper) CollectUserDust(ctx sdk.Context, address string, coin sdk.Coin, 
 	if !ok {
 		storageDust = types.UserDust{
 			Owner:  address,
-			Amount: "0",
+			Amount: math.LegacyZeroDec(),
 			Denom:  coin.Denom,
 		}
 	}
 
-	storageDustAmount, err := math.LegacyNewDecFromStr(storageDust.Amount)
-	if err != nil {
-		return coin, nil, zeroDec, err
-	}
+	storageDustAmount := storageDust.Amount
 
 	oneDec := math.LegacyOneDec()
 	if isReceiver {
@@ -137,7 +127,7 @@ func (k Keeper) CollectUserDust(ctx sdk.Context, address string, coin sdk.Coin, 
 			storageDustAmount = storageDustAmount.Add(remainingDust)
 		}
 	}
-	storageDust.Amount = storageDustAmount.String()
+	storageDust.Amount = storageDustAmount
 
 	return coin, &storageDust, storageDustAmount, nil
 }

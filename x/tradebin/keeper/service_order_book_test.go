@@ -244,7 +244,7 @@ func (suite *IntegrationTestSuite) TestGetOrderCoinsWithDust_WithExistingDust() 
 	// Store some existing dust for the user
 	ud := types.UserDust{
 		Owner:  addr,
-		Amount: "0.5",
+		Amount: math.LegacyMustNewDecFromStr("0.5"),
 		Denom:  market.Quote,
 	}
 	suite.k.SetUserDust(suite.ctx, ud)
@@ -282,7 +282,7 @@ func (suite *IntegrationTestSuite) TestGetOrderCoinsWithDust_BuyOrderWithDust() 
 	suite.Require().Equal(math.NewInt(34), result.Coin.Amount)
 	suite.Require().NotNil(result.UserDust)
 	expectedStoredDust := math.LegacyOneDec().Sub(math.LegacyMustNewDecFromStr("0.3"))
-	suite.Require().Equal(expectedStoredDust.String(), result.UserDust.Amount)
+	suite.Require().Equal(expectedStoredDust, result.UserDust.Amount)
 }
 
 func (suite *IntegrationTestSuite) TestGetOrderCoinsWithDust_ReceiverWithDust() {
@@ -303,7 +303,7 @@ func (suite *IntegrationTestSuite) TestGetOrderCoinsWithDust_ReceiverWithDust() 
 	suite.Require().Equal(math.NewInt(33), result.Coin.Amount)
 	suite.Require().NotNil(result.UserDust)
 	expectedStoredDust := math.LegacyMustNewDecFromStr("0.3")
-	suite.Require().Equal(expectedStoredDust.String(), result.UserDust.Amount)
+	suite.Require().Equal(expectedStoredDust, result.UserDust.Amount)
 }
 
 func (suite *IntegrationTestSuite) TestGetOrderCoinsWithDust_SellOrderNoDust() {

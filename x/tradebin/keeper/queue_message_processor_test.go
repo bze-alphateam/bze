@@ -504,7 +504,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching_WithD
 	suite.Require().True(ok)
 	suite.Require().Equal(makerDust.Denom, market.Quote)
 	suite.Require().Equal(makerDust.Owner, makerAddr.String())
-	suite.Require().Equal(makerDust.Amount, "0.612000000000000000")
+	suite.Require().Equal(makerDust.Amount, math.LegacyMustNewDecFromStr("0.612000000000000000"))
 
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceDec.String(), buyAmt.MulRaw(orderCounter).String())
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, sellPriceDec.String(), sellAmt.MulRaw(orderCounter).SubRaw(10).String())

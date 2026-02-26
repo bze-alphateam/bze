@@ -614,7 +614,7 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_Buy_Success_W
 	suite.Require().True(ok)
 	suite.Require().Equal(udQuote.Denom, market.Quote)
 	suite.Require().Equal(udQuote.Owner, addr1.String())
-	suite.Require().EqualValues(udQuote.Amount, "0.972030000000000000")
+	suite.Require().Equal(udQuote.Amount, math.LegacyMustNewDecFromStr("0.972030000000000000"))
 
 	_, ok = suite.k.GetUserDust(suite.ctx, addr1.String(), market.Base)
 	suite.Require().False(ok)
