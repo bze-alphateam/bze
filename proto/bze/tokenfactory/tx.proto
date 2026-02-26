@@ -6,6 +6,7 @@ import "amino/amino.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/bank/v1beta1/bank.proto";
 import "bze/tokenfactory/params.proto";
 
@@ -57,7 +58,10 @@ message MsgMint {
   option           (amino.name) = "bze/x/tokenfactory/MsgMint";
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
-  string coins   = 2;
+  cosmos.base.v1beta1.Coin coins = 2 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
 }
 
 message MsgMintResponse {}
@@ -66,7 +70,10 @@ message MsgBurn {
   option           (amino.name) = "bze/x/tokenfactory/MsgBurn";
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
-  string coins   = 2;
+  cosmos.base.v1beta1.Coin coins = 2 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
 }
 
 message MsgBurnResponse {}

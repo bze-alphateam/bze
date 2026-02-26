@@ -8,7 +8,7 @@ import (
 
 var _ sdk.Msg = &MsgMint{}
 
-func NewMsgMint(creator string, coins string) *MsgMint {
+func NewMsgMint(creator string, coins sdk.Coin) *MsgMint {
 	return &MsgMint{
 		Creator: creator,
 		Coins:   coins,
@@ -21,12 +21,11 @@ func (msg *MsgMint) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	c, err := sdk.ParseCoinNormalized(msg.Coins)
-	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "invalid coins (%s)", err)
+	if !msg.Coins.IsValid() {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "invalid coins (%s)", msg.Coins)
 	}
 
-	if !c.IsPositive() {
+	if !msg.Coins.IsPositive() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "cannot mint non positive coins")
 	}
 

@@ -39,9 +39,9 @@ func (k msgServer) CreateDenom(goCtx context.Context, msg *types.MsgCreateDenom)
 func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	coin, err := sdk.ParseCoinNormalized(msg.Coins)
-	if err != nil || !coin.IsPositive() {
-		return nil, types.ErrInvalidAmount.Wrapf("coins: %s", msg.Coins)
+	coin := msg.Coins
+	if !coin.IsValid() || !coin.IsPositive() {
+		return nil, types.ErrInvalidAmount.Wrapf("coins: %s", coin)
 	}
 
 	_, denomExists := k.bankKeeper.GetDenomMetaData(ctx, coin.GetDenom())
@@ -50,7 +50,7 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMi
 	}
 
 	//check denom is a tokenfactory denom
-	_, _, err = types.DeconstructDenom(coin.GetDenom())
+	_, _, err := types.DeconstructDenom(coin.GetDenom())
 	if err != nil {
 		return nil, err
 	}
@@ -84,9 +84,9 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMi
 
 func (k msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.MsgBurnResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	coin, err := sdk.ParseCoinNormalized(msg.Coins)
-	if err != nil || !coin.IsPositive() {
-		return nil, types.ErrInvalidAmount.Wrapf("coins: %s", msg.Coins)
+	coin := msg.Coins
+	if !coin.IsValid() || !coin.IsPositive() {
+		return nil, types.ErrInvalidAmount.Wrapf("coins: %s", coin)
 	}
 
 	dAuth, err := k.Keeper.GetDenomAuthority(ctx, coin.GetDenom())

@@ -8,7 +8,7 @@ import (
 
 var _ sdk.Msg = &MsgBurn{}
 
-func NewMsgBurn(creator string, coins string) *MsgBurn {
+func NewMsgBurn(creator string, coins sdk.Coin) *MsgBurn {
 	return &MsgBurn{
 		Creator: creator,
 		Coins:   coins,
@@ -21,12 +21,11 @@ func (msg *MsgBurn) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	c, err := sdk.ParseCoinNormalized(msg.Coins)
-	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "invalid coins (%s)", err)
+	if !msg.Coins.IsValid() {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "invalid coins (%s)", msg.Coins)
 	}
 
-	if !c.IsPositive() {
+	if !msg.Coins.IsPositive() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "cannot burn non positive coins")
 	}
 

@@ -119,8 +119,6 @@ func (suite *IntegrationTestSuite) TestCreateDenom_ChargingError() {
 func (suite *IntegrationTestSuite) TestMint_ValidRequest() {
 	creator := sdk.AccAddress("creator").String()
 	denom := "factory/" + creator + "/testtoken"
-	amount := "1000"
-	coins := amount + denom
 
 	// Set up denom authority
 	denomAuth := types.DenomAuthority{
@@ -142,7 +140,7 @@ func (suite *IntegrationTestSuite) TestMint_ValidRequest() {
 
 	msg := &types.MsgMint{
 		Creator: creator,
-		Coins:   coins,
+		Coins:   expectedCoin,
 	}
 
 	res, err := suite.msgServer.Mint(suite.ctx, msg)
@@ -156,7 +154,7 @@ func (suite *IntegrationTestSuite) TestMint_InvalidAmount() {
 
 	msg := &types.MsgMint{
 		Creator: creator,
-		Coins:   "invalid-amount",
+		Coins:   sdk.Coin{Denom: "utoken", Amount: sdk.ZeroInt()},
 	}
 
 	res, err := suite.msgServer.Mint(suite.ctx, msg)
@@ -169,14 +167,13 @@ func (suite *IntegrationTestSuite) TestMint_InvalidAmount() {
 func (suite *IntegrationTestSuite) TestMint_DenomDoesNotExist() {
 	creator := sdk.AccAddress("creator").String()
 	denom := "factory/" + creator + "/nonexistent"
-	coins := "1000" + denom
 
 	// Mock denom doesn't exist
 	suite.bank.EXPECT().GetDenomMetaData(suite.ctx, denom).Return(banktypes.Metadata{}, false).Times(1)
 
 	msg := &types.MsgMint{
 		Creator: creator,
-		Coins:   coins,
+		Coins:   sdk.NewInt64Coin(denom, 1000),
 	}
 
 	res, err := suite.msgServer.Mint(suite.ctx, msg)
@@ -190,7 +187,6 @@ func (suite *IntegrationTestSuite) TestMint_Unauthorized() {
 	creator := sdk.AccAddress("creator").String()
 	unauthorized := sdk.AccAddress("unauthorized").String()
 	denom := "factory/" + creator + "/testtoken"
-	coins := "1000" + denom
 
 	// Set up denom authority with different admin
 	denomAuth := types.DenomAuthority{
@@ -204,7 +200,7 @@ func (suite *IntegrationTestSuite) TestMint_Unauthorized() {
 
 	msg := &types.MsgMint{
 		Creator: unauthorized,
-		Coins:   coins,
+		Coins:   sdk.NewInt64Coin(denom, 1000),
 	}
 
 	res, err := suite.msgServer.Mint(suite.ctx, msg)
@@ -217,8 +213,6 @@ func (suite *IntegrationTestSuite) TestMint_Unauthorized() {
 func (suite *IntegrationTestSuite) TestBurn_ValidRequest() {
 	creator := sdk.AccAddress("creator").String()
 	denom := "factory/" + creator + "/testtoken"
-	amount := "1000"
-	coins := amount + denom
 
 	// Set up denom authority
 	denomAuth := types.DenomAuthority{
@@ -239,7 +233,7 @@ func (suite *IntegrationTestSuite) TestBurn_ValidRequest() {
 
 	msg := &types.MsgBurn{
 		Creator: creator,
-		Coins:   coins,
+		Coins:   expectedCoin,
 	}
 
 	res, err := suite.msgServer.Burn(suite.ctx, msg)
@@ -253,7 +247,7 @@ func (suite *IntegrationTestSuite) TestBurn_InvalidAmount() {
 
 	msg := &types.MsgBurn{
 		Creator: creator,
-		Coins:   "invalid-amount",
+		Coins:   sdk.Coin{Denom: "utoken", Amount: sdk.ZeroInt()},
 	}
 
 	res, err := suite.msgServer.Burn(suite.ctx, msg)
@@ -267,7 +261,6 @@ func (suite *IntegrationTestSuite) TestBurn_Unauthorized() {
 	creator := sdk.AccAddress("creator").String()
 	unauthorized := sdk.AccAddress("unauthorized").String()
 	denom := "factory/" + creator + "/testtoken"
-	coins := "1000" + denom
 
 	// Set up denom authority with different admin
 	denomAuth := types.DenomAuthority{
@@ -278,7 +271,7 @@ func (suite *IntegrationTestSuite) TestBurn_Unauthorized() {
 
 	msg := &types.MsgBurn{
 		Creator: unauthorized,
-		Coins:   coins,
+		Coins:   sdk.NewInt64Coin(denom, 1000),
 	}
 
 	res, err := suite.msgServer.Burn(suite.ctx, msg)

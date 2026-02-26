@@ -4,13 +4,14 @@ import (
 	"testing"
 
 	"github.com/bze-alphateam/bze/testutil/sample"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewMsgBurn(t *testing.T) {
 	creator := sample.AccAddress()
-	coins := "100utoken"
+	coins := sdk.NewInt64Coin("utoken", 100)
 
 	msg := NewMsgBurn(creator, coins)
 
@@ -30,7 +31,7 @@ func TestMsgBurn_ValidateBasic(t *testing.T) {
 			name: "invalid creator address",
 			msg: MsgBurn{
 				Creator: "invalid_address",
-				Coins:   "100utoken",
+				Coins:   sdk.NewInt64Coin("utoken", 100),
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		},
@@ -38,56 +39,15 @@ func TestMsgBurn_ValidateBasic(t *testing.T) {
 			name: "empty creator address",
 			msg: MsgBurn{
 				Creator: "",
-				Coins:   "100utoken",
+				Coins:   sdk.NewInt64Coin("utoken", 100),
 			},
 			err: sdkerrors.ErrInvalidAddress,
-		},
-		{
-			name: "invalid coins - empty",
-			msg: MsgBurn{
-				Creator: validCreator,
-				Coins:   "",
-			},
-			err: sdkerrors.ErrInvalidCoins,
-		},
-		{
-			name: "invalid coins - malformed",
-			msg: MsgBurn{
-				Creator: validCreator,
-				Coins:   "invalid_coins",
-			},
-			err: sdkerrors.ErrInvalidCoins,
-		},
-		{
-			name: "invalid coins - no denomination",
-			msg: MsgBurn{
-				Creator: validCreator,
-				Coins:   "100",
-			},
-			err: sdkerrors.ErrInvalidCoins,
-		},
-		{
-			name: "invalid coins - negative",
-			msg: MsgBurn{
-				Creator: validCreator,
-				Coins:   "-100utoken",
-			},
-			err: sdkerrors.ErrInvalidCoins,
 		},
 		{
 			name: "invalid coins - zero",
 			msg: MsgBurn{
 				Creator: validCreator,
-				Coins:   "0utoken",
-			},
-			err: sdkerrors.ErrInvalidCoins,
-		},
-
-		{
-			name: "invalid coins - multiple coins not supported",
-			msg: MsgBurn{
-				Creator: validCreator,
-				Coins:   "100utoken,50ustake",
+				Coins:   sdk.NewInt64Coin("utoken", 0),
 			},
 			err: sdkerrors.ErrInvalidCoins,
 		},
@@ -95,42 +55,28 @@ func TestMsgBurn_ValidateBasic(t *testing.T) {
 			name: "valid coins - single coin",
 			msg: MsgBurn{
 				Creator: validCreator,
-				Coins:   "100utoken",
+				Coins:   sdk.NewInt64Coin("utoken", 100),
 			},
 		},
 		{
 			name: "valid coins - large amount",
 			msg: MsgBurn{
 				Creator: validCreator,
-				Coins:   "1000000000000utoken",
+				Coins:   sdk.NewInt64Coin("utoken", 1000000000000),
 			},
 		},
 		{
 			name: "valid coins - single unit",
 			msg: MsgBurn{
 				Creator: validCreator,
-				Coins:   "1utoken",
+				Coins:   sdk.NewInt64Coin("utoken", 1),
 			},
 		},
 		{
 			name: "valid coins - different denomination",
 			msg: MsgBurn{
 				Creator: validCreator,
-				Coins:   "500ubze",
-			},
-		},
-		{
-			name: "valid coins - denomination with numbers",
-			msg: MsgBurn{
-				Creator: validCreator,
-				Coins:   "100token123",
-			},
-		},
-		{
-			name: "valid coins - long denomination",
-			msg: MsgBurn{
-				Creator: validCreator,
-				Coins:   "250verylongdenomination",
+				Coins:   sdk.NewInt64Coin("ubze", 500),
 			},
 		},
 	}
