@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"errors"
 
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/tokenfactory/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -154,7 +155,7 @@ func (suite *IntegrationTestSuite) TestMint_InvalidAmount() {
 
 	msg := &types.MsgMint{
 		Creator: creator,
-		Coins:   sdk.Coin{Denom: "utoken", Amount: sdk.ZeroInt()},
+		Coins:   sdk.Coin{Denom: "utoken", Amount: math.ZeroInt()},
 	}
 
 	res, err := suite.msgServer.Mint(suite.ctx, msg)
@@ -247,7 +248,7 @@ func (suite *IntegrationTestSuite) TestBurn_InvalidAmount() {
 
 	msg := &types.MsgBurn{
 		Creator: creator,
-		Coins:   sdk.Coin{Denom: "utoken", Amount: sdk.ZeroInt()},
+		Coins:   sdk.Coin{Denom: "utoken", Amount: math.ZeroInt()},
 	}
 
 	res, err := suite.msgServer.Burn(suite.ctx, msg)
