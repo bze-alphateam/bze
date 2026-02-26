@@ -39,7 +39,7 @@ func (msg *MsgCreateTradingReward) ToTradingReward() (TradingReward, error) {
 	if !amtInt.IsPositive() {
 		return tr, errorsmod.Wrapf(ErrInvalidAmount, "amount should be greater than 0")
 	}
-	tr.PrizeAmount = amtInt.String()
+	tr.PrizeAmount = amtInt
 
 	if msg.PrizeDenom == "" {
 		return tr, ErrInvalidPrizeDenom

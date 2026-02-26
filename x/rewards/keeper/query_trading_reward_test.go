@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
@@ -10,7 +11,7 @@ import (
 func (suite *IntegrationTestSuite) TestQueryTradingReward_TradingRewardPending() {
 	tradingReward := types.TradingReward{
 		RewardId:    "pending-query-reward",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -39,7 +40,7 @@ func (suite *IntegrationTestSuite) TestQueryTradingReward_TradingRewardPending()
 func (suite *IntegrationTestSuite) TestQueryTradingReward_TradingRewardActive() {
 	tradingReward := types.TradingReward{
 		RewardId:    "active-query-reward",
-		PrizeAmount: "2000",
+		PrizeAmount: math.NewInt(2000),
 		PrizeDenom:  "utoken",
 		Duration:    60,
 		MarketId:    "market-2",
@@ -69,7 +70,7 @@ func (suite *IntegrationTestSuite) TestQueryTradingReward_TradingRewardPendingPr
 	// When same reward exists in both pending and active, pending should be returned first
 	pendingReward := types.TradingReward{
 		RewardId:    "priority-reward",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -79,7 +80,7 @@ func (suite *IntegrationTestSuite) TestQueryTradingReward_TradingRewardPendingPr
 
 	activeReward := types.TradingReward{
 		RewardId:    "priority-reward",
-		PrizeAmount: "2000",
+		PrizeAmount: math.NewInt(2000),
 		PrizeDenom:  "utoken",
 		Duration:    60,
 		MarketId:    "market-2",
@@ -98,7 +99,7 @@ func (suite *IntegrationTestSuite) TestQueryTradingReward_TradingRewardPendingPr
 	suite.Require().NoError(err)
 	suite.Require().NotNil(response)
 	// Should return pending reward (first checked)
-	suite.Require().Equal("1000", response.TradingReward.PrizeAmount)
+	suite.Require().Equal(math.NewInt(1000), response.TradingReward.PrizeAmount)
 	suite.Require().Equal("ubze", response.TradingReward.PrizeDenom)
 }
 
@@ -128,7 +129,7 @@ func (suite *IntegrationTestSuite) TestQueryTradingReward_AllTradingRewardsActiv
 	activeRewards := []types.TradingReward{
 		{
 			RewardId:    "active-all-1",
-			PrizeAmount: "1000",
+			PrizeAmount: math.NewInt(1000),
 			PrizeDenom:  "ubze",
 			Duration:    30,
 			MarketId:    "market-1",
@@ -137,7 +138,7 @@ func (suite *IntegrationTestSuite) TestQueryTradingReward_AllTradingRewardsActiv
 		},
 		{
 			RewardId:    "active-all-2",
-			PrizeAmount: "2000",
+			PrizeAmount: math.NewInt(2000),
 			PrizeDenom:  "utoken",
 			Duration:    60,
 			MarketId:    "market-2",
@@ -174,7 +175,7 @@ func (suite *IntegrationTestSuite) TestQueryTradingReward_AllTradingRewardsPendi
 	pendingRewards := []types.TradingReward{
 		{
 			RewardId:    "pending-all-1",
-			PrizeAmount: "1500",
+			PrizeAmount: math.NewInt(1500),
 			PrizeDenom:  "ucoin",
 			Duration:    45,
 			MarketId:    "market-3",
@@ -183,7 +184,7 @@ func (suite *IntegrationTestSuite) TestQueryTradingReward_AllTradingRewardsPendi
 		},
 		{
 			RewardId:    "pending-all-2",
-			PrizeAmount: "2500",
+			PrizeAmount: math.NewInt(2500),
 			PrizeDenom:  "uother",
 			Duration:    90,
 			MarketId:    "market-4",
@@ -219,7 +220,7 @@ func (suite *IntegrationTestSuite) TestQueryTradingReward_AllTradingRewardsPendi
 func (suite *IntegrationTestSuite) TestQueryTradingReward_AllTradingRewardsDefaultActive() {
 	activeReward := types.TradingReward{
 		RewardId:    "default-active",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -266,7 +267,7 @@ func (suite *IntegrationTestSuite) TestQueryTradingReward_AllTradingRewardsPagin
 	activeRewards := []types.TradingReward{
 		{
 			RewardId:    "page-active-1",
-			PrizeAmount: "1000",
+			PrizeAmount: math.NewInt(1000),
 			PrizeDenom:  "ubze",
 			Duration:    30,
 			MarketId:    "market-1",
@@ -275,7 +276,7 @@ func (suite *IntegrationTestSuite) TestQueryTradingReward_AllTradingRewardsPagin
 		},
 		{
 			RewardId:    "page-active-2",
-			PrizeAmount: "2000",
+			PrizeAmount: math.NewInt(2000),
 			PrizeDenom:  "utoken",
 			Duration:    60,
 			MarketId:    "market-2",
@@ -307,12 +308,12 @@ func (suite *IntegrationTestSuite) TestQueryTradingReward_TradingRewardLeaderboa
 		RewardId: "leaderboard-query-reward",
 		List: []types.TradingRewardLeaderboardEntry{
 			{
-				Amount:    "5000",
+				Amount:    math.NewInt(5000),
 				Address:   "bze1leader1",
 				CreatedAt: 1000,
 			},
 			{
-				Amount:    "3000",
+				Amount:    math.NewInt(3000),
 				Address:   "bze1leader2",
 				CreatedAt: 2000,
 			},
@@ -332,7 +333,7 @@ func (suite *IntegrationTestSuite) TestQueryTradingReward_TradingRewardLeaderboa
 	suite.Require().Equal(leaderboard.RewardId, response.Leaderboard.RewardId)
 	suite.Require().Len(response.Leaderboard.List, 2)
 	suite.Require().Equal("bze1leader1", response.Leaderboard.List[0].Address)
-	suite.Require().Equal("5000", response.Leaderboard.List[0].Amount)
+	suite.Require().Equal(math.NewInt(5000), response.Leaderboard.List[0].Amount)
 }
 
 func (suite *IntegrationTestSuite) TestQueryTradingReward_TradingRewardLeaderboardNilRequest() {

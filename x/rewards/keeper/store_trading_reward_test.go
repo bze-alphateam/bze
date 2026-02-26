@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
+
 	"github.com/bze-alphateam/bze/x/rewards/types"
 )
 
@@ -8,7 +10,7 @@ import (
 func (suite *IntegrationTestSuite) TestStoreTradingReward_SetAndGetPending() {
 	tradingReward := types.TradingReward{
 		RewardId:    "pending-reward-1",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -40,7 +42,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingReward_GetPendingNonExistent(
 func (suite *IntegrationTestSuite) TestStoreTradingReward_SetMultiplePending() {
 	reward1 := types.TradingReward{
 		RewardId:    "pending-1",
-		PrizeAmount: "500",
+		PrizeAmount: math.NewInt(500),
 		PrizeDenom:  "ubze",
 		Duration:    15,
 		MarketId:    "market-1",
@@ -50,7 +52,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingReward_SetMultiplePending() {
 
 	reward2 := types.TradingReward{
 		RewardId:    "pending-2",
-		PrizeAmount: "1500",
+		PrizeAmount: math.NewInt(1500),
 		PrizeDenom:  "utoken",
 		Duration:    45,
 		MarketId:    "market-2",
@@ -77,7 +79,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingReward_SetMultiplePending() {
 func (suite *IntegrationTestSuite) TestStoreTradingReward_RemovePending() {
 	tradingReward := types.TradingReward{
 		RewardId:    "pending-to-remove",
-		PrizeAmount: "750",
+		PrizeAmount: math.NewInt(750),
 		PrizeDenom:  "ubze",
 		Duration:    20,
 		MarketId:    "market-remove",
@@ -110,7 +112,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingReward_GetAllPendingMultiple(
 	rewards := []types.TradingReward{
 		{
 			RewardId:    "pending-all-1",
-			PrizeAmount: "100",
+			PrizeAmount: math.NewInt(100),
 			PrizeDenom:  "ubze",
 			Duration:    10,
 			MarketId:    "market-1",
@@ -119,7 +121,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingReward_GetAllPendingMultiple(
 		},
 		{
 			RewardId:    "pending-all-2",
-			PrizeAmount: "200",
+			PrizeAmount: math.NewInt(200),
 			PrizeDenom:  "utoken",
 			Duration:    20,
 			MarketId:    "market-2",
@@ -128,7 +130,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingReward_GetAllPendingMultiple(
 		},
 		{
 			RewardId:    "pending-all-3",
-			PrizeAmount: "300",
+			PrizeAmount: math.NewInt(300),
 			PrizeDenom:  "ucoin",
 			Duration:    30,
 			MarketId:    "market-3",
@@ -161,7 +163,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingReward_GetAllPendingMultiple(
 func (suite *IntegrationTestSuite) TestStoreTradingReward_SetAndGetActive() {
 	tradingReward := types.TradingReward{
 		RewardId:    "active-reward-1",
-		PrizeAmount: "2000",
+		PrizeAmount: math.NewInt(2000),
 		PrizeDenom:  "ubze",
 		Duration:    60,
 		MarketId:    "market-active",
@@ -193,7 +195,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingReward_GetActiveNonExistent()
 func (suite *IntegrationTestSuite) TestStoreTradingReward_RemoveActive() {
 	tradingReward := types.TradingReward{
 		RewardId:    "active-to-remove",
-		PrizeAmount: "1250",
+		PrizeAmount: math.NewInt(1250),
 		PrizeDenom:  "ubze",
 		Duration:    40,
 		MarketId:    "market-remove-active",
@@ -226,7 +228,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingReward_GetAllActiveMultiple()
 	rewards := []types.TradingReward{
 		{
 			RewardId:    "active-all-1",
-			PrizeAmount: "500",
+			PrizeAmount: math.NewInt(500),
 			PrizeDenom:  "ubze",
 			Duration:    25,
 			MarketId:    "market-1",
@@ -235,7 +237,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingReward_GetAllActiveMultiple()
 		},
 		{
 			RewardId:    "active-all-2",
-			PrizeAmount: "1000",
+			PrizeAmount: math.NewInt(1000),
 			PrizeDenom:  "utoken",
 			Duration:    35,
 			MarketId:    "market-2",
@@ -267,7 +269,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingReward_GetAllActiveMultiple()
 func (suite *IntegrationTestSuite) TestStoreTradingReward_PendingActiveIndependence() {
 	pendingReward := types.TradingReward{
 		RewardId:    "independence-pending",
-		PrizeAmount: "500",
+		PrizeAmount: math.NewInt(500),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -277,7 +279,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingReward_PendingActiveIndepende
 
 	activeReward := types.TradingReward{
 		RewardId:    "independence-active",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "utoken",
 		Duration:    60,
 		MarketId:    "market-2",

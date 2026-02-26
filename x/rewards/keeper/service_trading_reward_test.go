@@ -65,7 +65,7 @@ func (suite *IntegrationTestSuite) TestProcessExpiredTradingRewardQueue_SingleEn
 
 	tradingReward := types.TradingReward{
 		RewardId:    "expired-reward-1",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -114,7 +114,7 @@ func (suite *IntegrationTestSuite) TestProcessExpiredTradingRewardQueue_Multiple
 	for i := 1; i <= 3; i++ {
 		suite.k.SetPendingTradingReward(suite.ctx, types.TradingReward{
 			RewardId:    fmt.Sprintf("expired-reward-%d", i),
-			PrizeAmount: "1000",
+			PrizeAmount: math.NewInt(1000),
 			PrizeDenom:  "ubze",
 			Duration:    30,
 			MarketId:    fmt.Sprintf("market-%d", i),
@@ -158,7 +158,7 @@ func (suite *IntegrationTestSuite) TestProcessExpiredTradingRewardQueue_BurnErro
 
 	suite.k.SetPendingTradingReward(suite.ctx, types.TradingReward{
 		RewardId:    "expired-reward-1",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -205,7 +205,7 @@ func (suite *IntegrationTestSuite) TestProcessExpiredTradingRewardQueue_BurnErro
 
 	suite.k.SetPendingTradingReward(suite.ctx, types.TradingReward{
 		RewardId:    "retry-reward",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -262,7 +262,7 @@ func (suite *IntegrationTestSuite) TestProcessExpiredTradingRewardQueue_Multiple
 	for _, epoch := range []int64{100, 200} {
 		suite.k.SetPendingTradingReward(suite.ctx, types.TradingReward{
 			RewardId:    fmt.Sprintf("reward-epoch-%d", epoch),
-			PrizeAmount: "500",
+			PrizeAmount: math.NewInt(500),
 			PrizeDenom:  "ubze",
 			Duration:    30,
 			MarketId:    fmt.Sprintf("market-%d", epoch),
@@ -308,7 +308,7 @@ func (suite *IntegrationTestSuite) TestProcessExpiredTradingRewardQueue_MultiBlo
 		rewardId := fmt.Sprintf("drain-reward-%d", i)
 		suite.k.SetPendingTradingReward(suite.ctx, types.TradingReward{
 			RewardId:    rewardId,
-			PrizeAmount: "100",
+			PrizeAmount: math.NewInt(100),
 			PrizeDenom:  "ubze",
 			Duration:    30,
 			MarketId:    fmt.Sprintf("market-%d", i),
@@ -370,7 +370,7 @@ func (suite *IntegrationTestSuite) TestProcessExpiredTradingRewardQueue_Differen
 	for _, epoch := range []int64{100, 200} {
 		suite.k.SetPendingTradingReward(suite.ctx, types.TradingReward{
 			RewardId:    fmt.Sprintf("reward-epoch-%d", epoch),
-			PrizeAmount: "500",
+			PrizeAmount: math.NewInt(500),
 			PrizeDenom:  "ubze",
 			Duration:    30,
 			MarketId:    fmt.Sprintf("market-%d", epoch),

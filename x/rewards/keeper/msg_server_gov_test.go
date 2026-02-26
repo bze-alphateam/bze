@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -13,7 +14,7 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardSuccess
 	// Set up pending trading reward
 	pendingReward := types.TradingReward{
 		RewardId:    "activate-reward",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -102,7 +103,7 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardAlready
 	// Set up active trading reward
 	activeReward := types.TradingReward{
 		RewardId:    "already-active-reward",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -145,7 +146,7 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardPending
 	// Set up both pending and active rewards with same ID
 	pendingReward := types.TradingReward{
 		RewardId:    "conflict-reward",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -155,7 +156,7 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardPending
 
 	activeReward := types.TradingReward{
 		RewardId:    "conflict-reward",
-		PrizeAmount: "2000",
+		PrizeAmount: math.NewInt(2000),
 		PrizeDenom:  "utoken",
 		Duration:    60,
 		MarketId:    "market-2",
@@ -191,7 +192,7 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardWithExi
 	// Set up pending trading reward for same market
 	pendingReward := types.TradingReward{
 		RewardId:    "new-reward",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1", // Same market as existing mapping
@@ -227,7 +228,7 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardSecondM
 	// Set up first pending reward for market-1
 	pendingReward1 := types.TradingReward{
 		RewardId:    "first-reward",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -244,7 +245,7 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardSecondM
 	// Set up second pending reward for the same market
 	pendingReward2 := types.TradingReward{
 		RewardId:    "second-reward",
-		PrizeAmount: "2000",
+		PrizeAmount: math.NewInt(2000),
 		PrizeDenom:  "ubze",
 		Duration:    60,
 		MarketId:    "market-1",
@@ -299,7 +300,7 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardPreserv
 	// Set up pending trading reward with all fields
 	pendingReward := types.TradingReward{
 		RewardId:    "preserve-data-reward",
-		PrizeAmount: "5000",
+		PrizeAmount: math.NewInt(5000),
 		PrizeDenom:  "uspecial",
 		Duration:    120,
 		MarketId:    "special-market",
@@ -349,7 +350,7 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardUsesRew
 	// Set up pending trading reward with Duration=7 (7-day competition)
 	pendingReward := types.TradingReward{
 		RewardId:    "short-duration-reward",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    7,
 		MarketId:    "market-1",
@@ -398,7 +399,7 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardCleanup
 	// Set up multiple pending rewards, we'll activate one
 	pendingReward1 := types.TradingReward{
 		RewardId:    "cleanup-reward-1",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -408,7 +409,7 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardCleanup
 
 	pendingReward2 := types.TradingReward{
 		RewardId:    "cleanup-reward-2",
-		PrizeAmount: "2000",
+		PrizeAmount: math.NewInt(2000),
 		PrizeDenom:  "utoken",
 		Duration:    60,
 		MarketId:    "market-2",

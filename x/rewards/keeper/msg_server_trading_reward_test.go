@@ -99,7 +99,7 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 	// Verify trading reward was created
 	tradingReward, found := suite.k.GetPendingTradingReward(suite.ctx, response.RewardId)
 	suite.Require().True(found)
-	suite.Require().Equal("1000", tradingReward.PrizeAmount)
+	suite.Require().Equal(math.NewInt(1000), tradingReward.PrizeAmount)
 	suite.Require().Equal("ubze", tradingReward.PrizeDenom)
 	suite.Require().Equal("market-1", tradingReward.MarketId)
 	suite.Require().Equal(uint32(30), tradingReward.Duration)

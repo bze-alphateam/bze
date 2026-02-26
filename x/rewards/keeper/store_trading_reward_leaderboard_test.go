@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 )
 
@@ -10,17 +11,17 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_SetAndGet()
 		RewardId: "leaderboard-reward-1",
 		List: []types.TradingRewardLeaderboardEntry{
 			{
-				Amount:    "1000",
+				Amount:    math.NewInt(1000),
 				Address:   "bze1first",
 				CreatedAt: 1704067200,
 			},
 			{
-				Amount:    "750",
+				Amount:    math.NewInt(750),
 				Address:   "bze1second",
 				CreatedAt: 1704067300,
 			},
 			{
-				Amount:    "500",
+				Amount:    math.NewInt(500),
 				Address:   "bze1third",
 				CreatedAt: 1704067400,
 			},
@@ -75,7 +76,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_SetMultiple
 		RewardId: "leaderboard-1",
 		List: []types.TradingRewardLeaderboardEntry{
 			{
-				Amount:    "100",
+				Amount:    math.NewInt(100),
 				Address:   "bze1user1",
 				CreatedAt: 1704067200,
 			},
@@ -86,12 +87,12 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_SetMultiple
 		RewardId: "leaderboard-2",
 		List: []types.TradingRewardLeaderboardEntry{
 			{
-				Amount:    "200",
+				Amount:    math.NewInt(200),
 				Address:   "bze1user2",
 				CreatedAt: 1704067300,
 			},
 			{
-				Amount:    "150",
+				Amount:    math.NewInt(150),
 				Address:   "bze1user3",
 				CreatedAt: 1704067400,
 			},
@@ -119,7 +120,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_UpdateExist
 		RewardId: "update-leaderboard",
 		List: []types.TradingRewardLeaderboardEntry{
 			{
-				Amount:    "100",
+				Amount:    math.NewInt(100),
 				Address:   "bze1original",
 				CreatedAt: 1704067200,
 			},
@@ -130,12 +131,12 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_UpdateExist
 		RewardId: "update-leaderboard",
 		List: []types.TradingRewardLeaderboardEntry{
 			{
-				Amount:    "200",
+				Amount:    math.NewInt(200),
 				Address:   "bze1updated",
 				CreatedAt: 1704067300,
 			},
 			{
-				Amount:    "150",
+				Amount:    math.NewInt(150),
 				Address:   "bze1new",
 				CreatedAt: 1704067400,
 			},
@@ -152,7 +153,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_UpdateExist
 	retrieved, found := suite.k.GetTradingRewardLeaderboard(suite.ctx, "update-leaderboard")
 	suite.Require().True(found)
 	suite.Require().Len(retrieved.List, 2)
-	suite.Require().Equal("200", retrieved.List[0].Amount)
+	suite.Require().Equal(math.NewInt(200), retrieved.List[0].Amount)
 	suite.Require().Equal("bze1updated", retrieved.List[0].Address)
 }
 
@@ -161,7 +162,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_Remove() {
 		RewardId: "leaderboard-to-remove",
 		List: []types.TradingRewardLeaderboardEntry{
 			{
-				Amount:    "500",
+				Amount:    math.NewInt(500),
 				Address:   "bze1remove",
 				CreatedAt: 1704067200,
 			},
@@ -202,7 +203,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_GetAllMulti
 			RewardId: "leaderboard-all-1",
 			List: []types.TradingRewardLeaderboardEntry{
 				{
-					Amount:    "300",
+					Amount:    math.NewInt(300),
 					Address:   "bze1leader1",
 					CreatedAt: 1704067200,
 				},
@@ -212,7 +213,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_GetAllMulti
 			RewardId: "leaderboard-all-2",
 			List: []types.TradingRewardLeaderboardEntry{
 				{
-					Amount:    "400",
+					Amount:    math.NewInt(400),
 					Address:   "bze1leader2",
 					CreatedAt: 1704067300,
 				},
@@ -222,7 +223,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_GetAllMulti
 			RewardId: "leaderboard-all-3",
 			List: []types.TradingRewardLeaderboardEntry{
 				{
-					Amount:    "500",
+					Amount:    math.NewInt(500),
 					Address:   "bze1leader3",
 					CreatedAt: 1704067400,
 				},
@@ -254,7 +255,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_GetAllMulti
 func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_SetAndGetCandidate() {
 	candidate := types.TradingRewardCandidate{
 		RewardId: "candidate-reward-1",
-		Amount:   "750",
+		Amount:   math.NewInt(750),
 		Address:  "bze1candidate",
 	}
 
@@ -277,7 +278,7 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_GetCandidat
 	// Test with existing reward but non-existent address
 	candidate := types.TradingRewardCandidate{
 		RewardId: "existing-reward",
-		Amount:   "100",
+		Amount:   math.NewInt(100),
 		Address:  "bze1existing",
 	}
 	suite.k.SetTradingRewardCandidate(suite.ctx, candidate)
@@ -290,17 +291,17 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_SetMultiple
 	candidates := []types.TradingRewardCandidate{
 		{
 			RewardId: "candidate-reward-1",
-			Amount:   "500",
+			Amount:   math.NewInt(500),
 			Address:  "bze1candidate1",
 		},
 		{
 			RewardId: "candidate-reward-1",
-			Amount:   "750",
+			Amount:   math.NewInt(750),
 			Address:  "bze1candidate2",
 		},
 		{
 			RewardId: "candidate-reward-2",
-			Amount:   "300",
+			Amount:   math.NewInt(300),
 			Address:  "bze1candidate1",
 		},
 	}
@@ -313,27 +314,27 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_SetMultiple
 	// Verify each can be retrieved independently
 	retrieved1, found1 := suite.k.GetTradingRewardCandidate(suite.ctx, "candidate-reward-1", "bze1candidate1")
 	suite.Require().True(found1)
-	suite.Require().Equal("500", retrieved1.Amount)
+	suite.Require().Equal(math.NewInt(500), retrieved1.Amount)
 
 	retrieved2, found2 := suite.k.GetTradingRewardCandidate(suite.ctx, "candidate-reward-1", "bze1candidate2")
 	suite.Require().True(found2)
-	suite.Require().Equal("750", retrieved2.Amount)
+	suite.Require().Equal(math.NewInt(750), retrieved2.Amount)
 
 	retrieved3, found3 := suite.k.GetTradingRewardCandidate(suite.ctx, "candidate-reward-2", "bze1candidate1")
 	suite.Require().True(found3)
-	suite.Require().Equal("300", retrieved3.Amount)
+	suite.Require().Equal(math.NewInt(300), retrieved3.Amount)
 }
 
 func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_UpdateCandidate() {
 	originalCandidate := types.TradingRewardCandidate{
 		RewardId: "update-candidate-reward",
-		Amount:   "100",
+		Amount:   math.NewInt(100),
 		Address:  "bze1update",
 	}
 
 	updatedCandidate := types.TradingRewardCandidate{
 		RewardId: "update-candidate-reward",
-		Amount:   "250",
+		Amount:   math.NewInt(250),
 		Address:  "bze1update",
 	}
 
@@ -346,13 +347,13 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_UpdateCandi
 	// Verify the candidate was updated
 	retrieved, found := suite.k.GetTradingRewardCandidate(suite.ctx, "update-candidate-reward", "bze1update")
 	suite.Require().True(found)
-	suite.Require().Equal("250", retrieved.Amount)
+	suite.Require().Equal(math.NewInt(250), retrieved.Amount)
 }
 
 func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_RemoveCandidate() {
 	candidate := types.TradingRewardCandidate{
 		RewardId: "candidate-to-remove",
-		Amount:   "600",
+		Amount:   math.NewInt(600),
 		Address:  "bze1remove",
 	}
 
@@ -374,13 +375,13 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_RemoveCandi
 func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_RemoveCandidateSpecific() {
 	candidate1 := types.TradingRewardCandidate{
 		RewardId: "reward-keep",
-		Amount:   "100",
+		Amount:   math.NewInt(100),
 		Address:  "bze1keep",
 	}
 
 	candidate2 := types.TradingRewardCandidate{
 		RewardId: "reward-keep",
-		Amount:   "200",
+		Amount:   math.NewInt(200),
 		Address:  "bze1remove",
 	}
 
@@ -409,17 +410,17 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_GetAllCandi
 	candidates := []types.TradingRewardCandidate{
 		{
 			RewardId: "all-candidate-reward-1",
-			Amount:   "100",
+			Amount:   math.NewInt(100),
 			Address:  "bze1candidate1",
 		},
 		{
 			RewardId: "all-candidate-reward-1",
-			Amount:   "150",
+			Amount:   math.NewInt(150),
 			Address:  "bze1candidate2",
 		},
 		{
 			RewardId: "all-candidate-reward-2",
-			Amount:   "200",
+			Amount:   math.NewInt(200),
 			Address:  "bze1candidate3",
 		},
 	}
@@ -449,22 +450,22 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_GetCandidat
 	candidates := []types.TradingRewardCandidate{
 		{
 			RewardId: "specific-reward",
-			Amount:   "100",
+			Amount:   math.NewInt(100),
 			Address:  "bze1candidate1",
 		},
 		{
 			RewardId: "specific-reward",
-			Amount:   "150",
+			Amount:   math.NewInt(150),
 			Address:  "bze1candidate2",
 		},
 		{
 			RewardId: "specific-reward",
-			Amount:   "200",
+			Amount:   math.NewInt(200),
 			Address:  "bze1candidate3",
 		},
 		{
 			RewardId: "different-reward",
-			Amount:   "300",
+			Amount:   math.NewInt(300),
 			Address:  "bze1candidate4",
 		},
 	}
@@ -506,19 +507,19 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_CompositeKe
 	// Test that the composite key (rewardId + address) works correctly
 	candidate1 := types.TradingRewardCandidate{
 		RewardId: "same-reward",
-		Amount:   "100",
+		Amount:   math.NewInt(100),
 		Address:  "bze1same",
 	}
 
 	candidate2 := types.TradingRewardCandidate{
 		RewardId: "same-reward",
-		Amount:   "200",
+		Amount:   math.NewInt(200),
 		Address:  "bze1different",
 	}
 
 	candidate3 := types.TradingRewardCandidate{
 		RewardId: "different-reward",
-		Amount:   "300",
+		Amount:   math.NewInt(300),
 		Address:  "bze1same",
 	}
 
@@ -530,15 +531,15 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardLeaderboard_CompositeKe
 	// Verify each can be retrieved with correct composite key
 	retrieved1, found1 := suite.k.GetTradingRewardCandidate(suite.ctx, "same-reward", "bze1same")
 	suite.Require().True(found1)
-	suite.Require().Equal("100", retrieved1.Amount)
+	suite.Require().Equal(math.NewInt(100), retrieved1.Amount)
 
 	retrieved2, found2 := suite.k.GetTradingRewardCandidate(suite.ctx, "same-reward", "bze1different")
 	suite.Require().True(found2)
-	suite.Require().Equal("200", retrieved2.Amount)
+	suite.Require().Equal(math.NewInt(200), retrieved2.Amount)
 
 	retrieved3, found3 := suite.k.GetTradingRewardCandidate(suite.ctx, "different-reward", "bze1same")
 	suite.Require().True(found3)
-	suite.Require().Equal("300", retrieved3.Amount)
+	suite.Require().Equal(math.NewInt(300), retrieved3.Amount)
 
 	// Verify wrong combinations don't exist
 	_, found4 := suite.k.GetTradingRewardCandidate(suite.ctx, "different-reward", "bze1different")

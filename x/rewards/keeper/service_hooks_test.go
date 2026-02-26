@@ -104,7 +104,7 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetRemoveExpiredPendingTradi
 	// Set up pending trading reward and expiration
 	tradingReward := types.TradingReward{
 		RewardId:    "expired-reward",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -152,7 +152,7 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetTradingRewardsDistributio
 	// Set up active trading reward
 	tradingReward := types.TradingReward{
 		RewardId:    "distribute-reward",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -169,12 +169,12 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetTradingRewardsDistributio
 		RewardId: "distribute-reward",
 		List: []types.TradingRewardLeaderboardEntry{
 			{
-				Amount:    "5000",
+				Amount:    math.NewInt(5000),
 				Address:   addr1.String(),
 				CreatedAt: 1000,
 			},
 			{
-				Amount:    "3000",
+				Amount:    math.NewInt(3000),
 				Address:   addr2.String(),
 				CreatedAt: 2000,
 			},
@@ -239,7 +239,7 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetOnOrderFillHookNewCandida
 	// Set up active trading reward
 	tradingReward := types.TradingReward{
 		RewardId:    "order-fill-reward",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -266,14 +266,14 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetOnOrderFillHookNewCandida
 	// Verify candidate was created
 	candidate, found := suite.k.GetTradingRewardCandidate(suite.ctx, "order-fill-reward", userAddr)
 	suite.Require().True(found)
-	suite.Require().Equal("500", candidate.Amount)
+	suite.Require().Equal(math.NewInt(500), candidate.Amount)
 
 	// Verify leaderboard was created
 	leaderboard, found := suite.k.GetTradingRewardLeaderboard(suite.ctx, "order-fill-reward")
 	suite.Require().True(found)
 	suite.Require().Len(leaderboard.List, 1)
 	suite.Require().Equal(userAddr, leaderboard.List[0].Address)
-	suite.Require().Equal("500", leaderboard.List[0].Amount)
+	suite.Require().Equal(math.NewInt(500), leaderboard.List[0].Amount)
 }
 
 func (suite *IntegrationTestSuite) TestServiceHooks_GetOnOrderFillHookExistingCandidate() {
@@ -282,7 +282,7 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetOnOrderFillHookExistingCa
 	// Set up active trading reward
 	tradingReward := types.TradingReward{
 		RewardId:    "order-fill-reward",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -300,7 +300,7 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetOnOrderFillHookExistingCa
 	// Set up existing candidate
 	existingCandidate := types.TradingRewardCandidate{
 		RewardId: "order-fill-reward",
-		Amount:   "300",
+		Amount:   math.NewInt(300),
 		Address:  userAddr,
 	}
 
@@ -317,7 +317,7 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetOnOrderFillHookExistingCa
 	// Verify candidate amount was updated
 	candidate, found := suite.k.GetTradingRewardCandidate(suite.ctx, "order-fill-reward", userAddr)
 	suite.Require().True(found)
-	suite.Require().Equal("500", candidate.Amount) // 300 + 200
+	suite.Require().Equal(math.NewInt(500), candidate.Amount) // 300 + 200
 }
 
 func (suite *IntegrationTestSuite) TestServiceHooks_GetOnOrderFillHookLeaderboardUpdate() {
@@ -326,7 +326,7 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetOnOrderFillHookLeaderboar
 	// Set up active trading reward
 	tradingReward := types.TradingReward{
 		RewardId:    "order-fill-reward",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -347,7 +347,7 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetOnOrderFillHookLeaderboar
 		RewardId: "order-fill-reward",
 		List: []types.TradingRewardLeaderboardEntry{
 			{
-				Amount:    "1000",
+				Amount:    math.NewInt(1000),
 				Address:   user1,
 				CreatedAt: 1000,
 			},
@@ -376,7 +376,7 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetOnOrderFillHookLeaderboar
 	// Set up active trading reward with only 2 slots
 	tradingReward := types.TradingReward{
 		RewardId:    "order-fill-reward",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -398,12 +398,12 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetOnOrderFillHookLeaderboar
 		RewardId: "order-fill-reward",
 		List: []types.TradingRewardLeaderboardEntry{
 			{
-				Amount:    "2000",
+				Amount:    math.NewInt(2000),
 				Address:   user1,
 				CreatedAt: 1000,
 			},
 			{
-				Amount:    "1500",
+				Amount:    math.NewInt(1500),
 				Address:   user2,
 				CreatedAt: 1500,
 			},
@@ -432,7 +432,7 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetOnOrderFillHookInvalidAmo
 	// Set up active trading reward
 	tradingReward := types.TradingReward{
 		RewardId:    "order-fill-reward",
-		PrizeAmount: "1000",
+		PrizeAmount: math.NewInt(1000),
 		PrizeDenom:  "ubze",
 		Duration:    30,
 		MarketId:    "market-1",
@@ -445,22 +445,27 @@ func (suite *IntegrationTestSuite) TestServiceHooks_GetOnOrderFillHookInvalidAmo
 		MarketId: "market-1",
 	}
 
-	// Set up candidate with invalid amount
-	invalidCandidate := types.TradingRewardCandidate{
+	// Set up candidate with zero amount
+	candidate := types.TradingRewardCandidate{
 		RewardId: "order-fill-reward",
-		Amount:   "invalid-amount",
+		Amount:   math.ZeroInt(),
 		Address:  "bze1user",
 	}
 
 	suite.k.SetActiveTradingReward(suite.ctx, tradingReward)
 	suite.k.SetMarketIdRewardId(suite.ctx, marketMapping)
-	suite.k.SetTradingRewardCandidate(suite.ctx, invalidCandidate)
+	suite.k.SetTradingRewardCandidate(suite.ctx, candidate)
 
-	// Should not panic with invalid amounts
+	// Should not panic with invalid traded amount string
 	suite.Require().NotPanics(func() {
 		hook(suite.ctx, "market-1", "invalid-traded-amount", "bze1user")
 	})
 
+	// Mock block time
+	blockTime := time.Unix(1000, 0)
+	suite.ctx = suite.ctx.WithBlockTime(blockTime)
+
+	// Should not panic with valid traded amount
 	suite.Require().NotPanics(func() {
 		hook(suite.ctx, "market-1", "500", "bze1user")
 	})

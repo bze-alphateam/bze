@@ -98,16 +98,11 @@ func (k Keeper) GetOnOrderFillHook() func(ctx sdk.Context, marketId, amountTrade
 			logger.Debug("candidate not found. creating a new one")
 			candidate = types.TradingRewardCandidate{
 				RewardId: reward.RewardId,
-				Amount:   "0",
+				Amount:   math.ZeroInt(),
 				Address:  userAddress,
 			}
 		}
-		candidateAmount, ok := math.NewIntFromString(candidate.Amount)
-		if !ok {
-			logger.Error("could not parse candidate amount")
-
-			return
-		}
+		candidateAmount := candidate.Amount
 
 		tradedAmount, ok := math.NewIntFromString(amountTraded)
 		if !ok {
@@ -122,7 +117,7 @@ func (k Keeper) GetOnOrderFillHook() func(ctx sdk.Context, marketId, amountTrade
 		}
 
 		candidateAmount = candidateAmount.Add(tradedAmount)
-		candidate.Amount = candidateAmount.String()
+		candidate.Amount = candidateAmount
 		k.SetTradingRewardCandidate(ctx, candidate)
 		logger.Debug("trading reward candidate saved")
 
@@ -143,7 +138,7 @@ func (k Keeper) GetOnOrderFillHook() func(ctx sdk.Context, marketId, amountTrade
 				continue
 			}
 
-			entry.Amount = candidateAmount.String()
+			entry.Amount = candidateAmount
 			leaderboard.List[i] = entry
 			addedToList = true
 
@@ -165,16 +160,8 @@ func (k Keeper) GetOnOrderFillHook() func(ctx sdk.Context, marketId, amountTrade
 
 		//sort the slice
 		slices.SortStableFunc(leaderboard.List, func(a, b types.TradingRewardLeaderboardEntry) int {
-			aAmt, aOk := math.NewIntFromString(a.Amount)
-			if !aOk {
-				logger.Error("could not parse amount from leaderboard entry", "entry", a)
-				aAmt = math.ZeroInt()
-			}
-			bAmt, bOk := math.NewIntFromString(b.Amount)
-			if !bOk {
-				logger.Error("could not parse amount from leaderboard entry", "entry", b)
-				bAmt = math.ZeroInt()
-			}
+			aAmt := a.Amount
+			bAmt := b.Amount
 
 			//if the amounts are equal, use CreatedAt to sort
 			if aAmt.Equal(bAmt) {

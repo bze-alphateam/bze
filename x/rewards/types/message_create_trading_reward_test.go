@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/testutil/sample"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
@@ -336,7 +337,7 @@ func TestMsgCreateTradingReward_ToTradingReward(t *testing.T) {
 
 	tr, err := validMsg.ToTradingReward()
 	require.NoError(t, err)
-	require.Equal(t, "1000", tr.PrizeAmount)
+	require.Equal(t, math.NewInt(1000), tr.PrizeAmount)
 	require.Equal(t, "utoken", tr.PrizeDenom)
 	require.Equal(t, "BTC-USD", tr.MarketId)
 	require.Equal(t, uint32(30), tr.Duration)
