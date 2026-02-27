@@ -113,8 +113,8 @@ func validatePublisherRespectParams(v interface{}) error {
 		return fmt.Errorf("invalid parameter publisherRespectParams type: %T", v)
 	}
 
-	if !publisherRespectParams.Tax.IsPositive() {
-		return fmt.Errorf("publisherRespectParams tax should be positive: %s", publisherRespectParams.Tax.String())
+	if !publisherRespectParams.Tax.IsPositive() || publisherRespectParams.Tax.GTE(math.LegacyOneDec()) {
+		return fmt.Errorf("publisherRespectParams tax should be between 0 (exclusive) and 1 (exclusive): %s", publisherRespectParams.Tax.String())
 	}
 
 	err := sdk.ValidateDenom(publisherRespectParams.Denom)
