@@ -482,3 +482,41 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_NoPot() {
 	suite.Require().Nil(res)
 	suite.Require().Contains(err.Error(), "no pot to participate to")
 }
+
+func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_TooManyParticipants() {
+	denom := "utoken"
+
+	// Set up existing raffle
+	raffle := types.Raffle{
+		Denom:       denom,
+		TicketPrice: "10",
+		EndAt:       200,
+	}
+	suite.k.SetRaffle(suite.ctx, raffle)
+
+	// Pre-fill 200 participants at BlockHeight + 2 (= 0 + 2 = 2)
+	execAt := suite.ctx.BlockHeight() + 2
+	for i := uint64(0); i < 200; i++ {
+		suite.k.SetRaffleParticipant(suite.ctx, types.RaffleParticipant{
+			Index:       i,
+			Denom:       denom,
+			Participant: "addr1",
+			ExecuteAt:   execAt,
+		})
+	}
+
+	msg := &types.MsgJoinRaffle{
+		Creator: sdk.AccAddress("creator").String(),
+		Denom:   denom,
+		Tickets: 1,
+	}
+
+	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
+	suite.epoch.EXPECT().GetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100)).Times(1)
+
+	res, err := suite.msgServer.JoinRaffle(suite.ctx, msg)
+
+	suite.Require().Error(err)
+	suite.Require().Nil(res)
+	suite.Require().Contains(err.Error(), "too many participants")
+}

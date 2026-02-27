@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	raffleDelayHeight = 2
+	raffleDelayHeight        = 2
+	maxParticipantsPerHeight = 200
 )
 
 func (k msgServer) StartRaffle(goCtx context.Context, msg *types.MsgStartRaffle) (*types.MsgStartRaffleResponse, error) {
@@ -111,6 +112,11 @@ func (k msgServer) JoinRaffle(goCtx context.Context, msg *types.MsgJoinRaffle) (
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "raffle is expired or too close to expiration")
 	}
 
+	execAt := ctx.BlockHeight() + raffleDelayHeight
+	if k.CountPrefixedRaffleParticipants(ctx, execAt) >= maxParticipantsPerHeight {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "too many participants scheduled, try again later")
+	}
+
 	creatorAddr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return nil, err
@@ -152,7 +158,6 @@ func (k msgServer) JoinRaffle(goCtx context.Context, msg *types.MsgJoinRaffle) (
 		return nil, err
 	}
 
-	execAt := ctx.BlockHeight() + raffleDelayHeight
 	for i := int64(0); i < int64(msg.GetTickets()); i++ {
 		participant := types.RaffleParticipant{
 			Index:       k.GetParticipantCounter(ctx),

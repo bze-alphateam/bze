@@ -161,6 +161,19 @@ func (k Keeper) GetAllPrefixedRaffleParticipants(ctx sdk.Context, pref int64) []
 	return k.getRaffleParticipantsByPrefix(ctx, types.GetRaffleParticipantPrefixedKey(pref))
 }
 
+func (k Keeper) CountPrefixedRaffleParticipants(ctx sdk.Context, pref int64) int {
+	store := k.getPrefixedStore(ctx, types.GetRaffleParticipantPrefixedKey(pref))
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
+	defer iterator.Close()
+
+	count := 0
+	for ; iterator.Valid(); iterator.Next() {
+		count++
+	}
+
+	return count
+}
+
 func (k Keeper) SetRaffleParticipant(ctx sdk.Context, part types.RaffleParticipant) {
 	store := k.getPrefixedStore(ctx, types.GetRaffleParticipantPrefixedKey(part.ExecuteAt))
 	val := k.cdc.MustMarshal(&part)
