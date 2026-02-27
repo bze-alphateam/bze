@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"errors"
-
 	"github.com/bze-alphateam/bze/x/burner/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -59,65 +57,20 @@ func (suite *IntegrationTestSuite) TestHooks_TestGetBurnerRaffleCleanupHook_Vali
 	suite.Require().Equal("burner_raffle_cleanup", hook.GetName())
 
 	epochNumber := int64(100)
-	denom := "utoken"
 
-	// Set up raffle delete hook
-	deleteHook := types.RaffleDeleteHook{
-		Denom: denom,
-		EndAt: uint64(epochNumber),
-	}
-	suite.k.SetRaffleDeleteHook(suite.ctx, deleteHook)
-
-	// Set up raffle
-	raffle := types.Raffle{
-		Denom: denom,
-		Pot:   "1000",
-	}
-	suite.k.SetRaffle(suite.ctx, raffle)
-
-	// Set up raffle winner
-	winner := types.RaffleWinner{
-		Index:  "1",
-		Denom:  denom,
-		Amount: "100",
-		Winner: "winner1",
-	}
-	suite.k.SetRaffleWinner(suite.ctx, winner)
-
-	// Mock module account with coins
-	addr := sdk.AccAddress("raffleacc")
-	raffleAcc := authtypes.ModuleAccount{
-		BaseAccount: &authtypes.BaseAccount{
-			Address: addr.String(),
-		},
-		Name: types.RaffleModuleName,
-	}
-
-	currentPot := sdk.NewInt64Coin(denom, 1000)
-
-	// Mock expectations
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(&raffleAcc).Times(1)
-	suite.bank.EXPECT().GetBalance(suite.ctx, addr, denom).Return(currentPot).Times(1)
-
-	// Add TradeKeeper mock for BurnAnyCoins
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, denom).Return(true).Times(1)
-
-	suite.bank.EXPECT().BurnCoins(suite.ctx, types.RaffleModuleName, sdk.NewCoins(currentPot)).Return(nil).Times(1)
-
-	// Execute hook
-	err := hook.AfterEpochEnd(suite.ctx, "hour", epochNumber)
-
-	suite.Require().NoError(err)
-
-	// Verify cleanup happened
-	_, found := suite.k.GetRaffle(suite.ctx, denom)
+	// Queue should not exist before hook
+	_, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
 	suite.Require().False(found)
 
-	winners := suite.k.GetRaffleWinners(suite.ctx, denom)
-	suite.Require().Len(winners, 0)
+	// Execute hook - should only enqueue, no bank/account/trade mocks needed
+	err := hook.AfterEpochEnd(suite.ctx, "hour", epochNumber)
+	suite.Require().NoError(err)
 
-	hooks := suite.k.GetRaffleDeleteHookByEndAtPrefix(suite.ctx, uint64(epochNumber))
-	suite.Require().Len(hooks, 0)
+	// Verify queue was set with the epoch
+	queue, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.PendingEpochs, 1)
+	suite.Require().Equal(uint64(epochNumber), queue.PendingEpochs[0])
 }
 
 func (suite *IntegrationTestSuite) TestHooks_TestGetBurnerRaffleCleanupHook_WrongEpoch() {
@@ -133,185 +86,15 @@ func (suite *IntegrationTestSuite) TestHooks_TestGetBurnerRaffleCleanupHook_Wron
 func (suite *IntegrationTestSuite) TestHooks_TestGetBurnerRaffleCleanupHook_NoRafflesToDelete() {
 	hook := suite.k.GetBurnerRaffleCleanupHook()
 
-	// Execute hook with no raffles to delete
+	// Execute hook with no raffles to delete - hook still enqueues
 	err := hook.AfterEpochEnd(suite.ctx, "hour", 100)
 
 	suite.Require().NoError(err)
-	// No mock expectations because function should return early when no raffles to delete
-}
 
-func (suite *IntegrationTestSuite) TestHooks_TestBurnerRaffleCleanup_ModuleAccountNotFound() {
-	epochNumber := int64(100)
-	denom := "utoken"
-
-	// Set up raffle delete hook
-	deleteHook := types.RaffleDeleteHook{
-		Denom: denom,
-		EndAt: uint64(epochNumber),
-	}
-	suite.k.SetRaffleDeleteHook(suite.ctx, deleteHook)
-
-	// Set up raffle
-	raffle := types.Raffle{
-		Denom: denom,
-		Pot:   "1000",
-	}
-	suite.k.SetRaffle(suite.ctx, raffle)
-
-	// Mock module account not found
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(1)
-
-	hook := suite.k.GetBurnerRaffleCleanupHook()
-	err := hook.AfterEpochEnd(suite.ctx, "hour", epochNumber)
-
-	suite.Require().NoError(err) // Should continue despite error
-
-	// Verify delete hook and raffle were still removed
-	_, found := suite.k.GetRaffle(suite.ctx, denom)
-	suite.Require().False(found)
-
-	hooks := suite.k.GetRaffleDeleteHookByEndAtPrefix(suite.ctx, uint64(epochNumber))
-	suite.Require().Len(hooks, 0)
-}
-
-func (suite *IntegrationTestSuite) TestHooks_TestBurnerRaffleCleanup_NoCoinsToBurn() {
-	epochNumber := int64(100)
-	denom := "utoken"
-
-	// Set up raffle delete hook
-	deleteHook := types.RaffleDeleteHook{
-		Denom: denom,
-		EndAt: uint64(epochNumber),
-	}
-	suite.k.SetRaffleDeleteHook(suite.ctx, deleteHook)
-
-	// Set up raffle
-	raffle := types.Raffle{
-		Denom: denom,
-		Pot:   "0",
-	}
-	suite.k.SetRaffle(suite.ctx, raffle)
-
-	// Mock module account with no coins
-	addr := sdk.AccAddress("raffleacc")
-	raffleAcc := authtypes.ModuleAccount{
-		BaseAccount: &authtypes.BaseAccount{
-			Address: addr.String(),
-		},
-		Name: types.RaffleModuleName,
-	}
-
-	emptyCoin := sdk.NewInt64Coin(denom, 0)
-
-	// Mock expectations
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(&raffleAcc).Times(1)
-	suite.bank.EXPECT().GetBalance(suite.ctx, addr, denom).Return(emptyCoin).Times(1)
-
-	hook := suite.k.GetBurnerRaffleCleanupHook()
-	err := hook.AfterEpochEnd(suite.ctx, "hour", epochNumber)
-
-	suite.Require().NoError(err)
-
-	// Verify cleanup still happened
-	_, found := suite.k.GetRaffle(suite.ctx, denom)
-	suite.Require().False(found)
-}
-
-func (suite *IntegrationTestSuite) TestHooks_TestBurnerRaffleCleanup_BurnCoinsError() {
-	epochNumber := int64(100)
-	denom := "utoken"
-
-	// Set up raffle delete hook
-	deleteHook := types.RaffleDeleteHook{
-		Denom: denom,
-		EndAt: uint64(epochNumber),
-	}
-	suite.k.SetRaffleDeleteHook(suite.ctx, deleteHook)
-
-	// Set up raffle
-	raffle := types.Raffle{
-		Denom: denom,
-		Pot:   "1000",
-	}
-	suite.k.SetRaffle(suite.ctx, raffle)
-
-	// Mock module account with coins
-	addr := sdk.AccAddress("raffleacc")
-	raffleAcc := authtypes.ModuleAccount{
-		BaseAccount: &authtypes.BaseAccount{
-			Address: addr.String(),
-		},
-		Name: types.RaffleModuleName,
-	}
-
-	currentPot := sdk.NewInt64Coin(denom, 1000)
-	burnError := errors.New("burn operation failed")
-
-	// Mock expectations - burn fails
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(&raffleAcc).Times(1)
-	suite.bank.EXPECT().GetBalance(suite.ctx, addr, denom).Return(currentPot).Times(1)
-
-	// Add TradeKeeper mock for BurnAnyCoins
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, denom).Return(true).Times(1)
-
-	suite.bank.EXPECT().BurnCoins(suite.ctx, types.RaffleModuleName, sdk.NewCoins(currentPot)).Return(burnError).Times(1)
-
-	hook := suite.k.GetBurnerRaffleCleanupHook()
-	err := hook.AfterEpochEnd(suite.ctx, "hour", epochNumber)
-
-	suite.Require().NoError(err) // Should continue despite burn error
-
-	// Verify cleanup still happened
-	_, found := suite.k.GetRaffle(suite.ctx, denom)
-	suite.Require().False(found)
-}
-
-func (suite *IntegrationTestSuite) TestHooks_TestBurnerRaffleCleanup_FactoryToken() {
-	epochNumber := int64(100)
-	denom := "factory/creator/token" // Factory token should not save burned coins
-
-	// Set up raffle delete hook
-	deleteHook := types.RaffleDeleteHook{
-		Denom: denom,
-		EndAt: uint64(epochNumber),
-	}
-	suite.k.SetRaffleDeleteHook(suite.ctx, deleteHook)
-
-	// Set up raffle
-	raffle := types.Raffle{
-		Denom: denom,
-		Pot:   "1000",
-	}
-	suite.k.SetRaffle(suite.ctx, raffle)
-
-	// Mock module account with coins
-	addr := sdk.AccAddress("raffleacc")
-	raffleAcc := authtypes.ModuleAccount{
-		BaseAccount: &authtypes.BaseAccount{
-			Address: addr.String(),
-		},
-		Name: types.RaffleModuleName,
-	}
-
-	currentPot := sdk.NewInt64Coin(denom, 1000)
-
-	// Mock expectations
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(&raffleAcc).Times(1)
-	suite.bank.EXPECT().GetBalance(suite.ctx, addr, denom).Return(currentPot).Times(1)
-
-	// Add TradeKeeper mock for BurnAnyCoins - factory tokens are not native
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, denom).Return(false).Times(1)
-
-	suite.bank.EXPECT().BurnCoins(suite.ctx, types.RaffleModuleName, sdk.NewCoins(currentPot)).Return(nil).Times(1)
-
-	hook := suite.k.GetBurnerRaffleCleanupHook()
-	err := hook.AfterEpochEnd(suite.ctx, "hour", epochNumber)
-
-	suite.Require().NoError(err)
-
-	// Verify no burned coins were saved (factory tokens are excluded)
-	burnedCoins := suite.k.GetAllBurnedCoins(suite.ctx)
-	suite.Require().Len(burnedCoins, 1)
+	// Verify epoch was enqueued (empty case is handled by queue processor)
+	queue, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.PendingEpochs, 1)
 }
 
 func (suite *IntegrationTestSuite) TestHooks_PeriodicBurnHook_EnqueueAndProcess() {

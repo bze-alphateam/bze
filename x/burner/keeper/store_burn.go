@@ -65,6 +65,28 @@ func (k Keeper) RemovePeriodicBurnQueue(ctx sdk.Context) {
 	store.Delete([]byte{1})
 }
 
+func (k Keeper) SetRaffleCleanupQueue(ctx sdk.Context, q types.RaffleCleanupQueue) {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.RaffleCleanupQueueKey))
+	b := k.cdc.MustMarshal(&q)
+	store.Set([]byte{1}, b)
+}
+
+func (k Keeper) GetRaffleCleanupQueue(ctx sdk.Context) (val types.RaffleCleanupQueue, found bool) {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.RaffleCleanupQueueKey))
+	b := store.Get([]byte{1})
+	if b == nil {
+		return val, false
+	}
+
+	k.cdc.MustUnmarshal(b, &val)
+	return val, true
+}
+
+func (k Keeper) RemoveRaffleCleanupQueue(ctx sdk.Context) {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.RaffleCleanupQueueKey))
+	store.Delete([]byte{1})
+}
+
 func (k Keeper) SaveBurnedCoins(ctx sdk.Context, coins sdk.Coins) error {
 	height := strconv.FormatInt(ctx.BlockHeader().Height, 10)
 	b, found := k.GetBurnedCoins(ctx, height)

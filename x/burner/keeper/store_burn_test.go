@@ -42,6 +42,52 @@ func (suite *IntegrationTestSuite) TestStoreBurn_PeriodicBurnQueue_RemoveIdempot
 	})
 }
 
+func (suite *IntegrationTestSuite) TestStoreBurn_RaffleCleanupQueue_SetAndGet() {
+	queue := types.RaffleCleanupQueue{PendingEpochs: []uint64{10, 20, 30}}
+	suite.k.SetRaffleCleanupQueue(suite.ctx, queue)
+
+	result, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Equal([]uint64{10, 20, 30}, result.PendingEpochs)
+}
+
+func (suite *IntegrationTestSuite) TestStoreBurn_RaffleCleanupQueue_NotFound() {
+	_, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().False(found)
+}
+
+func (suite *IntegrationTestSuite) TestStoreBurn_RaffleCleanupQueue_Remove() {
+	queue := types.RaffleCleanupQueue{PendingEpochs: []uint64{10}}
+	suite.k.SetRaffleCleanupQueue(suite.ctx, queue)
+
+	// Verify it exists
+	_, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().True(found)
+
+	// Remove it
+	suite.k.RemoveRaffleCleanupQueue(suite.ctx)
+
+	// Verify it's gone
+	_, found = suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().False(found)
+}
+
+func (suite *IntegrationTestSuite) TestStoreBurn_RaffleCleanupQueue_RemoveIdempotent() {
+	// Removing when not set should not panic
+	suite.Require().NotPanics(func() {
+		suite.k.RemoveRaffleCleanupQueue(suite.ctx)
+	})
+}
+
+func (suite *IntegrationTestSuite) TestStoreBurn_RaffleCleanupQueue_EmptyEpochs() {
+	queue := types.RaffleCleanupQueue{PendingEpochs: []uint64{}}
+	suite.k.SetRaffleCleanupQueue(suite.ctx, queue)
+
+	result, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Empty(result.PendingEpochs)
+}
+
 func (suite *IntegrationTestSuite) TestStoreBurn_SetAndGetBurnedCoins() {
 	// Test data
 	burnedCoins := types.BurnedCoins{

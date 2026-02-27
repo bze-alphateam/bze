@@ -11,6 +11,8 @@ const (
 	MemStoreKey = "mem_burner"
 	// PeriodicBurnQueueKey is the store key for the periodic burn queue
 	PeriodicBurnQueueKey = "pbq/"
+	// RaffleCleanupQueueKey is the store key for the raffle cleanup queue
+	RaffleCleanupQueueKey = "rcq/"
 )
 
 var (

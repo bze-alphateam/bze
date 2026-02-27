@@ -9,4 +9,8 @@ const (
 	// MaxDenomsBurnPerBlock is the maximum number of denominations to process
 	// in a single block during periodic burn queue processing.
 	MaxDenomsBurnPerBlock = 100
+
+	// MaxRafflesCleanupPerBlock is the maximum number of raffles to clean up
+	// in a single block during raffle cleanup queue processing.
+	MaxRafflesCleanupPerBlock = 50
 )

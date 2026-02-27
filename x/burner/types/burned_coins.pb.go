@@ -118,28 +118,76 @@ func (m *PeriodicBurnQueue) GetPending() bool {
 	return false
 }
 
+type RaffleCleanupQueue struct {
+	PendingEpochs []uint64 `protobuf:"varint,1,rep,packed,name=pending_epochs,json=pendingEpochs,proto3" json:"pending_epochs,omitempty"`
+}
+
+func (m *RaffleCleanupQueue) Reset()         { *m = RaffleCleanupQueue{} }
+func (m *RaffleCleanupQueue) String() string { return proto.CompactTextString(m) }
+func (*RaffleCleanupQueue) ProtoMessage()    {}
+func (*RaffleCleanupQueue) Descriptor() ([]byte, []int) {
+	return fileDescriptor_52bd8d40378e211b, []int{2}
+}
+func (m *RaffleCleanupQueue) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RaffleCleanupQueue) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RaffleCleanupQueue.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RaffleCleanupQueue) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RaffleCleanupQueue.Merge(m, src)
+}
+func (m *RaffleCleanupQueue) XXX_Size() int {
+	return m.Size()
+}
+func (m *RaffleCleanupQueue) XXX_DiscardUnknown() {
+	xxx_messageInfo_RaffleCleanupQueue.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RaffleCleanupQueue proto.InternalMessageInfo
+
+func (m *RaffleCleanupQueue) GetPendingEpochs() []uint64 {
+	if m != nil {
+		return m.PendingEpochs
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*BurnedCoins)(nil), "bze.burner.BurnedCoins")
 	proto.RegisterType((*PeriodicBurnQueue)(nil), "bze.burner.PeriodicBurnQueue")
+	proto.RegisterType((*RaffleCleanupQueue)(nil), "bze.burner.RaffleCleanupQueue")
 }
 
 func init() { proto.RegisterFile("bze/burner/burned_coins.proto", fileDescriptor_52bd8d40378e211b) }
 
 var fileDescriptor_52bd8d40378e211b = []byte{
-	// 202 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4d, 0xaa, 0x4a, 0xd5,
-	0x4f, 0x2a, 0x2d, 0xca, 0x4b, 0x2d, 0x82, 0x50, 0x29, 0xf1, 0xc9, 0xf9, 0x99, 0x79, 0xc5, 0x7a,
-	0x05, 0x45, 0xf9, 0x25, 0xf9, 0x42, 0x5c, 0x49, 0x55, 0xa9, 0x7a, 0x10, 0x69, 0x25, 0x5b, 0x2e,
-	0x6e, 0x27, 0xb0, 0x0a, 0x67, 0x90, 0x02, 0x21, 0x31, 0x2e, 0x36, 0x88, 0x06, 0x09, 0x46, 0x05,
-	0x46, 0x0d, 0xce, 0x20, 0x28, 0x0f, 0x24, 0x9e, 0x91, 0x9a, 0x99, 0x9e, 0x51, 0x22, 0xc1, 0x04,
-	0x11, 0x87, 0xf0, 0x94, 0x74, 0xb9, 0x04, 0x03, 0x52, 0x8b, 0x32, 0xf3, 0x53, 0x32, 0x93, 0x41,
-	0xc6, 0x04, 0x96, 0xa6, 0x96, 0xa6, 0x0a, 0x49, 0x70, 0xb1, 0x17, 0xa4, 0xe6, 0xa5, 0x64, 0xe6,
-	0xa5, 0x83, 0x4d, 0xe1, 0x08, 0x82, 0x71, 0x9d, 0x5c, 0x4f, 0x3c, 0x92, 0x63, 0xbc, 0xf0, 0x48,
-	0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x09, 0x8f, 0xe5, 0x18, 0x2e, 0x3c, 0x96, 0x63, 0xb8, 0xf1,
-	0x58, 0x8e, 0x21, 0x4a, 0x3b, 0x3d, 0xb3, 0x24, 0xa3, 0x34, 0x49, 0x2f, 0x39, 0x3f, 0x57, 0x3f,
-	0xa9, 0x2a, 0x55, 0x37, 0x31, 0xa7, 0x20, 0x23, 0xb1, 0x24, 0x35, 0x11, 0xcc, 0xd3, 0xaf, 0x80,
-	0xf9, 0xa6, 0xa4, 0xb2, 0x20, 0xb5, 0x38, 0x89, 0x0d, 0xec, 0x0f, 0x63, 0x40, 0x00, 0x00, 0x00,
-	0xff, 0xff, 0xcb, 0xfd, 0x3c, 0x78, 0xe8, 0x00, 0x00, 0x00,
+	// 245 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x34, 0x90, 0x31, 0x4b, 0xc4, 0x30,
+	0x14, 0x80, 0x1b, 0x95, 0x53, 0x23, 0x0a, 0x76, 0x90, 0x2e, 0x86, 0xa3, 0x20, 0x1c, 0xc8, 0xb5,
+	0x83, 0xa3, 0xb8, 0xdc, 0x71, 0xbb, 0x76, 0x74, 0x39, 0x92, 0xf6, 0x5d, 0x13, 0xa8, 0x49, 0x48,
+	0x13, 0xd0, 0xfe, 0x0a, 0x7f, 0x96, 0xe3, 0x8d, 0x8e, 0xd2, 0xfe, 0x11, 0x69, 0xd2, 0x4e, 0xe1,
+	0xfb, 0xf2, 0xbd, 0x37, 0x3c, 0x7c, 0xcf, 0x3a, 0xc8, 0x99, 0x33, 0x12, 0x4c, 0x78, 0xaa, 0x7d,
+	0xa9, 0x84, 0x6c, 0x33, 0x6d, 0x94, 0x55, 0x31, 0x66, 0x1d, 0x64, 0xe1, 0x3b, 0x7d, 0xc1, 0x57,
+	0x1b, 0x5f, 0x6c, 0xc7, 0x20, 0xbe, 0xc3, 0x8b, 0x30, 0x90, 0xa0, 0x25, 0x5a, 0x5d, 0x16, 0x13,
+	0x8d, 0x9e, 0x83, 0xa8, 0xb9, 0x4d, 0x4e, 0x82, 0x0f, 0x94, 0xae, 0xf1, 0xed, 0x2b, 0x18, 0xa1,
+	0x2a, 0x51, 0x8e, 0x6b, 0xde, 0x1c, 0x38, 0x88, 0x13, 0x7c, 0xae, 0x41, 0x56, 0x42, 0xd6, 0x7e,
+	0xcb, 0x45, 0x31, 0x63, 0xfa, 0x8c, 0xe3, 0x82, 0x1e, 0x0e, 0x0d, 0x6c, 0x1b, 0xa0, 0xd2, 0xe9,
+	0xd0, 0x3f, 0xe0, 0x9b, 0x29, 0xd8, 0x83, 0x56, 0x25, 0x6f, 0x13, 0xb4, 0x3c, 0x5d, 0x9d, 0x15,
+	0xd7, 0x93, 0xdd, 0x79, 0xb9, 0xd9, 0xfd, 0xf4, 0x04, 0x1d, 0x7b, 0x82, 0xfe, 0x7a, 0x82, 0xbe,
+	0x07, 0x12, 0x1d, 0x07, 0x12, 0xfd, 0x0e, 0x24, 0x7a, 0x7f, 0xac, 0x85, 0xe5, 0x8e, 0x65, 0xa5,
+	0xfa, 0xc8, 0x59, 0x07, 0x6b, 0xda, 0x68, 0x4e, 0x2d, 0x50, 0x4f, 0xf9, 0xe7, 0x7c, 0x0a, 0xfb,
+	0xa5, 0xa1, 0x65, 0x0b, 0x7f, 0x84, 0xa7, 0xff, 0x00, 0x00, 0x00, 0xff, 0xff, 0x7d, 0xb8, 0x05,
+	0x89, 0x25, 0x01, 0x00, 0x00,
 }
 
 func (m *BurnedCoins) Marshal() (dAtA []byte, err error) {
@@ -212,6 +260,47 @@ func (m *PeriodicBurnQueue) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *RaffleCleanupQueue) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RaffleCleanupQueue) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RaffleCleanupQueue) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.PendingEpochs) > 0 {
+		dAtA2 := make([]byte, len(m.PendingEpochs)*10)
+		var j1 int
+		for _, num := range m.PendingEpochs {
+			for num >= 1<<7 {
+				dAtA2[j1] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j1++
+			}
+			dAtA2[j1] = uint8(num)
+			j1++
+		}
+		i -= j1
+		copy(dAtA[i:], dAtA2[:j1])
+		i = encodeVarintBurnedCoins(dAtA, i, uint64(j1))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintBurnedCoins(dAtA []byte, offset int, v uint64) int {
 	offset -= sovBurnedCoins(v)
 	base := offset
@@ -248,6 +337,22 @@ func (m *PeriodicBurnQueue) Size() (n int) {
 	_ = l
 	if m.Pending {
 		n += 2
+	}
+	return n
+}
+
+func (m *RaffleCleanupQueue) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.PendingEpochs) > 0 {
+		l = 0
+		for _, e := range m.PendingEpochs {
+			l += sovBurnedCoins(uint64(e))
+		}
+		n += 1 + sovBurnedCoins(uint64(l)) + l
 	}
 	return n
 }
@@ -421,6 +526,132 @@ func (m *PeriodicBurnQueue) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.Pending = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipBurnedCoins(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthBurnedCoins
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RaffleCleanupQueue) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowBurnedCoins
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RaffleCleanupQueue: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RaffleCleanupQueue: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType == 0 {
+				var v uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowBurnedCoins
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.PendingEpochs = append(m.PendingEpochs, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowBurnedCoins
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthBurnedCoins
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthBurnedCoins
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.PendingEpochs) == 0 {
+					m.PendingEpochs = make([]uint64, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowBurnedCoins
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.PendingEpochs = append(m.PendingEpochs, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingEpochs", wireType)
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipBurnedCoins(dAtA[iNdEx:])

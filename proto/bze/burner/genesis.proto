@@ -39,4 +39,5 @@ message GenesisState {
   ];
 
   PeriodicBurnQueue periodic_burn_queue = 7;
+  RaffleCleanupQueue raffle_cleanup_queue = 8;
 }

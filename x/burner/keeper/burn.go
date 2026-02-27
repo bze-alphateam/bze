@@ -69,6 +69,106 @@ func (k Keeper) ProcessPeriodicBurnQueue(ctx sdk.Context) error {
 	return nil
 }
 
+// EnqueueRaffleCleanup appends the given epoch number to the raffle cleanup queue.
+// It is idempotent: if the epoch is already in the queue, it will not be added again.
+func (k Keeper) EnqueueRaffleCleanup(ctx sdk.Context, epochNumber uint64) {
+	q, found := k.GetRaffleCleanupQueue(ctx)
+	if !found {
+		q = types.RaffleCleanupQueue{}
+	}
+
+	for _, e := range q.PendingEpochs {
+		if e == epochNumber {
+			return
+		}
+	}
+
+	q.PendingEpochs = append(q.PendingEpochs, epochNumber)
+	k.SetRaffleCleanupQueue(ctx, q)
+}
+
+// ProcessRaffleCleanupQueue processes the raffle cleanup queue in bounded batches.
+// It processes at most MaxRafflesCleanupPerBlock raffles per block from the first pending epoch.
+func (k Keeper) ProcessRaffleCleanupQueue(ctx sdk.Context) error {
+	q, found := k.GetRaffleCleanupQueue(ctx)
+	if !found || len(q.PendingEpochs) == 0 {
+		return nil
+	}
+
+	logger := k.Logger().With("method", "ProcessRaffleCleanupQueue")
+
+	epoch := q.PendingEpochs[0]
+	batch := k.GetRaffleDeleteHookByEndAtPrefixBatched(ctx, epoch, types.MaxRafflesCleanupPerBlock)
+
+	if len(batch) == 0 {
+		// This epoch is fully processed, pop it from the queue
+		q.PendingEpochs = q.PendingEpochs[1:]
+		if len(q.PendingEpochs) == 0 {
+			k.RemoveRaffleCleanupQueue(ctx)
+		} else {
+			k.SetRaffleCleanupQueue(ctx, q)
+		}
+		return nil
+	}
+
+	for _, item := range batch {
+		itemLogger := logger.With("epoch", epoch, "denom", item.Denom)
+		k.RemoveRaffleDeleteHook(ctx, item)
+		k.RemoveRaffle(ctx, item.Denom)
+		winners := k.GetRaffleWinners(ctx, item.Denom)
+		for _, w := range winners {
+			k.RemoveRaffleWinner(ctx, w)
+		}
+
+		raffleAcc := k.accountKeeper.GetModuleAccount(ctx, types.RaffleModuleName)
+		if raffleAcc == nil {
+			itemLogger.Error("could not find module account")
+			continue
+		}
+
+		currentPot := k.bankKeeper.GetBalance(ctx, raffleAcc.GetAddress(), item.Denom)
+		if !currentPot.IsPositive() {
+			itemLogger.Info("no coins to burn for this raffle that we delete")
+			continue
+		}
+
+		burned, err := k.BurnAnyCoins(ctx, types.RaffleModuleName, sdk.NewCoins(currentPot))
+		if err != nil {
+			itemLogger.Error("failed to burn raffle remaining coins", "error", err)
+			continue
+		}
+
+		if burned.IsZero() {
+			itemLogger.Info("no raffle coins to burn")
+			continue
+		}
+
+		err = k.SaveBurnedCoins(ctx, burned)
+		if err != nil {
+			itemLogger.Error("failed to save burned coins", "error", err)
+		}
+
+		itemLogger.Debug("burned raffle coins", "burned_current_pot", burned)
+
+		err = ctx.EventManager().EmitTypedEvent(&types.RaffleFinishedEvent{Denom: item.Denom})
+		if err != nil {
+			itemLogger.Error("failed to emit raffle finished event", "error", err)
+		}
+	}
+
+	// If we processed fewer than the limit, this epoch is done
+	if len(batch) < types.MaxRafflesCleanupPerBlock {
+		q.PendingEpochs = q.PendingEpochs[1:]
+		if len(q.PendingEpochs) == 0 {
+			k.RemoveRaffleCleanupQueue(ctx)
+		} else {
+			k.SetRaffleCleanupQueue(ctx, q)
+		}
+	}
+
+	return nil
+}
+
 // BurnAnyCoins attempts to burn, lock, or exchange specified coins from a module account.
 // It directly burns native and token factory denominations, locks LP tokens, and exchanges IBC tokens for native ones.
 // It returns the coins that were successfully burned.

@@ -906,6 +906,542 @@ func (x *fastReflection_PeriodicBurnQueue) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var _ protoreflect.List = (*_RaffleCleanupQueue_1_list)(nil)
+
+type _RaffleCleanupQueue_1_list struct {
+	list *[]uint64
+}
+
+func (x *_RaffleCleanupQueue_1_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_RaffleCleanupQueue_1_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfUint64((*x.list)[i])
+}
+
+func (x *_RaffleCleanupQueue_1_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Uint()
+	concreteValue := valueUnwrapped
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_RaffleCleanupQueue_1_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Uint()
+	concreteValue := valueUnwrapped
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_RaffleCleanupQueue_1_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message RaffleCleanupQueue at list field PendingEpochs as it is not of Message kind"))
+}
+
+func (x *_RaffleCleanupQueue_1_list) Truncate(n int) {
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_RaffleCleanupQueue_1_list) NewElement() protoreflect.Value {
+	v := uint64(0)
+	return protoreflect.ValueOfUint64(v)
+}
+
+func (x *_RaffleCleanupQueue_1_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_RaffleCleanupQueue                protoreflect.MessageDescriptor
+	fd_RaffleCleanupQueue_pending_epochs protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_burner_burned_coins_proto_init()
+	md_RaffleCleanupQueue = File_bze_burner_burned_coins_proto.Messages().ByName("RaffleCleanupQueue")
+	fd_RaffleCleanupQueue_pending_epochs = md_RaffleCleanupQueue.Fields().ByName("pending_epochs")
+}
+
+var _ protoreflect.Message = (*fastReflection_RaffleCleanupQueue)(nil)
+
+type fastReflection_RaffleCleanupQueue RaffleCleanupQueue
+
+func (x *RaffleCleanupQueue) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_RaffleCleanupQueue)(x)
+}
+
+func (x *RaffleCleanupQueue) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_burner_burned_coins_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_RaffleCleanupQueue_messageType fastReflection_RaffleCleanupQueue_messageType
+var _ protoreflect.MessageType = fastReflection_RaffleCleanupQueue_messageType{}
+
+type fastReflection_RaffleCleanupQueue_messageType struct{}
+
+func (x fastReflection_RaffleCleanupQueue_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_RaffleCleanupQueue)(nil)
+}
+func (x fastReflection_RaffleCleanupQueue_messageType) New() protoreflect.Message {
+	return new(fastReflection_RaffleCleanupQueue)
+}
+func (x fastReflection_RaffleCleanupQueue_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_RaffleCleanupQueue
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_RaffleCleanupQueue) Descriptor() protoreflect.MessageDescriptor {
+	return md_RaffleCleanupQueue
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_RaffleCleanupQueue) Type() protoreflect.MessageType {
+	return _fastReflection_RaffleCleanupQueue_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_RaffleCleanupQueue) New() protoreflect.Message {
+	return new(fastReflection_RaffleCleanupQueue)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_RaffleCleanupQueue) Interface() protoreflect.ProtoMessage {
+	return (*RaffleCleanupQueue)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_RaffleCleanupQueue) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.PendingEpochs) != 0 {
+		value := protoreflect.ValueOfList(&_RaffleCleanupQueue_1_list{list: &x.PendingEpochs})
+		if !f(fd_RaffleCleanupQueue_pending_epochs, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_RaffleCleanupQueue) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.burner.RaffleCleanupQueue.pending_epochs":
+		return len(x.PendingEpochs) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.burner.RaffleCleanupQueue"))
+		}
+		panic(fmt.Errorf("message bze.burner.RaffleCleanupQueue does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_RaffleCleanupQueue) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.burner.RaffleCleanupQueue.pending_epochs":
+		x.PendingEpochs = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.burner.RaffleCleanupQueue"))
+		}
+		panic(fmt.Errorf("message bze.burner.RaffleCleanupQueue does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_RaffleCleanupQueue) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.burner.RaffleCleanupQueue.pending_epochs":
+		if len(x.PendingEpochs) == 0 {
+			return protoreflect.ValueOfList(&_RaffleCleanupQueue_1_list{})
+		}
+		listValue := &_RaffleCleanupQueue_1_list{list: &x.PendingEpochs}
+		return protoreflect.ValueOfList(listValue)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.burner.RaffleCleanupQueue"))
+		}
+		panic(fmt.Errorf("message bze.burner.RaffleCleanupQueue does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_RaffleCleanupQueue) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.burner.RaffleCleanupQueue.pending_epochs":
+		lv := value.List()
+		clv := lv.(*_RaffleCleanupQueue_1_list)
+		x.PendingEpochs = *clv.list
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.burner.RaffleCleanupQueue"))
+		}
+		panic(fmt.Errorf("message bze.burner.RaffleCleanupQueue does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_RaffleCleanupQueue) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.burner.RaffleCleanupQueue.pending_epochs":
+		if x.PendingEpochs == nil {
+			x.PendingEpochs = []uint64{}
+		}
+		value := &_RaffleCleanupQueue_1_list{list: &x.PendingEpochs}
+		return protoreflect.ValueOfList(value)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.burner.RaffleCleanupQueue"))
+		}
+		panic(fmt.Errorf("message bze.burner.RaffleCleanupQueue does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_RaffleCleanupQueue) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.burner.RaffleCleanupQueue.pending_epochs":
+		list := []uint64{}
+		return protoreflect.ValueOfList(&_RaffleCleanupQueue_1_list{list: &list})
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.burner.RaffleCleanupQueue"))
+		}
+		panic(fmt.Errorf("message bze.burner.RaffleCleanupQueue does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_RaffleCleanupQueue) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.burner.RaffleCleanupQueue", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_RaffleCleanupQueue) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_RaffleCleanupQueue) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_RaffleCleanupQueue) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_RaffleCleanupQueue) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*RaffleCleanupQueue)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if len(x.PendingEpochs) > 0 {
+			l = 0
+			for _, e := range x.PendingEpochs {
+				l += runtime.Sov(uint64(e))
+			}
+			n += 1 + runtime.Sov(uint64(l)) + l
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*RaffleCleanupQueue)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.PendingEpochs) > 0 {
+			var pksize2 int
+			for _, num := range x.PendingEpochs {
+				pksize2 += runtime.Sov(uint64(num))
+			}
+			i -= pksize2
+			j1 := i
+			for _, num := range x.PendingEpochs {
+				for num >= 1<<7 {
+					dAtA[j1] = uint8(uint64(num)&0x7f | 0x80)
+					num >>= 7
+					j1++
+				}
+				dAtA[j1] = uint8(num)
+				j1++
+			}
+			i = runtime.EncodeVarint(dAtA, i, uint64(pksize2))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*RaffleCleanupQueue)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: RaffleCleanupQueue: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: RaffleCleanupQueue: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType == 0 {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+						}
+						if iNdEx >= l {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					x.PendingEpochs = append(x.PendingEpochs, v)
+				} else if wireType == 2 {
+					var packedLen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+						}
+						if iNdEx >= l {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						packedLen |= int(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if packedLen < 0 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+					}
+					postIndex := iNdEx + packedLen
+					if postIndex < 0 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+					}
+					if postIndex > l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					var elementCount int
+					var count int
+					for _, integer := range dAtA[iNdEx:postIndex] {
+						if integer < 128 {
+							count++
+						}
+					}
+					elementCount = count
+					if elementCount != 0 && len(x.PendingEpochs) == 0 {
+						x.PendingEpochs = make([]uint64, 0, elementCount)
+					}
+					for iNdEx < postIndex {
+						var v uint64
+						for shift := uint(0); ; shift += 7 {
+							if shift >= 64 {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+							}
+							if iNdEx >= l {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+							}
+							b := dAtA[iNdEx]
+							iNdEx++
+							v |= uint64(b&0x7F) << shift
+							if b < 0x80 {
+								break
+							}
+						}
+						x.PendingEpochs = append(x.PendingEpochs, v)
+					}
+				} else {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PendingEpochs", wireType)
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -997,6 +1533,41 @@ func (x *PeriodicBurnQueue) GetPending() bool {
 	return false
 }
 
+type RaffleCleanupQueue struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	PendingEpochs []uint64 `protobuf:"varint,1,rep,packed,name=pending_epochs,json=pendingEpochs,proto3" json:"pending_epochs,omitempty"`
+}
+
+func (x *RaffleCleanupQueue) Reset() {
+	*x = RaffleCleanupQueue{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_burner_burned_coins_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *RaffleCleanupQueue) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RaffleCleanupQueue) ProtoMessage() {}
+
+// Deprecated: Use RaffleCleanupQueue.ProtoReflect.Descriptor instead.
+func (*RaffleCleanupQueue) Descriptor() ([]byte, []int) {
+	return file_bze_burner_burned_coins_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *RaffleCleanupQueue) GetPendingEpochs() []uint64 {
+	if x != nil {
+		return x.PendingEpochs
+	}
+	return nil
+}
+
 var File_bze_burner_burned_coins_proto protoreflect.FileDescriptor
 
 var file_bze_burner_burned_coins_proto_rawDesc = []byte{
@@ -1009,17 +1580,21 @@ var file_bze_burner_burned_coins_proto_rawDesc = []byte{
 	0x28, 0x09, 0x52, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x22, 0x2d, 0x0a, 0x11, 0x50, 0x65,
 	0x72, 0x69, 0x6f, 0x64, 0x69, 0x63, 0x42, 0x75, 0x72, 0x6e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12,
 	0x18, 0x0a, 0x07, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08,
-	0x52, 0x07, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x42, 0x98, 0x01, 0x0a, 0x0e, 0x63, 0x6f,
-	0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x72, 0x42, 0x10, 0x42, 0x75,
-	0x72, 0x6e, 0x65, 0x64, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
-	0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65,
-	0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61,
-	0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x72, 0xa2, 0x02, 0x03,
-	0x42, 0x42, 0x58, 0xaa, 0x02, 0x0a, 0x42, 0x7a, 0x65, 0x2e, 0x42, 0x75, 0x72, 0x6e, 0x65, 0x72,
-	0xca, 0x02, 0x0a, 0x42, 0x7a, 0x65, 0x5c, 0x42, 0x75, 0x72, 0x6e, 0x65, 0x72, 0xe2, 0x02, 0x16,
-	0x42, 0x7a, 0x65, 0x5c, 0x42, 0x75, 0x72, 0x6e, 0x65, 0x72, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
-	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0b, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x42, 0x75,
-	0x72, 0x6e, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x52, 0x07, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x22, 0x3b, 0x0a, 0x12, 0x52, 0x61, 0x66,
+	0x66, 0x6c, 0x65, 0x43, 0x6c, 0x65, 0x61, 0x6e, 0x75, 0x70, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12,
+	0x25, 0x0a, 0x0e, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x5f, 0x65, 0x70, 0x6f, 0x63, 0x68,
+	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x04, 0x52, 0x0d, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67,
+	0x45, 0x70, 0x6f, 0x63, 0x68, 0x73, 0x42, 0x98, 0x01, 0x0a, 0x0e, 0x63, 0x6f, 0x6d, 0x2e, 0x62,
+	0x7a, 0x65, 0x2e, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x72, 0x42, 0x10, 0x42, 0x75, 0x72, 0x6e, 0x65,
+	0x64, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c,
+	0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x62, 0x7a, 0x65, 0x2f, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x72, 0xa2, 0x02, 0x03, 0x42, 0x42, 0x58,
+	0xaa, 0x02, 0x0a, 0x42, 0x7a, 0x65, 0x2e, 0x42, 0x75, 0x72, 0x6e, 0x65, 0x72, 0xca, 0x02, 0x0a,
+	0x42, 0x7a, 0x65, 0x5c, 0x42, 0x75, 0x72, 0x6e, 0x65, 0x72, 0xe2, 0x02, 0x16, 0x42, 0x7a, 0x65,
+	0x5c, 0x42, 0x75, 0x72, 0x6e, 0x65, 0x72, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
+	0x61, 0x74, 0x61, 0xea, 0x02, 0x0b, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x42, 0x75, 0x72, 0x6e, 0x65,
+	0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1034,10 +1609,11 @@ func file_bze_burner_burned_coins_proto_rawDescGZIP() []byte {
 	return file_bze_burner_burned_coins_proto_rawDescData
 }
 
-var file_bze_burner_burned_coins_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_bze_burner_burned_coins_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_bze_burner_burned_coins_proto_goTypes = []interface{}{
-	(*BurnedCoins)(nil),       // 0: bze.burner.BurnedCoins
-	(*PeriodicBurnQueue)(nil), // 1: bze.burner.PeriodicBurnQueue
+	(*BurnedCoins)(nil),        // 0: bze.burner.BurnedCoins
+	(*PeriodicBurnQueue)(nil),  // 1: bze.burner.PeriodicBurnQueue
+	(*RaffleCleanupQueue)(nil), // 2: bze.burner.RaffleCleanupQueue
 }
 var file_bze_burner_burned_coins_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -1077,6 +1653,18 @@ func file_bze_burner_burned_coins_proto_init() {
 				return nil
 			}
 		}
+		file_bze_burner_burned_coins_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RaffleCleanupQueue); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1084,7 +1672,7 @@ func file_bze_burner_burned_coins_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_bze_burner_burned_coins_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

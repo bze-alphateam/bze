@@ -203,6 +203,14 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 		am.keeper.Logger().Error("error processing periodic burn queue", "err", err)
 	}
 
+	// Process raffle cleanup queue in bounded batches
+	err = bzeutils.ApplyFuncIfNoError(sdkCtx, func(ctx sdk.Context) error {
+		return am.keeper.ProcessRaffleCleanupQueue(ctx)
+	})
+	if err != nil {
+		am.keeper.Logger().Error("error processing raffle cleanup queue", "err", err)
+	}
+
 	return nil
 }
 

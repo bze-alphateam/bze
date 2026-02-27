@@ -438,3 +438,484 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_IBCNotSwappable() {
 	// Non-swappable IBC coins are locked, not burned
 	suite.Require().True(burned.IsZero())
 }
+
+// --- EnqueueRaffleCleanup tests ---
+
+func (suite *IntegrationTestSuite) TestEnqueueRaffleCleanup_SetsQueue() {
+	_, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().False(found)
+
+	suite.k.EnqueueRaffleCleanup(suite.ctx, 100)
+
+	queue, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.PendingEpochs, 1)
+	suite.Require().Equal(uint64(100), queue.PendingEpochs[0])
+}
+
+func (suite *IntegrationTestSuite) TestEnqueueRaffleCleanup_Idempotent() {
+	suite.k.EnqueueRaffleCleanup(suite.ctx, 100)
+	suite.k.EnqueueRaffleCleanup(suite.ctx, 100)
+
+	queue, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.PendingEpochs, 1)
+	suite.Require().Equal(uint64(100), queue.PendingEpochs[0])
+}
+
+func (suite *IntegrationTestSuite) TestEnqueueRaffleCleanup_MultipleEpochs() {
+	suite.k.EnqueueRaffleCleanup(suite.ctx, 100)
+	suite.k.EnqueueRaffleCleanup(suite.ctx, 200)
+	suite.k.EnqueueRaffleCleanup(suite.ctx, 300)
+
+	queue, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.PendingEpochs, 3)
+	suite.Require().Equal(uint64(100), queue.PendingEpochs[0])
+	suite.Require().Equal(uint64(200), queue.PendingEpochs[1])
+	suite.Require().Equal(uint64(300), queue.PendingEpochs[2])
+}
+
+// --- ProcessRaffleCleanupQueue tests ---
+
+func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_NoQueue() {
+	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err)
+}
+
+func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_EmptyEpoch() {
+	// Enqueue an epoch with no delete hooks
+	suite.k.EnqueueRaffleCleanup(suite.ctx, 100)
+
+	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	// Queue should be removed since the epoch had no raffles
+	_, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().False(found)
+}
+
+func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_SingleRaffle() {
+	epochNumber := uint64(100)
+	denom := "utoken"
+
+	// Set up raffle delete hook
+	deleteHook := types.RaffleDeleteHook{
+		Denom: denom,
+		EndAt: epochNumber,
+	}
+	suite.k.SetRaffleDeleteHook(suite.ctx, deleteHook)
+
+	// Set up raffle
+	raffle := types.Raffle{
+		Denom: denom,
+		Pot:   "1000",
+	}
+	suite.k.SetRaffle(suite.ctx, raffle)
+
+	// Set up raffle winner
+	winner := types.RaffleWinner{
+		Index:  "1",
+		Denom:  denom,
+		Amount: "100",
+		Winner: "winner1",
+	}
+	suite.k.SetRaffleWinner(suite.ctx, winner)
+
+	// Enqueue
+	suite.k.EnqueueRaffleCleanup(suite.ctx, epochNumber)
+
+	// Mock module account with coins
+	addr := sdk.AccAddress("raffleacc")
+	raffleAcc := authtypes.ModuleAccount{
+		BaseAccount: &authtypes.BaseAccount{
+			Address: addr.String(),
+		},
+		Name: types.RaffleModuleName,
+	}
+
+	currentPot := sdk.NewInt64Coin(denom, 1000)
+
+	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(&raffleAcc).Times(1)
+	suite.bank.EXPECT().GetBalance(suite.ctx, addr, denom).Return(currentPot).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(suite.ctx, denom).Return(true).Times(1)
+	suite.bank.EXPECT().BurnCoins(suite.ctx, types.RaffleModuleName, sdk.NewCoins(currentPot)).Return(nil).Times(1)
+
+	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	// Verify cleanup happened
+	_, found := suite.k.GetRaffle(suite.ctx, denom)
+	suite.Require().False(found)
+
+	winners := suite.k.GetRaffleWinners(suite.ctx, denom)
+	suite.Require().Len(winners, 0)
+
+	hooks := suite.k.GetRaffleDeleteHookByEndAtPrefix(suite.ctx, epochNumber)
+	suite.Require().Len(hooks, 0)
+
+	// Queue should be removed after processing single raffle
+	_, found = suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().False(found)
+}
+
+func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_MultipleBatches() {
+	epochNumber := uint64(100)
+
+	// Create more raffles than MaxRafflesCleanupPerBlock
+	numRaffles := types.MaxRafflesCleanupPerBlock + 5
+	for i := 0; i < numRaffles; i++ {
+		denom := fmt.Sprintf("denom%d", i)
+		suite.k.SetRaffleDeleteHook(suite.ctx, types.RaffleDeleteHook{
+			Denom: denom,
+			EndAt: epochNumber,
+		})
+		suite.k.SetRaffle(suite.ctx, types.Raffle{
+			Denom: denom,
+			Pot:   "0",
+		})
+	}
+
+	suite.k.EnqueueRaffleCleanup(suite.ctx, epochNumber)
+
+	// Mock for each raffle in the batch - module account not found to simplify
+	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(types.MaxRafflesCleanupPerBlock)
+
+	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	// Queue should still exist since we had more raffles than one batch
+	queue, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.PendingEpochs, 1)
+	suite.Require().Equal(epochNumber, queue.PendingEpochs[0])
+
+	// Verify remaining raffles
+	remaining := suite.k.GetRaffleDeleteHookByEndAtPrefix(suite.ctx, epochNumber)
+	suite.Require().Equal(numRaffles-types.MaxRafflesCleanupPerBlock, len(remaining))
+}
+
+func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_MultipleEpochs() {
+	epoch1 := uint64(100)
+	epoch2 := uint64(200)
+
+	// Set up raffle for epoch 1
+	suite.k.SetRaffleDeleteHook(suite.ctx, types.RaffleDeleteHook{Denom: "denom1", EndAt: epoch1})
+	suite.k.SetRaffle(suite.ctx, types.Raffle{Denom: "denom1", Pot: "0"})
+
+	// Set up raffle for epoch 2
+	suite.k.SetRaffleDeleteHook(suite.ctx, types.RaffleDeleteHook{Denom: "denom2", EndAt: epoch2})
+	suite.k.SetRaffle(suite.ctx, types.Raffle{Denom: "denom2", Pot: "0"})
+
+	suite.k.EnqueueRaffleCleanup(suite.ctx, epoch1)
+	suite.k.EnqueueRaffleCleanup(suite.ctx, epoch2)
+
+	// Process first epoch
+	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(1)
+
+	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	// First epoch should be processed, second epoch remains
+	queue, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.PendingEpochs, 1)
+	suite.Require().Equal(epoch2, queue.PendingEpochs[0])
+
+	// Process second epoch
+	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(1)
+
+	err = suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	// Queue should be removed
+	_, found = suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().False(found)
+}
+
+func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_BurnError() {
+	epochNumber := uint64(100)
+	denom := "utoken"
+
+	suite.k.SetRaffleDeleteHook(suite.ctx, types.RaffleDeleteHook{Denom: denom, EndAt: epochNumber})
+	suite.k.SetRaffle(suite.ctx, types.Raffle{Denom: denom, Pot: "1000"})
+	suite.k.EnqueueRaffleCleanup(suite.ctx, epochNumber)
+
+	addr := sdk.AccAddress("raffleacc")
+	raffleAcc := authtypes.ModuleAccount{
+		BaseAccount: &authtypes.BaseAccount{Address: addr.String()},
+		Name:        types.RaffleModuleName,
+	}
+	currentPot := sdk.NewInt64Coin(denom, 1000)
+
+	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(&raffleAcc).Times(1)
+	suite.bank.EXPECT().GetBalance(suite.ctx, addr, denom).Return(currentPot).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(suite.ctx, denom).Return(true).Times(1)
+	suite.bank.EXPECT().BurnCoins(suite.ctx, types.RaffleModuleName, sdk.NewCoins(currentPot)).Return(errors.New("burn failed")).Times(1)
+
+	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err) // Processing continues despite burn error
+
+	// Raffle and hooks should still be cleaned up
+	_, found := suite.k.GetRaffle(suite.ctx, denom)
+	suite.Require().False(found)
+
+	hooks := suite.k.GetRaffleDeleteHookByEndAtPrefix(suite.ctx, epochNumber)
+	suite.Require().Len(hooks, 0)
+
+	// Queue should be removed
+	_, found = suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().False(found)
+}
+
+func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_ModuleAccountNotFound() {
+	epochNumber := uint64(100)
+	denom := "utoken"
+
+	suite.k.SetRaffleDeleteHook(suite.ctx, types.RaffleDeleteHook{Denom: denom, EndAt: epochNumber})
+	suite.k.SetRaffle(suite.ctx, types.Raffle{Denom: denom, Pot: "1000"})
+	suite.k.EnqueueRaffleCleanup(suite.ctx, epochNumber)
+
+	// Mock module account not found
+	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(1)
+
+	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err) // Processing continues
+
+	// Raffle and delete hook should still be cleaned up
+	_, found := suite.k.GetRaffle(suite.ctx, denom)
+	suite.Require().False(found)
+
+	hooks := suite.k.GetRaffleDeleteHookByEndAtPrefix(suite.ctx, epochNumber)
+	suite.Require().Len(hooks, 0)
+}
+
+func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_NoCoinsToBurn() {
+	epochNumber := uint64(100)
+	denom := "utoken"
+
+	suite.k.SetRaffleDeleteHook(suite.ctx, types.RaffleDeleteHook{Denom: denom, EndAt: epochNumber})
+	suite.k.SetRaffle(suite.ctx, types.Raffle{Denom: denom, Pot: "0"})
+	suite.k.EnqueueRaffleCleanup(suite.ctx, epochNumber)
+
+	addr := sdk.AccAddress("raffleacc")
+	raffleAcc := authtypes.ModuleAccount{
+		BaseAccount: &authtypes.BaseAccount{Address: addr.String()},
+		Name:        types.RaffleModuleName,
+	}
+	emptyCoin := sdk.NewInt64Coin(denom, 0)
+
+	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(&raffleAcc).Times(1)
+	suite.bank.EXPECT().GetBalance(suite.ctx, addr, denom).Return(emptyCoin).Times(1)
+
+	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	// Raffle should be cleaned up
+	_, found := suite.k.GetRaffle(suite.ctx, denom)
+	suite.Require().False(found)
+
+	// Queue should be removed
+	_, found = suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().False(found)
+}
+
+func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_ExactBatchBoundary() {
+	epochNumber := uint64(100)
+
+	// Create exactly MaxRafflesCleanupPerBlock raffles
+	for i := 0; i < types.MaxRafflesCleanupPerBlock; i++ {
+		denom := fmt.Sprintf("denom%d", i)
+		suite.k.SetRaffleDeleteHook(suite.ctx, types.RaffleDeleteHook{
+			Denom: denom,
+			EndAt: epochNumber,
+		})
+		suite.k.SetRaffle(suite.ctx, types.Raffle{
+			Denom: denom,
+			Pot:   "0",
+		})
+	}
+
+	suite.k.EnqueueRaffleCleanup(suite.ctx, epochNumber)
+
+	// First call: processes exactly MaxRafflesCleanupPerBlock raffles
+	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(types.MaxRafflesCleanupPerBlock)
+
+	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	// len(batch) == MaxRafflesCleanupPerBlock, so the epoch is NOT popped yet
+	queue, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.PendingEpochs, 1)
+	suite.Require().Equal(epochNumber, queue.PendingEpochs[0])
+
+	// All delete hooks were removed, so no remaining raffles
+	remaining := suite.k.GetRaffleDeleteHookByEndAtPrefix(suite.ctx, epochNumber)
+	suite.Require().Len(remaining, 0)
+
+	// Second call: batch is empty, epoch gets popped
+	err = suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	_, found = suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().False(found)
+}
+
+func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_FullDrainAcrossMultipleBlocks() {
+	epochNumber := uint64(100)
+
+	// Create 2.5x the batch size to require 3 processing rounds + 1 empty round
+	numRaffles := types.MaxRafflesCleanupPerBlock*2 + types.MaxRafflesCleanupPerBlock/2
+	for i := 0; i < numRaffles; i++ {
+		denom := fmt.Sprintf("denom%d", i)
+		suite.k.SetRaffleDeleteHook(suite.ctx, types.RaffleDeleteHook{
+			Denom: denom,
+			EndAt: epochNumber,
+		})
+		suite.k.SetRaffle(suite.ctx, types.Raffle{
+			Denom: denom,
+			Pot:   "0",
+		})
+	}
+
+	suite.k.EnqueueRaffleCleanup(suite.ctx, epochNumber)
+
+	// Block 1: processes MaxRafflesCleanupPerBlock raffles
+	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(types.MaxRafflesCleanupPerBlock)
+	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	remaining := suite.k.GetRaffleDeleteHookByEndAtPrefix(suite.ctx, epochNumber)
+	suite.Require().Equal(numRaffles-types.MaxRafflesCleanupPerBlock, len(remaining))
+
+	queue, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.PendingEpochs, 1)
+
+	// Block 2: processes another MaxRafflesCleanupPerBlock raffles
+	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(types.MaxRafflesCleanupPerBlock)
+	err = suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	remaining = suite.k.GetRaffleDeleteHookByEndAtPrefix(suite.ctx, epochNumber)
+	suite.Require().Equal(numRaffles-types.MaxRafflesCleanupPerBlock*2, len(remaining))
+
+	queue, found = suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.PendingEpochs, 1)
+
+	// Block 3: processes remaining half-batch (< MaxRafflesCleanupPerBlock), epoch is popped
+	lastBatch := numRaffles - types.MaxRafflesCleanupPerBlock*2
+	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(lastBatch)
+	err = suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	remaining = suite.k.GetRaffleDeleteHookByEndAtPrefix(suite.ctx, epochNumber)
+	suite.Require().Len(remaining, 0)
+
+	// Queue fully drained
+	_, found = suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().False(found)
+}
+
+func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_NewEpochEnqueuedDuringProcessing() {
+	epoch1 := uint64(100)
+	epoch2 := uint64(200)
+
+	// Create more raffles than one batch for epoch1
+	numRafflesEpoch1 := types.MaxRafflesCleanupPerBlock + 3
+	for i := 0; i < numRafflesEpoch1; i++ {
+		denom := fmt.Sprintf("epoch1_denom%d", i)
+		suite.k.SetRaffleDeleteHook(suite.ctx, types.RaffleDeleteHook{
+			Denom: denom,
+			EndAt: epoch1,
+		})
+		suite.k.SetRaffle(suite.ctx, types.Raffle{
+			Denom: denom,
+			Pot:   "0",
+		})
+	}
+
+	suite.k.EnqueueRaffleCleanup(suite.ctx, epoch1)
+
+	// Block 1: process first batch of epoch1
+	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(types.MaxRafflesCleanupPerBlock)
+	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	// Epoch1 still in queue with remaining raffles
+	queue, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.PendingEpochs, 1)
+
+	// Now a new epoch arrives and gets enqueued (simulates epoch hook firing mid-drain)
+	suite.k.SetRaffleDeleteHook(suite.ctx, types.RaffleDeleteHook{Denom: "epoch2_denom0", EndAt: epoch2})
+	suite.k.SetRaffle(suite.ctx, types.Raffle{Denom: "epoch2_denom0", Pot: "0"})
+	suite.k.EnqueueRaffleCleanup(suite.ctx, epoch2)
+
+	// Verify FIFO: epoch1 is still first, epoch2 is appended
+	queue, found = suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.PendingEpochs, 2)
+	suite.Require().Equal(epoch1, queue.PendingEpochs[0])
+	suite.Require().Equal(epoch2, queue.PendingEpochs[1])
+
+	// Block 2: continues draining epoch1 (remaining 3 raffles < batch size, epoch1 popped)
+	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(3)
+	err = suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	// Epoch1 fully processed, only epoch2 remains
+	queue, found = suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.PendingEpochs, 1)
+	suite.Require().Equal(epoch2, queue.PendingEpochs[0])
+
+	remaining := suite.k.GetRaffleDeleteHookByEndAtPrefix(suite.ctx, epoch1)
+	suite.Require().Len(remaining, 0)
+
+	// Block 3: processes epoch2
+	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(1)
+	err = suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	// All done
+	_, found = suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().False(found)
+
+	remaining = suite.k.GetRaffleDeleteHookByEndAtPrefix(suite.ctx, epoch2)
+	suite.Require().Len(remaining, 0)
+}
+
+func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_FactoryToken() {
+	epochNumber := uint64(100)
+	denom := "factory/creator/token"
+
+	suite.k.SetRaffleDeleteHook(suite.ctx, types.RaffleDeleteHook{Denom: denom, EndAt: epochNumber})
+	suite.k.SetRaffle(suite.ctx, types.Raffle{Denom: denom, Pot: "1000"})
+	suite.k.EnqueueRaffleCleanup(suite.ctx, epochNumber)
+
+	addr := sdk.AccAddress("raffleacc")
+	raffleAcc := authtypes.ModuleAccount{
+		BaseAccount: &authtypes.BaseAccount{Address: addr.String()},
+		Name:        types.RaffleModuleName,
+	}
+	currentPot := sdk.NewInt64Coin(denom, 1000)
+
+	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(&raffleAcc).Times(1)
+	suite.bank.EXPECT().GetBalance(suite.ctx, addr, denom).Return(currentPot).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(suite.ctx, denom).Return(false).Times(1)
+	suite.bank.EXPECT().BurnCoins(suite.ctx, types.RaffleModuleName, sdk.NewCoins(currentPot)).Return(nil).Times(1)
+
+	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	// Verify burned coins were saved (factory tokens are burned, not excluded)
+	burnedCoins := suite.k.GetAllBurnedCoins(suite.ctx)
+	suite.Require().Len(burnedCoins, 1)
+
+	// Queue should be removed
+	_, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
+	suite.Require().False(found)
+}

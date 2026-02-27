@@ -12,3 +12,7 @@ message BurnedCoins {
 message PeriodicBurnQueue {
   bool pending = 1;
 }
+
+message RaffleCleanupQueue {
+  repeated uint64 pending_epochs = 1;
+}
