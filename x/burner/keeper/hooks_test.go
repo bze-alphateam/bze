@@ -6,6 +6,7 @@ import (
 	"github.com/bze-alphateam/bze/x/burner/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"go.uber.org/mock/gomock"
 )
 
 func (suite *IntegrationTestSuite) TestHooks_TestGetBurnerPeriodicBurnHook_ValidExecution() {
@@ -14,34 +15,18 @@ func (suite *IntegrationTestSuite) TestHooks_TestGetBurnerPeriodicBurnHook_Valid
 	// Verify hook properties
 	suite.Require().Equal("periodic_burner", hook.GetName())
 
-	// Mock module account with coins
-	addr := sdk.AccAddress("moduleacc")
-	moduleAcc := authtypes.ModuleAccount{
-		BaseAccount: &authtypes.BaseAccount{
-			Address: addr.String(),
-		},
-		Name: types.ModuleName,
-	}
+	// Queue should not exist before hook
+	_, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().False(found)
 
-	coins := sdk.NewCoins(
-		sdk.NewInt64Coin("ubze", 1000),
-		sdk.NewInt64Coin("utoken", 500),
-	)
-
-	// Mock expectations for burning
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(&moduleAcc).Times(1)
-	suite.bank.EXPECT().GetAllBalances(suite.ctx, addr).Return(coins).Times(1)
-
-	// Add TradeKeeper mocks for BurnAnyCoins
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ubze").Return(true).Times(1)
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "utoken").Return(true).Times(1)
-
-	suite.bank.EXPECT().BurnCoins(suite.ctx, types.ModuleName, coins).Return(nil).Times(1)
-
-	// Execute hook with correct epoch and interval
+	// Execute hook with correct epoch and interval - should only enqueue, not process
 	err := hook.AfterEpochEnd(suite.ctx, "week", 4) // 4 % 4 == 0
-
 	suite.Require().NoError(err)
+
+	// Verify queue was set to pending (not processed directly)
+	queue, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().True(queue.Pending)
 }
 
 func (suite *IntegrationTestSuite) TestHooks_TestGetBurnerPeriodicBurnHook_WrongEpoch() {
@@ -329,8 +314,18 @@ func (suite *IntegrationTestSuite) TestHooks_TestBurnerRaffleCleanup_FactoryToke
 	suite.Require().Len(burnedCoins, 1)
 }
 
-func (suite *IntegrationTestSuite) TestHooks_TestBurnModuleCoins_ValidExecution() {
-	// Mock module account with coins
+func (suite *IntegrationTestSuite) TestHooks_PeriodicBurnHook_EnqueueAndProcess() {
+	// Hook should only enqueue - verify no bank/trade operations happen during hook
+	hook := suite.k.GetBurnerPeriodicBurnHook()
+	err := hook.AfterEpochEnd(suite.ctx, "week", 4)
+	suite.Require().NoError(err)
+
+	// Verify queue was set
+	queue, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().True(queue.Pending)
+
+	// Now test processing via ProcessPeriodicBurnQueue
 	addr := sdk.AccAddress("moduleacc")
 	moduleAcc := authtypes.ModuleAccount{
 		BaseAccount: &authtypes.BaseAccount{
@@ -342,7 +337,7 @@ func (suite *IntegrationTestSuite) TestHooks_TestBurnModuleCoins_ValidExecution(
 	allCoins := sdk.NewCoins(
 		sdk.NewInt64Coin("ubze", 1000),
 		sdk.NewInt64Coin("utoken", 500),
-		sdk.NewInt64Coin("ibc/ABC123", 200), // IBC token
+		sdk.NewInt64Coin("ibc/ABC123", 200),
 	)
 
 	addedCoins := sdk.NewCoins(sdk.NewInt64Coin("ibc/ABC123", 180))
@@ -352,29 +347,32 @@ func (suite *IntegrationTestSuite) TestHooks_TestBurnModuleCoins_ValidExecution(
 		sdk.NewInt64Coin("utoken", 500),
 	)
 
-	// Mock expectations
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(&moduleAcc).Times(1)
-	suite.bank.EXPECT().GetAllBalances(suite.ctx, addr).Return(allCoins).Times(1)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
+	suite.bank.EXPECT().GetAllBalances(gomock.Any(), addr).Return(allCoins).Times(1)
 
-	// Add TradeKeeper mocks for BurnAnyCoins
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ubze").Return(true).Times(1)
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "utoken").Return(true).Times(1)
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/ABC123").Return(false).Times(1)
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, sdk.NewInt64Coin("ibc/ABC123", 200)).Return(true).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ubze").Return(true).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "utoken").Return(true).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/ABC123").Return(false).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), sdk.NewInt64Coin("ibc/ABC123", 200)).Return(true).Times(1)
 
-	suite.trade.EXPECT().ModuleAddLiquidityWithNativeDenom(suite.ctx, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ibc/ABC123", 200))).Return(addedCoins, refundedCoins, nil).Times(1)
+	suite.trade.EXPECT().ModuleAddLiquidityWithNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ibc/ABC123", 200))).Return(addedCoins, refundedCoins, nil).Times(1)
+	suite.bank.EXPECT().BurnCoins(gomock.Any(), types.ModuleName, expectedBurnCoins).Return(nil).Times(1)
 
-	suite.bank.EXPECT().BurnCoins(suite.ctx, types.ModuleName, expectedBurnCoins).Return(nil).Times(1)
-
-	// Execute burn
-	hook := suite.k.GetBurnerPeriodicBurnHook()
-	err := hook.AfterEpochEnd(suite.ctx, "week", 4)
-
+	err = suite.k.ProcessPeriodicBurnQueue(suite.ctx)
 	suite.Require().NoError(err)
+
+	// Queue should be cleared after processing
+	_, found = suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().False(found)
 }
 
-func (suite *IntegrationTestSuite) TestHooks_TestBurnModuleCoins_EmptyBalance() {
-	// Mock module account with no coins
+func (suite *IntegrationTestSuite) TestHooks_PeriodicBurnHook_EmptyBalance() {
+	// Enqueue via hook
+	hook := suite.k.GetBurnerPeriodicBurnHook()
+	err := hook.AfterEpochEnd(suite.ctx, "week", 4)
+	suite.Require().NoError(err)
+
+	// Process queue with empty balance
 	addr := sdk.AccAddress("moduleacc")
 	moduleAcc := authtypes.ModuleAccount{
 		BaseAccount: &authtypes.BaseAccount{
@@ -383,21 +381,24 @@ func (suite *IntegrationTestSuite) TestHooks_TestBurnModuleCoins_EmptyBalance() 
 		Name: types.ModuleName,
 	}
 
-	emptyCoins := sdk.NewCoins()
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
+	suite.bank.EXPECT().GetAllBalances(gomock.Any(), addr).Return(sdk.NewCoins()).Times(1)
 
-	// Mock expectations
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(&moduleAcc).Times(1)
-	suite.bank.EXPECT().GetAllBalances(suite.ctx, addr).Return(emptyCoins).Times(1)
+	err = suite.k.ProcessPeriodicBurnQueue(suite.ctx)
+	suite.Require().NoError(err)
 
-	// Execute burn - no TradeKeeper mocks needed since burnModuleCoins returns early for empty coins
-	hook := suite.k.GetBurnerPeriodicBurnHook()
-	err := hook.AfterEpochEnd(suite.ctx, "week", 4)
-
-	suite.Require().NoError(err) // Should return without error
+	// Queue should be cleared since balance was empty
+	_, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().False(found)
 }
 
-func (suite *IntegrationTestSuite) TestHooks_TestBurnModuleCoins_OnlyIBCTokens() {
-	// Mock module account with only IBC tokens
+func (suite *IntegrationTestSuite) TestHooks_PeriodicBurnHook_OnlyIBCTokens() {
+	// Enqueue via hook
+	hook := suite.k.GetBurnerPeriodicBurnHook()
+	err := hook.AfterEpochEnd(suite.ctx, "week", 4)
+	suite.Require().NoError(err)
+
+	// Process queue with only IBC tokens
 	addr := sdk.AccAddress("moduleacc")
 	moduleAcc := authtypes.ModuleAccount{
 		BaseAccount: &authtypes.BaseAccount{
@@ -417,24 +418,21 @@ func (suite *IntegrationTestSuite) TestHooks_TestBurnModuleCoins_OnlyIBCTokens()
 	)
 	refundedCoins := sdk.NewCoins()
 
-	// Mock expectations
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.ModuleName).Return(&moduleAcc).Times(1)
-	suite.bank.EXPECT().GetAllBalances(suite.ctx, addr).Return(ibcOnlyCoins).Times(1)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
+	suite.bank.EXPECT().GetAllBalances(gomock.Any(), addr).Return(ibcOnlyCoins).Times(1)
 
-	// Add TradeKeeper mocks for BurnAnyCoins
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/ABC123").Return(false).Times(1)
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/DEF456").Return(false).Times(1)
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, ibcOnlyCoins[0]).Return(true).Times(1)
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, ibcOnlyCoins[1]).Return(true).Times(1)
-	suite.trade.EXPECT().ModuleAddLiquidityWithNativeDenom(suite.ctx, types.ModuleName, ibcOnlyCoins).Return(addedCoins, refundedCoins, nil).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/ABC123").Return(false).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/DEF456").Return(false).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibcOnlyCoins[0]).Return(true).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibcOnlyCoins[1]).Return(true).Times(1)
+	suite.trade.EXPECT().ModuleAddLiquidityWithNativeDenom(gomock.Any(), types.ModuleName, ibcOnlyCoins).Return(addedCoins, refundedCoins, nil).Times(1)
 
-	// No burn operation expected - IBC coins are added to liquidity
-
-	// Execute burn
-	hook := suite.k.GetBurnerPeriodicBurnHook()
-	err := hook.AfterEpochEnd(suite.ctx, "week", 4)
-
+	err = suite.k.ProcessPeriodicBurnQueue(suite.ctx)
 	suite.Require().NoError(err)
+
+	// Queue should be cleared
+	_, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().False(found)
 }
 
 func (suite *IntegrationTestSuite) TestHooks_TestEpochHook_BeforeEpochStart() {

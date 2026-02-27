@@ -8,3 +8,7 @@ message BurnedCoins {
   string burned = 1;
   string height = 2;
 }
+
+message PeriodicBurnQueue {
+  bool pending = 1;
+}

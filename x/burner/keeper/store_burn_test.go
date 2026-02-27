@@ -5,6 +5,43 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+func (suite *IntegrationTestSuite) TestStoreBurn_PeriodicBurnQueue_SetAndGet() {
+	queue := types.PeriodicBurnQueue{Pending: true}
+	suite.k.SetPeriodicBurnQueue(suite.ctx, queue)
+
+	result, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().True(result.Pending)
+}
+
+func (suite *IntegrationTestSuite) TestStoreBurn_PeriodicBurnQueue_NotFound() {
+	_, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().False(found)
+}
+
+func (suite *IntegrationTestSuite) TestStoreBurn_PeriodicBurnQueue_Remove() {
+	queue := types.PeriodicBurnQueue{Pending: true}
+	suite.k.SetPeriodicBurnQueue(suite.ctx, queue)
+
+	// Verify it exists
+	_, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().True(found)
+
+	// Remove it
+	suite.k.RemovePeriodicBurnQueue(suite.ctx)
+
+	// Verify it's gone
+	_, found = suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().False(found)
+}
+
+func (suite *IntegrationTestSuite) TestStoreBurn_PeriodicBurnQueue_RemoveIdempotent() {
+	// Removing when not set should not panic
+	suite.Require().NotPanics(func() {
+		suite.k.RemovePeriodicBurnQueue(suite.ctx)
+	})
+}
+
 func (suite *IntegrationTestSuite) TestStoreBurn_SetAndGetBurnedCoins() {
 	// Test data
 	burnedCoins := types.BurnedCoins{

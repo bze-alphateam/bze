@@ -43,6 +43,28 @@ func (k Keeper) GetBurnedCoins(ctx sdk.Context, height string) (val types.Burned
 	return val, true
 }
 
+func (k Keeper) SetPeriodicBurnQueue(ctx sdk.Context, q types.PeriodicBurnQueue) {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.PeriodicBurnQueueKey))
+	b := k.cdc.MustMarshal(&q)
+	store.Set([]byte{1}, b)
+}
+
+func (k Keeper) GetPeriodicBurnQueue(ctx sdk.Context) (val types.PeriodicBurnQueue, found bool) {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.PeriodicBurnQueueKey))
+	b := store.Get([]byte{1})
+	if b == nil {
+		return val, false
+	}
+
+	k.cdc.MustUnmarshal(b, &val)
+	return val, true
+}
+
+func (k Keeper) RemovePeriodicBurnQueue(ctx sdk.Context) {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.PeriodicBurnQueueKey))
+	store.Delete([]byte{1})
+}
+
 func (k Keeper) SaveBurnedCoins(ctx sdk.Context, coins sdk.Coins) error {
 	height := strconv.FormatInt(ctx.BlockHeader().Height, 10)
 	b, found := k.GetBurnedCoins(ctx, height)

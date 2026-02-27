@@ -197,16 +197,26 @@ func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_OnlyUnprocessableCoi
 		Amount:  amount,
 	}
 
-	// Mock trade keeper for filtering - coin cannot be processed
+	expectedCoins, err := sdk.ParseCoinsNormalized(amount)
+	suite.Require().NoError(err)
+
+	creatorAddr, err := sdk.AccAddressFromBech32(creator)
+	suite.Require().NoError(err)
+
+	// Mock trade keeper for filtering - coin cannot be swapped but is now lockable
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/INVALID").Return(false).Times(1)
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, gomock.Any()).Return(false).Times(1)
 
-	// Should fail validation since no coins can be burned/locked/exchanged
+	// Non-swappable IBC coins are now lockable (sent to black hole)
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(suite.ctx, creatorAddr, types.BlackHoleModuleName, expectedCoins).
+		Return(nil).
+		Times(1)
+
 	res, err := suite.msgServer.FundBurner(suite.ctx, msg)
 
-	suite.Require().Error(err)
-	suite.Require().Nil(res)
-	suite.Require().Contains(err.Error(), "provided amounts can not be burned, locked or exchanged")
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
 }
 
 func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_WithExchangeableIBC() {

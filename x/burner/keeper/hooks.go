@@ -25,7 +25,9 @@ func (k Keeper) GetBurnerPeriodicBurnHook() types.EpochHook {
 			With("epoch", epochIdentifier, "epoch_number", epochNumber, "hook_name", periodicBurnHookName).
 			Debug("preparing to execute hook")
 
-		return k.burnModuleCoins(ctx)
+		k.EnqueuePeriodicBurn(ctx)
+
+		return nil
 	})
 }
 

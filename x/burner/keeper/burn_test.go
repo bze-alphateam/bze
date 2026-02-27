@@ -2,10 +2,205 @@ package keeper_test
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/bze-alphateam/bze/x/burner/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"go.uber.org/mock/gomock"
 )
+
+// --- EnqueuePeriodicBurn tests ---
+
+func (suite *IntegrationTestSuite) TestEnqueue_SetsQueue() {
+	_, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().False(found)
+
+	suite.k.EnqueuePeriodicBurn(suite.ctx)
+
+	queue, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().True(queue.Pending)
+}
+
+func (suite *IntegrationTestSuite) TestEnqueue_Idempotent() {
+	suite.k.EnqueuePeriodicBurn(suite.ctx)
+
+	queue, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().True(queue.Pending)
+
+	// Second enqueue should not change anything
+	suite.k.EnqueuePeriodicBurn(suite.ctx)
+
+	queue2, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().True(queue2.Pending)
+}
+
+func (suite *IntegrationTestSuite) TestEnqueue_AfterRemoval() {
+	suite.k.EnqueuePeriodicBurn(suite.ctx)
+	suite.k.RemovePeriodicBurnQueue(suite.ctx)
+
+	// After removal, enqueue should work again
+	suite.k.EnqueuePeriodicBurn(suite.ctx)
+
+	queue, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().True(queue.Pending)
+}
+
+// --- ProcessPeriodicBurnQueue tests ---
+
+func (suite *IntegrationTestSuite) TestProcessQueue_NoQueue() {
+	// No queue set - should return nil
+	err := suite.k.ProcessPeriodicBurnQueue(suite.ctx)
+	suite.Require().NoError(err)
+}
+
+func (suite *IntegrationTestSuite) TestProcessQueue_EmptyBalance() {
+	suite.k.EnqueuePeriodicBurn(suite.ctx)
+
+	addr := sdk.AccAddress("moduleacc")
+	moduleAcc := authtypes.ModuleAccount{
+		BaseAccount: &authtypes.BaseAccount{Address: addr.String()},
+		Name:        types.ModuleName,
+	}
+
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
+	suite.bank.EXPECT().GetAllBalances(gomock.Any(), addr).Return(sdk.NewCoins()).Times(1)
+
+	err := suite.k.ProcessPeriodicBurnQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	// Queue should be removed since balance was empty
+	_, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().False(found)
+}
+
+func (suite *IntegrationTestSuite) TestProcessQueue_SingleBatch() {
+	suite.k.EnqueuePeriodicBurn(suite.ctx)
+
+	addr := sdk.AccAddress("moduleacc")
+	moduleAcc := authtypes.ModuleAccount{
+		BaseAccount: &authtypes.BaseAccount{Address: addr.String()},
+		Name:        types.ModuleName,
+	}
+
+	coins := sdk.NewCoins(
+		sdk.NewInt64Coin("ubze", 1000),
+		sdk.NewInt64Coin("utoken", 500),
+	)
+
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
+	suite.bank.EXPECT().GetAllBalances(gomock.Any(), addr).Return(coins).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ubze").Return(true).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "utoken").Return(true).Times(1)
+	suite.bank.EXPECT().BurnCoins(gomock.Any(), types.ModuleName, coins).Return(nil).Times(1)
+
+	err := suite.k.ProcessPeriodicBurnQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	// Queue should be cleared after single batch
+	_, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().False(found)
+}
+
+func (suite *IntegrationTestSuite) TestProcessQueue_MultipleBatches() {
+	suite.k.EnqueuePeriodicBurn(suite.ctx)
+
+	addr := sdk.AccAddress("moduleacc")
+	moduleAcc := authtypes.ModuleAccount{
+		BaseAccount: &authtypes.BaseAccount{Address: addr.String()},
+		Name:        types.ModuleName,
+	}
+
+	// Create more coins than MaxDenomsBurnPerBlock
+	var allCoins sdk.Coins
+	for i := 0; i < types.MaxDenomsBurnPerBlock+5; i++ {
+		allCoins = allCoins.Add(sdk.NewInt64Coin(fmt.Sprintf("denom%03d", i), 100))
+	}
+
+	firstBatch := allCoins[:types.MaxDenomsBurnPerBlock]
+
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
+	suite.bank.EXPECT().GetAllBalances(gomock.Any(), addr).Return(allCoins).Times(1)
+
+	// Mock for each denom in first batch
+	for _, c := range firstBatch {
+		suite.trade.EXPECT().IsNativeDenom(gomock.Any(), c.Denom).Return(true).Times(1)
+	}
+	suite.bank.EXPECT().BurnCoins(gomock.Any(), types.ModuleName, firstBatch).Return(nil).Times(1)
+
+	err := suite.k.ProcessPeriodicBurnQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	// Queue should still be pending since we had more coins than one batch
+	queue, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().True(queue.Pending)
+}
+
+func (suite *IntegrationTestSuite) TestProcessQueue_BurnErrorRetries() {
+	suite.k.EnqueuePeriodicBurn(suite.ctx)
+
+	addr := sdk.AccAddress("moduleacc")
+	moduleAcc := authtypes.ModuleAccount{
+		BaseAccount: &authtypes.BaseAccount{Address: addr.String()},
+		Name:        types.ModuleName,
+	}
+
+	coins := sdk.NewCoins(sdk.NewInt64Coin("ubze", 1000))
+
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
+	suite.bank.EXPECT().GetAllBalances(gomock.Any(), addr).Return(coins).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ubze").Return(true).Times(1)
+	suite.bank.EXPECT().BurnCoins(gomock.Any(), types.ModuleName, coins).Return(errors.New("burn failed")).Times(1)
+
+	err := suite.k.ProcessPeriodicBurnQueue(suite.ctx)
+	suite.Require().Error(err)
+
+	// Queue should still be pending (caller wraps in ApplyFuncIfNoError which reverts state)
+	queue, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().True(queue.Pending)
+}
+
+func (suite *IntegrationTestSuite) TestProcessQueue_MixedCoinTypes() {
+	suite.k.EnqueuePeriodicBurn(suite.ctx)
+
+	addr := sdk.AccAddress("moduleacc")
+	moduleAcc := authtypes.ModuleAccount{
+		BaseAccount: &authtypes.BaseAccount{Address: addr.String()},
+		Name:        types.ModuleName,
+	}
+
+	nativeCoin := sdk.NewInt64Coin("ubze", 1000)
+	lpCoin := sdk.NewInt64Coin("ulp_token1", 300)
+	ibcCoin := sdk.NewInt64Coin("ibc/ABC123", 200)
+	coins := sdk.NewCoins(nativeCoin, lpCoin, ibcCoin)
+
+	addedCoins := sdk.NewCoins(sdk.NewInt64Coin("ibc/ABC123", 180))
+	refundedCoins := sdk.NewCoins()
+
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
+	suite.bank.EXPECT().GetAllBalances(gomock.Any(), addr).Return(coins).Times(1)
+
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ubze").Return(true).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ulp_token1").Return(false).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/ABC123").Return(false).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibcCoin).Return(true).Times(1)
+	suite.trade.EXPECT().ModuleAddLiquidityWithNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(ibcCoin)).Return(addedCoins, refundedCoins, nil).Times(1)
+	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, types.BlackHoleModuleName, sdk.NewCoins(lpCoin)).Return(nil).Times(1)
+	suite.bank.EXPECT().BurnCoins(gomock.Any(), types.ModuleName, sdk.NewCoins(nativeCoin)).Return(nil).Times(1)
+
+	err := suite.k.ProcessPeriodicBurnQueue(suite.ctx)
+	suite.Require().NoError(err)
+
+	// Queue should be cleared
+	_, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().False(found)
+}
 
 func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_OnlyNativeCoins() {
 	fromModule := "test_module"
@@ -205,7 +400,7 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_BurnError() {
 	suite.Require().Equal(burnError, err)
 }
 
-func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_UnknownDenomSkipped() {
+func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_UnknownDenomLocked() {
 	fromModule := "test_module"
 	coins := sdk.NewCoins(sdk.NewInt64Coin("unknown/denom", 1000))
 
@@ -215,11 +410,13 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_UnknownDenomSkipped
 	// Mock swap capability check (returns false)
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, coins[0]).Return(false).Times(1)
 
-	// Unknown denoms are skipped (not lockable, not burnable, not exchangeable)
-	// No send to black hole, no burn operation expected
+	// Unknown denoms that are not swappable are now locked (sent to black hole)
+	suite.bank.EXPECT().SendCoinsFromModuleToModule(suite.ctx, fromModule, types.BlackHoleModuleName, coins).Return(nil).Times(1)
 
-	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
+	burned, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
+	// Unknown denoms are locked, not burned - so burned should be empty
+	suite.Require().True(burned.IsZero())
 }
 
 func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_IBCNotSwappable() {
@@ -233,9 +430,11 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_IBCNotSwappable() {
 	// Mock swap capability check (returns false)
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, ibcCoin).Return(false).Times(1)
 
-	// IBC coins that cannot be swapped are skipped (not processed)
-	// No send to black hole, no burn operation expected
+	// IBC coins that cannot be swapped are now locked (sent to black hole)
+	suite.bank.EXPECT().SendCoinsFromModuleToModule(suite.ctx, fromModule, types.BlackHoleModuleName, coins).Return(nil).Times(1)
 
-	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
+	burned, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
+	// Non-swappable IBC coins are locked, not burned
+	suite.Require().True(burned.IsZero())
 }

@@ -195,6 +195,14 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 		am.keeper.Logger().Error("error on burner module EndBlock", "err", err)
 	}
 
+	// Process periodic burn queue in bounded batches
+	err = bzeutils.ApplyFuncIfNoError(sdkCtx, func(ctx sdk.Context) error {
+		return am.keeper.ProcessPeriodicBurnQueue(ctx)
+	})
+	if err != nil {
+		am.keeper.Logger().Error("error processing periodic burn queue", "err", err)
+	}
+
 	return nil
 }
 

@@ -6,38 +6,65 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) burnModuleCoins(ctx sdk.Context) error {
-	logger := k.Logger().With("method", "burnModuleCoins")
-	logger.Debug("running burn module coins")
+// EnqueuePeriodicBurn sets the periodic burn queue as pending.
+// If a burn is already pending (mid-processing), it does NOT re-enqueue,
+// ensuring we don't restart mid-processing.
+func (k Keeper) EnqueuePeriodicBurn(ctx sdk.Context) {
+	q, found := k.GetPeriodicBurnQueue(ctx)
+	if found && q.Pending {
+		return
+	}
+
+	k.SetPeriodicBurnQueue(ctx, types.PeriodicBurnQueue{
+		Pending: true,
+	})
+}
+
+// ProcessPeriodicBurnQueue processes the periodic burn queue if active, burning coins in batches and emitting events.
+func (k Keeper) ProcessPeriodicBurnQueue(ctx sdk.Context) error {
+	queue, found := k.GetPeriodicBurnQueue(ctx)
+	if !found || !queue.Pending {
+		return nil
+	}
+
+	logger := k.Logger().With("method", "ProcessPeriodicBurnQueue")
 
 	moduleAcc := k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 	allCoins := k.bankKeeper.GetAllBalances(ctx, moduleAcc.GetAddress())
 	if allCoins.IsZero() {
-		//nothing to burn at this moment
+		k.RemovePeriodicBurnQueue(ctx)
 		return nil
 	}
 
-	burned, err := k.BurnAnyCoins(ctx, types.ModuleName, allCoins)
+	// Take at most MaxDenomsBurnPerBlock coins to process
+	batch := allCoins
+	isLastBatch := true
+	if len(allCoins) > types.MaxDenomsBurnPerBlock {
+		batch = allCoins[:types.MaxDenomsBurnPerBlock]
+		isLastBatch = false
+	}
+
+	burned, err := k.BurnAnyCoins(ctx, types.ModuleName, batch)
 	if err != nil {
 		return err
 	}
 
-	if burned.IsZero() {
-		logger.Info("no module coins to burn")
-		return nil
+	if !burned.IsZero() {
+		if err = k.SaveBurnedCoins(ctx, burned); err != nil {
+			return err
+		}
+
+		if err = ctx.EventManager().EmitTypedEvent(&types.CoinsBurnedEvent{Burned: burned.String()}); err != nil {
+			return err
+		}
+
+		logger.With("coins", burned.String()).Info("coins successfully burned in batch")
 	}
 
-	err = k.SaveBurnedCoins(ctx, burned)
-	if err != nil {
-		logger.Error("error saving burned coins", "error", err)
+	if isLastBatch {
+		logger.Info("burning queue is empty, removing it")
+		k.RemovePeriodicBurnQueue(ctx)
 	}
-
-	err = ctx.EventManager().EmitTypedEvent(&types.CoinsBurnedEvent{Burned: burned.String()})
-	if err != nil {
-		return err
-	}
-
-	logger.With("coins", burned.String()).Info("coins successfully burned")
 
 	return nil
 }
@@ -114,7 +141,8 @@ func (k Keeper) filterCoinsToBurn(ctx sdk.Context, toBurn sdk.Coins) (burnable, 
 			continue
 		}
 
-		logger.Debug("coin is IBC token, cannot be burned or exchanged to native coin. Will skip for now", "coin", c.String())
+		logger.Debug("coin is IBC token, cannot be burned or exchanged to native coin. Will lock for now", "coin", c.String())
+		lockable = lockable.Add(c)
 	}
 
 	return burnable, exchangeable, lockable
