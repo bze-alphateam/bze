@@ -261,7 +261,144 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_RaffleExpired() {
 
 	suite.Require().Error(err)
 	suite.Require().Nil(res)
-	suite.Require().Contains(err.Error(), "raffle has expired")
+	suite.Require().Contains(err.Error(), "raffle is expired or too close to expiration")
+}
+
+func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_RaffleExpiredAtCurrentEpoch() {
+	denom := "utoken"
+
+	// Set up raffle where EndAt equals current epoch (final epoch - cleanup fires here)
+	raffle := types.Raffle{
+		Denom: denom,
+		EndAt: 100, // Current epoch is 100, so this is the cleanup epoch
+	}
+	suite.k.SetRaffle(suite.ctx, raffle)
+
+	msg := &types.MsgJoinRaffle{
+		Creator: sdk.AccAddress("creator").String(),
+		Denom:   denom,
+		Tickets: 1,
+	}
+
+	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
+	suite.epoch.EXPECT().GetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100)).Times(1)
+
+	res, err := suite.msgServer.JoinRaffle(suite.ctx, msg)
+
+	suite.Require().Error(err)
+	suite.Require().Nil(res)
+	suite.Require().Contains(err.Error(), "raffle is expired or too close to expiration")
+}
+
+func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_RaffleExpiresNextEpoch() {
+	denom := "utoken"
+
+	// Set up raffle where EndAt is one epoch ahead of current (only 1 epoch remaining,
+	// within the 2-epoch buffer — should be rejected)
+	raffle := types.Raffle{
+		Denom:       denom,
+		TicketPrice: "10",
+		EndAt:       101, // Current epoch is 100, one epoch remaining
+	}
+	suite.k.SetRaffle(suite.ctx, raffle)
+
+	msg := &types.MsgJoinRaffle{
+		Creator: sdk.AccAddress("creator").String(),
+		Denom:   denom,
+		Tickets: 1,
+	}
+
+	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
+	suite.epoch.EXPECT().GetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100)).Times(1)
+
+	res, err := suite.msgServer.JoinRaffle(suite.ctx, msg)
+
+	suite.Require().Error(err)
+	suite.Require().Nil(res)
+	suite.Require().Contains(err.Error(), "raffle is expired or too close to expiration")
+}
+
+func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_RaffleExpiresTwoEpochsAway() {
+	denom := "utoken"
+
+	// Set up raffle where EndAt is two epochs ahead of current (2 epochs remaining,
+	// within the buffer — should be rejected)
+	raffle := types.Raffle{
+		Denom:       denom,
+		TicketPrice: "10",
+		EndAt:       102, // Current epoch is 100, two epochs remaining
+	}
+	suite.k.SetRaffle(suite.ctx, raffle)
+
+	msg := &types.MsgJoinRaffle{
+		Creator: sdk.AccAddress("creator").String(),
+		Denom:   denom,
+		Tickets: 1,
+	}
+
+	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
+	suite.epoch.EXPECT().GetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100)).Times(1)
+
+	res, err := suite.msgServer.JoinRaffle(suite.ctx, msg)
+
+	suite.Require().Error(err)
+	suite.Require().Nil(res)
+	suite.Require().Contains(err.Error(), "raffle is expired or too close to expiration")
+}
+
+func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_AllowedThreeEpochsBeforeExpiry() {
+	creator := sdk.AccAddress("creator").String()
+	denom := "utoken"
+	tickets := uint64(1)
+
+	// Set up raffle where EndAt is three epochs ahead of current (3 epochs remaining,
+	// this is the boundary where joins are first permitted)
+	raffle := types.Raffle{
+		Denom:       denom,
+		TicketPrice: "10",
+		EndAt:       103, // Current epoch is 100, three epochs remaining
+	}
+	suite.k.SetRaffle(suite.ctx, raffle)
+
+	msg := &types.MsgJoinRaffle{
+		Creator: creator,
+		Denom:   denom,
+		Tickets: tickets,
+	}
+
+	creatorAddr, err := sdk.AccAddressFromBech32(creator)
+	suite.Require().NoError(err)
+
+	ticketCost := sdk.NewInt64Coin(denom, 10)
+	spendableCoins := sdk.NewCoins(sdk.NewInt64Coin(denom, 1000))
+	addr2 := sdk.AccAddress("addr2_______________")
+	moduleAcc := &authtypes.ModuleAccount{
+		BaseAccount: &authtypes.BaseAccount{
+			Address:       addr2.String(),
+			PubKey:        nil,
+			AccountNumber: 0,
+			Sequence:      0,
+		},
+		Name:        "test",
+		Permissions: nil,
+	}
+	moduleBalance := sdk.NewInt64Coin(denom, 5000)
+
+	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
+	suite.epoch.EXPECT().GetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100)).Times(1)
+	suite.bank.EXPECT().SpendableCoins(suite.ctx, creatorAddr).Return(spendableCoins).Times(1)
+	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(moduleAcc).Times(1)
+	suite.bank.EXPECT().GetBalance(suite.ctx, moduleAcc.GetAddress(), denom).Return(moduleBalance).Times(1)
+	suite.bank.EXPECT().SendCoinsFromAccountToModule(suite.ctx, creatorAddr, types.RaffleModuleName, sdk.NewCoins(ticketCost)).Return(nil).Times(1)
+
+	res, err := suite.msgServer.JoinRaffle(suite.ctx, msg)
+
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+
+	// Verify participant was added
+	participants := suite.k.GetAllRaffleParticipants(suite.ctx)
+	suite.Require().Len(participants, 1)
 }
 
 func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_InsufficientBalance() {

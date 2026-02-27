@@ -103,10 +103,12 @@ func (k msgServer) JoinRaffle(goCtx context.Context, msg *types.MsgJoinRaffle) (
 		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "raffle not found for provided denom")
 	}
 
-	//do not allow participants to join close to expiration
-	re := k.GetRaffleCurrentEpoch(ctx)
-	if re > 0 && raffle.EndAt <= (re-1) {
-		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "raffle has expired")
+	//do not allow participants to join an expired raffle or too close to expiration;
+	//cleanup fires at the EndAt epoch and removes the raffle, so we reject joins
+	//when 2 or fewer epochs remain
+	currentEpoch := k.GetRaffleCurrentEpoch(ctx)
+	if currentEpoch > 0 && currentEpoch+2 >= raffle.EndAt {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "raffle is expired or too close to expiration")
 	}
 
 	creatorAddr, err := sdk.AccAddressFromBech32(msg.Creator)
