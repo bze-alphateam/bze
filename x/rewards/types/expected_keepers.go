@@ -31,5 +31,5 @@ type TradingKeeper interface {
 }
 
 type EpochKeeper interface {
-	GetEpochCountByIdentifier(ctx sdk.Context, identifier string) int64
+	SafeGetEpochCountByIdentifier(ctx sdk.Context, identifier string) (int64, error)
 }

@@ -75,8 +75,8 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	// Mock epoch keeper call for expiration calculation
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(100)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(100), nil).
 		Times(1)
 
 	msg := &types.MsgCreateTradingReward{
@@ -154,8 +154,8 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	// Mock epoch keeper - current epoch is 300
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(300)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(300), nil).
 		Times(1)
 
 	// Create with Duration=7, but pending expiration should still be 30 days
@@ -390,8 +390,8 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	// Mock epoch keeper call for expiration calculation
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(150)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(150), nil).
 		Times(1)
 
 	msg := &types.MsgCreateTradingReward{
@@ -454,8 +454,8 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	// Mock epoch keeper call for expiration calculation
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(200)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(200), nil).
 		Times(1)
 
 	msg := &types.MsgCreateTradingReward{
@@ -530,8 +530,8 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	// Mock epoch keeper call for expiration calculation
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(250)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(250), nil).
 		Times(1)
 
 	msg := &types.MsgCreateTradingReward{
@@ -548,4 +548,63 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 	suite.Require().Error(err)
 	suite.Require().Nil(response)
 	suite.Require().Equal(swapError, err)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingReward_EpochCatchingUp() {
+	creator := sdk.AccAddress("creator")
+
+	// Set up params with zero fee for simplicity
+	params := types.Params{
+		CreateStakingRewardFee: sdk.NewCoin("ubze", math.ZeroInt()),
+		CreateTradingRewardFee: sdk.NewCoin("ubze", math.ZeroInt()),
+	}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	suite.bank.EXPECT().
+		HasSupply(suite.ctx, "ubze").
+		Return(true).
+		Times(1)
+
+	suite.trade.EXPECT().
+		MarketExists(suite.ctx, "market-1").
+		Return(true).
+		Times(1)
+
+	suite.bank.EXPECT().
+		SpendableCoins(suite.ctx, creator).
+		Return(sdk.NewCoins(
+			sdk.NewCoin("ubze", math.NewInt(100000)),
+		)).
+		Times(1)
+
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(
+			suite.ctx,
+			creator,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(5000))),
+		).
+		Return(nil).
+		Times(1)
+
+	// Mock epoch keeper returning catching up error
+	suite.epoch.EXPECT().
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(0), fmt.Errorf("epoch hour is catching up")).
+		Times(1)
+
+	msg := &types.MsgCreateTradingReward{
+		Creator:     creator.String(),
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    "30",
+		MarketId:    "market-1",
+		Slots:       "5",
+	}
+
+	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().Contains(err.Error(), "catching up")
 }

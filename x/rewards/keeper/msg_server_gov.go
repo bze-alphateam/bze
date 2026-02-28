@@ -44,7 +44,12 @@ func (k msgServer) ActivateTradingReward(goCtx context.Context, msg *types.MsgAc
 	k.RemovePendingTradingReward(ctx, r.RewardId)
 
 	//move the trading reward to active
-	r.ExpireAt = k.getNewTradingRewardExpireAt(ctx, r.Duration)
+	var err error
+	r.ExpireAt, err = k.getNewTradingRewardExpireAt(ctx, r.Duration)
+	if err != nil {
+		return nil, err
+	}
+
 	k.SetActiveTradingReward(ctx, r)
 
 	//save expiration
@@ -60,7 +65,7 @@ func (k msgServer) ActivateTradingReward(goCtx context.Context, msg *types.MsgAc
 		MarketId: r.MarketId,
 	})
 
-	err := ctx.EventManager().EmitTypedEvent(
+	err = ctx.EventManager().EmitTypedEvent(
 		&types.TradingRewardActivationEvent{
 			RewardId: exp.RewardId,
 		},

@@ -254,16 +254,17 @@ func (m *MockEpochKeeper) EXPECT() *MockEpochKeeperMockRecorder {
 	return m.recorder
 }
 
-// GetEpochCountByIdentifier mocks base method.
-func (m *MockEpochKeeper) GetEpochCountByIdentifier(ctx types.Context, identifier string) int64 {
+// SafeGetEpochCountByIdentifier mocks base method.
+func (m *MockEpochKeeper) SafeGetEpochCountByIdentifier(ctx types.Context, identifier string) (int64, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetEpochCountByIdentifier", ctx, identifier)
+	ret := m.ctrl.Call(m, "SafeGetEpochCountByIdentifier", ctx, identifier)
 	ret0, _ := ret[0].(int64)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// GetEpochCountByIdentifier indicates an expected call of GetEpochCountByIdentifier.
-func (mr *MockEpochKeeperMockRecorder) GetEpochCountByIdentifier(ctx, identifier any) *gomock.Call {
+// SafeGetEpochCountByIdentifier indicates an expected call of SafeGetEpochCountByIdentifier.
+func (mr *MockEpochKeeperMockRecorder) SafeGetEpochCountByIdentifier(ctx, identifier any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEpochCountByIdentifier", reflect.TypeOf((*MockEpochKeeper)(nil).GetEpochCountByIdentifier), ctx, identifier)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SafeGetEpochCountByIdentifier", reflect.TypeOf((*MockEpochKeeper)(nil).SafeGetEpochCountByIdentifier), ctx, identifier)
 }

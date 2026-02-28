@@ -477,8 +477,8 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStakingSuccess
 
 	// Mock epoch keeper call (even for lock = 0, beginUnlock still calls it)
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(100)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(100), nil).
 		Times(1)
 
 	// Mock bank keeper call for unlock (immediate since lock = 0)
@@ -543,8 +543,8 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStakingWithLoc
 
 	// Mock epoch keeper call for lock calculation
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(100)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(100), nil).
 		Times(1)
 
 	msg := &types.MsgExitStaking{
@@ -738,8 +738,8 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStakingTruncat
 
 	// Mock epoch keeper call (beginUnlock still calls it)
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(100)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(100), nil).
 		Times(1)
 
 	// Mock bank keeper call for unlock (immediate since lock = 0) - only the staked amount, no reward
@@ -954,4 +954,47 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_DistributeStakingR
 	updatedReward, found := suite.k.GetStakingReward(suite.ctx, "distribute-test-reward")
 	suite.Require().True(found)
 	suite.Require().Equal("0.500000000000000000", updatedReward.DistributedStake) // 500/1000 = 0.5
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStaking_EpochCatchingUp() {
+	creator := sdk.AccAddress("creator")
+
+	// Set up existing staking reward and participant
+	stakingReward := types.StakingReward{
+		RewardId:         "exit-catchup-reward",
+		PrizeAmount:      "1000",
+		PrizeDenom:       "ubze",
+		StakingDenom:     "ubze",
+		Duration:         5,
+		Payouts:          2,
+		MinStake:         100,
+		Lock:             7,
+		StakedAmount:     "500",
+		DistributedStake: "0",
+	}
+	suite.k.SetStakingReward(suite.ctx, stakingReward)
+
+	participant := types.StakingRewardParticipant{
+		Address:  creator.String(),
+		RewardId: "exit-catchup-reward",
+		Amount:   "500",
+		JoinedAt: "0",
+	}
+	suite.k.SetStakingRewardParticipant(suite.ctx, participant)
+
+	// Mock epoch keeper returning catching up error
+	suite.epoch.EXPECT().
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(0), fmt.Errorf("epoch hour is catching up")).
+		Times(1)
+
+	msg := &types.MsgExitStaking{
+		Creator:  creator.String(),
+		RewardId: "exit-catchup-reward",
+	}
+
+	response, err := suite.msgServer.ExitStaking(suite.ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().Contains(err.Error(), "catching up")
 }

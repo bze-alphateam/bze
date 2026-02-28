@@ -72,7 +72,11 @@ func (k Keeper) raffleFromMsgStartRaffle(ctx sdk.Context, msg *types.MsgStartRaf
 	}
 
 	raffle.Winners = 0
-	currentEpoch := k.GetRaffleCurrentEpoch(ctx)
+	currentEpoch, err := k.GetRaffleCurrentEpoch(ctx)
+	if err != nil {
+		return types.Raffle{}, err
+	}
+
 	raffle.EndAt = currentEpoch + (raffle.Duration * 24)
 	raffle.TotalWon = math.ZeroInt().String()
 
@@ -107,7 +111,11 @@ func (k msgServer) JoinRaffle(goCtx context.Context, msg *types.MsgJoinRaffle) (
 	//do not allow participants to join an expired raffle or too close to expiration;
 	//cleanup fires at the EndAt epoch and removes the raffle, so we reject joins
 	//when 2 or fewer epochs remain
-	currentEpoch := k.GetRaffleCurrentEpoch(ctx)
+	currentEpoch, err := k.GetRaffleCurrentEpoch(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	if currentEpoch > 0 && currentEpoch+2 >= raffle.EndAt {
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "raffle is expired or too close to expiration")
 	}

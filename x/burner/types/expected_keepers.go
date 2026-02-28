@@ -8,7 +8,7 @@ import (
 
 // EpochKeeper defines expected keeper that can return the current epoch
 type EpochKeeper interface {
-	GetEpochCountByIdentifier(ctx sdk.Context, identifier string) int64
+	SafeGetEpochCountByIdentifier(ctx sdk.Context, identifier string) (int64, error)
 }
 
 // AccountKeeper defines the expected interface for the Account module.

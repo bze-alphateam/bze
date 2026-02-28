@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -31,8 +33,8 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardSuccess
 
 	// Mock epoch keeper call
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(100)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(100), nil).
 		Times(1)
 
 	msg := &types.MsgActivateTradingReward{
@@ -260,8 +262,8 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardSecondM
 
 	// Mock epoch keeper - only first activation should reach this
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(100)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(100), nil).
 		Times(1)
 
 	// Activate first reward - should succeed
@@ -317,8 +319,8 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardPreserv
 
 	// Mock epoch keeper call
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(200)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(200), nil).
 		Times(1)
 
 	msg := &types.MsgActivateTradingReward{
@@ -367,8 +369,8 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardUsesRew
 
 	// Mock epoch keeper call - current epoch is 500
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(500)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(500), nil).
 		Times(1)
 
 	msg := &types.MsgActivateTradingReward{
@@ -433,8 +435,8 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardCleanup
 
 	// Mock epoch keeper call
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(250)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(250), nil).
 		Times(1)
 
 	msg := &types.MsgActivateTradingReward{
@@ -457,4 +459,52 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardCleanup
 	pendingExpirations := suite.k.GetAllPendingTradingRewardExpirationByExpireAt(suite.ctx, 1000)
 	suite.Require().Len(pendingExpirations, 1)
 	suite.Require().Equal("cleanup-reward-2", pendingExpirations[0].RewardId)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingReward_EpochCatchingUp() {
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+
+	// Set up pending trading reward
+	pendingReward := types.TradingReward{
+		RewardId:    "catchup-reward",
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    30,
+		MarketId:    "market-1",
+		Slots:       5,
+		ExpireAt:    1000,
+	}
+
+	pendingExpiration := types.TradingRewardExpiration{
+		RewardId: "catchup-reward",
+		ExpireAt: 1000,
+	}
+
+	suite.k.SetPendingTradingReward(suite.ctx, pendingReward)
+	suite.k.SetPendingTradingRewardExpiration(suite.ctx, pendingExpiration)
+
+	// Mock epoch keeper returning catching up error
+	suite.epoch.EXPECT().
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(0), fmt.Errorf("epoch hour is catching up")).
+		Times(1)
+
+	msg := &types.MsgActivateTradingReward{
+		Creator:  authority,
+		RewardId: "catchup-reward",
+	}
+
+	response, err := suite.msgServer.ActivateTradingReward(suite.ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().Contains(err.Error(), "catching up")
+
+	// Note: pending reward and expiration are removed before the epoch call,
+	// so they will not be present after an epoch error
+	_, found := suite.k.GetPendingTradingReward(suite.ctx, "catchup-reward")
+	suite.Require().False(found)
+
+	// Verify active reward was NOT created
+	_, found = suite.k.GetActiveTradingReward(suite.ctx, "catchup-reward")
+	suite.Require().False(found)
 }

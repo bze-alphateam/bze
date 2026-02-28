@@ -36,7 +36,7 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_ValidRequest() {
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, creatorAddr).Return(spendableCoins).Times(1)
 	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(&authtypes.ModuleAccount{}).Times(1)
 	suite.bank.EXPECT().SendCoinsFromAccountToModule(suite.ctx, creatorAddr, types.RaffleModuleName, sdk.NewCoins(potCoin)).Return(nil).Times(1)
-	suite.epoch.EXPECT().GetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100)).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100), nil).Times(1)
 
 	res, err := suite.msgServer.StartRaffle(suite.ctx, msg)
 
@@ -108,7 +108,7 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_InsufficientBalance
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, creatorAddr).Return(spendableCoins).Times(1)
-	suite.epoch.EXPECT().GetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100)).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100), nil).Times(1)
 
 	res, err := suite.msgServer.StartRaffle(suite.ctx, msg)
 
@@ -142,7 +142,7 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_BankKeeperError() {
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, creatorAddr).Return(spendableCoins).Times(1)
 	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(&authtypes.ModuleAccount{}).Times(1)
 	suite.bank.EXPECT().SendCoinsFromAccountToModule(suite.ctx, creatorAddr, types.RaffleModuleName, sdk.NewCoins(potCoin)).Return(bankError).Times(1)
-	suite.epoch.EXPECT().GetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100)).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100), nil).Times(1)
 
 	res, err := suite.msgServer.StartRaffle(suite.ctx, msg)
 
@@ -189,7 +189,7 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_ValidRequest() {
 	moduleBalance := sdk.NewInt64Coin(denom, 5000)
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
-	suite.epoch.EXPECT().GetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100)).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100), nil).Times(1)
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, creatorAddr).Return(spendableCoins).Times(1)
 	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(moduleAcc).Times(1)
 	suite.bank.EXPECT().GetBalance(suite.ctx, moduleAcc.GetAddress(), denom).Return(moduleBalance).Times(1)
@@ -255,7 +255,7 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_RaffleExpired() {
 	}
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
-	suite.epoch.EXPECT().GetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100)).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100), nil).Times(1)
 
 	res, err := suite.msgServer.JoinRaffle(suite.ctx, msg)
 
@@ -281,7 +281,7 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_RaffleExpiredAtCurre
 	}
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
-	suite.epoch.EXPECT().GetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100)).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100), nil).Times(1)
 
 	res, err := suite.msgServer.JoinRaffle(suite.ctx, msg)
 
@@ -309,7 +309,7 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_RaffleExpiresNextEpo
 	}
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
-	suite.epoch.EXPECT().GetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100)).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100), nil).Times(1)
 
 	res, err := suite.msgServer.JoinRaffle(suite.ctx, msg)
 
@@ -337,7 +337,7 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_RaffleExpiresTwoEpoc
 	}
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
-	suite.epoch.EXPECT().GetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100)).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100), nil).Times(1)
 
 	res, err := suite.msgServer.JoinRaffle(suite.ctx, msg)
 
@@ -385,7 +385,7 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_AllowedThreeEpochsBe
 	moduleBalance := sdk.NewInt64Coin(denom, 5000)
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
-	suite.epoch.EXPECT().GetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100)).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100), nil).Times(1)
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, creatorAddr).Return(spendableCoins).Times(1)
 	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(moduleAcc).Times(1)
 	suite.bank.EXPECT().GetBalance(suite.ctx, moduleAcc.GetAddress(), denom).Return(moduleBalance).Times(1)
@@ -425,7 +425,7 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_InsufficientBalance(
 	spendableCoins := sdk.NewCoins(sdk.NewInt64Coin(denom, 50))
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
-	suite.epoch.EXPECT().GetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100)).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100), nil).Times(1)
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, creatorAddr).Return(spendableCoins).Times(1)
 
 	res, err := suite.msgServer.JoinRaffle(suite.ctx, msg)
@@ -471,7 +471,7 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_NoPot() {
 	moduleBalance := sdk.NewInt64Coin(denom, 0)
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
-	suite.epoch.EXPECT().GetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100)).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100), nil).Times(1)
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, creatorAddr).Return(spendableCoins).Times(1)
 	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(moduleAcc).Times(1)
 	suite.bank.EXPECT().GetBalance(suite.ctx, moduleAcc.GetAddress(), denom).Return(moduleBalance).Times(1)
@@ -512,11 +512,62 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_TooManyParticipants(
 	}
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
-	suite.epoch.EXPECT().GetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100)).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100), nil).Times(1)
 
 	res, err := suite.msgServer.JoinRaffle(suite.ctx, msg)
 
 	suite.Require().Error(err)
 	suite.Require().Nil(res)
 	suite.Require().Contains(err.Error(), "too many participants")
+}
+
+func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_EpochCatchingUp() {
+	creator := sdk.AccAddress("creator").String()
+	denom := "utoken"
+
+	msg := &types.MsgStartRaffle{
+		Creator:     creator,
+		Pot:         "1000",
+		Duration:    "7",
+		Chances:     "100",
+		Ratio:       "0.1",
+		TicketPrice: "10",
+		Denom:       denom,
+	}
+
+	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(0), errors.New("epoch hour is catching up")).Times(1)
+
+	res, err := suite.msgServer.StartRaffle(suite.ctx, msg)
+
+	suite.Require().Error(err)
+	suite.Require().Nil(res)
+	suite.Require().Contains(err.Error(), "catching up")
+}
+
+func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_EpochCatchingUp() {
+	denom := "utoken"
+
+	// Set up existing raffle
+	raffle := types.Raffle{
+		Denom:       denom,
+		TicketPrice: "10",
+		EndAt:       200,
+	}
+	suite.k.SetRaffle(suite.ctx, raffle)
+
+	msg := &types.MsgJoinRaffle{
+		Creator: sdk.AccAddress("creator").String(),
+		Denom:   denom,
+		Tickets: 1,
+	}
+
+	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(0), errors.New("epoch hour is catching up")).Times(1)
+
+	res, err := suite.msgServer.JoinRaffle(suite.ctx, msg)
+
+	suite.Require().Error(err)
+	suite.Require().Nil(res)
+	suite.Require().Contains(err.Error(), "catching up")
 }
