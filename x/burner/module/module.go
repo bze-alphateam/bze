@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/bze-alphateam/bze/x/burner/exported"
 	"time"
+
+	"github.com/bze-alphateam/bze/x/burner/exported"
 
 	"github.com/bze-alphateam/bze/bzeutils"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -181,7 +182,7 @@ func (am AppModule) BeginBlock(_ context.Context) error {
 // EndBlock contains the logic that is automatically triggered at the end of each block.
 // The end block implementation is optional.
 func (am AppModule) EndBlock(ctx context.Context) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	wrappedFunc := func(ctx sdk.Context) error {
