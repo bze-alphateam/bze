@@ -242,7 +242,7 @@ type ModuleInputs struct {
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
 	EpochKeeper   types.EpochKeeper
-	TradeKeeper   types.TradeKeeper `optional:"true"`
+	TradeKeeper   types.TradeKeeper
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
