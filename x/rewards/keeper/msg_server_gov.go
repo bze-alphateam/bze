@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"context"
-	"cosmossdk.io/errors"
 	"fmt"
+
+	"cosmossdk.io/errors"
 
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,12 +33,23 @@ func (k msgServer) ActivateTradingReward(goCtx context.Context, msg *types.MsgAc
 		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "trading reward not found")
 	}
 
+	//if there is already an active reward for this market id do not allow adding another one
+	_, found = k.GetMarketIdRewardId(ctx, r.MarketId)
+	if found {
+		return nil, types.ErrRewardAlreadyExists
+	}
+
 	//remove the pending reward expiration because we're moving this one to active trading reward
 	k.RemovePendingTradingRewardExpiration(ctx, r.ExpireAt, r.RewardId)
 	k.RemovePendingTradingReward(ctx, r.RewardId)
 
 	//move the trading reward to active
-	r.ExpireAt = k.getNewTradingRewardExpireAt(ctx)
+	var err error
+	r.ExpireAt, err = k.getNewTradingRewardExpireAt(ctx, r.Duration)
+	if err != nil {
+		return nil, err
+	}
+
 	k.SetActiveTradingReward(ctx, r)
 
 	//save expiration
@@ -53,7 +65,7 @@ func (k msgServer) ActivateTradingReward(goCtx context.Context, msg *types.MsgAc
 		MarketId: r.MarketId,
 	})
 
-	err := ctx.EventManager().EmitTypedEvent(
+	err = ctx.EventManager().EmitTypedEvent(
 		&types.TradingRewardActivationEvent{
 			RewardId: exp.RewardId,
 		},

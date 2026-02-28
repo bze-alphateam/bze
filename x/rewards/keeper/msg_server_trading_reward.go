@@ -2,7 +2,9 @@ package keeper
 
 import (
 	"context"
+
 	"cosmossdk.io/errors"
+	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/bze-alphateam/bze/x/rewards/types"
@@ -10,7 +12,7 @@ import (
 )
 
 const (
-	expirationPeriodInHours uint32 = 30 * 24
+	pendingExpirationPeriodInDays uint32 = 30
 )
 
 func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCreateTradingReward) (*types.MsgCreateTradingRewardResponse, error) {
@@ -71,15 +73,24 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 	}
 
 	if fee != nil {
-		err = k.distrKeeper.FundCommunityPool(ctx, fee, acc)
+		capturedFee, err := k.tradeKeeper.CaptureAndSwapUserFee(ctx, acc, fee, types.ModuleName)
+		if err != nil {
+			return nil, err
+		}
+
+		err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, capturedFee)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	//add ID
-	tradingReward.RewardId = k.smallZeroFillId(k.GetTradingRewardsCounter(ctx))
-	tradingReward.ExpireAt = k.getNewTradingRewardExpireAt(ctx)
+	tradingReward.RewardId = k.smallZeroFillId(k.ReserveTradingRewardsCounter(ctx))
+	tradingReward.ExpireAt, err = k.getNewTradingRewardExpireAt(ctx, pendingExpirationPeriodInDays)
+	if err != nil {
+		return nil, err
+	}
+
 	k.SetPendingTradingReward(
 		ctx,
 		tradingReward,

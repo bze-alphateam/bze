@@ -33,7 +33,7 @@ func Migrate(
 		return err
 	}
 
-	newParams := types.NewParams(srf, trf)
+	newParams := types.NewParams(srf, trf, types.DefaultExtraGasForExitStake)
 	bz := cdc.MustMarshal(&newParams)
 	store.Set(types.ParamsKey, bz)
 

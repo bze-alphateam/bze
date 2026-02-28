@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	raffleDelayHeight = 2
+	raffleDelayHeight        = 2
+	maxParticipantsPerHeight = 200
 )
 
 func (k msgServer) StartRaffle(goCtx context.Context, msg *types.MsgStartRaffle) (*types.MsgStartRaffleResponse, error) {
@@ -71,7 +72,11 @@ func (k Keeper) raffleFromMsgStartRaffle(ctx sdk.Context, msg *types.MsgStartRaf
 	}
 
 	raffle.Winners = 0
-	currentEpoch := k.GetRaffleCurrentEpoch(ctx)
+	currentEpoch, err := k.GetRaffleCurrentEpoch(ctx)
+	if err != nil {
+		return types.Raffle{}, err
+	}
+
 	raffle.EndAt = currentEpoch + (raffle.Duration * 24)
 	raffle.TotalWon = math.ZeroInt().String()
 
@@ -103,10 +108,21 @@ func (k msgServer) JoinRaffle(goCtx context.Context, msg *types.MsgJoinRaffle) (
 		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "raffle not found for provided denom")
 	}
 
-	//do not allow participants to join close to expiration
-	re := k.GetRaffleCurrentEpoch(ctx)
-	if re > 0 && raffle.EndAt <= (re-1) {
-		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "raffle has expired")
+	//do not allow participants to join an expired raffle or too close to expiration;
+	//cleanup fires at the EndAt epoch and removes the raffle, so we reject joins
+	//when 2 or fewer epochs remain
+	currentEpoch, err := k.GetRaffleCurrentEpoch(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if currentEpoch > 0 && currentEpoch+2 >= raffle.EndAt {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "raffle is expired or too close to expiration")
+	}
+
+	execAt := ctx.BlockHeight() + raffleDelayHeight
+	if k.CountPrefixedRaffleParticipants(ctx, execAt) >= maxParticipantsPerHeight {
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "too many participants scheduled, try again later")
 	}
 
 	creatorAddr, err := sdk.AccAddressFromBech32(msg.Creator)
@@ -150,7 +166,6 @@ func (k msgServer) JoinRaffle(goCtx context.Context, msg *types.MsgJoinRaffle) (
 		return nil, err
 	}
 
-	execAt := ctx.BlockHeight() + raffleDelayHeight
 	for i := int64(0); i < int64(msg.GetTickets()); i++ {
 		participant := types.RaffleParticipant{
 			Index:       k.GetParticipantCounter(ctx),

@@ -11,8 +11,9 @@ const (
 	MemStoreKey = "mem_rewards"
 
 	// StakingRewardKeyPrefix is the prefix to retrieve all StakingReward
-	StakingRewardKeyPrefix = "sr/value/"
-	CounterKey             = "sr/c/"
+	StakingRewardKeyPrefix            = "sr/value/"
+	CounterKey                        = "sr/c/"
+	StakingRewardDistributionQueueKey = "sr/dq/"
 )
 
 var (

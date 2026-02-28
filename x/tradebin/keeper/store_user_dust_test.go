@@ -53,7 +53,7 @@ func (suite *IntegrationTestSuite) TestStore_UserDustStorage() {
 
 	//check delete. delete ud1
 	suite.k.RemoveUserDust(suite.ctx, ud1)
-	fromStore, ok = suite.k.GetUserDust(suite.ctx, ud1.Owner, ud1.Denom)
+	_, ok = suite.k.GetUserDust(suite.ctx, ud1.Owner, ud1.Denom)
 	suite.Require().False(ok)
 
 	//check that the list does not contain the deleted entry

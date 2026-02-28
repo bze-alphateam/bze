@@ -207,6 +207,20 @@ func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderMo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToAccount", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToAccount), ctx, senderModule, recipientAddr, amt)
 }
 
+// SendCoinsFromModuleToModule mocks base method.
+func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt types.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendCoinsFromModuleToModule", ctx, senderModule, recipientModule, amt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendCoinsFromModuleToModule indicates an expected call of SendCoinsFromModuleToModule.
+func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, amt any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToModule", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToModule), ctx, senderModule, recipientModule, amt)
+}
+
 // SetDenomMetaData mocks base method.
 func (m *MockBankKeeper) SetDenomMetaData(ctx context.Context, denomMetaData types0.Metadata) {
 	m.ctrl.T.Helper()
@@ -217,44 +231,6 @@ func (m *MockBankKeeper) SetDenomMetaData(ctx context.Context, denomMetaData typ
 func (mr *MockBankKeeperMockRecorder) SetDenomMetaData(ctx, denomMetaData any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDenomMetaData", reflect.TypeOf((*MockBankKeeper)(nil).SetDenomMetaData), ctx, denomMetaData)
-}
-
-// MockDistrKeeper is a mock of DistrKeeper interface.
-type MockDistrKeeper struct {
-	ctrl     *gomock.Controller
-	recorder *MockDistrKeeperMockRecorder
-	isgomock struct{}
-}
-
-// MockDistrKeeperMockRecorder is the mock recorder for MockDistrKeeper.
-type MockDistrKeeperMockRecorder struct {
-	mock *MockDistrKeeper
-}
-
-// NewMockDistrKeeper creates a new mock instance.
-func NewMockDistrKeeper(ctrl *gomock.Controller) *MockDistrKeeper {
-	mock := &MockDistrKeeper{ctrl: ctrl}
-	mock.recorder = &MockDistrKeeperMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockDistrKeeper) EXPECT() *MockDistrKeeperMockRecorder {
-	return m.recorder
-}
-
-// FundCommunityPool mocks base method.
-func (m *MockDistrKeeper) FundCommunityPool(ctx context.Context, amount types.Coins, sender types.AccAddress) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FundCommunityPool", ctx, amount, sender)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// FundCommunityPool indicates an expected call of FundCommunityPool.
-func (mr *MockDistrKeeperMockRecorder) FundCommunityPool(ctx, amount, sender any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FundCommunityPool", reflect.TypeOf((*MockDistrKeeper)(nil).FundCommunityPool), ctx, amount, sender)
 }
 
 // MockParamSubspace is a mock of ParamSubspace interface.
@@ -303,4 +279,43 @@ func (m *MockParamSubspace) Set(arg0 context.Context, arg1 []byte, arg2 any) {
 func (mr *MockParamSubspaceMockRecorder) Set(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockParamSubspace)(nil).Set), arg0, arg1, arg2)
+}
+
+// MockTradingKeeper is a mock of TradingKeeper interface.
+type MockTradingKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockTradingKeeperMockRecorder
+	isgomock struct{}
+}
+
+// MockTradingKeeperMockRecorder is the mock recorder for MockTradingKeeper.
+type MockTradingKeeperMockRecorder struct {
+	mock *MockTradingKeeper
+}
+
+// NewMockTradingKeeper creates a new mock instance.
+func NewMockTradingKeeper(ctrl *gomock.Controller) *MockTradingKeeper {
+	mock := &MockTradingKeeper{ctrl: ctrl}
+	mock.recorder = &MockTradingKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockTradingKeeper) EXPECT() *MockTradingKeeperMockRecorder {
+	return m.recorder
+}
+
+// CaptureAndSwapUserFee mocks base method.
+func (m *MockTradingKeeper) CaptureAndSwapUserFee(ctx types.Context, payer types.AccAddress, fee types.Coins, toModule string) (types.Coins, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CaptureAndSwapUserFee", ctx, payer, fee, toModule)
+	ret0, _ := ret[0].(types.Coins)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CaptureAndSwapUserFee indicates an expected call of CaptureAndSwapUserFee.
+func (mr *MockTradingKeeperMockRecorder) CaptureAndSwapUserFee(ctx, payer, fee, toModule any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CaptureAndSwapUserFee", reflect.TypeOf((*MockTradingKeeper)(nil).CaptureAndSwapUserFee), ctx, payer, fee, toModule)
 }

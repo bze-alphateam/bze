@@ -22,4 +22,8 @@ message Params {
     (gogoproto.moretags) = "yaml:\"create_trading_reward_fee\"",
     (gogoproto.jsontag)      = "create_trading_reward_fee,omitempty"
   ];
+  uint64 extraGasForExitStake = 3 [
+    (gogoproto.moretags) = "yaml:\"extra_gas_for_exit_stake\"",
+    (gogoproto.jsontag)      = "extra_gas_for_exit_stake,omitempty"
+  ];
 }

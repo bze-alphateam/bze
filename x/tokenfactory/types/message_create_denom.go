@@ -30,5 +30,9 @@ func (msg *MsgCreateDenom) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "subdenom should not contain _")
 	}
 
+	if strings.Contains(msg.Subdenom, "/") {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "subdenom should not contain /")
+	}
+
 	return nil
 }

@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -31,8 +33,8 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardSuccess
 
 	// Mock epoch keeper call
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(100)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(100), nil).
 		Times(1)
 
 	msg := &types.MsgActivateTradingReward{
@@ -58,7 +60,8 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardSuccess
 	suite.Require().Equal(pendingReward.RewardId, activeReward.RewardId)
 	suite.Require().Equal(pendingReward.PrizeAmount, activeReward.PrizeAmount)
 	suite.Require().Equal(pendingReward.MarketId, activeReward.MarketId)
-	suite.Require().NotEqual(uint32(1000), activeReward.ExpireAt) // Should have new expiration
+	suite.Require().NotEqual(uint32(1000), activeReward.ExpireAt)     // Should have new expiration
+	suite.Require().Equal(uint32(100+(30*24)), activeReward.ExpireAt) // epoch(100) + Duration(30) * 24
 
 	// Verify active expiration was created
 	activeExpirations := suite.k.GetAllActiveTradingRewardExpirationByExpireAt(suite.ctx, activeReward.ExpireAt)
@@ -180,7 +183,7 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardPending
 func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardWithExistingMarketMapping() {
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
-	// Set up existing market mapping
+	// Set up existing market mapping (simulates another active reward on this market)
 	existingMapping := types.MarketIdTradingRewardId{
 		RewardId: "existing-reward",
 		MarketId: "market-1",
@@ -198,19 +201,7 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardWithExi
 		ExpireAt:    1000,
 	}
 
-	pendingExpiration := types.TradingRewardExpiration{
-		RewardId: "new-reward",
-		ExpireAt: 1000,
-	}
-
 	suite.k.SetPendingTradingReward(suite.ctx, pendingReward)
-	suite.k.SetPendingTradingRewardExpiration(suite.ctx, pendingExpiration)
-
-	// Mock epoch keeper call
-	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(150)).
-		Times(1)
 
 	msg := &types.MsgActivateTradingReward{
 		Creator:  authority,
@@ -218,13 +209,90 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardWithExi
 	}
 
 	response, err := suite.msgServer.ActivateTradingReward(suite.ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().ErrorIs(err, types.ErrRewardAlreadyExists)
+
+	// Verify existing market mapping was NOT overwritten
+	marketMapping, found := suite.k.GetMarketIdRewardId(suite.ctx, "market-1")
+	suite.Require().True(found)
+	suite.Require().Equal("existing-reward", marketMapping.RewardId)
+
+	// Verify the pending reward was NOT removed
+	_, found = suite.k.GetPendingTradingReward(suite.ctx, "new-reward")
+	suite.Require().True(found)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardSecondMarketRewardBlocked() {
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+
+	// Set up first pending reward for market-1
+	pendingReward1 := types.TradingReward{
+		RewardId:    "first-reward",
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    30,
+		MarketId:    "market-1",
+		Slots:       5,
+		ExpireAt:    1000,
+	}
+	pendingExpiration1 := types.TradingRewardExpiration{
+		RewardId: "first-reward",
+		ExpireAt: 1000,
+	}
+	suite.k.SetPendingTradingReward(suite.ctx, pendingReward1)
+	suite.k.SetPendingTradingRewardExpiration(suite.ctx, pendingExpiration1)
+
+	// Set up second pending reward for the same market
+	pendingReward2 := types.TradingReward{
+		RewardId:    "second-reward",
+		PrizeAmount: "2000",
+		PrizeDenom:  "ubze",
+		Duration:    60,
+		MarketId:    "market-1",
+		Slots:       10,
+		ExpireAt:    1000,
+	}
+	pendingExpiration2 := types.TradingRewardExpiration{
+		RewardId: "second-reward",
+		ExpireAt: 1000,
+	}
+	suite.k.SetPendingTradingReward(suite.ctx, pendingReward2)
+	suite.k.SetPendingTradingRewardExpiration(suite.ctx, pendingExpiration2)
+
+	// Mock epoch keeper - only first activation should reach this
+	suite.epoch.EXPECT().
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(100), nil).
+		Times(1)
+
+	// Activate first reward - should succeed
+	msg1 := &types.MsgActivateTradingReward{
+		Creator:  authority,
+		RewardId: "first-reward",
+	}
+	response, err := suite.msgServer.ActivateTradingReward(suite.ctx, msg1)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(response)
 
-	// Verify market mapping was updated to new reward
+	// Try to activate second reward for same market - should fail
+	msg2 := &types.MsgActivateTradingReward{
+		Creator:  authority,
+		RewardId: "second-reward",
+	}
+	response, err = suite.msgServer.ActivateTradingReward(suite.ctx, msg2)
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().ErrorIs(err, types.ErrRewardAlreadyExists)
+
+	// Verify market mapping still points to first reward
 	marketMapping, found := suite.k.GetMarketIdRewardId(suite.ctx, "market-1")
 	suite.Require().True(found)
-	suite.Require().Equal("new-reward", marketMapping.RewardId)
+	suite.Require().Equal("first-reward", marketMapping.RewardId)
+
+	// Verify second pending reward was NOT removed
+	_, found = suite.k.GetPendingTradingReward(suite.ctx, "second-reward")
+	suite.Require().True(found)
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardPreservesRewardData() {
@@ -251,8 +319,8 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardPreserv
 
 	// Mock epoch keeper call
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(200)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(200), nil).
 		Times(1)
 
 	msg := &types.MsgActivateTradingReward{
@@ -274,6 +342,56 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardPreserv
 	suite.Require().Equal(pendingReward.MarketId, activeReward.MarketId)
 	suite.Require().Equal(pendingReward.Slots, activeReward.Slots)
 	suite.Require().NotEqual(pendingReward.ExpireAt, activeReward.ExpireAt) // Should be updated
+	suite.Require().Equal(uint32(200+(120*24)), activeReward.ExpireAt)      // epoch(200) + Duration(120) * 24
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardUsesRewardDuration() {
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+
+	// Set up pending trading reward with Duration=7 (7-day competition)
+	pendingReward := types.TradingReward{
+		RewardId:    "short-duration-reward",
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    7,
+		MarketId:    "market-1",
+		Slots:       5,
+		ExpireAt:    1000,
+	}
+
+	pendingExpiration := types.TradingRewardExpiration{
+		RewardId: "short-duration-reward",
+		ExpireAt: 1000,
+	}
+
+	suite.k.SetPendingTradingReward(suite.ctx, pendingReward)
+	suite.k.SetPendingTradingRewardExpiration(suite.ctx, pendingExpiration)
+
+	// Mock epoch keeper call - current epoch is 500
+	suite.epoch.EXPECT().
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(500), nil).
+		Times(1)
+
+	msg := &types.MsgActivateTradingReward{
+		Creator:  authority,
+		RewardId: "short-duration-reward",
+	}
+
+	response, err := suite.msgServer.ActivateTradingReward(suite.ctx, msg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(response)
+
+	// Verify active reward uses Duration for expiration: epoch(500) + Duration(7) * 24 = 668
+	activeReward, found := suite.k.GetActiveTradingReward(suite.ctx, "short-duration-reward")
+	suite.Require().True(found)
+	suite.Require().Equal(uint32(500+(7*24)), activeReward.ExpireAt)
+	suite.Require().Equal(uint32(668), activeReward.ExpireAt)
+
+	// Verify active expiration was created at the correct time
+	activeExpirations := suite.k.GetAllActiveTradingRewardExpirationByExpireAt(suite.ctx, activeReward.ExpireAt)
+	suite.Require().Len(activeExpirations, 1)
+	suite.Require().Equal("short-duration-reward", activeExpirations[0].RewardId)
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardCleanup() {
@@ -317,8 +435,8 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardCleanup
 
 	// Mock epoch keeper call
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(250)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(250), nil).
 		Times(1)
 
 	msg := &types.MsgActivateTradingReward{
@@ -341,4 +459,52 @@ func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingRewardCleanup
 	pendingExpirations := suite.k.GetAllPendingTradingRewardExpirationByExpireAt(suite.ctx, 1000)
 	suite.Require().Len(pendingExpirations, 1)
 	suite.Require().Equal("cleanup-reward-2", pendingExpirations[0].RewardId)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerGov_ActivateTradingReward_EpochCatchingUp() {
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+
+	// Set up pending trading reward
+	pendingReward := types.TradingReward{
+		RewardId:    "catchup-reward",
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    30,
+		MarketId:    "market-1",
+		Slots:       5,
+		ExpireAt:    1000,
+	}
+
+	pendingExpiration := types.TradingRewardExpiration{
+		RewardId: "catchup-reward",
+		ExpireAt: 1000,
+	}
+
+	suite.k.SetPendingTradingReward(suite.ctx, pendingReward)
+	suite.k.SetPendingTradingRewardExpiration(suite.ctx, pendingExpiration)
+
+	// Mock epoch keeper returning catching up error
+	suite.epoch.EXPECT().
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(0), fmt.Errorf("epoch hour is catching up")).
+		Times(1)
+
+	msg := &types.MsgActivateTradingReward{
+		Creator:  authority,
+		RewardId: "catchup-reward",
+	}
+
+	response, err := suite.msgServer.ActivateTradingReward(suite.ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().Contains(err.Error(), "catching up")
+
+	// Note: pending reward and expiration are removed before the epoch call,
+	// so they will not be present after an epoch error
+	_, found := suite.k.GetPendingTradingReward(suite.ctx, "catchup-reward")
+	suite.Require().False(found)
+
+	// Verify active reward was NOT created
+	_, found = suite.k.GetActiveTradingReward(suite.ctx, "catchup-reward")
+	suite.Require().False(found)
 }

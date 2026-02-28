@@ -3,7 +3,7 @@ package bze.tradebin;
 
 import "amino/amino.proto";
 import "gogoproto/gogo.proto";
-import "bze/tradebin/params.proto";
+import "bze/tradebin/v2/params.proto";
 import "bze/tradebin/store.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
@@ -11,7 +11,7 @@ option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
 // GenesisState defines the tradebin module's genesis state.
 message GenesisState {
   // params defines all the parameters of the module.
-  Params params = 1 [
+  bze.tradebin.v2.Params params = 1 [
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
   ];
@@ -43,5 +43,10 @@ message GenesisState {
   repeated UserDust all_users_dust = 8 [
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "all_users_dust,omitempty"
+  ];
+
+  repeated LiquidityPool liquidity_pools = 9 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "liquidity_pools,omitempty"
   ];
 }

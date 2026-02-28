@@ -19,9 +19,10 @@ import (
 
 	"github.com/bze-alphateam/bze/x/tradebin/keeper"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
+	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 )
 
-func TradebinKeeper(t testing.TB, bank types.BankKeeper, acc types.AccountKeeper, distr types.DistrKeeper) (keeper.Keeper, sdk.Context) {
+func TradebinKeeper(t testing.TB, bank types.BankKeeper, acc types.AccountKeeper) (keeper.Keeper, sdk.Context) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	db := dbm.NewMemDB()
@@ -40,13 +41,12 @@ func TradebinKeeper(t testing.TB, bank types.BankKeeper, acc types.AccountKeeper
 		authority.String(),
 		acc,
 		bank,
-		distr,
 	)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
 
 	// Initialize params
-	if err := k.SetParams(ctx, types.DefaultParams()); err != nil {
+	if err := k.SetParams(ctx, v2types.DefaultParams()); err != nil {
 		panic(err)
 	}
 

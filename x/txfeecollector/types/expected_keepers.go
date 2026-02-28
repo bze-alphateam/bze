@@ -10,6 +10,8 @@ type TradeKeeper interface {
 	CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool
 	ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins sdk.Coins) (sdk.Coin, error)
 	IsNativeDenom(ctx sdk.Context, denom string) bool
+	HasDeepLiquidityWithNativeDenom(ctx sdk.Context, denom string) bool
+	GetDenomSpotPriceInNativeCoin(ctx sdk.Context, denom string) (sdk.DecCoin, error)
 }
 
 type AccountKeeper interface {
@@ -29,6 +31,10 @@ type BankKeeper interface {
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	// Methods imported from bank should be defined here
+}
+
+type DistrKeeper interface {
+	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
 // ParamSubspace defines the expected Subspace interface for parameters.

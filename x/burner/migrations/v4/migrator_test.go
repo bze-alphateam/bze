@@ -1,33 +1,19 @@
 package v4_test
 
 import (
-	burner2 "github.com/bze-alphateam/bze/x/burner/module"
 	"testing"
+
+	burner2 "github.com/bze-alphateam/bze/x/burner/module"
 
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/stretchr/testify/require"
 
-	"github.com/bze-alphateam/bze/x/burner/exported"
 	v2 "github.com/bze-alphateam/bze/x/burner/migrations/v4"
 	"github.com/bze-alphateam/bze/x/burner/types"
 )
-
-// mockSubspace implements the exported.Subspace interface for testing
-type mockSubspace struct {
-	ps types.Params
-}
-
-func newMockSubspace(ps types.Params) mockSubspace {
-	return mockSubspace{ps: ps}
-}
-
-func (ms mockSubspace) GetParamSet(ctx sdk.Context, ps exported.ParamSet) {
-	*ps.(*types.Params) = ms.ps
-}
 
 // TestMigrate tests the successful migration of params from legacy subspace to module store
 func TestMigrate(t *testing.T) {
@@ -40,16 +26,13 @@ func TestMigrate(t *testing.T) {
 
 	store := prefix.NewStore(ctx.KVStore(storeKey), []byte{})
 
-	// Create mock subspace with default params
-	legacySubspace := newMockSubspace(types.DefaultParams())
-
-	// Run migration
-	require.NoError(t, v2.Migrate(ctx, store, legacySubspace, cdc))
+	// Run migration (fills params with v4 defaults)
+	require.NoError(t, v2.Migrate(store, cdc))
 
 	// Verify params were stored correctly
 	var res types.Params
 	bz := store.Get(types.ParamsKey)
 	require.NotNil(t, bz, "params should be stored in the new location")
 	require.NoError(t, cdc.Unmarshal(bz, &res))
-	require.Equal(t, legacySubspace.ps, res)
+	require.Equal(t, types.NewParams(4), res)
 }

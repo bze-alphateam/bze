@@ -29,7 +29,6 @@ type (
 		storeService  store.KVStoreService
 		logger        log.Logger
 		bankKeeper    types.BankKeeper
-		distrKeeper   types.DistrKeeper
 		epochKeeper   types.EpochKeeper
 		tradeKeeper   types.TradingKeeper
 		accountKeeper types.AccountKeeper
@@ -46,7 +45,6 @@ func NewKeeper(
 	logger log.Logger,
 	authority string,
 	bankKeeper types.BankKeeper,
-	distrKeeper types.DistrKeeper,
 	epochKeeper types.EpochKeeper,
 	tradeKeeper types.TradingKeeper,
 	accountKeeper types.AccountKeeper,
@@ -61,7 +59,6 @@ func NewKeeper(
 		authority:     authority,
 		logger:        logger,
 		bankKeeper:    bankKeeper,
-		distrKeeper:   distrKeeper,
 		epochKeeper:   epochKeeper,
 		tradeKeeper:   tradeKeeper,
 		accountKeeper: accountKeeper,
@@ -104,8 +101,11 @@ func (k Keeper) getPrefixedStore(ctx sdk.Context, p []byte) prefix.Store {
 	return prefix.NewStore(storeAdapter, p)
 }
 
-func (k Keeper) getNewTradingRewardExpireAt(ctx sdk.Context) uint32 {
-	cnt := uint32(k.epochKeeper.GetEpochCountByIdentifier(ctx, expirationEpoch))
+func (k Keeper) getNewTradingRewardExpireAt(ctx sdk.Context, durationInDays uint32) (uint32, error) {
+	no, err := k.epochKeeper.SafeGetEpochCountByIdentifier(ctx, expirationEpoch)
+	if err != nil {
+		return 0, err
+	}
 
-	return cnt + expirationPeriodInHours
+	return uint32(no) + (durationInDays * 24), nil
 }

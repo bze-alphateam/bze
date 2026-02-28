@@ -15,6 +15,10 @@ var (
 	DefaultCreateRewardFee    sdk.Coin = sdk.NewInt64Coin("ubze", 25_000_000000)
 )
 
+const (
+	DefaultExtraGasForExitStake uint64 = 1_000_000
+)
+
 // ParamKeyTable the param key table for launch module
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
@@ -24,10 +28,12 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams(
 	createStakingRewardFee sdk.Coin,
 	createTradingRewardFee sdk.Coin,
+	extraGasForExitStake uint64,
 ) Params {
 	return Params{
 		CreateStakingRewardFee: createStakingRewardFee,
 		CreateTradingRewardFee: createTradingRewardFee,
+		ExtraGasForExitStake:   extraGasForExitStake,
 	}
 }
 
@@ -36,6 +42,7 @@ func DefaultParams() Params {
 	return NewParams(
 		DefaultCreateRewardFee,
 		DefaultCreateRewardFee,
+		DefaultExtraGasForExitStake,
 	)
 }
 
@@ -54,6 +61,10 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateCreateTradingRewardFee(p.CreateTradingRewardFee); err != nil {
+		return err
+	}
+
+	if err := validateExtraGasForExitStake(p.ExtraGasForExitStake); err != nil {
 		return err
 	}
 
@@ -83,6 +94,16 @@ func validateCreateTradingRewardFee(v interface{}) error {
 
 	if !createTradingRewardFee.IsValid() {
 		return fmt.Errorf("invalid createTradingRewardFee: %s", createTradingRewardFee)
+	}
+
+	return nil
+}
+
+// validateExtraGasForExitStake validates the ExtraGasForExitStake param
+func validateExtraGasForExitStake(v interface{}) error {
+	_, ok := v.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
 	return nil

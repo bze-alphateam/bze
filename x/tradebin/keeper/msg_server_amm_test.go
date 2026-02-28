@@ -1,17 +1,20 @@
+//nolint:staticcheck // tests use legacy sdk helpers and context wrappers
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
+	"strings"
+	"testing"
+
+	"cosmossdk.io/math"
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
+	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"go.uber.org/mock/gomock"
-	"strings"
-	"testing"
 )
 
 func getValidLp() types.LiquidityPool {
@@ -85,7 +88,6 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidAssets(
 		},
 	}
 
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 	for _, c := range tc {
 		suite.T().Run(c.Name, func(t *testing.T) {
 			msg := &types.MsgCreateLiquidityPool{
@@ -99,7 +101,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidAssets(
 					suite.bankMock.EXPECT().HasSupply(gomock.Any(), c.Quote).Return(c.QuoteExists)
 				}
 			}
-			_, err := suite.msgServer.CreateLiquidityPool(goCtx, msg)
+			_, err := suite.msgServer.CreateLiquidityPool(suite.ctx, msg)
 			suite.Require().NotNil(err)
 			suite.Require().ErrorIs(err, c.ExpectedError)
 		})
@@ -115,12 +117,11 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_PoolAlreadyExi
 	suite.k.SetLiquidityPool(suite.ctx, types.LiquidityPool{
 		Id: "abc_def",
 	})
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), "def").Return(true).Times(1)
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), "abc").Return(true).Times(1)
 
-	_, err := suite.msgServer.CreateLiquidityPool(goCtx, msg)
+	_, err := suite.msgServer.CreateLiquidityPool(suite.ctx, msg)
 	suite.Require().NotNil(err)
 	suite.Require().ErrorIs(err, types.ErrMarketAlreadyExists)
 }
@@ -158,7 +159,6 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidFee() {
 		},
 	}
 
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 	for _, c := range tc {
 		suite.T().Run(c.Name, func(t *testing.T) {
 			msg := &types.MsgCreateLiquidityPool{
@@ -170,7 +170,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidFee() {
 			suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Base).Return(true).Times(1)
 			suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Quote).Return(true).Times(1)
 
-			_, err := suite.msgServer.CreateLiquidityPool(goCtx, msg)
+			_, err := suite.msgServer.CreateLiquidityPool(suite.ctx, msg)
 			suite.Require().NotNil(err)
 			suite.Require().ErrorIs(err, c.ExpectedError)
 		})
@@ -240,7 +240,6 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidFeeDest
 		},
 	}
 
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 	for _, c := range tc {
 		suite.T().Run(c.Name, func(t *testing.T) {
 			msg := &types.MsgCreateLiquidityPool{
@@ -253,7 +252,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidFeeDest
 			suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Base).Return(true).Times(1)
 			suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Quote).Return(true).Times(1)
 
-			_, err := suite.msgServer.CreateLiquidityPool(goCtx, msg)
+			_, err := suite.msgServer.CreateLiquidityPool(suite.ctx, msg)
 			suite.Require().NotNil(err)
 			suite.Require().ErrorIs(err, c.ExpectedError)
 		})
@@ -278,7 +277,6 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidReserve
 		},
 	}
 
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 	for _, c := range tc {
 		suite.T().Run(c.Name, func(t *testing.T) {
 			msg := &types.MsgCreateLiquidityPool{
@@ -293,7 +291,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidReserve
 			suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Base).Return(true).Times(1)
 			suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Quote).Return(true).Times(1)
 
-			_, err := suite.msgServer.CreateLiquidityPool(goCtx, msg)
+			_, err := suite.msgServer.CreateLiquidityPool(suite.ctx, msg)
 			suite.Require().NotNil(err)
 		})
 	}
@@ -301,7 +299,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_InvalidReserve
 
 func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_StableNotSupported() {
 	//TODO: improve test when stable swap implemented (TODO: implement stable swap)
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+
 	msg := &types.MsgCreateLiquidityPool{
 		Base:         "abc",
 		Quote:        "def",
@@ -315,13 +313,13 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_StableNotSuppo
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Base).Return(true).Times(1)
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Quote).Return(true).Times(1)
 
-	_, err := suite.msgServer.CreateLiquidityPool(goCtx, msg)
+	_, err := suite.msgServer.CreateLiquidityPool(suite.ctx, msg)
 	suite.Require().NotNil(err)
 	suite.Require().ErrorIs(err, sdkerrors.ErrNotSupported)
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_FundCommunityPoolErr() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+
 	msg := &types.MsgCreateLiquidityPool{
 		Base:         "abc",
 		Quote:        "def",
@@ -332,19 +330,19 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_FundCommunityP
 		InitialQuote: math.NewInt(345),
 	}
 
-	createMarketFeeCoin, err := sdk.ParseCoinsNormalized(suite.k.CreateMarketFee(suite.ctx))
-	suite.Require().NoError(err)
+	createMarketFeeCoin := sdk.NewCoins(suite.k.CreateMarketFee(suite.ctx))
 
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Base).Return(true).Times(1)
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Quote).Return(true).Times(1)
-	suite.distrMock.EXPECT().FundCommunityPool(gomock.Any(), createMarketFeeCoin, getTestAccount()).Return(fmt.Errorf("test error")).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), getTestAccount(), types.ModuleName, createMarketFeeCoin).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), createMarketFeeCoin).Return(fmt.Errorf("test error")).Times(1)
 
-	_, err = suite.msgServer.CreateLiquidityPool(goCtx, msg)
+	_, err := suite.msgServer.CreateLiquidityPool(suite.ctx, msg)
 	suite.Require().NotNil(err)
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_Success() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+
 	msg := &types.MsgCreateLiquidityPool{
 		Base:         "abc",
 		Quote:        "def",
@@ -370,12 +368,12 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_Success() {
 		Display: "lp_abc_def",
 	}
 
-	createMarketFeeCoin, err := sdk.ParseCoinsNormalized(suite.k.CreateMarketFee(suite.ctx))
-	suite.Require().NoError(err)
+	createMarketFeeCoin := sdk.NewCoins(suite.k.CreateMarketFee(suite.ctx))
 
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Base).Return(true).Times(1)
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), msg.Quote).Return(true).Times(1)
-	suite.distrMock.EXPECT().FundCommunityPool(gomock.Any(), createMarketFeeCoin, getTestAccount()).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), getTestAccount(), types.ModuleName, createMarketFeeCoin).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), createMarketFeeCoin).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(suite.ctx, getTestAccount(), types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("abc", 123), sdk.NewInt64Coin("def", 345)))
 	suite.bankMock.EXPECT().SetDenomMetaData(suite.ctx, denomMetaData)
 	//205997572,801234723674372 - resulted shared from (sqrt(123 * 345)) * 1_000_000
@@ -383,7 +381,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_Success() {
 	suite.bankMock.EXPECT().MintCoins(suite.ctx, types.ModuleName, lpTokens)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, "burner_black_hole", lpTokens).Return(nil).Times(1)
 
-	res, err := suite.msgServer.CreateLiquidityPool(goCtx, msg)
+	res, err := suite.msgServer.CreateLiquidityPool(suite.ctx, msg)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 	suite.Require().NotEmpty(res.GetId())
@@ -398,19 +396,18 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_Success() {
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_InvalidCreator() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	msg := &types.MsgAddLiquidity{
 		Creator: "",
 	}
 
-	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
+	_, err := suite.msgServer.AddLiquidity(suite.ctx, msg)
 	suite.Require().Error(err)
-	suite.Require().Contains(err.Error(), fmt.Sprintf("unauthorized"))
+	suite.Require().Contains(err.Error(), "invalid address")
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_PoolNotFound() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+
 	testLp := getValidLp()
 	suite.k.SetLiquidityPool(suite.ctx, testLp)
 
@@ -419,13 +416,13 @@ func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_PoolNotFound() {
 		PoolId:  "pool_1",
 	}
 
-	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
+	_, err := suite.msgServer.AddLiquidity(suite.ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "pool pool_1 not found")
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_InvalidCoins() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+
 	testLp := getValidLp()
 	suite.k.SetLiquidityPool(suite.ctx, testLp)
 
@@ -434,13 +431,13 @@ func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_InvalidCoins() {
 		PoolId:  testLp.Id,
 	}
 
-	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
+	_, err := suite.msgServer.AddLiquidity(suite.ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "failed to calculate provided amounts")
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_CoinCaptureFailure() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+
 	testLp := getValidLp()
 	testAcc := getTestAccount()
 	suite.k.SetLiquidityPool(suite.ctx, testLp)
@@ -455,13 +452,13 @@ func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_CoinCaptureFailure() 
 
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), testAcc, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ubze", 100), sdk.NewInt64Coin("uusdc", 200))).Times(1).Return(fmt.Errorf("invalid balance test"))
 
-	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
+	_, err := suite.msgServer.AddLiquidity(suite.ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "invalid balance test")
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_MissingLpTokenSupply() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+
 	testLp := getValidLp()
 	testAcc := getTestAccount()
 	suite.k.SetLiquidityPool(suite.ctx, testLp)
@@ -477,13 +474,13 @@ func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_MissingLpTokenSupply(
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), testAcc, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ubze", 100), sdk.NewInt64Coin("uusdc", 200))).Times(1).Return(nil)
 	suite.bankMock.EXPECT().GetSupply(suite.ctx, testLp.GetLpDenom()).Times(1).Return(sdk.NewCoin(testLp.GetLpDenom(), math.ZeroInt()))
 
-	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
+	_, err := suite.msgServer.AddLiquidity(suite.ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "could not find supply for pool")
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_LpMintError() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+
 	testLp := getValidLp()
 	testAcc := getTestAccount()
 	suite.k.SetLiquidityPool(suite.ctx, testLp)
@@ -501,13 +498,13 @@ func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_LpMintError() {
 
 	suite.bankMock.EXPECT().MintCoins(suite.ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(testLp.GetLpDenom(), math.NewIntFromUint64(10)))).Return(fmt.Errorf("lp minting error"))
 
-	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
+	_, err := suite.msgServer.AddLiquidity(suite.ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "lp minting error")
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_MinLpTokensNotMet() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+
 	testLp := getValidLp()
 	testAcc := getTestAccount()
 	suite.k.SetLiquidityPool(suite.ctx, testLp)
@@ -524,13 +521,13 @@ func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_MinLpTokensNotMet() {
 	suite.bankMock.EXPECT().GetSupply(suite.ctx, testLp.GetLpDenom()).Times(1).Return(sdk.NewCoin(testLp.GetLpDenom(), math.NewIntFromUint64(100)))
 	suite.bankMock.EXPECT().MintCoins(suite.ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(testLp.GetLpDenom(), math.NewIntFromUint64(10)))).Return(nil)
 
-	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
+	_, err := suite.msgServer.AddLiquidity(suite.ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "could not mint the minimum expected lp tokens")
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_ErrorOnSendingLpTokens() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+
 	testLp := getValidLp()
 	testAcc := getTestAccount()
 	suite.k.SetLiquidityPool(suite.ctx, testLp)
@@ -551,13 +548,12 @@ func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_ErrorOnSendingLpToken
 
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, testAcc, minted).Times(1).Return(fmt.Errorf("error on sending lp tokens test"))
 
-	_, err := suite.msgServer.AddLiquidity(goCtx, msg)
+	_, err := suite.msgServer.AddLiquidity(suite.ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "error on sending lp tokens test")
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_Success() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
 
 	testCases := []struct {
 		name         string
@@ -771,10 +767,9 @@ func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_Success() {
 			// Capture the event that should be emitted
 			eventManager := sdk.NewEventManager()
 			ctx := suite.ctx.WithEventManager(eventManager)
-			goCtx = sdk.WrapSDKContext(ctx)
 
 			// Execute the handler
-			resp, err := suite.msgServer.AddLiquidity(goCtx, msg)
+			resp, err := suite.msgServer.AddLiquidity(ctx, msg)
 
 			// Verify no errors and correct response
 			suite.Require().NoError(err)
@@ -815,7 +810,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_Success() {
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_RemoveLiquidity_Errors() {
-	goCtx := sdk.WrapSDKContext(suite.ctx)
+
 	testLp := types.LiquidityPool{
 		Id:           "ubze_uusdc",
 		Base:         "ubze",
@@ -846,8 +841,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_RemoveLiquidity_Errors() {
 				MinBase:  math.NewInt(10),
 				MinQuote: math.NewInt(20),
 			},
-			expectedError: "unauthorized",
-			errorType:     sdkerrors.ErrUnauthorized,
+			expectedError: "invalid address",
+			errorType:     sdkerrors.ErrInvalidAddress,
 			setupMock:     func() {},
 		},
 		{
@@ -1084,7 +1079,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_RemoveLiquidity_Errors() {
 			tc.setupMock()
 
 			// Execute the handler
-			_, err := suite.msgServer.RemoveLiquidity(goCtx, tc.msg)
+			_, err := suite.msgServer.RemoveLiquidity(suite.ctx, tc.msg)
 
 			// Verify error
 			suite.Require().Error(err)
@@ -1270,10 +1265,9 @@ func (suite *IntegrationTestSuite) TestMsgAmm_RemoveLiquidity_Success() {
 			// Capture events
 			eventManager := sdk.NewEventManager()
 			ctx := suite.ctx.WithEventManager(eventManager)
-			wrappedCtx := sdk.WrapSDKContext(ctx)
 
 			// Execute the handler
-			resp, err := suite.msgServer.RemoveLiquidity(wrappedCtx, msg)
+			resp, err := suite.msgServer.RemoveLiquidity(ctx, msg)
 
 			// Verify success
 			suite.Require().NoError(err)
@@ -1367,14 +1361,17 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SinglePool_Success() {
 		).
 		Return(nil)
 
-	expectedFee, _ := sdk.ParseCoinsNormalized(types.DefaultMarketTakerFee)
+	expectedFee := sdk.NewCoins(v2types.DefaultMarketTakerFee)
 	suite.bankMock.EXPECT().
 		SendCoinsFromAccountToModule(
 			suite.ctx,
 			creator,
-			types.FeeDestinationBurnerModule,
+			types.ModuleName,
 			expectedFee,
 		).
+		Return(nil)
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, gomock.Any(), expectedFee).
 		Return(nil)
 	// Since the fee is so small, treasury and burner parts round to 0
 	// But verify that any fee would be handled correctly
@@ -1388,12 +1385,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SinglePool_Success() {
 		Return(nil).
 		AnyTimes()
 
-	suite.distrMock.EXPECT().
-		FundCommunityPool(
-			gomock.Any(),
-			gomock.Any(),
-			gomock.Any(),
-		).
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).
 		Return(nil).
 		AnyTimes()
 
@@ -1415,8 +1408,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SinglePool_Success() {
 		Return(nil)
 
 	// Execute swap
-	ctx := sdk.WrapSDKContext(suite.ctx)
-	resp, err := suite.msgServer.MultiSwap(ctx, &msg)
+	resp, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
 
 	// Verify no errors
 	suite.Require().NoError(err)
@@ -1506,14 +1498,17 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_MultiPool_Success() {
 		Times(1).
 		Return(nil)
 
-	expectedFee, _ := sdk.ParseCoinsNormalized(types.DefaultMarketTakerFee)
+	expectedFee := sdk.NewCoins(v2types.DefaultMarketTakerFee)
 	suite.bankMock.EXPECT().
 		SendCoinsFromAccountToModule(
 			suite.ctx,
 			creator,
-			types.FeeDestinationBurnerModule,
+			types.ModuleName,
 			expectedFee,
 		).
+		Return(nil)
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, gomock.Any(), expectedFee).
 		Return(nil)
 	// Mock fee handling
 	suite.bankMock.EXPECT().
@@ -1526,12 +1521,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_MultiPool_Success() {
 		Return(nil).
 		Times(2)
 
-	suite.distrMock.EXPECT().
-		FundCommunityPool(
-			gomock.Any(),
-			gomock.Any(),
-			moduleAcc.GetAddress(),
-		).
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).
 		Return(nil).
 		Times(2)
 
@@ -1556,8 +1547,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_MultiPool_Success() {
 		Return(nil)
 
 	// Execute swap
-	ctx := sdk.WrapSDKContext(suite.ctx)
-	resp, err := suite.msgServer.MultiSwap(ctx, &msg)
+	resp, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
 
 	// Verify no errors
 	suite.Require().NoError(err)
@@ -1592,12 +1582,11 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_InvalidCreator() {
 	}
 
 	// Execute swap
-	ctx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.MultiSwap(ctx, &msg)
+	_, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
 
 	// Verify error
 	suite.Require().Error(err)
-	suite.Require().Contains(err.Error(), "unauthorized")
+	suite.Require().Contains(err.Error(), "invalid address")
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_PoolNotFound() {
@@ -1613,8 +1602,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_PoolNotFound() {
 	}
 
 	// Execute swap
-	ctx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.MultiSwap(ctx, &msg)
+	_, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
 
 	// Verify error
 	suite.Require().Error(err)
@@ -1661,8 +1649,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_InsufficientFunds() {
 		Return(fmt.Errorf("insufficient funds"))
 
 	// Execute swap
-	ctx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.MultiSwap(ctx, &msg)
+
+	_, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
 
 	// Verify error
 	suite.Require().Error(err)
@@ -1709,8 +1697,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_DenomNotInPool() {
 		Return(nil)
 
 	// Execute swap
-	ctx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.MultiSwap(ctx, &msg)
+
+	_, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
 
 	// Verify error
 	suite.Require().Error(err)
@@ -1771,12 +1759,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_OutputTooLow() {
 		Return(nil).
 		AnyTimes()
 
-	suite.distrMock.EXPECT().
-		FundCommunityPool(
-			gomock.Any(),
-			gomock.Any(),
-			gomock.Any(),
-		).
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).
 		Return(nil).
 		AnyTimes()
 
@@ -1786,8 +1770,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_OutputTooLow() {
 		AnyTimes()
 
 	// Execute swap
-	ctx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.MultiSwap(ctx, &msg)
+
+	_, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
 
 	// Verify error
 	suite.Require().Error(err)
@@ -1848,12 +1832,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_OutputDenomMismatch() {
 		Return(nil).
 		AnyTimes()
 
-	suite.distrMock.EXPECT().
-		FundCommunityPool(
-			gomock.Any(),
-			gomock.Any(),
-			gomock.Any(),
-		).
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).
 		Return(nil).
 		AnyTimes()
 
@@ -1863,8 +1843,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_OutputDenomMismatch() {
 		AnyTimes()
 
 	// Execute swap
-	ctx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.MultiSwap(ctx, &msg)
+
+	_, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
 
 	// Verify error
 	suite.Require().Error(err)
@@ -1932,19 +1912,22 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_ZeroFeeDest() {
 			sdk.NewCoins(expectedOutput),
 		).
 		Return(nil)
-	expectedFee, _ := sdk.ParseCoinsNormalized(types.DefaultMarketTakerFee)
+	expectedFee := sdk.NewCoins(v2types.DefaultMarketTakerFee)
 	suite.bankMock.EXPECT().
 		SendCoinsFromAccountToModule(
 			suite.ctx,
 			creator,
-			types.FeeDestinationBurnerModule,
+			types.ModuleName,
 			expectedFee,
 		).
 		Return(nil)
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, gomock.Any(), expectedFee).
+		Return(nil)
 
 	// Execute swap
-	ctx := sdk.WrapSDKContext(suite.ctx)
-	resp, err := suite.msgServer.MultiSwap(ctx, &msg)
+
+	resp, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
 
 	// Verify no errors
 	suite.Require().NoError(err)
@@ -2023,14 +2006,17 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_FeeDistribution() {
 		).
 		Return(nil)
 
-	expectedFee, _ := sdk.ParseCoinsNormalized(types.DefaultMarketTakerFee)
+	expectedFee := sdk.NewCoins(v2types.DefaultMarketTakerFee)
 	suite.bankMock.EXPECT().
 		SendCoinsFromAccountToModule(
 			suite.ctx,
 			creator,
-			types.FeeDestinationBurnerModule,
+			types.ModuleName,
 			expectedFee,
 		).
+		Return(nil)
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, gomock.Any(), expectedFee).
 		Return(nil)
 
 	// Mock getting module account
@@ -2040,12 +2026,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_FeeDistribution() {
 
 	// Mock treasury fee - expect 90 ubze
 	treasuryFee := sdk.NewCoin(denomBze, math.NewInt(90))
-	suite.distrMock.EXPECT().
-		FundCommunityPool(
-			suite.ctx,
-			sdk.NewCoins(treasuryFee),
-			gomock.Any(),
-		).
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, gomock.Any(), sdk.NewCoins(treasuryFee)).
 		Return(nil)
 
 	// Mock burner fee - expect 90 ubze
@@ -2074,8 +2056,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_FeeDistribution() {
 		Return(nil)
 
 	// Execute swap
-	ctx := sdk.WrapSDKContext(suite.ctx)
-	resp, err := suite.msgServer.MultiSwap(ctx, &msg)
+
+	resp, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
 
 	// Verify no errors
 	suite.Require().NoError(err)
@@ -2142,8 +2124,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SmallFeeAmount() {
 		Return(nil)
 
 	// Execute swap - should fail due to amount being too low
-	ctx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.MultiSwap(ctx, &msg)
+
+	_, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
 
 	// Verify error occurred
 	suite.Require().Error(err)
@@ -2200,17 +2182,13 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_TreasuryFeeError() {
 
 	// Mock treasury fee failing
 	treasuryFee := sdk.NewCoin(denomBze, math.NewInt(30)) // 10000 * 0.003 = 30
-	suite.distrMock.EXPECT().
-		FundCommunityPool(
-			suite.ctx,
-			sdk.NewCoins(treasuryFee),
-			gomock.Any(),
-		).
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, gomock.Any(), sdk.NewCoins(treasuryFee)).
 		Return(fmt.Errorf("treasury fee transfer failed"))
 
 	// Execute swap
-	ctx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.MultiSwap(ctx, &msg)
+
+	_, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
 
 	// Verify error
 	suite.Require().Error(err)
@@ -2273,8 +2251,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_BurnerFeeError() {
 		Return(fmt.Errorf("burner fee transfer failed"))
 
 	// Execute swap
-	ctx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.MultiSwap(ctx, &msg)
+
+	_, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
 
 	// Verify error
 	suite.Require().Error(err)
@@ -2295,8 +2273,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_EmptyRoutes() {
 	}
 
 	// Execute swap
-	ctx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.MultiSwap(ctx, &msg)
+
+	_, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
 
 	// Verify error
 	suite.Require().Error(err)
@@ -2330,8 +2308,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_InvalidCoins() {
 	}
 
 	// Execute swap
-	ctx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.MultiSwap(ctx, &msg)
+
+	_, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
 
 	// Verify error
 	suite.Require().Error(err)
@@ -2346,7 +2324,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_InvalidCoins() {
 	}
 
 	// Execute swap
-	_, err = suite.msgServer.MultiSwap(ctx, &msg)
+	_, err = suite.msgServer.MultiSwap(suite.ctx, &msg)
 
 	// Verify error
 	suite.Require().Error(err)
@@ -2406,12 +2384,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SendOutputError() {
 		AnyTimes()
 
 	// Mock fee collection operations - simplified for this test
-	suite.distrMock.EXPECT().
-		FundCommunityPool(
-			gomock.Any(),
-			gomock.Any(),
-			gomock.Any(),
-		).
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).
 		Return(nil).
 		AnyTimes()
 
@@ -2436,8 +2410,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_SendOutputError() {
 		Return(fmt.Errorf("output transfer failed"))
 
 	// Execute swap
-	ctx := sdk.WrapSDKContext(suite.ctx)
-	_, err := suite.msgServer.MultiSwap(ctx, &msg)
+	_, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
 
 	// Verify error
 	suite.Require().Error(err)

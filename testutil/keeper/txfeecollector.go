@@ -41,6 +41,46 @@ func TxfeecollectorKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 		nil,
 		nil,
 		nil,
+		nil,
+	)
+
+	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
+
+	// Initialize params
+	if err := k.SetParams(ctx, types.DefaultParams()); err != nil {
+		panic(err)
+	}
+
+	return k, ctx
+}
+
+func TxfeecollectorKeeperWithMocks(
+	t testing.TB,
+	bankKeeper types.BankKeeper,
+	accountKeeper types.AccountKeeper,
+	tradeKeeper types.TradeKeeper,
+	distrKeeper types.DistrKeeper,
+) (keeper.Keeper, sdk.Context) {
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
+
+	db := dbm.NewMemDB()
+	stateStore := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+	require.NoError(t, stateStore.LoadLatestVersion())
+
+	registry := codectypes.NewInterfaceRegistry()
+	cdc := codec.NewProtoCodec(registry)
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+
+	k := keeper.NewKeeper(
+		cdc,
+		runtime.NewKVStoreService(storeKey),
+		log.NewNopLogger(),
+		authority.String(),
+		bankKeeper,
+		accountKeeper,
+		tradeKeeper,
+		distrKeeper,
 	)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())

@@ -25,7 +25,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	for _, article := range genState.ArticleList {
-		k.SetArticle(ctx, article)
+		k.SetArticle(ctx, &article)
 	}
 }
 

@@ -99,3 +99,20 @@ func (k Keeper) GetEpochCountByIdentifier(ctx sdk.Context, identifier string) in
 
 	return e.CurrentEpoch
 }
+
+func (k Keeper) SafeGetEpochCountByIdentifier(ctx sdk.Context, identifier string) (int64, error) {
+	e := k.GetEpochInfo(ctx, identifier)
+	if e.Identifier == "" {
+		return 0, fmt.Errorf("epoch %s not found", identifier)
+	}
+	if !e.EpochCountingStarted {
+		return 0, nil
+	}
+
+	epochEndTime := e.CurrentEpochStartTime.Add(e.Duration)
+	if ctx.BlockTime().After(epochEndTime) {
+		return 0, fmt.Errorf("epoch %s is catching up", identifier)
+	}
+
+	return e.CurrentEpoch, nil
+}

@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	v800 "github.com/bze-alphateam/bze/app/upgrades/v800"
+	v810 "github.com/bze-alphateam/bze/app/upgrades/v810"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -51,8 +51,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import for side-effects
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
-	_ "github.com/cosmos/cosmos-sdk/x/crisis" // import for side-effects
-	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution" // import for side-effects
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
@@ -99,7 +97,6 @@ import (
 const (
 	AccountAddressPrefix = "bze"
 	Name                 = "bze"
-	MainDenom            = "ubze"
 )
 
 var (
@@ -132,7 +129,6 @@ type App struct {
 	SlashingKeeper       slashingkeeper.Keeper
 	MintKeeper           mintkeeper.Keeper
 	GovKeeper            *govkeeper.Keeper
-	CrisisKeeper         *crisiskeeper.Keeper
 	UpgradeKeeper        *upgradekeeper.Keeper
 	ParamsKeeper         paramskeeper.Keeper
 	AuthzKeeper          authzkeeper.Keeper
@@ -161,9 +157,9 @@ type App struct {
 	EpochKeeper          *epochmodulekeeper.Keeper
 	CointrunkKeeper      cointrunkmodulekeeper.Keeper
 	TokenfactoryKeeper   tokenfactorymodulekeeper.Keeper
-	RewardsKeeper        rewardsmodulekeeper.Keeper
+	RewardsKeeper        *rewardsmodulekeeper.Keeper
 	TradebinKeeper       *tradebinmodulekeeper.Keeper
-	TxfeecollectorKeeper txfeecollectormodulekeeper.Keeper
+	TxfeecollectorKeeper *txfeecollectormodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
@@ -258,7 +254,6 @@ func New(
 		&app.SlashingKeeper,
 		&app.MintKeeper,
 		&app.GovKeeper,
-		&app.CrisisKeeper,
 		&app.UpgradeKeeper,
 		&app.ParamsKeeper,
 		&app.AuthzKeeper,
@@ -296,9 +291,6 @@ func New(
 		return nil, err
 	}
 
-	/****  Module Options ****/
-	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
-
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
@@ -318,8 +310,9 @@ func New(
 	}
 
 	customAnte := AnteHandlerOptions{
-		TradeKeeper: app.TradebinKeeper,
-		BankKeeper:  app.BankKeeper,
+		TradeKeeper:       app.TradebinKeeper,
+		BankKeeper:        app.BankKeeper,
+		TxCollectorKeeper: app.TxfeecollectorKeeper,
 	}
 
 	anteHandler, err := NewAnteHandler(anteOptions, customAnte)
@@ -348,16 +341,11 @@ func New(
 
 func (app *App) setupUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v800.UpgradeName,
-		v800.CreateUpgradeHandler(
+		v810.UpgradeName,
+		v810.CreateUpgradeHandler(
 			app.Configurator(),
 			app.ModuleManager,
-			app.BankKeeper,
-			app.DistrKeeper,
-			app.AccountKeeper,
-			MainDenom,
-			&app.ParamsKeeper,
-			&app.ConsensusParamsKeeper,
+			app.TradebinKeeper,
 		),
 	)
 
@@ -366,8 +354,8 @@ func (app *App) setupUpgradeHandlers() {
 		panic(err)
 	}
 
-	if upgradeInfo.Name == v800.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := v800.GetStoreUpgrades()
+	if upgradeInfo.Name == v810.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := v810.GetStoreUpgrades()
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
 	}
 }
@@ -488,7 +476,6 @@ func (app *App) setEpochsHooks() {
 			app.RewardsKeeper.GetTradingRewardsDistributionHook(),
 			app.BurnerKeeper.GetBurnerRaffleCleanupHook(),
 			app.BurnerKeeper.GetBurnerPeriodicBurnHook(),
-			app.TxfeecollectorKeeper.GetTxFeeConverterHook(),
 		},
 	)
 }

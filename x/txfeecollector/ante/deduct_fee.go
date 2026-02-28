@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/bze-alphateam/bze/x/txfeecollector/keeper"
 	"github.com/bze-alphateam/bze/x/txfeecollector/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	errorsmod "cosmossdk.io/errors"
@@ -19,24 +19,20 @@ import (
 // Call next AnteHandler if fees successfully deducted.
 // CONTRACT: Tx must implement FeeTx interface to use DeductFeeDecorator
 type DeductFeeDecorator struct {
-	accountKeeper  types.AccountKeeper
-	bankKeeper     types.BankKeeper
-	feegrantKeeper types.FeegrantKeeper
-	txFeeChecker   ante.TxFeeChecker
-	tradeKeeper    types.TradeKeeper
+	accountKeeper     types.AccountKeeper
+	bankKeeper        types.BankKeeper
+	feegrantKeeper    types.FeegrantKeeper
+	tradeKeeper       types.TradeKeeper
+	txCollectorKeeper *keeper.Keeper
 }
 
-func NewDeductFeeDecorator(tk types.TradeKeeper, ak types.AccountKeeper, bk types.BankKeeper, fk types.FeegrantKeeper, tfc ante.TxFeeChecker) DeductFeeDecorator {
-	if tfc == nil {
-		tfc = checkTxFeeWithValidatorMinGasPrices
-	}
-
+func NewDeductFeeDecorator(tk types.TradeKeeper, ak types.AccountKeeper, bk types.BankKeeper, fk types.FeegrantKeeper, txCollectorKeeper *keeper.Keeper) DeductFeeDecorator {
 	return DeductFeeDecorator{
-		tradeKeeper:    tk,
-		accountKeeper:  ak,
-		bankKeeper:     bk,
-		feegrantKeeper: fk,
-		txFeeChecker:   tfc,
+		tradeKeeper:       tk,
+		accountKeeper:     ak,
+		bankKeeper:        bk,
+		feegrantKeeper:    fk,
+		txCollectorKeeper: txCollectorKeeper,
 	}
 }
 
@@ -57,7 +53,7 @@ func (dfd DeductFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bo
 
 	fee := feeTx.GetFee()
 	if !simulate {
-		fee, priority, err = dfd.txFeeChecker(ctx, tx)
+		fee, priority, err = dfd.checkTxFeeWithValidatorMinGasPrices(ctx, tx)
 		if err != nil {
 			return ctx, err
 		}
@@ -146,14 +142,14 @@ func (dfd DeductFeeDecorator) DeductFees(bankKeeper types.BankKeeper, ctx sdk.Co
 	if len(nativeFees) > 0 {
 		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authtypes.FeeCollectorName, nativeFees)
 		if err != nil {
-			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			return errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	}
 
 	if len(nonNativeFees) > 0 {
 		err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.ModuleName, nonNativeFees)
 		if err != nil {
-			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
+			return errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	}
 

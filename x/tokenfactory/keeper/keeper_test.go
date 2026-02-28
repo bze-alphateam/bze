@@ -19,7 +19,7 @@ type IntegrationTestSuite struct {
 	k         *keeper.Keeper
 	msgServer types.MsgServer
 	bank      *testutil.MockBankKeeper
-	distr     *testutil.MockDistrKeeper
+	trade     *testutil.MockTradingKeeper
 	acc       *testutil.MockAccountKeeper
 }
 
@@ -30,16 +30,16 @@ func (suite *IntegrationTestSuite) SetupTest() {
 
 	mockBank := testutil.NewMockBankKeeper(mockCtrl)
 	require.NotNil(t, mockBank)
-	mockDistr := testutil.NewMockDistrKeeper(mockCtrl)
-	require.NotNil(t, mockDistr)
+	mockTrade := testutil.NewMockTradingKeeper(mockCtrl)
+	require.NotNil(t, mockTrade)
 	mockAcc := testutil.NewMockAccountKeeper(mockCtrl)
 	require.NotNil(t, mockAcc)
 
-	k, ctx := keeper2.TokenfactoryKeeper(t, mockBank, mockDistr, mockAcc)
+	k, ctx := keeper2.TokenfactoryKeeper(t, mockBank, mockAcc, mockTrade)
 	suite.ctx = ctx
 	suite.k = &k
 	suite.bank = mockBank
-	suite.distr = mockDistr
+	suite.trade = mockTrade
 	suite.acc = mockAcc
 	suite.msgServer = keeper.NewMsgServerImpl(k)
 }

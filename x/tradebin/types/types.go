@@ -5,10 +5,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const (
-	FillOrdersExtraGas = 5000
-)
-
 type MsgCreator interface {
 	GetCreatorAcc() sdk.AccAddress
 }

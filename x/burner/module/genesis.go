@@ -35,6 +35,14 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	k.SetParticipantCounter(ctx, genState.RaffleParticipantCounter)
+
+	if genState.PeriodicBurnQueue != nil {
+		k.SetPeriodicBurnQueue(ctx, *genState.PeriodicBurnQueue)
+	}
+
+	if genState.RaffleCleanupQueue != nil {
+		k.SetRaffleCleanupQueue(ctx, *genState.RaffleCleanupQueue)
+	}
 }
 
 // ExportGenesis returns the module's exported genesis.
@@ -53,6 +61,16 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.RaffleWinnersList = winnersList
 	genesis.RaffleParticipantsList = k.GetAllRaffleParticipants(ctx)
 	genesis.RaffleParticipantCounter = k.GetParticipantCounter(ctx)
+
+	queue, found := k.GetPeriodicBurnQueue(ctx)
+	if found {
+		genesis.PeriodicBurnQueue = &queue
+	}
+
+	rcq, found := k.GetRaffleCleanupQueue(ctx)
+	if found {
+		genesis.RaffleCleanupQueue = &rcq
+	}
 
 	// this line is used by starport scaffolding # genesis/module/export
 

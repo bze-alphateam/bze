@@ -17,7 +17,7 @@ func (suite *IntegrationTestSuite) TestSetArticle_WithId() {
 	}
 
 	// Test SetArticle
-	suite.k.SetArticle(suite.ctx, article)
+	suite.k.SetArticle(suite.ctx, &article)
 
 	// Verify article was stored
 	allArticles := suite.k.GetAllArticles(suite.ctx)
@@ -46,7 +46,10 @@ func (suite *IntegrationTestSuite) TestSetArticle_AutoIncrementId() {
 	}
 
 	// Test SetArticle
-	suite.k.SetArticle(suite.ctx, article)
+	suite.k.SetArticle(suite.ctx, &article)
+
+	// Verify the caller's copy was updated with the auto-incremented ID
+	suite.Require().Equal(uint64(1), article.Id)
 
 	// Verify article was stored with auto-incremented ID
 	allArticles := suite.k.GetAllArticles(suite.ctx)
@@ -93,7 +96,7 @@ func (suite *IntegrationTestSuite) TestSetArticle_MultipleAutoIncrement() {
 
 	// Set all articles
 	for _, article := range articles {
-		suite.k.SetArticle(suite.ctx, article)
+		suite.k.SetArticle(suite.ctx, &article)
 	}
 
 	// Verify all articles were stored with incrementing IDs
@@ -129,7 +132,7 @@ func (suite *IntegrationTestSuite) TestSetArticle_PaidArticleCounter() {
 		CreatedAt: 1234567890,
 	}
 
-	suite.k.SetArticle(suite.ctx, paidArticle)
+	suite.k.SetArticle(suite.ctx, &paidArticle)
 
 	// Verify counter incremented
 	counterAfterPaid := suite.k.GetMonthlyPaidArticleCounter(suite.ctx)
@@ -145,7 +148,7 @@ func (suite *IntegrationTestSuite) TestSetArticle_PaidArticleCounter() {
 		CreatedAt: 1234567891,
 	}
 
-	suite.k.SetArticle(suite.ctx, unpaidArticle)
+	suite.k.SetArticle(suite.ctx, &unpaidArticle)
 
 	// Verify counter didn't increment for unpaid article
 	counterAfterUnpaid := suite.k.GetMonthlyPaidArticleCounter(suite.ctx)
@@ -161,7 +164,7 @@ func (suite *IntegrationTestSuite) TestSetArticle_PaidArticleCounter() {
 		CreatedAt: 1234567892,
 	}
 
-	suite.k.SetArticle(suite.ctx, anotherPaidArticle)
+	suite.k.SetArticle(suite.ctx, &anotherPaidArticle)
 
 	// Verify counter incremented again
 	finalCounter := suite.k.GetMonthlyPaidArticleCounter(suite.ctx)
@@ -188,7 +191,7 @@ func (suite *IntegrationTestSuite) TestGetArticleCounter() {
 		CreatedAt: 1234567890,
 	}
 
-	suite.k.SetArticle(suite.ctx, article)
+	suite.k.SetArticle(suite.ctx, &article)
 
 	// Verify counter incremented
 	counter := suite.k.GetArticleCounter(suite.ctx)
@@ -212,7 +215,7 @@ func (suite *IntegrationTestSuite) TestSetArticleCounter() {
 		CreatedAt: 1234567890,
 	}
 
-	suite.k.SetArticle(suite.ctx, article)
+	suite.k.SetArticle(suite.ctx, &article)
 
 	// Verify article got ID 101 (next after 100)
 	allArticles := suite.k.GetAllArticles(suite.ctx)
@@ -236,7 +239,7 @@ func (suite *IntegrationTestSuite) TestSetArticle_EmptyFields() {
 		CreatedAt: 0,
 	}
 
-	suite.k.SetArticle(suite.ctx, article)
+	suite.k.SetArticle(suite.ctx, &article)
 
 	// Verify it was stored correctly
 	allArticles := suite.k.GetAllArticles(suite.ctx)

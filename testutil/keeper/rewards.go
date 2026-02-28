@@ -21,7 +21,7 @@ import (
 	"github.com/bze-alphateam/bze/x/rewards/types"
 )
 
-func RewardsKeeper(t testing.TB, bank types.BankKeeper, distr types.DistrKeeper, epoch types.EpochKeeper, trade types.TradingKeeper, acc types.AccountKeeper) (keeper.Keeper, sdk.Context) {
+func RewardsKeeper(t testing.TB, bank types.BankKeeper, epoch types.EpochKeeper, trade types.TradingKeeper, acc types.AccountKeeper) (keeper.Keeper, sdk.Context) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	db := dbm.NewMemDB()
@@ -39,7 +39,6 @@ func RewardsKeeper(t testing.TB, bank types.BankKeeper, distr types.DistrKeeper,
 		log.NewNopLogger(),
 		authority.String(),
 		bank,
-		distr,
 		epoch,
 		trade,
 		acc,

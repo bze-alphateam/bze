@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"cosmossdk.io/math"
 	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -52,6 +54,22 @@ func (suite *IntegrationTestSuite) TestAddArticle_ValidRequest_PublishedByActive
 	updatedPublisher, found := suite.k.GetPublisher(suite.ctx, publisher.Address)
 	suite.Require().True(found)
 	suite.Require().Equal(uint32(6), updatedPublisher.ArticlesCount)
+
+	// Verify the emitted event contains the correct (non-zero) article ID
+	events := suite.ctx.EventManager().Events()
+	hasArticleAddedEvent := false
+	for _, event := range events {
+		if strings.Contains(event.Type, "ArticleAddedEvent") {
+			hasArticleAddedEvent = true
+			for _, attr := range event.Attributes {
+				if string(attr.Key) == "article_id" {
+					suite.Require().Contains(string(attr.Value), fmt.Sprintf("%d", articles[0].Id))
+					suite.Require().NotEqual("\"0\"", string(attr.Value))
+				}
+			}
+		}
+	}
+	suite.Require().True(hasArticleAddedEvent, "ArticleAddedEvent should be emitted")
 }
 
 func (suite *IntegrationTestSuite) TestAddArticle_ValidRequest_PaidArticle() {
@@ -99,6 +117,22 @@ func (suite *IntegrationTestSuite) TestAddArticle_ValidRequest_PaidArticle() {
 	articles := suite.k.GetAllArticles(suite.ctx)
 	suite.Require().Len(articles, 1)
 	suite.Require().True(articles[0].Paid)
+
+	// Verify the emitted event contains the correct (non-zero) article ID
+	events := suite.ctx.EventManager().Events()
+	hasArticleAddedEvent := false
+	for _, event := range events {
+		if strings.Contains(event.Type, "ArticleAddedEvent") {
+			hasArticleAddedEvent = true
+			for _, attr := range event.Attributes {
+				if string(attr.Key) == "article_id" {
+					suite.Require().Contains(string(attr.Value), fmt.Sprintf("%d", articles[0].Id))
+					suite.Require().NotEqual("\"0\"", string(attr.Value))
+				}
+			}
+		}
+	}
+	suite.Require().True(hasArticleAddedEvent, "ArticleAddedEvent should be emitted")
 }
 
 func (suite *IntegrationTestSuite) TestAddArticle_InvalidDomain() {

@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	ConsensusVersion = 3
+	ConsensusVersion = 4
 )
 
 var (
@@ -104,7 +104,6 @@ type AppModule struct {
 	keeper        *keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
-	distrKeeper   types.DistrKeeper
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	legacySubspace exported.Subspace
@@ -115,7 +114,6 @@ func NewAppModule(
 	keeper *keeper.Keeper,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
-	distrKeeper types.DistrKeeper,
 
 	legacySubspace exported.Subspace,
 ) AppModule {
@@ -124,7 +122,6 @@ func NewAppModule(
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
-		distrKeeper:    distrKeeper,
 		legacySubspace: legacySubspace,
 	}
 }
@@ -138,6 +135,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
+	}
+
+	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err))
 	}
 }
 
@@ -213,7 +214,6 @@ type ModuleInputs struct {
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
-	DistrKeeper   types.DistrKeeper
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
@@ -239,14 +239,12 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority.String(),
 		in.AccountKeeper,
 		in.BankKeeper,
-		in.DistrKeeper,
 	)
 	m := NewAppModule(
 		in.Cdc,
 		&k,
 		in.AccountKeeper,
 		in.BankKeeper,
-		in.DistrKeeper,
 		in.LegacySubspace,
 	)
 
