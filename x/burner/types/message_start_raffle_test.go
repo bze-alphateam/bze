@@ -10,7 +10,7 @@ import (
 
 func TestNewMsgStartRaffle(t *testing.T) {
 	creator := sample.AccAddress()
-	pot := "1000"
+	pot := "100000"
 	duration := "30"
 	chances := "100"
 	ratio := "0.5"
@@ -30,7 +30,7 @@ func TestNewMsgStartRaffle(t *testing.T) {
 
 func TestMsgStartRaffle_ValidateBasic(t *testing.T) {
 	validCreator := sample.AccAddress()
-	validPot := "1000"
+	validPot := "100000"
 	validDuration := "30"
 	validChances := "100"
 	validRatio := "0.5"
@@ -112,6 +112,19 @@ func TestMsgStartRaffle_ValidateBasic(t *testing.T) {
 			msg: MsgStartRaffle{
 				Creator:     validCreator,
 				Pot:         "0",
+				Duration:    validDuration,
+				Chances:     validChances,
+				Ratio:       validRatio,
+				TicketPrice: validTicketPrice,
+				Denom:       validDenom,
+			},
+			err: sdkerrors.ErrInvalidCoins,
+		},
+		{
+			name: "invalid pot - below minimum amount",
+			msg: MsgStartRaffle{
+				Creator:     validCreator,
+				Pot:         "99999",
 				Duration:    validDuration,
 				Chances:     validChances,
 				Ratio:       validRatio,
@@ -397,7 +410,7 @@ func TestMsgStartRaffle_ValidateBasic(t *testing.T) {
 			name: "valid message - minimum values",
 			msg: MsgStartRaffle{
 				Creator:     validCreator,
-				Pot:         "1",
+				Pot:         "100000",
 				Duration:    "1",
 				Chances:     "1",
 				Ratio:       "0.01",
@@ -458,7 +471,7 @@ func TestMsgStartRaffle_ToStorageRaffle(t *testing.T) {
 	validCreator := sample.AccAddress()
 	validMsg := MsgStartRaffle{
 		Creator:     validCreator,
-		Pot:         "1000",
+		Pot:         "100000",
 		Duration:    "30",
 		Chances:     "100",
 		Ratio:       "0.5",
@@ -468,7 +481,7 @@ func TestMsgStartRaffle_ToStorageRaffle(t *testing.T) {
 
 	raffle, err := validMsg.ToStorageRaffle()
 	require.NoError(t, err)
-	require.Equal(t, "1000", raffle.Pot)
+	require.Equal(t, "100000", raffle.Pot)
 	require.Equal(t, uint64(30), raffle.Duration)
 	require.Equal(t, uint64(100), raffle.Chances)
 	require.Equal(t, "0.5", raffle.Ratio)

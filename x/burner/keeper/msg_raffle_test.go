@@ -12,7 +12,7 @@ import (
 func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_ValidRequest() {
 	creator := sdk.AccAddress("creator").String()
 	denom := "utoken"
-	pot := "1000"
+	pot := "100000"
 	duration := "7"
 
 	msg := &types.MsgStartRaffle{
@@ -28,8 +28,8 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_ValidRequest() {
 	creatorAddr, err := sdk.AccAddressFromBech32(creator)
 	suite.Require().NoError(err)
 
-	potCoin := sdk.NewInt64Coin(denom, 1000)
-	spendableCoins := sdk.NewCoins(sdk.NewInt64Coin(denom, 2000))
+	potCoin := sdk.NewInt64Coin(denom, 100000)
+	spendableCoins := sdk.NewCoins(sdk.NewInt64Coin(denom, 200000))
 
 	// Mock expectations
 	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
@@ -92,7 +92,7 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_InsufficientBalance
 
 	msg := &types.MsgStartRaffle{
 		Creator:     creator,
-		Pot:         "1000",
+		Pot:         "100000",
 		Duration:    "7",
 		Chances:     "100",
 		Ratio:       "0.1",
@@ -123,7 +123,7 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_BankKeeperError() {
 
 	msg := &types.MsgStartRaffle{
 		Creator:     creator,
-		Pot:         "1000",
+		Pot:         "100000",
 		Duration:    "7",
 		Chances:     "100",
 		Ratio:       "0.1",
@@ -134,8 +134,8 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_BankKeeperError() {
 	creatorAddr, err := sdk.AccAddressFromBech32(creator)
 	suite.Require().NoError(err)
 
-	potCoin := sdk.NewInt64Coin(denom, 1000)
-	spendableCoins := sdk.NewCoins(sdk.NewInt64Coin(denom, 2000))
+	potCoin := sdk.NewInt64Coin(denom, 100000)
+	spendableCoins := sdk.NewCoins(sdk.NewInt64Coin(denom, 200000))
 	bankError := errors.New("bank transfer failed")
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
@@ -521,13 +521,37 @@ func (suite *IntegrationTestSuite) TestMsgRaffle_JoinRaffle_TooManyParticipants(
 	suite.Require().Contains(err.Error(), "too many participants")
 }
 
+func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_PotBelowMinimum() {
+	creator := sdk.AccAddress("creator").String()
+	denom := "utoken"
+
+	msg := &types.MsgStartRaffle{
+		Creator:     creator,
+		Pot:         "99999",
+		Duration:    "7",
+		Chances:     "100",
+		Ratio:       "0.1",
+		TicketPrice: "10",
+		Denom:       denom,
+	}
+
+	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100), nil).Times(1)
+
+	res, err := suite.msgServer.StartRaffle(suite.ctx, msg)
+
+	suite.Require().Error(err)
+	suite.Require().Nil(res)
+	suite.Require().Contains(err.Error(), "pot must be at least")
+}
+
 func (suite *IntegrationTestSuite) TestMsgRaffle_StartRaffle_EpochCatchingUp() {
 	creator := sdk.AccAddress("creator").String()
 	denom := "utoken"
 
 	msg := &types.MsgStartRaffle{
 		Creator:     creator,
-		Pot:         "1000",
+		Pot:         "100000",
 		Duration:    "7",
 		Chances:     "100",
 		Ratio:       "0.1",
