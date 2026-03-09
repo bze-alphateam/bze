@@ -57,7 +57,7 @@ func (k Keeper) CaptureAndSwapUserFee(ctx sdk.Context, payer sdk.AccAddress, fee
 	// big amount (changed via gov proposals, and it should be {BIGGEST_BZE_TAX} * 2 at least).
 	// we decide to allow going below the threshold to ensure smooth experience for in-flight transactions that already
 	// passed the ante-handler.
-	if nativeLpCoins.Amount.LT(params.MinNativeLiquidityForModuleSwap.QuoRaw(4).MulRaw(3)) {
+	if nativeLpCoins.Amount.LT(params.MinNativeLiquidityForModuleSwap.MulRaw(3).QuoRaw(4)) {
 		k.Logger().Debug("insufficient liquidity available, falling back to native denom", "pool", poolId)
 		return k.payerCoinsToModule(ctx, payer, fee, toModule)
 	}
