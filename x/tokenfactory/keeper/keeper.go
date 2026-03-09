@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"cosmossdk.io/store/prefix"
 	"fmt"
+
+	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/runtime"
 
 	"cosmossdk.io/core/store"
@@ -20,8 +21,8 @@ type (
 		logger       log.Logger
 
 		bankKeeper    types.BankKeeper
-		distrkeeper   types.DistrKeeper
 		accountKeeper types.AccountKeeper
+		tradeKeeper   types.TradingKeeper
 
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
@@ -35,8 +36,8 @@ func NewKeeper(
 	logger log.Logger,
 	authority string,
 	bankKeeper types.BankKeeper,
-	distrKeeper types.DistrKeeper,
 	accountKeeper types.AccountKeeper,
+	tradeKeeper types.TradingKeeper,
 ) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
@@ -48,8 +49,8 @@ func NewKeeper(
 		authority:     authority,
 		logger:        logger,
 		bankKeeper:    bankKeeper,
-		distrkeeper:   distrKeeper,
 		accountKeeper: accountKeeper,
+		tradeKeeper:   tradeKeeper,
 	}
 }
 

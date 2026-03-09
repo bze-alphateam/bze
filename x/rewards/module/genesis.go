@@ -57,6 +57,19 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetMarketIdRewardId(ctx, elem)
 	}
 
+	// Restore queue states
+	if genState.UnlockParticipantsQueue != nil {
+		k.SetUnlockParticipantsQueue(ctx, *genState.UnlockParticipantsQueue)
+	}
+
+	if genState.StakingRewardsDistributionQueue != nil {
+		k.SetStakingRewardsDistributionQueue(ctx, *genState.StakingRewardsDistributionQueue)
+	}
+
+	if genState.TradingRewardExpirationQueue != nil {
+		k.SetTradingRewardExpirationQueue(ctx, *genState.TradingRewardExpirationQueue)
+	}
+
 	// this line is used by starport scaffolding # genesis/module/init
 	k.SetTradingRewardsCounter(ctx, genState.TradingRewardsCounter)
 	k.SetStakingRewardsCounter(ctx, genState.StakingRewardsCounter)
@@ -80,6 +93,19 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.MarketIdTradingRewardIdList = k.GetAllMarketIdRewardId(ctx)
 	genesis.PendingTradingRewardExpirationList = k.GetAllPendingTradingRewardExpiration(ctx)
 	genesis.ActiveTradingRewardExpirationList = k.GetAllActiveTradingRewardExpiration(ctx)
+
+	// Export queue states
+	if unlockQueue, found := k.GetUnlockParticipantsQueue(ctx); found {
+		genesis.UnlockParticipantsQueue = &unlockQueue
+	}
+
+	if stakingDistQueue, found := k.GetStakingRewardsDistributionQueue(ctx); found {
+		genesis.StakingRewardsDistributionQueue = &stakingDistQueue
+	}
+
+	if tradingExpQueue, found := k.GetTradingRewardExpirationQueue(ctx); found {
+		genesis.TradingRewardExpirationQueue = &tradingExpQueue
+	}
 
 	// this line is used by starport scaffolding # genesis/module/export
 

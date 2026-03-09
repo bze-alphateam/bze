@@ -21,7 +21,7 @@ func TestGenesis(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	acc := testutil.NewMockAccountKeeper(ctrl)
 
-	k, ctx := keepertest.RewardsKeeper(t, nil, nil, nil, nil, acc)
+	k, ctx := keepertest.RewardsKeeper(t, nil, nil, nil, acc)
 	rewards.InitGenesis(ctx, k, genesisState)
 	got := rewards.ExportGenesis(ctx, k)
 	require.NotNil(t, got)

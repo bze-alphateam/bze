@@ -8,7 +8,7 @@ import (
 
 // EpochKeeper defines expected keeper that can return the current epoch
 type EpochKeeper interface {
-	GetEpochCountByIdentifier(ctx sdk.Context, identifier string) int64
+	SafeGetEpochCountByIdentifier(ctx sdk.Context, identifier string) (int64, error)
 }
 
 // AccountKeeper defines the expected interface for the Account module.
@@ -32,8 +32,7 @@ type BankKeeper interface {
 type TradeKeeper interface {
 	IsNativeDenom(ctx sdk.Context, denom string) bool
 	CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool
-	ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins sdk.Coins) (sdk.Coin, error)
-	HasLiquidityWithNativeDenom(ctx sdk.Context, denom string) bool
+	ModuleAddLiquidityWithNativeDenom(ctx sdk.Context, fromModule string, coins sdk.Coins) (addedCoins sdk.Coins, refundedCoins sdk.Coins, err error)
 }
 
 // ParamSubspace defines the expected Subspace interface for parameters.

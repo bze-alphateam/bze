@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"fmt"
+	"testing"
+
 	keeper2 "github.com/bze-alphateam/bze/testutil/keeper"
 	"github.com/bze-alphateam/bze/x/tradebin/keeper"
 	"github.com/bze-alphateam/bze/x/tradebin/testutil"
@@ -10,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
-	"testing"
 )
 
 const (
@@ -35,7 +36,6 @@ type IntegrationTestSuite struct {
 	k           *keeper.Keeper
 	msgServer   types.MsgServer
 	bankMock    *testutil.MockBankKeeper
-	distrMock   *testutil.MockDistrKeeper
 	accountMock *testutil.MockAccountKeeper
 }
 
@@ -46,16 +46,13 @@ func (suite *IntegrationTestSuite) SetupTest() {
 
 	mockBank := testutil.NewMockBankKeeper(mockCtrl)
 	require.NotNil(t, mockBank)
-	mockDistr := testutil.NewMockDistrKeeper(mockCtrl)
-	require.NotNil(t, mockDistr)
 	mockAccount := testutil.NewMockAccountKeeper(mockCtrl)
 	require.NotNil(t, mockAccount)
 
-	k, ctx := keeper2.TradebinKeeper(t, mockBank, mockAccount, mockDistr)
+	k, ctx := keeper2.TradebinKeeper(t, mockBank, mockAccount)
 	suite.ctx = ctx
 	suite.k = &k
 	suite.bankMock = mockBank
-	suite.distrMock = mockDistr
 	suite.accountMock = mockAccount
 	suite.msgServer = keeper.NewMsgServerImpl(k)
 }

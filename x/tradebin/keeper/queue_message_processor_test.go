@@ -8,21 +8,14 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func newStakeCoin(amt int64) sdk.Coin {
-	return sdk.NewInt64Coin(denomStake, amt)
-}
-
-func newBzeCoin(amt int64) sdk.Coin {
-	return sdk.NewInt64Coin(denomBze, amt)
-}
-
 func (suite *IntegrationTestSuite) TestQueueMessageProcessor_AddMakerOrder() {
 	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
 	suite.Require().Nil(err)
 
 	addr1 := sdk.AccAddress("addr1_______________")
 
-	mBuyAmt := keeper.CalculateMinAmount("100")
+	mBuyAmt, err := keeper.CalculateMinAmount("100")
+	suite.Require().NoError(err)
 	mBuy := types.QueueMessage{
 		MarketId:    getMarketId(),
 		MessageType: types.OrderTypeBuy,
@@ -31,7 +24,8 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_AddMakerOrder() {
 		OrderType:   types.OrderTypeBuy,
 		Owner:       addr1.String(),
 	}
-	mSellAmt := keeper.CalculateMinAmount("10")
+	mSellAmt, err := keeper.CalculateMinAmount("10")
+	suite.Require().NoError(err)
 	mSell := types.QueueMessage{
 		MarketId:    getMarketId(),
 		MessageType: types.OrderTypeSell,
@@ -145,7 +139,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 	engine.ProcessQueueMessages(suite.ctx)
 
 	//check orders were created
-	allUserOrders, err := suite.k.UserMarketOrders(sdk.WrapSDKContext(suite.ctx), &types.QueryUserMarketOrdersRequest{
+	allUserOrders, err := suite.k.UserMarketOrders(suite.ctx, &types.QueryUserMarketOrdersRequest{
 		Address:    addr1.String(),
 		Market:     getMarketId(),
 		Pagination: nil,
@@ -188,7 +182,7 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CancelOrder() {
 		engine.ProcessQueueMessages(suite.ctx)
 		cancelCount++
 		//check user order were canceled
-		checkUserOrders, err := suite.k.UserMarketOrders(sdk.WrapSDKContext(suite.ctx), &types.QueryUserMarketOrdersRequest{
+		checkUserOrders, err := suite.k.UserMarketOrders(suite.ctx, &types.QueryUserMarketOrdersRequest{
 			Address:    addr1.String(),
 			Market:     getMarketId(),
 			Pagination: nil,
@@ -225,10 +219,14 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 
 	//sellPrice := int64(10)
 	sellPriceStr := "1"
-	sellAmt := keeper.CalculateMinAmount(sellPriceStr).MulRaw(5)
+	sellAmt, err := keeper.CalculateMinAmount(sellPriceStr)
+	suite.Require().NoError(err)
+	sellAmt = sellAmt.MulRaw(5)
 	//buyPrice := int64(20)
 	buyPriceStr := "2"
-	buyAmt := keeper.CalculateMinAmount(buyPriceStr).MulRaw(5)
+	buyAmt, err := keeper.CalculateMinAmount(buyPriceStr)
+	suite.Require().NoError(err)
+	buyAmt = buyAmt.MulRaw(5)
 	orderCounter := int64(10)
 	for i := int64(0); i < orderCounter; i++ {
 		qmSell := types.QueueMessage{
@@ -276,7 +274,6 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	takerCoins, _, err := suite.k.GetOrderSdkCoin(types.TheOtherOrderType(qmBuy.OrderType), qmBuy.Price, qmAmountInt, &market)
 	suite.Require().Nil(err)
 
-	tradedUbzeCoins := makerCoins
 	tradedStakeCoins := takerCoins
 
 	suite.k.SetQueueMessage(suite.ctx, qmBuy)
@@ -316,7 +313,6 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	allOrders = suite.k.GetAllOrder(suite.ctx)
 	suite.Require().Equal(len(allOrders), int(orderCounter*2))
 
-	tradedUbzeCoins = tradedUbzeCoins.Add(makerCoins)
 	tradedStakeCoins = tradedStakeCoins.Add(takerCoins)
 
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt.MulRaw(orderCounter).String())
@@ -346,7 +342,6 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	allOrders = suite.k.GetAllOrder(suite.ctx)
 	suite.Require().Equal(len(allOrders), int(orderCounter*2)-2)
 
-	tradedUbzeCoins = tradedUbzeCoins.Add(makerCoins)
 	tradedStakeCoins = tradedStakeCoins.Add(takerCoins)
 
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt.MulRaw(orderCounter).String())
@@ -396,7 +391,6 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching() {
 	newOrderMakerCoins, _, err := suite.k.GetOrderSdkCoin(types.TheOtherOrderType(smallOrders[0].OrderType), smallOrders[0].Price, smallOrdAmt, &market)
 	newOrderTakerCoins, _, err := suite.k.GetOrderSdkCoin(smallOrders[0].OrderType, smallOrders[0].Price, smallOrdAmt, &market)
 	suite.Require().Nil(err)
-	tradedUbzeCoins = tradedUbzeCoins.Add(makerCoins).Sub(newOrderTakerCoins)
 	suite.Require().Nil(err)
 	tradedStakeCoins = tradedStakeCoins.Add(takerCoins).Sub(newOrderMakerCoins)
 
@@ -450,10 +444,14 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching_WithD
 
 	//sellPrice := int64(10)
 	sellPriceStr := "0.7612"
-	sellAmt := keeper.CalculateMinAmount(sellPriceStr).MulRaw(5)
+	sellAmt, err := keeper.CalculateMinAmount(sellPriceStr)
+	suite.Require().NoError(err)
+	sellAmt = sellAmt.MulRaw(5)
 	//buyPrice := int64(20)
 	buyPriceStr := "0.950012"
-	buyAmt := keeper.CalculateMinAmount(buyPriceStr).MulRaw(6)
+	buyAmt, err := keeper.CalculateMinAmount(buyPriceStr)
+	suite.Require().NoError(err)
+	buyAmt = buyAmt.MulRaw(6)
 	orderCounter := int64(10)
 	for i := int64(0); i < orderCounter; i++ {
 		qmSell := types.QueueMessage{
@@ -612,4 +610,433 @@ func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderMatching_WithD
 	//check the correct amount of orders removed
 	allOrders = suite.k.GetAllOrder(suite.ctx)
 	suite.Require().Equal(len(allOrders), 2)
+}
+
+func (suite *IntegrationTestSuite) TestQueueMessageProcessor_OrderBookPerBlockMessagesLimit() {
+	suite.k.SetMarket(suite.ctx, market)
+	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
+	suite.Require().Nil(err)
+
+	addr1 := sdk.AccAddress("addr1_______________")
+
+	// Create more messages than the limit allows
+	messageCount := 10
+	limit := uint64(5)
+
+	// Update params to set a lower limit for testing
+	params := suite.k.GetParams(suite.ctx)
+	params.OrderBookPerBlockMessages = limit
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
+
+	// Add messages to queue
+	minAmt, err := keeper.CalculateMinAmount("100")
+	suite.Require().NoError(err)
+	for i := 0; i < messageCount; i++ {
+		mBuy := types.QueueMessage{
+			MarketId:    getMarketId(),
+			MessageType: types.OrderTypeBuy,
+			Amount:      minAmt.String(),
+			Price:       "100",
+			OrderType:   types.OrderTypeBuy,
+			Owner:       addr1.String(),
+		}
+		suite.k.SetQueueMessage(suite.ctx, mBuy)
+	}
+
+	// Check message counter was incremented
+	mCnt := suite.k.GetQueueMessageCounter(suite.ctx)
+	suite.Require().Equal(uint64(messageCount), mCnt)
+
+	// Process queue messages
+	engine.ProcessQueueMessages(suite.ctx)
+
+	// Check that only 'limit' orders were created (not all messages were processed)
+	allOrders := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().Equal(int(limit), len(allOrders))
+
+	// Check that HasQueueMessages returns true (remaining messages in queue)
+	hasMessages := suite.k.HasQueueMessages(suite.ctx)
+	suite.Require().True(hasMessages)
+
+	// Check that counter was NOT reset (because queue still has messages)
+	// Counter should still be at the original value since we didn't reset
+	mCnt = suite.k.GetQueueMessageCounter(suite.ctx)
+	suite.Require().Equal(uint64(messageCount), mCnt)
+
+	// Process remaining messages
+	engine.ProcessQueueMessages(suite.ctx)
+
+	// Now all orders should be created
+	allOrders = suite.k.GetAllOrder(suite.ctx)
+	suite.Require().Equal(messageCount, len(allOrders))
+
+	// Queue should be empty now
+	hasMessages = suite.k.HasQueueMessages(suite.ctx)
+	suite.Require().False(hasMessages)
+
+	// Counter should be reset now
+	mCnt = suite.k.GetQueueMessageCounter(suite.ctx)
+	suite.Require().Equal(uint64(0), mCnt)
+}
+
+func (suite *IntegrationTestSuite) TestQueueMessageProcessor_CounterResetOnlyWhenEmpty() {
+	suite.k.SetMarket(suite.ctx, market)
+	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
+	suite.Require().Nil(err)
+
+	addr1 := sdk.AccAddress("addr1_______________")
+
+	// Add one message
+	minAmt, err := keeper.CalculateMinAmount("100")
+	suite.Require().NoError(err)
+	mBuy := types.QueueMessage{
+		MarketId:    getMarketId(),
+		MessageType: types.OrderTypeBuy,
+		Amount:      minAmt.String(),
+		Price:       "100",
+		OrderType:   types.OrderTypeBuy,
+		Owner:       addr1.String(),
+	}
+	suite.k.SetQueueMessage(suite.ctx, mBuy)
+
+	// Check counter is 1
+	mCnt := suite.k.GetQueueMessageCounter(suite.ctx)
+	suite.Require().Equal(uint64(1), mCnt)
+
+	// Process the message
+	engine.ProcessQueueMessages(suite.ctx)
+
+	// Queue should be empty
+	hasMessages := suite.k.HasQueueMessages(suite.ctx)
+	suite.Require().False(hasMessages)
+
+	// Counter should be reset to 0
+	mCnt = suite.k.GetQueueMessageCounter(suite.ctx)
+	suite.Require().Equal(uint64(0), mCnt)
+
+	// Add another message to verify counter starts from 0
+	suite.k.SetQueueMessage(suite.ctx, mBuy)
+	mCnt = suite.k.GetQueueMessageCounter(suite.ctx)
+	suite.Require().Equal(uint64(1), mCnt)
+}
+
+func (suite *IntegrationTestSuite) TestHasQueueMessages() {
+	// Initially empty queue
+	hasMessages := suite.k.HasQueueMessages(suite.ctx)
+	suite.Require().False(hasMessages)
+
+	addr1 := sdk.AccAddress("addr1_______________")
+
+	// Add a message
+	minAmt, err := keeper.CalculateMinAmount("100")
+	suite.Require().NoError(err)
+	mBuy := types.QueueMessage{
+		MarketId:    getMarketId(),
+		MessageType: types.OrderTypeBuy,
+		Amount:      minAmt.String(),
+		Price:       "100",
+		OrderType:   types.OrderTypeBuy,
+		Owner:       addr1.String(),
+	}
+	suite.k.SetQueueMessage(suite.ctx, mBuy)
+
+	// Should have messages now
+	hasMessages = suite.k.HasQueueMessages(suite.ctx)
+	suite.Require().True(hasMessages)
+
+	// Get all messages to retrieve the actual messageId
+	allMessages := suite.k.GetAllQueueMessage(suite.ctx)
+	suite.Require().Len(allMessages, 1)
+
+	// Remove the message using the retrieved messageId
+	suite.k.RemoveQueueMessage(suite.ctx, allMessages[0].MarketId, allMessages[0].MessageId)
+
+	// Should be empty again
+	hasMessages = suite.k.HasQueueMessages(suite.ctx)
+	suite.Require().False(hasMessages)
+}
+
+// TestFillAggregatedOrder_ContinuePastUnfillableOrder verifies that when getExecutedAmount returns zero for an order
+// (because the order amount is between minAmount and 2*minAmount, making it impossible to partially fill without
+// leaving a remainder below minAmount), the iteration continues to the next order instead of breaking.
+// This ensures that all compatible orders at the same price level are considered for filling.
+func (suite *IntegrationTestSuite) TestFillAggregatedOrder_ContinuePastUnfillableOrder() {
+	suite.k.SetMarket(suite.ctx, market)
+	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
+	suite.Require().Nil(err)
+
+	makerAddr := sdk.AccAddress("addr1_______________")
+	takerAddr := sdk.AccAddress("addr2_______________")
+
+	price := "1"
+	minAmount, err := keeper.CalculateMinAmount(price) // ceil(1/1)*2 = 2
+	suite.Require().NoError(err)
+
+	// Create a small sell order with amount between minAmount and 2*minAmount.
+	// For msgAmount=minAmount=2 and orderAmount=3:
+	//   getExecutedAmount(2, 3, 2): orderRemaining=1 < minAmount, executedAmount=1 < minAmount → returns 0
+	smallSellAmount := minAmount.AddRaw(1) // 3
+	qmSmallSell := types.QueueMessage{
+		MarketId:    getMarketId(),
+		MessageType: types.OrderTypeSell,
+		Amount:      smallSellAmount.String(),
+		Price:       price,
+		OrderType:   types.OrderTypeSell,
+		Owner:       makerAddr.String(),
+	}
+	suite.k.SetQueueMessage(suite.ctx, qmSmallSell)
+
+	// Create a large sell order that can be partially filled.
+	// For msgAmount=2 and orderAmount=100: orderRemaining=98 >= minAmount → returns 2
+	largeSellAmount := minAmount.MulRaw(50) // 100
+	qmLargeSell := types.QueueMessage{
+		MarketId:    getMarketId(),
+		MessageType: types.OrderTypeSell,
+		Amount:      largeSellAmount.String(),
+		Price:       price,
+		OrderType:   types.OrderTypeSell,
+		Owner:       makerAddr.String(),
+	}
+	suite.k.SetQueueMessage(suite.ctx, qmLargeSell)
+
+	// Process sell orders to place them in the order book
+	engine.ProcessQueueMessages(suite.ctx)
+
+	allOrders := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().Len(allOrders, 2)
+
+	totalSellAmount := smallSellAmount.Add(largeSellAmount) // 103
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, price, totalSellAmount.String())
+
+	// Submit a buy message with amount = minAmount.
+	// The small sell order cannot be filled (getExecutedAmount returns 0) but with 'continue',
+	// the large sell order should still be reached and partially filled.
+	buyAmount := minAmount // 2
+	qmBuy := types.QueueMessage{
+		MarketId:    getMarketId(),
+		MessageType: types.OrderTypeBuy,
+		Amount:      buyAmount.String(),
+		Price:       price,
+		OrderType:   types.OrderTypeBuy,
+		Owner:       takerAddr.String(),
+	}
+	suite.k.SetQueueMessage(suite.ctx, qmBuy)
+
+	// Expect exactly 1 fill: maker gets quote coins, taker gets base coins
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, makerAddr, gomock.Any()).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, takerAddr, gomock.Any()).Times(1)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	// Both orders should still exist: small untouched, large partially filled
+	allOrders = suite.k.GetAllOrder(suite.ctx)
+	suite.Require().Len(allOrders, 2)
+
+	for _, ord := range allOrders {
+		ordAmt, ok := math.NewIntFromString(ord.Amount)
+		suite.Require().True(ok)
+		if ordAmt.Equal(smallSellAmount) {
+			// Small order should be untouched
+			suite.Require().Equal(smallSellAmount.String(), ord.Amount)
+		} else {
+			// Large order should be partially filled: 100 - 2 = 98
+			suite.Require().Equal(largeSellAmount.Sub(buyAmount).String(), ord.Amount)
+		}
+	}
+
+	// Aggregated sell should reflect the fill: 103 - 2 = 101
+	expectedAggAmount := totalSellAmount.Sub(buyAmount)
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, price, expectedAggAmount.String())
+}
+
+// TestFillAggregatedOrder_EarlyExitMsgBelowMinAmount verifies that when the remaining message amount drops below
+// minAmount after a partial fill, the iteration breaks early. The remaining amount is refunded to the message owner.
+func (suite *IntegrationTestSuite) TestFillAggregatedOrder_EarlyExitMsgBelowMinAmount() {
+	suite.k.SetMarket(suite.ctx, market)
+	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
+	suite.Require().Nil(err)
+
+	makerAddr := sdk.AccAddress("addr1_______________")
+	takerAddr := sdk.AccAddress("addr2_______________")
+
+	price := "1"
+	minAmount, err := keeper.CalculateMinAmount(price) // 2
+	suite.Require().NoError(err)
+
+	// Create two sell orders at the same price, each with amount = minAmount (fully fillable)
+	sellAmount := minAmount // 2
+	for i := 0; i < 2; i++ {
+		qmSell := types.QueueMessage{
+			MarketId:    getMarketId(),
+			MessageType: types.OrderTypeSell,
+			Amount:      sellAmount.String(),
+			Price:       price,
+			OrderType:   types.OrderTypeSell,
+			Owner:       makerAddr.String(),
+		}
+		suite.k.SetQueueMessage(suite.ctx, qmSell)
+	}
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	allOrders := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().Len(allOrders, 2)
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, price, sellAmount.MulRaw(2).String()) // 4
+
+	// Submit a buy message with amount = minAmount + 1 = 3.
+	// First sell order (amount=2): getExecutedAmount(3, 2, 2) → msgAmount >= orderAmount → returns 2 (fully fills)
+	//   msgAmountInt = 3 - 2 = 1
+	// Second iteration: msgAmountInt(1) < minAmount(2) → break (new early exit)
+	// Second sell order is never reached.
+	// Remaining 1 is refunded to the buyer.
+	buyAmount := minAmount.AddRaw(1) // 3
+	qmBuy := types.QueueMessage{
+		MarketId:    getMarketId(),
+		MessageType: types.OrderTypeBuy,
+		Amount:      buyAmount.String(),
+		Price:       price,
+		OrderType:   types.OrderTypeBuy,
+		Owner:       takerAddr.String(),
+	}
+	suite.k.SetQueueMessage(suite.ctx, qmBuy)
+
+	// Expect 1 fill (2 bank calls) + 1 refund (1 bank call to taker)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, makerAddr, gomock.Any()).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, takerAddr, gomock.Any()).Times(2)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	// First sell order should be removed (fully filled), second should remain untouched
+	allOrders = suite.k.GetAllOrder(suite.ctx)
+	suite.Require().Len(allOrders, 1)
+	suite.Require().Equal(sellAmount.String(), allOrders[0].Amount)
+
+	// Aggregated sell should be just the remaining second order: 2
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, price, sellAmount.String())
+}
+
+// TestFillAggregatedOrder_ContinueThenEarlyExit exercises both code changes together:
+// 1. An unfillable order is skipped (continue instead of break)
+// 2. A subsequent order is partially filled
+// 3. The remaining message amount drops below minAmount, causing an early exit
+// 4. Further orders are not reached, and the remainder is refunded
+func (suite *IntegrationTestSuite) TestFillAggregatedOrder_ContinueThenEarlyExit() {
+	suite.k.SetMarket(suite.ctx, market)
+	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
+	suite.Require().Nil(err)
+
+	makerAddr := sdk.AccAddress("addr1_______________")
+	takerAddr := sdk.AccAddress("addr2_______________")
+
+	// Use price "0.1" for a larger minAmount, giving more room for the test scenario
+	price := "0.1"
+	minAmount, err := keeper.CalculateMinAmount(price) // ceil(1/0.1)*2 = 20
+	suite.Require().NoError(err)
+
+	// Order 1: unfillable (amount between minAmount and 2*minAmount)
+	// For msgAmount=25 and orderAmount=30:
+	//   getExecutedAmount(25, 30, 20): orderRemaining=5 < 20, executedAmount=10 < 20 → returns 0
+	unfillableAmount := minAmount.AddRaw(10) // 30
+	qmSell1 := types.QueueMessage{
+		MarketId:    getMarketId(),
+		MessageType: types.OrderTypeSell,
+		Amount:      unfillableAmount.String(),
+		Price:       price,
+		OrderType:   types.OrderTypeSell,
+		Owner:       makerAddr.String(),
+	}
+	suite.k.SetQueueMessage(suite.ctx, qmSell1)
+
+	// Order 2: partially fillable, but the partial fill leaves msgAmount < minAmount
+	// For msgAmount=25 and orderAmount=35:
+	//   getExecutedAmount(25, 35, 20): orderRemaining=10 < 20, executedAmount=15 >= 20? No, 15 < 20 → returns 0
+	// Hmm, let me recalculate. executedAmount = 35 - 20 = 15. 15 >= 20? No → returns 0.
+	// That's also unfillable! I need a different amount.
+	//
+	// For orderAmount=45 and msgAmount=25:
+	//   getExecutedAmount(25, 45, 20): orderRemaining=20 >= 20 → returns 25
+	// That fills the full msgAmount. I need partial fill.
+	//
+	// For orderAmount=40 and msgAmount=25:
+	//   getExecutedAmount(25, 40, 20): orderRemaining=15 < 20, executedAmount=20 >= 20 → returns 20
+	//   msgAmountInt = 25-20 = 5 < minAmount(20) → early exit!
+	partialFillAmount := minAmount.MulRaw(2) // 40
+	qmSell2 := types.QueueMessage{
+		MarketId:    getMarketId(),
+		MessageType: types.OrderTypeSell,
+		Amount:      partialFillAmount.String(),
+		Price:       price,
+		OrderType:   types.OrderTypeSell,
+		Owner:       makerAddr.String(),
+	}
+	suite.k.SetQueueMessage(suite.ctx, qmSell2)
+
+	// Order 3: large order that should NOT be reached due to early exit
+	largeAmount := minAmount.MulRaw(10) // 200
+	qmSell3 := types.QueueMessage{
+		MarketId:    getMarketId(),
+		MessageType: types.OrderTypeSell,
+		Amount:      largeAmount.String(),
+		Price:       price,
+		OrderType:   types.OrderTypeSell,
+		Owner:       makerAddr.String(),
+	}
+	suite.k.SetQueueMessage(suite.ctx, qmSell3)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	allOrders := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().Len(allOrders, 3)
+	totalSellAmount := unfillableAmount.Add(partialFillAmount).Add(largeAmount) // 30+40+200=270
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, price, totalSellAmount.String())
+
+	// Submit buy message with amount=25 (> minAmount=20)
+	// Flow:
+	// 1. Order 1 (30): getExecutedAmount(25,30,20) → orderRemaining=5<20, executedAmount=10<20 → 0 → continue
+	// 2. Order 2 (40): getExecutedAmount(25,40,20) → orderRemaining=15<20, executedAmount=20>=20 → 20
+	//    msgAmountInt = 25-20 = 5, orderAmount = 40-20 = 20
+	// 3. Next iteration: msgAmountInt(5) < minAmount(20) → break
+	// 4. Order 3 (200): not reached
+	// Remaining 5 is refunded to buyer
+	buyAmount := minAmount.AddRaw(5) // 25
+	qmBuy := types.QueueMessage{
+		MarketId:    getMarketId(),
+		MessageType: types.OrderTypeBuy,
+		Amount:      buyAmount.String(),
+		Price:       price,
+		OrderType:   types.OrderTypeBuy,
+		Owner:       takerAddr.String(),
+	}
+	suite.k.SetQueueMessage(suite.ctx, qmBuy)
+
+	// 1 fill (maker + taker) + 1 refund (taker)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, makerAddr, gomock.Any()).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, takerAddr, gomock.Any()).Times(2)
+
+	engine.ProcessQueueMessages(suite.ctx)
+
+	// All 3 orders should still exist
+	allOrders = suite.k.GetAllOrder(suite.ctx)
+	suite.Require().Len(allOrders, 3)
+
+	// Verify each order's amount
+	executedAmount := minAmount // 20 (what was filled from order 2)
+	for _, ord := range allOrders {
+		ordAmt, ok := math.NewIntFromString(ord.Amount)
+		suite.Require().True(ok)
+		if ordAmt.Equal(unfillableAmount) {
+			// Order 1: untouched at 30
+			suite.Require().Equal(unfillableAmount.String(), ord.Amount)
+		} else if ordAmt.Equal(partialFillAmount.Sub(executedAmount)) {
+			// Order 2: partially filled, 40 - 20 = 20
+			suite.Require().Equal(partialFillAmount.Sub(executedAmount).String(), ord.Amount)
+		} else {
+			// Order 3: untouched at 200
+			suite.Require().Equal(largeAmount.String(), ord.Amount)
+		}
+	}
+
+	// Aggregated sell: 270 - 20 = 250
+	expectedAggAmount := totalSellAmount.Sub(executedAmount)
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, price, expectedAggAmount.String())
 }

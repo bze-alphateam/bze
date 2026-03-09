@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -54,8 +53,8 @@ func initRootCmd(
 	)
 }
 
-func addModuleInitFlags(startCmd *cobra.Command) {
-	crisis.AddModuleInitFlags(startCmd)
+func addModuleInitFlags(_ *cobra.Command) {
+	//crisis.AddModuleInitFlags(startCmd) module removed
 }
 
 // genesisCommand builds genesis-related `beezeed genesis` command. Users may provide application specific commands as a parameter
@@ -127,7 +126,7 @@ func newApp(
 ) servertypes.Application {
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 
-	app, err := app.New(
+	a, err := app.New(
 		logger, db, traceStore, true,
 		appOpts,
 		baseappOptions...,
@@ -135,7 +134,7 @@ func newApp(
 	if err != nil {
 		panic(err)
 	}
-	return app
+	return a
 }
 
 // appExport creates a new app (optionally at a given height) and exports state.

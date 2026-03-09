@@ -5,9 +5,11 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+	txfeecollectormoduletypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	"github.com/bze-alphateam/bze/x/tradebin/types"
+	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -62,7 +64,11 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 		return nil, types.ErrInvalidOrderPrice.Wrapf("check price failed: %v", err)
 	}
 
-	minAmt := CalculateMinAmount(msg.Price)
+	minAmt, err := CalculateMinAmount(msg.Price)
+	if err != nil {
+		return nil, types.ErrInvalidOrderPrice.Wrapf("could not calculate minimum amount: %v", err)
+	}
+
 	amtInt, ok := math.NewIntFromString(msg.Amount)
 	if !ok {
 		return nil, types.ErrInvalidOrderAmount.Wrapf("amount could not be converted to Int")
@@ -74,6 +80,26 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 	market, found := k.GetMarketById(ctx, msg.MarketId)
 	if !found {
 		return nil, types.ErrMarketNotFound.Wrapf("market id: %s", msg.MarketId)
+	}
+
+	// Apply dynamic gas cost based on queue size to prevent spam attacks
+	// Formula: max(queue_size - window, 0) * queueExtraGas
+	// This makes it progressively more expensive to submit orders when the queue is full
+	params := k.GetParams(ctx)
+	queueCounter := k.GetQueueMessageCounter(ctx)
+	if queueCounter > params.OrderBookExtraGasWindow {
+		// The queue surcharge is extraGas = (queueCounter - window) * queueExtraGas with defaults window=100 and queueExtraGas=25,000. Baseline per trade is 100,000 gas. So for n trades in the block:
+		//
+		//  - First 100 trades: each 100,000 → 10,000,000 gas.
+		//  - For the next m = n-100 trades: each costs 100,000 + (i*25,000) for i=1..m.
+		//    Total = 10,000,000 + 100,000*m + 25,000 * m(m+1)/2
+		//    = 10,000,000 + 112,500*m + 12,500*m^2.
+		//
+		//  Solving 12,500*m^2 + 112,500*m + 10,000,000 ≤ 1,000,000,000 gives m ≈ 276. (m=277 pushes the block slightly over the 1,000,000,000 limit - the limit at the time of this writing.),
+		//
+		//  So with those assumptions, the block can fit about 376 trades (100 before the surcharge kicks in, plus ~276 more with increasing gas).
+		extraGas := (queueCounter - params.OrderBookExtraGasWindow) * params.OrderBookQueueExtraGas
+		ctx.GasMeter().ConsumeGas(extraGas, "queue spam protection")
 	}
 
 	accAddr, err := sdk.AccAddressFromBech32(msg.Creator)
@@ -143,6 +169,12 @@ func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder)
 		return nil, types.ErrUnauthorizedOrder
 	}
 
+	if k.HasPendingCancel(ctx, msg.MarketId, msg.OrderType, msg.OrderId) {
+		return nil, fmt.Errorf("cancel already pending for order %s", msg.OrderId)
+	}
+
+	k.SetPendingCancel(ctx, msg.MarketId, msg.OrderType, msg.OrderId)
+
 	qm := types.QueueMessage{
 		MarketId:    msg.MarketId,
 		MessageType: types.MessageTypeCancel,
@@ -174,10 +206,15 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 		return nil, types.ErrMarketNotFound.Wrapf("market id: %s", msg.MarketId)
 	}
 
-	ctx.GasMeter().ConsumeGas(types.FillOrdersExtraGas, "fill_orders")
+	params := k.GetParams(ctx)
+	ctx.GasMeter().ConsumeGas(params.FillOrdersExtraGas, "fill_orders")
 	totalCoins := sdk.NewCoins()
-	for _, fo := range msg.Orders {
-		minAmt := CalculateMinAmount(fo.Price)
+	for key, fo := range msg.Orders {
+		minAmt, err := CalculateMinAmount(fo.Price)
+		if err != nil {
+			return nil, types.ErrInvalidOrdersToFill.Wrapf("could not calculate minimum amount: %v", err)
+		}
+
 		amtInt, ok := math.NewIntFromString(fo.Amount)
 		if !ok {
 			return nil, types.ErrInvalidOrderAmount.Wrapf("amount could not be converted to Int")
@@ -221,7 +258,8 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 
 		totalCoins = totalCoins.Add(orderCoins.Coin)
 		//take extra gas for each order to fill
-		ctx.GasMeter().ConsumeGas(types.FillOrdersExtraGas, "fill_orders")
+		//increase the gas based on the number of orders to fill
+		ctx.GasMeter().ConsumeGas(params.FillOrdersExtraGas*uint64(key), "fill_orders")
 	}
 
 	if totalCoins.IsZero() {
@@ -247,16 +285,19 @@ func (k msgServer) payMarketCreateFee(ctx sdk.Context, payer sdk.AccAddress) err
 		return fmt.Errorf("could not get payer address")
 	}
 
-	createMarketFee, err := sdk.ParseCoinsNormalized(k.CreateMarketFee(ctx))
+	createMarketFee := k.CreateMarketFee(ctx)
+	if !createMarketFee.IsPositive() {
+		return nil
+	}
+
+	coinsCaptured, err := k.CaptureAndSwapUserFee(ctx, payer, sdk.NewCoins(createMarketFee), types.ModuleName)
 	if err != nil {
 		return err
 	}
 
-	if createMarketFee.IsAllPositive() {
-		sendErr := k.distrKeeper.FundCommunityPool(ctx, createMarketFee, payer)
-		if sendErr != nil {
-			return sendErr
-		}
+	sendErr := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, txfeecollectormoduletypes.CpFeeCollector, coinsCaptured)
+	if sendErr != nil {
+		return sendErr
 	}
 
 	return nil
@@ -304,46 +345,39 @@ func (k msgServer) captureMsgFees(ctx sdk.Context, msg *types.MsgCreateOrder, se
 
 func (k msgServer) captureTradingFees(ctx sdk.Context, sender sdk.AccAddress, isTaker bool) (coin sdk.Coin, err error) {
 	params := k.GetParams(ctx)
-	var fee string
+	var fee sdk.Coin
 	var destination string
 	if isTaker {
 		//is market taker
-		fee = params.GetMarketTakerFee()
-		destination = params.GetTakerFeeDestination()
+		fee = params.MarketTakerFee
+		destination = params.TakerFeeDestination
 	} else {
 		//is market maker
-		fee = params.GetMarketMakerFee()
-		destination = params.GetMakerFeeDestination()
+		fee = params.MarketMakerFee
+		destination = params.MakerFeeDestination
 	}
 
-	coin, err = sdk.ParseCoinNormalized(fee)
-	if err != nil {
-		k.Logger().
-			With("err", err).
-			With("param_fee", fee).
-			Error("could not parse fee coin. trading fee not captured")
-
-		//do not return error!! if we have a wrong fee parameter we don't want to stall the trading process
-		return coin, nil
-	}
-
-	if !coin.IsPositive() {
+	if !fee.IsPositive() {
 		k.Logger().
 			With("param_fee", fee).
 			Debug("not capturing order create fee because it is not a positive value")
 
-		return
+		return fee, nil
 	}
 
-	if destination == types.FeeDestinationBurnerModule {
-		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.FeeDestinationBurnerModule, sdk.NewCoins(coin))
-
-		return
+	captured, err := k.CaptureAndSwapUserFee(ctx, sender, sdk.NewCoins(fee), types.ModuleName)
+	if err != nil {
+		return fee, err
 	}
 
-	err = k.distrKeeper.FundCommunityPool(ctx, sdk.NewCoins(coin), sender)
+	destModule := txfeecollectormoduletypes.CpFeeCollector
+	if destination == v2types.FeeDestinationBurnerModule {
+		destModule = txfeecollectormoduletypes.BurnerFeeCollector
+	}
 
-	return
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, destModule, captured)
+
+	return fee, err
 }
 
 // checkPrice - validates the price of a message in order to make sure orders prices don't get messed up.
@@ -351,8 +385,6 @@ func (k msgServer) captureTradingFees(ctx sdk.Context, sender sdk.AccAddress, is
 // in descending/ascending order by price.
 //
 // A price is valid if:
-// - has an opposite order that can match and the order is filled immediately (market taker)
-// OR
 //   - if order type is "buy":
 //   - price is lower than the first "sell" order found
 //     AND
@@ -361,15 +393,9 @@ func (k msgServer) captureTradingFees(ctx sdk.Context, sender sdk.AccAddress, is
 //   - price is higher than the first "buy" order found
 //     AND
 //   - price is higher than ALL queue messages of type "buy"
+//
+// TODO: implement a proper price "oracle" for bid and ask. We could store them on each market
 func (k msgServer) checkPrice(ctx sdk.Context, msg *types.MsgCreateOrder) error {
-	oppositeType := types.TheOtherOrderType(msg.OrderType)
-	//if order can be filled then the price is valid
-	_, found := k.GetAggregatedOrder(ctx, msg.MarketId, oppositeType, msg.Price)
-	if found {
-
-		return nil
-	}
-
 	currentPrice, err := math.LegacyNewDecFromStr(msg.Price)
 	if err != nil {
 		//should never happen! Message should be validated before this function is called
@@ -395,7 +421,7 @@ func (k Keeper) checkPriceInOrderBook(ctx sdk.Context, msg *types.MsgCreateOrder
 		sells, _, err := k.getMarketAggregatedOrdersPaginated(ctx, msg.MarketId, oppositeType, &query.PageRequest{Limit: 1, Reverse: false})
 		if err != nil {
 
-			return fmt.Errorf("could not get buy orders pagination query: %w", err)
+			return fmt.Errorf("could not get sell orders pagination query: %w", err)
 		}
 
 		if len(sells) == 0 {
@@ -427,7 +453,7 @@ func (k Keeper) checkPriceInOrderBook(ctx sdk.Context, msg *types.MsgCreateOrder
 
 		bPrice, err := math.LegacyNewDecFromStr(buys[0].Price)
 		if err != nil {
-			return fmt.Errorf("could not parse sell price: %s", buys[0].Price)
+			return fmt.Errorf("could not parse buy price: %s", buys[0].Price)
 		}
 
 		if currentPrice.LT(bPrice) {
@@ -440,11 +466,17 @@ func (k Keeper) checkPriceInOrderBook(ctx sdk.Context, msg *types.MsgCreateOrder
 
 func (k Keeper) checkPriceInQueueMessages(ctx sdk.Context, msg *types.MsgCreateOrder, currentPrice *math.LegacyDec) error {
 	oppositeType := types.TheOtherOrderType(msg.OrderType)
-	queueMessages := k.GetAllQueueMessage(ctx)
+	// Use market-filtered lookup to get only messages for this market
+	// This is O(M) where M is messages for this market, instead of O(N) for all messages
+	queueMessages := k.GetQueueMessagesByMarket(ctx, msg.MarketId)
+	params := k.GetParams(ctx)
 	msgsPrice := math.LegacyZeroDec()
 	for _, queueMessage := range queueMessages {
-		//check against MessageType because we have "cancel" type besides "buy" and "sell"
-		if queueMessage.MarketId != msg.MarketId || queueMessage.MessageType != oppositeType {
+		// Consume extra gas for each queue message scan
+		ctx.GasMeter().ConsumeGas(params.OrderBookQueueMessageScanExtraGas, "queue_message_scan")
+
+		// Filter by message type (only check opposite type orders)
+		if queueMessage.MessageType != oppositeType {
 			continue
 		}
 

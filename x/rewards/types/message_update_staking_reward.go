@@ -1,10 +1,11 @@
 package types
 
 import (
+	"strconv"
+
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"strconv"
 )
 
 var _ sdk.Msg = &MsgUpdateStakingReward{}
@@ -23,12 +24,12 @@ func (msg *MsgUpdateStakingReward) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	durationInt, err := strconv.ParseUint(msg.Duration, 10, 32)
+	durationInt, err := strconv.ParseInt(msg.Duration, 10, 32)
 	if err != nil {
 		return errorsmod.Wrapf(ErrInvalidDuration, "could not convert duration to int: %s", err.Error())
 	}
 
-	if durationInt <= 0 {
+	if durationInt <= 0 || durationInt > int64(HundredYearsInDays) {
 		return ErrInvalidDuration
 	}
 

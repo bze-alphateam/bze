@@ -12,3 +12,4 @@ release/
 
 cmd/.DS_Store
 build/*
+.claude/

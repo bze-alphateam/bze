@@ -21,6 +21,7 @@ const (
 	// PendingTradingRewardExpirationKeyPrefix - the prefix used to save trading reward expiration
 	PendingTradingRewardExpirationKeyPrefix = "tr/exp/p/"
 	ActiveTradingRewardExpirationKeyPrefix  = "tr/exp/a/"
+	TradingRewardExpirationQueueKey         = "tr/rq/"
 )
 
 // TradingRewardCandidateKey returns the store key to retrieve a reward candidate

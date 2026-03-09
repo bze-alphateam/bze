@@ -6,6 +6,7 @@ import (
 	"github.com/bze-alphateam/bze/x/tokenfactory/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"go.uber.org/mock/gomock"
 )
 
 func (suite *IntegrationTestSuite) TestCreateDenom_ValidRequest() {
@@ -29,7 +30,8 @@ func (suite *IntegrationTestSuite) TestCreateDenom_ValidRequest() {
 
 	// Mock expectations for charging fee
 	expectedFee := sdk.NewCoins(sdk.NewInt64Coin("ubze", 1000))
-	suite.distr.EXPECT().FundCommunityPool(suite.ctx, expectedFee, creatorAddr).Return(nil).Times(1)
+	suite.trade.EXPECT().CaptureAndSwapUserFee(suite.ctx, creatorAddr, expectedFee, types.ModuleName).Return(expectedFee, nil).Times(1)
+	suite.bank.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, gomock.Any(), expectedFee).Return(nil).Times(1)
 
 	// Mock expectations for CreateDenomAfterValidation
 	suite.bank.EXPECT().GetDenomMetaData(suite.ctx, expectedDenom).Return(banktypes.Metadata{}, false).Times(1)
@@ -100,7 +102,7 @@ func (suite *IntegrationTestSuite) TestCreateDenom_ChargingError() {
 	// Mock charging error
 	expectedFee := sdk.NewCoins(sdk.NewInt64Coin("ubze", 1000))
 	chargingError := errors.New("insufficient funds")
-	suite.distr.EXPECT().FundCommunityPool(suite.ctx, expectedFee, creatorAddr).Return(chargingError).Times(1)
+	suite.trade.EXPECT().CaptureAndSwapUserFee(suite.ctx, creatorAddr, expectedFee, types.ModuleName).Return(nil, chargingError).Times(1)
 
 	msg := &types.MsgCreateDenom{
 		Creator:  creator,

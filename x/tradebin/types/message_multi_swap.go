@@ -26,7 +26,7 @@ func (msg *MsgMultiSwap) ValidateBasic() error {
 	}
 
 	if len(msg.GetRoutes()) <= 0 || len(msg.GetRoutes()) > MaxRoutes {
-		return errorsmod.Wrapf(ErrInvalidRoutes, "routes length must be between 0 and %d", MaxRoutes)
+		return errorsmod.Wrapf(ErrInvalidRoutes, "routes length must be between 1 and %d", MaxRoutes)
 	}
 
 	tempMap := make(map[string]struct{})
@@ -43,14 +43,6 @@ func (msg *MsgMultiSwap) ValidateBasic() error {
 
 	if !msg.MinOutput.IsValid() || !msg.MinOutput.IsPositive() {
 		return errorsmod.Wrapf(ErrInvalidOrderAmount, "minimum output (%s) is not valid", msg.GetMinOutput().String())
-	}
-
-	if !msg.Input.IsPositive() {
-		return errorsmod.Wrapf(ErrInvalidOrderAmount, "input is not positive (%s)", msg.Input.String())
-	}
-
-	if !msg.MinOutput.IsPositive() {
-		return errorsmod.Wrapf(ErrInvalidOrderAmount, "minimum output is not positive (%s)", msg.MinOutput.String())
 	}
 
 	return nil

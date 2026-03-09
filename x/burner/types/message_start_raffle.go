@@ -14,6 +14,7 @@ const (
 	RatioMax    = "1.00"
 	ChancesMin  = 1
 	ChancesMax  = 1_000_000
+	AmountMin   = 100000
 )
 
 var _ sdk.Msg = &MsgStartRaffle{}
@@ -52,6 +53,10 @@ func (msg *MsgStartRaffle) ToStorageRaffle() (raffle Raffle, err error) {
 
 	if !potCoin.IsPositive() {
 		return raffle, errors.Wrapf(sdkerrors.ErrInvalidCoins, "provided pot is not positive")
+	}
+
+	if potCoin.LT(math.NewInt(AmountMin)) {
+		return raffle, errors.Wrapf(sdkerrors.ErrInvalidCoins, "pot must be at least %d", AmountMin)
 	}
 	raffle.Pot = msg.Pot
 

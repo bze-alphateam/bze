@@ -374,6 +374,46 @@ func (suite *IntegrationTestSuite) TestStoreRaffle_ParticipantCounter() {
 	require.Equal(suite.T(), uint64(102), counter)
 }
 
+func (suite *IntegrationTestSuite) TestStoreRaffle_CountPrefixedRaffleParticipants() {
+	// Empty prefix should return 0
+	count := suite.k.CountPrefixedRaffleParticipants(suite.ctx, 500)
+	require.Equal(suite.T(), 0, count)
+
+	// Insert entries at prefix 500
+	for i := uint64(0); i < 5; i++ {
+		suite.k.SetRaffleParticipant(suite.ctx, types.RaffleParticipant{
+			Index:       i,
+			Denom:       "utoken",
+			Participant: "addr1",
+			ExecuteAt:   500,
+		})
+	}
+
+	count = suite.k.CountPrefixedRaffleParticipants(suite.ctx, 500)
+	require.Equal(suite.T(), 5, count)
+
+	// Different prefix should still be 0
+	count = suite.k.CountPrefixedRaffleParticipants(suite.ctx, 600)
+	require.Equal(suite.T(), 0, count)
+
+	// Insert entries at prefix 600
+	for i := uint64(10); i < 13; i++ {
+		suite.k.SetRaffleParticipant(suite.ctx, types.RaffleParticipant{
+			Index:       i,
+			Denom:       "utoken",
+			Participant: "addr2",
+			ExecuteAt:   600,
+		})
+	}
+
+	// Verify independence between prefixes
+	count = suite.k.CountPrefixedRaffleParticipants(suite.ctx, 500)
+	require.Equal(suite.T(), 5, count)
+
+	count = suite.k.CountPrefixedRaffleParticipants(suite.ctx, 600)
+	require.Equal(suite.T(), 3, count)
+}
+
 func (suite *IntegrationTestSuite) TestStoreRaffle_ParticipantCounterBinaryEncoding() {
 	// Test edge cases for binary encoding
 	testValues := []uint64{0, 1, 255, 256, 65535, 65536, 4294967295, 4294967296}

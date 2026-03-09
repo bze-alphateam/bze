@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"context"
-	"cosmossdk.io/math"
 	"fmt"
+
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/bzeutils"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
+	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"cosmossdk.io/log"
@@ -13,9 +15,14 @@ import (
 
 type ProcessingKeeper interface {
 	//queue messages
-	IterateAllQueueMessages(ctx sdk.Context, msgHandler func(ctx sdk.Context, message types.QueueMessage))
-	RemoveQueueMessage(ctx sdk.Context, messageId string)
+	IterateAllQueueMessages(ctx sdk.Context, msgHandler func(ctx sdk.Context, message types.QueueMessage) bool)
+	RemoveQueueMessage(ctx sdk.Context, marketId, messageId string)
 	ResetQueueMessageCounter(ctx sdk.Context)
+	HasQueueMessages(ctx sdk.Context) bool
+	RemovePendingCancel(ctx sdk.Context, marketId, orderType, orderId string)
+
+	//params
+	GetParams(ctx context.Context) v2types.Params
 
 	//orders
 	GetPriceOrderByPrice(ctx sdk.Context, marketId, orderType, price string) (list []types.OrderReference)
@@ -47,8 +54,13 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
+type queueMessageRef struct {
+	marketId  string
+	messageId string
+}
+
 type ProcessingEngine struct {
-	msgsToDelete []string
+	msgsToDelete []queueMessageRef
 
 	k    ProcessingKeeper
 	bank BankKeeper
@@ -72,24 +84,50 @@ func (pe *ProcessingEngine) ProcessQueueMessages(ctx sdk.Context) {
 	logger := pe.logger.With(
 		"method", "ProcessQueueMessages",
 	)
-	pe.k.IterateAllQueueMessages(ctx, pe.getMessageHandler())
+
+	// Get params and set max messages per block
+	params := pe.k.GetParams(ctx)
+	maxPerBlock := params.OrderBookPerBlockMessages
+	processedCount := uint64(0)
+
+	messageHandler := pe.getMessageHandler()
+
+	// Wrapper function that checks the counter before processing
+	pe.k.IterateAllQueueMessages(ctx, func(ctx sdk.Context, message types.QueueMessage) bool {
+		// Check if we've reached the max messages per block limit
+		if processedCount >= maxPerBlock {
+			logger.Info("reached max messages per block limit, stopping iteration", "processed", processedCount, "limit", maxPerBlock)
+			return false
+		}
+
+		// Process the message
+		shouldContinue := messageHandler(ctx, message)
+		processedCount++
+
+		return shouldContinue
+	})
 
 	if len(pe.msgsToDelete) == 0 {
-		logger.Info("no queue message to process")
+		logger.Info("no queue message to delete")
 		return
 	}
 
 	logger.Info("preparing to delete processed queue messages", "number_of_messages", len(pe.msgsToDelete))
-	for _, msgId := range pe.msgsToDelete {
-		pe.k.RemoveQueueMessage(ctx, msgId)
+	for _, msgRef := range pe.msgsToDelete {
+		pe.k.RemoveQueueMessage(ctx, msgRef.marketId, msgRef.messageId)
 	}
 
-	pe.k.ResetQueueMessageCounter(ctx)
-	logger.Info("queue message counter reset")
+	// Only reset counter if queue is empty
+	if !pe.k.HasQueueMessages(ctx) {
+		pe.k.ResetQueueMessageCounter(ctx)
+		logger.Info("queue message counter reset")
+	} else {
+		logger.Info("queue still has messages, counter not reset")
+	}
 }
 
-func (pe *ProcessingEngine) getMessageHandler() func(ctx sdk.Context, message types.QueueMessage) {
-	return func(ctx sdk.Context, message types.QueueMessage) {
+func (pe *ProcessingEngine) getMessageHandler() func(ctx sdk.Context, message types.QueueMessage) bool {
+	return func(ctx sdk.Context, message types.QueueMessage) bool {
 		var wrappingFn func(ctx sdk.Context) error
 
 		switch message.MessageType {
@@ -113,10 +151,17 @@ func (pe *ProcessingEngine) getMessageHandler() func(ctx sdk.Context, message ty
 		if err != nil {
 			//leave the message on queue until we discover what the issue was.
 			pe.logger.Error("error on handling queue message", "message", message)
-			return
+			//let the iteration continue, we don't want to block the entire processing engine.
+			//the message will be processed again on the next block.
+
+			return true
 		}
 
-		pe.msgsToDelete = append(pe.msgsToDelete, message.MessageId)
+		pe.msgsToDelete = append(pe.msgsToDelete, queueMessageRef{
+			marketId:  message.MarketId,
+			messageId: message.MessageId,
+		})
+		return true
 	}
 }
 
@@ -126,6 +171,8 @@ func (pe *ProcessingEngine) cancelOrder(ctx sdk.Context, message types.QueueMess
 		"func", "cancelOrder",
 	)
 	logger.Info("cancelling order")
+
+	pe.k.RemovePendingCancel(ctx, message.MarketId, message.OrderType, message.OrderId)
 
 	order, found := pe.k.GetOrder(ctx, message.MarketId, message.OrderType, message.OrderId)
 	if !found {
@@ -206,7 +253,7 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 
 	//should always exist
 	market, _ := pe.k.GetMarketById(ctx, message.MarketId)
-	minAmount := CalculateMinAmount(message.Price)
+	minAmount, _ := CalculateMinAmount(message.Price)
 	msgOwnerAddr, _ := sdk.AccAddressFromBech32(message.Owner)
 
 	remaining, err := pe.fillAggregatedOrder(ctx, &agg, &message, msgAmountInt, &market)
@@ -314,7 +361,9 @@ func (pe *ProcessingEngine) addHistoryOrder(ctx sdk.Context, order *types.Order,
 		Taker:      message.Owner,
 	}
 
-	pe.k.SetHistoryOrder(ctx, history, fmt.Sprintf("%s%s", order.Id, message.MessageId[len(message.MessageId)-5:]))
+	// Index format: {messageId}{orderId}
+	index := fmt.Sprintf("%s%s", message.MessageId, order.Id)
+	pe.k.SetHistoryOrder(ctx, history, index)
 }
 
 func (pe *ProcessingEngine) getExecutedAmount(messageAmount, orderAmount, minAmount math.Int) math.Int {
@@ -330,11 +379,14 @@ func (pe *ProcessingEngine) getExecutedAmount(messageAmount, orderAmount, minAmo
 
 	orderRemaining := orderAmount.Sub(messageAmount)
 	//if orderRemaining >= minAmount {
+	// check if the order amount resulted after match with message amount is still greater than min amount for future
+	// trades.
 	if orderRemaining.GTE(minAmount) {
 		return messageAmount
 	}
 
-	//order amount remains too low. keep min amount for it
+	//order amount remains too low if we fill the entire message amount. keep min the minimum amount required for this
+	// order to be filled later.
 	executedAmount := orderAmount.Sub(minAmount)
 	if executedAmount.GTE(minAmount) {
 		return executedAmount
@@ -563,11 +615,22 @@ func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.Aggr
 
 	oppositeOrderRefs := pe.k.GetPriceOrderByPrice(ctx, message.MarketId, types.TheOtherOrderType(message.OrderType), message.Price)
 	pe.logger.Info("found orders to fill", "number_of_orders", len(oppositeOrderRefs))
-	minAmount := CalculateMinAmount(message.Price)
+	minAmount, err := CalculateMinAmount(message.Price)
+	if err != nil {
+		return nil, fmt.Errorf("could not calculate min amount: %v", err)
+	}
+
 	for _, orderRef := range oppositeOrderRefs {
 		//stop when all message amount was spent
 		if !msgAmountInt.IsPositive() {
 			pe.logger.Debug("msg amount is not positive anymore. exiting oppositeOrderRefs iteration")
+			break
+		}
+
+		// msgAmountInt changes after each iteration. In case it goes too low to be executed we can stop trying.
+		// The caller of this function will refund the msg owner's coins.
+		if msgAmountInt.LT(minAmount) {
+			pe.logger.Debug("msg amount is too low. exiting oppositeOrderRefs iteration", "amount", msgAmountInt.String(), "minAmount", minAmount.String())
 			break
 		}
 
@@ -582,7 +645,7 @@ func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.Aggr
 		//find how much to send to the found order's owner
 		amountToExecute := pe.getExecutedAmount(msgAmountInt, orderAmountInt, minAmount)
 		if amountToExecute.IsZero() {
-			break
+			continue
 		}
 
 		msgAmountInt = msgAmountInt.Sub(amountToExecute)

@@ -14,19 +14,20 @@ import (
 	"github.com/bze-alphateam/bze/x/rewards/exported"
 	v2 "github.com/bze-alphateam/bze/x/rewards/migrations/v3"
 	"github.com/bze-alphateam/bze/x/rewards/types"
+	"github.com/bze-alphateam/bze/x/rewards/v1types"
 )
 
 // mockSubspace implements the exported.Subspace interface for testing
 type mockSubspace struct {
-	ps types.Params
+	ps v1types.Params
 }
 
-func newMockSubspace(ps types.Params) mockSubspace {
+func newMockSubspace(ps v1types.Params) mockSubspace {
 	return mockSubspace{ps: ps}
 }
 
 func (ms mockSubspace) GetParamSet(_ sdk.Context, ps exported.ParamSet) {
-	*ps.(*types.Params) = ms.ps
+	*ps.(*v1types.Params) = ms.ps
 }
 
 // TestMigrate tests the successful migration of params from legacy subspace to module store
@@ -40,8 +41,11 @@ func TestMigrate(t *testing.T) {
 
 	store := prefix.NewStore(ctx.KVStore(storeKey), []byte{})
 
-	// Create mock subspace with default params
-	legacySubspace := newMockSubspace(types.DefaultParams())
+	// Create mock subspace with legacy v1 params
+	legacySubspace := newMockSubspace(v1types.Params{
+		CreateStakingRewardFee: "100ubze",
+		CreateTradingRewardFee: "200ubze",
+	})
 
 	// Run migration
 	require.NoError(t, v2.Migrate(ctx, store, legacySubspace, cdc))
@@ -51,5 +55,6 @@ func TestMigrate(t *testing.T) {
 	bz := store.Get(types.ParamsKey)
 	require.NotNil(t, bz, "params should be stored in the new location")
 	require.NoError(t, cdc.Unmarshal(bz, &res))
-	require.Equal(t, legacySubspace.ps, res)
+	require.Equal(t, "100ubze", res.CreateStakingRewardFee.String())
+	require.Equal(t, "200ubze", res.CreateTradingRewardFee.String())
 }

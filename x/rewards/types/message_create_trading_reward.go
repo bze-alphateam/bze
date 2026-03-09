@@ -1,14 +1,17 @@
 package types
 
 import (
+	"strconv"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"strconv"
 )
 
 const (
+	//do not change max allowed slots. It basically limits the number of iterations we're doing when calculating the
+	//leaderboard.
 	maxAllowedSlots    = 10
 	maxAllowedDuration = 365
 )

@@ -1,10 +1,11 @@
 package keeper
 
 import (
+	"slices"
+
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"sort"
 )
 
 func (k Keeper) GetDistributeAllStakingRewardsHook() types.EpochHook {
@@ -18,7 +19,7 @@ func (k Keeper) GetDistributeAllStakingRewardsHook() types.EpochHook {
 			With("epoch", epochIdentifier, "epoch_number", epochNumber, "hook_name", hookName).
 			Debug("preparing to execute hook")
 
-		k.DistributeAllStakingRewards(ctx)
+		k.EnqueueStakingRewardsDistribution(ctx)
 
 		return nil
 	})
@@ -35,7 +36,7 @@ func (k Keeper) GetUnlockPendingUnlockParticipantsHook() types.EpochHook {
 			With("epoch", epochIdentifier, "epoch_number", epochNumber, "hook_name", hookName).
 			Debug("preparing to execute hook")
 
-		k.UnlockAllPendingUnlockParticipantsByEpoch(ctx, epochNumber)
+		k.EnqueueUnlockParticipants(ctx, epochNumber)
 
 		return nil
 	})
@@ -52,7 +53,7 @@ func (k Keeper) GetRemoveExpiredPendingTradingRewardsHook() types.EpochHook {
 			With("epoch", epochIdentifier, "epoch_number", epochNumber, "hook_name", hookName).
 			Debug("preparing to execute hook")
 
-		k.removeExpiredPendingTradingRewards(ctx, epochNumber)
+		k.EnqueueExpiredTradingRewardRemoval(ctx, epochNumber)
 
 		return nil
 	})
@@ -115,6 +116,11 @@ func (k Keeper) GetOnOrderFillHook() func(ctx sdk.Context, marketId, amountTrade
 			return
 		}
 
+		if !tradedAmount.IsPositive() {
+			logger.Error("traded amount is not positive")
+			return
+		}
+
 		candidateAmount = candidateAmount.Add(tradedAmount)
 		candidate.Amount = candidateAmount.String()
 		k.SetTradingRewardCandidate(ctx, candidate)
@@ -131,6 +137,7 @@ func (k Keeper) GetOnOrderFillHook() func(ctx sdk.Context, marketId, amountTrade
 		}
 
 		addedToList := false
+		//safe to iterate over the slice since it's limited to 10 entries
 		for i, entry := range leaderboard.List {
 			if candidate.Address != entry.Address {
 				continue
@@ -157,17 +164,37 @@ func (k Keeper) GetOnOrderFillHook() func(ctx sdk.Context, marketId, amountTrade
 		}
 
 		//sort the slice
-		sort.SliceStable(leaderboard.List[:], func(i, j int) bool {
-			iAmt, _ := math.NewIntFromString(amountTraded)
-			jAmt, _ := math.NewIntFromString(amountTraded)
-			if iAmt.GT(jAmt) {
-				return true
+		slices.SortStableFunc(leaderboard.List, func(a, b types.TradingRewardLeaderboardEntry) int {
+			aAmt, aOk := math.NewIntFromString(a.Amount)
+			if !aOk {
+				logger.Error("could not parse amount from leaderboard entry", "entry", a)
+				aAmt = math.ZeroInt()
 			}
-			if iAmt.LT(jAmt) {
-				return false
+			bAmt, bOk := math.NewIntFromString(b.Amount)
+			if !bOk {
+				logger.Error("could not parse amount from leaderboard entry", "entry", b)
+				bAmt = math.ZeroInt()
 			}
 
-			return leaderboard.List[i].CreatedAt < leaderboard.List[j].CreatedAt
+			//if the amounts are equal, use CreatedAt to sort
+			if aAmt.Equal(bAmt) {
+				if a.CreatedAt == b.CreatedAt {
+					//keep the original order -> ensures deterministic leaderboard
+					return 0
+				}
+
+				if a.CreatedAt < b.CreatedAt {
+					return -1
+				}
+
+				return 1
+			}
+
+			if aAmt.GT(bAmt) {
+				return -1
+			}
+
+			return 1
 		})
 
 		//trim slice if it's longer than the rewarded slots

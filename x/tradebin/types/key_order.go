@@ -2,8 +2,9 @@ package types
 
 import (
 	"encoding/binary"
-	"fmt"
-	"strconv"
+	"strings"
+
+	"cosmossdk.io/math"
 )
 
 var _ binary.ByteOrder
@@ -70,12 +71,25 @@ func OrderCounterKey() []byte {
 }
 
 func transformPrice(price string) string {
-	floatVal, err := strconv.ParseFloat(price, 64)
+	// Parse the price string using Cosmos SDK math to avoid float64 precision issues
+	dec, err := math.LegacyNewDecFromStr(price)
 	if err != nil {
 		return price
 	}
 
-	// Format the float back into a string with zero padding to ensure it's 24 characters long
-	// Adjust the precision as needed
-	return fmt.Sprintf("%024.10f", floatVal)
+	// LegacyDec.String() always returns exactly 18 decimal places
+	decStr := dec.String()
+
+	// Split on decimal point - guaranteed to exist with 18 decimal places
+	dotIndex := strings.Index(decStr, ".")
+	intPart := decStr[:dotIndex]
+	fracPart := decStr[dotIndex+1:] // Exactly 18 digits
+
+	// Pad integer part to 13 digits (supports up to 9,999,999,999,999)
+	// Total width: 13 + 1 + 18 = 32 characters
+	if len(intPart) < 13 {
+		intPart = strings.Repeat("0", 13-len(intPart)) + intPart
+	}
+
+	return intPart + "." + fracPart
 }
