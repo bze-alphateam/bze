@@ -8,13 +8,13 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-// --- UnlockAllPendingUnlockParticipantsByEpoch tests ---
+// --- EnqueueUnlockParticipants tests ---
 // This function now only enqueues the epoch number into the UnlockParticipantsQueue.
 // It does NOT process bank sends or remove participants.
 
 func (suite *IntegrationTestSuite) TestServiceUnlock_EnqueueEmpty() {
 	// No pending participants - should not add epoch to queue
-	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, 100)
+	suite.k.EnqueueUnlockParticipants(suite.ctx, 100)
 
 	_, found := suite.k.GetUnlockParticipantsQueue(suite.ctx)
 	suite.Require().False(found)
@@ -31,7 +31,7 @@ func (suite *IntegrationTestSuite) TestServiceUnlock_EnqueueSingle() {
 	}
 
 	suite.k.SetPendingUnlockParticipant(suite.ctx, participant)
-	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epochNumber)
+	suite.k.EnqueueUnlockParticipants(suite.ctx, epochNumber)
 
 	// Verify epoch was added to queue
 	queue, found := suite.k.GetUnlockParticipantsQueue(suite.ctx)
@@ -54,7 +54,7 @@ func (suite *IntegrationTestSuite) TestServiceUnlock_EnqueueMultipleEpochs() {
 			Amount:  "500",
 			Denom:   "ubze",
 		})
-		suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epoch)
+		suite.k.EnqueueUnlockParticipants(suite.ctx, epoch)
 	}
 
 	queue, found := suite.k.GetUnlockParticipantsQueue(suite.ctx)
@@ -94,7 +94,7 @@ func (suite *IntegrationTestSuite) TestProcessQueue_SingleEntry() {
 		Times(1)
 
 	suite.k.SetPendingUnlockParticipant(suite.ctx, participant)
-	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epochNumber)
+	suite.k.EnqueueUnlockParticipants(suite.ctx, epochNumber)
 
 	suite.k.ProcessUnlockParticipantsQueue(suite.ctx)
 
@@ -148,7 +148,7 @@ func (suite *IntegrationTestSuite) TestProcessQueue_MultipleEntries() {
 	for _, p := range participants {
 		suite.k.SetPendingUnlockParticipant(suite.ctx, p)
 	}
-	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epochNumber)
+	suite.k.EnqueueUnlockParticipants(suite.ctx, epochNumber)
 
 	suite.k.ProcessUnlockParticipantsQueue(suite.ctx)
 
@@ -172,7 +172,7 @@ func (suite *IntegrationTestSuite) TestProcessQueue_BankErrorKeepsEpochInQueue()
 		Times(1)
 
 	suite.k.SetPendingUnlockParticipant(suite.ctx, participant)
-	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epochNumber)
+	suite.k.EnqueueUnlockParticipants(suite.ctx, epochNumber)
 
 	suite.Require().NotPanics(func() {
 		suite.k.ProcessUnlockParticipantsQueue(suite.ctx)
@@ -199,7 +199,7 @@ func (suite *IntegrationTestSuite) TestProcessQueue_InvalidAddressKeepsEpochInQu
 	}
 
 	suite.k.SetPendingUnlockParticipant(suite.ctx, participant)
-	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epochNumber)
+	suite.k.EnqueueUnlockParticipants(suite.ctx, epochNumber)
 
 	suite.k.ProcessUnlockParticipantsQueue(suite.ctx)
 
@@ -249,7 +249,7 @@ func (suite *IntegrationTestSuite) TestProcessQueue_MixedSuccessAndFailure() {
 	for _, p := range participants {
 		suite.k.SetPendingUnlockParticipant(suite.ctx, p)
 	}
-	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epochNumber)
+	suite.k.EnqueueUnlockParticipants(suite.ctx, epochNumber)
 
 	suite.k.ProcessUnlockParticipantsQueue(suite.ctx)
 
@@ -282,7 +282,7 @@ func (suite *IntegrationTestSuite) TestProcessQueue_DifferentEpochsOnlyRequested
 	})
 
 	// Only enqueue epoch 200
-	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, 200)
+	suite.k.EnqueueUnlockParticipants(suite.ctx, 200)
 
 	suite.bank.EXPECT().
 		SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, addr1, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500)))).
@@ -310,7 +310,7 @@ func (suite *IntegrationTestSuite) TestProcessQueue_ZeroAmountKeepsEpochInQueue(
 	}
 
 	suite.k.SetPendingUnlockParticipant(suite.ctx, participant)
-	suite.k.UnlockAllPendingUnlockParticipantsByEpoch(suite.ctx, epochNumber)
+	suite.k.EnqueueUnlockParticipants(suite.ctx, epochNumber)
 
 	suite.k.ProcessUnlockParticipantsQueue(suite.ctx)
 

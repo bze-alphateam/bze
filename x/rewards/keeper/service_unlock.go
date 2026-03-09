@@ -6,10 +6,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// UnlockAllPendingUnlockParticipantsByEpoch processes and queues all pending unlock participants for the specified epoch.
+// EnqueueUnlockParticipants processes and queues all pending unlock participants for the specified epoch.
 // we save the epoch number in the queue. The module will process the queue in the following blocks and after it
 // finishes it deletes the epoch from the queue.
-func (k Keeper) UnlockAllPendingUnlockParticipantsByEpoch(ctx sdk.Context, epochNumber int64) {
+func (k Keeper) EnqueueUnlockParticipants(ctx sdk.Context, epochNumber int64) {
 	var hasPendingUnlock bool
 	k.IterateAllEpochPendingUnlockParticipant(ctx, epochNumber, func(ctx sdk.Context, sr types.PendingUnlockParticipant) (stop bool) {
 		hasPendingUnlock = true

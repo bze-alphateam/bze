@@ -36,7 +36,7 @@ func (k Keeper) GetUnlockPendingUnlockParticipantsHook() types.EpochHook {
 			With("epoch", epochIdentifier, "epoch_number", epochNumber, "hook_name", hookName).
 			Debug("preparing to execute hook")
 
-		k.UnlockAllPendingUnlockParticipantsByEpoch(ctx, epochNumber)
+		k.EnqueueUnlockParticipants(ctx, epochNumber)
 
 		return nil
 	})
