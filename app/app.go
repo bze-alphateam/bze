@@ -345,7 +345,6 @@ func (app *App) setupUpgradeHandlers() {
 		v810.CreateUpgradeHandler(
 			app.Configurator(),
 			app.ModuleManager,
-			app.TradebinKeeper,
 		),
 	)
 

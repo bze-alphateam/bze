@@ -1,4 +1,4 @@
-package v810
+package v4
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 
 // transformPriceOld is the old implementation using float64
 // This is kept only for migration purposes to construct old keys
-// TODO: Remove after v8.1.0 upgrade is deployed and completed
 func transformPriceOld(price string) string {
 	floatVal, err := strconv.ParseFloat(price, 64)
 	if err != nil {

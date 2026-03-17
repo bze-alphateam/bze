@@ -8,13 +8,26 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Migrate converts parameters from types.Params (string fees) to v2types.Params (sdk.Coin fees)
-// and sets new default values for parameters added in consensus version 4.
+// Migrate converts parameters from types.Params (string fees) to v2types.Params (sdk.Coin fees),
+// sets new default values for parameters added in consensus version 4, and migrates order keys
+// from old 24-char/10-decimal format to new 32-char/18-decimal format.
 func Migrate(
-	_ sdk.Context,
+	ctx sdk.Context,
 	store prefix.Store,
 	cdc codec.BinaryCodec,
 ) error {
+	if err := migrateParams(store, cdc); err != nil {
+		return err
+	}
+
+	orderStore := prefix.NewStore(store, types.KeyPrefix(types.OrderKeyPrefix))
+	priceOrderStore := prefix.NewStore(store, types.KeyPrefix(types.PriceOrderKeyPrefix))
+	aggOrderStore := prefix.NewStore(store, types.KeyPrefix(types.AggOrderKeyPrefix))
+
+	return MigrateOrderKeys(ctx, orderStore, priceOrderStore, aggOrderStore, cdc)
+}
+
+func migrateParams(store prefix.Store, cdc codec.BinaryCodec) error {
 	bz := store.Get(types.ParamsKey)
 	if bz == nil {
 		// No params stored yet — write defaults directly
