@@ -71,7 +71,7 @@ https://ping.pub/beezee
 
 ### Building from source
 #### Checkout to the branch/tag you want to build 
-`git checkout v8.0.0`
+`git checkout v8.1.0`
 
 #### Build binaries:
 `make build-all`  
