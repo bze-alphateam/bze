@@ -26,7 +26,20 @@ bzed tx tokenfactory change-admin factory/<myaddr>/mytoken <new-admin> --from my
 
 ## Queries
 - `bzed query tokenfactory params` – view the creation fee.
+- `bzed query tokenfactory denom-authority --denom <denom>` – view the current admin of a factory denom. An empty admin means the supply is permanently locked.
 - Bank module queries (`denom-metadata`, balances) apply to factory denoms as usual.
+
+REST: `/bze/tokenfactory/params`, `/bze/tokenfactory/denom_authority?denom=<denom>`.
+
+## Locking Supply
+To permanently lock a denom's supply (no future minting, burning, or metadata changes), call `MsgChangeAdmin` with an empty `newAdmin`. This is irreversible.
 
 ## Permissions
 - Only the current admin may mint, burn, change admin, or set metadata for a factory denom. Creation is open to anyone who can pay the fee.
+- `MsgUpdateParams` is restricted to the module authority (governance).
+
+## Version History
+
+### v8.1.0
+- Subdenom validation now disallows slash (`/`) and underscore (`_`) characters to prevent ambiguous denom paths
+- Keeper changed to pointer type for consistency with other modules

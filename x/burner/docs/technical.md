@@ -33,3 +33,14 @@ This file captures implementation details for integrators and operators. For use
 ## Parameters and Authority
 - `periodic_burning_weeks` is the only parameter; authority-gated updates use `MsgUpdateParams`.
 - The module expects the epoch module to provide `"week"` and `"hour"` identifiers to drive hooks; misconfiguration will disable scheduled burns/cleanup.
+
+## Version History
+
+### v8.1.0
+- Periodic burning moved from synchronous epoch hook to queued EndBlock processing: `EnqueuePeriodicBurn()` queues the work, `ProcessPeriodicBurnQueue()` processes up to 100 denoms per block
+- Raffle cleanup moved from synchronous epoch hook to queued EndBlock processing: `EnqueueRaffleCleanup()` queues epochs, `ProcessRaffleCleanupQueue()` processes up to 50 raffles per block
+- IBC token strategy in `BurnAnyCoins()` changed from `ModuleSwapForNativeDenom` to `ModuleAddLiquidityWithNativeDenom`
+- `MsgFundBurner` now classifies coins before sending: lockable (LP) to black hole, burnable/exchangeable to burner module
+- Added `MsgMoveIbcLockedCoins` (governance-only) to recover IBC coins from the black-hole module via liquidity addition
+- `GetRaffleCurrentEpoch()` now returns `(uint64, error)` using `SafeGetEpochCountByIdentifier` for proper error handling
+- Rate limit: max 200 raffle participants per block height; minimum pot of 100,000 units enforced

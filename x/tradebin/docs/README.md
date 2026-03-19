@@ -16,9 +16,14 @@ bzed tx tradebin cancel-order <market-id> <order-id> buy --from mykey
 ```
 
 ## Liquidity Pools and Swaps
-- **Create a pool** (`MsgCreateLiquidityPool`): set base/quote, pool fee, fee destination, whether it’s stable, and supply initial base/quote liquidity. Returns `pool_id`.
-- **Add/Remove liquidity** (`MsgAddLiquidity` / `MsgRemoveLiquidity`): deposit both sides to mint LP shares or redeem LP shares back to coins.
-- **MultiSwap** (`MsgMultiSwap`): route a swap through multiple pools; supply `routes`, `input`, and `min_output`.
+- **Create a pool** (`MsgCreateLiquidityPool`): set base/quote, pool fee, fee destination, and supply initial base/quote liquidity. Returns `pool_id`. The initial LP tokens are permanently locked (sent to the burner `black_hole` account) and cannot be recovered.
+- **Add/Remove liquidity** (`MsgAddLiquidity` / `MsgRemoveLiquidity`): deposit both sides to mint LP shares or redeem LP shares back to coins. Single-side deposits are automatically balanced via optimal swap calculation.
+- **MultiSwap** (`MsgMultiSwap`): route a swap through up to 5 pools; supply `routes`, `input`, and `min_output`. Always pays the taker fee.
+
+### LP Token Details
+- **Denom format**: `lp/<base>/<quote>` (e.g., `lp/ubze/ibc/xyz`).
+- **Precision**: LP tokens are scaled by 10^18 to preserve accuracy.
+- **Initial lock**: the first LP tokens minted at pool creation are permanently sent to the burner module’s black hole account — they can never be redeemed. This bootstraps the pool permanently.
 
 Example:
 ```bash
@@ -34,14 +39,38 @@ bzed tx tradebin multi-swap '["<pool1>","<pool2>"]' \
   --input 1000000ubze --min-output 900000ibc/xyz --from mykey
 ```
 
+## User Dust
+Partial order fills can leave fractional coin amounts (dust) that are too small to settle. The module tracks dust per user address, and it accumulates across trades.
+
 ## Queries
 - `bzed query tradebin params` – current fees and gas tuning knobs.
 - `bzed query tradebin market <id>` / `markets` – market listings.
+- `bzed query tradebin asset-markets <asset>` – all markets where an asset is base or quote.
+- `bzed query tradebin user-market-orders <address> --market <id>` – paginated user orders in a market.
+- `bzed query tradebin market-aggregated-orders <market> <buy|sell>` – aggregated order book at price levels.
+- `bzed query tradebin market-history <market>` – execution history for a market.
+- `bzed query tradebin market-order <market> <buy|sell> <order-id>` – single order details.
+- `bzed query tradebin all-user-dust <address>` – fractional dust from partial fills.
 - `bzed query tradebin liquidity-pool <id>` / `liquidity-pools` – pool details and LP supply.
-- Order and queue queries are also exposed via gRPC/REST for explorers/relayers.
 
 ## Fees and Destinations
-- Maker/taker fees and the create-market fee come from params. Create-market fees always go to the community-pool collector; maker/taker fees are routed to either the community-pool collector or burner fee collector based on `maker_fee_destination`/`taker_fee_destination`.
-- Fees are captured from the sender, swapped to `native_denom` when possible, and then forwarded to the destination module. Pools also carry their own fee and destination.
+- **Create-market fee** (`create_market_fee`): always routed to community pool via `txfeecollector`.
+- **Order fees** (maker/taker): routed based on `maker_fee_destination`/`taker_fee_destination` params — valid destinations are `community_pool` or `burner`.
+- **Pool fees** (`fee` field per pool): split three ways via `fee_destination` — `treasury` % to community pool, `burner` % to burner module, `providers` % to LP holders.
+- Fees are captured from the sender, swapped to `native_denom` when possible, and forwarded to the destination module.
+- `MsgUpdateParams` is restricted to the module authority (governance).
 - Queue processing at `EndBlock` is capped by `order_book_per_block_messages`; messages beyond the cap remain queued for later blocks, and the queue counter resets only after the queue is emptied.
 - Module-level swaps/add-liquidity helpers refuse to run unless the native/pair pool holds at least `min_native_liquidity_for_module_swap` in native reserves.
+
+## Version History
+
+### v8.1.0
+- Added queue-based order processing: orders processed asynchronously at EndBlock, capped at 500 messages/block (`OrderBookPerBlockMessages`)
+- Added dynamic gas surcharges for spam protection based on queue depth
+- Added `MsgFillOrders`: batch-fill up to 50 orders at specific price/amount levels in one transaction (always taker fee)
+- Added `MsgMultiSwap`: multi-hop swaps through up to 5 liquidity pool routes in a single transaction
+- AMM enhancements: optimal swap calculation for single-token liquidity provision, `ModuleSwapForNativeDenom`, `ModuleAddLiquidityWithNativeDenom` with automatic balancing and dust handling
+- Deep liquidity checks: `HasDeepLiquidityWithNativeDenom` ensures sufficient pool depth before swaps
+- Duplicate cancel prevention: pending cancel requests tracked to prevent duplicate cancellations
+- Order key precision migration: keys migrated from 24-char/10-decimal to 32-char/18-decimal format (module migration v3→v4)
+- Fee fields migrated from string to `sdk.Coin` type; 6 new gas/liquidity parameters added

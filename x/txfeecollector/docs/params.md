@@ -8,3 +8,10 @@
 
 ### Updating
 - Only the module authority (typically governance) can set this via `MsgUpdateParams`. Supply the full `DecCoin` value (denom + amount) in the message.
+
+## Version History
+
+### v8.1.0
+- Added `validator_min_gas_fee` parameter (default `0.01ubze`) — baseline minimum gas price enforced by the ante handler
+- Added `max_balance_iterations` parameter (default 100) — caps iterations over module balances per block during EndBlock fee conversion
+- ConsensusVersion bumped from 1 to 2; migration sets default values for new parameters

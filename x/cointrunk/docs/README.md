@@ -36,3 +36,9 @@ bzed tx cointrunk pay-publisher-respect \
 
 ## Governance / Authority
 - Module params and the “authority-only” messages (`accept-domain`, `save-publisher`) are reserved for the module authority (typically governance). Regular users usually only call `add-article` and `pay-publisher-respect`.
+
+## Version History
+
+### v8.1.0
+- Article event now includes article ID for easier indexing
+- Minor validation improvements

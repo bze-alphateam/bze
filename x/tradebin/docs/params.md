@@ -23,3 +23,10 @@
 
 ### Updating
 - Params are authority-only via `MsgUpdateParams`. All fields must be supplied when updating.
+
+## Version History
+
+### v8.1.0
+- Fee fields (`create_market_fee`, `market_maker_fee`, `market_taker_fee`) changed from string to `sdk.Coin` for type safety
+- Added `order_book_extra_gas_window` (default 100), `order_book_queue_extra_gas` (default 25,000), `fill_orders_extra_gas` (default 5,000), `order_book_queue_message_scan_extra_gas` (default 5,000), `order_book_per_block_messages` (default 500), `min_native_liquidity_for_module_swap` (default 100,000,000,000)
+- Migration v3→v4 converts string fees to `sdk.Coin` and sets defaults for new parameters

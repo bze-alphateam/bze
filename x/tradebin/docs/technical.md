@@ -19,3 +19,20 @@
 
 ## Storage / Queries
 - Prefixed stores keep markets, orders, queues, pools, and user dust; gRPC/REST exposes markets, pools, order books, and params for indexers.
+
+## Version History
+
+### v8.1.0
+- Added fee payer service (`CaptureAndSwapUserFee`) for fee capture and conversion to native denom via liquidity pools
+- Queue rate limiting via `OrderBookPerBlockMessages` parameter (default 500); counter resets only when queue empties
+- Pending cancel tracking: `CancelOrder` checks `HasPendingCancel` before queuing to prevent duplicates
+- New denom helpers: `HasDeepLiquidityWithNativeDenom`, `GetDenomSpotPriceInNativeCoin`
+- Min liquidity threshold now uses `MinNativeLiquidityForModuleSwap` param instead of hardcoded `50_000_000_000`
+- `ModuleSwapForNativeDenom` reordered to capture coins first then swap; returns `sdk.Coin{}` on error
+- `FillOrders` gas consumption uses `FillOrdersExtraGas` param (default 5,000) instead of hardcoded constant
+- `IterateAllQueueMessages` handler now returns `bool` to control iteration; `RemoveQueueMessage` requires `marketId` parameter
+- History order index format changed to `{messageId}{orderId}` for correct sorting
+- `CalculateMinAmount` now returns error and is properly checked
+- Order key precision migration (24-char/10-decimal → 32-char/18-decimal) moved to module migration (v3→v4) with write-before-delete pattern
+- v2 parameters: `sdk.Coin`-based fee fields + 6 new gas/liquidity parameters
+- ConsensusVersion bumped from 3 to 4

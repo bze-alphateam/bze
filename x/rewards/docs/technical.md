@@ -16,3 +16,14 @@
 
 ## Queries and Storage
 - Rewards, participants, counters, leaderboards, and expirations are kept under prefixed stores; gRPC routes expose staking/trading rewards and params for light-client/REST usage.
+
+## Version History
+
+### v8.1.0
+- Moved all three reward operations from synchronous, unbounded epoch hooks to async bounded batch processing in EndBlock with cursor tracking (100 items/block each)
+- Removed `DistrKeeper` dependency — fees now swapped to native and sent to `txfeecollector` instead of community pool
+- Expired pending trading rewards sent to burner module via `SendCoinsFromModuleToModule` instead of `BankKeeper.BurnCoins`
+- Leaderboard sorting fix: old code compared the same value for both items; fixed to properly compare `a.Amount` vs `b.Amount` with `CreatedAt` tiebreaker, using `slices.SortStableFunc`
+- Trading hook now validates `tradedAmount.IsPositive()` before processing; invalid amounts logged instead of silently ignored
+- Added `ExtraGasForExitStake` parameter (default 1,000,000)
+- ConsensusVersion bumped from 3 to 4
