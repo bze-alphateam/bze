@@ -41,6 +41,20 @@ func TestMsgUpdateParams(t *testing.T) {
 			expErrMsg: "validator min gas fee denom must be ubze",
 		},
 		{
+			name: "invalid cw deploy fee destination",
+			input: &types.MsgUpdateParams{
+				Authority: k.GetAuthority(),
+				Params: types.NewParams(
+					params.ValidatorMinGasFee,
+					params.MaxBalanceIterations,
+					"invalid_destination",
+					sdk.NewCoins(),
+				),
+			},
+			expErr:    true,
+			expErrMsg: "invalid cw_deploy_fee_destination",
+		},
+		{
 			name: "all good",
 			input: &types.MsgUpdateParams{
 				Authority: k.GetAuthority(),

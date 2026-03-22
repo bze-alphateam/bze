@@ -15,10 +15,63 @@ import (
 	sync "sync"
 )
 
+var _ protoreflect.List = (*_Params_4_list)(nil)
+
+type _Params_4_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_Params_4_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_Params_4_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_Params_4_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_Params_4_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_Params_4_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Params_4_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_Params_4_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Params_4_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
-	md_Params                      protoreflect.MessageDescriptor
-	fd_Params_ValidatorMinGasFee   protoreflect.FieldDescriptor
-	fd_Params_MaxBalanceIterations protoreflect.FieldDescriptor
+	md_Params                        protoreflect.MessageDescriptor
+	fd_Params_ValidatorMinGasFee     protoreflect.FieldDescriptor
+	fd_Params_MaxBalanceIterations   protoreflect.FieldDescriptor
+	fd_Params_CwDeployFeeDestination protoreflect.FieldDescriptor
+	fd_Params_CwDeployFee            protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -26,6 +79,8 @@ func init() {
 	md_Params = File_bze_txfeecollector_params_proto.Messages().ByName("Params")
 	fd_Params_ValidatorMinGasFee = md_Params.Fields().ByName("ValidatorMinGasFee")
 	fd_Params_MaxBalanceIterations = md_Params.Fields().ByName("MaxBalanceIterations")
+	fd_Params_CwDeployFeeDestination = md_Params.Fields().ByName("CwDeployFeeDestination")
+	fd_Params_CwDeployFee = md_Params.Fields().ByName("CwDeployFee")
 }
 
 var _ protoreflect.Message = (*fastReflection_Params)(nil)
@@ -105,6 +160,18 @@ func (x *fastReflection_Params) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
+	if x.CwDeployFeeDestination != "" {
+		value := protoreflect.ValueOfString(x.CwDeployFeeDestination)
+		if !f(fd_Params_CwDeployFeeDestination, value) {
+			return
+		}
+	}
+	if len(x.CwDeployFee) != 0 {
+		value := protoreflect.ValueOfList(&_Params_4_list{list: &x.CwDeployFee})
+		if !f(fd_Params_CwDeployFee, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -124,6 +191,10 @@ func (x *fastReflection_Params) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.ValidatorMinGasFee != nil
 	case "bze.txfeecollector.Params.MaxBalanceIterations":
 		return x.MaxBalanceIterations != uint64(0)
+	case "bze.txfeecollector.Params.CwDeployFeeDestination":
+		return x.CwDeployFeeDestination != ""
+	case "bze.txfeecollector.Params.CwDeployFee":
+		return len(x.CwDeployFee) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.txfeecollector.Params"))
@@ -144,6 +215,10 @@ func (x *fastReflection_Params) Clear(fd protoreflect.FieldDescriptor) {
 		x.ValidatorMinGasFee = nil
 	case "bze.txfeecollector.Params.MaxBalanceIterations":
 		x.MaxBalanceIterations = uint64(0)
+	case "bze.txfeecollector.Params.CwDeployFeeDestination":
+		x.CwDeployFeeDestination = ""
+	case "bze.txfeecollector.Params.CwDeployFee":
+		x.CwDeployFee = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.txfeecollector.Params"))
@@ -166,6 +241,15 @@ func (x *fastReflection_Params) Get(descriptor protoreflect.FieldDescriptor) pro
 	case "bze.txfeecollector.Params.MaxBalanceIterations":
 		value := x.MaxBalanceIterations
 		return protoreflect.ValueOfUint64(value)
+	case "bze.txfeecollector.Params.CwDeployFeeDestination":
+		value := x.CwDeployFeeDestination
+		return protoreflect.ValueOfString(value)
+	case "bze.txfeecollector.Params.CwDeployFee":
+		if len(x.CwDeployFee) == 0 {
+			return protoreflect.ValueOfList(&_Params_4_list{})
+		}
+		listValue := &_Params_4_list{list: &x.CwDeployFee}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.txfeecollector.Params"))
@@ -190,6 +274,12 @@ func (x *fastReflection_Params) Set(fd protoreflect.FieldDescriptor, value proto
 		x.ValidatorMinGasFee = value.Message().Interface().(*v1beta1.DecCoin)
 	case "bze.txfeecollector.Params.MaxBalanceIterations":
 		x.MaxBalanceIterations = value.Uint()
+	case "bze.txfeecollector.Params.CwDeployFeeDestination":
+		x.CwDeployFeeDestination = value.Interface().(string)
+	case "bze.txfeecollector.Params.CwDeployFee":
+		lv := value.List()
+		clv := lv.(*_Params_4_list)
+		x.CwDeployFee = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.txfeecollector.Params"))
@@ -215,8 +305,16 @@ func (x *fastReflection_Params) Mutable(fd protoreflect.FieldDescriptor) protore
 			x.ValidatorMinGasFee = new(v1beta1.DecCoin)
 		}
 		return protoreflect.ValueOfMessage(x.ValidatorMinGasFee.ProtoReflect())
+	case "bze.txfeecollector.Params.CwDeployFee":
+		if x.CwDeployFee == nil {
+			x.CwDeployFee = []*v1beta1.Coin{}
+		}
+		value := &_Params_4_list{list: &x.CwDeployFee}
+		return protoreflect.ValueOfList(value)
 	case "bze.txfeecollector.Params.MaxBalanceIterations":
 		panic(fmt.Errorf("field MaxBalanceIterations of message bze.txfeecollector.Params is not mutable"))
+	case "bze.txfeecollector.Params.CwDeployFeeDestination":
+		panic(fmt.Errorf("field CwDeployFeeDestination of message bze.txfeecollector.Params is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.txfeecollector.Params"))
@@ -235,6 +333,11 @@ func (x *fastReflection_Params) NewField(fd protoreflect.FieldDescriptor) protor
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "bze.txfeecollector.Params.MaxBalanceIterations":
 		return protoreflect.ValueOfUint64(uint64(0))
+	case "bze.txfeecollector.Params.CwDeployFeeDestination":
+		return protoreflect.ValueOfString("")
+	case "bze.txfeecollector.Params.CwDeployFee":
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_Params_4_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.txfeecollector.Params"))
@@ -311,6 +414,16 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if x.MaxBalanceIterations != 0 {
 			n += 1 + runtime.Sov(uint64(x.MaxBalanceIterations))
 		}
+		l = len(x.CwDeployFeeDestination)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if len(x.CwDeployFee) > 0 {
+			for _, e := range x.CwDeployFee {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -339,6 +452,29 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.CwDeployFee) > 0 {
+			for iNdEx := len(x.CwDeployFee) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.CwDeployFee[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x22
+			}
+		}
+		if len(x.CwDeployFeeDestination) > 0 {
+			i -= len(x.CwDeployFeeDestination)
+			copy(dAtA[i:], x.CwDeployFeeDestination)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.CwDeployFeeDestination)))
+			i--
+			dAtA[i] = 0x1a
 		}
 		if x.MaxBalanceIterations != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.MaxBalanceIterations))
@@ -463,6 +599,72 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CwDeployFeeDestination", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.CwDeployFeeDestination = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CwDeployFee", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.CwDeployFee = append(x.CwDeployFee, &v1beta1.Coin{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.CwDeployFee[len(x.CwDeployFee)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -517,8 +719,10 @@ type Params struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ValidatorMinGasFee   *v1beta1.DecCoin `protobuf:"bytes,1,opt,name=ValidatorMinGasFee,proto3" json:"ValidatorMinGasFee,omitempty"`
-	MaxBalanceIterations uint64           `protobuf:"varint,2,opt,name=MaxBalanceIterations,proto3" json:"MaxBalanceIterations,omitempty"`
+	ValidatorMinGasFee     *v1beta1.DecCoin `protobuf:"bytes,1,opt,name=ValidatorMinGasFee,proto3" json:"ValidatorMinGasFee,omitempty"`
+	MaxBalanceIterations   uint64           `protobuf:"varint,2,opt,name=MaxBalanceIterations,proto3" json:"MaxBalanceIterations,omitempty"`
+	CwDeployFeeDestination string           `protobuf:"bytes,3,opt,name=CwDeployFeeDestination,proto3" json:"CwDeployFeeDestination,omitempty"`
+	CwDeployFee            []*v1beta1.Coin  `protobuf:"bytes,4,rep,name=CwDeployFee,proto3" json:"CwDeployFee,omitempty"`
 }
 
 func (x *Params) Reset() {
@@ -555,6 +759,20 @@ func (x *Params) GetMaxBalanceIterations() uint64 {
 	return 0
 }
 
+func (x *Params) GetCwDeployFeeDestination() string {
+	if x != nil {
+		return x.CwDeployFeeDestination
+	}
+	return ""
+}
+
+func (x *Params) GetCwDeployFee() []*v1beta1.Coin {
+	if x != nil {
+		return x.CwDeployFee
+	}
+	return nil
+}
+
 var File_bze_txfeecollector_params_proto protoreflect.FileDescriptor
 
 var file_bze_txfeecollector_params_proto_rawDesc = []byte{
@@ -565,8 +783,8 @@ var file_bze_txfeecollector_params_proto_rawDesc = []byte{
 	0x6e, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72,
 	0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e,
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xc1,
-	0x02, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x95, 0x01, 0x0a, 0x12, 0x56, 0x61,
+	0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xea,
+	0x04, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x95, 0x01, 0x0a, 0x12, 0x56, 0x61,
 	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x4d, 0x69, 0x6e, 0x47, 0x61, 0x73, 0x46, 0x65, 0x65,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
 	0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x44, 0x65, 0x63,
@@ -583,22 +801,41 @@ var file_bze_txfeecollector_params_proto_rawDesc = []byte{
 	0x65, 0x6d, 0x70, 0x74, 0x79, 0xf2, 0xde, 0x1f, 0x1d, 0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x6d,
 	0x61, 0x78, 0x5f, 0x62, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x5f, 0x69, 0x74, 0x65, 0x72, 0x61,
 	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x22, 0x52, 0x14, 0x4d, 0x61, 0x78, 0x42, 0x61, 0x6c, 0x61, 0x6e,
-	0x63, 0x65, 0x49, 0x74, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x3a, 0x24, 0xe8, 0xa0,
-	0x1f, 0x01, 0x8a, 0xe7, 0xb0, 0x2a, 0x1b, 0x62, 0x7a, 0x65, 0x2f, 0x78, 0x2f, 0x74, 0x78, 0x66,
-	0x65, 0x65, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x2f, 0x50, 0x61, 0x72, 0x61,
-	0x6d, 0x73, 0x42, 0xc3, 0x01, 0x0a, 0x16, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74,
-	0x78, 0x66, 0x65, 0x65, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x42, 0x0b, 0x50,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x33, 0x67, 0x69,
-	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70,
-	0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62,
-	0x7a, 0x65, 0x2f, 0x74, 0x78, 0x66, 0x65, 0x65, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x6f,
-	0x72, 0xa2, 0x02, 0x03, 0x42, 0x54, 0x58, 0xaa, 0x02, 0x12, 0x42, 0x7a, 0x65, 0x2e, 0x54, 0x78,
-	0x66, 0x65, 0x65, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0xca, 0x02, 0x12, 0x42,
-	0x7a, 0x65, 0x5c, 0x54, 0x78, 0x66, 0x65, 0x65, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x6f,
-	0x72, 0xe2, 0x02, 0x1e, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x78, 0x66, 0x65, 0x65, 0x63, 0x6f, 0x6c,
-	0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0xea, 0x02, 0x13, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x54, 0x78, 0x66, 0x65, 0x65, 0x63,
-	0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x63, 0x65, 0x49, 0x74, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x83, 0x01, 0x0a,
+	0x16, 0x43, 0x77, 0x44, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x46, 0x65, 0x65, 0x44, 0x65, 0x73, 0x74,
+	0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x4b, 0xea,
+	0xde, 0x1f, 0x23, 0x63, 0x77, 0x5f, 0x64, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x5f, 0x66, 0x65, 0x65,
+	0x5f, 0x64, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2c, 0x6f, 0x6d, 0x69,
+	0x74, 0x65, 0x6d, 0x70, 0x74, 0x79, 0xf2, 0xde, 0x1f, 0x20, 0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22,
+	0x63, 0x77, 0x5f, 0x64, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x5f, 0x66, 0x65, 0x65, 0x5f, 0x64, 0x65,
+	0x73, 0x74, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x52, 0x16, 0x43, 0x77, 0x44, 0x65,
+	0x70, 0x6c, 0x6f, 0x79, 0x46, 0x65, 0x65, 0x44, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x12, 0xa0, 0x01, 0x0a, 0x0b, 0x43, 0x77, 0x44, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x46,
+	0x65, 0x65, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43,
+	0x6f, 0x69, 0x6e, 0x42, 0x63, 0xc8, 0xde, 0x1f, 0x00, 0xea, 0xde, 0x1f, 0x17, 0x63, 0x77, 0x5f,
+	0x64, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x5f, 0x66, 0x65, 0x65, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65,
+	0x6d, 0x70, 0x74, 0x79, 0xf2, 0xde, 0x1f, 0x14, 0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x63, 0x77,
+	0x5f, 0x64, 0x65, 0x70, 0x6c, 0x6f, 0x79, 0x5f, 0x66, 0x65, 0x65, 0x22, 0xaa, 0xdf, 0x1f, 0x28,
+	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70,
+	0x65, 0x73, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x0b, 0x43, 0x77, 0x44, 0x65, 0x70, 0x6c,
+	0x6f, 0x79, 0x46, 0x65, 0x65, 0x3a, 0x24, 0xe8, 0xa0, 0x1f, 0x01, 0x8a, 0xe7, 0xb0, 0x2a, 0x1b,
+	0x62, 0x7a, 0x65, 0x2f, 0x78, 0x2f, 0x74, 0x78, 0x66, 0x65, 0x65, 0x63, 0x6f, 0x6c, 0x6c, 0x65,
+	0x63, 0x74, 0x6f, 0x72, 0x2f, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0xc3, 0x01, 0x0a, 0x16,
+	0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x78, 0x66, 0x65, 0x65, 0x63, 0x6f, 0x6c,
+	0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x42, 0x0b, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x50, 0x72,
+	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x33, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
+	0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f,
+	0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x78, 0x66, 0x65,
+	0x65, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0xa2, 0x02, 0x03, 0x42, 0x54, 0x58,
+	0xaa, 0x02, 0x12, 0x42, 0x7a, 0x65, 0x2e, 0x54, 0x78, 0x66, 0x65, 0x65, 0x63, 0x6f, 0x6c, 0x6c,
+	0x65, 0x63, 0x74, 0x6f, 0x72, 0xca, 0x02, 0x12, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x78, 0x66, 0x65,
+	0x65, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0xe2, 0x02, 0x1e, 0x42, 0x7a, 0x65,
+	0x5c, 0x54, 0x78, 0x66, 0x65, 0x65, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x5c,
+	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x13, 0x42, 0x7a,
+	0x65, 0x3a, 0x3a, 0x54, 0x78, 0x66, 0x65, 0x65, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x6f,
+	0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -617,14 +854,16 @@ var file_bze_txfeecollector_params_proto_msgTypes = make([]protoimpl.MessageInfo
 var file_bze_txfeecollector_params_proto_goTypes = []interface{}{
 	(*Params)(nil),          // 0: bze.txfeecollector.Params
 	(*v1beta1.DecCoin)(nil), // 1: cosmos.base.v1beta1.DecCoin
+	(*v1beta1.Coin)(nil),    // 2: cosmos.base.v1beta1.Coin
 }
 var file_bze_txfeecollector_params_proto_depIdxs = []int32{
 	1, // 0: bze.txfeecollector.Params.ValidatorMinGasFee:type_name -> cosmos.base.v1beta1.DecCoin
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	2, // 1: bze.txfeecollector.Params.CwDeployFee:type_name -> cosmos.base.v1beta1.Coin
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_bze_txfeecollector_params_proto_init() }
