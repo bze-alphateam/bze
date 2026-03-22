@@ -41,6 +41,7 @@ func NewAnteHandler(options ante.HandlerOptions, customOptions AnteHandlerOption
 		ante.NewValidateMemoDecorator(options.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		customAnte.NewDeductFeeDecorator(customOptions.TradeKeeper, options.AccountKeeper, customOptions.BankKeeper, options.FeegrantKeeper, customOptions.TxCollectorKeeper),
+		customAnte.NewCwDeployFeeDecorator(customOptions.TradeKeeper, customOptions.BankKeeper, customOptions.TxCollectorKeeper),
 		ante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewValidateSigCountDecorator(options.AccountKeeper),
 		ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),

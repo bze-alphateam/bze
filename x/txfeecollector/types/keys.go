@@ -12,6 +12,10 @@ const (
 
 	BurnerFeeCollector = "txfeecollector_burner"
 	CpFeeCollector     = "txfeecollector_cp"
+
+	FeeDestBurner        = "burner"
+	FeeDestCommunityPool = "community_pool"
+	FeeDestStakers       = "stakers"
 )
 
 var (
