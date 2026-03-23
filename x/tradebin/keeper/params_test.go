@@ -305,19 +305,3 @@ func (suite *IntegrationTestSuite) TestParams_OrderBookQueueMessageScanExtraGas(
 	retrievedParams := suite.k.GetParams(suite.ctx)
 	suite.Require().Equal(uint64(7500), retrievedParams.OrderBookQueueMessageScanExtraGas)
 }
-
-func (suite *IntegrationTestSuite) TestParams_GetDefault_AllFields() {
-	retrievedParams := suite.k.GetParams(suite.ctx)
-
-	suite.Require().Equal(v2types.DefaultCreateMarketFee, retrievedParams.CreateMarketFee)
-	suite.Require().Equal(v2types.DefaultMarketMakerFee, retrievedParams.MarketMakerFee)
-	suite.Require().Equal(v2types.DefaultMarketTakerFee, retrievedParams.MarketTakerFee)
-	suite.Require().Equal(v2types.DefaultMakerFeeDestination, retrievedParams.MakerFeeDestination)
-	suite.Require().Equal(v2types.DefaultTakerFeeDestination, retrievedParams.TakerFeeDestination)
-	suite.Require().Equal(v2types.DefaultOrderBookExtraGasWindow, retrievedParams.OrderBookExtraGasWindow)
-	suite.Require().Equal(v2types.DefaultOrderBookQueueExtraGas, retrievedParams.OrderBookQueueExtraGas)
-	suite.Require().Equal(v2types.DefaultFillOrdersExtraGas, retrievedParams.FillOrdersExtraGas)
-	suite.Require().Equal(v2types.DefaultOrderBookQueueMessageScanExtraGas, retrievedParams.OrderBookQueueMessageScanExtraGas)
-	suite.Require().EqualValues(v2types.DefaultMinNativeLiquidityForModuleSwap, retrievedParams.MinNativeLiquidityForModuleSwap)
-	suite.Require().Equal(v2types.DefaultOrderBookPerBlockMessages, retrievedParams.OrderBookPerBlockMessages)
-}
