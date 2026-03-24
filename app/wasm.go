@@ -5,9 +5,12 @@ import (
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
+	appmodule "cosmossdk.io/core/appmodule"
 	storetypes "cosmossdk.io/store/types"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -95,6 +98,21 @@ func (app *App) registerWasmModule(appOpts servertypes.AppOptions) error {
 	}
 
 	return nil
+}
+
+// RegisterWasm registers wasm module on the client side for autocli/CLI support.
+// Since wasmd does not support dependency injection, we need to manually register
+// the module on the client side (same pattern as RegisterIBC in ibc.go).
+func RegisterWasm(registry cdctypes.InterfaceRegistry) map[string]appmodule.AppModule {
+	modules := map[string]appmodule.AppModule{
+		wasmtypes.ModuleName: wasm.AppModule{},
+	}
+
+	for name, m := range modules {
+		module.CoreAppModuleBasicAdaptor(name, m).RegisterInterfaces(registry)
+	}
+
+	return modules
 }
 
 // GetWasmOpts returns wasm keeper options.

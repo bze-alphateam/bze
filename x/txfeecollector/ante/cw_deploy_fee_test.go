@@ -7,12 +7,14 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/bze-alphateam/bze/x/txfeecollector/ante"
 	"github.com/bze-alphateam/bze/x/txfeecollector/types"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	"go.uber.org/mock/gomock"
 )
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_FeeDisabled() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	// Set params with zero CwDeployFee (disabled)
 	params := types.NewParams(
@@ -41,7 +43,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_FeeDisabled() {
 }
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_NoStoreCodeMsg() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	// Set params with active CwDeployFee
 	params := types.NewParams(
@@ -65,7 +67,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_NoStoreCodeMsg() {
 }
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_SingleStoreCode_Stakers() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	feePayer := sdk.AccAddress("feepayer____________")
 	deployFee := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 5000000000))
@@ -103,7 +105,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_SingleStoreCode_Stakers() {
 }
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_SingleStoreCode_Burner() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	feePayer := sdk.AccAddress("feepayer____________")
 	deployFee := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 5000000000))
@@ -140,7 +142,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_SingleStoreCode_Burner() {
 }
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_SingleStoreCode_CommunityPool() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	feePayer := sdk.AccAddress("feepayer____________")
 	deployFee := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 5000000000))
@@ -177,7 +179,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_SingleStoreCode_CommunityPo
 }
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_MultipleStoreCode() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	feePayer := sdk.AccAddress("feepayer____________")
 	singleFee := sdk.NewInt64Coin(denomBze, 5000000000)
@@ -217,7 +219,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_MultipleStoreCode() {
 }
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_InsufficientFunds() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	feePayer := sdk.AccAddress("feepayer____________")
 	deployFee := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 5000000000))
@@ -255,7 +257,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_InsufficientFunds() {
 }
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_SimulateMode() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	feePayer := sdk.AccAddress("feepayer____________")
 	deployFee := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 5000000000))
@@ -289,7 +291,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_SimulateMode() {
 }
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_MixedMsgs() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	feePayer := sdk.AccAddress("feepayer____________")
 	deployFee := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 5000000000))
@@ -326,7 +328,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_MixedMsgs() {
 }
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_MultiDenomFee() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	feePayer := sdk.AccAddress("feepayer____________")
 	deployFee := sdk.NewCoins(
@@ -370,7 +372,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_MultiDenomFee() {
 }
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_DefaultParams() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	feePayer := sdk.AccAddress("feepayer____________")
 
@@ -404,7 +406,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_DefaultParams() {
 }
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_EmitsEvent() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	feePayer := sdk.AccAddress("feepayer____________")
 	deployFee := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 5000000000))
@@ -459,7 +461,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_EmitsEvent() {
 }
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_CustomFeePayer() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	customPayer := sdk.AccAddress("custompayer_________")
 	deployFee := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 5000000000))
@@ -498,7 +500,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_CustomFeePayer() {
 // --- Non-native denom conversion tests ---
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_NonNativeDenom_ConvertsNativePortion() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	feePayer := sdk.AccAddress("feepayer____________")
 	deployFee := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 5000000000)) // 5000 BZE
@@ -559,7 +561,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_NonNativeDenom_ConvertsNati
 }
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_NonNativeDenom_SpotPriceFails_FallbackToNative() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	feePayer := sdk.AccAddress("feepayer____________")
 	deployFee := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 5000000000))
@@ -609,7 +611,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_NonNativeDenom_SpotPriceFai
 }
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_NonNativeDenom_ZeroSpotPrice_FallbackToNative() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	feePayer := sdk.AccAddress("feepayer____________")
 	deployFee := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 5000000000))
@@ -659,7 +661,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_NonNativeDenom_ZeroSpotPric
 }
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_NativeDenomInContext_NoConversion() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	feePayer := sdk.AccAddress("feepayer____________")
 	deployFee := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 5000000000))
@@ -703,7 +705,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_NativeDenomInContext_NoConv
 }
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_NonNativeDenom_MixedDeployFee_OnlyNativeConverted() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	feePayer := sdk.AccAddress("feepayer____________")
 	// Deploy fee has both native and non-native coins
@@ -776,7 +778,7 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_NonNativeDenom_MixedDeployF
 }
 
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_NonNativeDenom_CeilingRounding() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	feePayer := sdk.AccAddress("feepayer____________")
 	deployFee := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 100)) // small amount to test rounding
@@ -834,8 +836,193 @@ func (suite *AnteTestSuite) TestCwDeployFeeDecorator_NonNativeDenom_CeilingRound
 	suite.Require().True(suite.nextCalled)
 }
 
+// --- Authz MsgExec tests ---
+
+func (suite *AnteTestSuite) TestCwDeployFeeDecorator_AuthzWrappedStoreCode() {
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
+
+	feePayer := sdk.AccAddress("feepayer____________")
+	deployFee := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 5000000000))
+
+	params := types.NewParams(
+		types.DefaultParams().ValidatorMinGasFee,
+		types.DefaultMaxBalanceIterations,
+		types.FeeDestStakers,
+		deployFee,
+	)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	// MsgStoreCode wrapped in authz.MsgExec should still be counted
+	innerMsg := &wasmtypes.MsgStoreCode{
+		Sender:       feePayer.String(),
+		WASMByteCode: []byte("wasm_code"),
+	}
+	anyMsg, err := cdctypes.NewAnyWithValue(innerMsg)
+	suite.Require().NoError(err)
+
+	authzExec := &authz.MsgExec{
+		Grantee: feePayer.String(),
+		Msgs:    []*cdctypes.Any{anyMsg},
+	}
+
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(gomock.Any(), feePayer, types.ModuleName, deployFee).
+		Return(nil).
+		Times(1)
+
+	tx := &mockFeeTx{
+		fee:      sdk.NewCoins(sdk.NewCoin(denomBze, sdkmath.NewInt(1000))),
+		gas:      100000,
+		feePayer: feePayer,
+		msgs:     []sdk.Msg{authzExec},
+	}
+
+	_, err = decorator.AnteHandle(suite.ctx, tx, false, suite.mockNext())
+	suite.Require().NoError(err)
+	suite.Require().True(suite.nextCalled)
+}
+
+func (suite *AnteTestSuite) TestCwDeployFeeDecorator_AuthzMixedWithDirect() {
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
+
+	feePayer := sdk.AccAddress("feepayer____________")
+	singleFee := sdk.NewInt64Coin(denomBze, 5000000000)
+	deployFee := sdk.NewCoins(singleFee)
+
+	params := types.NewParams(
+		types.DefaultParams().ValidatorMinGasFee,
+		types.DefaultMaxBalanceIterations,
+		types.FeeDestStakers,
+		deployFee,
+	)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	// 1 direct MsgStoreCode + 1 wrapped in authz = 2x fee
+	innerMsg := &wasmtypes.MsgStoreCode{
+		Sender:       feePayer.String(),
+		WASMByteCode: []byte("wasm_code_2"),
+	}
+	anyMsg, err := cdctypes.NewAnyWithValue(innerMsg)
+	suite.Require().NoError(err)
+
+	authzExec := &authz.MsgExec{
+		Grantee: feePayer.String(),
+		Msgs:    []*cdctypes.Any{anyMsg},
+	}
+
+	expectedFee := sdk.NewCoins(sdk.NewCoin(denomBze, singleFee.Amount.MulRaw(2)))
+
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(gomock.Any(), feePayer, types.ModuleName, expectedFee).
+		Return(nil).
+		Times(1)
+
+	tx := &mockFeeTx{
+		fee:      sdk.NewCoins(sdk.NewCoin(denomBze, sdkmath.NewInt(1000))),
+		gas:      100000,
+		feePayer: feePayer,
+		msgs: []sdk.Msg{
+			&wasmtypes.MsgStoreCode{Sender: feePayer.String(), WASMByteCode: []byte("wasm_code_1")},
+			authzExec,
+		},
+	}
+
+	_, err = decorator.AnteHandle(suite.ctx, tx, false, suite.mockNext())
+	suite.Require().NoError(err)
+	suite.Require().True(suite.nextCalled)
+}
+
+// --- FeeGranter tests ---
+
+func (suite *AnteTestSuite) TestCwDeployFeeDecorator_FeeGranter_ChargesGranter() {
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
+
+	feePayer := sdk.AccAddress("feepayer____________")
+	feeGranter := sdk.AccAddress("feegranter__________")
+	deployFee := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 5000000000))
+
+	params := types.NewParams(
+		types.DefaultParams().ValidatorMinGasFee,
+		types.DefaultMaxBalanceIterations,
+		types.FeeDestStakers,
+		deployFee,
+	)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	// Feegrant should be checked and the granter should be charged
+	suite.feegrantMock.EXPECT().
+		UseGrantedFees(gomock.Any(), feeGranter, feePayer, deployFee, gomock.Any()).
+		Return(nil).
+		Times(1)
+
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(gomock.Any(), feeGranter, types.ModuleName, deployFee).
+		Return(nil).
+		Times(1)
+
+	tx := &mockFeeTx{
+		fee:        sdk.NewCoins(sdk.NewCoin(denomBze, sdkmath.NewInt(1000))),
+		gas:        100000,
+		feePayer:   feePayer,
+		feeGranter: feeGranter,
+		msgs: []sdk.Msg{
+			&wasmtypes.MsgStoreCode{
+				Sender:       feePayer.String(),
+				WASMByteCode: []byte("wasm_code"),
+			},
+		},
+	}
+
+	_, err = decorator.AnteHandle(suite.ctx, tx, false, suite.mockNext())
+	suite.Require().NoError(err)
+	suite.Require().True(suite.nextCalled)
+}
+
+func (suite *AnteTestSuite) TestCwDeployFeeDecorator_FeeGranter_GrantDenied() {
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
+
+	feePayer := sdk.AccAddress("feepayer____________")
+	feeGranter := sdk.AccAddress("feegranter__________")
+	deployFee := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 5000000000))
+
+	params := types.NewParams(
+		types.DefaultParams().ValidatorMinGasFee,
+		types.DefaultMaxBalanceIterations,
+		types.FeeDestStakers,
+		deployFee,
+	)
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	suite.feegrantMock.EXPECT().
+		UseGrantedFees(gomock.Any(), feeGranter, feePayer, deployFee, gomock.Any()).
+		Return(fmt.Errorf("fee grant not found")).
+		Times(1)
+
+	tx := &mockFeeTx{
+		fee:        sdk.NewCoins(sdk.NewCoin(denomBze, sdkmath.NewInt(1000))),
+		gas:        100000,
+		feePayer:   feePayer,
+		feeGranter: feeGranter,
+		msgs: []sdk.Msg{
+			&wasmtypes.MsgStoreCode{
+				Sender:       feePayer.String(),
+				WASMByteCode: []byte("wasm_code"),
+			},
+		},
+	}
+
+	_, err = decorator.AnteHandle(suite.ctx, tx, false, suite.mockNext())
+	suite.Require().Error(err)
+	suite.Require().Contains(err.Error(), "does not allow to pay fees for")
+	suite.Require().False(suite.nextCalled)
+}
+
 func (suite *AnteTestSuite) TestCwDeployFeeDecorator_NonNativeDenom_NoNativeInFee_NoConversion() {
-	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, &suite.k)
+	decorator := ante.NewCwDeployFeeDecorator(suite.tradeMock, suite.bankMock, suite.feegrantMock, &suite.k)
 
 	feePayer := sdk.AccAddress("feepayer____________")
 	// Deploy fee is entirely in a non-native denom — no conversion needed

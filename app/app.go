@@ -307,6 +307,9 @@ func New(
 	// Seal the IBC router after all modules (IBC + wasm) have added their routes
 	app.IBCKeeper.SetRouter(app.ibcRouter)
 
+	// Seal the capability keeper after all ScopeToModule calls (IBC + wasm) are complete
+	app.CapabilityKeeper.Seal()
+
 	// register streaming services
 	if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
 		return nil, err

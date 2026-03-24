@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"bytes"
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
@@ -11,6 +12,7 @@ import (
 	"github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
 // CwDeployFeeDecorator charges an additional fee for MsgStoreCode transactions.
@@ -20,17 +22,20 @@ import (
 type CwDeployFeeDecorator struct {
 	tradeKeeper       types.TradeKeeper
 	bankKeeper        types.BankKeeper
+	feegrantKeeper    types.FeegrantKeeper
 	txCollectorKeeper *keeper.Keeper
 }
 
 func NewCwDeployFeeDecorator(
 	tk types.TradeKeeper,
 	bk types.BankKeeper,
+	fk types.FeegrantKeeper,
 	txk *keeper.Keeper,
 ) CwDeployFeeDecorator {
 	return CwDeployFeeDecorator{
 		tradeKeeper:       tk,
 		bankKeeper:        bk,
+		feegrantKeeper:    fk,
 		txCollectorKeeper: txk,
 	}
 }
@@ -41,12 +46,7 @@ func (cfd CwDeployFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		return next(ctx, tx, simulate)
 	}
 
-	storeCodeCount := 0
-	for _, msg := range tx.GetMsgs() {
-		if _, ok := msg.(*wasmtypes.MsgStoreCode); ok {
-			storeCodeCount++
-		}
-	}
+	storeCodeCount := countStoreCodeMsgs(tx.GetMsgs())
 
 	if storeCodeCount == 0 {
 		return next(ctx, tx, simulate)
@@ -68,6 +68,23 @@ func (cfd CwDeployFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 	feePayer := feeTx.FeePayer()
+	deductFeesFrom := feePayer
+
+	// Support fee granter semantics (same as deduct_fee.go)
+	feeGranter := feeTx.FeeGranter()
+	if feeGranter != nil {
+		feeGranterAddr := sdk.AccAddress(feeGranter)
+		if cfd.feegrantKeeper == nil {
+			return ctx, sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
+		} else if !bytes.Equal(feeGranterAddr, feePayer) {
+			err := cfd.feegrantKeeper.UseGrantedFees(ctx, feeGranterAddr, feePayer, totalFee, tx.GetMsgs())
+			if err != nil {
+				return ctx, errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", feeGranter, feePayer)
+			}
+
+			deductFeesFrom = feeGranterAddr
+		}
+	}
 
 	// Determine destination module account
 	destModule, err := feeDestinationToModule(params.CwDeployFeeDestination)
@@ -76,7 +93,7 @@ func (cfd CwDeployFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	}
 
 	if !simulate {
-		err = cfd.bankKeeper.SendCoinsFromAccountToModule(ctx, feePayer, destModule, totalFee)
+		err = cfd.bankKeeper.SendCoinsFromAccountToModule(ctx, deductFeesFrom, destModule, totalFee)
 		if err != nil {
 			return ctx, errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, "failed to charge cw deploy fee: %s", err)
 		}
@@ -85,7 +102,7 @@ func (cfd CwDeployFeeDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			"cw_deploy_fee",
-			sdk.NewAttribute("fee_payer", sdk.AccAddress(feePayer).String()),
+			sdk.NewAttribute("fee_payer", sdk.AccAddress(deductFeesFrom).String()),
 			sdk.NewAttribute("fee", totalFee.String()),
 			sdk.NewAttribute("destination", params.CwDeployFeeDestination),
 			sdk.NewAttribute("store_code_count", fmt.Sprintf("%d", storeCodeCount)),
@@ -132,6 +149,24 @@ func (cfd CwDeployFeeDecorator) convertNativePortionToFeeDenom(ctx sdk.Context, 
 	}
 
 	return converted
+}
+
+// countStoreCodeMsgs counts MsgStoreCode messages, including those nested
+// inside authz.MsgExec wrappers (recursively).
+func countStoreCodeMsgs(msgs []sdk.Msg) int {
+	count := 0
+	for _, msg := range msgs {
+		switch m := msg.(type) {
+		case *wasmtypes.MsgStoreCode:
+			count++
+		case *authz.MsgExec:
+			inner, err := m.GetMessages()
+			if err == nil {
+				count += countStoreCodeMsgs(inner)
+			}
+		}
+	}
+	return count
 }
 
 // feeDestinationToModule maps a CwDeployFeeDestination param value to the
