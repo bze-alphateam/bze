@@ -41,6 +41,6 @@ This file captures implementation details for integrators and operators. For use
 - Raffle cleanup moved from synchronous epoch hook to queued EndBlock processing: `EnqueueRaffleCleanup()` queues epochs, `ProcessRaffleCleanupQueue()` processes up to 50 raffles per block
 - IBC token strategy in `BurnAnyCoins()` changed from `ModuleSwapForNativeDenom` to `ModuleAddLiquidityWithNativeDenom`
 - `MsgFundBurner` now classifies coins before sending: lockable (LP) to black hole, burnable/exchangeable to burner module
-- Added `MsgMoveIbcLockedCoins` (governance-only) to recover IBC coins from the black-hole module via liquidity addition
+- Added `MsgMoveIbcLockedCoins` (permissionless) to recover IBC coins from the black-hole module via liquidity addition
 - `GetRaffleCurrentEpoch()` now returns `(uint64, error)` using `SafeGetEpochCountByIdentifier` for proper error handling
 - Rate limit: max 200 raffle participants per block height; minimum pot of 100,000 units enforced

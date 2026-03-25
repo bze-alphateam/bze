@@ -65,12 +65,13 @@ Partial order fills can leave fractional coin amounts (dust) that are too small 
 ## Version History
 
 ### v8.1.0
-- Added queue-based order processing: orders processed asynchronously at EndBlock, capped at 500 messages/block (`OrderBookPerBlockMessages`)
-- Added dynamic gas surcharges for spam protection based on queue depth
-- Added `MsgFillOrders`: batch-fill up to 50 orders at specific price/amount levels in one transaction (always taker fee)
-- Added `MsgMultiSwap`: multi-hop swaps through up to 5 liquidity pool routes in a single transaction
-- AMM enhancements: optimal swap calculation for single-token liquidity provision, `ModuleSwapForNativeDenom`, `ModuleAddLiquidityWithNativeDenom` with automatic balancing and dust handling
-- Deep liquidity checks: `HasDeepLiquidityWithNativeDenom` ensures sufficient pool depth before swaps
-- Duplicate cancel prevention: pending cancel requests tracked to prevent duplicate cancellations
+- Fee payer service (`CaptureAndSwapUserFee`) for fee capture and conversion to native denom via liquidity pools
+- Queue-based order processing with bounded EndBlock execution, capped at 500 messages/block (`OrderBookPerBlockMessages`)
+- Dynamic gas surcharges for spam protection based on queue depth via 6 new gas/liquidity parameters
+- Duplicate cancel prevention: pending cancel requests tracked via `HasPendingCancel` to prevent duplicates
+- Queue message keys restructured to composite `{market}/{id}` format for market-scoped queries
 - Order key precision migration: keys migrated from 24-char/10-decimal to 32-char/18-decimal format (module migration v3→v4)
-- Fee fields migrated from string to `sdk.Coin` type; 6 new gas/liquidity parameters added
+- Fee fields (`create_market_fee`, `market_maker_fee`, `market_taker_fee`) migrated from string to `sdk.Coin` type (v2 parameters)
+- `min_native_liquidity_for_module_swap` param replaces hardcoded liquidity threshold
+- `FillOrders` gas consumption now uses `FillOrdersExtraGas` param instead of hardcoded constant
+- ConsensusVersion bumped from 3 to 4

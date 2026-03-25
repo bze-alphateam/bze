@@ -13,4 +13,3 @@
 
 ### v8.1.0
 - Added `extra_gas_for_exit_stake` parameter (`uint64`, default `1000000`): extra gas consumed when exiting a stake via `MsgExitStaking`
-- Fee fields changed to `sdk.Coin` type for type safety (migration v3→v4 handles conversion)
