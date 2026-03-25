@@ -40,5 +40,6 @@ bzed tx cointrunk pay-publisher-respect \
 ## Version History
 
 ### v8.1.0
-- Article event now includes article ID for easier indexing
-- Minor validation improvements
+- `SetArticle` now takes a pointer receiver, allowing the caller to observe the auto-incremented article ID
+- Publisher respect tax validation now enforces strict bounds (0 < tax < 1), rejecting values >= 100%
+- Removed impossible `uint64 < 0` check in `validateAnonArticleLimit`

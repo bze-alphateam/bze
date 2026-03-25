@@ -49,7 +49,7 @@ When a staking reward has a lock period and you exit:
 ## Trading Reward Lifecycle
 - Pending trading rewards must be activated by governance within 30 days. Unactivated rewards expire and their funds are sent to the burner module.
 - Only one active trading reward per market is allowed; creation fails if one already exists.
-- Top 10 traders per reward are tracked on a leaderboard, sorted by volume with timestamp-based tie-breaking.
+- Traders per reward are tracked on a leaderboard (sized by the reward's `slots` parameter), sorted by volume with timestamp-based tie-breaking.
 - Distribution happens automatically at the end of the reward period.
 
 ## Queries
@@ -59,7 +59,7 @@ When a staking reward has a lock period and you exit:
 - `bzed query rewards all-staking-reward-participants` – all participants across all rewards (paginated).
 - `bzed query rewards trading-reward <id>` – view a single trading reward.
 - `bzed query rewards trading-rewards [--state pending|active]` – filter trading rewards by state (paginated).
-- `bzed query rewards trading-reward-leaderboard <id>` – top 10 traders for a reward.
+- `bzed query rewards trading-reward-leaderboard <id>` – top traders for a reward.
 - `bzed query rewards market-trading-reward --market-id <id>` – active reward for a specific market.
 - `bzed query rewards all-pending-unlock-participants` – participants queued for stake unlock (paginated).
 - `bzed query rewards params` – view current fees for creating rewards.
@@ -73,7 +73,7 @@ When a staking reward has a lock period and you exit:
 ### v8.1.0
 - All reward operations now use bounded queue-based processing at EndBlock (up to 100 items/block): unlock participants, staking reward distribution, and trading reward expiration
 - Added `ExtraGasForExitStake` parameter (default 1,000,000 gas) consumed when exiting a stake
-- Trading reward leaderboard: top 10 traders tracked per reward, sorted by volume with tie-breaking by timestamp
+- Trading reward leaderboard: traders tracked per reward (sized by the reward's `slots` parameter), sorted by volume with tie-breaking by timestamp
 - One active trading reward per market enforced; creation fails if one already exists
 - Creation fees now routed to `txfeecollector` module instead of directly to community pool
 - Expired pending trading rewards send uncaptured tokens to the burner module

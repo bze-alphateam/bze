@@ -41,5 +41,5 @@ To permanently lock a denom's supply (no future minting, burning, or metadata ch
 ## Version History
 
 ### v8.1.0
-- Subdenom validation now disallows slash (`/`) and underscore (`_`) characters to prevent ambiguous denom paths
-- Keeper changed to pointer type for consistency with other modules
+- Subdenom validation now disallows slash (`/`) characters to prevent ambiguous denom paths
+- Creation fee routing changed from `FundCommunityPool` (distribution keeper) to `CaptureAndSwapUserFee` (trade keeper) with forwarding to fee collector
