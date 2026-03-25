@@ -96,3 +96,37 @@ func (k Keeper) GetAllActiveTradingRewardExpirationByExpireAt(ctx sdk.Context, e
 
 	return k.getAllTradingRewardExpirationByExpireAt(store, expireAt)
 }
+
+// GetBatchPendingTradingRewardExpirationByExpireAt returns up to limit pending TradingRewardExpiration entries for the given expireAt
+func (k Keeper) GetBatchPendingTradingRewardExpirationByExpireAt(ctx sdk.Context, expireAt uint32, limit int) []types.TradingRewardExpiration {
+	store := k.getPendingTradingRewardExpirationStore(ctx)
+	iterator := storetypes.KVStorePrefixIterator(store, []byte(types.TradingRewardExpirationByExpireAtPrefix(expireAt)))
+	defer iterator.Close()
+
+	var list []types.TradingRewardExpiration
+	for ; iterator.Valid() && len(list) < limit; iterator.Next() {
+		var val types.TradingRewardExpiration
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return list
+}
+
+func (k Keeper) SetTradingRewardExpirationQueue(ctx sdk.Context, q types.TradingRewardExpirationQueue) {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.TradingRewardExpirationQueueKey))
+	b := k.cdc.MustMarshal(&q)
+	store.Set([]byte{1}, b)
+}
+
+func (k Keeper) GetTradingRewardExpirationQueue(ctx sdk.Context) (val types.TradingRewardExpirationQueue, found bool) {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.TradingRewardExpirationQueueKey))
+
+	b := store.Get([]byte{1})
+	if b == nil {
+		return val, false
+	}
+
+	k.cdc.MustUnmarshal(b, &val)
+	return val, true
+}

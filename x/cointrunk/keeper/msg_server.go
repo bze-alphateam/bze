@@ -57,7 +57,7 @@ func (k msgServer) AddArticle(goCtx context.Context, msg *types.MsgAddArticle) (
 		CreatedAt: ctx.BlockHeader().Time.Unix(),
 	}
 
-	k.SetArticle(ctx, article)
+	k.SetArticle(ctx, &article)
 
 	if found {
 		publisher.ArticlesCount += 1

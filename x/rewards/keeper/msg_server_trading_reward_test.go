@@ -6,6 +6,7 @@ import (
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"go.uber.org/mock/gomock"
 )
 
 func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardSuccess() {
@@ -50,20 +51,32 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 		Return(nil).
 		Times(1)
 
-	// Mock community pool funding for fee
-	suite.distr.EXPECT().
-		FundCommunityPool(
+	// Mock fee capture and swap
+	suite.trade.EXPECT().
+		CaptureAndSwapUserFee(
 			suite.ctx,
-			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(200))),
 			creator,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(200))),
+			types.ModuleName,
+		).
+		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(200))), nil).
+		Times(1)
+
+	// Mock sending fee to fee collector
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToModule(
+			suite.ctx,
+			types.ModuleName,
+			gomock.Any(),
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(200))),
 		).
 		Return(nil).
 		Times(1)
 
 	// Mock epoch keeper call for expiration calculation
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(100)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(100), nil).
 		Times(1)
 
 	msg := &types.MsgCreateTradingReward{
@@ -75,10 +88,13 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 		Slots:       "5",
 	}
 
+	counter := suite.k.GetTradingRewardsCounter(suite.ctx)
 	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(response)
 	suite.Require().NotEmpty(response.RewardId)
+	newCounter := suite.k.GetTradingRewardsCounter(suite.ctx)
+	suite.Require().Equal(counter+1, newCounter)
 
 	// Verify trading reward was created
 	tradingReward, found := suite.k.GetPendingTradingReward(suite.ctx, response.RewardId)
@@ -89,10 +105,78 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 	suite.Require().Equal(uint32(30), tradingReward.Duration)
 	suite.Require().Equal(uint32(5), tradingReward.Slots)
 
+	// Verify pending expiration uses fixed 30-day timeout, not user-specified Duration
+	suite.Require().Equal(uint32(100+(30*24)), tradingReward.ExpireAt) // epoch(100) + 30 days * 24 hours
+
 	// Verify expiration was created
 	expirations := suite.k.GetAllPendingTradingRewardExpirationByExpireAt(suite.ctx, tradingReward.ExpireAt)
 	suite.Require().Len(expirations, 1)
 	suite.Require().Equal(response.RewardId, expirations[0].RewardId)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardPendingExpirationIgnoresDuration() {
+	creator := sdk.AccAddress("creator")
+
+	// Set up params with zero fee for simplicity
+	params := types.Params{
+		CreateStakingRewardFee: sdk.NewCoin("ubze", math.ZeroInt()),
+		CreateTradingRewardFee: sdk.NewCoin("ubze", math.ZeroInt()),
+	}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	suite.bank.EXPECT().
+		HasSupply(suite.ctx, "ubze").
+		Return(true).
+		Times(1)
+
+	suite.trade.EXPECT().
+		MarketExists(suite.ctx, "market-1").
+		Return(true).
+		Times(1)
+
+	suite.bank.EXPECT().
+		SpendableCoins(suite.ctx, creator).
+		Return(sdk.NewCoins(
+			sdk.NewCoin("ubze", math.NewInt(100000)),
+		)).
+		Times(1)
+
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(
+			suite.ctx,
+			creator,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(5000))), // 1000 * 5 slots
+		).
+		Return(nil).
+		Times(1)
+
+	// Mock epoch keeper - current epoch is 300
+	suite.epoch.EXPECT().
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(300), nil).
+		Times(1)
+
+	// Create with Duration=7, but pending expiration should still be 30 days
+	msg := &types.MsgCreateTradingReward{
+		Creator:     creator.String(),
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    "7",
+		MarketId:    "market-1",
+		Slots:       "5",
+	}
+
+	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(response)
+
+	// Verify pending expiration uses fixed 30-day timeout, NOT the 7-day user Duration
+	tradingReward, found := suite.k.GetPendingTradingReward(suite.ctx, response.RewardId)
+	suite.Require().True(found)
+	suite.Require().Equal(uint32(7), tradingReward.Duration)
+	suite.Require().Equal(uint32(300+(30*24)), tradingReward.ExpireAt) // epoch(300) + 30 days * 24 = 1020
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardNilRequest() {
@@ -306,8 +390,8 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	// Mock epoch keeper call for expiration calculation
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(150)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(150), nil).
 		Times(1)
 
 	msg := &types.MsgCreateTradingReward{
@@ -370,8 +454,8 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	// Mock epoch keeper call for expiration calculation
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(200)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(200), nil).
 		Times(1)
 
 	msg := &types.MsgCreateTradingReward{
@@ -390,7 +474,7 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 	suite.Require().Equal(bankError, err)
 }
 
-func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardCommunityPoolError() {
+func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewardFeeSwapError() {
 	creator := sdk.AccAddress("creator")
 
 	// Set up params with fee
@@ -432,21 +516,22 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 		Return(nil).
 		Times(1)
 
-	// Mock community pool funding error
-	poolError := fmt.Errorf("community pool funding failed")
-	suite.distr.EXPECT().
-		FundCommunityPool(
+	// Mock fee swap error
+	swapError := fmt.Errorf("fee swap failed")
+	suite.trade.EXPECT().
+		CaptureAndSwapUserFee(
 			suite.ctx,
-			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(200))),
 			creator,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(200))),
+			types.ModuleName,
 		).
-		Return(poolError).
+		Return(nil, swapError).
 		Times(1)
 
 	// Mock epoch keeper call for expiration calculation
 	suite.epoch.EXPECT().
-		GetEpochCountByIdentifier(suite.ctx, "hour").
-		Return(int64(250)).
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(250), nil).
 		Times(1)
 
 	msg := &types.MsgCreateTradingReward{
@@ -462,5 +547,64 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	suite.Require().Error(err)
 	suite.Require().Nil(response)
-	suite.Require().Equal(poolError, err)
+	suite.Require().Equal(swapError, err)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingReward_EpochCatchingUp() {
+	creator := sdk.AccAddress("creator")
+
+	// Set up params with zero fee for simplicity
+	params := types.Params{
+		CreateStakingRewardFee: sdk.NewCoin("ubze", math.ZeroInt()),
+		CreateTradingRewardFee: sdk.NewCoin("ubze", math.ZeroInt()),
+	}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	suite.bank.EXPECT().
+		HasSupply(suite.ctx, "ubze").
+		Return(true).
+		Times(1)
+
+	suite.trade.EXPECT().
+		MarketExists(suite.ctx, "market-1").
+		Return(true).
+		Times(1)
+
+	suite.bank.EXPECT().
+		SpendableCoins(suite.ctx, creator).
+		Return(sdk.NewCoins(
+			sdk.NewCoin("ubze", math.NewInt(100000)),
+		)).
+		Times(1)
+
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(
+			suite.ctx,
+			creator,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(5000))),
+		).
+		Return(nil).
+		Times(1)
+
+	// Mock epoch keeper returning catching up error
+	suite.epoch.EXPECT().
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(0), fmt.Errorf("epoch hour is catching up")).
+		Times(1)
+
+	msg := &types.MsgCreateTradingReward{
+		Creator:     creator.String(),
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    "30",
+		MarketId:    "market-1",
+		Slots:       "5",
+	}
+
+	response, err := suite.msgServer.CreateTradingReward(suite.ctx, msg)
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().Contains(err.Error(), "catching up")
 }

@@ -283,7 +283,7 @@ func TestMsgCreateOrder_ValidateBasic(t *testing.T) {
 			},
 		},
 		{
-			name: "valid message - empty market id",
+			name: "invalid message - empty market id",
 			msg: MsgCreateOrder{
 				Creator:   validCreator,
 				OrderType: validOrderType,
@@ -291,6 +291,7 @@ func TestMsgCreateOrder_ValidateBasic(t *testing.T) {
 				Price:     validPrice,
 				MarketId:  "",
 			},
+			err: ErrInvalidOrderMarketId,
 		},
 		{
 			name: "valid message - numeric market id",

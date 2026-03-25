@@ -539,6 +539,9 @@ var (
 	fd_GenesisState_market_id_trading_reward_id_list       protoreflect.FieldDescriptor
 	fd_GenesisState_pending_trading_reward_expiration_list protoreflect.FieldDescriptor
 	fd_GenesisState_active_trading_reward_expiration_list  protoreflect.FieldDescriptor
+	fd_GenesisState_unlock_participants_queue              protoreflect.FieldDescriptor
+	fd_GenesisState_staking_rewards_distribution_queue     protoreflect.FieldDescriptor
+	fd_GenesisState_trading_reward_expiration_queue        protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -557,6 +560,9 @@ func init() {
 	fd_GenesisState_market_id_trading_reward_id_list = md_GenesisState.Fields().ByName("market_id_trading_reward_id_list")
 	fd_GenesisState_pending_trading_reward_expiration_list = md_GenesisState.Fields().ByName("pending_trading_reward_expiration_list")
 	fd_GenesisState_active_trading_reward_expiration_list = md_GenesisState.Fields().ByName("active_trading_reward_expiration_list")
+	fd_GenesisState_unlock_participants_queue = md_GenesisState.Fields().ByName("unlock_participants_queue")
+	fd_GenesisState_staking_rewards_distribution_queue = md_GenesisState.Fields().ByName("staking_rewards_distribution_queue")
+	fd_GenesisState_trading_reward_expiration_queue = md_GenesisState.Fields().ByName("trading_reward_expiration_queue")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -702,6 +708,24 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
+	if x.UnlockParticipantsQueue != nil {
+		value := protoreflect.ValueOfMessage(x.UnlockParticipantsQueue.ProtoReflect())
+		if !f(fd_GenesisState_unlock_participants_queue, value) {
+			return
+		}
+	}
+	if x.StakingRewardsDistributionQueue != nil {
+		value := protoreflect.ValueOfMessage(x.StakingRewardsDistributionQueue.ProtoReflect())
+		if !f(fd_GenesisState_staking_rewards_distribution_queue, value) {
+			return
+		}
+	}
+	if x.TradingRewardExpirationQueue != nil {
+		value := protoreflect.ValueOfMessage(x.TradingRewardExpirationQueue.ProtoReflect())
+		if !f(fd_GenesisState_trading_reward_expiration_queue, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -743,6 +767,12 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 		return len(x.PendingTradingRewardExpirationList) != 0
 	case "bze.rewards.GenesisState.active_trading_reward_expiration_list":
 		return len(x.ActiveTradingRewardExpirationList) != 0
+	case "bze.rewards.GenesisState.unlock_participants_queue":
+		return x.UnlockParticipantsQueue != nil
+	case "bze.rewards.GenesisState.staking_rewards_distribution_queue":
+		return x.StakingRewardsDistributionQueue != nil
+	case "bze.rewards.GenesisState.trading_reward_expiration_queue":
+		return x.TradingRewardExpirationQueue != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.GenesisState"))
@@ -785,6 +815,12 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 		x.PendingTradingRewardExpirationList = nil
 	case "bze.rewards.GenesisState.active_trading_reward_expiration_list":
 		x.ActiveTradingRewardExpirationList = nil
+	case "bze.rewards.GenesisState.unlock_participants_queue":
+		x.UnlockParticipantsQueue = nil
+	case "bze.rewards.GenesisState.staking_rewards_distribution_queue":
+		x.StakingRewardsDistributionQueue = nil
+	case "bze.rewards.GenesisState.trading_reward_expiration_queue":
+		x.TradingRewardExpirationQueue = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.GenesisState"))
@@ -870,6 +906,15 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 		}
 		listValue := &_GenesisState_13_list{list: &x.ActiveTradingRewardExpirationList}
 		return protoreflect.ValueOfList(listValue)
+	case "bze.rewards.GenesisState.unlock_participants_queue":
+		value := x.UnlockParticipantsQueue
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "bze.rewards.GenesisState.staking_rewards_distribution_queue":
+		value := x.StakingRewardsDistributionQueue
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "bze.rewards.GenesisState.trading_reward_expiration_queue":
+		value := x.TradingRewardExpirationQueue
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.GenesisState"))
@@ -936,6 +981,12 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 		lv := value.List()
 		clv := lv.(*_GenesisState_13_list)
 		x.ActiveTradingRewardExpirationList = *clv.list
+	case "bze.rewards.GenesisState.unlock_participants_queue":
+		x.UnlockParticipantsQueue = value.Message().Interface().(*UnlockParticipantsQueue)
+	case "bze.rewards.GenesisState.staking_rewards_distribution_queue":
+		x.StakingRewardsDistributionQueue = value.Message().Interface().(*StakingRewardsDistributionQueue)
+	case "bze.rewards.GenesisState.trading_reward_expiration_queue":
+		x.TradingRewardExpirationQueue = value.Message().Interface().(*TradingRewardExpirationQueue)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.GenesisState"))
@@ -1021,6 +1072,21 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 		}
 		value := &_GenesisState_13_list{list: &x.ActiveTradingRewardExpirationList}
 		return protoreflect.ValueOfList(value)
+	case "bze.rewards.GenesisState.unlock_participants_queue":
+		if x.UnlockParticipantsQueue == nil {
+			x.UnlockParticipantsQueue = new(UnlockParticipantsQueue)
+		}
+		return protoreflect.ValueOfMessage(x.UnlockParticipantsQueue.ProtoReflect())
+	case "bze.rewards.GenesisState.staking_rewards_distribution_queue":
+		if x.StakingRewardsDistributionQueue == nil {
+			x.StakingRewardsDistributionQueue = new(StakingRewardsDistributionQueue)
+		}
+		return protoreflect.ValueOfMessage(x.StakingRewardsDistributionQueue.ProtoReflect())
+	case "bze.rewards.GenesisState.trading_reward_expiration_queue":
+		if x.TradingRewardExpirationQueue == nil {
+			x.TradingRewardExpirationQueue = new(TradingRewardExpirationQueue)
+		}
+		return protoreflect.ValueOfMessage(x.TradingRewardExpirationQueue.ProtoReflect())
 	case "bze.rewards.GenesisState.staking_rewards_counter":
 		panic(fmt.Errorf("field staking_rewards_counter of message bze.rewards.GenesisState is not mutable"))
 	case "bze.rewards.GenesisState.trading_rewards_counter":
@@ -1075,6 +1141,15 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	case "bze.rewards.GenesisState.active_trading_reward_expiration_list":
 		list := []*TradingRewardExpiration{}
 		return protoreflect.ValueOfList(&_GenesisState_13_list{list: &list})
+	case "bze.rewards.GenesisState.unlock_participants_queue":
+		m := new(UnlockParticipantsQueue)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "bze.rewards.GenesisState.staking_rewards_distribution_queue":
+		m := new(StakingRewardsDistributionQueue)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "bze.rewards.GenesisState.trading_reward_expiration_queue":
+		m := new(TradingRewardExpirationQueue)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.GenesisState"))
@@ -1214,6 +1289,18 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
+		if x.UnlockParticipantsQueue != nil {
+			l = options.Size(x.UnlockParticipantsQueue)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.StakingRewardsDistributionQueue != nil {
+			l = options.Size(x.StakingRewardsDistributionQueue)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.TradingRewardExpirationQueue != nil {
+			l = options.Size(x.TradingRewardExpirationQueue)
+			n += 2 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -1242,6 +1329,50 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.TradingRewardExpirationQueue != nil {
+			encoded, err := options.Marshal(x.TradingRewardExpirationQueue)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0x82
+		}
+		if x.StakingRewardsDistributionQueue != nil {
+			encoded, err := options.Marshal(x.StakingRewardsDistributionQueue)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x7a
+		}
+		if x.UnlockParticipantsQueue != nil {
+			encoded, err := options.Marshal(x.UnlockParticipantsQueue)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x72
 		}
 		if len(x.ActiveTradingRewardExpirationList) > 0 {
 			for iNdEx := len(x.ActiveTradingRewardExpirationList) - 1; iNdEx >= 0; iNdEx-- {
@@ -1890,6 +2021,114 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
+			case 14:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field UnlockParticipantsQueue", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.UnlockParticipantsQueue == nil {
+					x.UnlockParticipantsQueue = &UnlockParticipantsQueue{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.UnlockParticipantsQueue); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 15:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StakingRewardsDistributionQueue", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.StakingRewardsDistributionQueue == nil {
+					x.StakingRewardsDistributionQueue = &StakingRewardsDistributionQueue{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.StakingRewardsDistributionQueue); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 16:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TradingRewardExpirationQueue", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.TradingRewardExpirationQueue == nil {
+					x.TradingRewardExpirationQueue = &TradingRewardExpirationQueue{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.TradingRewardExpirationQueue); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -1945,19 +2184,22 @@ type GenesisState struct {
 	unknownFields protoimpl.UnknownFields
 
 	// params defines all the parameters of the module.
-	Params                             *Params                     `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
-	StakingRewardList                  []*StakingReward            `protobuf:"bytes,2,rep,name=staking_reward_list,json=stakingRewardList,proto3" json:"staking_reward_list,omitempty"`
-	StakingRewardsCounter              uint64                      `protobuf:"varint,3,opt,name=staking_rewards_counter,json=stakingRewardsCounter,proto3" json:"staking_rewards_counter,omitempty"`
-	TradingRewardsCounter              uint64                      `protobuf:"varint,4,opt,name=trading_rewards_counter,json=tradingRewardsCounter,proto3" json:"trading_rewards_counter,omitempty"`
-	ActiveTradingRewardList            []*TradingReward            `protobuf:"bytes,5,rep,name=active_trading_reward_list,json=activeTradingRewardList,proto3" json:"active_trading_reward_list,omitempty"`
-	PendingTradingRewardList           []*TradingReward            `protobuf:"bytes,6,rep,name=pending_trading_reward_list,json=pendingTradingRewardList,proto3" json:"pending_trading_reward_list,omitempty"`
-	StakingRewardParticipantList       []*StakingRewardParticipant `protobuf:"bytes,7,rep,name=staking_reward_participant_list,json=stakingRewardParticipantList,proto3" json:"staking_reward_participant_list,omitempty"`
-	PendingUnlockParticipantList       []*PendingUnlockParticipant `protobuf:"bytes,8,rep,name=pending_unlock_participant_list,json=pendingUnlockParticipantList,proto3" json:"pending_unlock_participant_list,omitempty"`
-	TradingRewardLeaderboardList       []*TradingRewardLeaderboard `protobuf:"bytes,9,rep,name=trading_reward_leaderboard_list,json=tradingRewardLeaderboardList,proto3" json:"trading_reward_leaderboard_list,omitempty"`
-	TradingRewardCandidateList         []*TradingRewardCandidate   `protobuf:"bytes,10,rep,name=trading_reward_candidate_list,json=tradingRewardCandidateList,proto3" json:"trading_reward_candidate_list,omitempty"`
-	MarketIdTradingRewardIdList        []*MarketIdTradingRewardId  `protobuf:"bytes,11,rep,name=market_id_trading_reward_id_list,json=marketIdTradingRewardIdList,proto3" json:"market_id_trading_reward_id_list,omitempty"`
-	PendingTradingRewardExpirationList []*TradingRewardExpiration  `protobuf:"bytes,12,rep,name=pending_trading_reward_expiration_list,json=pendingTradingRewardExpirationList,proto3" json:"pending_trading_reward_expiration_list,omitempty"`
-	ActiveTradingRewardExpirationList  []*TradingRewardExpiration  `protobuf:"bytes,13,rep,name=active_trading_reward_expiration_list,json=activeTradingRewardExpirationList,proto3" json:"active_trading_reward_expiration_list,omitempty"`
+	Params                             *Params                          `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
+	StakingRewardList                  []*StakingReward                 `protobuf:"bytes,2,rep,name=staking_reward_list,json=stakingRewardList,proto3" json:"staking_reward_list,omitempty"`
+	StakingRewardsCounter              uint64                           `protobuf:"varint,3,opt,name=staking_rewards_counter,json=stakingRewardsCounter,proto3" json:"staking_rewards_counter,omitempty"`
+	TradingRewardsCounter              uint64                           `protobuf:"varint,4,opt,name=trading_rewards_counter,json=tradingRewardsCounter,proto3" json:"trading_rewards_counter,omitempty"`
+	ActiveTradingRewardList            []*TradingReward                 `protobuf:"bytes,5,rep,name=active_trading_reward_list,json=activeTradingRewardList,proto3" json:"active_trading_reward_list,omitempty"`
+	PendingTradingRewardList           []*TradingReward                 `protobuf:"bytes,6,rep,name=pending_trading_reward_list,json=pendingTradingRewardList,proto3" json:"pending_trading_reward_list,omitempty"`
+	StakingRewardParticipantList       []*StakingRewardParticipant      `protobuf:"bytes,7,rep,name=staking_reward_participant_list,json=stakingRewardParticipantList,proto3" json:"staking_reward_participant_list,omitempty"`
+	PendingUnlockParticipantList       []*PendingUnlockParticipant      `protobuf:"bytes,8,rep,name=pending_unlock_participant_list,json=pendingUnlockParticipantList,proto3" json:"pending_unlock_participant_list,omitempty"`
+	TradingRewardLeaderboardList       []*TradingRewardLeaderboard      `protobuf:"bytes,9,rep,name=trading_reward_leaderboard_list,json=tradingRewardLeaderboardList,proto3" json:"trading_reward_leaderboard_list,omitempty"`
+	TradingRewardCandidateList         []*TradingRewardCandidate        `protobuf:"bytes,10,rep,name=trading_reward_candidate_list,json=tradingRewardCandidateList,proto3" json:"trading_reward_candidate_list,omitempty"`
+	MarketIdTradingRewardIdList        []*MarketIdTradingRewardId       `protobuf:"bytes,11,rep,name=market_id_trading_reward_id_list,json=marketIdTradingRewardIdList,proto3" json:"market_id_trading_reward_id_list,omitempty"`
+	PendingTradingRewardExpirationList []*TradingRewardExpiration       `protobuf:"bytes,12,rep,name=pending_trading_reward_expiration_list,json=pendingTradingRewardExpirationList,proto3" json:"pending_trading_reward_expiration_list,omitempty"`
+	ActiveTradingRewardExpirationList  []*TradingRewardExpiration       `protobuf:"bytes,13,rep,name=active_trading_reward_expiration_list,json=activeTradingRewardExpirationList,proto3" json:"active_trading_reward_expiration_list,omitempty"`
+	UnlockParticipantsQueue            *UnlockParticipantsQueue         `protobuf:"bytes,14,opt,name=unlock_participants_queue,json=unlockParticipantsQueue,proto3" json:"unlock_participants_queue,omitempty"`
+	StakingRewardsDistributionQueue    *StakingRewardsDistributionQueue `protobuf:"bytes,15,opt,name=staking_rewards_distribution_queue,json=stakingRewardsDistributionQueue,proto3" json:"staking_rewards_distribution_queue,omitempty"`
+	TradingRewardExpirationQueue       *TradingRewardExpirationQueue    `protobuf:"bytes,16,opt,name=trading_reward_expiration_queue,json=tradingRewardExpirationQueue,proto3" json:"trading_reward_expiration_queue,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -2071,6 +2313,27 @@ func (x *GenesisState) GetActiveTradingRewardExpirationList() []*TradingRewardEx
 	return nil
 }
 
+func (x *GenesisState) GetUnlockParticipantsQueue() *UnlockParticipantsQueue {
+	if x != nil {
+		return x.UnlockParticipantsQueue
+	}
+	return nil
+}
+
+func (x *GenesisState) GetStakingRewardsDistributionQueue() *StakingRewardsDistributionQueue {
+	if x != nil {
+		return x.StakingRewardsDistributionQueue
+	}
+	return nil
+}
+
+func (x *GenesisState) GetTradingRewardExpirationQueue() *TradingRewardExpirationQueue {
+	if x != nil {
+		return x.TradingRewardExpirationQueue
+	}
+	return nil
+}
+
 var File_bze_rewards_genesis_proto protoreflect.FileDescriptor
 
 var file_bze_rewards_genesis_proto_rawDesc = []byte{
@@ -2082,7 +2345,7 @@ var file_bze_rewards_genesis_proto_rawDesc = []byte{
 	0x6f, 0x1a, 0x18, 0x62, 0x7a, 0x65, 0x2f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2f, 0x70,
 	0x61, 0x72, 0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x17, 0x62, 0x7a, 0x65,
 	0x2f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x22, 0x83, 0x0a, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73,
+	0x72, 0x6f, 0x74, 0x6f, 0x22, 0xd2, 0x0c, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73,
 	0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x36, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61,
 	0x72, 0x64, 0x73, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00,
@@ -2162,16 +2425,38 @@ var file_bze_rewards_genesis_proto_rawDesc = []byte{
 	0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x45, 0x78, 0x70, 0x69, 0x72, 0x61, 0x74, 0x69, 0x6f,
 	0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x21, 0x61, 0x63, 0x74, 0x69, 0x76, 0x65, 0x54,
 	0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x45, 0x78, 0x70, 0x69,
-	0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x84, 0x01, 0x0a, 0x0f, 0x63,
-	0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x42, 0x0c,
-	0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x16,
-	0x62, 0x65, 0x65, 0x7a, 0x65, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x72,
-	0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xa2, 0x02, 0x03, 0x42, 0x52, 0x58, 0xaa, 0x02, 0x0b, 0x42,
-	0x7a, 0x65, 0x2e, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xca, 0x02, 0x0b, 0x42, 0x7a, 0x65,
-	0x5c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xe2, 0x02, 0x17, 0x42, 0x7a, 0x65, 0x5c, 0x52,
-	0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0xea, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64,
-	0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x60, 0x0a, 0x19, 0x75, 0x6e,
+	0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x70, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74,
+	0x73, 0x5f, 0x71, 0x75, 0x65, 0x75, 0x65, 0x18, 0x0e, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x24, 0x2e,
+	0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x55, 0x6e, 0x6c, 0x6f,
+	0x63, 0x6b, 0x50, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x73, 0x51, 0x75,
+	0x65, 0x75, 0x65, 0x52, 0x17, 0x75, 0x6e, 0x6c, 0x6f, 0x63, 0x6b, 0x50, 0x61, 0x72, 0x74, 0x69,
+	0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x73, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12, 0x79, 0x0a, 0x22,
+	0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x5f,
+	0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x71, 0x75, 0x65,
+	0x75, 0x65, 0x18, 0x0f, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72,
+	0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65,
+	0x77, 0x61, 0x72, 0x64, 0x73, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f,
+	0x6e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x52, 0x1f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52,
+	0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69,
+	0x6f, 0x6e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12, 0x70, 0x0a, 0x1f, 0x74, 0x72, 0x61, 0x64, 0x69,
+	0x6e, 0x67, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x65, 0x78, 0x70, 0x69, 0x72, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x71, 0x75, 0x65, 0x75, 0x65, 0x18, 0x10, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x29, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x54,
+	0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x45, 0x78, 0x70, 0x69,
+	0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x52, 0x1c, 0x74, 0x72, 0x61,
+	0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x45, 0x78, 0x70, 0x69, 0x72, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x42, 0x9a, 0x01, 0x0a, 0x0f, 0x63, 0x6f,
+	0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x42, 0x0c, 0x47,
+	0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c,
+	0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x62, 0x7a, 0x65, 0x2f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xa2, 0x02, 0x03, 0x42, 0x52,
+	0x58, 0xaa, 0x02, 0x0b, 0x42, 0x7a, 0x65, 0x2e, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xca,
+	0x02, 0x0b, 0x42, 0x7a, 0x65, 0x5c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xe2, 0x02, 0x17,
+	0x42, 0x7a, 0x65, 0x5c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x5c, 0x47, 0x50, 0x42, 0x4d,
+	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x52,
+	0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2188,16 +2473,19 @@ func file_bze_rewards_genesis_proto_rawDescGZIP() []byte {
 
 var file_bze_rewards_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_bze_rewards_genesis_proto_goTypes = []interface{}{
-	(*GenesisState)(nil),             // 0: bze.rewards.GenesisState
-	(*Params)(nil),                   // 1: bze.rewards.Params
-	(*StakingReward)(nil),            // 2: bze.rewards.StakingReward
-	(*TradingReward)(nil),            // 3: bze.rewards.TradingReward
-	(*StakingRewardParticipant)(nil), // 4: bze.rewards.StakingRewardParticipant
-	(*PendingUnlockParticipant)(nil), // 5: bze.rewards.PendingUnlockParticipant
-	(*TradingRewardLeaderboard)(nil), // 6: bze.rewards.TradingRewardLeaderboard
-	(*TradingRewardCandidate)(nil),   // 7: bze.rewards.TradingRewardCandidate
-	(*MarketIdTradingRewardId)(nil),  // 8: bze.rewards.MarketIdTradingRewardId
-	(*TradingRewardExpiration)(nil),  // 9: bze.rewards.TradingRewardExpiration
+	(*GenesisState)(nil),                    // 0: bze.rewards.GenesisState
+	(*Params)(nil),                          // 1: bze.rewards.Params
+	(*StakingReward)(nil),                   // 2: bze.rewards.StakingReward
+	(*TradingReward)(nil),                   // 3: bze.rewards.TradingReward
+	(*StakingRewardParticipant)(nil),        // 4: bze.rewards.StakingRewardParticipant
+	(*PendingUnlockParticipant)(nil),        // 5: bze.rewards.PendingUnlockParticipant
+	(*TradingRewardLeaderboard)(nil),        // 6: bze.rewards.TradingRewardLeaderboard
+	(*TradingRewardCandidate)(nil),          // 7: bze.rewards.TradingRewardCandidate
+	(*MarketIdTradingRewardId)(nil),         // 8: bze.rewards.MarketIdTradingRewardId
+	(*TradingRewardExpiration)(nil),         // 9: bze.rewards.TradingRewardExpiration
+	(*UnlockParticipantsQueue)(nil),         // 10: bze.rewards.UnlockParticipantsQueue
+	(*StakingRewardsDistributionQueue)(nil), // 11: bze.rewards.StakingRewardsDistributionQueue
+	(*TradingRewardExpirationQueue)(nil),    // 12: bze.rewards.TradingRewardExpirationQueue
 }
 var file_bze_rewards_genesis_proto_depIdxs = []int32{
 	1,  // 0: bze.rewards.GenesisState.params:type_name -> bze.rewards.Params
@@ -2211,11 +2499,14 @@ var file_bze_rewards_genesis_proto_depIdxs = []int32{
 	8,  // 8: bze.rewards.GenesisState.market_id_trading_reward_id_list:type_name -> bze.rewards.MarketIdTradingRewardId
 	9,  // 9: bze.rewards.GenesisState.pending_trading_reward_expiration_list:type_name -> bze.rewards.TradingRewardExpiration
 	9,  // 10: bze.rewards.GenesisState.active_trading_reward_expiration_list:type_name -> bze.rewards.TradingRewardExpiration
-	11, // [11:11] is the sub-list for method output_type
-	11, // [11:11] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	10, // 11: bze.rewards.GenesisState.unlock_participants_queue:type_name -> bze.rewards.UnlockParticipantsQueue
+	11, // 12: bze.rewards.GenesisState.staking_rewards_distribution_queue:type_name -> bze.rewards.StakingRewardsDistributionQueue
+	12, // 13: bze.rewards.GenesisState.trading_reward_expiration_queue:type_name -> bze.rewards.TradingRewardExpirationQueue
+	14, // [14:14] is the sub-list for method output_type
+	14, // [14:14] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_bze_rewards_genesis_proto_init() }

@@ -7,7 +7,7 @@ import "cosmos/msg/v1/msg.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
-import "bze/tradebin/params.proto";
+import "bze/tradebin/v2/params.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
 
@@ -38,7 +38,7 @@ message MsgUpdateParams {
   // params defines the module parameters to update.
   
   // NOTE: All parameters must be supplied.
-  Params params = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  bze.tradebin.v2.Params params = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // MsgUpdateParamsResponse defines the response structure for executing a

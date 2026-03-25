@@ -55,30 +55,30 @@ build-win64: check-version check-network go.sum
 
 build-linux: check-version check-network go.sum
 ifeq ($(OS), Linux)
-		GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-amd64/bzed ./cmd/bzed
+		GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-amd64/bzed-linux-amd64 ./cmd/bzed
 else
-		LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-amd64/bzed ./cmd/bzed
+		LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-amd64/bzed-linux-amd64 ./cmd/bzed
 endif
 
 build-linux-arm64: check-version check-network go.sum
 ifeq ($(OS), Linux)
-		GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-arm64/bzed ./cmd/bzed
+		GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-arm64/bzed-linux-arm64 ./cmd/bzed
 else
-		LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-arm64/bzed ./cmd/bzed
+		LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-arm64/bzed-linux-arm64 ./cmd/bzed
 endif
 
 build-mac: check-version check-network go.sum
 ifeq ($(OS), Darwin)
-		GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-amd64/bzed ./cmd/bzed
+		GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-amd64/bzed-darwin-amd64 ./cmd/bzed
 else
-		LEDGER_ENABLED=false GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-amd64/bzed ./cmd/bzed
+		LEDGER_ENABLED=false GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-amd64/bzed-darwin-amd64 ./cmd/bzed
 endif
 
 build-mac-arm64: check-version check-network go.sum
 ifeq ($(OS), Darwin)
-		GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-arm64/bzed ./cmd/bzed
+		GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-arm64/bzed-darwin-arm64 ./cmd/bzed
 else
-		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-arm64/bzed ./cmd/bzed
+		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-arm64/bzed-darwin-arm64 ./cmd/bzed
 endif
 
 build-all: check-version lint all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
@@ -114,8 +114,8 @@ lint-ci:
 
 # Add check to make sure we are using the proper Go version before proceeding with anything
 check-version:
-	@if ! go version | grep -q "go1.23"; then \
-		echo "\033[0;31mERROR:\033[0m Go version 1.23 is required for compiling bzed. It looks like you are using" "$(shell go version) \nThere are potential consensus-breaking changes that can occur when running binaries compiled with different versions of Go. Please download Go version 1.23 and retry. Thank you!"; \
+	@if ! go version | grep -q "go1.25"; then \
+		echo "\033[0;31mERROR:\033[0m Go version 1.25 is required for compiling bzed. It looks like you are using" "$(shell go version) \nThere are potential consensus-breaking changes that can occur when running binaries compiled with different versions of Go. Please download Go version 1.25 and retry. Thank you!"; \
 		exit 1; \
 	fi
 
@@ -153,7 +153,7 @@ start-localnet-ci: build
 	./build/bzed genesis gentx val 1000000000ubze --home ~/.bzed-liveness --chain-id liveness
 	./build/bzed genesis collect-gentxs --home ~/.bzed-liveness
 	sed -i.bak 's#^minimum-gas-prices = .*#minimum-gas-prices = "0.001ubze,0.0001stake"#g' ~/.bzed-liveness/config/app.toml
-	./build/bzed start --home ~/.bzed-liveness --x-crisis-skip-assert-invariants
+	./build/bzed start --home ~/.bzed-liveness
 .PHONY: start-localnet-ci
 
 build-docker-bzednode:

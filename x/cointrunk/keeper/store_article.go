@@ -23,14 +23,14 @@ func (k Keeper) GetAllArticles(ctx sdk.Context) (list []types.Article) {
 	return
 }
 
-func (k Keeper) SetArticle(ctx sdk.Context, article types.Article) {
+func (k Keeper) SetArticle(ctx sdk.Context, article *types.Article) {
 	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.ArticleKeyPrefix))
 	if article.Id == 0 {
 		article.Id = k.incrementCounter(ctx, types.ArticleCounterKeyPrefix)
 	}
 	keyString := fmt.Sprintf("%012d", article.Id)
 
-	record := k.cdc.MustMarshal(&article)
+	record := k.cdc.MustMarshal(article)
 	store.Set(
 		types.ArticleKey(keyString),
 		record,

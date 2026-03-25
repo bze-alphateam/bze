@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/bze-alphateam/bze/x/tokenfactory/types"
+	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"strings"
 )
 
 // Runs CreateDenom logic after the charge and all denom validation has been handled.
@@ -70,7 +72,13 @@ func (k Keeper) chargeForCreateDenom(ctx sdk.Context, creatorAddr string) (err e
 			return err
 		}
 
-		if err := k.distrkeeper.FundCommunityPool(ctx, sdk.NewCoins(params.CreateDenomFee), accAddr); err != nil {
+		capturedFee, err := k.tradeKeeper.CaptureAndSwapUserFee(ctx, accAddr, sdk.NewCoins(params.CreateDenomFee), types.ModuleName)
+		if err != nil {
+			return err
+		}
+
+		err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, capturedFee)
+		if err != nil {
 			return err
 		}
 	}

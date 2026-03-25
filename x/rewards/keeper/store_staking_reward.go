@@ -11,8 +11,6 @@ func (k Keeper) SetStakingReward(ctx sdk.Context, stakingReward types.StakingRew
 	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.StakingRewardKeyPrefix))
 	b := k.cdc.MustMarshal(&stakingReward)
 	store.Set(types.StakingRewardKey(stakingReward.RewardId), b)
-
-	k.incrementStakingRewardsCounter(ctx)
 }
 
 // GetStakingReward returns a stakingReward from its index
@@ -63,4 +61,51 @@ func (k Keeper) IterateAllStakingRewards(ctx sdk.Context, msgHandler func(ctx sd
 			break
 		}
 	}
+}
+
+// GetBatchStakingRewards returns up to limit StakingReward entries starting after the given cursor.
+// If cursor is empty, it starts from the beginning.
+func (k Keeper) GetBatchStakingRewards(ctx sdk.Context, startAtRewardId string, limit int) []types.StakingReward {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.StakingRewardKeyPrefix))
+
+	var startKey []byte
+	if startAtRewardId != "" {
+		// Start right after the startAtRewardId key by appending 0x00
+		startKey = append(types.StakingRewardKey(startAtRewardId), 0x00)
+	}
+
+	iterator := store.Iterator(startKey, nil)
+	defer iterator.Close()
+
+	var list []types.StakingReward
+	for ; iterator.Valid() && len(list) < limit; iterator.Next() {
+		var sr types.StakingReward
+		k.cdc.MustUnmarshal(iterator.Value(), &sr)
+		list = append(list, sr)
+	}
+
+	return list
+}
+
+func (k Keeper) SetStakingRewardsDistributionQueue(ctx sdk.Context, q types.StakingRewardsDistributionQueue) {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.StakingRewardDistributionQueueKey))
+	b := k.cdc.MustMarshal(&q)
+	store.Set([]byte{1}, b)
+}
+
+func (k Keeper) GetStakingRewardsDistributionQueue(ctx sdk.Context) (val types.StakingRewardsDistributionQueue, found bool) {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.StakingRewardDistributionQueueKey))
+
+	b := store.Get([]byte{1})
+	if b == nil {
+		return val, false
+	}
+
+	k.cdc.MustUnmarshal(b, &val)
+	return val, true
+}
+
+func (k Keeper) RemoveStakingRewardsDistributionQueue(ctx sdk.Context) {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.StakingRewardDistributionQueueKey))
+	store.Delete([]byte{1})
 }

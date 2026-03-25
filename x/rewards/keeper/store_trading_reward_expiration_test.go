@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 )
 
@@ -346,6 +347,146 @@ func (suite *IntegrationTestSuite) TestStoreTradingRewardExpiration_CompositeKey
 	expirationsAt1704067200 = suite.k.GetAllPendingTradingRewardExpirationByExpireAt(suite.ctx, 1704067200)
 	suite.Require().Len(expirationsAt1704067200, 1)
 	suite.Require().Equal("different-reward-id", expirationsAt1704067200[0].RewardId)
+}
+
+// --- GetBatchPendingTradingRewardExpirationByExpireAt tests ---
+
+func (suite *IntegrationTestSuite) TestStoreTradingRewardExpiration_GetBatchByExpireAt() {
+	expireAt := uint32(500)
+
+	for i := 1; i <= 5; i++ {
+		suite.k.SetPendingTradingRewardExpiration(suite.ctx, types.TradingRewardExpiration{
+			RewardId: fmt.Sprintf("batch-exp-reward-%d", i),
+			ExpireAt: expireAt,
+		})
+	}
+
+	// Limit to 2 - should return only 2
+	batch := suite.k.GetBatchPendingTradingRewardExpirationByExpireAt(suite.ctx, expireAt, 2)
+	suite.Require().Len(batch, 2)
+	for _, exp := range batch {
+		suite.Require().Equal(expireAt, exp.ExpireAt)
+	}
+}
+
+func (suite *IntegrationTestSuite) TestStoreTradingRewardExpiration_GetBatchLimitHigherThanEntries() {
+	expireAt := uint32(600)
+
+	for i := 1; i <= 3; i++ {
+		suite.k.SetPendingTradingRewardExpiration(suite.ctx, types.TradingRewardExpiration{
+			RewardId: fmt.Sprintf("batch-limit-reward-%d", i),
+			ExpireAt: expireAt,
+		})
+	}
+
+	// Limit higher than available entries - should return all 3
+	batch := suite.k.GetBatchPendingTradingRewardExpirationByExpireAt(suite.ctx, expireAt, 100)
+	suite.Require().Len(batch, 3)
+}
+
+func (suite *IntegrationTestSuite) TestStoreTradingRewardExpiration_GetBatchEmptyEpoch() {
+	// No expirations for this epoch
+	batch := suite.k.GetBatchPendingTradingRewardExpirationByExpireAt(suite.ctx, 999, 10)
+	suite.Require().Empty(batch)
+}
+
+func (suite *IntegrationTestSuite) TestStoreTradingRewardExpiration_GetBatchOnlyMatchesExpireAt() {
+	// Set expirations for different expire_at values
+	suite.k.SetPendingTradingRewardExpiration(suite.ctx, types.TradingRewardExpiration{
+		RewardId: "epoch-700-reward",
+		ExpireAt: 700,
+	})
+	suite.k.SetPendingTradingRewardExpiration(suite.ctx, types.TradingRewardExpiration{
+		RewardId: "epoch-800-reward",
+		ExpireAt: 800,
+	})
+
+	// Batch for epoch 700 should only return epoch 700 entries
+	batch := suite.k.GetBatchPendingTradingRewardExpirationByExpireAt(suite.ctx, 700, 10)
+	suite.Require().Len(batch, 1)
+	suite.Require().Equal("epoch-700-reward", batch[0].RewardId)
+
+	// Batch for epoch 800 should only return epoch 800 entries
+	batch = suite.k.GetBatchPendingTradingRewardExpirationByExpireAt(suite.ctx, 800, 10)
+	suite.Require().Len(batch, 1)
+	suite.Require().Equal("epoch-800-reward", batch[0].RewardId)
+}
+
+// --- TradingRewardExpirationQueue store tests ---
+
+func (suite *IntegrationTestSuite) TestStoreTradingRewardExpiration_Queue_SetAndGet() {
+	queue := types.TradingRewardExpirationQueue{
+		RemovalEpochs: []uint32{10, 20, 30},
+	}
+	suite.k.SetTradingRewardExpirationQueue(suite.ctx, queue)
+
+	result, found := suite.k.GetTradingRewardExpirationQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Equal(queue.RemovalEpochs, result.RemovalEpochs)
+}
+
+func (suite *IntegrationTestSuite) TestStoreTradingRewardExpiration_Queue_NotFound() {
+	_, found := suite.k.GetTradingRewardExpirationQueue(suite.ctx)
+	suite.Require().False(found)
+}
+
+func (suite *IntegrationTestSuite) TestStoreTradingRewardExpiration_Queue_Update() {
+	suite.k.SetTradingRewardExpirationQueue(suite.ctx, types.TradingRewardExpirationQueue{
+		RemovalEpochs: []uint32{100},
+	})
+
+	// Update the queue
+	suite.k.SetTradingRewardExpirationQueue(suite.ctx, types.TradingRewardExpirationQueue{
+		RemovalEpochs: []uint32{100, 200, 300},
+	})
+
+	result, found := suite.k.GetTradingRewardExpirationQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(result.RemovalEpochs, 3)
+	suite.Require().Equal(uint32(100), result.RemovalEpochs[0])
+	suite.Require().Equal(uint32(200), result.RemovalEpochs[1])
+	suite.Require().Equal(uint32(300), result.RemovalEpochs[2])
+}
+
+func (suite *IntegrationTestSuite) TestStoreTradingRewardExpiration_Queue_EmptyEpochs() {
+	suite.k.SetTradingRewardExpirationQueue(suite.ctx, types.TradingRewardExpirationQueue{
+		RemovalEpochs: []uint32{},
+	})
+
+	result, found := suite.k.GetTradingRewardExpirationQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Empty(result.RemovalEpochs)
+}
+
+func (suite *IntegrationTestSuite) TestStoreTradingRewardExpiration_Queue_NilEpochs() {
+	suite.k.SetTradingRewardExpirationQueue(suite.ctx, types.TradingRewardExpirationQueue{
+		RemovalEpochs: nil,
+	})
+
+	result, found := suite.k.GetTradingRewardExpirationQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Empty(result.RemovalEpochs)
+}
+
+func (suite *IntegrationTestSuite) TestStoreTradingRewardExpiration_Queue_IndependentFromExpirationStore() {
+	// Set a queue
+	suite.k.SetTradingRewardExpirationQueue(suite.ctx, types.TradingRewardExpirationQueue{
+		RemovalEpochs: []uint32{100},
+	})
+
+	// Set a pending expiration
+	suite.k.SetPendingTradingRewardExpiration(suite.ctx, types.TradingRewardExpiration{
+		RewardId: "independent-test",
+		ExpireAt: 100,
+	})
+
+	// Both should be independently retrievable
+	queue, found := suite.k.GetTradingRewardExpirationQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Len(queue.RemovalEpochs, 1)
+
+	expirations := suite.k.GetAllPendingTradingRewardExpiration(suite.ctx)
+	suite.Require().Len(expirations, 1)
 }
 
 func (suite *IntegrationTestSuite) TestStoreTradingRewardExpiration_RemoveNonExistent() {

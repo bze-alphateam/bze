@@ -3,6 +3,7 @@ package bze.txfeecollector;
 
 import "amino/amino.proto";
 import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/txfeecollector/types";
 
@@ -11,5 +12,14 @@ message Params {
   option (amino.name) = "bze/x/txfeecollector/Params";
   option (gogoproto.equal) = true;
 
-  
+  cosmos.base.v1beta1.DecCoin ValidatorMinGasFee = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)      = "yaml:\"validator_min_gas_fee\"",
+    (gogoproto.jsontag)      = "validator_min_gas_fee,omitempty"
+  ];
+
+  uint64 MaxBalanceIterations = 2 [
+    (gogoproto.moretags) = "yaml:\"max_balance_iterations\"",
+    (gogoproto.jsontag)      = "max_balance_iterations,omitempty"
+  ];
 }

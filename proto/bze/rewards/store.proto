@@ -32,6 +32,9 @@ message PendingUnlockParticipant {
   string denom = 4;
 }
 
+message UnlockParticipantsQueue {
+  repeated uint64 unlockEpochs = 1;
+}
 
 message TradingReward {
   string reward_id = 1;
@@ -68,4 +71,13 @@ message TradingRewardCandidate {
 message MarketIdTradingRewardId {
   string reward_id = 1;
   string market_id = 2;
+}
+
+message StakingRewardsDistributionQueue {
+  bool pending = 1;
+  string cursor = 2;
+}
+
+message TradingRewardExpirationQueue {
+  repeated uint32 removal_epochs = 1;
 }

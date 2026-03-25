@@ -15,18 +15,17 @@ func TestNewMsgCreateLiquidityPool(t *testing.T) {
 	quote := "uusdc"
 	fee := "0.003"
 	feeDest := `{"treasury":"0.5","burner":"0.3","providers":"0.2"}`
-	stable := false
 	initialBase := math.NewInt(1000)
 	initialQuote := math.NewInt(2000)
 
-	msg := NewMsgCreateLiquidityPool(creator, base, quote, fee, feeDest, stable, initialBase, initialQuote)
+	msg := NewMsgCreateLiquidityPool(creator, base, quote, fee, feeDest, false, initialBase, initialQuote)
 
 	require.Equal(t, creator, msg.Creator)
 	require.Equal(t, base, msg.Base)
 	require.Equal(t, quote, msg.Quote)
 	require.Equal(t, fee, msg.Fee)
 	require.Equal(t, feeDest, msg.FeeDest)
-	require.Equal(t, stable, msg.Stable)
+	require.Equal(t, false, msg.Stable)
 	require.Equal(t, initialBase, msg.InitialBase)
 	require.Equal(t, initialQuote, msg.InitialQuote)
 }
@@ -78,6 +77,34 @@ func TestMsgCreateLiquidityPool_ValidateBasic(t *testing.T) {
 			msg: MsgCreateLiquidityPool{
 				Creator:      validCreator,
 				Base:         "",
+				Quote:        "",
+				Fee:          validFee,
+				FeeDest:      validFeeDest,
+				Stable:       false,
+				InitialBase:  validInitialBase,
+				InitialQuote: validInitialQuote,
+			},
+			err: sdkerrors.ErrInvalidRequest,
+		},
+		{
+			name: "missing assets - base empty",
+			msg: MsgCreateLiquidityPool{
+				Creator:      validCreator,
+				Base:         "",
+				Quote:        "ubze",
+				Fee:          validFee,
+				FeeDest:      validFeeDest,
+				Stable:       false,
+				InitialBase:  validInitialBase,
+				InitialQuote: validInitialQuote,
+			},
+			err: sdkerrors.ErrInvalidRequest,
+		},
+		{
+			name: "missing assets - quote empty",
+			msg: MsgCreateLiquidityPool{
+				Creator:      validCreator,
+				Base:         "ubze",
 				Quote:        "",
 				Fee:          validFee,
 				FeeDest:      validFeeDest,
@@ -172,7 +199,7 @@ func TestMsgCreateLiquidityPool_ValidateBasic(t *testing.T) {
 			err: sdkerrors.ErrInvalidRequest,
 		},
 		{
-			name: "valid message - stable pool",
+			name: "invalid message - stable pool not supported",
 			msg: MsgCreateLiquidityPool{
 				Creator:      validCreator,
 				Base:         validBase,
@@ -183,6 +210,7 @@ func TestMsgCreateLiquidityPool_ValidateBasic(t *testing.T) {
 				InitialBase:  validInitialBase,
 				InitialQuote: validInitialQuote,
 			},
+			err: sdkerrors.ErrInvalidRequest,
 		},
 		{
 			name: "valid message - non-stable pool",
@@ -190,32 +218,6 @@ func TestMsgCreateLiquidityPool_ValidateBasic(t *testing.T) {
 				Creator:      validCreator,
 				Base:         validBase,
 				Quote:        validQuote,
-				Fee:          validFee,
-				FeeDest:      validFeeDest,
-				Stable:       false,
-				InitialBase:  validInitialBase,
-				InitialQuote: validInitialQuote,
-			},
-		},
-		{
-			name: "valid message - empty base only",
-			msg: MsgCreateLiquidityPool{
-				Creator:      validCreator,
-				Base:         "",
-				Quote:        validQuote,
-				Fee:          validFee,
-				FeeDest:      validFeeDest,
-				Stable:       false,
-				InitialBase:  validInitialBase,
-				InitialQuote: validInitialQuote,
-			},
-		},
-		{
-			name: "valid message - empty quote only",
-			msg: MsgCreateLiquidityPool{
-				Creator:      validCreator,
-				Base:         validBase,
-				Quote:        "",
 				Fee:          validFee,
 				FeeDest:      validFeeDest,
 				Stable:       false,

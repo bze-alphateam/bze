@@ -117,7 +117,7 @@ func (suite *IntegrationTestSuite) TestAllArticles_ValidRequest() {
 	}
 
 	for _, article := range articles {
-		suite.k.SetArticle(suite.ctx, article)
+		suite.k.SetArticle(suite.ctx, &article)
 	}
 
 	req := &types.QueryAllArticlesRequest{}
@@ -149,7 +149,7 @@ func (suite *IntegrationTestSuite) TestAllArticles_WithPagination() {
 			Paid:      i%2 == 0,
 			CreatedAt: 1234567890 + int64(i),
 		}
-		suite.k.SetArticle(suite.ctx, article)
+		suite.k.SetArticle(suite.ctx, &article)
 	}
 
 	req := &types.QueryAllArticlesRequest{

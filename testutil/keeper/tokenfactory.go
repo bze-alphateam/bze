@@ -21,7 +21,7 @@ import (
 	"github.com/bze-alphateam/bze/x/tokenfactory/types"
 )
 
-func TokenfactoryKeeper(t testing.TB, bank types.BankKeeper, distr types.DistrKeeper, acc types.AccountKeeper) (keeper.Keeper, sdk.Context) {
+func TokenfactoryKeeper(t testing.TB, bank types.BankKeeper, acc types.AccountKeeper, trade types.TradingKeeper) (keeper.Keeper, sdk.Context) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	db := dbm.NewMemDB()
@@ -39,8 +39,8 @@ func TokenfactoryKeeper(t testing.TB, bank types.BankKeeper, distr types.DistrKe
 		log.NewNopLogger(),
 		authority.String(),
 		bank,
-		distr,
 		acc,
+		trade,
 	)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())

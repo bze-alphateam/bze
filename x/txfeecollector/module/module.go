@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	"github.com/bze-alphateam/bze/bzeutils"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -23,6 +24,10 @@ import (
 	modulev1 "github.com/bze-alphateam/bze/api/bze/txfeecollector/module"
 	"github.com/bze-alphateam/bze/x/txfeecollector/keeper"
 	"github.com/bze-alphateam/bze/x/txfeecollector/types"
+)
+
+const (
+	ConsensusVersion = 2
 )
 
 var (
@@ -58,7 +63,7 @@ func (AppModuleBasic) Name() string {
 
 // RegisterLegacyAminoCodec registers the amino codec for the module, which is used
 // to marshal and unmarshal structs to/from []byte in order to persist them in the module's KVStore.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
+func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
 // RegisterInterfaces registers a module's interface types and their concrete implementations as proto.Message.
 func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
@@ -72,7 +77,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 }
 
 // ValidateGenesis used to validate the GenesisState, given in its json.RawMessage form.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
 	var genState types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -98,6 +103,7 @@ type AppModule struct {
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
+	distrKeeper   types.DistrKeeper
 }
 
 func NewAppModule(
@@ -105,12 +111,14 @@ func NewAppModule(
 	keeper keeper.Keeper,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
+	distrKeeper types.DistrKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
+		distrKeeper:    distrKeeper,
 	}
 }
 
@@ -118,6 +126,12 @@ func NewAppModule(
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+
+	m := keeper.NewMigrator(am.keeper)
+
+	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+	}
 }
 
 // RegisterInvariants registers the invariants of the module. If an invariant deviates from its predicted value, the InvariantRegistry triggers appropriate logic (most often the chain will be halted)
@@ -141,7 +155,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // ConsensusVersion is a sequence number for state-breaking change of the module.
 // It should be incremented on each consensus-breaking change introduced by the module.
 // To avoid wrong/empty versions, the initial version should be set to 1.
-func (AppModule) ConsensusVersion() uint64 { return 1 }
+func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock contains the logic that is automatically triggered at the beginning of each block.
 // The begin block implementation is optional.
@@ -151,7 +165,29 @@ func (am AppModule) BeginBlock(_ context.Context) error {
 
 // EndBlock contains the logic that is automatically triggered at the end of each block.
 // The end block implementation is optional.
-func (am AppModule) EndBlock(_ context.Context) error {
+func (am AppModule) EndBlock(gotCtx context.Context) error {
+	ctx := sdk.UnwrapSDKContext(gotCtx)
+	err := bzeutils.ApplyFuncIfNoError(ctx, func(c sdk.Context) error {
+		return am.keeper.ConvertCollectedFeesToNativeDenom(c)
+	})
+	if err != nil {
+		am.keeper.Logger().Error("error on txfeecollector module EndBlock when calling ConvertCollectedFeesToNativeDenom", "err", err)
+	}
+
+	err = bzeutils.ApplyFuncIfNoError(ctx, func(c sdk.Context) error {
+		return am.keeper.ConvertBurnerFeesToNativeDenom(c)
+	})
+	if err != nil {
+		am.keeper.Logger().Error("error on txfeecollector module EndBlock when calling ConvertBurnerFeesToNativeDenom", "err", err)
+	}
+
+	err = bzeutils.ApplyFuncIfNoError(ctx, func(c sdk.Context) error {
+		return am.keeper.ConvertCommunityPoolFeesToNativeDenom(c)
+	})
+	if err != nil {
+		am.keeper.Logger().Error("error on txfeecollector module EndBlock when calling ConvertCommunityPoolFeesToNativeDenom", "err", err)
+	}
+
 	return nil
 }
 
@@ -183,12 +219,13 @@ type ModuleInputs struct {
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
 	TradeKeeper   types.TradeKeeper
+	DistrKeeper   types.DistrKeeper
 }
 
 type ModuleOutputs struct {
 	depinject.Out
 
-	TxfeecollectorKeeper keeper.Keeper
+	TxfeecollectorKeeper *keeper.Keeper
 	Module               appmodule.AppModule
 }
 
@@ -206,13 +243,15 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.BankKeeper,
 		in.AccountKeeper,
 		in.TradeKeeper,
+		in.DistrKeeper,
 	)
 	m := NewAppModule(
 		in.Cdc,
 		k,
 		in.AccountKeeper,
 		in.BankKeeper,
+		in.DistrKeeper,
 	)
 
-	return ModuleOutputs{TxfeecollectorKeeper: k, Module: m}
+	return ModuleOutputs{TxfeecollectorKeeper: &k, Module: m}
 }

@@ -134,5 +134,11 @@ func (k Keeper) GetAllAssetMarketAliases(ctx sdk.Context, asset string) (list []
 func (k Keeper) MarketExists(ctx sdk.Context, marketId string) bool {
 	_, ok := k.GetMarketById(ctx, marketId)
 
+	if ok {
+		return true
+	}
+
+	_, ok = k.GetLiquidityPool(ctx, marketId)
+
 	return ok
 }

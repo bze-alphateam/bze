@@ -19,10 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_UpdateParams_FullMethodName = "/bze.burner.Msg/UpdateParams"
-	Msg_FundBurner_FullMethodName   = "/bze.burner.Msg/FundBurner"
-	Msg_StartRaffle_FullMethodName  = "/bze.burner.Msg/StartRaffle"
-	Msg_JoinRaffle_FullMethodName   = "/bze.burner.Msg/JoinRaffle"
+	Msg_UpdateParams_FullMethodName       = "/bze.burner.Msg/UpdateParams"
+	Msg_FundBurner_FullMethodName         = "/bze.burner.Msg/FundBurner"
+	Msg_StartRaffle_FullMethodName        = "/bze.burner.Msg/StartRaffle"
+	Msg_JoinRaffle_FullMethodName         = "/bze.burner.Msg/JoinRaffle"
+	Msg_MoveIbcLockedCoins_FullMethodName = "/bze.burner.Msg/MoveIbcLockedCoins"
 )
 
 // MsgClient is the client API for Msg service.
@@ -35,6 +36,7 @@ type MsgClient interface {
 	FundBurner(ctx context.Context, in *MsgFundBurner, opts ...grpc.CallOption) (*MsgFundBurnerResponse, error)
 	StartRaffle(ctx context.Context, in *MsgStartRaffle, opts ...grpc.CallOption) (*MsgStartRaffleResponse, error)
 	JoinRaffle(ctx context.Context, in *MsgJoinRaffle, opts ...grpc.CallOption) (*MsgJoinRaffleResponse, error)
+	MoveIbcLockedCoins(ctx context.Context, in *MsgMoveIbcLockedCoins, opts ...grpc.CallOption) (*MsgMoveIbcLockedCoinsResponse, error)
 }
 
 type msgClient struct {
@@ -81,6 +83,15 @@ func (c *msgClient) JoinRaffle(ctx context.Context, in *MsgJoinRaffle, opts ...g
 	return out, nil
 }
 
+func (c *msgClient) MoveIbcLockedCoins(ctx context.Context, in *MsgMoveIbcLockedCoins, opts ...grpc.CallOption) (*MsgMoveIbcLockedCoinsResponse, error) {
+	out := new(MsgMoveIbcLockedCoinsResponse)
+	err := c.cc.Invoke(ctx, Msg_MoveIbcLockedCoins_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -91,6 +102,7 @@ type MsgServer interface {
 	FundBurner(context.Context, *MsgFundBurner) (*MsgFundBurnerResponse, error)
 	StartRaffle(context.Context, *MsgStartRaffle) (*MsgStartRaffleResponse, error)
 	JoinRaffle(context.Context, *MsgJoinRaffle) (*MsgJoinRaffleResponse, error)
+	MoveIbcLockedCoins(context.Context, *MsgMoveIbcLockedCoins) (*MsgMoveIbcLockedCoinsResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -109,6 +121,9 @@ func (UnimplementedMsgServer) StartRaffle(context.Context, *MsgStartRaffle) (*Ms
 }
 func (UnimplementedMsgServer) JoinRaffle(context.Context, *MsgJoinRaffle) (*MsgJoinRaffleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JoinRaffle not implemented")
+}
+func (UnimplementedMsgServer) MoveIbcLockedCoins(context.Context, *MsgMoveIbcLockedCoins) (*MsgMoveIbcLockedCoinsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MoveIbcLockedCoins not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -195,6 +210,24 @@ func _Msg_JoinRaffle_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_MoveIbcLockedCoins_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgMoveIbcLockedCoins)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).MoveIbcLockedCoins(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_MoveIbcLockedCoins_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).MoveIbcLockedCoins(ctx, req.(*MsgMoveIbcLockedCoins))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -217,6 +250,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "JoinRaffle",
 			Handler:    _Msg_JoinRaffle_Handler,
+		},
+		{
+			MethodName: "MoveIbcLockedCoins",
+			Handler:    _Msg_MoveIbcLockedCoins_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

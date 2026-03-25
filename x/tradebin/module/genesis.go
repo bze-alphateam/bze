@@ -1,8 +1,10 @@
 package tradebin
 
 import (
+	"fmt"
 	"strconv"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bze-alphateam/bze/x/tradebin/keeper"
@@ -23,6 +25,9 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 	}
 
 	for _, elem := range genState.OrderList {
+		if _, err := math.LegacyNewDecFromStr(elem.Price); err != nil {
+			panic(fmt.Sprintf("invalid order price %q for order %s: %s", elem.Price, elem.Id, err))
+		}
 		k.SaveOrder(ctx, elem)
 	}
 
@@ -44,6 +49,10 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 	}
 	k.SetQueueMessageCounter(ctx, qmCounter)
 	k.SetOrderCounter(ctx, uint64(genState.OrderCounter))
+
+	for _, elem := range genState.LiquidityPools {
+		k.SetLiquidityPool(ctx, elem)
+	}
 }
 
 // ExportGenesis returns the module's exported genesis.
@@ -59,6 +68,7 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *types.GenesisState {
 
 	genesis.OrderCounter = int64(k.GetOrderCounter(ctx))
 	genesis.AllUsersDust = k.GetAllUserDust(ctx)
+	genesis.LiquidityPools = k.GetAllLiquidityPool(ctx)
 	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis

@@ -17,6 +17,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgFundBurner{},
 		&MsgStartRaffle{},
 		&MsgJoinRaffle{},
+		&MsgMoveIbcLockedCoins{},
 	)
 
 	registry.RegisterInterface(

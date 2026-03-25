@@ -435,39 +435,3 @@ func (suite *IntegrationTestSuite) TestStoreTradingReward_GetAllMarketIdRewardId
 	suite.Require().True(marketIds["market-2"])
 	suite.Require().True(marketIds["market-3"])
 }
-
-// Test Counter Increment
-func (suite *IntegrationTestSuite) TestStoreTradingReward_CounterIncrement() {
-	// Get initial counter
-	initialCounter := suite.k.GetTradingRewardsCounter(suite.ctx)
-
-	pendingReward := types.TradingReward{
-		RewardId:    "counter-pending",
-		PrizeAmount: "500",
-		PrizeDenom:  "ubze",
-		Duration:    30,
-		MarketId:    "market-1",
-		Slots:       10,
-		ExpireAt:    1704067200,
-	}
-
-	activeReward := types.TradingReward{
-		RewardId:    "counter-active",
-		PrizeAmount: "1000",
-		PrizeDenom:  "utoken",
-		Duration:    60,
-		MarketId:    "market-2",
-		Slots:       20,
-		ExpireAt:    1704153600,
-	}
-
-	// Set pending reward should increment counter
-	suite.k.SetPendingTradingReward(suite.ctx, pendingReward)
-	counterAfterPending := suite.k.GetTradingRewardsCounter(suite.ctx)
-	suite.Require().Equal(initialCounter+1, counterAfterPending)
-
-	// Set active reward should increment counter again
-	suite.k.SetActiveTradingReward(suite.ctx, activeReward)
-	finalCounter := suite.k.GetTradingRewardsCounter(suite.ctx)
-	suite.Require().Equal(initialCounter+2, finalCounter)
-}

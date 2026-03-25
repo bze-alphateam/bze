@@ -18,4 +18,10 @@ message Params {
   string makerFeeDestination = 4 [(gogoproto.moretags) = "yaml:\"maker_fee_destination\""];
   string takerFeeDestination = 5 [(gogoproto.moretags) = "yaml:\"taker_fee_destination\""];
   string native_denom = 6 [(gogoproto.moretags) = "yaml:\"native_denom\""];
+  uint64 orderBookExtraGasWindow = 7 [(gogoproto.moretags) = "yaml:\"order_book_extra_gas_window\""];
+  uint64 orderBookQueueExtraGas = 8 [(gogoproto.moretags) = "yaml:\"order_book_queue_extra_gas\""];
+  uint64 fillOrdersExtraGas = 9 [(gogoproto.moretags) = "yaml:\"fill_orders_extra_gas\""];
+  string minNativeLiquidityForModuleSwap = 10 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"min_native_liquidity_for_module_swap\""];
+  uint64 orderBookPerBlockMessages = 11 [(gogoproto.moretags) = "yaml:\"order_book_per_block_messages\""];
+  uint64 orderBookQueueMessageScanExtraGas = 12 [(gogoproto.moretags) = "yaml:\"order_book_queue_message_scan_extra_gas\""];
 }

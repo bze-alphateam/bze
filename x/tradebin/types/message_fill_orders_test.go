@@ -190,7 +190,7 @@ func TestMsgFillOrders_ValidateBasic(t *testing.T) {
 			},
 		},
 		{
-			name: "valid message - orders with empty values",
+			name: "invalid price - empty value",
 			msg: MsgFillOrders{
 				Creator:   validCreator,
 				MarketId:  validMarketId,
@@ -199,6 +199,47 @@ func TestMsgFillOrders_ValidateBasic(t *testing.T) {
 					{Price: "", Amount: ""},
 				},
 			},
+			err: sdkerrors.ErrInvalidRequest,
+		},
+		{
+			name: "duplicate prices in orders",
+			msg: MsgFillOrders{
+				Creator:   validCreator,
+				MarketId:  validMarketId,
+				OrderType: validOrderType,
+				Orders: []*FillOrderItem{
+					{Price: "1.5", Amount: "1000"},
+					{Price: "1.5", Amount: "2000"},
+				},
+			},
+			err: sdkerrors.ErrInvalidRequest,
+		},
+		{
+			name: "duplicate prices in orders - three orders with two duplicates",
+			msg: MsgFillOrders{
+				Creator:   validCreator,
+				MarketId:  validMarketId,
+				OrderType: validOrderType,
+				Orders: []*FillOrderItem{
+					{Price: "1.5", Amount: "1000"},
+					{Price: "1.6", Amount: "2000"},
+					{Price: "1.5", Amount: "3000"},
+				},
+			},
+			err: sdkerrors.ErrInvalidRequest,
+		},
+		{
+			name: "duplicate prices in orders - duplicate empty prices",
+			msg: MsgFillOrders{
+				Creator:   validCreator,
+				MarketId:  validMarketId,
+				OrderType: validOrderType,
+				Orders: []*FillOrderItem{
+					{Price: "", Amount: "1000"},
+					{Price: "", Amount: "2000"},
+				},
+			},
+			err: sdkerrors.ErrInvalidRequest,
 		},
 	}
 	for _, tt := range tests {

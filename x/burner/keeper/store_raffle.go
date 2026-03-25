@@ -74,6 +74,23 @@ func (k Keeper) RemoveRaffleDeleteHook(ctx sdk.Context, raffle types.RaffleDelet
 	store.Delete(types.RaffleStoreKey(raffle.Denom))
 }
 
+func (k Keeper) GetRaffleDeleteHookByEndAtPrefixBatched(ctx sdk.Context, endAt uint64, limit int) (list []types.RaffleDeleteHook) {
+	store := k.getPrefixedStore(ctx, types.GetRaffleDeleteHookPrefix(endAt))
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		if len(list) >= limit {
+			break
+		}
+		var val types.RaffleDeleteHook
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
+}
+
 func (k Keeper) GetRaffleDeleteHookByEndAtPrefix(ctx sdk.Context, endAt uint64) (list []types.RaffleDeleteHook) {
 	store := k.getPrefixedStore(ctx, types.GetRaffleDeleteHookPrefix(endAt))
 	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
@@ -142,6 +159,19 @@ func (k Keeper) GetAllRaffleParticipants(ctx sdk.Context) []types.RaffleParticip
 func (k Keeper) GetAllPrefixedRaffleParticipants(ctx sdk.Context, pref int64) []types.RaffleParticipant {
 
 	return k.getRaffleParticipantsByPrefix(ctx, types.GetRaffleParticipantPrefixedKey(pref))
+}
+
+func (k Keeper) CountPrefixedRaffleParticipants(ctx sdk.Context, pref int64) int {
+	store := k.getPrefixedStore(ctx, types.GetRaffleParticipantPrefixedKey(pref))
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
+	defer iterator.Close()
+
+	count := 0
+	for ; iterator.Valid(); iterator.Next() {
+		count++
+	}
+
+	return count
 }
 
 func (k Keeper) SetRaffleParticipant(ctx sdk.Context, part types.RaffleParticipant) {

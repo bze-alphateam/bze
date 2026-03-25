@@ -9,6 +9,11 @@ var _ sdk.Msg = &MsgUpdateParams{}
 
 // ValidateBasic does a sanity check on the provided data.
 func (m *MsgUpdateParams) ValidateBasic() error {
+	return m.Validate()
+}
+
+// Validate validates the MsgUpdateParams request.
+func (m *MsgUpdateParams) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		return errorsmod.Wrap(err, "invalid authority address")
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/bze-alphateam/bze/x/tokenfactory/exported"
 
 	"cosmossdk.io/core/appmodule"
@@ -63,7 +64,7 @@ func (AppModuleBasic) Name() string {
 
 // RegisterLegacyAminoCodec registers the amino codec for the module, which is used
 // to marshal and unmarshal structs to/from []byte in order to persist them in the module's KVStore.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
+func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
 // RegisterInterfaces registers a module's interface types and their concrete implementations as proto.Message.
 func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
@@ -77,7 +78,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 }
 
 // ValidateGenesis used to validate the GenesisState, given in its json.RawMessage form.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
 	var genState types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -103,7 +104,7 @@ type AppModule struct {
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
-	distrkeeper   types.DistrKeeper
+	tradeKeeper   types.TradingKeeper
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	legacySubspace exported.Subspace
@@ -114,7 +115,7 @@ func NewAppModule(
 	keeper keeper.Keeper,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
-	distrKeeper types.DistrKeeper,
+	trateKeeper types.TradingKeeper,
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	legacySubspace exported.Subspace,
@@ -124,8 +125,8 @@ func NewAppModule(
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
-		distrkeeper:    distrKeeper,
 		legacySubspace: legacySubspace,
+		tradeKeeper:    trateKeeper,
 	}
 }
 
@@ -203,7 +204,7 @@ type ModuleInputs struct {
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
-	DistrKeeper   types.DistrKeeper
+	TradeKeeper   types.TradingKeeper
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
@@ -228,15 +229,15 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.Logger,
 		authority.String(),
 		in.BankKeeper,
-		in.DistrKeeper,
 		in.AccountKeeper,
+		in.TradeKeeper,
 	)
 	m := NewAppModule(
 		in.Cdc,
 		k,
 		in.AccountKeeper,
 		in.BankKeeper,
-		in.DistrKeeper,
+		in.TradeKeeper,
 		in.LegacySubspace,
 	)
 

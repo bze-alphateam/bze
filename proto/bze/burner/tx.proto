@@ -1,4 +1,5 @@
 syntax = "proto3";
+
 package bze.burner;
 
 import "amino/amino.proto";
@@ -15,10 +16,11 @@ service Msg {
 
   // UpdateParams defines a (governance) operation for updating the module
   // parameters. The authority defaults to the x/gov module account.
-  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
-  rpc FundBurner(MsgFundBurner) returns (MsgFundBurnerResponse);
-  rpc StartRaffle(MsgStartRaffle) returns (MsgStartRaffleResponse);
-  rpc JoinRaffle(MsgJoinRaffle) returns (MsgJoinRaffleResponse);
+  rpc UpdateParams    (MsgUpdateParams   ) returns (MsgUpdateParamsResponse   );
+  rpc FundBurner      (MsgFundBurner     ) returns (MsgFundBurnerResponse     );
+  rpc StartRaffle     (MsgStartRaffle    ) returns (MsgStartRaffleResponse    );
+  rpc JoinRaffle      (MsgJoinRaffle     ) returns (MsgJoinRaffleResponse     );
+  rpc MoveIbcLockedCoins (MsgMoveIbcLockedCoins) returns (MsgMoveIbcLockedCoinsResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -77,3 +79,15 @@ message MsgJoinRaffle {
 }
 
 message MsgJoinRaffleResponse {}
+
+message MsgMoveIbcLockedCoins {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string denom   = 2;
+}
+
+message MsgMoveIbcLockedCoinsResponse {
+  string added = 1;
+  string refunded = 2;
+}
+

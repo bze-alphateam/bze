@@ -66,6 +66,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:            "join-raffle [denom] [tickets]",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}, {ProtoField: "tickets"}},
 				},
+				{
+					RpcMethod:      "MoveIbcLockedCoins",
+					Use:            "move-ibc-locked-coins [denom]",
+					Short:          "Move IBC locked coins to liquidity and send native refund to burner",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},

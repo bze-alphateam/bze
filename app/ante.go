@@ -3,6 +3,7 @@ package app
 import (
 	errorsmod "cosmossdk.io/errors"
 	customAnte "github.com/bze-alphateam/bze/x/txfeecollector/ante"
+	"github.com/bze-alphateam/bze/x/txfeecollector/keeper"
 	"github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -10,8 +11,9 @@ import (
 )
 
 type AnteHandlerOptions struct {
-	TradeKeeper types.TradeKeeper
-	BankKeeper  types.BankKeeper
+	TradeKeeper       types.TradeKeeper
+	BankKeeper        types.BankKeeper
+	TxCollectorKeeper *keeper.Keeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -38,7 +40,7 @@ func NewAnteHandler(options ante.HandlerOptions, customOptions AnteHandlerOption
 		ante.NewTxTimeoutHeightDecorator(),
 		ante.NewValidateMemoDecorator(options.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		customAnte.NewDeductFeeDecorator(customOptions.TradeKeeper, options.AccountKeeper, customOptions.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
+		customAnte.NewDeductFeeDecorator(customOptions.TradeKeeper, options.AccountKeeper, customOptions.BankKeeper, options.FeegrantKeeper, customOptions.TxCollectorKeeper),
 		ante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewValidateSigCountDecorator(options.AccountKeeper),
 		ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
