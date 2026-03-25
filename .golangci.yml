@@ -1,54 +1,11 @@
+version: "2"
+
 run:
   timeout: 5m
-  tests: false  # Exclude test files
-
-  # Directories to include
-  skip-dirs:
-    - vendor
-    - third_party
-    - testutil
-    - docs
-    - proto
-    - scripts
-    - simapp
-
-  # Files to skip
-  skip-files:
-    - ".*\\.pb\\.go$"        # Protobuf generated files
-    - ".*\\.pb\\.gw\\.go$"   # gRPC gateway generated files
-    - ".*\\.pulsar\\.go$"    # Pulsar generated files
-    - ".*_test\\.go$"        # Test files
-
-issues:
-  # Exclude common false positives
-  exclude-rules:
-    # Exclude linters for test files
-    - path: _test\.go
-      linters:
-        - gosec
-        - goconst
-        - gocyclo
-        - errcheck
-        - dupl
-        - funlen
-        - gocritic
-
-    # Exclude linters for generated files
-    - path: \.pb\.go$
-      linters:
-        - all
-
-    - path: \.pb\.gw\.go$
-      linters:
-        - all
-
-    - path: \.pulsar\.go$
-      linters:
-        - all
 
 linters:
+  default: none
   enable:
-    - gofmt
     - govet
     - staticcheck
     - unused
@@ -56,16 +13,62 @@ linters:
     - ineffassign
     - typecheck
 
-  disable:
-    - errcheck  # Too noisy for Cosmos SDK projects
-    - gosec     # Too many false positives
+  settings:
+    govet:
+      disable:
+        - shadow
 
-linters-settings:
-  gofmt:
-    simplify: true
+  exclusions:
+    presets:
+      - common-false-positives
+    paths:
+      - vendor
+      - third_party
+      - testutil
+      - docs
+      - proto
+      - scripts
+      - simapp
+      - ".*\\.pb\\.go$"
+      - ".*\\.pb\\.gw\\.go$"
+      - ".*\\.pulsar\\.go$"
+      - ".*_test\\.go$"
+    rules:
+      - path: _test\.go
+        linters:
+          - gosec
+          - goconst
+          - gocyclo
+          - errcheck
+          - dupl
+          - funlen
+          - gocritic
+      - path: \.pb\.go$
+        linters:
+          - all
+      - path: \.pb\.gw\.go$
+        linters:
+          - all
+      - path: \.pulsar\.go$
+        linters:
+          - all
 
-  govet:
-    check-shadowing: false
-
-  staticcheck:
-    go: "1.23"
+formatters:
+  enable:
+    - gofmt
+  settings:
+    gofmt:
+      simplify: true
+  exclusions:
+    paths:
+      - vendor
+      - third_party
+      - testutil
+      - docs
+      - proto
+      - scripts
+      - simapp
+      - ".*\\.pb\\.go$"
+      - ".*\\.pb\\.gw\\.go$"
+      - ".*\\.pulsar\\.go$"
+      - ".*_test\\.go$"
