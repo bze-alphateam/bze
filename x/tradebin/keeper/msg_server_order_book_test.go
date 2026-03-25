@@ -13,7 +13,7 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func (suite *IntegrationTestSuite) Msg_TestCancelOrder_MarketNotFound() {
+func (suite *IntegrationTestSuite) TestMsg_CancelOrder_MarketNotFound() {
 
 	_, err := suite.msgServer.CancelOrder(suite.ctx, &types.MsgCancelOrder{
 		Creator:   "me",
@@ -24,7 +24,7 @@ func (suite *IntegrationTestSuite) Msg_TestCancelOrder_MarketNotFound() {
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCancelOrder_OrderNotFound() {
+func (suite *IntegrationTestSuite) TestMsg_CancelOrder_OrderNotFound() {
 	suite.k.SetMarket(suite.ctx, market)
 
 	_, err := suite.msgServer.CancelOrder(suite.ctx, &types.MsgCancelOrder{
@@ -36,7 +36,7 @@ func (suite *IntegrationTestSuite) Msg_TestCancelOrder_OrderNotFound() {
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCancelOrder_Unauthorized() {
+func (suite *IntegrationTestSuite) TestMsg_CancelOrder_Unauthorized() {
 	suite.k.SetMarket(suite.ctx, market)
 	order := suite.k.NewOrder(suite.ctx, types.Order{
 		MarketId:  getMarketId(),
@@ -55,7 +55,7 @@ func (suite *IntegrationTestSuite) Msg_TestCancelOrder_Unauthorized() {
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCancelOrder_CancelBuy_Success() {
+func (suite *IntegrationTestSuite) TestMsg_CancelOrder_CancelBuy_Success() {
 	suite.k.SetMarket(suite.ctx, market)
 	order := suite.k.NewOrder(suite.ctx, types.Order{
 		MarketId:  getMarketId(),
@@ -83,7 +83,7 @@ func (suite *IntegrationTestSuite) Msg_TestCancelOrder_CancelBuy_Success() {
 	suite.Require().Equal(qms[0].Owner, order.Owner)
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCancelOrder_CancelSell_Success() {
+func (suite *IntegrationTestSuite) TestMsg_CancelOrder_CancelSell_Success() {
 	suite.k.SetMarket(suite.ctx, market)
 	order := suite.k.NewOrder(suite.ctx, types.Order{
 		MarketId:  getMarketId(),
@@ -321,7 +321,7 @@ func (suite *IntegrationTestSuite) TestCreateOrder_SellAtLowerBuyPrice_BetterBuy
 	suite.Require().Len(qmList, 0)
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCreateMarket_InvalidDenom() {
+func (suite *IntegrationTestSuite) TestMsg_CreateMarket_InvalidDenom() {
 
 	//same denom for both
 	_, err := suite.msgServer.CreateMarket(suite.ctx, &types.MsgCreateMarket{
@@ -341,7 +341,7 @@ func (suite *IntegrationTestSuite) Msg_TestCreateMarket_InvalidDenom() {
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCreateMarket_MarketAlreadyExist() {
+func (suite *IntegrationTestSuite) TestMsg_CreateMarket_MarketAlreadyExist() {
 	suite.k.SetMarket(suite.ctx, market)
 
 	_, err := suite.msgServer.CreateMarket(suite.ctx, &types.MsgCreateMarket{
@@ -359,7 +359,7 @@ func (suite *IntegrationTestSuite) Msg_TestCreateMarket_MarketAlreadyExist() {
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCreateMarket_NotEnoughCoinsForFee() {
+func (suite *IntegrationTestSuite) TestMsg_CreateMarket_NotEnoughCoinsForFee() {
 
 	addr1 := sdk.AccAddress("addr1_______________")
 	marketFee := sdk.NewCoins(sdk.NewCoin(denomBze, math.NewInt(25000000000)))
@@ -387,7 +387,7 @@ func (suite *IntegrationTestSuite) Msg_TestCreateMarket_NotEnoughCoinsForFee() {
 	suite.Require().NotNil(err)
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCreateMarket_Success() {
+func (suite *IntegrationTestSuite) TestMsg_CreateMarket_Success() {
 
 	addr1 := sdk.AccAddress("addr1_______________")
 	marketFee := sdk.NewCoins(sdk.NewCoin(denomBze, math.NewInt(25000000000)))
@@ -424,7 +424,7 @@ func (suite *IntegrationTestSuite) Msg_TestCreateMarket_Success() {
 	suite.Require().Equal(newMarket, storageMarket)
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCreateOrder_InvalidAmount() {
+func (suite *IntegrationTestSuite) TestMsg_CreateOrder_InvalidAmount() {
 
 	_, err := suite.msgServer.CreateOrder(suite.ctx, &types.MsgCreateOrder{
 		Amount: "hdsihdshdshids",
@@ -435,7 +435,7 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_InvalidAmount() {
 	suite.Require().Contains(err.Error(), "amount could not be converted to Int")
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCreateOrder_AmountTooLow() {
+func (suite *IntegrationTestSuite) TestMsg_CreateOrder_AmountTooLow() {
 
 	_, err := suite.msgServer.CreateOrder(suite.ctx, &types.MsgCreateOrder{
 		Amount: "1",
@@ -447,7 +447,7 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_AmountTooLow() {
 	suite.Require().Contains(err.Error(), "amount should be bigger than")
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketNotFound() {
+func (suite *IntegrationTestSuite) TestMsg_CreateOrder_MarketNotFound() {
 
 	_, err := suite.msgServer.CreateOrder(suite.ctx, &types.MsgCreateOrder{
 		Amount:   "1000000",
@@ -460,7 +460,7 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketNotFound() {
 	suite.Require().Contains(err.Error(), "market id")
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCreateOrder_InvalidOrderType() {
+func (suite *IntegrationTestSuite) TestMsg_CreateOrder_InvalidOrderType() {
 	suite.k.SetMarket(suite.ctx, market)
 
 	addr1 := sdk.AccAddress("addr1_______________")
@@ -476,7 +476,7 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_InvalidOrderType() {
 	suite.Require().Contains(err.Error(), "order type")
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCreateOrder_InvalidCreator() {
+func (suite *IntegrationTestSuite) TestMsg_CreateOrder_InvalidCreator() {
 	suite.k.SetMarket(suite.ctx, market)
 
 	_, err := suite.msgServer.CreateOrder(suite.ctx, &types.MsgCreateOrder{
@@ -491,7 +491,7 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_InvalidCreator() {
 	suite.Require().Contains(err.Error(), "bech32")
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketMaker_Buy_Success_ZeroDust() {
+func (suite *IntegrationTestSuite) TestMsg_CreateOrder_MarketMaker_Buy_Success_ZeroDust() {
 	suite.k.SetMarket(suite.ctx, market)
 
 	addr1 := sdk.AccAddress("addr1_______________")
@@ -530,7 +530,7 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketMaker_Buy_Success_Z
 	suite.Require().False(ok)
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_Buy_Success_ZeroDust() {
+func (suite *IntegrationTestSuite) TestMsg_CreateOrder_MarketTaker_Buy_Success_ZeroDust() {
 	suite.k.SetMarket(suite.ctx, market)
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
@@ -575,7 +575,7 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_Buy_Success_Z
 	suite.Require().False(ok)
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_Buy_Success_WithDust() {
+func (suite *IntegrationTestSuite) TestMsg_CreateOrder_MarketTaker_Buy_Success_WithDust() {
 	suite.k.SetMarket(suite.ctx, market)
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
@@ -621,7 +621,7 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_Buy_Success_W
 	suite.Require().False(ok)
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketMaker_Sell_Success() {
+func (suite *IntegrationTestSuite) TestMsg_CreateOrder_MarketMaker_Sell_Success() {
 	suite.k.SetMarket(suite.ctx, market)
 
 	addr1 := sdk.AccAddress("addr1_______________")
@@ -661,7 +661,7 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketMaker_Sell_Success(
 	suite.Require().False(ok)
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_Sell_Success() {
+func (suite *IntegrationTestSuite) TestMsg_CreateOrder_MarketTaker_Sell_Success() {
 	suite.k.SetMarket(suite.ctx, market)
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),
@@ -708,11 +708,8 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_Sell_Success(
 	suite.Require().False(ok)
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_StressBalance() {
+func (suite *IntegrationTestSuite) TestMsg_CreateOrder_MarketTaker_StressBalance() {
 	suite.k.SetMarket(suite.ctx, market)
-	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
-	suite.Require().Nil(err)
-
 	//create initial random markets
 	testDenom1 := "test1"
 	testDenom2 := "test2"
@@ -772,8 +769,13 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_StressBalance
 				allPaid = allPaid.Sub(coins...)
 				return nil
 			}).AnyTimes()
-		//suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		engine.ProcessQueueMessages(suite.ctx)
+		// Process all queue messages (may take multiple calls due to per-block limit)
+		// Create a fresh engine each round to avoid stale msgsToDelete accumulation
+		for suite.k.HasQueueMessages(suite.ctx) {
+			roundEngine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
+			suite.Require().Nil(err)
+			roundEngine.ProcessQueueMessages(suite.ctx)
+		}
 	}
 
 	allOrders := suite.k.GetAllOrder(suite.ctx)
@@ -826,7 +828,7 @@ func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_StressBalance
 	suite.Require().Equal(allPaid, amounts)
 }
 
-func (suite *IntegrationTestSuite) Msg_TestCreateOrder_MarketTaker_CheckPrice_Fail() {
+func (suite *IntegrationTestSuite) TestMsg_CreateOrder_MarketTaker_CheckPrice_Fail() {
 	suite.k.SetMarket(suite.ctx, market)
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
 		MarketId:  getMarketId(),

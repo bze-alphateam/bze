@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/log"
 	confixcmd "cosmossdk.io/tools/confix/cmd"
+	wasm "github.com/CosmWasm/wasmd/x/wasm"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"
@@ -53,8 +54,8 @@ func initRootCmd(
 	)
 }
 
-func addModuleInitFlags(_ *cobra.Command) {
-	//crisis.AddModuleInitFlags(startCmd) module removed
+func addModuleInitFlags(startCmd *cobra.Command) {
+	wasm.AddModuleInitFlags(startCmd)
 }
 
 // genesisCommand builds genesis-related `beezeed genesis` command. Users may provide application specific commands as a parameter

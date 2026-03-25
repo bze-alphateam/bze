@@ -22,4 +22,16 @@ message Params {
     (gogoproto.moretags) = "yaml:\"max_balance_iterations\"",
     (gogoproto.jsontag)      = "max_balance_iterations,omitempty"
   ];
+
+  string CwDeployFeeDestination = 3 [
+    (gogoproto.moretags) = "yaml:\"cw_deploy_fee_destination\"",
+    (gogoproto.jsontag)  = "cw_deploy_fee_destination,omitempty"
+  ];
+
+  repeated cosmos.base.v1beta1.Coin CwDeployFee = 4 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"cw_deploy_fee\"",
+    (gogoproto.jsontag)      = "cw_deploy_fee,omitempty"
+  ];
 }

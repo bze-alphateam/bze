@@ -6,6 +6,7 @@ import (
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	v810 "github.com/bze-alphateam/bze/app/upgrades/v810"
+	v820 "github.com/bze-alphateam/bze/app/upgrades/v820"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -79,7 +80,11 @@ import (
 	_ "github.com/cosmos/ibc-go/v8/modules/apps/29-fee" // import for side-effects
 	ibcfeekeeper "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/keeper"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
+	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	burnermodulekeeper "github.com/bze-alphateam/bze/x/burner/keeper"
 	cointrunkmodulekeeper "github.com/bze-alphateam/bze/x/cointrunk/keeper"
@@ -153,6 +158,10 @@ type App struct {
 	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
 	ScopedKeepers             map[string]capabilitykeeper.ScopedKeeper
 
+	// CosmWasm
+	WasmKeeper       wasmkeeper.Keeper
+	ScopedWasmKeeper capabilitykeeper.ScopedKeeper
+
 	BurnerKeeper         burnermodulekeeper.Keeper
 	EpochKeeper          *epochmodulekeeper.Keeper
 	CointrunkKeeper      cointrunkmodulekeeper.Keeper
@@ -161,6 +170,11 @@ type App struct {
 	TradebinKeeper       *tradebinmodulekeeper.Keeper
 	TxfeecollectorKeeper *txfeecollectormodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
+
+	// IBC router is stored temporarily so wasm can add its port before sealing.
+	ibcRouter *porttypes.Router
+	// wasmNodeConfig is stored during wasm module registration for use in ante handler setup.
+	wasmNodeConfig wasmtypes.NodeConfig
 
 	// simulation manager
 	sm *module.SimulationManager
@@ -281,10 +295,20 @@ func New(
 	// build app
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 
-	// register legacy modules
+	// register legacy modules (IBC and CosmWasm don't support depinject)
 	if err := app.registerIBCModules(appOpts); err != nil {
 		return nil, err
 	}
+
+	if err := app.registerWasmModule(appOpts); err != nil {
+		return nil, err
+	}
+
+	// Seal the IBC router after all modules (IBC + wasm) have added their routes
+	app.IBCKeeper.SetRouter(app.ibcRouter)
+
+	// Seal the capability keeper after all ScopeToModule calls (IBC + wasm) are complete
+	app.CapabilityKeeper.Seal()
 
 	// register streaming services
 	if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
@@ -315,7 +339,13 @@ func New(
 		TxCollectorKeeper: app.TxfeecollectorKeeper,
 	}
 
-	anteHandler, err := NewAnteHandler(anteOptions, customAnte)
+	wasmAnte := WasmAnteHandlerOptions{
+		NodeConfig:            &app.wasmNodeConfig,
+		WasmKeeper:            &app.WasmKeeper,
+		TXCounterStoreService: runtime.NewKVStoreService(app.GetKey(wasmtypes.StoreKey)),
+	}
+
+	anteHandler, err := NewAnteHandler(anteOptions, customAnte, wasmAnte)
 	if err != nil {
 		return nil, err
 	}
@@ -348,6 +378,14 @@ func (app *App) setupUpgradeHandlers() {
 		),
 	)
 
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v820.UpgradeName,
+		v820.CreateUpgradeHandler(
+			app.Configurator(),
+			app.ModuleManager,
+		),
+	)
+
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(err)
@@ -355,6 +393,11 @@ func (app *App) setupUpgradeHandlers() {
 
 	if upgradeInfo.Name == v810.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := v810.GetStoreUpgrades()
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
+	}
+
+	if upgradeInfo.Name == v820.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := v820.GetStoreUpgrades()
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
 	}
 }

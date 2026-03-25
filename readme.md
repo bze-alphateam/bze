@@ -69,15 +69,61 @@ https://ping.pub/beezee
 **BZE**: channel-0  
 **Osmosis**: channel-340 
 
+### CosmWasm
+BZE supports [CosmWasm](https://cosmwasm.com/) smart contracts (wasmd v0.54.6, wasmvm v2.2.6).
+
+**Capabilities**: `iterator`, `staking`, `stargate`, `cosmwasm_1_1` through `cosmwasm_2_2`
+
+Contracts can interact with all BZE modules (TradeBin, TokenFactory, Rewards, Burner, CoinTrunk) via Stargate messages (`CosmosMsg::Any`). Governance-only messages (`MsgUpdateParams`, etc.) are protected by authority checks and cannot be called by contracts.
+
+An additional CW deploy fee is charged when uploading contract code. Query current fees with:
+```
+bzed q txfeecollector params
+```
+
 ### Building from source
-#### Checkout to the branch/tag you want to build 
+
+#### Prerequisites
+
+- **Go 1.25** (required, enforced at build time)
+- **GCC or compatible C compiler** (required for wasmvm CGO linking)
+  - macOS: `xcode-select --install` (provides clang)
+  - Ubuntu/Debian: `sudo apt install build-essential`
+  - Alpine: `apk add gcc musl-dev`
+- **Git**
+
+#### Checkout to the branch/tag you want to build
 `git checkout v8.1.0`
 
-#### Build binaries:
-`make build-all`  
-This will build binaries for all supported platforms and compress them in ./build directory
+#### Build for your current platform (native):
+```
+make build
+```
+Produces `./build/bzed`. CGO is enabled automatically for wasmvm support.
 
-#### Build for specific platform:
-`make build-linux`
-This will build the binary for linux amd64 - check Makefile for more details and platforms
+#### Install to GOPATH:
+```
+make install
+```
+
+#### Build via Docker (cross-platform, no C compiler needed):
+```
+make build-docker
+```
+Produces a statically linked Linux amd64 binary using the project Dockerfile. To build for arm64:
+```
+make build-docker DOCKER_PLATFORM=linux/arm64
+```
+
+#### Build all platforms (native cross-compilation):
+```
+make build-all
+```
+Builds binaries for all supported platforms and compresses them in `./build/compressed`.
+
+**Note**: Cross-compiling from a different OS (e.g. Linux from macOS) requires a C cross-compiler because wasmvm uses CGO. For macOS to Linux:
+```
+brew install filosottile/musl-cross/musl-cross
+```
+If you don't have a cross-compiler, use `make build-docker` instead.
 
