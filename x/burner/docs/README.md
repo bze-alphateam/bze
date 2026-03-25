@@ -96,11 +96,13 @@ The module registers a dedicated account named `burner_black_hole`. This account
 ## Version History
 
 ### v8.1.0
-- Added raffle system: `MsgStartRaffle` and `MsgJoinRaffle` for on-chain luck-based raffles with configurable odds, duration, and ticket pricing
-- Added `MsgFundBurner` with coin classification — LP tokens are locked, burnable/exchangeable coins are sent to the burner module
-- Added `MsgMoveIbcLockedCoins` (permissionless) to move locked IBC coins into liquidity pools paired with native BZE
+- Queued periodic burning: burns now processed at EndBlock in bounded batches (up to 100 denoms/block) instead of synchronously in epoch hooks
+- Queued raffle cleanup: expired raffles processed at EndBlock in bounded batches (up to 50/block) instead of synchronously in epoch hooks
+- IBC token burn strategy changed from `ModuleSwapForNativeDenom` to `ModuleAddLiquidityWithNativeDenom`
+- `MsgFundBurner` now classifies coins before sending: lockable (LP) to black hole, burnable/exchangeable to burner module
+- Added `MsgMoveIbcLockedCoins` (permissionless) to move locked IBC coins from the black-hole account into liquidity pools paired with native BZE
 - Raffle participation rate-limited to 200 participants per block height
 - Minimum pot enforcement: raffles require at least 100,000 smallest units
 - Stricter raffle expiration check: rejects joins when 2 or fewer epochs remain
-- Queued periodic burning: burns now processed at EndBlock (up to 100 denoms/block) instead of synchronously in epoch hooks
-- Queued raffle cleanup: expired raffles processed at EndBlock (up to 50/block) instead of synchronously
+- `GetRaffleCurrentEpoch()` now returns `(uint64, error)` using `SafeGetEpochCountByIdentifier` for proper error handling
+- `periodic_burning_weeks` parameter validation now requires value > 0 (disallows zero)

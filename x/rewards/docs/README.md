@@ -71,11 +71,12 @@ When a staking reward has a lock period and you exit:
 ## Version History
 
 ### v8.1.0
-- All reward operations now use bounded queue-based processing at EndBlock (up to 100 items/block): unlock participants, staking reward distribution, and trading reward expiration
+- All reward operations moved from synchronous epoch hooks to bounded queue-based processing at EndBlock (up to 100 items/block): unlock participants, staking reward distribution, and trading reward expiration
 - Added `ExtraGasForExitStake` parameter (default 1,000,000 gas) consumed when exiting a stake
-- Trading reward leaderboard: traders tracked per reward (sized by the reward's `slots` parameter), sorted by volume with tie-breaking by timestamp
-- One active trading reward per market enforced; creation fails if one already exists
-- Creation fees now routed to `txfeecollector` module instead of directly to community pool
-- Expired pending trading rewards send uncaptured tokens to the burner module
+- Removed `DistrKeeper` dependency — creation fees now routed to `txfeecollector` module via `CaptureAndSwapUserFee` instead of `FundCommunityPool`
+- Expired pending trading rewards now send uncaptured tokens to the burner module instead of community pool
+- Leaderboard sorting fix: old code compared the same value for both items; fixed to properly compare `a.Amount` vs `b.Amount`
+- Trading hook now validates `tradedAmount.IsPositive()` before processing
 - Small reward protection: if calculated reward truncates to zero, `JoinedAt` is not updated
-- Maximum staking reward duration capped at 100 years
+- Maximum staking reward update duration increased from 10 years to 100 years
+- ConsensusVersion bumped from 3 to 4

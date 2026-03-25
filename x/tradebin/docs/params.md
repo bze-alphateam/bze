@@ -1,8 +1,8 @@
 # TradeBin Parameters
 
-- **`create_market_fee`** (`string coin`, default `25000000000ubze`): Charged during `MsgCreateMarket`; captured from the creator, swapped to `native_denom` if needed, and forwarded to the community-pool fee collector. Non-positive disables the charge.
-- **`market_maker_fee`** (`string coin`, default `1000ubze`): Taken on `MsgCreateOrder` when the order **does not** immediately match opposite liquidity (maker path). Captured, optionally swapped to `native_denom`, then sent to `maker_fee_destination`.
-- **`market_taker_fee`** (`string coin`, default `100000ubze`): Taken on `MsgCreateOrder` when the order crosses existing liquidity and on every `MsgFillOrders` call (taker path). Captured, optionally swapped to `native_denom`, then sent to `taker_fee_destination`.
+- **`create_market_fee`** (`sdk.Coin`, default `25000000000ubze`): Charged during `MsgCreateMarket`; captured from the creator, swapped to `native_denom` if needed, and forwarded to the community-pool fee collector. Non-positive disables the charge.
+- **`market_maker_fee`** (`sdk.Coin`, default `1000ubze`): Taken on `MsgCreateOrder` when the order **does not** immediately match opposite liquidity (maker path). Captured, optionally swapped to `native_denom`, then sent to `maker_fee_destination`.
+- **`market_taker_fee`** (`sdk.Coin`, default `100000ubze`): Taken on `MsgCreateOrder` when the order crosses existing liquidity and on every `MsgFillOrders` call (taker path). Captured, optionally swapped to `native_denom`, then sent to `taker_fee_destination`.
 - **`maker_fee_destination`** (`community_pool` | `burner`, default `burner`): Module that receives maker fees (community-pool collector or burner fee collector).
 - **`taker_fee_destination`** (`community_pool` | `burner`, default `burner`): Module that receives taker fees.
 - **`native_denom`** (`string`, default `ubze`): Base denom used when swapping collected fees or module balances; must exist in bank supply.
