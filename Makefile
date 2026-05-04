@@ -109,10 +109,18 @@ compress-build:
 	rm -rf $(BUILDDIR)/compressed
 	mkdir $(BUILDDIR)/compressed
 	zip -j $(BUILDDIR)/compressed/bze-$(VERSION)-win64.zip $(BUILDDIR)/win64/bzed.exe
-	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-darwin-arm64.tar.gz -C $(BUILDDIR)/darwin-arm64/ .
-	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-darwin-amd64.tar.gz -C $(BUILDDIR)/darwin-amd64/ .
-	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-linux-arm64.tar.gz -C $(BUILDDIR)/linux-arm64/ .
-	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-linux-amd64.tar.gz -C $(BUILDDIR)/linux-amd64/ .
+	cp $(BUILDDIR)/darwin-arm64/bzed-darwin-arm64 $(BUILDDIR)/darwin-arm64/bzed
+	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-darwin-arm64.tar.gz -C $(BUILDDIR)/darwin-arm64/ bzed
+	rm $(BUILDDIR)/darwin-arm64/bzed
+	cp $(BUILDDIR)/darwin-amd64/bzed-darwin-amd64 $(BUILDDIR)/darwin-amd64/bzed
+	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-darwin-amd64.tar.gz -C $(BUILDDIR)/darwin-amd64/ bzed
+	rm $(BUILDDIR)/darwin-amd64/bzed
+	cp $(BUILDDIR)/linux-arm64/bzed-linux-arm64 $(BUILDDIR)/linux-arm64/bzed
+	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-linux-arm64.tar.gz -C $(BUILDDIR)/linux-arm64/ bzed
+	rm $(BUILDDIR)/linux-arm64/bzed
+	cp $(BUILDDIR)/linux-amd64/bzed-linux-amd64 $(BUILDDIR)/linux-amd64/bzed
+	tar -czvf $(BUILDDIR)/compressed/bze-$(VERSION)-linux-amd64.tar.gz -C $(BUILDDIR)/linux-amd64/ bzed
+	rm $(BUILDDIR)/linux-amd64/bzed
 
 go.sum: go.mod
 		@echo "--> Ensure dependencies have not been modified"
