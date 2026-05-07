@@ -55,7 +55,10 @@ func NewAnteHandler(options ante.HandlerOptions, customOptions AnteHandlerOption
 		ante.NewValidateMemoDecorator(options.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		customAnte.NewDeductFeeDecorator(customOptions.TradeKeeper, options.AccountKeeper, customOptions.BankKeeper, options.FeegrantKeeper, customOptions.TxCollectorKeeper),
-		customAnte.NewCwDeployFeeDecorator(customOptions.TradeKeeper, customOptions.BankKeeper, options.FeegrantKeeper, customOptions.TxCollectorKeeper),
+		// Note: the cw deploy fee is charged inside the wasm MsgServer wrapper
+		// (app/wasm_msg_server.go), not in ante. That's the only place that
+		// catches every code-upload path (direct tx, authz, contract submsg,
+		// ICA host, gov proposal).
 		ante.NewSetPubKeyDecorator(options.AccountKeeper), // SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewValidateSigCountDecorator(options.AccountKeeper),
 		ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
