@@ -70,6 +70,11 @@ func (app *App) registerWasmModule(appOpts servertypes.AppOptions) error {
 		app.GRPCQueryRouter(),
 		DefaultNodeHome,
 		nodeConfig,
+		// VMConfig holds consensus-critical Wasm static-validation limits
+		// (WasmLimits). Zero value = use wasmvm's internal defaults, which
+		// is what most chains do. Setting custom limits here is a hard fork
+		// — all nodes must agree — so leave default unless we have a
+		// specific reason to tighten binary validation.
 		wasmtypes.VMConfig{},
 		availableCapabilities,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -82,18 +87,30 @@ func (app *App) registerWasmModule(appOpts servertypes.AppOptions) error {
 	wasmIBCModule := wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper, app.IBCFeeKeeper)
 	app.ibcRouter.AddRoute(wasmtypes.ModuleName, wasmIBCModule)
 
-	// Register wasm app module
-	if err := app.RegisterModules(
-		wasm.NewAppModule(
-			app.appCodec,
-			&app.WasmKeeper,
-			app.StakingKeeper,
-			app.AccountKeeper,
-			app.BankKeeper,
-			app.MsgServiceRouter(),
-			app.GetSubspace(wasmtypes.ModuleName),
-		),
-	); err != nil {
+	// Register wasm app module wrapped with a fee-charging MsgServer.
+	// The wrapper is the only universal capture point for the cw deploy
+	// fee — it covers direct user txs, authz, contract submsgs, ICA host
+	// dispatch, and gov proposals because all paths funnel through the
+	// wasm MsgServer registered on the MsgServiceRouter.
+	wasmSubspace := app.GetSubspace(wasmtypes.ModuleName)
+	innerWasmModule := wasm.NewAppModule(
+		app.appCodec,
+		&app.WasmKeeper,
+		app.StakingKeeper,
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.MsgServiceRouter(),
+		wasmSubspace,
+	)
+	wrappedWasmModule := NewFeeWrappedWasmAppModule(
+		innerWasmModule,
+		&app.WasmKeeper,
+		wasmSubspace,
+		app.TxfeecollectorKeeper,
+		app.BankKeeper,
+		app.WasmKeeper.GetAuthority(),
+	)
+	if err := app.RegisterModules(wrappedWasmModule); err != nil {
 		return err
 	}
 

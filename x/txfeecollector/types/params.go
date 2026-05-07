@@ -21,12 +21,13 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(validatorMinGasFee sdk.DecCoin, maxBalanceIterations uint64, cwDeployFeeDestination string, cwDeployFee sdk.Coins) Params {
+func NewParams(validatorMinGasFee sdk.DecCoin, maxBalanceIterations uint64, cwDeployFeeDestination string, cwDeployFee sdk.Coins, cwInstantiateFee sdk.Coins) Params {
 	return Params{
 		ValidatorMinGasFee:     validatorMinGasFee,
 		MaxBalanceIterations:   maxBalanceIterations,
 		CwDeployFeeDestination: cwDeployFeeDestination,
 		CwDeployFee:            cwDeployFee,
+		CwInstantiateFee:       cwInstantiateFee,
 	}
 }
 
@@ -36,7 +37,8 @@ func DefaultParams() Params {
 		sdk.NewDecCoinFromDec("ubze", sdkmath.LegacyNewDecWithPrec(1, 2)), // 0.01ubze
 		DefaultMaxBalanceIterations,
 		DefaultCwDeployFeeDestination,
-		sdk.NewCoins(sdk.NewInt64Coin("ubze", 5000000000)), // 5000 BZE
+		sdk.NewCoins(sdk.NewInt64Coin("ubze", 25000000000)), // 25,000 BZE
+		sdk.NewCoins(sdk.NewInt64Coin("ubze", 25000000000)), // 25,000 BZE
 	)
 }
 
@@ -60,6 +62,10 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateCwDeployFee(p.CwDeployFee); err != nil {
+		return err
+	}
+
+	if err := validateCwInstantiateFee(p.CwInstantiateFee); err != nil {
 		return err
 	}
 
@@ -116,6 +122,18 @@ func validateCwDeployFee(coins sdk.Coins) error {
 
 	if !coins.IsValid() {
 		return fmt.Errorf("invalid cw_deploy_fee: %s", coins)
+	}
+
+	return nil
+}
+
+func validateCwInstantiateFee(coins sdk.Coins) error {
+	if coins == nil || coins.IsZero() {
+		return nil
+	}
+
+	if !coins.IsValid() {
+		return fmt.Errorf("invalid cw_instantiate_fee: %s", coins)
 	}
 
 	return nil

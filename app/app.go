@@ -522,6 +522,14 @@ func (app *App) setEpochsHooks() {
 	)
 }
 
+// setTradebinHooks wires up the on-order-fill hook chain.
+//
+// SAFETY: hooks registered here MUST NOT invoke wasm code (no MsgExecuteContract
+// dispatch, no Sudo, no contract queries). Hooks fire synchronously during
+// order settlement while aggregate-order state is being mutated, so any wasm
+// callback opens a reentrancy window: a contract could re-enter the tradebin
+// MsgServer mid-settlement (now that CosmWasm contracts can dispatch any SDK
+// msg via Stargate). Keep hooks to pure KV reads/writes and bank ops only.
 func (app *App) setTradebinHooks() {
 	app.TradebinKeeper.SetOnOrderFillHooks(
 		[]tradebintypes.OnMarketOrderFill{

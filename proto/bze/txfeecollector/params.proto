@@ -34,4 +34,15 @@ message Params {
     (gogoproto.moretags)     = "yaml:\"cw_deploy_fee\"",
     (gogoproto.jsontag)      = "cw_deploy_fee,omitempty"
   ];
+
+  // CwInstantiateFee is charged once per CosmWasm contract instantiation
+  // (MsgInstantiateContract / MsgInstantiateContract2). MsgStoreAndInstantiateContract
+  // pays both CwDeployFee and CwInstantiateFee. Destination follows
+  // CwDeployFeeDestination — same routing policy as the deploy fee.
+  repeated cosmos.base.v1beta1.Coin CwInstantiateFee = 5 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.moretags)     = "yaml:\"cw_instantiate_fee\"",
+    (gogoproto.jsontag)      = "cw_instantiate_fee,omitempty"
+  ];
 }

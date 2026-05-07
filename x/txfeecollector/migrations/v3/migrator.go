@@ -23,9 +23,12 @@ func Migrate(
 		params = types.DefaultParams()
 	}
 
-	// Set defaults for the new fields
+	// Set defaults for the new CosmWasm fee fields. Both deploy and
+	// instantiate fees default to 25,000 BZE (25,000,000,000 ubze) and route
+	// to the same destination configured by CwDeployFeeDestination.
 	params.CwDeployFeeDestination = types.DefaultCwDeployFeeDestination
-	params.CwDeployFee = sdk.NewCoins(sdk.NewInt64Coin("ubze", 5000000000))
+	params.CwDeployFee = sdk.NewCoins(sdk.NewInt64Coin("ubze", 25000000000))
+	params.CwInstantiateFee = sdk.NewCoins(sdk.NewInt64Coin("ubze", 25000000000))
 
 	if err := params.Validate(); err != nil {
 		return err
