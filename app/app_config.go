@@ -39,10 +39,13 @@ import (
 	tradebinmodulev1 "github.com/bze-alphateam/bze/api/bze/tradebin/module"
 	txfeecollectormodulev1 "github.com/bze-alphateam/bze/api/bze/txfeecollector/module"
 
+	daodaomodulev1 "github.com/bze-alphateam/bze/api/bze/daodao/module"
 	_ "github.com/bze-alphateam/bze/x/burner/module" // import for side-effects
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	_ "github.com/bze-alphateam/bze/x/cointrunk/module" // import for side-effects
 	cointrunkmoduletypes "github.com/bze-alphateam/bze/x/cointrunk/types"
+	_ "github.com/bze-alphateam/bze/x/daodao/module" // import for side-effects
+	daodaomoduletypes "github.com/bze-alphateam/bze/x/daodao/types"
 	_ "github.com/bze-alphateam/bze/x/epochs/module" // import for side-effects
 	epochmoduletypes "github.com/bze-alphateam/bze/x/epochs/types"
 	_ "github.com/bze-alphateam/bze/x/rewards/module" // import for side-effects
@@ -118,6 +121,7 @@ var (
 		rewardsmoduletypes.ModuleName,
 		tradebinmoduletypes.ModuleName,
 		txfeecollectormoduletypes.ModuleName,
+		daodaomoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 
@@ -151,6 +155,7 @@ var (
 		rewardsmoduletypes.ModuleName,
 		tradebinmoduletypes.ModuleName,
 		txfeecollectormoduletypes.ModuleName,
+		daodaomoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/beginBlockers
 	}
 
@@ -177,6 +182,7 @@ var (
 		rewardsmoduletypes.ModuleName,
 		tradebinmoduletypes.ModuleName,
 		txfeecollectormoduletypes.ModuleName,
+		daodaomoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/endBlockers
 	}
 
@@ -368,6 +374,10 @@ var (
 			{
 				Name:   txfeecollectormoduletypes.ModuleName,
 				Config: appconfig.WrapAny(&txfeecollectormodulev1.Module{}),
+			},
+			{
+				Name:   daodaomoduletypes.ModuleName,
+				Config: appconfig.WrapAny(&daodaomodulev1.Module{}),
 			},
 			// this line is used by starport scaffolding # stargate/app/moduleConfig
 		},

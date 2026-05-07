@@ -1,0 +1,15 @@
+syntax = "proto3";
+package bze.daodao;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/daodao/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (amino.name) = "bze/x/daodao/Params";
+  option (gogoproto.equal) = true;
+
+  
+}

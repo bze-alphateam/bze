@@ -1,0 +1,17 @@
+syntax = "proto3";
+package bze.daodao;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "bze/daodao/params.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/daodao/types";
+
+// GenesisState defines the daodao module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}

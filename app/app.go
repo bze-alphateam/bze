@@ -95,6 +95,7 @@ import (
 	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
 
 	_ "github.com/bze-alphateam/bze/client/docs/statik"
+	daodaomodulekeeper "github.com/bze-alphateam/bze/x/daodao/keeper"
 	txfeecollectormodulekeeper "github.com/bze-alphateam/bze/x/txfeecollector/keeper"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
@@ -169,6 +170,7 @@ type App struct {
 	RewardsKeeper        *rewardsmodulekeeper.Keeper
 	TradebinKeeper       *tradebinmodulekeeper.Keeper
 	TxfeecollectorKeeper *txfeecollectormodulekeeper.Keeper
+	DaodaoKeeper         *daodaomodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// IBC router is stored temporarily so wasm can add its port before sealing.
@@ -283,6 +285,7 @@ func New(
 		&app.RewardsKeeper,
 		&app.TradebinKeeper,
 		&app.TxfeecollectorKeeper,
+		&app.DaodaoKeeper,
 		// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	); err != nil {
 		panic(err)
