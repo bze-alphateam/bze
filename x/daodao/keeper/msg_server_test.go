@@ -1,24 +1,11 @@
 package keeper_test
 
-import (
-	"context"
-	"testing"
+// Smoke test: the keeper, msg server and context are wired correctly by
+// SetupTest. Covered by the suite's own setup-validation path; this file
+// is intentionally tiny — every real test lives elsewhere as an
+// IntegrationTestSuite method.
 
-	"github.com/stretchr/testify/require"
-
-	keepertest "github.com/bze-alphateam/bze/testutil/keeper"
-	"github.com/bze-alphateam/bze/x/daodao/keeper"
-	"github.com/bze-alphateam/bze/x/daodao/types"
-)
-
-func setupMsgServer(t testing.TB) (keeper.Keeper, types.MsgServer, context.Context) {
-	k, ctx := keepertest.DaodaoKeeper(t)
-	return k, keeper.NewMsgServerImpl(k), ctx
-}
-
-func TestMsgServer(t *testing.T) {
-	k, ms, ctx := setupMsgServer(t)
-	require.NotNil(t, ms)
-	require.NotNil(t, ctx)
-	require.NotEmpty(t, k)
+func (suite *IntegrationTestSuite) TestMsgServer_Setup() {
+	suite.Require().NotNil(suite.msgServer)
+	suite.Require().NotNil(suite.k)
 }

@@ -5,18 +5,23 @@ package types
 
 import (
 	fmt "fmt"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	_ "google.golang.org/protobuf/types/known/durationpb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -24,8 +29,27 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Params defines the parameters for the module.
+// Params defines the parameters for the daodao module.
 type Params struct {
+	// dao_creation_fee is paid by the creator on MsgCreateDao. A zero amount
+	// disables the fee. When non-zero, the fee is routed per
+	// `dao_creation_fee_destination`.
+	DaoCreationFee types.Coin `protobuf:"bytes,1,opt,name=dao_creation_fee,json=daoCreationFee,proto3" json:"dao_creation_fee"`
+	// dao_creation_fee_destination selects where a non-zero creation fee goes.
+	// Valid values:
+	//   "burner"         — burned via x/burner (default)
+	//   "community_pool" — sent to the chain community pool via x/distribution
+	// Ignored when dao_creation_fee.amount is zero.
+	DaoCreationFeeDestination string `protobuf:"bytes,2,opt,name=dao_creation_fee_destination,json=daoCreationFeeDestination,proto3" json:"dao_creation_fee_destination,omitempty" yaml:"dao_creation_fee_destination"`
+	// max_voting_period is the chain-level ceiling on a DAO's
+	// governance.voting_period. The hardcoded floor is 1h.
+	MaxVotingPeriod time.Duration `protobuf:"bytes,3,opt,name=max_voting_period,json=maxVotingPeriod,proto3,stdduration" json:"max_voting_period"`
+	// max_deposit_period is the chain-level ceiling on a DAO's
+	// deposit.deposit_period. The hardcoded floor is 1 day.
+	MaxDepositPeriod time.Duration `protobuf:"bytes,4,opt,name=max_deposit_period,json=maxDepositPeriod,proto3,stdduration" json:"max_deposit_period"`
+	// max_msgs_per_proposal caps the number of messages in a proposal's bundle
+	// (DoS protection at proposal creation).
+	MaxMsgsPerProposal uint32 `protobuf:"varint,5,opt,name=max_msgs_per_proposal,json=maxMsgsPerProposal,proto3" json:"max_msgs_per_proposal,omitempty"`
 }
 
 func (m *Params) Reset()         { *m = Params{} }
@@ -61,6 +85,41 @@ func (m *Params) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Params proto.InternalMessageInfo
 
+func (m *Params) GetDaoCreationFee() types.Coin {
+	if m != nil {
+		return m.DaoCreationFee
+	}
+	return types.Coin{}
+}
+
+func (m *Params) GetDaoCreationFeeDestination() string {
+	if m != nil {
+		return m.DaoCreationFeeDestination
+	}
+	return ""
+}
+
+func (m *Params) GetMaxVotingPeriod() time.Duration {
+	if m != nil {
+		return m.MaxVotingPeriod
+	}
+	return 0
+}
+
+func (m *Params) GetMaxDepositPeriod() time.Duration {
+	if m != nil {
+		return m.MaxDepositPeriod
+	}
+	return 0
+}
+
+func (m *Params) GetMaxMsgsPerProposal() uint32 {
+	if m != nil {
+		return m.MaxMsgsPerProposal
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*Params)(nil), "bze.daodao.Params")
 }
@@ -68,18 +127,35 @@ func init() {
 func init() { proto.RegisterFile("bze/daodao/params.proto", fileDescriptor_24efddbf2a8632f2) }
 
 var fileDescriptor_24efddbf2a8632f2 = []byte{
-	// 173 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4f, 0xaa, 0x4a, 0xd5,
-	0x4f, 0x49, 0xcc, 0x4f, 0x49, 0xcc, 0xd7, 0x2f, 0x48, 0x2c, 0x4a, 0xcc, 0x2d, 0xd6, 0x2b, 0x28,
-	0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x4a, 0xaa, 0x4a, 0xd5, 0x83, 0x48, 0x48, 0x09, 0x26, 0xe6, 0x66,
-	0xe6, 0xe5, 0xeb, 0x83, 0x49, 0x88, 0xb4, 0x94, 0x48, 0x7a, 0x7e, 0x7a, 0x3e, 0x98, 0xa9, 0x0f,
-	0x62, 0x41, 0x44, 0x95, 0xd4, 0xb8, 0xd8, 0x02, 0xc0, 0x86, 0x58, 0xc9, 0xbc, 0x58, 0x20, 0xcf,
-	0xd8, 0xf5, 0x7c, 0x83, 0x96, 0x30, 0xc8, 0x82, 0x0a, 0x98, 0x15, 0x10, 0x59, 0x27, 0xd7, 0x13,
-	0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71, 0xc2, 0x63, 0x39, 0x86,
-	0x0b, 0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0x88, 0xd2, 0x4e, 0xcf, 0x2c, 0xc9, 0x28, 0x4d,
-	0xd2, 0x4b, 0xce, 0xcf, 0xd5, 0x4f, 0xaa, 0x4a, 0xd5, 0x4d, 0xcc, 0x29, 0xc8, 0x48, 0x2c, 0x49,
-	0x4d, 0x04, 0xf3, 0x10, 0xe6, 0x94, 0x54, 0x16, 0xa4, 0x16, 0x27, 0xb1, 0x81, 0x6d, 0x35, 0x06,
-	0x04, 0x00, 0x00, 0xff, 0xff, 0x42, 0x45, 0xa9, 0x9c, 0xc5, 0x00, 0x00, 0x00,
+	// 433 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x92, 0x31, 0x6f, 0x13, 0x31,
+	0x14, 0xc7, 0x63, 0x5a, 0x2a, 0x38, 0x04, 0xb4, 0x07, 0x88, 0xb4, 0xaa, 0x2e, 0x51, 0x18, 0x88,
+	0x40, 0xd8, 0x0a, 0x6c, 0x1d, 0xd3, 0x80, 0xc4, 0x80, 0x08, 0x19, 0x18, 0x58, 0x4e, 0xef, 0x72,
+	0xaf, 0x17, 0x4b, 0xf1, 0x3d, 0xeb, 0xec, 0x54, 0x69, 0x3e, 0x02, 0x13, 0x23, 0x23, 0x1f, 0x01,
+	0xf1, 0x29, 0x3a, 0x76, 0x64, 0x2a, 0x28, 0x19, 0x60, 0xe6, 0x13, 0x20, 0xfb, 0x1c, 0x45, 0x30,
+	0x20, 0x16, 0xeb, 0x3d, 0xff, 0xfd, 0xff, 0xf9, 0xf9, 0xf9, 0x45, 0xf7, 0xb3, 0x05, 0x8a, 0x1c,
+	0x28, 0x07, 0x12, 0x1a, 0x2a, 0x50, 0x86, 0xeb, 0x8a, 0x2c, 0xc5, 0x51, 0xb6, 0x40, 0x5e, 0x0b,
+	0x07, 0x7b, 0xa0, 0x64, 0x49, 0xc2, 0xaf, 0xb5, 0x7c, 0x70, 0xb7, 0xa0, 0x82, 0x7c, 0x28, 0x5c,
+	0x14, 0x76, 0x93, 0x82, 0xa8, 0x98, 0xa2, 0xf0, 0x59, 0x36, 0x3b, 0x11, 0xf9, 0xac, 0x02, 0x2b,
+	0xa9, 0x5c, 0xeb, 0x63, 0x32, 0x8a, 0x8c, 0xc8, 0xc0, 0xa0, 0x38, 0xed, 0x65, 0x68, 0xa1, 0x27,
+	0xc6, 0x24, 0x83, 0xde, 0xf9, 0xb2, 0x15, 0xed, 0x0c, 0x7d, 0x15, 0xf1, 0xcb, 0x68, 0x37, 0x07,
+	0x4a, 0xc7, 0x15, 0x7a, 0x40, 0x7a, 0x82, 0xd8, 0x64, 0x6d, 0xd6, 0xbd, 0xf1, 0x74, 0x9f, 0xd7,
+	0x14, 0xee, 0x28, 0x3c, 0x50, 0xf8, 0x31, 0xc9, 0xb2, 0xbf, 0x7d, 0x7e, 0xd9, 0x6a, 0x8c, 0x6e,
+	0xe5, 0x40, 0xc7, 0xc1, 0xf7, 0x02, 0x31, 0x9e, 0x44, 0x87, 0x7f, 0xa3, 0xd2, 0x1c, 0x8d, 0x95,
+	0xa5, 0xcf, 0x9b, 0x57, 0xda, 0xac, 0x7b, 0xbd, 0xff, 0xf0, 0xd7, 0x65, 0xeb, 0xc1, 0x19, 0xa8,
+	0xe9, 0x51, 0xe7, 0x5f, 0xa7, 0x3b, 0xa3, 0xfd, 0x3f, 0xf1, 0x83, 0x8d, 0x16, 0xbf, 0x8e, 0xf6,
+	0x14, 0xcc, 0xd3, 0x53, 0xb2, 0xb2, 0x2c, 0x52, 0x8d, 0x95, 0xa4, 0xbc, 0xb9, 0x15, 0xaa, 0xae,
+	0x7b, 0xc3, 0xd7, 0xbd, 0xe1, 0x83, 0xd0, 0x9b, 0xfe, 0x35, 0x57, 0xf5, 0xc7, 0x6f, 0x2d, 0x36,
+	0xba, 0xad, 0x60, 0xfe, 0xd6, 0x9b, 0x87, 0xde, 0x1b, 0xbf, 0x89, 0x62, 0x07, 0xcc, 0x51, 0x93,
+	0x91, 0x76, 0x4d, 0xdc, 0xfe, 0x7f, 0xe2, 0xae, 0x82, 0xf9, 0xa0, 0x76, 0x07, 0x64, 0x2f, 0xba,
+	0xe7, 0x90, 0xca, 0x14, 0xc6, 0xf1, 0x52, 0x5d, 0x91, 0x26, 0x03, 0xd3, 0xe6, 0xd5, 0x36, 0xeb,
+	0xde, 0x1c, 0xb9, 0xfb, 0x5e, 0x99, 0xc2, 0x0c, 0xb1, 0x1a, 0x06, 0xe5, 0xe8, 0xf0, 0xe7, 0xa7,
+	0x16, 0x7b, 0xff, 0xe3, 0xf3, 0xa3, 0x3b, 0x6e, 0x5a, 0xe6, 0xeb, 0x79, 0xa9, 0x7f, 0xaa, 0xff,
+	0xfc, 0x7c, 0x99, 0xb0, 0x8b, 0x65, 0xc2, 0xbe, 0x2f, 0x13, 0xf6, 0x61, 0x95, 0x34, 0x2e, 0x56,
+	0x49, 0xe3, 0xeb, 0x2a, 0x69, 0xbc, 0x7b, 0x5c, 0x48, 0x3b, 0x99, 0x65, 0x7c, 0x4c, 0x4a, 0x64,
+	0x0b, 0x7c, 0x02, 0x53, 0x3d, 0x01, 0x8b, 0xe0, 0xb3, 0x0d, 0xc7, 0x9e, 0x69, 0x34, 0xd9, 0x8e,
+	0x7f, 0xc6, 0xb3, 0xdf, 0x01, 0x00, 0x00, 0xff, 0xff, 0xce, 0x9c, 0xde, 0xfe, 0x92, 0x02, 0x00,
+	0x00,
 }
 
 func (this *Params) Equal(that interface{}) bool {
@@ -99,6 +175,21 @@ func (this *Params) Equal(that interface{}) bool {
 	if that1 == nil {
 		return this == nil
 	} else if this == nil {
+		return false
+	}
+	if !this.DaoCreationFee.Equal(&that1.DaoCreationFee) {
+		return false
+	}
+	if this.DaoCreationFeeDestination != that1.DaoCreationFeeDestination {
+		return false
+	}
+	if this.MaxVotingPeriod != that1.MaxVotingPeriod {
+		return false
+	}
+	if this.MaxDepositPeriod != that1.MaxDepositPeriod {
+		return false
+	}
+	if this.MaxMsgsPerProposal != that1.MaxMsgsPerProposal {
 		return false
 	}
 	return true
@@ -123,6 +214,44 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.MaxMsgsPerProposal != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.MaxMsgsPerProposal))
+		i--
+		dAtA[i] = 0x28
+	}
+	n1, err1 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.MaxDepositPeriod, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.MaxDepositPeriod):])
+	if err1 != nil {
+		return 0, err1
+	}
+	i -= n1
+	i = encodeVarintParams(dAtA, i, uint64(n1))
+	i--
+	dAtA[i] = 0x22
+	n2, err2 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.MaxVotingPeriod, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.MaxVotingPeriod):])
+	if err2 != nil {
+		return 0, err2
+	}
+	i -= n2
+	i = encodeVarintParams(dAtA, i, uint64(n2))
+	i--
+	dAtA[i] = 0x1a
+	if len(m.DaoCreationFeeDestination) > 0 {
+		i -= len(m.DaoCreationFeeDestination)
+		copy(dAtA[i:], m.DaoCreationFeeDestination)
+		i = encodeVarintParams(dAtA, i, uint64(len(m.DaoCreationFeeDestination)))
+		i--
+		dAtA[i] = 0x12
+	}
+	{
+		size, err := m.DaoCreationFee.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintParams(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -143,6 +272,19 @@ func (m *Params) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = m.DaoCreationFee.Size()
+	n += 1 + l + sovParams(uint64(l))
+	l = len(m.DaoCreationFeeDestination)
+	if l > 0 {
+		n += 1 + l + sovParams(uint64(l))
+	}
+	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.MaxVotingPeriod)
+	n += 1 + l + sovParams(uint64(l))
+	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.MaxDepositPeriod)
+	n += 1 + l + sovParams(uint64(l))
+	if m.MaxMsgsPerProposal != 0 {
+		n += 1 + sovParams(uint64(m.MaxMsgsPerProposal))
+	}
 	return n
 }
 
@@ -181,6 +323,156 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: Params: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoCreationFee", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.DaoCreationFee.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoCreationFeeDestination", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DaoCreationFeeDestination = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxVotingPeriod", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.MaxVotingPeriod, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxDepositPeriod", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.MaxDepositPeriod, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxMsgsPerProposal", wireType)
+			}
+			m.MaxMsgsPerProposal = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxMsgsPerProposal |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipParams(dAtA[iNdEx:])

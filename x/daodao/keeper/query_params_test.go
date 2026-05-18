@@ -1,20 +1,14 @@
 package keeper_test
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/require"
-
-	keepertest "github.com/bze-alphateam/bze/testutil/keeper"
 	"github.com/bze-alphateam/bze/x/daodao/types"
 )
 
-func TestParamsQuery(t *testing.T) {
-	keeper, ctx := keepertest.DaodaoKeeper(t)
+func (suite *IntegrationTestSuite) TestParamsQuery() {
 	params := types.DefaultParams()
-	require.NoError(t, keeper.SetParams(ctx, params))
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
 
-	response, err := keeper.Params(ctx, &types.QueryParamsRequest{})
-	require.NoError(t, err)
-	require.Equal(t, &types.QueryParamsResponse{Params: params}, response)
+	response, err := suite.k.Params(suite.ctx, &types.QueryParamsRequest{})
+	suite.Require().NoError(err)
+	suite.Require().Equal(&types.QueryParamsResponse{Params: params}, response)
 }

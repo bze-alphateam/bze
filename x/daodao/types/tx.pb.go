@@ -7,6 +7,8 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
+	types "github.com/cosmos/cosmos-sdk/codec/types"
+	types1 "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -33,11 +35,10 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
 type MsgUpdateParams struct {
-	// authority is the address that controls the module (defaults to x/gov unless overwritten).
+	// authority is the address that controls the module (defaults to x/gov).
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
-	// params defines the module parameters to update.
-	//
-	// NOTE: All parameters must be supplied.
+	// params defines the module parameters to update. All fields must be
+	// supplied.
 	Params Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params"`
 }
 
@@ -88,8 +89,6 @@ func (m *MsgUpdateParams) GetParams() Params {
 	return Params{}
 }
 
-// MsgUpdateParamsResponse defines the response structure for executing a
-// MsgUpdateParams message.
 type MsgUpdateParamsResponse struct {
 }
 
@@ -126,37 +125,2262 @@ func (m *MsgUpdateParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
+// MsgCreateDao creates a new DAO and registers its BaseAccount.
+type MsgCreateDao struct {
+	// creator signs this message. If `admin` is empty, creator becomes the
+	// initial admin of the new DAO.
+	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	// metadata is the DAO's identity at creation time. It can be updated later
+	// via MsgUpdateDaoMetadata.
+	Metadata DaoMetadata `protobuf:"bytes,2,opt,name=metadata,proto3" json:"metadata"`
+	// admin is the address that will administer the new DAO. If empty,
+	// defaults to `creator`. For subDAOs, set this to the parent DAO's
+	// account_address.
+	Admin string `protobuf:"bytes,3,opt,name=admin,proto3" json:"admin,omitempty"`
+	// parent_dao_id is the DAO this one declares as parent. 0 = no parent.
+	// Purely declarative — the parent does not gain admin authority from
+	// being listed here. Immutable after creation.
+	ParentDaoId uint64 `protobuf:"varint,4,opt,name=parent_dao_id,json=parentDaoId,proto3" json:"parent_dao_id,omitempty"`
+	// voting_config selects the DAO's membership/voting-power source.
+	// Required (zero-valued oneof rejected). Epic 2 accepts only the
+	// `static` variant; the `reward_staked` variant is reserved here for
+	// forward compatibility and rejected at MsgCreateDao validation. To use
+	// REWARD_STAKED, create a STATIC DAO first, set up a rewards program
+	// owned by the DAO via proposal, then swap backends via Epic 5's
+	// MsgUpdateVotingBackend.
+	//
+	// Types that are valid to be assigned to VotingConfig:
+	//	*MsgCreateDao_Static
+	//	*MsgCreateDao_RewardStaked
+	VotingConfig isMsgCreateDao_VotingConfig `protobuf_oneof:"voting_config"`
+	// governance is the initial GovernanceConfig for the DAO's proposal track.
+	// Required (zero-valued GovernanceConfig is rejected) and bound-checked
+	// against the brick-prevention caps (threshold 1..9900, quorum policy
+	// per approval_rule, voting_period between hardcoded 1h floor and
+	// Params.max_voting_period ceiling). May be replaced later via
+	// MsgUpdateGovernanceConfig.
+	Governance GovernanceConfig `protobuf:"bytes,200,opt,name=governance,proto3" json:"governance"`
+	// deposit is the initial DepositConfig for the DAO. Required and
+	// bound-checked against the deposit caps (min_deposit.amount > 0;
+	// deposit_period in [1d, Params.max_deposit_period]; forfeit_destination
+	// and voting_refund_policy known variants). May be replaced later via
+	// MsgUpdateDepositConfig.
+	Deposit DepositConfig `protobuf:"bytes,300,opt,name=deposit,proto3" json:"deposit"`
+}
+
+func (m *MsgCreateDao) Reset()         { *m = MsgCreateDao{} }
+func (m *MsgCreateDao) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateDao) ProtoMessage()    {}
+func (*MsgCreateDao) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{2}
+}
+func (m *MsgCreateDao) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateDao) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateDao.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateDao) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateDao.Merge(m, src)
+}
+func (m *MsgCreateDao) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateDao) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateDao.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateDao proto.InternalMessageInfo
+
+type isMsgCreateDao_VotingConfig interface {
+	isMsgCreateDao_VotingConfig()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type MsgCreateDao_Static struct {
+	Static *StaticVotingConfig `protobuf:"bytes,100,opt,name=static,proto3,oneof" json:"static,omitempty"`
+}
+type MsgCreateDao_RewardStaked struct {
+	RewardStaked *RewardStakedVotingConfig `protobuf:"bytes,101,opt,name=reward_staked,json=rewardStaked,proto3,oneof" json:"reward_staked,omitempty"`
+}
+
+func (*MsgCreateDao_Static) isMsgCreateDao_VotingConfig()       {}
+func (*MsgCreateDao_RewardStaked) isMsgCreateDao_VotingConfig() {}
+
+func (m *MsgCreateDao) GetVotingConfig() isMsgCreateDao_VotingConfig {
+	if m != nil {
+		return m.VotingConfig
+	}
+	return nil
+}
+
+func (m *MsgCreateDao) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgCreateDao) GetMetadata() DaoMetadata {
+	if m != nil {
+		return m.Metadata
+	}
+	return DaoMetadata{}
+}
+
+func (m *MsgCreateDao) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *MsgCreateDao) GetParentDaoId() uint64 {
+	if m != nil {
+		return m.ParentDaoId
+	}
+	return 0
+}
+
+func (m *MsgCreateDao) GetStatic() *StaticVotingConfig {
+	if x, ok := m.GetVotingConfig().(*MsgCreateDao_Static); ok {
+		return x.Static
+	}
+	return nil
+}
+
+func (m *MsgCreateDao) GetRewardStaked() *RewardStakedVotingConfig {
+	if x, ok := m.GetVotingConfig().(*MsgCreateDao_RewardStaked); ok {
+		return x.RewardStaked
+	}
+	return nil
+}
+
+func (m *MsgCreateDao) GetGovernance() GovernanceConfig {
+	if m != nil {
+		return m.Governance
+	}
+	return GovernanceConfig{}
+}
+
+func (m *MsgCreateDao) GetDeposit() DepositConfig {
+	if m != nil {
+		return m.Deposit
+	}
+	return DepositConfig{}
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*MsgCreateDao) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*MsgCreateDao_Static)(nil),
+		(*MsgCreateDao_RewardStaked)(nil),
+	}
+}
+
+// StaticVotingConfig is the create-time payload for STATIC DAOs. The list
+// must be non-empty; each weight > 0; no duplicate addresses.
+type StaticVotingConfig struct {
+	Members []StaticMember `protobuf:"bytes,1,rep,name=members,proto3" json:"members"`
+}
+
+func (m *StaticVotingConfig) Reset()         { *m = StaticVotingConfig{} }
+func (m *StaticVotingConfig) String() string { return proto.CompactTextString(m) }
+func (*StaticVotingConfig) ProtoMessage()    {}
+func (*StaticVotingConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{3}
+}
+func (m *StaticVotingConfig) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *StaticVotingConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_StaticVotingConfig.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *StaticVotingConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StaticVotingConfig.Merge(m, src)
+}
+func (m *StaticVotingConfig) XXX_Size() int {
+	return m.Size()
+}
+func (m *StaticVotingConfig) XXX_DiscardUnknown() {
+	xxx_messageInfo_StaticVotingConfig.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_StaticVotingConfig proto.InternalMessageInfo
+
+func (m *StaticVotingConfig) GetMembers() []StaticMember {
+	if m != nil {
+		return m.Members
+	}
+	return nil
+}
+
+// RewardStakedVotingConfig is the create-time payload for REWARD_STAKED
+// DAOs. Reserved in Epic 2 — currently rejected at MsgCreateDao
+// validation. Epic 5's MsgUpdateVotingBackend uses the same shape.
+type RewardStakedVotingConfig struct {
+	// reward_id must be a rewards.StakingReward whose creator equals the
+	// DAO's account_address (i.e. only DAO-owned reward programs are valid
+	// governance sources).
+	RewardId string `protobuf:"bytes,1,opt,name=reward_id,json=rewardId,proto3" json:"reward_id,omitempty"`
+}
+
+func (m *RewardStakedVotingConfig) Reset()         { *m = RewardStakedVotingConfig{} }
+func (m *RewardStakedVotingConfig) String() string { return proto.CompactTextString(m) }
+func (*RewardStakedVotingConfig) ProtoMessage()    {}
+func (*RewardStakedVotingConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{4}
+}
+func (m *RewardStakedVotingConfig) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RewardStakedVotingConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RewardStakedVotingConfig.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *RewardStakedVotingConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RewardStakedVotingConfig.Merge(m, src)
+}
+func (m *RewardStakedVotingConfig) XXX_Size() int {
+	return m.Size()
+}
+func (m *RewardStakedVotingConfig) XXX_DiscardUnknown() {
+	xxx_messageInfo_RewardStakedVotingConfig.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RewardStakedVotingConfig proto.InternalMessageInfo
+
+func (m *RewardStakedVotingConfig) GetRewardId() string {
+	if m != nil {
+		return m.RewardId
+	}
+	return ""
+}
+
+type MsgCreateDaoResponse struct {
+	// dao_id is the newly allocated DAO id.
+	DaoId uint64 `protobuf:"varint,1,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+	// account_address is the deterministic BaseAccount address registered for
+	// this DAO. It can immediately receive bank coins.
+	AccountAddress string `protobuf:"bytes,2,opt,name=account_address,json=accountAddress,proto3" json:"account_address,omitempty"`
+}
+
+func (m *MsgCreateDaoResponse) Reset()         { *m = MsgCreateDaoResponse{} }
+func (m *MsgCreateDaoResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateDaoResponse) ProtoMessage()    {}
+func (*MsgCreateDaoResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{5}
+}
+func (m *MsgCreateDaoResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateDaoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateDaoResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateDaoResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateDaoResponse.Merge(m, src)
+}
+func (m *MsgCreateDaoResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateDaoResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateDaoResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateDaoResponse proto.InternalMessageInfo
+
+func (m *MsgCreateDaoResponse) GetDaoId() uint64 {
+	if m != nil {
+		return m.DaoId
+	}
+	return 0
+}
+
+func (m *MsgCreateDaoResponse) GetAccountAddress() string {
+	if m != nil {
+		return m.AccountAddress
+	}
+	return ""
+}
+
+// MsgUpdateDaoMetadata updates a DAO's metadata. Admin-gated.
+type MsgUpdateDaoMetadata struct {
+	// authority must equal the DAO's current `admin`.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// dao_id identifies the DAO to update.
+	DaoId uint64 `protobuf:"varint,2,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+	// metadata is the new value. The full struct is replaced atomically.
+	Metadata DaoMetadata `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata"`
+}
+
+func (m *MsgUpdateDaoMetadata) Reset()         { *m = MsgUpdateDaoMetadata{} }
+func (m *MsgUpdateDaoMetadata) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateDaoMetadata) ProtoMessage()    {}
+func (*MsgUpdateDaoMetadata) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{6}
+}
+func (m *MsgUpdateDaoMetadata) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateDaoMetadata) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateDaoMetadata.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateDaoMetadata) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateDaoMetadata.Merge(m, src)
+}
+func (m *MsgUpdateDaoMetadata) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateDaoMetadata) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateDaoMetadata.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateDaoMetadata proto.InternalMessageInfo
+
+func (m *MsgUpdateDaoMetadata) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateDaoMetadata) GetDaoId() uint64 {
+	if m != nil {
+		return m.DaoId
+	}
+	return 0
+}
+
+func (m *MsgUpdateDaoMetadata) GetMetadata() DaoMetadata {
+	if m != nil {
+		return m.Metadata
+	}
+	return DaoMetadata{}
+}
+
+type MsgUpdateDaoMetadataResponse struct {
+}
+
+func (m *MsgUpdateDaoMetadataResponse) Reset()         { *m = MsgUpdateDaoMetadataResponse{} }
+func (m *MsgUpdateDaoMetadataResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateDaoMetadataResponse) ProtoMessage()    {}
+func (*MsgUpdateDaoMetadataResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{7}
+}
+func (m *MsgUpdateDaoMetadataResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateDaoMetadataResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateDaoMetadataResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateDaoMetadataResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateDaoMetadataResponse.Merge(m, src)
+}
+func (m *MsgUpdateDaoMetadataResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateDaoMetadataResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateDaoMetadataResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateDaoMetadataResponse proto.InternalMessageInfo
+
+// MsgUpdateDaoAdmin nominates a new admin for a DAO. Admin-gated. The
+// nominee must call AcceptDaoAdmin to complete the handoff. Until accepted,
+// the current admin retains authority.
+type MsgUpdateDaoAdmin struct {
+	// authority must equal the DAO's current `admin`.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// dao_id identifies the DAO whose admin will change.
+	DaoId uint64 `protobuf:"varint,2,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+	// new_admin is the address being nominated. Stored on `pending_admin`
+	// until accepted.
+	NewAdmin string `protobuf:"bytes,3,opt,name=new_admin,json=newAdmin,proto3" json:"new_admin,omitempty"`
+}
+
+func (m *MsgUpdateDaoAdmin) Reset()         { *m = MsgUpdateDaoAdmin{} }
+func (m *MsgUpdateDaoAdmin) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateDaoAdmin) ProtoMessage()    {}
+func (*MsgUpdateDaoAdmin) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{8}
+}
+func (m *MsgUpdateDaoAdmin) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateDaoAdmin) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateDaoAdmin.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateDaoAdmin) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateDaoAdmin.Merge(m, src)
+}
+func (m *MsgUpdateDaoAdmin) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateDaoAdmin) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateDaoAdmin.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateDaoAdmin proto.InternalMessageInfo
+
+func (m *MsgUpdateDaoAdmin) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateDaoAdmin) GetDaoId() uint64 {
+	if m != nil {
+		return m.DaoId
+	}
+	return 0
+}
+
+func (m *MsgUpdateDaoAdmin) GetNewAdmin() string {
+	if m != nil {
+		return m.NewAdmin
+	}
+	return ""
+}
+
+type MsgUpdateDaoAdminResponse struct {
+}
+
+func (m *MsgUpdateDaoAdminResponse) Reset()         { *m = MsgUpdateDaoAdminResponse{} }
+func (m *MsgUpdateDaoAdminResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateDaoAdminResponse) ProtoMessage()    {}
+func (*MsgUpdateDaoAdminResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{9}
+}
+func (m *MsgUpdateDaoAdminResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateDaoAdminResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateDaoAdminResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateDaoAdminResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateDaoAdminResponse.Merge(m, src)
+}
+func (m *MsgUpdateDaoAdminResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateDaoAdminResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateDaoAdminResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateDaoAdminResponse proto.InternalMessageInfo
+
+// MsgAcceptDaoAdmin completes the admin handoff. Must be signed by the
+// address previously nominated via MsgUpdateDaoAdmin.
+type MsgAcceptDaoAdmin struct {
+	// new_admin must equal the DAO's `pending_admin`. On success, admin is
+	// set to new_admin and pending_admin is cleared.
+	NewAdmin string `protobuf:"bytes,1,opt,name=new_admin,json=newAdmin,proto3" json:"new_admin,omitempty"`
+	// dao_id identifies the DAO whose admin transfer is being accepted.
+	DaoId uint64 `protobuf:"varint,2,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+}
+
+func (m *MsgAcceptDaoAdmin) Reset()         { *m = MsgAcceptDaoAdmin{} }
+func (m *MsgAcceptDaoAdmin) String() string { return proto.CompactTextString(m) }
+func (*MsgAcceptDaoAdmin) ProtoMessage()    {}
+func (*MsgAcceptDaoAdmin) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{10}
+}
+func (m *MsgAcceptDaoAdmin) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgAcceptDaoAdmin) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgAcceptDaoAdmin.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgAcceptDaoAdmin) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAcceptDaoAdmin.Merge(m, src)
+}
+func (m *MsgAcceptDaoAdmin) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgAcceptDaoAdmin) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAcceptDaoAdmin.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgAcceptDaoAdmin proto.InternalMessageInfo
+
+func (m *MsgAcceptDaoAdmin) GetNewAdmin() string {
+	if m != nil {
+		return m.NewAdmin
+	}
+	return ""
+}
+
+func (m *MsgAcceptDaoAdmin) GetDaoId() uint64 {
+	if m != nil {
+		return m.DaoId
+	}
+	return 0
+}
+
+type MsgAcceptDaoAdminResponse struct {
+}
+
+func (m *MsgAcceptDaoAdminResponse) Reset()         { *m = MsgAcceptDaoAdminResponse{} }
+func (m *MsgAcceptDaoAdminResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAcceptDaoAdminResponse) ProtoMessage()    {}
+func (*MsgAcceptDaoAdminResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{11}
+}
+func (m *MsgAcceptDaoAdminResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgAcceptDaoAdminResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgAcceptDaoAdminResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgAcceptDaoAdminResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAcceptDaoAdminResponse.Merge(m, src)
+}
+func (m *MsgAcceptDaoAdminResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgAcceptDaoAdminResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAcceptDaoAdminResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgAcceptDaoAdminResponse proto.InternalMessageInfo
+
+// MsgUpdateMembers adds and/or removes members on a STATIC DAO.
+//
+// Semantics:
+//   - `add` is upsert: existing addresses have their weight replaced;
+//     new addresses are inserted.
+//   - `remove` deletes the listed addresses.
+//   - `add` and `remove` are disjoint sets (validated).
+//   - Post-update the DAO must still have at least one member (a STATIC
+//     DAO with zero members has no voters and would be unable to ever
+//     pass a proposal).
+//
+// Admin-gated. Rejected for REWARD_STAKED DAOs.
+type MsgUpdateMembers struct {
+	// authority must equal the DAO's current `admin`.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// dao_id identifies the DAO to update. Must be a STATIC DAO.
+	DaoId uint64 `protobuf:"varint,2,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+	// add: members to upsert. Each weight must be > 0.
+	Add []StaticMember `protobuf:"bytes,3,rep,name=add,proto3" json:"add"`
+	// remove: addresses to delete from the member set. Bech32-encoded.
+	Remove []string `protobuf:"bytes,4,rep,name=remove,proto3" json:"remove,omitempty"`
+}
+
+func (m *MsgUpdateMembers) Reset()         { *m = MsgUpdateMembers{} }
+func (m *MsgUpdateMembers) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateMembers) ProtoMessage()    {}
+func (*MsgUpdateMembers) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{12}
+}
+func (m *MsgUpdateMembers) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateMembers) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateMembers.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateMembers) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateMembers.Merge(m, src)
+}
+func (m *MsgUpdateMembers) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateMembers) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateMembers.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateMembers proto.InternalMessageInfo
+
+func (m *MsgUpdateMembers) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateMembers) GetDaoId() uint64 {
+	if m != nil {
+		return m.DaoId
+	}
+	return 0
+}
+
+func (m *MsgUpdateMembers) GetAdd() []StaticMember {
+	if m != nil {
+		return m.Add
+	}
+	return nil
+}
+
+func (m *MsgUpdateMembers) GetRemove() []string {
+	if m != nil {
+		return m.Remove
+	}
+	return nil
+}
+
+type MsgUpdateMembersResponse struct {
+}
+
+func (m *MsgUpdateMembersResponse) Reset()         { *m = MsgUpdateMembersResponse{} }
+func (m *MsgUpdateMembersResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateMembersResponse) ProtoMessage()    {}
+func (*MsgUpdateMembersResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{13}
+}
+func (m *MsgUpdateMembersResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateMembersResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateMembersResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateMembersResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateMembersResponse.Merge(m, src)
+}
+func (m *MsgUpdateMembersResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateMembersResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateMembersResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateMembersResponse proto.InternalMessageInfo
+
+// MsgCreateProposal submits a new proposal on a DAO.
+//
+// Validation summary:
+//   - `proposer` is valid bech32 and has non-zero CURRENT voting power in
+//     the DAO (Epic 3 is member-only; Epic 4 relaxes this for non-members
+//     who attach a full deposit).
+//   - `title` is 1..MaxProposalTitleLen chars; `description` is
+//     0..MaxProposalDescriptionLen chars.
+//   - `msgs` length is in [0, Params.max_msgs_per_proposal]; each entry
+//     decodes via the interface registry. Epic 3 does NOT execute msgs;
+//     Epic 5 adds dispatch + signer validation.
+type MsgCreateProposal struct {
+	// proposer signs this message.
+	Proposer string `protobuf:"bytes,1,opt,name=proposer,proto3" json:"proposer,omitempty"`
+	// dao_id identifies the target DAO.
+	DaoId uint64 `protobuf:"varint,2,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+	// title is a short human-readable header for the proposal.
+	Title string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	// description is the long-form body of the proposal.
+	Description string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
+	// msgs is the bundle of messages to execute if the proposal passes.
+	// Stored verbatim in Epic 3; dispatched in Epic 5.
+	Msgs []*types.Any `protobuf:"bytes,5,rep,name=msgs,proto3" json:"msgs,omitempty"`
+	// initial_deposit is the deposit the proposer attaches at creation.
+	// Required field but amount may be 0.
+	//
+	//   - Members (proposer has Power(dao, proposer) > 0) may submit at 0;
+	//     the proposal starts in DEPOSIT_PERIOD with deposit_collected = 0
+	//     unless initial_deposit already meets min_deposit.
+	//   - Non-members MUST submit with amount >= deposit_snapshot.min_deposit.amount;
+	//     the proposal then starts directly in VOTING.
+	//
+	// Denom must equal deposit_snapshot.min_deposit.denom. Validated against
+	// the live DAO config at MsgCreateProposal time.
+	InitialDeposit types1.Coin `protobuf:"bytes,6,opt,name=initial_deposit,json=initialDeposit,proto3" json:"initial_deposit"`
+}
+
+func (m *MsgCreateProposal) Reset()         { *m = MsgCreateProposal{} }
+func (m *MsgCreateProposal) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateProposal) ProtoMessage()    {}
+func (*MsgCreateProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{14}
+}
+func (m *MsgCreateProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateProposal.Merge(m, src)
+}
+func (m *MsgCreateProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateProposal proto.InternalMessageInfo
+
+func (m *MsgCreateProposal) GetProposer() string {
+	if m != nil {
+		return m.Proposer
+	}
+	return ""
+}
+
+func (m *MsgCreateProposal) GetDaoId() uint64 {
+	if m != nil {
+		return m.DaoId
+	}
+	return 0
+}
+
+func (m *MsgCreateProposal) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *MsgCreateProposal) GetDescription() string {
+	if m != nil {
+		return m.Description
+	}
+	return ""
+}
+
+func (m *MsgCreateProposal) GetMsgs() []*types.Any {
+	if m != nil {
+		return m.Msgs
+	}
+	return nil
+}
+
+func (m *MsgCreateProposal) GetInitialDeposit() types1.Coin {
+	if m != nil {
+		return m.InitialDeposit
+	}
+	return types1.Coin{}
+}
+
+type MsgCreateProposalResponse struct {
+	// proposal_id is the newly allocated per-DAO proposal id.
+	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+}
+
+func (m *MsgCreateProposalResponse) Reset()         { *m = MsgCreateProposalResponse{} }
+func (m *MsgCreateProposalResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateProposalResponse) ProtoMessage()    {}
+func (*MsgCreateProposalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{15}
+}
+func (m *MsgCreateProposalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateProposalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateProposalResponse.Merge(m, src)
+}
+func (m *MsgCreateProposalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateProposalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateProposalResponse proto.InternalMessageInfo
+
+func (m *MsgCreateProposalResponse) GetProposalId() uint64 {
+	if m != nil {
+		return m.ProposalId
+	}
+	return 0
+}
+
+// MsgVote casts (or, with revote, replaces) the signer's vote on a
+// VOTING-status proposal.
+//
+// Validation summary:
+//   - The proposal exists, belongs to `dao_id`, and is in VOTING status.
+//   - `option` is one of YES / NO / ABSTAIN (UNSPECIFIED rejected).
+//   - `voter` has non-zero SnapshotPower at the proposal's snapshot_id.
+//   - Existing vote AND `governance_snapshot.allow_revote == false` is
+//     rejected; with revote enabled, the tally subtracts the previous
+//     option's contribution before adding the new one.
+//   - On revote: the new option may equal the previous one (no-op
+//     replacement is permitted; ValidateBasic accepts it).
+type MsgVote struct {
+	// voter signs this message.
+	Voter string `protobuf:"bytes,1,opt,name=voter,proto3" json:"voter,omitempty"`
+	// dao_id identifies the target DAO. Required so the keeper can resolve
+	// ProposalKey(dao_id, proposal_id) without an extra index lookup.
+	DaoId uint64 `protobuf:"varint,2,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+	// proposal_id identifies the target proposal within the DAO.
+	ProposalId uint64 `protobuf:"varint,3,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// option is the vote being cast. YES / NO / ABSTAIN; UNSPECIFIED is
+	// rejected at ValidateBasic.
+	Option VoteOption `protobuf:"varint,4,opt,name=option,proto3,enum=bze.daodao.VoteOption" json:"option,omitempty"`
+}
+
+func (m *MsgVote) Reset()         { *m = MsgVote{} }
+func (m *MsgVote) String() string { return proto.CompactTextString(m) }
+func (*MsgVote) ProtoMessage()    {}
+func (*MsgVote) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{16}
+}
+func (m *MsgVote) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgVote) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgVote.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgVote) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgVote.Merge(m, src)
+}
+func (m *MsgVote) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgVote) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgVote.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgVote proto.InternalMessageInfo
+
+func (m *MsgVote) GetVoter() string {
+	if m != nil {
+		return m.Voter
+	}
+	return ""
+}
+
+func (m *MsgVote) GetDaoId() uint64 {
+	if m != nil {
+		return m.DaoId
+	}
+	return 0
+}
+
+func (m *MsgVote) GetProposalId() uint64 {
+	if m != nil {
+		return m.ProposalId
+	}
+	return 0
+}
+
+func (m *MsgVote) GetOption() VoteOption {
+	if m != nil {
+		return m.Option
+	}
+	return VoteOption_VOTE_OPTION_UNSPECIFIED
+}
+
+type MsgVoteResponse struct {
+}
+
+func (m *MsgVoteResponse) Reset()         { *m = MsgVoteResponse{} }
+func (m *MsgVoteResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgVoteResponse) ProtoMessage()    {}
+func (*MsgVoteResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{17}
+}
+func (m *MsgVoteResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgVoteResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgVoteResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgVoteResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgVoteResponse.Merge(m, src)
+}
+func (m *MsgVoteResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgVoteResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgVoteResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgVoteResponse proto.InternalMessageInfo
+
+// MsgUpdateGovernanceConfig replaces a DAO's GovernanceConfig. Admin-gated.
+//
+// Validation summary:
+//   - `authority` equals the DAO's current `admin`.
+//   - `governance` passes the same brick-prevention caps as MsgCreateDao
+//     (threshold, quorum policy, voting_period bounds).
+//   - For REWARD_STAKED DAOs the keeper also asserts the
+//     `StakingReward.lock >= governance.voting_period` flash-vote rule.
+//
+// Existing proposals are unaffected (they hold their own
+// governance_snapshot frozen at creation). The change takes effect on the
+// NEXT proposal created.
+type MsgUpdateGovernanceConfig struct {
+	// authority must equal the DAO's current `admin`.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// dao_id identifies the DAO to update.
+	DaoId uint64 `protobuf:"varint,2,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+	// governance is the replacement config. The full struct is replaced
+	// atomically; there is no per-field patching.
+	Governance GovernanceConfig `protobuf:"bytes,3,opt,name=governance,proto3" json:"governance"`
+}
+
+func (m *MsgUpdateGovernanceConfig) Reset()         { *m = MsgUpdateGovernanceConfig{} }
+func (m *MsgUpdateGovernanceConfig) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateGovernanceConfig) ProtoMessage()    {}
+func (*MsgUpdateGovernanceConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{18}
+}
+func (m *MsgUpdateGovernanceConfig) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateGovernanceConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateGovernanceConfig.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateGovernanceConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateGovernanceConfig.Merge(m, src)
+}
+func (m *MsgUpdateGovernanceConfig) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateGovernanceConfig) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateGovernanceConfig.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateGovernanceConfig proto.InternalMessageInfo
+
+func (m *MsgUpdateGovernanceConfig) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateGovernanceConfig) GetDaoId() uint64 {
+	if m != nil {
+		return m.DaoId
+	}
+	return 0
+}
+
+func (m *MsgUpdateGovernanceConfig) GetGovernance() GovernanceConfig {
+	if m != nil {
+		return m.Governance
+	}
+	return GovernanceConfig{}
+}
+
+type MsgUpdateGovernanceConfigResponse struct {
+}
+
+func (m *MsgUpdateGovernanceConfigResponse) Reset()         { *m = MsgUpdateGovernanceConfigResponse{} }
+func (m *MsgUpdateGovernanceConfigResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateGovernanceConfigResponse) ProtoMessage()    {}
+func (*MsgUpdateGovernanceConfigResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{19}
+}
+func (m *MsgUpdateGovernanceConfigResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateGovernanceConfigResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateGovernanceConfigResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateGovernanceConfigResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateGovernanceConfigResponse.Merge(m, src)
+}
+func (m *MsgUpdateGovernanceConfigResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateGovernanceConfigResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateGovernanceConfigResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateGovernanceConfigResponse proto.InternalMessageInfo
+
+// MsgDeposit tops up a DEPOSIT_PERIOD proposal's collected deposit.
+//
+// Validation summary:
+//   - depositor is valid bech32.
+//   - dao_id and proposal_id are non-zero.
+//   - amount.amount > 0; amount.denom equals
+//     proposal.deposit_snapshot.min_deposit.denom.
+//
+// Stateful checks deferred to the keeper:
+//   - Proposal exists and is in PROPOSAL_STATUS_DEPOSIT_PERIOD.
+//   - Bank send escrow → succeeds (sufficient spendable balance).
+//   - Aggregating into the existing DepositRecord (if any).
+//   - If post-update collected >= min_deposit, transition to VOTING and
+//     re-key the end-blocker entry to voting_end.
+type MsgDeposit struct {
+	Depositor  string      `protobuf:"bytes,1,opt,name=depositor,proto3" json:"depositor,omitempty"`
+	DaoId      uint64      `protobuf:"varint,2,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+	ProposalId uint64      `protobuf:"varint,3,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	Amount     types1.Coin `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount"`
+}
+
+func (m *MsgDeposit) Reset()         { *m = MsgDeposit{} }
+func (m *MsgDeposit) String() string { return proto.CompactTextString(m) }
+func (*MsgDeposit) ProtoMessage()    {}
+func (*MsgDeposit) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{20}
+}
+func (m *MsgDeposit) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgDeposit) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgDeposit.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgDeposit) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDeposit.Merge(m, src)
+}
+func (m *MsgDeposit) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgDeposit) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDeposit.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgDeposit proto.InternalMessageInfo
+
+func (m *MsgDeposit) GetDepositor() string {
+	if m != nil {
+		return m.Depositor
+	}
+	return ""
+}
+
+func (m *MsgDeposit) GetDaoId() uint64 {
+	if m != nil {
+		return m.DaoId
+	}
+	return 0
+}
+
+func (m *MsgDeposit) GetProposalId() uint64 {
+	if m != nil {
+		return m.ProposalId
+	}
+	return 0
+}
+
+func (m *MsgDeposit) GetAmount() types1.Coin {
+	if m != nil {
+		return m.Amount
+	}
+	return types1.Coin{}
+}
+
+type MsgDepositResponse struct {
+}
+
+func (m *MsgDepositResponse) Reset()         { *m = MsgDepositResponse{} }
+func (m *MsgDepositResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgDepositResponse) ProtoMessage()    {}
+func (*MsgDepositResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{21}
+}
+func (m *MsgDepositResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgDepositResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgDepositResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgDepositResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDepositResponse.Merge(m, src)
+}
+func (m *MsgDepositResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgDepositResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDepositResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgDepositResponse proto.InternalMessageInfo
+
+// MsgUpdateDepositConfig replaces a DAO's DepositConfig. Admin-gated.
+//
+// Validation summary:
+//   - authority equals the DAO's current admin.
+//   - deposit passes the stateless brick-prevention caps
+//     (ValidateDepositConfigStateless) plus the Param-driven
+//     deposit_period upper bound.
+//
+// Existing proposals retain their own deposit_snapshot frozen at creation.
+// The change takes effect on the NEXT proposal created.
+type MsgUpdateDepositConfig struct {
+	Authority string        `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	DaoId     uint64        `protobuf:"varint,2,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+	Deposit   DepositConfig `protobuf:"bytes,3,opt,name=deposit,proto3" json:"deposit"`
+}
+
+func (m *MsgUpdateDepositConfig) Reset()         { *m = MsgUpdateDepositConfig{} }
+func (m *MsgUpdateDepositConfig) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateDepositConfig) ProtoMessage()    {}
+func (*MsgUpdateDepositConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{22}
+}
+func (m *MsgUpdateDepositConfig) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateDepositConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateDepositConfig.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateDepositConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateDepositConfig.Merge(m, src)
+}
+func (m *MsgUpdateDepositConfig) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateDepositConfig) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateDepositConfig.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateDepositConfig proto.InternalMessageInfo
+
+func (m *MsgUpdateDepositConfig) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateDepositConfig) GetDaoId() uint64 {
+	if m != nil {
+		return m.DaoId
+	}
+	return 0
+}
+
+func (m *MsgUpdateDepositConfig) GetDeposit() DepositConfig {
+	if m != nil {
+		return m.Deposit
+	}
+	return DepositConfig{}
+}
+
+type MsgUpdateDepositConfigResponse struct {
+}
+
+func (m *MsgUpdateDepositConfigResponse) Reset()         { *m = MsgUpdateDepositConfigResponse{} }
+func (m *MsgUpdateDepositConfigResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateDepositConfigResponse) ProtoMessage()    {}
+func (*MsgUpdateDepositConfigResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{23}
+}
+func (m *MsgUpdateDepositConfigResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateDepositConfigResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateDepositConfigResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateDepositConfigResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateDepositConfigResponse.Merge(m, src)
+}
+func (m *MsgUpdateDepositConfigResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateDepositConfigResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateDepositConfigResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateDepositConfigResponse proto.InternalMessageInfo
+
+// MsgExecuteProposal dispatches a PASSED proposal's msgs[] as the DAO's
+// account. Atomic: any failure rolls back the whole bundle and leaves
+// status PASSED (retryable). On full success, status becomes EXECUTED.
+//
+// Any address may submit. The `executor` is purely informational — bank
+// fees / gas come from the submitting tx's signer, and dispatched
+// messages always claim the DAO as their signer.
+type MsgExecuteProposal struct {
+	Executor   string `protobuf:"bytes,1,opt,name=executor,proto3" json:"executor,omitempty"`
+	DaoId      uint64 `protobuf:"varint,2,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+	ProposalId uint64 `protobuf:"varint,3,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+}
+
+func (m *MsgExecuteProposal) Reset()         { *m = MsgExecuteProposal{} }
+func (m *MsgExecuteProposal) String() string { return proto.CompactTextString(m) }
+func (*MsgExecuteProposal) ProtoMessage()    {}
+func (*MsgExecuteProposal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{24}
+}
+func (m *MsgExecuteProposal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgExecuteProposal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgExecuteProposal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgExecuteProposal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExecuteProposal.Merge(m, src)
+}
+func (m *MsgExecuteProposal) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgExecuteProposal) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExecuteProposal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgExecuteProposal proto.InternalMessageInfo
+
+func (m *MsgExecuteProposal) GetExecutor() string {
+	if m != nil {
+		return m.Executor
+	}
+	return ""
+}
+
+func (m *MsgExecuteProposal) GetDaoId() uint64 {
+	if m != nil {
+		return m.DaoId
+	}
+	return 0
+}
+
+func (m *MsgExecuteProposal) GetProposalId() uint64 {
+	if m != nil {
+		return m.ProposalId
+	}
+	return 0
+}
+
+type MsgExecuteProposalResponse struct {
+}
+
+func (m *MsgExecuteProposalResponse) Reset()         { *m = MsgExecuteProposalResponse{} }
+func (m *MsgExecuteProposalResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgExecuteProposalResponse) ProtoMessage()    {}
+func (*MsgExecuteProposalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{25}
+}
+func (m *MsgExecuteProposalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgExecuteProposalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgExecuteProposalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgExecuteProposalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExecuteProposalResponse.Merge(m, src)
+}
+func (m *MsgExecuteProposalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgExecuteProposalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExecuteProposalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgExecuteProposalResponse proto.InternalMessageInfo
+
+// MsgRenounceAdmin flips a DAO into self-governance by setting
+// admin = dao.account_address. Admin-gated. Idempotency: rejected if
+// dao.admin is already the DAO's own account (no-op fail loudly).
+//
+// After renunciation, direct admin-gated msgs from the previous human
+// admin are rejected — only proposals (which dispatch as the DAO) can
+// mutate the DAO.
+type MsgRenounceAdmin struct {
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	DaoId     uint64 `protobuf:"varint,2,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+}
+
+func (m *MsgRenounceAdmin) Reset()         { *m = MsgRenounceAdmin{} }
+func (m *MsgRenounceAdmin) String() string { return proto.CompactTextString(m) }
+func (*MsgRenounceAdmin) ProtoMessage()    {}
+func (*MsgRenounceAdmin) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{26}
+}
+func (m *MsgRenounceAdmin) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRenounceAdmin) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRenounceAdmin.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRenounceAdmin) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRenounceAdmin.Merge(m, src)
+}
+func (m *MsgRenounceAdmin) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRenounceAdmin) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRenounceAdmin.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRenounceAdmin proto.InternalMessageInfo
+
+func (m *MsgRenounceAdmin) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgRenounceAdmin) GetDaoId() uint64 {
+	if m != nil {
+		return m.DaoId
+	}
+	return 0
+}
+
+type MsgRenounceAdminResponse struct {
+}
+
+func (m *MsgRenounceAdminResponse) Reset()         { *m = MsgRenounceAdminResponse{} }
+func (m *MsgRenounceAdminResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRenounceAdminResponse) ProtoMessage()    {}
+func (*MsgRenounceAdminResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{27}
+}
+func (m *MsgRenounceAdminResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRenounceAdminResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRenounceAdminResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRenounceAdminResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRenounceAdminResponse.Merge(m, src)
+}
+func (m *MsgRenounceAdminResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRenounceAdminResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRenounceAdminResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRenounceAdminResponse proto.InternalMessageInfo
+
+// MsgUpdateVotingBackend replaces a DAO's voting-power source. Admin-gated.
+//
+// v1 constraints (the keeper enforces these — `voting_config` shares the
+// oneof shape with MsgCreateDao for forward compatibility):
+//   - Backend TYPE must match the current backend (STATIC → STATIC or
+//     REWARD_STAKED → REWARD_STAKED). Cross-type migration is deferred.
+//   - For REWARD_STAKED: the new reward program's creator MUST equal
+//     dao.account_address, and its `lock` MUST be >= the DAO's current
+//     governance.voting_period (Epic 3 flash-vote rule).
+//   - For STATIC → STATIC: the keeper rejects with a "use MsgUpdateMembers"
+//     pointer to keep there being one well-named operation per concept.
+type MsgUpdateVotingBackend struct {
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	DaoId     uint64 `protobuf:"varint,2,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+	// Types that are valid to be assigned to VotingConfig:
+	//
+	//	*MsgUpdateVotingBackend_Static
+	//	*MsgUpdateVotingBackend_RewardStaked
+	VotingConfig isMsgUpdateVotingBackend_VotingConfig `protobuf_oneof:"voting_config"`
+}
+
+func (m *MsgUpdateVotingBackend) Reset()         { *m = MsgUpdateVotingBackend{} }
+func (m *MsgUpdateVotingBackend) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateVotingBackend) ProtoMessage()    {}
+func (*MsgUpdateVotingBackend) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{28}
+}
+func (m *MsgUpdateVotingBackend) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateVotingBackend) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateVotingBackend.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateVotingBackend) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateVotingBackend.Merge(m, src)
+}
+func (m *MsgUpdateVotingBackend) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateVotingBackend) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateVotingBackend.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateVotingBackend proto.InternalMessageInfo
+
+type isMsgUpdateVotingBackend_VotingConfig interface {
+	isMsgUpdateVotingBackend_VotingConfig()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type MsgUpdateVotingBackend_Static struct {
+	Static *StaticVotingConfig `protobuf:"bytes,3,opt,name=static,proto3,oneof" json:"static,omitempty"`
+}
+type MsgUpdateVotingBackend_RewardStaked struct {
+	RewardStaked *RewardStakedVotingConfig `protobuf:"bytes,4,opt,name=reward_staked,json=rewardStaked,proto3,oneof" json:"reward_staked,omitempty"`
+}
+
+func (*MsgUpdateVotingBackend_Static) isMsgUpdateVotingBackend_VotingConfig()       {}
+func (*MsgUpdateVotingBackend_RewardStaked) isMsgUpdateVotingBackend_VotingConfig() {}
+
+func (m *MsgUpdateVotingBackend) GetVotingConfig() isMsgUpdateVotingBackend_VotingConfig {
+	if m != nil {
+		return m.VotingConfig
+	}
+	return nil
+}
+
+func (m *MsgUpdateVotingBackend) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateVotingBackend) GetDaoId() uint64 {
+	if m != nil {
+		return m.DaoId
+	}
+	return 0
+}
+
+func (m *MsgUpdateVotingBackend) GetStatic() *StaticVotingConfig {
+	if x, ok := m.GetVotingConfig().(*MsgUpdateVotingBackend_Static); ok {
+		return x.Static
+	}
+	return nil
+}
+
+func (m *MsgUpdateVotingBackend) GetRewardStaked() *RewardStakedVotingConfig {
+	if x, ok := m.GetVotingConfig().(*MsgUpdateVotingBackend_RewardStaked); ok {
+		return x.RewardStaked
+	}
+	return nil
+}
+
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*MsgUpdateVotingBackend) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
+		(*MsgUpdateVotingBackend_Static)(nil),
+		(*MsgUpdateVotingBackend_RewardStaked)(nil),
+	}
+}
+
+type MsgUpdateVotingBackendResponse struct {
+}
+
+func (m *MsgUpdateVotingBackendResponse) Reset()         { *m = MsgUpdateVotingBackendResponse{} }
+func (m *MsgUpdateVotingBackendResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateVotingBackendResponse) ProtoMessage()    {}
+func (*MsgUpdateVotingBackendResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{29}
+}
+func (m *MsgUpdateVotingBackendResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateVotingBackendResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateVotingBackendResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateVotingBackendResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateVotingBackendResponse.Merge(m, src)
+}
+func (m *MsgUpdateVotingBackendResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateVotingBackendResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateVotingBackendResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateVotingBackendResponse proto.InternalMessageInfo
+
+// MsgCreatePoll submits an informational poll on a DAO.
+//
+// Validation summary:
+//   - proposer is valid bech32; dao_id non-zero.
+//   - title is 1..MaxProposalTitleLen chars; description is
+//     0..MaxProposalDescriptionLen chars (re-using Epic 3 caps).
+//   - choices: 2..20 user-supplied labels; each 1..MaxPollChoiceLabelLen
+//     chars; no duplicates. Pass the user labels WITHOUT NOTA — the
+//     keeper appends "None of the above" iff include_nota = true.
+//   - max_selections: 1..len(choices). The cap excludes NOTA — voters
+//     can always cast [nota_index] alone regardless of max_selections.
+//   - quorum_bps: 0..MaxQuorumBps (= 8500). 0 disables the quorum check.
+//   - include_nota: bool.
+//   - initial_deposit: same rules as MsgCreateProposal (members may
+//     submit zero; non-members must meet min_deposit).
+//
+// Stateful checks deferred to the keeper:
+//   - DAO exists; proposer's member/non-member gating against initial
+//     deposit; denom match; bank send to escrow; snapshot.
+type MsgCreatePoll struct {
+	Proposer    string `protobuf:"bytes,1,opt,name=proposer,proto3" json:"proposer,omitempty"`
+	DaoId       uint64 `protobuf:"varint,2,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+	Title       string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	Description string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
+	// choices is the user-supplied label set; the keeper appends NOTA at
+	// the tail iff include_nota = true. 2..20 entries.
+	Choices []string `protobuf:"bytes,5,rep,name=choices,proto3" json:"choices,omitempty"`
+	// max_selections in [1, len(choices)] — caps how many user options a
+	// single vote may select. NOTA is always an exclusive [nota] alone
+	// regardless of max_selections.
+	MaxSelections uint32 `protobuf:"varint,6,opt,name=max_selections,json=maxSelections,proto3" json:"max_selections,omitempty"`
+	// 0..8500 bps. 0 = no quorum check.
+	QuorumBps uint32 `protobuf:"varint,7,opt,name=quorum_bps,json=quorumBps,proto3" json:"quorum_bps,omitempty"`
+	// Whether the keeper appends "None of the above" as the final choice.
+	IncludeNota bool `protobuf:"varint,8,opt,name=include_nota,json=includeNota,proto3" json:"include_nota,omitempty"`
+	// initial_deposit must use deposit_snapshot.min_deposit.denom (the
+	// DAO's frozen deposit config at poll creation time). Member proposers
+	// may attach amount = 0; non-members must attach >= min_deposit.
+	InitialDeposit types1.Coin `protobuf:"bytes,9,opt,name=initial_deposit,json=initialDeposit,proto3" json:"initial_deposit"`
+}
+
+func (m *MsgCreatePoll) Reset()         { *m = MsgCreatePoll{} }
+func (m *MsgCreatePoll) String() string { return proto.CompactTextString(m) }
+func (*MsgCreatePoll) ProtoMessage()    {}
+func (*MsgCreatePoll) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{30}
+}
+func (m *MsgCreatePoll) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreatePoll) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreatePoll.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreatePoll) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreatePoll.Merge(m, src)
+}
+func (m *MsgCreatePoll) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreatePoll) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreatePoll.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreatePoll proto.InternalMessageInfo
+
+func (m *MsgCreatePoll) GetProposer() string {
+	if m != nil {
+		return m.Proposer
+	}
+	return ""
+}
+
+func (m *MsgCreatePoll) GetDaoId() uint64 {
+	if m != nil {
+		return m.DaoId
+	}
+	return 0
+}
+
+func (m *MsgCreatePoll) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *MsgCreatePoll) GetDescription() string {
+	if m != nil {
+		return m.Description
+	}
+	return ""
+}
+
+func (m *MsgCreatePoll) GetChoices() []string {
+	if m != nil {
+		return m.Choices
+	}
+	return nil
+}
+
+func (m *MsgCreatePoll) GetMaxSelections() uint32 {
+	if m != nil {
+		return m.MaxSelections
+	}
+	return 0
+}
+
+func (m *MsgCreatePoll) GetQuorumBps() uint32 {
+	if m != nil {
+		return m.QuorumBps
+	}
+	return 0
+}
+
+func (m *MsgCreatePoll) GetIncludeNota() bool {
+	if m != nil {
+		return m.IncludeNota
+	}
+	return false
+}
+
+func (m *MsgCreatePoll) GetInitialDeposit() types1.Coin {
+	if m != nil {
+		return m.InitialDeposit
+	}
+	return types1.Coin{}
+}
+
+type MsgCreatePollResponse struct {
+	PollId uint64 `protobuf:"varint,1,opt,name=poll_id,json=pollId,proto3" json:"poll_id,omitempty"`
+}
+
+func (m *MsgCreatePollResponse) Reset()         { *m = MsgCreatePollResponse{} }
+func (m *MsgCreatePollResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreatePollResponse) ProtoMessage()    {}
+func (*MsgCreatePollResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{31}
+}
+func (m *MsgCreatePollResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreatePollResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreatePollResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreatePollResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreatePollResponse.Merge(m, src)
+}
+func (m *MsgCreatePollResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreatePollResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreatePollResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreatePollResponse proto.InternalMessageInfo
+
+func (m *MsgCreatePollResponse) GetPollId() uint64 {
+	if m != nil {
+		return m.PollId
+	}
+	return 0
+}
+
+// MsgVoteOnPoll casts an approval-style selection set on a VOTING poll.
+//
+// Validation summary:
+//   - voter is valid bech32; ids non-zero.
+//   - choice_indices: 1..max_selections distinct indices (or [nota_index]
+//     alone when include_nota and the voter rejects all options).
+//   - Each index ∈ [0, len(poll.choices)-1].
+//   - NOTA exclusivity: if any index == nota_index, it MUST be the sole
+//     element.
+//
+// Stateful checks deferred to the keeper:
+//   - Poll exists; status == VOTING.
+//   - voter has SnapshotPower > 0 at the poll's snapshot_id.
+//   - revote permission per allow_revote_snapshot.
+type MsgVoteOnPoll struct {
+	Voter         string   `protobuf:"bytes,1,opt,name=voter,proto3" json:"voter,omitempty"`
+	DaoId         uint64   `protobuf:"varint,2,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+	PollId        uint64   `protobuf:"varint,3,opt,name=poll_id,json=pollId,proto3" json:"poll_id,omitempty"`
+	ChoiceIndices []uint32 `protobuf:"varint,4,rep,packed,name=choice_indices,json=choiceIndices,proto3" json:"choice_indices,omitempty"`
+}
+
+func (m *MsgVoteOnPoll) Reset()         { *m = MsgVoteOnPoll{} }
+func (m *MsgVoteOnPoll) String() string { return proto.CompactTextString(m) }
+func (*MsgVoteOnPoll) ProtoMessage()    {}
+func (*MsgVoteOnPoll) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{32}
+}
+func (m *MsgVoteOnPoll) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgVoteOnPoll) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgVoteOnPoll.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgVoteOnPoll) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgVoteOnPoll.Merge(m, src)
+}
+func (m *MsgVoteOnPoll) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgVoteOnPoll) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgVoteOnPoll.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgVoteOnPoll proto.InternalMessageInfo
+
+func (m *MsgVoteOnPoll) GetVoter() string {
+	if m != nil {
+		return m.Voter
+	}
+	return ""
+}
+
+func (m *MsgVoteOnPoll) GetDaoId() uint64 {
+	if m != nil {
+		return m.DaoId
+	}
+	return 0
+}
+
+func (m *MsgVoteOnPoll) GetPollId() uint64 {
+	if m != nil {
+		return m.PollId
+	}
+	return 0
+}
+
+func (m *MsgVoteOnPoll) GetChoiceIndices() []uint32 {
+	if m != nil {
+		return m.ChoiceIndices
+	}
+	return nil
+}
+
+type MsgVoteOnPollResponse struct {
+}
+
+func (m *MsgVoteOnPollResponse) Reset()         { *m = MsgVoteOnPollResponse{} }
+func (m *MsgVoteOnPollResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgVoteOnPollResponse) ProtoMessage()    {}
+func (*MsgVoteOnPollResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{33}
+}
+func (m *MsgVoteOnPollResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgVoteOnPollResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgVoteOnPollResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgVoteOnPollResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgVoteOnPollResponse.Merge(m, src)
+}
+func (m *MsgVoteOnPollResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgVoteOnPollResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgVoteOnPollResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgVoteOnPollResponse proto.InternalMessageInfo
+
+// MsgDepositOnPoll tops up a DEPOSIT_PERIOD poll's escrow. Anyone may
+// deposit. Denom MUST match the poll's frozen deposit_snapshot.min_deposit
+// denom. Reaching min_deposit transitions the poll to VOTING in the
+// same tx.
+type MsgDepositOnPoll struct {
+	Depositor string      `protobuf:"bytes,1,opt,name=depositor,proto3" json:"depositor,omitempty"`
+	DaoId     uint64      `protobuf:"varint,2,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+	PollId    uint64      `protobuf:"varint,3,opt,name=poll_id,json=pollId,proto3" json:"poll_id,omitempty"`
+	Amount    types1.Coin `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount"`
+}
+
+func (m *MsgDepositOnPoll) Reset()         { *m = MsgDepositOnPoll{} }
+func (m *MsgDepositOnPoll) String() string { return proto.CompactTextString(m) }
+func (*MsgDepositOnPoll) ProtoMessage()    {}
+func (*MsgDepositOnPoll) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{34}
+}
+func (m *MsgDepositOnPoll) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgDepositOnPoll) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgDepositOnPoll.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgDepositOnPoll) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDepositOnPoll.Merge(m, src)
+}
+func (m *MsgDepositOnPoll) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgDepositOnPoll) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDepositOnPoll.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgDepositOnPoll proto.InternalMessageInfo
+
+func (m *MsgDepositOnPoll) GetDepositor() string {
+	if m != nil {
+		return m.Depositor
+	}
+	return ""
+}
+
+func (m *MsgDepositOnPoll) GetDaoId() uint64 {
+	if m != nil {
+		return m.DaoId
+	}
+	return 0
+}
+
+func (m *MsgDepositOnPoll) GetPollId() uint64 {
+	if m != nil {
+		return m.PollId
+	}
+	return 0
+}
+
+func (m *MsgDepositOnPoll) GetAmount() types1.Coin {
+	if m != nil {
+		return m.Amount
+	}
+	return types1.Coin{}
+}
+
+type MsgDepositOnPollResponse struct {
+}
+
+func (m *MsgDepositOnPollResponse) Reset()         { *m = MsgDepositOnPollResponse{} }
+func (m *MsgDepositOnPollResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgDepositOnPollResponse) ProtoMessage()    {}
+func (*MsgDepositOnPollResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_83f0a27116ca7976, []int{35}
+}
+func (m *MsgDepositOnPollResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgDepositOnPollResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgDepositOnPollResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgDepositOnPollResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDepositOnPollResponse.Merge(m, src)
+}
+func (m *MsgDepositOnPollResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgDepositOnPollResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDepositOnPollResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgDepositOnPollResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgUpdateParams)(nil), "bze.daodao.MsgUpdateParams")
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "bze.daodao.MsgUpdateParamsResponse")
+	proto.RegisterType((*MsgCreateDao)(nil), "bze.daodao.MsgCreateDao")
+	proto.RegisterType((*StaticVotingConfig)(nil), "bze.daodao.StaticVotingConfig")
+	proto.RegisterType((*RewardStakedVotingConfig)(nil), "bze.daodao.RewardStakedVotingConfig")
+	proto.RegisterType((*MsgCreateDaoResponse)(nil), "bze.daodao.MsgCreateDaoResponse")
+	proto.RegisterType((*MsgUpdateDaoMetadata)(nil), "bze.daodao.MsgUpdateDaoMetadata")
+	proto.RegisterType((*MsgUpdateDaoMetadataResponse)(nil), "bze.daodao.MsgUpdateDaoMetadataResponse")
+	proto.RegisterType((*MsgUpdateDaoAdmin)(nil), "bze.daodao.MsgUpdateDaoAdmin")
+	proto.RegisterType((*MsgUpdateDaoAdminResponse)(nil), "bze.daodao.MsgUpdateDaoAdminResponse")
+	proto.RegisterType((*MsgAcceptDaoAdmin)(nil), "bze.daodao.MsgAcceptDaoAdmin")
+	proto.RegisterType((*MsgAcceptDaoAdminResponse)(nil), "bze.daodao.MsgAcceptDaoAdminResponse")
+	proto.RegisterType((*MsgUpdateMembers)(nil), "bze.daodao.MsgUpdateMembers")
+	proto.RegisterType((*MsgUpdateMembersResponse)(nil), "bze.daodao.MsgUpdateMembersResponse")
+	proto.RegisterType((*MsgCreateProposal)(nil), "bze.daodao.MsgCreateProposal")
+	proto.RegisterType((*MsgCreateProposalResponse)(nil), "bze.daodao.MsgCreateProposalResponse")
+	proto.RegisterType((*MsgVote)(nil), "bze.daodao.MsgVote")
+	proto.RegisterType((*MsgVoteResponse)(nil), "bze.daodao.MsgVoteResponse")
+	proto.RegisterType((*MsgUpdateGovernanceConfig)(nil), "bze.daodao.MsgUpdateGovernanceConfig")
+	proto.RegisterType((*MsgUpdateGovernanceConfigResponse)(nil), "bze.daodao.MsgUpdateGovernanceConfigResponse")
+	proto.RegisterType((*MsgDeposit)(nil), "bze.daodao.MsgDeposit")
+	proto.RegisterType((*MsgDepositResponse)(nil), "bze.daodao.MsgDepositResponse")
+	proto.RegisterType((*MsgUpdateDepositConfig)(nil), "bze.daodao.MsgUpdateDepositConfig")
+	proto.RegisterType((*MsgUpdateDepositConfigResponse)(nil), "bze.daodao.MsgUpdateDepositConfigResponse")
+	proto.RegisterType((*MsgExecuteProposal)(nil), "bze.daodao.MsgExecuteProposal")
+	proto.RegisterType((*MsgExecuteProposalResponse)(nil), "bze.daodao.MsgExecuteProposalResponse")
+	proto.RegisterType((*MsgRenounceAdmin)(nil), "bze.daodao.MsgRenounceAdmin")
+	proto.RegisterType((*MsgRenounceAdminResponse)(nil), "bze.daodao.MsgRenounceAdminResponse")
+	proto.RegisterType((*MsgUpdateVotingBackend)(nil), "bze.daodao.MsgUpdateVotingBackend")
+	proto.RegisterType((*MsgUpdateVotingBackendResponse)(nil), "bze.daodao.MsgUpdateVotingBackendResponse")
+	proto.RegisterType((*MsgCreatePoll)(nil), "bze.daodao.MsgCreatePoll")
+	proto.RegisterType((*MsgCreatePollResponse)(nil), "bze.daodao.MsgCreatePollResponse")
+	proto.RegisterType((*MsgVoteOnPoll)(nil), "bze.daodao.MsgVoteOnPoll")
+	proto.RegisterType((*MsgVoteOnPollResponse)(nil), "bze.daodao.MsgVoteOnPollResponse")
+	proto.RegisterType((*MsgDepositOnPoll)(nil), "bze.daodao.MsgDepositOnPoll")
+	proto.RegisterType((*MsgDepositOnPollResponse)(nil), "bze.daodao.MsgDepositOnPollResponse")
 }
 
 func init() { proto.RegisterFile("bze/daodao/tx.proto", fileDescriptor_83f0a27116ca7976) }
 
 var fileDescriptor_83f0a27116ca7976 = []byte{
-	// 341 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4e, 0xaa, 0x4a, 0xd5,
-	0x4f, 0x49, 0xcc, 0x4f, 0x49, 0xcc, 0xd7, 0x2f, 0xa9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17,
-	0xe2, 0x4a, 0xaa, 0x4a, 0xd5, 0x83, 0x08, 0x4a, 0x09, 0x26, 0xe6, 0x66, 0xe6, 0xe5, 0xeb, 0x83,
-	0x49, 0x88, 0xb4, 0x94, 0x78, 0x72, 0x7e, 0x71, 0x6e, 0x7e, 0xb1, 0x7e, 0x6e, 0x71, 0xba, 0x7e,
-	0x99, 0x21, 0x88, 0x82, 0x4a, 0x48, 0x42, 0x24, 0xe2, 0xc1, 0x3c, 0x7d, 0x08, 0x07, 0x2a, 0x25,
-	0x92, 0x9e, 0x9f, 0x9e, 0x0f, 0x11, 0x07, 0xb1, 0x60, 0x26, 0x21, 0xd9, 0x5e, 0x90, 0x58, 0x94,
-	0x98, 0x0b, 0x55, 0xae, 0xb4, 0x91, 0x91, 0x8b, 0xdf, 0xb7, 0x38, 0x3d, 0xb4, 0x20, 0x25, 0xb1,
-	0x24, 0x35, 0x00, 0x2c, 0x23, 0x64, 0xc6, 0xc5, 0x99, 0x58, 0x5a, 0x92, 0x91, 0x5f, 0x94, 0x59,
-	0x52, 0x29, 0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0xe9, 0x24, 0x71, 0x69, 0x8b, 0xae, 0x08, 0xd4, 0x1e,
-	0xc7, 0x94, 0x94, 0xa2, 0xd4, 0xe2, 0xe2, 0xe0, 0x92, 0xa2, 0xcc, 0xbc, 0xf4, 0x20, 0x84, 0x52,
-	0x21, 0x53, 0x2e, 0x36, 0x88, 0xd9, 0x12, 0x4c, 0x0a, 0x8c, 0x1a, 0xdc, 0x46, 0x42, 0x7a, 0x08,
-	0xef, 0xe9, 0x41, 0xcc, 0x76, 0xe2, 0x3c, 0x71, 0x4f, 0x9e, 0x61, 0xc5, 0xf3, 0x0d, 0x5a, 0x8c,
-	0x41, 0x50, 0xc5, 0x56, 0xfa, 0x4d, 0xcf, 0x37, 0x68, 0x21, 0x8c, 0xe9, 0x7a, 0xbe, 0x41, 0x4b,
-	0x06, 0xe4, 0xdc, 0x0a, 0x98, 0x83, 0xd1, 0xdc, 0xa7, 0x24, 0xc9, 0x25, 0x8e, 0x26, 0x14, 0x94,
-	0x5a, 0x5c, 0x90, 0x9f, 0x57, 0x9c, 0x6a, 0x14, 0xc7, 0xc5, 0xec, 0x5b, 0x9c, 0x2e, 0x14, 0xc0,
-	0xc5, 0x83, 0xe2, 0x23, 0x69, 0x64, 0x97, 0xa0, 0xe9, 0x95, 0x52, 0xc6, 0x23, 0x09, 0x33, 0x58,
-	0x8a, 0xb5, 0x01, 0xe4, 0x66, 0x27, 0xd7, 0x13, 0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c,
-	0xf0, 0x48, 0x8e, 0x71, 0xc2, 0x63, 0x39, 0x86, 0x0b, 0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63,
-	0x88, 0xd2, 0x4e, 0xcf, 0x2c, 0xc9, 0x28, 0x4d, 0xd2, 0x4b, 0xce, 0xcf, 0xd5, 0x4f, 0xaa, 0x4a,
-	0xd5, 0x4d, 0xcc, 0x29, 0xc8, 0x48, 0x2c, 0x49, 0x4d, 0x04, 0xf3, 0x10, 0x7e, 0x29, 0xa9, 0x2c,
-	0x48, 0x2d, 0x4e, 0x62, 0x03, 0x07, 0xbe, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x8c, 0xca, 0x76,
-	0xc1, 0x15, 0x02, 0x00, 0x00,
+	// 1813 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xcd, 0x6f, 0x1c, 0x49,
+	0x15, 0x77, 0x67, 0xec, 0xb1, 0xe7, 0x39, 0x63, 0x93, 0x8e, 0xd7, 0x6e, 0xb7, 0xed, 0xc9, 0xa4,
+	0x93, 0x5d, 0x8c, 0x21, 0x33, 0x8e, 0xd9, 0x8f, 0xec, 0x88, 0x8b, 0x27, 0x89, 0x76, 0x0d, 0xf2,
+	0x12, 0xb5, 0x45, 0x24, 0xb8, 0x8c, 0x6a, 0xba, 0x6b, 0x3b, 0xad, 0x9d, 0xe9, 0x6a, 0xba, 0x7b,
+	0x1c, 0x27, 0x27, 0xc4, 0x91, 0x0b, 0x48, 0x20, 0xfe, 0x06, 0x0e, 0x1c, 0x82, 0xb4, 0x88, 0x13,
+	0x07, 0x2e, 0x28, 0x42, 0x1c, 0x22, 0x0e, 0x08, 0x81, 0x84, 0x20, 0x11, 0x8a, 0xf8, 0x0b, 0xb8,
+	0xa2, 0xae, 0xaa, 0xae, 0xae, 0xfe, 0xb2, 0x27, 0xc6, 0x48, 0x7b, 0xb1, 0xa7, 0xde, 0x7b, 0xf5,
+	0xea, 0x7d, 0xd6, 0xfb, 0x55, 0xc3, 0xd5, 0xe1, 0x53, 0xdc, 0xb5, 0x11, 0xb1, 0x11, 0xe9, 0x46,
+	0x27, 0x1d, 0x3f, 0x20, 0x11, 0x51, 0x61, 0xf8, 0x14, 0x77, 0x18, 0x51, 0xbf, 0x82, 0xc6, 0xae,
+	0x47, 0xba, 0xf4, 0x2f, 0x63, 0xeb, 0x6b, 0x16, 0x09, 0xc7, 0x24, 0xec, 0x8e, 0x43, 0xa7, 0x7b,
+	0x7c, 0x3b, 0xfe, 0xc7, 0x19, 0xeb, 0x8c, 0x31, 0xa0, 0xab, 0x2e, 0x5b, 0x70, 0xd6, 0x8a, 0x43,
+	0x1c, 0xc2, 0xe8, 0xf1, 0xaf, 0x64, 0x83, 0x43, 0x88, 0x33, 0xc2, 0x5d, 0xba, 0x1a, 0x4e, 0x3e,
+	0xed, 0x22, 0xef, 0x09, 0x67, 0xb5, 0xf8, 0x21, 0x43, 0x14, 0xe2, 0xee, 0xf1, 0xed, 0x21, 0x8e,
+	0xd0, 0xed, 0xae, 0x45, 0x5c, 0x2f, 0x31, 0x42, 0x32, 0xdc, 0x47, 0x01, 0x1a, 0x27, 0x27, 0xad,
+	0x4a, 0x8c, 0x30, 0x22, 0x01, 0x66, 0x74, 0xe3, 0x57, 0x0a, 0x2c, 0x1f, 0x86, 0xce, 0x77, 0x7c,
+	0x1b, 0x45, 0xf8, 0x01, 0xdd, 0xa1, 0xbe, 0x0f, 0x0d, 0x34, 0x89, 0x1e, 0x91, 0xc0, 0x8d, 0x9e,
+	0x68, 0x4a, 0x5b, 0xd9, 0x6e, 0xf4, 0xb5, 0x3f, 0x7d, 0x7e, 0x6b, 0x85, 0x9b, 0xbe, 0x6f, 0xdb,
+	0x01, 0x0e, 0xc3, 0xa3, 0x28, 0x70, 0x3d, 0xc7, 0x4c, 0x45, 0xd5, 0xf7, 0xa0, 0xce, 0xce, 0xd4,
+	0x2e, 0xb5, 0x95, 0xed, 0xc5, 0x3d, 0xb5, 0x93, 0x46, 0xac, 0xc3, 0x74, 0xf7, 0x1b, 0xcf, 0xff,
+	0x7e, 0x6d, 0xe6, 0x17, 0xaf, 0x9f, 0xed, 0x28, 0x26, 0x17, 0xee, 0x75, 0x7f, 0xf8, 0xfa, 0xd9,
+	0x4e, 0xaa, 0xe6, 0x47, 0xaf, 0x9f, 0xed, 0x6c, 0xc6, 0xd6, 0x9e, 0x24, 0xf6, 0xe6, 0xec, 0x33,
+	0xd6, 0x61, 0x2d, 0x47, 0x32, 0x71, 0xe8, 0x13, 0x2f, 0xc4, 0xc6, 0xcf, 0x67, 0xe1, 0xf2, 0x61,
+	0xe8, 0xdc, 0x0d, 0x30, 0x8a, 0xf0, 0x3d, 0x44, 0xd4, 0x3d, 0x98, 0xb7, 0xe2, 0x05, 0x09, 0xce,
+	0xf4, 0x24, 0x11, 0x54, 0x3f, 0x84, 0x85, 0x31, 0x8e, 0x90, 0x8d, 0x22, 0xc4, 0x3d, 0x59, 0x93,
+	0x3d, 0xb9, 0x87, 0xc8, 0x21, 0x67, 0xf7, 0x67, 0x63, 0x77, 0x4c, 0x21, 0xae, 0x76, 0x60, 0x0e,
+	0xd9, 0x63, 0xd7, 0xd3, 0x6a, 0x67, 0x1c, 0xc6, 0xc4, 0x54, 0x03, 0x9a, 0x3e, 0x0a, 0xb0, 0x17,
+	0x0d, 0x6c, 0x44, 0x06, 0xae, 0xad, 0xcd, 0xb6, 0x95, 0xed, 0x59, 0x73, 0x91, 0x11, 0xef, 0x21,
+	0x72, 0x60, 0xab, 0x77, 0xa0, 0x1e, 0x46, 0x28, 0x72, 0x2d, 0xcd, 0xa6, 0xc6, 0xb4, 0x64, 0x63,
+	0x8e, 0x28, 0xe7, 0x21, 0x89, 0x5c, 0xcf, 0xb9, 0x4b, 0xbc, 0x4f, 0x5d, 0xe7, 0xe3, 0x19, 0x93,
+	0xcb, 0xab, 0xdf, 0x82, 0x66, 0x80, 0x1f, 0xa3, 0xc0, 0x1e, 0x84, 0x11, 0xfa, 0x0c, 0xdb, 0x1a,
+	0xa6, 0x0a, 0x6e, 0xca, 0x0a, 0x4c, 0x2a, 0x70, 0x44, 0xf9, 0x39, 0x35, 0x97, 0x03, 0x89, 0xa7,
+	0xde, 0x05, 0x70, 0xc8, 0x31, 0x0e, 0x3c, 0xe4, 0x59, 0x58, 0x7b, 0xae, 0x50, 0x55, 0x9b, 0xb2,
+	0xaa, 0x8f, 0x04, 0x9b, 0xa9, 0xe0, 0xd1, 0x91, 0xb6, 0xa9, 0x3d, 0x98, 0xb7, 0xb1, 0x4f, 0x42,
+	0x37, 0xd2, 0x7e, 0xc9, 0x42, 0xbb, 0x9e, 0x09, 0x2d, 0xe3, 0x65, 0xb6, 0x27, 0x1b, 0x7a, 0x3b,
+	0x71, 0x9d, 0x24, 0x49, 0x8a, 0xab, 0x64, 0x3d, 0x5f, 0x25, 0x22, 0xed, 0xfd, 0x65, 0x68, 0x1e,
+	0x53, 0x67, 0x06, 0x16, 0xd5, 0x65, 0x7c, 0x02, 0x6a, 0x31, 0x54, 0xea, 0x1d, 0x98, 0x1f, 0xe3,
+	0xf1, 0x10, 0x07, 0xa1, 0xa6, 0xb4, 0x6b, 0xdb, 0x8b, 0x7b, 0x5a, 0x31, 0xb6, 0x87, 0x54, 0x20,
+	0x31, 0x86, 0x8b, 0x1b, 0x1f, 0x80, 0x56, 0x15, 0x39, 0x75, 0x03, 0x1a, 0x3c, 0xec, 0xae, 0xcd,
+	0xaa, 0xce, 0x5c, 0x60, 0x84, 0x03, 0xdb, 0x78, 0x08, 0x2b, 0xb2, 0xa5, 0x49, 0xe5, 0xaa, 0x6f,
+	0x41, 0x9d, 0x97, 0x80, 0x42, 0x4b, 0x60, 0xce, 0xa6, 0xc9, 0xff, 0x32, 0x2c, 0x23, 0xcb, 0x22,
+	0x13, 0x2f, 0x1a, 0x20, 0x56, 0x40, 0xb4, 0x24, 0x1b, 0xe6, 0x12, 0x27, 0xf3, 0xb2, 0x32, 0xfe,
+	0xac, 0x50, 0xc5, 0xac, 0x2b, 0xa4, 0x12, 0x3d, 0x77, 0x37, 0xa7, 0x06, 0x5d, 0x92, 0x0d, 0x92,
+	0x9b, 0xa3, 0xf6, 0x46, 0xcd, 0xd1, 0x7b, 0xb7, 0xd8, 0xe8, 0xd7, 0xcb, 0x1b, 0x5d, 0xd2, 0x62,
+	0xb4, 0x60, 0xb3, 0x8c, 0x2e, 0x5a, 0xfe, 0x8f, 0x0a, 0x5c, 0x91, 0x05, 0xf6, 0x69, 0x63, 0x5d,
+	0xb0, 0xd7, 0xef, 0x41, 0xc3, 0xc3, 0x8f, 0x07, 0xd3, 0xf5, 0xf6, 0x82, 0x87, 0x1f, 0x53, 0x2b,
+	0x7a, 0xb7, 0x8b, 0x1e, 0xb7, 0x2a, 0x3d, 0xa6, 0x5b, 0x8c, 0x0d, 0x58, 0x2f, 0x10, 0x85, 0xaf,
+	0x3f, 0x63, 0xbe, 0xee, 0x5b, 0x16, 0xf6, 0x23, 0xe1, 0x6b, 0xc6, 0x38, 0x65, 0x5a, 0xe3, 0x2a,
+	0x5c, 0xe5, 0x36, 0x0b, 0x85, 0xa5, 0x36, 0x67, 0x0d, 0xe0, 0x36, 0x67, 0x89, 0xc2, 0xe6, 0xff,
+	0x28, 0xf0, 0x25, 0xe1, 0x11, 0x6b, 0xa6, 0xf0, 0xa2, 0xd3, 0xb3, 0x0b, 0x35, 0x64, 0xdb, 0x5a,
+	0x6d, 0xaa, 0x1e, 0x8e, 0x45, 0xd5, 0x5d, 0xa8, 0x07, 0x78, 0x4c, 0x8e, 0xb1, 0x36, 0xdb, 0xae,
+	0x9d, 0x7a, 0x3a, 0x97, 0xeb, 0xed, 0x16, 0x73, 0xb9, 0x55, 0x9e, 0x4b, 0xee, 0xa4, 0xa1, 0x83,
+	0x96, 0xa7, 0x89, 0xa8, 0xfc, 0xed, 0x12, 0xcd, 0x24, 0xbb, 0x07, 0x1e, 0x04, 0xc4, 0x27, 0x21,
+	0x1a, 0xa9, 0xef, 0xc2, 0x82, 0x4f, 0x7f, 0xe3, 0xb3, 0xc7, 0x95, 0x90, 0xac, 0x0a, 0xca, 0x0a,
+	0xcc, 0x45, 0x6e, 0x34, 0xc2, 0xac, 0x5e, 0x4d, 0xb6, 0x50, 0xdb, 0xb0, 0x68, 0xe3, 0xd0, 0x0a,
+	0x5c, 0x3f, 0x72, 0x89, 0x47, 0xe7, 0x4d, 0xc3, 0x94, 0x49, 0xea, 0x7d, 0x98, 0x1d, 0x87, 0x4e,
+	0xa8, 0xcd, 0xd1, 0x68, 0xae, 0x74, 0x18, 0x1a, 0xe9, 0x24, 0x68, 0xa4, 0xb3, 0xef, 0x3d, 0xe9,
+	0x6f, 0xfc, 0xe1, 0xf3, 0x5b, 0x1c, 0xf0, 0x74, 0x62, 0x2c, 0xd2, 0xe1, 0x58, 0xa4, 0x73, 0x18,
+	0x3a, 0x26, 0xdd, 0xae, 0x7e, 0x0c, 0xcb, 0xae, 0xe7, 0x46, 0x2e, 0x1a, 0x0d, 0x92, 0x2b, 0xbf,
+	0xce, 0x6f, 0xfc, 0xb2, 0x8d, 0x77, 0x89, 0xeb, 0xf1, 0x04, 0x2d, 0xf1, 0x7d, 0x7c, 0x1a, 0xb0,
+	0xc8, 0x0b, 0x77, 0x4b, 0x0b, 0x32, 0x1b, 0x47, 0xe3, 0x1b, 0xb4, 0x20, 0xb3, 0x44, 0x71, 0xd3,
+	0x5e, 0x83, 0x45, 0x9f, 0xd3, 0xd2, 0xeb, 0x16, 0x12, 0xd2, 0x81, 0x6d, 0xfc, 0x5e, 0x81, 0xf9,
+	0xc3, 0xd0, 0x79, 0x48, 0x22, 0x1c, 0x0f, 0xf4, 0x63, 0x12, 0x4d, 0x91, 0x0e, 0x26, 0x56, 0x95,
+	0x8b, 0xdc, 0x99, 0xb5, 0xfc, 0x99, 0x6a, 0x07, 0xea, 0x24, 0xcd, 0xc8, 0xd2, 0xde, 0xaa, 0x5c,
+	0xc4, 0xb1, 0x25, 0xdf, 0xa6, 0x5c, 0x93, 0x4b, 0xf5, 0x6e, 0xc4, 0x31, 0x61, 0x67, 0xc6, 0x01,
+	0x59, 0xc9, 0x07, 0x24, 0xde, 0x62, 0x5c, 0xa1, 0xd8, 0x2e, 0xfe, 0x29, 0xea, 0xee, 0xdf, 0x8a,
+	0x74, 0xbf, 0xe4, 0x07, 0xf6, 0x45, 0xb7, 0x65, 0x3f, 0x03, 0x19, 0x6a, 0xe7, 0x41, 0x0c, 0xbd,
+	0x0f, 0x8b, 0x6d, 0xf7, 0x4e, 0x79, 0xdb, 0xe5, 0x95, 0x19, 0x37, 0xe0, 0x7a, 0x25, 0x53, 0x04,
+	0xe4, 0x9f, 0x0a, 0xc0, 0x61, 0xe8, 0xf0, 0x5a, 0x8b, 0x23, 0xc0, 0xab, 0x75, 0x0a, 0xc4, 0x98,
+	0x8a, 0x9e, 0x3b, 0xef, 0x1f, 0x40, 0x1d, 0x8d, 0xe3, 0x39, 0x4e, 0xf3, 0x3e, 0x45, 0x73, 0x70,
+	0x71, 0x86, 0x86, 0x52, 0x03, 0xe2, 0xb8, 0xac, 0xe5, 0xe3, 0xc2, 0x9d, 0x32, 0x56, 0x40, 0x4d,
+	0x57, 0xc2, 0xf3, 0xbf, 0x2a, 0xb0, 0x9a, 0x8e, 0x1a, 0x19, 0x79, 0x5d, 0x3c, 0x66, 0x10, 0xa8,
+	0xaf, 0xf6, 0x86, 0xa0, 0xef, 0xfd, 0x62, 0xfa, 0x6f, 0x54, 0x4c, 0x50, 0x59, 0x8d, 0xd1, 0x86,
+	0x56, 0x39, 0x47, 0xb8, 0xff, 0x6b, 0x85, 0x46, 0xe5, 0xfe, 0x09, 0xb6, 0x26, 0xd9, 0x2b, 0x18,
+	0x53, 0xd2, 0x14, 0xf9, 0x17, 0x92, 0xe7, 0x4d, 0x3f, 0x1b, 0xb6, 0x42, 0x4d, 0xec, 0xdd, 0xb5,
+	0xbc, 0x77, 0x39, 0x03, 0x8d, 0x4d, 0xd0, 0x8b, 0x54, 0xe1, 0xd5, 0x4f, 0xd9, 0xb4, 0x35, 0xb1,
+	0x47, 0x26, 0x9e, 0x85, 0xff, 0x1f, 0x60, 0x68, 0xaa, 0x49, 0x98, 0x31, 0x80, 0x4f, 0xc2, 0x0c,
+	0x4d, 0x58, 0xfc, 0x9b, 0x4b, 0x52, 0x19, 0x32, 0x1c, 0xdd, 0x47, 0xd6, 0x67, 0xd8, 0xb3, 0x2f,
+	0xba, 0x0c, 0xd3, 0x87, 0x54, 0xed, 0x7f, 0x7d, 0x48, 0xcd, 0x9e, 0xff, 0x21, 0xf5, 0x06, 0x25,
+	0x9d, 0x89, 0x46, 0xf1, 0x4d, 0x23, 0xd7, 0x78, 0x46, 0x54, 0xc4, 0xf6, 0xc7, 0x35, 0x68, 0xa6,
+	0x83, 0x90, 0x8c, 0xbe, 0x20, 0x08, 0x43, 0x83, 0x79, 0xeb, 0x11, 0x71, 0x2d, 0xcc, 0x40, 0x46,
+	0xc3, 0x4c, 0x96, 0xea, 0xdb, 0xb0, 0x34, 0x46, 0x27, 0x83, 0x10, 0x8f, 0xb0, 0x15, 0x8b, 0x86,
+	0x14, 0x33, 0x34, 0xcd, 0xe6, 0x18, 0x9d, 0x1c, 0x09, 0xa2, 0xba, 0x05, 0xf0, 0xfd, 0x09, 0x09,
+	0x26, 0xe3, 0xc1, 0xd0, 0x0f, 0xb5, 0x79, 0x2a, 0xd2, 0x60, 0x94, 0xbe, 0x1f, 0xaa, 0xd7, 0xe1,
+	0xb2, 0xeb, 0x59, 0xa3, 0x89, 0x8d, 0x07, 0x1e, 0x89, 0x90, 0xb6, 0xd0, 0x56, 0xb6, 0x17, 0xcc,
+	0x45, 0x4e, 0xfb, 0x84, 0x44, 0xa8, 0x0c, 0x9d, 0x34, 0xce, 0x87, 0x4e, 0xbe, 0x56, 0x40, 0x27,
+	0x7a, 0x05, 0x3a, 0x21, 0xa3, 0x91, 0xb1, 0x0b, 0x6f, 0x65, 0x08, 0x02, 0x95, 0xac, 0xc1, 0xbc,
+	0x4f, 0x46, 0x12, 0x22, 0xa9, 0xc7, 0xcb, 0x03, 0xdb, 0xf8, 0x9d, 0x42, 0x73, 0x48, 0x31, 0x80,
+	0x47, 0x73, 0x78, 0x41, 0x98, 0x44, 0x3a, 0xb1, 0x26, 0x9f, 0x18, 0x27, 0x81, 0xe5, 0x63, 0xe0,
+	0x7a, 0x36, 0xcd, 0x52, 0x8c, 0x91, 0x9b, 0x66, 0x93, 0x51, 0x0f, 0x18, 0xb1, 0xf7, 0x95, 0x2c,
+	0x04, 0xd1, 0xcb, 0x20, 0x08, 0xb3, 0xd8, 0x58, 0xa3, 0x5e, 0xa7, 0x04, 0x51, 0xa0, 0xff, 0x62,
+	0xd7, 0x15, 0x8f, 0x25, 0xf7, 0xef, 0x82, 0x67, 0x70, 0xa5, 0x9f, 0xe7, 0x9e, 0xbd, 0xbb, 0xc5,
+	0xd9, 0xbb, 0x55, 0x31, 0x7b, 0x79, 0x00, 0xd8, 0x05, 0x98, 0xa1, 0x25, 0x31, 0xd8, 0xfb, 0xed,
+	0x22, 0xd4, 0x0e, 0x43, 0x47, 0x7d, 0x00, 0x97, 0x33, 0x9f, 0xe1, 0x36, 0xe4, 0xdb, 0x25, 0xf7,
+	0xc1, 0x4b, 0xbf, 0x71, 0x0a, 0x53, 0xd4, 0xd4, 0x47, 0xd0, 0x48, 0xbf, 0x84, 0x69, 0xb9, 0x1d,
+	0x82, 0xa3, 0xb7, 0xab, 0x38, 0x42, 0xd1, 0x00, 0xae, 0x14, 0x3f, 0x2c, 0xb4, 0x4b, 0x4d, 0x90,
+	0x24, 0xf4, 0xed, 0xb3, 0x24, 0xc4, 0x01, 0x0f, 0x61, 0x29, 0xf7, 0x80, 0xdf, 0xaa, 0xda, 0x4b,
+	0xd9, 0xfa, 0xdb, 0xa7, 0xb2, 0x65, 0xbd, 0xb9, 0xc7, 0x72, 0x5e, 0x6f, 0x96, 0x5d, 0xd0, 0x5b,
+	0xfe, 0xa8, 0x55, 0x8f, 0xa0, 0x99, 0x7d, 0xd0, 0x6e, 0x96, 0xda, 0xc3, 0xb9, 0xfa, 0xcd, 0xd3,
+	0xb8, 0xb2, 0xb1, 0xb9, 0xf7, 0xe0, 0x56, 0x69, 0x66, 0x12, 0x76, 0xc1, 0xd8, 0x8a, 0x07, 0xcf,
+	0x1d, 0x98, 0xa5, 0x6f, 0x99, 0xab, 0x39, 0xf1, 0x98, 0xa8, 0x6f, 0x94, 0x10, 0xc5, 0x4e, 0x0f,
+	0x56, 0x2b, 0x5e, 0x0a, 0xe5, 0xf1, 0xcf, 0x8b, 0xe9, 0xb7, 0xa6, 0x12, 0x13, 0xe7, 0xed, 0xc3,
+	0x7c, 0x02, 0xc4, 0x57, 0x73, 0x3b, 0x39, 0x5d, 0x6f, 0x95, 0xd3, 0x85, 0x0a, 0x0c, 0x57, 0xcb,
+	0x10, 0xad, 0x51, 0x5e, 0x2f, 0xb2, 0x8c, 0xbe, 0x73, 0xb6, 0x8c, 0x38, 0xe6, 0xbb, 0xb0, 0x9c,
+	0x47, 0x8e, 0x79, 0xcb, 0x72, 0x7c, 0xfd, 0x9d, 0xd3, 0xf9, 0x72, 0x6d, 0x65, 0xe1, 0x5b, 0xbe,
+	0xb6, 0x32, 0xdc, 0x42, 0x6d, 0x95, 0xa2, 0xac, 0x34, 0x2c, 0x59, 0x84, 0x55, 0x1e, 0x96, 0x8c,
+	0x4c, 0x45, 0x58, 0x4a, 0x01, 0x87, 0xfa, 0x4d, 0x00, 0x09, 0x6c, 0xac, 0x97, 0xd7, 0x27, 0x19,
+	0x8d, 0xf4, 0xeb, 0x95, 0x2c, 0x59, 0x97, 0x34, 0xf4, 0xd6, 0x4b, 0xea, 0x94, 0xb1, 0x0a, 0xba,
+	0x8a, 0x73, 0x26, 0x8e, 0x69, 0x76, 0xc6, 0x6c, 0x96, 0x97, 0x11, 0xd7, 0x78, 0xf3, 0x34, 0x6e,
+	0xa2, 0x54, 0x9f, 0xfb, 0xc1, 0xeb, 0x67, 0x3b, 0x4a, 0xff, 0xfe, 0xf3, 0x97, 0x2d, 0xe5, 0xc5,
+	0xcb, 0x96, 0xf2, 0x8f, 0x97, 0x2d, 0xe5, 0x27, 0xaf, 0x5a, 0x33, 0x2f, 0x5e, 0xb5, 0x66, 0xfe,
+	0xf2, 0xaa, 0x35, 0xf3, 0xbd, 0xaf, 0x3a, 0x6e, 0xf4, 0x68, 0x32, 0xec, 0x58, 0x64, 0xdc, 0x1d,
+	0x3e, 0xc5, 0xb7, 0xd0, 0xc8, 0x7f, 0x84, 0x22, 0x8c, 0xe8, 0x2a, 0x9d, 0x16, 0xd1, 0x13, 0x1f,
+	0x87, 0xc3, 0x3a, 0xfd, 0xc0, 0xf2, 0xf5, 0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0x24, 0x69, 0x1b,
+	0xe5, 0x7c, 0x1a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -171,9 +2395,73 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// UpdateParams defines a (governance) operation for updating the module
-	// parameters. The authority defaults to the x/gov module account.
+	// UpdateParams updates the module-level params. Chain-gov authority.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	// CreateDao creates a new DAO, registers a BaseAccount for it at a
+	// deterministic address, and burns the creation fee (if configured).
+	CreateDao(ctx context.Context, in *MsgCreateDao, opts ...grpc.CallOption) (*MsgCreateDaoResponse, error)
+	// UpdateDaoMetadata updates a DAO's name / description / image / links.
+	// Admin-gated.
+	UpdateDaoMetadata(ctx context.Context, in *MsgUpdateDaoMetadata, opts ...grpc.CallOption) (*MsgUpdateDaoMetadataResponse, error)
+	// UpdateDaoAdmin nominates a new admin. The nominee must call
+	// AcceptDaoAdmin to complete the transfer. Admin-gated.
+	UpdateDaoAdmin(ctx context.Context, in *MsgUpdateDaoAdmin, opts ...grpc.CallOption) (*MsgUpdateDaoAdminResponse, error)
+	// AcceptDaoAdmin completes the admin handoff initiated by UpdateDaoAdmin.
+	// Must be signed by the nominee (pending_admin).
+	AcceptDaoAdmin(ctx context.Context, in *MsgAcceptDaoAdmin, opts ...grpc.CallOption) (*MsgAcceptDaoAdminResponse, error)
+	// UpdateMembers adds / removes / re-weights members of a STATIC DAO.
+	// Admin-gated. Rejected for REWARD_STAKED DAOs (their membership flows
+	// through rewards.MsgJoinStaking / MsgExitStaking).
+	UpdateMembers(ctx context.Context, in *MsgUpdateMembers, opts ...grpc.CallOption) (*MsgUpdateMembersResponse, error)
+	// CreateProposal submits a new proposal on a DAO. Snapshot is taken at
+	// creation; the proposal goes straight to VOTING in Epic 3
+	// (DEPOSIT_PERIOD is added in Epic 4). The `msgs` bundle is stored for
+	// later execution by Epic 5.
+	CreateProposal(ctx context.Context, in *MsgCreateProposal, opts ...grpc.CallOption) (*MsgCreateProposalResponse, error)
+	// Vote casts (or, when revote is enabled, replaces) the signer's vote
+	// on an open proposal. Voter power is read from the proposal's snapshot.
+	Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error)
+	// UpdateGovernanceConfig replaces the DAO's proposal-track configuration.
+	// Admin-gated. Existing proposals retain their frozen
+	// governance_snapshot; new proposals adopt the new config.
+	UpdateGovernanceConfig(ctx context.Context, in *MsgUpdateGovernanceConfig, opts ...grpc.CallOption) (*MsgUpdateGovernanceConfigResponse, error)
+	// Deposit tops up a DEPOSIT_PERIOD proposal's collected deposit. Anyone
+	// may deposit. The amount must use the proposal's deposit_snapshot
+	// min_deposit.denom. Reaching min_deposit transitions the proposal to
+	// VOTING in the same tx.
+	Deposit(ctx context.Context, in *MsgDeposit, opts ...grpc.CallOption) (*MsgDepositResponse, error)
+	// UpdateDepositConfig replaces a DAO's deposit-period configuration.
+	// Admin-gated. Existing proposals retain their frozen deposit_snapshot;
+	// new proposals adopt the new config.
+	UpdateDepositConfig(ctx context.Context, in *MsgUpdateDepositConfig, opts ...grpc.CallOption) (*MsgUpdateDepositConfigResponse, error)
+	// ExecuteProposal dispatches a PASSED proposal's msgs[] atomically as
+	// the DAO's account. Any address may submit; the signer of the tx is
+	// unrelated to who the dispatched messages claim as their signer (always
+	// the DAO).
+	ExecuteProposal(ctx context.Context, in *MsgExecuteProposal, opts ...grpc.CallOption) (*MsgExecuteProposalResponse, error)
+	// RenounceAdmin flips a DAO from admin-controlled to self-governed by
+	// setting admin = dao.account_address. After this, only proposals can
+	// mutate the DAO (because handlers gate on `assertAdmin`, which now
+	// accepts only the DAO's own account).
+	RenounceAdmin(ctx context.Context, in *MsgRenounceAdmin, opts ...grpc.CallOption) (*MsgRenounceAdminResponse, error)
+	// UpdateVotingBackend replaces the DAO's voting-power source. Same-type
+	// only in v1: STATIC → STATIC (use MsgUpdateMembers instead is also
+	// valid), REWARD_STAKED → REWARD_STAKED with the new program's creator
+	// matching dao.account_address and lock >= governance.voting_period.
+	// Cross-type migration (STATIC ↔ REWARD_STAKED) is rejected.
+	UpdateVotingBackend(ctx context.Context, in *MsgUpdateVotingBackend, opts ...grpc.CallOption) (*MsgUpdateVotingBackendResponse, error)
+	// CreatePoll opens an informational poll on a DAO. Unlike CreateProposal,
+	// a poll has no executable bundle — its terminal state surfaces a single
+	// winning_choice_index. Uses the same DAO deposit + voting_period config
+	// as proposals.
+	CreatePoll(ctx context.Context, in *MsgCreatePoll, opts ...grpc.CallOption) (*MsgCreatePollResponse, error)
+	// VoteOnPoll casts (or replaces, with revote enabled) the signer's
+	// approval-style selection on an open poll. Each chosen option receives
+	// the voter's full snapshot power.
+	VoteOnPoll(ctx context.Context, in *MsgVoteOnPoll, opts ...grpc.CallOption) (*MsgVoteOnPollResponse, error)
+	// DepositOnPoll tops up a DEPOSIT_PERIOD poll's escrow. Reaching
+	// min_deposit transitions the poll to VOTING.
+	DepositOnPoll(ctx context.Context, in *MsgDepositOnPoll, opts ...grpc.CallOption) (*MsgDepositOnPollResponse, error)
 }
 
 type msgClient struct {
@@ -193,11 +2481,219 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
+func (c *msgClient) CreateDao(ctx context.Context, in *MsgCreateDao, opts ...grpc.CallOption) (*MsgCreateDaoResponse, error) {
+	out := new(MsgCreateDaoResponse)
+	err := c.cc.Invoke(ctx, "/bze.daodao.Msg/CreateDao", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateDaoMetadata(ctx context.Context, in *MsgUpdateDaoMetadata, opts ...grpc.CallOption) (*MsgUpdateDaoMetadataResponse, error) {
+	out := new(MsgUpdateDaoMetadataResponse)
+	err := c.cc.Invoke(ctx, "/bze.daodao.Msg/UpdateDaoMetadata", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateDaoAdmin(ctx context.Context, in *MsgUpdateDaoAdmin, opts ...grpc.CallOption) (*MsgUpdateDaoAdminResponse, error) {
+	out := new(MsgUpdateDaoAdminResponse)
+	err := c.cc.Invoke(ctx, "/bze.daodao.Msg/UpdateDaoAdmin", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) AcceptDaoAdmin(ctx context.Context, in *MsgAcceptDaoAdmin, opts ...grpc.CallOption) (*MsgAcceptDaoAdminResponse, error) {
+	out := new(MsgAcceptDaoAdminResponse)
+	err := c.cc.Invoke(ctx, "/bze.daodao.Msg/AcceptDaoAdmin", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateMembers(ctx context.Context, in *MsgUpdateMembers, opts ...grpc.CallOption) (*MsgUpdateMembersResponse, error) {
+	out := new(MsgUpdateMembersResponse)
+	err := c.cc.Invoke(ctx, "/bze.daodao.Msg/UpdateMembers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) CreateProposal(ctx context.Context, in *MsgCreateProposal, opts ...grpc.CallOption) (*MsgCreateProposalResponse, error) {
+	out := new(MsgCreateProposalResponse)
+	err := c.cc.Invoke(ctx, "/bze.daodao.Msg/CreateProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error) {
+	out := new(MsgVoteResponse)
+	err := c.cc.Invoke(ctx, "/bze.daodao.Msg/Vote", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateGovernanceConfig(ctx context.Context, in *MsgUpdateGovernanceConfig, opts ...grpc.CallOption) (*MsgUpdateGovernanceConfigResponse, error) {
+	out := new(MsgUpdateGovernanceConfigResponse)
+	err := c.cc.Invoke(ctx, "/bze.daodao.Msg/UpdateGovernanceConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) Deposit(ctx context.Context, in *MsgDeposit, opts ...grpc.CallOption) (*MsgDepositResponse, error) {
+	out := new(MsgDepositResponse)
+	err := c.cc.Invoke(ctx, "/bze.daodao.Msg/Deposit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateDepositConfig(ctx context.Context, in *MsgUpdateDepositConfig, opts ...grpc.CallOption) (*MsgUpdateDepositConfigResponse, error) {
+	out := new(MsgUpdateDepositConfigResponse)
+	err := c.cc.Invoke(ctx, "/bze.daodao.Msg/UpdateDepositConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ExecuteProposal(ctx context.Context, in *MsgExecuteProposal, opts ...grpc.CallOption) (*MsgExecuteProposalResponse, error) {
+	out := new(MsgExecuteProposalResponse)
+	err := c.cc.Invoke(ctx, "/bze.daodao.Msg/ExecuteProposal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) RenounceAdmin(ctx context.Context, in *MsgRenounceAdmin, opts ...grpc.CallOption) (*MsgRenounceAdminResponse, error) {
+	out := new(MsgRenounceAdminResponse)
+	err := c.cc.Invoke(ctx, "/bze.daodao.Msg/RenounceAdmin", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateVotingBackend(ctx context.Context, in *MsgUpdateVotingBackend, opts ...grpc.CallOption) (*MsgUpdateVotingBackendResponse, error) {
+	out := new(MsgUpdateVotingBackendResponse)
+	err := c.cc.Invoke(ctx, "/bze.daodao.Msg/UpdateVotingBackend", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) CreatePoll(ctx context.Context, in *MsgCreatePoll, opts ...grpc.CallOption) (*MsgCreatePollResponse, error) {
+	out := new(MsgCreatePollResponse)
+	err := c.cc.Invoke(ctx, "/bze.daodao.Msg/CreatePoll", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) VoteOnPoll(ctx context.Context, in *MsgVoteOnPoll, opts ...grpc.CallOption) (*MsgVoteOnPollResponse, error) {
+	out := new(MsgVoteOnPollResponse)
+	err := c.cc.Invoke(ctx, "/bze.daodao.Msg/VoteOnPoll", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) DepositOnPoll(ctx context.Context, in *MsgDepositOnPoll, opts ...grpc.CallOption) (*MsgDepositOnPollResponse, error) {
+	out := new(MsgDepositOnPollResponse)
+	err := c.cc.Invoke(ctx, "/bze.daodao.Msg/DepositOnPoll", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// UpdateParams defines a (governance) operation for updating the module
-	// parameters. The authority defaults to the x/gov module account.
+	// UpdateParams updates the module-level params. Chain-gov authority.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	// CreateDao creates a new DAO, registers a BaseAccount for it at a
+	// deterministic address, and burns the creation fee (if configured).
+	CreateDao(context.Context, *MsgCreateDao) (*MsgCreateDaoResponse, error)
+	// UpdateDaoMetadata updates a DAO's name / description / image / links.
+	// Admin-gated.
+	UpdateDaoMetadata(context.Context, *MsgUpdateDaoMetadata) (*MsgUpdateDaoMetadataResponse, error)
+	// UpdateDaoAdmin nominates a new admin. The nominee must call
+	// AcceptDaoAdmin to complete the transfer. Admin-gated.
+	UpdateDaoAdmin(context.Context, *MsgUpdateDaoAdmin) (*MsgUpdateDaoAdminResponse, error)
+	// AcceptDaoAdmin completes the admin handoff initiated by UpdateDaoAdmin.
+	// Must be signed by the nominee (pending_admin).
+	AcceptDaoAdmin(context.Context, *MsgAcceptDaoAdmin) (*MsgAcceptDaoAdminResponse, error)
+	// UpdateMembers adds / removes / re-weights members of a STATIC DAO.
+	// Admin-gated. Rejected for REWARD_STAKED DAOs (their membership flows
+	// through rewards.MsgJoinStaking / MsgExitStaking).
+	UpdateMembers(context.Context, *MsgUpdateMembers) (*MsgUpdateMembersResponse, error)
+	// CreateProposal submits a new proposal on a DAO. Snapshot is taken at
+	// creation; the proposal goes straight to VOTING in Epic 3
+	// (DEPOSIT_PERIOD is added in Epic 4). The `msgs` bundle is stored for
+	// later execution by Epic 5.
+	CreateProposal(context.Context, *MsgCreateProposal) (*MsgCreateProposalResponse, error)
+	// Vote casts (or, when revote is enabled, replaces) the signer's vote
+	// on an open proposal. Voter power is read from the proposal's snapshot.
+	Vote(context.Context, *MsgVote) (*MsgVoteResponse, error)
+	// UpdateGovernanceConfig replaces the DAO's proposal-track configuration.
+	// Admin-gated. Existing proposals retain their frozen
+	// governance_snapshot; new proposals adopt the new config.
+	UpdateGovernanceConfig(context.Context, *MsgUpdateGovernanceConfig) (*MsgUpdateGovernanceConfigResponse, error)
+	// Deposit tops up a DEPOSIT_PERIOD proposal's collected deposit. Anyone
+	// may deposit. The amount must use the proposal's deposit_snapshot
+	// min_deposit.denom. Reaching min_deposit transitions the proposal to
+	// VOTING in the same tx.
+	Deposit(context.Context, *MsgDeposit) (*MsgDepositResponse, error)
+	// UpdateDepositConfig replaces a DAO's deposit-period configuration.
+	// Admin-gated. Existing proposals retain their frozen deposit_snapshot;
+	// new proposals adopt the new config.
+	UpdateDepositConfig(context.Context, *MsgUpdateDepositConfig) (*MsgUpdateDepositConfigResponse, error)
+	// ExecuteProposal dispatches a PASSED proposal's msgs[] atomically as
+	// the DAO's account. Any address may submit; the signer of the tx is
+	// unrelated to who the dispatched messages claim as their signer (always
+	// the DAO).
+	ExecuteProposal(context.Context, *MsgExecuteProposal) (*MsgExecuteProposalResponse, error)
+	// RenounceAdmin flips a DAO from admin-controlled to self-governed by
+	// setting admin = dao.account_address. After this, only proposals can
+	// mutate the DAO (because handlers gate on `assertAdmin`, which now
+	// accepts only the DAO's own account).
+	RenounceAdmin(context.Context, *MsgRenounceAdmin) (*MsgRenounceAdminResponse, error)
+	// UpdateVotingBackend replaces the DAO's voting-power source. Same-type
+	// only in v1: STATIC → STATIC (use MsgUpdateMembers instead is also
+	// valid), REWARD_STAKED → REWARD_STAKED with the new program's creator
+	// matching dao.account_address and lock >= governance.voting_period.
+	// Cross-type migration (STATIC ↔ REWARD_STAKED) is rejected.
+	UpdateVotingBackend(context.Context, *MsgUpdateVotingBackend) (*MsgUpdateVotingBackendResponse, error)
+	// CreatePoll opens an informational poll on a DAO. Unlike CreateProposal,
+	// a poll has no executable bundle — its terminal state surfaces a single
+	// winning_choice_index. Uses the same DAO deposit + voting_period config
+	// as proposals.
+	CreatePoll(context.Context, *MsgCreatePoll) (*MsgCreatePollResponse, error)
+	// VoteOnPoll casts (or replaces, with revote enabled) the signer's
+	// approval-style selection on an open poll. Each chosen option receives
+	// the voter's full snapshot power.
+	VoteOnPoll(context.Context, *MsgVoteOnPoll) (*MsgVoteOnPollResponse, error)
+	// DepositOnPoll tops up a DEPOSIT_PERIOD poll's escrow. Reaching
+	// min_deposit transitions the poll to VOTING.
+	DepositOnPoll(context.Context, *MsgDepositOnPoll) (*MsgDepositOnPollResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -206,6 +2702,54 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) UpdateParams(ctx context.Context, req *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+}
+func (*UnimplementedMsgServer) CreateDao(ctx context.Context, req *MsgCreateDao) (*MsgCreateDaoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateDao not implemented")
+}
+func (*UnimplementedMsgServer) UpdateDaoMetadata(ctx context.Context, req *MsgUpdateDaoMetadata) (*MsgUpdateDaoMetadataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDaoMetadata not implemented")
+}
+func (*UnimplementedMsgServer) UpdateDaoAdmin(ctx context.Context, req *MsgUpdateDaoAdmin) (*MsgUpdateDaoAdminResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDaoAdmin not implemented")
+}
+func (*UnimplementedMsgServer) AcceptDaoAdmin(ctx context.Context, req *MsgAcceptDaoAdmin) (*MsgAcceptDaoAdminResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AcceptDaoAdmin not implemented")
+}
+func (*UnimplementedMsgServer) UpdateMembers(ctx context.Context, req *MsgUpdateMembers) (*MsgUpdateMembersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMembers not implemented")
+}
+func (*UnimplementedMsgServer) CreateProposal(ctx context.Context, req *MsgCreateProposal) (*MsgCreateProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateProposal not implemented")
+}
+func (*UnimplementedMsgServer) Vote(ctx context.Context, req *MsgVote) (*MsgVoteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Vote not implemented")
+}
+func (*UnimplementedMsgServer) UpdateGovernanceConfig(ctx context.Context, req *MsgUpdateGovernanceConfig) (*MsgUpdateGovernanceConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateGovernanceConfig not implemented")
+}
+func (*UnimplementedMsgServer) Deposit(ctx context.Context, req *MsgDeposit) (*MsgDepositResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Deposit not implemented")
+}
+func (*UnimplementedMsgServer) UpdateDepositConfig(ctx context.Context, req *MsgUpdateDepositConfig) (*MsgUpdateDepositConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDepositConfig not implemented")
+}
+func (*UnimplementedMsgServer) ExecuteProposal(ctx context.Context, req *MsgExecuteProposal) (*MsgExecuteProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExecuteProposal not implemented")
+}
+func (*UnimplementedMsgServer) RenounceAdmin(ctx context.Context, req *MsgRenounceAdmin) (*MsgRenounceAdminResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RenounceAdmin not implemented")
+}
+func (*UnimplementedMsgServer) UpdateVotingBackend(ctx context.Context, req *MsgUpdateVotingBackend) (*MsgUpdateVotingBackendResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateVotingBackend not implemented")
+}
+func (*UnimplementedMsgServer) CreatePoll(ctx context.Context, req *MsgCreatePoll) (*MsgCreatePollResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreatePoll not implemented")
+}
+func (*UnimplementedMsgServer) VoteOnPoll(ctx context.Context, req *MsgVoteOnPoll) (*MsgVoteOnPollResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VoteOnPoll not implemented")
+}
+func (*UnimplementedMsgServer) DepositOnPoll(ctx context.Context, req *MsgDepositOnPoll) (*MsgDepositOnPollResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DepositOnPoll not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -230,6 +2774,294 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreateDao_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateDao)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateDao(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.daodao.Msg/CreateDao",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateDao(ctx, req.(*MsgCreateDao))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateDaoMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateDaoMetadata)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateDaoMetadata(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.daodao.Msg/UpdateDaoMetadata",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateDaoMetadata(ctx, req.(*MsgUpdateDaoMetadata))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateDaoAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateDaoAdmin)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateDaoAdmin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.daodao.Msg/UpdateDaoAdmin",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateDaoAdmin(ctx, req.(*MsgUpdateDaoAdmin))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_AcceptDaoAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAcceptDaoAdmin)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).AcceptDaoAdmin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.daodao.Msg/AcceptDaoAdmin",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).AcceptDaoAdmin(ctx, req.(*MsgAcceptDaoAdmin))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateMembers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateMembers)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateMembers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.daodao.Msg/UpdateMembers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateMembers(ctx, req.(*MsgUpdateMembers))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_CreateProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateProposal)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.daodao.Msg/CreateProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateProposal(ctx, req.(*MsgCreateProposal))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_Vote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgVote)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).Vote(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.daodao.Msg/Vote",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).Vote(ctx, req.(*MsgVote))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateGovernanceConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateGovernanceConfig)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateGovernanceConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.daodao.Msg/UpdateGovernanceConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateGovernanceConfig(ctx, req.(*MsgUpdateGovernanceConfig))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_Deposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDeposit)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).Deposit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.daodao.Msg/Deposit",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).Deposit(ctx, req.(*MsgDeposit))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateDepositConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateDepositConfig)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateDepositConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.daodao.Msg/UpdateDepositConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateDepositConfig(ctx, req.(*MsgUpdateDepositConfig))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ExecuteProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgExecuteProposal)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ExecuteProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.daodao.Msg/ExecuteProposal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ExecuteProposal(ctx, req.(*MsgExecuteProposal))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_RenounceAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRenounceAdmin)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RenounceAdmin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.daodao.Msg/RenounceAdmin",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RenounceAdmin(ctx, req.(*MsgRenounceAdmin))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateVotingBackend_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateVotingBackend)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateVotingBackend(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.daodao.Msg/UpdateVotingBackend",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateVotingBackend(ctx, req.(*MsgUpdateVotingBackend))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_CreatePoll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreatePoll)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreatePoll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.daodao.Msg/CreatePoll",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreatePoll(ctx, req.(*MsgCreatePoll))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_VoteOnPoll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgVoteOnPoll)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).VoteOnPoll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.daodao.Msg/VoteOnPoll",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).VoteOnPoll(ctx, req.(*MsgVoteOnPoll))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_DepositOnPoll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDepositOnPoll)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).DepositOnPoll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.daodao.Msg/DepositOnPoll",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).DepositOnPoll(ctx, req.(*MsgDepositOnPoll))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "bze.daodao.Msg",
@@ -238,6 +3070,70 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateParams",
 			Handler:    _Msg_UpdateParams_Handler,
+		},
+		{
+			MethodName: "CreateDao",
+			Handler:    _Msg_CreateDao_Handler,
+		},
+		{
+			MethodName: "UpdateDaoMetadata",
+			Handler:    _Msg_UpdateDaoMetadata_Handler,
+		},
+		{
+			MethodName: "UpdateDaoAdmin",
+			Handler:    _Msg_UpdateDaoAdmin_Handler,
+		},
+		{
+			MethodName: "AcceptDaoAdmin",
+			Handler:    _Msg_AcceptDaoAdmin_Handler,
+		},
+		{
+			MethodName: "UpdateMembers",
+			Handler:    _Msg_UpdateMembers_Handler,
+		},
+		{
+			MethodName: "CreateProposal",
+			Handler:    _Msg_CreateProposal_Handler,
+		},
+		{
+			MethodName: "Vote",
+			Handler:    _Msg_Vote_Handler,
+		},
+		{
+			MethodName: "UpdateGovernanceConfig",
+			Handler:    _Msg_UpdateGovernanceConfig_Handler,
+		},
+		{
+			MethodName: "Deposit",
+			Handler:    _Msg_Deposit_Handler,
+		},
+		{
+			MethodName: "UpdateDepositConfig",
+			Handler:    _Msg_UpdateDepositConfig_Handler,
+		},
+		{
+			MethodName: "ExecuteProposal",
+			Handler:    _Msg_ExecuteProposal_Handler,
+		},
+		{
+			MethodName: "RenounceAdmin",
+			Handler:    _Msg_RenounceAdmin_Handler,
+		},
+		{
+			MethodName: "UpdateVotingBackend",
+			Handler:    _Msg_UpdateVotingBackend_Handler,
+		},
+		{
+			MethodName: "CreatePoll",
+			Handler:    _Msg_CreatePoll_Handler,
+		},
+		{
+			MethodName: "VoteOnPoll",
+			Handler:    _Msg_VoteOnPoll_Handler,
+		},
+		{
+			MethodName: "DepositOnPoll",
+			Handler:    _Msg_DepositOnPoll_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -307,6 +3203,1389 @@ func (m *MsgUpdateParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgCreateDao) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateDao) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateDao) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Deposit.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	i--
+	dAtA[i] = 0xe2
+	{
+		size, err := m.Governance.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xc
+	i--
+	dAtA[i] = 0xc2
+	if m.VotingConfig != nil {
+		{
+			size := m.VotingConfig.Size()
+			i -= size
+			if _, err := m.VotingConfig.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+		}
+	}
+	if m.ParentDaoId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.ParentDaoId))
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	{
+		size, err := m.Metadata.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateDao_Static) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateDao_Static) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Static != nil {
+		{
+			size, err := m.Static.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0xa2
+	}
+	return len(dAtA) - i, nil
+}
+func (m *MsgCreateDao_RewardStaked) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateDao_RewardStaked) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.RewardStaked != nil {
+		{
+			size, err := m.RewardStaked.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6
+		i--
+		dAtA[i] = 0xaa
+	}
+	return len(dAtA) - i, nil
+}
+func (m *StaticVotingConfig) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *StaticVotingConfig) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *StaticVotingConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Members) > 0 {
+		for iNdEx := len(m.Members) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Members[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *RewardStakedVotingConfig) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RewardStakedVotingConfig) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *RewardStakedVotingConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.RewardId) > 0 {
+		i -= len(m.RewardId)
+		copy(dAtA[i:], m.RewardId)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.RewardId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateDaoResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateDaoResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateDaoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.AccountAddress) > 0 {
+		i -= len(m.AccountAddress)
+		copy(dAtA[i:], m.AccountAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.AccountAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.DaoId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.DaoId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateDaoMetadata) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateDaoMetadata) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateDaoMetadata) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Metadata.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if m.DaoId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.DaoId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateDaoMetadataResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateDaoMetadataResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateDaoMetadataResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateDaoAdmin) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateDaoAdmin) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateDaoAdmin) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.NewAdmin) > 0 {
+		i -= len(m.NewAdmin)
+		copy(dAtA[i:], m.NewAdmin)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.NewAdmin)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.DaoId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.DaoId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateDaoAdminResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateDaoAdminResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateDaoAdminResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgAcceptDaoAdmin) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgAcceptDaoAdmin) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgAcceptDaoAdmin) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.DaoId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.DaoId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.NewAdmin) > 0 {
+		i -= len(m.NewAdmin)
+		copy(dAtA[i:], m.NewAdmin)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.NewAdmin)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgAcceptDaoAdminResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgAcceptDaoAdminResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgAcceptDaoAdminResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateMembers) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateMembers) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateMembers) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Remove) > 0 {
+		for iNdEx := len(m.Remove) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Remove[iNdEx])
+			copy(dAtA[i:], m.Remove[iNdEx])
+			i = encodeVarintTx(dAtA, i, uint64(len(m.Remove[iNdEx])))
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if len(m.Add) > 0 {
+		for iNdEx := len(m.Add) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Add[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if m.DaoId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.DaoId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateMembersResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateMembersResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateMembersResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.InitialDeposit.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x32
+	if len(m.Msgs) > 0 {
+		for iNdEx := len(m.Msgs) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Msgs[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.DaoId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.DaoId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Proposer) > 0 {
+		i -= len(m.Proposer)
+		copy(dAtA[i:], m.Proposer)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Proposer)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateProposalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateProposalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ProposalId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.ProposalId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgVote) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgVote) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgVote) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Option != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.Option))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.ProposalId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.ProposalId))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.DaoId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.DaoId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Voter) > 0 {
+		i -= len(m.Voter)
+		copy(dAtA[i:], m.Voter)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Voter)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgVoteResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgVoteResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgVoteResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateGovernanceConfig) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateGovernanceConfig) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateGovernanceConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Governance.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if m.DaoId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.DaoId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateGovernanceConfigResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateGovernanceConfigResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateGovernanceConfigResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgDeposit) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgDeposit) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgDeposit) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Amount.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	if m.ProposalId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.ProposalId))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.DaoId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.DaoId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Depositor) > 0 {
+		i -= len(m.Depositor)
+		copy(dAtA[i:], m.Depositor)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Depositor)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgDepositResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgDepositResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgDepositResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateDepositConfig) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateDepositConfig) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateDepositConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Deposit.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if m.DaoId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.DaoId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateDepositConfigResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateDepositConfigResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateDepositConfigResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgExecuteProposal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgExecuteProposal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgExecuteProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ProposalId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.ProposalId))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.DaoId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.DaoId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Executor) > 0 {
+		i -= len(m.Executor)
+		copy(dAtA[i:], m.Executor)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Executor)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgExecuteProposalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgExecuteProposalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgExecuteProposalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRenounceAdmin) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRenounceAdmin) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRenounceAdmin) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.DaoId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.DaoId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRenounceAdminResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRenounceAdminResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRenounceAdminResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateVotingBackend) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateVotingBackend) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateVotingBackend) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.VotingConfig != nil {
+		{
+			size := m.VotingConfig.Size()
+			i -= size
+			if _, err := m.VotingConfig.MarshalTo(dAtA[i:]); err != nil {
+				return 0, err
+			}
+		}
+	}
+	if m.DaoId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.DaoId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateVotingBackend_Static) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateVotingBackend_Static) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.Static != nil {
+		{
+			size, err := m.Static.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
+	return len(dAtA) - i, nil
+}
+func (m *MsgUpdateVotingBackend_RewardStaked) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateVotingBackend_RewardStaked) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	if m.RewardStaked != nil {
+		{
+			size, err := m.RewardStaked.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x22
+	}
+	return len(dAtA) - i, nil
+}
+func (m *MsgUpdateVotingBackendResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateVotingBackendResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateVotingBackendResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreatePoll) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreatePoll) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreatePoll) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.InitialDeposit.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x4a
+	if m.IncludeNota {
+		i--
+		if m.IncludeNota {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x40
+	}
+	if m.QuorumBps != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.QuorumBps))
+		i--
+		dAtA[i] = 0x38
+	}
+	if m.MaxSelections != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.MaxSelections))
+		i--
+		dAtA[i] = 0x30
+	}
+	if len(m.Choices) > 0 {
+		for iNdEx := len(m.Choices) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Choices[iNdEx])
+			copy(dAtA[i:], m.Choices[iNdEx])
+			i = encodeVarintTx(dAtA, i, uint64(len(m.Choices[iNdEx])))
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.DaoId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.DaoId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Proposer) > 0 {
+		i -= len(m.Proposer)
+		copy(dAtA[i:], m.Proposer)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Proposer)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreatePollResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreatePollResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreatePollResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.PollId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PollId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgVoteOnPoll) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgVoteOnPoll) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgVoteOnPoll) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ChoiceIndices) > 0 {
+		dAtA16 := make([]byte, len(m.ChoiceIndices)*10)
+		var j15 int
+		for _, num := range m.ChoiceIndices {
+			for num >= 1<<7 {
+				dAtA16[j15] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j15++
+			}
+			dAtA16[j15] = uint8(num)
+			j15++
+		}
+		i -= j15
+		copy(dAtA[i:], dAtA16[:j15])
+		i = encodeVarintTx(dAtA, i, uint64(j15))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.PollId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PollId))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.DaoId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.DaoId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Voter) > 0 {
+		i -= len(m.Voter)
+		copy(dAtA[i:], m.Voter)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Voter)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgVoteOnPollResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgVoteOnPollResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgVoteOnPollResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgDepositOnPoll) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgDepositOnPoll) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgDepositOnPoll) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Amount.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	if m.PollId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.PollId))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.DaoId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.DaoId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Depositor) > 0 {
+		i -= len(m.Depositor)
+		copy(dAtA[i:], m.Depositor)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Depositor)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgDepositOnPollResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgDepositOnPollResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgDepositOnPollResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -334,6 +4613,603 @@ func (m *MsgUpdateParams) Size() (n int) {
 }
 
 func (m *MsgUpdateParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgCreateDao) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Metadata.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = len(m.Admin)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.ParentDaoId != 0 {
+		n += 1 + sovTx(uint64(m.ParentDaoId))
+	}
+	if m.VotingConfig != nil {
+		n += m.VotingConfig.Size()
+	}
+	l = m.Governance.Size()
+	n += 2 + l + sovTx(uint64(l))
+	l = m.Deposit.Size()
+	n += 2 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgCreateDao_Static) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Static != nil {
+		l = m.Static.Size()
+		n += 2 + l + sovTx(uint64(l))
+	}
+	return n
+}
+func (m *MsgCreateDao_RewardStaked) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.RewardStaked != nil {
+		l = m.RewardStaked.Size()
+		n += 2 + l + sovTx(uint64(l))
+	}
+	return n
+}
+func (m *StaticVotingConfig) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Members) > 0 {
+		for _, e := range m.Members {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *RewardStakedVotingConfig) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.RewardId)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgCreateDaoResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.DaoId != 0 {
+		n += 1 + sovTx(uint64(m.DaoId))
+	}
+	l = len(m.AccountAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateDaoMetadata) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.DaoId != 0 {
+		n += 1 + sovTx(uint64(m.DaoId))
+	}
+	l = m.Metadata.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUpdateDaoMetadataResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateDaoAdmin) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.DaoId != 0 {
+		n += 1 + sovTx(uint64(m.DaoId))
+	}
+	l = len(m.NewAdmin)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateDaoAdminResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgAcceptDaoAdmin) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.NewAdmin)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.DaoId != 0 {
+		n += 1 + sovTx(uint64(m.DaoId))
+	}
+	return n
+}
+
+func (m *MsgAcceptDaoAdminResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateMembers) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.DaoId != 0 {
+		n += 1 + sovTx(uint64(m.DaoId))
+	}
+	if len(m.Add) > 0 {
+		for _, e := range m.Add {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if len(m.Remove) > 0 {
+		for _, s := range m.Remove {
+			l = len(s)
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgUpdateMembersResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgCreateProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Proposer)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.DaoId != 0 {
+		n += 1 + sovTx(uint64(m.DaoId))
+	}
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.Msgs) > 0 {
+		for _, e := range m.Msgs {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	l = m.InitialDeposit.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgCreateProposalResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ProposalId != 0 {
+		n += 1 + sovTx(uint64(m.ProposalId))
+	}
+	return n
+}
+
+func (m *MsgVote) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Voter)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.DaoId != 0 {
+		n += 1 + sovTx(uint64(m.DaoId))
+	}
+	if m.ProposalId != 0 {
+		n += 1 + sovTx(uint64(m.ProposalId))
+	}
+	if m.Option != 0 {
+		n += 1 + sovTx(uint64(m.Option))
+	}
+	return n
+}
+
+func (m *MsgVoteResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateGovernanceConfig) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.DaoId != 0 {
+		n += 1 + sovTx(uint64(m.DaoId))
+	}
+	l = m.Governance.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUpdateGovernanceConfigResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgDeposit) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Depositor)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.DaoId != 0 {
+		n += 1 + sovTx(uint64(m.DaoId))
+	}
+	if m.ProposalId != 0 {
+		n += 1 + sovTx(uint64(m.ProposalId))
+	}
+	l = m.Amount.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgDepositResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateDepositConfig) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.DaoId != 0 {
+		n += 1 + sovTx(uint64(m.DaoId))
+	}
+	l = m.Deposit.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUpdateDepositConfigResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgExecuteProposal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Executor)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.DaoId != 0 {
+		n += 1 + sovTx(uint64(m.DaoId))
+	}
+	if m.ProposalId != 0 {
+		n += 1 + sovTx(uint64(m.ProposalId))
+	}
+	return n
+}
+
+func (m *MsgExecuteProposalResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgRenounceAdmin) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.DaoId != 0 {
+		n += 1 + sovTx(uint64(m.DaoId))
+	}
+	return n
+}
+
+func (m *MsgRenounceAdminResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateVotingBackend) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.DaoId != 0 {
+		n += 1 + sovTx(uint64(m.DaoId))
+	}
+	if m.VotingConfig != nil {
+		n += m.VotingConfig.Size()
+	}
+	return n
+}
+
+func (m *MsgUpdateVotingBackend_Static) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Static != nil {
+		l = m.Static.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+func (m *MsgUpdateVotingBackend_RewardStaked) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.RewardStaked != nil {
+		l = m.RewardStaked.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+func (m *MsgUpdateVotingBackendResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgCreatePoll) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Proposer)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.DaoId != 0 {
+		n += 1 + sovTx(uint64(m.DaoId))
+	}
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.Choices) > 0 {
+		for _, s := range m.Choices {
+			l = len(s)
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if m.MaxSelections != 0 {
+		n += 1 + sovTx(uint64(m.MaxSelections))
+	}
+	if m.QuorumBps != 0 {
+		n += 1 + sovTx(uint64(m.QuorumBps))
+	}
+	if m.IncludeNota {
+		n += 2
+	}
+	l = m.InitialDeposit.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgCreatePollResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PollId != 0 {
+		n += 1 + sovTx(uint64(m.PollId))
+	}
+	return n
+}
+
+func (m *MsgVoteOnPoll) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Voter)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.DaoId != 0 {
+		n += 1 + sovTx(uint64(m.DaoId))
+	}
+	if m.PollId != 0 {
+		n += 1 + sovTx(uint64(m.PollId))
+	}
+	if len(m.ChoiceIndices) > 0 {
+		l = 0
+		for _, e := range m.ChoiceIndices {
+			l += sovTx(uint64(e))
+		}
+		n += 1 + sovTx(uint64(l)) + l
+	}
+	return n
+}
+
+func (m *MsgVoteOnPollResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgDepositOnPoll) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Depositor)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.DaoId != 0 {
+		n += 1 + sovTx(uint64(m.DaoId))
+	}
+	if m.PollId != 0 {
+		n += 1 + sovTx(uint64(m.PollId))
+	}
+	l = m.Amount.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgDepositOnPollResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -490,6 +5366,3719 @@ func (m *MsgUpdateParamsResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUpdateParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateDao) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateDao: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateDao: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Metadata.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ParentDaoId", wireType)
+			}
+			m.ParentDaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ParentDaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 100:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Static", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &StaticVotingConfig{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.VotingConfig = &MsgCreateDao_Static{v}
+			iNdEx = postIndex
+		case 101:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardStaked", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &RewardStakedVotingConfig{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.VotingConfig = &MsgCreateDao_RewardStaked{v}
+			iNdEx = postIndex
+		case 200:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Governance", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Governance.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 300:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Deposit", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Deposit.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *StaticVotingConfig) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: StaticVotingConfig: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: StaticVotingConfig: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Members", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Members = append(m.Members, StaticMember{})
+			if err := m.Members[len(m.Members)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RewardStakedVotingConfig) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RewardStakedVotingConfig: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RewardStakedVotingConfig: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RewardId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateDaoResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateDaoResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateDaoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+			}
+			m.DaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccountAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AccountAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateDaoMetadata) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateDaoMetadata: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateDaoMetadata: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+			}
+			m.DaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Metadata.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateDaoMetadataResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateDaoMetadataResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateDaoMetadataResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateDaoAdmin) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateDaoAdmin: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateDaoAdmin: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+			}
+			m.DaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NewAdmin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NewAdmin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateDaoAdminResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateDaoAdminResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateDaoAdminResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgAcceptDaoAdmin) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgAcceptDaoAdmin: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgAcceptDaoAdmin: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NewAdmin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NewAdmin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+			}
+			m.DaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgAcceptDaoAdminResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgAcceptDaoAdminResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgAcceptDaoAdminResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateMembers) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateMembers: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateMembers: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+			}
+			m.DaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Add", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Add = append(m.Add, StaticMember{})
+			if err := m.Add[len(m.Add)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Remove", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Remove = append(m.Remove, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateMembersResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateMembersResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateMembersResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Proposer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Proposer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+			}
+			m.DaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Msgs", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Msgs = append(m.Msgs, &types.Any{})
+			if err := m.Msgs[len(m.Msgs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InitialDeposit", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.InitialDeposit.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateProposalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateProposalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProposalId", wireType)
+			}
+			m.ProposalId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProposalId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgVote) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgVote: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgVote: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Voter", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Voter = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+			}
+			m.DaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProposalId", wireType)
+			}
+			m.ProposalId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProposalId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Option", wireType)
+			}
+			m.Option = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Option |= VoteOption(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgVoteResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgVoteResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgVoteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateGovernanceConfig) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateGovernanceConfig: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateGovernanceConfig: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+			}
+			m.DaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Governance", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Governance.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateGovernanceConfigResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateGovernanceConfigResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateGovernanceConfigResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgDeposit) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgDeposit: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgDeposit: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Depositor", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Depositor = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+			}
+			m.DaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProposalId", wireType)
+			}
+			m.ProposalId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProposalId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgDepositResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgDepositResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgDepositResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateDepositConfig) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateDepositConfig: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateDepositConfig: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+			}
+			m.DaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Deposit", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Deposit.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateDepositConfigResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateDepositConfigResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateDepositConfigResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgExecuteProposal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgExecuteProposal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgExecuteProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Executor", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Executor = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+			}
+			m.DaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProposalId", wireType)
+			}
+			m.ProposalId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ProposalId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgExecuteProposalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgExecuteProposalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgExecuteProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRenounceAdmin) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRenounceAdmin: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRenounceAdmin: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+			}
+			m.DaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRenounceAdminResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRenounceAdminResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRenounceAdminResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateVotingBackend) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateVotingBackend: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateVotingBackend: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+			}
+			m.DaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Static", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &StaticVotingConfig{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.VotingConfig = &MsgUpdateVotingBackend_Static{v}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardStaked", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &RewardStakedVotingConfig{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.VotingConfig = &MsgUpdateVotingBackend_RewardStaked{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateVotingBackendResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateVotingBackendResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateVotingBackendResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreatePoll) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreatePoll: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreatePoll: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Proposer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Proposer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+			}
+			m.DaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Choices", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Choices = append(m.Choices, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxSelections", wireType)
+			}
+			m.MaxSelections = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxSelections |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QuorumBps", wireType)
+			}
+			m.QuorumBps = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.QuorumBps |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IncludeNota", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IncludeNota = bool(v != 0)
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InitialDeposit", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.InitialDeposit.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreatePollResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreatePollResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreatePollResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PollId", wireType)
+			}
+			m.PollId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PollId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgVoteOnPoll) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgVoteOnPoll: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgVoteOnPoll: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Voter", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Voter = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+			}
+			m.DaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PollId", wireType)
+			}
+			m.PollId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PollId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType == 0 {
+				var v uint32
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTx
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.ChoiceIndices = append(m.ChoiceIndices, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTx
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthTx
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthTx
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.ChoiceIndices) == 0 {
+					m.ChoiceIndices = make([]uint32, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint32
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTx
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint32(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.ChoiceIndices = append(m.ChoiceIndices, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChoiceIndices", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgVoteOnPollResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgVoteOnPollResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgVoteOnPollResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgDepositOnPoll) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgDepositOnPoll: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgDepositOnPoll: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Depositor", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Depositor = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+			}
+			m.DaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PollId", wireType)
+			}
+			m.PollId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PollId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgDepositOnPollResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgDepositOnPollResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgDepositOnPollResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

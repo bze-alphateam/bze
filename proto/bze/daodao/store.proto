@@ -1,0 +1,575 @@
+syntax = "proto3";
+package bze.daodao;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/daodao/types";
+
+// DaoMetadata holds a DAO's identity, branding, and social link fields.
+// Length limits are enforced by ValidateBasic; see Epic 1 spec.
+message DaoMetadata {
+  string name        = 1;
+  string description = 2;
+  string image_url   = 3;
+
+  // Named social link fields. Each is a free-form string capped at 256 chars.
+  string twitter  = 4;
+  string discord  = 5;
+  string telegram = 6;
+  string website  = 7;
+
+  // other is a free-form field, e.g. a Linktree URL, IPFS URI, or arbitrary
+  // short text. Capped at 256 chars.
+  string other = 8;
+}
+
+// Dao is an on-chain governance entity. Each DAO is also a BaseAccount in
+// x/auth that can hold any bank coins. The DAO signs messages only via
+// proposals that pass governance (Epic 5).
+message Dao {
+  // id is the DAO's unique identifier (assigned at creation).
+  uint64 id = 1;
+
+  // metadata holds the DAO's name, description, image, and links.
+  DaoMetadata metadata = 2 [(gogoproto.nullable) = false];
+
+  // creator is the address that originally created the DAO via MsgCreateDao.
+  // Recorded for indexing (`DaosByCreator`); confers no authority.
+  string creator = 3;
+
+  // account_address is the deterministic on-chain address for this DAO's
+  // BaseAccount. Derived from `id` via `address.Module(ModuleName, ...)`.
+  string account_address = 4;
+
+  // admin is the current authority that may directly mutate the DAO. This is
+  // the ONLY authority concept (README D13). A DAO whose admin equals its own
+  // account_address is fully self-governed.
+  string admin = 5;
+
+  // pending_admin is set by MsgUpdateDaoAdmin (nominate) and cleared by
+  // MsgAcceptDaoAdmin (accept). Empty when no handoff is in flight.
+  string pending_admin = 6;
+
+  // parent_dao_id references a parent DAO for registry / discovery purposes.
+  // Purely declarative — it does NOT confer admin authority. 0 = no parent.
+  // Immutable after creation.
+  uint64 parent_dao_id = 7;
+
+  // created_at_block is the block height at which this DAO was created.
+  int64 created_at_block = 8;
+
+  // voting_backend selects which membership / voting-power source this DAO
+  // uses. STATIC: explicit (address, weight) members held inside the daodao
+  // store. REWARD_STAKED: voting power proxied from a rewards.StakingReward
+  // program (see `reward_id`). UNSPECIFIED is invalid.
+  //
+  // Epic 2 allows only STATIC at creation; REWARD_STAKED becomes reachable
+  // via Epic 5's MsgUpdateVotingBackend (after the DAO has created a
+  // rewards program whose creator equals its account_address).
+  VotingBackendType voting_backend = 100;
+
+  // reward_id is populated only when voting_backend == REWARD_STAKED. It
+  // identifies the rewards.StakingReward program whose participants form
+  // this DAO's voting set. Empty for STATIC DAOs.
+  string reward_id = 101;
+
+  // governance holds the DAO's proposal-track configuration: approval rule,
+  // threshold, quorum, voting period, revoting toggle. Set at creation
+  // (MsgCreateDao.governance), mutable by the admin via
+  // MsgUpdateGovernanceConfig. Changes apply to NEW proposals only —
+  // existing proposals carry a frozen copy in Proposal.governance_snapshot.
+  GovernanceConfig governance = 200 [(gogoproto.nullable) = false];
+
+  // deposit holds the DAO's proposal-deposit policy: minimum deposit
+  // (coin), deposit_period duration, forfeit routing, and post-voting
+  // refund policy. Set at creation (MsgCreateDao.deposit), mutable by
+  // the admin via MsgUpdateDepositConfig. Like governance, changes
+  // apply to NEW proposals only — in-flight proposals carry a frozen
+  // copy in Proposal.deposit_snapshot.
+  DepositConfig deposit = 300 [(gogoproto.nullable) = false];
+}
+
+// VotingBackendType identifies how a DAO derives voting power.
+enum VotingBackendType {
+  VOTING_BACKEND_UNSPECIFIED   = 0;
+  VOTING_BACKEND_STATIC        = 1;
+  VOTING_BACKEND_REWARD_STAKED = 2;
+}
+
+// StaticMember is one (address, weight) entry in a STATIC DAO's member list.
+// Weight must be strictly positive. The DAO's total voting power is the sum
+// of all members' weights.
+message StaticMember {
+  string address = 1;
+  uint64 weight  = 2;
+}
+
+// ----- Epic 3: proposals & voting -----
+
+// ApprovalRule selects how a proposal is judged at tally time.
+//
+//   WITH_QUORUM:    requires both a quorum (voted/total >= quorum_bps) AND
+//                   threshold support over yes+no (abstain contributes to
+//                   quorum but NOT to threshold).
+//   WITHOUT_QUORUM: requires yes/total >= threshold_bps. No participation
+//                   floor — no and abstain effectively block, as do non-voters.
+//
+// UNSPECIFIED is invalid in stored / submitted GovernanceConfig and is
+// rejected at validation time.
+enum ApprovalRule {
+  APPROVAL_RULE_UNSPECIFIED    = 0;
+  APPROVAL_RULE_WITH_QUORUM    = 1;
+  APPROVAL_RULE_WITHOUT_QUORUM = 2;
+}
+
+// GovernanceConfig is the per-DAO proposal-track configuration. Stored on
+// the Dao record and frozen onto each Proposal at creation
+// (Proposal.governance_snapshot) so subsequent edits do not affect in-flight
+// proposals.
+//
+// Bps fields are basis-points (1/10000): threshold_bps=5000 is 50%.
+message GovernanceConfig {
+  // approval_rule selects WITH_QUORUM vs WITHOUT_QUORUM tally semantics.
+  ApprovalRule approval_rule = 1;
+
+  // threshold_bps is the support fraction in basis points required for a
+  // proposal to pass. Validated to [1, 9900] (0.01% .. 99%).
+  uint32 threshold_bps = 2;
+
+  // quorum_bps is the participation fraction in basis points required for
+  // WITH_QUORUM proposals. Validated to [1, 8500] when approval_rule is
+  // WITH_QUORUM; MUST be 0 when approval_rule is WITHOUT_QUORUM.
+  uint32 quorum_bps = 3;
+
+  // voting_period is how long a proposal stays open for voting after it
+  // enters VOTING. Bounded by a hardcoded floor of 1h and the chain-tunable
+  // ceiling Params.max_voting_period (default 30d).
+  google.protobuf.Duration voting_period = 4 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable)    = false
+  ];
+
+  // allow_revote permits a voter to call MsgVote again on the same
+  // proposal, replacing their previous choice. When false, the keeper also
+  // performs the early-close check on each vote so a locked-in outcome
+  // terminates the proposal immediately.
+  bool allow_revote = 5;
+}
+
+// ProposalStatus is the lifecycle status of a Proposal.
+//
+// Epic 3 only reaches VOTING / PASSED / REJECTED. The DEPOSIT_PERIOD,
+// EXECUTED, and REJECTED_NO_DEPOSIT slots are reserved here so the wire
+// numbering is locked in for Epic 4 (deposit period) and Epic 5 (execution).
+enum ProposalStatus {
+  PROPOSAL_STATUS_UNSPECIFIED         = 0;
+  PROPOSAL_STATUS_DEPOSIT_PERIOD      = 1;  // reserved: Epic 4
+  PROPOSAL_STATUS_VOTING              = 2;
+  PROPOSAL_STATUS_PASSED              = 3;
+  PROPOSAL_STATUS_REJECTED            = 4;
+  PROPOSAL_STATUS_EXECUTED            = 5;  // reserved: Epic 5
+  PROPOSAL_STATUS_REJECTED_NO_DEPOSIT = 6;  // reserved: Epic 4
+}
+
+// VoteOption is the choice cast on a single-choice proposal.
+//
+//   YES / NO contribute to threshold.
+//   ABSTAIN contributes only to quorum (WITH_QUORUM rule).
+//   UNSPECIFIED is invalid and rejected at MsgVote validation.
+enum VoteOption {
+  VOTE_OPTION_UNSPECIFIED = 0;
+  VOTE_OPTION_YES         = 1;
+  VOTE_OPTION_NO          = 2;
+  VOTE_OPTION_ABSTAIN     = 3;
+}
+
+// Tally is the running per-option vote counts for a Proposal. Maintained
+// incrementally by MsgVote (and by revote subtractions). total_power is
+// copied from SnapshotTotal at proposal creation; subsequent membership /
+// stake changes do not move it.
+message Tally {
+  uint64 yes_power     = 1;
+  uint64 no_power      = 2;
+  uint64 abstain_power = 3;
+  uint64 total_power   = 4;
+}
+
+// Proposal is a single-choice executable governance proposal on a DAO.
+//
+// Stored at ProposalKey(dao_id, proposal_id). A separate
+// ProposalByStatusKey(dao_id, status, proposal_id) row mirrors `status`
+// for efficient status-filtered listing; both rows are updated atomically
+// on every transition.
+//
+// Snapshot semantics: at creation the keeper calls CreateSnapshot for the
+// DAO, allocates a snapshot id, and asks the voting backend to populate
+// per-address rows + a total row. `snapshot_id` references that record;
+// the snapshot is read at vote time so power is the value at proposal
+// creation, not the current value.
+//
+// `msgs` is the executable bundle. In Epic 3 it is stored and validated
+// for cardinality + decodability only; execution is deferred to Epic 5.
+message Proposal {
+  // dao_id and proposal_id together uniquely identify a Proposal. The
+  // counter is per-DAO and monotonic.
+  uint64 dao_id      = 1;
+  uint64 proposal_id = 2;
+
+  // proposer is the address that submitted MsgCreateProposal. In Epic 3
+  // the proposer must have non-zero current voting power (members only);
+  // Epic 4 relaxes this for non-members willing to attach a full deposit.
+  string proposer = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // title and description are free-form text for UI. Length-capped at
+  // ValidateBasic time.
+  string title       = 4;
+  string description = 5;
+
+  // msgs is the executable bundle (Epic 5 will dispatch these as the
+  // DAO's account). Capped at Params.max_msgs_per_proposal entries; each
+  // entry must decode via the interface registry.
+  repeated google.protobuf.Any msgs = 6 [
+    (cosmos_proto.accepts_interface) = "cosmos.base.v1beta1.Msg"
+  ];
+
+  // snapshot_id is the per-DAO snapshot allocated for this proposal.
+  // Voters' powers are read at SnapshotPower(dao_id, snapshot_id, voter).
+  uint64 snapshot_id = 7;
+
+  // created_height is the block height at which the proposal was created
+  // (recorded for indexing / audit; not used in tally math).
+  int64 created_height = 8;
+
+  // voting_end is the deadline after which the end-blocker finalizes the
+  // proposal. Equal to BlockTime(create) + governance_snapshot.voting_period.
+  google.protobuf.Timestamp voting_end = 9 [
+    (gogoproto.stdtime)  = true,
+    (gogoproto.nullable) = false
+  ];
+
+  // status is the proposal's current lifecycle position.
+  ProposalStatus status = 10;
+
+  // tally is the running per-option count. Updated on every MsgVote (and
+  // on revote subtractions). Tally.total_power is the frozen DAO total at
+  // creation time.
+  Tally tally = 11 [(gogoproto.nullable) = false];
+
+  // governance_snapshot is a frozen copy of the DAO's GovernanceConfig at
+  // creation time. Mid-flight edits to Dao.governance via
+  // MsgUpdateGovernanceConfig do NOT propagate to existing proposals; they
+  // apply to proposals created AFTER the update.
+  GovernanceConfig governance_snapshot = 12 [(gogoproto.nullable) = false];
+
+  // ----- Epic 4 deposit fields -----
+
+  // deposit_collected is the running total of deposits paid into the
+  // proposal's escrow. Denom is always deposit_snapshot.min_deposit.denom.
+  // Updated atomically by MsgDeposit (and by the initial deposit at
+  // MsgCreateProposal). On terminal status, the per-depositor breakdown
+  // in DepositRecord rows is what drives refund routing; this field is
+  // the cached sum for fast reads.
+  cosmos.base.v1beta1.Coin deposit_collected = 50 [(gogoproto.nullable) = false];
+
+  // deposit_deadline is the timestamp at which the end-blocker forfeits a
+  // DEPOSIT_PERIOD proposal that has not collected min_deposit.
+  // Equal to BlockTime(create) + deposit_snapshot.deposit_period.
+  // Unused after the proposal transitions to VOTING.
+  google.protobuf.Timestamp deposit_deadline = 51 [
+    (gogoproto.stdtime)  = true,
+    (gogoproto.nullable) = false
+  ];
+
+  // deposit_snapshot is a frozen copy of the DAO's DepositConfig at
+  // creation time. Refund/forfeit routing at terminal status reads from
+  // this snapshot rather than the live DAO config so mid-flight
+  // MsgUpdateDepositConfig calls cannot change the rules under existing
+  // proposals.
+  DepositConfig deposit_snapshot = 52 [(gogoproto.nullable) = false];
+}
+
+// Vote records a single (voter, proposal) decision. Stored at
+// VoteKey(dao_id, proposal_id, voter). Replaced in-place on revote (when
+// the DAO's governance_snapshot.allow_revote is true).
+//
+// `power` is the voter's snapshotted power (read from SnapshotPower at
+// MsgVote time); it does not move even if membership / stake changes
+// later, because Tally maintenance subtracts using this stored value.
+message Vote {
+  uint64     dao_id       = 1;
+  uint64     proposal_id  = 2;
+  string     voter        = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  VoteOption option       = 4;
+  uint64     power        = 5;
+  int64      voted_height = 6;
+}
+
+// ----- Epic 3 genesis helpers -----
+//
+// The four messages below are wire shapes used only by GenesisState (proto:
+// genesis.proto). They are not stored on chain — KV state uses raw keys
+// and uint64-marshalled values for these fields. They exist so genesis
+// export/import can round-trip the per-DAO counters and per-(dao, snapshot)
+// power tables without resorting to opaque blobs.
+
+// PerDaoUint64 is a (dao_id, value) pair. Used in genesis to serialize the
+// per-DAO ProposalIDCounter and SnapshotIDCounter, which are stored on
+// chain at one row per DAO and would otherwise need ad-hoc maps.
+message PerDaoUint64 {
+  uint64 dao_id = 1;
+  uint64 value  = 2;
+}
+
+// SnapshotPowerEntry is one row of the per-(dao, snapshot, address)
+// snapshot-power table. Serialized in genesis so in-flight proposals can
+// be replayed after import — without these rows, every vote on a
+// pre-export proposal would silently see 0 power.
+message SnapshotPowerEntry {
+  uint64 dao_id      = 1;
+  uint64 snapshot_id = 2;
+  string address     = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 power       = 4;
+}
+
+// SnapshotTotalEntry is the (dao, snapshot) → total companion to
+// SnapshotPowerEntry. Tally.total_power is frozen on the Proposal record
+// at creation, so this exists primarily for symmetry / direct queries on
+// the snapshot table (and to round-trip the on-chain row, which is what
+// Epic 3's keeper helpers read).
+message SnapshotTotalEntry {
+  uint64 dao_id      = 1;
+  uint64 snapshot_id = 2;
+  uint64 total       = 3;
+}
+
+// StaticMemberEntry is one (dao, address, weight) row of a STATIC DAO's
+// member table, serialized for genesis. The runtime stores members
+// under MemberKey(dao, addr) → weight; this proto carries that pair plus
+// the dao_id so the import path can demultiplex.
+//
+// We don't reuse `StaticMember` here because it lacks dao_id — the
+// per-DAO membership is implicit at runtime (encoded in the key prefix)
+// but must be explicit in the flat genesis list.
+//
+// Total power (StaticTotalPowerKey) is RECOMPUTED on import from the
+// per-DAO weight sum; we don't serialize it (avoids divergence between
+// the cached total and the sum-of-rows truth).
+message StaticMemberEntry {
+  uint64 dao_id  = 1;
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 weight  = 3;
+}
+
+// ----- Epic 4: deposit period -----
+
+// ForfeitDestination selects where forfeited deposits go. Applies to:
+//   - DEPOSIT_PERIOD proposals that never reach min_deposit;
+//   - VOTING proposals whose outcome + voting_refund_policy result in
+//     non-refund (i.e. policy NEVER, or policy ON_PASS with outcome
+//     REJECTED).
+//
+//   BURNER:   coins go to x/burner (permanent supply reduction).
+//   TREASURY: coins go to the DAO's own account_address (the DAO can
+//             later spend them via passed proposals).
+//
+// UNSPECIFIED is invalid and rejected at validation time.
+enum ForfeitDestination {
+  FORFEIT_DESTINATION_UNSPECIFIED = 0;
+  FORFEIT_DESTINATION_BURNER      = 1;
+  FORFEIT_DESTINATION_TREASURY    = 2;
+}
+
+// RefundPolicy selects how deposits behave once a proposal exits VOTING.
+// Independent of the DEPOSIT_PERIOD forfeiture (which is always governed
+// by ForfeitDestination).
+//
+//   ALWAYS:  refund every depositor on both PASSED and REJECTED.
+//   ON_PASS: refund only when the proposal PASSED; forfeit on REJECTED.
+//   NEVER:   forfeit on both PASSED and REJECTED.
+//
+// UNSPECIFIED is invalid and rejected at validation time.
+enum RefundPolicy {
+  REFUND_POLICY_UNSPECIFIED = 0;
+  REFUND_POLICY_ALWAYS      = 1;
+  REFUND_POLICY_ON_PASS     = 2;
+  REFUND_POLICY_NEVER       = 3;
+}
+
+// DepositConfig is the per-DAO deposit-period configuration. Frozen onto
+// each Proposal at creation (Proposal.deposit_snapshot) so subsequent
+// MsgUpdateDepositConfig edits do not change the rules for in-flight
+// proposals.
+//
+// Single-denom by design: min_deposit is a single Coin (denom + amount),
+// and every MsgDeposit / initial_deposit on the proposal must use that
+// same denom. Cross-denom deposits would let an attacker dilute refund
+// math by paying in an unrelated coin.
+message DepositConfig {
+  // min_deposit is the threshold a proposal's collected deposits must
+  // reach to leave DEPOSIT_PERIOD and enter VOTING. amount > 0; denom
+  // valid.
+  cosmos.base.v1beta1.Coin min_deposit = 1 [(gogoproto.nullable) = false];
+
+  // deposit_period is how long the deposit-collection window stays open
+  // before the end-blocker forfeits an under-funded proposal. Bounded
+  // by hardcoded floor MinDepositPeriod (1d) and Params.max_deposit_period
+  // (default 30d, chain-tunable).
+  google.protobuf.Duration deposit_period = 2 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable)    = false
+  ];
+
+  // forfeit_destination routes deposits when forfeiture fires (failed
+  // DEPOSIT_PERIOD, or VOTING terminal with NEVER / ON_PASS-and-rejected).
+  ForfeitDestination forfeit_destination = 3;
+
+  // voting_refund_policy selects the post-VOTING disposition: ALWAYS
+  // refund, ON_PASS refund, or NEVER refund.
+  RefundPolicy voting_refund_policy = 4;
+}
+
+// DepositRecord is one (proposal, depositor) row tracking how much that
+// depositor put into the proposal's escrow. Multiple deposits from the
+// same address are aggregated into a single row (amount += delta) so
+// refunds are one bank-send per depositor regardless of how many top-ups
+// they made.
+//
+// Stored at DepositRecordKey(dao_id, proposal_id, depositor). Deleted on
+// disbursement at terminal status.
+message DepositRecord {
+  uint64                   dao_id      = 1;
+  uint64                   proposal_id = 2;
+  string                   depositor   = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  cosmos.base.v1beta1.Coin amount      = 4 [(gogoproto.nullable) = false];
+}
+
+// ----- Epic 6: polls (informational, approval-style voting) -----
+
+// PollStatus tracks the lifecycle of a Poll. Mirrors ProposalStatus in
+// shape (DEPOSIT_PERIOD → VOTING → terminal) but uses CONCLUDED (with
+// winning_choice_index set) instead of PASSED/EXECUTED — polls have no
+// executable bundle.
+//
+// CLOSED is reserved as a parallel to ProposalStatus.CLOSED in case a
+// future cleanup pass needs it; v1 never reaches CLOSED.
+enum PollStatus {
+  POLL_STATUS_UNSPECIFIED         = 0;
+  POLL_STATUS_DEPOSIT_PERIOD      = 1;
+  POLL_STATUS_VOTING              = 2;
+  POLL_STATUS_CONCLUDED           = 3;  // winning_choice_index set; terminal
+  POLL_STATUS_REJECTED            = 4;  // tie / NOTA-wins / quorum-not-met; terminal
+  POLL_STATUS_REJECTED_NO_DEPOSIT = 5;  // deposit deadline expired underfunded
+  POLL_STATUS_CLOSED              = 6;  // reserved
+}
+
+// PollTally is the running per-choice power accumulation for a Poll.
+//
+// choice_power[i] is the sum of voter powers from voters who selected
+// choice `i` (including NOTA if include_nota=true). Under approval-style
+// multi-select, a single voter contributing to N choices makes
+// `sum(choice_power)` exceed `total_voted_power` by a factor up to N.
+//
+// total_voted_power counts each distinct voter once (used for quorum).
+// total_power is the frozen snapshot total at poll creation.
+message PollTally {
+  repeated uint64 choice_power      = 1;
+  uint64          total_voted_power = 2;
+  uint64          total_power       = 3;
+}
+
+// PollVote records a single voter's selection set on a poll. Replaced
+// in-place on revote (when allow_revote_snapshot is true).
+//
+// choice_indices is 0-based into Poll.choices (post-NOTA append). Length
+// is 1..max_selections or [nota_index] alone when NOTA is selected.
+//
+// power is the snapshot power read at vote time — recorded so the tally
+// can be safely adjusted on revote regardless of mid-flight membership
+// changes (mirrors Proposal.Vote semantics).
+message PollVote {
+  uint64          dao_id         = 1;
+  uint64          poll_id        = 2;
+  string          voter          = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated uint32 choice_indices = 4;
+  uint64          power          = 5;
+  int64           voted_height   = 6;
+}
+
+// Poll is an informational vote on a DAO. Unlike Proposal, a Poll has no
+// executable bundle — its terminal state surfaces a single
+// winning_choice_index for off-chain consumers.
+//
+// Storage: PollKey(dao_id, poll_id). A separate PollByStatusKey index
+// mirrors `status` for efficient status-filtered listings. Both rows are
+// updated atomically on every transition.
+//
+// Configuration is FROZEN at creation: voting_period_snapshot,
+// allow_revote_snapshot, and deposit_snapshot copy the DAO's then-current
+// settings. Mid-flight edits via MsgUpdateGovernanceConfig /
+// MsgUpdateDepositConfig don't affect in-flight polls.
+//
+// `choices` includes the user-supplied labels, with the keeper-appended
+// "None of the above" at the END when include_nota = true. The nota_index
+// is therefore always `len(choices) - 1` when include_nota.
+message Poll {
+  uint64 dao_id      = 1;
+  uint64 poll_id     = 2;
+  string proposer    = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string title       = 4;
+  string description = 5;
+
+  // choices includes the user labels AND the keeper-appended NOTA at the
+  // tail when include_nota = true. Length is always 2..21.
+  repeated string choices = 6;
+
+  // max_selections is the upper bound on len(choice_indices) per vote.
+  // Range: [1, len(user_choices)] (i.e. excluding NOTA from the cap).
+  uint32 max_selections = 7;
+
+  // 0 = no quorum. Otherwise in [1, 8500].
+  uint32 quorum_bps = 8;
+
+  // Did the keeper append NOTA? UIs render NOTA distinctly when true.
+  bool include_nota = 9;
+
+  // snapshot_id allocates from the per-DAO snapshot counter (shared with
+  // proposals — one space per DAO, written by either family). Voters'
+  // powers are read from SnapshotPower(dao, snapshot_id, voter).
+  uint64 snapshot_id = 10;
+
+  int64                     created_height   = 11;
+  google.protobuf.Timestamp deposit_deadline = 12 [
+    (gogoproto.stdtime)  = true,
+    (gogoproto.nullable) = false
+  ];
+  google.protobuf.Timestamp voting_end = 13 [
+    (gogoproto.stdtime)  = true,
+    (gogoproto.nullable) = false
+  ];
+  PollStatus status = 14;
+
+  // Frozen copies of the DAO config at creation time. Polls don't carry a
+  // full GovernanceConfig snapshot because they only need the voting
+  // period and revote toggle — threshold/quorum/approval-rule are
+  // proposal concepts.
+  google.protobuf.Duration voting_period_snapshot = 15 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable)    = false
+  ];
+  bool          allow_revote_snapshot = 16;
+  DepositConfig deposit_snapshot      = 17 [(gogoproto.nullable) = false];
+
+  PollTally                tally             = 18 [(gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin deposit_collected = 19 [(gogoproto.nullable) = false];
+
+  // winning_choice_index is set at finalize when status == CONCLUDED.
+  // It's an index into `choices` (so the user-readable label is
+  // poll.choices[winning_choice_index]). Meaningless for non-CONCLUDED
+  // status; readers should gate on status before consuming.
+  uint32 winning_choice_index = 20;
+}

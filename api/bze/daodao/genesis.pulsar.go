@@ -14,15 +14,706 @@ import (
 	sync "sync"
 )
 
+var _ protoreflect.List = (*_GenesisState_3_list)(nil)
+
+type _GenesisState_3_list struct {
+	list *[]*Dao
+}
+
+func (x *_GenesisState_3_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_3_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_3_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*Dao)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_3_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*Dao)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_3_list) AppendMutable() protoreflect.Value {
+	v := new(Dao)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_3_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_3_list) NewElement() protoreflect.Value {
+	v := new(Dao)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_3_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_4_list)(nil)
+
+type _GenesisState_4_list struct {
+	list *[]*Proposal
+}
+
+func (x *_GenesisState_4_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_4_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_4_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*Proposal)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_4_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*Proposal)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_4_list) AppendMutable() protoreflect.Value {
+	v := new(Proposal)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_4_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_4_list) NewElement() protoreflect.Value {
+	v := new(Proposal)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_4_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_5_list)(nil)
+
+type _GenesisState_5_list struct {
+	list *[]*Vote
+}
+
+func (x *_GenesisState_5_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_5_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_5_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*Vote)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_5_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*Vote)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_5_list) AppendMutable() protoreflect.Value {
+	v := new(Vote)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_5_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_5_list) NewElement() protoreflect.Value {
+	v := new(Vote)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_5_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_6_list)(nil)
+
+type _GenesisState_6_list struct {
+	list *[]*PerDaoUint64
+}
+
+func (x *_GenesisState_6_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_6_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_6_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*PerDaoUint64)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_6_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*PerDaoUint64)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_6_list) AppendMutable() protoreflect.Value {
+	v := new(PerDaoUint64)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_6_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_6_list) NewElement() protoreflect.Value {
+	v := new(PerDaoUint64)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_6_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_7_list)(nil)
+
+type _GenesisState_7_list struct {
+	list *[]*PerDaoUint64
+}
+
+func (x *_GenesisState_7_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_7_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_7_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*PerDaoUint64)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_7_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*PerDaoUint64)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_7_list) AppendMutable() protoreflect.Value {
+	v := new(PerDaoUint64)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_7_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_7_list) NewElement() protoreflect.Value {
+	v := new(PerDaoUint64)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_7_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_8_list)(nil)
+
+type _GenesisState_8_list struct {
+	list *[]*SnapshotPowerEntry
+}
+
+func (x *_GenesisState_8_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_8_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_8_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*SnapshotPowerEntry)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_8_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*SnapshotPowerEntry)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_8_list) AppendMutable() protoreflect.Value {
+	v := new(SnapshotPowerEntry)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_8_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_8_list) NewElement() protoreflect.Value {
+	v := new(SnapshotPowerEntry)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_8_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_9_list)(nil)
+
+type _GenesisState_9_list struct {
+	list *[]*SnapshotTotalEntry
+}
+
+func (x *_GenesisState_9_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_9_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_9_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*SnapshotTotalEntry)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_9_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*SnapshotTotalEntry)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_9_list) AppendMutable() protoreflect.Value {
+	v := new(SnapshotTotalEntry)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_9_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_9_list) NewElement() protoreflect.Value {
+	v := new(SnapshotTotalEntry)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_9_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_10_list)(nil)
+
+type _GenesisState_10_list struct {
+	list *[]*DepositRecord
+}
+
+func (x *_GenesisState_10_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_10_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_10_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DepositRecord)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_10_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DepositRecord)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_10_list) AppendMutable() protoreflect.Value {
+	v := new(DepositRecord)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_10_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_10_list) NewElement() protoreflect.Value {
+	v := new(DepositRecord)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_10_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_11_list)(nil)
+
+type _GenesisState_11_list struct {
+	list *[]*Poll
+}
+
+func (x *_GenesisState_11_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_11_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_11_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*Poll)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_11_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*Poll)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_11_list) AppendMutable() protoreflect.Value {
+	v := new(Poll)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_11_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_11_list) NewElement() protoreflect.Value {
+	v := new(Poll)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_11_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_12_list)(nil)
+
+type _GenesisState_12_list struct {
+	list *[]*PollVote
+}
+
+func (x *_GenesisState_12_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_12_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_12_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*PollVote)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_12_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*PollVote)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_12_list) AppendMutable() protoreflect.Value {
+	v := new(PollVote)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_12_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_12_list) NewElement() protoreflect.Value {
+	v := new(PollVote)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_12_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_13_list)(nil)
+
+type _GenesisState_13_list struct {
+	list *[]*PerDaoUint64
+}
+
+func (x *_GenesisState_13_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_13_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_13_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*PerDaoUint64)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_13_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*PerDaoUint64)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_13_list) AppendMutable() protoreflect.Value {
+	v := new(PerDaoUint64)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_13_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_13_list) NewElement() protoreflect.Value {
+	v := new(PerDaoUint64)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_13_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_14_list)(nil)
+
+type _GenesisState_14_list struct {
+	list *[]*DepositRecord
+}
+
+func (x *_GenesisState_14_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_14_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_14_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DepositRecord)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_14_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DepositRecord)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_14_list) AppendMutable() protoreflect.Value {
+	v := new(DepositRecord)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_14_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_14_list) NewElement() protoreflect.Value {
+	v := new(DepositRecord)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_14_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_15_list)(nil)
+
+type _GenesisState_15_list struct {
+	list *[]*StaticMemberEntry
+}
+
+func (x *_GenesisState_15_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_15_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_15_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*StaticMemberEntry)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_15_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*StaticMemberEntry)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_15_list) AppendMutable() protoreflect.Value {
+	v := new(StaticMemberEntry)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_15_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_15_list) NewElement() protoreflect.Value {
+	v := new(StaticMemberEntry)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_15_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
-	md_GenesisState        protoreflect.MessageDescriptor
-	fd_GenesisState_params protoreflect.FieldDescriptor
+	md_GenesisState                      protoreflect.MessageDescriptor
+	fd_GenesisState_params               protoreflect.FieldDescriptor
+	fd_GenesisState_dao_id_counter       protoreflect.FieldDescriptor
+	fd_GenesisState_daos                 protoreflect.FieldDescriptor
+	fd_GenesisState_proposals            protoreflect.FieldDescriptor
+	fd_GenesisState_votes                protoreflect.FieldDescriptor
+	fd_GenesisState_proposal_id_counters protoreflect.FieldDescriptor
+	fd_GenesisState_snapshot_id_counters protoreflect.FieldDescriptor
+	fd_GenesisState_snapshot_powers      protoreflect.FieldDescriptor
+	fd_GenesisState_snapshot_totals      protoreflect.FieldDescriptor
+	fd_GenesisState_deposit_records      protoreflect.FieldDescriptor
+	fd_GenesisState_polls                protoreflect.FieldDescriptor
+	fd_GenesisState_poll_votes           protoreflect.FieldDescriptor
+	fd_GenesisState_poll_id_counters     protoreflect.FieldDescriptor
+	fd_GenesisState_poll_deposit_records protoreflect.FieldDescriptor
+	fd_GenesisState_static_members       protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_bze_daodao_genesis_proto_init()
 	md_GenesisState = File_bze_daodao_genesis_proto.Messages().ByName("GenesisState")
 	fd_GenesisState_params = md_GenesisState.Fields().ByName("params")
+	fd_GenesisState_dao_id_counter = md_GenesisState.Fields().ByName("dao_id_counter")
+	fd_GenesisState_daos = md_GenesisState.Fields().ByName("daos")
+	fd_GenesisState_proposals = md_GenesisState.Fields().ByName("proposals")
+	fd_GenesisState_votes = md_GenesisState.Fields().ByName("votes")
+	fd_GenesisState_proposal_id_counters = md_GenesisState.Fields().ByName("proposal_id_counters")
+	fd_GenesisState_snapshot_id_counters = md_GenesisState.Fields().ByName("snapshot_id_counters")
+	fd_GenesisState_snapshot_powers = md_GenesisState.Fields().ByName("snapshot_powers")
+	fd_GenesisState_snapshot_totals = md_GenesisState.Fields().ByName("snapshot_totals")
+	fd_GenesisState_deposit_records = md_GenesisState.Fields().ByName("deposit_records")
+	fd_GenesisState_polls = md_GenesisState.Fields().ByName("polls")
+	fd_GenesisState_poll_votes = md_GenesisState.Fields().ByName("poll_votes")
+	fd_GenesisState_poll_id_counters = md_GenesisState.Fields().ByName("poll_id_counters")
+	fd_GenesisState_poll_deposit_records = md_GenesisState.Fields().ByName("poll_deposit_records")
+	fd_GenesisState_static_members = md_GenesisState.Fields().ByName("static_members")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -96,6 +787,90 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
+	if x.DaoIdCounter != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.DaoIdCounter)
+		if !f(fd_GenesisState_dao_id_counter, value) {
+			return
+		}
+	}
+	if len(x.Daos) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_3_list{list: &x.Daos})
+		if !f(fd_GenesisState_daos, value) {
+			return
+		}
+	}
+	if len(x.Proposals) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_4_list{list: &x.Proposals})
+		if !f(fd_GenesisState_proposals, value) {
+			return
+		}
+	}
+	if len(x.Votes) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_5_list{list: &x.Votes})
+		if !f(fd_GenesisState_votes, value) {
+			return
+		}
+	}
+	if len(x.ProposalIdCounters) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_6_list{list: &x.ProposalIdCounters})
+		if !f(fd_GenesisState_proposal_id_counters, value) {
+			return
+		}
+	}
+	if len(x.SnapshotIdCounters) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_7_list{list: &x.SnapshotIdCounters})
+		if !f(fd_GenesisState_snapshot_id_counters, value) {
+			return
+		}
+	}
+	if len(x.SnapshotPowers) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_8_list{list: &x.SnapshotPowers})
+		if !f(fd_GenesisState_snapshot_powers, value) {
+			return
+		}
+	}
+	if len(x.SnapshotTotals) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_9_list{list: &x.SnapshotTotals})
+		if !f(fd_GenesisState_snapshot_totals, value) {
+			return
+		}
+	}
+	if len(x.DepositRecords) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_10_list{list: &x.DepositRecords})
+		if !f(fd_GenesisState_deposit_records, value) {
+			return
+		}
+	}
+	if len(x.Polls) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_11_list{list: &x.Polls})
+		if !f(fd_GenesisState_polls, value) {
+			return
+		}
+	}
+	if len(x.PollVotes) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_12_list{list: &x.PollVotes})
+		if !f(fd_GenesisState_poll_votes, value) {
+			return
+		}
+	}
+	if len(x.PollIdCounters) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_13_list{list: &x.PollIdCounters})
+		if !f(fd_GenesisState_poll_id_counters, value) {
+			return
+		}
+	}
+	if len(x.PollDepositRecords) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_14_list{list: &x.PollDepositRecords})
+		if !f(fd_GenesisState_poll_deposit_records, value) {
+			return
+		}
+	}
+	if len(x.StaticMembers) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_15_list{list: &x.StaticMembers})
+		if !f(fd_GenesisState_static_members, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -113,6 +888,34 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 	switch fd.FullName() {
 	case "bze.daodao.GenesisState.params":
 		return x.Params != nil
+	case "bze.daodao.GenesisState.dao_id_counter":
+		return x.DaoIdCounter != uint64(0)
+	case "bze.daodao.GenesisState.daos":
+		return len(x.Daos) != 0
+	case "bze.daodao.GenesisState.proposals":
+		return len(x.Proposals) != 0
+	case "bze.daodao.GenesisState.votes":
+		return len(x.Votes) != 0
+	case "bze.daodao.GenesisState.proposal_id_counters":
+		return len(x.ProposalIdCounters) != 0
+	case "bze.daodao.GenesisState.snapshot_id_counters":
+		return len(x.SnapshotIdCounters) != 0
+	case "bze.daodao.GenesisState.snapshot_powers":
+		return len(x.SnapshotPowers) != 0
+	case "bze.daodao.GenesisState.snapshot_totals":
+		return len(x.SnapshotTotals) != 0
+	case "bze.daodao.GenesisState.deposit_records":
+		return len(x.DepositRecords) != 0
+	case "bze.daodao.GenesisState.polls":
+		return len(x.Polls) != 0
+	case "bze.daodao.GenesisState.poll_votes":
+		return len(x.PollVotes) != 0
+	case "bze.daodao.GenesisState.poll_id_counters":
+		return len(x.PollIdCounters) != 0
+	case "bze.daodao.GenesisState.poll_deposit_records":
+		return len(x.PollDepositRecords) != 0
+	case "bze.daodao.GenesisState.static_members":
+		return len(x.StaticMembers) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.daodao.GenesisState"))
@@ -131,6 +934,34 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "bze.daodao.GenesisState.params":
 		x.Params = nil
+	case "bze.daodao.GenesisState.dao_id_counter":
+		x.DaoIdCounter = uint64(0)
+	case "bze.daodao.GenesisState.daos":
+		x.Daos = nil
+	case "bze.daodao.GenesisState.proposals":
+		x.Proposals = nil
+	case "bze.daodao.GenesisState.votes":
+		x.Votes = nil
+	case "bze.daodao.GenesisState.proposal_id_counters":
+		x.ProposalIdCounters = nil
+	case "bze.daodao.GenesisState.snapshot_id_counters":
+		x.SnapshotIdCounters = nil
+	case "bze.daodao.GenesisState.snapshot_powers":
+		x.SnapshotPowers = nil
+	case "bze.daodao.GenesisState.snapshot_totals":
+		x.SnapshotTotals = nil
+	case "bze.daodao.GenesisState.deposit_records":
+		x.DepositRecords = nil
+	case "bze.daodao.GenesisState.polls":
+		x.Polls = nil
+	case "bze.daodao.GenesisState.poll_votes":
+		x.PollVotes = nil
+	case "bze.daodao.GenesisState.poll_id_counters":
+		x.PollIdCounters = nil
+	case "bze.daodao.GenesisState.poll_deposit_records":
+		x.PollDepositRecords = nil
+	case "bze.daodao.GenesisState.static_members":
+		x.StaticMembers = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.daodao.GenesisState"))
@@ -150,6 +981,87 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 	case "bze.daodao.GenesisState.params":
 		value := x.Params
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "bze.daodao.GenesisState.dao_id_counter":
+		value := x.DaoIdCounter
+		return protoreflect.ValueOfUint64(value)
+	case "bze.daodao.GenesisState.daos":
+		if len(x.Daos) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_3_list{})
+		}
+		listValue := &_GenesisState_3_list{list: &x.Daos}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.daodao.GenesisState.proposals":
+		if len(x.Proposals) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_4_list{})
+		}
+		listValue := &_GenesisState_4_list{list: &x.Proposals}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.daodao.GenesisState.votes":
+		if len(x.Votes) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_5_list{})
+		}
+		listValue := &_GenesisState_5_list{list: &x.Votes}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.daodao.GenesisState.proposal_id_counters":
+		if len(x.ProposalIdCounters) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_6_list{})
+		}
+		listValue := &_GenesisState_6_list{list: &x.ProposalIdCounters}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.daodao.GenesisState.snapshot_id_counters":
+		if len(x.SnapshotIdCounters) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_7_list{})
+		}
+		listValue := &_GenesisState_7_list{list: &x.SnapshotIdCounters}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.daodao.GenesisState.snapshot_powers":
+		if len(x.SnapshotPowers) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_8_list{})
+		}
+		listValue := &_GenesisState_8_list{list: &x.SnapshotPowers}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.daodao.GenesisState.snapshot_totals":
+		if len(x.SnapshotTotals) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_9_list{})
+		}
+		listValue := &_GenesisState_9_list{list: &x.SnapshotTotals}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.daodao.GenesisState.deposit_records":
+		if len(x.DepositRecords) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_10_list{})
+		}
+		listValue := &_GenesisState_10_list{list: &x.DepositRecords}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.daodao.GenesisState.polls":
+		if len(x.Polls) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_11_list{})
+		}
+		listValue := &_GenesisState_11_list{list: &x.Polls}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.daodao.GenesisState.poll_votes":
+		if len(x.PollVotes) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_12_list{})
+		}
+		listValue := &_GenesisState_12_list{list: &x.PollVotes}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.daodao.GenesisState.poll_id_counters":
+		if len(x.PollIdCounters) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_13_list{})
+		}
+		listValue := &_GenesisState_13_list{list: &x.PollIdCounters}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.daodao.GenesisState.poll_deposit_records":
+		if len(x.PollDepositRecords) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_14_list{})
+		}
+		listValue := &_GenesisState_14_list{list: &x.PollDepositRecords}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.daodao.GenesisState.static_members":
+		if len(x.StaticMembers) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_15_list{})
+		}
+		listValue := &_GenesisState_15_list{list: &x.StaticMembers}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.daodao.GenesisState"))
@@ -172,6 +1084,60 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 	switch fd.FullName() {
 	case "bze.daodao.GenesisState.params":
 		x.Params = value.Message().Interface().(*Params)
+	case "bze.daodao.GenesisState.dao_id_counter":
+		x.DaoIdCounter = value.Uint()
+	case "bze.daodao.GenesisState.daos":
+		lv := value.List()
+		clv := lv.(*_GenesisState_3_list)
+		x.Daos = *clv.list
+	case "bze.daodao.GenesisState.proposals":
+		lv := value.List()
+		clv := lv.(*_GenesisState_4_list)
+		x.Proposals = *clv.list
+	case "bze.daodao.GenesisState.votes":
+		lv := value.List()
+		clv := lv.(*_GenesisState_5_list)
+		x.Votes = *clv.list
+	case "bze.daodao.GenesisState.proposal_id_counters":
+		lv := value.List()
+		clv := lv.(*_GenesisState_6_list)
+		x.ProposalIdCounters = *clv.list
+	case "bze.daodao.GenesisState.snapshot_id_counters":
+		lv := value.List()
+		clv := lv.(*_GenesisState_7_list)
+		x.SnapshotIdCounters = *clv.list
+	case "bze.daodao.GenesisState.snapshot_powers":
+		lv := value.List()
+		clv := lv.(*_GenesisState_8_list)
+		x.SnapshotPowers = *clv.list
+	case "bze.daodao.GenesisState.snapshot_totals":
+		lv := value.List()
+		clv := lv.(*_GenesisState_9_list)
+		x.SnapshotTotals = *clv.list
+	case "bze.daodao.GenesisState.deposit_records":
+		lv := value.List()
+		clv := lv.(*_GenesisState_10_list)
+		x.DepositRecords = *clv.list
+	case "bze.daodao.GenesisState.polls":
+		lv := value.List()
+		clv := lv.(*_GenesisState_11_list)
+		x.Polls = *clv.list
+	case "bze.daodao.GenesisState.poll_votes":
+		lv := value.List()
+		clv := lv.(*_GenesisState_12_list)
+		x.PollVotes = *clv.list
+	case "bze.daodao.GenesisState.poll_id_counters":
+		lv := value.List()
+		clv := lv.(*_GenesisState_13_list)
+		x.PollIdCounters = *clv.list
+	case "bze.daodao.GenesisState.poll_deposit_records":
+		lv := value.List()
+		clv := lv.(*_GenesisState_14_list)
+		x.PollDepositRecords = *clv.list
+	case "bze.daodao.GenesisState.static_members":
+		lv := value.List()
+		clv := lv.(*_GenesisState_15_list)
+		x.StaticMembers = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.daodao.GenesisState"))
@@ -197,6 +1163,86 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 			x.Params = new(Params)
 		}
 		return protoreflect.ValueOfMessage(x.Params.ProtoReflect())
+	case "bze.daodao.GenesisState.daos":
+		if x.Daos == nil {
+			x.Daos = []*Dao{}
+		}
+		value := &_GenesisState_3_list{list: &x.Daos}
+		return protoreflect.ValueOfList(value)
+	case "bze.daodao.GenesisState.proposals":
+		if x.Proposals == nil {
+			x.Proposals = []*Proposal{}
+		}
+		value := &_GenesisState_4_list{list: &x.Proposals}
+		return protoreflect.ValueOfList(value)
+	case "bze.daodao.GenesisState.votes":
+		if x.Votes == nil {
+			x.Votes = []*Vote{}
+		}
+		value := &_GenesisState_5_list{list: &x.Votes}
+		return protoreflect.ValueOfList(value)
+	case "bze.daodao.GenesisState.proposal_id_counters":
+		if x.ProposalIdCounters == nil {
+			x.ProposalIdCounters = []*PerDaoUint64{}
+		}
+		value := &_GenesisState_6_list{list: &x.ProposalIdCounters}
+		return protoreflect.ValueOfList(value)
+	case "bze.daodao.GenesisState.snapshot_id_counters":
+		if x.SnapshotIdCounters == nil {
+			x.SnapshotIdCounters = []*PerDaoUint64{}
+		}
+		value := &_GenesisState_7_list{list: &x.SnapshotIdCounters}
+		return protoreflect.ValueOfList(value)
+	case "bze.daodao.GenesisState.snapshot_powers":
+		if x.SnapshotPowers == nil {
+			x.SnapshotPowers = []*SnapshotPowerEntry{}
+		}
+		value := &_GenesisState_8_list{list: &x.SnapshotPowers}
+		return protoreflect.ValueOfList(value)
+	case "bze.daodao.GenesisState.snapshot_totals":
+		if x.SnapshotTotals == nil {
+			x.SnapshotTotals = []*SnapshotTotalEntry{}
+		}
+		value := &_GenesisState_9_list{list: &x.SnapshotTotals}
+		return protoreflect.ValueOfList(value)
+	case "bze.daodao.GenesisState.deposit_records":
+		if x.DepositRecords == nil {
+			x.DepositRecords = []*DepositRecord{}
+		}
+		value := &_GenesisState_10_list{list: &x.DepositRecords}
+		return protoreflect.ValueOfList(value)
+	case "bze.daodao.GenesisState.polls":
+		if x.Polls == nil {
+			x.Polls = []*Poll{}
+		}
+		value := &_GenesisState_11_list{list: &x.Polls}
+		return protoreflect.ValueOfList(value)
+	case "bze.daodao.GenesisState.poll_votes":
+		if x.PollVotes == nil {
+			x.PollVotes = []*PollVote{}
+		}
+		value := &_GenesisState_12_list{list: &x.PollVotes}
+		return protoreflect.ValueOfList(value)
+	case "bze.daodao.GenesisState.poll_id_counters":
+		if x.PollIdCounters == nil {
+			x.PollIdCounters = []*PerDaoUint64{}
+		}
+		value := &_GenesisState_13_list{list: &x.PollIdCounters}
+		return protoreflect.ValueOfList(value)
+	case "bze.daodao.GenesisState.poll_deposit_records":
+		if x.PollDepositRecords == nil {
+			x.PollDepositRecords = []*DepositRecord{}
+		}
+		value := &_GenesisState_14_list{list: &x.PollDepositRecords}
+		return protoreflect.ValueOfList(value)
+	case "bze.daodao.GenesisState.static_members":
+		if x.StaticMembers == nil {
+			x.StaticMembers = []*StaticMemberEntry{}
+		}
+		value := &_GenesisState_15_list{list: &x.StaticMembers}
+		return protoreflect.ValueOfList(value)
+	case "bze.daodao.GenesisState.dao_id_counter":
+		panic(fmt.Errorf("field dao_id_counter of message bze.daodao.GenesisState is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.daodao.GenesisState"))
@@ -213,6 +1259,47 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	case "bze.daodao.GenesisState.params":
 		m := new(Params)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "bze.daodao.GenesisState.dao_id_counter":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "bze.daodao.GenesisState.daos":
+		list := []*Dao{}
+		return protoreflect.ValueOfList(&_GenesisState_3_list{list: &list})
+	case "bze.daodao.GenesisState.proposals":
+		list := []*Proposal{}
+		return protoreflect.ValueOfList(&_GenesisState_4_list{list: &list})
+	case "bze.daodao.GenesisState.votes":
+		list := []*Vote{}
+		return protoreflect.ValueOfList(&_GenesisState_5_list{list: &list})
+	case "bze.daodao.GenesisState.proposal_id_counters":
+		list := []*PerDaoUint64{}
+		return protoreflect.ValueOfList(&_GenesisState_6_list{list: &list})
+	case "bze.daodao.GenesisState.snapshot_id_counters":
+		list := []*PerDaoUint64{}
+		return protoreflect.ValueOfList(&_GenesisState_7_list{list: &list})
+	case "bze.daodao.GenesisState.snapshot_powers":
+		list := []*SnapshotPowerEntry{}
+		return protoreflect.ValueOfList(&_GenesisState_8_list{list: &list})
+	case "bze.daodao.GenesisState.snapshot_totals":
+		list := []*SnapshotTotalEntry{}
+		return protoreflect.ValueOfList(&_GenesisState_9_list{list: &list})
+	case "bze.daodao.GenesisState.deposit_records":
+		list := []*DepositRecord{}
+		return protoreflect.ValueOfList(&_GenesisState_10_list{list: &list})
+	case "bze.daodao.GenesisState.polls":
+		list := []*Poll{}
+		return protoreflect.ValueOfList(&_GenesisState_11_list{list: &list})
+	case "bze.daodao.GenesisState.poll_votes":
+		list := []*PollVote{}
+		return protoreflect.ValueOfList(&_GenesisState_12_list{list: &list})
+	case "bze.daodao.GenesisState.poll_id_counters":
+		list := []*PerDaoUint64{}
+		return protoreflect.ValueOfList(&_GenesisState_13_list{list: &list})
+	case "bze.daodao.GenesisState.poll_deposit_records":
+		list := []*DepositRecord{}
+		return protoreflect.ValueOfList(&_GenesisState_14_list{list: &list})
+	case "bze.daodao.GenesisState.static_members":
+		list := []*StaticMemberEntry{}
+		return protoreflect.ValueOfList(&_GenesisState_15_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.daodao.GenesisState"))
@@ -286,6 +1373,87 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			l = options.Size(x.Params)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		if x.DaoIdCounter != 0 {
+			n += 1 + runtime.Sov(uint64(x.DaoIdCounter))
+		}
+		if len(x.Daos) > 0 {
+			for _, e := range x.Daos {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.Proposals) > 0 {
+			for _, e := range x.Proposals {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.Votes) > 0 {
+			for _, e := range x.Votes {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.ProposalIdCounters) > 0 {
+			for _, e := range x.ProposalIdCounters {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.SnapshotIdCounters) > 0 {
+			for _, e := range x.SnapshotIdCounters {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.SnapshotPowers) > 0 {
+			for _, e := range x.SnapshotPowers {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.SnapshotTotals) > 0 {
+			for _, e := range x.SnapshotTotals {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.DepositRecords) > 0 {
+			for _, e := range x.DepositRecords {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.Polls) > 0 {
+			for _, e := range x.Polls {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.PollVotes) > 0 {
+			for _, e := range x.PollVotes {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.PollIdCounters) > 0 {
+			for _, e := range x.PollIdCounters {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.PollDepositRecords) > 0 {
+			for _, e := range x.PollDepositRecords {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.StaticMembers) > 0 {
+			for _, e := range x.StaticMembers {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -314,6 +1482,219 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.StaticMembers) > 0 {
+			for iNdEx := len(x.StaticMembers) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.StaticMembers[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x7a
+			}
+		}
+		if len(x.PollDepositRecords) > 0 {
+			for iNdEx := len(x.PollDepositRecords) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.PollDepositRecords[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x72
+			}
+		}
+		if len(x.PollIdCounters) > 0 {
+			for iNdEx := len(x.PollIdCounters) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.PollIdCounters[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x6a
+			}
+		}
+		if len(x.PollVotes) > 0 {
+			for iNdEx := len(x.PollVotes) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.PollVotes[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x62
+			}
+		}
+		if len(x.Polls) > 0 {
+			for iNdEx := len(x.Polls) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Polls[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x5a
+			}
+		}
+		if len(x.DepositRecords) > 0 {
+			for iNdEx := len(x.DepositRecords) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.DepositRecords[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x52
+			}
+		}
+		if len(x.SnapshotTotals) > 0 {
+			for iNdEx := len(x.SnapshotTotals) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.SnapshotTotals[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x4a
+			}
+		}
+		if len(x.SnapshotPowers) > 0 {
+			for iNdEx := len(x.SnapshotPowers) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.SnapshotPowers[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x42
+			}
+		}
+		if len(x.SnapshotIdCounters) > 0 {
+			for iNdEx := len(x.SnapshotIdCounters) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.SnapshotIdCounters[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x3a
+			}
+		}
+		if len(x.ProposalIdCounters) > 0 {
+			for iNdEx := len(x.ProposalIdCounters) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.ProposalIdCounters[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x32
+			}
+		}
+		if len(x.Votes) > 0 {
+			for iNdEx := len(x.Votes) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Votes[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x2a
+			}
+		}
+		if len(x.Proposals) > 0 {
+			for iNdEx := len(x.Proposals) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Proposals[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x22
+			}
+		}
+		if len(x.Daos) > 0 {
+			for iNdEx := len(x.Daos) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Daos[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x1a
+			}
+		}
+		if x.DaoIdCounter != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.DaoIdCounter))
+			i--
+			dAtA[i] = 0x10
 		}
 		if x.Params != nil {
 			encoded, err := options.Marshal(x.Params)
@@ -414,6 +1795,467 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DaoIdCounter", wireType)
+				}
+				x.DaoIdCounter = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.DaoIdCounter |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Daos", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Daos = append(x.Daos, &Dao{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Daos[len(x.Daos)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Proposals", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Proposals = append(x.Proposals, &Proposal{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Proposals[len(x.Proposals)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Votes", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Votes = append(x.Votes, &Vote{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Votes[len(x.Votes)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ProposalIdCounters", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ProposalIdCounters = append(x.ProposalIdCounters, &PerDaoUint64{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ProposalIdCounters[len(x.ProposalIdCounters)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 7:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SnapshotIdCounters", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.SnapshotIdCounters = append(x.SnapshotIdCounters, &PerDaoUint64{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.SnapshotIdCounters[len(x.SnapshotIdCounters)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 8:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SnapshotPowers", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.SnapshotPowers = append(x.SnapshotPowers, &SnapshotPowerEntry{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.SnapshotPowers[len(x.SnapshotPowers)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 9:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SnapshotTotals", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.SnapshotTotals = append(x.SnapshotTotals, &SnapshotTotalEntry{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.SnapshotTotals[len(x.SnapshotTotals)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 10:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DepositRecords", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.DepositRecords = append(x.DepositRecords, &DepositRecord{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.DepositRecords[len(x.DepositRecords)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 11:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Polls", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Polls = append(x.Polls, &Poll{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Polls[len(x.Polls)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 12:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PollVotes", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PollVotes = append(x.PollVotes, &PollVote{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PollVotes[len(x.PollVotes)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 13:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PollIdCounters", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PollIdCounters = append(x.PollIdCounters, &PerDaoUint64{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PollIdCounters[len(x.PollIdCounters)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 14:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PollDepositRecords", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PollDepositRecords = append(x.PollDepositRecords, &DepositRecord{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PollDepositRecords[len(x.PollDepositRecords)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 15:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StaticMembers", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.StaticMembers = append(x.StaticMembers, &StaticMemberEntry{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.StaticMembers[len(x.StaticMembers)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -463,6 +2305,13 @@ const (
 )
 
 // GenesisState defines the daodao module's genesis state.
+//
+// Index conventions in this struct:
+//   - DAO secondary indexes (DaoByAddress / DaoByCreator / SubDao) are
+//     rebuilt on import from `daos`.
+//   - Proposal status index (ProposalByStatusKey) and the end-blocker
+//     expiring queue (ExpiringProposalKey) are rebuilt on import from
+//     `proposals`. We don't serialize derived state.
 type GenesisState struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -470,6 +2319,73 @@ type GenesisState struct {
 
 	// params defines all the parameters of the module.
 	Params *Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
+	// dao_id_counter is the next DAO id to be allocated. On import, this MUST
+	// be greater than the largest `id` present in `daos`.
+	DaoIdCounter uint64 `protobuf:"varint,2,opt,name=dao_id_counter,json=daoIdCounter,proto3" json:"dao_id_counter,omitempty"`
+	// daos holds all DAOs at export time. On import, indices
+	// (DaoByAddress, DaoByCreator, SubDao) are rebuilt from this list.
+	Daos []*Dao `protobuf:"bytes,3,rep,name=daos,proto3" json:"daos,omitempty"`
+	// proposals holds every proposal at export time, in any status
+	// (DEPOSIT_PERIOD / VOTING / PASSED / REJECTED / EXECUTED / …). On
+	// import we resurrect each one, restoring its primary record AND the
+	// derived ProposalByStatusKey row; VOTING proposals are also re-enqueued
+	// on the end-blocker timer queue keyed by voting_end.
+	Proposals []*Proposal `protobuf:"bytes,4,rep,name=proposals,proto3" json:"proposals,omitempty"`
+	// votes holds every cast vote at export time. Replayed verbatim on
+	// import (replaces-in-place semantics matter only at runtime; at
+	// import we just write the rows).
+	Votes []*Vote `protobuf:"bytes,5,rep,name=votes,proto3" json:"votes,omitempty"`
+	// proposal_id_counters[i] is the NEXT proposal id to allocate for
+	// the DAO with id `proposal_id_counters[i].dao_id`. Per-DAO and
+	// monotonic. Validate confirms each counter strictly exceeds the
+	// maximum proposal_id present for its DAO.
+	ProposalIdCounters []*PerDaoUint64 `protobuf:"bytes,6,rep,name=proposal_id_counters,json=proposalIdCounters,proto3" json:"proposal_id_counters,omitempty"`
+	// snapshot_id_counters[i] is the NEXT snapshot id to allocate for
+	// the DAO with id `snapshot_id_counters[i].dao_id`. Same shape /
+	// invariants as proposal_id_counters.
+	SnapshotIdCounters []*PerDaoUint64 `protobuf:"bytes,7,rep,name=snapshot_id_counters,json=snapshotIdCounters,proto3" json:"snapshot_id_counters,omitempty"`
+	// snapshot_powers and snapshot_totals serialize the per-(dao, snapshot)
+	// snapshot table. Required for in-flight proposals: a Vote read at
+	// import time needs SnapshotPower(dao, snapshot_id, voter) to still
+	// resolve. Validate confirms every (dao_id, snapshot_id) pair
+	// referenced by a Proposal has a matching snapshot_totals row.
+	SnapshotPowers []*SnapshotPowerEntry `protobuf:"bytes,8,rep,name=snapshot_powers,json=snapshotPowers,proto3" json:"snapshot_powers,omitempty"`
+	SnapshotTotals []*SnapshotTotalEntry `protobuf:"bytes,9,rep,name=snapshot_totals,json=snapshotTotals,proto3" json:"snapshot_totals,omitempty"`
+	// deposit_records holds every open (proposal, depositor) deposit row at
+	// export time. Required for refund routing on post-import terminal
+	// status — without these rows the keeper would know the escrow balance
+	// but not which depositors to send refunds to. Terminal proposals have
+	// already disbursed their deposits and contribute no rows.
+	DepositRecords []*DepositRecord `protobuf:"bytes,10,rep,name=deposit_records,json=depositRecords,proto3" json:"deposit_records,omitempty"`
+	// polls holds every poll at export time, in any status. Derived state
+	// (PollByStatusKey index, ExpiringPollKey queue) is rebuilt from this
+	// list on import — same pattern as proposals.
+	Polls []*Poll `protobuf:"bytes,11,rep,name=polls,proto3" json:"polls,omitempty"`
+	// poll_votes holds every cast poll vote at export time. Replayed
+	// verbatim on import.
+	PollVotes []*PollVote `protobuf:"bytes,12,rep,name=poll_votes,json=pollVotes,proto3" json:"poll_votes,omitempty"`
+	// poll_id_counters[i] is the NEXT poll id to allocate for the DAO
+	// with id `poll_id_counters[i].dao_id`. Per-DAO monotonic counter,
+	// independent of the proposal id counter.
+	PollIdCounters []*PerDaoUint64 `protobuf:"bytes,13,rep,name=poll_id_counters,json=pollIdCounters,proto3" json:"poll_id_counters,omitempty"`
+	// poll_deposit_records holds every open (poll, depositor) deposit row
+	// at export time. Stored under a separate key prefix from proposal
+	// deposits (PollDepositRecordKey vs DepositRecordKey) so refund/
+	// forfeit iterators iterate the right set; the proto shape is shared
+	// with proposal deposits.
+	PollDepositRecords []*DepositRecord `protobuf:"bytes,14,rep,name=poll_deposit_records,json=pollDepositRecords,proto3" json:"poll_deposit_records,omitempty"`
+	// static_members holds every (dao, address, weight) row of every
+	// STATIC DAO's member table at export time. Without this, a chain
+	// export/import would silently lose the member set: dao.voting_backend
+	// would still be STATIC, but the on-chain MemberKey range would be
+	// empty, so new proposals/polls would have zero voting power and
+	// self-admin DAOs could be bricked.
+	//
+	// The cached StaticTotalPowerKey is NOT serialized — it's recomputed
+	// on import from the sum of weights per DAO (avoids divergence).
+	// Validate enforces: each entry's dao_id is in `daos` AND that DAO's
+	// voting_backend is STATIC.
+	StaticMembers []*StaticMemberEntry `protobuf:"bytes,15,rep,name=static_members,json=staticMembers,proto3" json:"static_members,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -499,6 +2415,104 @@ func (x *GenesisState) GetParams() *Params {
 	return nil
 }
 
+func (x *GenesisState) GetDaoIdCounter() uint64 {
+	if x != nil {
+		return x.DaoIdCounter
+	}
+	return 0
+}
+
+func (x *GenesisState) GetDaos() []*Dao {
+	if x != nil {
+		return x.Daos
+	}
+	return nil
+}
+
+func (x *GenesisState) GetProposals() []*Proposal {
+	if x != nil {
+		return x.Proposals
+	}
+	return nil
+}
+
+func (x *GenesisState) GetVotes() []*Vote {
+	if x != nil {
+		return x.Votes
+	}
+	return nil
+}
+
+func (x *GenesisState) GetProposalIdCounters() []*PerDaoUint64 {
+	if x != nil {
+		return x.ProposalIdCounters
+	}
+	return nil
+}
+
+func (x *GenesisState) GetSnapshotIdCounters() []*PerDaoUint64 {
+	if x != nil {
+		return x.SnapshotIdCounters
+	}
+	return nil
+}
+
+func (x *GenesisState) GetSnapshotPowers() []*SnapshotPowerEntry {
+	if x != nil {
+		return x.SnapshotPowers
+	}
+	return nil
+}
+
+func (x *GenesisState) GetSnapshotTotals() []*SnapshotTotalEntry {
+	if x != nil {
+		return x.SnapshotTotals
+	}
+	return nil
+}
+
+func (x *GenesisState) GetDepositRecords() []*DepositRecord {
+	if x != nil {
+		return x.DepositRecords
+	}
+	return nil
+}
+
+func (x *GenesisState) GetPolls() []*Poll {
+	if x != nil {
+		return x.Polls
+	}
+	return nil
+}
+
+func (x *GenesisState) GetPollVotes() []*PollVote {
+	if x != nil {
+		return x.PollVotes
+	}
+	return nil
+}
+
+func (x *GenesisState) GetPollIdCounters() []*PerDaoUint64 {
+	if x != nil {
+		return x.PollIdCounters
+	}
+	return nil
+}
+
+func (x *GenesisState) GetPollDepositRecords() []*DepositRecord {
+	if x != nil {
+		return x.PollDepositRecords
+	}
+	return nil
+}
+
+func (x *GenesisState) GetStaticMembers() []*StaticMemberEntry {
+	if x != nil {
+		return x.StaticMembers
+	}
+	return nil
+}
+
 var File_bze_daodao_genesis_proto protoreflect.FileDescriptor
 
 var file_bze_daodao_genesis_proto_rawDesc = []byte{
@@ -508,11 +2522,70 @@ var file_bze_daodao_genesis_proto_rawDesc = []byte{
 	0x69, 0x6e, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a,
 	0x17, 0x62, 0x7a, 0x65, 0x2f, 0x64, 0x61, 0x6f, 0x64, 0x61, 0x6f, 0x2f, 0x70, 0x61, 0x72, 0x61,
-	0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x45, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65,
-	0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x35, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61,
-	0x6d, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64,
-	0x61, 0x6f, 0x64, 0x61, 0x6f, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x09, 0xc8, 0xde,
-	0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42,
+	0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x16, 0x62, 0x7a, 0x65, 0x2f, 0x64, 0x61,
+	0x6f, 0x64, 0x61, 0x6f, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x22, 0xdc, 0x07, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74,
+	0x65, 0x12, 0x35, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x12, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x64, 0x61, 0x6f, 0x2e, 0x50,
+	0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01,
+	0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x24, 0x0a, 0x0e, 0x64, 0x61, 0x6f, 0x5f,
+	0x69, 0x64, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04,
+	0x52, 0x0c, 0x64, 0x61, 0x6f, 0x49, 0x64, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72, 0x12, 0x29,
+	0x0a, 0x04, 0x64, 0x61, 0x6f, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x62,
+	0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x64, 0x61, 0x6f, 0x2e, 0x44, 0x61, 0x6f, 0x42, 0x04, 0xc8,
+	0xde, 0x1f, 0x00, 0x52, 0x04, 0x64, 0x61, 0x6f, 0x73, 0x12, 0x38, 0x0a, 0x09, 0x70, 0x72, 0x6f,
+	0x70, 0x6f, 0x73, 0x61, 0x6c, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x62,
+	0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x64, 0x61, 0x6f, 0x2e, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73,
+	0x61, 0x6c, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x09, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73,
+	0x61, 0x6c, 0x73, 0x12, 0x2c, 0x0a, 0x05, 0x76, 0x6f, 0x74, 0x65, 0x73, 0x18, 0x05, 0x20, 0x03,
+	0x28, 0x0b, 0x32, 0x10, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x64, 0x61, 0x6f, 0x2e,
+	0x56, 0x6f, 0x74, 0x65, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x05, 0x76, 0x6f, 0x74, 0x65,
+	0x73, 0x12, 0x50, 0x0a, 0x14, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64,
+	0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72, 0x73, 0x18, 0x06, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x18, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x64, 0x61, 0x6f, 0x2e, 0x50, 0x65, 0x72,
+	0x44, 0x61, 0x6f, 0x55, 0x69, 0x6e, 0x74, 0x36, 0x34, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52,
+	0x12, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x43, 0x6f, 0x75, 0x6e, 0x74,
+	0x65, 0x72, 0x73, 0x12, 0x50, 0x0a, 0x14, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x5f,
+	0x69, 0x64, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72, 0x73, 0x18, 0x07, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x18, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x64, 0x61, 0x6f, 0x2e, 0x50,
+	0x65, 0x72, 0x44, 0x61, 0x6f, 0x55, 0x69, 0x6e, 0x74, 0x36, 0x34, 0x42, 0x04, 0xc8, 0xde, 0x1f,
+	0x00, 0x52, 0x12, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x49, 0x64, 0x43, 0x6f, 0x75,
+	0x6e, 0x74, 0x65, 0x72, 0x73, 0x12, 0x4d, 0x0a, 0x0f, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f,
+	0x74, 0x5f, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x73, 0x18, 0x08, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1e,
+	0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x64, 0x61, 0x6f, 0x2e, 0x53, 0x6e, 0x61, 0x70,
+	0x73, 0x68, 0x6f, 0x74, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x42, 0x04,
+	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0e, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x50, 0x6f,
+	0x77, 0x65, 0x72, 0x73, 0x12, 0x4d, 0x0a, 0x0f, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74,
+	0x5f, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x73, 0x18, 0x09, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1e, 0x2e,
+	0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x64, 0x61, 0x6f, 0x2e, 0x53, 0x6e, 0x61, 0x70, 0x73,
+	0x68, 0x6f, 0x74, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x42, 0x04, 0xc8,
+	0xde, 0x1f, 0x00, 0x52, 0x0e, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x54, 0x6f, 0x74,
+	0x61, 0x6c, 0x73, 0x12, 0x48, 0x0a, 0x0f, 0x64, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x5f, 0x72,
+	0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x18, 0x0a, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x62,
+	0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x64, 0x61, 0x6f, 0x2e, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69,
+	0x74, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0e, 0x64,
+	0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x12, 0x2c, 0x0a,
+	0x05, 0x70, 0x6f, 0x6c, 0x6c, 0x73, 0x18, 0x0b, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x10, 0x2e, 0x62,
+	0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x64, 0x61, 0x6f, 0x2e, 0x50, 0x6f, 0x6c, 0x6c, 0x42, 0x04,
+	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x05, 0x70, 0x6f, 0x6c, 0x6c, 0x73, 0x12, 0x39, 0x0a, 0x0a, 0x70,
+	0x6f, 0x6c, 0x6c, 0x5f, 0x76, 0x6f, 0x74, 0x65, 0x73, 0x18, 0x0c, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x14, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x64, 0x61, 0x6f, 0x2e, 0x50, 0x6f, 0x6c,
+	0x6c, 0x56, 0x6f, 0x74, 0x65, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x09, 0x70, 0x6f, 0x6c,
+	0x6c, 0x56, 0x6f, 0x74, 0x65, 0x73, 0x12, 0x48, 0x0a, 0x10, 0x70, 0x6f, 0x6c, 0x6c, 0x5f, 0x69,
+	0x64, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72, 0x73, 0x18, 0x0d, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x18, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x64, 0x61, 0x6f, 0x2e, 0x50, 0x65,
+	0x72, 0x44, 0x61, 0x6f, 0x55, 0x69, 0x6e, 0x74, 0x36, 0x34, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00,
+	0x52, 0x0e, 0x70, 0x6f, 0x6c, 0x6c, 0x49, 0x64, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x65, 0x72, 0x73,
+	0x12, 0x51, 0x0a, 0x14, 0x70, 0x6f, 0x6c, 0x6c, 0x5f, 0x64, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74,
+	0x5f, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x18, 0x0e, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19,
+	0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x64, 0x61, 0x6f, 0x2e, 0x44, 0x65, 0x70, 0x6f,
+	0x73, 0x69, 0x74, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52,
+	0x12, 0x70, 0x6f, 0x6c, 0x6c, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x52, 0x65, 0x63, 0x6f,
+	0x72, 0x64, 0x73, 0x12, 0x4a, 0x0a, 0x0e, 0x73, 0x74, 0x61, 0x74, 0x69, 0x63, 0x5f, 0x6d, 0x65,
+	0x6d, 0x62, 0x65, 0x72, 0x73, 0x18, 0x0f, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x62, 0x7a,
+	0x65, 0x2e, 0x64, 0x61, 0x6f, 0x64, 0x61, 0x6f, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x69, 0x63, 0x4d,
+	0x65, 0x6d, 0x62, 0x65, 0x72, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00,
+	0x52, 0x0d, 0x73, 0x74, 0x61, 0x74, 0x69, 0x63, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x42,
 	0x94, 0x01, 0x0a, 0x0e, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x64,
 	0x61, 0x6f, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f,
 	0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62,
@@ -539,16 +2612,39 @@ func file_bze_daodao_genesis_proto_rawDescGZIP() []byte {
 
 var file_bze_daodao_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_bze_daodao_genesis_proto_goTypes = []interface{}{
-	(*GenesisState)(nil), // 0: bze.daodao.GenesisState
-	(*Params)(nil),       // 1: bze.daodao.Params
+	(*GenesisState)(nil),       // 0: bze.daodao.GenesisState
+	(*Params)(nil),             // 1: bze.daodao.Params
+	(*Dao)(nil),                // 2: bze.daodao.Dao
+	(*Proposal)(nil),           // 3: bze.daodao.Proposal
+	(*Vote)(nil),               // 4: bze.daodao.Vote
+	(*PerDaoUint64)(nil),       // 5: bze.daodao.PerDaoUint64
+	(*SnapshotPowerEntry)(nil), // 6: bze.daodao.SnapshotPowerEntry
+	(*SnapshotTotalEntry)(nil), // 7: bze.daodao.SnapshotTotalEntry
+	(*DepositRecord)(nil),      // 8: bze.daodao.DepositRecord
+	(*Poll)(nil),               // 9: bze.daodao.Poll
+	(*PollVote)(nil),           // 10: bze.daodao.PollVote
+	(*StaticMemberEntry)(nil),  // 11: bze.daodao.StaticMemberEntry
 }
 var file_bze_daodao_genesis_proto_depIdxs = []int32{
-	1, // 0: bze.daodao.GenesisState.params:type_name -> bze.daodao.Params
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	1,  // 0: bze.daodao.GenesisState.params:type_name -> bze.daodao.Params
+	2,  // 1: bze.daodao.GenesisState.daos:type_name -> bze.daodao.Dao
+	3,  // 2: bze.daodao.GenesisState.proposals:type_name -> bze.daodao.Proposal
+	4,  // 3: bze.daodao.GenesisState.votes:type_name -> bze.daodao.Vote
+	5,  // 4: bze.daodao.GenesisState.proposal_id_counters:type_name -> bze.daodao.PerDaoUint64
+	5,  // 5: bze.daodao.GenesisState.snapshot_id_counters:type_name -> bze.daodao.PerDaoUint64
+	6,  // 6: bze.daodao.GenesisState.snapshot_powers:type_name -> bze.daodao.SnapshotPowerEntry
+	7,  // 7: bze.daodao.GenesisState.snapshot_totals:type_name -> bze.daodao.SnapshotTotalEntry
+	8,  // 8: bze.daodao.GenesisState.deposit_records:type_name -> bze.daodao.DepositRecord
+	9,  // 9: bze.daodao.GenesisState.polls:type_name -> bze.daodao.Poll
+	10, // 10: bze.daodao.GenesisState.poll_votes:type_name -> bze.daodao.PollVote
+	5,  // 11: bze.daodao.GenesisState.poll_id_counters:type_name -> bze.daodao.PerDaoUint64
+	8,  // 12: bze.daodao.GenesisState.poll_deposit_records:type_name -> bze.daodao.DepositRecord
+	11, // 13: bze.daodao.GenesisState.static_members:type_name -> bze.daodao.StaticMemberEntry
+	14, // [14:14] is the sub-list for method output_type
+	14, // [14:14] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_bze_daodao_genesis_proto_init() }
@@ -557,6 +2653,7 @@ func file_bze_daodao_genesis_proto_init() {
 		return
 	}
 	file_bze_daodao_params_proto_init()
+	file_bze_daodao_store_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_bze_daodao_genesis_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GenesisState); i {

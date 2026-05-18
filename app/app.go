@@ -313,6 +313,12 @@ func New(
 	// Seal the capability keeper after all ScopeToModule calls (IBC + wasm) are complete
 	app.CapabilityKeeper.Seal()
 
+	// Epic 5: wire the baseapp MsgServiceRouter into the daodao keeper so
+	// MsgExecuteProposal can dispatch a passed proposal's msgs[] bundle.
+	// Must run AFTER appBuilder.Build (which builds the router) and AFTER
+	// every module has registered its msg services with that router.
+	app.DaodaoKeeper.SetMsgRouter(app.MsgServiceRouter())
+
 	// register streaming services
 	if err := app.RegisterStreamingServices(appOpts, app.kvStoreKeys()); err != nil {
 		return nil, err

@@ -7,3 +7,4 @@ $mockgen_cmd -source=x/cointrunk/types/expected_keepers.go -package testutil -de
 $mockgen_cmd -source=x/tokenfactory/types/expected_keepers.go -package testutil -destination x/tokenfactory/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/tradebin/types/expected_keepers.go -package testutil -destination x/tradebin/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/txfeecollector/types/expected_keepers.go -package testutil -destination x/txfeecollector/testutil/expected_keepers_mocks.go
+$mockgen_cmd -source=x/daodao/types/expected_keepers.go -package testutil -destination x/daodao/testutil/expected_keepers_mocks.go

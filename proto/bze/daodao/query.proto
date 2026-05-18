@@ -2,18 +2,154 @@ syntax = "proto3";
 package bze.daodao;
 
 import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "bze/daodao/params.proto";
+import "bze/daodao/store.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/daodao/types";
 
-// Query defines the gRPC querier service.
+// Query defines the daodao gRPC querier service.
 service Query {
-  // Parameters queries the parameters of the module.
+  // Params queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/bze-alphateam/bze/daodao/params";
+    option (google.api.http).get = "/bze/daodao/params";
+  }
+
+  // Dao queries a DAO by its id.
+  rpc Dao(QueryDaoRequest) returns (QueryDaoResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}";
+  }
+
+  // DaoByAddress queries a DAO by its on-chain account address.
+  rpc DaoByAddress(QueryDaoByAddressRequest) returns (QueryDaoResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/by_address/{address}";
+  }
+
+  // Daos lists all DAOs, paginated.
+  rpc Daos(QueryDaosRequest) returns (QueryDaosResponse) {
+    option (google.api.http).get = "/bze/daodao/daos";
+  }
+
+  // DaosByCreator lists DAOs created by a given address, paginated.
+  rpc DaosByCreator(QueryDaosByCreatorRequest) returns (QueryDaosResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/by_creator/{creator}";
+  }
+
+  // SubDaos lists the children of a given parent DAO, paginated.
+  rpc SubDaos(QuerySubDaosRequest) returns (QueryDaosResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{parent_dao_id}/subdaos";
+  }
+
+  // VotingPower returns an address's CURRENT voting power within a DAO,
+  // plus the DAO's total. For snapshot-based reads at a proposal's
+  // creation height, callers should use Epic 3's proposal/tally queries
+  // instead.
+  rpc VotingPower(QueryVotingPowerRequest) returns (QueryVotingPowerResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}/voting_power/{address}";
+  }
+
+  // TotalVotingPower returns the DAO's CURRENT total voting power.
+  rpc TotalVotingPower(QueryTotalVotingPowerRequest) returns (QueryTotalVotingPowerResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}/total_voting_power";
+  }
+
+  // Members lists the (address, weight) entries of a STATIC DAO. Returns
+  // an error if the DAO is REWARD_STAKED (use the rewards module's own
+  // participant queries instead).
+  rpc Members(QueryMembersRequest) returns (QueryMembersResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}/members";
+  }
+
+  // ----- Epic 3: proposals & voting -----
+
+  // GovernanceConfig returns a DAO's current proposal-track configuration.
+  // Note: in-flight proposals carry their own frozen copy
+  // (Proposal.governance_snapshot); this query reflects the value that
+  // will apply to FUTURE proposals.
+  rpc GovernanceConfig(QueryGovernanceConfigRequest) returns (QueryGovernanceConfigResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}/governance";
+  }
+
+  // Proposal returns a single proposal by (dao_id, proposal_id).
+  rpc Proposal(QueryProposalRequest) returns (QueryProposalResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}/proposals/{proposal_id}";
+  }
+
+  // Proposals lists a DAO's proposals, optionally filtered by status.
+  // Paginated.
+  rpc Proposals(QueryProposalsRequest) returns (QueryProposalsResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}/proposals";
+  }
+
+  // Tally returns the running tally for a proposal. Equivalent to reading
+  // Proposal.tally but exposed as a dedicated endpoint for UI polling.
+  rpc Tally(QueryTallyRequest) returns (QueryTallyResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}/proposals/{proposal_id}/tally";
+  }
+
+  // Vote returns a single voter's vote on a proposal, or NOT_FOUND if the
+  // voter hasn't voted.
+  rpc Vote(QueryVoteRequest) returns (QueryVoteResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}/proposals/{proposal_id}/votes/{voter}";
+  }
+
+  // Votes lists all votes cast on a proposal, paginated.
+  rpc Votes(QueryVotesRequest) returns (QueryVotesResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}/proposals/{proposal_id}/votes";
+  }
+
+  // ----- Epic 4: deposit period -----
+
+  // DepositConfig returns a DAO's current deposit-period configuration.
+  // In-flight proposals carry their own frozen Proposal.deposit_snapshot;
+  // this query reflects the value that will apply to FUTURE proposals.
+  rpc DepositConfig(QueryDepositConfigRequest) returns (QueryDepositConfigResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}/deposit";
+  }
+
+  // Deposits lists every per-(proposal, depositor) deposit row for a
+  // proposal, paginated. Used by UIs to render contributor lists and by
+  // depositors to verify their pending refund.
+  rpc Deposits(QueryDepositsRequest) returns (QueryDepositsResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}/proposals/{proposal_id}/deposits";
+  }
+
+  // ----- Epic 6: polls -----
+
+  // Poll returns a single poll by (dao_id, poll_id).
+  rpc Poll(QueryPollRequest) returns (QueryPollResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}/polls/{poll_id}";
+  }
+
+  // Polls lists a DAO's polls, optionally filtered by status. Paginated.
+  rpc Polls(QueryPollsRequest) returns (QueryPollsResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}/polls";
+  }
+
+  // PollVote returns a single voter's selection on a poll. NOT_FOUND if
+  // the voter hasn't voted.
+  rpc PollVote(QueryPollVoteRequest) returns (QueryPollVoteResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}/polls/{poll_id}/votes/{voter}";
+  }
+
+  // PollVotes lists every vote on a poll, paginated.
+  rpc PollVotes(QueryPollVotesRequest) returns (QueryPollVotesResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}/polls/{poll_id}/votes";
+  }
+
+  // PollTally returns the running tally for a poll. Equivalent to reading
+  // Poll.tally but exposed as a dedicated endpoint for UI polling.
+  rpc PollTally(QueryPollTallyRequest) returns (QueryPollTallyResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}/polls/{poll_id}/tally";
+  }
+
+  // PollDeposits lists every per-(poll, depositor) deposit row,
+  // paginated. Shares the DepositRecord proto shape with proposals.
+  rpc PollDeposits(QueryPollDepositsRequest) returns (QueryPollDepositsResponse) {
+    option (google.api.http).get = "/bze/daodao/daos/{dao_id}/polls/{poll_id}/deposits";
   }
 }
 
@@ -24,7 +160,237 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params holds all the parameters of this module.
   Params params = 1 [
-    (gogoproto.nullable) = false,
+    (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
+}
+
+// QueryDaoRequest queries a single DAO by its id.
+message QueryDaoRequest {
+  uint64 dao_id = 1;
+}
+
+// QueryDaoByAddressRequest queries a single DAO by its on-chain account
+// address.
+message QueryDaoByAddressRequest {
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryDaoResponse returns a single DAO.
+message QueryDaoResponse {
+  Dao dao = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryDaosRequest is the paginated listing request for all DAOs.
+message QueryDaosRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryDaosByCreatorRequest queries DAOs created by a specific address.
+message QueryDaosByCreatorRequest {
+  string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QuerySubDaosRequest queries the children of a parent DAO.
+message QuerySubDaosRequest {
+  uint64 parent_dao_id = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryDaosResponse returns a paginated list of DAOs. Shared response type
+// across Daos / DaosByCreator / SubDaos.
+message QueryDaosResponse {
+  repeated Dao daos = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryVotingPowerRequest queries a single address's current voting power.
+message QueryVotingPowerRequest {
+  uint64 dao_id  = 1;
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryVotingPowerResponse returns the address's power and the DAO total
+// (so a caller computes ratios without a second round-trip).
+message QueryVotingPowerResponse {
+  uint64 power = 1;
+  uint64 total = 2;
+}
+
+// QueryTotalVotingPowerRequest queries the DAO's current total.
+message QueryTotalVotingPowerRequest {
+  uint64 dao_id = 1;
+}
+
+message QueryTotalVotingPowerResponse {
+  uint64 total = 1;
+}
+
+// QueryMembersRequest queries the (address, weight) list of a STATIC DAO.
+message QueryMembersRequest {
+  uint64 dao_id = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryMembersResponse {
+  repeated StaticMember members = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// ----- Epic 3: proposals & voting -----
+
+message QueryGovernanceConfigRequest {
+  uint64 dao_id = 1;
+}
+
+message QueryGovernanceConfigResponse {
+  GovernanceConfig governance = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryProposalRequest {
+  uint64 dao_id      = 1;
+  uint64 proposal_id = 2;
+}
+
+message QueryProposalResponse {
+  Proposal proposal = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryProposalsRequest lists a DAO's proposals.
+//
+// status_filter is optional: PROPOSAL_STATUS_UNSPECIFIED means "no filter,
+// return proposals in every status." Any other value restricts the listing
+// to proposals currently in that status (via the ProposalByStatusKey index).
+message QueryProposalsRequest {
+  uint64                                  dao_id        = 1;
+  ProposalStatus                          status_filter = 2;
+  cosmos.base.query.v1beta1.PageRequest   pagination    = 3;
+}
+
+message QueryProposalsResponse {
+  repeated Proposal                       proposals  = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse  pagination = 2;
+}
+
+message QueryTallyRequest {
+  uint64 dao_id      = 1;
+  uint64 proposal_id = 2;
+}
+
+message QueryTallyResponse {
+  Tally          tally  = 1 [(gogoproto.nullable) = false];
+  // status is included so a UI doesn't need a separate Proposal round-trip
+  // to render "voting closed" vs "voting open".
+  ProposalStatus status = 2;
+}
+
+message QueryVoteRequest {
+  uint64 dao_id      = 1;
+  uint64 proposal_id = 2;
+  string voter       = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message QueryVoteResponse {
+  Vote vote = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryVotesRequest {
+  uint64                                dao_id      = 1;
+  uint64                                proposal_id = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination  = 3;
+}
+
+message QueryVotesResponse {
+  repeated Vote                          votes      = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// ----- Epic 4: deposit period -----
+
+message QueryDepositConfigRequest {
+  uint64 dao_id = 1;
+}
+
+message QueryDepositConfigResponse {
+  DepositConfig deposit = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryDepositsRequest {
+  uint64                                dao_id      = 1;
+  uint64                                proposal_id = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination  = 3;
+}
+
+message QueryDepositsResponse {
+  repeated DepositRecord                 deposits   = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// ----- Epic 6: polls -----
+
+message QueryPollRequest {
+  uint64 dao_id  = 1;
+  uint64 poll_id = 2;
+}
+
+message QueryPollResponse {
+  Poll poll = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryPollsRequest: status_filter == POLL_STATUS_UNSPECIFIED means "no
+// filter" (return polls in every status).
+message QueryPollsRequest {
+  uint64                                dao_id        = 1;
+  PollStatus                            status_filter = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination    = 3;
+}
+
+message QueryPollsResponse {
+  repeated Poll                          polls      = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPollVoteRequest {
+  uint64 dao_id  = 1;
+  uint64 poll_id = 2;
+  string voter   = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message QueryPollVoteResponse {
+  PollVote vote = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryPollVotesRequest {
+  uint64                                dao_id     = 1;
+  uint64                                poll_id    = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryPollVotesResponse {
+  repeated PollVote                      votes      = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPollTallyRequest {
+  uint64 dao_id  = 1;
+  uint64 poll_id = 2;
+}
+
+message QueryPollTallyResponse {
+  PollTally  tally  = 1 [(gogoproto.nullable) = false];
+  PollStatus status = 2;
+  // winning_choice_index is meaningful only when status == CONCLUDED.
+  uint32     winning_choice_index = 3;
+}
+
+message QueryPollDepositsRequest {
+  uint64                                dao_id     = 1;
+  uint64                                poll_id    = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryPollDepositsResponse {
+  repeated DepositRecord                 deposits   = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

@@ -19,15 +19,99 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Query_Params_FullMethodName = "/bze.daodao.Query/Params"
+	Query_Params_FullMethodName           = "/bze.daodao.Query/Params"
+	Query_Dao_FullMethodName              = "/bze.daodao.Query/Dao"
+	Query_DaoByAddress_FullMethodName     = "/bze.daodao.Query/DaoByAddress"
+	Query_Daos_FullMethodName             = "/bze.daodao.Query/Daos"
+	Query_DaosByCreator_FullMethodName    = "/bze.daodao.Query/DaosByCreator"
+	Query_SubDaos_FullMethodName          = "/bze.daodao.Query/SubDaos"
+	Query_VotingPower_FullMethodName      = "/bze.daodao.Query/VotingPower"
+	Query_TotalVotingPower_FullMethodName = "/bze.daodao.Query/TotalVotingPower"
+	Query_Members_FullMethodName          = "/bze.daodao.Query/Members"
+	Query_GovernanceConfig_FullMethodName = "/bze.daodao.Query/GovernanceConfig"
+	Query_Proposal_FullMethodName         = "/bze.daodao.Query/Proposal"
+	Query_Proposals_FullMethodName        = "/bze.daodao.Query/Proposals"
+	Query_Tally_FullMethodName            = "/bze.daodao.Query/Tally"
+	Query_Vote_FullMethodName             = "/bze.daodao.Query/Vote"
+	Query_Votes_FullMethodName            = "/bze.daodao.Query/Votes"
+	Query_DepositConfig_FullMethodName    = "/bze.daodao.Query/DepositConfig"
+	Query_Deposits_FullMethodName         = "/bze.daodao.Query/Deposits"
+	Query_Poll_FullMethodName             = "/bze.daodao.Query/Poll"
+	Query_Polls_FullMethodName            = "/bze.daodao.Query/Polls"
+	Query_PollVote_FullMethodName         = "/bze.daodao.Query/PollVote"
+	Query_PollVotes_FullMethodName        = "/bze.daodao.Query/PollVotes"
+	Query_PollTally_FullMethodName        = "/bze.daodao.Query/PollTally"
+	Query_PollDeposits_FullMethodName     = "/bze.daodao.Query/PollDeposits"
 )
 
 // QueryClient is the client API for Query service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type QueryClient interface {
-	// Parameters queries the parameters of the module.
+	// Params queries the parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// Dao queries a DAO by its id.
+	Dao(ctx context.Context, in *QueryDaoRequest, opts ...grpc.CallOption) (*QueryDaoResponse, error)
+	// DaoByAddress queries a DAO by its on-chain account address.
+	DaoByAddress(ctx context.Context, in *QueryDaoByAddressRequest, opts ...grpc.CallOption) (*QueryDaoResponse, error)
+	// Daos lists all DAOs, paginated.
+	Daos(ctx context.Context, in *QueryDaosRequest, opts ...grpc.CallOption) (*QueryDaosResponse, error)
+	// DaosByCreator lists DAOs created by a given address, paginated.
+	DaosByCreator(ctx context.Context, in *QueryDaosByCreatorRequest, opts ...grpc.CallOption) (*QueryDaosResponse, error)
+	// SubDaos lists the children of a given parent DAO, paginated.
+	SubDaos(ctx context.Context, in *QuerySubDaosRequest, opts ...grpc.CallOption) (*QueryDaosResponse, error)
+	// VotingPower returns an address's CURRENT voting power within a DAO,
+	// plus the DAO's total. For snapshot-based reads at a proposal's
+	// creation height, callers should use Epic 3's proposal/tally queries
+	// instead.
+	VotingPower(ctx context.Context, in *QueryVotingPowerRequest, opts ...grpc.CallOption) (*QueryVotingPowerResponse, error)
+	// TotalVotingPower returns the DAO's CURRENT total voting power.
+	TotalVotingPower(ctx context.Context, in *QueryTotalVotingPowerRequest, opts ...grpc.CallOption) (*QueryTotalVotingPowerResponse, error)
+	// Members lists the (address, weight) entries of a STATIC DAO. Returns
+	// an error if the DAO is REWARD_STAKED (use the rewards module's own
+	// participant queries instead).
+	Members(ctx context.Context, in *QueryMembersRequest, opts ...grpc.CallOption) (*QueryMembersResponse, error)
+	// GovernanceConfig returns a DAO's current proposal-track configuration.
+	// Note: in-flight proposals carry their own frozen copy
+	// (Proposal.governance_snapshot); this query reflects the value that
+	// will apply to FUTURE proposals.
+	GovernanceConfig(ctx context.Context, in *QueryGovernanceConfigRequest, opts ...grpc.CallOption) (*QueryGovernanceConfigResponse, error)
+	// Proposal returns a single proposal by (dao_id, proposal_id).
+	Proposal(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryProposalResponse, error)
+	// Proposals lists a DAO's proposals, optionally filtered by status.
+	// Paginated.
+	Proposals(ctx context.Context, in *QueryProposalsRequest, opts ...grpc.CallOption) (*QueryProposalsResponse, error)
+	// Tally returns the running tally for a proposal. Equivalent to reading
+	// Proposal.tally but exposed as a dedicated endpoint for UI polling.
+	Tally(ctx context.Context, in *QueryTallyRequest, opts ...grpc.CallOption) (*QueryTallyResponse, error)
+	// Vote returns a single voter's vote on a proposal, or NOT_FOUND if the
+	// voter hasn't voted.
+	Vote(ctx context.Context, in *QueryVoteRequest, opts ...grpc.CallOption) (*QueryVoteResponse, error)
+	// Votes lists all votes cast on a proposal, paginated.
+	Votes(ctx context.Context, in *QueryVotesRequest, opts ...grpc.CallOption) (*QueryVotesResponse, error)
+	// DepositConfig returns a DAO's current deposit-period configuration.
+	// In-flight proposals carry their own frozen Proposal.deposit_snapshot;
+	// this query reflects the value that will apply to FUTURE proposals.
+	DepositConfig(ctx context.Context, in *QueryDepositConfigRequest, opts ...grpc.CallOption) (*QueryDepositConfigResponse, error)
+	// Deposits lists every per-(proposal, depositor) deposit row for a
+	// proposal, paginated. Used by UIs to render contributor lists and by
+	// depositors to verify their pending refund.
+	Deposits(ctx context.Context, in *QueryDepositsRequest, opts ...grpc.CallOption) (*QueryDepositsResponse, error)
+	// Poll returns a single poll by (dao_id, poll_id).
+	Poll(ctx context.Context, in *QueryPollRequest, opts ...grpc.CallOption) (*QueryPollResponse, error)
+	// Polls lists a DAO's polls, optionally filtered by status. Paginated.
+	Polls(ctx context.Context, in *QueryPollsRequest, opts ...grpc.CallOption) (*QueryPollsResponse, error)
+	// PollVote returns a single voter's selection on a poll. NOT_FOUND if
+	// the voter hasn't voted.
+	PollVote(ctx context.Context, in *QueryPollVoteRequest, opts ...grpc.CallOption) (*QueryPollVoteResponse, error)
+	// PollVotes lists every vote on a poll, paginated.
+	PollVotes(ctx context.Context, in *QueryPollVotesRequest, opts ...grpc.CallOption) (*QueryPollVotesResponse, error)
+	// PollTally returns the running tally for a poll. Equivalent to reading
+	// Poll.tally but exposed as a dedicated endpoint for UI polling.
+	PollTally(ctx context.Context, in *QueryPollTallyRequest, opts ...grpc.CallOption) (*QueryPollTallyResponse, error)
+	// PollDeposits lists every per-(poll, depositor) deposit row,
+	// paginated. Shares the DepositRecord proto shape with proposals.
+	PollDeposits(ctx context.Context, in *QueryPollDepositsRequest, opts ...grpc.CallOption) (*QueryPollDepositsResponse, error)
 }
 
 type queryClient struct {
@@ -47,12 +131,272 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) Dao(ctx context.Context, in *QueryDaoRequest, opts ...grpc.CallOption) (*QueryDaoResponse, error) {
+	out := new(QueryDaoResponse)
+	err := c.cc.Invoke(ctx, Query_Dao_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) DaoByAddress(ctx context.Context, in *QueryDaoByAddressRequest, opts ...grpc.CallOption) (*QueryDaoResponse, error) {
+	out := new(QueryDaoResponse)
+	err := c.cc.Invoke(ctx, Query_DaoByAddress_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Daos(ctx context.Context, in *QueryDaosRequest, opts ...grpc.CallOption) (*QueryDaosResponse, error) {
+	out := new(QueryDaosResponse)
+	err := c.cc.Invoke(ctx, Query_Daos_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) DaosByCreator(ctx context.Context, in *QueryDaosByCreatorRequest, opts ...grpc.CallOption) (*QueryDaosResponse, error) {
+	out := new(QueryDaosResponse)
+	err := c.cc.Invoke(ctx, Query_DaosByCreator_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) SubDaos(ctx context.Context, in *QuerySubDaosRequest, opts ...grpc.CallOption) (*QueryDaosResponse, error) {
+	out := new(QueryDaosResponse)
+	err := c.cc.Invoke(ctx, Query_SubDaos_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) VotingPower(ctx context.Context, in *QueryVotingPowerRequest, opts ...grpc.CallOption) (*QueryVotingPowerResponse, error) {
+	out := new(QueryVotingPowerResponse)
+	err := c.cc.Invoke(ctx, Query_VotingPower_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) TotalVotingPower(ctx context.Context, in *QueryTotalVotingPowerRequest, opts ...grpc.CallOption) (*QueryTotalVotingPowerResponse, error) {
+	out := new(QueryTotalVotingPowerResponse)
+	err := c.cc.Invoke(ctx, Query_TotalVotingPower_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Members(ctx context.Context, in *QueryMembersRequest, opts ...grpc.CallOption) (*QueryMembersResponse, error) {
+	out := new(QueryMembersResponse)
+	err := c.cc.Invoke(ctx, Query_Members_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GovernanceConfig(ctx context.Context, in *QueryGovernanceConfigRequest, opts ...grpc.CallOption) (*QueryGovernanceConfigResponse, error) {
+	out := new(QueryGovernanceConfigResponse)
+	err := c.cc.Invoke(ctx, Query_GovernanceConfig_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Proposal(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryProposalResponse, error) {
+	out := new(QueryProposalResponse)
+	err := c.cc.Invoke(ctx, Query_Proposal_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Proposals(ctx context.Context, in *QueryProposalsRequest, opts ...grpc.CallOption) (*QueryProposalsResponse, error) {
+	out := new(QueryProposalsResponse)
+	err := c.cc.Invoke(ctx, Query_Proposals_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Tally(ctx context.Context, in *QueryTallyRequest, opts ...grpc.CallOption) (*QueryTallyResponse, error) {
+	out := new(QueryTallyResponse)
+	err := c.cc.Invoke(ctx, Query_Tally_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Vote(ctx context.Context, in *QueryVoteRequest, opts ...grpc.CallOption) (*QueryVoteResponse, error) {
+	out := new(QueryVoteResponse)
+	err := c.cc.Invoke(ctx, Query_Vote_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Votes(ctx context.Context, in *QueryVotesRequest, opts ...grpc.CallOption) (*QueryVotesResponse, error) {
+	out := new(QueryVotesResponse)
+	err := c.cc.Invoke(ctx, Query_Votes_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) DepositConfig(ctx context.Context, in *QueryDepositConfigRequest, opts ...grpc.CallOption) (*QueryDepositConfigResponse, error) {
+	out := new(QueryDepositConfigResponse)
+	err := c.cc.Invoke(ctx, Query_DepositConfig_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Deposits(ctx context.Context, in *QueryDepositsRequest, opts ...grpc.CallOption) (*QueryDepositsResponse, error) {
+	out := new(QueryDepositsResponse)
+	err := c.cc.Invoke(ctx, Query_Deposits_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Poll(ctx context.Context, in *QueryPollRequest, opts ...grpc.CallOption) (*QueryPollResponse, error) {
+	out := new(QueryPollResponse)
+	err := c.cc.Invoke(ctx, Query_Poll_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Polls(ctx context.Context, in *QueryPollsRequest, opts ...grpc.CallOption) (*QueryPollsResponse, error) {
+	out := new(QueryPollsResponse)
+	err := c.cc.Invoke(ctx, Query_Polls_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) PollVote(ctx context.Context, in *QueryPollVoteRequest, opts ...grpc.CallOption) (*QueryPollVoteResponse, error) {
+	out := new(QueryPollVoteResponse)
+	err := c.cc.Invoke(ctx, Query_PollVote_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) PollVotes(ctx context.Context, in *QueryPollVotesRequest, opts ...grpc.CallOption) (*QueryPollVotesResponse, error) {
+	out := new(QueryPollVotesResponse)
+	err := c.cc.Invoke(ctx, Query_PollVotes_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) PollTally(ctx context.Context, in *QueryPollTallyRequest, opts ...grpc.CallOption) (*QueryPollTallyResponse, error) {
+	out := new(QueryPollTallyResponse)
+	err := c.cc.Invoke(ctx, Query_PollTally_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) PollDeposits(ctx context.Context, in *QueryPollDepositsRequest, opts ...grpc.CallOption) (*QueryPollDepositsResponse, error) {
+	out := new(QueryPollDepositsResponse)
+	err := c.cc.Invoke(ctx, Query_PollDeposits_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
 type QueryServer interface {
-	// Parameters queries the parameters of the module.
+	// Params queries the parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// Dao queries a DAO by its id.
+	Dao(context.Context, *QueryDaoRequest) (*QueryDaoResponse, error)
+	// DaoByAddress queries a DAO by its on-chain account address.
+	DaoByAddress(context.Context, *QueryDaoByAddressRequest) (*QueryDaoResponse, error)
+	// Daos lists all DAOs, paginated.
+	Daos(context.Context, *QueryDaosRequest) (*QueryDaosResponse, error)
+	// DaosByCreator lists DAOs created by a given address, paginated.
+	DaosByCreator(context.Context, *QueryDaosByCreatorRequest) (*QueryDaosResponse, error)
+	// SubDaos lists the children of a given parent DAO, paginated.
+	SubDaos(context.Context, *QuerySubDaosRequest) (*QueryDaosResponse, error)
+	// VotingPower returns an address's CURRENT voting power within a DAO,
+	// plus the DAO's total. For snapshot-based reads at a proposal's
+	// creation height, callers should use Epic 3's proposal/tally queries
+	// instead.
+	VotingPower(context.Context, *QueryVotingPowerRequest) (*QueryVotingPowerResponse, error)
+	// TotalVotingPower returns the DAO's CURRENT total voting power.
+	TotalVotingPower(context.Context, *QueryTotalVotingPowerRequest) (*QueryTotalVotingPowerResponse, error)
+	// Members lists the (address, weight) entries of a STATIC DAO. Returns
+	// an error if the DAO is REWARD_STAKED (use the rewards module's own
+	// participant queries instead).
+	Members(context.Context, *QueryMembersRequest) (*QueryMembersResponse, error)
+	// GovernanceConfig returns a DAO's current proposal-track configuration.
+	// Note: in-flight proposals carry their own frozen copy
+	// (Proposal.governance_snapshot); this query reflects the value that
+	// will apply to FUTURE proposals.
+	GovernanceConfig(context.Context, *QueryGovernanceConfigRequest) (*QueryGovernanceConfigResponse, error)
+	// Proposal returns a single proposal by (dao_id, proposal_id).
+	Proposal(context.Context, *QueryProposalRequest) (*QueryProposalResponse, error)
+	// Proposals lists a DAO's proposals, optionally filtered by status.
+	// Paginated.
+	Proposals(context.Context, *QueryProposalsRequest) (*QueryProposalsResponse, error)
+	// Tally returns the running tally for a proposal. Equivalent to reading
+	// Proposal.tally but exposed as a dedicated endpoint for UI polling.
+	Tally(context.Context, *QueryTallyRequest) (*QueryTallyResponse, error)
+	// Vote returns a single voter's vote on a proposal, or NOT_FOUND if the
+	// voter hasn't voted.
+	Vote(context.Context, *QueryVoteRequest) (*QueryVoteResponse, error)
+	// Votes lists all votes cast on a proposal, paginated.
+	Votes(context.Context, *QueryVotesRequest) (*QueryVotesResponse, error)
+	// DepositConfig returns a DAO's current deposit-period configuration.
+	// In-flight proposals carry their own frozen Proposal.deposit_snapshot;
+	// this query reflects the value that will apply to FUTURE proposals.
+	DepositConfig(context.Context, *QueryDepositConfigRequest) (*QueryDepositConfigResponse, error)
+	// Deposits lists every per-(proposal, depositor) deposit row for a
+	// proposal, paginated. Used by UIs to render contributor lists and by
+	// depositors to verify their pending refund.
+	Deposits(context.Context, *QueryDepositsRequest) (*QueryDepositsResponse, error)
+	// Poll returns a single poll by (dao_id, poll_id).
+	Poll(context.Context, *QueryPollRequest) (*QueryPollResponse, error)
+	// Polls lists a DAO's polls, optionally filtered by status. Paginated.
+	Polls(context.Context, *QueryPollsRequest) (*QueryPollsResponse, error)
+	// PollVote returns a single voter's selection on a poll. NOT_FOUND if
+	// the voter hasn't voted.
+	PollVote(context.Context, *QueryPollVoteRequest) (*QueryPollVoteResponse, error)
+	// PollVotes lists every vote on a poll, paginated.
+	PollVotes(context.Context, *QueryPollVotesRequest) (*QueryPollVotesResponse, error)
+	// PollTally returns the running tally for a poll. Equivalent to reading
+	// Poll.tally but exposed as a dedicated endpoint for UI polling.
+	PollTally(context.Context, *QueryPollTallyRequest) (*QueryPollTallyResponse, error)
+	// PollDeposits lists every per-(poll, depositor) deposit row,
+	// paginated. Shares the DepositRecord proto shape with proposals.
+	PollDeposits(context.Context, *QueryPollDepositsRequest) (*QueryPollDepositsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -62,6 +406,72 @@ type UnimplementedQueryServer struct {
 
 func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (UnimplementedQueryServer) Dao(context.Context, *QueryDaoRequest) (*QueryDaoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Dao not implemented")
+}
+func (UnimplementedQueryServer) DaoByAddress(context.Context, *QueryDaoByAddressRequest) (*QueryDaoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DaoByAddress not implemented")
+}
+func (UnimplementedQueryServer) Daos(context.Context, *QueryDaosRequest) (*QueryDaosResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Daos not implemented")
+}
+func (UnimplementedQueryServer) DaosByCreator(context.Context, *QueryDaosByCreatorRequest) (*QueryDaosResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DaosByCreator not implemented")
+}
+func (UnimplementedQueryServer) SubDaos(context.Context, *QuerySubDaosRequest) (*QueryDaosResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubDaos not implemented")
+}
+func (UnimplementedQueryServer) VotingPower(context.Context, *QueryVotingPowerRequest) (*QueryVotingPowerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VotingPower not implemented")
+}
+func (UnimplementedQueryServer) TotalVotingPower(context.Context, *QueryTotalVotingPowerRequest) (*QueryTotalVotingPowerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TotalVotingPower not implemented")
+}
+func (UnimplementedQueryServer) Members(context.Context, *QueryMembersRequest) (*QueryMembersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Members not implemented")
+}
+func (UnimplementedQueryServer) GovernanceConfig(context.Context, *QueryGovernanceConfigRequest) (*QueryGovernanceConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GovernanceConfig not implemented")
+}
+func (UnimplementedQueryServer) Proposal(context.Context, *QueryProposalRequest) (*QueryProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Proposal not implemented")
+}
+func (UnimplementedQueryServer) Proposals(context.Context, *QueryProposalsRequest) (*QueryProposalsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Proposals not implemented")
+}
+func (UnimplementedQueryServer) Tally(context.Context, *QueryTallyRequest) (*QueryTallyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Tally not implemented")
+}
+func (UnimplementedQueryServer) Vote(context.Context, *QueryVoteRequest) (*QueryVoteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Vote not implemented")
+}
+func (UnimplementedQueryServer) Votes(context.Context, *QueryVotesRequest) (*QueryVotesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Votes not implemented")
+}
+func (UnimplementedQueryServer) DepositConfig(context.Context, *QueryDepositConfigRequest) (*QueryDepositConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DepositConfig not implemented")
+}
+func (UnimplementedQueryServer) Deposits(context.Context, *QueryDepositsRequest) (*QueryDepositsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Deposits not implemented")
+}
+func (UnimplementedQueryServer) Poll(context.Context, *QueryPollRequest) (*QueryPollResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Poll not implemented")
+}
+func (UnimplementedQueryServer) Polls(context.Context, *QueryPollsRequest) (*QueryPollsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Polls not implemented")
+}
+func (UnimplementedQueryServer) PollVote(context.Context, *QueryPollVoteRequest) (*QueryPollVoteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PollVote not implemented")
+}
+func (UnimplementedQueryServer) PollVotes(context.Context, *QueryPollVotesRequest) (*QueryPollVotesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PollVotes not implemented")
+}
+func (UnimplementedQueryServer) PollTally(context.Context, *QueryPollTallyRequest) (*QueryPollTallyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PollTally not implemented")
+}
+func (UnimplementedQueryServer) PollDeposits(context.Context, *QueryPollDepositsRequest) (*QueryPollDepositsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PollDeposits not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -94,6 +504,402 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Dao_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDaoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Dao(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Dao_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Dao(ctx, req.(*QueryDaoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_DaoByAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDaoByAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DaoByAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_DaoByAddress_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DaoByAddress(ctx, req.(*QueryDaoByAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Daos_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDaosRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Daos(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Daos_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Daos(ctx, req.(*QueryDaosRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_DaosByCreator_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDaosByCreatorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DaosByCreator(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_DaosByCreator_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DaosByCreator(ctx, req.(*QueryDaosByCreatorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_SubDaos_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySubDaosRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).SubDaos(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_SubDaos_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).SubDaos(ctx, req.(*QuerySubDaosRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_VotingPower_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryVotingPowerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).VotingPower(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_VotingPower_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).VotingPower(ctx, req.(*QueryVotingPowerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_TotalVotingPower_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTotalVotingPowerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TotalVotingPower(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_TotalVotingPower_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TotalVotingPower(ctx, req.(*QueryTotalVotingPowerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Members_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryMembersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Members(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Members_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Members(ctx, req.(*QueryMembersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GovernanceConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGovernanceConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GovernanceConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_GovernanceConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GovernanceConfig(ctx, req.(*QueryGovernanceConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Proposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryProposalRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Proposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Proposal_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Proposal(ctx, req.(*QueryProposalRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Proposals_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryProposalsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Proposals(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Proposals_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Proposals(ctx, req.(*QueryProposalsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Tally_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTallyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Tally(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Tally_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Tally(ctx, req.(*QueryTallyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Vote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryVoteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Vote(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Vote_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Vote(ctx, req.(*QueryVoteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Votes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryVotesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Votes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Votes_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Votes(ctx, req.(*QueryVotesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_DepositConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDepositConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DepositConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_DepositConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DepositConfig(ctx, req.(*QueryDepositConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Deposits_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDepositsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Deposits(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Deposits_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Deposits(ctx, req.(*QueryDepositsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Poll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPollRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Poll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Poll_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Poll(ctx, req.(*QueryPollRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Polls_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPollsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Polls(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Polls_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Polls(ctx, req.(*QueryPollsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_PollVote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPollVoteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).PollVote(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_PollVote_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).PollVote(ctx, req.(*QueryPollVoteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_PollVotes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPollVotesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).PollVotes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_PollVotes_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).PollVotes(ctx, req.(*QueryPollVotesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_PollTally_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPollTallyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).PollTally(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_PollTally_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).PollTally(ctx, req.(*QueryPollTallyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_PollDeposits_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPollDepositsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).PollDeposits(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_PollDeposits_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).PollDeposits(ctx, req.(*QueryPollDepositsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -104,6 +910,94 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "Dao",
+			Handler:    _Query_Dao_Handler,
+		},
+		{
+			MethodName: "DaoByAddress",
+			Handler:    _Query_DaoByAddress_Handler,
+		},
+		{
+			MethodName: "Daos",
+			Handler:    _Query_Daos_Handler,
+		},
+		{
+			MethodName: "DaosByCreator",
+			Handler:    _Query_DaosByCreator_Handler,
+		},
+		{
+			MethodName: "SubDaos",
+			Handler:    _Query_SubDaos_Handler,
+		},
+		{
+			MethodName: "VotingPower",
+			Handler:    _Query_VotingPower_Handler,
+		},
+		{
+			MethodName: "TotalVotingPower",
+			Handler:    _Query_TotalVotingPower_Handler,
+		},
+		{
+			MethodName: "Members",
+			Handler:    _Query_Members_Handler,
+		},
+		{
+			MethodName: "GovernanceConfig",
+			Handler:    _Query_GovernanceConfig_Handler,
+		},
+		{
+			MethodName: "Proposal",
+			Handler:    _Query_Proposal_Handler,
+		},
+		{
+			MethodName: "Proposals",
+			Handler:    _Query_Proposals_Handler,
+		},
+		{
+			MethodName: "Tally",
+			Handler:    _Query_Tally_Handler,
+		},
+		{
+			MethodName: "Vote",
+			Handler:    _Query_Vote_Handler,
+		},
+		{
+			MethodName: "Votes",
+			Handler:    _Query_Votes_Handler,
+		},
+		{
+			MethodName: "DepositConfig",
+			Handler:    _Query_DepositConfig_Handler,
+		},
+		{
+			MethodName: "Deposits",
+			Handler:    _Query_Deposits_Handler,
+		},
+		{
+			MethodName: "Poll",
+			Handler:    _Query_Poll_Handler,
+		},
+		{
+			MethodName: "Polls",
+			Handler:    _Query_Polls_Handler,
+		},
+		{
+			MethodName: "PollVote",
+			Handler:    _Query_PollVote_Handler,
+		},
+		{
+			MethodName: "PollVotes",
+			Handler:    _Query_PollVotes_Handler,
+		},
+		{
+			MethodName: "PollTally",
+			Handler:    _Query_PollTally_Handler,
+		},
+		{
+			MethodName: "PollDeposits",
+			Handler:    _Query_PollDeposits_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

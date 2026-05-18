@@ -19,16 +19,96 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_UpdateParams_FullMethodName = "/bze.daodao.Msg/UpdateParams"
+	Msg_UpdateParams_FullMethodName           = "/bze.daodao.Msg/UpdateParams"
+	Msg_CreateDao_FullMethodName              = "/bze.daodao.Msg/CreateDao"
+	Msg_UpdateDaoMetadata_FullMethodName      = "/bze.daodao.Msg/UpdateDaoMetadata"
+	Msg_UpdateDaoAdmin_FullMethodName         = "/bze.daodao.Msg/UpdateDaoAdmin"
+	Msg_AcceptDaoAdmin_FullMethodName         = "/bze.daodao.Msg/AcceptDaoAdmin"
+	Msg_UpdateMembers_FullMethodName          = "/bze.daodao.Msg/UpdateMembers"
+	Msg_CreateProposal_FullMethodName         = "/bze.daodao.Msg/CreateProposal"
+	Msg_Vote_FullMethodName                   = "/bze.daodao.Msg/Vote"
+	Msg_UpdateGovernanceConfig_FullMethodName = "/bze.daodao.Msg/UpdateGovernanceConfig"
+	Msg_Deposit_FullMethodName                = "/bze.daodao.Msg/Deposit"
+	Msg_UpdateDepositConfig_FullMethodName    = "/bze.daodao.Msg/UpdateDepositConfig"
+	Msg_ExecuteProposal_FullMethodName        = "/bze.daodao.Msg/ExecuteProposal"
+	Msg_RenounceAdmin_FullMethodName          = "/bze.daodao.Msg/RenounceAdmin"
+	Msg_UpdateVotingBackend_FullMethodName    = "/bze.daodao.Msg/UpdateVotingBackend"
+	Msg_CreatePoll_FullMethodName             = "/bze.daodao.Msg/CreatePoll"
+	Msg_VoteOnPoll_FullMethodName             = "/bze.daodao.Msg/VoteOnPoll"
+	Msg_DepositOnPoll_FullMethodName          = "/bze.daodao.Msg/DepositOnPoll"
 )
 
 // MsgClient is the client API for Msg service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgClient interface {
-	// UpdateParams defines a (governance) operation for updating the module
-	// parameters. The authority defaults to the x/gov module account.
+	// UpdateParams updates the module-level params. Chain-gov authority.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	// CreateDao creates a new DAO, registers a BaseAccount for it at a
+	// deterministic address, and burns the creation fee (if configured).
+	CreateDao(ctx context.Context, in *MsgCreateDao, opts ...grpc.CallOption) (*MsgCreateDaoResponse, error)
+	// UpdateDaoMetadata updates a DAO's name / description / image / links.
+	// Admin-gated.
+	UpdateDaoMetadata(ctx context.Context, in *MsgUpdateDaoMetadata, opts ...grpc.CallOption) (*MsgUpdateDaoMetadataResponse, error)
+	// UpdateDaoAdmin nominates a new admin. The nominee must call
+	// AcceptDaoAdmin to complete the transfer. Admin-gated.
+	UpdateDaoAdmin(ctx context.Context, in *MsgUpdateDaoAdmin, opts ...grpc.CallOption) (*MsgUpdateDaoAdminResponse, error)
+	// AcceptDaoAdmin completes the admin handoff initiated by UpdateDaoAdmin.
+	// Must be signed by the nominee (pending_admin).
+	AcceptDaoAdmin(ctx context.Context, in *MsgAcceptDaoAdmin, opts ...grpc.CallOption) (*MsgAcceptDaoAdminResponse, error)
+	// UpdateMembers adds / removes / re-weights members of a STATIC DAO.
+	// Admin-gated. Rejected for REWARD_STAKED DAOs (their membership flows
+	// through rewards.MsgJoinStaking / MsgExitStaking).
+	UpdateMembers(ctx context.Context, in *MsgUpdateMembers, opts ...grpc.CallOption) (*MsgUpdateMembersResponse, error)
+	// CreateProposal submits a new proposal on a DAO. Snapshot is taken at
+	// creation; the proposal goes straight to VOTING in Epic 3
+	// (DEPOSIT_PERIOD is added in Epic 4). The `msgs` bundle is stored for
+	// later execution by Epic 5.
+	CreateProposal(ctx context.Context, in *MsgCreateProposal, opts ...grpc.CallOption) (*MsgCreateProposalResponse, error)
+	// Vote casts (or, when revote is enabled, replaces) the signer's vote
+	// on an open proposal. Voter power is read from the proposal's snapshot.
+	Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error)
+	// UpdateGovernanceConfig replaces the DAO's proposal-track configuration.
+	// Admin-gated. Existing proposals retain their frozen
+	// governance_snapshot; new proposals adopt the new config.
+	UpdateGovernanceConfig(ctx context.Context, in *MsgUpdateGovernanceConfig, opts ...grpc.CallOption) (*MsgUpdateGovernanceConfigResponse, error)
+	// Deposit tops up a DEPOSIT_PERIOD proposal's collected deposit. Anyone
+	// may deposit. The amount must use the proposal's deposit_snapshot
+	// min_deposit.denom. Reaching min_deposit transitions the proposal to
+	// VOTING in the same tx.
+	Deposit(ctx context.Context, in *MsgDeposit, opts ...grpc.CallOption) (*MsgDepositResponse, error)
+	// UpdateDepositConfig replaces a DAO's deposit-period configuration.
+	// Admin-gated. Existing proposals retain their frozen deposit_snapshot;
+	// new proposals adopt the new config.
+	UpdateDepositConfig(ctx context.Context, in *MsgUpdateDepositConfig, opts ...grpc.CallOption) (*MsgUpdateDepositConfigResponse, error)
+	// ExecuteProposal dispatches a PASSED proposal's msgs[] atomically as
+	// the DAO's account. Any address may submit; the signer of the tx is
+	// unrelated to who the dispatched messages claim as their signer (always
+	// the DAO).
+	ExecuteProposal(ctx context.Context, in *MsgExecuteProposal, opts ...grpc.CallOption) (*MsgExecuteProposalResponse, error)
+	// RenounceAdmin flips a DAO from admin-controlled to self-governed by
+	// setting admin = dao.account_address. After this, only proposals can
+	// mutate the DAO (because handlers gate on `assertAdmin`, which now
+	// accepts only the DAO's own account).
+	RenounceAdmin(ctx context.Context, in *MsgRenounceAdmin, opts ...grpc.CallOption) (*MsgRenounceAdminResponse, error)
+	// UpdateVotingBackend replaces the DAO's voting-power source. Same-type
+	// only in v1: STATIC → STATIC (use MsgUpdateMembers instead is also
+	// valid), REWARD_STAKED → REWARD_STAKED with the new program's creator
+	// matching dao.account_address and lock >= governance.voting_period.
+	// Cross-type migration (STATIC ↔ REWARD_STAKED) is rejected.
+	UpdateVotingBackend(ctx context.Context, in *MsgUpdateVotingBackend, opts ...grpc.CallOption) (*MsgUpdateVotingBackendResponse, error)
+	// CreatePoll opens an informational poll on a DAO. Unlike CreateProposal,
+	// a poll has no executable bundle — its terminal state surfaces a single
+	// winning_choice_index. Uses the same DAO deposit + voting_period config
+	// as proposals.
+	CreatePoll(ctx context.Context, in *MsgCreatePoll, opts ...grpc.CallOption) (*MsgCreatePollResponse, error)
+	// VoteOnPoll casts (or replaces, with revote enabled) the signer's
+	// approval-style selection on an open poll. Each chosen option receives
+	// the voter's full snapshot power.
+	VoteOnPoll(ctx context.Context, in *MsgVoteOnPoll, opts ...grpc.CallOption) (*MsgVoteOnPollResponse, error)
+	// DepositOnPoll tops up a DEPOSIT_PERIOD poll's escrow. Reaching
+	// min_deposit transitions the poll to VOTING.
+	DepositOnPoll(ctx context.Context, in *MsgDepositOnPoll, opts ...grpc.CallOption) (*MsgDepositOnPollResponse, error)
 }
 
 type msgClient struct {
@@ -48,13 +128,221 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
+func (c *msgClient) CreateDao(ctx context.Context, in *MsgCreateDao, opts ...grpc.CallOption) (*MsgCreateDaoResponse, error) {
+	out := new(MsgCreateDaoResponse)
+	err := c.cc.Invoke(ctx, Msg_CreateDao_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateDaoMetadata(ctx context.Context, in *MsgUpdateDaoMetadata, opts ...grpc.CallOption) (*MsgUpdateDaoMetadataResponse, error) {
+	out := new(MsgUpdateDaoMetadataResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateDaoMetadata_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateDaoAdmin(ctx context.Context, in *MsgUpdateDaoAdmin, opts ...grpc.CallOption) (*MsgUpdateDaoAdminResponse, error) {
+	out := new(MsgUpdateDaoAdminResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateDaoAdmin_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) AcceptDaoAdmin(ctx context.Context, in *MsgAcceptDaoAdmin, opts ...grpc.CallOption) (*MsgAcceptDaoAdminResponse, error) {
+	out := new(MsgAcceptDaoAdminResponse)
+	err := c.cc.Invoke(ctx, Msg_AcceptDaoAdmin_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateMembers(ctx context.Context, in *MsgUpdateMembers, opts ...grpc.CallOption) (*MsgUpdateMembersResponse, error) {
+	out := new(MsgUpdateMembersResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateMembers_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) CreateProposal(ctx context.Context, in *MsgCreateProposal, opts ...grpc.CallOption) (*MsgCreateProposalResponse, error) {
+	out := new(MsgCreateProposalResponse)
+	err := c.cc.Invoke(ctx, Msg_CreateProposal_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error) {
+	out := new(MsgVoteResponse)
+	err := c.cc.Invoke(ctx, Msg_Vote_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateGovernanceConfig(ctx context.Context, in *MsgUpdateGovernanceConfig, opts ...grpc.CallOption) (*MsgUpdateGovernanceConfigResponse, error) {
+	out := new(MsgUpdateGovernanceConfigResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateGovernanceConfig_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) Deposit(ctx context.Context, in *MsgDeposit, opts ...grpc.CallOption) (*MsgDepositResponse, error) {
+	out := new(MsgDepositResponse)
+	err := c.cc.Invoke(ctx, Msg_Deposit_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateDepositConfig(ctx context.Context, in *MsgUpdateDepositConfig, opts ...grpc.CallOption) (*MsgUpdateDepositConfigResponse, error) {
+	out := new(MsgUpdateDepositConfigResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateDepositConfig_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ExecuteProposal(ctx context.Context, in *MsgExecuteProposal, opts ...grpc.CallOption) (*MsgExecuteProposalResponse, error) {
+	out := new(MsgExecuteProposalResponse)
+	err := c.cc.Invoke(ctx, Msg_ExecuteProposal_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) RenounceAdmin(ctx context.Context, in *MsgRenounceAdmin, opts ...grpc.CallOption) (*MsgRenounceAdminResponse, error) {
+	out := new(MsgRenounceAdminResponse)
+	err := c.cc.Invoke(ctx, Msg_RenounceAdmin_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateVotingBackend(ctx context.Context, in *MsgUpdateVotingBackend, opts ...grpc.CallOption) (*MsgUpdateVotingBackendResponse, error) {
+	out := new(MsgUpdateVotingBackendResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateVotingBackend_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) CreatePoll(ctx context.Context, in *MsgCreatePoll, opts ...grpc.CallOption) (*MsgCreatePollResponse, error) {
+	out := new(MsgCreatePollResponse)
+	err := c.cc.Invoke(ctx, Msg_CreatePoll_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) VoteOnPoll(ctx context.Context, in *MsgVoteOnPoll, opts ...grpc.CallOption) (*MsgVoteOnPollResponse, error) {
+	out := new(MsgVoteOnPollResponse)
+	err := c.cc.Invoke(ctx, Msg_VoteOnPoll_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) DepositOnPoll(ctx context.Context, in *MsgDepositOnPoll, opts ...grpc.CallOption) (*MsgDepositOnPollResponse, error) {
+	out := new(MsgDepositOnPollResponse)
+	err := c.cc.Invoke(ctx, Msg_DepositOnPoll_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
 type MsgServer interface {
-	// UpdateParams defines a (governance) operation for updating the module
-	// parameters. The authority defaults to the x/gov module account.
+	// UpdateParams updates the module-level params. Chain-gov authority.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	// CreateDao creates a new DAO, registers a BaseAccount for it at a
+	// deterministic address, and burns the creation fee (if configured).
+	CreateDao(context.Context, *MsgCreateDao) (*MsgCreateDaoResponse, error)
+	// UpdateDaoMetadata updates a DAO's name / description / image / links.
+	// Admin-gated.
+	UpdateDaoMetadata(context.Context, *MsgUpdateDaoMetadata) (*MsgUpdateDaoMetadataResponse, error)
+	// UpdateDaoAdmin nominates a new admin. The nominee must call
+	// AcceptDaoAdmin to complete the transfer. Admin-gated.
+	UpdateDaoAdmin(context.Context, *MsgUpdateDaoAdmin) (*MsgUpdateDaoAdminResponse, error)
+	// AcceptDaoAdmin completes the admin handoff initiated by UpdateDaoAdmin.
+	// Must be signed by the nominee (pending_admin).
+	AcceptDaoAdmin(context.Context, *MsgAcceptDaoAdmin) (*MsgAcceptDaoAdminResponse, error)
+	// UpdateMembers adds / removes / re-weights members of a STATIC DAO.
+	// Admin-gated. Rejected for REWARD_STAKED DAOs (their membership flows
+	// through rewards.MsgJoinStaking / MsgExitStaking).
+	UpdateMembers(context.Context, *MsgUpdateMembers) (*MsgUpdateMembersResponse, error)
+	// CreateProposal submits a new proposal on a DAO. Snapshot is taken at
+	// creation; the proposal goes straight to VOTING in Epic 3
+	// (DEPOSIT_PERIOD is added in Epic 4). The `msgs` bundle is stored for
+	// later execution by Epic 5.
+	CreateProposal(context.Context, *MsgCreateProposal) (*MsgCreateProposalResponse, error)
+	// Vote casts (or, when revote is enabled, replaces) the signer's vote
+	// on an open proposal. Voter power is read from the proposal's snapshot.
+	Vote(context.Context, *MsgVote) (*MsgVoteResponse, error)
+	// UpdateGovernanceConfig replaces the DAO's proposal-track configuration.
+	// Admin-gated. Existing proposals retain their frozen
+	// governance_snapshot; new proposals adopt the new config.
+	UpdateGovernanceConfig(context.Context, *MsgUpdateGovernanceConfig) (*MsgUpdateGovernanceConfigResponse, error)
+	// Deposit tops up a DEPOSIT_PERIOD proposal's collected deposit. Anyone
+	// may deposit. The amount must use the proposal's deposit_snapshot
+	// min_deposit.denom. Reaching min_deposit transitions the proposal to
+	// VOTING in the same tx.
+	Deposit(context.Context, *MsgDeposit) (*MsgDepositResponse, error)
+	// UpdateDepositConfig replaces a DAO's deposit-period configuration.
+	// Admin-gated. Existing proposals retain their frozen deposit_snapshot;
+	// new proposals adopt the new config.
+	UpdateDepositConfig(context.Context, *MsgUpdateDepositConfig) (*MsgUpdateDepositConfigResponse, error)
+	// ExecuteProposal dispatches a PASSED proposal's msgs[] atomically as
+	// the DAO's account. Any address may submit; the signer of the tx is
+	// unrelated to who the dispatched messages claim as their signer (always
+	// the DAO).
+	ExecuteProposal(context.Context, *MsgExecuteProposal) (*MsgExecuteProposalResponse, error)
+	// RenounceAdmin flips a DAO from admin-controlled to self-governed by
+	// setting admin = dao.account_address. After this, only proposals can
+	// mutate the DAO (because handlers gate on `assertAdmin`, which now
+	// accepts only the DAO's own account).
+	RenounceAdmin(context.Context, *MsgRenounceAdmin) (*MsgRenounceAdminResponse, error)
+	// UpdateVotingBackend replaces the DAO's voting-power source. Same-type
+	// only in v1: STATIC → STATIC (use MsgUpdateMembers instead is also
+	// valid), REWARD_STAKED → REWARD_STAKED with the new program's creator
+	// matching dao.account_address and lock >= governance.voting_period.
+	// Cross-type migration (STATIC ↔ REWARD_STAKED) is rejected.
+	UpdateVotingBackend(context.Context, *MsgUpdateVotingBackend) (*MsgUpdateVotingBackendResponse, error)
+	// CreatePoll opens an informational poll on a DAO. Unlike CreateProposal,
+	// a poll has no executable bundle — its terminal state surfaces a single
+	// winning_choice_index. Uses the same DAO deposit + voting_period config
+	// as proposals.
+	CreatePoll(context.Context, *MsgCreatePoll) (*MsgCreatePollResponse, error)
+	// VoteOnPoll casts (or replaces, with revote enabled) the signer's
+	// approval-style selection on an open poll. Each chosen option receives
+	// the voter's full snapshot power.
+	VoteOnPoll(context.Context, *MsgVoteOnPoll) (*MsgVoteOnPollResponse, error)
+	// DepositOnPoll tops up a DEPOSIT_PERIOD poll's escrow. Reaching
+	// min_deposit transitions the poll to VOTING.
+	DepositOnPoll(context.Context, *MsgDepositOnPoll) (*MsgDepositOnPollResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -64,6 +352,54 @@ type UnimplementedMsgServer struct {
 
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+}
+func (UnimplementedMsgServer) CreateDao(context.Context, *MsgCreateDao) (*MsgCreateDaoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateDao not implemented")
+}
+func (UnimplementedMsgServer) UpdateDaoMetadata(context.Context, *MsgUpdateDaoMetadata) (*MsgUpdateDaoMetadataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDaoMetadata not implemented")
+}
+func (UnimplementedMsgServer) UpdateDaoAdmin(context.Context, *MsgUpdateDaoAdmin) (*MsgUpdateDaoAdminResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDaoAdmin not implemented")
+}
+func (UnimplementedMsgServer) AcceptDaoAdmin(context.Context, *MsgAcceptDaoAdmin) (*MsgAcceptDaoAdminResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AcceptDaoAdmin not implemented")
+}
+func (UnimplementedMsgServer) UpdateMembers(context.Context, *MsgUpdateMembers) (*MsgUpdateMembersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMembers not implemented")
+}
+func (UnimplementedMsgServer) CreateProposal(context.Context, *MsgCreateProposal) (*MsgCreateProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateProposal not implemented")
+}
+func (UnimplementedMsgServer) Vote(context.Context, *MsgVote) (*MsgVoteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Vote not implemented")
+}
+func (UnimplementedMsgServer) UpdateGovernanceConfig(context.Context, *MsgUpdateGovernanceConfig) (*MsgUpdateGovernanceConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateGovernanceConfig not implemented")
+}
+func (UnimplementedMsgServer) Deposit(context.Context, *MsgDeposit) (*MsgDepositResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Deposit not implemented")
+}
+func (UnimplementedMsgServer) UpdateDepositConfig(context.Context, *MsgUpdateDepositConfig) (*MsgUpdateDepositConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDepositConfig not implemented")
+}
+func (UnimplementedMsgServer) ExecuteProposal(context.Context, *MsgExecuteProposal) (*MsgExecuteProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExecuteProposal not implemented")
+}
+func (UnimplementedMsgServer) RenounceAdmin(context.Context, *MsgRenounceAdmin) (*MsgRenounceAdminResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RenounceAdmin not implemented")
+}
+func (UnimplementedMsgServer) UpdateVotingBackend(context.Context, *MsgUpdateVotingBackend) (*MsgUpdateVotingBackendResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateVotingBackend not implemented")
+}
+func (UnimplementedMsgServer) CreatePoll(context.Context, *MsgCreatePoll) (*MsgCreatePollResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreatePoll not implemented")
+}
+func (UnimplementedMsgServer) VoteOnPoll(context.Context, *MsgVoteOnPoll) (*MsgVoteOnPollResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VoteOnPoll not implemented")
+}
+func (UnimplementedMsgServer) DepositOnPoll(context.Context, *MsgDepositOnPoll) (*MsgDepositOnPollResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DepositOnPoll not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -96,6 +432,294 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreateDao_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateDao)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateDao(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_CreateDao_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateDao(ctx, req.(*MsgCreateDao))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateDaoMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateDaoMetadata)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateDaoMetadata(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateDaoMetadata_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateDaoMetadata(ctx, req.(*MsgUpdateDaoMetadata))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateDaoAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateDaoAdmin)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateDaoAdmin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateDaoAdmin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateDaoAdmin(ctx, req.(*MsgUpdateDaoAdmin))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_AcceptDaoAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAcceptDaoAdmin)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).AcceptDaoAdmin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_AcceptDaoAdmin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).AcceptDaoAdmin(ctx, req.(*MsgAcceptDaoAdmin))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateMembers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateMembers)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateMembers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateMembers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateMembers(ctx, req.(*MsgUpdateMembers))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_CreateProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateProposal)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_CreateProposal_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateProposal(ctx, req.(*MsgCreateProposal))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_Vote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgVote)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).Vote(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_Vote_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).Vote(ctx, req.(*MsgVote))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateGovernanceConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateGovernanceConfig)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateGovernanceConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateGovernanceConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateGovernanceConfig(ctx, req.(*MsgUpdateGovernanceConfig))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_Deposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDeposit)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).Deposit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_Deposit_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).Deposit(ctx, req.(*MsgDeposit))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateDepositConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateDepositConfig)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateDepositConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateDepositConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateDepositConfig(ctx, req.(*MsgUpdateDepositConfig))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ExecuteProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgExecuteProposal)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ExecuteProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_ExecuteProposal_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ExecuteProposal(ctx, req.(*MsgExecuteProposal))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_RenounceAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRenounceAdmin)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RenounceAdmin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_RenounceAdmin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RenounceAdmin(ctx, req.(*MsgRenounceAdmin))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateVotingBackend_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateVotingBackend)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateVotingBackend(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateVotingBackend_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateVotingBackend(ctx, req.(*MsgUpdateVotingBackend))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_CreatePoll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreatePoll)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreatePoll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_CreatePoll_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreatePoll(ctx, req.(*MsgCreatePoll))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_VoteOnPoll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgVoteOnPoll)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).VoteOnPoll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_VoteOnPoll_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).VoteOnPoll(ctx, req.(*MsgVoteOnPoll))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_DepositOnPoll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDepositOnPoll)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).DepositOnPoll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_DepositOnPoll_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).DepositOnPoll(ctx, req.(*MsgDepositOnPoll))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -106,6 +730,70 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateParams",
 			Handler:    _Msg_UpdateParams_Handler,
+		},
+		{
+			MethodName: "CreateDao",
+			Handler:    _Msg_CreateDao_Handler,
+		},
+		{
+			MethodName: "UpdateDaoMetadata",
+			Handler:    _Msg_UpdateDaoMetadata_Handler,
+		},
+		{
+			MethodName: "UpdateDaoAdmin",
+			Handler:    _Msg_UpdateDaoAdmin_Handler,
+		},
+		{
+			MethodName: "AcceptDaoAdmin",
+			Handler:    _Msg_AcceptDaoAdmin_Handler,
+		},
+		{
+			MethodName: "UpdateMembers",
+			Handler:    _Msg_UpdateMembers_Handler,
+		},
+		{
+			MethodName: "CreateProposal",
+			Handler:    _Msg_CreateProposal_Handler,
+		},
+		{
+			MethodName: "Vote",
+			Handler:    _Msg_Vote_Handler,
+		},
+		{
+			MethodName: "UpdateGovernanceConfig",
+			Handler:    _Msg_UpdateGovernanceConfig_Handler,
+		},
+		{
+			MethodName: "Deposit",
+			Handler:    _Msg_Deposit_Handler,
+		},
+		{
+			MethodName: "UpdateDepositConfig",
+			Handler:    _Msg_UpdateDepositConfig_Handler,
+		},
+		{
+			MethodName: "ExecuteProposal",
+			Handler:    _Msg_ExecuteProposal_Handler,
+		},
+		{
+			MethodName: "RenounceAdmin",
+			Handler:    _Msg_RenounceAdmin_Handler,
+		},
+		{
+			MethodName: "UpdateVotingBackend",
+			Handler:    _Msg_UpdateVotingBackend_Handler,
+		},
+		{
+			MethodName: "CreatePoll",
+			Handler:    _Msg_CreatePoll_Handler,
+		},
+		{
+			MethodName: "VoteOnPoll",
+			Handler:    _Msg_VoteOnPoll_Handler,
+		},
+		{
+			MethodName: "DepositOnPoll",
+			Handler:    _Msg_DepositOnPoll_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

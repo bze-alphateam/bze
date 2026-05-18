@@ -25,9 +25,83 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the daodao module's genesis state.
+//
+// Index conventions in this struct:
+//   - DAO secondary indexes (DaoByAddress / DaoByCreator / SubDao) are
+//     rebuilt on import from `daos`.
+//   - Proposal status index (ProposalByStatusKey) and the end-blocker
+//     expiring queue (ExpiringProposalKey) are rebuilt on import from
+//     `proposals`. We don't serialize derived state.
 type GenesisState struct {
 	// params defines all the parameters of the module.
 	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	// dao_id_counter is the next DAO id to be allocated. On import, this MUST
+	// be greater than the largest `id` present in `daos`.
+	DaoIdCounter uint64 `protobuf:"varint,2,opt,name=dao_id_counter,json=daoIdCounter,proto3" json:"dao_id_counter,omitempty"`
+	// daos holds all DAOs at export time. On import, indices
+	// (DaoByAddress, DaoByCreator, SubDao) are rebuilt from this list.
+	Daos []Dao `protobuf:"bytes,3,rep,name=daos,proto3" json:"daos"`
+	// proposals holds every proposal at export time, in any status
+	// (DEPOSIT_PERIOD / VOTING / PASSED / REJECTED / EXECUTED / …). On
+	// import we resurrect each one, restoring its primary record AND the
+	// derived ProposalByStatusKey row; VOTING proposals are also re-enqueued
+	// on the end-blocker timer queue keyed by voting_end.
+	Proposals []Proposal `protobuf:"bytes,4,rep,name=proposals,proto3" json:"proposals"`
+	// votes holds every cast vote at export time. Replayed verbatim on
+	// import (replaces-in-place semantics matter only at runtime; at
+	// import we just write the rows).
+	Votes []Vote `protobuf:"bytes,5,rep,name=votes,proto3" json:"votes"`
+	// proposal_id_counters[i] is the NEXT proposal id to allocate for
+	// the DAO with id `proposal_id_counters[i].dao_id`. Per-DAO and
+	// monotonic. Validate confirms each counter strictly exceeds the
+	// maximum proposal_id present for its DAO.
+	ProposalIdCounters []PerDaoUint64 `protobuf:"bytes,6,rep,name=proposal_id_counters,json=proposalIdCounters,proto3" json:"proposal_id_counters"`
+	// snapshot_id_counters[i] is the NEXT snapshot id to allocate for
+	// the DAO with id `snapshot_id_counters[i].dao_id`. Same shape /
+	// invariants as proposal_id_counters.
+	SnapshotIdCounters []PerDaoUint64 `protobuf:"bytes,7,rep,name=snapshot_id_counters,json=snapshotIdCounters,proto3" json:"snapshot_id_counters"`
+	// snapshot_powers and snapshot_totals serialize the per-(dao, snapshot)
+	// snapshot table. Required for in-flight proposals: a Vote read at
+	// import time needs SnapshotPower(dao, snapshot_id, voter) to still
+	// resolve. Validate confirms every (dao_id, snapshot_id) pair
+	// referenced by a Proposal has a matching snapshot_totals row.
+	SnapshotPowers []SnapshotPowerEntry `protobuf:"bytes,8,rep,name=snapshot_powers,json=snapshotPowers,proto3" json:"snapshot_powers"`
+	SnapshotTotals []SnapshotTotalEntry `protobuf:"bytes,9,rep,name=snapshot_totals,json=snapshotTotals,proto3" json:"snapshot_totals"`
+	// deposit_records holds every open (proposal, depositor) deposit row at
+	// export time. Required for refund routing on post-import terminal
+	// status — without these rows the keeper would know the escrow balance
+	// but not which depositors to send refunds to. Terminal proposals have
+	// already disbursed their deposits and contribute no rows.
+	DepositRecords []DepositRecord `protobuf:"bytes,10,rep,name=deposit_records,json=depositRecords,proto3" json:"deposit_records"`
+	// polls holds every poll at export time, in any status. Derived state
+	// (PollByStatusKey index, ExpiringPollKey queue) is rebuilt from this
+	// list on import — same pattern as proposals.
+	Polls []Poll `protobuf:"bytes,11,rep,name=polls,proto3" json:"polls"`
+	// poll_votes holds every cast poll vote at export time. Replayed
+	// verbatim on import.
+	PollVotes []PollVote `protobuf:"bytes,12,rep,name=poll_votes,json=pollVotes,proto3" json:"poll_votes"`
+	// poll_id_counters[i] is the NEXT poll id to allocate for the DAO
+	// with id `poll_id_counters[i].dao_id`. Per-DAO monotonic counter,
+	// independent of the proposal id counter.
+	PollIdCounters []PerDaoUint64 `protobuf:"bytes,13,rep,name=poll_id_counters,json=pollIdCounters,proto3" json:"poll_id_counters"`
+	// poll_deposit_records holds every open (poll, depositor) deposit row
+	// at export time. Stored under a separate key prefix from proposal
+	// deposits (PollDepositRecordKey vs DepositRecordKey) so refund/
+	// forfeit iterators iterate the right set; the proto shape is shared
+	// with proposal deposits.
+	PollDepositRecords []DepositRecord `protobuf:"bytes,14,rep,name=poll_deposit_records,json=pollDepositRecords,proto3" json:"poll_deposit_records"`
+	// static_members holds every (dao, address, weight) row of every
+	// STATIC DAO's member table at export time. Without this, a chain
+	// export/import would silently lose the member set: dao.voting_backend
+	// would still be STATIC, but the on-chain MemberKey range would be
+	// empty, so new proposals/polls would have zero voting power and
+	// self-admin DAOs could be bricked.
+	//
+	// The cached StaticTotalPowerKey is NOT serialized — it's recomputed
+	// on import from the sum of weights per DAO (avoids divergence).
+	// Validate enforces: each entry's dao_id is in `daos` AND that DAO's
+	// voting_backend is STATIC.
+	StaticMembers []StaticMemberEntry `protobuf:"bytes,15,rep,name=static_members,json=staticMembers,proto3" json:"static_members"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -70,6 +144,104 @@ func (m *GenesisState) GetParams() Params {
 	return Params{}
 }
 
+func (m *GenesisState) GetDaoIdCounter() uint64 {
+	if m != nil {
+		return m.DaoIdCounter
+	}
+	return 0
+}
+
+func (m *GenesisState) GetDaos() []Dao {
+	if m != nil {
+		return m.Daos
+	}
+	return nil
+}
+
+func (m *GenesisState) GetProposals() []Proposal {
+	if m != nil {
+		return m.Proposals
+	}
+	return nil
+}
+
+func (m *GenesisState) GetVotes() []Vote {
+	if m != nil {
+		return m.Votes
+	}
+	return nil
+}
+
+func (m *GenesisState) GetProposalIdCounters() []PerDaoUint64 {
+	if m != nil {
+		return m.ProposalIdCounters
+	}
+	return nil
+}
+
+func (m *GenesisState) GetSnapshotIdCounters() []PerDaoUint64 {
+	if m != nil {
+		return m.SnapshotIdCounters
+	}
+	return nil
+}
+
+func (m *GenesisState) GetSnapshotPowers() []SnapshotPowerEntry {
+	if m != nil {
+		return m.SnapshotPowers
+	}
+	return nil
+}
+
+func (m *GenesisState) GetSnapshotTotals() []SnapshotTotalEntry {
+	if m != nil {
+		return m.SnapshotTotals
+	}
+	return nil
+}
+
+func (m *GenesisState) GetDepositRecords() []DepositRecord {
+	if m != nil {
+		return m.DepositRecords
+	}
+	return nil
+}
+
+func (m *GenesisState) GetPolls() []Poll {
+	if m != nil {
+		return m.Polls
+	}
+	return nil
+}
+
+func (m *GenesisState) GetPollVotes() []PollVote {
+	if m != nil {
+		return m.PollVotes
+	}
+	return nil
+}
+
+func (m *GenesisState) GetPollIdCounters() []PerDaoUint64 {
+	if m != nil {
+		return m.PollIdCounters
+	}
+	return nil
+}
+
+func (m *GenesisState) GetPollDepositRecords() []DepositRecord {
+	if m != nil {
+		return m.PollDepositRecords
+	}
+	return nil
+}
+
+func (m *GenesisState) GetStaticMembers() []StaticMemberEntry {
+	if m != nil {
+		return m.StaticMembers
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "bze.daodao.GenesisState")
 }
@@ -77,21 +249,42 @@ func init() {
 func init() { proto.RegisterFile("bze/daodao/genesis.proto", fileDescriptor_9da32a0fde14183f) }
 
 var fileDescriptor_9da32a0fde14183f = []byte{
-	// 209 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x48, 0xaa, 0x4a, 0xd5,
-	0x4f, 0x49, 0xcc, 0x4f, 0x49, 0xcc, 0xd7, 0x4f, 0x4f, 0xcd, 0x4b, 0x2d, 0xce, 0x2c, 0xd6, 0x2b,
-	0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x4a, 0xaa, 0x4a, 0xd5, 0x83, 0xc8, 0x48, 0x09, 0x26, 0xe6,
-	0x66, 0xe6, 0xe5, 0xeb, 0x83, 0x49, 0x88, 0xb4, 0x94, 0x48, 0x7a, 0x7e, 0x7a, 0x3e, 0x98, 0xa9,
-	0x0f, 0x62, 0x41, 0x45, 0xc5, 0x91, 0x8c, 0x2b, 0x48, 0x2c, 0x4a, 0xcc, 0x85, 0x9a, 0xa6, 0xe4,
-	0xca, 0xc5, 0xe3, 0x0e, 0x31, 0x3e, 0xb8, 0x24, 0xb1, 0x24, 0x55, 0xc8, 0x94, 0x8b, 0x0d, 0x22,
-	0x2f, 0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0x6d, 0x24, 0xa4, 0x87, 0xb0, 0x4e, 0x2f, 0x00, 0x2c, 0xe3,
-	0xc4, 0x79, 0xe2, 0x9e, 0x3c, 0xc3, 0x8a, 0xe7, 0x1b, 0xb4, 0x18, 0x83, 0xa0, 0x8a, 0x9d, 0x5c,
-	0x4f, 0x3c, 0x92, 0x63, 0xbc, 0xf0, 0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x09, 0x8f, 0xe5,
-	0x18, 0x2e, 0x3c, 0x96, 0x63, 0xb8, 0xf1, 0x58, 0x8e, 0x21, 0x4a, 0x3b, 0x3d, 0xb3, 0x24, 0xa3,
-	0x34, 0x49, 0x2f, 0x39, 0x3f, 0x57, 0x3f, 0xa9, 0x2a, 0x55, 0x37, 0x31, 0xa7, 0x20, 0x23, 0xb1,
-	0x24, 0x35, 0x11, 0xcc, 0xd3, 0xaf, 0x80, 0x39, 0xaa, 0xa4, 0xb2, 0x20, 0xb5, 0x38, 0x89, 0x0d,
-	0xec, 0x28, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x49, 0xa2, 0xc5, 0x7d, 0xfe, 0x00, 0x00,
-	0x00,
+	// 552 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x94, 0xcb, 0x6e, 0xd3, 0x40,
+	0x18, 0x85, 0x63, 0x9a, 0xb6, 0x64, 0x92, 0x26, 0x65, 0x14, 0x81, 0x89, 0x84, 0x89, 0x10, 0x8b,
+	0x70, 0x8b, 0xa5, 0x72, 0x11, 0x6c, 0x43, 0x2a, 0x2e, 0x52, 0xa5, 0x90, 0x02, 0x0b, 0x36, 0xd1,
+	0x38, 0x1e, 0x25, 0x96, 0x6c, 0xff, 0x23, 0xcf, 0x14, 0x68, 0x9e, 0x82, 0xc7, 0x60, 0xc9, 0x63,
+	0x74, 0xd9, 0x25, 0x0b, 0x84, 0x50, 0xb2, 0xe0, 0x35, 0xd0, 0xfc, 0x1e, 0xb7, 0x63, 0x28, 0x52,
+	0x36, 0xd1, 0x78, 0xce, 0x39, 0x9f, 0xff, 0xcc, 0xb1, 0x86, 0xb8, 0xc1, 0x82, 0xfb, 0x21, 0x83,
+	0x90, 0x81, 0x3f, 0xe3, 0x29, 0x97, 0x91, 0xec, 0x8b, 0x0c, 0x14, 0x50, 0x12, 0x2c, 0x78, 0x3f,
+	0x57, 0x3a, 0x57, 0x58, 0x12, 0xa5, 0xe0, 0xe3, 0x6f, 0x2e, 0x77, 0xda, 0x33, 0x98, 0x01, 0x2e,
+	0x7d, 0xbd, 0x32, 0xbb, 0xd7, 0x2c, 0x9c, 0x60, 0x19, 0x4b, 0x0c, 0xad, 0x73, 0xd5, 0x12, 0xa4,
+	0x82, 0x8c, 0xe7, 0xfb, 0xb7, 0x7e, 0x6c, 0x93, 0xc6, 0x8b, 0xfc, 0xbd, 0x87, 0x8a, 0x29, 0x4e,
+	0x1f, 0x93, 0xad, 0x3c, 0xe8, 0x3a, 0x5d, 0xa7, 0x57, 0xdf, 0xa3, 0xfd, 0xf3, 0x39, 0xfa, 0x23,
+	0x54, 0x06, 0xb5, 0x93, 0x9f, 0x37, 0x2b, 0x5f, 0x7f, 0x7f, 0xbb, 0xeb, 0x8c, 0x8d, 0x99, 0xde,
+	0x26, 0xcd, 0x90, 0xc1, 0x24, 0x0a, 0x27, 0x53, 0x38, 0x4a, 0x15, 0xcf, 0xdc, 0x4b, 0x5d, 0xa7,
+	0x57, 0x1d, 0x37, 0x42, 0x06, 0xaf, 0xc2, 0xe7, 0xf9, 0x1e, 0xbd, 0x43, 0xaa, 0x21, 0x03, 0xe9,
+	0x6e, 0x74, 0x37, 0x7a, 0xf5, 0xbd, 0x96, 0x8d, 0x1e, 0x32, 0x18, 0x54, 0x35, 0x77, 0x8c, 0x16,
+	0xfa, 0x94, 0xd4, 0x44, 0x06, 0x02, 0x24, 0x8b, 0xa5, 0x5b, 0x45, 0x7f, 0xbb, 0x34, 0x8a, 0x11,
+	0x4d, 0xe8, 0xdc, 0x4c, 0xef, 0x93, 0xcd, 0x8f, 0xa0, 0xb8, 0x74, 0x37, 0x31, 0xb5, 0x6b, 0xa7,
+	0xde, 0x83, 0xe2, 0x26, 0x91, 0x9b, 0xe8, 0x88, 0xb4, 0x8b, 0xa8, 0x35, 0xbd, 0x74, 0xb7, 0x30,
+	0xec, 0x96, 0x5e, 0xc9, 0xb3, 0x21, 0x83, 0x77, 0x51, 0xaa, 0x9e, 0x3c, 0x32, 0x10, 0x5a, 0x64,
+	0xcf, 0xfe, 0x23, 0x12, 0x65, 0xca, 0x84, 0x9c, 0x83, 0x2a, 0x11, 0xb7, 0xd7, 0x23, 0x16, 0x59,
+	0x8b, 0x78, 0x40, 0x5a, 0x67, 0x44, 0x01, 0x9f, 0x34, 0xec, 0x32, 0xc2, 0x3c, 0x1b, 0x76, 0x68,
+	0x2c, 0x23, 0xed, 0xd8, 0x4f, 0x55, 0x76, 0x6c, 0x90, 0x4d, 0x69, 0x2b, 0x65, 0x9c, 0x02, 0xa5,
+	0x0f, 0xb8, 0xf6, 0x7f, 0xdc, 0x5b, 0xed, 0xb8, 0x10, 0x87, 0x8a, 0xa4, 0x2f, 0x49, 0x2b, 0xe4,
+	0x02, 0x64, 0xa4, 0x26, 0x19, 0x9f, 0x42, 0x16, 0x4a, 0x97, 0x20, 0xee, 0x7a, 0xa9, 0xdf, 0xdc,
+	0x32, 0x46, 0x47, 0x41, 0x0a, 0xed, 0x4d, 0x6c, 0x4e, 0x40, 0x1c, 0x4b, 0xb7, 0xfe, 0x6f, 0x73,
+	0x23, 0x88, 0x8b, 0xae, 0x73, 0x13, 0x7d, 0x46, 0x88, 0x5e, 0x4c, 0xf2, 0xb2, 0x1b, 0x17, 0x7c,
+	0x22, 0x10, 0xc7, 0x56, 0xe1, 0x35, 0x61, 0x9e, 0xf5, 0xc8, 0xbb, 0x18, 0xb5, 0xeb, 0xd9, 0x59,
+	0xab, 0x9e, 0xa6, 0xce, 0x59, 0xd5, 0xbc, 0x21, 0x6d, 0x24, 0xfd, 0x7d, 0x02, 0xcd, 0xf5, 0x4e,
+	0x80, 0xea, 0xf0, 0xb0, 0x7c, 0x0a, 0xaf, 0x49, 0x53, 0x2a, 0xa6, 0xa2, 0xe9, 0x24, 0xe1, 0x49,
+	0xa0, 0x47, 0x6b, 0x21, 0xec, 0x46, 0xa9, 0x1d, 0x74, 0x1c, 0xa0, 0xc1, 0x2e, 0x67, 0x47, 0x5a,
+	0x82, 0x1c, 0xec, 0x9f, 0x2c, 0x3d, 0xe7, 0x74, 0xe9, 0x39, 0xbf, 0x96, 0x9e, 0xf3, 0x65, 0xe5,
+	0x55, 0x4e, 0x57, 0x5e, 0xe5, 0xfb, 0xca, 0xab, 0x7c, 0xb8, 0x37, 0x8b, 0xd4, 0xfc, 0x28, 0xe8,
+	0x4f, 0x21, 0xf1, 0x83, 0x05, 0x7f, 0xc0, 0x62, 0x31, 0x67, 0x8a, 0x33, 0x7c, 0xf2, 0x3f, 0x17,
+	0x77, 0x85, 0x3a, 0x16, 0x5c, 0x06, 0x5b, 0x78, 0x59, 0x3c, 0xfc, 0x13, 0x00, 0x00, 0xff, 0xff,
+	0x52, 0xfe, 0xe0, 0xa6, 0xae, 0x04, 0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -114,6 +307,193 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.StaticMembers) > 0 {
+		for iNdEx := len(m.StaticMembers) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.StaticMembers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x7a
+		}
+	}
+	if len(m.PollDepositRecords) > 0 {
+		for iNdEx := len(m.PollDepositRecords) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PollDepositRecords[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x72
+		}
+	}
+	if len(m.PollIdCounters) > 0 {
+		for iNdEx := len(m.PollIdCounters) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PollIdCounters[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x6a
+		}
+	}
+	if len(m.PollVotes) > 0 {
+		for iNdEx := len(m.PollVotes) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PollVotes[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x62
+		}
+	}
+	if len(m.Polls) > 0 {
+		for iNdEx := len(m.Polls) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Polls[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x5a
+		}
+	}
+	if len(m.DepositRecords) > 0 {
+		for iNdEx := len(m.DepositRecords) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.DepositRecords[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x52
+		}
+	}
+	if len(m.SnapshotTotals) > 0 {
+		for iNdEx := len(m.SnapshotTotals) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.SnapshotTotals[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x4a
+		}
+	}
+	if len(m.SnapshotPowers) > 0 {
+		for iNdEx := len(m.SnapshotPowers) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.SnapshotPowers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x42
+		}
+	}
+	if len(m.SnapshotIdCounters) > 0 {
+		for iNdEx := len(m.SnapshotIdCounters) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.SnapshotIdCounters[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x3a
+		}
+	}
+	if len(m.ProposalIdCounters) > 0 {
+		for iNdEx := len(m.ProposalIdCounters) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ProposalIdCounters[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x32
+		}
+	}
+	if len(m.Votes) > 0 {
+		for iNdEx := len(m.Votes) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Votes[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.Proposals) > 0 {
+		for iNdEx := len(m.Proposals) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Proposals[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if len(m.Daos) > 0 {
+		for iNdEx := len(m.Daos) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Daos[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if m.DaoIdCounter != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.DaoIdCounter))
+		i--
+		dAtA[i] = 0x10
+	}
 	{
 		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -146,6 +526,87 @@ func (m *GenesisState) Size() (n int) {
 	_ = l
 	l = m.Params.Size()
 	n += 1 + l + sovGenesis(uint64(l))
+	if m.DaoIdCounter != 0 {
+		n += 1 + sovGenesis(uint64(m.DaoIdCounter))
+	}
+	if len(m.Daos) > 0 {
+		for _, e := range m.Daos {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.Proposals) > 0 {
+		for _, e := range m.Proposals {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.Votes) > 0 {
+		for _, e := range m.Votes {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.ProposalIdCounters) > 0 {
+		for _, e := range m.ProposalIdCounters {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.SnapshotIdCounters) > 0 {
+		for _, e := range m.SnapshotIdCounters {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.SnapshotPowers) > 0 {
+		for _, e := range m.SnapshotPowers {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.SnapshotTotals) > 0 {
+		for _, e := range m.SnapshotTotals {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.DepositRecords) > 0 {
+		for _, e := range m.DepositRecords {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.Polls) > 0 {
+		for _, e := range m.Polls {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.PollVotes) > 0 {
+		for _, e := range m.PollVotes {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.PollIdCounters) > 0 {
+		for _, e := range m.PollIdCounters {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.PollDepositRecords) > 0 {
+		for _, e := range m.PollDepositRecords {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.StaticMembers) > 0 {
+		for _, e := range m.StaticMembers {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -214,6 +675,467 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoIdCounter", wireType)
+			}
+			m.DaoIdCounter = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoIdCounter |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Daos", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Daos = append(m.Daos, Dao{})
+			if err := m.Daos[len(m.Daos)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Proposals", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Proposals = append(m.Proposals, Proposal{})
+			if err := m.Proposals[len(m.Proposals)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Votes", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Votes = append(m.Votes, Vote{})
+			if err := m.Votes[len(m.Votes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ProposalIdCounters", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ProposalIdCounters = append(m.ProposalIdCounters, PerDaoUint64{})
+			if err := m.ProposalIdCounters[len(m.ProposalIdCounters)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SnapshotIdCounters", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SnapshotIdCounters = append(m.SnapshotIdCounters, PerDaoUint64{})
+			if err := m.SnapshotIdCounters[len(m.SnapshotIdCounters)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SnapshotPowers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SnapshotPowers = append(m.SnapshotPowers, SnapshotPowerEntry{})
+			if err := m.SnapshotPowers[len(m.SnapshotPowers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SnapshotTotals", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SnapshotTotals = append(m.SnapshotTotals, SnapshotTotalEntry{})
+			if err := m.SnapshotTotals[len(m.SnapshotTotals)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DepositRecords", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DepositRecords = append(m.DepositRecords, DepositRecord{})
+			if err := m.DepositRecords[len(m.DepositRecords)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Polls", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Polls = append(m.Polls, Poll{})
+			if err := m.Polls[len(m.Polls)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PollVotes", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PollVotes = append(m.PollVotes, PollVote{})
+			if err := m.PollVotes[len(m.PollVotes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PollIdCounters", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PollIdCounters = append(m.PollIdCounters, PerDaoUint64{})
+			if err := m.PollIdCounters[len(m.PollIdCounters)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 14:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PollDepositRecords", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PollDepositRecords = append(m.PollDepositRecords, DepositRecord{})
+			if err := m.PollDepositRecords[len(m.PollDepositRecords)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 15:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StaticMembers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.StaticMembers = append(m.StaticMembers, StaticMemberEntry{})
+			if err := m.StaticMembers[len(m.StaticMembers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

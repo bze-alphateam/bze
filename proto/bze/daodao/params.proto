@@ -3,13 +3,43 @@ package bze.daodao;
 
 import "amino/amino.proto";
 import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/daodao/types";
 
-// Params defines the parameters for the module.
+// Params defines the parameters for the daodao module.
 message Params {
   option (amino.name) = "bze/x/daodao/Params";
   option (gogoproto.equal) = true;
 
-  
+  // dao_creation_fee is paid by the creator on MsgCreateDao. A zero amount
+  // disables the fee. When non-zero, the fee is routed per
+  // `dao_creation_fee_destination`.
+  cosmos.base.v1beta1.Coin dao_creation_fee = 1 [(gogoproto.nullable) = false];
+
+  // dao_creation_fee_destination selects where a non-zero creation fee goes.
+  // Valid values:
+  //   "burner"         — burned via x/burner (default)
+  //   "community_pool" — sent to the chain community pool via x/distribution
+  // Ignored when dao_creation_fee.amount is zero.
+  string dao_creation_fee_destination = 2 [(gogoproto.moretags) = "yaml:\"dao_creation_fee_destination\""];
+
+  // max_voting_period is the chain-level ceiling on a DAO's
+  // governance.voting_period. The hardcoded floor is 1h.
+  google.protobuf.Duration max_voting_period = 3 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable)    = false
+  ];
+
+  // max_deposit_period is the chain-level ceiling on a DAO's
+  // deposit.deposit_period. The hardcoded floor is 1 day.
+  google.protobuf.Duration max_deposit_period = 4 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable)    = false
+  ];
+
+  // max_msgs_per_proposal caps the number of messages in a proposal's bundle
+  // (DoS protection at proposal creation).
+  uint32 max_msgs_per_proposal = 5;
 }

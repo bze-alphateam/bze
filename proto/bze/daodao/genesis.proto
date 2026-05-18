@@ -4,14 +4,108 @@ package bze.daodao;
 import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "bze/daodao/params.proto";
+import "bze/daodao/store.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/daodao/types";
 
 // GenesisState defines the daodao module's genesis state.
+//
+// Index conventions in this struct:
+//   - DAO secondary indexes (DaoByAddress / DaoByCreator / SubDao) are
+//     rebuilt on import from `daos`.
+//   - Proposal status index (ProposalByStatusKey) and the end-blocker
+//     expiring queue (ExpiringProposalKey) are rebuilt on import from
+//     `proposals`. We don't serialize derived state.
 message GenesisState {
   // params defines all the parameters of the module.
   Params params = 1 [
-    (gogoproto.nullable) = false,
+    (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
+
+  // dao_id_counter is the next DAO id to be allocated. On import, this MUST
+  // be greater than the largest `id` present in `daos`.
+  uint64 dao_id_counter = 2;
+
+  // daos holds all DAOs at export time. On import, indices
+  // (DaoByAddress, DaoByCreator, SubDao) are rebuilt from this list.
+  repeated Dao daos = 3 [(gogoproto.nullable) = false];
+
+  // ----- Epic 3 genesis fields -----
+
+  // proposals holds every proposal at export time, in any status
+  // (DEPOSIT_PERIOD / VOTING / PASSED / REJECTED / EXECUTED / …). On
+  // import we resurrect each one, restoring its primary record AND the
+  // derived ProposalByStatusKey row; VOTING proposals are also re-enqueued
+  // on the end-blocker timer queue keyed by voting_end.
+  repeated Proposal proposals = 4 [(gogoproto.nullable) = false];
+
+  // votes holds every cast vote at export time. Replayed verbatim on
+  // import (replaces-in-place semantics matter only at runtime; at
+  // import we just write the rows).
+  repeated Vote votes = 5 [(gogoproto.nullable) = false];
+
+  // proposal_id_counters[i] is the NEXT proposal id to allocate for
+  // the DAO with id `proposal_id_counters[i].dao_id`. Per-DAO and
+  // monotonic. Validate confirms each counter strictly exceeds the
+  // maximum proposal_id present for its DAO.
+  repeated PerDaoUint64 proposal_id_counters = 6 [(gogoproto.nullable) = false];
+
+  // snapshot_id_counters[i] is the NEXT snapshot id to allocate for
+  // the DAO with id `snapshot_id_counters[i].dao_id`. Same shape /
+  // invariants as proposal_id_counters.
+  repeated PerDaoUint64 snapshot_id_counters = 7 [(gogoproto.nullable) = false];
+
+  // snapshot_powers and snapshot_totals serialize the per-(dao, snapshot)
+  // snapshot table. Required for in-flight proposals: a Vote read at
+  // import time needs SnapshotPower(dao, snapshot_id, voter) to still
+  // resolve. Validate confirms every (dao_id, snapshot_id) pair
+  // referenced by a Proposal has a matching snapshot_totals row.
+  repeated SnapshotPowerEntry snapshot_powers = 8 [(gogoproto.nullable) = false];
+  repeated SnapshotTotalEntry snapshot_totals = 9 [(gogoproto.nullable) = false];
+
+  // ----- Epic 4 genesis fields -----
+
+  // deposit_records holds every open (proposal, depositor) deposit row at
+  // export time. Required for refund routing on post-import terminal
+  // status — without these rows the keeper would know the escrow balance
+  // but not which depositors to send refunds to. Terminal proposals have
+  // already disbursed their deposits and contribute no rows.
+  repeated DepositRecord deposit_records = 10 [(gogoproto.nullable) = false];
+
+  // ----- Epic 6 genesis fields -----
+
+  // polls holds every poll at export time, in any status. Derived state
+  // (PollByStatusKey index, ExpiringPollKey queue) is rebuilt from this
+  // list on import — same pattern as proposals.
+  repeated Poll polls = 11 [(gogoproto.nullable) = false];
+
+  // poll_votes holds every cast poll vote at export time. Replayed
+  // verbatim on import.
+  repeated PollVote poll_votes = 12 [(gogoproto.nullable) = false];
+
+  // poll_id_counters[i] is the NEXT poll id to allocate for the DAO
+  // with id `poll_id_counters[i].dao_id`. Per-DAO monotonic counter,
+  // independent of the proposal id counter.
+  repeated PerDaoUint64 poll_id_counters = 13 [(gogoproto.nullable) = false];
+
+  // poll_deposit_records holds every open (poll, depositor) deposit row
+  // at export time. Stored under a separate key prefix from proposal
+  // deposits (PollDepositRecordKey vs DepositRecordKey) so refund/
+  // forfeit iterators iterate the right set; the proto shape is shared
+  // with proposal deposits.
+  repeated DepositRecord poll_deposit_records = 14 [(gogoproto.nullable) = false];
+
+  // static_members holds every (dao, address, weight) row of every
+  // STATIC DAO's member table at export time. Without this, a chain
+  // export/import would silently lose the member set: dao.voting_backend
+  // would still be STATIC, but the on-chain MemberKey range would be
+  // empty, so new proposals/polls would have zero voting power and
+  // self-admin DAOs could be bricked.
+  //
+  // The cached StaticTotalPowerKey is NOT serialized — it's recomputed
+  // on import from the sum of weights per DAO (avoids divergence).
+  // Validate enforces: each entry's dao_id is in `daos` AND that DAO's
+  // voting_backend is STATIC.
+  repeated StaticMemberEntry static_members = 15 [(gogoproto.nullable) = false];
 }

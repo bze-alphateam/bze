@@ -5,36 +5,600 @@ import "amino/amino.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "bze/daodao/params.proto";
+import "bze/daodao/store.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/daodao/types";
 
-// Msg defines the Msg service.
+// Msg defines the daodao Msg service.
 service Msg {
   option (cosmos.msg.v1.service) = true;
 
-  // UpdateParams defines a (governance) operation for updating the module
-  // parameters. The authority defaults to the x/gov module account.
-  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+  // UpdateParams updates the module-level params. Chain-gov authority.
+  rpc UpdateParams      (MsgUpdateParams     ) returns (MsgUpdateParamsResponse     );
+
+  // CreateDao creates a new DAO, registers a BaseAccount for it at a
+  // deterministic address, and burns the creation fee (if configured).
+  rpc CreateDao         (MsgCreateDao        ) returns (MsgCreateDaoResponse        );
+
+  // UpdateDaoMetadata updates a DAO's name / description / image / links.
+  // Admin-gated.
+  rpc UpdateDaoMetadata (MsgUpdateDaoMetadata) returns (MsgUpdateDaoMetadataResponse);
+
+  // UpdateDaoAdmin nominates a new admin. The nominee must call
+  // AcceptDaoAdmin to complete the transfer. Admin-gated.
+  rpc UpdateDaoAdmin    (MsgUpdateDaoAdmin   ) returns (MsgUpdateDaoAdminResponse   );
+
+  // AcceptDaoAdmin completes the admin handoff initiated by UpdateDaoAdmin.
+  // Must be signed by the nominee (pending_admin).
+  rpc AcceptDaoAdmin    (MsgAcceptDaoAdmin   ) returns (MsgAcceptDaoAdminResponse   );
+
+  // UpdateMembers adds / removes / re-weights members of a STATIC DAO.
+  // Admin-gated. Rejected for REWARD_STAKED DAOs (their membership flows
+  // through rewards.MsgJoinStaking / MsgExitStaking).
+  rpc UpdateMembers     (MsgUpdateMembers    ) returns (MsgUpdateMembersResponse    );
+
+  // CreateProposal submits a new proposal on a DAO. Snapshot is taken at
+  // creation; the proposal goes straight to VOTING in Epic 3
+  // (DEPOSIT_PERIOD is added in Epic 4). The `msgs` bundle is stored for
+  // later execution by Epic 5.
+  rpc CreateProposal           (MsgCreateProposal          ) returns (MsgCreateProposalResponse          );
+
+  // Vote casts (or, when revote is enabled, replaces) the signer's vote
+  // on an open proposal. Voter power is read from the proposal's snapshot.
+  rpc Vote                     (MsgVote                    ) returns (MsgVoteResponse                    );
+
+  // UpdateGovernanceConfig replaces the DAO's proposal-track configuration.
+  // Admin-gated. Existing proposals retain their frozen
+  // governance_snapshot; new proposals adopt the new config.
+  rpc UpdateGovernanceConfig   (MsgUpdateGovernanceConfig  ) returns (MsgUpdateGovernanceConfigResponse  );
+
+  // Deposit tops up a DEPOSIT_PERIOD proposal's collected deposit. Anyone
+  // may deposit. The amount must use the proposal's deposit_snapshot
+  // min_deposit.denom. Reaching min_deposit transitions the proposal to
+  // VOTING in the same tx.
+  rpc Deposit               (MsgDeposit              ) returns (MsgDepositResponse              );
+
+  // UpdateDepositConfig replaces a DAO's deposit-period configuration.
+  // Admin-gated. Existing proposals retain their frozen deposit_snapshot;
+  // new proposals adopt the new config.
+  rpc UpdateDepositConfig   (MsgUpdateDepositConfig  ) returns (MsgUpdateDepositConfigResponse  );
+
+  // ExecuteProposal dispatches a PASSED proposal's msgs[] atomically as
+  // the DAO's account. Any address may submit; the signer of the tx is
+  // unrelated to who the dispatched messages claim as their signer (always
+  // the DAO).
+  rpc ExecuteProposal      (MsgExecuteProposal     ) returns (MsgExecuteProposalResponse     );
+
+  // RenounceAdmin flips a DAO from admin-controlled to self-governed by
+  // setting admin = dao.account_address. After this, only proposals can
+  // mutate the DAO (because handlers gate on `assertAdmin`, which now
+  // accepts only the DAO's own account).
+  rpc RenounceAdmin        (MsgRenounceAdmin       ) returns (MsgRenounceAdminResponse       );
+
+  // UpdateVotingBackend replaces the DAO's voting-power source. Same-type
+  // only in v1: STATIC → STATIC (use MsgUpdateMembers instead is also
+  // valid), REWARD_STAKED → REWARD_STAKED with the new program's creator
+  // matching dao.account_address and lock >= governance.voting_period.
+  // Cross-type migration (STATIC ↔ REWARD_STAKED) is rejected.
+  rpc UpdateVotingBackend  (MsgUpdateVotingBackend ) returns (MsgUpdateVotingBackendResponse );
+
+  // CreatePoll opens an informational poll on a DAO. Unlike CreateProposal,
+  // a poll has no executable bundle — its terminal state surfaces a single
+  // winning_choice_index. Uses the same DAO deposit + voting_period config
+  // as proposals.
+  rpc CreatePoll       (MsgCreatePoll      ) returns (MsgCreatePollResponse      );
+
+  // VoteOnPoll casts (or replaces, with revote enabled) the signer's
+  // approval-style selection on an open poll. Each chosen option receives
+  // the voter's full snapshot power.
+  rpc VoteOnPoll       (MsgVoteOnPoll      ) returns (MsgVoteOnPollResponse      );
+
+  // DepositOnPoll tops up a DEPOSIT_PERIOD poll's escrow. Reaching
+  // min_deposit transitions the poll to VOTING.
+  rpc DepositOnPoll    (MsgDepositOnPoll   ) returns (MsgDepositOnPollResponse   );
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "authority";
-  option (amino.name) = "bze/x/daodao/MsgUpdateParams";
+  option (amino.name)           = "bze/x/daodao/MsgUpdateParams";
 
-  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  // authority is the address that controls the module (defaults to x/gov).
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // params defines the module parameters to update.
-  //
-  // NOTE: All parameters must be supplied.
+  // params defines the module parameters to update. All fields must be
+  // supplied.
   Params params = 2 [
-    (gogoproto.nullable) = false,
-    (amino.dont_omitempty) = true
+    (gogoproto.nullable)    = false,
+    (amino.dont_omitempty)  = true
   ];
 }
 
-// MsgUpdateParamsResponse defines the response structure for executing a
-// MsgUpdateParams message.
 message MsgUpdateParamsResponse {}
+
+// MsgCreateDao creates a new DAO and registers its BaseAccount.
+message MsgCreateDao {
+  option (amino.name)           = "bze/x/daodao/MsgCreateDao";
+  option (cosmos.msg.v1.signer) = "creator";
+
+  // creator signs this message. If `admin` is empty, creator becomes the
+  // initial admin of the new DAO.
+  string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // metadata is the DAO's identity at creation time. It can be updated later
+  // via MsgUpdateDaoMetadata.
+  DaoMetadata metadata = 2 [(gogoproto.nullable) = false];
+
+  // admin is the address that will administer the new DAO. If empty,
+  // defaults to `creator`. For subDAOs, set this to the parent DAO's
+  // account_address.
+  string admin = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // parent_dao_id is the DAO this one declares as parent. 0 = no parent.
+  // Purely declarative — the parent does not gain admin authority from
+  // being listed here. Immutable after creation.
+  uint64 parent_dao_id = 4;
+
+  // voting_config selects the DAO's membership/voting-power source.
+  // Required (zero-valued oneof rejected). Epic 2 accepts only the
+  // `static` variant; the `reward_staked` variant is reserved here for
+  // forward compatibility and rejected at MsgCreateDao validation. To use
+  // REWARD_STAKED, create a STATIC DAO first, set up a rewards program
+  // owned by the DAO via proposal, then swap backends via Epic 5's
+  // MsgUpdateVotingBackend.
+  oneof voting_config {
+    StaticVotingConfig       static        = 100;
+    RewardStakedVotingConfig reward_staked = 101;
+  }
+
+  // governance is the initial GovernanceConfig for the DAO's proposal track.
+  // Required (zero-valued GovernanceConfig is rejected) and bound-checked
+  // against the brick-prevention caps (threshold 1..9900, quorum policy
+  // per approval_rule, voting_period between hardcoded 1h floor and
+  // Params.max_voting_period ceiling). May be replaced later via
+  // MsgUpdateGovernanceConfig.
+  GovernanceConfig governance = 200 [(gogoproto.nullable) = false];
+
+  // deposit is the initial DepositConfig for the DAO. Required and
+  // bound-checked against the deposit caps (min_deposit.amount > 0;
+  // deposit_period in [1d, Params.max_deposit_period]; forfeit_destination
+  // and voting_refund_policy known variants). May be replaced later via
+  // MsgUpdateDepositConfig.
+  DepositConfig deposit = 300 [(gogoproto.nullable) = false];
+}
+
+// StaticVotingConfig is the create-time payload for STATIC DAOs. The list
+// must be non-empty; each weight > 0; no duplicate addresses.
+message StaticVotingConfig {
+  repeated StaticMember members = 1 [(gogoproto.nullable) = false];
+}
+
+// RewardStakedVotingConfig is the create-time payload for REWARD_STAKED
+// DAOs. Reserved in Epic 2 — currently rejected at MsgCreateDao
+// validation. Epic 5's MsgUpdateVotingBackend uses the same shape.
+message RewardStakedVotingConfig {
+  // reward_id must be a rewards.StakingReward whose creator equals the
+  // DAO's account_address (i.e. only DAO-owned reward programs are valid
+  // governance sources).
+  string reward_id = 1;
+}
+
+message MsgCreateDaoResponse {
+  // dao_id is the newly allocated DAO id.
+  uint64 dao_id = 1;
+  // account_address is the deterministic BaseAccount address registered for
+  // this DAO. It can immediately receive bank coins.
+  string account_address = 2;
+}
+
+// MsgUpdateDaoMetadata updates a DAO's metadata. Admin-gated.
+message MsgUpdateDaoMetadata {
+  option (amino.name)           = "bze/x/daodao/MsgUpdateDaoMetadata";
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority must equal the DAO's current `admin`.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // dao_id identifies the DAO to update.
+  uint64 dao_id = 2;
+
+  // metadata is the new value. The full struct is replaced atomically.
+  DaoMetadata metadata = 3 [(gogoproto.nullable) = false];
+}
+
+message MsgUpdateDaoMetadataResponse {}
+
+// MsgUpdateDaoAdmin nominates a new admin for a DAO. Admin-gated. The
+// nominee must call AcceptDaoAdmin to complete the handoff. Until accepted,
+// the current admin retains authority.
+message MsgUpdateDaoAdmin {
+  option (amino.name)           = "bze/x/daodao/MsgUpdateDaoAdmin";
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority must equal the DAO's current `admin`.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // dao_id identifies the DAO whose admin will change.
+  uint64 dao_id = 2;
+
+  // new_admin is the address being nominated. Stored on `pending_admin`
+  // until accepted.
+  string new_admin = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message MsgUpdateDaoAdminResponse {}
+
+// MsgAcceptDaoAdmin completes the admin handoff. Must be signed by the
+// address previously nominated via MsgUpdateDaoAdmin.
+message MsgAcceptDaoAdmin {
+  option (amino.name)           = "bze/x/daodao/MsgAcceptDaoAdmin";
+  option (cosmos.msg.v1.signer) = "new_admin";
+
+  // new_admin must equal the DAO's `pending_admin`. On success, admin is
+  // set to new_admin and pending_admin is cleared.
+  string new_admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // dao_id identifies the DAO whose admin transfer is being accepted.
+  uint64 dao_id = 2;
+}
+
+message MsgAcceptDaoAdminResponse {}
+
+// MsgUpdateMembers adds and/or removes members on a STATIC DAO.
+//
+// Semantics:
+//   - `add` is upsert: existing addresses have their weight replaced;
+//     new addresses are inserted.
+//   - `remove` deletes the listed addresses.
+//   - `add` and `remove` are disjoint sets (validated).
+//   - Post-update the DAO must still have at least one member (a STATIC
+//     DAO with zero members has no voters and would be unable to ever
+//     pass a proposal).
+//
+// Admin-gated. Rejected for REWARD_STAKED DAOs.
+message MsgUpdateMembers {
+  option (amino.name)           = "bze/x/daodao/MsgUpdateMembers";
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority must equal the DAO's current `admin`.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // dao_id identifies the DAO to update. Must be a STATIC DAO.
+  uint64 dao_id = 2;
+
+  // add: members to upsert. Each weight must be > 0.
+  repeated StaticMember add = 3 [(gogoproto.nullable) = false];
+
+  // remove: addresses to delete from the member set. Bech32-encoded.
+  repeated string remove = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message MsgUpdateMembersResponse {}
+
+// ----- Epic 3: proposals & voting -----
+
+// MsgCreateProposal submits a new proposal on a DAO.
+//
+// Validation summary:
+//   - `proposer` is valid bech32 and has non-zero CURRENT voting power in
+//     the DAO (Epic 3 is member-only; Epic 4 relaxes this for non-members
+//     who attach a full deposit).
+//   - `title` is 1..MaxProposalTitleLen chars; `description` is
+//     0..MaxProposalDescriptionLen chars.
+//   - `msgs` length is in [0, Params.max_msgs_per_proposal]; each entry
+//     decodes via the interface registry. Epic 3 does NOT execute msgs;
+//     Epic 5 adds dispatch + signer validation.
+message MsgCreateProposal {
+  option (amino.name)           = "bze/x/daodao/MsgCreateProposal";
+  option (cosmos.msg.v1.signer) = "proposer";
+
+  // proposer signs this message.
+  string proposer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // dao_id identifies the target DAO.
+  uint64 dao_id = 2;
+
+  // title is a short human-readable header for the proposal.
+  string title = 3;
+
+  // description is the long-form body of the proposal.
+  string description = 4;
+
+  // msgs is the bundle of messages to execute if the proposal passes.
+  // Stored verbatim in Epic 3; dispatched in Epic 5.
+  repeated google.protobuf.Any msgs = 5 [
+    (cosmos_proto.accepts_interface) = "cosmos.base.v1beta1.Msg"
+  ];
+
+  // initial_deposit is the deposit the proposer attaches at creation.
+  // Required field but amount may be 0.
+  //
+  //   - Members (proposer has Power(dao, proposer) > 0) may submit at 0;
+  //     the proposal starts in DEPOSIT_PERIOD with deposit_collected = 0
+  //     unless initial_deposit already meets min_deposit.
+  //   - Non-members MUST submit with amount >= deposit_snapshot.min_deposit.amount;
+  //     the proposal then starts directly in VOTING.
+  //
+  // Denom must equal deposit_snapshot.min_deposit.denom. Validated against
+  // the live DAO config at MsgCreateProposal time.
+  cosmos.base.v1beta1.Coin initial_deposit = 6 [(gogoproto.nullable) = false];
+}
+
+message MsgCreateProposalResponse {
+  // proposal_id is the newly allocated per-DAO proposal id.
+  uint64 proposal_id = 1;
+}
+
+// MsgVote casts (or, with revote, replaces) the signer's vote on a
+// VOTING-status proposal.
+//
+// Validation summary:
+//   - The proposal exists, belongs to `dao_id`, and is in VOTING status.
+//   - `option` is one of YES / NO / ABSTAIN (UNSPECIFIED rejected).
+//   - `voter` has non-zero SnapshotPower at the proposal's snapshot_id.
+//   - Existing vote AND `governance_snapshot.allow_revote == false` is
+//     rejected; with revote enabled, the tally subtracts the previous
+//     option's contribution before adding the new one.
+//   - On revote: the new option may equal the previous one (no-op
+//     replacement is permitted; ValidateBasic accepts it).
+message MsgVote {
+  option (amino.name)           = "bze/x/daodao/MsgVote";
+  option (cosmos.msg.v1.signer) = "voter";
+
+  // voter signs this message.
+  string voter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // dao_id identifies the target DAO. Required so the keeper can resolve
+  // ProposalKey(dao_id, proposal_id) without an extra index lookup.
+  uint64 dao_id = 2;
+
+  // proposal_id identifies the target proposal within the DAO.
+  uint64 proposal_id = 3;
+
+  // option is the vote being cast. YES / NO / ABSTAIN; UNSPECIFIED is
+  // rejected at ValidateBasic.
+  VoteOption option = 4;
+}
+
+message MsgVoteResponse {}
+
+// MsgUpdateGovernanceConfig replaces a DAO's GovernanceConfig. Admin-gated.
+//
+// Validation summary:
+//   - `authority` equals the DAO's current `admin`.
+//   - `governance` passes the same brick-prevention caps as MsgCreateDao
+//     (threshold, quorum policy, voting_period bounds).
+//   - For REWARD_STAKED DAOs the keeper also asserts the
+//     `StakingReward.lock >= governance.voting_period` flash-vote rule.
+//
+// Existing proposals are unaffected (they hold their own
+// governance_snapshot frozen at creation). The change takes effect on the
+// NEXT proposal created.
+message MsgUpdateGovernanceConfig {
+  option (amino.name)           = "bze/x/daodao/MsgUpdateGovernanceConfig";
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority must equal the DAO's current `admin`.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // dao_id identifies the DAO to update.
+  uint64 dao_id = 2;
+
+  // governance is the replacement config. The full struct is replaced
+  // atomically; there is no per-field patching.
+  GovernanceConfig governance = 3 [(gogoproto.nullable) = false];
+}
+
+message MsgUpdateGovernanceConfigResponse {}
+
+// ----- Epic 4: deposit period -----
+
+// MsgDeposit tops up a DEPOSIT_PERIOD proposal's collected deposit.
+//
+// Validation summary:
+//   - depositor is valid bech32.
+//   - dao_id and proposal_id are non-zero.
+//   - amount.amount > 0; amount.denom equals
+//     proposal.deposit_snapshot.min_deposit.denom.
+//
+// Stateful checks deferred to the keeper:
+//   - Proposal exists and is in PROPOSAL_STATUS_DEPOSIT_PERIOD.
+//   - Bank send escrow → succeeds (sufficient spendable balance).
+//   - Aggregating into the existing DepositRecord (if any).
+//   - If post-update collected >= min_deposit, transition to VOTING and
+//     re-key the end-blocker entry to voting_end.
+message MsgDeposit {
+  option (amino.name)           = "bze/x/daodao/MsgDeposit";
+  option (cosmos.msg.v1.signer) = "depositor";
+
+  string                   depositor   = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64                   dao_id      = 2;
+  uint64                   proposal_id = 3;
+  cosmos.base.v1beta1.Coin amount      = 4 [(gogoproto.nullable) = false];
+}
+
+message MsgDepositResponse {}
+
+// MsgUpdateDepositConfig replaces a DAO's DepositConfig. Admin-gated.
+//
+// Validation summary:
+//   - authority equals the DAO's current admin.
+//   - deposit passes the stateless brick-prevention caps
+//     (ValidateDepositConfigStateless) plus the Param-driven
+//     deposit_period upper bound.
+//
+// Existing proposals retain their own deposit_snapshot frozen at creation.
+// The change takes effect on the NEXT proposal created.
+message MsgUpdateDepositConfig {
+  option (amino.name)           = "bze/x/daodao/MsgUpdateDepositConfig";
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string        authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64        dao_id    = 2;
+  DepositConfig deposit   = 3 [(gogoproto.nullable) = false];
+}
+
+message MsgUpdateDepositConfigResponse {}
+
+// ----- Epic 5: execution dispatcher & admin renouncement -----
+
+// MsgExecuteProposal dispatches a PASSED proposal's msgs[] as the DAO's
+// account. Atomic: any failure rolls back the whole bundle and leaves
+// status PASSED (retryable). On full success, status becomes EXECUTED.
+//
+// Any address may submit. The `executor` is purely informational — bank
+// fees / gas come from the submitting tx's signer, and dispatched
+// messages always claim the DAO as their signer.
+message MsgExecuteProposal {
+  option (amino.name)           = "bze/x/daodao/MsgExecuteProposal";
+  option (cosmos.msg.v1.signer) = "executor";
+
+  string executor    = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 dao_id      = 2;
+  uint64 proposal_id = 3;
+}
+
+message MsgExecuteProposalResponse {}
+
+// MsgRenounceAdmin flips a DAO into self-governance by setting
+// admin = dao.account_address. Admin-gated. Idempotency: rejected if
+// dao.admin is already the DAO's own account (no-op fail loudly).
+//
+// After renunciation, direct admin-gated msgs from the previous human
+// admin are rejected — only proposals (which dispatch as the DAO) can
+// mutate the DAO.
+message MsgRenounceAdmin {
+  option (amino.name)           = "bze/x/daodao/MsgRenounceAdmin";
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 dao_id    = 2;
+}
+
+message MsgRenounceAdminResponse {}
+
+// MsgUpdateVotingBackend replaces a DAO's voting-power source. Admin-gated.
+//
+// v1 constraints (the keeper enforces these — `voting_config` shares the
+// oneof shape with MsgCreateDao for forward compatibility):
+//   - Backend TYPE must match the current backend (STATIC → STATIC or
+//     REWARD_STAKED → REWARD_STAKED). Cross-type migration is deferred.
+//   - For REWARD_STAKED: the new reward program's creator MUST equal
+//     dao.account_address, and its `lock` MUST be >= the DAO's current
+//     governance.voting_period (Epic 3 flash-vote rule).
+//   - For STATIC → STATIC: the keeper rejects with a "use MsgUpdateMembers"
+//     pointer to keep there being one well-named operation per concept.
+message MsgUpdateVotingBackend {
+  option (amino.name)           = "bze/x/daodao/MsgUpdateVotingBackend";
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 dao_id    = 2;
+
+  oneof voting_config {
+    StaticVotingConfig       static        = 3;
+    RewardStakedVotingConfig reward_staked = 4;
+  }
+}
+
+message MsgUpdateVotingBackendResponse {}
+
+// ----- Epic 6: polls -----
+
+// MsgCreatePoll submits an informational poll on a DAO.
+//
+// Validation summary:
+//   - proposer is valid bech32; dao_id non-zero.
+//   - title is 1..MaxProposalTitleLen chars; description is
+//     0..MaxProposalDescriptionLen chars (re-using Epic 3 caps).
+//   - choices: 2..20 user-supplied labels; each 1..MaxPollChoiceLabelLen
+//     chars; no duplicates. Pass the user labels WITHOUT NOTA — the
+//     keeper appends "None of the above" iff include_nota = true.
+//   - max_selections: 1..len(choices). The cap excludes NOTA — voters
+//     can always cast [nota_index] alone regardless of max_selections.
+//   - quorum_bps: 0..MaxQuorumBps (= 8500). 0 disables the quorum check.
+//   - include_nota: bool.
+//   - initial_deposit: same rules as MsgCreateProposal (members may
+//     submit zero; non-members must meet min_deposit).
+//
+// Stateful checks deferred to the keeper:
+//   - DAO exists; proposer's member/non-member gating against initial
+//     deposit; denom match; bank send to escrow; snapshot.
+message MsgCreatePoll {
+  option (amino.name)           = "bze/x/daodao/MsgCreatePoll";
+  option (cosmos.msg.v1.signer) = "proposer";
+
+  string proposer    = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 dao_id      = 2;
+  string title       = 3;
+  string description = 4;
+
+  // choices is the user-supplied label set; the keeper appends NOTA at
+  // the tail iff include_nota = true. 2..20 entries.
+  repeated string choices = 5;
+
+  // max_selections in [1, len(choices)] — caps how many user options a
+  // single vote may select. NOTA is always an exclusive [nota] alone
+  // regardless of max_selections.
+  uint32 max_selections = 6;
+
+  // 0..8500 bps. 0 = no quorum check.
+  uint32 quorum_bps = 7;
+
+  // Whether the keeper appends "None of the above" as the final choice.
+  bool include_nota = 8;
+
+  // initial_deposit must use deposit_snapshot.min_deposit.denom (the
+  // DAO's frozen deposit config at poll creation time). Member proposers
+  // may attach amount = 0; non-members must attach >= min_deposit.
+  cosmos.base.v1beta1.Coin initial_deposit = 9 [(gogoproto.nullable) = false];
+}
+
+message MsgCreatePollResponse {
+  uint64 poll_id = 1;
+}
+
+// MsgVoteOnPoll casts an approval-style selection set on a VOTING poll.
+//
+// Validation summary:
+//   - voter is valid bech32; ids non-zero.
+//   - choice_indices: 1..max_selections distinct indices (or [nota_index]
+//     alone when include_nota and the voter rejects all options).
+//   - Each index ∈ [0, len(poll.choices)-1].
+//   - NOTA exclusivity: if any index == nota_index, it MUST be the sole
+//     element.
+//
+// Stateful checks deferred to the keeper:
+//   - Poll exists; status == VOTING.
+//   - voter has SnapshotPower > 0 at the poll's snapshot_id.
+//   - revote permission per allow_revote_snapshot.
+message MsgVoteOnPoll {
+  option (amino.name)           = "bze/x/daodao/MsgVoteOnPoll";
+  option (cosmos.msg.v1.signer) = "voter";
+
+  string          voter          = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64          dao_id         = 2;
+  uint64          poll_id        = 3;
+  repeated uint32 choice_indices = 4;
+}
+
+message MsgVoteOnPollResponse {}
+
+// MsgDepositOnPoll tops up a DEPOSIT_PERIOD poll's escrow. Anyone may
+// deposit. Denom MUST match the poll's frozen deposit_snapshot.min_deposit
+// denom. Reaching min_deposit transitions the poll to VOTING in the
+// same tx.
+message MsgDepositOnPoll {
+  option (amino.name)           = "bze/x/daodao/MsgDepositOnPoll";
+  option (cosmos.msg.v1.signer) = "depositor";
+
+  string                   depositor = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64                   dao_id    = 2;
+  uint64                   poll_id   = 3;
+  cosmos.base.v1beta1.Coin amount    = 4 [(gogoproto.nullable) = false];
+}
+
+message MsgDepositOnPollResponse {}

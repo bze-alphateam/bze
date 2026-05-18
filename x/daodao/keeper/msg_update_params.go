@@ -9,9 +9,17 @@ import (
 	"github.com/bze-alphateam/bze/x/daodao/types"
 )
 
+// UpdateParams replaces the module-level Params. Chain-governance authority
+// only. The proposed Params are validated before being persisted so an
+// invalid governance proposal cannot brick the module's invariants
+// (defaults, fee destinations, period ceilings).
 func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if k.GetAuthority() != req.Authority {
 		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), req.Authority)
+	}
+
+	if err := req.Params.Validate(); err != nil {
+		return nil, err
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)

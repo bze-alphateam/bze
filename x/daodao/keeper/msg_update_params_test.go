@@ -1,21 +1,20 @@
 package keeper_test
 
 import (
-	"testing"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-
 	"github.com/bze-alphateam/bze/x/daodao/types"
 )
 
-func TestMsgUpdateParams(t *testing.T) {
-	k, ms, ctx := setupMsgServer(t)
+func (suite *IntegrationTestSuite) TestMsgUpdateParams() {
 	params := types.DefaultParams()
-	require.NoError(t, k.SetParams(ctx, params))
-	wctx := sdk.UnwrapSDKContext(ctx)
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
 
-	// default params
+	// "Invalid params under a valid authority" should be rejected by
+	// Params.Validate before SetParams runs, so live state stays at
+	// `params`. We build this once here to assert un-changed state after
+	// the failure case.
+	invalidParams := types.DefaultParams()
+	invalidParams.DaoCreationFeeDestination = "not_a_real_destination"
+
 	testCases := []struct {
 		name      string
 		input     *types.MsgUpdateParams
@@ -32,9 +31,18 @@ func TestMsgUpdateParams(t *testing.T) {
 			expErrMsg: "invalid authority",
 		},
 		{
+			name: "valid authority but invalid params",
+			input: &types.MsgUpdateParams{
+				Authority: suite.k.GetAuthority(),
+				Params:    invalidParams,
+			},
+			expErr:    true,
+			expErrMsg: "dao_creation_fee_destination",
+		},
+		{
 			name: "all good",
 			input: &types.MsgUpdateParams{
-				Authority: k.GetAuthority(),
+				Authority: suite.k.GetAuthority(),
 				Params:    params,
 			},
 			expErr: false,
@@ -42,14 +50,15 @@ func TestMsgUpdateParams(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			_, err := ms.UpdateParams(wctx, tc.input)
-
+		suite.Run(tc.name, func() {
+			_, err := suite.msgServer.UpdateParams(suite.ctx, tc.input)
 			if tc.expErr {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), tc.expErrMsg)
+				suite.Require().Error(err)
+				suite.Require().Contains(err.Error(), tc.expErrMsg)
+				// On error, previous (valid) params must remain.
+				suite.Require().Equal(params, suite.k.GetParams(suite.ctx))
 			} else {
-				require.NoError(t, err)
+				suite.Require().NoError(err)
 			}
 		})
 	}
