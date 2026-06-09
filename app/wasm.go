@@ -7,6 +7,7 @@ import (
 
 	appmodule "cosmossdk.io/core/appmodule"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -14,6 +15,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	ibcfee "github.com/cosmos/ibc-go/v8/modules/apps/29-fee"
+	"github.com/spf13/cast"
 )
 
 // availableCapabilities lists all CosmWasm capabilities supported by this chain.
@@ -53,6 +56,16 @@ func (app *App) registerWasmModule(appOpts servertypes.AppOptions) error {
 	// Store config for ante handler setup
 	app.wasmNodeConfig = nodeConfig
 
+	// Resolve the actual node home from the runtime --home flag so the wasmvm
+	// on-disk cache lands under the node's real data dir (wasmd joins
+	// homeDir + "wasm"). Falling back to DefaultNodeHome keeps instantiation
+	// paths that don't set --home (some test harnesses) working with an
+	// absolute path instead of a relative "wasm" dir.
+	homePath := cast.ToString(appOpts.Get(flags.FlagHome))
+	if homePath == "" {
+		homePath = DefaultNodeHome
+	}
+
 	// Create wasm keeper
 	app.WasmKeeper = wasmkeeper.NewKeeper(
 		app.appCodec,
@@ -68,7 +81,7 @@ func (app *App) registerWasmModule(appOpts servertypes.AppOptions) error {
 		app.TransferKeeper,
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
-		DefaultNodeHome,
+		homePath,
 		nodeConfig,
 		// VMConfig holds consensus-critical Wasm static-validation limits
 		// (WasmLimits). Zero value = use wasmvm's internal defaults, which
@@ -83,9 +96,14 @@ func (app *App) registerWasmModule(appOpts servertypes.AppOptions) error {
 
 	app.ScopedWasmKeeper = scopedWasmKeeper
 
-	// Add wasm IBC port to the IBC router (before it's sealed)
+	// Add wasm IBC port to the IBC router (before it's sealed).
+	// Wrap with the ICS-29 fee middleware to match the transfer/ICA stacks
+	// (see ibc.go) and the wasmd v0.54.6 reference app. Without the wrapper
+	// wasm IBC channels can't negotiate the ics29 fee version and a
+	// fee-enabled handshake from a counterparty would fail.
 	wasmIBCModule := wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper, app.IBCFeeKeeper)
-	app.ibcRouter.AddRoute(wasmtypes.ModuleName, wasmIBCModule)
+	wasmStack := ibcfee.NewIBCMiddleware(wasmIBCModule, app.IBCFeeKeeper)
+	app.ibcRouter.AddRoute(wasmtypes.ModuleName, wasmStack)
 
 	// Register wasm app module wrapped with a fee-charging MsgServer.
 	// The wrapper is the only universal capture point for the cw deploy
