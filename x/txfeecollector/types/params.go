@@ -10,7 +10,7 @@ import (
 
 const (
 	DefaultMaxBalanceIterations   = uint64(100)
-	DefaultCwDeployFeeDestination = FeeDestStakers
+	DefaultCwDeployFeeDestination = FeeDestBurner
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -37,8 +37,8 @@ func DefaultParams() Params {
 		sdk.NewDecCoinFromDec("ubze", sdkmath.LegacyNewDecWithPrec(1, 2)), // 0.01ubze
 		DefaultMaxBalanceIterations,
 		DefaultCwDeployFeeDestination,
-		sdk.NewCoins(sdk.NewInt64Coin("ubze", 25000000000)), // 25,000 BZE
-		sdk.NewCoins(sdk.NewInt64Coin("ubze", 25000000000)), // 25,000 BZE
+		sdk.NewCoins(sdk.NewInt64Coin("ubze", 50000000000)), // 50,000 BZE (deploy: gates bytecode upload)
+		sdk.NewCoins(sdk.NewInt64Coin("ubze", 10000000)),    // 10 BZE (instantiate: low, gas covers state cost)
 	)
 }
 
