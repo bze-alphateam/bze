@@ -395,6 +395,52 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_Success() {
 	suite.Require().EqualValues(stored.ReserveQuote.Int64(), 345)
 }
 
+// TestMsgAmm_CreateLiquidityPool_TwoIbcDenoms guards against the LP denom exceeding the SDK's
+// 128-character denom limit. When both assets are IBC denoms (each "ibc/" + 64 hex = 68 chars),
+// the naive "ulp_<base>_<quote>" scheme produces a 141-char denom, which makes sdk.NewCoin panic
+// with "invalid denom" while minting the initial LP tokens. This test creates such a pool and
+// asserts it succeeds and yields a valid, spec-compliant LP denom. It is intentionally agnostic
+// to the exact LP denom scheme (it only checks validity + length), so it survives whatever
+// bounded scheme we adopt to fix the derivation.
+func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_TwoIbcDenoms() {
+	const (
+		ibcBase  = "ibc/19488A79F091167225A4BFA34BD3D04F11621E682EB14A58B4CA5D6234BA9487"
+		ibcQuote = "ibc/6490A7EAB61059BFC1CDDEB05917DD70BDF3A611654162A1A47DB930D40D8AF4"
+	)
+
+	msg := &types.MsgCreateLiquidityPool{
+		Base:         ibcBase,
+		Quote:        ibcQuote,
+		Creator:      getTestAddress(),
+		Fee:          "0.002",
+		FeeDest:      getFeeDestinationString("0.25", "0.5", "0.25"),
+		InitialBase:  math.NewInt(123),
+		InitialQuote: math.NewInt(345),
+	}
+
+	// Both IBC denoms individually are valid, so the reserve/fee paths are fine. The failure is
+	// solely the derived LP denom, so keep every bank expectation scheme-agnostic via gomock.Any().
+	suite.bankMock.EXPECT().HasSupply(gomock.Any(), ibcBase).Return(true).AnyTimes()
+	suite.bankMock.EXPECT().HasSupply(gomock.Any(), ibcQuote).Return(true).AnyTimes()
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	suite.bankMock.EXPECT().SetDenomMetaData(gomock.Any(), gomock.Any()).AnyTimes()
+	suite.bankMock.EXPECT().MintCoins(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	res, err := suite.msgServer.CreateLiquidityPool(suite.ctx, msg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	suite.Require().NotEmpty(res.GetId())
+
+	stored, found := suite.k.GetLiquidityPool(suite.ctx, res.GetId())
+	suite.Require().True(found)
+
+	// The core regression assertions: the LP denom must be a valid bank denom and must respect
+	// the SDK's 128-character maximum. This is exactly what fails with the "ulp_<base>_<quote>" scheme.
+	suite.Require().NoError(sdk.ValidateDenom(stored.GetLpDenom()), "LP denom must be a valid SDK denom")
+	suite.Require().LessOrEqual(len(stored.GetLpDenom()), 128, "LP denom must not exceed the SDK 128-char limit")
+}
+
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_InvalidCreator() {
 
 	msg := &types.MsgAddLiquidity{
