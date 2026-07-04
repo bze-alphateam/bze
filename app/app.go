@@ -8,8 +8,10 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/bze-alphateam/bze/app/upgrades"
 	v810 "github.com/bze-alphateam/bze/app/upgrades/v810"
 	v820 "github.com/bze-alphateam/bze/app/upgrades/v820"
+	v811 "github.com/bze-alphateam/bze/app/upgrades/v811"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -389,6 +391,12 @@ func (app *App) setupUpgradeHandlers() {
 			app.Configurator(),
 			app.ModuleManager,
 		),
+	)
+
+	// v8.1.1 only changes LP denom derivation for new pools: no migrations, no store changes
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v811.UpgradeName,
+		upgrades.EmptyUpgradeHandler(),
 	)
 
 	app.UpgradeKeeper.SetUpgradeHandler(
