@@ -1,6 +1,8 @@
 package app
 
 import (
+	"fmt"
+
 	wasm "github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -98,12 +100,19 @@ func (app *App) registerWasmModule(appOpts servertypes.AppOptions) error {
 
 	// Add wasm IBC port to the IBC router (before it's sealed).
 	// Wrap with the ICS-29 fee middleware to match the transfer/ICA stacks
-	// (see ibc.go) and the wasmd v0.54.6 reference app. Without the wrapper
+	// (see ibc.go) and the wasmd v0.54.x reference app. Without the wrapper
 	// wasm IBC channels can't negotiate the ics29 fee version and a
 	// fee-enabled handshake from a counterparty would fail.
 	wasmIBCModule := wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper, app.IBCFeeKeeper)
 	wasmStack := ibcfee.NewIBCMiddleware(wasmIBCModule, app.IBCFeeKeeper)
 	app.ibcRouter.AddRoute(wasmtypes.ModuleName, wasmStack)
+
+	// Register the legacy params subspace for wasm (mirrors the wasmd reference
+	// app). It is only consumed by wasmd's Migrate1to2 — which never runs on this
+	// chain since fresh installs start at consensus version 4 — but GetSubspace
+	// silently returns a zero-value subspace when nothing is registered, which
+	// would panic if that migration were ever exercised.
+	app.ParamsKeeper.Subspace(wasmtypes.ModuleName)
 
 	// Register wasm app module wrapped with a fee-charging MsgServer.
 	// The wrapper is the only universal capture point for the cw deploy
@@ -130,6 +139,19 @@ func (app *App) registerWasmModule(appOpts servertypes.AppOptions) error {
 	)
 	if err := app.RegisterModules(wrappedWasmModule); err != nil {
 		return err
+	}
+
+	// Register the wasm snapshot extension so state-sync snapshots include the
+	// contract code stored in wasmvm's on-disk file store (it is NOT part of the
+	// IAVL store). Without this, a node that joins via state sync receives the
+	// code checksums but not the code itself and fails on the first contract
+	// execution.
+	if manager := app.SnapshotManager(); manager != nil {
+		if err := manager.RegisterExtensions(
+			wasmkeeper.NewWasmSnapshotter(app.CommitMultiStore(), &app.WasmKeeper),
+		); err != nil {
+			return fmt.Errorf("failed to register wasm snapshot extension: %w", err)
+		}
 	}
 
 	return nil

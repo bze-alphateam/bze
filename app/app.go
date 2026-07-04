@@ -1,8 +1,11 @@
 package app
 
 import (
+	"fmt"
 	"io"
 	"net/http"
+
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	v810 "github.com/bze-alphateam/bze/app/upgrades/v810"
@@ -364,6 +367,16 @@ func New(
 
 	if err := app.Load(loadLatest); err != nil {
 		return nil, err
+	}
+
+	if loadLatest {
+		// Pre-load pinned wasm codes into the VM's in-memory cache (mirrors the
+		// wasmd reference app). Codes are pinned via gov proposals; without this
+		// call they lose their cache advantage after every node restart.
+		ctx := app.BaseApp.NewUncachedContext(true, cmtproto.Header{})
+		if err := app.WasmKeeper.InitializePinnedCodes(ctx); err != nil {
+			return nil, fmt.Errorf("failed to initialize pinned codes: %w", err)
+		}
 	}
 
 	return app, nil
