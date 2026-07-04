@@ -353,19 +353,22 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_Success() {
 		InitialQuote: math.NewInt(345),
 	}
 
+	lpDenom := types.GetLpDenom("abc_def")
+	lpScaledDenom := types.GetLpScaledDenom("abc_def")
+
 	denomMetaData := banktypes.Metadata{
 		DenomUnits: []*banktypes.DenomUnit{
 			{
-				Denom:    "ulp_abc_def",
+				Denom:    lpDenom,
 				Exponent: 0,
 			},
 			{
-				Denom:    "lp_abc_def",
+				Denom:    lpScaledDenom,
 				Exponent: 6,
 			},
 		},
-		Base:    "ulp_abc_def",
-		Display: "lp_abc_def",
+		Base:    lpDenom,
+		Display: lpScaledDenom,
 	}
 
 	createMarketFeeCoin := sdk.NewCoins(suite.k.CreateMarketFee(suite.ctx))
@@ -377,7 +380,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_Success() {
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(suite.ctx, getTestAccount(), types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("abc", 123), sdk.NewInt64Coin("def", 345)))
 	suite.bankMock.EXPECT().SetDenomMetaData(suite.ctx, denomMetaData)
 	//205997572,801234723674372 - resulted shared from (sqrt(123 * 345)) * 1_000_000
-	lpTokens := sdk.NewCoins(sdk.NewInt64Coin("ulp_abc_def", 205997572))
+	lpTokens := sdk.NewCoins(sdk.NewInt64Coin(lpDenom, 205997572))
 	suite.bankMock.EXPECT().MintCoins(suite.ctx, types.ModuleName, lpTokens)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, "burner_black_hole", lpTokens).Return(nil).Times(1)
 
@@ -393,6 +396,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_Success() {
 	suite.Require().Equal(msg.GetCreator(), stored.GetCreator())
 	suite.Require().EqualValues(stored.ReserveBase.Int64(), 123)
 	suite.Require().EqualValues(stored.ReserveQuote.Int64(), 345)
+	suite.Require().Equal(lpDenom, stored.GetLpDenom())
+	suite.Require().Equal(lpDenom, res.GetLpDenom())
 }
 
 // TestMsgAmm_CreateLiquidityPool_TwoIbcDenoms guards against the LP denom exceeding the SDK's
@@ -439,6 +444,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_TwoIbcDenoms()
 	// the SDK's 128-character maximum. This is exactly what fails with the "ulp_<base>_<quote>" scheme.
 	suite.Require().NoError(sdk.ValidateDenom(stored.GetLpDenom()), "LP denom must be a valid SDK denom")
 	suite.Require().LessOrEqual(len(stored.GetLpDenom()), 128, "LP denom must not exceed the SDK 128-char limit")
+	suite.Require().Equal(stored.GetLpDenom(), res.GetLpDenom(), "response must carry the pool's LP denom")
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_InvalidCreator() {

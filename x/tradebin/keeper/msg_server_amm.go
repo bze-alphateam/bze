@@ -109,6 +109,7 @@ func (k msgServer) CreateLiquidityPool(goCtx context.Context, msg *types.MsgCrea
 			Creator: msg.Creator,
 			Base:    base,
 			Quote:   quote,
+			LpDenom: lp.LpDenom,
 		},
 	)
 
@@ -117,7 +118,8 @@ func (k msgServer) CreateLiquidityPool(goCtx context.Context, msg *types.MsgCrea
 	}
 
 	return &types.MsgCreateLiquidityPoolResponse{
-		Id: poolId,
+		Id:      poolId,
+		LpDenom: lp.LpDenom,
 	}, nil
 }
 
