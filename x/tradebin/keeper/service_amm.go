@@ -13,8 +13,6 @@ import (
 )
 
 const (
-	lpDenomPrefix = "lp"
-
 	sharesScaleExponent = 6
 )
 
@@ -34,12 +32,17 @@ func (k Keeper) getPoolId(base, quote string) string {
 	return fmt.Sprintf("%s_%s", base, quote)
 }
 
+// getPoolDenom returns the LP denom for a NEW pool ("ulp/<hash>", see types.GetLpDenom).
+// Only call this at pool creation: existing pools (including pre-hash ones with legacy
+// "ulp_<base>_<quote>" denoms) must use the LpDenom stored on the LiquidityPool object.
 func (k Keeper) getPoolDenom(poolId string) string {
-	return fmt.Sprintf("u%s", k.getPoolScaledDenom(poolId))
+	return types.GetLpDenom(poolId)
 }
 
+// getPoolScaledDenom returns the display LP denom for a NEW pool ("lp/<hash>").
+// Same creation-time-only rule as getPoolDenom.
 func (k Keeper) getPoolScaledDenom(poolId string) string {
-	return fmt.Sprintf("%s_%s", lpDenomPrefix, poolId)
+	return types.GetLpScaledDenom(poolId)
 }
 
 // BalanceProvidedAmounts calculates optimal base and quote amounts maintaining pool reserve ratios.

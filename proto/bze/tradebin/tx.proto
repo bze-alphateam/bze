@@ -109,6 +109,8 @@ message MsgCreateLiquidityPool {
 
 message MsgCreateLiquidityPoolResponse {
   string id = 1;
+  // lp_denom is the denom of the created pool's LP token ("ulp/<hash>").
+  string lp_denom = 2;
 }
 
 message MsgAddLiquidity {

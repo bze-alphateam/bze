@@ -60,6 +60,9 @@ message PoolCreatedEvent {
   string creator = 1;
   string base = 2;
   string quote = 3;
+  // lp_denom is the denom of the pool's LP token ("ulp/<hash>"). Emitted so
+  // off-chain consumers don't have to derive it from base/quote.
+  string lp_denom = 4;
 }
 
 message LiquidityAddedEvent {
