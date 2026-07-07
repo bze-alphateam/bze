@@ -853,6 +853,345 @@ func (suite *IntegrationTestSuite) TestConvertCommunityPoolFeesToNativeDenom_Swa
 	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidCoins)
 }
 
+func (suite *IntegrationTestSuite) TestConvertCollectedFeesToNativeDenom_MaxIterationsExactMatch() {
+	// MaxBalanceIterations == coin count: all coins should be processed
+	moduleAddr := sdk.AccAddress("txfeecollector_addr")
+	params := suite.k.GetParams(suite.ctx)
+	params.MaxBalanceIterations = 2
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	coin1 := sdk.NewInt64Coin(denomOther, 300)
+	coin2 := sdk.NewInt64Coin(denomStake, 700)
+	balances := sdk.NewCoins(coin1, coin2)
+	swappedAmount := sdk.NewInt64Coin(denomBze, 900)
+
+	suite.accountMock.EXPECT().
+		GetModuleAddress(types.ModuleName).
+		Return(moduleAddr).
+		Times(1)
+
+	suite.bankMock.EXPECT().
+		GetAllBalances(suite.ctx, moduleAddr).
+		Return(balances).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		IsNativeDenom(suite.ctx, gomock.Any()).
+		Return(false).
+		Times(2)
+
+	suite.tradeMock.EXPECT().
+		CanSwapForNativeDenom(suite.ctx, coin1).
+		Return(true).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		CanSwapForNativeDenom(suite.ctx, coin2).
+		Return(true).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		ModuleSwapForNativeDenom(suite.ctx, types.ModuleName, balances).
+		Return(swappedAmount, nil).
+		Times(1)
+
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(swappedAmount)).
+		Return(nil).
+		Times(1)
+
+	err = suite.k.ConvertCollectedFeesToNativeDenom(suite.ctx)
+	suite.Require().NoError(err)
+}
+
+func (suite *IntegrationTestSuite) TestConvertCollectedFeesToNativeDenom_MaxIterationsExceeded() {
+	// MaxBalanceIterations < coin count: extra coins are NOT processed
+	moduleAddr := sdk.AccAddress("txfeecollector_addr")
+	params := suite.k.GetParams(suite.ctx)
+	params.MaxBalanceIterations = 1
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	// sdk.NewCoins sorts alphabetically: other, stake
+	coin1 := sdk.NewInt64Coin(denomOther, 300)
+	coin2 := sdk.NewInt64Coin(denomStake, 700)
+	balances := sdk.NewCoins(coin1, coin2)
+	swappedAmount := sdk.NewInt64Coin(denomBze, 250)
+
+	suite.accountMock.EXPECT().
+		GetModuleAddress(types.ModuleName).
+		Return(moduleAddr).
+		Times(1)
+
+	suite.bankMock.EXPECT().
+		GetAllBalances(suite.ctx, moduleAddr).
+		Return(balances).
+		Times(1)
+
+	// Only first coin (other) is processed
+	suite.tradeMock.EXPECT().
+		IsNativeDenom(suite.ctx, denomOther).
+		Return(false).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		CanSwapForNativeDenom(suite.ctx, coin1).
+		Return(true).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		ModuleSwapForNativeDenom(suite.ctx, types.ModuleName, sdk.NewCoins(coin1)).
+		Return(swappedAmount, nil).
+		Times(1)
+
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, authtypes.FeeCollectorName, sdk.NewCoins(swappedAmount)).
+		Return(nil).
+		Times(1)
+
+	err = suite.k.ConvertCollectedFeesToNativeDenom(suite.ctx)
+	suite.Require().NoError(err)
+}
+
+func (suite *IntegrationTestSuite) TestConvertBurnerFeesToNativeDenom_MixedNativeSwappableUnswappable() {
+	// Burner path with native + swappable + unswappable coins (sendSkipped=true bundles all)
+	moduleAddr := sdk.AccAddress("burner_collector_addr")
+	nativeCoin := sdk.NewInt64Coin(denomBze, 100)
+	swappableCoin := sdk.NewInt64Coin(denomStake, 500)
+	unswappableCoin := sdk.NewInt64Coin(denomOther, 200)
+	balances := sdk.NewCoins(nativeCoin, swappableCoin, unswappableCoin)
+	swappedAmount := sdk.NewInt64Coin(denomBze, 400)
+
+	suite.accountMock.EXPECT().
+		GetModuleAddress(types.BurnerFeeCollector).
+		Return(moduleAddr).
+		Times(1)
+
+	suite.bankMock.EXPECT().
+		GetAllBalances(suite.ctx, moduleAddr).
+		Return(balances).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		IsNativeDenom(suite.ctx, gomock.Any()).
+		DoAndReturn(func(_ sdk.Context, denom string) bool {
+			return denom == denomBze
+		}).
+		Times(3)
+
+	suite.tradeMock.EXPECT().
+		CanSwapForNativeDenom(suite.ctx, swappableCoin).
+		Return(true).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		CanSwapForNativeDenom(suite.ctx, unswappableCoin).
+		Return(false).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		HasDeepLiquidityWithNativeDenom(suite.ctx, denomOther).
+		Return(false).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		ModuleSwapForNativeDenom(suite.ctx, types.BurnerFeeCollector, sdk.NewCoins(swappableCoin)).
+		Return(swappedAmount, nil).
+		Times(1)
+
+	// sendSkipped=true: native(100) + swapped(400) + unswappable(200other) all sent to burner
+	expectedSend := sdk.NewCoins(
+		sdk.NewInt64Coin(denomBze, 500), // 100 native + 400 swapped
+		unswappableCoin,                 // 200 other (skipped but sent)
+	)
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.BurnerFeeCollector, burnermoduletypes.ModuleName, expectedSend).
+		Return(nil).
+		Times(1)
+
+	err := suite.k.ConvertBurnerFeesToNativeDenom(suite.ctx)
+	suite.Require().NoError(err)
+}
+
+func (suite *IntegrationTestSuite) TestConvertBurnerFeesToNativeDenom_DeepLiquidityButCantSwap() {
+	// Burner: coin has deep liquidity but amount too small — left untouched
+	moduleAddr := sdk.AccAddress("burner_collector_addr")
+	balances := sdk.NewCoins(sdk.NewInt64Coin(denomStake, 5))
+
+	suite.accountMock.EXPECT().
+		GetModuleAddress(types.BurnerFeeCollector).
+		Return(moduleAddr).
+		Times(1)
+
+	suite.bankMock.EXPECT().
+		GetAllBalances(suite.ctx, moduleAddr).
+		Return(balances).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		IsNativeDenom(suite.ctx, denomStake).
+		Return(false).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		CanSwapForNativeDenom(suite.ctx, balances[0]).
+		Return(false).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		HasDeepLiquidityWithNativeDenom(suite.ctx, denomStake).
+		Return(true).
+		Times(1)
+
+	// Coin left to accumulate: no swap, no send
+	err := suite.k.ConvertBurnerFeesToNativeDenom(suite.ctx)
+	suite.Require().NoError(err)
+}
+
+func (suite *IntegrationTestSuite) TestConvertCommunityPoolFeesToNativeDenom_OnlyNativeCoins() {
+	// CP: only native coins — sent directly to community pool, no swap needed
+	moduleAddr := sdk.AccAddress("cp_collector_addr")
+	nativeBalance := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 800))
+
+	suite.accountMock.EXPECT().
+		GetModuleAddress(types.CpFeeCollector).
+		Return(moduleAddr).
+		Times(2)
+
+	suite.bankMock.EXPECT().
+		GetAllBalances(suite.ctx, moduleAddr).
+		Return(nativeBalance).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		IsNativeDenom(suite.ctx, denomBze).
+		Return(true).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		ModuleSwapForNativeDenom(suite.ctx, types.CpFeeCollector, sdk.NewCoins()).
+		Return(sdk.NewCoin(denomBze, math.ZeroInt()), nil).
+		Times(1)
+
+	suite.distrMock.EXPECT().
+		FundCommunityPool(suite.ctx, nativeBalance, moduleAddr).
+		Return(nil).
+		Times(1)
+
+	err := suite.k.ConvertCommunityPoolFeesToNativeDenom(suite.ctx)
+	suite.Require().NoError(err)
+}
+
+func (suite *IntegrationTestSuite) TestConvertCommunityPoolFeesToNativeDenom_DeepLiquidityButCantSwap() {
+	// CP: coin has deep liquidity but amount too small — left untouched, nothing sent anywhere
+	moduleAddr := sdk.AccAddress("cp_collector_addr")
+	balances := sdk.NewCoins(sdk.NewInt64Coin(denomStake, 5))
+
+	suite.accountMock.EXPECT().
+		GetModuleAddress(types.CpFeeCollector).
+		Return(moduleAddr).
+		Times(1)
+
+	suite.bankMock.EXPECT().
+		GetAllBalances(suite.ctx, moduleAddr).
+		Return(balances).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		IsNativeDenom(suite.ctx, denomStake).
+		Return(false).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		CanSwapForNativeDenom(suite.ctx, balances[0]).
+		Return(false).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		HasDeepLiquidityWithNativeDenom(suite.ctx, denomStake).
+		Return(true).
+		Times(1)
+
+	// No swap, no send, no FundCommunityPool, no burner send
+	err := suite.k.ConvertCommunityPoolFeesToNativeDenom(suite.ctx)
+	suite.Require().NoError(err)
+}
+
+func (suite *IntegrationTestSuite) TestConvertCommunityPoolFeesToNativeDenom_MixedWithNativeAndDeepLiquidity() {
+	// CP: native + swappable + deep-liquidity-skip + unswappable all at once
+	moduleAddr := sdk.AccAddress("cp_collector_addr")
+	nativeCoin := sdk.NewInt64Coin(denomBze, 100)
+	swappableCoin := sdk.NewInt64Coin(denomStake, 500)
+	deepLiqCoin := sdk.NewInt64Coin("deepcoin", 5)       // deep liquidity, too small to swap
+	unswappableCoin := sdk.NewInt64Coin(denomOther, 200) // no deep liquidity
+	balances := sdk.NewCoins(deepLiqCoin, unswappableCoin, swappableCoin, nativeCoin)
+	swappedAmount := sdk.NewInt64Coin(denomBze, 450)
+
+	suite.accountMock.EXPECT().
+		GetModuleAddress(types.CpFeeCollector).
+		Return(moduleAddr).
+		Times(2)
+
+	suite.bankMock.EXPECT().
+		GetAllBalances(suite.ctx, moduleAddr).
+		Return(balances).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		IsNativeDenom(suite.ctx, gomock.Any()).
+		DoAndReturn(func(_ sdk.Context, denom string) bool {
+			return denom == denomBze
+		}).
+		Times(4)
+
+	suite.tradeMock.EXPECT().
+		CanSwapForNativeDenom(suite.ctx, swappableCoin).
+		Return(true).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		CanSwapForNativeDenom(suite.ctx, deepLiqCoin).
+		Return(false).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		CanSwapForNativeDenom(suite.ctx, unswappableCoin).
+		Return(false).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		HasDeepLiquidityWithNativeDenom(suite.ctx, "deepcoin").
+		Return(true).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		HasDeepLiquidityWithNativeDenom(suite.ctx, denomOther).
+		Return(false).
+		Times(1)
+
+	suite.tradeMock.EXPECT().
+		ModuleSwapForNativeDenom(suite.ctx, types.CpFeeCollector, sdk.NewCoins(swappableCoin)).
+		Return(swappedAmount, nil).
+		Times(1)
+
+	// Unswappable coins sent to burner
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.CpFeeCollector, burnermoduletypes.ModuleName, sdk.NewCoins(unswappableCoin)).
+		Return(nil).
+		Times(1)
+
+	// native(100) + swapped(450) sent to community pool
+	expectedCpSend := sdk.NewCoins(sdk.NewInt64Coin(denomBze, 550))
+	suite.distrMock.EXPECT().
+		FundCommunityPool(suite.ctx, expectedCpSend, moduleAddr).
+		Return(nil).
+		Times(1)
+
+	err := suite.k.ConvertCommunityPoolFeesToNativeDenom(suite.ctx)
+	suite.Require().NoError(err)
+}
+
 func (suite *IntegrationTestSuite) TestConvertCommunityPoolFeesToNativeDenom_FundCommunityPoolError() {
 	moduleAddr := sdk.AccAddress("cp_collector_addr")
 	balances := sdk.NewCoins(sdk.NewInt64Coin(denomStake, 1000))

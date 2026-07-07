@@ -18,3 +18,12 @@ func TestParamsQuery(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, &types.QueryParamsResponse{Params: params}, response)
 }
+
+func TestParamsQuery_NilRequest(t *testing.T) {
+	keeper, ctx := keepertest.TxfeecollectorKeeper(t)
+
+	response, err := keeper.Params(ctx, nil)
+	require.Error(t, err)
+	require.Nil(t, response)
+	require.Contains(t, err.Error(), "invalid request")
+}

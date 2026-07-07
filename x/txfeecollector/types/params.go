@@ -8,7 +8,10 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
-const DefaultMaxBalanceIterations = uint64(100)
+const (
+	DefaultMaxBalanceIterations   = uint64(100)
+	DefaultCwDeployFeeDestination = FeeDestBurner
+)
 
 var _ paramtypes.ParamSet = (*Params)(nil)
 
@@ -18,10 +21,13 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(validatorMinGasFee sdk.DecCoin, maxBalanceIterations uint64) Params {
+func NewParams(validatorMinGasFee sdk.DecCoin, maxBalanceIterations uint64, cwDeployFeeDestination string, cwDeployFee sdk.Coins, cwInstantiateFee sdk.Coins) Params {
 	return Params{
-		ValidatorMinGasFee:   validatorMinGasFee,
-		MaxBalanceIterations: maxBalanceIterations,
+		ValidatorMinGasFee:     validatorMinGasFee,
+		MaxBalanceIterations:   maxBalanceIterations,
+		CwDeployFeeDestination: cwDeployFeeDestination,
+		CwDeployFee:            cwDeployFee,
+		CwInstantiateFee:       cwInstantiateFee,
 	}
 }
 
@@ -30,6 +36,9 @@ func DefaultParams() Params {
 	return NewParams(
 		sdk.NewDecCoinFromDec("ubze", sdkmath.LegacyNewDecWithPrec(1, 2)), // 0.01ubze
 		DefaultMaxBalanceIterations,
+		DefaultCwDeployFeeDestination,
+		sdk.NewCoins(sdk.NewInt64Coin("ubze", 50000000000)), // 50,000 BZE (deploy: gates bytecode upload)
+		sdk.NewCoins(sdk.NewInt64Coin("ubze", 10000000)),    // 10 BZE (instantiate: low, gas covers state cost)
 	)
 }
 
@@ -45,6 +54,18 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateMaxBalanceIterations(p.MaxBalanceIterations); err != nil {
+		return err
+	}
+
+	if err := validateCwDeployFeeDestination(p.CwDeployFeeDestination); err != nil {
+		return err
+	}
+
+	if err := validateCwDeployFee(p.CwDeployFee); err != nil {
+		return err
+	}
+
+	if err := validateCwInstantiateFee(p.CwInstantiateFee); err != nil {
 		return err
 	}
 
@@ -80,6 +101,39 @@ func validateMaxBalanceIterations(i interface{}) error {
 
 	if v == 0 {
 		return fmt.Errorf("max balance iterations must be greater than 0")
+	}
+
+	return nil
+}
+
+func validateCwDeployFeeDestination(dest string) error {
+	switch dest {
+	case FeeDestBurner, FeeDestCommunityPool, FeeDestStakers:
+		return nil
+	default:
+		return fmt.Errorf("invalid cw_deploy_fee_destination: %s, must be one of: %s, %s, %s", dest, FeeDestBurner, FeeDestCommunityPool, FeeDestStakers)
+	}
+}
+
+func validateCwDeployFee(coins sdk.Coins) error {
+	if coins == nil || coins.IsZero() {
+		return nil
+	}
+
+	if !coins.IsValid() {
+		return fmt.Errorf("invalid cw_deploy_fee: %s", coins)
+	}
+
+	return nil
+}
+
+func validateCwInstantiateFee(coins sdk.Coins) error {
+	if coins == nil || coins.IsZero() {
+		return nil
+	}
+
+	if !coins.IsValid() {
+		return fmt.Errorf("invalid cw_instantiate_fee: %s", coins)
 	}
 
 	return nil

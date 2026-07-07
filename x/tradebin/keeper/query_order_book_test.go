@@ -4,7 +4,7 @@ import (
 	"github.com/bze-alphateam/bze/x/tradebin/types"
 )
 
-func (suite *IntegrationTestSuite) Query_Query_TestAssetMarkets_InvalidRequest() {
+func (suite *IntegrationTestSuite) TestQueryAssetMarkets_InvalidRequest() {
 	_, err := suite.k.AssetMarkets(suite.ctx, nil)
 	suite.Require().NotNil(err)
 }
@@ -121,7 +121,7 @@ func (suite *IntegrationTestSuite) TestQueryMarketAggregatedOrders_Success() {
 
 func (suite *IntegrationTestSuite) TestQueryMarketAll_InvalidRequest() {
 
-	_, err := suite.k.Market(suite.ctx, nil)
+	_, err := suite.k.AllMarkets(suite.ctx, nil)
 	suite.Require().NotNil(err)
 }
 

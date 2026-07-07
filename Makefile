@@ -7,6 +7,7 @@ NETWORK ?= mainnet
 COVERAGE ?= coverage.txt
 BUILDDIR ?= $(CURDIR)/build
 LEDGER_ENABLED ?= false
+CGO_ENABLED ?= 1
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=bze \
 	-X github.com/cosmos/cosmos-sdk/version.AppName=bzed \
@@ -43,43 +44,64 @@ download:
 	git submodule update --init --recursive
 
 install: check-version lint check-network go.sum
-		go install -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) ./cmd/bzed
+		CGO_ENABLED=$(CGO_ENABLED) go install -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) ./cmd/bzed
 
 build: check-version check-network go.sum
-		go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/bzed ./cmd/bzed
+		CGO_ENABLED=$(CGO_ENABLED) go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/bzed ./cmd/bzed
 
 build-win64: check-version check-network go.sum
-		go build -buildmode=exe -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/win64/bzed.exe ./cmd/bzed
+		CGO_ENABLED=$(CGO_ENABLED) go build -buildmode=exe -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/win64/bzed.exe ./cmd/bzed
 
 .PHONY: build
 
 build-linux: check-version check-network go.sum
 ifeq ($(OS), Linux)
-		GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-amd64/bzed-linux-amd64 ./cmd/bzed
+		CGO_ENABLED=$(CGO_ENABLED) GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-amd64/bzed-linux-amd64 ./cmd/bzed
 else
-		LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-amd64/bzed-linux-amd64 ./cmd/bzed
+		@echo "Cross-compiling Linux amd64 from $(OS) requires a C cross-compiler (e.g. x86_64-linux-musl-gcc)."
+		@echo "Install musl-cross: brew install filosottile/musl-cross/musl-cross"
+		@echo "Or use 'make build-docker' for cross-platform builds via Docker."
+		CGO_ENABLED=$(CGO_ENABLED) LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-amd64/bzed-linux-amd64 ./cmd/bzed
 endif
 
 build-linux-arm64: check-version check-network go.sum
 ifeq ($(OS), Linux)
-		GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-arm64/bzed-linux-arm64 ./cmd/bzed
+		CGO_ENABLED=$(CGO_ENABLED) GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-arm64/bzed-linux-arm64 ./cmd/bzed
 else
-		LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-arm64/bzed-linux-arm64 ./cmd/bzed
+		@echo "Cross-compiling Linux arm64 from $(OS) requires a C cross-compiler (e.g. aarch64-linux-musl-gcc)."
+		@echo "Install musl-cross: brew install filosottile/musl-cross/musl-cross --with-aarch64"
+		@echo "Or use 'make build-docker' for cross-platform builds via Docker."
+		CGO_ENABLED=$(CGO_ENABLED) LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/linux-arm64/bzed-linux-arm64 ./cmd/bzed
 endif
 
 build-mac: check-version check-network go.sum
 ifeq ($(OS), Darwin)
-		GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-amd64/bzed-darwin-amd64 ./cmd/bzed
+		CGO_ENABLED=$(CGO_ENABLED) GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-amd64/bzed-darwin-amd64 ./cmd/bzed
 else
-		LEDGER_ENABLED=false GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-amd64/bzed-darwin-amd64 ./cmd/bzed
+		CGO_ENABLED=$(CGO_ENABLED) LEDGER_ENABLED=false GOOS=darwin GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-amd64/bzed-darwin-amd64 ./cmd/bzed
 endif
 
 build-mac-arm64: check-version check-network go.sum
 ifeq ($(OS), Darwin)
-		GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-arm64/bzed-darwin-arm64 ./cmd/bzed
+		CGO_ENABLED=$(CGO_ENABLED) GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-arm64/bzed-darwin-arm64 ./cmd/bzed
 else
-		LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-arm64/bzed-darwin-arm64 ./cmd/bzed
+		CGO_ENABLED=$(CGO_ENABLED) LEDGER_ENABLED=false GOOS=darwin GOARCH=arm64 go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/darwin-arm64/bzed-darwin-arm64 ./cmd/bzed
 endif
+
+# Build a statically linked Linux binary via Docker. Works from any host OS
+# without needing a C cross-compiler installed locally.
+# Usage:
+#   make build-docker                    # linux/amd64 (default)
+#   make build-docker DOCKER_PLATFORM=linux/arm64  # linux/arm64
+build-docker:
+	$(eval DOCKER_PLATFORM ?= linux/amd64)
+	$(eval DOCKER_ARCH := $(lastword $(subst /, ,$(DOCKER_PLATFORM))))
+	docker build --platform $(DOCKER_PLATFORM) -t bze-builder:$(DOCKER_ARCH) -f Dockerfile --target builder .
+	@mkdir -p $(BUILDDIR)/linux-$(DOCKER_ARCH)
+	docker create --name bze-extract-$(DOCKER_ARCH) bze-builder:$(DOCKER_ARCH) noop 2>/dev/null || (docker rm -f bze-extract-$(DOCKER_ARCH) && docker create --name bze-extract-$(DOCKER_ARCH) bze-builder:$(DOCKER_ARCH) noop)
+	docker cp bze-extract-$(DOCKER_ARCH):/src/build/bzed $(BUILDDIR)/linux-$(DOCKER_ARCH)/bzed-linux-$(DOCKER_ARCH)
+	docker rm -f bze-extract-$(DOCKER_ARCH)
+	@echo "Binary built: $(BUILDDIR)/linux-$(DOCKER_ARCH)/bzed-linux-$(DOCKER_ARCH)"
 
 build-all: check-version lint all build-win64 build-mac build-mac-arm64 build-linux build-linux-arm64 compress-build
 

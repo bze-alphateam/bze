@@ -30,6 +30,7 @@ import (
 	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/nft"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	burnermodulev1 "github.com/bze-alphateam/bze/api/bze/burner/module"
 	cointrunkmodulev1 "github.com/bze-alphateam/bze/api/bze/cointrunk/module"
 	epochmodulev1 "github.com/bze-alphateam/bze/api/bze/epochs/module"
@@ -37,6 +38,7 @@ import (
 	tokenfactorymodulev1 "github.com/bze-alphateam/bze/api/bze/tokenfactory/module"
 	tradebinmodulev1 "github.com/bze-alphateam/bze/api/bze/tradebin/module"
 	txfeecollectormodulev1 "github.com/bze-alphateam/bze/api/bze/txfeecollector/module"
+
 	_ "github.com/bze-alphateam/bze/x/burner/module" // import for side-effects
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	_ "github.com/bze-alphateam/bze/x/cointrunk/module" // import for side-effects
@@ -106,6 +108,8 @@ var (
 		group.ModuleName,
 		consensustypes.ModuleName,
 		circuittypes.ModuleName,
+		// wasm module
+		wasmtypes.ModuleName,
 		// chain modules
 		burnermoduletypes.ModuleName,
 		epochmoduletypes.ModuleName,
@@ -137,6 +141,8 @@ var (
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		ibcfeetypes.ModuleName,
+		// wasm module
+		wasmtypes.ModuleName,
 		// chain modules
 		burnermoduletypes.ModuleName,
 		epochmoduletypes.ModuleName,
@@ -161,6 +167,8 @@ var (
 		capabilitytypes.ModuleName,
 		icatypes.ModuleName,
 		ibcfeetypes.ModuleName,
+		// wasm module
+		wasmtypes.ModuleName,
 		// chain modules
 		burnermoduletypes.ModuleName,
 		epochmoduletypes.ModuleName,
@@ -189,6 +197,7 @@ var (
 		{Account: ibctransfertypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner}},
 		{Account: ibcfeetypes.ModuleName},
 		{Account: icatypes.ModuleName},
+		{Account: wasmtypes.ModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: rewardsmoduletypes.ModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: burnermoduletypes.ModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: burnermoduletypes.BlackHoleModuleName},

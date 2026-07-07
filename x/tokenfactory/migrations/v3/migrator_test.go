@@ -14,19 +14,22 @@ import (
 	"github.com/bze-alphateam/bze/x/tokenfactory/exported"
 	v2 "github.com/bze-alphateam/bze/x/tokenfactory/migrations/v3"
 	"github.com/bze-alphateam/bze/x/tokenfactory/types"
+	"github.com/bze-alphateam/bze/x/tokenfactory/v1types"
 )
 
-// mockSubspace implements the exported.Subspace interface for testing
+// mockSubspace implements the exported.Subspace interface for testing.
+// The v3 migration reads the LEGACY v1 params (CreateDenomFee as a string),
+// so the mock must hold and return a *v1types.Params.
 type mockSubspace struct {
-	ps types.Params
+	ps v1types.Params
 }
 
-func newMockSubspace(ps types.Params) mockSubspace {
+func newMockSubspace(ps v1types.Params) mockSubspace {
 	return mockSubspace{ps: ps}
 }
 
 func (ms mockSubspace) GetParamSet(_ sdk.Context, ps exported.ParamSet) {
-	*ps.(*types.Params) = ms.ps
+	*ps.(*v1types.Params) = ms.ps
 }
 
 // TestMigrate tests the successful migration of params from legacy subspace to module store
@@ -40,8 +43,10 @@ func TestMigrate(t *testing.T) {
 
 	store := prefix.NewStore(ctx.KVStore(storeKey), []byte{})
 
-	// Create mock subspace with default params
-	legacySubspace := newMockSubspace(types.DefaultParams())
+	// Legacy params store the create denom fee as a string coin; the
+	// migration parses it into a types.Coin on the new Params.
+	legacyParams := v1types.Params{CreateDenomFee: "25000000000ubze"}
+	legacySubspace := newMockSubspace(legacyParams)
 
 	// Run migration
 	require.NoError(t, v2.Migrate(ctx, store, legacySubspace, cdc))
@@ -51,5 +56,9 @@ func TestMigrate(t *testing.T) {
 	bz := store.Get(types.ParamsKey)
 	require.NotNil(t, bz, "params should be stored in the new location")
 	require.NoError(t, cdc.Unmarshal(bz, &res))
-	require.Equal(t, legacySubspace.ps, res)
+
+	// The migration converts the legacy string fee into a parsed Coin.
+	expectedFee, err := sdk.ParseCoinNormalized(legacyParams.CreateDenomFee)
+	require.NoError(t, err)
+	require.Equal(t, expectedFee, res.CreateDenomFee)
 }

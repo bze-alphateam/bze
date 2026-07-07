@@ -154,15 +154,15 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 
 	icaHostIBCModule := ibcfee.NewIBCMiddleware(icahost.NewIBCModule(app.ICAHostKeeper), app.IBCFeeKeeper)
 
-	// Create static IBC router, add transfer route, then set and seal it
-	ibcRouter := porttypes.NewRouter().
-		AddRoute(ibctransfertypes.ModuleName, transferIBCModule).
-		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
-		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
+	// Create static IBC router and add routes.
+	// The router is stored on the app so that registerWasmModule can add
+	// the wasm port route before the router is sealed via finalizeIBCRouter.
+	app.ibcRouter = porttypes.NewRouter()
+	app.ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
+	app.ibcRouter.AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule)
+	app.ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
 
 	// this line is used by starport scaffolding # ibc/app/module
-
-	app.IBCKeeper.SetRouter(ibcRouter)
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedIBCTransferKeeper = scopedIBCTransferKeeper
