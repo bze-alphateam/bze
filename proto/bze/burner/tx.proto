@@ -81,6 +81,7 @@ message MsgJoinRaffle {
 message MsgJoinRaffleResponse {}
 
 message MsgMoveIbcLockedCoins {
+  option (amino.name) = "bze/x/burner/MsgMoveIbcLockedCoins";
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string denom   = 2;
