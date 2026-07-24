@@ -235,6 +235,17 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 	k.SetStakingRewardParticipant(ctx, participant)
 	k.SetStakingReward(ctx, stakingReward)
 
+	//notify hooks after all state writes; an error aborts the whole tx
+	addedAmount := toCapture.AmountOf(stakingReward.StakingDenom)
+	if found {
+		err = k.afterStakingRewardIncrease(ctx, stakingReward.RewardId, msg.Creator, addedAmount, amtInt, stakingReward.StakingDenom)
+	} else {
+		err = k.afterStakingRewardJoin(ctx, stakingReward.RewardId, msg.Creator, addedAmount, stakingReward.StakingDenom)
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.StakingRewardJoinEvent{
 			RewardId: stakingReward.RewardId,
@@ -311,6 +322,14 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 		if err != nil {
 			k.Logger().Error(err.Error())
 		}
+	}
+
+	//notify hooks after all state writes; an error aborts the whole tx.
+	//the reward's denom and amount are passed from the local copy because the
+	//StakingReward record may have been removed above when the reward finished
+	err = k.afterStakingRewardExit(ctx, stakingReward.RewardId, msg.Creator, partCoins.AmountOf(stakingReward.StakingDenom), stakingReward.StakingDenom)
+	if err != nil {
+		return nil, err
 	}
 
 	err = ctx.EventManager().EmitTypedEvent(
