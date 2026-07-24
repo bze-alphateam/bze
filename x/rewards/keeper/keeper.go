@@ -33,6 +33,12 @@ type (
 		tradeKeeper   types.TradingKeeper
 		accountKeeper types.AccountKeeper
 
+		// hooks other modules registered to be notified on staking reward
+		// participation changes. Not a constructor argument: it is registered
+		// after keepers are built, via SetHooks (same approach as tradebin's
+		// SetOnOrderFillHooks).
+		hooks types.StakingRewardHooks
+
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
 		authority string
@@ -68,6 +74,40 @@ func NewKeeper(
 // GetAuthority returns the module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
+}
+
+// SetHooks sets the staking reward participation hooks. It panics if called
+// more than once, following the Cosmos SDK convention.
+func (k *Keeper) SetHooks(sh types.StakingRewardHooks) {
+	if k.hooks != nil {
+		panic("cannot set rewards hooks twice")
+	}
+
+	k.hooks = sh
+}
+
+func (k Keeper) afterStakingRewardJoin(ctx sdk.Context, rewardId, address string, amount math.Int, stakingDenom string) error {
+	if k.hooks == nil {
+		return nil
+	}
+
+	return k.hooks.AfterStakingRewardJoin(ctx, rewardId, address, amount, stakingDenom)
+}
+
+func (k Keeper) afterStakingRewardIncrease(ctx sdk.Context, rewardId, address string, amountAdded, newTotal math.Int, stakingDenom string) error {
+	if k.hooks == nil {
+		return nil
+	}
+
+	return k.hooks.AfterStakingRewardIncrease(ctx, rewardId, address, amountAdded, newTotal, stakingDenom)
+}
+
+func (k Keeper) afterStakingRewardExit(ctx sdk.Context, rewardId, address string, unstakedAmount math.Int, stakingDenom string) error {
+	if k.hooks == nil {
+		return nil
+	}
+
+	return k.hooks.AfterStakingRewardExit(ctx, rewardId, address, unstakedAmount, stakingDenom)
 }
 
 // Logger returns a module-specific logger.
