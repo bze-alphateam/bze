@@ -8,6 +8,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/bank/v1beta1/bank.proto";
 import "bze/tokenfactory/params.proto";
+import "bze/tokenfactory/denom_branding.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/tokenfactory/types";
 
@@ -23,6 +24,7 @@ service Msg {
   rpc Burn             (MsgBurn            ) returns (MsgBurnResponse            );
   rpc ChangeAdmin      (MsgChangeAdmin     ) returns (MsgChangeAdminResponse     );
   rpc SetDenomMetadata (MsgSetDenomMetadata) returns (MsgSetDenomMetadataResponse);
+  rpc SetDenomBranding (MsgSetDenomBranding) returns (MsgSetDenomBrandingResponse);
 }
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
@@ -93,4 +95,17 @@ message MsgSetDenomMetadata {
 }
 
 message MsgSetDenomMetadataResponse {}
+
+message MsgSetDenomBranding {
+  option           (amino.name) = "bze/x/tokenfactory/MsgSetDenomBranding";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string denom   = 2;
+
+  // branding is the full package to store. A nil/empty branding clears any
+  // stored branding for the denom.
+  DenomBranding branding = 3;
+}
+
+message MsgSetDenomBrandingResponse {}
 

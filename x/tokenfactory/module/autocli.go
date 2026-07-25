@@ -23,6 +23,17 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query denom-authority",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
 				},
+				{
+					RpcMethod:      "DenomBranding",
+					Use:            "denom-branding [denom]",
+					Short:          "Query the branding package of a denom",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
+				{
+					RpcMethod: "AllDenomBranding",
+					Use:       "all-denom-branding",
+					Short:     "Query the branding packages of all denoms",
+				},
 
 				// this line is used by ignite scaffolding # autocli/query
 			},
@@ -64,6 +75,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:            "set-denom-metadata [metadata]",
 					Short:          "Send a set-denom-metadata tx",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "metadata"}},
+				},
+				{
+					RpcMethod:      "SetDenomBranding",
+					Use:            "set-denom-branding [denom]",
+					Short:          "Set or clear the branding package of a denom (omit --branding to clear)",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
 				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},

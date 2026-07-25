@@ -5,6 +5,7 @@ import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "bze/tokenfactory/params.proto";
 import "bze/tokenfactory/denom_authority.proto";
+import "bze/tokenfactory/denom_branding.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/tokenfactory/types";
 
@@ -17,6 +18,10 @@ message GenesisState {
   ];
   repeated GenesisDenom factory_denoms = 2 [
     (gogoproto.moretags) = "yaml:\"factory_denoms\"",
+    (gogoproto.nullable) = false
+  ];
+  repeated DenomBrandingRecord denom_brandings = 3 [
+    (gogoproto.moretags) = "yaml:\"denom_brandings\"",
     (gogoproto.nullable) = false
   ];
 }

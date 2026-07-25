@@ -25,6 +25,7 @@ const (
 	Msg_Burn_FullMethodName             = "/bze.tokenfactory.Msg/Burn"
 	Msg_ChangeAdmin_FullMethodName      = "/bze.tokenfactory.Msg/ChangeAdmin"
 	Msg_SetDenomMetadata_FullMethodName = "/bze.tokenfactory.Msg/SetDenomMetadata"
+	Msg_SetDenomBranding_FullMethodName = "/bze.tokenfactory.Msg/SetDenomBranding"
 )
 
 // MsgClient is the client API for Msg service.
@@ -39,6 +40,7 @@ type MsgClient interface {
 	Burn(ctx context.Context, in *MsgBurn, opts ...grpc.CallOption) (*MsgBurnResponse, error)
 	ChangeAdmin(ctx context.Context, in *MsgChangeAdmin, opts ...grpc.CallOption) (*MsgChangeAdminResponse, error)
 	SetDenomMetadata(ctx context.Context, in *MsgSetDenomMetadata, opts ...grpc.CallOption) (*MsgSetDenomMetadataResponse, error)
+	SetDenomBranding(ctx context.Context, in *MsgSetDenomBranding, opts ...grpc.CallOption) (*MsgSetDenomBrandingResponse, error)
 }
 
 type msgClient struct {
@@ -103,6 +105,15 @@ func (c *msgClient) SetDenomMetadata(ctx context.Context, in *MsgSetDenomMetadat
 	return out, nil
 }
 
+func (c *msgClient) SetDenomBranding(ctx context.Context, in *MsgSetDenomBranding, opts ...grpc.CallOption) (*MsgSetDenomBrandingResponse, error) {
+	out := new(MsgSetDenomBrandingResponse)
+	err := c.cc.Invoke(ctx, Msg_SetDenomBranding_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -115,6 +126,7 @@ type MsgServer interface {
 	Burn(context.Context, *MsgBurn) (*MsgBurnResponse, error)
 	ChangeAdmin(context.Context, *MsgChangeAdmin) (*MsgChangeAdminResponse, error)
 	SetDenomMetadata(context.Context, *MsgSetDenomMetadata) (*MsgSetDenomMetadataResponse, error)
+	SetDenomBranding(context.Context, *MsgSetDenomBranding) (*MsgSetDenomBrandingResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -139,6 +151,9 @@ func (UnimplementedMsgServer) ChangeAdmin(context.Context, *MsgChangeAdmin) (*Ms
 }
 func (UnimplementedMsgServer) SetDenomMetadata(context.Context, *MsgSetDenomMetadata) (*MsgSetDenomMetadataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetDenomMetadata not implemented")
+}
+func (UnimplementedMsgServer) SetDenomBranding(context.Context, *MsgSetDenomBranding) (*MsgSetDenomBrandingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetDenomBranding not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -261,6 +276,24 @@ func _Msg_SetDenomMetadata_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SetDenomBranding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetDenomBranding)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetDenomBranding(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_SetDenomBranding_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetDenomBranding(ctx, req.(*MsgSetDenomBranding))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -291,6 +324,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetDenomMetadata",
 			Handler:    _Msg_SetDenomMetadata_Handler,
+		},
+		{
+			MethodName: "SetDenomBranding",
+			Handler:    _Msg_SetDenomBranding_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

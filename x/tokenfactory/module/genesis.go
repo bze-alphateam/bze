@@ -27,6 +27,14 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			panic(err)
 		}
 	}
+	for _, record := range genState.GetDenomBrandings() {
+		if _, err := k.GetDenomAuthority(ctx, record.GetDenom()); err != nil {
+			panic(err)
+		}
+		if err := k.SetDenomBranding(ctx, record.GetDenom(), *record.GetBranding()); err != nil {
+			panic(err)
+		}
+	}
 }
 
 // ExportGenesis returns the module's exported genesis.
@@ -51,6 +59,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 
 	genesis.FactoryDenoms = genDenoms
+	genesis.DenomBrandings = k.GetAllDenomBrandings(ctx)
 	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis

@@ -188,3 +188,32 @@ func (k msgServer) SetDenomMetadata(goCtx context.Context, msg *types.MsgSetDeno
 
 	return &types.MsgSetDenomMetadataResponse{}, nil
 }
+
+func (k msgServer) SetDenomBranding(goCtx context.Context, msg *types.MsgSetDenomBranding) (*types.MsgSetDenomBrandingResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	dAuth, err := k.Keeper.GetDenomAuthority(ctx, msg.Denom)
+	if err != nil {
+		return nil, err
+	}
+
+	if msg.Creator != dAuth.GetAdmin() {
+		return nil, types.ErrUnauthorized
+	}
+
+	if msg.Branding == nil || msg.Branding.IsEmpty() {
+		k.Keeper.RemoveDenomBranding(ctx, msg.Denom)
+	} else {
+		err = k.Keeper.SetDenomBranding(ctx, msg.Denom, *msg.Branding)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = ctx.EventManager().EmitTypedEvent(&types.DenomBrandingChangeEvent{Denom: msg.Denom})
+	if err != nil {
+		k.Logger().Error("failed to emit branding changed event", "error", err)
+	}
+
+	return &types.MsgSetDenomBrandingResponse{}, nil
+}

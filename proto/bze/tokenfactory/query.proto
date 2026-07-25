@@ -8,6 +8,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "bze/tokenfactory/params.proto";
 import "bze/tokenfactory/denom_authority.proto";
+import "bze/tokenfactory/denom_branding.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/tokenfactory/types";
 
@@ -23,7 +24,19 @@ service Query {
   // Queries the DenomAuthority of a denom
   rpc DenomAuthority (QueryDenomAuthorityRequest) returns (QueryDenomAuthorityResponse) {
     option (google.api.http).get = "/bze/tokenfactory/denom_authority";
-  
+
+  }
+
+  // Queries the branding package of a denom
+  rpc DenomBranding (QueryDenomBrandingRequest) returns (QueryDenomBrandingResponse) {
+    option (google.api.http).get = "/bze/tokenfactory/denom_branding";
+
+  }
+
+  // Queries the branding packages of all denoms with pagination
+  rpc AllDenomBranding (QueryAllDenomBrandingRequest) returns (QueryAllDenomBrandingResponse) {
+    option (google.api.http).get = "/bze/tokenfactory/all_denom_branding";
+
   }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -42,5 +55,22 @@ message QueryDenomAuthorityRequest {
 
 message QueryDenomAuthorityResponse {
   DenomAuthority denomAuthority = 1;
+}
+
+message QueryDenomBrandingRequest {
+  string denom = 1;
+}
+
+message QueryDenomBrandingResponse {
+  DenomBranding branding = 1;
+}
+
+message QueryAllDenomBrandingRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllDenomBrandingResponse {
+  repeated DenomBrandingRecord denom_brandings = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
