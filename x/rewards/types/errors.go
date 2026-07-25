@@ -22,4 +22,6 @@ var (
 	ErrNoRewardsToClaim    = sdkerrors.Register(ModuleName, 5012, "no rewards available to claim")
 	ErrInvalidBoostDenom   = sdkerrors.Register(ModuleName, 5013, "invalid boost denom")
 	ErrInvalidBoostDays    = sdkerrors.Register(ModuleName, 5014, "invalid boost days")
+	ErrBoostAlreadyExists  = sdkerrors.Register(ModuleName, 5015, "a boost already exists for this reward and denom")
+	ErrBoostCapReached     = sdkerrors.Register(ModuleName, 5016, "the reward reached the maximum number of boosts")
 )
