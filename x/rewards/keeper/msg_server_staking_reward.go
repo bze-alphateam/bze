@@ -212,6 +212,21 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 	}
 	participant.JoinedAt = stakingReward.DistributedStake
 
+	// --- Staking Reward Boosts ---
+	// Settle accrued boost rewards on the PRE-join amount, then reset the boost
+	// snapshots to the current s_boost for every existing record (active AND
+	// finalizing) so the freshly added stake earns nothing retroactively. This
+	// MUST run before participant.Amount is increased below — settling after the
+	// top-up would let a whale collect the whole accrual window at the new amount
+	// (exploit A2); skipping finalizing records would overpay a joiner during
+	// finalization (exploit A3). Finally record the reverse index so the
+	// finalization sweep can find this participant.
+	if _, err = k.settleBoosts(ctx, &participant, msg.RewardId); err != nil {
+		return nil, err
+	}
+	k.writeJoinBoostSnapshots(ctx, &participant, msg.RewardId)
+	k.SetBoostParticipantIndex(ctx, msg.RewardId, participant.Address)
+
 	amtInt, ok := math.NewIntFromString(participant.Amount)
 	if !ok {
 		return nil, fmt.Errorf("could not transform amount from storage into int")
@@ -293,6 +308,15 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 		return nil, err
 	}
 
+	// --- Staking Reward Boosts ---
+	// Pay any pending boost rewards before the participant record (and with it
+	// the boost snapshots) is removed — exit forfeits nothing (A7) — then drop
+	// the participant's reverse-index entry.
+	if _, err = k.settleBoosts(ctx, &participation, msg.RewardId); err != nil {
+		return nil, err
+	}
+	k.RemoveBoostParticipantIndex(ctx, msg.RewardId, participation.Address)
+
 	k.RemoveStakingRewardParticipant(ctx, participation.Address, participation.RewardId)
 
 	remainingStakedAmount := stakedAmountInt.Sub(partCoins.AmountOf(stakingReward.StakingDenom))
@@ -342,12 +366,21 @@ func (k msgServer) ClaimStakingRewards(goCtx context.Context, msg *types.MsgClai
 		return nil, errors.Wrapf(types.ErrInvalidRewardId, "you are not a participant in this staking reward")
 	}
 
+	// --- Staking Reward Boosts ---
+	// Settle accrued boost rewards before the base claim (settle is independent
+	// of joined_at, so the order is safe). A claim succeeds when either the base
+	// reward or a boost paid out.
+	boostPaid, err := k.settleBoosts(ctx, &participant, msg.RewardId)
+	if err != nil {
+		return nil, err
+	}
+
 	paid, err := k.claimPending(ctx, stakingReward, &participant)
 	if err != nil {
 		return nil, err
 	}
 
-	if paid.IsZero() {
+	if paid.IsZero() && !boostPaid {
 		return nil, types.ErrNoRewardsToClaim
 	}
 
