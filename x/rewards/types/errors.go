@@ -20,4 +20,6 @@ var (
 	ErrRewardAlreadyExists = sdkerrors.Register(ModuleName, 5010, "a reward is already running for this market")
 	ErrInvalidSigner       = sdkerrors.Register(ModuleName, 5011, "invalid signer")
 	ErrNoRewardsToClaim    = sdkerrors.Register(ModuleName, 5012, "no rewards available to claim")
+	ErrInvalidBoostDenom   = sdkerrors.Register(ModuleName, 5013, "invalid boost denom")
+	ErrInvalidBoostDays    = sdkerrors.Register(ModuleName, 5014, "invalid boost days")
 )
