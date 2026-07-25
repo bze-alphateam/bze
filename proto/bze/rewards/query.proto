@@ -72,7 +72,26 @@ service Query {
   // Queries a list of AllPendingUnlockParticipants items.
   rpc AllPendingUnlockParticipants (QueryAllPendingUnlockParticipantsRequest) returns (QueryAllPendingUnlockParticipantsResponse) {
     option (google.api.http).get = "/bze/rewards/all_pending_unlock_participants";
-  
+
+  }
+
+  // Queries a single Boost by reward_id and denom. denom is a query parameter
+  // (not a path segment) because boost denoms may contain "/" (IBC, factory).
+  rpc Boost (QueryBoostRequest) returns (QueryBoostResponse) {
+    option (google.api.http).get = "/bze/rewards/boost/{reward_id}";
+
+  }
+
+  // Queries all boosts of a single reward.
+  rpc RewardBoosts (QueryRewardBoostsRequest) returns (QueryRewardBoostsResponse) {
+    option (google.api.http).get = "/bze/rewards/reward_boosts/{reward_id}";
+
+  }
+
+  // Queries a paginated list of all boosts.
+  rpc AllBoosts (QueryAllBoostsRequest) returns (QueryAllBoostsResponse) {
+    option (google.api.http).get = "/bze/rewards/all_boosts";
+
   }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.
