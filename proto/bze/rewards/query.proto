@@ -8,6 +8,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "bze/rewards/params.proto";
 import "bze/rewards/store.proto";
+import "bze/rewards/boost.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
 
@@ -161,5 +162,33 @@ message QueryAllPendingUnlockParticipantsRequest {
 message QueryAllPendingUnlockParticipantsResponse {
   repeated PendingUnlockParticipant list = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// Boost query types. The service RPCs + handlers are wired in a later ticket;
+// the request/response messages are defined here for the data layer.
+message QueryBoostRequest {
+  string reward_id = 1;
+  string denom     = 2;
+}
+
+message QueryBoostResponse {
+  Boost boost = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryRewardBoostsRequest {
+  string reward_id = 1;
+}
+
+message QueryRewardBoostsResponse {
+  repeated Boost list = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllBoostsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllBoostsResponse {
+  repeated Boost                                  list       = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 

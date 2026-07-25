@@ -2,6 +2,7 @@ syntax = "proto3";
 package bze.rewards;
 
 import "gogoproto/gogo.proto";
+import "bze/rewards/boost.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
 
@@ -23,6 +24,7 @@ message StakingRewardParticipant {
   string reward_id = 2;
   string amount = 3; // stake[address]
   string joined_at = 4; // S0[address]
+  map<string, BoostSnapshot> boost_snapshots = 5; // key: boost denom — additive, old records decode with an empty map
 }
 
 message PendingUnlockParticipant {

@@ -1,0 +1,26 @@
+syntax = "proto3";
+package bze.rewards;
+
+option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
+
+// Boost is a scheduled extra-reward program running on top of a single staking
+// reward, identified by (reward_id, denom). It is permissionless to create and
+// always runs its full schedule.
+message Boost {
+  string reward_id       = 1;
+  string denom           = 2;
+  uint64 uid             = 3; // global monotonic counter — distinguishes runs of the same (reward_id, denom)
+  string daily_amount    = 4; // math.Int — amount distributed on each advancing day
+  uint32 days_left       = 5; // active while > 0; finalizing at 0 until deleted
+  string s_boost         = 6; // LegacyDec accumulator, starts at "0" each run
+  string finalize_cursor = 7; // last address processed by the finalization sweep ("" = not started)
+  string creator         = 8; // audit/events only — no special rights
+}
+
+// BoostSnapshot is the per-participant per-denom snapshot stored in the
+// StakingRewardParticipant boost_snapshots map. S0 is the s_boost value already
+// accounted for this participant on the run identified by uid.
+message BoostSnapshot {
+  uint64 uid = 1;
+  string s0  = 2; // LegacyDec
+}

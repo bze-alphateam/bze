@@ -70,3 +70,33 @@ message TradingRewardDistributionEvent {
   string prize_denom = 3;
   repeated string winners = 4;
 }
+
+message BoostCreateEvent {
+  string reward_id    = 1;
+  string denom        = 2;
+  uint64 uid          = 3;
+  string daily_amount = 4;
+  uint32 days         = 5;
+  string creator      = 6;
+}
+
+message BoostDistributionEvent {
+  string reward_id = 1;
+  string denom     = 2;
+  uint64 uid       = 3;
+  string amount    = 4;
+}
+
+message BoostClaimEvent {
+  string reward_id = 1;
+  string denom     = 2;
+  uint64 uid       = 3;
+  string address   = 4;
+  string amount    = 5;
+}
+
+message BoostFinalizeEvent {
+  string reward_id = 1;
+  string denom     = 2;
+  uint64 uid       = 3;
+}
