@@ -26,6 +26,7 @@ service Msg {
   rpc CreateTradingReward      (MsgCreateTradingReward     ) returns (MsgCreateTradingRewardResponse     );
   rpc ActivateTradingReward    (MsgActivateTradingReward   ) returns (MsgActivateTradingRewardResponse   );
   rpc CreateBoost              (MsgCreateBoost             ) returns (MsgCreateBoostResponse             );
+  rpc CleanupBoost             (MsgCleanupBoost            ) returns (MsgCleanupBoostResponse            );
 }
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {

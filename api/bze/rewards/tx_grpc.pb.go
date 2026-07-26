@@ -29,6 +29,7 @@ const (
 	Msg_CreateTradingReward_FullMethodName      = "/bze.rewards.Msg/CreateTradingReward"
 	Msg_ActivateTradingReward_FullMethodName    = "/bze.rewards.Msg/ActivateTradingReward"
 	Msg_CreateBoost_FullMethodName              = "/bze.rewards.Msg/CreateBoost"
+	Msg_CleanupBoost_FullMethodName             = "/bze.rewards.Msg/CleanupBoost"
 )
 
 // MsgClient is the client API for Msg service.
@@ -47,6 +48,7 @@ type MsgClient interface {
 	CreateTradingReward(ctx context.Context, in *MsgCreateTradingReward, opts ...grpc.CallOption) (*MsgCreateTradingRewardResponse, error)
 	ActivateTradingReward(ctx context.Context, in *MsgActivateTradingReward, opts ...grpc.CallOption) (*MsgActivateTradingRewardResponse, error)
 	CreateBoost(ctx context.Context, in *MsgCreateBoost, opts ...grpc.CallOption) (*MsgCreateBoostResponse, error)
+	CleanupBoost(ctx context.Context, in *MsgCleanupBoost, opts ...grpc.CallOption) (*MsgCleanupBoostResponse, error)
 }
 
 type msgClient struct {
@@ -147,6 +149,15 @@ func (c *msgClient) CreateBoost(ctx context.Context, in *MsgCreateBoost, opts ..
 	return out, nil
 }
 
+func (c *msgClient) CleanupBoost(ctx context.Context, in *MsgCleanupBoost, opts ...grpc.CallOption) (*MsgCleanupBoostResponse, error) {
+	out := new(MsgCleanupBoostResponse)
+	err := c.cc.Invoke(ctx, Msg_CleanupBoost_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -163,6 +174,7 @@ type MsgServer interface {
 	CreateTradingReward(context.Context, *MsgCreateTradingReward) (*MsgCreateTradingRewardResponse, error)
 	ActivateTradingReward(context.Context, *MsgActivateTradingReward) (*MsgActivateTradingRewardResponse, error)
 	CreateBoost(context.Context, *MsgCreateBoost) (*MsgCreateBoostResponse, error)
+	CleanupBoost(context.Context, *MsgCleanupBoost) (*MsgCleanupBoostResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -199,6 +211,9 @@ func (UnimplementedMsgServer) ActivateTradingReward(context.Context, *MsgActivat
 }
 func (UnimplementedMsgServer) CreateBoost(context.Context, *MsgCreateBoost) (*MsgCreateBoostResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateBoost not implemented")
+}
+func (UnimplementedMsgServer) CleanupBoost(context.Context, *MsgCleanupBoost) (*MsgCleanupBoostResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CleanupBoost not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -393,6 +408,24 @@ func _Msg_CreateBoost_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CleanupBoost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCleanupBoost)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CleanupBoost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_CleanupBoost_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CleanupBoost(ctx, req.(*MsgCleanupBoost))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -439,6 +472,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateBoost",
 			Handler:    _Msg_CreateBoost_Handler,
+		},
+		{
+			MethodName: "CleanupBoost",
+			Handler:    _Msg_CleanupBoost_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
