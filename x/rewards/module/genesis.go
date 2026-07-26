@@ -38,6 +38,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// Set all the stakingRewardParticipant
 	for _, elem := range genState.StakingRewardParticipantList {
 		k.SetStakingRewardParticipant(ctx, elem)
+		// keep the boost participant reverse index in sync with the participant
+		// store so genesis-imported participants are reachable by the boost
+		// finalization sweep (same invariant the upgrade migration backfills).
+		k.SetBoostParticipantIndex(ctx, elem.RewardId, elem.Address)
 	}
 
 	// Set all the stakingRewardParticipant
