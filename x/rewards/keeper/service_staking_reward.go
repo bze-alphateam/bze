@@ -91,6 +91,9 @@ func (k Keeper) distributeStakingReward(ctx sdk.Context, sr types.StakingReward)
 	sr.Payouts++
 	k.SetStakingReward(ctx, sr)
 
+	//base reward distributed: advance boosts too (never on the skip paths above)
+	k.distributeBoosts(ctx, &sr)
+
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.StakingRewardDistributionEvent{
 			RewardId: sr.RewardId,
