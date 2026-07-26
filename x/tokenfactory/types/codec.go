@@ -22,8 +22,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSetDenomMetadata{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSetDenomBranding{},
 	)
 	// this line is used by starport scaffolding # 3

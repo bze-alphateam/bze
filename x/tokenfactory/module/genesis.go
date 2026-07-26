@@ -1,6 +1,8 @@
 package tokenfactory
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bze-alphateam/bze/x/tokenfactory/keeper"
@@ -30,6 +32,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, record := range genState.GetDenomBrandings() {
 		if _, err := k.GetDenomAuthority(ctx, record.GetDenom()); err != nil {
 			panic(err)
+		}
+		if record.GetBranding() == nil {
+			panic(fmt.Sprintf("branding record for denom %s has no branding", record.GetDenom()))
 		}
 		if err := k.SetDenomBranding(ctx, record.GetDenom(), *record.GetBranding()); err != nil {
 			panic(err)
