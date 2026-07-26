@@ -28,6 +28,7 @@ const (
 	Msg_DistributeStakingRewards_FullMethodName = "/bze.rewards.Msg/DistributeStakingRewards"
 	Msg_CreateTradingReward_FullMethodName      = "/bze.rewards.Msg/CreateTradingReward"
 	Msg_ActivateTradingReward_FullMethodName    = "/bze.rewards.Msg/ActivateTradingReward"
+	Msg_CreateBoost_FullMethodName              = "/bze.rewards.Msg/CreateBoost"
 )
 
 // MsgClient is the client API for Msg service.
@@ -45,6 +46,7 @@ type MsgClient interface {
 	DistributeStakingRewards(ctx context.Context, in *MsgDistributeStakingRewards, opts ...grpc.CallOption) (*MsgDistributeStakingRewardsResponse, error)
 	CreateTradingReward(ctx context.Context, in *MsgCreateTradingReward, opts ...grpc.CallOption) (*MsgCreateTradingRewardResponse, error)
 	ActivateTradingReward(ctx context.Context, in *MsgActivateTradingReward, opts ...grpc.CallOption) (*MsgActivateTradingRewardResponse, error)
+	CreateBoost(ctx context.Context, in *MsgCreateBoost, opts ...grpc.CallOption) (*MsgCreateBoostResponse, error)
 }
 
 type msgClient struct {
@@ -136,6 +138,15 @@ func (c *msgClient) ActivateTradingReward(ctx context.Context, in *MsgActivateTr
 	return out, nil
 }
 
+func (c *msgClient) CreateBoost(ctx context.Context, in *MsgCreateBoost, opts ...grpc.CallOption) (*MsgCreateBoostResponse, error) {
+	out := new(MsgCreateBoostResponse)
+	err := c.cc.Invoke(ctx, Msg_CreateBoost_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -151,6 +162,7 @@ type MsgServer interface {
 	DistributeStakingRewards(context.Context, *MsgDistributeStakingRewards) (*MsgDistributeStakingRewardsResponse, error)
 	CreateTradingReward(context.Context, *MsgCreateTradingReward) (*MsgCreateTradingRewardResponse, error)
 	ActivateTradingReward(context.Context, *MsgActivateTradingReward) (*MsgActivateTradingRewardResponse, error)
+	CreateBoost(context.Context, *MsgCreateBoost) (*MsgCreateBoostResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -184,6 +196,9 @@ func (UnimplementedMsgServer) CreateTradingReward(context.Context, *MsgCreateTra
 }
 func (UnimplementedMsgServer) ActivateTradingReward(context.Context, *MsgActivateTradingReward) (*MsgActivateTradingRewardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ActivateTradingReward not implemented")
+}
+func (UnimplementedMsgServer) CreateBoost(context.Context, *MsgCreateBoost) (*MsgCreateBoostResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateBoost not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -360,6 +375,24 @@ func _Msg_ActivateTradingReward_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreateBoost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateBoost)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateBoost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_CreateBoost_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateBoost(ctx, req.(*MsgCreateBoost))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -402,6 +435,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ActivateTradingReward",
 			Handler:    _Msg_ActivateTradingReward_Handler,
+		},
+		{
+			MethodName: "CreateBoost",
+			Handler:    _Msg_CreateBoost_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
