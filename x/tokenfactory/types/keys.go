@@ -24,6 +24,7 @@ const (
 	DenomsPrefixKey           = "denoms"
 	CreatorPrefixKey          = "creator"
 	AdminPrefixKey            = "admin"
+	BrandingPrefixKey         = "branding"
 )
 
 // GetDenomPrefixStore returns the store prefix where all the data associated with a specific denom
@@ -41,4 +42,10 @@ func GetCreatorPrefix(creator string) []byte {
 // GetCreatorsPrefix returns the store prefix where a list of all creator addresses are stored
 func GetCreatorsPrefix() []byte {
 	return []byte(strings.Join([]string{CreatorPrefixKey, ""}, KeySeparator))
+}
+
+// GetBrandingsPrefix returns the store prefix where all the denom branding records are stored,
+// keyed by denom
+func GetBrandingsPrefix() []byte {
+	return []byte(strings.Join([]string{BrandingPrefixKey, ""}, KeySeparator))
 }

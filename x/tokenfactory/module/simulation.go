@@ -43,6 +43,10 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgSetDenomMetadata int = 100
 
+	opWeightMsgSetDenomBranding = "op_weight_msg_set_denom_branding"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgSetDenomBranding int = 100
+
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -121,6 +125,17 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		tokenfactorysimulation.SimulateMsgSetDenomMetadata(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
+	var weightMsgSetDenomBranding int
+	simState.AppParams.GetOrGenerate(opWeightMsgSetDenomBranding, &weightMsgSetDenomBranding, nil,
+		func(_ *rand.Rand) {
+			weightMsgSetDenomBranding = defaultWeightMsgSetDenomBranding
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgSetDenomBranding,
+		tokenfactorysimulation.SimulateMsgSetDenomBranding(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
 	// this line is used by starport scaffolding # simapp/module/operation
 
 	return operations
@@ -166,6 +181,14 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			defaultWeightMsgSetDenomMetadata,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
 				tokenfactorysimulation.SimulateMsgSetDenomMetadata(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgSetDenomBranding,
+			defaultWeightMsgSetDenomBranding,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				tokenfactorysimulation.SimulateMsgSetDenomBranding(am.accountKeeper, am.bankKeeper, am.keeper)
 				return nil
 			},
 		),

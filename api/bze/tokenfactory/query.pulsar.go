@@ -3,7 +3,7 @@ package tokenfactory
 
 import (
 	_ "cosmossdk.io/api/amino"
-	_ "cosmossdk.io/api/cosmos/base/query/v1beta1"
+	v1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -1662,6 +1662,1869 @@ func (x *fastReflection_QueryDenomAuthorityResponse) ProtoMethods() *protoiface.
 	}
 }
 
+var (
+	md_QueryDenomBrandingRequest       protoreflect.MessageDescriptor
+	fd_QueryDenomBrandingRequest_denom protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_tokenfactory_query_proto_init()
+	md_QueryDenomBrandingRequest = File_bze_tokenfactory_query_proto.Messages().ByName("QueryDenomBrandingRequest")
+	fd_QueryDenomBrandingRequest_denom = md_QueryDenomBrandingRequest.Fields().ByName("denom")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryDenomBrandingRequest)(nil)
+
+type fastReflection_QueryDenomBrandingRequest QueryDenomBrandingRequest
+
+func (x *QueryDenomBrandingRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryDenomBrandingRequest)(x)
+}
+
+func (x *QueryDenomBrandingRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_tokenfactory_query_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryDenomBrandingRequest_messageType fastReflection_QueryDenomBrandingRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryDenomBrandingRequest_messageType{}
+
+type fastReflection_QueryDenomBrandingRequest_messageType struct{}
+
+func (x fastReflection_QueryDenomBrandingRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryDenomBrandingRequest)(nil)
+}
+func (x fastReflection_QueryDenomBrandingRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryDenomBrandingRequest)
+}
+func (x fastReflection_QueryDenomBrandingRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryDenomBrandingRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryDenomBrandingRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryDenomBrandingRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryDenomBrandingRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryDenomBrandingRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryDenomBrandingRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryDenomBrandingRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryDenomBrandingRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryDenomBrandingRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryDenomBrandingRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Denom != "" {
+		value := protoreflect.ValueOfString(x.Denom)
+		if !f(fd_QueryDenomBrandingRequest_denom, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryDenomBrandingRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryDenomBrandingRequest.denom":
+		return x.Denom != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryDenomBrandingRequest"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryDenomBrandingRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDenomBrandingRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryDenomBrandingRequest.denom":
+		x.Denom = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryDenomBrandingRequest"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryDenomBrandingRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryDenomBrandingRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.tokenfactory.QueryDenomBrandingRequest.denom":
+		value := x.Denom
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryDenomBrandingRequest"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryDenomBrandingRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDenomBrandingRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryDenomBrandingRequest.denom":
+		x.Denom = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryDenomBrandingRequest"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryDenomBrandingRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDenomBrandingRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryDenomBrandingRequest.denom":
+		panic(fmt.Errorf("field denom of message bze.tokenfactory.QueryDenomBrandingRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryDenomBrandingRequest"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryDenomBrandingRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryDenomBrandingRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryDenomBrandingRequest.denom":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryDenomBrandingRequest"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryDenomBrandingRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryDenomBrandingRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.tokenfactory.QueryDenomBrandingRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryDenomBrandingRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDenomBrandingRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryDenomBrandingRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryDenomBrandingRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryDenomBrandingRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Denom)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryDenomBrandingRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Denom) > 0 {
+			i -= len(x.Denom)
+			copy(dAtA[i:], x.Denom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Denom)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryDenomBrandingRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDenomBrandingRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDenomBrandingRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Denom = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryDenomBrandingResponse          protoreflect.MessageDescriptor
+	fd_QueryDenomBrandingResponse_branding protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_tokenfactory_query_proto_init()
+	md_QueryDenomBrandingResponse = File_bze_tokenfactory_query_proto.Messages().ByName("QueryDenomBrandingResponse")
+	fd_QueryDenomBrandingResponse_branding = md_QueryDenomBrandingResponse.Fields().ByName("branding")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryDenomBrandingResponse)(nil)
+
+type fastReflection_QueryDenomBrandingResponse QueryDenomBrandingResponse
+
+func (x *QueryDenomBrandingResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryDenomBrandingResponse)(x)
+}
+
+func (x *QueryDenomBrandingResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_tokenfactory_query_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryDenomBrandingResponse_messageType fastReflection_QueryDenomBrandingResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryDenomBrandingResponse_messageType{}
+
+type fastReflection_QueryDenomBrandingResponse_messageType struct{}
+
+func (x fastReflection_QueryDenomBrandingResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryDenomBrandingResponse)(nil)
+}
+func (x fastReflection_QueryDenomBrandingResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryDenomBrandingResponse)
+}
+func (x fastReflection_QueryDenomBrandingResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryDenomBrandingResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryDenomBrandingResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryDenomBrandingResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryDenomBrandingResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryDenomBrandingResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryDenomBrandingResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryDenomBrandingResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryDenomBrandingResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryDenomBrandingResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryDenomBrandingResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Branding != nil {
+		value := protoreflect.ValueOfMessage(x.Branding.ProtoReflect())
+		if !f(fd_QueryDenomBrandingResponse_branding, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryDenomBrandingResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryDenomBrandingResponse.branding":
+		return x.Branding != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryDenomBrandingResponse"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryDenomBrandingResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDenomBrandingResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryDenomBrandingResponse.branding":
+		x.Branding = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryDenomBrandingResponse"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryDenomBrandingResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryDenomBrandingResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.tokenfactory.QueryDenomBrandingResponse.branding":
+		value := x.Branding
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryDenomBrandingResponse"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryDenomBrandingResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDenomBrandingResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryDenomBrandingResponse.branding":
+		x.Branding = value.Message().Interface().(*DenomBranding)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryDenomBrandingResponse"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryDenomBrandingResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDenomBrandingResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryDenomBrandingResponse.branding":
+		if x.Branding == nil {
+			x.Branding = new(DenomBranding)
+		}
+		return protoreflect.ValueOfMessage(x.Branding.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryDenomBrandingResponse"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryDenomBrandingResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryDenomBrandingResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryDenomBrandingResponse.branding":
+		m := new(DenomBranding)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryDenomBrandingResponse"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryDenomBrandingResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryDenomBrandingResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.tokenfactory.QueryDenomBrandingResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryDenomBrandingResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDenomBrandingResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryDenomBrandingResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryDenomBrandingResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryDenomBrandingResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Branding != nil {
+			l = options.Size(x.Branding)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryDenomBrandingResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Branding != nil {
+			encoded, err := options.Marshal(x.Branding)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryDenomBrandingResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDenomBrandingResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDenomBrandingResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Branding", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Branding == nil {
+					x.Branding = &DenomBranding{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Branding); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryAllDenomBrandingRequest            protoreflect.MessageDescriptor
+	fd_QueryAllDenomBrandingRequest_pagination protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_tokenfactory_query_proto_init()
+	md_QueryAllDenomBrandingRequest = File_bze_tokenfactory_query_proto.Messages().ByName("QueryAllDenomBrandingRequest")
+	fd_QueryAllDenomBrandingRequest_pagination = md_QueryAllDenomBrandingRequest.Fields().ByName("pagination")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryAllDenomBrandingRequest)(nil)
+
+type fastReflection_QueryAllDenomBrandingRequest QueryAllDenomBrandingRequest
+
+func (x *QueryAllDenomBrandingRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryAllDenomBrandingRequest)(x)
+}
+
+func (x *QueryAllDenomBrandingRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_tokenfactory_query_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryAllDenomBrandingRequest_messageType fastReflection_QueryAllDenomBrandingRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryAllDenomBrandingRequest_messageType{}
+
+type fastReflection_QueryAllDenomBrandingRequest_messageType struct{}
+
+func (x fastReflection_QueryAllDenomBrandingRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryAllDenomBrandingRequest)(nil)
+}
+func (x fastReflection_QueryAllDenomBrandingRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryAllDenomBrandingRequest)
+}
+func (x fastReflection_QueryAllDenomBrandingRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryAllDenomBrandingRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryAllDenomBrandingRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryAllDenomBrandingRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryAllDenomBrandingRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryAllDenomBrandingRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryAllDenomBrandingRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryAllDenomBrandingRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryAllDenomBrandingRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryAllDenomBrandingRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryAllDenomBrandingRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Pagination != nil {
+		value := protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
+		if !f(fd_QueryAllDenomBrandingRequest_pagination, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryAllDenomBrandingRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryAllDenomBrandingRequest.pagination":
+		return x.Pagination != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryAllDenomBrandingRequest"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryAllDenomBrandingRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryAllDenomBrandingRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryAllDenomBrandingRequest.pagination":
+		x.Pagination = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryAllDenomBrandingRequest"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryAllDenomBrandingRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryAllDenomBrandingRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.tokenfactory.QueryAllDenomBrandingRequest.pagination":
+		value := x.Pagination
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryAllDenomBrandingRequest"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryAllDenomBrandingRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryAllDenomBrandingRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryAllDenomBrandingRequest.pagination":
+		x.Pagination = value.Message().Interface().(*v1beta1.PageRequest)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryAllDenomBrandingRequest"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryAllDenomBrandingRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryAllDenomBrandingRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryAllDenomBrandingRequest.pagination":
+		if x.Pagination == nil {
+			x.Pagination = new(v1beta1.PageRequest)
+		}
+		return protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryAllDenomBrandingRequest"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryAllDenomBrandingRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryAllDenomBrandingRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryAllDenomBrandingRequest.pagination":
+		m := new(v1beta1.PageRequest)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryAllDenomBrandingRequest"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryAllDenomBrandingRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryAllDenomBrandingRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.tokenfactory.QueryAllDenomBrandingRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryAllDenomBrandingRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryAllDenomBrandingRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryAllDenomBrandingRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryAllDenomBrandingRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryAllDenomBrandingRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Pagination != nil {
+			l = options.Size(x.Pagination)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryAllDenomBrandingRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Pagination != nil {
+			encoded, err := options.Marshal(x.Pagination)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryAllDenomBrandingRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAllDenomBrandingRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAllDenomBrandingRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Pagination == nil {
+					x.Pagination = &v1beta1.PageRequest{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Pagination); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var _ protoreflect.List = (*_QueryAllDenomBrandingResponse_1_list)(nil)
+
+type _QueryAllDenomBrandingResponse_1_list struct {
+	list *[]*DenomBrandingRecord
+}
+
+func (x *_QueryAllDenomBrandingResponse_1_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_QueryAllDenomBrandingResponse_1_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_QueryAllDenomBrandingResponse_1_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DenomBrandingRecord)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_QueryAllDenomBrandingResponse_1_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DenomBrandingRecord)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_QueryAllDenomBrandingResponse_1_list) AppendMutable() protoreflect.Value {
+	v := new(DenomBrandingRecord)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryAllDenomBrandingResponse_1_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_QueryAllDenomBrandingResponse_1_list) NewElement() protoreflect.Value {
+	v := new(DenomBrandingRecord)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryAllDenomBrandingResponse_1_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_QueryAllDenomBrandingResponse                 protoreflect.MessageDescriptor
+	fd_QueryAllDenomBrandingResponse_denom_brandings protoreflect.FieldDescriptor
+	fd_QueryAllDenomBrandingResponse_pagination      protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_tokenfactory_query_proto_init()
+	md_QueryAllDenomBrandingResponse = File_bze_tokenfactory_query_proto.Messages().ByName("QueryAllDenomBrandingResponse")
+	fd_QueryAllDenomBrandingResponse_denom_brandings = md_QueryAllDenomBrandingResponse.Fields().ByName("denom_brandings")
+	fd_QueryAllDenomBrandingResponse_pagination = md_QueryAllDenomBrandingResponse.Fields().ByName("pagination")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryAllDenomBrandingResponse)(nil)
+
+type fastReflection_QueryAllDenomBrandingResponse QueryAllDenomBrandingResponse
+
+func (x *QueryAllDenomBrandingResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryAllDenomBrandingResponse)(x)
+}
+
+func (x *QueryAllDenomBrandingResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_tokenfactory_query_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryAllDenomBrandingResponse_messageType fastReflection_QueryAllDenomBrandingResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryAllDenomBrandingResponse_messageType{}
+
+type fastReflection_QueryAllDenomBrandingResponse_messageType struct{}
+
+func (x fastReflection_QueryAllDenomBrandingResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryAllDenomBrandingResponse)(nil)
+}
+func (x fastReflection_QueryAllDenomBrandingResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryAllDenomBrandingResponse)
+}
+func (x fastReflection_QueryAllDenomBrandingResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryAllDenomBrandingResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryAllDenomBrandingResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryAllDenomBrandingResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryAllDenomBrandingResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryAllDenomBrandingResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryAllDenomBrandingResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryAllDenomBrandingResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryAllDenomBrandingResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryAllDenomBrandingResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryAllDenomBrandingResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.DenomBrandings) != 0 {
+		value := protoreflect.ValueOfList(&_QueryAllDenomBrandingResponse_1_list{list: &x.DenomBrandings})
+		if !f(fd_QueryAllDenomBrandingResponse_denom_brandings, value) {
+			return
+		}
+	}
+	if x.Pagination != nil {
+		value := protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
+		if !f(fd_QueryAllDenomBrandingResponse_pagination, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryAllDenomBrandingResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryAllDenomBrandingResponse.denom_brandings":
+		return len(x.DenomBrandings) != 0
+	case "bze.tokenfactory.QueryAllDenomBrandingResponse.pagination":
+		return x.Pagination != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryAllDenomBrandingResponse"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryAllDenomBrandingResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryAllDenomBrandingResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryAllDenomBrandingResponse.denom_brandings":
+		x.DenomBrandings = nil
+	case "bze.tokenfactory.QueryAllDenomBrandingResponse.pagination":
+		x.Pagination = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryAllDenomBrandingResponse"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryAllDenomBrandingResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryAllDenomBrandingResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.tokenfactory.QueryAllDenomBrandingResponse.denom_brandings":
+		if len(x.DenomBrandings) == 0 {
+			return protoreflect.ValueOfList(&_QueryAllDenomBrandingResponse_1_list{})
+		}
+		listValue := &_QueryAllDenomBrandingResponse_1_list{list: &x.DenomBrandings}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.tokenfactory.QueryAllDenomBrandingResponse.pagination":
+		value := x.Pagination
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryAllDenomBrandingResponse"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryAllDenomBrandingResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryAllDenomBrandingResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryAllDenomBrandingResponse.denom_brandings":
+		lv := value.List()
+		clv := lv.(*_QueryAllDenomBrandingResponse_1_list)
+		x.DenomBrandings = *clv.list
+	case "bze.tokenfactory.QueryAllDenomBrandingResponse.pagination":
+		x.Pagination = value.Message().Interface().(*v1beta1.PageResponse)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryAllDenomBrandingResponse"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryAllDenomBrandingResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryAllDenomBrandingResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryAllDenomBrandingResponse.denom_brandings":
+		if x.DenomBrandings == nil {
+			x.DenomBrandings = []*DenomBrandingRecord{}
+		}
+		value := &_QueryAllDenomBrandingResponse_1_list{list: &x.DenomBrandings}
+		return protoreflect.ValueOfList(value)
+	case "bze.tokenfactory.QueryAllDenomBrandingResponse.pagination":
+		if x.Pagination == nil {
+			x.Pagination = new(v1beta1.PageResponse)
+		}
+		return protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryAllDenomBrandingResponse"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryAllDenomBrandingResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryAllDenomBrandingResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tokenfactory.QueryAllDenomBrandingResponse.denom_brandings":
+		list := []*DenomBrandingRecord{}
+		return protoreflect.ValueOfList(&_QueryAllDenomBrandingResponse_1_list{list: &list})
+	case "bze.tokenfactory.QueryAllDenomBrandingResponse.pagination":
+		m := new(v1beta1.PageResponse)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tokenfactory.QueryAllDenomBrandingResponse"))
+		}
+		panic(fmt.Errorf("message bze.tokenfactory.QueryAllDenomBrandingResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryAllDenomBrandingResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.tokenfactory.QueryAllDenomBrandingResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryAllDenomBrandingResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryAllDenomBrandingResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryAllDenomBrandingResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryAllDenomBrandingResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryAllDenomBrandingResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if len(x.DenomBrandings) > 0 {
+			for _, e := range x.DenomBrandings {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.Pagination != nil {
+			l = options.Size(x.Pagination)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryAllDenomBrandingResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Pagination != nil {
+			encoded, err := options.Marshal(x.Pagination)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.DenomBrandings) > 0 {
+			for iNdEx := len(x.DenomBrandings) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.DenomBrandings[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0xa
+			}
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryAllDenomBrandingResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAllDenomBrandingResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryAllDenomBrandingResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DenomBrandings", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.DenomBrandings = append(x.DenomBrandings, &DenomBrandingRecord{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.DenomBrandings[len(x.DenomBrandings)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Pagination == nil {
+					x.Pagination = &v1beta1.PageResponse{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Pagination); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -1809,6 +3672,154 @@ func (x *QueryDenomAuthorityResponse) GetDenomAuthority() *DenomAuthority {
 	return nil
 }
 
+type QueryDenomBrandingRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (x *QueryDenomBrandingRequest) Reset() {
+	*x = QueryDenomBrandingRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_tokenfactory_query_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryDenomBrandingRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryDenomBrandingRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryDenomBrandingRequest.ProtoReflect.Descriptor instead.
+func (*QueryDenomBrandingRequest) Descriptor() ([]byte, []int) {
+	return file_bze_tokenfactory_query_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *QueryDenomBrandingRequest) GetDenom() string {
+	if x != nil {
+		return x.Denom
+	}
+	return ""
+}
+
+type QueryDenomBrandingResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Branding *DenomBranding `protobuf:"bytes,1,opt,name=branding,proto3" json:"branding,omitempty"`
+}
+
+func (x *QueryDenomBrandingResponse) Reset() {
+	*x = QueryDenomBrandingResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_tokenfactory_query_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryDenomBrandingResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryDenomBrandingResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryDenomBrandingResponse.ProtoReflect.Descriptor instead.
+func (*QueryDenomBrandingResponse) Descriptor() ([]byte, []int) {
+	return file_bze_tokenfactory_query_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *QueryDenomBrandingResponse) GetBranding() *DenomBranding {
+	if x != nil {
+		return x.Branding
+	}
+	return nil
+}
+
+type QueryAllDenomBrandingRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Pagination *v1beta1.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (x *QueryAllDenomBrandingRequest) Reset() {
+	*x = QueryAllDenomBrandingRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_tokenfactory_query_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryAllDenomBrandingRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryAllDenomBrandingRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryAllDenomBrandingRequest.ProtoReflect.Descriptor instead.
+func (*QueryAllDenomBrandingRequest) Descriptor() ([]byte, []int) {
+	return file_bze_tokenfactory_query_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *QueryAllDenomBrandingRequest) GetPagination() *v1beta1.PageRequest {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+type QueryAllDenomBrandingResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	DenomBrandings []*DenomBrandingRecord `protobuf:"bytes,1,rep,name=denom_brandings,json=denomBrandings,proto3" json:"denom_brandings,omitempty"`
+	Pagination     *v1beta1.PageResponse  `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (x *QueryAllDenomBrandingResponse) Reset() {
+	*x = QueryAllDenomBrandingResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_tokenfactory_query_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryAllDenomBrandingResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryAllDenomBrandingResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryAllDenomBrandingResponse.ProtoReflect.Descriptor instead.
+func (*QueryAllDenomBrandingResponse) Descriptor() ([]byte, []int) {
+	return file_bze_tokenfactory_query_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *QueryAllDenomBrandingResponse) GetDenomBrandings() []*DenomBrandingRecord {
+	if x != nil {
+		return x.DenomBrandings
+	}
+	return nil
+}
+
+func (x *QueryAllDenomBrandingResponse) GetPagination() *v1beta1.PageResponse {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
 var File_bze_tokenfactory_query_proto protoreflect.FileDescriptor
 
 var file_bze_tokenfactory_query_proto_rawDesc = []byte{
@@ -1826,53 +3837,103 @@ var file_bze_tokenfactory_query_proto_rawDesc = []byte{
 	0x63, 0x74, 0x6f, 0x72, 0x79, 0x2f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x1a, 0x26, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63,
 	0x74, 0x6f, 0x72, 0x79, 0x2f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x61, 0x75, 0x74, 0x68, 0x6f,
-	0x72, 0x69, 0x74, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x14, 0x0a, 0x12, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x22, 0x52, 0x0a, 0x13, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3b, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d,
-	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x6f,
-	0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d,
-	0x73, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x06, 0x70, 0x61,
-	0x72, 0x61, 0x6d, 0x73, 0x22, 0x32, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e,
-	0x6f, 0x6d, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0x67, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x48, 0x0a, 0x0e, 0x64, 0x65, 0x6e, 0x6f, 0x6d,
-	0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x20, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f,
-	0x72, 0x79, 0x2e, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74,
-	0x79, 0x52, 0x0e, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74,
-	0x79, 0x32, 0x9b, 0x02, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x77, 0x0a, 0x06, 0x50,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x24, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x6f, 0x6b, 0x65,
-	0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61,
-	0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x25, 0x2e, 0x62, 0x7a,
-	0x65, 0x2e, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x20, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1a, 0x12, 0x18, 0x2f, 0x62, 0x7a, 0x65,
-	0x2f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2f, 0x70, 0x61,
-	0x72, 0x61, 0x6d, 0x73, 0x12, 0x98, 0x01, 0x0a, 0x0e, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x41, 0x75,
-	0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x12, 0x2c, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x6f,
-	0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
-	0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x6f, 0x6b, 0x65,
+	0x72, 0x69, 0x74, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x25, 0x62, 0x7a, 0x65, 0x2f,
+	0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2f, 0x64, 0x65, 0x6e,
+	0x6f, 0x6d, 0x5f, 0x62, 0x72, 0x61, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x22, 0x14, 0x0a, 0x12, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x52, 0x0a, 0x13, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3b,
+	0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18,
+	0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72,
+	0x79, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7,
+	0xb0, 0x2a, 0x01, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x22, 0x32, 0x0a, 0x1a, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69,
+	0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x64, 0x65, 0x6e,
+	0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x22,
+	0x67, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x41, 0x75, 0x74,
+	0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x48,
+	0x0a, 0x0e, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x6f, 0x6b,
+	0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x41,
+	0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x52, 0x0e, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x41,
+	0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x22, 0x31, 0x0a, 0x19, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x72, 0x61, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0x59, 0x0a, 0x1a, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x72, 0x61, 0x6e, 0x64, 0x69, 0x6e,
+	0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3b, 0x0a, 0x08, 0x62, 0x72, 0x61,
+	0x6e, 0x64, 0x69, 0x6e, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x62, 0x7a,
+	0x65, 0x2e, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x44,
+	0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x72, 0x61, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x08, 0x62, 0x72,
+	0x61, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x22, 0x66, 0x0a, 0x1c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41,
+	0x6c, 0x6c, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x72, 0x61, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0xbe,
+	0x01, 0x0a, 0x1d, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x6c, 0x6c, 0x44, 0x65, 0x6e, 0x6f, 0x6d,
+	0x42, 0x72, 0x61, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x54, 0x0a, 0x0f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x62, 0x72, 0x61, 0x6e, 0x64, 0x69,
+	0x6e, 0x67, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x62, 0x7a, 0x65, 0x2e,
+	0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x44, 0x65, 0x6e,
+	0x6f, 0x6d, 0x42, 0x72, 0x61, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64,
+	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0e, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x72, 0x61,
+	0x6e, 0x64, 0x69, 0x6e, 0x67, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x32,
+	0xd6, 0x04, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x77, 0x0a, 0x06, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x12, 0x24, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66,
+	0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61,
+	0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x25, 0x2e, 0x62, 0x7a, 0x65, 0x2e,
+	0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x20, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1a, 0x12, 0x18, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74,
+	0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2f, 0x70, 0x61, 0x72, 0x61,
+	0x6d, 0x73, 0x12, 0x98, 0x01, 0x0a, 0x0e, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x41, 0x75, 0x74, 0x68,
+	0x6f, 0x72, 0x69, 0x74, 0x79, 0x12, 0x2c, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x6f, 0x6b, 0x65,
 	0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65,
-	0x6e, 0x6f, 0x6d, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x29, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x23, 0x12, 0x21, 0x2f, 0x62,
-	0x7a, 0x65, 0x2f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2f,
-	0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x42,
-	0xb6, 0x01, 0x0a, 0x14, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x6f, 0x6b, 0x65,
-	0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50,
-	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x31, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
-	0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d,
-	0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x6f, 0x6b,
-	0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0xa2, 0x02, 0x03, 0x42, 0x54, 0x58, 0xaa,
-	0x02, 0x10, 0x42, 0x7a, 0x65, 0x2e, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f,
-	0x72, 0x79, 0xca, 0x02, 0x10, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61,
-	0x63, 0x74, 0x6f, 0x72, 0x79, 0xe2, 0x02, 0x1c, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x6f, 0x6b, 0x65,
-	0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x11, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x54, 0x6f, 0x6b, 0x65,
-	0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6e, 0x6f, 0x6d, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x2d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66,
+	0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f,
+	0x6d, 0x41, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0x29, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x23, 0x12, 0x21, 0x2f, 0x62, 0x7a, 0x65,
+	0x2f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2f, 0x64, 0x65,
+	0x6e, 0x6f, 0x6d, 0x5f, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x12, 0x94, 0x01,
+	0x0a, 0x0d, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x72, 0x61, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x12,
+	0x2b, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f,
+	0x72, 0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x72, 0x61,
+	0x6e, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2c, 0x2e, 0x62,
+	0x7a, 0x65, 0x2e, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2e,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x72, 0x61, 0x6e, 0x64, 0x69,
+	0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x28, 0x82, 0xd3, 0xe4, 0x93,
+	0x02, 0x22, 0x12, 0x20, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61,
+	0x63, 0x74, 0x6f, 0x72, 0x79, 0x2f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x62, 0x72, 0x61, 0x6e,
+	0x64, 0x69, 0x6e, 0x67, 0x12, 0xa1, 0x01, 0x0a, 0x10, 0x41, 0x6c, 0x6c, 0x44, 0x65, 0x6e, 0x6f,
+	0x6d, 0x42, 0x72, 0x61, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x12, 0x2e, 0x2e, 0x62, 0x7a, 0x65, 0x2e,
+	0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x41, 0x6c, 0x6c, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x72, 0x61, 0x6e, 0x64, 0x69,
+	0x6e, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x62, 0x7a, 0x65, 0x2e,
+	0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x41, 0x6c, 0x6c, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x72, 0x61, 0x6e, 0x64, 0x69,
+	0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2c, 0x82, 0xd3, 0xe4, 0x93,
+	0x02, 0x26, 0x12, 0x24, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61,
+	0x63, 0x74, 0x6f, 0x72, 0x79, 0x2f, 0x61, 0x6c, 0x6c, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f,
+	0x62, 0x72, 0x61, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x42, 0xb6, 0x01, 0x0a, 0x14, 0x63, 0x6f, 0x6d,
+	0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72,
+	0x79, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a,
+	0x31, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d,
+	0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70,
+	0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f,
+	0x72, 0x79, 0xa2, 0x02, 0x03, 0x42, 0x54, 0x58, 0xaa, 0x02, 0x10, 0x42, 0x7a, 0x65, 0x2e, 0x54,
+	0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0xca, 0x02, 0x10, 0x42, 0x7a,
+	0x65, 0x5c, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72, 0x79, 0xe2, 0x02,
+	0x1c, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72,
+	0x79, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x11,
+	0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x66, 0x61, 0x63, 0x74, 0x6f, 0x72,
+	0x79, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1887,27 +3948,43 @@ func file_bze_tokenfactory_query_proto_rawDescGZIP() []byte {
 	return file_bze_tokenfactory_query_proto_rawDescData
 }
 
-var file_bze_tokenfactory_query_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_bze_tokenfactory_query_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_bze_tokenfactory_query_proto_goTypes = []interface{}{
-	(*QueryParamsRequest)(nil),          // 0: bze.tokenfactory.QueryParamsRequest
-	(*QueryParamsResponse)(nil),         // 1: bze.tokenfactory.QueryParamsResponse
-	(*QueryDenomAuthorityRequest)(nil),  // 2: bze.tokenfactory.QueryDenomAuthorityRequest
-	(*QueryDenomAuthorityResponse)(nil), // 3: bze.tokenfactory.QueryDenomAuthorityResponse
-	(*Params)(nil),                      // 4: bze.tokenfactory.Params
-	(*DenomAuthority)(nil),              // 5: bze.tokenfactory.DenomAuthority
+	(*QueryParamsRequest)(nil),            // 0: bze.tokenfactory.QueryParamsRequest
+	(*QueryParamsResponse)(nil),           // 1: bze.tokenfactory.QueryParamsResponse
+	(*QueryDenomAuthorityRequest)(nil),    // 2: bze.tokenfactory.QueryDenomAuthorityRequest
+	(*QueryDenomAuthorityResponse)(nil),   // 3: bze.tokenfactory.QueryDenomAuthorityResponse
+	(*QueryDenomBrandingRequest)(nil),     // 4: bze.tokenfactory.QueryDenomBrandingRequest
+	(*QueryDenomBrandingResponse)(nil),    // 5: bze.tokenfactory.QueryDenomBrandingResponse
+	(*QueryAllDenomBrandingRequest)(nil),  // 6: bze.tokenfactory.QueryAllDenomBrandingRequest
+	(*QueryAllDenomBrandingResponse)(nil), // 7: bze.tokenfactory.QueryAllDenomBrandingResponse
+	(*Params)(nil),                        // 8: bze.tokenfactory.Params
+	(*DenomAuthority)(nil),                // 9: bze.tokenfactory.DenomAuthority
+	(*DenomBranding)(nil),                 // 10: bze.tokenfactory.DenomBranding
+	(*v1beta1.PageRequest)(nil),           // 11: cosmos.base.query.v1beta1.PageRequest
+	(*DenomBrandingRecord)(nil),           // 12: bze.tokenfactory.DenomBrandingRecord
+	(*v1beta1.PageResponse)(nil),          // 13: cosmos.base.query.v1beta1.PageResponse
 }
 var file_bze_tokenfactory_query_proto_depIdxs = []int32{
-	4, // 0: bze.tokenfactory.QueryParamsResponse.params:type_name -> bze.tokenfactory.Params
-	5, // 1: bze.tokenfactory.QueryDenomAuthorityResponse.denomAuthority:type_name -> bze.tokenfactory.DenomAuthority
-	0, // 2: bze.tokenfactory.Query.Params:input_type -> bze.tokenfactory.QueryParamsRequest
-	2, // 3: bze.tokenfactory.Query.DenomAuthority:input_type -> bze.tokenfactory.QueryDenomAuthorityRequest
-	1, // 4: bze.tokenfactory.Query.Params:output_type -> bze.tokenfactory.QueryParamsResponse
-	3, // 5: bze.tokenfactory.Query.DenomAuthority:output_type -> bze.tokenfactory.QueryDenomAuthorityResponse
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	8,  // 0: bze.tokenfactory.QueryParamsResponse.params:type_name -> bze.tokenfactory.Params
+	9,  // 1: bze.tokenfactory.QueryDenomAuthorityResponse.denomAuthority:type_name -> bze.tokenfactory.DenomAuthority
+	10, // 2: bze.tokenfactory.QueryDenomBrandingResponse.branding:type_name -> bze.tokenfactory.DenomBranding
+	11, // 3: bze.tokenfactory.QueryAllDenomBrandingRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	12, // 4: bze.tokenfactory.QueryAllDenomBrandingResponse.denom_brandings:type_name -> bze.tokenfactory.DenomBrandingRecord
+	13, // 5: bze.tokenfactory.QueryAllDenomBrandingResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	0,  // 6: bze.tokenfactory.Query.Params:input_type -> bze.tokenfactory.QueryParamsRequest
+	2,  // 7: bze.tokenfactory.Query.DenomAuthority:input_type -> bze.tokenfactory.QueryDenomAuthorityRequest
+	4,  // 8: bze.tokenfactory.Query.DenomBranding:input_type -> bze.tokenfactory.QueryDenomBrandingRequest
+	6,  // 9: bze.tokenfactory.Query.AllDenomBranding:input_type -> bze.tokenfactory.QueryAllDenomBrandingRequest
+	1,  // 10: bze.tokenfactory.Query.Params:output_type -> bze.tokenfactory.QueryParamsResponse
+	3,  // 11: bze.tokenfactory.Query.DenomAuthority:output_type -> bze.tokenfactory.QueryDenomAuthorityResponse
+	5,  // 12: bze.tokenfactory.Query.DenomBranding:output_type -> bze.tokenfactory.QueryDenomBrandingResponse
+	7,  // 13: bze.tokenfactory.Query.AllDenomBranding:output_type -> bze.tokenfactory.QueryAllDenomBrandingResponse
+	10, // [10:14] is the sub-list for method output_type
+	6,  // [6:10] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_bze_tokenfactory_query_proto_init() }
@@ -1917,6 +3994,7 @@ func file_bze_tokenfactory_query_proto_init() {
 	}
 	file_bze_tokenfactory_params_proto_init()
 	file_bze_tokenfactory_denom_authority_proto_init()
+	file_bze_tokenfactory_denom_branding_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_bze_tokenfactory_query_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryParamsRequest); i {
@@ -1966,6 +4044,54 @@ func file_bze_tokenfactory_query_proto_init() {
 				return nil
 			}
 		}
+		file_bze_tokenfactory_query_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryDenomBrandingRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bze_tokenfactory_query_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryDenomBrandingResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bze_tokenfactory_query_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryAllDenomBrandingRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bze_tokenfactory_query_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryAllDenomBrandingResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1973,7 +4099,7 @@ func file_bze_tokenfactory_query_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_bze_tokenfactory_query_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

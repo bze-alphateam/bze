@@ -1,0 +1,37 @@
+syntax = "proto3";
+package bze.tokenfactory;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/tokenfactory/types";
+
+// BrandingColors holds the 4 brand colours of one theme (light or dark).
+// All colours are hex strings in the form #RRGGBB.
+message BrandingColors {
+  option (gogoproto.equal) = true;
+
+  string background = 1;
+  string text = 2;
+  string primary = 3;
+  string secondary = 4;
+}
+
+// DenomBranding is the on-chain branding package of a factory denom:
+// one font id plus a light and a dark palette. The package is
+// all-or-nothing: font and all 8 colours must be present and valid.
+message DenomBranding {
+  option (gogoproto.equal) = true;
+
+  string font = 1;
+  BrandingColors light = 2;
+  BrandingColors dark = 3;
+}
+
+// DenomBrandingRecord pairs a denom with its branding package. Used by the
+// AllDenomBranding query and by genesis import/export.
+message DenomBrandingRecord {
+  option (gogoproto.equal) = true;
+
+  string denom = 1;
+  DenomBranding branding = 2;
+}

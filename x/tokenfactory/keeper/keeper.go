@@ -84,3 +84,8 @@ func (k Keeper) GetCreatorPrefixStore(ctx sdk.Context, creator string) prefix.St
 func (k Keeper) GetCreatorsPrefixStore(ctx sdk.Context) prefix.Store {
 	return k.getPrefixedStore(ctx, types.GetCreatorsPrefix())
 }
+
+// GetBrandingsPrefixStore returns the substore that contains the denom branding records
+func (k Keeper) GetBrandingsPrefixStore(ctx sdk.Context) prefix.Store {
+	return k.getPrefixedStore(ctx, types.GetBrandingsPrefix())
+}

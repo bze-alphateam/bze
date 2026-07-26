@@ -1,6 +1,8 @@
 package tokenfactory
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bze-alphateam/bze/x/tokenfactory/keeper"
@@ -24,6 +26,17 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		}
 		err = k.SetDenomAuthority(ctx, genDenom.GetDenom(), genDenom.GetDenomAuthority())
 		if err != nil {
+			panic(err)
+		}
+	}
+	for _, record := range genState.GetDenomBrandings() {
+		if _, err := k.GetDenomAuthority(ctx, record.GetDenom()); err != nil {
+			panic(err)
+		}
+		if record.GetBranding() == nil {
+			panic(fmt.Sprintf("branding record for denom %s has no branding", record.GetDenom()))
+		}
+		if err := k.SetDenomBranding(ctx, record.GetDenom(), *record.GetBranding()); err != nil {
 			panic(err)
 		}
 	}
@@ -51,6 +64,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 
 	genesis.FactoryDenoms = genDenoms
+	genesis.DenomBrandings = k.GetAllDenomBrandings(ctx)
 	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis
