@@ -143,3 +143,69 @@ func (k msgServer) CreateBoost(goCtx context.Context, msg *types.MsgCreateBoost)
 
 	return &types.MsgCreateBoostResponse{Uid: uid}, nil
 }
+
+// cleanupBoostMaxLimit is the server-side clamp on how many participants a
+// single MsgCleanupBoost call may sweep. Gas is the caller's payment; the clamp
+// keeps a single tx bounded regardless of what limit the caller asked for.
+const cleanupBoostMaxLimit = 200
+
+// CleanupBoost is the permissionless finalization crank. For an existing
+// reward it sweeps the participants of every finalizing boost record
+// (days_left == 0) from the record's persisted cursor, paying each participant
+// their outstanding accrual against the final s_boost; a fully swept record is
+// deleted. For a deleted reward it removes every leftover boost record —
+// participants are provably gone, so there is nothing to pay. Idempotent:
+// nothing to do is a successful no-op.
+func (k msgServer) CleanupBoost(goCtx context.Context, msg *types.MsgCleanupBoost) (*types.MsgCleanupBoostResponse, error) {
+	if msg == nil {
+		return nil, sdkerrors.ErrInvalidRequest
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	limit := int(msg.Limit)
+	if limit < 1 {
+		limit = 1
+	}
+	if limit > cleanupBoostMaxLimit {
+		limit = cleanupBoostMaxLimit
+	}
+
+	boosts := k.GetRewardBoosts(ctx, msg.RewardId)
+
+	if _, rewardExists := k.GetStakingReward(ctx, msg.RewardId); !rewardExists {
+		// orphan cleanup: the reward is gone, so its participants are gone too —
+		// no payouts to compute, just delete the leftover records.
+		for _, boost := range boosts {
+			k.removeFinalizedBoost(ctx, boost)
+		}
+		return &types.MsgCleanupBoostResponse{Processed: uint32(len(boosts)), Completed: true}, nil
+	}
+
+	processed := 0
+	completed := true
+	for _, boost := range boosts {
+		if boost.DaysLeft > 0 {
+			// active record: still emitting, not this crank's business
+			continue
+		}
+
+		if processed >= limit {
+			completed = false
+			break
+		}
+
+		done, swept, err := k.sweepFinalizingBoost(ctx, boost, limit-processed)
+		if err != nil {
+			return nil, err
+		}
+		processed += swept
+
+		if done {
+			k.removeFinalizedBoost(ctx, boost)
+		} else {
+			completed = false
+		}
+	}
+
+	return &types.MsgCleanupBoostResponse{Processed: uint32(processed), Completed: completed}, nil
+}

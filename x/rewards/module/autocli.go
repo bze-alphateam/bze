@@ -150,6 +150,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Send a create-boost tx",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reward_id"}, {ProtoField: "denom"}, {ProtoField: "daily_amount"}, {ProtoField: "days"}},
 				},
+				{
+					RpcMethod:      "CleanupBoost",
+					Use:            "cleanup-boost [reward-id] [limit]",
+					Short:          "Send a cleanup-boost tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reward_id"}, {ProtoField: "limit"}},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},
