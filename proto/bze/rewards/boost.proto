@@ -1,0 +1,28 @@
+syntax = "proto3";
+package bze.rewards;
+
+option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
+
+// Boost is a staking-reward-shaped extra-reward record attached to a parent
+// staking reward. It is settled only through the parent's join/exit/claim and
+// deleted only when the parent reward is removed.
+message Boost {
+  string id                = 1; // fixed-width id from the boost counter — globally unique, never reused
+  string reward_id         = 2; // parent staking reward
+  string denom             = 3;
+  string daily_amount      = 4; // math.Int
+  uint32 duration          = 5; // total scheduled days (extension increases this)
+  uint32 payouts           = 6; // days already distributed; finished when == duration
+  string distributed_stake = 7; // LegacyDec accumulator (S_boost) — never resets
+  string creator           = 8; // audit/events only — no special rights
+}
+
+// BoostParticipant records the accumulator snapshot (S0) for one (user, boost)
+// pair. An absent record means the user staked since before the boost was
+// created, i.e. S0 = 0.
+message BoostParticipant {
+  string address   = 1;
+  string reward_id = 2;
+  string boost_id  = 3;
+  string joined_at = 4; // LegacyDec — S0 for this (user, boost); absent record ⇒ S0 = 0
+}

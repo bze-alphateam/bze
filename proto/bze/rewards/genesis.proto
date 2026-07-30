@@ -5,6 +5,7 @@ import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "bze/rewards/params.proto";
 import "bze/rewards/store.proto";
+import "bze/rewards/boost.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
 
@@ -31,4 +32,8 @@ message GenesisState {
   UnlockParticipantsQueue unlock_participants_queue = 14;
   StakingRewardsDistributionQueue staking_rewards_distribution_queue = 15;
   TradingRewardExpirationQueue trading_reward_expiration_queue = 16;
+
+  repeated Boost boost_list = 17 [(gogoproto.nullable) = false];
+  repeated BoostParticipant boost_participant_list = 18 [(gogoproto.nullable) = false];
+  uint64 boost_counter = 19;
 }

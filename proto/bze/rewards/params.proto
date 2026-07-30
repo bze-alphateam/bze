@@ -26,4 +26,13 @@ message Params {
     (gogoproto.moretags) = "yaml:\"extra_gas_for_exit_stake\"",
     (gogoproto.jsontag)      = "extra_gas_for_exit_stake,omitempty"
   ];
+  cosmos.base.v1beta1.Coin createBoostFee = 4 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"create_boost_fee\"",
+    (gogoproto.jsontag)      = "create_boost_fee,omitempty"
+  ];
+  uint32 maxBoostsPerReward = 5 [
+    (gogoproto.moretags) = "yaml:\"max_boosts_per_reward\"",
+    (gogoproto.jsontag)      = "max_boosts_per_reward,omitempty"
+  ];
 }
