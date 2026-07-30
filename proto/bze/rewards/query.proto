@@ -72,7 +72,25 @@ service Query {
   // Queries a list of AllPendingUnlockParticipants items.
   rpc AllPendingUnlockParticipants (QueryAllPendingUnlockParticipantsRequest) returns (QueryAllPendingUnlockParticipantsResponse) {
     option (google.api.http).get = "/bze/rewards/all_pending_unlock_participants";
-  
+
+  }
+
+  // Queries a single boost of a staking reward.
+  rpc Boost (QueryBoostRequest) returns (QueryBoostResponse) {
+    option (google.api.http).get = "/bze/rewards/boost/{reward_id}/{boost_id}";
+
+  }
+
+  // Queries all boosts attached to a staking reward.
+  rpc RewardBoosts (QueryRewardBoostsRequest) returns (QueryRewardBoostsResponse) {
+    option (google.api.http).get = "/bze/rewards/reward_boosts/{reward_id}";
+
+  }
+
+  // Queries a list of all boosts.
+  rpc AllBoosts (QueryAllBoostsRequest) returns (QueryAllBoostsResponse) {
+    option (google.api.http).get = "/bze/rewards/all_boosts";
+
   }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -164,8 +182,6 @@ message QueryAllPendingUnlockParticipantsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// Boost query types. The service RPCs + handlers are wired in a later ticket;
-// the request/response messages are defined here for the data layer.
 message QueryBoostRequest {
   string reward_id = 1;
   string boost_id  = 2;
