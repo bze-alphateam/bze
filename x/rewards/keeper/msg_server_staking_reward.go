@@ -203,6 +203,12 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 		if err != nil {
 			return nil, err
 		}
+		//settle boosts on the pre-top-up amount: settling after the amount
+		//grows would pay the whole accrued window at the inflated stake
+		_, err = k.settleBoosts(ctx, &participant)
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		participant = types.StakingRewardParticipant{
 			Address:  msg.Creator,
@@ -234,6 +240,9 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 	}
 	k.SetStakingRewardParticipant(ctx, participant)
 	k.SetStakingReward(ctx, stakingReward)
+	//stamp a boost entry at the current accumulator for every existing boost,
+	//finished included: the joiner earns from this point onward only
+	k.stampBoostParticipants(ctx, participant.Address, participant.RewardId)
 
 	//notify hooks after all state writes; an error aborts the whole tx
 	addedAmount := toCapture.AmountOf(stakingReward.StakingDenom)
@@ -299,12 +308,20 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 		return nil, err
 	}
 
+	//pay boost pendings before the participant record is removed: exits never
+	//forfeit boost entitlements
+	_, err = k.settleBoosts(ctx, &participation)
+	if err != nil {
+		return nil, err
+	}
+
 	err = k.beginUnlock(ctx, participation, stakingReward)
 	if err != nil {
 		return nil, err
 	}
 
 	k.RemoveStakingRewardParticipant(ctx, participation.Address, participation.RewardId)
+	k.RemoveRewardBoostParticipants(ctx, participation.Address, participation.RewardId)
 
 	remainingStakedAmount := stakedAmountInt.Sub(partCoins.AmountOf(stakingReward.StakingDenom))
 	stakingReward.StakedAmount = remainingStakedAmount.String()
@@ -313,6 +330,12 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 	//if this staking reward is finished (all funds were distributed and payouts executed) we should remove it
 	if remainingStakedAmount.IsZero() && stakingReward.Payouts >= stakingReward.Duration {
 		k.RemoveStakingReward(ctx, stakingReward.RewardId)
+		//the parent reward's removal is the only place boost records are
+		//deleted: every boost is fully emitted here (a boost never outlives
+		//the parent's payouts) and every participant was settled at exit
+		for _, boost := range k.GetRewardBoosts(ctx, stakingReward.RewardId) {
+			k.RemoveBoost(ctx, boost.RewardId, boost.Id)
+		}
 		err = ctx.EventManager().EmitTypedEvent(
 			&types.StakingRewardFinishEvent{
 				RewardId: stakingReward.RewardId,
@@ -361,12 +384,19 @@ func (k msgServer) ClaimStakingRewards(goCtx context.Context, msg *types.MsgClai
 		return nil, errors.Wrapf(types.ErrInvalidRewardId, "you are not a participant in this staking reward")
 	}
 
+	//settle boosts alongside the base claim: a boost-only claim (base pending
+	//zero, boost pending positive) must succeed
+	boostPaid, err := k.settleBoosts(ctx, &participant)
+	if err != nil {
+		return nil, err
+	}
+
 	paid, err := k.claimPending(ctx, stakingReward, &participant)
 	if err != nil {
 		return nil, err
 	}
 
-	if paid.IsZero() {
+	if paid.IsZero() && !boostPaid {
 		return nil, types.ErrNoRewardsToClaim
 	}
 
