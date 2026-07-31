@@ -29,6 +29,9 @@ const (
 	Query_TradingRewardLeaderboard_FullMethodName     = "/bze.rewards.Query/TradingRewardLeaderboard"
 	Query_MarketTradingReward_FullMethodName          = "/bze.rewards.Query/MarketTradingReward"
 	Query_AllPendingUnlockParticipants_FullMethodName = "/bze.rewards.Query/AllPendingUnlockParticipants"
+	Query_Boost_FullMethodName                        = "/bze.rewards.Query/Boost"
+	Query_RewardBoosts_FullMethodName                 = "/bze.rewards.Query/RewardBoosts"
+	Query_AllBoosts_FullMethodName                    = "/bze.rewards.Query/AllBoosts"
 )
 
 // QueryClient is the client API for Query service.
@@ -55,6 +58,12 @@ type QueryClient interface {
 	MarketTradingReward(ctx context.Context, in *QueryMarketTradingRewardRequest, opts ...grpc.CallOption) (*QueryMarketTradingRewardResponse, error)
 	// Queries a list of AllPendingUnlockParticipants items.
 	AllPendingUnlockParticipants(ctx context.Context, in *QueryAllPendingUnlockParticipantsRequest, opts ...grpc.CallOption) (*QueryAllPendingUnlockParticipantsResponse, error)
+	// Queries a single boost of a staking reward.
+	Boost(ctx context.Context, in *QueryBoostRequest, opts ...grpc.CallOption) (*QueryBoostResponse, error)
+	// Queries all boosts attached to a staking reward.
+	RewardBoosts(ctx context.Context, in *QueryRewardBoostsRequest, opts ...grpc.CallOption) (*QueryRewardBoostsResponse, error)
+	// Queries a list of all boosts.
+	AllBoosts(ctx context.Context, in *QueryAllBoostsRequest, opts ...grpc.CallOption) (*QueryAllBoostsResponse, error)
 }
 
 type queryClient struct {
@@ -155,6 +164,33 @@ func (c *queryClient) AllPendingUnlockParticipants(ctx context.Context, in *Quer
 	return out, nil
 }
 
+func (c *queryClient) Boost(ctx context.Context, in *QueryBoostRequest, opts ...grpc.CallOption) (*QueryBoostResponse, error) {
+	out := new(QueryBoostResponse)
+	err := c.cc.Invoke(ctx, Query_Boost_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) RewardBoosts(ctx context.Context, in *QueryRewardBoostsRequest, opts ...grpc.CallOption) (*QueryRewardBoostsResponse, error) {
+	out := new(QueryRewardBoostsResponse)
+	err := c.cc.Invoke(ctx, Query_RewardBoosts_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) AllBoosts(ctx context.Context, in *QueryAllBoostsRequest, opts ...grpc.CallOption) (*QueryAllBoostsResponse, error) {
+	out := new(QueryAllBoostsResponse)
+	err := c.cc.Invoke(ctx, Query_AllBoosts_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -179,6 +215,12 @@ type QueryServer interface {
 	MarketTradingReward(context.Context, *QueryMarketTradingRewardRequest) (*QueryMarketTradingRewardResponse, error)
 	// Queries a list of AllPendingUnlockParticipants items.
 	AllPendingUnlockParticipants(context.Context, *QueryAllPendingUnlockParticipantsRequest) (*QueryAllPendingUnlockParticipantsResponse, error)
+	// Queries a single boost of a staking reward.
+	Boost(context.Context, *QueryBoostRequest) (*QueryBoostResponse, error)
+	// Queries all boosts attached to a staking reward.
+	RewardBoosts(context.Context, *QueryRewardBoostsRequest) (*QueryRewardBoostsResponse, error)
+	// Queries a list of all boosts.
+	AllBoosts(context.Context, *QueryAllBoostsRequest) (*QueryAllBoostsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -215,6 +257,15 @@ func (UnimplementedQueryServer) MarketTradingReward(context.Context, *QueryMarke
 }
 func (UnimplementedQueryServer) AllPendingUnlockParticipants(context.Context, *QueryAllPendingUnlockParticipantsRequest) (*QueryAllPendingUnlockParticipantsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllPendingUnlockParticipants not implemented")
+}
+func (UnimplementedQueryServer) Boost(context.Context, *QueryBoostRequest) (*QueryBoostResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Boost not implemented")
+}
+func (UnimplementedQueryServer) RewardBoosts(context.Context, *QueryRewardBoostsRequest) (*QueryRewardBoostsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RewardBoosts not implemented")
+}
+func (UnimplementedQueryServer) AllBoosts(context.Context, *QueryAllBoostsRequest) (*QueryAllBoostsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllBoosts not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -409,6 +460,60 @@ func _Query_AllPendingUnlockParticipants_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Boost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryBoostRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Boost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Boost_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Boost(ctx, req.(*QueryBoostRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_RewardBoosts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRewardBoostsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).RewardBoosts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_RewardBoosts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).RewardBoosts(ctx, req.(*QueryRewardBoostsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_AllBoosts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllBoostsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllBoosts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_AllBoosts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllBoosts(ctx, req.(*QueryAllBoostsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -455,6 +560,18 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AllPendingUnlockParticipants",
 			Handler:    _Query_AllPendingUnlockParticipants_Handler,
+		},
+		{
+			MethodName: "Boost",
+			Handler:    _Query_Boost_Handler,
+		},
+		{
+			MethodName: "RewardBoosts",
+			Handler:    _Query_RewardBoosts_Handler,
+		},
+		{
+			MethodName: "AllBoosts",
+			Handler:    _Query_AllBoosts_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

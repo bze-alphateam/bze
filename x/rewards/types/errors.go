@@ -23,4 +23,5 @@ var (
 	ErrInvalidBoostDenom   = sdkerrors.Register(ModuleName, 5013, "invalid boost denom")
 	ErrInvalidBoostDays    = sdkerrors.Register(ModuleName, 5014, "invalid boost days")
 	ErrInvalidBoostId      = sdkerrors.Register(ModuleName, 5015, "invalid boost_id")
+	ErrBoostCapReached     = sdkerrors.Register(ModuleName, 5016, "the reward reached the maximum number of boosts")
 )
