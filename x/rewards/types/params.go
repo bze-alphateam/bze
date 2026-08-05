@@ -23,6 +23,9 @@ const (
 	// DefaultMaxBoostsPerReward is the default cap on concurrently existing boost
 	// records per reward.
 	DefaultMaxBoostsPerReward uint32 = 10
+	// DefaultCleanupBatchSize is the default (and ceiling for the caller's
+	// limit) number of addresses a single MsgCleanupBoost call sweeps.
+	DefaultCleanupBatchSize uint32 = 100
 )
 
 // ParamKeyTable the param key table for launch module
@@ -52,6 +55,7 @@ func DefaultParams() Params {
 	)
 	p.CreateBoostFee = DefaultCreateBoostFee
 	p.MaxBoostsPerReward = DefaultMaxBoostsPerReward
+	p.CleanupBatchSize = DefaultCleanupBatchSize
 
 	return p
 }
@@ -83,6 +87,10 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateMaxBoostsPerReward(p.MaxBoostsPerReward); err != nil {
+		return err
+	}
+
+	if err := validateCleanupBatchSize(p.CleanupBatchSize); err != nil {
 		return err
 	}
 
@@ -150,6 +158,20 @@ func validateMaxBoostsPerReward(v interface{}) error {
 
 	if maxBoostsPerReward == 0 {
 		return fmt.Errorf("invalid MaxBoostsPerReward: must be greater than 0")
+	}
+
+	return nil
+}
+
+// validateCleanupBatchSize validates the CleanupBatchSize param
+func validateCleanupBatchSize(v interface{}) error {
+	cleanupBatchSize, ok := v.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
+	}
+
+	if cleanupBatchSize == 0 {
+		return fmt.Errorf("invalid CleanupBatchSize: must be greater than 0")
 	}
 
 	return nil

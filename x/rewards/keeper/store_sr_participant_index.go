@@ -37,14 +37,7 @@ func (k Keeper) HasStakingRewardParticipantIndexEntry(ctx sdk.Context, rewardId,
 func (k Keeper) GetStakingRewardParticipantIndexAddresses(ctx sdk.Context, rewardId, afterAddress string, limit uint32) (list []string) {
 	store := k.getPrefixedStore(ctx, types.StakingRewardParticipantIndexRewardPrefix(rewardId))
 
-	var start []byte
-	if afterAddress != "" {
-		// index keys end in "/": a zero byte appended to the cursor's own key
-		// is the smallest key sorting after it, making the start exclusive
-		start = append([]byte(afterAddress+"/"), 0)
-	}
-
-	iterator := store.Iterator(start, nil)
+	iterator := store.Iterator(participantIndexExclusiveStart(afterAddress), nil)
 	defer iterator.Close()
 
 	for ; iterator.Valid() && uint32(len(list)) < limit; iterator.Next() {
@@ -52,4 +45,30 @@ func (k Keeper) GetStakingRewardParticipantIndexAddresses(ctx sdk.Context, rewar
 	}
 
 	return
+}
+
+// CountStakingRewardParticipantIndexEntries returns how many of the reward's
+// index entries sort strictly after afterAddress ("" = all of them) — the
+// cleanup sweep's remaining work, computed node-side for the status query.
+func (k Keeper) CountStakingRewardParticipantIndexEntries(ctx sdk.Context, rewardId, afterAddress string) (count uint64) {
+	store := k.getPrefixedStore(ctx, types.StakingRewardParticipantIndexRewardPrefix(rewardId))
+
+	iterator := store.Iterator(participantIndexExclusiveStart(afterAddress), nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		count++
+	}
+
+	return
+}
+
+func participantIndexExclusiveStart(afterAddress string) []byte {
+	if afterAddress == "" {
+		return nil
+	}
+
+	// index keys end in "/": a zero byte appended to the cursor's own key
+	// is the smallest key sorting after it, making the start exclusive
+	return append([]byte(afterAddress+"/"), 0)
 }

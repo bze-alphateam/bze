@@ -60,3 +60,24 @@ func (k Keeper) AllBoosts(goCtx context.Context, req *types.QueryAllBoostsReques
 
 	return &types.QueryAllBoostsResponse{List: boosts, Pagination: pageRes}, nil
 }
+
+// BoostCleanupStatus reports a boost's cleanup progress: the persisted cursor
+// and how many participant index entries remain after it. The count lives
+// here and not in the tx response because computing it on-chain would cost
+// O(remaining) gas on every cleanup call.
+func (k Keeper) BoostCleanupStatus(goCtx context.Context, req *types.QueryBoostCleanupStatusRequest) (*types.QueryBoostCleanupStatusResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	boost, found := k.GetBoost(ctx, req.RewardId, req.BoostId)
+	if !found {
+		return nil, status.Error(codes.NotFound, "not found")
+	}
+
+	return &types.QueryBoostCleanupStatusResponse{
+		Remaining: k.CountStakingRewardParticipantIndexEntries(ctx, req.RewardId, boost.CleanupCursor),
+		Cursor:    boost.CleanupCursor,
+	}, nil
+}
