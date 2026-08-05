@@ -35,9 +35,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetTradingRewardCandidate(ctx, elem)
 	}
 
-	// Set all the stakingRewardParticipant
+	// Set all the stakingRewardParticipant. The participant reverse index is
+	// not exported (derivable state) — rebuild it from the imported list.
 	for _, elem := range genState.StakingRewardParticipantList {
 		k.SetStakingRewardParticipant(ctx, elem)
+		k.SetStakingRewardParticipantIndexEntry(ctx, elem.RewardId, elem.Address)
 	}
 
 	// Set all the stakingRewardParticipant
