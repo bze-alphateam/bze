@@ -439,12 +439,16 @@ func (suite *IntegrationTestSuite) TestBoostSettle_RewardRemovalDeletesBoosts() 
 // fires, proving the hook sees the final state.
 type callbackStakingHooks struct {
 	joins, increases, exits int
+	onJoin                  func(rewardId, address string, amount math.Int, denom string)
 	onIncrease              func(rewardId, address string, amountAdded, newTotal math.Int, denom string)
 	onExit                  func(rewardId, address string, unstaked math.Int, denom string)
 }
 
-func (c *callbackStakingHooks) AfterStakingRewardJoin(_ sdk.Context, _, _ string, _ math.Int, _ string) error {
+func (c *callbackStakingHooks) AfterStakingRewardJoin(_ sdk.Context, rewardId, address string, amount math.Int, denom string) error {
 	c.joins++
+	if c.onJoin != nil {
+		c.onJoin(rewardId, address, amount, denom)
+	}
 	return nil
 }
 
@@ -510,6 +514,53 @@ func (suite *IntegrationTestSuite) TestBoostSettle_HookPreservationOnJoin() {
 
 	suite.Require().Equal(1, hooks.increases)
 	suite.Require().Equal(0, hooks.joins)
+	suite.Require().Equal(0, hooks.exits)
+}
+
+// TestBoostSettle_HookPreservationOnFreshJoin covers A10 for the fresh-join
+// path: with a boost present, the join hook (not the increase hook) fires
+// exactly once, with the same arguments as before, and only after every state
+// write — the boost stamp included, so a hook consumer never observes a
+// joiner without their boost entries.
+func (suite *IntegrationTestSuite) TestBoostSettle_HookPreservationOnFreshJoin() {
+	joiner := sdk.AccAddress("joiner.")
+	suite.seedRewardAndParticipant("000000000001", "10")
+	suite.setBoostWithAccumulator("000000000001", "000000000001", "uboost", "3", false)
+
+	hooks := &callbackStakingHooks{}
+	hooks.onJoin = func(rewardId, address string, amount math.Int, denom string) {
+		suite.Require().Equal("000000000001", rewardId)
+		suite.Require().Equal(joiner.String(), address)
+		suite.Require().Equal(math.NewInt(500), amount)
+		suite.Require().Equal("ubze", denom)
+
+		//all state writes happened before the hook fired, the boost stamp included
+		participant, found := suite.k.GetStakingRewardParticipant(suite.ctx, address, rewardId)
+		suite.Require().True(found)
+		suite.Require().Equal("500", participant.Amount)
+		entry, found := suite.k.GetBoostParticipant(suite.ctx, address, rewardId, "000000000001")
+		suite.Require().True(found)
+		suite.Require().Equal("3", entry.JoinedAt)
+	}
+	suite.k.SetHooks(hooks)
+	suite.msgServer = keeper.NewMsgServerImpl(*suite.k)
+
+	suite.bank.EXPECT().
+		SpendableCoins(suite.ctx, joiner).
+		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(10000)))).
+		Times(1)
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(suite.ctx, joiner, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500)))).
+		Return(nil).
+		Times(1)
+
+	_, err := suite.msgServer.JoinStaking(suite.ctx, &types.MsgJoinStaking{Creator: joiner.String(), RewardId: "000000000001", Amount: "500"})
+	suite.Require().NoError(err)
+
+	//the fresh joiner earns from the stamp onward only: no boost payment was
+	//expected and none happened (the mock would panic on an unexpected send)
+	suite.Require().Equal(1, hooks.joins)
+	suite.Require().Equal(0, hooks.increases)
 	suite.Require().Equal(0, hooks.exits)
 }
 
