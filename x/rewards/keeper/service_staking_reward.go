@@ -91,6 +91,9 @@ func (k Keeper) distributeStakingReward(ctx sdk.Context, sr types.StakingReward)
 	sr.Payouts++
 	k.SetStakingReward(ctx, sr)
 
+	//boosts advance only on a day the base reward actually distributed (skip parity, exploit A6)
+	k.distributeBoosts(ctx, &sr)
+
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.StakingRewardDistributionEvent{
 			RewardId: sr.RewardId,
