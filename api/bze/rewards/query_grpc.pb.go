@@ -32,6 +32,7 @@ const (
 	Query_Boost_FullMethodName                        = "/bze.rewards.Query/Boost"
 	Query_RewardBoosts_FullMethodName                 = "/bze.rewards.Query/RewardBoosts"
 	Query_AllBoosts_FullMethodName                    = "/bze.rewards.Query/AllBoosts"
+	Query_BoostCleanupStatus_FullMethodName           = "/bze.rewards.Query/BoostCleanupStatus"
 )
 
 // QueryClient is the client API for Query service.
@@ -64,6 +65,9 @@ type QueryClient interface {
 	RewardBoosts(ctx context.Context, in *QueryRewardBoostsRequest, opts ...grpc.CallOption) (*QueryRewardBoostsResponse, error)
 	// Queries a list of all boosts.
 	AllBoosts(ctx context.Context, in *QueryAllBoostsRequest, opts ...grpc.CallOption) (*QueryAllBoostsResponse, error)
+	// Queries a boost's cleanup progress: participant index entries remaining
+	// after the persisted cleanup cursor.
+	BoostCleanupStatus(ctx context.Context, in *QueryBoostCleanupStatusRequest, opts ...grpc.CallOption) (*QueryBoostCleanupStatusResponse, error)
 }
 
 type queryClient struct {
@@ -191,6 +195,15 @@ func (c *queryClient) AllBoosts(ctx context.Context, in *QueryAllBoostsRequest, 
 	return out, nil
 }
 
+func (c *queryClient) BoostCleanupStatus(ctx context.Context, in *QueryBoostCleanupStatusRequest, opts ...grpc.CallOption) (*QueryBoostCleanupStatusResponse, error) {
+	out := new(QueryBoostCleanupStatusResponse)
+	err := c.cc.Invoke(ctx, Query_BoostCleanupStatus_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -221,6 +234,9 @@ type QueryServer interface {
 	RewardBoosts(context.Context, *QueryRewardBoostsRequest) (*QueryRewardBoostsResponse, error)
 	// Queries a list of all boosts.
 	AllBoosts(context.Context, *QueryAllBoostsRequest) (*QueryAllBoostsResponse, error)
+	// Queries a boost's cleanup progress: participant index entries remaining
+	// after the persisted cleanup cursor.
+	BoostCleanupStatus(context.Context, *QueryBoostCleanupStatusRequest) (*QueryBoostCleanupStatusResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -266,6 +282,9 @@ func (UnimplementedQueryServer) RewardBoosts(context.Context, *QueryRewardBoosts
 }
 func (UnimplementedQueryServer) AllBoosts(context.Context, *QueryAllBoostsRequest) (*QueryAllBoostsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllBoosts not implemented")
+}
+func (UnimplementedQueryServer) BoostCleanupStatus(context.Context, *QueryBoostCleanupStatusRequest) (*QueryBoostCleanupStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BoostCleanupStatus not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -514,6 +533,24 @@ func _Query_AllBoosts_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_BoostCleanupStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryBoostCleanupStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).BoostCleanupStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_BoostCleanupStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).BoostCleanupStatus(ctx, req.(*QueryBoostCleanupStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -572,6 +609,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AllBoosts",
 			Handler:    _Query_AllBoosts_Handler,
+		},
+		{
+			MethodName: "BoostCleanupStatus",
+			Handler:    _Query_BoostCleanupStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

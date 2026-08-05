@@ -27,6 +27,7 @@ service Msg {
   rpc ActivateTradingReward    (MsgActivateTradingReward   ) returns (MsgActivateTradingRewardResponse   );
   rpc CreateBoost              (MsgCreateBoost             ) returns (MsgCreateBoostResponse             );
   rpc UpdateBoost              (MsgUpdateBoost             ) returns (MsgUpdateBoostResponse             );
+  rpc CleanupBoost             (MsgCleanupBoost            ) returns (MsgCleanupBoostResponse            );
 }
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
@@ -163,4 +164,21 @@ message MsgUpdateBoost {
 }
 
 message MsgUpdateBoostResponse {}
+
+// MsgCleanupBoost pays out a finished boost's remaining entitlements in
+// batches and deletes its record when the sweep completes, freeing a boost
+// slot. Permissionless, no fee — gas is the payment.
+message MsgCleanupBoost {
+  option           (amino.name) = "bze/x/rewards/MsgCleanupBoost";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator   = 1;
+  string reward_id = 2;
+  string boost_id  = 3;
+  uint32 limit     = 4; // addresses to sweep this call; 0 = use the cleanup_batch_size param; always clamped by it
+}
+
+message MsgCleanupBoostResponse {
+  uint32 processed = 1; // addresses swept this call
+  bool   completed = 2; // whether the boost record is now deleted
+}
 
