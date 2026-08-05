@@ -57,6 +57,15 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetMarketIdRewardId(ctx, elem)
 	}
 
+	// Set all the boost records and their participant entries
+	for _, elem := range genState.BoostList {
+		k.SetBoost(ctx, elem)
+	}
+
+	for _, elem := range genState.BoostParticipantList {
+		k.SetBoostParticipant(ctx, elem)
+	}
+
 	// Restore queue states
 	if genState.UnlockParticipantsQueue != nil {
 		k.SetUnlockParticipantsQueue(ctx, *genState.UnlockParticipantsQueue)
@@ -73,6 +82,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// this line is used by starport scaffolding # genesis/module/init
 	k.SetTradingRewardsCounter(ctx, genState.TradingRewardsCounter)
 	k.SetStakingRewardsCounter(ctx, genState.StakingRewardsCounter)
+	k.SetBoostsCounter(ctx, genState.BoostCounter)
 }
 
 // ExportGenesis returns the module's exported genesis.
@@ -91,6 +101,10 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.TradingRewardCandidateList = k.GetAllTradingRewardCandidate(ctx)
 
 	genesis.MarketIdTradingRewardIdList = k.GetAllMarketIdRewardId(ctx)
+
+	genesis.BoostList = k.GetAllBoosts(ctx)
+	genesis.BoostParticipantList = k.GetAllBoostParticipant(ctx)
+	genesis.BoostCounter = k.GetBoostsCounter(ctx)
 	genesis.PendingTradingRewardExpirationList = k.GetAllPendingTradingRewardExpiration(ctx)
 	genesis.ActiveTradingRewardExpirationList = k.GetAllActiveTradingRewardExpiration(ctx)
 

@@ -83,6 +83,49 @@ func (suite *IntegrationTestSuite) TestMsgServerBoost_CreateBoostSuccessWithFee(
 	suite.Require().Equal(uint64(1), suite.k.GetBoostsCounter(suite.ctx))
 }
 
+// TestMsgServerBoost_CreateBoostNoFeeDenomBalance: the balance pre-check must
+// only require the budget — the trade keeper may capture the fee in the user's
+// preferred denom via swap, so holding zero of the fee's params denom must not
+// reject the creation.
+func (suite *IntegrationTestSuite) TestMsgServerBoost_CreateBoostNoFeeDenomBalance() {
+	creator := sdk.AccAddress("creator")
+	suite.setBoostTestParams(sdk.NewCoin("ubze", math.NewInt(100)), 10)
+	suite.seedStakingReward("000000000001", 30, 0)
+
+	suite.bank.EXPECT().HasSupply(suite.ctx, "uboost").Return(true).Times(1)
+	//spendable covers the boost budget only: no ubze for the fee at all
+	suite.bank.EXPECT().
+		SpendableCoins(suite.ctx, creator).
+		Return(sdk.NewCoins(sdk.NewCoin("uboost", math.NewInt(50000)))).
+		Times(1)
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(suite.ctx, creator, types.ModuleName, sdk.NewCoins(sdk.NewCoin("uboost", math.NewInt(10000)))).
+		Return(nil).
+		Times(1)
+	//the trade keeper captures the fee from the user's preferred denom and swaps it
+	suite.trade.EXPECT().
+		CaptureAndSwapUserFee(suite.ctx, creator, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100))), types.ModuleName).
+		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100))), nil).
+		Times(1)
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, gomock.Any(), sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100)))).
+		Return(nil).
+		Times(1)
+
+	msg := &types.MsgCreateBoost{
+		Creator:     creator.String(),
+		RewardId:    "000000000001",
+		Denom:       "uboost",
+		DailyAmount: "1000",
+		Days:        "10",
+	}
+
+	response, err := suite.msgServer.CreateBoost(suite.ctx, msg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(response)
+	suite.Require().Equal("000000000001", response.BoostId)
+}
+
 // TestMsgServerBoost_CreateBoostIdsIncrement creates two boosts with the SAME
 // denom on one reward: both must be created (no uniqueness rule) with
 // incrementing ids.
@@ -310,10 +353,11 @@ func (suite *IntegrationTestSuite) TestMsgServerBoost_CreateBoostInsufficientFun
 	suite.seedStakingReward("000000000001", 30, 0)
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, "uboost").Return(true).Times(1)
-	//user holds the escrow but not the fee on top of it
+	//user does not hold the full escrow (the fee is not part of this check:
+	//it may be paid in a preferred denom via the trade keeper's swap)
 	suite.bank.EXPECT().
 		SpendableCoins(suite.ctx, creator).
-		Return(sdk.NewCoins(sdk.NewCoin("uboost", math.NewInt(10000)))).
+		Return(sdk.NewCoins(sdk.NewCoin("uboost", math.NewInt(9999)))).
 		Times(1)
 
 	msg := &types.MsgCreateBoost{
