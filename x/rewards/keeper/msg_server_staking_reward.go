@@ -45,12 +45,9 @@ func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCrea
 	}
 	fee := k.getRewardCreationFee(ctx, k.GetParams(ctx).CreateStakingRewardFee)
 
-	neededBalance := toCapture
-	if fee != nil {
-		neededBalance = neededBalance.Add(fee...)
-	}
-
-	err = k.checkUserBalances(ctx, neededBalance, acc)
+	//check the budget only: the fee may be paid in the user's preferred denom via the trade keeper's swap,
+	//so requiring it in the params denom here would wrongly reject valid users
+	err = k.checkUserBalances(ctx, toCapture, acc)
 	if err != nil {
 		return nil, err
 	}

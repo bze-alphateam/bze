@@ -100,6 +100,84 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 	suite.Require().Equal(uint32(7), stakingReward.Lock)
 }
 
+// TestMsgServerStakingReward_CreateStakingRewardNoFeeDenomBalance: the balance
+// pre-check must only require the budget — the trade keeper may capture the fee
+// in the user's preferred denom via swap, so holding zero of the fee's params
+// denom must not reject the creation.
+func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewardNoFeeDenomBalance() {
+	creator := sdk.AccAddress("creator")
+
+	params := types.Params{
+		CreateStakingRewardFee: sdk.NewCoin("ubze", math.NewInt(100)),
+		CreateTradingRewardFee: sdk.NewCoin("ubze", math.NewInt(200)),
+	}
+	err := suite.k.SetParams(suite.ctx, params)
+	suite.Require().NoError(err)
+
+	suite.bank.EXPECT().
+		HasSupply(suite.ctx, "ubze").
+		Return(true).
+		Times(1)
+	suite.bank.EXPECT().
+		HasSupply(suite.ctx, "uatom").
+		Return(true).
+		Times(1)
+
+	// spendable covers the prize budget only: no ubze for the fee at all
+	suite.bank.EXPECT().
+		SpendableCoins(suite.ctx, creator).
+		Return(sdk.NewCoins(
+			sdk.NewCoin("uatom", math.NewInt(6000)),
+		)).
+		Times(1)
+
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(
+			suite.ctx,
+			creator,
+			types.ModuleName,
+			sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(5000))), // 1000 * 5 duration
+		).
+		Return(nil).
+		Times(1)
+
+	// the trade keeper captures the fee from the user's preferred denom and swaps it
+	suite.trade.EXPECT().
+		CaptureAndSwapUserFee(
+			suite.ctx,
+			creator,
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100))),
+			types.ModuleName,
+		).
+		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100))), nil).
+		Times(1)
+
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToModule(
+			suite.ctx,
+			types.ModuleName,
+			gomock.Any(),
+			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100))),
+		).
+		Return(nil).
+		Times(1)
+
+	msg := &types.MsgCreateStakingReward{
+		Creator:      creator.String(),
+		PrizeAmount:  "1000",
+		PrizeDenom:   "uatom",
+		StakingDenom: "ubze",
+		Duration:     "5",
+		MinStake:     "100",
+		Lock:         "7",
+	}
+
+	response, err := suite.msgServer.CreateStakingReward(suite.ctx, msg)
+	suite.Require().NoError(err)
+	suite.Require().NotNil(response)
+	suite.Require().NotEmpty(response.RewardId)
+}
+
 func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewardNilRequest() {
 	response, err := suite.msgServer.CreateStakingReward(suite.ctx, nil)
 
