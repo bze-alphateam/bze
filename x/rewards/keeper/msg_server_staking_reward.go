@@ -293,6 +293,18 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 		return nil, fmt.Errorf("no staked amount left")
 	}
 
+	remainingStakedAmount := stakedAmountInt.Sub(partCoins.AmountOf(stakingReward.StakingDenom))
+
+	//the removal decision is fully determined before any mutation: when this
+	//exit will delete the finished reward, give subscribers the chance to
+	//veto while the reward — and everything else — is still intact
+	if remainingStakedAmount.IsZero() && stakingReward.Payouts >= stakingReward.Duration {
+		err = k.beforeStakingRewardRemoval(ctx, stakingReward.RewardId)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	//send pending rewards
 	_, err = k.claimPending(ctx, stakingReward, &participation)
 	if err != nil {
@@ -306,7 +318,6 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 
 	k.RemoveStakingRewardParticipant(ctx, participation.Address, participation.RewardId)
 
-	remainingStakedAmount := stakedAmountInt.Sub(partCoins.AmountOf(stakingReward.StakingDenom))
 	stakingReward.StakedAmount = remainingStakedAmount.String()
 	k.SetStakingReward(ctx, stakingReward)
 

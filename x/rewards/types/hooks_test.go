@@ -32,6 +32,11 @@ func (r recordingHooks) AfterStakingRewardExit(_ sdk.Context, _, _ string, _ mat
 	return r.err
 }
 
+func (r recordingHooks) BeforeStakingRewardRemoval(_ sdk.Context, _ string) error {
+	*r.calls = append(*r.calls, r.name+":removal")
+	return r.err
+}
+
 func TestMultiStakingRewardHooks_CallsAllInOrder(t *testing.T) {
 	var calls []string
 	multi := NewMultiStakingRewardHooks(
@@ -45,11 +50,13 @@ func TestMultiStakingRewardHooks_CallsAllInOrder(t *testing.T) {
 	require.NoError(t, multi.AfterStakingRewardJoin(ctx, "01", "addr", amount, "ubze"))
 	require.NoError(t, multi.AfterStakingRewardIncrease(ctx, "01", "addr", amount, amount, "ubze"))
 	require.NoError(t, multi.AfterStakingRewardExit(ctx, "01", "addr", amount, "ubze"))
+	require.NoError(t, multi.BeforeStakingRewardRemoval(ctx, "01"))
 
 	require.Equal(t, []string{
 		"first:join", "second:join",
 		"first:increase", "second:increase",
 		"first:exit", "second:exit",
+		"first:removal", "second:removal",
 	}, calls)
 }
 
@@ -78,6 +85,11 @@ func TestMultiStakingRewardHooks_FirstErrorShortCircuits(t *testing.T) {
 	err = multi.AfterStakingRewardExit(ctx, "01", "addr", amount, "ubze")
 	require.ErrorIs(t, err, expectedErr)
 	require.Equal(t, []string{"first:exit"}, calls)
+
+	calls = nil
+	err = multi.BeforeStakingRewardRemoval(ctx, "01")
+	require.ErrorIs(t, err, expectedErr)
+	require.Equal(t, []string{"first:removal"}, calls)
 }
 
 func TestMultiStakingRewardHooks_EmptyReturnsNil(t *testing.T) {
@@ -89,4 +101,5 @@ func TestMultiStakingRewardHooks_EmptyReturnsNil(t *testing.T) {
 	require.NoError(t, multi.AfterStakingRewardJoin(ctx, "01", "addr", amount, "ubze"))
 	require.NoError(t, multi.AfterStakingRewardIncrease(ctx, "01", "addr", amount, amount, "ubze"))
 	require.NoError(t, multi.AfterStakingRewardExit(ctx, "01", "addr", amount, "ubze"))
+	require.NoError(t, multi.BeforeStakingRewardRemoval(ctx, "01"))
 }

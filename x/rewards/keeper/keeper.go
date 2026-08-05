@@ -110,6 +110,14 @@ func (k Keeper) afterStakingRewardExit(ctx sdk.Context, rewardId, address string
 	return k.hooks.AfterStakingRewardExit(ctx, rewardId, address, unstakedAmount, stakingDenom)
 }
 
+func (k Keeper) beforeStakingRewardRemoval(ctx sdk.Context, rewardId string) error {
+	if k.hooks == nil {
+		return nil
+	}
+
+	return k.hooks.BeforeStakingRewardRemoval(ctx, rewardId)
+}
+
 // Logger returns a module-specific logger.
 func (k Keeper) Logger() log.Logger {
 	return k.logger.With("module", fmt.Sprintf("x/%s", types.ModuleName))

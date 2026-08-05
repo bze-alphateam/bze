@@ -18,6 +18,11 @@ type StakingRewardHooks interface {
 
 	// AfterStakingRewardExit - the participant exited, removing their entire stake.
 	AfterStakingRewardExit(ctx sdk.Context, rewardId, address string, unstakedAmount math.Int, stakingDenom string) error
+
+	// BeforeStakingRewardRemoval - called before a staking reward record is
+	// deleted; a non-nil error aborts the transaction and leaves the reward
+	// (and all other state) intact.
+	BeforeStakingRewardRemoval(ctx sdk.Context, rewardId string) error
 }
 
 // MultiStakingRewardHooks - combines multiple StakingRewardHooks. Hooks are
@@ -53,6 +58,16 @@ func (h MultiStakingRewardHooks) AfterStakingRewardIncrease(ctx sdk.Context, rew
 func (h MultiStakingRewardHooks) AfterStakingRewardExit(ctx sdk.Context, rewardId, address string, unstakedAmount math.Int, stakingDenom string) error {
 	for i := range h {
 		if err := h[i].AfterStakingRewardExit(ctx, rewardId, address, unstakedAmount, stakingDenom); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (h MultiStakingRewardHooks) BeforeStakingRewardRemoval(ctx sdk.Context, rewardId string) error {
+	for i := range h {
+		if err := h[i].BeforeStakingRewardRemoval(ctx, rewardId); err != nil {
 			return err
 		}
 	}

@@ -30,6 +30,7 @@ type recordingStakingHooks struct {
 	joins     []joinRecord
 	increases []increaseRecord
 	exits     []exitRecord
+	removals  []string
 	err       error
 }
 
@@ -45,6 +46,11 @@ func (r *recordingStakingHooks) AfterStakingRewardIncrease(_ sdk.Context, reward
 
 func (r *recordingStakingHooks) AfterStakingRewardExit(_ sdk.Context, rewardId, address string, unstakedAmount math.Int, stakingDenom string) error {
 	r.exits = append(r.exits, exitRecord{rewardId: rewardId, address: address, unstaked: unstakedAmount, denom: stakingDenom})
+	return r.err
+}
+
+func (r *recordingStakingHooks) BeforeStakingRewardRemoval(_ sdk.Context, rewardId string) error {
+	r.removals = append(r.removals, rewardId)
 	return r.err
 }
 
@@ -374,4 +380,148 @@ func (suite *IntegrationTestSuite) TestStakingRewardHooks_NoHooksRegisteredIsNoO
 
 	_, err := suite.msgServer.JoinStaking(suite.ctx, msg)
 	suite.Require().NoError(err)
+}
+
+// seedFinishedRewardWithLastParticipant stores a finished reward (all payouts
+// executed) whose entire remaining stake belongs to one participant — the
+// exact state in which the next exit deletes the reward record.
+func (suite *IntegrationTestSuite) seedFinishedRewardWithLastParticipant(rewardId string, creator sdk.AccAddress) {
+	suite.k.SetStakingReward(suite.ctx, types.StakingReward{
+		RewardId:         rewardId,
+		PrizeAmount:      "1000",
+		PrizeDenom:       "ubze",
+		StakingDenom:     "ubze",
+		Duration:         5,
+		Payouts:          5,
+		MinStake:         100,
+		Lock:             0,
+		StakedAmount:     "500",
+		DistributedStake: "0",
+	})
+	suite.k.SetStakingRewardParticipant(suite.ctx, types.StakingRewardParticipant{
+		Address:  creator.String(),
+		RewardId: rewardId,
+		Amount:   "500",
+		JoinedAt: "0",
+	})
+}
+
+// TestStakingRewardHooks_RemovalVetoBlocksFinalExit: a subscriber error from
+// BeforeStakingRewardRemoval fails the final exit before any mutation — the
+// reward, the participant and the unlock queue are untouched and no coins
+// move (the mock would panic on an unexpected transfer).
+func (suite *IntegrationTestSuite) TestStakingRewardHooks_RemovalVetoBlocksFinalExit() {
+	creator := sdk.AccAddress("creator")
+	hooks := suite.registerHooks()
+	hooks.err = fmt.Errorf("reward is pinned")
+	suite.seedFinishedRewardWithLastParticipant("hook-removal-veto", creator)
+
+	msg := &types.MsgExitStaking{Creator: creator.String(), RewardId: "hook-removal-veto"}
+	_, err := suite.msgServer.ExitStaking(suite.ctx, msg)
+	suite.Require().ErrorContains(err, "reward is pinned")
+
+	//the veto fired for this reward and nothing else did
+	suite.Require().Equal([]string{"hook-removal-veto"}, hooks.removals)
+	suite.Require().Empty(hooks.exits)
+
+	//all SR state is intact
+	reward, found := suite.k.GetStakingReward(suite.ctx, "hook-removal-veto")
+	suite.Require().True(found)
+	suite.Require().Equal("500", reward.StakedAmount)
+	participant, found := suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), "hook-removal-veto")
+	suite.Require().True(found)
+	suite.Require().Equal("500", participant.Amount)
+	suite.Require().Empty(suite.k.GetAllPendingUnlockParticipant(suite.ctx))
+}
+
+// TestStakingRewardHooks_RemovalAllowedOnFinalExit: a nil-returning
+// subscriber observes the removal, the exit succeeds, the reward is removed,
+// the finish event is emitted and AfterStakingRewardExit still fires.
+func (suite *IntegrationTestSuite) TestStakingRewardHooks_RemovalAllowedOnFinalExit() {
+	creator := sdk.AccAddress("creator")
+	hooks := suite.registerHooks()
+	suite.seedFinishedRewardWithLastParticipant("hook-removal-ok", creator)
+
+	//lock = 0 -> the stake is returned immediately
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, creator, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500)))).
+		Return(nil).
+		Times(1)
+
+	msg := &types.MsgExitStaking{Creator: creator.String(), RewardId: "hook-removal-ok"}
+	_, err := suite.msgServer.ExitStaking(suite.ctx, msg)
+	suite.Require().NoError(err)
+
+	suite.Require().Equal([]string{"hook-removal-ok"}, hooks.removals)
+	suite.Require().Len(hooks.exits, 1)
+	suite.Require().Equal("hook-removal-ok", hooks.exits[0].rewardId)
+
+	_, found := suite.k.GetStakingReward(suite.ctx, "hook-removal-ok")
+	suite.Require().False(found)
+
+	finishEmitted := false
+	for _, event := range suite.ctx.EventManager().Events() {
+		if event.Type == "bze.rewards.StakingRewardFinishEvent" {
+			finishEmitted = true
+		}
+	}
+	suite.Require().True(finishEmitted)
+}
+
+// TestStakingRewardHooks_NonFinalExitSkipsRemovalHook: an exit that leaves
+// stake behind (reward not finished) must not consult the removal hook.
+func (suite *IntegrationTestSuite) TestStakingRewardHooks_NonFinalExitSkipsRemovalHook() {
+	creator := sdk.AccAddress("creator")
+	hooks := suite.registerHooks()
+
+	suite.k.SetStakingReward(suite.ctx, types.StakingReward{
+		RewardId:         "hook-no-removal",
+		PrizeAmount:      "1000",
+		PrizeDenom:       "ubze",
+		StakingDenom:     "ubze",
+		Duration:         5,
+		Payouts:          2,
+		MinStake:         100,
+		Lock:             0,
+		StakedAmount:     "500",
+		DistributedStake: "0",
+	})
+	suite.k.SetStakingRewardParticipant(suite.ctx, types.StakingRewardParticipant{
+		Address:  creator.String(),
+		RewardId: "hook-no-removal",
+		Amount:   "500",
+		JoinedAt: "0",
+	})
+
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, creator, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500)))).
+		Return(nil).
+		Times(1)
+
+	msg := &types.MsgExitStaking{Creator: creator.String(), RewardId: "hook-no-removal"}
+	_, err := suite.msgServer.ExitStaking(suite.ctx, msg)
+	suite.Require().NoError(err)
+
+	suite.Require().Empty(hooks.removals)
+	suite.Require().Len(hooks.exits, 1)
+}
+
+// TestStakingRewardHooks_FinalExitRemovalWithoutHooksSet: SetHooks never
+// called — the final exit removes the finished reward exactly as before, no
+// panic.
+func (suite *IntegrationTestSuite) TestStakingRewardHooks_FinalExitRemovalWithoutHooksSet() {
+	creator := sdk.AccAddress("creator")
+	suite.seedFinishedRewardWithLastParticipant("no-hooks-removal", creator)
+
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, creator, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500)))).
+		Return(nil).
+		Times(1)
+
+	msg := &types.MsgExitStaking{Creator: creator.String(), RewardId: "no-hooks-removal"}
+	_, err := suite.msgServer.ExitStaking(suite.ctx, msg)
+	suite.Require().NoError(err)
+
+	_, found := suite.k.GetStakingReward(suite.ctx, "no-hooks-removal")
+	suite.Require().False(found)
 }
