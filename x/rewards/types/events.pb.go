@@ -683,6 +683,294 @@ func (m *TradingRewardDistributionEvent) GetWinners() []string {
 	return nil
 }
 
+type BoostCreateEvent struct {
+	RewardId    string `protobuf:"bytes,1,opt,name=reward_id,json=rewardId,proto3" json:"reward_id,omitempty"`
+	BoostId     string `protobuf:"bytes,2,opt,name=boost_id,json=boostId,proto3" json:"boost_id,omitempty"`
+	Denom       string `protobuf:"bytes,3,opt,name=denom,proto3" json:"denom,omitempty"`
+	DailyAmount string `protobuf:"bytes,4,opt,name=daily_amount,json=dailyAmount,proto3" json:"daily_amount,omitempty"`
+	Days        uint32 `protobuf:"varint,5,opt,name=days,proto3" json:"days,omitempty"`
+	Creator     string `protobuf:"bytes,6,opt,name=creator,proto3" json:"creator,omitempty"`
+}
+
+func (m *BoostCreateEvent) Reset()         { *m = BoostCreateEvent{} }
+func (m *BoostCreateEvent) String() string { return proto.CompactTextString(m) }
+func (*BoostCreateEvent) ProtoMessage()    {}
+func (*BoostCreateEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e803d815d280c3f4, []int{11}
+}
+func (m *BoostCreateEvent) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BoostCreateEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BoostCreateEvent.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BoostCreateEvent) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BoostCreateEvent.Merge(m, src)
+}
+func (m *BoostCreateEvent) XXX_Size() int {
+	return m.Size()
+}
+func (m *BoostCreateEvent) XXX_DiscardUnknown() {
+	xxx_messageInfo_BoostCreateEvent.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BoostCreateEvent proto.InternalMessageInfo
+
+func (m *BoostCreateEvent) GetRewardId() string {
+	if m != nil {
+		return m.RewardId
+	}
+	return ""
+}
+
+func (m *BoostCreateEvent) GetBoostId() string {
+	if m != nil {
+		return m.BoostId
+	}
+	return ""
+}
+
+func (m *BoostCreateEvent) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *BoostCreateEvent) GetDailyAmount() string {
+	if m != nil {
+		return m.DailyAmount
+	}
+	return ""
+}
+
+func (m *BoostCreateEvent) GetDays() uint32 {
+	if m != nil {
+		return m.Days
+	}
+	return 0
+}
+
+func (m *BoostCreateEvent) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+type BoostUpdateEvent struct {
+	RewardId string `protobuf:"bytes,1,opt,name=reward_id,json=rewardId,proto3" json:"reward_id,omitempty"`
+	BoostId  string `protobuf:"bytes,2,opt,name=boost_id,json=boostId,proto3" json:"boost_id,omitempty"`
+	Duration uint32 `protobuf:"varint,3,opt,name=duration,proto3" json:"duration,omitempty"`
+}
+
+func (m *BoostUpdateEvent) Reset()         { *m = BoostUpdateEvent{} }
+func (m *BoostUpdateEvent) String() string { return proto.CompactTextString(m) }
+func (*BoostUpdateEvent) ProtoMessage()    {}
+func (*BoostUpdateEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e803d815d280c3f4, []int{12}
+}
+func (m *BoostUpdateEvent) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BoostUpdateEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BoostUpdateEvent.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BoostUpdateEvent) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BoostUpdateEvent.Merge(m, src)
+}
+func (m *BoostUpdateEvent) XXX_Size() int {
+	return m.Size()
+}
+func (m *BoostUpdateEvent) XXX_DiscardUnknown() {
+	xxx_messageInfo_BoostUpdateEvent.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BoostUpdateEvent proto.InternalMessageInfo
+
+func (m *BoostUpdateEvent) GetRewardId() string {
+	if m != nil {
+		return m.RewardId
+	}
+	return ""
+}
+
+func (m *BoostUpdateEvent) GetBoostId() string {
+	if m != nil {
+		return m.BoostId
+	}
+	return ""
+}
+
+func (m *BoostUpdateEvent) GetDuration() uint32 {
+	if m != nil {
+		return m.Duration
+	}
+	return 0
+}
+
+type BoostDistributionEvent struct {
+	RewardId string `protobuf:"bytes,1,opt,name=reward_id,json=rewardId,proto3" json:"reward_id,omitempty"`
+	BoostId  string `protobuf:"bytes,2,opt,name=boost_id,json=boostId,proto3" json:"boost_id,omitempty"`
+	Denom    string `protobuf:"bytes,3,opt,name=denom,proto3" json:"denom,omitempty"`
+	Amount   string `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
+}
+
+func (m *BoostDistributionEvent) Reset()         { *m = BoostDistributionEvent{} }
+func (m *BoostDistributionEvent) String() string { return proto.CompactTextString(m) }
+func (*BoostDistributionEvent) ProtoMessage()    {}
+func (*BoostDistributionEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e803d815d280c3f4, []int{13}
+}
+func (m *BoostDistributionEvent) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BoostDistributionEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BoostDistributionEvent.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BoostDistributionEvent) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BoostDistributionEvent.Merge(m, src)
+}
+func (m *BoostDistributionEvent) XXX_Size() int {
+	return m.Size()
+}
+func (m *BoostDistributionEvent) XXX_DiscardUnknown() {
+	xxx_messageInfo_BoostDistributionEvent.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BoostDistributionEvent proto.InternalMessageInfo
+
+func (m *BoostDistributionEvent) GetRewardId() string {
+	if m != nil {
+		return m.RewardId
+	}
+	return ""
+}
+
+func (m *BoostDistributionEvent) GetBoostId() string {
+	if m != nil {
+		return m.BoostId
+	}
+	return ""
+}
+
+func (m *BoostDistributionEvent) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *BoostDistributionEvent) GetAmount() string {
+	if m != nil {
+		return m.Amount
+	}
+	return ""
+}
+
+type BoostClaimEvent struct {
+	RewardId string `protobuf:"bytes,1,opt,name=reward_id,json=rewardId,proto3" json:"reward_id,omitempty"`
+	BoostId  string `protobuf:"bytes,2,opt,name=boost_id,json=boostId,proto3" json:"boost_id,omitempty"`
+	Denom    string `protobuf:"bytes,3,opt,name=denom,proto3" json:"denom,omitempty"`
+	Address  string `protobuf:"bytes,4,opt,name=address,proto3" json:"address,omitempty"`
+	Amount   string `protobuf:"bytes,5,opt,name=amount,proto3" json:"amount,omitempty"`
+}
+
+func (m *BoostClaimEvent) Reset()         { *m = BoostClaimEvent{} }
+func (m *BoostClaimEvent) String() string { return proto.CompactTextString(m) }
+func (*BoostClaimEvent) ProtoMessage()    {}
+func (*BoostClaimEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e803d815d280c3f4, []int{14}
+}
+func (m *BoostClaimEvent) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BoostClaimEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BoostClaimEvent.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BoostClaimEvent) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BoostClaimEvent.Merge(m, src)
+}
+func (m *BoostClaimEvent) XXX_Size() int {
+	return m.Size()
+}
+func (m *BoostClaimEvent) XXX_DiscardUnknown() {
+	xxx_messageInfo_BoostClaimEvent.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BoostClaimEvent proto.InternalMessageInfo
+
+func (m *BoostClaimEvent) GetRewardId() string {
+	if m != nil {
+		return m.RewardId
+	}
+	return ""
+}
+
+func (m *BoostClaimEvent) GetBoostId() string {
+	if m != nil {
+		return m.BoostId
+	}
+	return ""
+}
+
+func (m *BoostClaimEvent) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *BoostClaimEvent) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *BoostClaimEvent) GetAmount() string {
+	if m != nil {
+		return m.Amount
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*StakingRewardCreateEvent)(nil), "bze.rewards.StakingRewardCreateEvent")
 	proto.RegisterType((*StakingRewardUpdateEvent)(nil), "bze.rewards.StakingRewardUpdateEvent")
@@ -695,44 +983,55 @@ func init() {
 	proto.RegisterType((*TradingRewardExpireEvent)(nil), "bze.rewards.TradingRewardExpireEvent")
 	proto.RegisterType((*TradingRewardActivationEvent)(nil), "bze.rewards.TradingRewardActivationEvent")
 	proto.RegisterType((*TradingRewardDistributionEvent)(nil), "bze.rewards.TradingRewardDistributionEvent")
+	proto.RegisterType((*BoostCreateEvent)(nil), "bze.rewards.BoostCreateEvent")
+	proto.RegisterType((*BoostUpdateEvent)(nil), "bze.rewards.BoostUpdateEvent")
+	proto.RegisterType((*BoostDistributionEvent)(nil), "bze.rewards.BoostDistributionEvent")
+	proto.RegisterType((*BoostClaimEvent)(nil), "bze.rewards.BoostClaimEvent")
 }
 
 func init() { proto.RegisterFile("bze/rewards/events.proto", fileDescriptor_e803d815d280c3f4) }
 
 var fileDescriptor_e803d815d280c3f4 = []byte{
-	// 508 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x54, 0xbf, 0x6f, 0x13, 0x31,
-	0x14, 0xae, 0xd3, 0xfc, 0x7c, 0x6d, 0x96, 0x53, 0x55, 0xac, 0x82, 0x8e, 0x70, 0x2c, 0x19, 0x20,
-	0x19, 0x18, 0x18, 0x98, 0x0a, 0x4d, 0xa5, 0xb2, 0x20, 0x5d, 0xe9, 0xc2, 0x12, 0xf9, 0x62, 0xeb,
-	0x62, 0x25, 0x67, 0x9f, 0x6c, 0xa7, 0x0d, 0xf9, 0x2b, 0xd8, 0xf9, 0x87, 0x18, 0x3b, 0x32, 0xa2,
-	0x84, 0x95, 0xff, 0x01, 0xd9, 0xbe, 0x96, 0x5e, 0x84, 0xc4, 0x21, 0x40, 0x6c, 0xf7, 0x7d, 0x7e,
-	0xcf, 0xdf, 0xfb, 0xbe, 0x7b, 0x32, 0xe0, 0x64, 0xc5, 0x86, 0x8a, 0x5d, 0x11, 0x45, 0xf5, 0x90,
-	0x5d, 0x32, 0x61, 0xf4, 0x20, 0x57, 0xd2, 0xc8, 0x60, 0x2f, 0x59, 0xb1, 0x41, 0x71, 0x72, 0x74,
-	0x90, 0xca, 0x54, 0x3a, 0x7e, 0x68, 0xbf, 0x7c, 0x49, 0xf4, 0x0d, 0x01, 0x3e, 0x37, 0x64, 0xc6,
-	0x45, 0x1a, 0xbb, 0xc2, 0x57, 0x8a, 0x11, 0xc3, 0x46, 0xf6, 0x9a, 0xe0, 0x3e, 0x74, 0x7c, 0xf7,
-	0x98, 0x53, 0x8c, 0x7a, 0xa8, 0xdf, 0x89, 0xdb, 0x9e, 0x38, 0xa3, 0xc1, 0x23, 0xd8, 0xcf, 0x15,
-	0x5f, 0xb1, 0x31, 0xc9, 0xe4, 0x42, 0x18, 0x5c, 0x73, 0xe7, 0x7b, 0x8e, 0x3b, 0x76, 0x54, 0xf0,
-	0x10, 0x3c, 0x1c, 0x53, 0x26, 0x64, 0x86, 0x77, 0x5d, 0x05, 0x38, 0xea, 0xc4, 0x32, 0xc1, 0x63,
-	0xe8, 0x6a, 0x2f, 0x5e, 0x94, 0xd4, 0x5d, 0xc9, 0x7e, 0x41, 0xfa, 0xa2, 0x23, 0x68, 0xd3, 0x85,
-	0x22, 0x86, 0x4b, 0x81, 0x1b, 0x3d, 0xd4, 0xef, 0xc6, 0xb7, 0xd8, 0x4e, 0x98, 0x71, 0x31, 0xb6,
-	0xf5, 0x0c, 0x37, 0x7b, 0xa8, 0x5f, 0x8f, 0xdb, 0x19, 0x17, 0xd6, 0x11, 0x0b, 0x02, 0xa8, 0xcf,
-	0xe5, 0x64, 0x86, 0x5b, 0xae, 0xc9, 0x7d, 0x47, 0xe7, 0x5b, 0x76, 0x2f, 0x72, 0x5a, 0xcd, 0xee,
-	0xdd, 0x29, 0x6a, 0xe5, 0x29, 0xa2, 0x29, 0xdc, 0x2b, 0x67, 0x38, 0x27, 0x3c, 0xab, 0x70, 0x27,
-	0x86, 0x16, 0xa1, 0x54, 0x31, 0xad, 0x8b, 0xf4, 0x6e, 0x60, 0x70, 0x08, 0xcd, 0x22, 0x56, 0x1f,
-	0x5a, 0x81, 0xa2, 0x14, 0x0e, 0x4b, 0x4a, 0xaf, 0x25, 0x17, 0xff, 0x44, 0xe8, 0xcd, 0x96, 0xd0,
-	0x68, 0xc9, 0xcd, 0x9f, 0x08, 0x45, 0xcf, 0xb7, 0x82, 0x3f, 0xe5, 0x82, 0xeb, 0xe9, 0xaf, 0xaf,
-	0x8c, 0x2e, 0x20, 0x2c, 0x35, 0x9e, 0x70, 0x6d, 0x14, 0x4f, 0x16, 0x36, 0xf9, 0x0a, 0x13, 0xfd,
-	0x30, 0x58, 0x2b, 0x19, 0xfc, 0x8a, 0x00, 0xbf, 0x55, 0x84, 0xfe, 0x9f, 0xc5, 0xbf, 0xbb, 0x4d,
-	0xf5, 0x9f, 0xec, 0x34, 0x51, 0x33, 0x66, 0xac, 0x78, 0xc3, 0x8b, 0x7b, 0xe2, 0x8c, 0x06, 0x07,
-	0xd0, 0xd0, 0x73, 0x69, 0xb4, 0x5b, 0xf6, 0x6e, 0xec, 0x81, 0x8d, 0x7d, 0x62, 0xc7, 0x97, 0xca,
-	0x2d, 0x7b, 0x27, 0xbe, 0x81, 0x36, 0xf6, 0x92, 0xcb, 0xd1, 0x32, 0xe7, 0xaa, 0x82, 0xcb, 0xe8,
-	0x05, 0x3c, 0x28, 0x35, 0x1e, 0x4f, 0x0c, 0xbf, 0x24, 0xd5, 0x42, 0x8f, 0x3e, 0x22, 0x08, 0x4b,
-	0xdd, 0xbf, 0xf9, 0xd3, 0xfe, 0x46, 0xc4, 0x18, 0x5a, 0x57, 0x5c, 0x08, 0xa6, 0x34, 0xae, 0xf7,
-	0x76, 0x6d, 0x26, 0x05, 0x7c, 0x79, 0xfa, 0x69, 0x1d, 0xa2, 0xeb, 0x75, 0x88, 0xbe, 0xac, 0x43,
-	0xf4, 0x61, 0x13, 0xee, 0x5c, 0x6f, 0xc2, 0x9d, 0xcf, 0x9b, 0x70, 0xe7, 0xdd, 0x93, 0x94, 0x9b,
-	0xe9, 0x22, 0x19, 0x4c, 0x64, 0x36, 0x4c, 0x56, 0xec, 0x29, 0x99, 0xe7, 0x53, 0x62, 0x18, 0x71,
-	0x68, 0xb8, 0xbc, 0x7d, 0x65, 0xcd, 0xfb, 0x9c, 0xe9, 0xa4, 0xe9, 0x9e, 0xd0, 0x67, 0xdf, 0x03,
-	0x00, 0x00, 0xff, 0xff, 0xef, 0xfb, 0x95, 0x55, 0x81, 0x05, 0x00, 0x00,
+	// 623 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x55, 0xbf, 0x6e, 0x13, 0x4f,
+	0x10, 0xce, 0x26, 0x67, 0xc7, 0x99, 0x24, 0xfa, 0xfd, 0x74, 0x8a, 0xc2, 0x12, 0xd0, 0x61, 0x8e,
+	0x26, 0x05, 0xc4, 0x05, 0x05, 0x05, 0x55, 0x42, 0x12, 0x29, 0x34, 0x48, 0x17, 0xd2, 0xd0, 0x58,
+	0x7b, 0xde, 0xc5, 0x5e, 0xc5, 0x77, 0x7b, 0xda, 0x5d, 0x27, 0xb6, 0x0b, 0x9e, 0x01, 0x6a, 0x9e,
+	0x82, 0xb7, 0xa0, 0x4c, 0x49, 0x89, 0x6c, 0x5a, 0xde, 0x01, 0xed, 0xee, 0x39, 0xb9, 0xb3, 0xf8,
+	0x73, 0x16, 0x20, 0xba, 0xfd, 0x66, 0x67, 0x76, 0xe6, 0xfb, 0x66, 0x6e, 0x0e, 0x70, 0x3c, 0x66,
+	0x2d, 0xc9, 0x2e, 0x89, 0xa4, 0xaa, 0xc5, 0x2e, 0x58, 0xaa, 0xd5, 0x5e, 0x26, 0x85, 0x16, 0xfe,
+	0x7a, 0x3c, 0x66, 0x7b, 0xf9, 0xcd, 0xce, 0x56, 0x57, 0x74, 0x85, 0xb5, 0xb7, 0xcc, 0xc9, 0xb9,
+	0x84, 0x5f, 0x11, 0xe0, 0x53, 0x4d, 0xce, 0x79, 0xda, 0x8d, 0xac, 0xe3, 0x33, 0xc9, 0x88, 0x66,
+	0x47, 0xe6, 0x19, 0xff, 0x0e, 0xac, 0xb9, 0xe8, 0x36, 0xa7, 0x18, 0x35, 0xd1, 0xee, 0x5a, 0xd4,
+	0x70, 0x86, 0x13, 0xea, 0xdf, 0x87, 0x8d, 0x4c, 0xf2, 0x31, 0x6b, 0x93, 0x44, 0x0c, 0x52, 0x8d,
+	0x97, 0xed, 0xfd, 0xba, 0xb5, 0xed, 0x5b, 0x93, 0x7f, 0x0f, 0x1c, 0x6c, 0x53, 0x96, 0x8a, 0x04,
+	0xaf, 0x58, 0x0f, 0xb0, 0xa6, 0x43, 0x63, 0xf1, 0x1f, 0xc0, 0xa6, 0x72, 0xc9, 0x73, 0x17, 0xcf,
+	0xba, 0x6c, 0xe4, 0x46, 0xe7, 0xb4, 0x03, 0x0d, 0x3a, 0x90, 0x44, 0x73, 0x91, 0xe2, 0x5a, 0x13,
+	0xed, 0x6e, 0x46, 0xd7, 0xd8, 0x54, 0x98, 0xf0, 0xb4, 0x6d, 0xfc, 0x19, 0xae, 0x37, 0xd1, 0xae,
+	0x17, 0x35, 0x12, 0x9e, 0x1a, 0x46, 0xcc, 0xf7, 0xc1, 0xeb, 0x8b, 0xce, 0x39, 0x5e, 0xb5, 0x41,
+	0xf6, 0x1c, 0x9e, 0xce, 0xd1, 0x3d, 0xcb, 0x68, 0x35, 0xba, 0xc5, 0x2a, 0x96, 0xcb, 0x55, 0x84,
+	0x3d, 0xb8, 0x55, 0xd6, 0xb0, 0x4f, 0x78, 0x52, 0xe1, 0x4d, 0x0c, 0xab, 0x84, 0x52, 0xc9, 0x94,
+	0xca, 0xd5, 0x9b, 0x41, 0x7f, 0x1b, 0xea, 0xb9, 0xac, 0x4e, 0xb4, 0x1c, 0x85, 0x5d, 0xd8, 0x2e,
+	0x65, 0x7a, 0x2e, 0x78, 0xfa, 0x57, 0x12, 0xbd, 0x98, 0x4b, 0x74, 0x34, 0xe4, 0xfa, 0x77, 0x12,
+	0x85, 0x4f, 0xe6, 0x84, 0x3f, 0xe6, 0x29, 0x57, 0xbd, 0x5f, 0x3f, 0x19, 0x9e, 0x41, 0x50, 0x0a,
+	0x3c, 0xe4, 0x4a, 0x4b, 0x1e, 0x0f, 0x8c, 0xf2, 0x15, 0x2a, 0xba, 0x21, 0xb8, 0x5c, 0x22, 0xf8,
+	0x05, 0x01, 0x7e, 0x29, 0x09, 0xfd, 0x37, 0x83, 0x5f, 0x9c, 0x26, 0xef, 0x3b, 0x33, 0x4d, 0xe4,
+	0x39, 0xd3, 0x26, 0x79, 0xcd, 0x25, 0x77, 0x86, 0x13, 0xea, 0x6f, 0x41, 0x4d, 0xf5, 0x85, 0x56,
+	0x76, 0xd8, 0x37, 0x23, 0x07, 0x8c, 0xec, 0x1d, 0x53, 0xbe, 0x90, 0x76, 0xd8, 0xd7, 0xa2, 0x19,
+	0x34, 0xb2, 0x97, 0x58, 0x1e, 0x0d, 0x33, 0x2e, 0x2b, 0xb0, 0x0c, 0x9f, 0xc2, 0xdd, 0x52, 0xe0,
+	0x7e, 0x47, 0xf3, 0x0b, 0x52, 0x4d, 0xf4, 0xf0, 0x3d, 0x82, 0xa0, 0x14, 0xbd, 0x60, 0xd3, 0xfe,
+	0x84, 0xc4, 0x18, 0x56, 0x2f, 0x79, 0x9a, 0x32, 0xa9, 0xb0, 0xd7, 0x5c, 0x31, 0x9a, 0xe4, 0x30,
+	0xfc, 0x80, 0xe0, 0xff, 0x03, 0x21, 0x94, 0xae, 0xdc, 0xf2, 0xdb, 0xd0, 0x88, 0x4d, 0x80, 0xb9,
+	0xcb, 0xe7, 0xda, 0x62, 0xd7, 0x90, 0x62, 0x05, 0x0e, 0x18, 0x02, 0x94, 0xf0, 0xfe, 0x68, 0x46,
+	0xc0, 0xed, 0xb5, 0x75, 0x6b, 0xcb, 0x09, 0xf8, 0xe0, 0x51, 0x32, 0x52, 0xf9, 0x4a, 0xb3, 0xe7,
+	0x62, 0x1f, 0xeb, 0xe5, 0x3e, 0xbe, 0xce, 0x4b, 0xae, 0xbc, 0xaf, 0x7e, 0x52, 0x72, 0x71, 0xf8,
+	0x56, 0xe6, 0x56, 0xd9, 0x1b, 0xd8, 0xb6, 0x79, 0x16, 0x6c, 0xd8, 0xc2, 0x02, 0xdd, 0x7c, 0x96,
+	0x5e, 0xe9, 0xb3, 0x7c, 0x87, 0xe0, 0x3f, 0xd7, 0x9b, 0x8a, 0x3b, 0x74, 0xe1, 0xcc, 0x85, 0x15,
+	0xe5, 0xfd, 0x68, 0x17, 0xd6, 0x8a, 0x35, 0x1d, 0x1c, 0x7f, 0x9c, 0x04, 0xe8, 0x6a, 0x12, 0xa0,
+	0xcf, 0x93, 0x00, 0xbd, 0x9d, 0x06, 0x4b, 0x57, 0xd3, 0x60, 0xe9, 0xd3, 0x34, 0x58, 0x7a, 0xf5,
+	0xb0, 0xcb, 0x75, 0x6f, 0x10, 0xef, 0x75, 0x44, 0xd2, 0x8a, 0xc7, 0xec, 0x11, 0xe9, 0x67, 0x3d,
+	0xa2, 0x19, 0xb1, 0xa8, 0x35, 0xbc, 0xfe, 0x2b, 0xeb, 0x51, 0xc6, 0x54, 0x5c, 0xb7, 0xbf, 0xdc,
+	0xc7, 0xdf, 0x02, 0x00, 0x00, 0xff, 0xff, 0x48, 0x40, 0xdc, 0x70, 0xb1, 0x07, 0x00, 0x00,
 }
 
 func (m *StakingRewardCreateEvent) Marshal() (dAtA []byte, err error) {
@@ -1209,6 +1508,220 @@ func (m *TradingRewardDistributionEvent) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
+func (m *BoostCreateEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BoostCreateEvent) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BoostCreateEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if m.Days != 0 {
+		i = encodeVarintEvents(dAtA, i, uint64(m.Days))
+		i--
+		dAtA[i] = 0x28
+	}
+	if len(m.DailyAmount) > 0 {
+		i -= len(m.DailyAmount)
+		copy(dAtA[i:], m.DailyAmount)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.DailyAmount)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.BoostId) > 0 {
+		i -= len(m.BoostId)
+		copy(dAtA[i:], m.BoostId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.BoostId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.RewardId) > 0 {
+		i -= len(m.RewardId)
+		copy(dAtA[i:], m.RewardId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.RewardId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BoostUpdateEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BoostUpdateEvent) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BoostUpdateEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Duration != 0 {
+		i = encodeVarintEvents(dAtA, i, uint64(m.Duration))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.BoostId) > 0 {
+		i -= len(m.BoostId)
+		copy(dAtA[i:], m.BoostId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.BoostId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.RewardId) > 0 {
+		i -= len(m.RewardId)
+		copy(dAtA[i:], m.RewardId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.RewardId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BoostDistributionEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BoostDistributionEvent) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BoostDistributionEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Amount) > 0 {
+		i -= len(m.Amount)
+		copy(dAtA[i:], m.Amount)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Amount)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.BoostId) > 0 {
+		i -= len(m.BoostId)
+		copy(dAtA[i:], m.BoostId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.BoostId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.RewardId) > 0 {
+		i -= len(m.RewardId)
+		copy(dAtA[i:], m.RewardId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.RewardId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BoostClaimEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BoostClaimEvent) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BoostClaimEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Amount) > 0 {
+		i -= len(m.Amount)
+		copy(dAtA[i:], m.Amount)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Amount)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.BoostId) > 0 {
+		i -= len(m.BoostId)
+		copy(dAtA[i:], m.BoostId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.BoostId)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.RewardId) > 0 {
+		i -= len(m.RewardId)
+		copy(dAtA[i:], m.RewardId)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.RewardId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintEvents(dAtA []byte, offset int, v uint64) int {
 	offset -= sovEvents(v)
 	base := offset
@@ -1443,6 +1956,112 @@ func (m *TradingRewardDistributionEvent) Size() (n int) {
 			l = len(s)
 			n += 1 + l + sovEvents(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *BoostCreateEvent) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.RewardId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.BoostId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.DailyAmount)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if m.Days != 0 {
+		n += 1 + sovEvents(uint64(m.Days))
+	}
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *BoostUpdateEvent) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.RewardId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.BoostId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if m.Duration != 0 {
+		n += 1 + sovEvents(uint64(m.Duration))
+	}
+	return n
+}
+
+func (m *BoostDistributionEvent) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.RewardId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.BoostId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Amount)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *BoostClaimEvent) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.RewardId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.BoostId)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Amount)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
 	}
 	return n
 }
@@ -2959,6 +3578,756 @@ func (m *TradingRewardDistributionEvent) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Winners = append(m.Winners, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BoostCreateEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BoostCreateEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BoostCreateEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RewardId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BoostId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BoostId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DailyAmount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DailyAmount = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Days", wireType)
+			}
+			m.Days = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Days |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BoostUpdateEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BoostUpdateEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BoostUpdateEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RewardId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BoostId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BoostId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Duration", wireType)
+			}
+			m.Duration = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Duration |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BoostDistributionEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BoostDistributionEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BoostDistributionEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RewardId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BoostId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BoostId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BoostClaimEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BoostClaimEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BoostClaimEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RewardId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BoostId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BoostId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

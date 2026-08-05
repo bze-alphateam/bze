@@ -25,6 +25,8 @@ service Msg {
   rpc DistributeStakingRewards (MsgDistributeStakingRewards) returns (MsgDistributeStakingRewardsResponse);
   rpc CreateTradingReward      (MsgCreateTradingReward     ) returns (MsgCreateTradingRewardResponse     );
   rpc ActivateTradingReward    (MsgActivateTradingReward   ) returns (MsgActivateTradingRewardResponse   );
+  rpc CreateBoost              (MsgCreateBoost             ) returns (MsgCreateBoostResponse             );
+  rpc UpdateBoost              (MsgUpdateBoost             ) returns (MsgUpdateBoostResponse             );
 }
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
@@ -133,4 +135,32 @@ message MsgActivateTradingReward {
 }
 
 message MsgActivateTradingRewardResponse {}
+
+// MsgCreateBoost creates a boost on top of a staking reward.
+message MsgCreateBoost {
+  option           (amino.name) = "bze/x/rewards/MsgCreateBoost";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator      = 1;
+  string reward_id    = 2;
+  string denom        = 3;
+  string daily_amount = 4;
+  string days         = 5;
+}
+
+message MsgCreateBoostResponse {
+  string boost_id = 1;
+}
+
+// MsgUpdateBoost extends an existing boost's schedule by the given number of
+// days, escrowing the extra budget. Shaped after MsgUpdateStakingReward.
+message MsgUpdateBoost {
+  option           (amino.name) = "bze/x/rewards/MsgUpdateBoost";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator   = 1;
+  string reward_id = 2;
+  string boost_id  = 3;
+  string days      = 4;
+}
+
+message MsgUpdateBoostResponse {}
 

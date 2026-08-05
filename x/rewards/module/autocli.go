@@ -72,6 +72,24 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query all-pending-unlock-participants",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
+				{
+					RpcMethod:      "Boost",
+					Use:            "boost [reward-id] [boost-id]",
+					Short:          "Query a single boost of a staking reward",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reward_id"}, {ProtoField: "boost_id"}},
+				},
+				{
+					RpcMethod:      "RewardBoosts",
+					Use:            "reward-boosts [reward-id]",
+					Short:          "Query all boosts attached to a staking reward",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reward_id"}},
+				},
+				{
+					RpcMethod:      "AllBoosts",
+					Use:            "all-boosts",
+					Short:          "Query all boosts",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
 
 				// this line is used by ignite scaffolding # autocli/query
 			},
@@ -125,6 +143,18 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:            "create-trading-reward [prize-amount] [prize-denom] [duration] [market-id] [slots]",
 					Short:          "Send a create-trading-reward tx",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "prize_amount"}, {ProtoField: "prize_denom"}, {ProtoField: "duration"}, {ProtoField: "market_id"}, {ProtoField: "slots"}},
+				},
+				{
+					RpcMethod:      "CreateBoost",
+					Use:            "create-boost [reward-id] [denom] [daily-amount] [days]",
+					Short:          "Send a create-boost tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reward_id"}, {ProtoField: "denom"}, {ProtoField: "daily_amount"}, {ProtoField: "days"}},
+				},
+				{
+					RpcMethod:      "UpdateBoost",
+					Use:            "update-boost [reward-id] [boost-id] [days]",
+					Short:          "Send an update-boost tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reward_id"}, {ProtoField: "boost_id"}, {ProtoField: "days"}},
 				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},

@@ -8,6 +8,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "bze/rewards/params.proto";
 import "bze/rewards/store.proto";
+import "bze/rewards/boost.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/rewards/types";
 
@@ -71,7 +72,25 @@ service Query {
   // Queries a list of AllPendingUnlockParticipants items.
   rpc AllPendingUnlockParticipants (QueryAllPendingUnlockParticipantsRequest) returns (QueryAllPendingUnlockParticipantsResponse) {
     option (google.api.http).get = "/bze/rewards/all_pending_unlock_participants";
-  
+
+  }
+
+  // Queries a single boost of a staking reward.
+  rpc Boost (QueryBoostRequest) returns (QueryBoostResponse) {
+    option (google.api.http).get = "/bze/rewards/boost/{reward_id}/{boost_id}";
+
+  }
+
+  // Queries all boosts attached to a staking reward.
+  rpc RewardBoosts (QueryRewardBoostsRequest) returns (QueryRewardBoostsResponse) {
+    option (google.api.http).get = "/bze/rewards/reward_boosts/{reward_id}";
+
+  }
+
+  // Queries a list of all boosts.
+  rpc AllBoosts (QueryAllBoostsRequest) returns (QueryAllBoostsResponse) {
+    option (google.api.http).get = "/bze/rewards/all_boosts";
+
   }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -161,5 +180,31 @@ message QueryAllPendingUnlockParticipantsRequest {
 message QueryAllPendingUnlockParticipantsResponse {
   repeated PendingUnlockParticipant list = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryBoostRequest {
+  string reward_id = 1;
+  string boost_id  = 2;
+}
+
+message QueryBoostResponse {
+  Boost boost = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryRewardBoostsRequest {
+  string reward_id = 1;
+}
+
+message QueryRewardBoostsResponse {
+  repeated Boost list = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllBoostsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllBoostsResponse {
+  repeated Boost                                  list       = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 

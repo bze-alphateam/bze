@@ -13,10 +13,16 @@ var (
 	KeyCreateTradingRewardFee          = []byte("CreateTradingRewardFee")
 	KeyCreateStakingRewardFee          = []byte("CreateStakingRewardFee")
 	DefaultCreateRewardFee    sdk.Coin = sdk.NewInt64Coin("ubze", 25_000_000000)
+	// DefaultCreateBoostFee is the default fee to create a boost — 25,000 BZE,
+	// same as the staking/trading reward creation fee.
+	DefaultCreateBoostFee sdk.Coin = sdk.NewInt64Coin("ubze", 25_000_000000)
 )
 
 const (
 	DefaultExtraGasForExitStake uint64 = 1_000_000
+	// DefaultMaxBoostsPerReward is the default cap on concurrently existing boost
+	// records per reward.
+	DefaultMaxBoostsPerReward uint32 = 10
 )
 
 // ParamKeyTable the param key table for launch module
@@ -39,11 +45,15 @@ func NewParams(
 
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
-	return NewParams(
+	p := NewParams(
 		DefaultCreateRewardFee,
 		DefaultCreateRewardFee,
 		DefaultExtraGasForExitStake,
 	)
+	p.CreateBoostFee = DefaultCreateBoostFee
+	p.MaxBoostsPerReward = DefaultMaxBoostsPerReward
+
+	return p
 }
 
 // ParamSetPairs get the params.ParamSet
@@ -65,6 +75,14 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateExtraGasForExitStake(p.ExtraGasForExitStake); err != nil {
+		return err
+	}
+
+	if err := validateCreateBoostFee(p.CreateBoostFee); err != nil {
+		return err
+	}
+
+	if err := validateMaxBoostsPerReward(p.MaxBoostsPerReward); err != nil {
 		return err
 	}
 
@@ -104,6 +122,34 @@ func validateExtraGasForExitStake(v interface{}) error {
 	_, ok := v.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)
+	}
+
+	return nil
+}
+
+// validateCreateBoostFee validates the CreateBoostFee param
+func validateCreateBoostFee(v interface{}) error {
+	createBoostFee, ok := v.(sdk.Coin)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
+	}
+
+	if !createBoostFee.IsValid() {
+		return fmt.Errorf("invalid CreateBoostFee: %s", createBoostFee)
+	}
+
+	return nil
+}
+
+// validateMaxBoostsPerReward validates the MaxBoostsPerReward param
+func validateMaxBoostsPerReward(v interface{}) error {
+	maxBoostsPerReward, ok := v.(uint32)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
+	}
+
+	if maxBoostsPerReward == 0 {
+		return fmt.Errorf("invalid MaxBoostsPerReward: must be greater than 0")
 	}
 
 	return nil
