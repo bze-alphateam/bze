@@ -317,7 +317,8 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 		if hookErr := k.beforeStakingRewardRemoval(ctx, stakingReward.RewardId); hookErr != nil {
 			k.Logger().Info("staking reward removal suppressed by hook", "reward_id", stakingReward.RewardId, "reason", hookErr.Error())
 		} else {
-			k.RemoveStakingReward(ctx, stakingReward.RewardId)
+			//Keeper qualifier: the plain call would resolve to the msgServer's RemoveStakingReward handler
+			k.Keeper.RemoveStakingReward(ctx, stakingReward.RewardId)
 			err = ctx.EventManager().EmitTypedEvent(
 				&types.StakingRewardFinishEvent{
 					RewardId: stakingReward.RewardId,
