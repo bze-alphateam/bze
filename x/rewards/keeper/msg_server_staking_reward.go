@@ -310,17 +310,23 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 	stakingReward.StakedAmount = remainingStakedAmount.String()
 	k.SetStakingReward(ctx, stakingReward)
 
-	//if this staking reward is finished (all funds were distributed and payouts executed) we should remove it
+	//if this staking reward is finished (all funds were distributed and payouts executed) we should remove it,
+	//unless a hook subscriber objects — then only the deletion is skipped (never the exit itself): the record
+	//stays behind harmlessly and its removal is retried on any later final exit
 	if remainingStakedAmount.IsZero() && stakingReward.Payouts >= stakingReward.Duration {
-		k.RemoveStakingReward(ctx, stakingReward.RewardId)
-		err = ctx.EventManager().EmitTypedEvent(
-			&types.StakingRewardFinishEvent{
-				RewardId: stakingReward.RewardId,
-			},
-		)
+		if hookErr := k.beforeStakingRewardRemoval(ctx, stakingReward.RewardId); hookErr != nil {
+			k.Logger().Info("staking reward removal suppressed by hook", "reward_id", stakingReward.RewardId, "reason", hookErr.Error())
+		} else {
+			k.RemoveStakingReward(ctx, stakingReward.RewardId)
+			err = ctx.EventManager().EmitTypedEvent(
+				&types.StakingRewardFinishEvent{
+					RewardId: stakingReward.RewardId,
+				},
+			)
 
-		if err != nil {
-			k.Logger().Error(err.Error())
+			if err != nil {
+				k.Logger().Error(err.Error())
+			}
 		}
 	}
 
