@@ -20,4 +20,7 @@ var (
 	ErrRewardAlreadyExists = sdkerrors.Register(ModuleName, 5010, "a reward is already running for this market")
 	ErrInvalidSigner       = sdkerrors.Register(ModuleName, 5011, "invalid signer")
 	ErrNoRewardsToClaim    = sdkerrors.Register(ModuleName, 5012, "no rewards available to claim")
+
+	ErrStakingRewardNotFinished = sdkerrors.Register(ModuleName, 5013, "staking reward is not finished")
+	ErrStakingRewardNotEmpty    = sdkerrors.Register(ModuleName, 5014, "staking reward still has staked funds: stakers must exit first")
 )
