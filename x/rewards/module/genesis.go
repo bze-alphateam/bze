@@ -105,7 +105,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.MarketIdTradingRewardIdList = k.GetAllMarketIdRewardId(ctx)
 
 	genesis.BoostList = k.GetAllBoosts(ctx)
-	genesis.BoostParticipantList = k.GetAllBoostParticipant(ctx)
+	genesis.BoostParticipantList = k.GetAllLiveBoostParticipant(ctx)
 	genesis.BoostCounter = k.GetBoostsCounter(ctx)
 	genesis.PendingTradingRewardExpirationList = k.GetAllPendingTradingRewardExpiration(ctx)
 	genesis.ActiveTradingRewardExpirationList = k.GetAllActiveTradingRewardExpiration(ctx)

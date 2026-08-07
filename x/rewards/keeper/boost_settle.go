@@ -20,6 +20,11 @@ import (
 //
 // It returns whether at least one boost paid out.
 func (k Keeper) settleBoosts(ctx sdk.Context, participant *types.StakingRewardParticipant) (bool, error) {
+	//lazy hygiene: entries referencing a cleaned-up boost are inert (ids are
+	//never reused, so they can never be misread) — drop them at the owner's
+	//next settle instead of paying for a dedicated GC pass
+	k.removeOrphanedBoostParticipants(ctx, participant.Address, participant.RewardId)
+
 	boosts := k.GetRewardBoosts(ctx, participant.RewardId)
 	if len(boosts) == 0 {
 		return false, nil
@@ -90,6 +95,71 @@ func (k Keeper) settleBoosts(ctx sdk.Context, participant *types.StakingRewardPa
 	}
 
 	return paid, nil
+}
+
+// sweepBoostParticipant settles ONE boost for one participant during a
+// cleanup sweep. Unlike settleBoosts it ALWAYS stamps the entry to the
+// boost's final accumulator, including on zero-truncated payouts: the record
+// is about to be deleted, so sub-unit remainders become dust (same as the
+// base exit's dust semantics). Entries are stamped, never deleted — deleting
+// one while the record still exists would let the swept user re-settle via
+// claim with S0 = 0 and be paid again in full.
+func (k Keeper) sweepBoostParticipant(ctx sdk.Context, boost types.Boost, sFinal math.LegacyDec, address string) error {
+	participant, found := k.GetStakingRewardParticipant(ctx, address, boost.RewardId)
+	if !found {
+		//defensive: index entries exist only for live participants
+		return nil
+	}
+
+	amount, err := math.LegacyNewDecFromStr(participant.Amount)
+	if err != nil {
+		return err
+	}
+
+	s0 := math.LegacyZeroDec()
+	if entry, entryFound := k.GetBoostParticipant(ctx, address, boost.RewardId, boost.Id); entryFound {
+		s0, err = math.LegacyNewDecFromStr(entry.JoinedAt)
+		if err != nil {
+			return err
+		}
+	}
+
+	pending := amount.Mul(sFinal.Sub(s0)).TruncateInt()
+	if pending.IsPositive() {
+		acc, err := sdk.AccAddressFromBech32(address)
+		if err != nil {
+			return err
+		}
+
+		toSend := sdk.NewCoin(boost.Denom, pending)
+		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, acc, sdk.NewCoins(toSend))
+		if err != nil {
+			return err
+		}
+
+		err = ctx.EventManager().EmitTypedEvent(
+			&types.BoostClaimEvent{
+				RewardId: boost.RewardId,
+				BoostId:  boost.Id,
+				Denom:    boost.Denom,
+				Address:  address,
+				Amount:   pending.String(),
+			},
+		)
+
+		if err != nil {
+			k.Logger().Error(err.Error())
+		}
+	}
+
+	k.SetBoostParticipant(ctx, types.BoostParticipant{
+		Address:  address,
+		RewardId: boost.RewardId,
+		BoostId:  boost.Id,
+		JoinedAt: boost.DistributedStake,
+	})
+
+	return nil
 }
 
 // stampBoostParticipants writes an entry (joined_at = current accumulator)

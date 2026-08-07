@@ -23,6 +23,7 @@ func Migrate(
 
 	params.CreateBoostFee = types.DefaultCreateBoostFee
 	params.MaxBoostsPerReward = types.DefaultMaxBoostsPerReward
+	params.CleanupBatchSize = types.DefaultCleanupBatchSize
 
 	if err := params.Validate(); err != nil {
 		return err

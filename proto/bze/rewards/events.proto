@@ -100,3 +100,10 @@ message BoostClaimEvent {
   string address   = 4;
   string amount    = 5;
 }
+
+// BoostCleanupEvent is emitted when a cleanup sweep completes and the boost
+// record is deleted.
+message BoostCleanupEvent {
+  string reward_id = 1;
+  string boost_id  = 2;
+}

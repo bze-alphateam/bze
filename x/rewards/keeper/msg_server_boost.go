@@ -173,6 +173,12 @@ func (k msgServer) UpdateBoost(goCtx context.Context, msg *types.MsgUpdateBoost)
 		return nil, errors.Wrapf(types.ErrInvalidBoostDays, "the extended schedule exceeds the parent reward's remaining payouts")
 	}
 
+	//a stale cursor on a re-armed boost would make a later cleanup resume
+	//mid-way, skip the already-swept participants' new accrual segment and
+	//then delete the record — silent loss. Restart the sweep instead:
+	//already-stamped participants just settle the delta (stamps only advance)
+	boost.CleanupCursor = ""
+
 	k.SetBoost(ctx, boost)
 
 	err = ctx.EventManager().EmitTypedEvent(
@@ -188,4 +194,73 @@ func (k msgServer) UpdateBoost(goCtx context.Context, msg *types.MsgUpdateBoost)
 	}
 
 	return &types.MsgUpdateBoostResponse{}, nil
+}
+
+// CleanupBoost pays out a finished boost's remaining entitlements in batches
+// and deletes its record when the sweep completes, freeing a boost slot while
+// the parent reward is still running. Permissionless and fee-free: gas is the
+// payment, and a fee would disincentivize the cleanup the module wants.
+func (k msgServer) CleanupBoost(goCtx context.Context, msg *types.MsgCleanupBoost) (*types.MsgCleanupBoostResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if msg == nil {
+		return nil, sdkerrors.ErrInvalidRequest
+	}
+
+	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
+		return nil, err
+	}
+
+	boost, found := k.GetBoost(ctx, msg.RewardId, msg.BoostId)
+	if !found {
+		return nil, errors.Wrapf(types.ErrInvalidBoostId, "boost with provided id not found")
+	}
+
+	//an active boost may never be cleaned up: deleting it would strand its
+	//future accrual and escrow
+	if boost.Payouts < boost.Duration {
+		return nil, errors.Wrapf(types.ErrBoostNotFinished, "the boost still has scheduled payouts")
+	}
+
+	//the param is the ceiling, never the caller: an unclamped huge limit
+	//would run out of block gas and revert, wasting the whole call's work
+	limit := k.GetParams(ctx).CleanupBatchSize
+	if msg.Limit != 0 && msg.Limit < limit {
+		limit = msg.Limit
+	}
+
+	sFinal, err := math.LegacyNewDecFromStr(boost.DistributedStake)
+	if err != nil {
+		return nil, err
+	}
+
+	addresses := k.GetStakingRewardParticipantIndexAddresses(ctx, msg.RewardId, boost.CleanupCursor, limit)
+	for _, address := range addresses {
+		if err = k.sweepBoostParticipant(ctx, boost, sFinal, address); err != nil {
+			return nil, err
+		}
+	}
+
+	//fewer addresses than asked for means the iteration is exhausted; an
+	//exact-limit batch ending on the last entry completes on the next call
+	//(a no-op success) — idempotent by construction
+	completed := uint32(len(addresses)) < limit
+	if completed {
+		k.RemoveBoost(ctx, boost.RewardId, boost.Id)
+
+		err = ctx.EventManager().EmitTypedEvent(
+			&types.BoostCleanupEvent{
+				RewardId: boost.RewardId,
+				BoostId:  boost.Id,
+			},
+		)
+
+		if err != nil {
+			k.Logger().Error(err.Error())
+		}
+	} else {
+		boost.CleanupCursor = addresses[len(addresses)-1]
+		k.SetBoost(ctx, boost)
+	}
+
+	return &types.MsgCleanupBoostResponse{Processed: uint32(len(addresses)), Completed: completed}, nil
 }

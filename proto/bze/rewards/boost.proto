@@ -15,6 +15,7 @@ message Boost {
   uint32 payouts           = 6; // days already distributed; finished when == duration
   string distributed_stake = 7; // LegacyDec accumulator (S_boost) — never resets
   string creator           = 8; // audit/events only — no special rights
+  string cleanup_cursor    = 9; // last address swept by MsgCleanupBoost; "" = not started (reset by extension)
 }
 
 // BoostParticipant records the accumulator snapshot (S0) for one (user, boost)
