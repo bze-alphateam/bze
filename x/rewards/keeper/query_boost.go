@@ -65,8 +65,9 @@ func (k Keeper) AllBoosts(goCtx context.Context, req *types.QueryAllBoostsReques
 // BoostCleanupStatus query performs. The index grows with (cheap) JoinStaking
 // txs, so an uncapped count would let anyone turn the public query into O(n)
 // node work. A response with Remaining == MaxCleanupStatusRemaining means
-// "this many or more".
-const MaxCleanupStatusRemaining uint64 = 10_000
+// "this many or more" — 1k still maps out ten default-size sweep batches of
+// progress, plenty for a client pacing its cleanup txs.
+const MaxCleanupStatusRemaining uint64 = 1_000
 
 // BoostCleanupStatus reports a boost's cleanup progress: the persisted cursor
 // and how many participant index entries remain after it (capped at
