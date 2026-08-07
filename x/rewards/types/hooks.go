@@ -20,11 +20,7 @@ type StakingRewardHooks interface {
 	AfterStakingRewardExit(ctx sdk.Context, rewardId, address string, unstakedAmount math.Int, stakingDenom string) error
 
 	// BeforeStakingRewardRemoval - called before a staking reward record is
-	// deleted; a non-nil error suppresses only the deletion, keeping the
-	// record alive — it must NOT fail the surrounding transaction, so a veto
-	// never blocks a participant from exiting and withdrawing their stake.
-	// A kept record is harmless (distribution skips empty/finished rewards)
-	// and deletion is retried on any later final exit.
+	// deleted; a non-nil error stops the deletion, keeping the record alive.
 	BeforeStakingRewardRemoval(ctx sdk.Context, rewardId string) error
 }
 
