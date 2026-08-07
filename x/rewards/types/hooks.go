@@ -8,7 +8,7 @@ import (
 // StakingRewardHooks - event hooks called by the rewards module when a user's
 // staking reward participation changes. Hooks run synchronously in the tx that
 // changed the participation, after the module's own state writes. A non-nil
-// error aborts the whole transaction.
+// error from the After* hooks aborts the whole transaction.
 type StakingRewardHooks interface {
 	// AfterStakingRewardJoin - the address became a new participant of the reward.
 	AfterStakingRewardJoin(ctx sdk.Context, rewardId, address string, amount math.Int, stakingDenom string) error
@@ -20,8 +20,11 @@ type StakingRewardHooks interface {
 	AfterStakingRewardExit(ctx sdk.Context, rewardId, address string, unstakedAmount math.Int, stakingDenom string) error
 
 	// BeforeStakingRewardRemoval - called before a staking reward record is
-	// deleted; a non-nil error aborts the transaction and leaves the reward
-	// (and all other state) intact.
+	// deleted; a non-nil error suppresses only the deletion, keeping the
+	// record alive — it must NOT fail the surrounding transaction, so a veto
+	// never blocks a participant from exiting and withdrawing their stake.
+	// A kept record is harmless (distribution skips empty/finished rewards)
+	// and deletion is retried on any later final exit.
 	BeforeStakingRewardRemoval(ctx sdk.Context, rewardId string) error
 }
 

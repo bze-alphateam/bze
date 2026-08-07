@@ -25,13 +25,17 @@ type exitRecord struct {
 }
 
 // recordingStakingHooks records every hook call so tests can assert exactly
-// which hooks fired and with what arguments.
+// which hooks fired and with what arguments. removalErr is separate from err
+// because the removal hook's error has different semantics (suppresses the
+// deletion instead of aborting the tx) and must be testable while the After*
+// hooks keep returning nil.
 type recordingStakingHooks struct {
-	joins     []joinRecord
-	increases []increaseRecord
-	exits     []exitRecord
-	removals  []string
-	err       error
+	joins      []joinRecord
+	increases  []increaseRecord
+	exits      []exitRecord
+	removals   []string
+	err        error
+	removalErr error
 }
 
 func (r *recordingStakingHooks) AfterStakingRewardJoin(_ sdk.Context, rewardId, address string, amount math.Int, stakingDenom string) error {
@@ -51,7 +55,7 @@ func (r *recordingStakingHooks) AfterStakingRewardExit(_ sdk.Context, rewardId, 
 
 func (r *recordingStakingHooks) BeforeStakingRewardRemoval(_ sdk.Context, rewardId string) error {
 	r.removals = append(r.removals, rewardId)
-	return r.err
+	return r.removalErr
 }
 
 // registerHooks registers the recording hooks on the suite keeper and rebuilds
@@ -406,32 +410,90 @@ func (suite *IntegrationTestSuite) seedFinishedRewardWithLastParticipant(rewardI
 	})
 }
 
-// TestStakingRewardHooks_RemovalVetoBlocksFinalExit: a subscriber error from
-// BeforeStakingRewardRemoval fails the final exit before any mutation — the
-// reward, the participant and the unlock queue are untouched and no coins
-// move (the mock would panic on an unexpected transfer).
-func (suite *IntegrationTestSuite) TestStakingRewardHooks_RemovalVetoBlocksFinalExit() {
+// TestStakingRewardHooks_RemovalVetoSkipsDeletionOnly: a subscriber error from
+// BeforeStakingRewardRemoval suppresses only the record deletion — the last
+// participant still exits and gets their stake back, the participant record is
+// removed, no finish event is emitted, and the reward record stays behind with
+// zero stake.
+func (suite *IntegrationTestSuite) TestStakingRewardHooks_RemovalVetoSkipsDeletionOnly() {
 	creator := sdk.AccAddress("creator")
 	hooks := suite.registerHooks()
-	hooks.err = fmt.Errorf("reward is pinned")
+	hooks.removalErr = fmt.Errorf("reward is pinned")
 	suite.seedFinishedRewardWithLastParticipant("hook-removal-veto", creator)
+
+	//lock = 0 -> the stake is returned immediately despite the veto
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, creator, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500)))).
+		Return(nil).
+		Times(1)
 
 	msg := &types.MsgExitStaking{Creator: creator.String(), RewardId: "hook-removal-veto"}
 	_, err := suite.msgServer.ExitStaking(suite.ctx, msg)
-	suite.Require().ErrorContains(err, "reward is pinned")
+	suite.Require().NoError(err)
 
-	//the veto fired for this reward and nothing else did
+	//the veto was consulted and the exit hook still fired
 	suite.Require().Equal([]string{"hook-removal-veto"}, hooks.removals)
-	suite.Require().Empty(hooks.exits)
+	suite.Require().Len(hooks.exits, 1)
 
-	//all SR state is intact
+	//the exit fully happened: participant gone, stake zeroed
+	_, found := suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), "hook-removal-veto")
+	suite.Require().False(found)
+
+	//only the deletion was suppressed: the record survives, no finish event
 	reward, found := suite.k.GetStakingReward(suite.ctx, "hook-removal-veto")
 	suite.Require().True(found)
-	suite.Require().Equal("500", reward.StakedAmount)
-	participant, found := suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), "hook-removal-veto")
+	suite.Require().Equal("0", reward.StakedAmount)
+	for _, event := range suite.ctx.EventManager().Events() {
+		suite.Require().NotEqual("bze.rewards.StakingRewardFinishEvent", event.Type)
+	}
+}
+
+// TestStakingRewardHooks_SuppressedRemovalRetriesOnNextFinalExit: a record kept
+// alive by a veto is deleted by the next final exit once the subscriber no
+// longer objects — the deletion self-heals through the ordinary join/exit path.
+func (suite *IntegrationTestSuite) TestStakingRewardHooks_SuppressedRemovalRetriesOnNextFinalExit() {
+	creator := sdk.AccAddress("creator")
+	hooks := suite.registerHooks()
+	hooks.removalErr = fmt.Errorf("reward is pinned")
+	suite.seedFinishedRewardWithLastParticipant("hook-removal-retry", creator)
+
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, creator, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500)))).
+		Return(nil).
+		Times(1)
+
+	_, err := suite.msgServer.ExitStaking(suite.ctx, &types.MsgExitStaking{Creator: creator.String(), RewardId: "hook-removal-retry"})
+	suite.Require().NoError(err)
+	_, found := suite.k.GetStakingReward(suite.ctx, "hook-removal-retry")
 	suite.Require().True(found)
-	suite.Require().Equal("500", participant.Amount)
-	suite.Require().Empty(suite.k.GetAllPendingUnlockParticipant(suite.ctx))
+
+	//the subscriber stops objecting (e.g. the reward got unpinned)
+	hooks.removalErr = nil
+
+	//a later participant joins the finished record and exits again
+	joiner := sdk.AccAddress("joiner")
+	suite.bank.EXPECT().
+		SpendableCoins(suite.ctx, joiner).
+		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(10000)))).
+		Times(1)
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(suite.ctx, joiner, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500)))).
+		Return(nil).
+		Times(1)
+	_, err = suite.msgServer.JoinStaking(suite.ctx, &types.MsgJoinStaking{Creator: joiner.String(), RewardId: "hook-removal-retry", Amount: "500"})
+	suite.Require().NoError(err)
+
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, joiner, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500)))).
+		Return(nil).
+		Times(1)
+	_, err = suite.msgServer.ExitStaking(suite.ctx, &types.MsgExitStaking{Creator: joiner.String(), RewardId: "hook-removal-retry"})
+	suite.Require().NoError(err)
+
+	//this time the removal went through
+	suite.Require().Equal([]string{"hook-removal-retry", "hook-removal-retry"}, hooks.removals)
+	_, found = suite.k.GetStakingReward(suite.ctx, "hook-removal-retry")
+	suite.Require().False(found)
 }
 
 // TestStakingRewardHooks_RemovalAllowedOnFinalExit: a nil-returning
