@@ -50,13 +50,16 @@ func (k Keeper) GetStakingRewardParticipantIndexAddresses(ctx sdk.Context, rewar
 // CountStakingRewardParticipantIndexEntries returns how many of the reward's
 // index entries sort strictly after afterAddress ("" = all of them) — the
 // cleanup sweep's remaining work, computed node-side for the status query.
-func (k Keeper) CountStakingRewardParticipantIndexEntries(ctx sdk.Context, rewardId, afterAddress string) (count uint64) {
+// Counting stops at maxCount so a public query can never be made to iterate
+// an attacker-grown index end to end; a result equal to maxCount therefore
+// means "maxCount or more".
+func (k Keeper) CountStakingRewardParticipantIndexEntries(ctx sdk.Context, rewardId, afterAddress string, maxCount uint64) (count uint64) {
 	store := k.getPrefixedStore(ctx, types.StakingRewardParticipantIndexRewardPrefix(rewardId))
 
 	iterator := store.Iterator(participantIndexExclusiveStart(afterAddress), nil)
 	defer iterator.Close()
 
-	for ; iterator.Valid(); iterator.Next() {
+	for ; iterator.Valid() && count < maxCount; iterator.Next() {
 		count++
 	}
 

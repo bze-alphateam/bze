@@ -61,10 +61,18 @@ func (k Keeper) AllBoosts(goCtx context.Context, req *types.QueryAllBoostsReques
 	return &types.QueryAllBoostsResponse{List: boosts, Pagination: pageRes}, nil
 }
 
+// MaxCleanupStatusRemaining caps the counting work a single
+// BoostCleanupStatus query performs. The index grows with (cheap) JoinStaking
+// txs, so an uncapped count would let anyone turn the public query into O(n)
+// node work. A response with Remaining == MaxCleanupStatusRemaining means
+// "this many or more".
+const MaxCleanupStatusRemaining uint64 = 10_000
+
 // BoostCleanupStatus reports a boost's cleanup progress: the persisted cursor
-// and how many participant index entries remain after it. The count lives
-// here and not in the tx response because computing it on-chain would cost
-// O(remaining) gas on every cleanup call.
+// and how many participant index entries remain after it (capped at
+// MaxCleanupStatusRemaining — the cap value means "this many or more"). The
+// count lives here and not in the tx response because computing it on-chain
+// would cost O(remaining) gas on every cleanup call.
 func (k Keeper) BoostCleanupStatus(goCtx context.Context, req *types.QueryBoostCleanupStatusRequest) (*types.QueryBoostCleanupStatusResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -77,7 +85,7 @@ func (k Keeper) BoostCleanupStatus(goCtx context.Context, req *types.QueryBoostC
 	}
 
 	return &types.QueryBoostCleanupStatusResponse{
-		Remaining: k.CountStakingRewardParticipantIndexEntries(ctx, req.RewardId, boost.CleanupCursor),
+		Remaining: k.CountStakingRewardParticipantIndexEntries(ctx, req.RewardId, boost.CleanupCursor, MaxCleanupStatusRemaining),
 		Cursor:    boost.CleanupCursor,
 	}, nil
 }
