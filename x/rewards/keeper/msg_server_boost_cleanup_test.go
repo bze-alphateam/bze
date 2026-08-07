@@ -486,7 +486,7 @@ func (suite *IntegrationTestSuite) TestBoostSecurity_EscrowConservationWithClean
 	}
 
 	//every piece of boost state is gone: the record via cleanup, the stamped
-	//entries via the exits' prefix delete
+	//entries via the exits' bounded orphan purge and live-stamp deletes
 	suite.Require().Empty(suite.k.GetAllBoosts(suite.ctx))
 	suite.Require().Empty(suite.k.GetAllBoostParticipant(suite.ctx))
 

@@ -27,29 +27,39 @@ func (k Keeper) GetBoostParticipant(ctx sdk.Context, address, rewardId, boostId 
 	return val, true
 }
 
-// RemoveRewardBoostParticipants removes all of an address' boost participant
-// entries for one reward (prefix delete, bounded by the boosts-per-reward cap)
-func (k Keeper) RemoveRewardBoostParticipants(ctx sdk.Context, address, rewardId string) {
+// RemoveBoostParticipant removes one (address, reward, boost) stamp by exact
+// key. Exit deletes its live-boost stamps this way — a blind prefix delete
+// would also walk every orphaned stamp accumulated since the address' last
+// settle, making exit gas grow with the reward's cleanup history.
+func (k Keeper) RemoveBoostParticipant(ctx sdk.Context, address, rewardId, boostId string) {
 	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.BoostParticipantKeyPrefix))
-	iterator := storetypes.KVStorePrefixIterator(store, types.BoostParticipantByRewardPrefix(address, rewardId))
-
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		store.Delete(iterator.Key())
-	}
+	store.Delete(types.BoostParticipantKey(address, rewardId, boostId))
 }
+
+// MaxOrphanedBoostParticipantScan bounds the work one settle spends reaping
+// orphaned stamps. Every cleanup cycle stamps all indexed participants and
+// then deletes the boost record, so a dormant address accumulates one orphan
+// per cycle without bound; an unbounded purge would make that user's next
+// claim/join/exit cost gas linear in history — past the block gas limit it
+// would lock them out entirely. Partial purges are safe (orphans are inert)
+// and converge: live stamps never exceed the boosts-per-reward cap, so each
+// pass reaps at least scan-cap minus that many orphans while any remain.
+const MaxOrphanedBoostParticipantScan = 100
 
 // removeOrphanedBoostParticipants deletes the address' participant entries
 // for one reward that reference boosts which no longer exist (cleaned up).
-// Bounded by the boosts-per-reward cap, like the exit prefix delete.
+// At most MaxOrphanedBoostParticipantScan entries are scanned per call;
+// leftovers wait for the owner's next settle, and any residue left behind by
+// the owner's exit is inert (boost ids are never reused) and excluded from
+// genesis exports.
 func (k Keeper) removeOrphanedBoostParticipants(ctx sdk.Context, address, rewardId string) {
 	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.BoostParticipantKeyPrefix))
 	iterator := storetypes.KVStorePrefixIterator(store, types.BoostParticipantByRewardPrefix(address, rewardId))
 
 	// collect first: the store must not be mutated while the iterator is open
 	var orphaned [][]byte
-	for ; iterator.Valid(); iterator.Next() {
+	for scanned := 0; iterator.Valid() && scanned < MaxOrphanedBoostParticipantScan; iterator.Next() {
+		scanned++
 		var val types.BoostParticipant
 		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		if _, found := k.GetBoost(ctx, val.RewardId, val.BoostId); !found {
