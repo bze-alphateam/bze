@@ -36,11 +36,11 @@ func (suite *IntegrationTestSuite) finishEventEmitted() bool {
 	return false
 }
 
-func (suite *IntegrationTestSuite) TestRemoveStakingReward_NoHooksSet() {
+func (suite *IntegrationTestSuite) TestDeleteStakingReward_NoHooksSet() {
 	suite.seedStrandedReward("remove-no-hooks")
 
-	msg := types.NewMsgRemoveStakingReward(sdk.AccAddress("janitor").String(), "remove-no-hooks")
-	_, err := suite.msgServer.RemoveStakingReward(suite.ctx, msg)
+	msg := types.NewMsgDeleteStakingReward(sdk.AccAddress("janitor").String(), "remove-no-hooks")
+	_, err := suite.msgServer.DeleteStakingReward(suite.ctx, msg)
 	suite.Require().NoError(err)
 
 	_, found := suite.k.GetStakingReward(suite.ctx, "remove-no-hooks")
@@ -48,12 +48,12 @@ func (suite *IntegrationTestSuite) TestRemoveStakingReward_NoHooksSet() {
 	suite.Require().True(suite.finishEventEmitted())
 }
 
-func (suite *IntegrationTestSuite) TestRemoveStakingReward_HookObservesRemoval() {
+func (suite *IntegrationTestSuite) TestDeleteStakingReward_HookObservesRemoval() {
 	hooks := suite.registerHooks()
 	suite.seedStrandedReward("remove-hook-ok")
 
-	msg := types.NewMsgRemoveStakingReward(sdk.AccAddress("janitor").String(), "remove-hook-ok")
-	_, err := suite.msgServer.RemoveStakingReward(suite.ctx, msg)
+	msg := types.NewMsgDeleteStakingReward(sdk.AccAddress("janitor").String(), "remove-hook-ok")
+	_, err := suite.msgServer.DeleteStakingReward(suite.ctx, msg)
 	suite.Require().NoError(err)
 
 	suite.Require().Equal([]string{"remove-hook-ok"}, hooks.removals)
@@ -62,16 +62,16 @@ func (suite *IntegrationTestSuite) TestRemoveStakingReward_HookObservesRemoval()
 	suite.Require().True(suite.finishEventEmitted())
 }
 
-// TestRemoveStakingReward_HookVetoFailsMsg: unlike ExitStaking (where a veto
+// TestDeleteStakingReward_HookVetoFailsMsg: unlike ExitStaking (where a veto
 // suppresses only the deletion), here the veto fails the whole message —
 // an explicit error is more informative for the janitor caller.
-func (suite *IntegrationTestSuite) TestRemoveStakingReward_HookVetoFailsMsg() {
+func (suite *IntegrationTestSuite) TestDeleteStakingReward_HookVetoFailsMsg() {
 	hooks := suite.registerHooks()
 	hooks.removalErr = fmt.Errorf("reward is pinned")
 	suite.seedStrandedReward("remove-hook-veto")
 
-	msg := types.NewMsgRemoveStakingReward(sdk.AccAddress("janitor").String(), "remove-hook-veto")
-	response, err := suite.msgServer.RemoveStakingReward(suite.ctx, msg)
+	msg := types.NewMsgDeleteStakingReward(sdk.AccAddress("janitor").String(), "remove-hook-veto")
+	response, err := suite.msgServer.DeleteStakingReward(suite.ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Nil(response)
 	suite.Require().Contains(err.Error(), "reward is pinned")
@@ -82,7 +82,7 @@ func (suite *IntegrationTestSuite) TestRemoveStakingReward_HookVetoFailsMsg() {
 	suite.Require().False(suite.finishEventEmitted())
 }
 
-func (suite *IntegrationTestSuite) TestRemoveStakingReward_NotFinished() {
+func (suite *IntegrationTestSuite) TestDeleteStakingReward_NotFinished() {
 	hooks := suite.registerHooks()
 	suite.k.SetStakingReward(suite.ctx, types.StakingReward{
 		RewardId:         "remove-not-finished",
@@ -97,8 +97,8 @@ func (suite *IntegrationTestSuite) TestRemoveStakingReward_NotFinished() {
 		DistributedStake: "0",
 	})
 
-	msg := types.NewMsgRemoveStakingReward(sdk.AccAddress("janitor").String(), "remove-not-finished")
-	_, err := suite.msgServer.RemoveStakingReward(suite.ctx, msg)
+	msg := types.NewMsgDeleteStakingReward(sdk.AccAddress("janitor").String(), "remove-not-finished")
+	_, err := suite.msgServer.DeleteStakingReward(suite.ctx, msg)
 	suite.Require().ErrorIs(err, types.ErrStakingRewardNotFinished)
 
 	suite.Require().Empty(hooks.removals)
@@ -106,13 +106,13 @@ func (suite *IntegrationTestSuite) TestRemoveStakingReward_NotFinished() {
 	suite.Require().True(found)
 }
 
-func (suite *IntegrationTestSuite) TestRemoveStakingReward_NotEmpty() {
+func (suite *IntegrationTestSuite) TestDeleteStakingReward_NotEmpty() {
 	staker := sdk.AccAddress("staker")
 	hooks := suite.registerHooks()
 	suite.seedFinishedRewardWithLastParticipant("remove-not-empty", staker)
 
-	msg := types.NewMsgRemoveStakingReward(sdk.AccAddress("janitor").String(), "remove-not-empty")
-	_, err := suite.msgServer.RemoveStakingReward(suite.ctx, msg)
+	msg := types.NewMsgDeleteStakingReward(sdk.AccAddress("janitor").String(), "remove-not-empty")
+	_, err := suite.msgServer.DeleteStakingReward(suite.ctx, msg)
 	suite.Require().ErrorIs(err, types.ErrStakingRewardNotEmpty)
 
 	suite.Require().Empty(hooks.removals)
@@ -124,17 +124,17 @@ func (suite *IntegrationTestSuite) TestRemoveStakingReward_NotEmpty() {
 	suite.Require().Equal("500", participant.Amount)
 }
 
-func (suite *IntegrationTestSuite) TestRemoveStakingReward_RewardNotFound() {
-	msg := types.NewMsgRemoveStakingReward(sdk.AccAddress("janitor").String(), "no-such-reward")
-	_, err := suite.msgServer.RemoveStakingReward(suite.ctx, msg)
+func (suite *IntegrationTestSuite) TestDeleteStakingReward_RewardNotFound() {
+	msg := types.NewMsgDeleteStakingReward(sdk.AccAddress("janitor").String(), "no-such-reward")
+	_, err := suite.msgServer.DeleteStakingReward(suite.ctx, msg)
 	suite.Require().ErrorIs(err, types.ErrInvalidRewardId)
 }
 
-// TestRemoveStakingReward_StrandThenClean: end-to-end regression of the state
+// TestDeleteStakingReward_StrandThenClean: end-to-end regression of the state
 // this message exists for — a removal veto at final exit strands the record,
 // the veto lifts, and the janitor message deletes it, finally emitting the
 // finish event the veto path withheld.
-func (suite *IntegrationTestSuite) TestRemoveStakingReward_StrandThenClean() {
+func (suite *IntegrationTestSuite) TestDeleteStakingReward_StrandThenClean() {
 	creator := sdk.AccAddress("creator")
 	hooks := suite.registerHooks()
 	hooks.removalErr = fmt.Errorf("reward is pinned")
@@ -157,8 +157,8 @@ func (suite *IntegrationTestSuite) TestRemoveStakingReward_StrandThenClean() {
 
 	//the subscriber stops objecting (e.g. the reward got unpinned) and anyone cleans up
 	hooks.removalErr = nil
-	msg := types.NewMsgRemoveStakingReward(sdk.AccAddress("janitor").String(), "strand-then-clean")
-	_, err = suite.msgServer.RemoveStakingReward(suite.ctx, msg)
+	msg := types.NewMsgDeleteStakingReward(sdk.AccAddress("janitor").String(), "strand-then-clean")
+	_, err = suite.msgServer.DeleteStakingReward(suite.ctx, msg)
 	suite.Require().NoError(err)
 
 	suite.Require().Equal([]string{"strand-then-clean", "strand-then-clean"}, hooks.removals)

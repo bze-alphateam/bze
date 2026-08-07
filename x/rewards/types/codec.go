@@ -33,7 +33,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgActivateTradingReward{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgRemoveStakingReward{},
+		&MsgDeleteStakingReward{},
 	)
 	// this line is used by starport scaffolding # 3
 

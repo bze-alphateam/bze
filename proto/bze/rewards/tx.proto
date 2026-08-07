@@ -25,7 +25,7 @@ service Msg {
   rpc DistributeStakingRewards (MsgDistributeStakingRewards) returns (MsgDistributeStakingRewardsResponse);
   rpc CreateTradingReward      (MsgCreateTradingReward     ) returns (MsgCreateTradingRewardResponse     );
   rpc ActivateTradingReward    (MsgActivateTradingReward   ) returns (MsgActivateTradingRewardResponse   );
-  rpc RemoveStakingReward      (MsgRemoveStakingReward     ) returns (MsgRemoveStakingRewardResponse     );
+  rpc DeleteStakingReward      (MsgDeleteStakingReward     ) returns (MsgDeleteStakingRewardResponse     );
 }
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
@@ -135,14 +135,14 @@ message MsgActivateTradingReward {
 
 message MsgActivateTradingRewardResponse {}
 
-// MsgRemoveStakingReward - permissionless cleanup of a finished, emptied
+// MsgDeleteStakingReward - permissionless cleanup of a finished, emptied
 // staking reward record whose deletion was previously suppressed by a hook.
-message MsgRemoveStakingReward {
-  option           (amino.name) = "bze/x/rewards/MsgRemoveStakingReward";
+message MsgDeleteStakingReward {
+  option           (amino.name) = "bze/x/rewards/MsgDeleteStakingReward";
   option (cosmos.msg.v1.signer) = "creator";
   string creator   = 1;
   string reward_id = 2;
 }
 
-message MsgRemoveStakingRewardResponse {}
+message MsgDeleteStakingRewardResponse {}
 

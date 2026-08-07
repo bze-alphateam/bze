@@ -6,16 +6,16 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ sdk.Msg = &MsgRemoveStakingReward{}
+var _ sdk.Msg = &MsgDeleteStakingReward{}
 
-func NewMsgRemoveStakingReward(creator string, rewardId string) *MsgRemoveStakingReward {
-	return &MsgRemoveStakingReward{
+func NewMsgDeleteStakingReward(creator string, rewardId string) *MsgDeleteStakingReward {
+	return &MsgDeleteStakingReward{
 		Creator:  creator,
 		RewardId: rewardId,
 	}
 }
 
-func (msg *MsgRemoveStakingReward) ValidateBasic() error {
+func (msg *MsgDeleteStakingReward) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)

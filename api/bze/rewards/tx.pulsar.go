@@ -8552,27 +8552,27 @@ func (x *fastReflection_MsgActivateTradingRewardResponse) ProtoMethods() *protoi
 }
 
 var (
-	md_MsgRemoveStakingReward           protoreflect.MessageDescriptor
-	fd_MsgRemoveStakingReward_creator   protoreflect.FieldDescriptor
-	fd_MsgRemoveStakingReward_reward_id protoreflect.FieldDescriptor
+	md_MsgDeleteStakingReward           protoreflect.MessageDescriptor
+	fd_MsgDeleteStakingReward_creator   protoreflect.FieldDescriptor
+	fd_MsgDeleteStakingReward_reward_id protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_bze_rewards_tx_proto_init()
-	md_MsgRemoveStakingReward = File_bze_rewards_tx_proto.Messages().ByName("MsgRemoveStakingReward")
-	fd_MsgRemoveStakingReward_creator = md_MsgRemoveStakingReward.Fields().ByName("creator")
-	fd_MsgRemoveStakingReward_reward_id = md_MsgRemoveStakingReward.Fields().ByName("reward_id")
+	md_MsgDeleteStakingReward = File_bze_rewards_tx_proto.Messages().ByName("MsgDeleteStakingReward")
+	fd_MsgDeleteStakingReward_creator = md_MsgDeleteStakingReward.Fields().ByName("creator")
+	fd_MsgDeleteStakingReward_reward_id = md_MsgDeleteStakingReward.Fields().ByName("reward_id")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgRemoveStakingReward)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgDeleteStakingReward)(nil)
 
-type fastReflection_MsgRemoveStakingReward MsgRemoveStakingReward
+type fastReflection_MsgDeleteStakingReward MsgDeleteStakingReward
 
-func (x *MsgRemoveStakingReward) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgRemoveStakingReward)(x)
+func (x *MsgDeleteStakingReward) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgDeleteStakingReward)(x)
 }
 
-func (x *MsgRemoveStakingReward) slowProtoReflect() protoreflect.Message {
+func (x *MsgDeleteStakingReward) slowProtoReflect() protoreflect.Message {
 	mi := &file_bze_rewards_tx_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -8584,43 +8584,43 @@ func (x *MsgRemoveStakingReward) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgRemoveStakingReward_messageType fastReflection_MsgRemoveStakingReward_messageType
-var _ protoreflect.MessageType = fastReflection_MsgRemoveStakingReward_messageType{}
+var _fastReflection_MsgDeleteStakingReward_messageType fastReflection_MsgDeleteStakingReward_messageType
+var _ protoreflect.MessageType = fastReflection_MsgDeleteStakingReward_messageType{}
 
-type fastReflection_MsgRemoveStakingReward_messageType struct{}
+type fastReflection_MsgDeleteStakingReward_messageType struct{}
 
-func (x fastReflection_MsgRemoveStakingReward_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgRemoveStakingReward)(nil)
+func (x fastReflection_MsgDeleteStakingReward_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgDeleteStakingReward)(nil)
 }
-func (x fastReflection_MsgRemoveStakingReward_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgRemoveStakingReward)
+func (x fastReflection_MsgDeleteStakingReward_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgDeleteStakingReward)
 }
-func (x fastReflection_MsgRemoveStakingReward_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgRemoveStakingReward
+func (x fastReflection_MsgDeleteStakingReward_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgDeleteStakingReward
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgRemoveStakingReward) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgRemoveStakingReward
+func (x *fastReflection_MsgDeleteStakingReward) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgDeleteStakingReward
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgRemoveStakingReward) Type() protoreflect.MessageType {
-	return _fastReflection_MsgRemoveStakingReward_messageType
+func (x *fastReflection_MsgDeleteStakingReward) Type() protoreflect.MessageType {
+	return _fastReflection_MsgDeleteStakingReward_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgRemoveStakingReward) New() protoreflect.Message {
-	return new(fastReflection_MsgRemoveStakingReward)
+func (x *fastReflection_MsgDeleteStakingReward) New() protoreflect.Message {
+	return new(fastReflection_MsgDeleteStakingReward)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgRemoveStakingReward) Interface() protoreflect.ProtoMessage {
-	return (*MsgRemoveStakingReward)(x)
+func (x *fastReflection_MsgDeleteStakingReward) Interface() protoreflect.ProtoMessage {
+	return (*MsgDeleteStakingReward)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -8628,16 +8628,16 @@ func (x *fastReflection_MsgRemoveStakingReward) Interface() protoreflect.ProtoMe
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgRemoveStakingReward) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgDeleteStakingReward) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Creator != "" {
 		value := protoreflect.ValueOfString(x.Creator)
-		if !f(fd_MsgRemoveStakingReward_creator, value) {
+		if !f(fd_MsgDeleteStakingReward_creator, value) {
 			return
 		}
 	}
 	if x.RewardId != "" {
 		value := protoreflect.ValueOfString(x.RewardId)
-		if !f(fd_MsgRemoveStakingReward_reward_id, value) {
+		if !f(fd_MsgDeleteStakingReward_reward_id, value) {
 			return
 		}
 	}
@@ -8654,17 +8654,17 @@ func (x *fastReflection_MsgRemoveStakingReward) Range(f func(protoreflect.FieldD
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgRemoveStakingReward) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgDeleteStakingReward) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "bze.rewards.MsgRemoveStakingReward.creator":
+	case "bze.rewards.MsgDeleteStakingReward.creator":
 		return x.Creator != ""
-	case "bze.rewards.MsgRemoveStakingReward.reward_id":
+	case "bze.rewards.MsgDeleteStakingReward.reward_id":
 		return x.RewardId != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgRemoveStakingReward"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgDeleteStakingReward"))
 		}
-		panic(fmt.Errorf("message bze.rewards.MsgRemoveStakingReward does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message bze.rewards.MsgDeleteStakingReward does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -8674,17 +8674,17 @@ func (x *fastReflection_MsgRemoveStakingReward) Has(fd protoreflect.FieldDescrip
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgRemoveStakingReward) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgDeleteStakingReward) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "bze.rewards.MsgRemoveStakingReward.creator":
+	case "bze.rewards.MsgDeleteStakingReward.creator":
 		x.Creator = ""
-	case "bze.rewards.MsgRemoveStakingReward.reward_id":
+	case "bze.rewards.MsgDeleteStakingReward.reward_id":
 		x.RewardId = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgRemoveStakingReward"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgDeleteStakingReward"))
 		}
-		panic(fmt.Errorf("message bze.rewards.MsgRemoveStakingReward does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message bze.rewards.MsgDeleteStakingReward does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -8694,19 +8694,19 @@ func (x *fastReflection_MsgRemoveStakingReward) Clear(fd protoreflect.FieldDescr
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgRemoveStakingReward) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgDeleteStakingReward) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "bze.rewards.MsgRemoveStakingReward.creator":
+	case "bze.rewards.MsgDeleteStakingReward.creator":
 		value := x.Creator
 		return protoreflect.ValueOfString(value)
-	case "bze.rewards.MsgRemoveStakingReward.reward_id":
+	case "bze.rewards.MsgDeleteStakingReward.reward_id":
 		value := x.RewardId
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgRemoveStakingReward"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgDeleteStakingReward"))
 		}
-		panic(fmt.Errorf("message bze.rewards.MsgRemoveStakingReward does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message bze.rewards.MsgDeleteStakingReward does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -8720,17 +8720,17 @@ func (x *fastReflection_MsgRemoveStakingReward) Get(descriptor protoreflect.Fiel
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgRemoveStakingReward) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgDeleteStakingReward) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "bze.rewards.MsgRemoveStakingReward.creator":
+	case "bze.rewards.MsgDeleteStakingReward.creator":
 		x.Creator = value.Interface().(string)
-	case "bze.rewards.MsgRemoveStakingReward.reward_id":
+	case "bze.rewards.MsgDeleteStakingReward.reward_id":
 		x.RewardId = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgRemoveStakingReward"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgDeleteStakingReward"))
 		}
-		panic(fmt.Errorf("message bze.rewards.MsgRemoveStakingReward does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message bze.rewards.MsgDeleteStakingReward does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -8744,44 +8744,44 @@ func (x *fastReflection_MsgRemoveStakingReward) Set(fd protoreflect.FieldDescrip
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgRemoveStakingReward) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgDeleteStakingReward) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "bze.rewards.MsgRemoveStakingReward.creator":
-		panic(fmt.Errorf("field creator of message bze.rewards.MsgRemoveStakingReward is not mutable"))
-	case "bze.rewards.MsgRemoveStakingReward.reward_id":
-		panic(fmt.Errorf("field reward_id of message bze.rewards.MsgRemoveStakingReward is not mutable"))
+	case "bze.rewards.MsgDeleteStakingReward.creator":
+		panic(fmt.Errorf("field creator of message bze.rewards.MsgDeleteStakingReward is not mutable"))
+	case "bze.rewards.MsgDeleteStakingReward.reward_id":
+		panic(fmt.Errorf("field reward_id of message bze.rewards.MsgDeleteStakingReward is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgRemoveStakingReward"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgDeleteStakingReward"))
 		}
-		panic(fmt.Errorf("message bze.rewards.MsgRemoveStakingReward does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message bze.rewards.MsgDeleteStakingReward does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgRemoveStakingReward) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgDeleteStakingReward) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "bze.rewards.MsgRemoveStakingReward.creator":
+	case "bze.rewards.MsgDeleteStakingReward.creator":
 		return protoreflect.ValueOfString("")
-	case "bze.rewards.MsgRemoveStakingReward.reward_id":
+	case "bze.rewards.MsgDeleteStakingReward.reward_id":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgRemoveStakingReward"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgDeleteStakingReward"))
 		}
-		panic(fmt.Errorf("message bze.rewards.MsgRemoveStakingReward does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message bze.rewards.MsgDeleteStakingReward does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgRemoveStakingReward) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgDeleteStakingReward) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in bze.rewards.MsgRemoveStakingReward", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in bze.rewards.MsgDeleteStakingReward", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -8789,7 +8789,7 @@ func (x *fastReflection_MsgRemoveStakingReward) WhichOneof(d protoreflect.OneofD
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgRemoveStakingReward) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgDeleteStakingReward) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -8800,7 +8800,7 @@ func (x *fastReflection_MsgRemoveStakingReward) GetUnknown() protoreflect.RawFie
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgRemoveStakingReward) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgDeleteStakingReward) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -8812,7 +8812,7 @@ func (x *fastReflection_MsgRemoveStakingReward) SetUnknown(fields protoreflect.R
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgRemoveStakingReward) IsValid() bool {
+func (x *fastReflection_MsgDeleteStakingReward) IsValid() bool {
 	return x != nil
 }
 
@@ -8822,9 +8822,9 @@ func (x *fastReflection_MsgRemoveStakingReward) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgRemoveStakingReward) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgDeleteStakingReward) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgRemoveStakingReward)
+		x := input.Message.Interface().(*MsgDeleteStakingReward)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -8854,7 +8854,7 @@ func (x *fastReflection_MsgRemoveStakingReward) ProtoMethods() *protoiface.Metho
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgRemoveStakingReward)
+		x := input.Message.Interface().(*MsgDeleteStakingReward)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -8898,7 +8898,7 @@ func (x *fastReflection_MsgRemoveStakingReward) ProtoMethods() *protoiface.Metho
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgRemoveStakingReward)
+		x := input.Message.Interface().(*MsgDeleteStakingReward)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -8930,10 +8930,10 @@ func (x *fastReflection_MsgRemoveStakingReward) ProtoMethods() *protoiface.Metho
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgRemoveStakingReward: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgDeleteStakingReward: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgRemoveStakingReward: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgDeleteStakingReward: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -9036,23 +9036,23 @@ func (x *fastReflection_MsgRemoveStakingReward) ProtoMethods() *protoiface.Metho
 }
 
 var (
-	md_MsgRemoveStakingRewardResponse protoreflect.MessageDescriptor
+	md_MsgDeleteStakingRewardResponse protoreflect.MessageDescriptor
 )
 
 func init() {
 	file_bze_rewards_tx_proto_init()
-	md_MsgRemoveStakingRewardResponse = File_bze_rewards_tx_proto.Messages().ByName("MsgRemoveStakingRewardResponse")
+	md_MsgDeleteStakingRewardResponse = File_bze_rewards_tx_proto.Messages().ByName("MsgDeleteStakingRewardResponse")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgRemoveStakingRewardResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgDeleteStakingRewardResponse)(nil)
 
-type fastReflection_MsgRemoveStakingRewardResponse MsgRemoveStakingRewardResponse
+type fastReflection_MsgDeleteStakingRewardResponse MsgDeleteStakingRewardResponse
 
-func (x *MsgRemoveStakingRewardResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgRemoveStakingRewardResponse)(x)
+func (x *MsgDeleteStakingRewardResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgDeleteStakingRewardResponse)(x)
 }
 
-func (x *MsgRemoveStakingRewardResponse) slowProtoReflect() protoreflect.Message {
+func (x *MsgDeleteStakingRewardResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_bze_rewards_tx_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -9064,43 +9064,43 @@ func (x *MsgRemoveStakingRewardResponse) slowProtoReflect() protoreflect.Message
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgRemoveStakingRewardResponse_messageType fastReflection_MsgRemoveStakingRewardResponse_messageType
-var _ protoreflect.MessageType = fastReflection_MsgRemoveStakingRewardResponse_messageType{}
+var _fastReflection_MsgDeleteStakingRewardResponse_messageType fastReflection_MsgDeleteStakingRewardResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgDeleteStakingRewardResponse_messageType{}
 
-type fastReflection_MsgRemoveStakingRewardResponse_messageType struct{}
+type fastReflection_MsgDeleteStakingRewardResponse_messageType struct{}
 
-func (x fastReflection_MsgRemoveStakingRewardResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgRemoveStakingRewardResponse)(nil)
+func (x fastReflection_MsgDeleteStakingRewardResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgDeleteStakingRewardResponse)(nil)
 }
-func (x fastReflection_MsgRemoveStakingRewardResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgRemoveStakingRewardResponse)
+func (x fastReflection_MsgDeleteStakingRewardResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgDeleteStakingRewardResponse)
 }
-func (x fastReflection_MsgRemoveStakingRewardResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgRemoveStakingRewardResponse
+func (x fastReflection_MsgDeleteStakingRewardResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgDeleteStakingRewardResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgRemoveStakingRewardResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgRemoveStakingRewardResponse
+func (x *fastReflection_MsgDeleteStakingRewardResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgDeleteStakingRewardResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgRemoveStakingRewardResponse) Type() protoreflect.MessageType {
-	return _fastReflection_MsgRemoveStakingRewardResponse_messageType
+func (x *fastReflection_MsgDeleteStakingRewardResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgDeleteStakingRewardResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgRemoveStakingRewardResponse) New() protoreflect.Message {
-	return new(fastReflection_MsgRemoveStakingRewardResponse)
+func (x *fastReflection_MsgDeleteStakingRewardResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgDeleteStakingRewardResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgRemoveStakingRewardResponse) Interface() protoreflect.ProtoMessage {
-	return (*MsgRemoveStakingRewardResponse)(x)
+func (x *fastReflection_MsgDeleteStakingRewardResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgDeleteStakingRewardResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -9108,7 +9108,7 @@ func (x *fastReflection_MsgRemoveStakingRewardResponse) Interface() protoreflect
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgRemoveStakingRewardResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgDeleteStakingRewardResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 }
 
 // Has reports whether a field is populated.
@@ -9122,13 +9122,13 @@ func (x *fastReflection_MsgRemoveStakingRewardResponse) Range(f func(protoreflec
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgRemoveStakingRewardResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgDeleteStakingRewardResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgRemoveStakingRewardResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgDeleteStakingRewardResponse"))
 		}
-		panic(fmt.Errorf("message bze.rewards.MsgRemoveStakingRewardResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message bze.rewards.MsgDeleteStakingRewardResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9138,13 +9138,13 @@ func (x *fastReflection_MsgRemoveStakingRewardResponse) Has(fd protoreflect.Fiel
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgRemoveStakingRewardResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgDeleteStakingRewardResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgRemoveStakingRewardResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgDeleteStakingRewardResponse"))
 		}
-		panic(fmt.Errorf("message bze.rewards.MsgRemoveStakingRewardResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message bze.rewards.MsgDeleteStakingRewardResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9154,13 +9154,13 @@ func (x *fastReflection_MsgRemoveStakingRewardResponse) Clear(fd protoreflect.Fi
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgRemoveStakingRewardResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgDeleteStakingRewardResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgRemoveStakingRewardResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgDeleteStakingRewardResponse"))
 		}
-		panic(fmt.Errorf("message bze.rewards.MsgRemoveStakingRewardResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message bze.rewards.MsgDeleteStakingRewardResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -9174,13 +9174,13 @@ func (x *fastReflection_MsgRemoveStakingRewardResponse) Get(descriptor protorefl
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgRemoveStakingRewardResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgDeleteStakingRewardResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgRemoveStakingRewardResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgDeleteStakingRewardResponse"))
 		}
-		panic(fmt.Errorf("message bze.rewards.MsgRemoveStakingRewardResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message bze.rewards.MsgDeleteStakingRewardResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9194,36 +9194,36 @@ func (x *fastReflection_MsgRemoveStakingRewardResponse) Set(fd protoreflect.Fiel
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgRemoveStakingRewardResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgDeleteStakingRewardResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgRemoveStakingRewardResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgDeleteStakingRewardResponse"))
 		}
-		panic(fmt.Errorf("message bze.rewards.MsgRemoveStakingRewardResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message bze.rewards.MsgDeleteStakingRewardResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgRemoveStakingRewardResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgDeleteStakingRewardResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgRemoveStakingRewardResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.MsgDeleteStakingRewardResponse"))
 		}
-		panic(fmt.Errorf("message bze.rewards.MsgRemoveStakingRewardResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message bze.rewards.MsgDeleteStakingRewardResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgRemoveStakingRewardResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgDeleteStakingRewardResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in bze.rewards.MsgRemoveStakingRewardResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in bze.rewards.MsgDeleteStakingRewardResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -9231,7 +9231,7 @@ func (x *fastReflection_MsgRemoveStakingRewardResponse) WhichOneof(d protoreflec
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgRemoveStakingRewardResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgDeleteStakingRewardResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -9242,7 +9242,7 @@ func (x *fastReflection_MsgRemoveStakingRewardResponse) GetUnknown() protoreflec
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgRemoveStakingRewardResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgDeleteStakingRewardResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -9254,7 +9254,7 @@ func (x *fastReflection_MsgRemoveStakingRewardResponse) SetUnknown(fields protor
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgRemoveStakingRewardResponse) IsValid() bool {
+func (x *fastReflection_MsgDeleteStakingRewardResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -9264,9 +9264,9 @@ func (x *fastReflection_MsgRemoveStakingRewardResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgRemoveStakingRewardResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgDeleteStakingRewardResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgRemoveStakingRewardResponse)
+		x := input.Message.Interface().(*MsgDeleteStakingRewardResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -9288,7 +9288,7 @@ func (x *fastReflection_MsgRemoveStakingRewardResponse) ProtoMethods() *protoifa
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgRemoveStakingRewardResponse)
+		x := input.Message.Interface().(*MsgDeleteStakingRewardResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -9318,7 +9318,7 @@ func (x *fastReflection_MsgRemoveStakingRewardResponse) ProtoMethods() *protoifa
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgRemoveStakingRewardResponse)
+		x := input.Message.Interface().(*MsgDeleteStakingRewardResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -9350,10 +9350,10 @@ func (x *fastReflection_MsgRemoveStakingRewardResponse) ProtoMethods() *protoifa
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgRemoveStakingRewardResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgDeleteStakingRewardResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgRemoveStakingRewardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgDeleteStakingRewardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			default:
@@ -10153,9 +10153,9 @@ func (*MsgActivateTradingRewardResponse) Descriptor() ([]byte, []int) {
 	return file_bze_rewards_tx_proto_rawDescGZIP(), []int{17}
 }
 
-// MsgRemoveStakingReward - permissionless cleanup of a finished, emptied
+// MsgDeleteStakingReward - permissionless cleanup of a finished, emptied
 // staking reward record whose deletion was previously suppressed by a hook.
-type MsgRemoveStakingReward struct {
+type MsgDeleteStakingReward struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -10164,8 +10164,8 @@ type MsgRemoveStakingReward struct {
 	RewardId string `protobuf:"bytes,2,opt,name=reward_id,json=rewardId,proto3" json:"reward_id,omitempty"`
 }
 
-func (x *MsgRemoveStakingReward) Reset() {
-	*x = MsgRemoveStakingReward{}
+func (x *MsgDeleteStakingReward) Reset() {
+	*x = MsgDeleteStakingReward{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_bze_rewards_tx_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -10173,39 +10173,39 @@ func (x *MsgRemoveStakingReward) Reset() {
 	}
 }
 
-func (x *MsgRemoveStakingReward) String() string {
+func (x *MsgDeleteStakingReward) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgRemoveStakingReward) ProtoMessage() {}
+func (*MsgDeleteStakingReward) ProtoMessage() {}
 
-// Deprecated: Use MsgRemoveStakingReward.ProtoReflect.Descriptor instead.
-func (*MsgRemoveStakingReward) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgDeleteStakingReward.ProtoReflect.Descriptor instead.
+func (*MsgDeleteStakingReward) Descriptor() ([]byte, []int) {
 	return file_bze_rewards_tx_proto_rawDescGZIP(), []int{18}
 }
 
-func (x *MsgRemoveStakingReward) GetCreator() string {
+func (x *MsgDeleteStakingReward) GetCreator() string {
 	if x != nil {
 		return x.Creator
 	}
 	return ""
 }
 
-func (x *MsgRemoveStakingReward) GetRewardId() string {
+func (x *MsgDeleteStakingReward) GetRewardId() string {
 	if x != nil {
 		return x.RewardId
 	}
 	return ""
 }
 
-type MsgRemoveStakingRewardResponse struct {
+type MsgDeleteStakingRewardResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *MsgRemoveStakingRewardResponse) Reset() {
-	*x = MsgRemoveStakingRewardResponse{}
+func (x *MsgDeleteStakingRewardResponse) Reset() {
+	*x = MsgDeleteStakingRewardResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_bze_rewards_tx_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -10213,14 +10213,14 @@ func (x *MsgRemoveStakingRewardResponse) Reset() {
 	}
 }
 
-func (x *MsgRemoveStakingRewardResponse) String() string {
+func (x *MsgDeleteStakingRewardResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgRemoveStakingRewardResponse) ProtoMessage() {}
+func (*MsgDeleteStakingRewardResponse) ProtoMessage() {}
 
-// Deprecated: Use MsgRemoveStakingRewardResponse.ProtoReflect.Descriptor instead.
-func (*MsgRemoveStakingRewardResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgDeleteStakingRewardResponse.ProtoReflect.Descriptor instead.
+func (*MsgDeleteStakingRewardResponse) Descriptor() ([]byte, []int) {
 	return file_bze_rewards_tx_proto_rawDescGZIP(), []int{19}
 }
 
@@ -10360,16 +10360,16 @@ var file_bze_rewards_tx_proto_rawDesc = []byte{
 	0x61, 0x74, 0x65, 0x54, 0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64,
 	0x22, 0x22, 0x0a, 0x20, 0x4d, 0x73, 0x67, 0x41, 0x63, 0x74, 0x69, 0x76, 0x61, 0x74, 0x65, 0x54,
 	0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x86, 0x01, 0x0a, 0x16, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x6d, 0x6f,
-	0x76, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x12,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x86, 0x01, 0x0a, 0x16, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x6c, 0x65,
+	0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x12,
 	0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
 	0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x1b, 0x0a, 0x09, 0x72, 0x65, 0x77,
 	0x61, 0x72, 0x64, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65,
 	0x77, 0x61, 0x72, 0x64, 0x49, 0x64, 0x3a, 0x35, 0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x63, 0x72, 0x65,
 	0x61, 0x74, 0x6f, 0x72, 0x8a, 0xe7, 0xb0, 0x2a, 0x24, 0x62, 0x7a, 0x65, 0x2f, 0x78, 0x2f, 0x72,
-	0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2f, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65,
+	0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2f, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65,
 	0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x22, 0x20, 0x0a,
-	0x1e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e,
+	0x1e, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e,
 	0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32,
 	0xf6, 0x07, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x52, 0x0a, 0x0c, 0x55, 0x70, 0x64, 0x61, 0x74,
 	0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x1c, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65,
@@ -10427,12 +10427,12 @@ var file_bze_rewards_tx_proto_rawDesc = []byte{
 	0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x1a, 0x2d, 0x2e, 0x62, 0x7a, 0x65, 0x2e,
 	0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x63, 0x74, 0x69, 0x76,
 	0x61, 0x74, 0x65, 0x54, 0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x67, 0x0a, 0x13, 0x52, 0x65, 0x6d, 0x6f,
-	0x76, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x12,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x67, 0x0a, 0x13, 0x44, 0x65, 0x6c, 0x65,
+	0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x12,
 	0x23, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x4d, 0x73,
-	0x67, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65,
+	0x67, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65,
 	0x77, 0x61, 0x72, 0x64, 0x1a, 0x2b, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72,
-	0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x53, 0x74, 0x61, 0x6b,
+	0x64, 0x73, 0x2e, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b,
 	0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
 	0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x95, 0x01, 0x0a, 0x0f, 0x63, 0x6f, 0x6d,
 	0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x42, 0x07, 0x54, 0x78,
@@ -10479,8 +10479,8 @@ var file_bze_rewards_tx_proto_goTypes = []interface{}{
 	(*MsgCreateTradingRewardResponse)(nil),      // 15: bze.rewards.MsgCreateTradingRewardResponse
 	(*MsgActivateTradingReward)(nil),            // 16: bze.rewards.MsgActivateTradingReward
 	(*MsgActivateTradingRewardResponse)(nil),    // 17: bze.rewards.MsgActivateTradingRewardResponse
-	(*MsgRemoveStakingReward)(nil),              // 18: bze.rewards.MsgRemoveStakingReward
-	(*MsgRemoveStakingRewardResponse)(nil),      // 19: bze.rewards.MsgRemoveStakingRewardResponse
+	(*MsgDeleteStakingReward)(nil),              // 18: bze.rewards.MsgDeleteStakingReward
+	(*MsgDeleteStakingRewardResponse)(nil),      // 19: bze.rewards.MsgDeleteStakingRewardResponse
 	(*Params)(nil),                              // 20: bze.rewards.Params
 }
 var file_bze_rewards_tx_proto_depIdxs = []int32{
@@ -10494,7 +10494,7 @@ var file_bze_rewards_tx_proto_depIdxs = []int32{
 	12, // 7: bze.rewards.Msg.DistributeStakingRewards:input_type -> bze.rewards.MsgDistributeStakingRewards
 	14, // 8: bze.rewards.Msg.CreateTradingReward:input_type -> bze.rewards.MsgCreateTradingReward
 	16, // 9: bze.rewards.Msg.ActivateTradingReward:input_type -> bze.rewards.MsgActivateTradingReward
-	18, // 10: bze.rewards.Msg.RemoveStakingReward:input_type -> bze.rewards.MsgRemoveStakingReward
+	18, // 10: bze.rewards.Msg.DeleteStakingReward:input_type -> bze.rewards.MsgDeleteStakingReward
 	1,  // 11: bze.rewards.Msg.UpdateParams:output_type -> bze.rewards.MsgUpdateParamsResponse
 	3,  // 12: bze.rewards.Msg.CreateStakingReward:output_type -> bze.rewards.MsgCreateStakingRewardResponse
 	5,  // 13: bze.rewards.Msg.UpdateStakingReward:output_type -> bze.rewards.MsgUpdateStakingRewardResponse
@@ -10504,7 +10504,7 @@ var file_bze_rewards_tx_proto_depIdxs = []int32{
 	13, // 17: bze.rewards.Msg.DistributeStakingRewards:output_type -> bze.rewards.MsgDistributeStakingRewardsResponse
 	15, // 18: bze.rewards.Msg.CreateTradingReward:output_type -> bze.rewards.MsgCreateTradingRewardResponse
 	17, // 19: bze.rewards.Msg.ActivateTradingReward:output_type -> bze.rewards.MsgActivateTradingRewardResponse
-	19, // 20: bze.rewards.Msg.RemoveStakingReward:output_type -> bze.rewards.MsgRemoveStakingRewardResponse
+	19, // 20: bze.rewards.Msg.DeleteStakingReward:output_type -> bze.rewards.MsgDeleteStakingRewardResponse
 	11, // [11:21] is the sub-list for method output_type
 	1,  // [1:11] is the sub-list for method input_type
 	1,  // [1:1] is the sub-list for extension type_name
@@ -10736,7 +10736,7 @@ func file_bze_rewards_tx_proto_init() {
 			}
 		}
 		file_bze_rewards_tx_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgRemoveStakingReward); i {
+			switch v := v.(*MsgDeleteStakingReward); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -10748,7 +10748,7 @@ func file_bze_rewards_tx_proto_init() {
 			}
 		}
 		file_bze_rewards_tx_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgRemoveStakingRewardResponse); i {
+			switch v := v.(*MsgDeleteStakingRewardResponse); i {
 			case 0:
 				return &v.state
 			case 1:

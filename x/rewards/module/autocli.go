@@ -127,9 +127,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "prize_amount"}, {ProtoField: "prize_denom"}, {ProtoField: "duration"}, {ProtoField: "market_id"}, {ProtoField: "slots"}},
 				},
 				{
-					RpcMethod:      "RemoveStakingReward",
-					Use:            "remove-staking-reward [reward-id]",
-					Short:          "Remove a finished, emptied staking reward record",
+					RpcMethod:      "DeleteStakingReward",
+					Use:            "delete-staking-reward [reward-id]",
+					Short:          "Delete a finished, emptied staking reward record",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reward_id"}},
 				},
 				// this line is used by ignite scaffolding # autocli/tx

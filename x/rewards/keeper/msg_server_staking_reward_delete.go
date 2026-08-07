@@ -11,12 +11,12 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// RemoveStakingReward - permissionless cleanup of a finished, emptied staking
+// DeleteStakingReward - permissionless cleanup of a finished, emptied staking
 // reward record. It applies the same condition + hook + event as ExitStaking's
 // final-exit cleanup, but here a hook veto fails the message instead of being
 // silently skipped: there is no exit to preserve, and an explicit error is more
 // informative for the caller.
-func (k msgServer) RemoveStakingReward(goCtx context.Context, msg *types.MsgRemoveStakingReward) (*types.MsgRemoveStakingRewardResponse, error) {
+func (k msgServer) DeleteStakingReward(goCtx context.Context, msg *types.MsgDeleteStakingReward) (*types.MsgDeleteStakingRewardResponse, error) {
 	if msg == nil {
 		return nil, sdkerrors.ErrInvalidRequest
 	}
@@ -48,7 +48,7 @@ func (k msgServer) RemoveStakingReward(goCtx context.Context, msg *types.MsgRemo
 		return nil, err
 	}
 
-	k.Keeper.RemoveStakingReward(ctx, stakingReward.RewardId)
+	k.RemoveStakingReward(ctx, stakingReward.RewardId)
 
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.StakingRewardFinishEvent{
@@ -60,5 +60,5 @@ func (k msgServer) RemoveStakingReward(goCtx context.Context, msg *types.MsgRemo
 		k.Logger().Error(err.Error())
 	}
 
-	return &types.MsgRemoveStakingRewardResponse{}, nil
+	return &types.MsgDeleteStakingRewardResponse{}, nil
 }

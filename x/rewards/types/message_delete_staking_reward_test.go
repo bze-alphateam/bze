@@ -8,28 +8,28 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestMsgRemoveStakingReward_ValidateBasic(t *testing.T) {
+func TestMsgDeleteStakingReward_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  MsgRemoveStakingReward
+		msg  MsgDeleteStakingReward
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: MsgRemoveStakingReward{
+			msg: MsgDeleteStakingReward{
 				Creator:  "invalid_address",
 				RewardId: "000000000001",
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "empty reward id",
-			msg: MsgRemoveStakingReward{
+			msg: MsgDeleteStakingReward{
 				Creator: sample.AccAddress(),
 			},
 			err: ErrInvalidRewardId,
 		}, {
 			name: "valid message",
-			msg: MsgRemoveStakingReward{
+			msg: MsgDeleteStakingReward{
 				Creator:  sample.AccAddress(),
 				RewardId: "000000000001",
 			},

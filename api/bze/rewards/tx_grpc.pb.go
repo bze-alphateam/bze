@@ -28,7 +28,7 @@ const (
 	Msg_DistributeStakingRewards_FullMethodName = "/bze.rewards.Msg/DistributeStakingRewards"
 	Msg_CreateTradingReward_FullMethodName      = "/bze.rewards.Msg/CreateTradingReward"
 	Msg_ActivateTradingReward_FullMethodName    = "/bze.rewards.Msg/ActivateTradingReward"
-	Msg_RemoveStakingReward_FullMethodName      = "/bze.rewards.Msg/RemoveStakingReward"
+	Msg_DeleteStakingReward_FullMethodName      = "/bze.rewards.Msg/DeleteStakingReward"
 )
 
 // MsgClient is the client API for Msg service.
@@ -46,7 +46,7 @@ type MsgClient interface {
 	DistributeStakingRewards(ctx context.Context, in *MsgDistributeStakingRewards, opts ...grpc.CallOption) (*MsgDistributeStakingRewardsResponse, error)
 	CreateTradingReward(ctx context.Context, in *MsgCreateTradingReward, opts ...grpc.CallOption) (*MsgCreateTradingRewardResponse, error)
 	ActivateTradingReward(ctx context.Context, in *MsgActivateTradingReward, opts ...grpc.CallOption) (*MsgActivateTradingRewardResponse, error)
-	RemoveStakingReward(ctx context.Context, in *MsgRemoveStakingReward, opts ...grpc.CallOption) (*MsgRemoveStakingRewardResponse, error)
+	DeleteStakingReward(ctx context.Context, in *MsgDeleteStakingReward, opts ...grpc.CallOption) (*MsgDeleteStakingRewardResponse, error)
 }
 
 type msgClient struct {
@@ -138,9 +138,9 @@ func (c *msgClient) ActivateTradingReward(ctx context.Context, in *MsgActivateTr
 	return out, nil
 }
 
-func (c *msgClient) RemoveStakingReward(ctx context.Context, in *MsgRemoveStakingReward, opts ...grpc.CallOption) (*MsgRemoveStakingRewardResponse, error) {
-	out := new(MsgRemoveStakingRewardResponse)
-	err := c.cc.Invoke(ctx, Msg_RemoveStakingReward_FullMethodName, in, out, opts...)
+func (c *msgClient) DeleteStakingReward(ctx context.Context, in *MsgDeleteStakingReward, opts ...grpc.CallOption) (*MsgDeleteStakingRewardResponse, error) {
+	out := new(MsgDeleteStakingRewardResponse)
+	err := c.cc.Invoke(ctx, Msg_DeleteStakingReward_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ type MsgServer interface {
 	DistributeStakingRewards(context.Context, *MsgDistributeStakingRewards) (*MsgDistributeStakingRewardsResponse, error)
 	CreateTradingReward(context.Context, *MsgCreateTradingReward) (*MsgCreateTradingRewardResponse, error)
 	ActivateTradingReward(context.Context, *MsgActivateTradingReward) (*MsgActivateTradingRewardResponse, error)
-	RemoveStakingReward(context.Context, *MsgRemoveStakingReward) (*MsgRemoveStakingRewardResponse, error)
+	DeleteStakingReward(context.Context, *MsgDeleteStakingReward) (*MsgDeleteStakingRewardResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -197,8 +197,8 @@ func (UnimplementedMsgServer) CreateTradingReward(context.Context, *MsgCreateTra
 func (UnimplementedMsgServer) ActivateTradingReward(context.Context, *MsgActivateTradingReward) (*MsgActivateTradingRewardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ActivateTradingReward not implemented")
 }
-func (UnimplementedMsgServer) RemoveStakingReward(context.Context, *MsgRemoveStakingReward) (*MsgRemoveStakingRewardResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveStakingReward not implemented")
+func (UnimplementedMsgServer) DeleteStakingReward(context.Context, *MsgDeleteStakingReward) (*MsgDeleteStakingRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteStakingReward not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -375,20 +375,20 @@ func _Msg_ActivateTradingReward_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_RemoveStakingReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgRemoveStakingReward)
+func _Msg_DeleteStakingReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDeleteStakingReward)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).RemoveStakingReward(ctx, in)
+		return srv.(MsgServer).DeleteStakingReward(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Msg_RemoveStakingReward_FullMethodName,
+		FullMethod: Msg_DeleteStakingReward_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).RemoveStakingReward(ctx, req.(*MsgRemoveStakingReward))
+		return srv.(MsgServer).DeleteStakingReward(ctx, req.(*MsgDeleteStakingReward))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -437,8 +437,8 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_ActivateTradingReward_Handler,
 		},
 		{
-			MethodName: "RemoveStakingReward",
-			Handler:    _Msg_RemoveStakingReward_Handler,
+			MethodName: "DeleteStakingReward",
+			Handler:    _Msg_DeleteStakingReward_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
