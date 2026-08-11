@@ -92,6 +92,13 @@ service Query {
     option (google.api.http).get = "/bze/rewards/all_boosts";
 
   }
+
+  // Queries a boost's cleanup progress: participant index entries remaining
+  // after the persisted cleanup cursor.
+  rpc BoostCleanupStatus (QueryBoostCleanupStatusRequest) returns (QueryBoostCleanupStatusResponse) {
+    option (google.api.http).get = "/bze/rewards/boost_cleanup_status/{reward_id}/{boost_id}";
+
+  }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.
 message QueryParamsRequest {}
@@ -206,5 +213,15 @@ message QueryAllBoostsRequest {
 message QueryAllBoostsResponse {
   repeated Boost                                  list       = 1 [(gogoproto.nullable) = false];
            cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryBoostCleanupStatusRequest {
+  string reward_id = 1;
+  string boost_id  = 2;
+}
+
+message QueryBoostCleanupStatusResponse {
+  uint64 remaining = 1; // index entries not yet swept
+  string cursor    = 2; // the boost's persisted cleanup cursor
 }
 

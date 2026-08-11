@@ -35,4 +35,8 @@ message Params {
     (gogoproto.moretags) = "yaml:\"max_boosts_per_reward\"",
     (gogoproto.jsontag)      = "max_boosts_per_reward,omitempty"
   ];
+  uint32 cleanupBatchSize = 6 [
+    (gogoproto.moretags) = "yaml:\"cleanup_batch_size\"",
+    (gogoproto.jsontag)      = "cleanup_batch_size,omitempty"
+  ];
 }

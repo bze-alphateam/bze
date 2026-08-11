@@ -14,6 +14,8 @@ func TestDefaultParams_Boost(t *testing.T) {
 	require.Equal(t, DefaultCreateBoostFee, p.CreateBoostFee)
 	require.Equal(t, DefaultMaxBoostsPerReward, p.MaxBoostsPerReward)
 	require.Equal(t, uint32(10), p.MaxBoostsPerReward)
+	require.Equal(t, DefaultCleanupBatchSize, p.CleanupBatchSize)
+	require.Equal(t, uint32(100), p.CleanupBatchSize)
 	require.NoError(t, p.Validate())
 }
 
@@ -41,6 +43,11 @@ func TestParams_Validate_Boost(t *testing.T) {
 		{
 			name:    "zero max boosts per reward",
 			mutate:  func(p *Params) { p.MaxBoostsPerReward = 0 },
+			wantErr: true,
+		},
+		{
+			name:    "zero cleanup batch size",
+			mutate:  func(p *Params) { p.CleanupBatchSize = 0 },
 			wantErr: true,
 		},
 		{

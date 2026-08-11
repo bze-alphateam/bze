@@ -320,7 +320,12 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 	}
 
 	k.RemoveStakingRewardParticipant(ctx, participation.Address, participation.RewardId)
-	k.RemoveRewardBoostParticipants(ctx, participation.Address, participation.RewardId)
+	//delete the exiter's stamps for the live boosts by exact key, bounded by
+	//the boosts-per-reward cap. Orphaned stamps were reaped — up to the scan
+	//bound — by the settle above; any residue is inert and genesis-filtered
+	for _, boost := range k.GetRewardBoosts(ctx, participation.RewardId) {
+		k.RemoveBoostParticipant(ctx, participation.Address, boost.RewardId, boost.Id)
+	}
 	k.RemoveStakingRewardParticipantIndexEntry(ctx, participation.RewardId, participation.Address)
 
 	remainingStakedAmount := stakedAmountInt.Sub(partCoins.AmountOf(stakingReward.StakingDenom))

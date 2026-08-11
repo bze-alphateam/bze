@@ -30,39 +30,38 @@ func (suite *IntegrationTestSuite) TestBoostParticipant_GetNonExistent() {
 	suite.Require().False(found)
 }
 
-// TestBoostParticipant_RemoveRewardBoostParticipants verifies the prefix
-// delete removes exactly one (address, reward) slice — other rewards of the
-// same address and other addresses on the same reward are untouched.
-func (suite *IntegrationTestSuite) TestBoostParticipant_RemoveRewardBoostParticipants() {
-	// addr1 on reward1: two boost entries — the slice to delete
+// TestBoostParticipant_Remove verifies the exact-key delete removes one
+// (address, reward, boost) stamp — sibling boosts of the same slice, other
+// rewards of the same address and other addresses are untouched.
+func (suite *IntegrationTestSuite) TestBoostParticipant_Remove() {
 	suite.k.SetBoostParticipant(suite.ctx, newBoostParticipant("bze1addr1", "000000000001", "000000000001"))
+	// sibling boost of the same (address, reward) slice: must survive
 	suite.k.SetBoostParticipant(suite.ctx, newBoostParticipant("bze1addr1", "000000000001", "000000000002"))
 	// addr1 on reward2: must survive
 	suite.k.SetBoostParticipant(suite.ctx, newBoostParticipant("bze1addr1", "000000000002", "000000000003"))
 	// addr2 on reward1: must survive
 	suite.k.SetBoostParticipant(suite.ctx, newBoostParticipant("bze1addr2", "000000000001", "000000000001"))
 
-	suite.k.RemoveRewardBoostParticipants(suite.ctx, "bze1addr1", "000000000001")
+	suite.k.RemoveBoostParticipant(suite.ctx, "bze1addr1", "000000000001", "000000000001")
 
 	_, found := suite.k.GetBoostParticipant(suite.ctx, "bze1addr1", "000000000001", "000000000001")
 	suite.Require().False(found)
 	_, found = suite.k.GetBoostParticipant(suite.ctx, "bze1addr1", "000000000001", "000000000002")
-	suite.Require().False(found)
-
+	suite.Require().True(found)
 	_, found = suite.k.GetBoostParticipant(suite.ctx, "bze1addr1", "000000000002", "000000000003")
 	suite.Require().True(found)
 	_, found = suite.k.GetBoostParticipant(suite.ctx, "bze1addr2", "000000000001", "000000000001")
 	suite.Require().True(found)
 
-	suite.Require().Len(suite.k.GetAllBoostParticipant(suite.ctx), 2)
+	suite.Require().Len(suite.k.GetAllBoostParticipant(suite.ctx), 3)
 }
 
-// TestBoostParticipant_RemoveRewardBoostParticipants_NoOp asserts deleting an
-// empty slice does nothing.
-func (suite *IntegrationTestSuite) TestBoostParticipant_RemoveRewardBoostParticipants_NoOp() {
+// TestBoostParticipant_Remove_NoOp asserts deleting a missing stamp does
+// nothing.
+func (suite *IntegrationTestSuite) TestBoostParticipant_Remove_NoOp() {
 	suite.k.SetBoostParticipant(suite.ctx, newBoostParticipant("bze1addr1", "000000000001", "000000000001"))
 
-	suite.k.RemoveRewardBoostParticipants(suite.ctx, "bze1addr2", "000000000001")
+	suite.k.RemoveBoostParticipant(suite.ctx, "bze1addr2", "000000000001", "000000000001")
 
 	suite.Require().Len(suite.k.GetAllBoostParticipant(suite.ctx), 1)
 }

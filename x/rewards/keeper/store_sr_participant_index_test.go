@@ -72,3 +72,28 @@ func (suite *IntegrationTestSuite) TestSrParticipantIndex_RewardIsolation() {
 	suite.Require().Equal([]string{only1}, suite.k.GetStakingRewardParticipantIndexAddresses(suite.ctx, "000000000001", "", 100))
 	suite.Require().True(suite.k.HasStakingRewardParticipantIndexEntry(suite.ctx, "000000000002", shared))
 }
+
+// TestSrParticipantIndex_CountCapAndCursor: the count honors the cursor and
+// stops at maxCount — the public status query's per-call work stays bounded
+// no matter how large the index grows, and a capped result reads as "maxCount
+// or more".
+func (suite *IntegrationTestSuite) TestSrParticipantIndex_CountCapAndCursor() {
+	addrs := make([]string, 5)
+	for i := range addrs {
+		addrs[i] = sample.AccAddress()
+	}
+	sort.Strings(addrs)
+	for _, addr := range addrs {
+		suite.k.SetStakingRewardParticipantIndexEntry(suite.ctx, "000000000001", addr)
+	}
+
+	//uncapped-in-practice: maxCount above the entry count returns the exact total
+	suite.Require().Equal(uint64(5), suite.k.CountStakingRewardParticipantIndexEntries(suite.ctx, "000000000001", "", 100))
+	//the cap bounds the work: counting stops at maxCount
+	suite.Require().Equal(uint64(3), suite.k.CountStakingRewardParticipantIndexEntries(suite.ctx, "000000000001", "", 3))
+	//cursor and cap compose: entries after addrs[1] are 3, capped at 2
+	suite.Require().Equal(uint64(3), suite.k.CountStakingRewardParticipantIndexEntries(suite.ctx, "000000000001", addrs[1], 100))
+	suite.Require().Equal(uint64(2), suite.k.CountStakingRewardParticipantIndexEntries(suite.ctx, "000000000001", addrs[1], 2))
+	//maxCount 0 counts nothing
+	suite.Require().Equal(uint64(0), suite.k.CountStakingRewardParticipantIndexEntries(suite.ctx, "000000000001", "", 0))
+}

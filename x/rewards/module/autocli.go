@@ -90,6 +90,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query all boosts",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
+				{
+					RpcMethod:      "BoostCleanupStatus",
+					Use:            "boost-cleanup-status [reward-id] [boost-id]",
+					Short:          "Query a boost's cleanup progress (remaining addresses and cursor)",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reward_id"}, {ProtoField: "boost_id"}},
+				},
 
 				// this line is used by ignite scaffolding # autocli/query
 			},
@@ -155,6 +161,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:            "update-boost [reward-id] [boost-id] [days]",
 					Short:          "Send an update-boost tx",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reward_id"}, {ProtoField: "boost_id"}, {ProtoField: "days"}},
+				},
+				{
+					RpcMethod:      "CleanupBoost",
+					Use:            "cleanup-boost [reward-id] [boost-id] [limit]",
+					Short:          "Send a cleanup-boost tx (sweep a finished boost; limit 0 uses the module default)",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reward_id"}, {ProtoField: "boost_id"}, {ProtoField: "limit"}},
 				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},

@@ -17,6 +17,7 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate4to5() {
 	params := types.DefaultParams()
 	params.CreateBoostFee = sdk.NewInt64Coin("ubze", 1)
 	params.MaxBoostsPerReward = 3
+	params.CleanupBatchSize = 7
 	params.ExtraGasForExitStake = 5
 	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
 
@@ -29,6 +30,7 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate4to5() {
 	got := suite.k.GetParams(suite.ctx)
 	suite.Require().Equal(types.DefaultCreateBoostFee, got.CreateBoostFee)
 	suite.Require().Equal(types.DefaultMaxBoostsPerReward, got.MaxBoostsPerReward)
+	suite.Require().Equal(types.DefaultCleanupBatchSize, got.CleanupBatchSize)
 	suite.Require().Equal(uint64(5), got.ExtraGasForExitStake)
 
 	gotSr, found := suite.k.GetStakingReward(suite.ctx, sr.RewardId)

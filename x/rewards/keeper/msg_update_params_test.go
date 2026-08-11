@@ -8,12 +8,18 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
+// validUpdateParams returns a fully valid Params value to mutate per test.
+// MsgUpdateParams replaces the WHOLE params object, so every field must pass
+// validation — partial params (unset boost fields) are rejected.
+func validUpdateParams() types.Params {
+	return types.DefaultParams()
+}
+
 func (suite *IntegrationTestSuite) TestMsgUpdateParams_ValidAuthority() {
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
-	params := types.Params{
-		CreateStakingRewardFee: sdk.NewCoin("ubze", math.NewInt(1000)),
-		CreateTradingRewardFee: sdk.NewCoin("ubze", math.NewInt(2000)),
-	}
+	params := validUpdateParams()
+	params.CreateStakingRewardFee = sdk.NewCoin("ubze", math.NewInt(1000))
+	params.CreateTradingRewardFee = sdk.NewCoin("ubze", math.NewInt(2000))
 
 	msg := &types.MsgUpdateParams{
 		Authority: authority,
@@ -31,15 +37,9 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_ValidAuthority() {
 }
 
 func (suite *IntegrationTestSuite) TestMsgUpdateParams_InvalidAuthority() {
-	invalidAuthority := "bze1invalidauthority"
-	params := types.Params{
-		CreateStakingRewardFee: sdk.NewCoin("ubze", math.NewInt(1000)),
-		CreateTradingRewardFee: sdk.NewCoin("ubze", math.NewInt(2000)),
-	}
-
 	msg := &types.MsgUpdateParams{
-		Authority: invalidAuthority,
-		Params:    params,
+		Authority: "bze1invalidauthority",
+		Params:    validUpdateParams(),
 	}
 
 	response, err := suite.msgServer.UpdateParams(suite.ctx, msg)
@@ -49,14 +49,9 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_InvalidAuthority() {
 }
 
 func (suite *IntegrationTestSuite) TestMsgUpdateParams_EmptyAuthority() {
-	params := types.Params{
-		CreateStakingRewardFee: sdk.NewCoin("ubze", math.NewInt(1000)),
-		CreateTradingRewardFee: sdk.NewCoin("ubze", math.NewInt(2000)),
-	}
-
 	msg := &types.MsgUpdateParams{
 		Authority: "",
-		Params:    params,
+		Params:    validUpdateParams(),
 	}
 
 	response, err := suite.msgServer.UpdateParams(suite.ctx, msg)
@@ -67,10 +62,9 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_EmptyAuthority() {
 
 func (suite *IntegrationTestSuite) TestMsgUpdateParams_ZeroFees() {
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
-	params := types.Params{
-		CreateStakingRewardFee: sdk.NewCoin("ubze", math.ZeroInt()),
-		CreateTradingRewardFee: sdk.NewCoin("ubze", math.ZeroInt()),
-	}
+	params := validUpdateParams()
+	params.CreateStakingRewardFee = sdk.NewCoin("ubze", math.ZeroInt())
+	params.CreateTradingRewardFee = sdk.NewCoin("ubze", math.ZeroInt())
 
 	msg := &types.MsgUpdateParams{
 		Authority: authority,
@@ -89,10 +83,9 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_ZeroFees() {
 
 func (suite *IntegrationTestSuite) TestMsgUpdateParams_DifferentDenominations() {
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
-	params := types.Params{
-		CreateStakingRewardFee: sdk.NewCoin("ubze", math.NewInt(500)),
-		CreateTradingRewardFee: sdk.NewCoin("utoken", math.NewInt(1000)),
-	}
+	params := validUpdateParams()
+	params.CreateStakingRewardFee = sdk.NewCoin("ubze", math.NewInt(500))
+	params.CreateTradingRewardFee = sdk.NewCoin("utoken", math.NewInt(1000))
 
 	msg := &types.MsgUpdateParams{
 		Authority: authority,
@@ -113,10 +106,9 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_LargeFees() {
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 	largeAmount := math.NewIntFromUint64(18446744073709551615) // Max uint64
 
-	params := types.Params{
-		CreateStakingRewardFee: sdk.NewCoin("ubze", largeAmount),
-		CreateTradingRewardFee: sdk.NewCoin("ubze", largeAmount),
-	}
+	params := validUpdateParams()
+	params.CreateStakingRewardFee = sdk.NewCoin("ubze", largeAmount)
+	params.CreateTradingRewardFee = sdk.NewCoin("ubze", largeAmount)
 
 	msg := &types.MsgUpdateParams{
 		Authority: authority,
@@ -137,17 +129,14 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_MultipleUpdates() {
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
 	// First update
-	params1 := types.Params{
-		CreateStakingRewardFee: sdk.NewCoin("ubze", math.NewInt(100)),
-		CreateTradingRewardFee: sdk.NewCoin("ubze", math.NewInt(200)),
-	}
+	params1 := validUpdateParams()
+	params1.CreateStakingRewardFee = sdk.NewCoin("ubze", math.NewInt(100))
+	params1.CreateTradingRewardFee = sdk.NewCoin("ubze", math.NewInt(200))
 
-	msg1 := &types.MsgUpdateParams{
+	response1, err := suite.msgServer.UpdateParams(suite.ctx, &types.MsgUpdateParams{
 		Authority: authority,
 		Params:    params1,
-	}
-
-	response1, err := suite.msgServer.UpdateParams(suite.ctx, msg1)
+	})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(response1)
 
@@ -156,17 +145,14 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_MultipleUpdates() {
 	suite.Require().Equal(params1.CreateStakingRewardFee, retrievedParams1.CreateStakingRewardFee)
 
 	// Second update
-	params2 := types.Params{
-		CreateStakingRewardFee: sdk.NewCoin("utoken", math.NewInt(300)),
-		CreateTradingRewardFee: sdk.NewCoin("utoken", math.NewInt(400)),
-	}
+	params2 := validUpdateParams()
+	params2.CreateStakingRewardFee = sdk.NewCoin("utoken", math.NewInt(300))
+	params2.CreateTradingRewardFee = sdk.NewCoin("utoken", math.NewInt(400))
 
-	msg2 := &types.MsgUpdateParams{
+	response2, err := suite.msgServer.UpdateParams(suite.ctx, &types.MsgUpdateParams{
 		Authority: authority,
 		Params:    params2,
-	}
-
-	response2, err := suite.msgServer.UpdateParams(suite.ctx, msg2)
+	})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(response2)
 
@@ -180,26 +166,21 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_PartialUpdate() {
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
 	// Set initial params
-	initialParams := types.Params{
-		CreateStakingRewardFee: sdk.NewCoin("ubze", math.NewInt(100)),
-		CreateTradingRewardFee: sdk.NewCoin("ubze", math.NewInt(200)),
-	}
+	initialParams := validUpdateParams()
+	initialParams.CreateStakingRewardFee = sdk.NewCoin("ubze", math.NewInt(100))
+	initialParams.CreateTradingRewardFee = sdk.NewCoin("ubze", math.NewInt(200))
 
 	err := suite.k.SetParams(suite.ctx, initialParams)
 	suite.Require().NoError(err)
 
-	// Update with new params (both fields must be provided)
-	updatedParams := types.Params{
-		CreateStakingRewardFee: sdk.NewCoin("ubze", math.NewInt(150)),
-		CreateTradingRewardFee: sdk.NewCoin("ubze", math.NewInt(200)), // Keep same
-	}
+	// Update with new params (the whole object must be provided)
+	updatedParams := initialParams
+	updatedParams.CreateStakingRewardFee = sdk.NewCoin("ubze", math.NewInt(150))
 
-	msg := &types.MsgUpdateParams{
+	response, err := suite.msgServer.UpdateParams(suite.ctx, &types.MsgUpdateParams{
 		Authority: authority,
 		Params:    updatedParams,
-	}
-
-	response, err := suite.msgServer.UpdateParams(suite.ctx, msg)
+	})
 	suite.Require().NoError(err)
 	suite.Require().NotNil(response)
 
@@ -209,20 +190,42 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_PartialUpdate() {
 	suite.Require().Equal(math.NewInt(200), retrievedParams.CreateTradingRewardFee.Amount)
 }
 
-func (suite *IntegrationTestSuite) TestMsgUpdateParams_NilParams() {
+// TestMsgUpdateParams_EmptyParamsRejected: an all-zero Params object no longer
+// slips past the handler — validation runs before the store write.
+func (suite *IntegrationTestSuite) TestMsgUpdateParams_EmptyParamsRejected() {
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	before := suite.k.GetParams(suite.ctx)
 
-	msg := &types.MsgUpdateParams{
+	response, err := suite.msgServer.UpdateParams(suite.ctx, &types.MsgUpdateParams{
 		Authority: authority,
-		Params:    types.Params{}, // Empty params
-	}
+		Params:    types.Params{},
+	})
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
 
-	response, err := suite.msgServer.UpdateParams(suite.ctx, msg)
-	suite.Require().NoError(err)
-	suite.Require().NotNil(response)
+	// stored params untouched
+	suite.Require().Equal(before, suite.k.GetParams(suite.ctx))
+}
 
-	// Verify empty params were set
-	retrievedParams := suite.k.GetParams(suite.ctx)
-	suite.Require().Equal("", retrievedParams.CreateStakingRewardFee.Denom)
-	suite.Require().Equal(math.ZeroInt(), retrievedParams.CreateStakingRewardFee.Amount)
+// TestMsgUpdateParams_InvalidParamsRejected: params violating a single
+// invariant are rejected even with a valid authority — a zero
+// CleanupBatchSize would brick MsgCleanupBoost (its batch-limit logic assumes
+// limit >= 1), so it must never reach the store.
+func (suite *IntegrationTestSuite) TestMsgUpdateParams_InvalidParamsRejected() {
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	before := suite.k.GetParams(suite.ctx)
+
+	invalid := validUpdateParams()
+	invalid.CleanupBatchSize = 0
+
+	response, err := suite.msgServer.UpdateParams(suite.ctx, &types.MsgUpdateParams{
+		Authority: authority,
+		Params:    invalid,
+	})
+	suite.Require().Error(err)
+	suite.Require().Nil(response)
+	suite.Require().Contains(err.Error(), "CleanupBatchSize")
+
+	// stored params untouched
+	suite.Require().Equal(before, suite.k.GetParams(suite.ctx))
 }
