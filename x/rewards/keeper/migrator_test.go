@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"sort"
+
+	"github.com/bze-alphateam/bze/testutil/sample"
 	"github.com/bze-alphateam/bze/x/rewards/keeper"
 	rewards "github.com/bze-alphateam/bze/x/rewards/module"
 	"github.com/bze-alphateam/bze/x/rewards/types"
@@ -43,4 +46,39 @@ func (suite *IntegrationTestSuite) TestMigrator_Migrate4to5() {
 
 func (suite *IntegrationTestSuite) TestConsensusVersionBumped() {
 	suite.Require().Equal(uint64(5), rewards.AppModule{}.ConsensusVersion())
+}
+
+// TestMigrator_Migrate4to5_BackfillsParticipantIndex covers C2: the migration
+// over multi-reward, multi-address pre-index state writes exactly one reverse
+// index entry per participant — completeness is consensus-critical, a missing
+// entry means the cleanup sweep silently skips that participant.
+func (suite *IntegrationTestSuite) TestMigrator_Migrate4to5_BackfillsParticipantIndex() {
+	addrs := make([]string, 3)
+	for i := range addrs {
+		addrs[i] = sample.AccAddress()
+	}
+	sort.Strings(addrs)
+
+	//pre-index state: participants written directly, no index entries exist
+	for _, addr := range addrs {
+		suite.k.SetStakingRewardParticipant(suite.ctx, types.StakingRewardParticipant{
+			Address: addr, RewardId: "000000000001", Amount: "10", JoinedAt: "1",
+		})
+	}
+	suite.k.SetStakingRewardParticipant(suite.ctx, types.StakingRewardParticipant{
+		Address: addrs[0], RewardId: "000000000002", Amount: "20", JoinedAt: "2",
+	})
+	suite.Require().Empty(suite.k.GetStakingRewardParticipantIndexAddresses(suite.ctx, "000000000001", "", 100))
+
+	migrator := keeper.NewMigrator(*suite.k, nil)
+	suite.Require().NoError(migrator.Migrate4to5(suite.ctx))
+
+	//exactly one entry per participant, per reward
+	suite.Require().Equal(addrs, suite.k.GetStakingRewardParticipantIndexAddresses(suite.ctx, "000000000001", "", 100))
+	suite.Require().Equal(addrs[:1], suite.k.GetStakingRewardParticipantIndexAddresses(suite.ctx, "000000000002", "", 100))
+
+	//idempotent: a second run changes nothing
+	suite.Require().NoError(migrator.Migrate4to5(suite.ctx))
+	suite.Require().Equal(addrs, suite.k.GetStakingRewardParticipantIndexAddresses(suite.ctx, "000000000001", "", 100))
+	suite.Require().Equal(addrs[:1], suite.k.GetStakingRewardParticipantIndexAddresses(suite.ctx, "000000000002", "", 100))
 }

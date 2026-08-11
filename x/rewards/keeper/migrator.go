@@ -48,7 +48,8 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 
 // Migrate4to5 migrates the x/rewards module state from consensus version 4 to
 // version 5. It sets the new boost parameters (CreateBoostFee and
-// MaxBoostsPerReward) to their default values.
+// MaxBoostsPerReward) to their default values and backfills the staking
+// reward participant reverse index from the participant store.
 func (m Migrator) Migrate4to5(ctx sdk.Context) error {
 	adapter := runtime.KVStoreAdapter(m.keeper.storeService.OpenKVStore(ctx))
 	store := prefix.NewStore(adapter, []byte{})

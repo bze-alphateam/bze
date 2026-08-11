@@ -237,6 +237,8 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 	}
 	k.SetStakingRewardParticipant(ctx, participant)
 	k.SetStakingReward(ctx, stakingReward)
+	//reverse index entry powering per-reward enumeration (idempotent on top-ups)
+	k.SetStakingRewardParticipantIndexEntry(ctx, participant.RewardId, participant.Address)
 	//stamp a boost entry at the current accumulator for every existing boost,
 	//finished included: the joiner earns from this point onward only
 	k.stampBoostParticipants(ctx, participant.Address, participant.RewardId)
@@ -319,6 +321,7 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 
 	k.RemoveStakingRewardParticipant(ctx, participation.Address, participation.RewardId)
 	k.RemoveRewardBoostParticipants(ctx, participation.Address, participation.RewardId)
+	k.RemoveStakingRewardParticipantIndexEntry(ctx, participation.RewardId, participation.Address)
 
 	remainingStakedAmount := stakedAmountInt.Sub(partCoins.AmountOf(stakingReward.StakingDenom))
 	stakingReward.StakedAmount = remainingStakedAmount.String()
