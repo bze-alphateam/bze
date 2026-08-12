@@ -35,6 +35,27 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgDeleteStakingReward{},
 	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgCreateDenomReward{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgJoinDenomReward{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgExitDenomReward{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgClaimDenomRewards{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgCreateDenomRewardSchedule{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgUpdateDenomRewardSchedule{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgDistributeDenomRewards{},
+	)
 	// this line is used by starport scaffolding # 3
 
 	registry.RegisterImplementations((*sdk.Msg)(nil),

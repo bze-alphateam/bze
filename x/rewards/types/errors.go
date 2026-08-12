@@ -23,4 +23,11 @@ var (
 
 	ErrStakingRewardNotFinished = sdkerrors.Register(ModuleName, 5013, "staking reward is not finished")
 	ErrStakingRewardNotEmpty    = sdkerrors.Register(ModuleName, 5014, "staking reward still has staked funds: stakers must exit first")
+
+	// Denom Rewards errors
+	ErrDenomRewardNotFound    = sdkerrors.Register(ModuleName, 5015, "denom reward not found")
+	ErrDenomRewardExists      = sdkerrors.Register(ModuleName, 5016, "a denom reward already exists for this denom")
+	ErrPrizeDenomCapReached   = sdkerrors.Register(ModuleName, 5017, "prize denom cap reached for this denom reward")
+	ErrNoStakersInDenomReward = sdkerrors.Register(ModuleName, 5018, "denom reward has no stakers")
+	ErrInvalidScheduleId      = sdkerrors.Register(ModuleName, 5019, "invalid schedule_id")
 )

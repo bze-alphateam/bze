@@ -1,0 +1,44 @@
+package types
+
+import (
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+)
+
+var _ sdk.Msg = &MsgDistributeDenomRewards{}
+
+func NewMsgDistributeDenomRewards(creator string, denom string, prizeDenom string, amount string) *MsgDistributeDenomRewards {
+	return &MsgDistributeDenomRewards{
+		Creator:    creator,
+		Denom:      denom,
+		PrizeDenom: prizeDenom,
+		Amount:     amount,
+	}
+}
+
+func (msg *MsgDistributeDenomRewards) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+
+	if msg.Denom == "" {
+		return errorsmod.Wrap(ErrInvalidStakingDenom, "denom cannot be empty")
+	}
+
+	if msg.PrizeDenom == "" {
+		return errorsmod.Wrap(ErrInvalidPrizeDenom, "prize_denom cannot be empty")
+	}
+
+	amtInt, ok := math.NewIntFromString(msg.Amount)
+	if !ok {
+		return errorsmod.Wrap(ErrInvalidAmount, "could not convert amount")
+	}
+	if !amtInt.IsPositive() {
+		return errorsmod.Wrap(ErrInvalidAmount, "amount should be greater than 0")
+	}
+
+	return nil
+}
