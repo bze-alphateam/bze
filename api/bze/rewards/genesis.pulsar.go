@@ -524,6 +524,261 @@ func (x *_GenesisState_13_list) IsValid() bool {
 	return x.list != nil
 }
 
+var _ protoreflect.List = (*_GenesisState_17_list)(nil)
+
+type _GenesisState_17_list struct {
+	list *[]*DenomReward
+}
+
+func (x *_GenesisState_17_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_17_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_17_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DenomReward)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_17_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DenomReward)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_17_list) AppendMutable() protoreflect.Value {
+	v := new(DenomReward)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_17_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_17_list) NewElement() protoreflect.Value {
+	v := new(DenomReward)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_17_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_18_list)(nil)
+
+type _GenesisState_18_list struct {
+	list *[]*DenomRewardPrize
+}
+
+func (x *_GenesisState_18_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_18_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_18_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DenomRewardPrize)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_18_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DenomRewardPrize)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_18_list) AppendMutable() protoreflect.Value {
+	v := new(DenomRewardPrize)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_18_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_18_list) NewElement() protoreflect.Value {
+	v := new(DenomRewardPrize)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_18_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_19_list)(nil)
+
+type _GenesisState_19_list struct {
+	list *[]*DenomRewardParticipant
+}
+
+func (x *_GenesisState_19_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_19_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_19_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DenomRewardParticipant)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_19_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DenomRewardParticipant)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_19_list) AppendMutable() protoreflect.Value {
+	v := new(DenomRewardParticipant)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_19_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_19_list) NewElement() protoreflect.Value {
+	v := new(DenomRewardParticipant)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_19_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_20_list)(nil)
+
+type _GenesisState_20_list struct {
+	list *[]*DenomRewardParticipantIndex
+}
+
+func (x *_GenesisState_20_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_20_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_20_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DenomRewardParticipantIndex)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_20_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DenomRewardParticipantIndex)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_20_list) AppendMutable() protoreflect.Value {
+	v := new(DenomRewardParticipantIndex)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_20_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_20_list) NewElement() protoreflect.Value {
+	v := new(DenomRewardParticipantIndex)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_20_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_21_list)(nil)
+
+type _GenesisState_21_list struct {
+	list *[]*DenomRewardSchedule
+}
+
+func (x *_GenesisState_21_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_21_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_21_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DenomRewardSchedule)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_21_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DenomRewardSchedule)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_21_list) AppendMutable() protoreflect.Value {
+	v := new(DenomRewardSchedule)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_21_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_21_list) NewElement() protoreflect.Value {
+	v := new(DenomRewardSchedule)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_21_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
 	md_GenesisState                                        protoreflect.MessageDescriptor
 	fd_GenesisState_params                                 protoreflect.FieldDescriptor
@@ -542,6 +797,13 @@ var (
 	fd_GenesisState_unlock_participants_queue              protoreflect.FieldDescriptor
 	fd_GenesisState_staking_rewards_distribution_queue     protoreflect.FieldDescriptor
 	fd_GenesisState_trading_reward_expiration_queue        protoreflect.FieldDescriptor
+	fd_GenesisState_denom_reward_list                      protoreflect.FieldDescriptor
+	fd_GenesisState_denom_reward_prize_list                protoreflect.FieldDescriptor
+	fd_GenesisState_denom_reward_participant_list          protoreflect.FieldDescriptor
+	fd_GenesisState_denom_reward_participant_index_list    protoreflect.FieldDescriptor
+	fd_GenesisState_denom_reward_schedule_list             protoreflect.FieldDescriptor
+	fd_GenesisState_denom_reward_schedule_counter          protoreflect.FieldDescriptor
+	fd_GenesisState_denom_rewards_distribution_queue       protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -563,6 +825,13 @@ func init() {
 	fd_GenesisState_unlock_participants_queue = md_GenesisState.Fields().ByName("unlock_participants_queue")
 	fd_GenesisState_staking_rewards_distribution_queue = md_GenesisState.Fields().ByName("staking_rewards_distribution_queue")
 	fd_GenesisState_trading_reward_expiration_queue = md_GenesisState.Fields().ByName("trading_reward_expiration_queue")
+	fd_GenesisState_denom_reward_list = md_GenesisState.Fields().ByName("denom_reward_list")
+	fd_GenesisState_denom_reward_prize_list = md_GenesisState.Fields().ByName("denom_reward_prize_list")
+	fd_GenesisState_denom_reward_participant_list = md_GenesisState.Fields().ByName("denom_reward_participant_list")
+	fd_GenesisState_denom_reward_participant_index_list = md_GenesisState.Fields().ByName("denom_reward_participant_index_list")
+	fd_GenesisState_denom_reward_schedule_list = md_GenesisState.Fields().ByName("denom_reward_schedule_list")
+	fd_GenesisState_denom_reward_schedule_counter = md_GenesisState.Fields().ByName("denom_reward_schedule_counter")
+	fd_GenesisState_denom_rewards_distribution_queue = md_GenesisState.Fields().ByName("denom_rewards_distribution_queue")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -726,6 +995,48 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
+	if len(x.DenomRewardList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_17_list{list: &x.DenomRewardList})
+		if !f(fd_GenesisState_denom_reward_list, value) {
+			return
+		}
+	}
+	if len(x.DenomRewardPrizeList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_18_list{list: &x.DenomRewardPrizeList})
+		if !f(fd_GenesisState_denom_reward_prize_list, value) {
+			return
+		}
+	}
+	if len(x.DenomRewardParticipantList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_19_list{list: &x.DenomRewardParticipantList})
+		if !f(fd_GenesisState_denom_reward_participant_list, value) {
+			return
+		}
+	}
+	if len(x.DenomRewardParticipantIndexList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_20_list{list: &x.DenomRewardParticipantIndexList})
+		if !f(fd_GenesisState_denom_reward_participant_index_list, value) {
+			return
+		}
+	}
+	if len(x.DenomRewardScheduleList) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_21_list{list: &x.DenomRewardScheduleList})
+		if !f(fd_GenesisState_denom_reward_schedule_list, value) {
+			return
+		}
+	}
+	if x.DenomRewardScheduleCounter != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.DenomRewardScheduleCounter)
+		if !f(fd_GenesisState_denom_reward_schedule_counter, value) {
+			return
+		}
+	}
+	if x.DenomRewardsDistributionQueue != nil {
+		value := protoreflect.ValueOfMessage(x.DenomRewardsDistributionQueue.ProtoReflect())
+		if !f(fd_GenesisState_denom_rewards_distribution_queue, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -773,6 +1084,20 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 		return x.StakingRewardsDistributionQueue != nil
 	case "bze.rewards.GenesisState.trading_reward_expiration_queue":
 		return x.TradingRewardExpirationQueue != nil
+	case "bze.rewards.GenesisState.denom_reward_list":
+		return len(x.DenomRewardList) != 0
+	case "bze.rewards.GenesisState.denom_reward_prize_list":
+		return len(x.DenomRewardPrizeList) != 0
+	case "bze.rewards.GenesisState.denom_reward_participant_list":
+		return len(x.DenomRewardParticipantList) != 0
+	case "bze.rewards.GenesisState.denom_reward_participant_index_list":
+		return len(x.DenomRewardParticipantIndexList) != 0
+	case "bze.rewards.GenesisState.denom_reward_schedule_list":
+		return len(x.DenomRewardScheduleList) != 0
+	case "bze.rewards.GenesisState.denom_reward_schedule_counter":
+		return x.DenomRewardScheduleCounter != uint64(0)
+	case "bze.rewards.GenesisState.denom_rewards_distribution_queue":
+		return x.DenomRewardsDistributionQueue != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.GenesisState"))
@@ -821,6 +1146,20 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 		x.StakingRewardsDistributionQueue = nil
 	case "bze.rewards.GenesisState.trading_reward_expiration_queue":
 		x.TradingRewardExpirationQueue = nil
+	case "bze.rewards.GenesisState.denom_reward_list":
+		x.DenomRewardList = nil
+	case "bze.rewards.GenesisState.denom_reward_prize_list":
+		x.DenomRewardPrizeList = nil
+	case "bze.rewards.GenesisState.denom_reward_participant_list":
+		x.DenomRewardParticipantList = nil
+	case "bze.rewards.GenesisState.denom_reward_participant_index_list":
+		x.DenomRewardParticipantIndexList = nil
+	case "bze.rewards.GenesisState.denom_reward_schedule_list":
+		x.DenomRewardScheduleList = nil
+	case "bze.rewards.GenesisState.denom_reward_schedule_counter":
+		x.DenomRewardScheduleCounter = uint64(0)
+	case "bze.rewards.GenesisState.denom_rewards_distribution_queue":
+		x.DenomRewardsDistributionQueue = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.GenesisState"))
@@ -915,6 +1254,42 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 	case "bze.rewards.GenesisState.trading_reward_expiration_queue":
 		value := x.TradingRewardExpirationQueue
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "bze.rewards.GenesisState.denom_reward_list":
+		if len(x.DenomRewardList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_17_list{})
+		}
+		listValue := &_GenesisState_17_list{list: &x.DenomRewardList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.rewards.GenesisState.denom_reward_prize_list":
+		if len(x.DenomRewardPrizeList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_18_list{})
+		}
+		listValue := &_GenesisState_18_list{list: &x.DenomRewardPrizeList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.rewards.GenesisState.denom_reward_participant_list":
+		if len(x.DenomRewardParticipantList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_19_list{})
+		}
+		listValue := &_GenesisState_19_list{list: &x.DenomRewardParticipantList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.rewards.GenesisState.denom_reward_participant_index_list":
+		if len(x.DenomRewardParticipantIndexList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_20_list{})
+		}
+		listValue := &_GenesisState_20_list{list: &x.DenomRewardParticipantIndexList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.rewards.GenesisState.denom_reward_schedule_list":
+		if len(x.DenomRewardScheduleList) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_21_list{})
+		}
+		listValue := &_GenesisState_21_list{list: &x.DenomRewardScheduleList}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.rewards.GenesisState.denom_reward_schedule_counter":
+		value := x.DenomRewardScheduleCounter
+		return protoreflect.ValueOfUint64(value)
+	case "bze.rewards.GenesisState.denom_rewards_distribution_queue":
+		value := x.DenomRewardsDistributionQueue
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.GenesisState"))
@@ -987,6 +1362,30 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 		x.StakingRewardsDistributionQueue = value.Message().Interface().(*StakingRewardsDistributionQueue)
 	case "bze.rewards.GenesisState.trading_reward_expiration_queue":
 		x.TradingRewardExpirationQueue = value.Message().Interface().(*TradingRewardExpirationQueue)
+	case "bze.rewards.GenesisState.denom_reward_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_17_list)
+		x.DenomRewardList = *clv.list
+	case "bze.rewards.GenesisState.denom_reward_prize_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_18_list)
+		x.DenomRewardPrizeList = *clv.list
+	case "bze.rewards.GenesisState.denom_reward_participant_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_19_list)
+		x.DenomRewardParticipantList = *clv.list
+	case "bze.rewards.GenesisState.denom_reward_participant_index_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_20_list)
+		x.DenomRewardParticipantIndexList = *clv.list
+	case "bze.rewards.GenesisState.denom_reward_schedule_list":
+		lv := value.List()
+		clv := lv.(*_GenesisState_21_list)
+		x.DenomRewardScheduleList = *clv.list
+	case "bze.rewards.GenesisState.denom_reward_schedule_counter":
+		x.DenomRewardScheduleCounter = value.Uint()
+	case "bze.rewards.GenesisState.denom_rewards_distribution_queue":
+		x.DenomRewardsDistributionQueue = value.Message().Interface().(*DenomRewardsDistributionQueue)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.GenesisState"))
@@ -1087,10 +1486,47 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 			x.TradingRewardExpirationQueue = new(TradingRewardExpirationQueue)
 		}
 		return protoreflect.ValueOfMessage(x.TradingRewardExpirationQueue.ProtoReflect())
+	case "bze.rewards.GenesisState.denom_reward_list":
+		if x.DenomRewardList == nil {
+			x.DenomRewardList = []*DenomReward{}
+		}
+		value := &_GenesisState_17_list{list: &x.DenomRewardList}
+		return protoreflect.ValueOfList(value)
+	case "bze.rewards.GenesisState.denom_reward_prize_list":
+		if x.DenomRewardPrizeList == nil {
+			x.DenomRewardPrizeList = []*DenomRewardPrize{}
+		}
+		value := &_GenesisState_18_list{list: &x.DenomRewardPrizeList}
+		return protoreflect.ValueOfList(value)
+	case "bze.rewards.GenesisState.denom_reward_participant_list":
+		if x.DenomRewardParticipantList == nil {
+			x.DenomRewardParticipantList = []*DenomRewardParticipant{}
+		}
+		value := &_GenesisState_19_list{list: &x.DenomRewardParticipantList}
+		return protoreflect.ValueOfList(value)
+	case "bze.rewards.GenesisState.denom_reward_participant_index_list":
+		if x.DenomRewardParticipantIndexList == nil {
+			x.DenomRewardParticipantIndexList = []*DenomRewardParticipantIndex{}
+		}
+		value := &_GenesisState_20_list{list: &x.DenomRewardParticipantIndexList}
+		return protoreflect.ValueOfList(value)
+	case "bze.rewards.GenesisState.denom_reward_schedule_list":
+		if x.DenomRewardScheduleList == nil {
+			x.DenomRewardScheduleList = []*DenomRewardSchedule{}
+		}
+		value := &_GenesisState_21_list{list: &x.DenomRewardScheduleList}
+		return protoreflect.ValueOfList(value)
+	case "bze.rewards.GenesisState.denom_rewards_distribution_queue":
+		if x.DenomRewardsDistributionQueue == nil {
+			x.DenomRewardsDistributionQueue = new(DenomRewardsDistributionQueue)
+		}
+		return protoreflect.ValueOfMessage(x.DenomRewardsDistributionQueue.ProtoReflect())
 	case "bze.rewards.GenesisState.staking_rewards_counter":
 		panic(fmt.Errorf("field staking_rewards_counter of message bze.rewards.GenesisState is not mutable"))
 	case "bze.rewards.GenesisState.trading_rewards_counter":
 		panic(fmt.Errorf("field trading_rewards_counter of message bze.rewards.GenesisState is not mutable"))
+	case "bze.rewards.GenesisState.denom_reward_schedule_counter":
+		panic(fmt.Errorf("field denom_reward_schedule_counter of message bze.rewards.GenesisState is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.GenesisState"))
@@ -1149,6 +1585,26 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "bze.rewards.GenesisState.trading_reward_expiration_queue":
 		m := new(TradingRewardExpirationQueue)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "bze.rewards.GenesisState.denom_reward_list":
+		list := []*DenomReward{}
+		return protoreflect.ValueOfList(&_GenesisState_17_list{list: &list})
+	case "bze.rewards.GenesisState.denom_reward_prize_list":
+		list := []*DenomRewardPrize{}
+		return protoreflect.ValueOfList(&_GenesisState_18_list{list: &list})
+	case "bze.rewards.GenesisState.denom_reward_participant_list":
+		list := []*DenomRewardParticipant{}
+		return protoreflect.ValueOfList(&_GenesisState_19_list{list: &list})
+	case "bze.rewards.GenesisState.denom_reward_participant_index_list":
+		list := []*DenomRewardParticipantIndex{}
+		return protoreflect.ValueOfList(&_GenesisState_20_list{list: &list})
+	case "bze.rewards.GenesisState.denom_reward_schedule_list":
+		list := []*DenomRewardSchedule{}
+		return protoreflect.ValueOfList(&_GenesisState_21_list{list: &list})
+	case "bze.rewards.GenesisState.denom_reward_schedule_counter":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "bze.rewards.GenesisState.denom_rewards_distribution_queue":
+		m := new(DenomRewardsDistributionQueue)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -1301,6 +1757,43 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			l = options.Size(x.TradingRewardExpirationQueue)
 			n += 2 + l + runtime.Sov(uint64(l))
 		}
+		if len(x.DenomRewardList) > 0 {
+			for _, e := range x.DenomRewardList {
+				l = options.Size(e)
+				n += 2 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.DenomRewardPrizeList) > 0 {
+			for _, e := range x.DenomRewardPrizeList {
+				l = options.Size(e)
+				n += 2 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.DenomRewardParticipantList) > 0 {
+			for _, e := range x.DenomRewardParticipantList {
+				l = options.Size(e)
+				n += 2 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.DenomRewardParticipantIndexList) > 0 {
+			for _, e := range x.DenomRewardParticipantIndexList {
+				l = options.Size(e)
+				n += 2 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.DenomRewardScheduleList) > 0 {
+			for _, e := range x.DenomRewardScheduleList {
+				l = options.Size(e)
+				n += 2 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.DenomRewardScheduleCounter != 0 {
+			n += 2 + runtime.Sov(uint64(x.DenomRewardScheduleCounter))
+		}
+		if x.DenomRewardsDistributionQueue != nil {
+			l = options.Size(x.DenomRewardsDistributionQueue)
+			n += 2 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -1329,6 +1822,119 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.DenomRewardsDistributionQueue != nil {
+			encoded, err := options.Marshal(x.DenomRewardsDistributionQueue)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xba
+		}
+		if x.DenomRewardScheduleCounter != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.DenomRewardScheduleCounter))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xb0
+		}
+		if len(x.DenomRewardScheduleList) > 0 {
+			for iNdEx := len(x.DenomRewardScheduleList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.DenomRewardScheduleList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x1
+				i--
+				dAtA[i] = 0xaa
+			}
+		}
+		if len(x.DenomRewardParticipantIndexList) > 0 {
+			for iNdEx := len(x.DenomRewardParticipantIndexList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.DenomRewardParticipantIndexList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x1
+				i--
+				dAtA[i] = 0xa2
+			}
+		}
+		if len(x.DenomRewardParticipantList) > 0 {
+			for iNdEx := len(x.DenomRewardParticipantList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.DenomRewardParticipantList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x1
+				i--
+				dAtA[i] = 0x9a
+			}
+		}
+		if len(x.DenomRewardPrizeList) > 0 {
+			for iNdEx := len(x.DenomRewardPrizeList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.DenomRewardPrizeList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x1
+				i--
+				dAtA[i] = 0x92
+			}
+		}
+		if len(x.DenomRewardList) > 0 {
+			for iNdEx := len(x.DenomRewardList) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.DenomRewardList[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x1
+				i--
+				dAtA[i] = 0x8a
+			}
 		}
 		if x.TradingRewardExpirationQueue != nil {
 			encoded, err := options.Marshal(x.TradingRewardExpirationQueue)
@@ -2129,6 +2735,231 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
+			case 17:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DenomRewardList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.DenomRewardList = append(x.DenomRewardList, &DenomReward{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.DenomRewardList[len(x.DenomRewardList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 18:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DenomRewardPrizeList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.DenomRewardPrizeList = append(x.DenomRewardPrizeList, &DenomRewardPrize{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.DenomRewardPrizeList[len(x.DenomRewardPrizeList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 19:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DenomRewardParticipantList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.DenomRewardParticipantList = append(x.DenomRewardParticipantList, &DenomRewardParticipant{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.DenomRewardParticipantList[len(x.DenomRewardParticipantList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 20:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DenomRewardParticipantIndexList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.DenomRewardParticipantIndexList = append(x.DenomRewardParticipantIndexList, &DenomRewardParticipantIndex{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.DenomRewardParticipantIndexList[len(x.DenomRewardParticipantIndexList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 21:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DenomRewardScheduleList", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.DenomRewardScheduleList = append(x.DenomRewardScheduleList, &DenomRewardSchedule{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.DenomRewardScheduleList[len(x.DenomRewardScheduleList)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 22:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DenomRewardScheduleCounter", wireType)
+				}
+				x.DenomRewardScheduleCounter = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.DenomRewardScheduleCounter |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 23:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DenomRewardsDistributionQueue", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.DenomRewardsDistributionQueue == nil {
+					x.DenomRewardsDistributionQueue = &DenomRewardsDistributionQueue{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.DenomRewardsDistributionQueue); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -2200,6 +3031,14 @@ type GenesisState struct {
 	UnlockParticipantsQueue            *UnlockParticipantsQueue         `protobuf:"bytes,14,opt,name=unlock_participants_queue,json=unlockParticipantsQueue,proto3" json:"unlock_participants_queue,omitempty"`
 	StakingRewardsDistributionQueue    *StakingRewardsDistributionQueue `protobuf:"bytes,15,opt,name=staking_rewards_distribution_queue,json=stakingRewardsDistributionQueue,proto3" json:"staking_rewards_distribution_queue,omitempty"`
 	TradingRewardExpirationQueue       *TradingRewardExpirationQueue    `protobuf:"bytes,16,opt,name=trading_reward_expiration_queue,json=tradingRewardExpirationQueue,proto3" json:"trading_reward_expiration_queue,omitempty"`
+	// Denom Rewards genesis (additive)
+	DenomRewardList                 []*DenomReward                 `protobuf:"bytes,17,rep,name=denom_reward_list,json=denomRewardList,proto3" json:"denom_reward_list,omitempty"`
+	DenomRewardPrizeList            []*DenomRewardPrize            `protobuf:"bytes,18,rep,name=denom_reward_prize_list,json=denomRewardPrizeList,proto3" json:"denom_reward_prize_list,omitempty"`
+	DenomRewardParticipantList      []*DenomRewardParticipant      `protobuf:"bytes,19,rep,name=denom_reward_participant_list,json=denomRewardParticipantList,proto3" json:"denom_reward_participant_list,omitempty"`
+	DenomRewardParticipantIndexList []*DenomRewardParticipantIndex `protobuf:"bytes,20,rep,name=denom_reward_participant_index_list,json=denomRewardParticipantIndexList,proto3" json:"denom_reward_participant_index_list,omitempty"`
+	DenomRewardScheduleList         []*DenomRewardSchedule         `protobuf:"bytes,21,rep,name=denom_reward_schedule_list,json=denomRewardScheduleList,proto3" json:"denom_reward_schedule_list,omitempty"`
+	DenomRewardScheduleCounter      uint64                         `protobuf:"varint,22,opt,name=denom_reward_schedule_counter,json=denomRewardScheduleCounter,proto3" json:"denom_reward_schedule_counter,omitempty"`
+	DenomRewardsDistributionQueue   *DenomRewardsDistributionQueue `protobuf:"bytes,23,opt,name=denom_rewards_distribution_queue,json=denomRewardsDistributionQueue,proto3" json:"denom_rewards_distribution_queue,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -2334,6 +3173,55 @@ func (x *GenesisState) GetTradingRewardExpirationQueue() *TradingRewardExpiratio
 	return nil
 }
 
+func (x *GenesisState) GetDenomRewardList() []*DenomReward {
+	if x != nil {
+		return x.DenomRewardList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetDenomRewardPrizeList() []*DenomRewardPrize {
+	if x != nil {
+		return x.DenomRewardPrizeList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetDenomRewardParticipantList() []*DenomRewardParticipant {
+	if x != nil {
+		return x.DenomRewardParticipantList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetDenomRewardParticipantIndexList() []*DenomRewardParticipantIndex {
+	if x != nil {
+		return x.DenomRewardParticipantIndexList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetDenomRewardScheduleList() []*DenomRewardSchedule {
+	if x != nil {
+		return x.DenomRewardScheduleList
+	}
+	return nil
+}
+
+func (x *GenesisState) GetDenomRewardScheduleCounter() uint64 {
+	if x != nil {
+		return x.DenomRewardScheduleCounter
+	}
+	return 0
+}
+
+func (x *GenesisState) GetDenomRewardsDistributionQueue() *DenomRewardsDistributionQueue {
+	if x != nil {
+		return x.DenomRewardsDistributionQueue
+	}
+	return nil
+}
+
 var File_bze_rewards_genesis_proto protoreflect.FileDescriptor
 
 var file_bze_rewards_genesis_proto_rawDesc = []byte{
@@ -2345,7 +3233,7 @@ var file_bze_rewards_genesis_proto_rawDesc = []byte{
 	0x6f, 0x1a, 0x18, 0x62, 0x7a, 0x65, 0x2f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2f, 0x70,
 	0x61, 0x72, 0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x17, 0x62, 0x7a, 0x65,
 	0x2f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x22, 0xd2, 0x0c, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73,
+	0x72, 0x6f, 0x74, 0x6f, 0x22, 0x83, 0x12, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73,
 	0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x36, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61,
 	0x72, 0x64, 0x73, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00,
@@ -2446,17 +3334,60 @@ var file_bze_rewards_genesis_proto_rawDesc = []byte{
 	0x72, 0x61, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x45, 0x78, 0x70, 0x69,
 	0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x52, 0x1c, 0x74, 0x72, 0x61,
 	0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x45, 0x78, 0x70, 0x69, 0x72, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x42, 0x9a, 0x01, 0x0a, 0x0f, 0x63, 0x6f,
-	0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x42, 0x0c, 0x47,
-	0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x67,
-	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c,
-	0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f,
-	0x62, 0x7a, 0x65, 0x2f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xa2, 0x02, 0x03, 0x42, 0x52,
-	0x58, 0xaa, 0x02, 0x0b, 0x42, 0x7a, 0x65, 0x2e, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xca,
-	0x02, 0x0b, 0x42, 0x7a, 0x65, 0x5c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xe2, 0x02, 0x17,
-	0x42, 0x7a, 0x65, 0x5c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x5c, 0x47, 0x50, 0x42, 0x4d,
-	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x52,
-	0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x74, 0x69, 0x6f, 0x6e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12, 0x4a, 0x0a, 0x11, 0x64, 0x65, 0x6e,
+	0x6f, 0x6d, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x11,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72,
+	0x64, 0x73, 0x2e, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x42, 0x04,
+	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72,
+	0x64, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x5a, 0x0a, 0x17, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x72,
+	0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x70, 0x72, 0x69, 0x7a, 0x65, 0x5f, 0x6c, 0x69, 0x73, 0x74,
+	0x18, 0x12, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77,
+	0x61, 0x72, 0x64, 0x73, 0x2e, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64,
+	0x50, 0x72, 0x69, 0x7a, 0x65, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x14, 0x64, 0x65, 0x6e,
+	0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x50, 0x72, 0x69, 0x7a, 0x65, 0x4c, 0x69, 0x73,
+	0x74, 0x12, 0x6c, 0x0a, 0x1d, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72,
+	0x64, 0x5f, 0x70, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x5f, 0x6c, 0x69,
+	0x73, 0x74, 0x18, 0x13, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72,
+	0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61,
+	0x72, 0x64, 0x50, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x42, 0x04, 0xc8,
+	0xde, 0x1f, 0x00, 0x52, 0x1a, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64,
+	0x50, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x4c, 0x69, 0x73, 0x74, 0x12,
+	0x7c, 0x0a, 0x23, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f,
+	0x70, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x5f, 0x69, 0x6e, 0x64, 0x65,
+	0x78, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x14, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x28, 0x2e, 0x62,
+	0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x44, 0x65, 0x6e, 0x6f, 0x6d,
+	0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x50, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e,
+	0x74, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x1f, 0x64, 0x65,
+	0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x50, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69,
+	0x70, 0x61, 0x6e, 0x74, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x63, 0x0a,
+	0x1a, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x73, 0x63,
+	0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x15, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x20, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e,
+	0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x53, 0x63, 0x68, 0x65, 0x64,
+	0x75, 0x6c, 0x65, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x17, 0x64, 0x65, 0x6e, 0x6f, 0x6d,
+	0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x53, 0x63, 0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x4c, 0x69,
+	0x73, 0x74, 0x12, 0x41, 0x0a, 0x1d, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x72, 0x65, 0x77, 0x61,
+	0x72, 0x64, 0x5f, 0x73, 0x63, 0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x5f, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x65, 0x72, 0x18, 0x16, 0x20, 0x01, 0x28, 0x04, 0x52, 0x1a, 0x64, 0x65, 0x6e, 0x6f, 0x6d,
+	0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x53, 0x63, 0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x43, 0x6f,
+	0x75, 0x6e, 0x74, 0x65, 0x72, 0x12, 0x73, 0x0a, 0x20, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x72,
+	0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x5f, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74,
+	0x69, 0x6f, 0x6e, 0x5f, 0x71, 0x75, 0x65, 0x75, 0x65, 0x18, 0x17, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x2a, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2e, 0x44, 0x65,
+	0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69,
+	0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x52, 0x1d, 0x64, 0x65, 0x6e,
+	0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62,
+	0x75, 0x74, 0x69, 0x6f, 0x6e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x42, 0x9a, 0x01, 0x0a, 0x0f, 0x63,
+	0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x42, 0x0c,
+	0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c,
+	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61,
+	0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69,
+	0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xa2, 0x02, 0x03, 0x42,
+	0x52, 0x58, 0xaa, 0x02, 0x0b, 0x42, 0x7a, 0x65, 0x2e, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73,
+	0xca, 0x02, 0x0b, 0x42, 0x7a, 0x65, 0x5c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xe2, 0x02,
+	0x17, 0x42, 0x7a, 0x65, 0x5c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x5c, 0x47, 0x50, 0x42,
+	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x3a, 0x3a,
+	0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2486,6 +3417,12 @@ var file_bze_rewards_genesis_proto_goTypes = []interface{}{
 	(*UnlockParticipantsQueue)(nil),         // 10: bze.rewards.UnlockParticipantsQueue
 	(*StakingRewardsDistributionQueue)(nil), // 11: bze.rewards.StakingRewardsDistributionQueue
 	(*TradingRewardExpirationQueue)(nil),    // 12: bze.rewards.TradingRewardExpirationQueue
+	(*DenomReward)(nil),                     // 13: bze.rewards.DenomReward
+	(*DenomRewardPrize)(nil),                // 14: bze.rewards.DenomRewardPrize
+	(*DenomRewardParticipant)(nil),          // 15: bze.rewards.DenomRewardParticipant
+	(*DenomRewardParticipantIndex)(nil),     // 16: bze.rewards.DenomRewardParticipantIndex
+	(*DenomRewardSchedule)(nil),             // 17: bze.rewards.DenomRewardSchedule
+	(*DenomRewardsDistributionQueue)(nil),   // 18: bze.rewards.DenomRewardsDistributionQueue
 }
 var file_bze_rewards_genesis_proto_depIdxs = []int32{
 	1,  // 0: bze.rewards.GenesisState.params:type_name -> bze.rewards.Params
@@ -2502,11 +3439,17 @@ var file_bze_rewards_genesis_proto_depIdxs = []int32{
 	10, // 11: bze.rewards.GenesisState.unlock_participants_queue:type_name -> bze.rewards.UnlockParticipantsQueue
 	11, // 12: bze.rewards.GenesisState.staking_rewards_distribution_queue:type_name -> bze.rewards.StakingRewardsDistributionQueue
 	12, // 13: bze.rewards.GenesisState.trading_reward_expiration_queue:type_name -> bze.rewards.TradingRewardExpirationQueue
-	14, // [14:14] is the sub-list for method output_type
-	14, // [14:14] is the sub-list for method input_type
-	14, // [14:14] is the sub-list for extension type_name
-	14, // [14:14] is the sub-list for extension extendee
-	0,  // [0:14] is the sub-list for field type_name
+	13, // 14: bze.rewards.GenesisState.denom_reward_list:type_name -> bze.rewards.DenomReward
+	14, // 15: bze.rewards.GenesisState.denom_reward_prize_list:type_name -> bze.rewards.DenomRewardPrize
+	15, // 16: bze.rewards.GenesisState.denom_reward_participant_list:type_name -> bze.rewards.DenomRewardParticipant
+	16, // 17: bze.rewards.GenesisState.denom_reward_participant_index_list:type_name -> bze.rewards.DenomRewardParticipantIndex
+	17, // 18: bze.rewards.GenesisState.denom_reward_schedule_list:type_name -> bze.rewards.DenomRewardSchedule
+	18, // 19: bze.rewards.GenesisState.denom_rewards_distribution_queue:type_name -> bze.rewards.DenomRewardsDistributionQueue
+	20, // [20:20] is the sub-list for method output_type
+	20, // [20:20] is the sub-list for method input_type
+	20, // [20:20] is the sub-list for extension type_name
+	20, // [20:20] is the sub-list for extension extendee
+	0,  // [0:20] is the sub-list for field type_name
 }
 
 func init() { file_bze_rewards_genesis_proto_init() }

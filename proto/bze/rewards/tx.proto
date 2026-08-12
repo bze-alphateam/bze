@@ -4,6 +4,7 @@ package bze.rewards;
 
 import "amino/amino.proto";
 import "cosmos/msg/v1/msg.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "bze/rewards/params.proto";
@@ -145,4 +146,85 @@ message MsgDeleteStakingReward {
 }
 
 message MsgDeleteStakingRewardResponse {}
+
+// Denom Rewards messages. Service RPCs are added in the handler stories
+// (alongside autocli), mirroring how the module was built so far.
+message MsgCreateDenomReward {
+  option           (amino.name) = "bze/x/rewards/MsgCreateDenomReward";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string denom   = 2;
+}
+
+message MsgCreateDenomRewardResponse {}
+
+message MsgJoinDenomReward {
+  option           (amino.name) = "bze/x/rewards/MsgJoinDenomReward";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string denom   = 2;
+  string amount  = 3;
+}
+
+message MsgJoinDenomRewardResponse {}
+
+message MsgExitDenomReward {
+  option           (amino.name) = "bze/x/rewards/MsgExitDenomReward";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string denom   = 2;
+}
+
+message MsgExitDenomRewardResponse {}
+
+message MsgClaimDenomRewards {
+  option           (amino.name) = "bze/x/rewards/MsgClaimDenomRewards";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  string denom   = 2;
+}
+
+message MsgClaimDenomRewardsResponse {
+  repeated cosmos.base.v1beta1.Coin amounts = 1 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"amounts\"",
+    (gogoproto.jsontag)      = "amounts,omitempty"
+  ];
+}
+
+message MsgCreateDenomRewardSchedule {
+  option           (amino.name) = "bze/x/rewards/MsgCreateDenomRewardSchedule";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator      = 1;
+  string denom        = 2;
+  string prize_denom  = 3;
+  string daily_amount = 4;
+  string duration     = 5;
+}
+
+message MsgCreateDenomRewardScheduleResponse {
+  string schedule_id = 1;
+}
+
+message MsgUpdateDenomRewardSchedule {
+  option           (amino.name) = "bze/x/rewards/MsgUpdateDenomRewardSchedule";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator     = 1;
+  string denom       = 2;
+  string schedule_id = 3;
+  string duration    = 4;
+}
+
+message MsgUpdateDenomRewardScheduleResponse {}
+
+message MsgDistributeDenomRewards {
+  option           (amino.name) = "bze/x/rewards/MsgDistributeDenomRewards";
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator     = 1;
+  string denom       = 2;
+  string prize_denom = 3;
+  string amount      = 4;
+}
+
+message MsgDistributeDenomRewardsResponse {}
 
