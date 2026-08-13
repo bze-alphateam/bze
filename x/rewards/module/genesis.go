@@ -70,6 +70,35 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetTradingRewardExpirationQueue(ctx, *genState.TradingRewardExpirationQueue)
 	}
 
+	// Denom Rewards state
+	for _, elem := range genState.DenomRewardList {
+		k.SetDenomReward(ctx, elem)
+	}
+
+	for _, elem := range genState.DenomRewardPrizeList {
+		k.SetDenomRewardPrize(ctx, elem)
+	}
+
+	// SetDenomRewardParticipant also writes the address-first drp/a/ marker, so the
+	// marker index (derivable state, not exported) is rebuilt here.
+	for _, elem := range genState.DenomRewardParticipantList {
+		k.SetDenomRewardParticipant(ctx, elem)
+	}
+
+	for _, elem := range genState.DenomRewardParticipantIndexList {
+		k.SetDenomRewardParticipantIndex(ctx, elem)
+	}
+
+	for _, elem := range genState.DenomRewardScheduleList {
+		k.SetDenomRewardSchedule(ctx, elem)
+	}
+
+	if genState.DenomRewardsDistributionQueue != nil {
+		k.SetDenomRewardsDistributionQueue(ctx, *genState.DenomRewardsDistributionQueue)
+	}
+
+	k.SetDenomRewardScheduleCounter(ctx, genState.DenomRewardScheduleCounter)
+
 	// this line is used by starport scaffolding # genesis/module/init
 	k.SetTradingRewardsCounter(ctx, genState.TradingRewardsCounter)
 	k.SetStakingRewardsCounter(ctx, genState.StakingRewardsCounter)
@@ -105,6 +134,19 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	if tradingExpQueue, found := k.GetTradingRewardExpirationQueue(ctx); found {
 		genesis.TradingRewardExpirationQueue = &tradingExpQueue
+	}
+
+	// Denom Rewards state. The drp/a/ marker index is NOT exported: it is derivable
+	// state, rebuilt by SetDenomRewardParticipant on import.
+	genesis.DenomRewardList = k.GetAllDenomReward(ctx)
+	genesis.DenomRewardPrizeList = k.GetAllDenomRewardPrize(ctx)
+	genesis.DenomRewardParticipantList = k.GetAllDenomRewardParticipant(ctx)
+	genesis.DenomRewardParticipantIndexList = k.GetAllDenomRewardParticipantIndex(ctx)
+	genesis.DenomRewardScheduleList = k.GetAllDenomRewardSchedule(ctx)
+	genesis.DenomRewardScheduleCounter = k.GetDenomRewardScheduleCounter(ctx)
+
+	if denomDistQueue, found := k.GetDenomRewardsDistributionQueue(ctx); found {
+		genesis.DenomRewardsDistributionQueue = &denomDistQueue
 	}
 
 	// this line is used by starport scaffolding # genesis/module/export
