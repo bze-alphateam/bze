@@ -29,6 +29,8 @@ service Msg {
   rpc DeleteStakingReward      (MsgDeleteStakingReward     ) returns (MsgDeleteStakingRewardResponse     );
   rpc CreateDenomReward        (MsgCreateDenomReward       ) returns (MsgCreateDenomRewardResponse       );
   rpc JoinDenomReward          (MsgJoinDenomReward         ) returns (MsgJoinDenomRewardResponse         );
+  rpc ExitDenomReward          (MsgExitDenomReward         ) returns (MsgExitDenomRewardResponse         );
+  rpc ClaimDenomRewards        (MsgClaimDenomRewards       ) returns (MsgClaimDenomRewardsResponse       );
 }
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {

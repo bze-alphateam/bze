@@ -144,6 +144,18 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Send a join-denom-reward tx",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}, {ProtoField: "amount"}},
 				},
+				{
+					RpcMethod:      "ExitDenomReward",
+					Use:            "exit-denom-reward [denom]",
+					Short:          "Send a exit-denom-reward tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
+				{
+					RpcMethod:      "ClaimDenomRewards",
+					Use:            "claim-denom-rewards [denom]",
+					Short:          "Send a claim-denom-rewards tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},

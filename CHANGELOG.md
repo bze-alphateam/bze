@@ -14,6 +14,7 @@ derived from it. History older than v8.0.0 lives in the
 * (x/tokenfactory) [#75](https://github.com/bze-alphateam/bze/pull/75) On-chain denom branding: `MsgSetDenomBranding` lets a denom admin attach a branding package (font plus light/dark colour palettes) to a factory denom, with `DenomBranding`/`AllDenomBranding` queries and genesis import/export.
 * (x/rewards) [#92](https://github.com/bze-alphateam/bze/pull/92) `MsgDeleteStakingReward`: permissionless removal of a finished staking reward once all stakes have exited, mirroring ExitStaking's final-exit cleanup; a removal-hook veto fails the message explicitly.
 * (x/rewards) [#96](https://github.com/bze-alphateam/bze/pull/96) Denom Rewards: add `MsgCreateDenomReward` (creates the unique per-denom staking pool with a param-snapshotted lock and min-stake, capturing the creation fee) and `MsgJoinDenomReward` (stake into a pool — first join or top-up — settling every accrued prize before the staked amount changes).
+* (x/rewards) [#97](https://github.com/bze-alphateam/bze/pull/97) Denom Rewards: add `MsgClaimDenomRewards` (pays every pending prize denom in one tx; sub-unit dust keeps accruing) and `MsgExitDenomReward` (all-or-nothing exit that settles pending prizes first, then releases the stake through the existing pending-unlock pipeline — immediately at lock 0, otherwise after lock×24 hour-epochs).
 
 ### Improvements
 

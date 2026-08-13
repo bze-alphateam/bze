@@ -188,3 +188,164 @@ func (k msgServer) JoinDenomReward(goCtx context.Context, msg *types.MsgJoinDeno
 
 	return &types.MsgJoinDenomRewardResponse{}, nil
 }
+
+// ClaimDenomRewards pays out every pending prize of the sender's position in a denom reward,
+// without touching the staked amount (Business Logic rule 11). A claim that pays nothing —
+// including a pure-dust claim, where every pending fraction truncates to zero whole units — is
+// rejected with ErrNoRewardsToClaim, and settleDenomParticipant has left every dust index
+// untouched so the fractions keep accruing (rule 12; mirrors ClaimStakingRewards).
+func (k msgServer) ClaimDenomRewards(goCtx context.Context, msg *types.MsgClaimDenomRewards) (*types.MsgClaimDenomRewardsResponse, error) {
+	if msg == nil {
+		return nil, sdkerrors.ErrInvalidRequest
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	dr, found := k.GetDenomReward(ctx, msg.Denom)
+	if !found {
+		return nil, types.ErrDenomRewardNotFound
+	}
+
+	participant, found := k.GetDenomRewardParticipant(ctx, dr.StakingDenom, msg.Creator)
+	if !found {
+		return nil, errors.Wrapf(types.ErrDenomRewardNotFound, "you are not a participant in this denom reward")
+	}
+
+	paid, err := k.settleDenomParticipant(ctx, dr, participant)
+	if err != nil {
+		return nil, err
+	}
+
+	if paid.IsZero() {
+		return nil, types.ErrNoRewardsToClaim
+	}
+
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.DenomRewardClaimEvent{
+			Denom:   dr.StakingDenom,
+			Address: msg.Creator,
+			Amounts: paid.String(),
+		},
+	)
+	if err != nil {
+		k.Logger().Error(err.Error())
+	}
+
+	return &types.MsgClaimDenomRewardsResponse{Amounts: paid}, nil
+}
+
+// ExitDenomReward removes the sender's whole position from a denom reward (exit is all-or-nothing —
+// Business Logic rule 7). The pending prizes are settled BEFORE anything is removed, in the same tx;
+// sub-unit dust still pending after that settle is forfeited and stays in escrow (rule 12). The stake
+// is then released through the shared pending-unlock pipeline under the DR's snapshotted lock:
+// lock 0 returns the funds immediately, otherwise they unlock lock×24 hour-epochs from now and earn
+// nothing meanwhile (they leave staked_amount here). Finally the position is erased — indexes,
+// participant and its address-first marker — so a later re-join starts a fresh position with fresh
+// stamps (rule 8).
+func (k msgServer) ExitDenomReward(goCtx context.Context, msg *types.MsgExitDenomReward) (*types.MsgExitDenomRewardResponse, error) {
+	if msg == nil {
+		return nil, sdkerrors.ErrInvalidRequest
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// charge the extra gas up front (mirrors ExitStaking): exits schedule future unlock work that
+	// the tx's own gas would otherwise not account for
+	params := k.GetParams(ctx)
+	ctx.GasMeter().ConsumeGas(params.ExtraGasForDenomExit, "denom_exit_extra_gas")
+
+	dr, found := k.GetDenomReward(ctx, msg.Denom)
+	if !found {
+		return nil, types.ErrDenomRewardNotFound
+	}
+
+	participant, found := k.GetDenomRewardParticipant(ctx, dr.StakingDenom, msg.Creator)
+	if !found {
+		return nil, errors.Wrapf(types.ErrDenomRewardNotFound, "you are not a participant in this denom reward")
+	}
+
+	stakedAmountInt, ok := math.NewIntFromString(dr.StakedAmount)
+	if !ok {
+		return nil, fmt.Errorf("could not transform staked amount from storage into int")
+	}
+	if !stakedAmountInt.IsPositive() {
+		//disaster in this case
+		return nil, fmt.Errorf("no staked amount left")
+	}
+
+	partAmountInt, ok := math.NewIntFromString(participant.Amount)
+	if !ok {
+		return nil, fmt.Errorf("could not transform amount from storage into int")
+	}
+
+	// settle every pending prize BEFORE any removal (rule 7): the indexes are deleted below, so an
+	// unsettled interval would be unrecoverable
+	if _, err := k.settleDenomParticipant(ctx, dr, participant); err != nil {
+		return nil, err
+	}
+
+	if err := k.beginDenomUnlock(ctx, participant, dr); err != nil {
+		return nil, err
+	}
+
+	k.RemoveAllParticipantIndexes(ctx, participant.Address, dr.StakingDenom)
+	k.RemoveDenomRewardParticipant(ctx, dr.StakingDenom, participant.Address)
+
+	dr.StakedAmount = stakedAmountInt.Sub(partAmountInt).String()
+	k.SetDenomReward(ctx, dr)
+
+	err := ctx.EventManager().EmitTypedEvent(
+		&types.DenomRewardExitEvent{
+			Denom:   dr.StakingDenom,
+			Address: msg.Creator,
+		},
+	)
+	if err != nil {
+		k.Logger().Error(err.Error())
+	}
+
+	return &types.MsgExitDenomRewardResponse{}, nil
+}
+
+// beginDenomUnlock releases an exiting participant's stake through the SAME pending-unlock store and
+// EndBlock queue the staking rewards use (the designed store sharing — the pipeline is generic and is
+// only CALLED here, never copied or modified). It mirrors beginUnlock: a snapshotted lock of 0 sends
+// the funds back immediately; otherwise a pending-unlock entry is written at hour-epoch now + lock×24,
+// merging amounts with an existing entry at the same epoch so everything unlocks at once. The key part
+// is "dr/{denom}/{address}" — collision-free against SR entries by construction, because SR reward ids
+// are digits-only and can never equal the literal "dr".
+func (k msgServer) beginDenomUnlock(ctx sdk.Context, p types.DenomRewardParticipant, dr types.DenomReward) error {
+	if dr.Lock == 0 {
+		pending := types.PendingUnlockParticipant{
+			Address: p.Address,
+			Amount:  p.Amount,
+			Denom:   dr.StakingDenom,
+		}
+		return k.performUnlock(ctx, &pending)
+	}
+
+	lockedUntil, err := k.epochKeeper.SafeGetEpochCountByIdentifier(ctx, expirationEpoch)
+	if err != nil {
+		return err
+	}
+
+	lockedUntil += int64(dr.Lock) * 24
+	pendingKey := types.CreatePendingUnlockParticipantKey(lockedUntil, fmt.Sprintf("dr/%s/%s", dr.StakingDenom, p.Address))
+	pending := types.PendingUnlockParticipant{
+		Index:   pendingKey,
+		Address: p.Address,
+		Amount:  p.Amount,
+		Denom:   dr.StakingDenom,
+	}
+
+	inStore, found := k.GetPendingUnlockParticipant(ctx, pendingKey)
+	if found {
+		//an entry for this denom reward and participant already unlocks at the same epoch:
+		//merge the amounts, so it can all be unlocked at once
+		inStoreAmount, _ := math.NewIntFromString(inStore.Amount)
+		pendingAmount, _ := math.NewIntFromString(pending.Amount)
+		pending.Amount = pendingAmount.Add(inStoreAmount).String()
+	}
+
+	k.SetPendingUnlockParticipant(ctx, pending)
+
+	return nil
+}
