@@ -156,6 +156,24 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Send a claim-denom-rewards tx",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
 				},
+				{
+					RpcMethod:      "CreateDenomRewardSchedule",
+					Use:            "create-denom-reward-schedule [denom] [prize-denom] [daily-amount] [duration]",
+					Short:          "Send a create-denom-reward-schedule tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}, {ProtoField: "prize_denom"}, {ProtoField: "daily_amount"}, {ProtoField: "duration"}},
+				},
+				{
+					RpcMethod:      "UpdateDenomRewardSchedule",
+					Use:            "update-denom-reward-schedule [denom] [schedule-id] [duration]",
+					Short:          "Send a update-denom-reward-schedule tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}, {ProtoField: "schedule_id"}, {ProtoField: "duration"}},
+				},
+				{
+					RpcMethod:      "DistributeDenomRewards",
+					Use:            "distribute-denom-rewards [denom] [prize-denom] [amount]",
+					Short:          "Send a distribute-denom-rewards tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}, {ProtoField: "prize_denom"}, {ProtoField: "amount"}},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},

@@ -3,9 +3,12 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
+	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // settleDenomParticipant pays out and settles every pending prize of a participant's position in a
@@ -120,6 +123,67 @@ func (k Keeper) stampParticipantIndexes(ctx sdk.Context, address, stakingDenom s
 
 		return false
 	})
+}
+
+// ensureDenomRewardPrize returns the (staking denom, prize denom) accumulator, creating it when the
+// prize denom is new to the denom reward. Creation is the paid, capped event both money-in paths
+// share (Business Logic rules 20–22): the cap check uses >= against the LIVE param so a DR left
+// over-cap by a later param decrease also refuses new prize denoms, and the creation fee is captured
+// from feePayer through the same capture-and-swap flow as the other reward fees. The fee is
+// deliberately trigger-agnostic — a schedule and an airdrop introducing the same denom pay
+// identically, otherwise the fee could be bypassed via a throwaway schedule. An existing accumulator
+// is returned as-is: no fee, no cap check (only NEW prize denoms consume slots).
+func (k msgServer) ensureDenomRewardPrize(ctx sdk.Context, stakingDenom, prizeDenom string, feePayer sdk.AccAddress) (types.DenomRewardPrize, error) {
+	prize, found := k.GetDenomRewardPrize(ctx, stakingDenom, prizeDenom)
+	if found {
+		return prize, nil
+	}
+
+	params := k.GetParams(ctx)
+	if k.CountDenomRewardPrizes(ctx, stakingDenom) >= params.MaxPrizeDenomsPerDr {
+		return prize, types.ErrPrizeDenomCapReached
+	}
+
+	fee := k.getRewardCreationFee(ctx, params.CreateDenomRewardPrizeFee)
+	if fee != nil {
+		if err := k.checkUserBalances(ctx, fee, feePayer); err != nil {
+			return prize, err
+		}
+
+		// the fee can be captured only if the trade keeper is available to swap it
+		if k.tradeKeeper == nil {
+			return prize, errors.Wrapf(sdkerrors.ErrInvalidRequest, "trade keeper is not available")
+		}
+		capturedFee, err := k.tradeKeeper.CaptureAndSwapUserFee(ctx, feePayer, fee, types.ModuleName)
+		if err != nil {
+			return prize, err
+		}
+
+		if err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, capturedFee); err != nil {
+			return prize, err
+		}
+	}
+
+	// the accumulator starts a fresh era at S = 0; existing stakers accrue from this point only
+	// (rule 10's lazy-zero), and the first distribution stamps last_distribution_epoch
+	prize = types.DenomRewardPrize{
+		StakingDenom:     stakingDenom,
+		PrizeDenom:       prizeDenom,
+		DistributedStake: "0",
+	}
+	k.SetDenomRewardPrize(ctx, prize)
+
+	err := ctx.EventManager().EmitTypedEvent(
+		&types.DenomRewardPrizeCreateEvent{
+			Denom:      stakingDenom,
+			PrizeDenom: prizeDenom,
+		},
+	)
+	if err != nil {
+		k.Logger().Error(err.Error())
+	}
+
+	return prize, nil
 }
 
 // distributeToDenomPrize bumps a prize accumulator by amount/T and stamps the distribution epoch,
