@@ -31,6 +31,9 @@ service Msg {
   rpc JoinDenomReward          (MsgJoinDenomReward         ) returns (MsgJoinDenomRewardResponse         );
   rpc ExitDenomReward          (MsgExitDenomReward         ) returns (MsgExitDenomRewardResponse         );
   rpc ClaimDenomRewards        (MsgClaimDenomRewards       ) returns (MsgClaimDenomRewardsResponse       );
+  rpc CreateDenomRewardSchedule (MsgCreateDenomRewardSchedule) returns (MsgCreateDenomRewardScheduleResponse);
+  rpc UpdateDenomRewardSchedule (MsgUpdateDenomRewardSchedule) returns (MsgUpdateDenomRewardScheduleResponse);
+  rpc DistributeDenomRewards   (MsgDistributeDenomRewards  ) returns (MsgDistributeDenomRewardsResponse  );
 }
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
