@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"strings"
 
 	"cosmossdk.io/math"
@@ -490,4 +491,370 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_Stak
 	suite.Require().Equal("150", pa.Amount)
 	pb, _ := suite.k.GetDenomRewardParticipant(suite.ctx, "ubze", b.String())
 	suite.Require().Equal("250", pb.Amount)
+}
+
+// --- ClaimDenomRewards ---
+
+// A single claim pays EVERY prize denom of the DR in one tx, each with the exact amount
+// amount × (S − index), advances each paid index to its accumulator's S, and leaves the position's
+// amount and the DR's staked total untouched (claiming never unstakes — Business Logic rule 11).
+func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ClaimDenomRewards_MultiPrizeExactAmounts() {
+	claimer := sdk.AccAddress("dr-claimer-01")
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "1000"})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: claimer.String(), StakingDenom: "ubze", Amount: "100"})
+	// uatom: index missing -> lazy zero -> pending = 100 × 2 = 200
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uatom", DistributedStake: "2"})
+	// ubtc: index 0.1 -> pending = 100 × (0.5 − 0.1) = 40
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: "0.5"})
+	suite.k.SetDenomRewardParticipantIndex(suite.ctx, types.DenomRewardParticipantIndex{
+		Address: claimer.String(), StakingDenom: "ubze", PrizeDenom: "ubtc", Index: "0.1",
+	})
+
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, claimer, sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(200)))).
+		Return(nil).Times(1)
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, claimer, sdk.NewCoins(sdk.NewCoin("ubtc", math.NewInt(40)))).
+		Return(nil).Times(1)
+
+	res, err := suite.msgServer.ClaimDenomRewards(suite.ctx, &types.MsgClaimDenomRewards{Creator: claimer.String(), Denom: "ubze"})
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+	suite.Require().Equal(
+		sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(200)), sdk.NewCoin("ubtc", math.NewInt(40))),
+		sdk.Coins(res.Amounts),
+	)
+
+	// both indexes advanced to their accumulator's S
+	atomIdx, found := suite.k.GetDenomRewardParticipantIndex(suite.ctx, claimer.String(), "ubze", "uatom")
+	suite.Require().True(found)
+	suite.Require().Equal("2", atomIdx.Index)
+	btcIdx, found := suite.k.GetDenomRewardParticipantIndex(suite.ctx, claimer.String(), "ubze", "ubtc")
+	suite.Require().True(found)
+	suite.Require().Equal("0.5", btcIdx.Index)
+
+	// position and pool untouched
+	participant, _ := suite.k.GetDenomRewardParticipant(suite.ctx, "ubze", claimer.String())
+	suite.Require().Equal("100", participant.Amount)
+	dr, _ := suite.k.GetDenomReward(suite.ctx, "ubze")
+	suite.Require().Equal("1000", dr.StakedAmount)
+
+	e, ok := suite.findTypedEvent(proto.MessageName(&types.DenomRewardClaimEvent{}))
+	suite.Require().True(ok)
+	suite.requireEventAttr(e, "denom", "ubze")
+	suite.requireEventAttr(e, "address", claimer.String())
+	suite.requireEventAttr(e, "amounts", "200uatom,40ubtc")
+}
+
+// A pure-dust claim (every pending fraction truncates to zero whole units) is rejected with
+// ErrNoRewardsToClaim and advances NO index, so the fractions keep accruing (rule 12). A payout or a
+// stamped index here would silently forfeit the dust.
+func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ClaimDenomRewards_PureDustErrors_NoIndexAdvance() {
+	claimer := sdk.AccAddress("dr-claimer-02")
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "1"})
+	// amount 1 × S 0.5 -> pending 0.5 -> dust. no bank send is mocked: one would panic.
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "0.5"})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: claimer.String(), StakingDenom: "ubze", Amount: "1"})
+
+	res, err := suite.msgServer.ClaimDenomRewards(suite.ctx, &types.MsgClaimDenomRewards{Creator: claimer.String(), Denom: "ubze"})
+	suite.Require().ErrorIs(err, types.ErrNoRewardsToClaim)
+	suite.Require().Nil(res)
+
+	// the index was NOT stamped — the dust interval stays open
+	_, found := suite.k.GetDenomRewardParticipantIndex(suite.ctx, claimer.String(), "ubze", "uprize")
+	suite.Require().False(found)
+}
+
+// Claiming twice without a new distribution pays only once: the second claim finds every interval
+// closed and is rejected with ErrNoRewardsToClaim.
+func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ClaimDenomRewards_SecondClaimPaysNothing() {
+	claimer := sdk.AccAddress("dr-claimer-03")
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "100"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "3"})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: claimer.String(), StakingDenom: "ubze", Amount: "100"})
+
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, claimer, sdk.NewCoins(sdk.NewCoin("uprize", math.NewInt(300)))).
+		Return(nil).Times(1)
+
+	_, err := suite.msgServer.ClaimDenomRewards(suite.ctx, &types.MsgClaimDenomRewards{Creator: claimer.String(), Denom: "ubze"})
+	suite.Require().NoError(err)
+
+	// second claim: every index == S, nothing pending. a bank send here would be unexpected and panic.
+	res, err := suite.msgServer.ClaimDenomRewards(suite.ctx, &types.MsgClaimDenomRewards{Creator: claimer.String(), Denom: "ubze"})
+	suite.Require().ErrorIs(err, types.ErrNoRewardsToClaim)
+	suite.Require().Nil(res)
+}
+
+// Claiming a denom with no DR is rejected.
+func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ClaimDenomRewards_NotFound() {
+	claimer := sdk.AccAddress("dr-claimer-04")
+	res, err := suite.msgServer.ClaimDenomRewards(suite.ctx, &types.MsgClaimDenomRewards{Creator: claimer.String(), Denom: "ubze"})
+	suite.Require().ErrorIs(err, types.ErrDenomRewardNotFound)
+	suite.Require().Nil(res)
+}
+
+// Claiming without a position is rejected.
+func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ClaimDenomRewards_NotParticipant() {
+	claimer := sdk.AccAddress("dr-claimer-05")
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "0"})
+
+	res, err := suite.msgServer.ClaimDenomRewards(suite.ctx, &types.MsgClaimDenomRewards{Creator: claimer.String(), Denom: "ubze"})
+	suite.Require().ErrorIs(err, types.ErrDenomRewardNotFound)
+	suite.Require().Contains(err.Error(), "not a participant")
+	suite.Require().Nil(res)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ClaimDenomRewards_NilRequest() {
+	res, err := suite.msgServer.ClaimDenomRewards(suite.ctx, nil)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
+	suite.Require().Nil(res)
+}
+
+// --- ExitDenomReward ---
+
+// An exit settles the pending prizes BEFORE removing anything (rule 7) — the pending payout lands in
+// the exit tx itself — and with a snapshotted lock of 0 the stake is returned immediately. Afterwards
+// the position is fully erased: indexes, participant and its address-first marker; staked_amount drops
+// by exactly the exited amount.
+func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_LockZero_SettlesAndReturnsImmediately() {
+	exiter := sdk.AccAddress("dr-exiter-01")
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 0, MinStake: 0, StakedAmount: "800"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "1"})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: "500"})
+	// index missing -> lazy zero -> pending = 500 × 1 = 500 uprize paid during the exit
+
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, exiter, sdk.NewCoins(sdk.NewCoin("uprize", math.NewInt(500)))).
+		Return(nil).Times(1)
+	// lock 0: the stake comes back in the same tx
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, exiter, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500)))).
+		Return(nil).Times(1)
+
+	res, err := suite.msgServer.ExitDenomReward(suite.ctx, &types.MsgExitDenomReward{Creator: exiter.String(), Denom: "ubze"})
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+
+	// position fully erased
+	_, found := suite.k.GetDenomRewardParticipant(suite.ctx, "ubze", exiter.String())
+	suite.Require().False(found)
+	suite.Require().False(suite.k.HasDenomRewardParticipantMarker(suite.ctx, exiter.String(), "ubze"))
+	_, found = suite.k.GetDenomRewardParticipantIndex(suite.ctx, exiter.String(), "ubze", "uprize")
+	suite.Require().False(found)
+
+	dr, _ := suite.k.GetDenomReward(suite.ctx, "ubze")
+	suite.Require().Equal("300", dr.StakedAmount)
+
+	e, ok := suite.findTypedEvent(proto.MessageName(&types.DenomRewardExitEvent{}))
+	suite.Require().True(ok)
+	suite.requireEventAttr(e, "denom", "ubze")
+	suite.requireEventAttr(e, "address", exiter.String())
+
+	// no pending-unlock entry was left behind
+	suite.Require().Empty(suite.k.GetAllPendingUnlockParticipant(suite.ctx))
+}
+
+// The exit consumes the extra gas configured in params (mirrors ExitStaking): the exit schedules
+// future unlock work the tx's own gas would not otherwise account for.
+func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_ConsumesExtraGas() {
+	exiter := sdk.AccAddress("dr-exiter-02")
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, types.Params{ExtraGasForDenomExit: 12345}))
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 0, MinStake: 0, StakedAmount: "100"})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: "100"})
+
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, exiter, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100)))).
+		Return(nil).Times(1)
+
+	gasBefore := suite.ctx.GasMeter().GasConsumed()
+	_, err := suite.msgServer.ExitDenomReward(suite.ctx, &types.MsgExitDenomReward{Creator: exiter.String(), Denom: "ubze"})
+	suite.Require().NoError(err)
+	suite.Require().GreaterOrEqual(suite.ctx.GasMeter().GasConsumed()-gasBefore, uint64(12345))
+}
+
+// With a positive snapshotted lock the stake is NOT returned: a pending-unlock entry is written at
+// hour-epoch now + lock×24 under the DR key part "dr/{denom}/{address}", and the position is erased.
+func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_LockPositive_PendingUnlockAtRightEpoch() {
+	exiter := sdk.AccAddress("dr-exiter-03")
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "500"})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: "500"})
+
+	suite.epoch.EXPECT().
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(100), nil).Times(1)
+	// no bank send is mocked: an immediate return of the stake would panic
+
+	_, err := suite.msgServer.ExitDenomReward(suite.ctx, &types.MsgExitDenomReward{Creator: exiter.String(), Denom: "ubze"})
+	suite.Require().NoError(err)
+
+	expectedKey := fmt.Sprintf("%d/dr/%s/%s", 100+7*24, "ubze", exiter.String())
+	pending, found := suite.k.GetPendingUnlockParticipant(suite.ctx, expectedKey)
+	suite.Require().True(found)
+	suite.Require().Equal(exiter.String(), pending.Address)
+	suite.Require().Equal("500", pending.Amount)
+	suite.Require().Equal("ubze", pending.Denom)
+
+	_, found = suite.k.GetDenomRewardParticipant(suite.ctx, "ubze", exiter.String())
+	suite.Require().False(found)
+	suite.Require().False(suite.k.HasDenomRewardParticipantMarker(suite.ctx, exiter.String(), "ubze"))
+	dr, _ := suite.k.GetDenomReward(suite.ctx, "ubze")
+	suite.Require().Equal("0", dr.StakedAmount)
+}
+
+// Exit → re-join → exit within the same hour-epoch: the second exit lands on the SAME pending-unlock
+// key and the amounts are merged, so everything unlocks at once (mirrors beginUnlock).
+func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_SecondExitSameEpochMerges() {
+	exiter := sdk.AccAddress("dr-exiter-04")
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "500"})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: "500"})
+
+	suite.epoch.EXPECT().
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(100), nil).Times(2)
+
+	_, err := suite.msgServer.ExitDenomReward(suite.ctx, &types.MsgExitDenomReward{Creator: exiter.String(), Denom: "ubze"})
+	suite.Require().NoError(err)
+
+	// re-join with a fresh position...
+	suite.bank.EXPECT().SpendableCoins(suite.ctx, exiter).
+		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(10_000)))).Times(1)
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(suite.ctx, exiter, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(300)))).
+		Return(nil).Times(1)
+	_, err = suite.msgServer.JoinDenomReward(suite.ctx, types.NewMsgJoinDenomReward(exiter.String(), "ubze", "300"))
+	suite.Require().NoError(err)
+
+	// ...and exit again in the same hour-epoch: the entry is merged, not overwritten
+	_, err = suite.msgServer.ExitDenomReward(suite.ctx, &types.MsgExitDenomReward{Creator: exiter.String(), Denom: "ubze"})
+	suite.Require().NoError(err)
+
+	expectedKey := fmt.Sprintf("%d/dr/%s/%s", 100+7*24, "ubze", exiter.String())
+	pending, found := suite.k.GetPendingUnlockParticipant(suite.ctx, expectedKey)
+	suite.Require().True(found)
+	suite.Require().Equal("800", pending.Amount) // 500 + 300
+
+	dr, _ := suite.k.GetDenomReward(suite.ctx, "ubze")
+	suite.Require().Equal("0", dr.StakedAmount)
+}
+
+// DR and SR pending-unlock entries share the same store and epoch prefix without colliding: SR key
+// parts start with a digits-only reward id, DR key parts with the literal "dr/". Both survive side by
+// side at the same epoch.
+func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_CoexistsWithSrPendingUnlock() {
+	exiter := sdk.AccAddress("dr-exiter-05")
+	// a pre-existing SR pending unlock at the same target epoch
+	srKey := types.CreatePendingUnlockParticipantKey(268, fmt.Sprintf("%s/%s", "00123", exiter.String()))
+	suite.k.SetPendingUnlockParticipant(suite.ctx, types.PendingUnlockParticipant{
+		Index: srKey, Address: exiter.String(), Amount: "77", Denom: "ubze",
+	})
+
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "500"})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: "500"})
+	suite.epoch.EXPECT().
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(100), nil).Times(1)
+
+	_, err := suite.msgServer.ExitDenomReward(suite.ctx, &types.MsgExitDenomReward{Creator: exiter.String(), Denom: "ubze"})
+	suite.Require().NoError(err)
+
+	// both entries exist at epoch 268, untouched by each other
+	entries := suite.k.GetAllEpochPendingUnlockParticipant(suite.ctx, 268)
+	suite.Require().Len(entries, 2)
+	srEntry, found := suite.k.GetPendingUnlockParticipant(suite.ctx, srKey)
+	suite.Require().True(found)
+	suite.Require().Equal("77", srEntry.Amount)
+	drEntry, found := suite.k.GetPendingUnlockParticipant(suite.ctx, fmt.Sprintf("268/dr/ubze/%s", exiter.String()))
+	suite.Require().True(found)
+	suite.Require().Equal("500", drEntry.Amount)
+}
+
+// The existing EndBlock unlock queue pays a DR pending-unlock entry out with no DR-specific code:
+// enqueue the epoch, process the queue, and the stake arrives while the entry is removed.
+func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_UnlockQueuePaysOut() {
+	exiter := sdk.AccAddress("dr-exiter-06")
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "500"})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: "500"})
+	suite.epoch.EXPECT().
+		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
+		Return(int64(100), nil).Times(1)
+
+	_, err := suite.msgServer.ExitDenomReward(suite.ctx, &types.MsgExitDenomReward{Creator: exiter.String(), Denom: "ubze"})
+	suite.Require().NoError(err)
+
+	// the unlock epoch arrives: the generic queue pays the entry out. RemovePendingUnlockParticipant
+	// runs only after a successful performUnlock, so the entry's disappearance proves the payout.
+	// the queue processes inside a cached context (ApplyFuncIfNoError), hence gomock.Any() for ctx.
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, exiter, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500)))).
+		Return(nil).Times(1)
+	suite.k.EnqueueUnlockParticipants(suite.ctx, 268)
+	suite.k.ProcessUnlockParticipantsQueue(suite.ctx)
+
+	suite.Require().Empty(suite.k.GetAllEpochPendingUnlockParticipant(suite.ctx, 268))
+}
+
+// The A13 analog: exit → re-join → claim pays only what was distributed AFTER the re-join. The old
+// position's history is gone (indexes removed at exit, fresh stamps at re-join), so the claim spans
+// exactly the post-re-join accrual.
+func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_RejoinStartsFresh() {
+	user := sdk.AccAddress("dr-exiter-07")
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 0, MinStake: 0, StakedAmount: "100"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "2"})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: user.String(), StakingDenom: "ubze", Amount: "100"})
+
+	// exit: settles 100 × (2 − 0) = 200 uprize and returns the 100 ubze stake (lock 0)
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, user, sdk.NewCoins(sdk.NewCoin("uprize", math.NewInt(200)))).
+		Return(nil).Times(1)
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, user, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100)))).
+		Return(nil).Times(1)
+	_, err := suite.msgServer.ExitDenomReward(suite.ctx, &types.MsgExitDenomReward{Creator: user.String(), Denom: "ubze"})
+	suite.Require().NoError(err)
+
+	// re-join: fresh stamps at the current S = 2
+	suite.bank.EXPECT().SpendableCoins(suite.ctx, user).
+		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(10_000)))).Times(1)
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(suite.ctx, user, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100)))).
+		Return(nil).Times(1)
+	_, err = suite.msgServer.JoinDenomReward(suite.ctx, types.NewMsgJoinDenomReward(user.String(), "ubze", "100"))
+	suite.Require().NoError(err)
+
+	// the accumulator advances after the re-join: S 2 -> 3
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "3"})
+
+	// claim pays exactly 100 × (3 − 2) = 100, not a unit of the pre-exit history
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, user, sdk.NewCoins(sdk.NewCoin("uprize", math.NewInt(100)))).
+		Return(nil).Times(1)
+	res, err := suite.msgServer.ClaimDenomRewards(suite.ctx, &types.MsgClaimDenomRewards{Creator: user.String(), Denom: "ubze"})
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.NewCoins(sdk.NewCoin("uprize", math.NewInt(100))), sdk.Coins(res.Amounts))
+}
+
+// Exiting a denom with no DR is rejected.
+func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_NotFound() {
+	exiter := sdk.AccAddress("dr-exiter-08")
+	res, err := suite.msgServer.ExitDenomReward(suite.ctx, &types.MsgExitDenomReward{Creator: exiter.String(), Denom: "ubze"})
+	suite.Require().ErrorIs(err, types.ErrDenomRewardNotFound)
+	suite.Require().Nil(res)
+}
+
+// Exiting without a position is rejected.
+func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_NotParticipant() {
+	exiter := sdk.AccAddress("dr-exiter-09")
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "100"})
+
+	res, err := suite.msgServer.ExitDenomReward(suite.ctx, &types.MsgExitDenomReward{Creator: exiter.String(), Denom: "ubze"})
+	suite.Require().ErrorIs(err, types.ErrDenomRewardNotFound)
+	suite.Require().Contains(err.Error(), "not a participant")
+	suite.Require().Nil(res)
+}
+
+func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_NilRequest() {
+	res, err := suite.msgServer.ExitDenomReward(suite.ctx, nil)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
+	suite.Require().Nil(res)
 }
