@@ -8,6 +8,7 @@ import (
 	"github.com/bze-alphateam/bze/app/upgrades"
 	v810 "github.com/bze-alphateam/bze/app/upgrades/v810"
 	v811 "github.com/bze-alphateam/bze/app/upgrades/v811"
+	v820 "github.com/bze-alphateam/bze/app/upgrades/v820"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -354,6 +355,16 @@ func (app *App) setupUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v811.UpgradeName,
 		upgrades.EmptyUpgradeHandler(),
+	)
+
+	// v8.2.0 runs module migrations (rewards v4->v5: Denom Rewards param defaults);
+	// no store keys are added or removed, so no store loader entry is needed
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v820.UpgradeName,
+		v820.CreateUpgradeHandler(
+			app.Configurator(),
+			app.ModuleManager,
+		),
 	)
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
