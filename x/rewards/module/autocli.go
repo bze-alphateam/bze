@@ -72,6 +72,42 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query all-pending-unlock-participants",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
+				{
+					RpcMethod:      "DenomReward",
+					Use:            "denom-reward [denom]",
+					Short:          "Query denom-reward",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
+				{
+					RpcMethod:      "DenomRewardAll",
+					Use:            "all-denom-rewards",
+					Short:          "Query all-denom-rewards",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
+				{
+					RpcMethod:      "DenomRewardPrizes",
+					Use:            "denom-reward-prizes [denom]",
+					Short:          "Query denom-reward-prizes",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
+				{
+					RpcMethod:      "DenomRewardSchedules",
+					Use:            "denom-reward-schedules [denom]",
+					Short:          "Query denom-reward-schedules",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
+				{
+					RpcMethod:      "DenomRewardParticipant",
+					Use:            "denom-reward-participant [address] [denom]",
+					Short:          "Query denom-reward-participant with its pending prizes",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}, {ProtoField: "denom"}},
+				},
+				{
+					RpcMethod:      "DenomRewardParticipations",
+					Use:            "denom-reward-participations [address]",
+					Short:          "Query denom-reward-participations",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
+				},
 
 				// this line is used by ignite scaffolding # autocli/query
 			},

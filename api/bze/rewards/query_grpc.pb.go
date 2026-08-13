@@ -29,6 +29,12 @@ const (
 	Query_TradingRewardLeaderboard_FullMethodName     = "/bze.rewards.Query/TradingRewardLeaderboard"
 	Query_MarketTradingReward_FullMethodName          = "/bze.rewards.Query/MarketTradingReward"
 	Query_AllPendingUnlockParticipants_FullMethodName = "/bze.rewards.Query/AllPendingUnlockParticipants"
+	Query_DenomReward_FullMethodName                  = "/bze.rewards.Query/DenomReward"
+	Query_DenomRewardAll_FullMethodName               = "/bze.rewards.Query/DenomRewardAll"
+	Query_DenomRewardPrizes_FullMethodName            = "/bze.rewards.Query/DenomRewardPrizes"
+	Query_DenomRewardSchedules_FullMethodName         = "/bze.rewards.Query/DenomRewardSchedules"
+	Query_DenomRewardParticipant_FullMethodName       = "/bze.rewards.Query/DenomRewardParticipant"
+	Query_DenomRewardParticipations_FullMethodName    = "/bze.rewards.Query/DenomRewardParticipations"
 )
 
 // QueryClient is the client API for Query service.
@@ -55,6 +61,19 @@ type QueryClient interface {
 	MarketTradingReward(ctx context.Context, in *QueryMarketTradingRewardRequest, opts ...grpc.CallOption) (*QueryMarketTradingRewardResponse, error)
 	// Queries a list of AllPendingUnlockParticipants items.
 	AllPendingUnlockParticipants(ctx context.Context, in *QueryAllPendingUnlockParticipantsRequest, opts ...grpc.CallOption) (*QueryAllPendingUnlockParticipantsResponse, error)
+	// Queries a DenomReward by its staking denom.
+	DenomReward(ctx context.Context, in *QueryDenomRewardRequest, opts ...grpc.CallOption) (*QueryDenomRewardResponse, error)
+	// Queries all DenomReward records.
+	DenomRewardAll(ctx context.Context, in *QueryDenomRewardAllRequest, opts ...grpc.CallOption) (*QueryDenomRewardAllResponse, error)
+	// Queries every prize accumulator of a DenomReward (bounded by max_prize_denoms_per_dr).
+	DenomRewardPrizes(ctx context.Context, in *QueryDenomRewardPrizesRequest, opts ...grpc.CallOption) (*QueryDenomRewardPrizesResponse, error)
+	// Queries the schedules of a DenomReward.
+	DenomRewardSchedules(ctx context.Context, in *QueryDenomRewardSchedulesRequest, opts ...grpc.CallOption) (*QueryDenomRewardSchedulesResponse, error)
+	// Queries a participant's position in a DenomReward, including the pending
+	// (claimable) amount per prize denom.
+	DenomRewardParticipant(ctx context.Context, in *QueryDenomRewardParticipantRequest, opts ...grpc.CallOption) (*QueryDenomRewardParticipantResponse, error)
+	// Queries every DenomReward participation of an address.
+	DenomRewardParticipations(ctx context.Context, in *QueryDenomRewardParticipationsRequest, opts ...grpc.CallOption) (*QueryDenomRewardParticipationsResponse, error)
 }
 
 type queryClient struct {
@@ -155,6 +174,60 @@ func (c *queryClient) AllPendingUnlockParticipants(ctx context.Context, in *Quer
 	return out, nil
 }
 
+func (c *queryClient) DenomReward(ctx context.Context, in *QueryDenomRewardRequest, opts ...grpc.CallOption) (*QueryDenomRewardResponse, error) {
+	out := new(QueryDenomRewardResponse)
+	err := c.cc.Invoke(ctx, Query_DenomReward_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) DenomRewardAll(ctx context.Context, in *QueryDenomRewardAllRequest, opts ...grpc.CallOption) (*QueryDenomRewardAllResponse, error) {
+	out := new(QueryDenomRewardAllResponse)
+	err := c.cc.Invoke(ctx, Query_DenomRewardAll_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) DenomRewardPrizes(ctx context.Context, in *QueryDenomRewardPrizesRequest, opts ...grpc.CallOption) (*QueryDenomRewardPrizesResponse, error) {
+	out := new(QueryDenomRewardPrizesResponse)
+	err := c.cc.Invoke(ctx, Query_DenomRewardPrizes_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) DenomRewardSchedules(ctx context.Context, in *QueryDenomRewardSchedulesRequest, opts ...grpc.CallOption) (*QueryDenomRewardSchedulesResponse, error) {
+	out := new(QueryDenomRewardSchedulesResponse)
+	err := c.cc.Invoke(ctx, Query_DenomRewardSchedules_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) DenomRewardParticipant(ctx context.Context, in *QueryDenomRewardParticipantRequest, opts ...grpc.CallOption) (*QueryDenomRewardParticipantResponse, error) {
+	out := new(QueryDenomRewardParticipantResponse)
+	err := c.cc.Invoke(ctx, Query_DenomRewardParticipant_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) DenomRewardParticipations(ctx context.Context, in *QueryDenomRewardParticipationsRequest, opts ...grpc.CallOption) (*QueryDenomRewardParticipationsResponse, error) {
+	out := new(QueryDenomRewardParticipationsResponse)
+	err := c.cc.Invoke(ctx, Query_DenomRewardParticipations_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -179,6 +252,19 @@ type QueryServer interface {
 	MarketTradingReward(context.Context, *QueryMarketTradingRewardRequest) (*QueryMarketTradingRewardResponse, error)
 	// Queries a list of AllPendingUnlockParticipants items.
 	AllPendingUnlockParticipants(context.Context, *QueryAllPendingUnlockParticipantsRequest) (*QueryAllPendingUnlockParticipantsResponse, error)
+	// Queries a DenomReward by its staking denom.
+	DenomReward(context.Context, *QueryDenomRewardRequest) (*QueryDenomRewardResponse, error)
+	// Queries all DenomReward records.
+	DenomRewardAll(context.Context, *QueryDenomRewardAllRequest) (*QueryDenomRewardAllResponse, error)
+	// Queries every prize accumulator of a DenomReward (bounded by max_prize_denoms_per_dr).
+	DenomRewardPrizes(context.Context, *QueryDenomRewardPrizesRequest) (*QueryDenomRewardPrizesResponse, error)
+	// Queries the schedules of a DenomReward.
+	DenomRewardSchedules(context.Context, *QueryDenomRewardSchedulesRequest) (*QueryDenomRewardSchedulesResponse, error)
+	// Queries a participant's position in a DenomReward, including the pending
+	// (claimable) amount per prize denom.
+	DenomRewardParticipant(context.Context, *QueryDenomRewardParticipantRequest) (*QueryDenomRewardParticipantResponse, error)
+	// Queries every DenomReward participation of an address.
+	DenomRewardParticipations(context.Context, *QueryDenomRewardParticipationsRequest) (*QueryDenomRewardParticipationsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -215,6 +301,24 @@ func (UnimplementedQueryServer) MarketTradingReward(context.Context, *QueryMarke
 }
 func (UnimplementedQueryServer) AllPendingUnlockParticipants(context.Context, *QueryAllPendingUnlockParticipantsRequest) (*QueryAllPendingUnlockParticipantsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllPendingUnlockParticipants not implemented")
+}
+func (UnimplementedQueryServer) DenomReward(context.Context, *QueryDenomRewardRequest) (*QueryDenomRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DenomReward not implemented")
+}
+func (UnimplementedQueryServer) DenomRewardAll(context.Context, *QueryDenomRewardAllRequest) (*QueryDenomRewardAllResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DenomRewardAll not implemented")
+}
+func (UnimplementedQueryServer) DenomRewardPrizes(context.Context, *QueryDenomRewardPrizesRequest) (*QueryDenomRewardPrizesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DenomRewardPrizes not implemented")
+}
+func (UnimplementedQueryServer) DenomRewardSchedules(context.Context, *QueryDenomRewardSchedulesRequest) (*QueryDenomRewardSchedulesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DenomRewardSchedules not implemented")
+}
+func (UnimplementedQueryServer) DenomRewardParticipant(context.Context, *QueryDenomRewardParticipantRequest) (*QueryDenomRewardParticipantResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DenomRewardParticipant not implemented")
+}
+func (UnimplementedQueryServer) DenomRewardParticipations(context.Context, *QueryDenomRewardParticipationsRequest) (*QueryDenomRewardParticipationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DenomRewardParticipations not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -409,6 +513,114 @@ func _Query_AllPendingUnlockParticipants_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_DenomReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDenomRewardRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DenomReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_DenomReward_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DenomReward(ctx, req.(*QueryDenomRewardRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_DenomRewardAll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDenomRewardAllRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DenomRewardAll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_DenomRewardAll_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DenomRewardAll(ctx, req.(*QueryDenomRewardAllRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_DenomRewardPrizes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDenomRewardPrizesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DenomRewardPrizes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_DenomRewardPrizes_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DenomRewardPrizes(ctx, req.(*QueryDenomRewardPrizesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_DenomRewardSchedules_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDenomRewardSchedulesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DenomRewardSchedules(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_DenomRewardSchedules_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DenomRewardSchedules(ctx, req.(*QueryDenomRewardSchedulesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_DenomRewardParticipant_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDenomRewardParticipantRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DenomRewardParticipant(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_DenomRewardParticipant_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DenomRewardParticipant(ctx, req.(*QueryDenomRewardParticipantRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_DenomRewardParticipations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDenomRewardParticipationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DenomRewardParticipations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_DenomRewardParticipations_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DenomRewardParticipations(ctx, req.(*QueryDenomRewardParticipationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -455,6 +667,30 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AllPendingUnlockParticipants",
 			Handler:    _Query_AllPendingUnlockParticipants_Handler,
+		},
+		{
+			MethodName: "DenomReward",
+			Handler:    _Query_DenomReward_Handler,
+		},
+		{
+			MethodName: "DenomRewardAll",
+			Handler:    _Query_DenomRewardAll_Handler,
+		},
+		{
+			MethodName: "DenomRewardPrizes",
+			Handler:    _Query_DenomRewardPrizes_Handler,
+		},
+		{
+			MethodName: "DenomRewardSchedules",
+			Handler:    _Query_DenomRewardSchedules_Handler,
+		},
+		{
+			MethodName: "DenomRewardParticipant",
+			Handler:    _Query_DenomRewardParticipant_Handler,
+		},
+		{
+			MethodName: "DenomRewardParticipations",
+			Handler:    _Query_DenomRewardParticipations_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
