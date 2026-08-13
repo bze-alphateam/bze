@@ -132,6 +132,18 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Delete a finished, emptied staking reward record",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reward_id"}},
 				},
+				{
+					RpcMethod:      "CreateDenomReward",
+					Use:            "create-denom-reward [denom]",
+					Short:          "Send a create-denom-reward tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
+				{
+					RpcMethod:      "JoinDenomReward",
+					Use:            "join-denom-reward [denom] [amount]",
+					Short:          "Send a join-denom-reward tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}, {ProtoField: "amount"}},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},

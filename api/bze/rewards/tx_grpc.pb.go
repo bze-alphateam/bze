@@ -29,6 +29,8 @@ const (
 	Msg_CreateTradingReward_FullMethodName      = "/bze.rewards.Msg/CreateTradingReward"
 	Msg_ActivateTradingReward_FullMethodName    = "/bze.rewards.Msg/ActivateTradingReward"
 	Msg_DeleteStakingReward_FullMethodName      = "/bze.rewards.Msg/DeleteStakingReward"
+	Msg_CreateDenomReward_FullMethodName        = "/bze.rewards.Msg/CreateDenomReward"
+	Msg_JoinDenomReward_FullMethodName          = "/bze.rewards.Msg/JoinDenomReward"
 )
 
 // MsgClient is the client API for Msg service.
@@ -47,6 +49,8 @@ type MsgClient interface {
 	CreateTradingReward(ctx context.Context, in *MsgCreateTradingReward, opts ...grpc.CallOption) (*MsgCreateTradingRewardResponse, error)
 	ActivateTradingReward(ctx context.Context, in *MsgActivateTradingReward, opts ...grpc.CallOption) (*MsgActivateTradingRewardResponse, error)
 	DeleteStakingReward(ctx context.Context, in *MsgDeleteStakingReward, opts ...grpc.CallOption) (*MsgDeleteStakingRewardResponse, error)
+	CreateDenomReward(ctx context.Context, in *MsgCreateDenomReward, opts ...grpc.CallOption) (*MsgCreateDenomRewardResponse, error)
+	JoinDenomReward(ctx context.Context, in *MsgJoinDenomReward, opts ...grpc.CallOption) (*MsgJoinDenomRewardResponse, error)
 }
 
 type msgClient struct {
@@ -147,6 +151,24 @@ func (c *msgClient) DeleteStakingReward(ctx context.Context, in *MsgDeleteStakin
 	return out, nil
 }
 
+func (c *msgClient) CreateDenomReward(ctx context.Context, in *MsgCreateDenomReward, opts ...grpc.CallOption) (*MsgCreateDenomRewardResponse, error) {
+	out := new(MsgCreateDenomRewardResponse)
+	err := c.cc.Invoke(ctx, Msg_CreateDenomReward_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) JoinDenomReward(ctx context.Context, in *MsgJoinDenomReward, opts ...grpc.CallOption) (*MsgJoinDenomRewardResponse, error) {
+	out := new(MsgJoinDenomRewardResponse)
+	err := c.cc.Invoke(ctx, Msg_JoinDenomReward_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -163,6 +185,8 @@ type MsgServer interface {
 	CreateTradingReward(context.Context, *MsgCreateTradingReward) (*MsgCreateTradingRewardResponse, error)
 	ActivateTradingReward(context.Context, *MsgActivateTradingReward) (*MsgActivateTradingRewardResponse, error)
 	DeleteStakingReward(context.Context, *MsgDeleteStakingReward) (*MsgDeleteStakingRewardResponse, error)
+	CreateDenomReward(context.Context, *MsgCreateDenomReward) (*MsgCreateDenomRewardResponse, error)
+	JoinDenomReward(context.Context, *MsgJoinDenomReward) (*MsgJoinDenomRewardResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -199,6 +223,12 @@ func (UnimplementedMsgServer) ActivateTradingReward(context.Context, *MsgActivat
 }
 func (UnimplementedMsgServer) DeleteStakingReward(context.Context, *MsgDeleteStakingReward) (*MsgDeleteStakingRewardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteStakingReward not implemented")
+}
+func (UnimplementedMsgServer) CreateDenomReward(context.Context, *MsgCreateDenomReward) (*MsgCreateDenomRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateDenomReward not implemented")
+}
+func (UnimplementedMsgServer) JoinDenomReward(context.Context, *MsgJoinDenomReward) (*MsgJoinDenomRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JoinDenomReward not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -393,6 +423,42 @@ func _Msg_DeleteStakingReward_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreateDenomReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateDenomReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateDenomReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_CreateDenomReward_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateDenomReward(ctx, req.(*MsgCreateDenomReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_JoinDenomReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgJoinDenomReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).JoinDenomReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_JoinDenomReward_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).JoinDenomReward(ctx, req.(*MsgJoinDenomReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -439,6 +505,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteStakingReward",
 			Handler:    _Msg_DeleteStakingReward_Handler,
+		},
+		{
+			MethodName: "CreateDenomReward",
+			Handler:    _Msg_CreateDenomReward_Handler,
+		},
+		{
+			MethodName: "JoinDenomReward",
+			Handler:    _Msg_JoinDenomReward_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

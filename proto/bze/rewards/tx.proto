@@ -27,6 +27,8 @@ service Msg {
   rpc CreateTradingReward      (MsgCreateTradingReward     ) returns (MsgCreateTradingRewardResponse     );
   rpc ActivateTradingReward    (MsgActivateTradingReward   ) returns (MsgActivateTradingRewardResponse   );
   rpc DeleteStakingReward      (MsgDeleteStakingReward     ) returns (MsgDeleteStakingRewardResponse     );
+  rpc CreateDenomReward        (MsgCreateDenomReward       ) returns (MsgCreateDenomRewardResponse       );
+  rpc JoinDenomReward          (MsgJoinDenomReward         ) returns (MsgJoinDenomRewardResponse         );
 }
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {

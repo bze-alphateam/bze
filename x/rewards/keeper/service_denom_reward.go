@@ -103,8 +103,12 @@ func (k Keeper) settleDenomParticipant(ctx sdk.Context, dr types.DenomReward, pa
 // only mean the accumulator was born after the participant joined, so reading it as zero credits the
 // participant exactly the rewards distributed since they joined — never earlier ones.
 //
-// It must be called when a position is first created (before any amount is staked), never on an
-// existing position: re-stamping a live participant would silently discard their unsettled pending.
+// It is called immediately before a position's amount changes, in two places: on a fresh join (the
+// position is created at amount 0), and on a top-up right AFTER settleDenomParticipant has paid out
+// every whole-unit prize. It must never be called on a live position WITHOUT a preceding full settle:
+// re-stamping unsettled indexes would silently discard real pending. After a full settle the only
+// thing it discards is sub-unit dust, which — like SR's unconditional JoinedAt reset on a top-up — is
+// forfeited so that no settlement interval ever spans an amount change (security invariant I1).
 func (k Keeper) stampParticipantIndexes(ctx sdk.Context, address, stakingDenom string) {
 	k.IterateDenomRewardPrizes(ctx, stakingDenom, func(ctx sdk.Context, prize types.DenomRewardPrize) (stop bool) {
 		k.SetDenomRewardParticipantIndex(ctx, types.DenomRewardParticipantIndex{
