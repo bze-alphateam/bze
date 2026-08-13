@@ -223,3 +223,137 @@ func (k Keeper) distributeToDenomPrize(ctx sdk.Context, prize types.DenomRewardP
 
 	return nil
 }
+
+// EnqueueDenomRewardsDistribution checks if any denom reward schedules exist and enqueues
+// a distribution request. The module will process the queue in the following blocks.
+// Mirrors EnqueueStakingRewardsDistribution: a single first-record probe (never a full scan)
+// decides whether there is any work, and an already-pending queue is left untouched so a day
+// tick arriving mid-drain cannot reset the cursor.
+func (k Keeper) EnqueueDenomRewardsDistribution(ctx sdk.Context) {
+	if len(k.GetBatchDenomRewardSchedules(ctx, "", 1)) == 0 {
+		return
+	}
+
+	queue, found := k.GetDenomRewardsDistributionQueue(ctx)
+	if found && queue.Pending {
+		// distribution already pending, skip
+		return
+	}
+
+	queue = types.DenomRewardsDistributionQueue{
+		Pending: true,
+		Cursor:  "",
+	}
+	k.SetDenomRewardsDistributionQueue(ctx, queue)
+}
+
+// ProcessDenomRewardsDistributionQueue processes denom reward schedule payouts in bounded batches.
+// It mirrors ProcessStakingRewardsDistributionQueue: entries are batch-collected (the store
+// iterator is closed before any mutation, so the per-schedule pass may delete finished schedules
+// safely — the audited SR collect-then-mutate pattern) and the cursor persists progress so more
+// than MaxDenomRewardDistributionsPerBlock schedules simply span multiple blocks. Work scales with
+// the schedule count only — never with participants (invariant I5).
+func (k Keeper) ProcessDenomRewardsDistributionQueue(ctx sdk.Context) {
+	queue, found := k.GetDenomRewardsDistributionQueue(ctx)
+	if !found || !queue.Pending {
+		return
+	}
+
+	schedules := k.GetBatchDenomRewardSchedules(ctx, queue.Cursor, types.MaxDenomRewardDistributionsPerBlock)
+	if len(schedules) == 0 {
+		// no more schedules to process, distribution is complete
+		k.RemoveDenomRewardsDistributionQueue(ctx)
+		return
+	}
+
+	finished := len(schedules) < types.MaxDenomRewardDistributionsPerBlock
+
+	// Process collected entries in a safe context
+	lastProcessedKey := queue.Cursor
+	for _, schedule := range schedules {
+		lastProcessedKey = string(types.DenomRewardScheduleKey(schedule.StakingDenom, schedule.ScheduleId))
+		k.distributeDenomRewardSchedule(ctx, schedule)
+	}
+
+	if finished {
+		k.RemoveDenomRewardsDistributionQueue(ctx)
+	} else {
+		queue.Cursor = lastProcessedKey
+		k.SetDenomRewardsDistributionQueue(ctx, queue)
+	}
+}
+
+// distributeDenomRewardSchedule pays one day of a schedule into its prize accumulator. A day with
+// zero stakers is skipped WITHOUT counting a payout (Business Logic rule 15): the escrowed budget
+// is preserved and the schedule stretches until stakers return, so the total distributed over the
+// schedule's life is always daily_amount × duration. The finishing payout (payouts reaching
+// duration) deletes the schedule and emits the finish event; the accumulator keeps its value
+// forever, so already-accrued (and dust) claims are unaffected.
+func (k Keeper) distributeDenomRewardSchedule(ctx sdk.Context, schedule types.DenomRewardSchedule) {
+	logger := k.Logger().With("denom_reward_schedule", schedule)
+
+	logger.Debug("preparing to distribute denom reward schedule")
+
+	dr, found := k.GetDenomReward(ctx, schedule.StakingDenom)
+	if !found {
+		logger.Error("denom reward not found for schedule. skipping distribution")
+		return
+	}
+
+	stakedAmount := math.ZeroInt()
+	if dr.StakedAmount != "" {
+		var ok bool
+		stakedAmount, ok = math.NewIntFromString(dr.StakedAmount)
+		if !ok {
+			logger.Error("could not parse denom reward staked amount. skipping distribution")
+			return
+		}
+	}
+
+	if !stakedAmount.IsPositive() {
+		logger.Debug("denom reward has no staked coins. skipping distribution")
+		return
+	}
+
+	if schedule.Payouts >= schedule.Duration {
+		// defensive: schedules are deleted on their finishing payout, so this should not happen
+		logger.Debug("denom reward schedule finished. skipping distribution")
+		return
+	}
+
+	dailyAmount, ok := math.NewIntFromString(schedule.DailyAmount)
+	if !ok {
+		logger.Error("could not parse schedule daily amount. skipping distribution")
+		return
+	}
+
+	prize, found := k.GetDenomRewardPrize(ctx, schedule.StakingDenom, schedule.PrizeDenom)
+	if !found {
+		logger.Error("denom reward prize not found for schedule. skipping distribution")
+		return
+	}
+
+	if err := k.distributeToDenomPrize(ctx, prize, dailyAmount, stakedAmount); err != nil {
+		logger.Error(err.Error())
+		return
+	}
+
+	//increment payouts to know when the schedule finished (a.k.a. all payouts calculated)
+	schedule.Payouts++
+	if schedule.Payouts == schedule.Duration {
+		k.RemoveDenomRewardSchedule(ctx, schedule.StakingDenom, schedule.ScheduleId)
+
+		err := ctx.EventManager().EmitTypedEvent(
+			&types.DenomRewardScheduleFinishEvent{
+				ScheduleId: schedule.ScheduleId,
+			},
+		)
+		if err != nil {
+			k.Logger().Error(err.Error())
+		}
+
+		return
+	}
+
+	k.SetDenomRewardSchedule(ctx, schedule)
+}

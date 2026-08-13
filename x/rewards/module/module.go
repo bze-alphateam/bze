@@ -185,6 +185,7 @@ func (am AppModule) EndBlock(gotCtx context.Context) error {
 	am.keeper.ProcessUnlockParticipantsQueue(ctx)
 	am.keeper.ProcessStakingRewardsDistributionQueue(ctx)
 	am.keeper.ProcessExpiredTradingRewardRemovalQueue(ctx)
+	am.keeper.ProcessDenomRewardsDistributionQueue(ctx)
 
 	return nil
 }

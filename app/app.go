@@ -481,6 +481,7 @@ func (app *App) setEpochsHooks() {
 			app.RewardsKeeper.GetUnlockPendingUnlockParticipantsHook(),
 			app.RewardsKeeper.GetRemoveExpiredPendingTradingRewardsHook(),
 			app.RewardsKeeper.GetTradingRewardsDistributionHook(),
+			app.RewardsKeeper.GetDenomRewardsDistributionHook(),
 			app.BurnerKeeper.GetBurnerRaffleCleanupHook(),
 			app.BurnerKeeper.GetBurnerPeriodicBurnHook(),
 		},
