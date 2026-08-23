@@ -11,15 +11,15 @@ import (
 
 // seedDenomRewardWithPrize writes a DenomReward with the given staked total and a fresh S = 0
 // accumulator for the prize denom — the state a schedule created via the BZE-89 handlers relies on.
-func (suite *IntegrationTestSuite) seedDenomRewardWithPrize(stakingDenom, prizeDenom, staked string) {
+func (suite *IntegrationTestSuite) seedDenomRewardWithPrize(stakingDenom, prizeDenom string, staked int64) {
 	suite.k.SetDenomReward(suite.ctx, types.DenomReward{
 		StakingDenom: stakingDenom,
-		StakedAmount: staked,
+		StakedAmount: math.NewInt(staked),
 	})
 	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{
 		StakingDenom:     stakingDenom,
 		PrizeDenom:       prizeDenom,
-		DistributedStake: "0",
+		DistributedStake: math.LegacyMustNewDecFromStr("0"),
 	})
 }
 
@@ -27,18 +27,18 @@ func (suite *IntegrationTestSuite) requirePrizeS(stakingDenom, prizeDenom, expec
 	prize, found := suite.k.GetDenomRewardPrize(suite.ctx, stakingDenom, prizeDenom)
 	suite.Require().True(found)
 	suite.Require().True(
-		math.LegacyMustNewDecFromStr(expectedS).Equal(math.LegacyMustNewDecFromStr(prize.DistributedStake)),
+		math.LegacyMustNewDecFromStr(expectedS).Equal(prize.DistributedStake),
 		"expected S=%s got S=%s", expectedS, prize.DistributedStake,
 	)
 }
 
 func (suite *IntegrationTestSuite) TestDenomRewardsDistributionHook_FiresOnlyOnDayEpoch() {
-	suite.seedDenomRewardWithPrize("ubze", "uprize", "100")
+	suite.seedDenomRewardWithPrize("ubze", "uprize", 100)
 	suite.k.SetDenomRewardSchedule(suite.ctx, types.DenomRewardSchedule{
 		ScheduleId:   "000000000001",
 		StakingDenom: "ubze",
 		PrizeDenom:   "uprize",
-		DailyAmount:  "100",
+		DailyAmount:  math.NewInt(100),
 		Duration:     5,
 	})
 
@@ -70,7 +70,7 @@ func (suite *IntegrationTestSuite) TestEnqueueDenomRewardsDistribution_AlreadyPe
 		ScheduleId:   "000000000001",
 		StakingDenom: "ubze",
 		PrizeDenom:   "uprize",
-		DailyAmount:  "100",
+		DailyAmount:  math.NewInt(100),
 		Duration:     5,
 	})
 
@@ -107,7 +107,7 @@ func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_Curs
 		Return(int64(7), nil).
 		AnyTimes()
 
-	suite.seedDenomRewardWithPrize("ubze", "uprize", "100")
+	suite.seedDenomRewardWithPrize("ubze", "uprize", 100)
 
 	total := types.MaxDenomRewardDistributionsPerBlock + 50
 	for i := 1; i <= total; i++ {
@@ -115,7 +115,7 @@ func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_Curs
 			ScheduleId:   fmt.Sprintf("%012d", i),
 			StakingDenom: "ubze",
 			PrizeDenom:   "uprize",
-			DailyAmount:  "100",
+			DailyAmount:  math.NewInt(100),
 			Duration:     5,
 		})
 	}
@@ -174,12 +174,12 @@ func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_Zero
 		Return(int64(3), nil).
 		AnyTimes()
 
-	suite.seedDenomRewardWithPrize("ubze", "uprize", "0")
+	suite.seedDenomRewardWithPrize("ubze", "uprize", 0)
 	suite.k.SetDenomRewardSchedule(suite.ctx, types.DenomRewardSchedule{
 		ScheduleId:   "000000000001",
 		StakingDenom: "ubze",
 		PrizeDenom:   "uprize",
-		DailyAmount:  "100",
+		DailyAmount:  math.NewInt(100),
 		Duration:     3,
 	})
 
@@ -193,7 +193,7 @@ func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_Zero
 	suite.requirePrizeS("ubze", "uprize", "0")
 
 	// stakers return: the schedule stretches and still pays its full daily × duration budget
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", StakedAmount: "50"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", StakedAmount: math.NewInt(50)})
 
 	for day := 1; day <= 3; day++ {
 		suite.k.EnqueueDenomRewardsDistribution(suite.ctx)
@@ -212,12 +212,12 @@ func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_Fini
 		Return(int64(9), nil).
 		AnyTimes()
 
-	suite.seedDenomRewardWithPrize("ubze", "uprize", "100")
+	suite.seedDenomRewardWithPrize("ubze", "uprize", 100)
 	suite.k.SetDenomRewardSchedule(suite.ctx, types.DenomRewardSchedule{
 		ScheduleId:   "000000000042",
 		StakingDenom: "ubze",
 		PrizeDenom:   "uprize",
-		DailyAmount:  "100",
+		DailyAmount:  math.NewInt(100),
 		Duration:     2,
 		Payouts:      1, // one day left
 	})
@@ -249,13 +249,13 @@ func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_Same
 		Return(int64(5), nil).
 		AnyTimes()
 
-	suite.seedDenomRewardWithPrize("ubze", "uprize", "100")
-	for i, daily := range []string{"100", "50"} {
+	suite.seedDenomRewardWithPrize("ubze", "uprize", 100)
+	for i, daily := range []int64{100, 50} {
 		suite.k.SetDenomRewardSchedule(suite.ctx, types.DenomRewardSchedule{
 			ScheduleId:   fmt.Sprintf("%012d", i+1),
 			StakingDenom: "ubze",
 			PrizeDenom:   "uprize",
-			DailyAmount:  daily,
+			DailyAmount:  math.NewInt(daily),
 			Duration:     5,
 		})
 	}
@@ -266,7 +266,7 @@ func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_Same
 	suite.requirePrizeS("ubze", "uprize", "1.5")
 
 	// stake changes between days: day 2 uses the live T
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", StakedAmount: "300"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", StakedAmount: math.NewInt(300)})
 	suite.k.EnqueueDenomRewardsDistribution(suite.ctx)
 	suite.k.ProcessDenomRewardsDistributionQueue(suite.ctx)
 	suite.requirePrizeS("ubze", "uprize", "2") // 1.5 + 150/300
@@ -281,27 +281,27 @@ func (suite *IntegrationTestSuite) TestDistributeDenomRewardSchedule_DefensiveSk
 		ScheduleId:   "000000000001",
 		StakingDenom: "nodr",
 		PrizeDenom:   "uprize",
-		DailyAmount:  "100",
+		DailyAmount:  math.NewInt(100),
 		Duration:     5,
 	})
 
 	// schedule whose prize accumulator is missing
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", StakedAmount: "100"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", StakedAmount: math.NewInt(100)})
 	suite.k.SetDenomRewardSchedule(suite.ctx, types.DenomRewardSchedule{
 		ScheduleId:   "000000000002",
 		StakingDenom: "ubze",
 		PrizeDenom:   "noprize",
-		DailyAmount:  "100",
+		DailyAmount:  math.NewInt(100),
 		Duration:     5,
 	})
 
 	// already-finished schedule (cannot normally exist — finish deletes it)
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "0"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("0")})
 	suite.k.SetDenomRewardSchedule(suite.ctx, types.DenomRewardSchedule{
 		ScheduleId:   "000000000003",
 		StakingDenom: "ubze",
 		PrizeDenom:   "uprize",
-		DailyAmount:  "100",
+		DailyAmount:  math.NewInt(100),
 		Duration:     3,
 		Payouts:      3,
 	})

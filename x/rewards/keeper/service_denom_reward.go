@@ -31,10 +31,7 @@ import (
 // Any bank error aborts the whole tx; because message execution is atomic, no partial payout
 // survives. Returns the total paid across all prize denoms.
 func (k Keeper) settleDenomParticipant(ctx sdk.Context, dr types.DenomReward, participant types.DenomRewardParticipant) (sdk.Coins, error) {
-	deposited, err := math.LegacyNewDecFromStr(participant.Amount)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse participant amount %q: %w", participant.Amount, err)
-	}
+	deposited := math.LegacyNewDecFromInt(participant.Amount)
 
 	acc, err := sdk.AccAddressFromBech32(participant.Address)
 	if err != nil {
@@ -44,20 +41,12 @@ func (k Keeper) settleDenomParticipant(ctx sdk.Context, dr types.DenomReward, pa
 	paid := sdk.NewCoins()
 	var iterErr error
 	k.IterateDenomRewardPrizes(ctx, dr.StakingDenom, func(ctx sdk.Context, prize types.DenomRewardPrize) (stop bool) {
-		s, sErr := math.LegacyNewDecFromStr(prize.DistributedStake)
-		if sErr != nil {
-			iterErr = fmt.Errorf("could not parse accumulator %s/%s: %w", prize.StakingDenom, prize.PrizeDenom, sErr)
-			return true
-		}
+		s := prize.DistributedStake
 
 		// missing index means zero (lazy-zero rule, Business Logic rule 10)
 		index := math.LegacyZeroDec()
 		if stored, found := k.GetDenomRewardParticipantIndex(ctx, participant.Address, dr.StakingDenom, prize.PrizeDenom); found {
-			index, sErr = math.LegacyNewDecFromStr(stored.Index)
-			if sErr != nil {
-				iterErr = fmt.Errorf("could not parse index for %s/%s: %w", dr.StakingDenom, prize.PrizeDenom, sErr)
-				return true
-			}
+			index = stored.Index
 		}
 
 		// pending = amount × (S − index)
@@ -75,7 +64,7 @@ func (k Keeper) settleDenomParticipant(ctx sdk.Context, dr types.DenomReward, pa
 		}
 
 		toSend := sdk.NewCoin(prize.PrizeDenom, reward)
-		if sErr = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, acc, sdk.NewCoins(toSend)); sErr != nil {
+		if sErr := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, acc, sdk.NewCoins(toSend)); sErr != nil {
 			iterErr = sErr
 			return true
 		}
@@ -169,7 +158,7 @@ func (k msgServer) ensureDenomRewardPrize(ctx sdk.Context, stakingDenom, prizeDe
 	prize = types.DenomRewardPrize{
 		StakingDenom:     stakingDenom,
 		PrizeDenom:       prizeDenom,
-		DistributedStake: "0",
+		DistributedStake: math.LegacyZeroDec(),
 	}
 	k.SetDenomRewardPrize(ctx, prize)
 
@@ -204,19 +193,13 @@ func (k Keeper) distributeToDenomPrize(ctx sdk.Context, prize types.DenomRewardP
 		return fmt.Errorf("distribution amount should be positive")
 	}
 
-	s, err := math.LegacyNewDecFromStr(prize.DistributedStake)
-	if err != nil {
-		return fmt.Errorf("could not parse accumulator %s/%s: %w", prize.StakingDenom, prize.PrizeDenom, err)
-	}
-
 	epoch, err := k.epochKeeper.SafeGetEpochCountByIdentifier(ctx, distributionEpoch)
 	if err != nil {
 		return err
 	}
 
 	// S = S + amount / T
-	s = s.Add(math.LegacyNewDecFromInt(amount).Quo(math.LegacyNewDecFromInt(stakedTotal)))
-	prize.DistributedStake = s.String()
+	prize.DistributedStake = prize.DistributedStake.Add(math.LegacyNewDecFromInt(amount).Quo(math.LegacyNewDecFromInt(stakedTotal)))
 	prize.LastDistributionEpoch = epoch
 
 	k.SetDenomRewardPrize(ctx, prize)
@@ -300,17 +283,7 @@ func (k Keeper) distributeDenomRewardSchedule(ctx sdk.Context, schedule types.De
 		return
 	}
 
-	stakedAmount := math.ZeroInt()
-	if dr.StakedAmount != "" {
-		var ok bool
-		stakedAmount, ok = math.NewIntFromString(dr.StakedAmount)
-		if !ok {
-			logger.Error("could not parse denom reward staked amount. skipping distribution")
-			return
-		}
-	}
-
-	if !stakedAmount.IsPositive() {
+	if !dr.StakedAmount.IsPositive() {
 		logger.Debug("denom reward has no staked coins. skipping distribution")
 		return
 	}
@@ -321,19 +294,13 @@ func (k Keeper) distributeDenomRewardSchedule(ctx sdk.Context, schedule types.De
 		return
 	}
 
-	dailyAmount, ok := math.NewIntFromString(schedule.DailyAmount)
-	if !ok {
-		logger.Error("could not parse schedule daily amount. skipping distribution")
-		return
-	}
-
 	prize, found := k.GetDenomRewardPrize(ctx, schedule.StakingDenom, schedule.PrizeDenom)
 	if !found {
 		logger.Error("denom reward prize not found for schedule. skipping distribution")
 		return
 	}
 
-	if err := k.distributeToDenomPrize(ctx, prize, dailyAmount, stakedAmount); err != nil {
+	if err := k.distributeToDenomPrize(ctx, prize, schedule.DailyAmount, dr.StakedAmount); err != nil {
 		logger.Error(err.Error())
 		return
 	}

@@ -29,7 +29,7 @@ func (suite *IntegrationTestSuite) TestMigrate4to5() {
 	// unrelated state that the migration must not touch
 	sr := types.StakingReward{RewardId: "00000001", PrizeDenom: "ubze", StakingDenom: "ubze", PrizeAmount: "10", Duration: 10, StakedAmount: "0", DistributedStake: "0"}
 	suite.k.SetStakingReward(suite.ctx, sr)
-	dr := suite.seedDenomReward("udenom1", "1000")
+	dr := suite.seedDenomReward("udenom1", 1000)
 	stateBefore := rewards.ExportGenesis(suite.ctx, *suite.k)
 
 	migrator := keeper.NewMigrator(*suite.k, nil)

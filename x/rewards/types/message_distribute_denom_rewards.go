@@ -9,7 +9,7 @@ import (
 
 var _ sdk.Msg = &MsgDistributeDenomRewards{}
 
-func NewMsgDistributeDenomRewards(creator string, denom string, prizeDenom string, amount string) *MsgDistributeDenomRewards {
+func NewMsgDistributeDenomRewards(creator string, denom string, prizeDenom string, amount math.Int) *MsgDistributeDenomRewards {
 	return &MsgDistributeDenomRewards{
 		Creator:    creator,
 		Denom:      denom,
@@ -32,11 +32,7 @@ func (msg *MsgDistributeDenomRewards) ValidateBasic() error {
 		return errorsmod.Wrap(ErrInvalidPrizeDenom, "prize_denom cannot be empty")
 	}
 
-	amtInt, ok := math.NewIntFromString(msg.Amount)
-	if !ok {
-		return errorsmod.Wrap(ErrInvalidAmount, "could not convert amount")
-	}
-	if !amtInt.IsPositive() {
+	if msg.Amount.IsNil() || !msg.Amount.IsPositive() {
 		return errorsmod.Wrap(ErrInvalidAmount, "amount should be greater than 0")
 	}
 

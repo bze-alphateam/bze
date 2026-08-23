@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -9,7 +10,7 @@ func (suite *IntegrationTestSuite) TestStoreDenomRewardParticipant_SetGetRemove_
 	p := types.DenomRewardParticipant{
 		Address:      "bze1user",
 		StakingDenom: "ubze",
-		Amount:       "1000",
+		Amount:       math.NewInt(1000),
 	}
 
 	// set writes both the record and the address-first marker
@@ -29,9 +30,9 @@ func (suite *IntegrationTestSuite) TestStoreDenomRewardParticipant_SetGetRemove_
 
 func (suite *IntegrationTestSuite) TestStoreDenomRewardParticipant_IterateByDenom_Isolation() {
 	// two participants in ubze, one in other
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: "bze1a", StakingDenom: "ubze", Amount: "1"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: "bze1b", StakingDenom: "ubze", Amount: "2"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: "bze1a", StakingDenom: "other", Amount: "3"})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: "bze1a", StakingDenom: "ubze", Amount: math.NewInt(1)})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: "bze1b", StakingDenom: "ubze", Amount: math.NewInt(2)})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: "bze1a", StakingDenom: "other", Amount: math.NewInt(3)})
 
 	var ubze []string
 	suite.k.IterateDenomRewardParticipants(suite.ctx, "ubze", func(_ sdk.Context, p types.DenomRewardParticipant) bool {
@@ -53,9 +54,9 @@ func (suite *IntegrationTestSuite) TestStoreDenomRewardParticipant_IterateByDeno
 
 func (suite *IntegrationTestSuite) TestStoreDenomRewardParticipant_IterateUserDenomRewards_ViaMarker() {
 	// bze1a joins ubze and other; bze1b joins only ubze
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: "bze1a", StakingDenom: "ubze", Amount: "1"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: "bze1a", StakingDenom: "other", Amount: "3"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: "bze1b", StakingDenom: "ubze", Amount: "2"})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: "bze1a", StakingDenom: "ubze", Amount: math.NewInt(1)})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: "bze1a", StakingDenom: "other", Amount: math.NewInt(3)})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: "bze1b", StakingDenom: "ubze", Amount: math.NewInt(2)})
 
 	var aDenoms []string
 	suite.k.IterateUserDenomRewards(suite.ctx, "bze1a", func(_ sdk.Context, p types.DenomRewardParticipant) bool {

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -9,7 +10,7 @@ func (suite *IntegrationTestSuite) TestStoreDenomRewardPrize_SetGetRemove() {
 	prize := types.DenomRewardPrize{
 		StakingDenom:          "ubze",
 		PrizeDenom:            "uprize",
-		DistributedStake:      "0",
+		DistributedStake:      math.LegacyMustNewDecFromStr("0"),
 		LastDistributionEpoch: 10,
 	}
 
@@ -30,9 +31,9 @@ func (suite *IntegrationTestSuite) TestStoreDenomRewardPrize_SetGetRemove() {
 func (suite *IntegrationTestSuite) TestStoreDenomRewardPrize_IterateAndCount_PerDenomIsolation() {
 	// ubze has prizes p1, p2, p3; other has a single prize p1 (same prize denom, different DR)
 	for _, p := range []string{"p1", "p2", "p3"} {
-		suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: p, DistributedStake: "0"})
+		suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: p, DistributedStake: math.LegacyMustNewDecFromStr("0")})
 	}
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "other", PrizeDenom: "p1", DistributedStake: "0"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "other", PrizeDenom: "p1", DistributedStake: math.LegacyMustNewDecFromStr("0")})
 
 	// counts are isolated per staking denom
 	suite.Require().Equal(uint32(3), suite.k.CountDenomRewardPrizes(suite.ctx, "ubze"))

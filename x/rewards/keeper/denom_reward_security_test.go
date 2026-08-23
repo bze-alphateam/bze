@@ -128,7 +128,7 @@ func (suite *IntegrationTestSuite) drAdvanceDay(led *drSecLedger) {
 	// I4: S only ever grows
 	for _, prize := range suite.k.GetAllDenomRewardPrize(suite.ctx) {
 		key := prize.StakingDenom + "/" + prize.PrizeDenom
-		s := math.LegacyMustNewDecFromStr(prize.DistributedStake)
+		s := prize.DistributedStake
 		if prev, ok := led.lastS[key]; ok {
 			suite.Require().True(s.GTE(prev), "accumulator %s decreased: %s -> %s", key, prev, s)
 		}
@@ -181,7 +181,7 @@ func (suite *IntegrationTestSuite) assertDrStoreIntegrity() {
 
 func (suite *IntegrationTestSuite) drSecJoin(addr sdk.AccAddress, denom string, amount int64) {
 	_, err := suite.msgServer.JoinDenomReward(suite.ctx, &types.MsgJoinDenomReward{
-		Creator: addr.String(), Denom: denom, Amount: math.NewInt(amount).String(),
+		Creator: addr.String(), Denom: denom, Amount: math.NewInt(amount),
 	})
 	suite.Require().NoError(err)
 }
@@ -282,7 +282,7 @@ func (suite *IntegrationTestSuite) runDenomRewardLifecycle(tc drSecLifecycleCase
 				Creator:     funder.String(),
 				Denom:       dr.stakingDenom,
 				PrizeDenom:  schedule.prize,
-				DailyAmount: math.NewInt(schedule.daily).String(),
+				DailyAmount: math.NewInt(schedule.daily),
 				Duration:    fmt.Sprintf("%d", schedule.days),
 			})
 			suite.Require().NoError(err)
@@ -299,7 +299,7 @@ func (suite *IntegrationTestSuite) runDenomRewardLifecycle(tc drSecLifecycleCase
 					}
 					_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, &types.MsgDistributeDenomRewards{
 						Creator: funder.String(), Denom: dr.stakingDenom,
-						PrizeDenom: airdrop.prize, Amount: math.NewInt(airdrop.amount).String(),
+						PrizeDenom: airdrop.prize, Amount: math.NewInt(airdrop.amount),
 					})
 					suite.Require().NoError(err)
 				}
@@ -367,7 +367,7 @@ func (suite *IntegrationTestSuite) runDenomRewardLifecycle(tc drSecLifecycleCase
 					}
 					_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, &types.MsgDistributeDenomRewards{
 						Creator: funder.String(), Denom: dr.stakingDenom,
-						PrizeDenom: airdrop.prize, Amount: math.NewInt(airdrop.amount).String(),
+						PrizeDenom: airdrop.prize, Amount: math.NewInt(airdrop.amount),
 					})
 					suite.Require().NoError(err)
 				}
@@ -401,7 +401,7 @@ func (suite *IntegrationTestSuite) runDenomRewardLifecycle(tc drSecLifecycleCase
 	for _, dr := range tc.drs {
 		stored, found := suite.k.GetDenomReward(suite.ctx, dr.stakingDenom)
 		suite.Require().True(found)
-		suite.Require().Equal("0", stored.StakedAmount)
+		suite.Require().Equal("0", stored.StakedAmount.String())
 	}
 
 	// I4 per (denom, prize): escrowed-in is exactly the budgets + airdrops, and everything
@@ -455,7 +455,7 @@ func (suite *IntegrationTestSuite) runDenomRewardLifecycle(tc drSecLifecycleCase
 func (suite *IntegrationTestSuite) drScheduleIdAt(stakingDenom string, spec drSecSchedule) string {
 	var id string
 	suite.k.IterateDenomSchedules(suite.ctx, stakingDenom, func(_ sdk.Context, schedule types.DenomRewardSchedule) bool {
-		if schedule.PrizeDenom == spec.prize && schedule.DailyAmount == math.NewInt(spec.daily).String() {
+		if schedule.PrizeDenom == spec.prize && schedule.DailyAmount.Equal(math.NewInt(spec.daily)) {
 			id = schedule.ScheduleId
 			return true
 		}
@@ -558,13 +558,13 @@ func (suite *IntegrationTestSuite) TestDenomRewardSecurity_I1_TopUpThenImmediate
 	victim := sdk.AccAddress("drsec-victim....")
 	funder := sdk.AccAddress("drsec-funder....")
 
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ustake1", Lock: 0, MinStake: 0, StakedAmount: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ustake1", Lock: 0, MinStake: 0, StakedAmount: math.NewInt(0)})
 	suite.drSecJoin(attacker, "ustake1", 100)
 	suite.drSecJoin(victim, "ustake1", 300)
 
 	// day of accrual: 400 escrowed on T = 400 → S = 1
 	_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, &types.MsgDistributeDenomRewards{
-		Creator: funder.String(), Denom: "ustake1", PrizeDenom: "uprizea", Amount: "400",
+		Creator: funder.String(), Denom: "ustake1", PrizeDenom: "uprizea", Amount: math.NewInt(400),
 	})
 	suite.Require().NoError(err)
 
@@ -578,7 +578,7 @@ func (suite *IntegrationTestSuite) TestDenomRewardSecurity_I1_TopUpThenImmediate
 
 	// next distribution pays at the live amounts: T = 1300, S += 1
 	_, err = suite.msgServer.DistributeDenomRewards(suite.ctx, &types.MsgDistributeDenomRewards{
-		Creator: funder.String(), Denom: "ustake1", PrizeDenom: "uprizea", Amount: "1300",
+		Creator: funder.String(), Denom: "ustake1", PrizeDenom: "uprizea", Amount: math.NewInt(1300),
 	})
 	suite.Require().NoError(err)
 
@@ -612,17 +612,17 @@ func (suite *IntegrationTestSuite) TestDenomRewardSecurity_I2_NoOrphanIndexes() 
 	late := sdk.AccAddress("drsec-late......")
 	funder := sdk.AccAddress("drsec-funder....")
 
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ustake1", Lock: 0, MinStake: 0, StakedAmount: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ustake1", Lock: 0, MinStake: 0, StakedAmount: math.NewInt(0)})
 
 	suite.drSecJoin(early, "ustake1", 100) // joins before any prize exists: zero stamps
 	suite.assertDrStoreIntegrity()
 
 	_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, &types.MsgDistributeDenomRewards{
-		Creator: funder.String(), Denom: "ustake1", PrizeDenom: "uprizea", Amount: "500",
+		Creator: funder.String(), Denom: "ustake1", PrizeDenom: "uprizea", Amount: math.NewInt(500),
 	})
 	suite.Require().NoError(err)
 	_, err = suite.msgServer.CreateDenomRewardSchedule(suite.ctx, &types.MsgCreateDenomRewardSchedule{
-		Creator: funder.String(), Denom: "ustake1", PrizeDenom: "uprizeb", DailyAmount: "100", Duration: "2",
+		Creator: funder.String(), Denom: "ustake1", PrizeDenom: "uprizeb", DailyAmount: math.NewInt(100), Duration: "2",
 	})
 	suite.Require().NoError(err)
 
@@ -662,19 +662,19 @@ func (suite *IntegrationTestSuite) TestDenomRewardSecurity_I5_BoundedWork_GasInd
 		// same T and same measured participant regardless of the crowd size, so every measured
 		// operation moves identical amounts and writes identical bytes
 		measured := sdk.AccAddress("drsec-measured..")
-		suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ustake1", Lock: 0, MinStake: 0, StakedAmount: "100000"})
-		suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ustake1", PrizeDenom: "uprizea", DistributedStake: "0"})
-		suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: measured.String(), StakingDenom: "ustake1", Amount: "50000"})
+		suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ustake1", Lock: 0, MinStake: 0, StakedAmount: math.NewInt(100000)})
+		suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ustake1", PrizeDenom: "uprizea", DistributedStake: math.LegacyMustNewDecFromStr("0")})
+		suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: measured.String(), StakingDenom: "ustake1", Amount: math.NewInt(50000)})
 		for i := 1; i < nParticipants; i++ {
 			suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{
 				Address:      sdk.AccAddress(fmt.Sprintf("drsec-crowd-%04d", i)).String(),
 				StakingDenom: "ustake1",
-				Amount:       "7",
+				Amount:       math.NewInt(7),
 			})
 		}
 		suite.k.SetDenomRewardSchedule(suite.ctx, types.DenomRewardSchedule{
 			ScheduleId: "000000000001", StakingDenom: "ustake1", PrizeDenom: "uprizea",
-			DailyAmount: "100000", Duration: 5, Payouts: 0,
+			DailyAmount: math.NewInt(100000), Duration: 5, Payouts: 0,
 		})
 
 		gas := func(op func()) uint64 {
@@ -722,9 +722,9 @@ func (suite *IntegrationTestSuite) TestDenomRewardSecurity_SrParity() {
 		suite.k.SetStakingRewardParticipant(suite.ctx, types.StakingRewardParticipant{
 			Address: user.String(), RewardId: "000000000001", Amount: "100", JoinedAt: "0",
 		})
-		suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ustake1", Lock: 0, MinStake: 0, StakedAmount: "100"})
-		suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ustake1", PrizeDenom: "uprizea", DistributedStake: "0.005"})
-		suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: user.String(), StakingDenom: "ustake1", Amount: "100"})
+		suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ustake1", Lock: 0, MinStake: 0, StakedAmount: math.NewInt(100)})
+		suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ustake1", PrizeDenom: "uprizea", DistributedStake: math.LegacyMustNewDecFromStr("0.005")})
+		suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: user.String(), StakingDenom: "ustake1", Amount: math.NewInt(100)})
 
 		// both claims: positive pending truncating to zero → same error, no snapshot advance
 		_, srErr := suite.msgServer.ClaimStakingRewards(suite.ctx, &types.MsgClaimStakingRewards{Creator: user.String(), RewardId: "000000000001"})
@@ -742,7 +742,7 @@ func (suite *IntegrationTestSuite) TestDenomRewardSecurity_SrParity() {
 		sr.DistributedStake = "0.01"
 		suite.k.SetStakingReward(suite.ctx, sr)
 		prize, _ := suite.k.GetDenomRewardPrize(suite.ctx, "ustake1", "uprizea")
-		prize.DistributedStake = "0.01"
+		prize.DistributedStake = math.LegacyMustNewDecFromStr("0.01")
 		suite.k.SetDenomRewardPrize(suite.ctx, prize)
 
 		srClaim, err := suite.msgServer.ClaimStakingRewards(suite.ctx, &types.MsgClaimStakingRewards{Creator: user.String(), RewardId: "000000000001"})
@@ -761,11 +761,11 @@ func (suite *IntegrationTestSuite) TestDenomRewardSecurity_SrParity() {
 			RewardId: "000000000001", PrizeDenom: "uprize", StakingDenom: "ubze",
 			PrizeAmount: "1000", Duration: 5, Payouts: 0, StakedAmount: "0", DistributedStake: "0",
 		})
-		suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ustake1", StakedAmount: "0"})
-		suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ustake1", PrizeDenom: "uprizea", DistributedStake: "0"})
+		suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ustake1", StakedAmount: math.NewInt(0)})
+		suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ustake1", PrizeDenom: "uprizea", DistributedStake: math.LegacyMustNewDecFromStr("0")})
 		suite.k.SetDenomRewardSchedule(suite.ctx, types.DenomRewardSchedule{
 			ScheduleId: "000000000001", StakingDenom: "ustake1", PrizeDenom: "uprizea",
-			DailyAmount: "1000", Duration: 5, Payouts: 0,
+			DailyAmount: math.NewInt(1000), Duration: 5, Payouts: 0,
 		})
 
 		suite.k.EnqueueStakingRewardsDistribution(suite.ctx)
@@ -778,7 +778,7 @@ func (suite *IntegrationTestSuite) TestDenomRewardSecurity_SrParity() {
 		suite.Require().Equal(uint32(0), schedule.Payouts, "DR consumed a zero-staker day")
 		suite.Require().Equal("0", sr.DistributedStake)
 		prize, _ := suite.k.GetDenomRewardPrize(suite.ctx, "ustake1", "uprizea")
-		suite.Require().Equal("0", prize.DistributedStake)
+		suite.Require().True(math.LegacyMustNewDecFromStr("0").Equal(prize.DistributedStake))
 	})
 
 	suite.Run("escrow and fee capture: identical amounts through identical paths", func() {
@@ -806,7 +806,7 @@ func (suite *IntegrationTestSuite) TestDenomRewardSecurity_SrParity() {
 		_, err = suite.msgServer.CreateDenomReward(suite.ctx, &types.MsgCreateDenomReward{Creator: creator.String(), Denom: "ustake1"})
 		suite.Require().NoError(err)
 		_, err = suite.msgServer.CreateDenomRewardSchedule(suite.ctx, &types.MsgCreateDenomRewardSchedule{
-			Creator: creator.String(), Denom: "ustake1", PrizeDenom: "uprizea", DailyAmount: "100", Duration: "5",
+			Creator: creator.String(), Denom: "ustake1", PrizeDenom: "uprizea", DailyAmount: math.NewInt(100), Duration: "5",
 		})
 		suite.Require().NoError(err)
 
@@ -827,8 +827,8 @@ func (suite *IntegrationTestSuite) TestDenomRewardSecurity_SrParity() {
 		suite.k.SetStakingRewardParticipant(suite.ctx, types.StakingRewardParticipant{
 			Address: user.String(), RewardId: "000000000001", Amount: "100", JoinedAt: "0",
 		})
-		suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ustake1", Lock: 3, MinStake: 0, StakedAmount: "70"})
-		suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: user.String(), StakingDenom: "ustake1", Amount: "70"})
+		suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ustake1", Lock: 3, MinStake: 0, StakedAmount: math.NewInt(70)})
+		suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: user.String(), StakingDenom: "ustake1", Amount: math.NewInt(70)})
 
 		_, err := suite.msgServer.ExitStaking(suite.ctx, &types.MsgExitStaking{Creator: user.String(), RewardId: "000000000001"})
 		suite.Require().NoError(err)
@@ -887,7 +887,7 @@ func (suite *IntegrationTestSuite) runSrLifecycleObservables(withDr bool) srObse
 		suite.Require().NoError(err)
 		suite.drSecJoin(drStaker, "udrstake", 200)
 		_, err = suite.msgServer.CreateDenomRewardSchedule(suite.ctx, &types.MsgCreateDenomRewardSchedule{
-			Creator: funder.String(), Denom: "udrstake", PrizeDenom: "uprized", DailyAmount: "500", Duration: "2",
+			Creator: funder.String(), Denom: "udrstake", PrizeDenom: "uprized", DailyAmount: math.NewInt(500), Duration: "2",
 		})
 		suite.Require().NoError(err)
 	}
@@ -972,7 +972,7 @@ func (suite *IntegrationTestSuite) TestDenomRewardSecurity_BaseBehaviourFreeze_S
 	// the DR world really ran: its own denoms moved (200 stake in+out, 2×500 schedule payouts)
 	dr, found := suite.k.GetDenomReward(suite.ctx, "udrstake")
 	suite.Require().True(found)
-	suite.Require().Equal("0", dr.StakedAmount)
+	suite.Require().Equal("0", dr.StakedAmount.String())
 }
 
 // --- genesis round-trip under load ---
@@ -1003,8 +1003,8 @@ func (suite *IntegrationTestSuite) TestDenomRewardSecurity_GenesisRoundTripUnder
 	suite.drSecJoin(dormant, "ustake1", 100)
 
 	for _, schedule := range []types.MsgCreateDenomRewardSchedule{
-		{Creator: funder.String(), Denom: "ustake1", PrizeDenom: "uprizea", DailyAmount: "1000", Duration: "6"},
-		{Creator: funder.String(), Denom: "ustake1", PrizeDenom: "uprizeb", DailyAmount: "300", Duration: "2"},
+		{Creator: funder.String(), Denom: "ustake1", PrizeDenom: "uprizea", DailyAmount: math.NewInt(1000), Duration: "6"},
+		{Creator: funder.String(), Denom: "ustake1", PrizeDenom: "uprizeb", DailyAmount: math.NewInt(300), Duration: "2"},
 	} {
 		msg := schedule
 		_, err = suite.msgServer.CreateDenomRewardSchedule(suite.ctx, &msg)
@@ -1020,7 +1020,7 @@ func (suite *IntegrationTestSuite) TestDenomRewardSecurity_GenesisRoundTripUnder
 	suite.drSecJoin(late, "ustake1", 400)
 	suite.drAdvanceDay(led)
 	_, err = suite.msgServer.DistributeDenomRewards(suite.ctx, &types.MsgDistributeDenomRewards{
-		Creator: funder.String(), Denom: "ustake1", PrizeDenom: "uprizec", Amount: "555",
+		Creator: funder.String(), Denom: "ustake1", PrizeDenom: "uprizec", Amount: math.NewInt(555),
 	})
 	suite.Require().NoError(err)
 

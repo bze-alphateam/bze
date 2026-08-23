@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -10,7 +11,7 @@ func (suite *IntegrationTestSuite) TestStoreDenomRewardSchedule_SetGetRemove() {
 		ScheduleId:   "000000000001",
 		StakingDenom: "ubze",
 		PrizeDenom:   "uprize",
-		DailyAmount:  "100",
+		DailyAmount:  math.NewInt(100),
 		Duration:     30,
 		Payouts:      0,
 	}

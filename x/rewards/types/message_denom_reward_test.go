@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/math"
 	"strconv"
 	"testing"
 
@@ -40,13 +41,12 @@ func TestMsgJoinDenomReward_ValidateBasic(t *testing.T) {
 		msg  MsgJoinDenomReward
 		err  error
 	}{
-		{name: "invalid creator", msg: MsgJoinDenomReward{Creator: "invalid", Denom: "ubze", Amount: "100"}, err: sdkerrors.ErrInvalidAddress},
-		{name: "empty denom", msg: MsgJoinDenomReward{Creator: creator, Denom: "", Amount: "100"}, err: ErrInvalidStakingDenom},
-		{name: "empty amount", msg: MsgJoinDenomReward{Creator: creator, Denom: "ubze", Amount: ""}, err: ErrInvalidAmount},
-		{name: "non-numeric amount", msg: MsgJoinDenomReward{Creator: creator, Denom: "ubze", Amount: "abc"}, err: ErrInvalidAmount},
-		{name: "negative amount", msg: MsgJoinDenomReward{Creator: creator, Denom: "ubze", Amount: "-1"}, err: ErrInvalidAmount},
-		{name: "zero amount", msg: MsgJoinDenomReward{Creator: creator, Denom: "ubze", Amount: "0"}, err: ErrInvalidAmount},
-		{name: "valid", msg: MsgJoinDenomReward{Creator: creator, Denom: "ubze", Amount: "100"}},
+		{name: "invalid creator", msg: MsgJoinDenomReward{Creator: "invalid", Denom: "ubze", Amount: math.NewInt(100)}, err: sdkerrors.ErrInvalidAddress},
+		{name: "empty denom", msg: MsgJoinDenomReward{Creator: creator, Denom: "", Amount: math.NewInt(100)}, err: ErrInvalidStakingDenom},
+		{name: "unset amount", msg: MsgJoinDenomReward{Creator: creator, Denom: "ubze"}, err: ErrInvalidAmount},
+		{name: "negative amount", msg: MsgJoinDenomReward{Creator: creator, Denom: "ubze", Amount: math.NewInt(-1)}, err: ErrInvalidAmount},
+		{name: "zero amount", msg: MsgJoinDenomReward{Creator: creator, Denom: "ubze", Amount: math.NewInt(0)}, err: ErrInvalidAmount},
+		{name: "valid", msg: MsgJoinDenomReward{Creator: creator, Denom: "ubze", Amount: math.NewInt(100)}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -114,15 +114,15 @@ func TestMsgCreateDenomRewardSchedule_ValidateBasic(t *testing.T) {
 		msg  MsgCreateDenomRewardSchedule
 		err  error
 	}{
-		{name: "invalid creator", msg: MsgCreateDenomRewardSchedule{Creator: "invalid", Denom: "ubze", PrizeDenom: "up", DailyAmount: "100", Duration: "30"}, err: sdkerrors.ErrInvalidAddress},
-		{name: "empty denom", msg: MsgCreateDenomRewardSchedule{Creator: creator, Denom: "", PrizeDenom: "up", DailyAmount: "100", Duration: "30"}, err: ErrInvalidStakingDenom},
-		{name: "empty prize denom", msg: MsgCreateDenomRewardSchedule{Creator: creator, Denom: "ubze", PrizeDenom: "", DailyAmount: "100", Duration: "30"}, err: ErrInvalidPrizeDenom},
-		{name: "non-numeric daily amount", msg: MsgCreateDenomRewardSchedule{Creator: creator, Denom: "ubze", PrizeDenom: "up", DailyAmount: "abc", Duration: "30"}, err: ErrInvalidAmount},
-		{name: "zero daily amount", msg: MsgCreateDenomRewardSchedule{Creator: creator, Denom: "ubze", PrizeDenom: "up", DailyAmount: "0", Duration: "30"}, err: ErrInvalidAmount},
-		{name: "non-numeric duration", msg: MsgCreateDenomRewardSchedule{Creator: creator, Denom: "ubze", PrizeDenom: "up", DailyAmount: "100", Duration: "x"}, err: ErrInvalidDuration},
-		{name: "zero duration", msg: MsgCreateDenomRewardSchedule{Creator: creator, Denom: "ubze", PrizeDenom: "up", DailyAmount: "100", Duration: "0"}, err: ErrInvalidDuration},
-		{name: "duration too long", msg: MsgCreateDenomRewardSchedule{Creator: creator, Denom: "ubze", PrizeDenom: "up", DailyAmount: "100", Duration: tooLong}, err: ErrInvalidDuration},
-		{name: "valid", msg: MsgCreateDenomRewardSchedule{Creator: creator, Denom: "ubze", PrizeDenom: "up", DailyAmount: "100", Duration: "30"}},
+		{name: "invalid creator", msg: MsgCreateDenomRewardSchedule{Creator: "invalid", Denom: "ubze", PrizeDenom: "up", DailyAmount: math.NewInt(100), Duration: "30"}, err: sdkerrors.ErrInvalidAddress},
+		{name: "empty denom", msg: MsgCreateDenomRewardSchedule{Creator: creator, Denom: "", PrizeDenom: "up", DailyAmount: math.NewInt(100), Duration: "30"}, err: ErrInvalidStakingDenom},
+		{name: "empty prize denom", msg: MsgCreateDenomRewardSchedule{Creator: creator, Denom: "ubze", PrizeDenom: "", DailyAmount: math.NewInt(100), Duration: "30"}, err: ErrInvalidPrizeDenom},
+		{name: "unset daily amount", msg: MsgCreateDenomRewardSchedule{Creator: creator, Denom: "ubze", PrizeDenom: "up", Duration: "30"}, err: ErrInvalidAmount},
+		{name: "zero daily amount", msg: MsgCreateDenomRewardSchedule{Creator: creator, Denom: "ubze", PrizeDenom: "up", DailyAmount: math.NewInt(0), Duration: "30"}, err: ErrInvalidAmount},
+		{name: "non-numeric duration", msg: MsgCreateDenomRewardSchedule{Creator: creator, Denom: "ubze", PrizeDenom: "up", DailyAmount: math.NewInt(100), Duration: "x"}, err: ErrInvalidDuration},
+		{name: "zero duration", msg: MsgCreateDenomRewardSchedule{Creator: creator, Denom: "ubze", PrizeDenom: "up", DailyAmount: math.NewInt(100), Duration: "0"}, err: ErrInvalidDuration},
+		{name: "duration too long", msg: MsgCreateDenomRewardSchedule{Creator: creator, Denom: "ubze", PrizeDenom: "up", DailyAmount: math.NewInt(100), Duration: tooLong}, err: ErrInvalidDuration},
+		{name: "valid", msg: MsgCreateDenomRewardSchedule{Creator: creator, Denom: "ubze", PrizeDenom: "up", DailyAmount: math.NewInt(100), Duration: "30"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -171,12 +171,12 @@ func TestMsgDistributeDenomRewards_ValidateBasic(t *testing.T) {
 		msg  MsgDistributeDenomRewards
 		err  error
 	}{
-		{name: "invalid creator", msg: MsgDistributeDenomRewards{Creator: "invalid", Denom: "ubze", PrizeDenom: "up", Amount: "100"}, err: sdkerrors.ErrInvalidAddress},
-		{name: "empty denom", msg: MsgDistributeDenomRewards{Creator: creator, Denom: "", PrizeDenom: "up", Amount: "100"}, err: ErrInvalidStakingDenom},
-		{name: "empty prize denom", msg: MsgDistributeDenomRewards{Creator: creator, Denom: "ubze", PrizeDenom: "", Amount: "100"}, err: ErrInvalidPrizeDenom},
-		{name: "non-numeric amount", msg: MsgDistributeDenomRewards{Creator: creator, Denom: "ubze", PrizeDenom: "up", Amount: "abc"}, err: ErrInvalidAmount},
-		{name: "zero amount", msg: MsgDistributeDenomRewards{Creator: creator, Denom: "ubze", PrizeDenom: "up", Amount: "0"}, err: ErrInvalidAmount},
-		{name: "valid", msg: MsgDistributeDenomRewards{Creator: creator, Denom: "ubze", PrizeDenom: "up", Amount: "100"}},
+		{name: "invalid creator", msg: MsgDistributeDenomRewards{Creator: "invalid", Denom: "ubze", PrizeDenom: "up", Amount: math.NewInt(100)}, err: sdkerrors.ErrInvalidAddress},
+		{name: "empty denom", msg: MsgDistributeDenomRewards{Creator: creator, Denom: "", PrizeDenom: "up", Amount: math.NewInt(100)}, err: ErrInvalidStakingDenom},
+		{name: "empty prize denom", msg: MsgDistributeDenomRewards{Creator: creator, Denom: "ubze", PrizeDenom: "", Amount: math.NewInt(100)}, err: ErrInvalidPrizeDenom},
+		{name: "unset amount", msg: MsgDistributeDenomRewards{Creator: creator, Denom: "ubze", PrizeDenom: "up"}, err: ErrInvalidAmount},
+		{name: "zero amount", msg: MsgDistributeDenomRewards{Creator: creator, Denom: "ubze", PrizeDenom: "up", Amount: math.NewInt(0)}, err: ErrInvalidAmount},
+		{name: "valid", msg: MsgDistributeDenomRewards{Creator: creator, Denom: "ubze", PrizeDenom: "up", Amount: math.NewInt(100)}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -195,10 +195,10 @@ func TestNewMsgDenomReward_Constructors(t *testing.T) {
 	creator := sample.AccAddress()
 
 	require.Equal(t, &MsgCreateDenomReward{Creator: creator, Denom: "ubze"}, NewMsgCreateDenomReward(creator, "ubze"))
-	require.Equal(t, &MsgJoinDenomReward{Creator: creator, Denom: "ubze", Amount: "100"}, NewMsgJoinDenomReward(creator, "ubze", "100"))
+	require.Equal(t, &MsgJoinDenomReward{Creator: creator, Denom: "ubze", Amount: math.NewInt(100)}, NewMsgJoinDenomReward(creator, "ubze", math.NewInt(100)))
 	require.Equal(t, &MsgExitDenomReward{Creator: creator, Denom: "ubze"}, NewMsgExitDenomReward(creator, "ubze"))
 	require.Equal(t, &MsgClaimDenomRewards{Creator: creator, Denom: "ubze"}, NewMsgClaimDenomRewards(creator, "ubze"))
-	require.Equal(t, &MsgCreateDenomRewardSchedule{Creator: creator, Denom: "ubze", PrizeDenom: "up", DailyAmount: "100", Duration: "30"}, NewMsgCreateDenomRewardSchedule(creator, "ubze", "up", "100", "30"))
+	require.Equal(t, &MsgCreateDenomRewardSchedule{Creator: creator, Denom: "ubze", PrizeDenom: "up", DailyAmount: math.NewInt(100), Duration: "30"}, NewMsgCreateDenomRewardSchedule(creator, "ubze", "up", math.NewInt(100), "30"))
 	require.Equal(t, &MsgUpdateDenomRewardSchedule{Creator: creator, Denom: "ubze", ScheduleId: "000000000001", Duration: "30"}, NewMsgUpdateDenomRewardSchedule(creator, "ubze", "000000000001", "30"))
-	require.Equal(t, &MsgDistributeDenomRewards{Creator: creator, Denom: "ubze", PrizeDenom: "up", Amount: "100"}, NewMsgDistributeDenomRewards(creator, "ubze", "up", "100"))
+	require.Equal(t, &MsgDistributeDenomRewards{Creator: creator, Denom: "ubze", PrizeDenom: "up", Amount: math.NewInt(100)}, NewMsgDistributeDenomRewards(creator, "ubze", "up", math.NewInt(100)))
 }

@@ -170,7 +170,7 @@ message MsgJoinDenomReward {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string denom   = 2;
-  string amount  = 3;
+  string amount  = 3 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"amount\""];
 }
 
 message MsgJoinDenomRewardResponse {}
@@ -205,7 +205,7 @@ message MsgCreateDenomRewardSchedule {
   string creator      = 1;
   string denom        = 2;
   string prize_denom  = 3;
-  string daily_amount = 4;
+  string daily_amount = 4 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"daily_amount\""];
   string duration     = 5;
 }
 
@@ -230,7 +230,7 @@ message MsgDistributeDenomRewards {
   string creator     = 1;
   string denom       = 2;
   string prize_denom = 3;
-  string amount      = 4;
+  string amount      = 4 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"amount\""];
 }
 
 message MsgDistributeDenomRewardsResponse {}

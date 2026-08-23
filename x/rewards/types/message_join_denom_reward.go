@@ -9,7 +9,7 @@ import (
 
 var _ sdk.Msg = &MsgJoinDenomReward{}
 
-func NewMsgJoinDenomReward(creator string, denom string, amount string) *MsgJoinDenomReward {
+func NewMsgJoinDenomReward(creator string, denom string, amount math.Int) *MsgJoinDenomReward {
 	return &MsgJoinDenomReward{
 		Creator: creator,
 		Denom:   denom,
@@ -27,15 +27,7 @@ func (msg *MsgJoinDenomReward) ValidateBasic() error {
 		return errorsmod.Wrap(ErrInvalidStakingDenom, "denom cannot be empty")
 	}
 
-	if msg.Amount == "" {
-		return errorsmod.Wrap(ErrInvalidAmount, "empty amount provided")
-	}
-
-	amtInt, ok := math.NewIntFromString(msg.Amount)
-	if !ok {
-		return errorsmod.Wrap(ErrInvalidAmount, "could not convert amount")
-	}
-	if !amtInt.IsPositive() {
+	if msg.Amount.IsNil() || !msg.Amount.IsPositive() {
 		return errorsmod.Wrap(ErrInvalidAmount, "amount should be greater than 0")
 	}
 

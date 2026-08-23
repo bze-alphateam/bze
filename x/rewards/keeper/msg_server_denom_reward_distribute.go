@@ -2,9 +2,7 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
-	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -33,19 +31,11 @@ func (k msgServer) DistributeDenomRewards(goCtx context.Context, msg *types.MsgD
 		return nil, types.ErrDenomRewardNotFound
 	}
 
-	stakedAmount := math.ZeroInt()
-	if dr.StakedAmount != "" {
-		var ok bool
-		stakedAmount, ok = math.NewIntFromString(dr.StakedAmount)
-		if !ok {
-			return nil, fmt.Errorf("could not transform staked amount from storage into int")
-		}
-	}
-	if !stakedAmount.IsPositive() {
+	if !dr.StakedAmount.IsPositive() {
 		return nil, types.ErrNoStakersInDenomReward
 	}
 
-	toCapture, err := k.getAmountToCapture(msg.PrizeDenom, msg.Amount, int64(1))
+	toCapture, err := denomAmountToCapture(msg.PrizeDenom, msg.Amount, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +56,7 @@ func (k msgServer) DistributeDenomRewards(goCtx context.Context, msg *types.MsgD
 		return nil, err
 	}
 
-	if err = k.distributeToDenomPrize(ctx, prize, toCapture.AmountOf(msg.PrizeDenom), stakedAmount); err != nil {
+	if err = k.distributeToDenomPrize(ctx, prize, toCapture.AmountOf(msg.PrizeDenom), dr.StakedAmount); err != nil {
 		return nil, err
 	}
 

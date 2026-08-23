@@ -16,11 +16,11 @@ import (
 // full amount × S is paid and the index is stamped to S.
 func (suite *IntegrationTestSuite) TestSettleDenomParticipant_AbsentIndex_LazyZero() {
 	addr := sdk.AccAddress("dr-participant-01")
-	dr := types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "1000"}
+	dr := types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(1000)}
 	suite.k.SetDenomReward(suite.ctx, dr)
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "2"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("2")})
 
-	participant := types.DenomRewardParticipant{Address: addr.String(), StakingDenom: "ubze", Amount: "100"}
+	participant := types.DenomRewardParticipant{Address: addr.String(), StakingDenom: "ubze", Amount: math.NewInt(100)}
 	suite.k.SetDenomRewardParticipant(suite.ctx, participant)
 
 	// no index exists -> lazy zero. pending = 100 * (2 - 0) = 200
@@ -36,20 +36,20 @@ func (suite *IntegrationTestSuite) TestSettleDenomParticipant_AbsentIndex_LazyZe
 	// the index was stamped to S
 	idx, found := suite.k.GetDenomRewardParticipantIndex(suite.ctx, addr.String(), "ubze", "uprize")
 	suite.Require().True(found)
-	suite.Require().Equal("2", idx.Index)
+	suite.Require().True(math.LegacyMustNewDecFromStr("2").Equal(idx.Index))
 }
 
 // A participant with a present index settles only the span since that index: amount × (S − index).
 func (suite *IntegrationTestSuite) TestSettleDenomParticipant_PresentIndex() {
 	addr := sdk.AccAddress("dr-participant-02")
-	dr := types.DenomReward{StakingDenom: "ubze", StakedAmount: "1000"}
+	dr := types.DenomReward{StakingDenom: "ubze", StakedAmount: math.NewInt(1000)}
 	suite.k.SetDenomReward(suite.ctx, dr)
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "5"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("5")})
 
-	participant := types.DenomRewardParticipant{Address: addr.String(), StakingDenom: "ubze", Amount: "10"}
+	participant := types.DenomRewardParticipant{Address: addr.String(), StakingDenom: "ubze", Amount: math.NewInt(10)}
 	suite.k.SetDenomRewardParticipant(suite.ctx, participant)
 	suite.k.SetDenomRewardParticipantIndex(suite.ctx, types.DenomRewardParticipantIndex{
-		Address: addr.String(), StakingDenom: "ubze", PrizeDenom: "uprize", Index: "2",
+		Address: addr.String(), StakingDenom: "ubze", PrizeDenom: "uprize", Index: math.LegacyMustNewDecFromStr("2"),
 	})
 
 	// pending = 10 * (5 - 2) = 30
@@ -64,19 +64,19 @@ func (suite *IntegrationTestSuite) TestSettleDenomParticipant_PresentIndex() {
 
 	idx, found := suite.k.GetDenomRewardParticipantIndex(suite.ctx, addr.String(), "ubze", "uprize")
 	suite.Require().True(found)
-	suite.Require().Equal("5", idx.Index)
+	suite.Require().True(math.LegacyMustNewDecFromStr("5").Equal(idx.Index))
 }
 
 // Dust — a positive pending that truncates to zero whole units — sends nothing and does NOT advance
 // the index; the fraction keeps accruing and is paid cumulatively once a whole unit is reachable.
 func (suite *IntegrationTestSuite) TestSettleDenomParticipant_DustGuard_NoSendNoStamp_AccruesCumulatively() {
 	addr := sdk.AccAddress("dr-participant-03")
-	dr := types.DenomReward{StakingDenom: "ubze", StakedAmount: "1000"}
+	dr := types.DenomReward{StakingDenom: "ubze", StakedAmount: math.NewInt(1000)}
 	suite.k.SetDenomReward(suite.ctx, dr)
 
 	// S = 0.005, amount 100 -> pending = 0.5 -> truncates to 0 -> dust
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "0.005"})
-	participant := types.DenomRewardParticipant{Address: addr.String(), StakingDenom: "ubze", Amount: "100"}
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("0.005")})
+	participant := types.DenomRewardParticipant{Address: addr.String(), StakingDenom: "ubze", Amount: math.NewInt(100)}
 	suite.k.SetDenomRewardParticipant(suite.ctx, participant)
 
 	// no send is set up: any SendCoins call would be an unexpected call and panic
@@ -90,7 +90,7 @@ func (suite *IntegrationTestSuite) TestSettleDenomParticipant_DustGuard_NoSendNo
 
 	// later the accumulator grows to 0.02; because the index never advanced, the whole span from 0
 	// is settled: 100 * (0.02 - 0) = 2 (the earlier 0.5 dust is included — nothing was forfeited)
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "0.02"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("0.02")})
 	suite.bank.EXPECT().
 		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, addr, sdk.NewCoins(sdk.NewCoin("uprize", math.NewInt(2)))).
 		Return(nil).
@@ -102,22 +102,22 @@ func (suite *IntegrationTestSuite) TestSettleDenomParticipant_DustGuard_NoSendNo
 
 	idx, found := suite.k.GetDenomRewardParticipantIndex(suite.ctx, addr.String(), "ubze", "uprize")
 	suite.Require().True(found)
-	suite.Require().Equal("0.02", idx.Index)
+	suite.Require().True(math.LegacyMustNewDecFromStr("0.02").Equal(idx.Index))
 }
 
 // Multi-accumulator settle pays each prize denom exactly once, in deterministic lexicographic
 // prize-denom order regardless of insertion order, and stamps each index to its own S.
 func (suite *IntegrationTestSuite) TestSettleDenomParticipant_MultiPrize_EachPaidOnce_DeterministicOrder() {
 	addr := sdk.AccAddress("dr-participant-04")
-	dr := types.DenomReward{StakingDenom: "ubze", StakedAmount: "1000"}
+	dr := types.DenomReward{StakingDenom: "ubze", StakedAmount: math.NewInt(1000)}
 	suite.k.SetDenomReward(suite.ctx, dr)
 
 	// inserted out of lexicographic order on purpose
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uctc", DistributedStake: "3"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uatom", DistributedStake: "1"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: "2"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uctc", DistributedStake: math.LegacyMustNewDecFromStr("3")})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uatom", DistributedStake: math.LegacyMustNewDecFromStr("1")})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: math.LegacyMustNewDecFromStr("2")})
 
-	participant := types.DenomRewardParticipant{Address: addr.String(), StakingDenom: "ubze", Amount: "10"}
+	participant := types.DenomRewardParticipant{Address: addr.String(), StakingDenom: "ubze", Amount: math.NewInt(10)}
 	suite.k.SetDenomRewardParticipant(suite.ctx, participant)
 
 	var sentOrder []string
@@ -140,7 +140,7 @@ func (suite *IntegrationTestSuite) TestSettleDenomParticipant_MultiPrize_EachPai
 	for _, tc := range []struct{ denom, s string }{{"uatom", "1"}, {"ubtc", "2"}, {"uctc", "3"}} {
 		idx, found := suite.k.GetDenomRewardParticipantIndex(suite.ctx, addr.String(), "ubze", tc.denom)
 		suite.Require().True(found, tc.denom)
-		suite.Require().Equal(tc.s, idx.Index, tc.denom)
+		suite.Require().True(math.LegacyMustNewDecFromStr(tc.s).Equal(idx.Index), tc.denom)
 	}
 }
 
@@ -148,12 +148,12 @@ func (suite *IntegrationTestSuite) TestSettleDenomParticipant_MultiPrize_EachPai
 // second time (all indexes equal S after the first settle).
 func (suite *IntegrationTestSuite) TestSettleDenomParticipant_SettleTwice_SecondPaysZero() {
 	addr := sdk.AccAddress("dr-participant-05")
-	dr := types.DenomReward{StakingDenom: "ubze", StakedAmount: "1000"}
+	dr := types.DenomReward{StakingDenom: "ubze", StakedAmount: math.NewInt(1000)}
 	suite.k.SetDenomReward(suite.ctx, dr)
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uatom", DistributedStake: "1"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: "2"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uatom", DistributedStake: math.LegacyMustNewDecFromStr("1")})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: math.LegacyMustNewDecFromStr("2")})
 
-	participant := types.DenomRewardParticipant{Address: addr.String(), StakingDenom: "ubze", Amount: "10"}
+	participant := types.DenomRewardParticipant{Address: addr.String(), StakingDenom: "ubze", Amount: math.NewInt(10)}
 	suite.k.SetDenomRewardParticipant(suite.ctx, participant)
 
 	suite.bank.EXPECT().
@@ -178,10 +178,10 @@ func (suite *IntegrationTestSuite) TestSettleDenomParticipant_SettleTwice_Second
 // the whole tx rolling back.
 func (suite *IntegrationTestSuite) TestSettleDenomParticipant_BankError_Aborts() {
 	addr := sdk.AccAddress("dr-participant-06")
-	dr := types.DenomReward{StakingDenom: "ubze", StakedAmount: "1000"}
+	dr := types.DenomReward{StakingDenom: "ubze", StakedAmount: math.NewInt(1000)}
 	suite.k.SetDenomReward(suite.ctx, dr)
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "2"})
-	participant := types.DenomRewardParticipant{Address: addr.String(), StakingDenom: "ubze", Amount: "100"}
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("2")})
+	participant := types.DenomRewardParticipant{Address: addr.String(), StakingDenom: "ubze", Amount: math.NewInt(100)}
 	suite.k.SetDenomRewardParticipant(suite.ctx, participant)
 
 	suite.bank.EXPECT().
@@ -199,18 +199,18 @@ func (suite *IntegrationTestSuite) TestSettleDenomParticipant_BankError_Aborts()
 func (suite *IntegrationTestSuite) TestStampParticipantIndexes_CoversEveryAccumulator() {
 	addr := sdk.AccAddress("dr-participant-07")
 
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uatom", DistributedStake: "1"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: "2.5"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uctc", DistributedStake: "3"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uatom", DistributedStake: math.LegacyMustNewDecFromStr("1")})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: math.LegacyMustNewDecFromStr("2.5")})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uctc", DistributedStake: math.LegacyMustNewDecFromStr("3")})
 	// a different DR's accumulator must remain untouched for this participant
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "uother", PrizeDenom: "uatom", DistributedStake: "9"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "uother", PrizeDenom: "uatom", DistributedStake: math.LegacyMustNewDecFromStr("9")})
 
 	suite.k.StampParticipantIndexes(suite.ctx, addr.String(), "ubze")
 
 	for _, tc := range []struct{ denom, s string }{{"uatom", "1"}, {"ubtc", "2.5"}, {"uctc", "3"}} {
 		idx, found := suite.k.GetDenomRewardParticipantIndex(suite.ctx, addr.String(), "ubze", tc.denom)
 		suite.Require().True(found, tc.denom)
-		suite.Require().Equal(tc.s, idx.Index, tc.denom)
+		suite.Require().True(math.LegacyMustNewDecFromStr(tc.s).Equal(idx.Index), tc.denom)
 	}
 
 	// isolation: the other DR's accumulator was not stamped
@@ -252,7 +252,7 @@ func (suite *IntegrationTestSuite) TestDistributeToDenomPrize_Math() {
 	}
 
 	for _, tc := range cases {
-		prize := types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: tc.prizeDenom, DistributedStake: tc.startS}
+		prize := types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: tc.prizeDenom, DistributedStake: math.LegacyMustNewDecFromStr(tc.startS)}
 		suite.k.SetDenomRewardPrize(suite.ctx, prize)
 
 		err := suite.k.DistributeToDenomPrize(suite.ctx, prize, math.NewInt(tc.amount), math.NewInt(tc.stakedTotal))
@@ -261,7 +261,7 @@ func (suite *IntegrationTestSuite) TestDistributeToDenomPrize_Math() {
 		got, found := suite.k.GetDenomRewardPrize(suite.ctx, "ubze", tc.prizeDenom)
 		suite.Require().True(found, tc.name)
 		suite.Require().True(
-			math.LegacyMustNewDecFromStr(tc.expectedS).Equal(math.LegacyMustNewDecFromStr(got.DistributedStake)),
+			math.LegacyMustNewDecFromStr(tc.expectedS).Equal(got.DistributedStake),
 			"%s: expected S=%s got S=%s", tc.name, tc.expectedS, got.DistributedStake,
 		)
 		suite.Require().Equal(int64(42), got.LastDistributionEpoch, tc.name)
@@ -272,7 +272,7 @@ func (suite *IntegrationTestSuite) TestDistributeToDenomPrize_Math() {
 // guard failure the accumulator is neither saved nor is the epoch read.
 func (suite *IntegrationTestSuite) TestDistributeToDenomPrize_Guards() {
 	// no epoch expectation: a guard failure must return before reading the epoch
-	prize := types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "0"}
+	prize := types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("0")}
 
 	cases := []struct {
 		name        string
@@ -297,7 +297,7 @@ func (suite *IntegrationTestSuite) TestDistributeToDenomPrize_Guards() {
 
 // distributeToDenomPrize propagates an epoch-keeper failure without persisting the bump.
 func (suite *IntegrationTestSuite) TestDistributeToDenomPrize_EpochError() {
-	prize := types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "0"}
+	prize := types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("0")}
 
 	suite.epoch.EXPECT().
 		SafeGetEpochCountByIdentifier(suite.ctx, "day").

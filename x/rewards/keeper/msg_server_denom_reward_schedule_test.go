@@ -55,7 +55,7 @@ var (
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_NewPrizeDenom_FullFeeMatrix() {
 	creator := sdk.AccAddress("drs-creator-01")
 	suite.setDrMoneyInParams(50)
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)})
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ufoo").Return(true).Times(1)
 	suite.richBalance(creator)
@@ -66,7 +66,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_NewPrizeDenom_
 		SendCoinsFromAccountToModule(suite.ctx, creator, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ufoo", math.NewInt(30_000)))).
 		Return(nil).Times(1)
 
-	msg := types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", "1000", "30")
+	msg := types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", math.NewInt(1000), "30")
 	res, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, msg)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
@@ -76,13 +76,13 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_NewPrizeDenom_
 	suite.Require().True(found)
 	suite.Require().Equal("ubze", schedule.StakingDenom)
 	suite.Require().Equal("ufoo", schedule.PrizeDenom)
-	suite.Require().Equal("1000", schedule.DailyAmount)
+	suite.Require().Equal("1000", schedule.DailyAmount.String())
 	suite.Require().Equal(uint32(30), schedule.Duration)
 	suite.Require().Equal(uint32(0), schedule.Payouts)
 
 	prize, found := suite.k.GetDenomRewardPrize(suite.ctx, "ubze", "ufoo")
 	suite.Require().True(found)
-	suite.Require().Equal("0", prize.DistributedStake)
+	suite.Require().True(math.LegacyMustNewDecFromStr("0").Equal(prize.DistributedStake))
 
 	e, ok := suite.findTypedEvent(proto.MessageName(&types.DenomRewardPrizeCreateEvent{}))
 	suite.Require().True(ok)
@@ -102,8 +102,8 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_NewPrizeDenom_
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_ExistingPrizeDenom_NoPrizeFee() {
 	creator := sdk.AccAddress("drs-creator-02")
 	suite.setDrMoneyInParams(50)
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "100"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ufoo", DistributedStake: "5", LastDistributionEpoch: 9})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(100)})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ufoo", DistributedStake: math.LegacyMustNewDecFromStr("5"), LastDistributionEpoch: 9})
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ufoo").Return(true).Times(1)
 	suite.richBalance(creator)
@@ -112,14 +112,14 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_ExistingPrizeD
 		SendCoinsFromAccountToModule(suite.ctx, creator, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ufoo", math.NewInt(7_000)))).
 		Return(nil).Times(1)
 
-	msg := types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", "700", "10")
+	msg := types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", math.NewInt(700), "10")
 	res, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, msg)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
 	// the shared accumulator is untouched by schedule creation
 	prize, _ := suite.k.GetDenomRewardPrize(suite.ctx, "ubze", "ufoo")
-	suite.Require().Equal("5", prize.DistributedStake)
+	suite.Require().True(math.LegacyMustNewDecFromStr("5").Equal(prize.DistributedStake))
 	suite.Require().Equal(int64(9), prize.LastDistributionEpoch)
 }
 
@@ -128,14 +128,14 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_ExistingPrizeD
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_CapReached_Rejected() {
 	creator := sdk.AccAddress("drs-creator-03")
 	suite.setDrMoneyInParams(2)
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "0"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uatom", DistributedStake: "0"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uatom", DistributedStake: math.LegacyMustNewDecFromStr("0")})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: math.LegacyMustNewDecFromStr("0")})
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ufoo").Return(true).Times(1)
 	suite.richBalance(creator)
 
-	msg := types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", "1000", "30")
+	msg := types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", math.NewInt(1000), "30")
 	res, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, msg)
 	suite.Require().ErrorIs(err, types.ErrPrizeDenomCapReached)
 	suite.Require().Nil(res)
@@ -150,14 +150,14 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_CapReached_Rej
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_CapGteSemantics_OverCapStillRejected() {
 	creator := sdk.AccAddress("drs-creator-04")
 	suite.setDrMoneyInParams(1)
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "0"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uatom", DistributedStake: "0"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uatom", DistributedStake: math.LegacyMustNewDecFromStr("0")})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: math.LegacyMustNewDecFromStr("0")})
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ufoo").Return(true).Times(1)
 	suite.richBalance(creator)
 
-	_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", "1000", "30"))
+	_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", math.NewInt(1000), "30"))
 	suite.Require().ErrorIs(err, types.ErrPrizeDenomCapReached)
 }
 
@@ -166,9 +166,9 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_CapGteSemantic
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_ExistingPrizeDenomAllowedAtCap() {
 	creator := sdk.AccAddress("drs-creator-05")
 	suite.setDrMoneyInParams(2)
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "0"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ufoo", DistributedStake: "0"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ufoo", DistributedStake: math.LegacyMustNewDecFromStr("0")})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: math.LegacyMustNewDecFromStr("0")})
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ufoo").Return(true).Times(1)
 	suite.richBalance(creator)
@@ -177,14 +177,14 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_ExistingPrizeD
 		SendCoinsFromAccountToModule(suite.ctx, creator, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ufoo", math.NewInt(50)))).
 		Return(nil).Times(1)
 
-	_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", "5", "10"))
+	_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", math.NewInt(5), "10"))
 	suite.Require().NoError(err)
 }
 
 // Schedules attach only to existing DRs.
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_DrNotFound() {
 	creator := sdk.AccAddress("drs-creator-06")
-	msg := types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", "1000", "30")
+	msg := types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", math.NewInt(1000), "30")
 	_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, msg)
 	suite.Require().ErrorIs(err, types.ErrDenomRewardNotFound)
 }
@@ -192,10 +192,10 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_DrNotFound() {
 // The prize denom must have supply.
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_PrizeDenomNoSupply() {
 	creator := sdk.AccAddress("drs-creator-07")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)})
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ufoo").Return(false).Times(1)
 
-	_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", "1000", "30"))
+	_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", math.NewInt(1000), "30"))
 	suite.Require().ErrorIs(err, types.ErrInvalidPrizeDenom)
 }
 
@@ -204,12 +204,12 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_PrizeDenomNoSu
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_DurationBounds() {
 	creator := sdk.AccAddress("drs-creator-08")
 	suite.setDrMoneyInParams(50)
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)})
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ufoo").Return(true).AnyTimes()
 
 	for _, bad := range []string{"0", "36501", "-4", "abc"} {
-		_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", "1000", bad))
+		_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", math.NewInt(1000), bad))
 		suite.Require().ErrorIs(err, types.ErrInvalidDuration, "duration %q", bad)
 	}
 
@@ -220,7 +220,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_DurationBounds
 		SendCoinsFromAccountToModule(suite.ctx, creator, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ufoo", math.NewInt(36_500_000)))).
 		Return(nil).Times(1)
 
-	res, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", "1000", "36500"))
+	res, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", math.NewInt(1000), "36500"))
 	suite.Require().NoError(err)
 
 	schedule, found := suite.k.GetDenomRewardSchedule(suite.ctx, "ubze", res.ScheduleId)
@@ -233,10 +233,11 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_DurationBounds
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_BudgetOverflowGuard() {
 	creator := sdk.AccAddress("drs-creator-09")
 	suite.setDrMoneyInParams(50)
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)})
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ufoo").Return(true).Times(1)
 
-	huge := "1" + strings.Repeat("0", 75)
+	huge, ok := math.NewIntFromString("1" + strings.Repeat("0", 75))
+	suite.Require().True(ok)
 	_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", huge, "36500"))
 	suite.Require().ErrorIs(err, types.ErrInvalidAmount)
 }
@@ -245,14 +246,14 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_BudgetOverflow
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_InsufficientBalance() {
 	creator := sdk.AccAddress("drs-creator-10")
 	suite.setDrMoneyInParams(50)
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)})
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ufoo").Return(true).Times(1)
 	// covers the budget but not the schedule fee
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, creator).
 		Return(sdk.NewCoins(sdk.NewCoin("ufoo", math.NewInt(30_000)))).Times(1)
 
-	_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", "1000", "30"))
+	_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", math.NewInt(1000), "30"))
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "balance is too low")
 	suite.Require().Empty(suite.k.GetAllDenomRewardSchedule(suite.ctx))
@@ -262,7 +263,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_InsufficientBa
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_IdsIncrement() {
 	creator := sdk.AccAddress("drs-creator-11")
 	suite.setDrMoneyInParams(50)
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)})
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ufoo").Return(true).Times(2)
 	suite.richBalance(creator)
@@ -277,9 +278,9 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_IdsIncrement()
 		SendCoinsFromAccountToModule(suite.ctx, creator, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ufoo", math.NewInt(10_000)))).
 		Return(nil).Times(2)
 
-	first, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", "1000", "10"))
+	first, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", math.NewInt(1000), "10"))
 	suite.Require().NoError(err)
-	second, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", "1000", "10"))
+	second, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", math.NewInt(1000), "10"))
 	suite.Require().NoError(err)
 
 	suite.Require().Equal("000000000000", first.ScheduleId)
@@ -297,9 +298,9 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_NilRequest() {
 // beyond the budget (no trade expectations are set: any fee capture would panic).
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Update_ExtendsAndEscrowsExact() {
 	creator := sdk.AccAddress("drs-updater-01")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)})
 	suite.k.SetDenomRewardSchedule(suite.ctx, types.DenomRewardSchedule{
-		ScheduleId: "000000000004", StakingDenom: "ubze", PrizeDenom: "ufoo", DailyAmount: "1000", Duration: 30, Payouts: 3,
+		ScheduleId: "000000000004", StakingDenom: "ubze", PrizeDenom: "ufoo", DailyAmount: math.NewInt(1000), Duration: 30, Payouts: 3,
 	})
 
 	suite.richBalance(creator)
@@ -327,7 +328,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Update_ExtendsAndEscr
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Update_PostExtensionBoundRejected() {
 	creator := sdk.AccAddress("drs-updater-02")
 	suite.k.SetDenomRewardSchedule(suite.ctx, types.DenomRewardSchedule{
-		ScheduleId: "000000000000", StakingDenom: "ubze", PrizeDenom: "ufoo", DailyAmount: "1000", Duration: 36500, Payouts: 0,
+		ScheduleId: "000000000000", StakingDenom: "ubze", PrizeDenom: "ufoo", DailyAmount: math.NewInt(1000), Duration: 36500, Payouts: 0,
 	})
 
 	suite.richBalance(creator)
@@ -362,7 +363,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Update_NonPositiveExt
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Update_InsufficientBalance() {
 	creator := sdk.AccAddress("drs-updater-05")
 	suite.k.SetDenomRewardSchedule(suite.ctx, types.DenomRewardSchedule{
-		ScheduleId: "000000000000", StakingDenom: "ubze", PrizeDenom: "ufoo", DailyAmount: "1000", Duration: 30, Payouts: 0,
+		ScheduleId: "000000000000", StakingDenom: "ubze", PrizeDenom: "ufoo", DailyAmount: math.NewInt(1000), Duration: 30, Payouts: 0,
 	})
 
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, creator).

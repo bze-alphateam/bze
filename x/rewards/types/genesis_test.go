@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/math"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,23 +14,23 @@ func validDenomRewardsGenesis() GenesisState {
 	return GenesisState{
 		Params: DefaultParams(),
 		DenomRewardList: []DenomReward{
-			{StakingDenom: "udenom1", Lock: 7, MinStake: 0, StakedAmount: "1000"},
-			{StakingDenom: "udenom2", Lock: 7, MinStake: 0, StakedAmount: "0"},
+			{StakingDenom: "udenom1", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(1000)},
+			{StakingDenom: "udenom2", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)},
 		},
 		DenomRewardPrizeList: []DenomRewardPrize{
-			{StakingDenom: "udenom1", PrizeDenom: "uprizea", DistributedStake: "1.5", LastDistributionEpoch: 10},
-			{StakingDenom: "udenom2", PrizeDenom: "uprizeb", DistributedStake: "0", LastDistributionEpoch: 0},
+			{StakingDenom: "udenom1", PrizeDenom: "uprizea", DistributedStake: math.LegacyMustNewDecFromStr("1.5"), LastDistributionEpoch: 10},
+			{StakingDenom: "udenom2", PrizeDenom: "uprizeb", DistributedStake: math.LegacyMustNewDecFromStr("0"), LastDistributionEpoch: 0},
 		},
 		DenomRewardParticipantList: []DenomRewardParticipant{
-			{Address: "addr1", StakingDenom: "udenom1", Amount: "400"},
-			{Address: "addr2", StakingDenom: "udenom1", Amount: "600"},
+			{Address: "addr1", StakingDenom: "udenom1", Amount: math.NewInt(400)},
+			{Address: "addr2", StakingDenom: "udenom1", Amount: math.NewInt(600)},
 		},
 		DenomRewardParticipantIndexList: []DenomRewardParticipantIndex{
-			{Address: "addr1", StakingDenom: "udenom1", PrizeDenom: "uprizea", Index: "0.5"},
+			{Address: "addr1", StakingDenom: "udenom1", PrizeDenom: "uprizea", Index: math.LegacyMustNewDecFromStr("0.5")},
 		},
 		DenomRewardScheduleList: []DenomRewardSchedule{
-			{ScheduleId: "000000000001", StakingDenom: "udenom1", PrizeDenom: "uprizea", DailyAmount: "100", Duration: 30, Payouts: 10},
-			{ScheduleId: "000000000002", StakingDenom: "udenom2", PrizeDenom: "uprizeb", DailyAmount: "50", Duration: 5},
+			{ScheduleId: "000000000001", StakingDenom: "udenom1", PrizeDenom: "uprizea", DailyAmount: math.NewInt(100), Duration: 30, Payouts: 10},
+			{ScheduleId: "000000000002", StakingDenom: "udenom2", PrizeDenom: "uprizeb", DailyAmount: math.NewInt(50), Duration: 5},
 		},
 		DenomRewardScheduleCounter: 2,
 		DenomRewardsDistributionQueue: &DenomRewardsDistributionQueue{
@@ -68,7 +69,7 @@ func TestGenesisState_ValidateDenomRewards(t *testing.T) {
 		{
 			name: "duplicate denom reward",
 			mutate: func(gs *GenesisState) {
-				gs.DenomRewardList = append(gs.DenomRewardList, DenomReward{StakingDenom: "udenom1", StakedAmount: "5"})
+				gs.DenomRewardList = append(gs.DenomRewardList, DenomReward{StakingDenom: "udenom1", StakedAmount: math.NewInt(5)})
 			},
 			expError: "duplicate denom reward",
 		},

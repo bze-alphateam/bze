@@ -22,7 +22,7 @@ const scheduleDaysMaxBitLen = 16
 // days is at most HundredYearsInDays (< 2^16), making the product provably safe whenever
 // dailyInt fits in the remaining bits.
 func (k msgServer) getScheduleBudget(prizeDenom string, dailyInt math.Int, days int64) (sdk.Coins, error) {
-	if !dailyInt.IsPositive() {
+	if dailyInt.IsNil() || !dailyInt.IsPositive() {
 		return nil, errors.Wrapf(types.ErrInvalidAmount, "daily_amount should be greater than 0")
 	}
 
@@ -30,7 +30,7 @@ func (k msgServer) getScheduleBudget(prizeDenom string, dailyInt math.Int, days 
 		return nil, errors.Wrapf(types.ErrInvalidAmount, "daily_amount is too large")
 	}
 
-	return k.getAmountToCapture(prizeDenom, dailyInt.String(), days)
+	return denomAmountToCapture(prizeDenom, dailyInt, days)
 }
 
 // CreateDenomRewardSchedule attaches a daily-payout campaign to an existing denom reward.
@@ -69,12 +69,7 @@ func (k msgServer) CreateDenomRewardSchedule(goCtx context.Context, msg *types.M
 		return nil, errors.Wrapf(types.ErrInvalidDuration, "duration should be between 1 and %d days", types.HundredYearsInDays)
 	}
 
-	dailyInt, ok := math.NewIntFromString(msg.DailyAmount)
-	if !ok {
-		return nil, errors.Wrapf(types.ErrInvalidAmount, "could not convert daily_amount")
-	}
-
-	budget, err := k.getScheduleBudget(msg.PrizeDenom, dailyInt, durationInt)
+	budget, err := k.getScheduleBudget(msg.PrizeDenom, msg.DailyAmount, durationInt)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +116,7 @@ func (k msgServer) CreateDenomRewardSchedule(goCtx context.Context, msg *types.M
 		ScheduleId:   k.smallZeroFillId(k.GetDenomRewardScheduleCounter(ctx)),
 		StakingDenom: dr.StakingDenom,
 		PrizeDenom:   msg.PrizeDenom,
-		DailyAmount:  dailyInt.String(),
+		DailyAmount:  msg.DailyAmount,
 		Duration:     uint32(durationInt),
 		Payouts:      0,
 	}
@@ -133,7 +128,7 @@ func (k msgServer) CreateDenomRewardSchedule(goCtx context.Context, msg *types.M
 			ScheduleId:  schedule.ScheduleId,
 			Denom:       schedule.StakingDenom,
 			PrizeDenom:  schedule.PrizeDenom,
-			DailyAmount: schedule.DailyAmount,
+			DailyAmount: schedule.DailyAmount.String(),
 			Duration:    schedule.Duration,
 		},
 	)
@@ -173,12 +168,7 @@ func (k msgServer) UpdateDenomRewardSchedule(goCtx context.Context, msg *types.M
 		return nil, errors.Wrap(sdkerrors.ErrKeyNotFound, "denom reward schedule not found")
 	}
 
-	dailyInt, ok := math.NewIntFromString(schedule.DailyAmount)
-	if !ok {
-		return nil, errors.Wrapf(types.ErrInvalidAmount, "could not convert stored daily_amount")
-	}
-
-	toCapture, err := k.getScheduleBudget(schedule.PrizeDenom, dailyInt, extraDays)
+	toCapture, err := k.getScheduleBudget(schedule.PrizeDenom, schedule.DailyAmount, extraDays)
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -10,7 +11,7 @@ func (suite *IntegrationTestSuite) TestStoreDenomReward_SetGetHasRemove() {
 		StakingDenom: "ubze",
 		Lock:         7,
 		MinStake:     0,
-		StakedAmount: "1000",
+		StakedAmount: math.NewInt(1000),
 	}
 
 	// not present initially
@@ -39,7 +40,7 @@ func (suite *IntegrationTestSuite) TestStoreDenomReward_SetGetHasRemove() {
 func (suite *IntegrationTestSuite) TestStoreDenomReward_GetAllAndIterate() {
 	denoms := []string{"aaa", "bbb", "ccc"}
 	for _, d := range denoms {
-		suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: d, StakedAmount: "0"})
+		suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: d, StakedAmount: math.NewInt(0)})
 	}
 
 	all := suite.k.GetAllDenomReward(suite.ctx)

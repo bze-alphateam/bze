@@ -14,8 +14,8 @@ import (
 // accumulator is bumped by exactly amount/T in the same tx, stamping the distribution epoch.
 func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_ExistingPrize_Free_BumpsAccumulator() {
 	sender := sdk.AccAddress("drd-sender-01")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "4"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(4)})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("0")})
 
 	suite.richBalance(sender)
 	suite.bank.EXPECT().
@@ -23,13 +23,13 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_ExistingPrize_Free_
 		Return(nil).Times(1)
 	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, "day").Return(int64(42), nil).Times(1)
 
-	msg := types.NewMsgDistributeDenomRewards(sender.String(), "ubze", "uprize", "1000")
+	msg := types.NewMsgDistributeDenomRewards(sender.String(), "ubze", "uprize", math.NewInt(1000))
 	res, err := suite.msgServer.DistributeDenomRewards(suite.ctx, msg)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
 	prize, _ := suite.k.GetDenomRewardPrize(suite.ctx, "ubze", "uprize")
-	suite.Require().Equal("250.000000000000000000", prize.DistributedStake)
+	suite.Require().True(math.LegacyMustNewDecFromStr("250.000000000000000000").Equal(prize.DistributedStake))
 	suite.Require().Equal(int64(42), prize.LastDistributionEpoch)
 
 	e, ok := suite.findTypedEvent(proto.MessageName(&types.DenomRewardDistributionEvent{}))
@@ -44,7 +44,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_ExistingPrize_Free_
 func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_NewPrizeDenom_PaysPrizeFee() {
 	sender := sdk.AccAddress("drd-sender-02")
 	suite.setDrMoneyInParams(50)
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "8"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(8)})
 
 	suite.richBalance(sender)
 	suite.expectFeeCapture(sender, drPrizeFee)
@@ -53,13 +53,13 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_NewPrizeDenom_PaysP
 		Return(nil).Times(1)
 	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, "day").Return(int64(7), nil).Times(1)
 
-	msg := types.NewMsgDistributeDenomRewards(sender.String(), "ubze", "uprize", "2")
+	msg := types.NewMsgDistributeDenomRewards(sender.String(), "ubze", "uprize", math.NewInt(2))
 	_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, msg)
 	suite.Require().NoError(err)
 
 	prize, found := suite.k.GetDenomRewardPrize(suite.ctx, "ubze", "uprize")
 	suite.Require().True(found)
-	suite.Require().Equal("0.250000000000000000", prize.DistributedStake)
+	suite.Require().True(math.LegacyMustNewDecFromStr("0.250000000000000000").Equal(prize.DistributedStake))
 	suite.Require().Equal(int64(7), prize.LastDistributionEpoch)
 
 	_, ok := suite.findTypedEvent(proto.MessageName(&types.DenomRewardPrizeCreateEvent{}))
@@ -70,9 +70,9 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_NewPrizeDenom_PaysP
 // be stranded with nobody to credit. Nothing is escrowed and no prize is created.
 func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_ZeroStakers_Rejected() {
 	sender := sdk.AccAddress("drd-sender-03")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)})
 
-	msg := types.NewMsgDistributeDenomRewards(sender.String(), "ubze", "uprize", "1000")
+	msg := types.NewMsgDistributeDenomRewards(sender.String(), "ubze", "uprize", math.NewInt(1000))
 	res, err := suite.msgServer.DistributeDenomRewards(suite.ctx, msg)
 	suite.Require().ErrorIs(err, types.ErrNoStakersInDenomReward)
 	suite.Require().Nil(res)
@@ -84,7 +84,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_ZeroStakers_Rejecte
 // Airdrops target only existing DRs.
 func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_DrNotFound() {
 	sender := sdk.AccAddress("drd-sender-04")
-	_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, types.NewMsgDistributeDenomRewards(sender.String(), "ubze", "uprize", "1000"))
+	_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, types.NewMsgDistributeDenomRewards(sender.String(), "ubze", "uprize", math.NewInt(1000)))
 	suite.Require().ErrorIs(err, types.ErrDenomRewardNotFound)
 }
 
@@ -93,13 +93,13 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_DrNotFound() {
 func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_CapReached_Rejected() {
 	sender := sdk.AccAddress("drd-sender-05")
 	suite.setDrMoneyInParams(1)
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "100"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uatom", DistributedStake: "0"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(100)})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uatom", DistributedStake: math.LegacyMustNewDecFromStr("0")})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: math.LegacyMustNewDecFromStr("0")})
 
 	suite.richBalance(sender)
 
-	_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, types.NewMsgDistributeDenomRewards(sender.String(), "ubze", "uprize", "1000"))
+	_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, types.NewMsgDistributeDenomRewards(sender.String(), "ubze", "uprize", math.NewInt(1000)))
 	suite.Require().ErrorIs(err, types.ErrPrizeDenomCapReached)
 
 	_, found := suite.k.GetDenomRewardPrize(suite.ctx, "ubze", "uprize")
@@ -110,12 +110,12 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_CapReached_Rejected
 // created and no fee is captured.
 func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_InsufficientBalance() {
 	sender := sdk.AccAddress("drd-sender-06")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "100"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(100)})
 
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, sender).
 		Return(sdk.NewCoins(sdk.NewCoin("uprize", math.NewInt(999)))).Times(1)
 
-	_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, types.NewMsgDistributeDenomRewards(sender.String(), "ubze", "uprize", "1000"))
+	_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, types.NewMsgDistributeDenomRewards(sender.String(), "ubze", "uprize", math.NewInt(1000)))
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "balance is too low")
 
@@ -134,7 +134,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_NilRequest() {
 func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_PrizeFeeOnce_ScheduleThenAirdrop() {
 	actor := sdk.AccAddress("drd-lifecycle-01")
 	suite.setDrMoneyInParams(50)
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "10"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(10)})
 
 	// schedule first: full fee matrix
 	suite.bank.EXPECT().HasSupply(suite.ctx, "uprize").Return(true).Times(1)
@@ -145,7 +145,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_PrizeFeeOnce_Schedu
 		SendCoinsFromAccountToModule(suite.ctx, actor, types.ModuleName, sdk.NewCoins(sdk.NewCoin("uprize", math.NewInt(5_000)))).
 		Return(nil).Times(1)
 
-	_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(actor.String(), "ubze", "uprize", "500", "10"))
+	_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(actor.String(), "ubze", "uprize", math.NewInt(500), "10"))
 	suite.Require().NoError(err)
 
 	// airdrop second, same prize denom: free — only the escrow send and the accumulator bump
@@ -154,11 +154,11 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_PrizeFeeOnce_Schedu
 		Return(nil).Times(1)
 	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, "day").Return(int64(3), nil).Times(1)
 
-	_, err = suite.msgServer.DistributeDenomRewards(suite.ctx, types.NewMsgDistributeDenomRewards(actor.String(), "ubze", "uprize", "100"))
+	_, err = suite.msgServer.DistributeDenomRewards(suite.ctx, types.NewMsgDistributeDenomRewards(actor.String(), "ubze", "uprize", math.NewInt(100)))
 	suite.Require().NoError(err)
 
 	prize, _ := suite.k.GetDenomRewardPrize(suite.ctx, "ubze", "uprize")
-	suite.Require().Equal("10.000000000000000000", prize.DistributedStake)
+	suite.Require().True(math.LegacyMustNewDecFromStr("10.000000000000000000").Equal(prize.DistributedStake))
 }
 
 // The prize fee is charged exactly ONCE per denom lifetime, airdrop-then-schedule order: the
@@ -167,7 +167,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_PrizeFeeOnce_Schedu
 func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_PrizeFeeOnce_AirdropThenSchedule() {
 	actor := sdk.AccAddress("drd-lifecycle-02")
 	suite.setDrMoneyInParams(50)
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "10"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(10)})
 
 	// airdrop first: prize fee only
 	suite.richBalance(actor)
@@ -177,7 +177,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_PrizeFeeOnce_Airdro
 		Return(nil).Times(1)
 	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, "day").Return(int64(3), nil).Times(1)
 
-	_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, types.NewMsgDistributeDenomRewards(actor.String(), "ubze", "uprize", "100"))
+	_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, types.NewMsgDistributeDenomRewards(actor.String(), "ubze", "uprize", math.NewInt(100)))
 	suite.Require().NoError(err)
 
 	// schedule second, same prize denom: schedule fee + budget only (no second prize fee — an
@@ -188,7 +188,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_PrizeFeeOnce_Airdro
 		SendCoinsFromAccountToModule(suite.ctx, actor, types.ModuleName, sdk.NewCoins(sdk.NewCoin("uprize", math.NewInt(5_000)))).
 		Return(nil).Times(1)
 
-	_, err = suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(actor.String(), "ubze", "uprize", "500", "10"))
+	_, err = suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(actor.String(), "ubze", "uprize", math.NewInt(500), "10"))
 	suite.Require().NoError(err)
 }
 
@@ -198,10 +198,10 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_PrizeFeeOnce_Airdro
 func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_SubsequentClaimIncludesAirdrop() {
 	sender := sdk.AccAddress("drd-funder-01")
 	staker := sdk.AccAddress("drd-staker-01")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "400"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "0"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: staker.String(), StakingDenom: "ubze", Amount: "400"})
-	suite.k.SetDenomRewardParticipantIndex(suite.ctx, types.DenomRewardParticipantIndex{Address: staker.String(), StakingDenom: "ubze", PrizeDenom: "uprize", Index: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(400)})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("0")})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: staker.String(), StakingDenom: "ubze", Amount: math.NewInt(400)})
+	suite.k.SetDenomRewardParticipantIndex(suite.ctx, types.DenomRewardParticipantIndex{Address: staker.String(), StakingDenom: "ubze", PrizeDenom: "uprize", Index: math.LegacyMustNewDecFromStr("0")})
 
 	suite.richBalance(sender)
 	suite.bank.EXPECT().
@@ -209,7 +209,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_SubsequentClaimIncl
 		Return(nil).Times(1)
 	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, "day").Return(int64(11), nil).Times(1)
 
-	_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, types.NewMsgDistributeDenomRewards(sender.String(), "ubze", "uprize", "1000"))
+	_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, types.NewMsgDistributeDenomRewards(sender.String(), "ubze", "uprize", math.NewInt(1000)))
 	suite.Require().NoError(err)
 
 	// the staker claims: 400 x (2.5 - 0) = 1000 — the entire airdrop

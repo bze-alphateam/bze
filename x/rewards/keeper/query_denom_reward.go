@@ -107,40 +107,22 @@ func (k Keeper) DenomRewardParticipant(goCtx context.Context, req *types.QueryDe
 		return nil, status.Error(codes.NotFound, "not found")
 	}
 
-	deposited, err := math.LegacyNewDecFromStr(participant.Amount)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
+	deposited := math.LegacyNewDecFromInt(participant.Amount)
 
 	pending := sdk.NewCoins()
-	var iterErr error
 	k.IterateDenomRewardPrizes(ctx, req.Denom, func(ctx sdk.Context, prize types.DenomRewardPrize) (stop bool) {
-		s, sErr := math.LegacyNewDecFromStr(prize.DistributedStake)
-		if sErr != nil {
-			iterErr = sErr
-			return true
-		}
-
 		index := math.LegacyZeroDec()
 		if stored, idxFound := k.GetDenomRewardParticipantIndex(ctx, req.Address, req.Denom, prize.PrizeDenom); idxFound {
-			index, sErr = math.LegacyNewDecFromStr(stored.Index)
-			if sErr != nil {
-				iterErr = sErr
-				return true
-			}
+			index = stored.Index
 		}
 
-		reward := deposited.Mul(s.Sub(index)).TruncateInt()
+		reward := deposited.Mul(prize.DistributedStake.Sub(index)).TruncateInt()
 		if reward.IsPositive() {
 			pending = pending.Add(sdk.NewCoin(prize.PrizeDenom, reward))
 		}
 
 		return false
 	})
-
-	if iterErr != nil {
-		return nil, status.Error(codes.Internal, iterErr.Error())
-	}
 
 	return &types.QueryDenomRewardParticipantResponse{Participant: participant, Pending: pending}, nil
 }

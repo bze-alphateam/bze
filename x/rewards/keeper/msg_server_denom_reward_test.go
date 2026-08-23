@@ -77,7 +77,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_CreateDenomReward_Su
 	suite.Require().Equal("ubze", dr.StakingDenom)
 	suite.Require().Equal(uint32(7), dr.Lock)
 	suite.Require().Equal(uint64(100), dr.MinStake)
-	suite.Require().Equal("0", dr.StakedAmount)
+	suite.Require().Equal("0", dr.StakedAmount.String())
 
 	e, ok := suite.findTypedEvent(proto.MessageName(&types.DenomRewardCreateEvent{}))
 	suite.Require().True(ok)
@@ -106,7 +106,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_CreateDenomReward_Fr
 	dr, found := suite.k.GetDenomReward(suite.ctx, "ubze")
 	suite.Require().True(found)
 	suite.Require().Equal(uint32(7), dr.Lock)
-	suite.Require().Equal("0", dr.StakedAmount)
+	suite.Require().Equal("0", dr.StakedAmount.String())
 }
 
 // One DR per denom, chain-wide: creating a DR for a denom that already has one is rejected.
@@ -116,7 +116,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_CreateDenomReward_Du
 	suite.Require().NoError(suite.k.SetParams(suite.ctx, types.Params{
 		CreateDenomRewardFee: sdk.NewCoin("ubze", math.NewInt(0)),
 	}))
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)})
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ubze").Return(true).Times(1)
 
@@ -249,7 +249,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_CreateDenomReward_Pa
 // DR's staked total and emits the join event with the added amount.
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_FreshJoinSuccess() {
 	joiner := sdk.AccAddress("dr-joiner-01")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 100, StakedAmount: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 100, StakedAmount: math.NewInt(0)})
 
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, joiner).
 		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(10_000)))).Times(1)
@@ -257,18 +257,18 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_Fres
 		SendCoinsFromAccountToModule(suite.ctx, joiner, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(500)))).
 		Return(nil).Times(1)
 
-	msg := types.NewMsgJoinDenomReward(joiner.String(), "ubze", "500")
+	msg := types.NewMsgJoinDenomReward(joiner.String(), "ubze", math.NewInt(500))
 	res, err := suite.msgServer.JoinDenomReward(suite.ctx, msg)
 	suite.Require().NoError(err)
 	suite.Require().NotNil(res)
 
 	participant, found := suite.k.GetDenomRewardParticipant(suite.ctx, "ubze", joiner.String())
 	suite.Require().True(found)
-	suite.Require().Equal("500", participant.Amount)
+	suite.Require().Equal("500", participant.Amount.String())
 	suite.Require().True(suite.k.HasDenomRewardParticipantMarker(suite.ctx, joiner.String(), "ubze"))
 
 	dr, _ := suite.k.GetDenomReward(suite.ctx, "ubze")
-	suite.Require().Equal("500", dr.StakedAmount)
+	suite.Require().Equal("500", dr.StakedAmount.String())
 
 	e, ok := suite.findTypedEvent(proto.MessageName(&types.DenomRewardJoinEvent{}))
 	suite.Require().True(ok)
@@ -282,10 +282,10 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_Fres
 // payout is made on join, and a later settle at the unchanged S would pay zero.
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_FreshJoinStampsEveryAccumulator() {
 	joiner := sdk.AccAddress("dr-joiner-02")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "1000"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(1000)})
 	// two accumulators, one already advanced past zero
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uatom", DistributedStake: "3"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: "0"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uatom", DistributedStake: math.LegacyMustNewDecFromStr("3")})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: math.LegacyMustNewDecFromStr("0")})
 
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, joiner).
 		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(10_000)))).Times(1)
@@ -294,20 +294,20 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_Fres
 		Return(nil).Times(1)
 	// NB: no SendCoinsFromModuleToAccount is expected — a fresh joiner is never paid on join
 
-	msg := types.NewMsgJoinDenomReward(joiner.String(), "ubze", "10")
+	msg := types.NewMsgJoinDenomReward(joiner.String(), "ubze", math.NewInt(10))
 	_, err := suite.msgServer.JoinDenomReward(suite.ctx, msg)
 	suite.Require().NoError(err)
 
 	// every accumulator was stamped to its own S
 	atomIdx, found := suite.k.GetDenomRewardParticipantIndex(suite.ctx, joiner.String(), "ubze", "uatom")
 	suite.Require().True(found)
-	suite.Require().Equal("3", atomIdx.Index)
+	suite.Require().True(math.LegacyMustNewDecFromStr("3").Equal(atomIdx.Index))
 	btcIdx, found := suite.k.GetDenomRewardParticipantIndex(suite.ctx, joiner.String(), "ubze", "ubtc")
 	suite.Require().True(found)
-	suite.Require().Equal("0", btcIdx.Index)
+	suite.Require().True(math.LegacyMustNewDecFromStr("0").Equal(btcIdx.Index))
 
 	dr, _ := suite.k.GetDenomReward(suite.ctx, "ubze")
-	suite.Require().Equal("1010", dr.StakedAmount)
+	suite.Require().Equal("1010", dr.StakedAmount.String())
 }
 
 // A top-up settles every prize at the CURRENT amount before the amount grows (rule 6 / I1). The payout
@@ -315,9 +315,9 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_Fres
 // new_amount × (S − index), so pinning the exact payout proves the ordering.
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_TopUpSettlesBeforeAmountChange() {
 	joiner := sdk.AccAddress("dr-joiner-03")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "1000"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "1"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: joiner.String(), StakingDenom: "ubze", Amount: "100"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(1000)})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("1")})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: joiner.String(), StakingDenom: "ubze", Amount: math.NewInt(100)})
 	// index missing -> lazy zero -> pending = 100 * (1 - 0) = 100 at the OLD amount
 
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, joiner).
@@ -330,16 +330,16 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_TopU
 		SendCoinsFromAccountToModule(suite.ctx, joiner, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(50)))).
 		Return(nil).Times(1)
 
-	msg := types.NewMsgJoinDenomReward(joiner.String(), "ubze", "50")
+	msg := types.NewMsgJoinDenomReward(joiner.String(), "ubze", math.NewInt(50))
 	_, err := suite.msgServer.JoinDenomReward(suite.ctx, msg)
 	suite.Require().NoError(err)
 
 	participant, _ := suite.k.GetDenomRewardParticipant(suite.ctx, "ubze", joiner.String())
-	suite.Require().Equal("150", participant.Amount)
+	suite.Require().Equal("150", participant.Amount.String())
 	idx, _ := suite.k.GetDenomRewardParticipantIndex(suite.ctx, joiner.String(), "ubze", "uprize")
-	suite.Require().Equal("1", idx.Index)
+	suite.Require().True(math.LegacyMustNewDecFromStr("1").Equal(idx.Index))
 	dr, _ := suite.k.GetDenomReward(suite.ctx, "ubze")
-	suite.Require().Equal("1050", dr.StakedAmount)
+	suite.Require().Equal("1050", dr.StakedAmount.String())
 }
 
 // The A2-analog: a top-up must not let pre-top-up accrual be captured at the post-top-up amount.
@@ -348,10 +348,10 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_TopU
 // distribution proves it: it pays nothing (a payout here would be an unexpected mock call and panic).
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_TopUpDustForfeited_NoRecapture() {
 	joiner := sdk.AccAddress("dr-joiner-04")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "1"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(1)})
 	// S = 0.5, amount 1 -> pending 0.5 -> dust
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "0.5"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: joiner.String(), StakingDenom: "ubze", Amount: "1"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("0.5")})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: joiner.String(), StakingDenom: "ubze", Amount: math.NewInt(1)})
 
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, joiner).
 		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100_000_000)))).AnyTimes()
@@ -360,17 +360,17 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_TopU
 		SendCoinsFromAccountToModule(suite.ctx, joiner, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(1_000_000)))).
 		Return(nil).Times(1)
 
-	_, err := suite.msgServer.JoinDenomReward(suite.ctx, types.NewMsgJoinDenomReward(joiner.String(), "ubze", "1000000"))
+	_, err := suite.msgServer.JoinDenomReward(suite.ctx, types.NewMsgJoinDenomReward(joiner.String(), "ubze", math.NewInt(1000000)))
 	suite.Require().NoError(err)
 
 	// dust forfeited: the index is closed to S, and the amount grew
 	participant, _ := suite.k.GetDenomRewardParticipant(suite.ctx, "ubze", joiner.String())
-	suite.Require().Equal("1000001", participant.Amount)
+	suite.Require().Equal("1000001", participant.Amount.String())
 	idx, found := suite.k.GetDenomRewardParticipantIndex(suite.ctx, joiner.String(), "ubze", "uprize")
 	suite.Require().True(found)
-	suite.Require().Equal("0.5", idx.Index)
+	suite.Require().True(math.LegacyMustNewDecFromStr("0.5").Equal(idx.Index))
 	dr, _ := suite.k.GetDenomReward(suite.ctx, "ubze")
-	suite.Require().Equal("1000001", dr.StakedAmount)
+	suite.Require().Equal("1000001", dr.StakedAmount.String())
 
 	// second top-up with no new distribution: pending = 1000001 * (0.5 - 0.5) = 0 -> nothing paid.
 	// If the pre-top-up 0.5 had been recapturable it would now be 1000001*0.5 = 500000 -> a payout
@@ -378,22 +378,22 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_TopU
 	suite.bank.EXPECT().
 		SendCoinsFromAccountToModule(suite.ctx, joiner, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(1)))).
 		Return(nil).Times(1)
-	_, err = suite.msgServer.JoinDenomReward(suite.ctx, types.NewMsgJoinDenomReward(joiner.String(), "ubze", "1"))
+	_, err = suite.msgServer.JoinDenomReward(suite.ctx, types.NewMsgJoinDenomReward(joiner.String(), "ubze", math.NewInt(1)))
 	suite.Require().NoError(err)
 
 	participant, _ = suite.k.GetDenomRewardParticipant(suite.ctx, "ubze", joiner.String())
-	suite.Require().Equal("1000002", participant.Amount)
+	suite.Require().Equal("1000002", participant.Amount.String())
 }
 
 // Min stake is enforced on the resulting amount: a first join below it is rejected and no state moves.
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_MinStakeFirstJoinRejected() {
 	joiner := sdk.AccAddress("dr-joiner-05")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 1000, StakedAmount: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 1000, StakedAmount: math.NewInt(0)})
 
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, joiner).
 		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(10_000)))).Times(1)
 
-	msg := types.NewMsgJoinDenomReward(joiner.String(), "ubze", "500")
+	msg := types.NewMsgJoinDenomReward(joiner.String(), "ubze", math.NewInt(500))
 	res, err := suite.msgServer.JoinDenomReward(suite.ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "min stake")
@@ -407,8 +407,8 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_MinS
 // (already-compliant) amount only grows, so min stake never blocks a top-up.
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_MinStakeNotEnforcedOnTopUp() {
 	joiner := sdk.AccAddress("dr-joiner-06")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 1000, StakedAmount: "1000"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: joiner.String(), StakingDenom: "ubze", Amount: "1000"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 1000, StakedAmount: math.NewInt(1000)})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: joiner.String(), StakingDenom: "ubze", Amount: math.NewInt(1000)})
 
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, joiner).
 		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(10_000)))).Times(1)
@@ -417,23 +417,23 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_MinS
 		Return(nil).Times(1)
 
 	// top-up of 1, far below the 1000 min stake, is accepted
-	msg := types.NewMsgJoinDenomReward(joiner.String(), "ubze", "1")
+	msg := types.NewMsgJoinDenomReward(joiner.String(), "ubze", math.NewInt(1))
 	_, err := suite.msgServer.JoinDenomReward(suite.ctx, msg)
 	suite.Require().NoError(err)
 
 	participant, _ := suite.k.GetDenomRewardParticipant(suite.ctx, "ubze", joiner.String())
-	suite.Require().Equal("1001", participant.Amount)
+	suite.Require().Equal("1001", participant.Amount.String())
 }
 
 // A joiner who cannot cover the stake is rejected before any state is written.
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_BalanceTooLow() {
 	joiner := sdk.AccAddress("dr-joiner-07")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)})
 
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, joiner).
 		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(10)))).Times(1)
 
-	msg := types.NewMsgJoinDenomReward(joiner.String(), "ubze", "500")
+	msg := types.NewMsgJoinDenomReward(joiner.String(), "ubze", math.NewInt(500))
 	res, err := suite.msgServer.JoinDenomReward(suite.ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "user balance is too low")
@@ -446,7 +446,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_Bala
 // Joining a denom with no DR is rejected.
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_NotFound() {
 	joiner := sdk.AccAddress("dr-joiner-08")
-	msg := types.NewMsgJoinDenomReward(joiner.String(), "ubze", "500")
+	msg := types.NewMsgJoinDenomReward(joiner.String(), "ubze", math.NewInt(500))
 	res, err := suite.msgServer.JoinDenomReward(suite.ctx, msg)
 	suite.Require().ErrorIs(err, types.ErrDenomRewardNotFound)
 	suite.Require().Nil(res)
@@ -462,7 +462,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_NilR
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_StakedAmountExactAcrossJoiners() {
 	a := sdk.AccAddress("dr-joiner-09a")
 	b := sdk.AccAddress("dr-joiner-09b")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)})
 
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, a).
 		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(10_000)))).AnyTimes()
@@ -478,19 +478,19 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_Stak
 		SendCoinsFromAccountToModule(suite.ctx, a, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(50)))).
 		Return(nil).Times(1)
 
-	_, err := suite.msgServer.JoinDenomReward(suite.ctx, types.NewMsgJoinDenomReward(a.String(), "ubze", "100"))
+	_, err := suite.msgServer.JoinDenomReward(suite.ctx, types.NewMsgJoinDenomReward(a.String(), "ubze", math.NewInt(100)))
 	suite.Require().NoError(err)
-	_, err = suite.msgServer.JoinDenomReward(suite.ctx, types.NewMsgJoinDenomReward(b.String(), "ubze", "250"))
+	_, err = suite.msgServer.JoinDenomReward(suite.ctx, types.NewMsgJoinDenomReward(b.String(), "ubze", math.NewInt(250)))
 	suite.Require().NoError(err)
-	_, err = suite.msgServer.JoinDenomReward(suite.ctx, types.NewMsgJoinDenomReward(a.String(), "ubze", "50"))
+	_, err = suite.msgServer.JoinDenomReward(suite.ctx, types.NewMsgJoinDenomReward(a.String(), "ubze", math.NewInt(50)))
 	suite.Require().NoError(err)
 
 	dr, _ := suite.k.GetDenomReward(suite.ctx, "ubze")
-	suite.Require().Equal("400", dr.StakedAmount) // 100 + 250 + 50
+	suite.Require().Equal("400", dr.StakedAmount.String()) // 100 + 250 + 50
 	pa, _ := suite.k.GetDenomRewardParticipant(suite.ctx, "ubze", a.String())
-	suite.Require().Equal("150", pa.Amount)
+	suite.Require().Equal("150", pa.Amount.String())
 	pb, _ := suite.k.GetDenomRewardParticipant(suite.ctx, "ubze", b.String())
-	suite.Require().Equal("250", pb.Amount)
+	suite.Require().Equal("250", pb.Amount.String())
 }
 
 // --- ClaimDenomRewards ---
@@ -500,14 +500,14 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_Stak
 // amount and the DR's staked total untouched (claiming never unstakes — Business Logic rule 11).
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ClaimDenomRewards_MultiPrizeExactAmounts() {
 	claimer := sdk.AccAddress("dr-claimer-01")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "1000"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: claimer.String(), StakingDenom: "ubze", Amount: "100"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(1000)})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: claimer.String(), StakingDenom: "ubze", Amount: math.NewInt(100)})
 	// uatom: index missing -> lazy zero -> pending = 100 × 2 = 200
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uatom", DistributedStake: "2"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uatom", DistributedStake: math.LegacyMustNewDecFromStr("2")})
 	// ubtc: index 0.1 -> pending = 100 × (0.5 − 0.1) = 40
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: "0.5"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "ubtc", DistributedStake: math.LegacyMustNewDecFromStr("0.5")})
 	suite.k.SetDenomRewardParticipantIndex(suite.ctx, types.DenomRewardParticipantIndex{
-		Address: claimer.String(), StakingDenom: "ubze", PrizeDenom: "ubtc", Index: "0.1",
+		Address: claimer.String(), StakingDenom: "ubze", PrizeDenom: "ubtc", Index: math.LegacyMustNewDecFromStr("0.1"),
 	})
 
 	suite.bank.EXPECT().
@@ -528,16 +528,16 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ClaimDenomRewards_Mu
 	// both indexes advanced to their accumulator's S
 	atomIdx, found := suite.k.GetDenomRewardParticipantIndex(suite.ctx, claimer.String(), "ubze", "uatom")
 	suite.Require().True(found)
-	suite.Require().Equal("2", atomIdx.Index)
+	suite.Require().True(math.LegacyMustNewDecFromStr("2").Equal(atomIdx.Index))
 	btcIdx, found := suite.k.GetDenomRewardParticipantIndex(suite.ctx, claimer.String(), "ubze", "ubtc")
 	suite.Require().True(found)
-	suite.Require().Equal("0.5", btcIdx.Index)
+	suite.Require().True(math.LegacyMustNewDecFromStr("0.5").Equal(btcIdx.Index))
 
 	// position and pool untouched
 	participant, _ := suite.k.GetDenomRewardParticipant(suite.ctx, "ubze", claimer.String())
-	suite.Require().Equal("100", participant.Amount)
+	suite.Require().Equal("100", participant.Amount.String())
 	dr, _ := suite.k.GetDenomReward(suite.ctx, "ubze")
-	suite.Require().Equal("1000", dr.StakedAmount)
+	suite.Require().Equal("1000", dr.StakedAmount.String())
 
 	e, ok := suite.findTypedEvent(proto.MessageName(&types.DenomRewardClaimEvent{}))
 	suite.Require().True(ok)
@@ -551,10 +551,10 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ClaimDenomRewards_Mu
 // stamped index here would silently forfeit the dust.
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ClaimDenomRewards_PureDustErrors_NoIndexAdvance() {
 	claimer := sdk.AccAddress("dr-claimer-02")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "1"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(1)})
 	// amount 1 × S 0.5 -> pending 0.5 -> dust. no bank send is mocked: one would panic.
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "0.5"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: claimer.String(), StakingDenom: "ubze", Amount: "1"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("0.5")})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: claimer.String(), StakingDenom: "ubze", Amount: math.NewInt(1)})
 
 	res, err := suite.msgServer.ClaimDenomRewards(suite.ctx, &types.MsgClaimDenomRewards{Creator: claimer.String(), Denom: "ubze"})
 	suite.Require().ErrorIs(err, types.ErrNoRewardsToClaim)
@@ -569,9 +569,9 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ClaimDenomRewards_Pu
 // closed and is rejected with ErrNoRewardsToClaim.
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ClaimDenomRewards_SecondClaimPaysNothing() {
 	claimer := sdk.AccAddress("dr-claimer-03")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "100"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "3"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: claimer.String(), StakingDenom: "ubze", Amount: "100"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(100)})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("3")})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: claimer.String(), StakingDenom: "ubze", Amount: math.NewInt(100)})
 
 	suite.bank.EXPECT().
 		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, claimer, sdk.NewCoins(sdk.NewCoin("uprize", math.NewInt(300)))).
@@ -597,7 +597,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ClaimDenomRewards_No
 // Claiming without a position is rejected.
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ClaimDenomRewards_NotParticipant() {
 	claimer := sdk.AccAddress("dr-claimer-05")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "0"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)})
 
 	res, err := suite.msgServer.ClaimDenomRewards(suite.ctx, &types.MsgClaimDenomRewards{Creator: claimer.String(), Denom: "ubze"})
 	suite.Require().ErrorIs(err, types.ErrDenomRewardNotFound)
@@ -619,9 +619,9 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ClaimDenomRewards_Ni
 // by exactly the exited amount.
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_LockZero_SettlesAndReturnsImmediately() {
 	exiter := sdk.AccAddress("dr-exiter-01")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 0, MinStake: 0, StakedAmount: "800"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "1"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: "500"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 0, MinStake: 0, StakedAmount: math.NewInt(800)})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("1")})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: math.NewInt(500)})
 	// index missing -> lazy zero -> pending = 500 × 1 = 500 uprize paid during the exit
 
 	suite.bank.EXPECT().
@@ -644,7 +644,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_Lock
 	suite.Require().False(found)
 
 	dr, _ := suite.k.GetDenomReward(suite.ctx, "ubze")
-	suite.Require().Equal("300", dr.StakedAmount)
+	suite.Require().Equal("300", dr.StakedAmount.String())
 
 	e, ok := suite.findTypedEvent(proto.MessageName(&types.DenomRewardExitEvent{}))
 	suite.Require().True(ok)
@@ -660,8 +660,8 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_Lock
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_ConsumesExtraGas() {
 	exiter := sdk.AccAddress("dr-exiter-02")
 	suite.Require().NoError(suite.k.SetParams(suite.ctx, types.Params{ExtraGasForDenomExit: 12345}))
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 0, MinStake: 0, StakedAmount: "100"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: "100"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 0, MinStake: 0, StakedAmount: math.NewInt(100)})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: math.NewInt(100)})
 
 	suite.bank.EXPECT().
 		SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, exiter, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100)))).
@@ -677,8 +677,8 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_Cons
 // hour-epoch now + lock×24 under the DR key part "dr/{denom}/{address}", and the position is erased.
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_LockPositive_PendingUnlockAtRightEpoch() {
 	exiter := sdk.AccAddress("dr-exiter-03")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "500"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: "500"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(500)})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: math.NewInt(500)})
 
 	suite.epoch.EXPECT().
 		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
@@ -699,15 +699,15 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_Lock
 	suite.Require().False(found)
 	suite.Require().False(suite.k.HasDenomRewardParticipantMarker(suite.ctx, exiter.String(), "ubze"))
 	dr, _ := suite.k.GetDenomReward(suite.ctx, "ubze")
-	suite.Require().Equal("0", dr.StakedAmount)
+	suite.Require().Equal("0", dr.StakedAmount.String())
 }
 
 // Exit → re-join → exit within the same hour-epoch: the second exit lands on the SAME pending-unlock
 // key and the amounts are merged, so everything unlocks at once (mirrors beginUnlock).
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_SecondExitSameEpochMerges() {
 	exiter := sdk.AccAddress("dr-exiter-04")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "500"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: "500"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(500)})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: math.NewInt(500)})
 
 	suite.epoch.EXPECT().
 		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
@@ -722,7 +722,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_Seco
 	suite.bank.EXPECT().
 		SendCoinsFromAccountToModule(suite.ctx, exiter, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(300)))).
 		Return(nil).Times(1)
-	_, err = suite.msgServer.JoinDenomReward(suite.ctx, types.NewMsgJoinDenomReward(exiter.String(), "ubze", "300"))
+	_, err = suite.msgServer.JoinDenomReward(suite.ctx, types.NewMsgJoinDenomReward(exiter.String(), "ubze", math.NewInt(300)))
 	suite.Require().NoError(err)
 
 	// ...and exit again in the same hour-epoch: the entry is merged, not overwritten
@@ -735,7 +735,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_Seco
 	suite.Require().Equal("800", pending.Amount) // 500 + 300
 
 	dr, _ := suite.k.GetDenomReward(suite.ctx, "ubze")
-	suite.Require().Equal("0", dr.StakedAmount)
+	suite.Require().Equal("0", dr.StakedAmount.String())
 }
 
 // DR and SR pending-unlock entries share the same store and epoch prefix without colliding: SR key
@@ -749,8 +749,8 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_Coex
 		Index: srKey, Address: exiter.String(), Amount: "77", Denom: "ubze",
 	})
 
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "500"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: "500"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(500)})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: math.NewInt(500)})
 	suite.epoch.EXPECT().
 		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
 		Return(int64(100), nil).Times(1)
@@ -773,8 +773,8 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_Coex
 // enqueue the epoch, process the queue, and the stake arrives while the entry is removed.
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_UnlockQueuePaysOut() {
 	exiter := sdk.AccAddress("dr-exiter-06")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "500"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: "500"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(500)})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: exiter.String(), StakingDenom: "ubze", Amount: math.NewInt(500)})
 	suite.epoch.EXPECT().
 		SafeGetEpochCountByIdentifier(suite.ctx, "hour").
 		Return(int64(100), nil).Times(1)
@@ -799,9 +799,9 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_Unlo
 // exactly the post-re-join accrual.
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_RejoinStartsFresh() {
 	user := sdk.AccAddress("dr-exiter-07")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 0, MinStake: 0, StakedAmount: "100"})
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "2"})
-	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: user.String(), StakingDenom: "ubze", Amount: "100"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 0, MinStake: 0, StakedAmount: math.NewInt(100)})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("2")})
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{Address: user.String(), StakingDenom: "ubze", Amount: math.NewInt(100)})
 
 	// exit: settles 100 × (2 − 0) = 200 uprize and returns the 100 ubze stake (lock 0)
 	suite.bank.EXPECT().
@@ -819,11 +819,11 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_Rejo
 	suite.bank.EXPECT().
 		SendCoinsFromAccountToModule(suite.ctx, user, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100)))).
 		Return(nil).Times(1)
-	_, err = suite.msgServer.JoinDenomReward(suite.ctx, types.NewMsgJoinDenomReward(user.String(), "ubze", "100"))
+	_, err = suite.msgServer.JoinDenomReward(suite.ctx, types.NewMsgJoinDenomReward(user.String(), "ubze", math.NewInt(100)))
 	suite.Require().NoError(err)
 
 	// the accumulator advances after the re-join: S 2 -> 3
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: "3"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("3")})
 
 	// claim pays exactly 100 × (3 − 2) = 100, not a unit of the pre-exit history
 	suite.bank.EXPECT().
@@ -845,7 +845,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_NotF
 // Exiting without a position is rejected.
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_NotParticipant() {
 	exiter := sdk.AccAddress("dr-exiter-09")
-	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: "100"})
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(100)})
 
 	res, err := suite.msgServer.ExitDenomReward(suite.ctx, &types.MsgExitDenomReward{Creator: exiter.String(), Denom: "ubze"})
 	suite.Require().ErrorIs(err, types.ErrDenomRewardNotFound)

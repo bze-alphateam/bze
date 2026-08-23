@@ -11,7 +11,7 @@ import (
 
 var _ sdk.Msg = &MsgCreateDenomRewardSchedule{}
 
-func NewMsgCreateDenomRewardSchedule(creator string, denom string, prizeDenom string, dailyAmount string, duration string) *MsgCreateDenomRewardSchedule {
+func NewMsgCreateDenomRewardSchedule(creator string, denom string, prizeDenom string, dailyAmount math.Int, duration string) *MsgCreateDenomRewardSchedule {
 	return &MsgCreateDenomRewardSchedule{
 		Creator:     creator,
 		Denom:       denom,
@@ -35,11 +35,7 @@ func (msg *MsgCreateDenomRewardSchedule) ValidateBasic() error {
 		return errorsmod.Wrap(ErrInvalidPrizeDenom, "prize_denom cannot be empty")
 	}
 
-	amtInt, ok := math.NewIntFromString(msg.DailyAmount)
-	if !ok {
-		return errorsmod.Wrap(ErrInvalidAmount, "could not convert daily_amount")
-	}
-	if !amtInt.IsPositive() {
+	if msg.DailyAmount.IsNil() || !msg.DailyAmount.IsPositive() {
 		return errorsmod.Wrap(ErrInvalidAmount, "daily_amount should be greater than 0")
 	}
 

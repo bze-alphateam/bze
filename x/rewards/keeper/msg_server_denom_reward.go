@@ -70,7 +70,7 @@ func (k msgServer) CreateDenomReward(goCtx context.Context, msg *types.MsgCreate
 		StakingDenom: msg.Denom,
 		Lock:         params.DenomRewardLock,
 		MinStake:     params.DenomRewardMinStake,
-		StakedAmount: "0",
+		StakedAmount: math.ZeroInt(),
 	}
 	k.SetDenomReward(ctx, dr)
 
@@ -107,17 +107,8 @@ func (k msgServer) JoinDenomReward(goCtx context.Context, msg *types.MsgJoinDeno
 		return nil, types.ErrDenomRewardNotFound
 	}
 
-	stakedAmount := math.ZeroInt()
-	if dr.StakedAmount != "" {
-		var ok bool
-		stakedAmount, ok = math.NewIntFromString(dr.StakedAmount)
-		if !ok {
-			return nil, fmt.Errorf("could not transform staked amount from storage into int")
-		}
-	}
-
 	// the coins to escrow: `amount` of the staking denom
-	toCapture, err := k.getAmountToCapture(dr.StakingDenom, msg.Amount, int64(1))
+	toCapture, err := denomAmountToCapture(dr.StakingDenom, msg.Amount, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -145,17 +136,13 @@ func (k msgServer) JoinDenomReward(goCtx context.Context, msg *types.MsgJoinDeno
 		participant = types.DenomRewardParticipant{
 			Address:      msg.Creator,
 			StakingDenom: dr.StakingDenom,
-			Amount:       "0",
+			Amount:       math.ZeroInt(),
 		}
 		k.stampParticipantIndexes(ctx, msg.Creator, dr.StakingDenom)
 	}
 
-	amtInt, ok := math.NewIntFromString(participant.Amount)
-	if !ok {
-		return nil, fmt.Errorf("could not transform amount from storage into int")
-	}
 	added := toCapture.AmountOf(dr.StakingDenom)
-	amtInt = amtInt.Add(added)
+	amtInt := participant.Amount.Add(added)
 
 	// the DR's snapshotted min_stake is enforced on the RESULTING amount. A first join must reach it;
 	// a top-up only ever increases an already-compliant amount, so it can never be blocked by it.
@@ -163,10 +150,8 @@ func (k msgServer) JoinDenomReward(goCtx context.Context, msg *types.MsgJoinDeno
 		return nil, fmt.Errorf("amount is smaller than denom reward min stake")
 	}
 
-	participant.Amount = amtInt.String()
-
-	stakedAmount = stakedAmount.Add(added)
-	dr.StakedAmount = stakedAmount.String()
+	participant.Amount = amtInt
+	dr.StakedAmount = dr.StakedAmount.Add(added)
 
 	if err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, acc, types.ModuleName, toCapture); err != nil {
 		return nil, err
@@ -262,18 +247,9 @@ func (k msgServer) ExitDenomReward(goCtx context.Context, msg *types.MsgExitDeno
 		return nil, errors.Wrapf(types.ErrDenomRewardNotFound, "you are not a participant in this denom reward")
 	}
 
-	stakedAmountInt, ok := math.NewIntFromString(dr.StakedAmount)
-	if !ok {
-		return nil, fmt.Errorf("could not transform staked amount from storage into int")
-	}
-	if !stakedAmountInt.IsPositive() {
+	if !dr.StakedAmount.IsPositive() {
 		//disaster in this case
 		return nil, fmt.Errorf("no staked amount left")
-	}
-
-	partAmountInt, ok := math.NewIntFromString(participant.Amount)
-	if !ok {
-		return nil, fmt.Errorf("could not transform amount from storage into int")
 	}
 
 	// settle every pending prize BEFORE any removal (rule 7): the indexes are deleted below, so an
@@ -289,7 +265,7 @@ func (k msgServer) ExitDenomReward(goCtx context.Context, msg *types.MsgExitDeno
 	k.RemoveAllParticipantIndexes(ctx, participant.Address, dr.StakingDenom)
 	k.RemoveDenomRewardParticipant(ctx, dr.StakingDenom, participant.Address)
 
-	dr.StakedAmount = stakedAmountInt.Sub(partAmountInt).String()
+	dr.StakedAmount = dr.StakedAmount.Sub(participant.Amount)
 	k.SetDenomReward(ctx, dr)
 
 	err := ctx.EventManager().EmitTypedEvent(
@@ -316,7 +292,7 @@ func (k msgServer) beginDenomUnlock(ctx sdk.Context, p types.DenomRewardParticip
 	if dr.Lock == 0 {
 		pending := types.PendingUnlockParticipant{
 			Address: p.Address,
-			Amount:  p.Amount,
+			Amount:  p.Amount.String(),
 			Denom:   dr.StakingDenom,
 		}
 		return k.performUnlock(ctx, &pending)
@@ -332,7 +308,7 @@ func (k msgServer) beginDenomUnlock(ctx sdk.Context, p types.DenomRewardParticip
 	pending := types.PendingUnlockParticipant{
 		Index:   pendingKey,
 		Address: p.Address,
-		Amount:  p.Amount,
+		Amount:  p.Amount.String(),
 		Denom:   dr.StakingDenom,
 	}
 
@@ -341,11 +317,27 @@ func (k msgServer) beginDenomUnlock(ctx sdk.Context, p types.DenomRewardParticip
 		//an entry for this denom reward and participant already unlocks at the same epoch:
 		//merge the amounts, so it can all be unlocked at once
 		inStoreAmount, _ := math.NewIntFromString(inStore.Amount)
-		pendingAmount, _ := math.NewIntFromString(pending.Amount)
-		pending.Amount = pendingAmount.Add(inStoreAmount).String()
+		pending.Amount = p.Amount.Add(inStoreAmount).String()
 	}
 
 	k.SetPendingUnlockParticipant(ctx, pending)
 
 	return nil
+}
+
+// denomAmountToCapture is the typed counterpart of getAmountToCapture for the denom reward messages,
+// whose amounts are math.Int at the proto layer (parsing and validation happen on unmarshal). It
+// builds `amount × multiplier` of `denom` and rejects anything that is not a valid, positive coin.
+func denomAmountToCapture(denom string, amount math.Int, multiplier int64) (sdk.Coins, error) {
+	if amount.IsNil() {
+		return nil, fmt.Errorf("no amount provided")
+	}
+
+	toCapture := sdk.Coin{Denom: denom, Amount: amount.MulRaw(multiplier)}
+	if err := toCapture.Validate(); err != nil || !toCapture.IsPositive() {
+		//should never happen
+		return nil, fmt.Errorf("calculated amount to capture is not positive")
+	}
+
+	return sdk.NewCoins(toCapture), nil
 }

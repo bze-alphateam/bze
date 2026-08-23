@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/testutil/sample"
 	rewards "github.com/bze-alphateam/bze/x/rewards/module"
 	"github.com/bze-alphateam/bze/x/rewards/types"
@@ -9,12 +10,12 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-func (suite *IntegrationTestSuite) seedDenomReward(stakingDenom, stakedAmount string) types.DenomReward {
+func (suite *IntegrationTestSuite) seedDenomReward(stakingDenom string, stakedAmount int64) types.DenomReward {
 	dr := types.DenomReward{
 		StakingDenom: stakingDenom,
 		Lock:         7,
 		MinStake:     0,
-		StakedAmount: stakedAmount,
+		StakedAmount: math.NewInt(stakedAmount),
 	}
 	suite.k.SetDenomReward(suite.ctx, dr)
 
@@ -32,8 +33,8 @@ func (suite *IntegrationTestSuite) TestQueryDenomReward_NotFound() {
 }
 
 func (suite *IntegrationTestSuite) TestQueryDenomReward_Success() {
-	dr := suite.seedDenomReward("udenom1", "1000")
-	suite.seedDenomReward("udenom2", "500")
+	dr := suite.seedDenomReward("udenom1", 1000)
+	suite.seedDenomReward("udenom2", 500)
 
 	resp, err := suite.k.DenomReward(suite.ctx, &types.QueryDenomRewardRequest{Denom: "udenom1"})
 	suite.Require().NoError(err)
@@ -41,9 +42,9 @@ func (suite *IntegrationTestSuite) TestQueryDenomReward_Success() {
 }
 
 func (suite *IntegrationTestSuite) TestQueryDenomRewardAll_Pagination() {
-	dr1 := suite.seedDenomReward("udenom1", "1000")
-	dr2 := suite.seedDenomReward("udenom2", "500")
-	dr3 := suite.seedDenomReward("udenom3", "0")
+	dr1 := suite.seedDenomReward("udenom1", 1000)
+	dr2 := suite.seedDenomReward("udenom2", 500)
+	dr3 := suite.seedDenomReward("udenom3", 0)
 
 	resp, err := suite.k.DenomRewardAll(suite.ctx, &types.QueryDenomRewardAllRequest{})
 	suite.Require().NoError(err)
@@ -66,12 +67,12 @@ func (suite *IntegrationTestSuite) TestQueryDenomRewardAll_Pagination() {
 }
 
 func (suite *IntegrationTestSuite) TestQueryDenomRewardPrizes() {
-	suite.seedDenomReward("udenom1", "1000")
-	suite.seedDenomReward("udenom2", "500")
+	suite.seedDenomReward("udenom1", 1000)
+	suite.seedDenomReward("udenom2", 500)
 
-	prizeA := types.DenomRewardPrize{StakingDenom: "udenom1", PrizeDenom: "uprizea", DistributedStake: "1.5", LastDistributionEpoch: 10}
-	prizeB := types.DenomRewardPrize{StakingDenom: "udenom1", PrizeDenom: "uprizeb", DistributedStake: "0.25", LastDistributionEpoch: 11}
-	other := types.DenomRewardPrize{StakingDenom: "udenom2", PrizeDenom: "uprizec", DistributedStake: "3", LastDistributionEpoch: 12}
+	prizeA := types.DenomRewardPrize{StakingDenom: "udenom1", PrizeDenom: "uprizea", DistributedStake: math.LegacyMustNewDecFromStr("1.5"), LastDistributionEpoch: 10}
+	prizeB := types.DenomRewardPrize{StakingDenom: "udenom1", PrizeDenom: "uprizeb", DistributedStake: math.LegacyMustNewDecFromStr("0.25"), LastDistributionEpoch: 11}
+	other := types.DenomRewardPrize{StakingDenom: "udenom2", PrizeDenom: "uprizec", DistributedStake: math.LegacyMustNewDecFromStr("3"), LastDistributionEpoch: 12}
 	suite.k.SetDenomRewardPrize(suite.ctx, prizeA)
 	suite.k.SetDenomRewardPrize(suite.ctx, prizeB)
 	suite.k.SetDenomRewardPrize(suite.ctx, other)
@@ -87,12 +88,12 @@ func (suite *IntegrationTestSuite) TestQueryDenomRewardPrizes() {
 }
 
 func (suite *IntegrationTestSuite) TestQueryDenomRewardSchedules_Pagination() {
-	suite.seedDenomReward("udenom1", "1000")
-	suite.seedDenomReward("udenom2", "500")
+	suite.seedDenomReward("udenom1", 1000)
+	suite.seedDenomReward("udenom2", 500)
 
-	sched1 := types.DenomRewardSchedule{ScheduleId: "000000000001", StakingDenom: "udenom1", PrizeDenom: "uprizea", DailyAmount: "100", Duration: 30, Payouts: 10}
-	sched2 := types.DenomRewardSchedule{ScheduleId: "000000000002", StakingDenom: "udenom1", PrizeDenom: "uprizeb", DailyAmount: "50", Duration: 5}
-	other := types.DenomRewardSchedule{ScheduleId: "000000000003", StakingDenom: "udenom2", PrizeDenom: "uprizec", DailyAmount: "10", Duration: 2}
+	sched1 := types.DenomRewardSchedule{ScheduleId: "000000000001", StakingDenom: "udenom1", PrizeDenom: "uprizea", DailyAmount: math.NewInt(100), Duration: 30, Payouts: 10}
+	sched2 := types.DenomRewardSchedule{ScheduleId: "000000000002", StakingDenom: "udenom1", PrizeDenom: "uprizeb", DailyAmount: math.NewInt(50), Duration: 5}
+	other := types.DenomRewardSchedule{ScheduleId: "000000000003", StakingDenom: "udenom2", PrizeDenom: "uprizec", DailyAmount: math.NewInt(10), Duration: 2}
 	suite.k.SetDenomRewardSchedule(suite.ctx, sched1)
 	suite.k.SetDenomRewardSchedule(suite.ctx, sched2)
 	suite.k.SetDenomRewardSchedule(suite.ctx, other)
@@ -120,7 +121,7 @@ func (suite *IntegrationTestSuite) TestQueryDenomRewardSchedules_Pagination() {
 }
 
 func (suite *IntegrationTestSuite) TestQueryDenomRewardParticipant_NotFound() {
-	suite.seedDenomReward("udenom1", "1000")
+	suite.seedDenomReward("udenom1", 1000)
 
 	_, err := suite.k.DenomRewardParticipant(suite.ctx, &types.QueryDenomRewardParticipantRequest{
 		Address: sample.AccAddress(),
@@ -135,19 +136,19 @@ func (suite *IntegrationTestSuite) TestQueryDenomRewardParticipant_NotFound() {
 // wrote nothing to the store.
 func (suite *IntegrationTestSuite) TestQueryDenomRewardParticipant_PendingMatchesClaim() {
 	addr := sample.AccAddress()
-	dr := suite.seedDenomReward("udenom1", "1000")
+	dr := suite.seedDenomReward("udenom1", 1000)
 
 	// prize A: S = 1.5, index stamped at 0.5 → pending = 400 × 1.0 = 400
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "udenom1", PrizeDenom: "uprizea", DistributedStake: "1.5"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "udenom1", PrizeDenom: "uprizea", DistributedStake: math.LegacyMustNewDecFromStr("1.5")})
 	suite.k.SetDenomRewardParticipantIndex(suite.ctx, types.DenomRewardParticipantIndex{
-		Address: addr, StakingDenom: "udenom1", PrizeDenom: "uprizea", Index: "0.5",
+		Address: addr, StakingDenom: "udenom1", PrizeDenom: "uprizea", Index: math.LegacyMustNewDecFromStr("0.5"),
 	})
 	// prize B: S = 0.25, no index (lazy zero) → pending = 400 × 0.25 = 100
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "udenom1", PrizeDenom: "uprizeb", DistributedStake: "0.25"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "udenom1", PrizeDenom: "uprizeb", DistributedStake: math.LegacyMustNewDecFromStr("0.25")})
 	// prize C: S = 0.001, no index → 400 × 0.001 = 0.4 → dust, excluded
-	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "udenom1", PrizeDenom: "uprizec", DistributedStake: "0.001"})
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "udenom1", PrizeDenom: "uprizec", DistributedStake: math.LegacyMustNewDecFromStr("0.001")})
 
-	participant := types.DenomRewardParticipant{Address: addr, StakingDenom: "udenom1", Amount: "400"}
+	participant := types.DenomRewardParticipant{Address: addr, StakingDenom: "udenom1", Amount: math.NewInt(400)}
 	suite.k.SetDenomRewardParticipant(suite.ctx, participant)
 
 	// snapshot the full module state before the query
@@ -186,12 +187,12 @@ func (suite *IntegrationTestSuite) TestQueryDenomRewardParticipations() {
 	addr := sample.AccAddress()
 	otherAddr := sample.AccAddress()
 
-	suite.seedDenomReward("udenom1", "1000")
-	suite.seedDenomReward("udenom2", "500")
+	suite.seedDenomReward("udenom1", 1000)
+	suite.seedDenomReward("udenom2", 500)
 
-	p1 := types.DenomRewardParticipant{Address: addr, StakingDenom: "udenom1", Amount: "400"}
-	p2 := types.DenomRewardParticipant{Address: addr, StakingDenom: "udenom2", Amount: "100"}
-	other := types.DenomRewardParticipant{Address: otherAddr, StakingDenom: "udenom2", Amount: "77"}
+	p1 := types.DenomRewardParticipant{Address: addr, StakingDenom: "udenom1", Amount: math.NewInt(400)}
+	p2 := types.DenomRewardParticipant{Address: addr, StakingDenom: "udenom2", Amount: math.NewInt(100)}
+	other := types.DenomRewardParticipant{Address: otherAddr, StakingDenom: "udenom2", Amount: math.NewInt(77)}
 	suite.k.SetDenomRewardParticipant(suite.ctx, p1)
 	suite.k.SetDenomRewardParticipant(suite.ctx, p2)
 	suite.k.SetDenomRewardParticipant(suite.ctx, other)
