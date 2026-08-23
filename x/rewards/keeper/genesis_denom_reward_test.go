@@ -82,11 +82,11 @@ func (suite *IntegrationTestSuite) TestGenesisDenomRewardsRoundTrip() {
 	suite.Require().Equal(exported, rewards.ExportGenesis(freshCtx, freshK))
 
 	// the drp/a/ markers (derivable state, not exported) were rebuilt on import
-	suite.Require().True(freshK.HasDenomRewardParticipantMarker(freshCtx, addr1, "udenom1"))
-	suite.Require().True(freshK.HasDenomRewardParticipantMarker(freshCtx, addr2, "udenom1"))
-	suite.Require().False(freshK.HasDenomRewardParticipantMarker(freshCtx, addr1, "udenom2"))
+	suite.Require().True(hasDrParticipantMarker(freshK, freshCtx, addr1, "udenom1"))
+	suite.Require().True(hasDrParticipantMarker(freshK, freshCtx, addr2, "udenom1"))
+	suite.Require().False(hasDrParticipantMarker(freshK, freshCtx, addr1, "udenom2"))
 
-	// settle every participant on both chains and require identical payouts:
+	// claim for every participant on both chains and require identical payouts:
 	// addr1 → uprizea 400×(1.5−0.5)=400, uprizeb 400×0.25=100 (lazy zero)
 	// addr2 → uprizea nothing (index at S), uprizeb 600×0.25=150
 	for _, tc := range []struct {
@@ -100,27 +100,22 @@ func (suite *IntegrationTestSuite) TestGenesisDenomRewardsRoundTrip() {
 		suite.Require().NoError(err)
 
 		for _, k := range []struct {
-			keeper keeper.Keeper
-			ctx    sdk.Context
-			bank   *testutil.MockBankKeeper
+			msgServer types.MsgServer
+			ctx       sdk.Context
+			bank      *testutil.MockBankKeeper
 		}{
-			{*suite.k, suite.ctx, suite.bank},
-			{freshK, freshCtx, freshBank},
+			{suite.msgServer, suite.ctx, suite.bank},
+			{keeper.NewMsgServerImpl(freshK), freshCtx, freshBank},
 		} {
-			dr, found := k.keeper.GetDenomReward(k.ctx, "udenom1")
-			suite.Require().True(found)
-			participant, found := k.keeper.GetDenomRewardParticipant(k.ctx, "udenom1", tc.address)
-			suite.Require().True(found)
-
 			for _, coin := range tc.paid {
 				k.bank.EXPECT().
 					SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, acc, sdk.NewCoins(coin)).
 					Return(nil).Times(1)
 			}
 
-			paid, err := k.keeper.SettleDenomParticipant(k.ctx, dr, participant)
+			res, err := k.msgServer.ClaimDenomRewards(k.ctx, &types.MsgClaimDenomRewards{Creator: tc.address, Denom: "udenom1"})
 			suite.Require().NoError(err)
-			suite.Require().Equal(tc.paid, paid)
+			suite.Require().Equal(tc.paid, sdk.NewCoins(res.Amounts...))
 		}
 	}
 }

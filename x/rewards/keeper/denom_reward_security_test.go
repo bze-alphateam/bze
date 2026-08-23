@@ -171,7 +171,7 @@ func (suite *IntegrationTestSuite) assertDrStoreIntegrity() {
 	}
 	for _, participant := range suite.k.GetAllDenomRewardParticipant(suite.ctx) {
 		suite.Require().True(
-			suite.k.HasDenomRewardParticipantMarker(suite.ctx, participant.Address, participant.StakingDenom),
+			hasDrParticipantMarker(*suite.k, suite.ctx, participant.Address, participant.StakingDenom),
 			"participant %s/%s without its drp/a/ marker", participant.Address, participant.StakingDenom,
 		)
 	}
@@ -636,7 +636,7 @@ func (suite *IntegrationTestSuite) TestDenomRewardSecurity_I2_NoOrphanIndexes() 
 	for _, index := range suite.k.GetAllDenomRewardParticipantIndex(suite.ctx) {
 		suite.Require().NotEqual(early.String(), index.Address, "exit left an index behind")
 	}
-	suite.Require().False(suite.k.HasDenomRewardParticipantMarker(suite.ctx, early.String(), "ustake1"))
+	suite.Require().False(hasDrParticipantMarker(*suite.k, suite.ctx, early.String(), "ustake1"))
 
 	suite.drSecExit(late, "ustake1")
 	suite.assertDrStoreIntegrity()

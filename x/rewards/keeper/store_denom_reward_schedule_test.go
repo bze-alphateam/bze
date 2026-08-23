@@ -80,9 +80,25 @@ func (suite *IntegrationTestSuite) TestStoreDenomRewardScheduleCounter_Independe
 	// the DR schedule counter lives in its own dr/c/ store and starts at 0
 	suite.Require().Equal(uint64(0), suite.k.GetDenomRewardScheduleCounter(suite.ctx))
 
+	// the counter only advances through CreateDenomRewardSchedule (each schedule consumes one id);
+	// zero fees keep the flow free so no trade/fee-collector expectations are needed
+	creator := sdk.AccAddress("drs-counter-01")
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, types.Params{MaxPrizeDenomsPerDr: 50}))
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", StakedAmount: math.ZeroInt()})
+	suite.bank.EXPECT().HasSupply(suite.ctx, "ufoo").Return(true).Times(2)
+	suite.richBalance(creator)
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(suite.ctx, creator, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ufoo", math.NewInt(10_000)))).
+		Return(nil).Times(2)
+
 	// advancing the DR counter does not touch the SR/trading counters
-	suite.Require().Equal(uint64(1), suite.k.IncrementDenomRewardScheduleCounter(suite.ctx))
-	suite.Require().Equal(uint64(2), suite.k.IncrementDenomRewardScheduleCounter(suite.ctx))
+	first, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", math.NewInt(1000), "10"))
+	suite.Require().NoError(err)
+	suite.Require().Equal("000000000000", first.ScheduleId)
+	suite.Require().Equal(uint64(1), suite.k.GetDenomRewardScheduleCounter(suite.ctx))
+	second, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", math.NewInt(1000), "10"))
+	suite.Require().NoError(err)
+	suite.Require().Equal("000000000001", second.ScheduleId)
 	suite.Require().Equal(uint64(2), suite.k.GetDenomRewardScheduleCounter(suite.ctx))
 
 	suite.Require().Equal(uint64(100), suite.k.GetStakingRewardsCounter(suite.ctx))

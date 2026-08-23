@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
@@ -181,16 +179,13 @@ func (k msgServer) ensureDenomRewardPrize(ctx sdk.Context, stakingDenom, prizeDe
 // and instant airdrops route every payout through this one primitive so the accumulator math lives
 // in a single place.
 //
-// The guards enforce invariant I6 (no distribution may run with T = 0 — the payout would credit
-// nobody and strand escrow) and reject a non-positive amount. Callers escrow `amount` into the
-// module account before calling; a returned error leaves the accumulator untouched.
+// The guards (types.ValidateDenomDistribution) enforce invariant I6 (no distribution may run with
+// T = 0 — the payout would credit nobody and strand escrow) and reject a non-positive amount; they
+// run BEFORE the epoch is read. Callers escrow `amount` into the module account before calling; a
+// returned error leaves the accumulator untouched.
 func (k Keeper) distributeToDenomPrize(ctx sdk.Context, prize types.DenomRewardPrize, amount, stakedTotal math.Int) error {
-	if !stakedTotal.IsPositive() {
-		return fmt.Errorf("no stakers found in denom reward %s", prize.StakingDenom)
-	}
-
-	if !amount.IsPositive() {
-		return fmt.Errorf("distribution amount should be positive")
+	if err := types.ValidateDenomDistribution(prize.StakingDenom, amount, stakedTotal); err != nil {
+		return err
 	}
 
 	epoch, err := k.epochKeeper.SafeGetEpochCountByIdentifier(ctx, distributionEpoch)
@@ -199,10 +194,7 @@ func (k Keeper) distributeToDenomPrize(ctx sdk.Context, prize types.DenomRewardP
 	}
 
 	// S = S + amount / T
-	prize.DistributedStake = prize.DistributedStake.Add(math.LegacyNewDecFromInt(amount).Quo(math.LegacyNewDecFromInt(stakedTotal)))
-	prize.LastDistributionEpoch = epoch
-
-	k.SetDenomRewardPrize(ctx, prize)
+	k.SetDenomRewardPrize(ctx, prize.WithDistribution(amount, stakedTotal, epoch))
 
 	return nil
 }

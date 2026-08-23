@@ -19,13 +19,13 @@ func (suite *IntegrationTestSuite) TestStoreDenomRewardParticipant_SetGetRemove_
 	got, found := suite.k.GetDenomRewardParticipant(suite.ctx, "ubze", "bze1user")
 	suite.Require().True(found)
 	suite.Require().Equal(p.Amount, got.Amount)
-	suite.Require().True(suite.k.HasDenomRewardParticipantMarker(suite.ctx, "bze1user", "ubze"))
+	suite.Require().True(hasDrParticipantMarker(*suite.k, suite.ctx, "bze1user", "ubze"))
 
 	// remove deletes both the record and the marker
 	suite.k.RemoveDenomRewardParticipant(suite.ctx, "ubze", "bze1user")
 	_, found = suite.k.GetDenomRewardParticipant(suite.ctx, "ubze", "bze1user")
 	suite.Require().False(found)
-	suite.Require().False(suite.k.HasDenomRewardParticipantMarker(suite.ctx, "bze1user", "ubze"))
+	suite.Require().False(hasDrParticipantMarker(*suite.k, suite.ctx, "bze1user", "ubze"))
 }
 
 func (suite *IntegrationTestSuite) TestStoreDenomRewardParticipant_IterateByDenom_Isolation() {

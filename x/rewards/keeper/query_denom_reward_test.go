@@ -136,7 +136,7 @@ func (suite *IntegrationTestSuite) TestQueryDenomRewardParticipant_NotFound() {
 // wrote nothing to the store.
 func (suite *IntegrationTestSuite) TestQueryDenomRewardParticipant_PendingMatchesClaim() {
 	addr := sample.AccAddress()
-	dr := suite.seedDenomReward("udenom1", 1000)
+	suite.seedDenomReward("udenom1", 1000)
 
 	// prize A: S = 1.5, index stamped at 0.5 → pending = 400 × 1.0 = 400
 	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "udenom1", PrizeDenom: "uprizea", DistributedStake: math.LegacyMustNewDecFromStr("1.5")})
@@ -178,7 +178,7 @@ func (suite *IntegrationTestSuite) TestQueryDenomRewardParticipant_PendingMatche
 		SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, acc, sdk.NewCoins(sdk.NewInt64Coin("uprizeb", 100))).
 		Return(nil).Times(1)
 
-	paid, err := suite.k.SettleDenomParticipant(suite.ctx, dr, participant)
+	paid, err := suite.claimDr(acc, "udenom1")
 	suite.Require().NoError(err)
 	suite.Require().Equal(expected, paid)
 }

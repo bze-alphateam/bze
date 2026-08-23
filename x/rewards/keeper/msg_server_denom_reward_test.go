@@ -265,7 +265,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_JoinDenomReward_Fres
 	participant, found := suite.k.GetDenomRewardParticipant(suite.ctx, "ubze", joiner.String())
 	suite.Require().True(found)
 	suite.Require().Equal("500", participant.Amount.String())
-	suite.Require().True(suite.k.HasDenomRewardParticipantMarker(suite.ctx, joiner.String(), "ubze"))
+	suite.Require().True(hasDrParticipantMarker(*suite.k, suite.ctx, joiner.String(), "ubze"))
 
 	dr, _ := suite.k.GetDenomReward(suite.ctx, "ubze")
 	suite.Require().Equal("500", dr.StakedAmount.String())
@@ -639,7 +639,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_Lock
 	// position fully erased
 	_, found := suite.k.GetDenomRewardParticipant(suite.ctx, "ubze", exiter.String())
 	suite.Require().False(found)
-	suite.Require().False(suite.k.HasDenomRewardParticipantMarker(suite.ctx, exiter.String(), "ubze"))
+	suite.Require().False(hasDrParticipantMarker(*suite.k, suite.ctx, exiter.String(), "ubze"))
 	_, found = suite.k.GetDenomRewardParticipantIndex(suite.ctx, exiter.String(), "ubze", "uprize")
 	suite.Require().False(found)
 
@@ -697,7 +697,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_Lock
 
 	_, found = suite.k.GetDenomRewardParticipant(suite.ctx, "ubze", exiter.String())
 	suite.Require().False(found)
-	suite.Require().False(suite.k.HasDenomRewardParticipantMarker(suite.ctx, exiter.String(), "ubze"))
+	suite.Require().False(hasDrParticipantMarker(*suite.k, suite.ctx, exiter.String(), "ubze"))
 	dr, _ := suite.k.GetDenomReward(suite.ctx, "ubze")
 	suite.Require().Equal("0", dr.StakedAmount.String())
 }
