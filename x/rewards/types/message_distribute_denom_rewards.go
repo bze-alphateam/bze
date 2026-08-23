@@ -28,8 +28,16 @@ func (msg *MsgDistributeDenomRewards) ValidateBasic() error {
 		return errorsmod.Wrap(ErrInvalidStakingDenom, "denom cannot be empty")
 	}
 
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return errorsmod.Wrap(ErrInvalidStakingDenom, err.Error())
+	}
+
 	if msg.PrizeDenom == "" {
 		return errorsmod.Wrap(ErrInvalidPrizeDenom, "prize_denom cannot be empty")
+	}
+
+	if err := sdk.ValidateDenom(msg.PrizeDenom); err != nil {
+		return errorsmod.Wrap(ErrInvalidPrizeDenom, err.Error())
 	}
 
 	if msg.Amount.IsNil() || !msg.Amount.IsPositive() {

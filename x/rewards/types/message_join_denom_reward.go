@@ -27,6 +27,10 @@ func (msg *MsgJoinDenomReward) ValidateBasic() error {
 		return errorsmod.Wrap(ErrInvalidStakingDenom, "denom cannot be empty")
 	}
 
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return errorsmod.Wrap(ErrInvalidStakingDenom, err.Error())
+	}
+
 	if msg.Amount.IsNil() || !msg.Amount.IsPositive() {
 		return errorsmod.Wrap(ErrInvalidAmount, "amount should be greater than 0")
 	}

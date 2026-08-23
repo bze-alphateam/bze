@@ -25,5 +25,9 @@ func (msg *MsgCreateDenomReward) ValidateBasic() error {
 		return errorsmod.Wrap(ErrInvalidStakingDenom, "denom cannot be empty")
 	}
 
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return errorsmod.Wrap(ErrInvalidStakingDenom, err.Error())
+	}
+
 	return nil
 }

@@ -280,6 +280,7 @@ func (suite *IntegrationTestSuite) TestDenomRewardDistribute_Airdrop_Math() {
 		suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: tc.prizeDenom, DistributedStake: math.LegacyMustNewDecFromStr(tc.startS)})
 
 		escrow := sdk.NewCoins(sdk.NewInt64Coin(tc.prizeDenom, tc.amount))
+		suite.bank.EXPECT().HasSupply(suite.ctx, tc.prizeDenom).Return(true).Times(1)
 		suite.bank.EXPECT().SendCoinsFromAccountToModule(suite.ctx, sender, types.ModuleName, escrow).Return(nil).Times(1)
 
 		_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, types.NewMsgDistributeDenomRewards(sender.String(), "ubze", tc.prizeDenom, math.NewInt(tc.amount)))
@@ -303,6 +304,7 @@ func (suite *IntegrationTestSuite) TestDenomRewardDistribute_Airdrop_EpochError(
 	suite.k.SetDenomRewardPrize(suite.ctx, before)
 
 	suite.richBalance(sender)
+	suite.bank.EXPECT().HasSupply(suite.ctx, "uprize").Return(true).Times(1)
 	suite.bank.EXPECT().
 		SendCoinsFromAccountToModule(suite.ctx, sender, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("uprize", 1000))).
 		Return(nil).Times(1)

@@ -35,6 +35,12 @@ func (k msgServer) DistributeDenomRewards(goCtx context.Context, msg *types.MsgD
 		return nil, types.ErrNoStakersInDenomReward
 	}
 
+	// same guard as CreateDenomRewardSchedule: a prize denom with no supply cannot be escrowed,
+	// and rejecting it here keeps malformed denoms out of coin construction and store keys
+	if !k.bankKeeper.HasSupply(ctx, msg.PrizeDenom) {
+		return nil, types.ErrInvalidPrizeDenom
+	}
+
 	toCapture, err := denomAmountToCapture(msg.PrizeDenom, msg.Amount, 1)
 	if err != nil {
 		return nil, err
