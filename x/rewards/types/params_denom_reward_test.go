@@ -14,7 +14,7 @@ func TestDefaultParams_DenomRewardDefaults(t *testing.T) {
 	// fees
 	require.Equal(t, sdk.NewInt64Coin("ubze", 25_000_000000), p.CreateDenomRewardFee)
 	require.Equal(t, sdk.NewInt64Coin("ubze", 25_000_000000), p.CreateDenomRewardPrizeFee)
-	require.Equal(t, sdk.NewInt64Coin("ubze", 5_000_000000), p.AddDenomRewardScheduleFee)
+	require.Equal(t, sdk.NewInt64Coin("ubze", 25_000_000000), p.AddDenomRewardScheduleFee)
 
 	// numeric params — lock defaults to 7 days, min_stake to 0
 	require.Equal(t, uint32(50), p.MaxPrizeDenomsPerDr)

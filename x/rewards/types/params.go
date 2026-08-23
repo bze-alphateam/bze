@@ -15,7 +15,7 @@ var (
 	DefaultCreateRewardFee    sdk.Coin = sdk.NewInt64Coin("ubze", 25_000_000000)
 
 	// Denom Rewards defaults
-	DefaultAddDenomRewardScheduleFee sdk.Coin = sdk.NewInt64Coin("ubze", 5_000_000000)
+	DefaultAddDenomRewardScheduleFee sdk.Coin = sdk.NewInt64Coin("ubze", 25_000_000000)
 )
 
 const (
