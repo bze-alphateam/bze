@@ -84,6 +84,7 @@ message DenomRewardJoinEvent {
 message DenomRewardExitEvent {
   string denom = 1;
   string address = 2;
+  string amount = 3; // the staked amount being withdrawn, in the DR's staking denom
 }
 
 message DenomRewardClaimEvent {

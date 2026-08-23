@@ -272,6 +272,7 @@ func (k msgServer) ExitDenomReward(goCtx context.Context, msg *types.MsgExitDeno
 		&types.DenomRewardExitEvent{
 			Denom:   dr.StakingDenom,
 			Address: msg.Creator,
+			Amount:  participant.Amount.String(),
 		},
 	)
 	if err != nil {

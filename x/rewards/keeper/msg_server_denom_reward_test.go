@@ -650,6 +650,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_Lock
 	suite.Require().True(ok)
 	suite.requireEventAttr(e, "denom", "ubze")
 	suite.requireEventAttr(e, "address", exiter.String())
+	suite.requireEventAttr(e, "amount", "500")
 
 	// no pending-unlock entry was left behind
 	suite.Require().Empty(suite.k.GetAllPendingUnlockParticipant(suite.ctx))
@@ -700,6 +701,13 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_ExitDenomReward_Lock
 	suite.Require().False(hasDrParticipantMarker(*suite.k, suite.ctx, exiter.String(), "ubze"))
 	dr, _ := suite.k.GetDenomReward(suite.ctx, "ubze")
 	suite.Require().Equal("0", dr.StakedAmount.String())
+
+	// the exit event carries the exited amount on the locked path too
+	e, ok := suite.findTypedEvent(proto.MessageName(&types.DenomRewardExitEvent{}))
+	suite.Require().True(ok)
+	suite.requireEventAttr(e, "denom", "ubze")
+	suite.requireEventAttr(e, "address", exiter.String())
+	suite.requireEventAttr(e, "amount", "500")
 }
 
 // Exit → re-join → exit within the same hour-epoch: the second exit lands on the SAME pending-unlock
