@@ -140,8 +140,9 @@ func (k Keeper) DenomRewardParticipations(goCtx context.Context, req *types.Quer
 	markerStore := k.getPrefixedStore(ctx, types.DenomRewardParticipantMarkerPrefix(req.Address))
 
 	pageRes, err := query.Paginate(markerStore, req.Pagination, func(key []byte, value []byte) error {
-		// the marker key (prefix stripped) is "{staking_denom}/"; denoms never contain "/".
-		stakingDenom := strings.TrimSuffix(string(key), "/")
+		// the marker key (prefix stripped) is the staking denom followed by the separator,
+		// a byte that can never appear inside a denom (unlike "/", legal in ibc/factory denoms)
+		stakingDenom := strings.TrimSuffix(string(key), types.DenomRewardKeySeparator)
 		participant, found := k.GetDenomRewardParticipant(ctx, stakingDenom, req.Address)
 		if !found {
 			// markers are written and deleted in the same call as the participant record,

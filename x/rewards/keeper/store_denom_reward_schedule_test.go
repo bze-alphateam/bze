@@ -48,7 +48,7 @@ func (suite *IntegrationTestSuite) TestStoreDenomRewardSchedule_IterateByDenom_I
 }
 
 func (suite *IntegrationTestSuite) TestStoreDenomRewardSchedule_GetBatch_CursorSemantics() {
-	// global composite-key order is "{denom}/{id}/": other/...1, ubze/...1, ubze/...2
+	// global composite-key order is (denom, id): other/...1, ubze/...1, ubze/...2
 	suite.k.SetDenomRewardSchedule(suite.ctx, types.DenomRewardSchedule{ScheduleId: "000000000001", StakingDenom: "ubze", PrizeDenom: "p1"})
 	suite.k.SetDenomRewardSchedule(suite.ctx, types.DenomRewardSchedule{ScheduleId: "000000000002", StakingDenom: "ubze", PrizeDenom: "p2"})
 	suite.k.SetDenomRewardSchedule(suite.ctx, types.DenomRewardSchedule{ScheduleId: "000000000001", StakingDenom: "other", PrizeDenom: "p1"})
@@ -113,11 +113,12 @@ func (suite *IntegrationTestSuite) TestStoreDenomRewardsDistributionQueue_SetGet
 	_, found := suite.k.GetDenomRewardsDistributionQueue(suite.ctx)
 	suite.Require().False(found)
 
-	suite.k.SetDenomRewardsDistributionQueue(suite.ctx, types.DenomRewardsDistributionQueue{Pending: true, Cursor: "ubze/000000000001/"})
+	cursor := string(types.DenomRewardScheduleKey("ubze", "000000000001"))
+	suite.k.SetDenomRewardsDistributionQueue(suite.ctx, types.DenomRewardsDistributionQueue{Pending: true, Cursor: cursor})
 	q, found := suite.k.GetDenomRewardsDistributionQueue(suite.ctx)
 	suite.Require().True(found)
 	suite.Require().True(q.Pending)
-	suite.Require().Equal("ubze/000000000001/", q.Cursor)
+	suite.Require().Equal(cursor, q.Cursor)
 
 	suite.k.RemoveDenomRewardsDistributionQueue(suite.ctx)
 	_, found = suite.k.GetDenomRewardsDistributionQueue(suite.ctx)

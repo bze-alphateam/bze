@@ -65,8 +65,9 @@ func (k Keeper) IterateUserDenomRewards(ctx sdk.Context, address string, msgHand
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		// the marker key (prefix stripped) is "{staking_denom}/"; denoms never contain "/".
-		stakingDenom := strings.TrimSuffix(string(iterator.Key()), "/")
+		// the marker key (prefix stripped) is the staking denom followed by the separator,
+		// a byte that can never appear inside a denom (unlike "/", legal in ibc/factory denoms)
+		stakingDenom := strings.TrimSuffix(string(iterator.Key()), types.DenomRewardKeySeparator)
 		participant, found := k.GetDenomRewardParticipant(ctx, stakingDenom, address)
 		if !found {
 			continue

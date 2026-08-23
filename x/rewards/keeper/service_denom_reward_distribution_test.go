@@ -74,7 +74,7 @@ func (suite *IntegrationTestSuite) TestEnqueueDenomRewardsDistribution_AlreadyPe
 		Duration:     5,
 	})
 
-	midDrain := types.DenomRewardsDistributionQueue{Pending: true, Cursor: "ubze/000000000001/"}
+	midDrain := types.DenomRewardsDistributionQueue{Pending: true, Cursor: string(types.DenomRewardScheduleKey("ubze", "000000000001"))}
 	suite.k.SetDenomRewardsDistributionQueue(suite.ctx, midDrain)
 
 	suite.k.EnqueueDenomRewardsDistribution(suite.ctx)
