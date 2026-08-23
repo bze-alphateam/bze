@@ -27,6 +27,8 @@ derived from it. History older than v8.0.0 lives in the
 
 * (x/rewards) [#74](https://github.com/bze-alphateam/bze/pull/74) Add `StakingRewardHooks` interface (with multi-hooks combinator and keeper `SetHooks` plumbing); participation hooks are emitted on staking join, increase and exit. No-op until a listener module registers.
 * (x/rewards) [#91](https://github.com/bze-alphateam/bze/pull/91) Add `BeforeStakingRewardRemoval` hook as a veto point for staking reward deletion; on final exit a veto suppresses the deletion instead of failing the exit.
+* (x/rewards) [#101](https://github.com/bze-alphateam/bze/pull/101) Denom Rewards: numeric proto fields are now typed as `math.Int`/`math.LegacyDec` via gogoproto customtype (stores, messages and queries), so parsing/validation lives in the proto layer; wire format and genesis JSON stay string-encoded and unchanged.
+* (x/rewards) [#101](https://github.com/bze-alphateam/bze/pull/101) Denom Rewards: `DenomRewardExitEvent` now carries the exited `amount` (staked amount being withdrawn, in the DR's staking denom), so indexers following exits don't need a follow-up query.
 
 ### Bug Fixes
 
