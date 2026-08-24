@@ -31,4 +31,13 @@ message GenesisState {
   UnlockParticipantsQueue unlock_participants_queue = 14;
   StakingRewardsDistributionQueue staking_rewards_distribution_queue = 15;
   TradingRewardExpirationQueue trading_reward_expiration_queue = 16;
+
+  // Denom Rewards genesis (additive)
+  repeated DenomReward denom_reward_list = 17 [(gogoproto.nullable) = false];
+  repeated DenomRewardPrize denom_reward_prize_list = 18 [(gogoproto.nullable) = false];
+  repeated DenomRewardParticipant denom_reward_participant_list = 19 [(gogoproto.nullable) = false];
+  repeated DenomRewardParticipantIndex denom_reward_participant_index_list = 20 [(gogoproto.nullable) = false];
+  repeated DenomRewardSchedule denom_reward_schedule_list = 21 [(gogoproto.nullable) = false];
+  uint64 denom_reward_schedule_counter = 22;
+  DenomRewardsDistributionQueue denom_rewards_distribution_queue = 23;
 }

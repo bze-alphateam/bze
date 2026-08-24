@@ -81,3 +81,54 @@ message StakingRewardsDistributionQueue {
 message TradingRewardExpirationQueue {
   repeated uint32 removal_epochs = 1;
 }
+
+// DenomReward is a generic per-denom staking pool. One DenomReward exists per
+// staking denom (unique chain-wide). lock and min_stake are snapshotted from the
+// module params at creation time and never change afterwards.
+message DenomReward {
+  string staking_denom = 1; // identity - one DenomReward per denom
+  uint32 lock          = 2; // days; snapshot from params at creation
+  uint64 min_stake     = 3; // snapshot from params at creation
+  string staked_amount = 4 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"staked_amount\""]; // total staked T
+}
+
+// DenomRewardPrize is the accumulator for a (staking_denom, prize_denom) pair.
+message DenomRewardPrize {
+  string staking_denom           = 1;
+  string prize_denom             = 2;
+  string distributed_stake       = 3 [(gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"distributed_stake\""]; // S, starts at 0
+  int64  last_distribution_epoch = 4; // day-epoch count of last distribution
+}
+
+// DenomRewardParticipant is a staker's position in a DenomReward.
+message DenomRewardParticipant {
+  string address       = 1;
+  string staking_denom = 2;
+  string amount        = 3 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"amount\""]; // stake[address]
+}
+
+// DenomRewardParticipantIndex records the accumulator value S seen at the
+// participant's last settlement for a given prize denom.
+message DenomRewardParticipantIndex {
+  string address       = 1;
+  string staking_denom = 2;
+  string prize_denom   = 3;
+  string index         = 4 [(gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"index\""]; // S at last settlement
+}
+
+// DenomRewardSchedule is an SR-style reward campaign attached to a DenomReward.
+message DenomRewardSchedule {
+  string schedule_id   = 1; // zero-filled global counter
+  string staking_denom = 2;
+  string prize_denom   = 3;
+  string daily_amount  = 4 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"daily_amount\""];
+  uint32 duration      = 5; // days
+  uint32 payouts       = 6; // days already distributed
+}
+
+// DenomRewardsDistributionQueue mirrors StakingRewardsDistributionQueue for the
+// daily distribution of denom reward schedules.
+message DenomRewardsDistributionQueue {
+  bool   pending = 1;
+  string cursor  = 2; // last processed schedule composite key
+}

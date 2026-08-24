@@ -26,4 +26,37 @@ message Params {
     (gogoproto.moretags) = "yaml:\"extra_gas_for_exit_stake\"",
     (gogoproto.jsontag)      = "extra_gas_for_exit_stake,omitempty"
   ];
+
+  // Denom Rewards params (additive)
+  cosmos.base.v1beta1.Coin createDenomRewardFee = 4 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"create_denom_reward_fee\"",
+    (gogoproto.jsontag)      = "create_denom_reward_fee,omitempty"
+  ];
+  cosmos.base.v1beta1.Coin createDenomRewardPrizeFee = 5 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"create_denom_reward_prize_fee\"",
+    (gogoproto.jsontag)      = "create_denom_reward_prize_fee,omitempty"
+  ];
+  cosmos.base.v1beta1.Coin addDenomRewardScheduleFee = 6 [
+    (gogoproto.nullable)     = false,
+    (gogoproto.moretags)     = "yaml:\"add_denom_reward_schedule_fee\"",
+    (gogoproto.jsontag)      = "add_denom_reward_schedule_fee,omitempty"
+  ];
+  uint32 maxPrizeDenomsPerDr = 7 [
+    (gogoproto.moretags) = "yaml:\"max_prize_denoms_per_dr\"",
+    (gogoproto.jsontag)  = "max_prize_denoms_per_dr,omitempty"
+  ];
+  uint64 extraGasForDenomExit = 8 [
+    (gogoproto.moretags) = "yaml:\"extra_gas_for_denom_exit\"",
+    (gogoproto.jsontag)  = "extra_gas_for_denom_exit,omitempty"
+  ];
+  uint32 denomRewardLock = 9 [
+    (gogoproto.moretags) = "yaml:\"denom_reward_lock\"",
+    (gogoproto.jsontag)  = "denom_reward_lock,omitempty"
+  ];
+  uint64 denomRewardMinStake = 10 [
+    (gogoproto.moretags) = "yaml:\"denom_reward_min_stake\"",
+    (gogoproto.jsontag)  = "denom_reward_min_stake,omitempty"
+  ];
 }

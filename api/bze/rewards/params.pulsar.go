@@ -16,10 +16,17 @@ import (
 )
 
 var (
-	md_Params                        protoreflect.MessageDescriptor
-	fd_Params_createStakingRewardFee protoreflect.FieldDescriptor
-	fd_Params_createTradingRewardFee protoreflect.FieldDescriptor
-	fd_Params_extraGasForExitStake   protoreflect.FieldDescriptor
+	md_Params                           protoreflect.MessageDescriptor
+	fd_Params_createStakingRewardFee    protoreflect.FieldDescriptor
+	fd_Params_createTradingRewardFee    protoreflect.FieldDescriptor
+	fd_Params_extraGasForExitStake      protoreflect.FieldDescriptor
+	fd_Params_createDenomRewardFee      protoreflect.FieldDescriptor
+	fd_Params_createDenomRewardPrizeFee protoreflect.FieldDescriptor
+	fd_Params_addDenomRewardScheduleFee protoreflect.FieldDescriptor
+	fd_Params_maxPrizeDenomsPerDr       protoreflect.FieldDescriptor
+	fd_Params_extraGasForDenomExit      protoreflect.FieldDescriptor
+	fd_Params_denomRewardLock           protoreflect.FieldDescriptor
+	fd_Params_denomRewardMinStake       protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -28,6 +35,13 @@ func init() {
 	fd_Params_createStakingRewardFee = md_Params.Fields().ByName("createStakingRewardFee")
 	fd_Params_createTradingRewardFee = md_Params.Fields().ByName("createTradingRewardFee")
 	fd_Params_extraGasForExitStake = md_Params.Fields().ByName("extraGasForExitStake")
+	fd_Params_createDenomRewardFee = md_Params.Fields().ByName("createDenomRewardFee")
+	fd_Params_createDenomRewardPrizeFee = md_Params.Fields().ByName("createDenomRewardPrizeFee")
+	fd_Params_addDenomRewardScheduleFee = md_Params.Fields().ByName("addDenomRewardScheduleFee")
+	fd_Params_maxPrizeDenomsPerDr = md_Params.Fields().ByName("maxPrizeDenomsPerDr")
+	fd_Params_extraGasForDenomExit = md_Params.Fields().ByName("extraGasForDenomExit")
+	fd_Params_denomRewardLock = md_Params.Fields().ByName("denomRewardLock")
+	fd_Params_denomRewardMinStake = md_Params.Fields().ByName("denomRewardMinStake")
 }
 
 var _ protoreflect.Message = (*fastReflection_Params)(nil)
@@ -113,6 +127,48 @@ func (x *fastReflection_Params) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
+	if x.CreateDenomRewardFee != nil {
+		value := protoreflect.ValueOfMessage(x.CreateDenomRewardFee.ProtoReflect())
+		if !f(fd_Params_createDenomRewardFee, value) {
+			return
+		}
+	}
+	if x.CreateDenomRewardPrizeFee != nil {
+		value := protoreflect.ValueOfMessage(x.CreateDenomRewardPrizeFee.ProtoReflect())
+		if !f(fd_Params_createDenomRewardPrizeFee, value) {
+			return
+		}
+	}
+	if x.AddDenomRewardScheduleFee != nil {
+		value := protoreflect.ValueOfMessage(x.AddDenomRewardScheduleFee.ProtoReflect())
+		if !f(fd_Params_addDenomRewardScheduleFee, value) {
+			return
+		}
+	}
+	if x.MaxPrizeDenomsPerDr != uint32(0) {
+		value := protoreflect.ValueOfUint32(x.MaxPrizeDenomsPerDr)
+		if !f(fd_Params_maxPrizeDenomsPerDr, value) {
+			return
+		}
+	}
+	if x.ExtraGasForDenomExit != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ExtraGasForDenomExit)
+		if !f(fd_Params_extraGasForDenomExit, value) {
+			return
+		}
+	}
+	if x.DenomRewardLock != uint32(0) {
+		value := protoreflect.ValueOfUint32(x.DenomRewardLock)
+		if !f(fd_Params_denomRewardLock, value) {
+			return
+		}
+	}
+	if x.DenomRewardMinStake != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.DenomRewardMinStake)
+		if !f(fd_Params_denomRewardMinStake, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -134,6 +190,20 @@ func (x *fastReflection_Params) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.CreateTradingRewardFee != nil
 	case "bze.rewards.Params.extraGasForExitStake":
 		return x.ExtraGasForExitStake != uint64(0)
+	case "bze.rewards.Params.createDenomRewardFee":
+		return x.CreateDenomRewardFee != nil
+	case "bze.rewards.Params.createDenomRewardPrizeFee":
+		return x.CreateDenomRewardPrizeFee != nil
+	case "bze.rewards.Params.addDenomRewardScheduleFee":
+		return x.AddDenomRewardScheduleFee != nil
+	case "bze.rewards.Params.maxPrizeDenomsPerDr":
+		return x.MaxPrizeDenomsPerDr != uint32(0)
+	case "bze.rewards.Params.extraGasForDenomExit":
+		return x.ExtraGasForDenomExit != uint64(0)
+	case "bze.rewards.Params.denomRewardLock":
+		return x.DenomRewardLock != uint32(0)
+	case "bze.rewards.Params.denomRewardMinStake":
+		return x.DenomRewardMinStake != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.Params"))
@@ -156,6 +226,20 @@ func (x *fastReflection_Params) Clear(fd protoreflect.FieldDescriptor) {
 		x.CreateTradingRewardFee = nil
 	case "bze.rewards.Params.extraGasForExitStake":
 		x.ExtraGasForExitStake = uint64(0)
+	case "bze.rewards.Params.createDenomRewardFee":
+		x.CreateDenomRewardFee = nil
+	case "bze.rewards.Params.createDenomRewardPrizeFee":
+		x.CreateDenomRewardPrizeFee = nil
+	case "bze.rewards.Params.addDenomRewardScheduleFee":
+		x.AddDenomRewardScheduleFee = nil
+	case "bze.rewards.Params.maxPrizeDenomsPerDr":
+		x.MaxPrizeDenomsPerDr = uint32(0)
+	case "bze.rewards.Params.extraGasForDenomExit":
+		x.ExtraGasForDenomExit = uint64(0)
+	case "bze.rewards.Params.denomRewardLock":
+		x.DenomRewardLock = uint32(0)
+	case "bze.rewards.Params.denomRewardMinStake":
+		x.DenomRewardMinStake = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.Params"))
@@ -180,6 +264,27 @@ func (x *fastReflection_Params) Get(descriptor protoreflect.FieldDescriptor) pro
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "bze.rewards.Params.extraGasForExitStake":
 		value := x.ExtraGasForExitStake
+		return protoreflect.ValueOfUint64(value)
+	case "bze.rewards.Params.createDenomRewardFee":
+		value := x.CreateDenomRewardFee
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "bze.rewards.Params.createDenomRewardPrizeFee":
+		value := x.CreateDenomRewardPrizeFee
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "bze.rewards.Params.addDenomRewardScheduleFee":
+		value := x.AddDenomRewardScheduleFee
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "bze.rewards.Params.maxPrizeDenomsPerDr":
+		value := x.MaxPrizeDenomsPerDr
+		return protoreflect.ValueOfUint32(value)
+	case "bze.rewards.Params.extraGasForDenomExit":
+		value := x.ExtraGasForDenomExit
+		return protoreflect.ValueOfUint64(value)
+	case "bze.rewards.Params.denomRewardLock":
+		value := x.DenomRewardLock
+		return protoreflect.ValueOfUint32(value)
+	case "bze.rewards.Params.denomRewardMinStake":
+		value := x.DenomRewardMinStake
 		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
@@ -207,6 +312,20 @@ func (x *fastReflection_Params) Set(fd protoreflect.FieldDescriptor, value proto
 		x.CreateTradingRewardFee = value.Message().Interface().(*v1beta1.Coin)
 	case "bze.rewards.Params.extraGasForExitStake":
 		x.ExtraGasForExitStake = value.Uint()
+	case "bze.rewards.Params.createDenomRewardFee":
+		x.CreateDenomRewardFee = value.Message().Interface().(*v1beta1.Coin)
+	case "bze.rewards.Params.createDenomRewardPrizeFee":
+		x.CreateDenomRewardPrizeFee = value.Message().Interface().(*v1beta1.Coin)
+	case "bze.rewards.Params.addDenomRewardScheduleFee":
+		x.AddDenomRewardScheduleFee = value.Message().Interface().(*v1beta1.Coin)
+	case "bze.rewards.Params.maxPrizeDenomsPerDr":
+		x.MaxPrizeDenomsPerDr = uint32(value.Uint())
+	case "bze.rewards.Params.extraGasForDenomExit":
+		x.ExtraGasForDenomExit = value.Uint()
+	case "bze.rewards.Params.denomRewardLock":
+		x.DenomRewardLock = uint32(value.Uint())
+	case "bze.rewards.Params.denomRewardMinStake":
+		x.DenomRewardMinStake = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.Params"))
@@ -237,8 +356,31 @@ func (x *fastReflection_Params) Mutable(fd protoreflect.FieldDescriptor) protore
 			x.CreateTradingRewardFee = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.CreateTradingRewardFee.ProtoReflect())
+	case "bze.rewards.Params.createDenomRewardFee":
+		if x.CreateDenomRewardFee == nil {
+			x.CreateDenomRewardFee = new(v1beta1.Coin)
+		}
+		return protoreflect.ValueOfMessage(x.CreateDenomRewardFee.ProtoReflect())
+	case "bze.rewards.Params.createDenomRewardPrizeFee":
+		if x.CreateDenomRewardPrizeFee == nil {
+			x.CreateDenomRewardPrizeFee = new(v1beta1.Coin)
+		}
+		return protoreflect.ValueOfMessage(x.CreateDenomRewardPrizeFee.ProtoReflect())
+	case "bze.rewards.Params.addDenomRewardScheduleFee":
+		if x.AddDenomRewardScheduleFee == nil {
+			x.AddDenomRewardScheduleFee = new(v1beta1.Coin)
+		}
+		return protoreflect.ValueOfMessage(x.AddDenomRewardScheduleFee.ProtoReflect())
 	case "bze.rewards.Params.extraGasForExitStake":
 		panic(fmt.Errorf("field extraGasForExitStake of message bze.rewards.Params is not mutable"))
+	case "bze.rewards.Params.maxPrizeDenomsPerDr":
+		panic(fmt.Errorf("field maxPrizeDenomsPerDr of message bze.rewards.Params is not mutable"))
+	case "bze.rewards.Params.extraGasForDenomExit":
+		panic(fmt.Errorf("field extraGasForDenomExit of message bze.rewards.Params is not mutable"))
+	case "bze.rewards.Params.denomRewardLock":
+		panic(fmt.Errorf("field denomRewardLock of message bze.rewards.Params is not mutable"))
+	case "bze.rewards.Params.denomRewardMinStake":
+		panic(fmt.Errorf("field denomRewardMinStake of message bze.rewards.Params is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.Params"))
@@ -259,6 +401,23 @@ func (x *fastReflection_Params) NewField(fd protoreflect.FieldDescriptor) protor
 		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "bze.rewards.Params.extraGasForExitStake":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "bze.rewards.Params.createDenomRewardFee":
+		m := new(v1beta1.Coin)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "bze.rewards.Params.createDenomRewardPrizeFee":
+		m := new(v1beta1.Coin)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "bze.rewards.Params.addDenomRewardScheduleFee":
+		m := new(v1beta1.Coin)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "bze.rewards.Params.maxPrizeDenomsPerDr":
+		return protoreflect.ValueOfUint32(uint32(0))
+	case "bze.rewards.Params.extraGasForDenomExit":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "bze.rewards.Params.denomRewardLock":
+		return protoreflect.ValueOfUint32(uint32(0))
+	case "bze.rewards.Params.denomRewardMinStake":
 		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
@@ -340,6 +499,30 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if x.ExtraGasForExitStake != 0 {
 			n += 1 + runtime.Sov(uint64(x.ExtraGasForExitStake))
 		}
+		if x.CreateDenomRewardFee != nil {
+			l = options.Size(x.CreateDenomRewardFee)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.CreateDenomRewardPrizeFee != nil {
+			l = options.Size(x.CreateDenomRewardPrizeFee)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.AddDenomRewardScheduleFee != nil {
+			l = options.Size(x.AddDenomRewardScheduleFee)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.MaxPrizeDenomsPerDr != 0 {
+			n += 1 + runtime.Sov(uint64(x.MaxPrizeDenomsPerDr))
+		}
+		if x.ExtraGasForDenomExit != 0 {
+			n += 1 + runtime.Sov(uint64(x.ExtraGasForDenomExit))
+		}
+		if x.DenomRewardLock != 0 {
+			n += 1 + runtime.Sov(uint64(x.DenomRewardLock))
+		}
+		if x.DenomRewardMinStake != 0 {
+			n += 1 + runtime.Sov(uint64(x.DenomRewardMinStake))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -368,6 +551,68 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.DenomRewardMinStake != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.DenomRewardMinStake))
+			i--
+			dAtA[i] = 0x50
+		}
+		if x.DenomRewardLock != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.DenomRewardLock))
+			i--
+			dAtA[i] = 0x48
+		}
+		if x.ExtraGasForDenomExit != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.ExtraGasForDenomExit))
+			i--
+			dAtA[i] = 0x40
+		}
+		if x.MaxPrizeDenomsPerDr != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.MaxPrizeDenomsPerDr))
+			i--
+			dAtA[i] = 0x38
+		}
+		if x.AddDenomRewardScheduleFee != nil {
+			encoded, err := options.Marshal(x.AddDenomRewardScheduleFee)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x32
+		}
+		if x.CreateDenomRewardPrizeFee != nil {
+			encoded, err := options.Marshal(x.CreateDenomRewardPrizeFee)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x2a
+		}
+		if x.CreateDenomRewardFee != nil {
+			encoded, err := options.Marshal(x.CreateDenomRewardFee)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x22
 		}
 		if x.ExtraGasForExitStake != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.ExtraGasForExitStake))
@@ -542,6 +787,190 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CreateDenomRewardFee", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.CreateDenomRewardFee == nil {
+					x.CreateDenomRewardFee = &v1beta1.Coin{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.CreateDenomRewardFee); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CreateDenomRewardPrizeFee", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.CreateDenomRewardPrizeFee == nil {
+					x.CreateDenomRewardPrizeFee = &v1beta1.Coin{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.CreateDenomRewardPrizeFee); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AddDenomRewardScheduleFee", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.AddDenomRewardScheduleFee == nil {
+					x.AddDenomRewardScheduleFee = &v1beta1.Coin{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.AddDenomRewardScheduleFee); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 7:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MaxPrizeDenomsPerDr", wireType)
+				}
+				x.MaxPrizeDenomsPerDr = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.MaxPrizeDenomsPerDr |= uint32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 8:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ExtraGasForDenomExit", wireType)
+				}
+				x.ExtraGasForDenomExit = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.ExtraGasForDenomExit |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 9:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DenomRewardLock", wireType)
+				}
+				x.DenomRewardLock = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.DenomRewardLock |= uint32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 10:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DenomRewardMinStake", wireType)
+				}
+				x.DenomRewardMinStake = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.DenomRewardMinStake |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -599,6 +1028,14 @@ type Params struct {
 	CreateStakingRewardFee *v1beta1.Coin `protobuf:"bytes,1,opt,name=createStakingRewardFee,proto3" json:"createStakingRewardFee,omitempty"`
 	CreateTradingRewardFee *v1beta1.Coin `protobuf:"bytes,2,opt,name=createTradingRewardFee,proto3" json:"createTradingRewardFee,omitempty"`
 	ExtraGasForExitStake   uint64        `protobuf:"varint,3,opt,name=extraGasForExitStake,proto3" json:"extraGasForExitStake,omitempty"`
+	// Denom Rewards params (additive)
+	CreateDenomRewardFee      *v1beta1.Coin `protobuf:"bytes,4,opt,name=createDenomRewardFee,proto3" json:"createDenomRewardFee,omitempty"`
+	CreateDenomRewardPrizeFee *v1beta1.Coin `protobuf:"bytes,5,opt,name=createDenomRewardPrizeFee,proto3" json:"createDenomRewardPrizeFee,omitempty"`
+	AddDenomRewardScheduleFee *v1beta1.Coin `protobuf:"bytes,6,opt,name=addDenomRewardScheduleFee,proto3" json:"addDenomRewardScheduleFee,omitempty"`
+	MaxPrizeDenomsPerDr       uint32        `protobuf:"varint,7,opt,name=maxPrizeDenomsPerDr,proto3" json:"maxPrizeDenomsPerDr,omitempty"`
+	ExtraGasForDenomExit      uint64        `protobuf:"varint,8,opt,name=extraGasForDenomExit,proto3" json:"extraGasForDenomExit,omitempty"`
+	DenomRewardLock           uint32        `protobuf:"varint,9,opt,name=denomRewardLock,proto3" json:"denomRewardLock,omitempty"`
+	DenomRewardMinStake       uint64        `protobuf:"varint,10,opt,name=denomRewardMinStake,proto3" json:"denomRewardMinStake,omitempty"`
 }
 
 func (x *Params) Reset() {
@@ -642,6 +1079,55 @@ func (x *Params) GetExtraGasForExitStake() uint64 {
 	return 0
 }
 
+func (x *Params) GetCreateDenomRewardFee() *v1beta1.Coin {
+	if x != nil {
+		return x.CreateDenomRewardFee
+	}
+	return nil
+}
+
+func (x *Params) GetCreateDenomRewardPrizeFee() *v1beta1.Coin {
+	if x != nil {
+		return x.CreateDenomRewardPrizeFee
+	}
+	return nil
+}
+
+func (x *Params) GetAddDenomRewardScheduleFee() *v1beta1.Coin {
+	if x != nil {
+		return x.AddDenomRewardScheduleFee
+	}
+	return nil
+}
+
+func (x *Params) GetMaxPrizeDenomsPerDr() uint32 {
+	if x != nil {
+		return x.MaxPrizeDenomsPerDr
+	}
+	return 0
+}
+
+func (x *Params) GetExtraGasForDenomExit() uint64 {
+	if x != nil {
+		return x.ExtraGasForDenomExit
+	}
+	return 0
+}
+
+func (x *Params) GetDenomRewardLock() uint32 {
+	if x != nil {
+		return x.DenomRewardLock
+	}
+	return 0
+}
+
+func (x *Params) GetDenomRewardMinStake() uint64 {
+	if x != nil {
+		return x.DenomRewardMinStake
+	}
+	return 0
+}
+
 var File_bze_rewards_params_proto protoreflect.FileDescriptor
 
 var file_bze_rewards_params_proto_rawDesc = []byte{
@@ -652,7 +1138,7 @@ var file_bze_rewards_params_proto_rawDesc = []byte{
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31,
 	0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x22, 0xf0, 0x03, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0xa2, 0x01, 0x0a, 0x16,
+	0x22, 0xcd, 0x0b, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0xa2, 0x01, 0x0a, 0x16,
 	0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x53, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x77,
 	0x61, 0x72, 0x64, 0x46, 0x65, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
@@ -681,19 +1167,81 @@ var file_bze_rewards_params_proto_rawDesc = []byte{
 	0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x65, 0x78, 0x74, 0x72, 0x61, 0x5f, 0x67, 0x61, 0x73, 0x5f, 0x66,
 	0x6f, 0x72, 0x5f, 0x65, 0x78, 0x69, 0x74, 0x5f, 0x73, 0x74, 0x61, 0x6b, 0x65, 0x22, 0x52, 0x14,
 	0x65, 0x78, 0x74, 0x72, 0x61, 0x47, 0x61, 0x73, 0x46, 0x6f, 0x72, 0x45, 0x78, 0x69, 0x74, 0x53,
-	0x74, 0x61, 0x6b, 0x65, 0x3a, 0x1d, 0xe8, 0xa0, 0x1f, 0x01, 0x8a, 0xe7, 0xb0, 0x2a, 0x14, 0x62,
-	0x7a, 0x65, 0x2f, 0x78, 0x2f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2f, 0x50, 0x61, 0x72,
-	0x61, 0x6d, 0x73, 0x42, 0x99, 0x01, 0x0a, 0x0f, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e,
-	0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x42, 0x0b, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x50,
-	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
-	0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d,
-	0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x72, 0x65, 0x77,
-	0x61, 0x72, 0x64, 0x73, 0xa2, 0x02, 0x03, 0x42, 0x52, 0x58, 0xaa, 0x02, 0x0b, 0x42, 0x7a, 0x65,
-	0x2e, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xca, 0x02, 0x0b, 0x42, 0x7a, 0x65, 0x5c, 0x52,
-	0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xe2, 0x02, 0x17, 0x42, 0x7a, 0x65, 0x5c, 0x52, 0x65, 0x77,
-	0x61, 0x72, 0x64, 0x73, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
-	0xea, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x74, 0x61, 0x6b, 0x65, 0x12, 0x9a, 0x01, 0x0a, 0x14, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x44,
+	0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x46, 0x65, 0x65, 0x18, 0x04, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73,
+	0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x4b,
+	0xc8, 0xde, 0x1f, 0x00, 0xea, 0xde, 0x1f, 0x21, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x5f, 0x64,
+	0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x66, 0x65, 0x65, 0x2c,
+	0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74, 0x79, 0xf2, 0xde, 0x1f, 0x1e, 0x79, 0x61, 0x6d,
+	0x6c, 0x3a, 0x22, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f,
+	0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x66, 0x65, 0x65, 0x22, 0x52, 0x14, 0x63, 0x72, 0x65,
+	0x61, 0x74, 0x65, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x46, 0x65,
+	0x65, 0x12, 0xb0, 0x01, 0x0a, 0x19, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x44, 0x65, 0x6e, 0x6f,
+	0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x50, 0x72, 0x69, 0x7a, 0x65, 0x46, 0x65, 0x65, 0x18,
+	0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
+	0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e,
+	0x42, 0x57, 0xc8, 0xde, 0x1f, 0x00, 0xea, 0xde, 0x1f, 0x27, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x70, 0x72,
+	0x69, 0x7a, 0x65, 0x5f, 0x66, 0x65, 0x65, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74,
+	0x79, 0xf2, 0xde, 0x1f, 0x24, 0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x63, 0x72, 0x65, 0x61, 0x74,
+	0x65, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x70,
+	0x72, 0x69, 0x7a, 0x65, 0x5f, 0x66, 0x65, 0x65, 0x22, 0x52, 0x19, 0x63, 0x72, 0x65, 0x61, 0x74,
+	0x65, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x50, 0x72, 0x69, 0x7a,
+	0x65, 0x46, 0x65, 0x65, 0x12, 0xb0, 0x01, 0x0a, 0x19, 0x61, 0x64, 0x64, 0x44, 0x65, 0x6e, 0x6f,
+	0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x53, 0x63, 0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x46,
+	0x65, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43,
+	0x6f, 0x69, 0x6e, 0x42, 0x57, 0xc8, 0xde, 0x1f, 0x00, 0xea, 0xde, 0x1f, 0x27, 0x61, 0x64, 0x64,
+	0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x73, 0x63,
+	0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x5f, 0x66, 0x65, 0x65, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65,
+	0x6d, 0x70, 0x74, 0x79, 0xf2, 0xde, 0x1f, 0x24, 0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x61, 0x64,
+	0x64, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x73,
+	0x63, 0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x5f, 0x66, 0x65, 0x65, 0x22, 0x52, 0x19, 0x61, 0x64,
+	0x64, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x53, 0x63, 0x68, 0x65,
+	0x64, 0x75, 0x6c, 0x65, 0x46, 0x65, 0x65, 0x12, 0x79, 0x0a, 0x13, 0x6d, 0x61, 0x78, 0x50, 0x72,
+	0x69, 0x7a, 0x65, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x50, 0x65, 0x72, 0x44, 0x72, 0x18, 0x07,
+	0x20, 0x01, 0x28, 0x0d, 0x42, 0x47, 0xea, 0xde, 0x1f, 0x21, 0x6d, 0x61, 0x78, 0x5f, 0x70, 0x72,
+	0x69, 0x7a, 0x65, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x5f, 0x70, 0x65, 0x72, 0x5f, 0x64,
+	0x72, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74, 0x79, 0xf2, 0xde, 0x1f, 0x1e, 0x79,
+	0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x6d, 0x61, 0x78, 0x5f, 0x70, 0x72, 0x69, 0x7a, 0x65, 0x5f, 0x64,
+	0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x5f, 0x70, 0x65, 0x72, 0x5f, 0x64, 0x72, 0x22, 0x52, 0x13, 0x6d,
+	0x61, 0x78, 0x50, 0x72, 0x69, 0x7a, 0x65, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x50, 0x65, 0x72,
+	0x44, 0x72, 0x12, 0x7d, 0x0a, 0x14, 0x65, 0x78, 0x74, 0x72, 0x61, 0x47, 0x61, 0x73, 0x46, 0x6f,
+	0x72, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x45, 0x78, 0x69, 0x74, 0x18, 0x08, 0x20, 0x01, 0x28, 0x04,
+	0x42, 0x49, 0xea, 0xde, 0x1f, 0x22, 0x65, 0x78, 0x74, 0x72, 0x61, 0x5f, 0x67, 0x61, 0x73, 0x5f,
+	0x66, 0x6f, 0x72, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x65, 0x78, 0x69, 0x74, 0x2c, 0x6f,
+	0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74, 0x79, 0xf2, 0xde, 0x1f, 0x1f, 0x79, 0x61, 0x6d, 0x6c,
+	0x3a, 0x22, 0x65, 0x78, 0x74, 0x72, 0x61, 0x5f, 0x67, 0x61, 0x73, 0x5f, 0x66, 0x6f, 0x72, 0x5f,
+	0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x65, 0x78, 0x69, 0x74, 0x22, 0x52, 0x14, 0x65, 0x78, 0x74,
+	0x72, 0x61, 0x47, 0x61, 0x73, 0x46, 0x6f, 0x72, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x45, 0x78, 0x69,
+	0x74, 0x12, 0x65, 0x0a, 0x0f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64,
+	0x4c, 0x6f, 0x63, 0x6b, 0x18, 0x09, 0x20, 0x01, 0x28, 0x0d, 0x42, 0x3b, 0xea, 0xde, 0x1f, 0x1b,
+	0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x6c, 0x6f, 0x63,
+	0x6b, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74, 0x79, 0xf2, 0xde, 0x1f, 0x18, 0x79,
+	0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72,
+	0x64, 0x5f, 0x6c, 0x6f, 0x63, 0x6b, 0x22, 0x52, 0x0f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65,
+	0x77, 0x61, 0x72, 0x64, 0x4c, 0x6f, 0x63, 0x6b, 0x12, 0x77, 0x0a, 0x13, 0x64, 0x65, 0x6e, 0x6f,
+	0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x4d, 0x69, 0x6e, 0x53, 0x74, 0x61, 0x6b, 0x65, 0x18,
+	0x0a, 0x20, 0x01, 0x28, 0x04, 0x42, 0x45, 0xea, 0xde, 0x1f, 0x20, 0x64, 0x65, 0x6e, 0x6f, 0x6d,
+	0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x5f, 0x6d, 0x69, 0x6e, 0x5f, 0x73, 0x74, 0x61, 0x6b,
+	0x65, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74, 0x79, 0xf2, 0xde, 0x1f, 0x1d, 0x79,
+	0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72,
+	0x64, 0x5f, 0x6d, 0x69, 0x6e, 0x5f, 0x73, 0x74, 0x61, 0x6b, 0x65, 0x22, 0x52, 0x13, 0x64, 0x65,
+	0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x4d, 0x69, 0x6e, 0x53, 0x74, 0x61, 0x6b,
+	0x65, 0x3a, 0x1d, 0xe8, 0xa0, 0x1f, 0x01, 0x8a, 0xe7, 0xb0, 0x2a, 0x14, 0x62, 0x7a, 0x65, 0x2f,
+	0x78, 0x2f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2f, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
+	0x42, 0x99, 0x01, 0x0a, 0x0f, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77,
+	0x61, 0x72, 0x64, 0x73, 0x42, 0x0b, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x50, 0x72, 0x6f, 0x74,
+	0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
+	0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a,
+	0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64,
+	0x73, 0xa2, 0x02, 0x03, 0x42, 0x52, 0x58, 0xaa, 0x02, 0x0b, 0x42, 0x7a, 0x65, 0x2e, 0x52, 0x65,
+	0x77, 0x61, 0x72, 0x64, 0x73, 0xca, 0x02, 0x0b, 0x42, 0x7a, 0x65, 0x5c, 0x52, 0x65, 0x77, 0x61,
+	0x72, 0x64, 0x73, 0xe2, 0x02, 0x17, 0x42, 0x7a, 0x65, 0x5c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64,
+	0x73, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0c,
+	0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x62, 0x06, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -716,11 +1264,14 @@ var file_bze_rewards_params_proto_goTypes = []interface{}{
 var file_bze_rewards_params_proto_depIdxs = []int32{
 	1, // 0: bze.rewards.Params.createStakingRewardFee:type_name -> cosmos.base.v1beta1.Coin
 	1, // 1: bze.rewards.Params.createTradingRewardFee:type_name -> cosmos.base.v1beta1.Coin
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	1, // 2: bze.rewards.Params.createDenomRewardFee:type_name -> cosmos.base.v1beta1.Coin
+	1, // 3: bze.rewards.Params.createDenomRewardPrizeFee:type_name -> cosmos.base.v1beta1.Coin
+	1, // 4: bze.rewards.Params.addDenomRewardScheduleFee:type_name -> cosmos.base.v1beta1.Coin
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_bze_rewards_params_proto_init() }

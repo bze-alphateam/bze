@@ -19,16 +19,23 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_UpdateParams_FullMethodName             = "/bze.rewards.Msg/UpdateParams"
-	Msg_CreateStakingReward_FullMethodName      = "/bze.rewards.Msg/CreateStakingReward"
-	Msg_UpdateStakingReward_FullMethodName      = "/bze.rewards.Msg/UpdateStakingReward"
-	Msg_JoinStaking_FullMethodName              = "/bze.rewards.Msg/JoinStaking"
-	Msg_ExitStaking_FullMethodName              = "/bze.rewards.Msg/ExitStaking"
-	Msg_ClaimStakingRewards_FullMethodName      = "/bze.rewards.Msg/ClaimStakingRewards"
-	Msg_DistributeStakingRewards_FullMethodName = "/bze.rewards.Msg/DistributeStakingRewards"
-	Msg_CreateTradingReward_FullMethodName      = "/bze.rewards.Msg/CreateTradingReward"
-	Msg_ActivateTradingReward_FullMethodName    = "/bze.rewards.Msg/ActivateTradingReward"
-	Msg_DeleteStakingReward_FullMethodName      = "/bze.rewards.Msg/DeleteStakingReward"
+	Msg_UpdateParams_FullMethodName              = "/bze.rewards.Msg/UpdateParams"
+	Msg_CreateStakingReward_FullMethodName       = "/bze.rewards.Msg/CreateStakingReward"
+	Msg_UpdateStakingReward_FullMethodName       = "/bze.rewards.Msg/UpdateStakingReward"
+	Msg_JoinStaking_FullMethodName               = "/bze.rewards.Msg/JoinStaking"
+	Msg_ExitStaking_FullMethodName               = "/bze.rewards.Msg/ExitStaking"
+	Msg_ClaimStakingRewards_FullMethodName       = "/bze.rewards.Msg/ClaimStakingRewards"
+	Msg_DistributeStakingRewards_FullMethodName  = "/bze.rewards.Msg/DistributeStakingRewards"
+	Msg_CreateTradingReward_FullMethodName       = "/bze.rewards.Msg/CreateTradingReward"
+	Msg_ActivateTradingReward_FullMethodName     = "/bze.rewards.Msg/ActivateTradingReward"
+	Msg_DeleteStakingReward_FullMethodName       = "/bze.rewards.Msg/DeleteStakingReward"
+	Msg_CreateDenomReward_FullMethodName         = "/bze.rewards.Msg/CreateDenomReward"
+	Msg_JoinDenomReward_FullMethodName           = "/bze.rewards.Msg/JoinDenomReward"
+	Msg_ExitDenomReward_FullMethodName           = "/bze.rewards.Msg/ExitDenomReward"
+	Msg_ClaimDenomRewards_FullMethodName         = "/bze.rewards.Msg/ClaimDenomRewards"
+	Msg_CreateDenomRewardSchedule_FullMethodName = "/bze.rewards.Msg/CreateDenomRewardSchedule"
+	Msg_UpdateDenomRewardSchedule_FullMethodName = "/bze.rewards.Msg/UpdateDenomRewardSchedule"
+	Msg_DistributeDenomRewards_FullMethodName    = "/bze.rewards.Msg/DistributeDenomRewards"
 )
 
 // MsgClient is the client API for Msg service.
@@ -47,6 +54,13 @@ type MsgClient interface {
 	CreateTradingReward(ctx context.Context, in *MsgCreateTradingReward, opts ...grpc.CallOption) (*MsgCreateTradingRewardResponse, error)
 	ActivateTradingReward(ctx context.Context, in *MsgActivateTradingReward, opts ...grpc.CallOption) (*MsgActivateTradingRewardResponse, error)
 	DeleteStakingReward(ctx context.Context, in *MsgDeleteStakingReward, opts ...grpc.CallOption) (*MsgDeleteStakingRewardResponse, error)
+	CreateDenomReward(ctx context.Context, in *MsgCreateDenomReward, opts ...grpc.CallOption) (*MsgCreateDenomRewardResponse, error)
+	JoinDenomReward(ctx context.Context, in *MsgJoinDenomReward, opts ...grpc.CallOption) (*MsgJoinDenomRewardResponse, error)
+	ExitDenomReward(ctx context.Context, in *MsgExitDenomReward, opts ...grpc.CallOption) (*MsgExitDenomRewardResponse, error)
+	ClaimDenomRewards(ctx context.Context, in *MsgClaimDenomRewards, opts ...grpc.CallOption) (*MsgClaimDenomRewardsResponse, error)
+	CreateDenomRewardSchedule(ctx context.Context, in *MsgCreateDenomRewardSchedule, opts ...grpc.CallOption) (*MsgCreateDenomRewardScheduleResponse, error)
+	UpdateDenomRewardSchedule(ctx context.Context, in *MsgUpdateDenomRewardSchedule, opts ...grpc.CallOption) (*MsgUpdateDenomRewardScheduleResponse, error)
+	DistributeDenomRewards(ctx context.Context, in *MsgDistributeDenomRewards, opts ...grpc.CallOption) (*MsgDistributeDenomRewardsResponse, error)
 }
 
 type msgClient struct {
@@ -147,6 +161,69 @@ func (c *msgClient) DeleteStakingReward(ctx context.Context, in *MsgDeleteStakin
 	return out, nil
 }
 
+func (c *msgClient) CreateDenomReward(ctx context.Context, in *MsgCreateDenomReward, opts ...grpc.CallOption) (*MsgCreateDenomRewardResponse, error) {
+	out := new(MsgCreateDenomRewardResponse)
+	err := c.cc.Invoke(ctx, Msg_CreateDenomReward_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) JoinDenomReward(ctx context.Context, in *MsgJoinDenomReward, opts ...grpc.CallOption) (*MsgJoinDenomRewardResponse, error) {
+	out := new(MsgJoinDenomRewardResponse)
+	err := c.cc.Invoke(ctx, Msg_JoinDenomReward_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ExitDenomReward(ctx context.Context, in *MsgExitDenomReward, opts ...grpc.CallOption) (*MsgExitDenomRewardResponse, error) {
+	out := new(MsgExitDenomRewardResponse)
+	err := c.cc.Invoke(ctx, Msg_ExitDenomReward_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ClaimDenomRewards(ctx context.Context, in *MsgClaimDenomRewards, opts ...grpc.CallOption) (*MsgClaimDenomRewardsResponse, error) {
+	out := new(MsgClaimDenomRewardsResponse)
+	err := c.cc.Invoke(ctx, Msg_ClaimDenomRewards_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) CreateDenomRewardSchedule(ctx context.Context, in *MsgCreateDenomRewardSchedule, opts ...grpc.CallOption) (*MsgCreateDenomRewardScheduleResponse, error) {
+	out := new(MsgCreateDenomRewardScheduleResponse)
+	err := c.cc.Invoke(ctx, Msg_CreateDenomRewardSchedule_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateDenomRewardSchedule(ctx context.Context, in *MsgUpdateDenomRewardSchedule, opts ...grpc.CallOption) (*MsgUpdateDenomRewardScheduleResponse, error) {
+	out := new(MsgUpdateDenomRewardScheduleResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateDenomRewardSchedule_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) DistributeDenomRewards(ctx context.Context, in *MsgDistributeDenomRewards, opts ...grpc.CallOption) (*MsgDistributeDenomRewardsResponse, error) {
+	out := new(MsgDistributeDenomRewardsResponse)
+	err := c.cc.Invoke(ctx, Msg_DistributeDenomRewards_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -163,6 +240,13 @@ type MsgServer interface {
 	CreateTradingReward(context.Context, *MsgCreateTradingReward) (*MsgCreateTradingRewardResponse, error)
 	ActivateTradingReward(context.Context, *MsgActivateTradingReward) (*MsgActivateTradingRewardResponse, error)
 	DeleteStakingReward(context.Context, *MsgDeleteStakingReward) (*MsgDeleteStakingRewardResponse, error)
+	CreateDenomReward(context.Context, *MsgCreateDenomReward) (*MsgCreateDenomRewardResponse, error)
+	JoinDenomReward(context.Context, *MsgJoinDenomReward) (*MsgJoinDenomRewardResponse, error)
+	ExitDenomReward(context.Context, *MsgExitDenomReward) (*MsgExitDenomRewardResponse, error)
+	ClaimDenomRewards(context.Context, *MsgClaimDenomRewards) (*MsgClaimDenomRewardsResponse, error)
+	CreateDenomRewardSchedule(context.Context, *MsgCreateDenomRewardSchedule) (*MsgCreateDenomRewardScheduleResponse, error)
+	UpdateDenomRewardSchedule(context.Context, *MsgUpdateDenomRewardSchedule) (*MsgUpdateDenomRewardScheduleResponse, error)
+	DistributeDenomRewards(context.Context, *MsgDistributeDenomRewards) (*MsgDistributeDenomRewardsResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -199,6 +283,27 @@ func (UnimplementedMsgServer) ActivateTradingReward(context.Context, *MsgActivat
 }
 func (UnimplementedMsgServer) DeleteStakingReward(context.Context, *MsgDeleteStakingReward) (*MsgDeleteStakingRewardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteStakingReward not implemented")
+}
+func (UnimplementedMsgServer) CreateDenomReward(context.Context, *MsgCreateDenomReward) (*MsgCreateDenomRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateDenomReward not implemented")
+}
+func (UnimplementedMsgServer) JoinDenomReward(context.Context, *MsgJoinDenomReward) (*MsgJoinDenomRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JoinDenomReward not implemented")
+}
+func (UnimplementedMsgServer) ExitDenomReward(context.Context, *MsgExitDenomReward) (*MsgExitDenomRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExitDenomReward not implemented")
+}
+func (UnimplementedMsgServer) ClaimDenomRewards(context.Context, *MsgClaimDenomRewards) (*MsgClaimDenomRewardsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClaimDenomRewards not implemented")
+}
+func (UnimplementedMsgServer) CreateDenomRewardSchedule(context.Context, *MsgCreateDenomRewardSchedule) (*MsgCreateDenomRewardScheduleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateDenomRewardSchedule not implemented")
+}
+func (UnimplementedMsgServer) UpdateDenomRewardSchedule(context.Context, *MsgUpdateDenomRewardSchedule) (*MsgUpdateDenomRewardScheduleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDenomRewardSchedule not implemented")
+}
+func (UnimplementedMsgServer) DistributeDenomRewards(context.Context, *MsgDistributeDenomRewards) (*MsgDistributeDenomRewardsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DistributeDenomRewards not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -393,6 +498,132 @@ func _Msg_DeleteStakingReward_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreateDenomReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateDenomReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateDenomReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_CreateDenomReward_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateDenomReward(ctx, req.(*MsgCreateDenomReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_JoinDenomReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgJoinDenomReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).JoinDenomReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_JoinDenomReward_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).JoinDenomReward(ctx, req.(*MsgJoinDenomReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ExitDenomReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgExitDenomReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ExitDenomReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_ExitDenomReward_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ExitDenomReward(ctx, req.(*MsgExitDenomReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ClaimDenomRewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgClaimDenomRewards)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ClaimDenomRewards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_ClaimDenomRewards_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ClaimDenomRewards(ctx, req.(*MsgClaimDenomRewards))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_CreateDenomRewardSchedule_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateDenomRewardSchedule)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateDenomRewardSchedule(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_CreateDenomRewardSchedule_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateDenomRewardSchedule(ctx, req.(*MsgCreateDenomRewardSchedule))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateDenomRewardSchedule_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateDenomRewardSchedule)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateDenomRewardSchedule(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateDenomRewardSchedule_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateDenomRewardSchedule(ctx, req.(*MsgUpdateDenomRewardSchedule))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_DistributeDenomRewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDistributeDenomRewards)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).DistributeDenomRewards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_DistributeDenomRewards_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).DistributeDenomRewards(ctx, req.(*MsgDistributeDenomRewards))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -439,6 +670,34 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteStakingReward",
 			Handler:    _Msg_DeleteStakingReward_Handler,
+		},
+		{
+			MethodName: "CreateDenomReward",
+			Handler:    _Msg_CreateDenomReward_Handler,
+		},
+		{
+			MethodName: "JoinDenomReward",
+			Handler:    _Msg_JoinDenomReward_Handler,
+		},
+		{
+			MethodName: "ExitDenomReward",
+			Handler:    _Msg_ExitDenomReward_Handler,
+		},
+		{
+			MethodName: "ClaimDenomRewards",
+			Handler:    _Msg_ClaimDenomRewards_Handler,
+		},
+		{
+			MethodName: "CreateDenomRewardSchedule",
+			Handler:    _Msg_CreateDenomRewardSchedule_Handler,
+		},
+		{
+			MethodName: "UpdateDenomRewardSchedule",
+			Handler:    _Msg_UpdateDenomRewardSchedule_Handler,
+		},
+		{
+			MethodName: "DistributeDenomRewards",
+			Handler:    _Msg_DistributeDenomRewards_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

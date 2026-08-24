@@ -6,6 +6,7 @@ import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "bze/rewards/params.proto";
 import "bze/rewards/store.proto";
 
@@ -71,7 +72,44 @@ service Query {
   // Queries a list of AllPendingUnlockParticipants items.
   rpc AllPendingUnlockParticipants (QueryAllPendingUnlockParticipantsRequest) returns (QueryAllPendingUnlockParticipantsResponse) {
     option (google.api.http).get = "/bze/rewards/all_pending_unlock_participants";
-  
+
+  }
+
+  // Queries a DenomReward by its staking denom.
+  rpc DenomReward (QueryDenomRewardRequest) returns (QueryDenomRewardResponse) {
+    option (google.api.http).get = "/bze/rewards/denom_reward/{denom}";
+
+  }
+
+  // Queries all DenomReward records.
+  rpc DenomRewardAll (QueryDenomRewardAllRequest) returns (QueryDenomRewardAllResponse) {
+    option (google.api.http).get = "/bze/rewards/all_denom_rewards";
+
+  }
+
+  // Queries every prize accumulator of a DenomReward (bounded by max_prize_denoms_per_dr).
+  rpc DenomRewardPrizes (QueryDenomRewardPrizesRequest) returns (QueryDenomRewardPrizesResponse) {
+    option (google.api.http).get = "/bze/rewards/denom_reward_prizes/{denom}";
+
+  }
+
+  // Queries the schedules of a DenomReward.
+  rpc DenomRewardSchedules (QueryDenomRewardSchedulesRequest) returns (QueryDenomRewardSchedulesResponse) {
+    option (google.api.http).get = "/bze/rewards/denom_reward_schedules/{denom}";
+
+  }
+
+  // Queries a participant's position in a DenomReward, including the pending
+  // (claimable) amount per prize denom.
+  rpc DenomRewardParticipant (QueryDenomRewardParticipantRequest) returns (QueryDenomRewardParticipantResponse) {
+    option (google.api.http).get = "/bze/rewards/denom_reward_participant/{address}/{denom}";
+
+  }
+
+  // Queries every DenomReward participation of an address.
+  rpc DenomRewardParticipations (QueryDenomRewardParticipationsRequest) returns (QueryDenomRewardParticipationsResponse) {
+    option (google.api.http).get = "/bze/rewards/denom_reward_participations/{address}";
+
   }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -161,5 +199,67 @@ message QueryAllPendingUnlockParticipantsRequest {
 message QueryAllPendingUnlockParticipantsResponse {
   repeated PendingUnlockParticipant list = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryDenomRewardRequest {
+  string denom = 1;
+}
+
+message QueryDenomRewardResponse {
+  DenomReward denom_reward = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryDenomRewardAllRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryDenomRewardAllResponse {
+  repeated DenomReward                            list       = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryDenomRewardPrizesRequest {
+  string denom = 1;
+}
+
+message QueryDenomRewardPrizesResponse {
+  repeated DenomRewardPrize list = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryDenomRewardSchedulesRequest {
+  string                                denom      = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryDenomRewardSchedulesResponse {
+  repeated DenomRewardSchedule                    list       = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryDenomRewardParticipantRequest {
+  string address = 1;
+  string denom   = 2;
+}
+
+message QueryDenomRewardParticipantResponse {
+  DenomRewardParticipant participant = 1 [(gogoproto.nullable) = false];
+
+  // pending holds the coins a claim would pay right now, one per prize denom
+  // (computed read-only; sub-unit dust is excluded, exactly like a real claim).
+  repeated cosmos.base.v1beta1.Coin pending = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"pending\"",
+    (gogoproto.jsontag)  = "pending,omitempty"
+  ];
+}
+
+message QueryDenomRewardParticipationsRequest {
+  string                                address    = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryDenomRewardParticipationsResponse {
+  repeated DenomRewardParticipant                 list       = 1 [(gogoproto.nullable) = false];
+           cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 

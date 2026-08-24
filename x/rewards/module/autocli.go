@@ -72,6 +72,42 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query all-pending-unlock-participants",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
+				{
+					RpcMethod:      "DenomReward",
+					Use:            "denom-reward [denom]",
+					Short:          "Query denom-reward",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
+				{
+					RpcMethod:      "DenomRewardAll",
+					Use:            "all-denom-rewards",
+					Short:          "Query all-denom-rewards",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
+				{
+					RpcMethod:      "DenomRewardPrizes",
+					Use:            "denom-reward-prizes [denom]",
+					Short:          "Query denom-reward-prizes",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
+				{
+					RpcMethod:      "DenomRewardSchedules",
+					Use:            "denom-reward-schedules [denom]",
+					Short:          "Query denom-reward-schedules",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
+				{
+					RpcMethod:      "DenomRewardParticipant",
+					Use:            "denom-reward-participant [address] [denom]",
+					Short:          "Query denom-reward-participant with its pending prizes",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}, {ProtoField: "denom"}},
+				},
+				{
+					RpcMethod:      "DenomRewardParticipations",
+					Use:            "denom-reward-participations [address]",
+					Short:          "Query denom-reward-participations",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
+				},
 
 				// this line is used by ignite scaffolding # autocli/query
 			},
@@ -131,6 +167,48 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:            "delete-staking-reward [reward-id]",
 					Short:          "Delete a finished, emptied staking reward record",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reward_id"}},
+				},
+				{
+					RpcMethod:      "CreateDenomReward",
+					Use:            "create-denom-reward [denom]",
+					Short:          "Send a create-denom-reward tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
+				{
+					RpcMethod:      "JoinDenomReward",
+					Use:            "join-denom-reward [denom] [amount]",
+					Short:          "Send a join-denom-reward tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}, {ProtoField: "amount"}},
+				},
+				{
+					RpcMethod:      "ExitDenomReward",
+					Use:            "exit-denom-reward [denom]",
+					Short:          "Send a exit-denom-reward tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
+				{
+					RpcMethod:      "ClaimDenomRewards",
+					Use:            "claim-denom-rewards [denom]",
+					Short:          "Send a claim-denom-rewards tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
+				{
+					RpcMethod:      "CreateDenomRewardSchedule",
+					Use:            "create-denom-reward-schedule [denom] [prize-denom] [daily-amount] [duration]",
+					Short:          "Send a create-denom-reward-schedule tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}, {ProtoField: "prize_denom"}, {ProtoField: "daily_amount"}, {ProtoField: "duration"}},
+				},
+				{
+					RpcMethod:      "UpdateDenomRewardSchedule",
+					Use:            "update-denom-reward-schedule [denom] [schedule-id] [duration]",
+					Short:          "Send a update-denom-reward-schedule tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}, {ProtoField: "schedule_id"}, {ProtoField: "duration"}},
+				},
+				{
+					RpcMethod:      "DistributeDenomRewards",
+					Use:            "distribute-denom-rewards [denom] [prize-denom] [amount]",
+					Short:          "Send a distribute-denom-rewards tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}, {ProtoField: "prize_denom"}, {ProtoField: "amount"}},
 				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},

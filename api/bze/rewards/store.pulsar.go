@@ -7061,6 +7061,3524 @@ func (x *fastReflection_TradingRewardExpirationQueue) ProtoMethods() *protoiface
 	}
 }
 
+var (
+	md_DenomReward               protoreflect.MessageDescriptor
+	fd_DenomReward_staking_denom protoreflect.FieldDescriptor
+	fd_DenomReward_lock          protoreflect.FieldDescriptor
+	fd_DenomReward_min_stake     protoreflect.FieldDescriptor
+	fd_DenomReward_staked_amount protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_rewards_store_proto_init()
+	md_DenomReward = File_bze_rewards_store_proto.Messages().ByName("DenomReward")
+	fd_DenomReward_staking_denom = md_DenomReward.Fields().ByName("staking_denom")
+	fd_DenomReward_lock = md_DenomReward.Fields().ByName("lock")
+	fd_DenomReward_min_stake = md_DenomReward.Fields().ByName("min_stake")
+	fd_DenomReward_staked_amount = md_DenomReward.Fields().ByName("staked_amount")
+}
+
+var _ protoreflect.Message = (*fastReflection_DenomReward)(nil)
+
+type fastReflection_DenomReward DenomReward
+
+func (x *DenomReward) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_DenomReward)(x)
+}
+
+func (x *DenomReward) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_rewards_store_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_DenomReward_messageType fastReflection_DenomReward_messageType
+var _ protoreflect.MessageType = fastReflection_DenomReward_messageType{}
+
+type fastReflection_DenomReward_messageType struct{}
+
+func (x fastReflection_DenomReward_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_DenomReward)(nil)
+}
+func (x fastReflection_DenomReward_messageType) New() protoreflect.Message {
+	return new(fastReflection_DenomReward)
+}
+func (x fastReflection_DenomReward_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_DenomReward
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_DenomReward) Descriptor() protoreflect.MessageDescriptor {
+	return md_DenomReward
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_DenomReward) Type() protoreflect.MessageType {
+	return _fastReflection_DenomReward_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_DenomReward) New() protoreflect.Message {
+	return new(fastReflection_DenomReward)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_DenomReward) Interface() protoreflect.ProtoMessage {
+	return (*DenomReward)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_DenomReward) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.StakingDenom != "" {
+		value := protoreflect.ValueOfString(x.StakingDenom)
+		if !f(fd_DenomReward_staking_denom, value) {
+			return
+		}
+	}
+	if x.Lock != uint32(0) {
+		value := protoreflect.ValueOfUint32(x.Lock)
+		if !f(fd_DenomReward_lock, value) {
+			return
+		}
+	}
+	if x.MinStake != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.MinStake)
+		if !f(fd_DenomReward_min_stake, value) {
+			return
+		}
+	}
+	if x.StakedAmount != "" {
+		value := protoreflect.ValueOfString(x.StakedAmount)
+		if !f(fd_DenomReward_staked_amount, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_DenomReward) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.rewards.DenomReward.staking_denom":
+		return x.StakingDenom != ""
+	case "bze.rewards.DenomReward.lock":
+		return x.Lock != uint32(0)
+	case "bze.rewards.DenomReward.min_stake":
+		return x.MinStake != uint64(0)
+	case "bze.rewards.DenomReward.staked_amount":
+		return x.StakedAmount != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomReward"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomReward does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomReward) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.rewards.DenomReward.staking_denom":
+		x.StakingDenom = ""
+	case "bze.rewards.DenomReward.lock":
+		x.Lock = uint32(0)
+	case "bze.rewards.DenomReward.min_stake":
+		x.MinStake = uint64(0)
+	case "bze.rewards.DenomReward.staked_amount":
+		x.StakedAmount = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomReward"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomReward does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_DenomReward) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.rewards.DenomReward.staking_denom":
+		value := x.StakingDenom
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.DenomReward.lock":
+		value := x.Lock
+		return protoreflect.ValueOfUint32(value)
+	case "bze.rewards.DenomReward.min_stake":
+		value := x.MinStake
+		return protoreflect.ValueOfUint64(value)
+	case "bze.rewards.DenomReward.staked_amount":
+		value := x.StakedAmount
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomReward"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomReward does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomReward) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.rewards.DenomReward.staking_denom":
+		x.StakingDenom = value.Interface().(string)
+	case "bze.rewards.DenomReward.lock":
+		x.Lock = uint32(value.Uint())
+	case "bze.rewards.DenomReward.min_stake":
+		x.MinStake = value.Uint()
+	case "bze.rewards.DenomReward.staked_amount":
+		x.StakedAmount = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomReward"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomReward does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomReward) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.rewards.DenomReward.staking_denom":
+		panic(fmt.Errorf("field staking_denom of message bze.rewards.DenomReward is not mutable"))
+	case "bze.rewards.DenomReward.lock":
+		panic(fmt.Errorf("field lock of message bze.rewards.DenomReward is not mutable"))
+	case "bze.rewards.DenomReward.min_stake":
+		panic(fmt.Errorf("field min_stake of message bze.rewards.DenomReward is not mutable"))
+	case "bze.rewards.DenomReward.staked_amount":
+		panic(fmt.Errorf("field staked_amount of message bze.rewards.DenomReward is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomReward"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomReward does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_DenomReward) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.rewards.DenomReward.staking_denom":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.DenomReward.lock":
+		return protoreflect.ValueOfUint32(uint32(0))
+	case "bze.rewards.DenomReward.min_stake":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "bze.rewards.DenomReward.staked_amount":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomReward"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomReward does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_DenomReward) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.rewards.DenomReward", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_DenomReward) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomReward) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_DenomReward) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_DenomReward) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*DenomReward)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.StakingDenom)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Lock != 0 {
+			n += 1 + runtime.Sov(uint64(x.Lock))
+		}
+		if x.MinStake != 0 {
+			n += 1 + runtime.Sov(uint64(x.MinStake))
+		}
+		l = len(x.StakedAmount)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*DenomReward)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.StakedAmount) > 0 {
+			i -= len(x.StakedAmount)
+			copy(dAtA[i:], x.StakedAmount)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.StakedAmount)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if x.MinStake != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.MinStake))
+			i--
+			dAtA[i] = 0x18
+		}
+		if x.Lock != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Lock))
+			i--
+			dAtA[i] = 0x10
+		}
+		if len(x.StakingDenom) > 0 {
+			i -= len(x.StakingDenom)
+			copy(dAtA[i:], x.StakingDenom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.StakingDenom)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*DenomReward)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DenomReward: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DenomReward: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StakingDenom", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.StakingDenom = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Lock", wireType)
+				}
+				x.Lock = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Lock |= uint32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MinStake", wireType)
+				}
+				x.MinStake = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.MinStake |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StakedAmount", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.StakedAmount = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_DenomRewardPrize                         protoreflect.MessageDescriptor
+	fd_DenomRewardPrize_staking_denom           protoreflect.FieldDescriptor
+	fd_DenomRewardPrize_prize_denom             protoreflect.FieldDescriptor
+	fd_DenomRewardPrize_distributed_stake       protoreflect.FieldDescriptor
+	fd_DenomRewardPrize_last_distribution_epoch protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_rewards_store_proto_init()
+	md_DenomRewardPrize = File_bze_rewards_store_proto.Messages().ByName("DenomRewardPrize")
+	fd_DenomRewardPrize_staking_denom = md_DenomRewardPrize.Fields().ByName("staking_denom")
+	fd_DenomRewardPrize_prize_denom = md_DenomRewardPrize.Fields().ByName("prize_denom")
+	fd_DenomRewardPrize_distributed_stake = md_DenomRewardPrize.Fields().ByName("distributed_stake")
+	fd_DenomRewardPrize_last_distribution_epoch = md_DenomRewardPrize.Fields().ByName("last_distribution_epoch")
+}
+
+var _ protoreflect.Message = (*fastReflection_DenomRewardPrize)(nil)
+
+type fastReflection_DenomRewardPrize DenomRewardPrize
+
+func (x *DenomRewardPrize) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_DenomRewardPrize)(x)
+}
+
+func (x *DenomRewardPrize) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_rewards_store_proto_msgTypes[13]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_DenomRewardPrize_messageType fastReflection_DenomRewardPrize_messageType
+var _ protoreflect.MessageType = fastReflection_DenomRewardPrize_messageType{}
+
+type fastReflection_DenomRewardPrize_messageType struct{}
+
+func (x fastReflection_DenomRewardPrize_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_DenomRewardPrize)(nil)
+}
+func (x fastReflection_DenomRewardPrize_messageType) New() protoreflect.Message {
+	return new(fastReflection_DenomRewardPrize)
+}
+func (x fastReflection_DenomRewardPrize_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_DenomRewardPrize
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_DenomRewardPrize) Descriptor() protoreflect.MessageDescriptor {
+	return md_DenomRewardPrize
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_DenomRewardPrize) Type() protoreflect.MessageType {
+	return _fastReflection_DenomRewardPrize_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_DenomRewardPrize) New() protoreflect.Message {
+	return new(fastReflection_DenomRewardPrize)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_DenomRewardPrize) Interface() protoreflect.ProtoMessage {
+	return (*DenomRewardPrize)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_DenomRewardPrize) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.StakingDenom != "" {
+		value := protoreflect.ValueOfString(x.StakingDenom)
+		if !f(fd_DenomRewardPrize_staking_denom, value) {
+			return
+		}
+	}
+	if x.PrizeDenom != "" {
+		value := protoreflect.ValueOfString(x.PrizeDenom)
+		if !f(fd_DenomRewardPrize_prize_denom, value) {
+			return
+		}
+	}
+	if x.DistributedStake != "" {
+		value := protoreflect.ValueOfString(x.DistributedStake)
+		if !f(fd_DenomRewardPrize_distributed_stake, value) {
+			return
+		}
+	}
+	if x.LastDistributionEpoch != int64(0) {
+		value := protoreflect.ValueOfInt64(x.LastDistributionEpoch)
+		if !f(fd_DenomRewardPrize_last_distribution_epoch, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_DenomRewardPrize) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardPrize.staking_denom":
+		return x.StakingDenom != ""
+	case "bze.rewards.DenomRewardPrize.prize_denom":
+		return x.PrizeDenom != ""
+	case "bze.rewards.DenomRewardPrize.distributed_stake":
+		return x.DistributedStake != ""
+	case "bze.rewards.DenomRewardPrize.last_distribution_epoch":
+		return x.LastDistributionEpoch != int64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardPrize"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardPrize does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardPrize) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardPrize.staking_denom":
+		x.StakingDenom = ""
+	case "bze.rewards.DenomRewardPrize.prize_denom":
+		x.PrizeDenom = ""
+	case "bze.rewards.DenomRewardPrize.distributed_stake":
+		x.DistributedStake = ""
+	case "bze.rewards.DenomRewardPrize.last_distribution_epoch":
+		x.LastDistributionEpoch = int64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardPrize"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardPrize does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_DenomRewardPrize) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.rewards.DenomRewardPrize.staking_denom":
+		value := x.StakingDenom
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.DenomRewardPrize.prize_denom":
+		value := x.PrizeDenom
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.DenomRewardPrize.distributed_stake":
+		value := x.DistributedStake
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.DenomRewardPrize.last_distribution_epoch":
+		value := x.LastDistributionEpoch
+		return protoreflect.ValueOfInt64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardPrize"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardPrize does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardPrize) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardPrize.staking_denom":
+		x.StakingDenom = value.Interface().(string)
+	case "bze.rewards.DenomRewardPrize.prize_denom":
+		x.PrizeDenom = value.Interface().(string)
+	case "bze.rewards.DenomRewardPrize.distributed_stake":
+		x.DistributedStake = value.Interface().(string)
+	case "bze.rewards.DenomRewardPrize.last_distribution_epoch":
+		x.LastDistributionEpoch = value.Int()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardPrize"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardPrize does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardPrize) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardPrize.staking_denom":
+		panic(fmt.Errorf("field staking_denom of message bze.rewards.DenomRewardPrize is not mutable"))
+	case "bze.rewards.DenomRewardPrize.prize_denom":
+		panic(fmt.Errorf("field prize_denom of message bze.rewards.DenomRewardPrize is not mutable"))
+	case "bze.rewards.DenomRewardPrize.distributed_stake":
+		panic(fmt.Errorf("field distributed_stake of message bze.rewards.DenomRewardPrize is not mutable"))
+	case "bze.rewards.DenomRewardPrize.last_distribution_epoch":
+		panic(fmt.Errorf("field last_distribution_epoch of message bze.rewards.DenomRewardPrize is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardPrize"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardPrize does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_DenomRewardPrize) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardPrize.staking_denom":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.DenomRewardPrize.prize_denom":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.DenomRewardPrize.distributed_stake":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.DenomRewardPrize.last_distribution_epoch":
+		return protoreflect.ValueOfInt64(int64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardPrize"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardPrize does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_DenomRewardPrize) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.rewards.DenomRewardPrize", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_DenomRewardPrize) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardPrize) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_DenomRewardPrize) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_DenomRewardPrize) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*DenomRewardPrize)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.StakingDenom)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.PrizeDenom)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.DistributedStake)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.LastDistributionEpoch != 0 {
+			n += 1 + runtime.Sov(uint64(x.LastDistributionEpoch))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*DenomRewardPrize)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.LastDistributionEpoch != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.LastDistributionEpoch))
+			i--
+			dAtA[i] = 0x20
+		}
+		if len(x.DistributedStake) > 0 {
+			i -= len(x.DistributedStake)
+			copy(dAtA[i:], x.DistributedStake)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.DistributedStake)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.PrizeDenom) > 0 {
+			i -= len(x.PrizeDenom)
+			copy(dAtA[i:], x.PrizeDenom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.PrizeDenom)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.StakingDenom) > 0 {
+			i -= len(x.StakingDenom)
+			copy(dAtA[i:], x.StakingDenom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.StakingDenom)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*DenomRewardPrize)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DenomRewardPrize: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DenomRewardPrize: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StakingDenom", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.StakingDenom = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PrizeDenom", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PrizeDenom = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DistributedStake", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.DistributedStake = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field LastDistributionEpoch", wireType)
+				}
+				x.LastDistributionEpoch = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.LastDistributionEpoch |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_DenomRewardParticipant               protoreflect.MessageDescriptor
+	fd_DenomRewardParticipant_address       protoreflect.FieldDescriptor
+	fd_DenomRewardParticipant_staking_denom protoreflect.FieldDescriptor
+	fd_DenomRewardParticipant_amount        protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_rewards_store_proto_init()
+	md_DenomRewardParticipant = File_bze_rewards_store_proto.Messages().ByName("DenomRewardParticipant")
+	fd_DenomRewardParticipant_address = md_DenomRewardParticipant.Fields().ByName("address")
+	fd_DenomRewardParticipant_staking_denom = md_DenomRewardParticipant.Fields().ByName("staking_denom")
+	fd_DenomRewardParticipant_amount = md_DenomRewardParticipant.Fields().ByName("amount")
+}
+
+var _ protoreflect.Message = (*fastReflection_DenomRewardParticipant)(nil)
+
+type fastReflection_DenomRewardParticipant DenomRewardParticipant
+
+func (x *DenomRewardParticipant) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_DenomRewardParticipant)(x)
+}
+
+func (x *DenomRewardParticipant) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_rewards_store_proto_msgTypes[14]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_DenomRewardParticipant_messageType fastReflection_DenomRewardParticipant_messageType
+var _ protoreflect.MessageType = fastReflection_DenomRewardParticipant_messageType{}
+
+type fastReflection_DenomRewardParticipant_messageType struct{}
+
+func (x fastReflection_DenomRewardParticipant_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_DenomRewardParticipant)(nil)
+}
+func (x fastReflection_DenomRewardParticipant_messageType) New() protoreflect.Message {
+	return new(fastReflection_DenomRewardParticipant)
+}
+func (x fastReflection_DenomRewardParticipant_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_DenomRewardParticipant
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_DenomRewardParticipant) Descriptor() protoreflect.MessageDescriptor {
+	return md_DenomRewardParticipant
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_DenomRewardParticipant) Type() protoreflect.MessageType {
+	return _fastReflection_DenomRewardParticipant_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_DenomRewardParticipant) New() protoreflect.Message {
+	return new(fastReflection_DenomRewardParticipant)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_DenomRewardParticipant) Interface() protoreflect.ProtoMessage {
+	return (*DenomRewardParticipant)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_DenomRewardParticipant) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Address != "" {
+		value := protoreflect.ValueOfString(x.Address)
+		if !f(fd_DenomRewardParticipant_address, value) {
+			return
+		}
+	}
+	if x.StakingDenom != "" {
+		value := protoreflect.ValueOfString(x.StakingDenom)
+		if !f(fd_DenomRewardParticipant_staking_denom, value) {
+			return
+		}
+	}
+	if x.Amount != "" {
+		value := protoreflect.ValueOfString(x.Amount)
+		if !f(fd_DenomRewardParticipant_amount, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_DenomRewardParticipant) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardParticipant.address":
+		return x.Address != ""
+	case "bze.rewards.DenomRewardParticipant.staking_denom":
+		return x.StakingDenom != ""
+	case "bze.rewards.DenomRewardParticipant.amount":
+		return x.Amount != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardParticipant"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardParticipant does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardParticipant) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardParticipant.address":
+		x.Address = ""
+	case "bze.rewards.DenomRewardParticipant.staking_denom":
+		x.StakingDenom = ""
+	case "bze.rewards.DenomRewardParticipant.amount":
+		x.Amount = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardParticipant"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardParticipant does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_DenomRewardParticipant) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.rewards.DenomRewardParticipant.address":
+		value := x.Address
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.DenomRewardParticipant.staking_denom":
+		value := x.StakingDenom
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.DenomRewardParticipant.amount":
+		value := x.Amount
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardParticipant"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardParticipant does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardParticipant) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardParticipant.address":
+		x.Address = value.Interface().(string)
+	case "bze.rewards.DenomRewardParticipant.staking_denom":
+		x.StakingDenom = value.Interface().(string)
+	case "bze.rewards.DenomRewardParticipant.amount":
+		x.Amount = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardParticipant"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardParticipant does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardParticipant) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardParticipant.address":
+		panic(fmt.Errorf("field address of message bze.rewards.DenomRewardParticipant is not mutable"))
+	case "bze.rewards.DenomRewardParticipant.staking_denom":
+		panic(fmt.Errorf("field staking_denom of message bze.rewards.DenomRewardParticipant is not mutable"))
+	case "bze.rewards.DenomRewardParticipant.amount":
+		panic(fmt.Errorf("field amount of message bze.rewards.DenomRewardParticipant is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardParticipant"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardParticipant does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_DenomRewardParticipant) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardParticipant.address":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.DenomRewardParticipant.staking_denom":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.DenomRewardParticipant.amount":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardParticipant"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardParticipant does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_DenomRewardParticipant) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.rewards.DenomRewardParticipant", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_DenomRewardParticipant) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardParticipant) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_DenomRewardParticipant) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_DenomRewardParticipant) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*DenomRewardParticipant)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Address)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.StakingDenom)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Amount)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*DenomRewardParticipant)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Amount) > 0 {
+			i -= len(x.Amount)
+			copy(dAtA[i:], x.Amount)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Amount)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.StakingDenom) > 0 {
+			i -= len(x.StakingDenom)
+			copy(dAtA[i:], x.StakingDenom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.StakingDenom)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Address) > 0 {
+			i -= len(x.Address)
+			copy(dAtA[i:], x.Address)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Address)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*DenomRewardParticipant)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DenomRewardParticipant: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DenomRewardParticipant: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Address = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StakingDenom", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.StakingDenom = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Amount = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_DenomRewardParticipantIndex               protoreflect.MessageDescriptor
+	fd_DenomRewardParticipantIndex_address       protoreflect.FieldDescriptor
+	fd_DenomRewardParticipantIndex_staking_denom protoreflect.FieldDescriptor
+	fd_DenomRewardParticipantIndex_prize_denom   protoreflect.FieldDescriptor
+	fd_DenomRewardParticipantIndex_index         protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_rewards_store_proto_init()
+	md_DenomRewardParticipantIndex = File_bze_rewards_store_proto.Messages().ByName("DenomRewardParticipantIndex")
+	fd_DenomRewardParticipantIndex_address = md_DenomRewardParticipantIndex.Fields().ByName("address")
+	fd_DenomRewardParticipantIndex_staking_denom = md_DenomRewardParticipantIndex.Fields().ByName("staking_denom")
+	fd_DenomRewardParticipantIndex_prize_denom = md_DenomRewardParticipantIndex.Fields().ByName("prize_denom")
+	fd_DenomRewardParticipantIndex_index = md_DenomRewardParticipantIndex.Fields().ByName("index")
+}
+
+var _ protoreflect.Message = (*fastReflection_DenomRewardParticipantIndex)(nil)
+
+type fastReflection_DenomRewardParticipantIndex DenomRewardParticipantIndex
+
+func (x *DenomRewardParticipantIndex) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_DenomRewardParticipantIndex)(x)
+}
+
+func (x *DenomRewardParticipantIndex) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_rewards_store_proto_msgTypes[15]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_DenomRewardParticipantIndex_messageType fastReflection_DenomRewardParticipantIndex_messageType
+var _ protoreflect.MessageType = fastReflection_DenomRewardParticipantIndex_messageType{}
+
+type fastReflection_DenomRewardParticipantIndex_messageType struct{}
+
+func (x fastReflection_DenomRewardParticipantIndex_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_DenomRewardParticipantIndex)(nil)
+}
+func (x fastReflection_DenomRewardParticipantIndex_messageType) New() protoreflect.Message {
+	return new(fastReflection_DenomRewardParticipantIndex)
+}
+func (x fastReflection_DenomRewardParticipantIndex_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_DenomRewardParticipantIndex
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_DenomRewardParticipantIndex) Descriptor() protoreflect.MessageDescriptor {
+	return md_DenomRewardParticipantIndex
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_DenomRewardParticipantIndex) Type() protoreflect.MessageType {
+	return _fastReflection_DenomRewardParticipantIndex_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_DenomRewardParticipantIndex) New() protoreflect.Message {
+	return new(fastReflection_DenomRewardParticipantIndex)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_DenomRewardParticipantIndex) Interface() protoreflect.ProtoMessage {
+	return (*DenomRewardParticipantIndex)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_DenomRewardParticipantIndex) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Address != "" {
+		value := protoreflect.ValueOfString(x.Address)
+		if !f(fd_DenomRewardParticipantIndex_address, value) {
+			return
+		}
+	}
+	if x.StakingDenom != "" {
+		value := protoreflect.ValueOfString(x.StakingDenom)
+		if !f(fd_DenomRewardParticipantIndex_staking_denom, value) {
+			return
+		}
+	}
+	if x.PrizeDenom != "" {
+		value := protoreflect.ValueOfString(x.PrizeDenom)
+		if !f(fd_DenomRewardParticipantIndex_prize_denom, value) {
+			return
+		}
+	}
+	if x.Index != "" {
+		value := protoreflect.ValueOfString(x.Index)
+		if !f(fd_DenomRewardParticipantIndex_index, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_DenomRewardParticipantIndex) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardParticipantIndex.address":
+		return x.Address != ""
+	case "bze.rewards.DenomRewardParticipantIndex.staking_denom":
+		return x.StakingDenom != ""
+	case "bze.rewards.DenomRewardParticipantIndex.prize_denom":
+		return x.PrizeDenom != ""
+	case "bze.rewards.DenomRewardParticipantIndex.index":
+		return x.Index != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardParticipantIndex"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardParticipantIndex does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardParticipantIndex) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardParticipantIndex.address":
+		x.Address = ""
+	case "bze.rewards.DenomRewardParticipantIndex.staking_denom":
+		x.StakingDenom = ""
+	case "bze.rewards.DenomRewardParticipantIndex.prize_denom":
+		x.PrizeDenom = ""
+	case "bze.rewards.DenomRewardParticipantIndex.index":
+		x.Index = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardParticipantIndex"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardParticipantIndex does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_DenomRewardParticipantIndex) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.rewards.DenomRewardParticipantIndex.address":
+		value := x.Address
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.DenomRewardParticipantIndex.staking_denom":
+		value := x.StakingDenom
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.DenomRewardParticipantIndex.prize_denom":
+		value := x.PrizeDenom
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.DenomRewardParticipantIndex.index":
+		value := x.Index
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardParticipantIndex"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardParticipantIndex does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardParticipantIndex) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardParticipantIndex.address":
+		x.Address = value.Interface().(string)
+	case "bze.rewards.DenomRewardParticipantIndex.staking_denom":
+		x.StakingDenom = value.Interface().(string)
+	case "bze.rewards.DenomRewardParticipantIndex.prize_denom":
+		x.PrizeDenom = value.Interface().(string)
+	case "bze.rewards.DenomRewardParticipantIndex.index":
+		x.Index = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardParticipantIndex"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardParticipantIndex does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardParticipantIndex) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardParticipantIndex.address":
+		panic(fmt.Errorf("field address of message bze.rewards.DenomRewardParticipantIndex is not mutable"))
+	case "bze.rewards.DenomRewardParticipantIndex.staking_denom":
+		panic(fmt.Errorf("field staking_denom of message bze.rewards.DenomRewardParticipantIndex is not mutable"))
+	case "bze.rewards.DenomRewardParticipantIndex.prize_denom":
+		panic(fmt.Errorf("field prize_denom of message bze.rewards.DenomRewardParticipantIndex is not mutable"))
+	case "bze.rewards.DenomRewardParticipantIndex.index":
+		panic(fmt.Errorf("field index of message bze.rewards.DenomRewardParticipantIndex is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardParticipantIndex"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardParticipantIndex does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_DenomRewardParticipantIndex) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardParticipantIndex.address":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.DenomRewardParticipantIndex.staking_denom":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.DenomRewardParticipantIndex.prize_denom":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.DenomRewardParticipantIndex.index":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardParticipantIndex"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardParticipantIndex does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_DenomRewardParticipantIndex) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.rewards.DenomRewardParticipantIndex", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_DenomRewardParticipantIndex) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardParticipantIndex) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_DenomRewardParticipantIndex) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_DenomRewardParticipantIndex) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*DenomRewardParticipantIndex)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Address)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.StakingDenom)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.PrizeDenom)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Index)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*DenomRewardParticipantIndex)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Index) > 0 {
+			i -= len(x.Index)
+			copy(dAtA[i:], x.Index)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Index)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if len(x.PrizeDenom) > 0 {
+			i -= len(x.PrizeDenom)
+			copy(dAtA[i:], x.PrizeDenom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.PrizeDenom)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.StakingDenom) > 0 {
+			i -= len(x.StakingDenom)
+			copy(dAtA[i:], x.StakingDenom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.StakingDenom)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Address) > 0 {
+			i -= len(x.Address)
+			copy(dAtA[i:], x.Address)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Address)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*DenomRewardParticipantIndex)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DenomRewardParticipantIndex: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DenomRewardParticipantIndex: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Address = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StakingDenom", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.StakingDenom = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PrizeDenom", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PrizeDenom = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Index = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_DenomRewardSchedule               protoreflect.MessageDescriptor
+	fd_DenomRewardSchedule_schedule_id   protoreflect.FieldDescriptor
+	fd_DenomRewardSchedule_staking_denom protoreflect.FieldDescriptor
+	fd_DenomRewardSchedule_prize_denom   protoreflect.FieldDescriptor
+	fd_DenomRewardSchedule_daily_amount  protoreflect.FieldDescriptor
+	fd_DenomRewardSchedule_duration      protoreflect.FieldDescriptor
+	fd_DenomRewardSchedule_payouts       protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_rewards_store_proto_init()
+	md_DenomRewardSchedule = File_bze_rewards_store_proto.Messages().ByName("DenomRewardSchedule")
+	fd_DenomRewardSchedule_schedule_id = md_DenomRewardSchedule.Fields().ByName("schedule_id")
+	fd_DenomRewardSchedule_staking_denom = md_DenomRewardSchedule.Fields().ByName("staking_denom")
+	fd_DenomRewardSchedule_prize_denom = md_DenomRewardSchedule.Fields().ByName("prize_denom")
+	fd_DenomRewardSchedule_daily_amount = md_DenomRewardSchedule.Fields().ByName("daily_amount")
+	fd_DenomRewardSchedule_duration = md_DenomRewardSchedule.Fields().ByName("duration")
+	fd_DenomRewardSchedule_payouts = md_DenomRewardSchedule.Fields().ByName("payouts")
+}
+
+var _ protoreflect.Message = (*fastReflection_DenomRewardSchedule)(nil)
+
+type fastReflection_DenomRewardSchedule DenomRewardSchedule
+
+func (x *DenomRewardSchedule) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_DenomRewardSchedule)(x)
+}
+
+func (x *DenomRewardSchedule) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_rewards_store_proto_msgTypes[16]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_DenomRewardSchedule_messageType fastReflection_DenomRewardSchedule_messageType
+var _ protoreflect.MessageType = fastReflection_DenomRewardSchedule_messageType{}
+
+type fastReflection_DenomRewardSchedule_messageType struct{}
+
+func (x fastReflection_DenomRewardSchedule_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_DenomRewardSchedule)(nil)
+}
+func (x fastReflection_DenomRewardSchedule_messageType) New() protoreflect.Message {
+	return new(fastReflection_DenomRewardSchedule)
+}
+func (x fastReflection_DenomRewardSchedule_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_DenomRewardSchedule
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_DenomRewardSchedule) Descriptor() protoreflect.MessageDescriptor {
+	return md_DenomRewardSchedule
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_DenomRewardSchedule) Type() protoreflect.MessageType {
+	return _fastReflection_DenomRewardSchedule_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_DenomRewardSchedule) New() protoreflect.Message {
+	return new(fastReflection_DenomRewardSchedule)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_DenomRewardSchedule) Interface() protoreflect.ProtoMessage {
+	return (*DenomRewardSchedule)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_DenomRewardSchedule) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.ScheduleId != "" {
+		value := protoreflect.ValueOfString(x.ScheduleId)
+		if !f(fd_DenomRewardSchedule_schedule_id, value) {
+			return
+		}
+	}
+	if x.StakingDenom != "" {
+		value := protoreflect.ValueOfString(x.StakingDenom)
+		if !f(fd_DenomRewardSchedule_staking_denom, value) {
+			return
+		}
+	}
+	if x.PrizeDenom != "" {
+		value := protoreflect.ValueOfString(x.PrizeDenom)
+		if !f(fd_DenomRewardSchedule_prize_denom, value) {
+			return
+		}
+	}
+	if x.DailyAmount != "" {
+		value := protoreflect.ValueOfString(x.DailyAmount)
+		if !f(fd_DenomRewardSchedule_daily_amount, value) {
+			return
+		}
+	}
+	if x.Duration != uint32(0) {
+		value := protoreflect.ValueOfUint32(x.Duration)
+		if !f(fd_DenomRewardSchedule_duration, value) {
+			return
+		}
+	}
+	if x.Payouts != uint32(0) {
+		value := protoreflect.ValueOfUint32(x.Payouts)
+		if !f(fd_DenomRewardSchedule_payouts, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_DenomRewardSchedule) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardSchedule.schedule_id":
+		return x.ScheduleId != ""
+	case "bze.rewards.DenomRewardSchedule.staking_denom":
+		return x.StakingDenom != ""
+	case "bze.rewards.DenomRewardSchedule.prize_denom":
+		return x.PrizeDenom != ""
+	case "bze.rewards.DenomRewardSchedule.daily_amount":
+		return x.DailyAmount != ""
+	case "bze.rewards.DenomRewardSchedule.duration":
+		return x.Duration != uint32(0)
+	case "bze.rewards.DenomRewardSchedule.payouts":
+		return x.Payouts != uint32(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardSchedule"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardSchedule does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardSchedule) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardSchedule.schedule_id":
+		x.ScheduleId = ""
+	case "bze.rewards.DenomRewardSchedule.staking_denom":
+		x.StakingDenom = ""
+	case "bze.rewards.DenomRewardSchedule.prize_denom":
+		x.PrizeDenom = ""
+	case "bze.rewards.DenomRewardSchedule.daily_amount":
+		x.DailyAmount = ""
+	case "bze.rewards.DenomRewardSchedule.duration":
+		x.Duration = uint32(0)
+	case "bze.rewards.DenomRewardSchedule.payouts":
+		x.Payouts = uint32(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardSchedule"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardSchedule does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_DenomRewardSchedule) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.rewards.DenomRewardSchedule.schedule_id":
+		value := x.ScheduleId
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.DenomRewardSchedule.staking_denom":
+		value := x.StakingDenom
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.DenomRewardSchedule.prize_denom":
+		value := x.PrizeDenom
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.DenomRewardSchedule.daily_amount":
+		value := x.DailyAmount
+		return protoreflect.ValueOfString(value)
+	case "bze.rewards.DenomRewardSchedule.duration":
+		value := x.Duration
+		return protoreflect.ValueOfUint32(value)
+	case "bze.rewards.DenomRewardSchedule.payouts":
+		value := x.Payouts
+		return protoreflect.ValueOfUint32(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardSchedule"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardSchedule does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardSchedule) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardSchedule.schedule_id":
+		x.ScheduleId = value.Interface().(string)
+	case "bze.rewards.DenomRewardSchedule.staking_denom":
+		x.StakingDenom = value.Interface().(string)
+	case "bze.rewards.DenomRewardSchedule.prize_denom":
+		x.PrizeDenom = value.Interface().(string)
+	case "bze.rewards.DenomRewardSchedule.daily_amount":
+		x.DailyAmount = value.Interface().(string)
+	case "bze.rewards.DenomRewardSchedule.duration":
+		x.Duration = uint32(value.Uint())
+	case "bze.rewards.DenomRewardSchedule.payouts":
+		x.Payouts = uint32(value.Uint())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardSchedule"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardSchedule does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardSchedule) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardSchedule.schedule_id":
+		panic(fmt.Errorf("field schedule_id of message bze.rewards.DenomRewardSchedule is not mutable"))
+	case "bze.rewards.DenomRewardSchedule.staking_denom":
+		panic(fmt.Errorf("field staking_denom of message bze.rewards.DenomRewardSchedule is not mutable"))
+	case "bze.rewards.DenomRewardSchedule.prize_denom":
+		panic(fmt.Errorf("field prize_denom of message bze.rewards.DenomRewardSchedule is not mutable"))
+	case "bze.rewards.DenomRewardSchedule.daily_amount":
+		panic(fmt.Errorf("field daily_amount of message bze.rewards.DenomRewardSchedule is not mutable"))
+	case "bze.rewards.DenomRewardSchedule.duration":
+		panic(fmt.Errorf("field duration of message bze.rewards.DenomRewardSchedule is not mutable"))
+	case "bze.rewards.DenomRewardSchedule.payouts":
+		panic(fmt.Errorf("field payouts of message bze.rewards.DenomRewardSchedule is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardSchedule"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardSchedule does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_DenomRewardSchedule) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardSchedule.schedule_id":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.DenomRewardSchedule.staking_denom":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.DenomRewardSchedule.prize_denom":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.DenomRewardSchedule.daily_amount":
+		return protoreflect.ValueOfString("")
+	case "bze.rewards.DenomRewardSchedule.duration":
+		return protoreflect.ValueOfUint32(uint32(0))
+	case "bze.rewards.DenomRewardSchedule.payouts":
+		return protoreflect.ValueOfUint32(uint32(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardSchedule"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardSchedule does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_DenomRewardSchedule) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.rewards.DenomRewardSchedule", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_DenomRewardSchedule) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardSchedule) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_DenomRewardSchedule) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_DenomRewardSchedule) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*DenomRewardSchedule)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.ScheduleId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.StakingDenom)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.PrizeDenom)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.DailyAmount)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Duration != 0 {
+			n += 1 + runtime.Sov(uint64(x.Duration))
+		}
+		if x.Payouts != 0 {
+			n += 1 + runtime.Sov(uint64(x.Payouts))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*DenomRewardSchedule)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Payouts != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Payouts))
+			i--
+			dAtA[i] = 0x30
+		}
+		if x.Duration != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Duration))
+			i--
+			dAtA[i] = 0x28
+		}
+		if len(x.DailyAmount) > 0 {
+			i -= len(x.DailyAmount)
+			copy(dAtA[i:], x.DailyAmount)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.DailyAmount)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if len(x.PrizeDenom) > 0 {
+			i -= len(x.PrizeDenom)
+			copy(dAtA[i:], x.PrizeDenom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.PrizeDenom)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.StakingDenom) > 0 {
+			i -= len(x.StakingDenom)
+			copy(dAtA[i:], x.StakingDenom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.StakingDenom)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.ScheduleId) > 0 {
+			i -= len(x.ScheduleId)
+			copy(dAtA[i:], x.ScheduleId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ScheduleId)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*DenomRewardSchedule)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DenomRewardSchedule: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DenomRewardSchedule: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ScheduleId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ScheduleId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StakingDenom", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.StakingDenom = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PrizeDenom", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PrizeDenom = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DailyAmount", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.DailyAmount = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 5:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Duration", wireType)
+				}
+				x.Duration = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Duration |= uint32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 6:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Payouts", wireType)
+				}
+				x.Payouts = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Payouts |= uint32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_DenomRewardsDistributionQueue         protoreflect.MessageDescriptor
+	fd_DenomRewardsDistributionQueue_pending protoreflect.FieldDescriptor
+	fd_DenomRewardsDistributionQueue_cursor  protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_rewards_store_proto_init()
+	md_DenomRewardsDistributionQueue = File_bze_rewards_store_proto.Messages().ByName("DenomRewardsDistributionQueue")
+	fd_DenomRewardsDistributionQueue_pending = md_DenomRewardsDistributionQueue.Fields().ByName("pending")
+	fd_DenomRewardsDistributionQueue_cursor = md_DenomRewardsDistributionQueue.Fields().ByName("cursor")
+}
+
+var _ protoreflect.Message = (*fastReflection_DenomRewardsDistributionQueue)(nil)
+
+type fastReflection_DenomRewardsDistributionQueue DenomRewardsDistributionQueue
+
+func (x *DenomRewardsDistributionQueue) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_DenomRewardsDistributionQueue)(x)
+}
+
+func (x *DenomRewardsDistributionQueue) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_rewards_store_proto_msgTypes[17]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_DenomRewardsDistributionQueue_messageType fastReflection_DenomRewardsDistributionQueue_messageType
+var _ protoreflect.MessageType = fastReflection_DenomRewardsDistributionQueue_messageType{}
+
+type fastReflection_DenomRewardsDistributionQueue_messageType struct{}
+
+func (x fastReflection_DenomRewardsDistributionQueue_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_DenomRewardsDistributionQueue)(nil)
+}
+func (x fastReflection_DenomRewardsDistributionQueue_messageType) New() protoreflect.Message {
+	return new(fastReflection_DenomRewardsDistributionQueue)
+}
+func (x fastReflection_DenomRewardsDistributionQueue_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_DenomRewardsDistributionQueue
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_DenomRewardsDistributionQueue) Descriptor() protoreflect.MessageDescriptor {
+	return md_DenomRewardsDistributionQueue
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_DenomRewardsDistributionQueue) Type() protoreflect.MessageType {
+	return _fastReflection_DenomRewardsDistributionQueue_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_DenomRewardsDistributionQueue) New() protoreflect.Message {
+	return new(fastReflection_DenomRewardsDistributionQueue)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_DenomRewardsDistributionQueue) Interface() protoreflect.ProtoMessage {
+	return (*DenomRewardsDistributionQueue)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_DenomRewardsDistributionQueue) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Pending != false {
+		value := protoreflect.ValueOfBool(x.Pending)
+		if !f(fd_DenomRewardsDistributionQueue_pending, value) {
+			return
+		}
+	}
+	if x.Cursor != "" {
+		value := protoreflect.ValueOfString(x.Cursor)
+		if !f(fd_DenomRewardsDistributionQueue_cursor, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_DenomRewardsDistributionQueue) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardsDistributionQueue.pending":
+		return x.Pending != false
+	case "bze.rewards.DenomRewardsDistributionQueue.cursor":
+		return x.Cursor != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardsDistributionQueue"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardsDistributionQueue does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardsDistributionQueue) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardsDistributionQueue.pending":
+		x.Pending = false
+	case "bze.rewards.DenomRewardsDistributionQueue.cursor":
+		x.Cursor = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardsDistributionQueue"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardsDistributionQueue does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_DenomRewardsDistributionQueue) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.rewards.DenomRewardsDistributionQueue.pending":
+		value := x.Pending
+		return protoreflect.ValueOfBool(value)
+	case "bze.rewards.DenomRewardsDistributionQueue.cursor":
+		value := x.Cursor
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardsDistributionQueue"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardsDistributionQueue does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardsDistributionQueue) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardsDistributionQueue.pending":
+		x.Pending = value.Bool()
+	case "bze.rewards.DenomRewardsDistributionQueue.cursor":
+		x.Cursor = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardsDistributionQueue"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardsDistributionQueue does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardsDistributionQueue) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardsDistributionQueue.pending":
+		panic(fmt.Errorf("field pending of message bze.rewards.DenomRewardsDistributionQueue is not mutable"))
+	case "bze.rewards.DenomRewardsDistributionQueue.cursor":
+		panic(fmt.Errorf("field cursor of message bze.rewards.DenomRewardsDistributionQueue is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardsDistributionQueue"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardsDistributionQueue does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_DenomRewardsDistributionQueue) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.rewards.DenomRewardsDistributionQueue.pending":
+		return protoreflect.ValueOfBool(false)
+	case "bze.rewards.DenomRewardsDistributionQueue.cursor":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.rewards.DenomRewardsDistributionQueue"))
+		}
+		panic(fmt.Errorf("message bze.rewards.DenomRewardsDistributionQueue does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_DenomRewardsDistributionQueue) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.rewards.DenomRewardsDistributionQueue", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_DenomRewardsDistributionQueue) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomRewardsDistributionQueue) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_DenomRewardsDistributionQueue) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_DenomRewardsDistributionQueue) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*DenomRewardsDistributionQueue)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Pending {
+			n += 2
+		}
+		l = len(x.Cursor)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*DenomRewardsDistributionQueue)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Cursor) > 0 {
+			i -= len(x.Cursor)
+			copy(dAtA[i:], x.Cursor)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Cursor)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if x.Pending {
+			i--
+			if x.Pending {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
+			}
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*DenomRewardsDistributionQueue)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DenomRewardsDistributionQueue: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DenomRewardsDistributionQueue: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Pending", wireType)
+				}
+				var v int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				x.Pending = bool(v != 0)
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Cursor", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Cursor = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -7726,6 +11244,362 @@ func (x *TradingRewardExpirationQueue) GetRemovalEpochs() []uint32 {
 	return nil
 }
 
+// DenomReward is a generic per-denom staking pool. One DenomReward exists per
+// staking denom (unique chain-wide). lock and min_stake are snapshotted from the
+// module params at creation time and never change afterwards.
+type DenomReward struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	StakingDenom string `protobuf:"bytes,1,opt,name=staking_denom,json=stakingDenom,proto3" json:"staking_denom,omitempty"` // identity - one DenomReward per denom
+	Lock         uint32 `protobuf:"varint,2,opt,name=lock,proto3" json:"lock,omitempty"`                                    // days; snapshot from params at creation
+	MinStake     uint64 `protobuf:"varint,3,opt,name=min_stake,json=minStake,proto3" json:"min_stake,omitempty"`            // snapshot from params at creation
+	StakedAmount string `protobuf:"bytes,4,opt,name=staked_amount,json=stakedAmount,proto3" json:"staked_amount,omitempty"` // total staked T
+}
+
+func (x *DenomReward) Reset() {
+	*x = DenomReward{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_rewards_store_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DenomReward) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DenomReward) ProtoMessage() {}
+
+// Deprecated: Use DenomReward.ProtoReflect.Descriptor instead.
+func (*DenomReward) Descriptor() ([]byte, []int) {
+	return file_bze_rewards_store_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *DenomReward) GetStakingDenom() string {
+	if x != nil {
+		return x.StakingDenom
+	}
+	return ""
+}
+
+func (x *DenomReward) GetLock() uint32 {
+	if x != nil {
+		return x.Lock
+	}
+	return 0
+}
+
+func (x *DenomReward) GetMinStake() uint64 {
+	if x != nil {
+		return x.MinStake
+	}
+	return 0
+}
+
+func (x *DenomReward) GetStakedAmount() string {
+	if x != nil {
+		return x.StakedAmount
+	}
+	return ""
+}
+
+// DenomRewardPrize is the accumulator for a (staking_denom, prize_denom) pair.
+type DenomRewardPrize struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	StakingDenom          string `protobuf:"bytes,1,opt,name=staking_denom,json=stakingDenom,proto3" json:"staking_denom,omitempty"`
+	PrizeDenom            string `protobuf:"bytes,2,opt,name=prize_denom,json=prizeDenom,proto3" json:"prize_denom,omitempty"`
+	DistributedStake      string `protobuf:"bytes,3,opt,name=distributed_stake,json=distributedStake,proto3" json:"distributed_stake,omitempty"`                   // S, starts at 0
+	LastDistributionEpoch int64  `protobuf:"varint,4,opt,name=last_distribution_epoch,json=lastDistributionEpoch,proto3" json:"last_distribution_epoch,omitempty"` // day-epoch count of last distribution
+}
+
+func (x *DenomRewardPrize) Reset() {
+	*x = DenomRewardPrize{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_rewards_store_proto_msgTypes[13]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DenomRewardPrize) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DenomRewardPrize) ProtoMessage() {}
+
+// Deprecated: Use DenomRewardPrize.ProtoReflect.Descriptor instead.
+func (*DenomRewardPrize) Descriptor() ([]byte, []int) {
+	return file_bze_rewards_store_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *DenomRewardPrize) GetStakingDenom() string {
+	if x != nil {
+		return x.StakingDenom
+	}
+	return ""
+}
+
+func (x *DenomRewardPrize) GetPrizeDenom() string {
+	if x != nil {
+		return x.PrizeDenom
+	}
+	return ""
+}
+
+func (x *DenomRewardPrize) GetDistributedStake() string {
+	if x != nil {
+		return x.DistributedStake
+	}
+	return ""
+}
+
+func (x *DenomRewardPrize) GetLastDistributionEpoch() int64 {
+	if x != nil {
+		return x.LastDistributionEpoch
+	}
+	return 0
+}
+
+// DenomRewardParticipant is a staker's position in a DenomReward.
+type DenomRewardParticipant struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Address      string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	StakingDenom string `protobuf:"bytes,2,opt,name=staking_denom,json=stakingDenom,proto3" json:"staking_denom,omitempty"`
+	Amount       string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"` // stake[address]
+}
+
+func (x *DenomRewardParticipant) Reset() {
+	*x = DenomRewardParticipant{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_rewards_store_proto_msgTypes[14]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DenomRewardParticipant) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DenomRewardParticipant) ProtoMessage() {}
+
+// Deprecated: Use DenomRewardParticipant.ProtoReflect.Descriptor instead.
+func (*DenomRewardParticipant) Descriptor() ([]byte, []int) {
+	return file_bze_rewards_store_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *DenomRewardParticipant) GetAddress() string {
+	if x != nil {
+		return x.Address
+	}
+	return ""
+}
+
+func (x *DenomRewardParticipant) GetStakingDenom() string {
+	if x != nil {
+		return x.StakingDenom
+	}
+	return ""
+}
+
+func (x *DenomRewardParticipant) GetAmount() string {
+	if x != nil {
+		return x.Amount
+	}
+	return ""
+}
+
+// DenomRewardParticipantIndex records the accumulator value S seen at the
+// participant's last settlement for a given prize denom.
+type DenomRewardParticipantIndex struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Address      string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	StakingDenom string `protobuf:"bytes,2,opt,name=staking_denom,json=stakingDenom,proto3" json:"staking_denom,omitempty"`
+	PrizeDenom   string `protobuf:"bytes,3,opt,name=prize_denom,json=prizeDenom,proto3" json:"prize_denom,omitempty"`
+	Index        string `protobuf:"bytes,4,opt,name=index,proto3" json:"index,omitempty"` // S at last settlement
+}
+
+func (x *DenomRewardParticipantIndex) Reset() {
+	*x = DenomRewardParticipantIndex{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_rewards_store_proto_msgTypes[15]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DenomRewardParticipantIndex) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DenomRewardParticipantIndex) ProtoMessage() {}
+
+// Deprecated: Use DenomRewardParticipantIndex.ProtoReflect.Descriptor instead.
+func (*DenomRewardParticipantIndex) Descriptor() ([]byte, []int) {
+	return file_bze_rewards_store_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *DenomRewardParticipantIndex) GetAddress() string {
+	if x != nil {
+		return x.Address
+	}
+	return ""
+}
+
+func (x *DenomRewardParticipantIndex) GetStakingDenom() string {
+	if x != nil {
+		return x.StakingDenom
+	}
+	return ""
+}
+
+func (x *DenomRewardParticipantIndex) GetPrizeDenom() string {
+	if x != nil {
+		return x.PrizeDenom
+	}
+	return ""
+}
+
+func (x *DenomRewardParticipantIndex) GetIndex() string {
+	if x != nil {
+		return x.Index
+	}
+	return ""
+}
+
+// DenomRewardSchedule is an SR-style reward campaign attached to a DenomReward.
+type DenomRewardSchedule struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ScheduleId   string `protobuf:"bytes,1,opt,name=schedule_id,json=scheduleId,proto3" json:"schedule_id,omitempty"` // zero-filled global counter
+	StakingDenom string `protobuf:"bytes,2,opt,name=staking_denom,json=stakingDenom,proto3" json:"staking_denom,omitempty"`
+	PrizeDenom   string `protobuf:"bytes,3,opt,name=prize_denom,json=prizeDenom,proto3" json:"prize_denom,omitempty"`
+	DailyAmount  string `protobuf:"bytes,4,opt,name=daily_amount,json=dailyAmount,proto3" json:"daily_amount,omitempty"`
+	Duration     uint32 `protobuf:"varint,5,opt,name=duration,proto3" json:"duration,omitempty"` // days
+	Payouts      uint32 `protobuf:"varint,6,opt,name=payouts,proto3" json:"payouts,omitempty"`   // days already distributed
+}
+
+func (x *DenomRewardSchedule) Reset() {
+	*x = DenomRewardSchedule{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_rewards_store_proto_msgTypes[16]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DenomRewardSchedule) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DenomRewardSchedule) ProtoMessage() {}
+
+// Deprecated: Use DenomRewardSchedule.ProtoReflect.Descriptor instead.
+func (*DenomRewardSchedule) Descriptor() ([]byte, []int) {
+	return file_bze_rewards_store_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *DenomRewardSchedule) GetScheduleId() string {
+	if x != nil {
+		return x.ScheduleId
+	}
+	return ""
+}
+
+func (x *DenomRewardSchedule) GetStakingDenom() string {
+	if x != nil {
+		return x.StakingDenom
+	}
+	return ""
+}
+
+func (x *DenomRewardSchedule) GetPrizeDenom() string {
+	if x != nil {
+		return x.PrizeDenom
+	}
+	return ""
+}
+
+func (x *DenomRewardSchedule) GetDailyAmount() string {
+	if x != nil {
+		return x.DailyAmount
+	}
+	return ""
+}
+
+func (x *DenomRewardSchedule) GetDuration() uint32 {
+	if x != nil {
+		return x.Duration
+	}
+	return 0
+}
+
+func (x *DenomRewardSchedule) GetPayouts() uint32 {
+	if x != nil {
+		return x.Payouts
+	}
+	return 0
+}
+
+// DenomRewardsDistributionQueue mirrors StakingRewardsDistributionQueue for the
+// daily distribution of denom reward schedules.
+type DenomRewardsDistributionQueue struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Pending bool   `protobuf:"varint,1,opt,name=pending,proto3" json:"pending,omitempty"`
+	Cursor  string `protobuf:"bytes,2,opt,name=cursor,proto3" json:"cursor,omitempty"` // last processed schedule composite key
+}
+
+func (x *DenomRewardsDistributionQueue) Reset() {
+	*x = DenomRewardsDistributionQueue{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_rewards_store_proto_msgTypes[17]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DenomRewardsDistributionQueue) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DenomRewardsDistributionQueue) ProtoMessage() {}
+
+// Deprecated: Use DenomRewardsDistributionQueue.ProtoReflect.Descriptor instead.
+func (*DenomRewardsDistributionQueue) Descriptor() ([]byte, []int) {
+	return file_bze_rewards_store_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *DenomRewardsDistributionQueue) GetPending() bool {
+	if x != nil {
+		return x.Pending
+	}
+	return false
+}
+
+func (x *DenomRewardsDistributionQueue) GetCursor() string {
+	if x != nil {
+		return x.Cursor
+	}
+	return ""
+}
+
 var File_bze_rewards_store_proto protoreflect.FileDescriptor
 
 var file_bze_rewards_store_proto_rawDesc = []byte{
@@ -7829,18 +11703,91 @@ var file_bze_rewards_store_proto_rawDesc = []byte{
 	0x6e, 0x67, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x45, 0x78, 0x70, 0x69, 0x72, 0x61, 0x74, 0x69,
 	0x6f, 0x6e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12, 0x25, 0x0a, 0x0e, 0x72, 0x65, 0x6d, 0x6f, 0x76,
 	0x61, 0x6c, 0x5f, 0x65, 0x70, 0x6f, 0x63, 0x68, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0d, 0x52,
-	0x0d, 0x72, 0x65, 0x6d, 0x6f, 0x76, 0x61, 0x6c, 0x45, 0x70, 0x6f, 0x63, 0x68, 0x73, 0x42, 0x98,
-	0x01, 0x0a, 0x0f, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61, 0x72,
-	0x64, 0x73, 0x42, 0x0a, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
-	0x5a, 0x2c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65,
-	0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61,
-	0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xa2, 0x02,
-	0x03, 0x42, 0x52, 0x58, 0xaa, 0x02, 0x0b, 0x42, 0x7a, 0x65, 0x2e, 0x52, 0x65, 0x77, 0x61, 0x72,
-	0x64, 0x73, 0xca, 0x02, 0x0b, 0x42, 0x7a, 0x65, 0x5c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73,
-	0xe2, 0x02, 0x17, 0x42, 0x7a, 0x65, 0x5c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x5c, 0x47,
-	0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0c, 0x42, 0x7a, 0x65,
-	0x3a, 0x3a, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x0d, 0x72, 0x65, 0x6d, 0x6f, 0x76, 0x61, 0x6c, 0x45, 0x70, 0x6f, 0x63, 0x68, 0x73, 0x22, 0xbf,
+	0x01, 0x0a, 0x0b, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x12, 0x23,
+	0x0a, 0x0d, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x44, 0x65,
+	0x6e, 0x6f, 0x6d, 0x12, 0x12, 0x0a, 0x04, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x0d, 0x52, 0x04, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x69, 0x6e, 0x5f, 0x73,
+	0x74, 0x61, 0x6b, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x08, 0x6d, 0x69, 0x6e, 0x53,
+	0x74, 0x61, 0x6b, 0x65, 0x12, 0x5a, 0x0a, 0x0d, 0x73, 0x74, 0x61, 0x6b, 0x65, 0x64, 0x5f, 0x61,
+	0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x42, 0x35, 0xc8, 0xde, 0x1f,
+	0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
+	0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xf2, 0xde, 0x1f, 0x14, 0x79, 0x61,
+	0x6d, 0x6c, 0x3a, 0x22, 0x73, 0x74, 0x61, 0x6b, 0x65, 0x64, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e,
+	0x74, 0x22, 0x52, 0x0c, 0x73, 0x74, 0x61, 0x6b, 0x65, 0x64, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74,
+	0x22, 0xfe, 0x01, 0x0a, 0x10, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64,
+	0x50, 0x72, 0x69, 0x7a, 0x65, 0x12, 0x23, 0x0a, 0x0d, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67,
+	0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x73, 0x74,
+	0x61, 0x6b, 0x69, 0x6e, 0x67, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72,
+	0x69, 0x7a, 0x65, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x0a, 0x70, 0x72, 0x69, 0x7a, 0x65, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x6c, 0x0a, 0x11, 0x64,
+	0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x64, 0x5f, 0x73, 0x74, 0x61, 0x6b, 0x65,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x3f, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74,
+	0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63, 0xf2, 0xde, 0x1f, 0x18, 0x79,
+	0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x64,
+	0x5f, 0x73, 0x74, 0x61, 0x6b, 0x65, 0x22, 0x52, 0x10, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62,
+	0x75, 0x74, 0x65, 0x64, 0x53, 0x74, 0x61, 0x6b, 0x65, 0x12, 0x36, 0x0a, 0x17, 0x6c, 0x61, 0x73,
+	0x74, 0x5f, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x65,
+	0x70, 0x6f, 0x63, 0x68, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x15, 0x6c, 0x61, 0x73, 0x74,
+	0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x70, 0x6f, 0x63,
+	0x68, 0x22, 0x9f, 0x01, 0x0a, 0x16, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72,
+	0x64, 0x50, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x12, 0x18, 0x0a, 0x07,
+	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x23, 0x0a, 0x0d, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e,
+	0x67, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x73,
+	0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x46, 0x0a, 0x06, 0x61,
+	0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2e, 0xc8, 0xde, 0x1f,
+	0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
+	0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xf2, 0xde, 0x1f, 0x0d, 0x79, 0x61,
+	0x6d, 0x6c, 0x3a, 0x22, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x52, 0x06, 0x61, 0x6d, 0x6f,
+	0x75, 0x6e, 0x74, 0x22, 0xc8, 0x01, 0x0a, 0x1b, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77,
+	0x61, 0x72, 0x64, 0x50, 0x61, 0x72, 0x74, 0x69, 0x63, 0x69, 0x70, 0x61, 0x6e, 0x74, 0x49, 0x6e,
+	0x64, 0x65, 0x78, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x23, 0x0a,
+	0x0d, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x44, 0x65, 0x6e,
+	0x6f, 0x6d, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x69, 0x7a, 0x65, 0x5f, 0x64, 0x65, 0x6e, 0x6f,
+	0x6d, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x70, 0x72, 0x69, 0x7a, 0x65, 0x44, 0x65,
+	0x6e, 0x6f, 0x6d, 0x12, 0x49, 0x0a, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x04, 0x20, 0x01,
+	0x28, 0x09, 0x42, 0x33, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65,
+	0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63, 0xf2, 0xde, 0x1f, 0x0c, 0x79, 0x61, 0x6d, 0x6c, 0x3a,
+	0x22, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x22, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x22, 0x8b,
+	0x02, 0x0a, 0x13, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x53, 0x63,
+	0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x73, 0x63, 0x68, 0x65, 0x64, 0x75,
+	0x6c, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x73, 0x63, 0x68,
+	0x65, 0x64, 0x75, 0x6c, 0x65, 0x49, 0x64, 0x12, 0x23, 0x0a, 0x0d, 0x73, 0x74, 0x61, 0x6b, 0x69,
+	0x6e, 0x67, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c,
+	0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x1f, 0x0a, 0x0b,
+	0x70, 0x72, 0x69, 0x7a, 0x65, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0a, 0x70, 0x72, 0x69, 0x7a, 0x65, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x57, 0x0a,
+	0x0c, 0x64, 0x61, 0x69, 0x6c, 0x79, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04, 0x20,
+	0x01, 0x28, 0x09, 0x42, 0x34, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49,
+	0x6e, 0x74, 0xf2, 0xde, 0x1f, 0x13, 0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x64, 0x61, 0x69, 0x6c,
+	0x79, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x52, 0x0b, 0x64, 0x61, 0x69, 0x6c, 0x79,
+	0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x12, 0x18, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6f, 0x75, 0x74, 0x73, 0x18, 0x06, 0x20,
+	0x01, 0x28, 0x0d, 0x52, 0x07, 0x70, 0x61, 0x79, 0x6f, 0x75, 0x74, 0x73, 0x22, 0x51, 0x0a, 0x1d,
+	0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x44, 0x69, 0x73, 0x74,
+	0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12, 0x18, 0x0a,
+	0x07, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07,
+	0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x12, 0x16, 0x0a, 0x06, 0x63, 0x75, 0x72, 0x73, 0x6f,
+	0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x63, 0x75, 0x72, 0x73, 0x6f, 0x72, 0x42,
+	0x98, 0x01, 0x0a, 0x0f, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x72, 0x65, 0x77, 0x61,
+	0x72, 0x64, 0x73, 0x42, 0x0a, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x2c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a,
+	0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f,
+	0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0xa2,
+	0x02, 0x03, 0x42, 0x52, 0x58, 0xaa, 0x02, 0x0b, 0x42, 0x7a, 0x65, 0x2e, 0x52, 0x65, 0x77, 0x61,
+	0x72, 0x64, 0x73, 0xca, 0x02, 0x0b, 0x42, 0x7a, 0x65, 0x5c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64,
+	0x73, 0xe2, 0x02, 0x17, 0x42, 0x7a, 0x65, 0x5c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x5c,
+	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0c, 0x42, 0x7a,
+	0x65, 0x3a, 0x3a, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -7855,7 +11802,7 @@ func file_bze_rewards_store_proto_rawDescGZIP() []byte {
 	return file_bze_rewards_store_proto_rawDescData
 }
 
-var file_bze_rewards_store_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_bze_rewards_store_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_bze_rewards_store_proto_goTypes = []interface{}{
 	(*StakingReward)(nil),                   // 0: bze.rewards.StakingReward
 	(*StakingRewardParticipant)(nil),        // 1: bze.rewards.StakingRewardParticipant
@@ -7869,6 +11816,12 @@ var file_bze_rewards_store_proto_goTypes = []interface{}{
 	(*MarketIdTradingRewardId)(nil),         // 9: bze.rewards.MarketIdTradingRewardId
 	(*StakingRewardsDistributionQueue)(nil), // 10: bze.rewards.StakingRewardsDistributionQueue
 	(*TradingRewardExpirationQueue)(nil),    // 11: bze.rewards.TradingRewardExpirationQueue
+	(*DenomReward)(nil),                     // 12: bze.rewards.DenomReward
+	(*DenomRewardPrize)(nil),                // 13: bze.rewards.DenomRewardPrize
+	(*DenomRewardParticipant)(nil),          // 14: bze.rewards.DenomRewardParticipant
+	(*DenomRewardParticipantIndex)(nil),     // 15: bze.rewards.DenomRewardParticipantIndex
+	(*DenomRewardSchedule)(nil),             // 16: bze.rewards.DenomRewardSchedule
+	(*DenomRewardsDistributionQueue)(nil),   // 17: bze.rewards.DenomRewardsDistributionQueue
 }
 var file_bze_rewards_store_proto_depIdxs = []int32{
 	7, // 0: bze.rewards.TradingRewardLeaderboard.list:type_name -> bze.rewards.TradingRewardLeaderboardEntry
@@ -8029,6 +11982,78 @@ func file_bze_rewards_store_proto_init() {
 				return nil
 			}
 		}
+		file_bze_rewards_store_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DenomReward); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bze_rewards_store_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DenomRewardPrize); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bze_rewards_store_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DenomRewardParticipant); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bze_rewards_store_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DenomRewardParticipantIndex); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bze_rewards_store_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DenomRewardSchedule); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bze_rewards_store_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DenomRewardsDistributionQueue); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -8036,7 +12061,7 @@ func file_bze_rewards_store_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_bze_rewards_store_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

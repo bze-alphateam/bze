@@ -70,3 +70,53 @@ message TradingRewardDistributionEvent {
   string prize_denom = 3;
   repeated string winners = 4;
 }
+
+message DenomRewardCreateEvent {
+  string denom = 1;
+}
+
+message DenomRewardJoinEvent {
+  string denom = 1;
+  string address = 2;
+  string amount = 3;
+}
+
+message DenomRewardExitEvent {
+  string denom = 1;
+  string address = 2;
+  string amount = 3; // the staked amount being withdrawn, in the DR's staking denom
+}
+
+message DenomRewardClaimEvent {
+  string denom = 1;
+  string address = 2;
+  string amounts = 3; // sdk.Coins rendered as string
+}
+
+message DenomRewardPrizeCreateEvent {
+  string denom = 1;
+  string prize_denom = 2;
+}
+
+message DenomRewardScheduleCreateEvent {
+  string schedule_id = 1;
+  string denom = 2;
+  string prize_denom = 3;
+  string daily_amount = 4;
+  uint32 duration = 5;
+}
+
+message DenomRewardScheduleUpdateEvent {
+  string schedule_id = 1;
+  uint32 duration = 2;
+}
+
+message DenomRewardScheduleFinishEvent {
+  string schedule_id = 1;
+}
+
+message DenomRewardDistributionEvent {
+  string denom = 1;
+  string prize_denom = 2;
+  string amount = 3;
+}

@@ -10,35 +10,23 @@ import (
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgCreateStakingReward{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgUpdateStakingReward{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgJoinStaking{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgExitStaking{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgClaimStakingRewards{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgDistributeStakingRewards{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgCreateTradingReward{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgActivateTradingReward{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgDeleteStakingReward{},
-	)
-	// this line is used by starport scaffolding # 3
-
-	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgCreateDenomReward{},
+		&MsgJoinDenomReward{},
+		&MsgExitDenomReward{},
+		&MsgClaimDenomRewards{},
+		&MsgCreateDenomRewardSchedule{},
+		&MsgUpdateDenomRewardSchedule{},
+		&MsgDistributeDenomRewards{},
 		&MsgUpdateParams{},
 	)
+	// this line is used by starport scaffolding # 3
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

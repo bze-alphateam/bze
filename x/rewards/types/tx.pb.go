@@ -5,8 +5,10 @@ package types
 
 import (
 	context "context"
+	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -1038,6 +1040,683 @@ func (m *MsgDeleteStakingRewardResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDeleteStakingRewardResponse proto.InternalMessageInfo
 
+// Denom Rewards messages. Service RPCs are added in the handler stories
+// (alongside autocli), mirroring how the module was built so far.
+type MsgCreateDenomReward struct {
+	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Denom   string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (m *MsgCreateDenomReward) Reset()         { *m = MsgCreateDenomReward{} }
+func (m *MsgCreateDenomReward) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateDenomReward) ProtoMessage()    {}
+func (*MsgCreateDenomReward) Descriptor() ([]byte, []int) {
+	return fileDescriptor_78488722246c3ce3, []int{20}
+}
+func (m *MsgCreateDenomReward) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateDenomReward) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateDenomReward.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateDenomReward) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateDenomReward.Merge(m, src)
+}
+func (m *MsgCreateDenomReward) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateDenomReward) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateDenomReward.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateDenomReward proto.InternalMessageInfo
+
+func (m *MsgCreateDenomReward) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgCreateDenomReward) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+type MsgCreateDenomRewardResponse struct {
+}
+
+func (m *MsgCreateDenomRewardResponse) Reset()         { *m = MsgCreateDenomRewardResponse{} }
+func (m *MsgCreateDenomRewardResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateDenomRewardResponse) ProtoMessage()    {}
+func (*MsgCreateDenomRewardResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_78488722246c3ce3, []int{21}
+}
+func (m *MsgCreateDenomRewardResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateDenomRewardResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateDenomRewardResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateDenomRewardResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateDenomRewardResponse.Merge(m, src)
+}
+func (m *MsgCreateDenomRewardResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateDenomRewardResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateDenomRewardResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateDenomRewardResponse proto.InternalMessageInfo
+
+type MsgJoinDenomReward struct {
+	Creator string                `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Denom   string                `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+	Amount  cosmossdk_io_math.Int `protobuf:"bytes,3,opt,name=amount,proto3,customtype=cosmossdk.io/math.Int" json:"amount" yaml:"amount"`
+}
+
+func (m *MsgJoinDenomReward) Reset()         { *m = MsgJoinDenomReward{} }
+func (m *MsgJoinDenomReward) String() string { return proto.CompactTextString(m) }
+func (*MsgJoinDenomReward) ProtoMessage()    {}
+func (*MsgJoinDenomReward) Descriptor() ([]byte, []int) {
+	return fileDescriptor_78488722246c3ce3, []int{22}
+}
+func (m *MsgJoinDenomReward) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgJoinDenomReward) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgJoinDenomReward.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgJoinDenomReward) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgJoinDenomReward.Merge(m, src)
+}
+func (m *MsgJoinDenomReward) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgJoinDenomReward) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgJoinDenomReward.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgJoinDenomReward proto.InternalMessageInfo
+
+func (m *MsgJoinDenomReward) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgJoinDenomReward) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+type MsgJoinDenomRewardResponse struct {
+}
+
+func (m *MsgJoinDenomRewardResponse) Reset()         { *m = MsgJoinDenomRewardResponse{} }
+func (m *MsgJoinDenomRewardResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgJoinDenomRewardResponse) ProtoMessage()    {}
+func (*MsgJoinDenomRewardResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_78488722246c3ce3, []int{23}
+}
+func (m *MsgJoinDenomRewardResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgJoinDenomRewardResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgJoinDenomRewardResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgJoinDenomRewardResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgJoinDenomRewardResponse.Merge(m, src)
+}
+func (m *MsgJoinDenomRewardResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgJoinDenomRewardResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgJoinDenomRewardResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgJoinDenomRewardResponse proto.InternalMessageInfo
+
+type MsgExitDenomReward struct {
+	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Denom   string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (m *MsgExitDenomReward) Reset()         { *m = MsgExitDenomReward{} }
+func (m *MsgExitDenomReward) String() string { return proto.CompactTextString(m) }
+func (*MsgExitDenomReward) ProtoMessage()    {}
+func (*MsgExitDenomReward) Descriptor() ([]byte, []int) {
+	return fileDescriptor_78488722246c3ce3, []int{24}
+}
+func (m *MsgExitDenomReward) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgExitDenomReward) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgExitDenomReward.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgExitDenomReward) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExitDenomReward.Merge(m, src)
+}
+func (m *MsgExitDenomReward) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgExitDenomReward) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExitDenomReward.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgExitDenomReward proto.InternalMessageInfo
+
+func (m *MsgExitDenomReward) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgExitDenomReward) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+type MsgExitDenomRewardResponse struct {
+}
+
+func (m *MsgExitDenomRewardResponse) Reset()         { *m = MsgExitDenomRewardResponse{} }
+func (m *MsgExitDenomRewardResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgExitDenomRewardResponse) ProtoMessage()    {}
+func (*MsgExitDenomRewardResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_78488722246c3ce3, []int{25}
+}
+func (m *MsgExitDenomRewardResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgExitDenomRewardResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgExitDenomRewardResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgExitDenomRewardResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgExitDenomRewardResponse.Merge(m, src)
+}
+func (m *MsgExitDenomRewardResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgExitDenomRewardResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgExitDenomRewardResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgExitDenomRewardResponse proto.InternalMessageInfo
+
+type MsgClaimDenomRewards struct {
+	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Denom   string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (m *MsgClaimDenomRewards) Reset()         { *m = MsgClaimDenomRewards{} }
+func (m *MsgClaimDenomRewards) String() string { return proto.CompactTextString(m) }
+func (*MsgClaimDenomRewards) ProtoMessage()    {}
+func (*MsgClaimDenomRewards) Descriptor() ([]byte, []int) {
+	return fileDescriptor_78488722246c3ce3, []int{26}
+}
+func (m *MsgClaimDenomRewards) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgClaimDenomRewards) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgClaimDenomRewards.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgClaimDenomRewards) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgClaimDenomRewards.Merge(m, src)
+}
+func (m *MsgClaimDenomRewards) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgClaimDenomRewards) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgClaimDenomRewards.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgClaimDenomRewards proto.InternalMessageInfo
+
+func (m *MsgClaimDenomRewards) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgClaimDenomRewards) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+type MsgClaimDenomRewardsResponse struct {
+	Amounts []types.Coin `protobuf:"bytes,1,rep,name=amounts,proto3" json:"amounts,omitempty" yaml:"amounts"`
+}
+
+func (m *MsgClaimDenomRewardsResponse) Reset()         { *m = MsgClaimDenomRewardsResponse{} }
+func (m *MsgClaimDenomRewardsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgClaimDenomRewardsResponse) ProtoMessage()    {}
+func (*MsgClaimDenomRewardsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_78488722246c3ce3, []int{27}
+}
+func (m *MsgClaimDenomRewardsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgClaimDenomRewardsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgClaimDenomRewardsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgClaimDenomRewardsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgClaimDenomRewardsResponse.Merge(m, src)
+}
+func (m *MsgClaimDenomRewardsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgClaimDenomRewardsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgClaimDenomRewardsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgClaimDenomRewardsResponse proto.InternalMessageInfo
+
+func (m *MsgClaimDenomRewardsResponse) GetAmounts() []types.Coin {
+	if m != nil {
+		return m.Amounts
+	}
+	return nil
+}
+
+type MsgCreateDenomRewardSchedule struct {
+	Creator     string                `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Denom       string                `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+	PrizeDenom  string                `protobuf:"bytes,3,opt,name=prize_denom,json=prizeDenom,proto3" json:"prize_denom,omitempty"`
+	DailyAmount cosmossdk_io_math.Int `protobuf:"bytes,4,opt,name=daily_amount,json=dailyAmount,proto3,customtype=cosmossdk.io/math.Int" json:"daily_amount" yaml:"daily_amount"`
+	Duration    string                `protobuf:"bytes,5,opt,name=duration,proto3" json:"duration,omitempty"`
+}
+
+func (m *MsgCreateDenomRewardSchedule) Reset()         { *m = MsgCreateDenomRewardSchedule{} }
+func (m *MsgCreateDenomRewardSchedule) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateDenomRewardSchedule) ProtoMessage()    {}
+func (*MsgCreateDenomRewardSchedule) Descriptor() ([]byte, []int) {
+	return fileDescriptor_78488722246c3ce3, []int{28}
+}
+func (m *MsgCreateDenomRewardSchedule) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateDenomRewardSchedule) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateDenomRewardSchedule.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateDenomRewardSchedule) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateDenomRewardSchedule.Merge(m, src)
+}
+func (m *MsgCreateDenomRewardSchedule) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateDenomRewardSchedule) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateDenomRewardSchedule.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateDenomRewardSchedule proto.InternalMessageInfo
+
+func (m *MsgCreateDenomRewardSchedule) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgCreateDenomRewardSchedule) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *MsgCreateDenomRewardSchedule) GetPrizeDenom() string {
+	if m != nil {
+		return m.PrizeDenom
+	}
+	return ""
+}
+
+func (m *MsgCreateDenomRewardSchedule) GetDuration() string {
+	if m != nil {
+		return m.Duration
+	}
+	return ""
+}
+
+type MsgCreateDenomRewardScheduleResponse struct {
+	ScheduleId string `protobuf:"bytes,1,opt,name=schedule_id,json=scheduleId,proto3" json:"schedule_id,omitempty"`
+}
+
+func (m *MsgCreateDenomRewardScheduleResponse) Reset()         { *m = MsgCreateDenomRewardScheduleResponse{} }
+func (m *MsgCreateDenomRewardScheduleResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateDenomRewardScheduleResponse) ProtoMessage()    {}
+func (*MsgCreateDenomRewardScheduleResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_78488722246c3ce3, []int{29}
+}
+func (m *MsgCreateDenomRewardScheduleResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateDenomRewardScheduleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateDenomRewardScheduleResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateDenomRewardScheduleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateDenomRewardScheduleResponse.Merge(m, src)
+}
+func (m *MsgCreateDenomRewardScheduleResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateDenomRewardScheduleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateDenomRewardScheduleResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateDenomRewardScheduleResponse proto.InternalMessageInfo
+
+func (m *MsgCreateDenomRewardScheduleResponse) GetScheduleId() string {
+	if m != nil {
+		return m.ScheduleId
+	}
+	return ""
+}
+
+type MsgUpdateDenomRewardSchedule struct {
+	Creator    string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Denom      string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+	ScheduleId string `protobuf:"bytes,3,opt,name=schedule_id,json=scheduleId,proto3" json:"schedule_id,omitempty"`
+	Duration   string `protobuf:"bytes,4,opt,name=duration,proto3" json:"duration,omitempty"`
+}
+
+func (m *MsgUpdateDenomRewardSchedule) Reset()         { *m = MsgUpdateDenomRewardSchedule{} }
+func (m *MsgUpdateDenomRewardSchedule) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateDenomRewardSchedule) ProtoMessage()    {}
+func (*MsgUpdateDenomRewardSchedule) Descriptor() ([]byte, []int) {
+	return fileDescriptor_78488722246c3ce3, []int{30}
+}
+func (m *MsgUpdateDenomRewardSchedule) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateDenomRewardSchedule) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateDenomRewardSchedule.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateDenomRewardSchedule) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateDenomRewardSchedule.Merge(m, src)
+}
+func (m *MsgUpdateDenomRewardSchedule) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateDenomRewardSchedule) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateDenomRewardSchedule.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateDenomRewardSchedule proto.InternalMessageInfo
+
+func (m *MsgUpdateDenomRewardSchedule) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgUpdateDenomRewardSchedule) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *MsgUpdateDenomRewardSchedule) GetScheduleId() string {
+	if m != nil {
+		return m.ScheduleId
+	}
+	return ""
+}
+
+func (m *MsgUpdateDenomRewardSchedule) GetDuration() string {
+	if m != nil {
+		return m.Duration
+	}
+	return ""
+}
+
+type MsgUpdateDenomRewardScheduleResponse struct {
+}
+
+func (m *MsgUpdateDenomRewardScheduleResponse) Reset()         { *m = MsgUpdateDenomRewardScheduleResponse{} }
+func (m *MsgUpdateDenomRewardScheduleResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateDenomRewardScheduleResponse) ProtoMessage()    {}
+func (*MsgUpdateDenomRewardScheduleResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_78488722246c3ce3, []int{31}
+}
+func (m *MsgUpdateDenomRewardScheduleResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateDenomRewardScheduleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateDenomRewardScheduleResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateDenomRewardScheduleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateDenomRewardScheduleResponse.Merge(m, src)
+}
+func (m *MsgUpdateDenomRewardScheduleResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateDenomRewardScheduleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateDenomRewardScheduleResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateDenomRewardScheduleResponse proto.InternalMessageInfo
+
+type MsgDistributeDenomRewards struct {
+	Creator    string                `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Denom      string                `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+	PrizeDenom string                `protobuf:"bytes,3,opt,name=prize_denom,json=prizeDenom,proto3" json:"prize_denom,omitempty"`
+	Amount     cosmossdk_io_math.Int `protobuf:"bytes,4,opt,name=amount,proto3,customtype=cosmossdk.io/math.Int" json:"amount" yaml:"amount"`
+}
+
+func (m *MsgDistributeDenomRewards) Reset()         { *m = MsgDistributeDenomRewards{} }
+func (m *MsgDistributeDenomRewards) String() string { return proto.CompactTextString(m) }
+func (*MsgDistributeDenomRewards) ProtoMessage()    {}
+func (*MsgDistributeDenomRewards) Descriptor() ([]byte, []int) {
+	return fileDescriptor_78488722246c3ce3, []int{32}
+}
+func (m *MsgDistributeDenomRewards) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgDistributeDenomRewards) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgDistributeDenomRewards.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgDistributeDenomRewards) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDistributeDenomRewards.Merge(m, src)
+}
+func (m *MsgDistributeDenomRewards) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgDistributeDenomRewards) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDistributeDenomRewards.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgDistributeDenomRewards proto.InternalMessageInfo
+
+func (m *MsgDistributeDenomRewards) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgDistributeDenomRewards) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *MsgDistributeDenomRewards) GetPrizeDenom() string {
+	if m != nil {
+		return m.PrizeDenom
+	}
+	return ""
+}
+
+type MsgDistributeDenomRewardsResponse struct {
+}
+
+func (m *MsgDistributeDenomRewardsResponse) Reset()         { *m = MsgDistributeDenomRewardsResponse{} }
+func (m *MsgDistributeDenomRewardsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgDistributeDenomRewardsResponse) ProtoMessage()    {}
+func (*MsgDistributeDenomRewardsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_78488722246c3ce3, []int{33}
+}
+func (m *MsgDistributeDenomRewardsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgDistributeDenomRewardsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgDistributeDenomRewardsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgDistributeDenomRewardsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDistributeDenomRewardsResponse.Merge(m, src)
+}
+func (m *MsgDistributeDenomRewardsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgDistributeDenomRewardsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDistributeDenomRewardsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgDistributeDenomRewardsResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgUpdateParams)(nil), "bze.rewards.MsgUpdateParams")
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "bze.rewards.MsgUpdateParamsResponse")
@@ -1059,70 +1738,113 @@ func init() {
 	proto.RegisterType((*MsgActivateTradingRewardResponse)(nil), "bze.rewards.MsgActivateTradingRewardResponse")
 	proto.RegisterType((*MsgDeleteStakingReward)(nil), "bze.rewards.MsgDeleteStakingReward")
 	proto.RegisterType((*MsgDeleteStakingRewardResponse)(nil), "bze.rewards.MsgDeleteStakingRewardResponse")
+	proto.RegisterType((*MsgCreateDenomReward)(nil), "bze.rewards.MsgCreateDenomReward")
+	proto.RegisterType((*MsgCreateDenomRewardResponse)(nil), "bze.rewards.MsgCreateDenomRewardResponse")
+	proto.RegisterType((*MsgJoinDenomReward)(nil), "bze.rewards.MsgJoinDenomReward")
+	proto.RegisterType((*MsgJoinDenomRewardResponse)(nil), "bze.rewards.MsgJoinDenomRewardResponse")
+	proto.RegisterType((*MsgExitDenomReward)(nil), "bze.rewards.MsgExitDenomReward")
+	proto.RegisterType((*MsgExitDenomRewardResponse)(nil), "bze.rewards.MsgExitDenomRewardResponse")
+	proto.RegisterType((*MsgClaimDenomRewards)(nil), "bze.rewards.MsgClaimDenomRewards")
+	proto.RegisterType((*MsgClaimDenomRewardsResponse)(nil), "bze.rewards.MsgClaimDenomRewardsResponse")
+	proto.RegisterType((*MsgCreateDenomRewardSchedule)(nil), "bze.rewards.MsgCreateDenomRewardSchedule")
+	proto.RegisterType((*MsgCreateDenomRewardScheduleResponse)(nil), "bze.rewards.MsgCreateDenomRewardScheduleResponse")
+	proto.RegisterType((*MsgUpdateDenomRewardSchedule)(nil), "bze.rewards.MsgUpdateDenomRewardSchedule")
+	proto.RegisterType((*MsgUpdateDenomRewardScheduleResponse)(nil), "bze.rewards.MsgUpdateDenomRewardScheduleResponse")
+	proto.RegisterType((*MsgDistributeDenomRewards)(nil), "bze.rewards.MsgDistributeDenomRewards")
+	proto.RegisterType((*MsgDistributeDenomRewardsResponse)(nil), "bze.rewards.MsgDistributeDenomRewardsResponse")
 }
 
 func init() { proto.RegisterFile("bze/rewards/tx.proto", fileDescriptor_78488722246c3ce3) }
 
 var fileDescriptor_78488722246c3ce3 = []byte{
-	// 925 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x57, 0xcf, 0x6f, 0xe3, 0x44,
-	0x14, 0x8e, 0xfb, 0x23, 0xdd, 0x4c, 0x0a, 0x08, 0x6f, 0xd8, 0xf5, 0xba, 0x4b, 0x36, 0x38, 0x2d,
-	0x2a, 0x85, 0x24, 0xa5, 0x88, 0x82, 0x22, 0x71, 0xe8, 0x0f, 0x90, 0x8a, 0x14, 0x81, 0x52, 0xb8,
-	0x70, 0x89, 0x26, 0xf1, 0xc8, 0xb5, 0x1a, 0x7b, 0x22, 0xcf, 0x24, 0xb4, 0x39, 0x21, 0x0e, 0x1c,
-	0x7a, 0x40, 0xfc, 0x07, 0x48, 0x9c, 0x7a, 0xac, 0x04, 0x7f, 0x44, 0x8f, 0x15, 0x27, 0x4e, 0x08,
-	0xb5, 0x87, 0xfe, 0x07, 0x9c, 0x38, 0x20, 0xcf, 0x4c, 0xdc, 0xb1, 0x3d, 0x09, 0xa6, 0x54, 0x5c,
-	0x76, 0x33, 0xef, 0x7b, 0x79, 0xef, 0x7b, 0x9f, 0x5f, 0xbe, 0x71, 0x41, 0xa9, 0x3b, 0x46, 0x8d,
-	0x00, 0x7d, 0x0d, 0x03, 0x9b, 0x34, 0xe8, 0x49, 0x7d, 0x10, 0x60, 0x8a, 0xf5, 0x62, 0x77, 0x8c,
-	0xea, 0x22, 0x6a, 0xbe, 0x0a, 0x3d, 0xd7, 0xc7, 0x0d, 0xf6, 0x2f, 0xc7, 0xcd, 0xa7, 0x3d, 0x4c,
-	0x3c, 0x4c, 0x1a, 0x1e, 0x71, 0x1a, 0xa3, 0x77, 0xc3, 0xff, 0x04, 0xf0, 0x8c, 0x03, 0x1d, 0x76,
-	0x6a, 0xf0, 0x83, 0x80, 0x4a, 0x0e, 0x76, 0x30, 0x8f, 0x87, 0x9f, 0x44, 0xd4, 0x90, 0xfb, 0x0f,
-	0x60, 0x00, 0x3d, 0x91, 0x6f, 0xfd, 0xac, 0x81, 0x57, 0x5a, 0xc4, 0xf9, 0x72, 0x60, 0x43, 0x8a,
-	0x3e, 0x67, 0x88, 0xbe, 0x0d, 0x0a, 0x70, 0x48, 0x8f, 0x70, 0xe0, 0xd2, 0x53, 0x43, 0xab, 0x68,
-	0xeb, 0x85, 0x5d, 0xe3, 0xd7, 0x5f, 0x6a, 0x25, 0xd1, 0x68, 0xc7, 0xb6, 0x03, 0x44, 0xc8, 0x21,
-	0x0d, 0x5c, 0xdf, 0x69, 0xdf, 0xa5, 0xea, 0xdb, 0x20, 0xcf, 0x6b, 0x1b, 0x73, 0x15, 0x6d, 0xbd,
-	0xb8, 0xf5, 0xb8, 0x2e, 0x0d, 0x58, 0xe7, 0xc5, 0x77, 0x0b, 0x97, 0xbf, 0xbf, 0xc8, 0x9d, 0xdf,
-	0x5e, 0x6c, 0x68, 0x6d, 0x91, 0xdd, 0xdc, 0xfc, 0xf6, 0xf6, 0x62, 0xe3, 0xae, 0xce, 0xd9, 0xed,
-	0xc5, 0xc6, 0xeb, 0x21, 0xe1, 0x93, 0x88, 0x72, 0x82, 0xa1, 0xf5, 0x0c, 0x3c, 0x4d, 0x84, 0xda,
-	0x88, 0x0c, 0xb0, 0x4f, 0x90, 0xf5, 0xe3, 0x1c, 0x78, 0xd2, 0x22, 0xce, 0x5e, 0x80, 0x20, 0x45,
-	0x87, 0x14, 0x1e, 0x87, 0x24, 0x59, 0x19, 0xdd, 0x00, 0x4b, 0xbd, 0x30, 0x8c, 0x03, 0x3e, 0x55,
-	0x7b, 0x72, 0xd4, 0xdf, 0x00, 0xcb, 0x83, 0xc0, 0x1d, 0xa3, 0x0e, 0xf4, 0xf0, 0xd0, 0xa7, 0x8c,
-	0x7f, 0xa1, 0x5d, 0x64, 0xb1, 0x1d, 0x16, 0xd2, 0x5f, 0x00, 0x7e, 0xec, 0xd8, 0xc8, 0xc7, 0x9e,
-	0x31, 0xcf, 0x32, 0x00, 0x0b, 0xed, 0x87, 0x11, 0xbd, 0x0a, 0x5e, 0x22, 0xbc, 0x9d, 0x48, 0x59,
-	0x60, 0x29, 0xcb, 0x22, 0xc8, 0x93, 0x4c, 0xf0, 0xc8, 0x1e, 0x06, 0x90, 0xba, 0xd8, 0x37, 0x16,
-	0x19, 0x1e, 0x9d, 0xf5, 0x15, 0x50, 0xf0, 0x5c, 0xbf, 0x13, 0xe6, 0x23, 0x23, 0xcf, 0x41, 0xcf,
-	0xf5, 0xc3, 0x19, 0x90, 0xae, 0x83, 0x85, 0x3e, 0xee, 0x1d, 0x1b, 0x4b, 0x2c, 0xce, 0x3e, 0x37,
-	0xdf, 0x0f, 0x75, 0x9b, 0xcc, 0x10, 0xaa, 0xb6, 0x9a, 0x52, 0x4d, 0x21, 0x83, 0xf5, 0x11, 0x28,
-	0xab, 0x91, 0x89, 0x86, 0x21, 0x13, 0x5e, 0xa3, 0xe3, 0xda, 0x42, 0xaa, 0x47, 0x3c, 0x70, 0x60,
-	0x5b, 0x3f, 0x69, 0x4c, 0x60, 0x2e, 0x7e, 0x56, 0x81, 0x63, 0x15, 0xe7, 0xe2, 0x15, 0x63, 0xa2,
-	0xcc, 0xc7, 0x45, 0xc9, 0x32, 0xa3, 0x82, 0x89, 0x55, 0x61, 0x33, 0x2a, 0x90, 0x68, 0x4f, 0xbe,
-	0xd7, 0xc0, 0xcb, 0x2d, 0xe2, 0x7c, 0x8a, 0xb9, 0xc2, 0xae, 0xef, 0xdc, 0x97, 0xfe, 0x13, 0x90,
-	0x17, 0x6b, 0xc3, 0xc9, 0x8b, 0x53, 0xb3, 0x96, 0xa4, 0xfe, 0x3c, 0x45, 0x5d, 0xea, 0x6e, 0x19,
-	0x4c, 0x56, 0x29, 0x12, 0x51, 0x1d, 0x31, 0xa6, 0x1f, 0x9f, 0xb8, 0xf4, 0xbf, 0x31, 0xcd, 0xc2,
-	0x48, 0xea, 0x22, 0x18, 0x49, 0x91, 0x88, 0xd1, 0x77, 0x7c, 0x07, 0xf6, 0xfa, 0xd0, 0xf5, 0x62,
-	0xf2, 0x92, 0xfb, 0x52, 0xcb, 0xb2, 0xcb, 0xe9, 0x6e, 0xd6, 0x87, 0x7c, 0x97, 0xd3, 0x48, 0xb4,
-	0xcb, 0x77, 0x4f, 0x47, 0x93, 0x9f, 0x8e, 0x75, 0xae, 0x81, 0x95, 0x16, 0x71, 0xf6, 0x5d, 0x42,
-	0x03, 0xb7, 0x3b, 0x4c, 0xac, 0x09, 0x79, 0xe8, 0x65, 0x68, 0x26, 0xe7, 0x7b, 0x2b, 0x35, 0xdf,
-	0x34, 0x2a, 0xd6, 0x1a, 0xa8, 0xce, 0x80, 0xa3, 0x87, 0xf2, 0x97, 0x26, 0x39, 0xdf, 0x17, 0x01,
-	0xb4, 0xff, 0x2f, 0xe7, 0x93, 0x7f, 0xbf, 0x0b, 0x0a, 0x53, 0x83, 0xc1, 0x31, 0xa2, 0xa1, 0x58,
-	0xc2, 0xf1, 0x78, 0xe0, 0xc0, 0xd6, 0x4b, 0x60, 0x91, 0xf4, 0x31, 0x25, 0xc2, 0xed, 0xf8, 0x21,
-	0xbb, 0xad, 0xc5, 0x66, 0x8c, 0xd9, 0x5a, 0x0c, 0xc9, 0x66, 0x6b, 0x67, 0x1a, 0x30, 0x5a, 0xc4,
-	0xd9, 0xe9, 0x51, 0x77, 0xf4, 0x2f, 0xf4, 0x9b, 0xb9, 0xd4, 0x1f, 0x24, 0x27, 0x79, 0x33, 0x35,
-	0x89, 0xb2, 0x9f, 0x65, 0x81, 0xca, 0x34, 0x2c, 0xf9, 0x1b, 0xdc, 0x47, 0x7d, 0xf4, 0x30, 0x3e,
-	0x9c, 0x45, 0x78, 0x45, 0x37, 0xe1, 0xb5, 0x0a, 0x64, 0x42, 0x75, 0xeb, 0xcf, 0x25, 0x30, 0xdf,
-	0x22, 0x8e, 0xde, 0x06, 0xcb, 0xb1, 0x17, 0x8d, 0xe7, 0xb1, 0x17, 0x84, 0xc4, 0x8d, 0x6e, 0xae,
-	0xce, 0x42, 0xa3, 0x87, 0xea, 0x80, 0xc7, 0xaa, 0xbb, 0xbe, 0x9a, 0xfc, 0xb2, 0x22, 0xc9, 0x7c,
-	0x3b, 0x43, 0x92, 0xdc, 0x48, 0x75, 0xe7, 0x55, 0xd5, 0x2c, 0xff, 0xa1, 0xd1, 0x8c, 0x9b, 0x49,
-	0xff, 0x0c, 0x14, 0xe5, 0x5b, 0x69, 0x25, 0xf9, 0x5d, 0x09, 0x34, 0xab, 0x33, 0x40, 0xb9, 0xa0,
-	0x7c, 0x79, 0xa4, 0x0a, 0x4a, 0x60, 0xba, 0xa0, 0xc2, 0xfe, 0x99, 0xe6, 0x0a, 0xeb, 0x4f, 0x6b,
-	0x9e, 0x4e, 0x52, 0x68, 0x3e, 0xc3, 0xbc, 0x47, 0xc0, 0x98, 0x6a, 0xd0, 0xeb, 0xc9, 0x42, 0xd3,
-	0x32, 0xcd, 0xcd, 0xac, 0x99, 0xe9, 0xa5, 0x8a, 0xdb, 0xc0, 0x94, 0xa5, 0x8a, 0x25, 0x4d, 0x5b,
-	0x2a, 0xb5, 0x25, 0x79, 0xe0, 0x35, 0xb5, 0xe3, 0xac, 0x25, 0xab, 0x28, 0xd3, 0xcc, 0x5a, 0xa6,
-	0x34, 0x79, 0x2e, 0x95, 0x5f, 0xa4, 0xe6, 0x52, 0x24, 0xa5, 0xe7, 0x9a, 0xf1, 0x8b, 0x37, 0x17,
-	0xbf, 0x09, 0xdf, 0xf0, 0x77, 0x3f, 0xb9, 0xbc, 0x2e, 0x6b, 0x57, 0xd7, 0x65, 0xed, 0x8f, 0xeb,
-	0xb2, 0xf6, 0xc3, 0x4d, 0x39, 0x77, 0x75, 0x53, 0xce, 0xfd, 0x76, 0x53, 0xce, 0x7d, 0xf5, 0x8e,
-	0xe3, 0xd2, 0xa3, 0x61, 0xb7, 0xde, 0xc3, 0x5e, 0xa3, 0x3b, 0x46, 0x35, 0xd8, 0x1f, 0x1c, 0x41,
-	0x8a, 0x20, 0x3b, 0x49, 0x9e, 0x43, 0x4f, 0x07, 0x88, 0x74, 0xf3, 0xec, 0x8f, 0x95, 0xf7, 0xfe,
-	0x0e, 0x00, 0x00, 0xff, 0xff, 0x1d, 0xb7, 0xf9, 0x1d, 0x48, 0x0d, 0x00, 0x00,
+	// 1392 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x58, 0xbd, 0x6f, 0xdb, 0x46,
+	0x14, 0x37, 0xfd, 0x95, 0xf8, 0xe4, 0x24, 0x08, 0xa3, 0x24, 0x34, 0xe3, 0x4a, 0x32, 0x95, 0x0f,
+	0xc7, 0x89, 0xa9, 0x38, 0x69, 0xd3, 0x40, 0x45, 0x87, 0x28, 0x69, 0x0a, 0x17, 0x10, 0x5a, 0x28,
+	0x2d, 0x0a, 0xb4, 0x83, 0x4b, 0x89, 0x07, 0x9a, 0xb0, 0x48, 0x0a, 0x3c, 0xca, 0x89, 0xdc, 0x25,
+	0xe8, 0xd0, 0x21, 0x43, 0xd1, 0xff, 0xa0, 0x68, 0xa7, 0x8c, 0x06, 0xda, 0xbd, 0x6b, 0xc6, 0xa0,
+	0x53, 0xd1, 0x41, 0x28, 0xe2, 0xc1, 0x40, 0x87, 0x0e, 0x99, 0x3b, 0x14, 0xbc, 0x3b, 0xd1, 0xc7,
+	0xe3, 0x91, 0x62, 0x62, 0xb7, 0x4b, 0xa2, 0x7b, 0xef, 0xf1, 0xbd, 0xdf, 0xfb, 0xdd, 0xbb, 0x77,
+	0xef, 0x0c, 0x8a, 0xed, 0x1d, 0x58, 0xf3, 0xe1, 0x23, 0xc3, 0x37, 0x51, 0x2d, 0x78, 0xac, 0xf7,
+	0x7c, 0x2f, 0xf0, 0xe4, 0x42, 0x7b, 0x07, 0xea, 0x54, 0xaa, 0x9e, 0x36, 0x1c, 0xdb, 0xf5, 0x6a,
+	0xf8, 0x5f, 0xa2, 0x57, 0xcf, 0x77, 0x3c, 0xe4, 0x78, 0xa8, 0xe6, 0x20, 0xab, 0xb6, 0xbd, 0x16,
+	0xfe, 0x47, 0x15, 0x25, 0xaa, 0x68, 0x1b, 0x08, 0xd6, 0xb6, 0xd7, 0xda, 0x30, 0x30, 0xd6, 0x6a,
+	0x1d, 0xcf, 0x76, 0xa9, 0x7e, 0x81, 0xe8, 0x37, 0xf0, 0xaa, 0x46, 0x16, 0x54, 0x55, 0xb4, 0x3c,
+	0xcb, 0x23, 0xf2, 0xf0, 0x17, 0x95, 0x2a, 0x2c, 0xbe, 0x9e, 0xe1, 0x1b, 0x0e, 0xb5, 0xd7, 0x7e,
+	0x96, 0xc0, 0xa9, 0x26, 0xb2, 0x3e, 0xeb, 0x99, 0x46, 0x00, 0x3f, 0xc1, 0x1a, 0xf9, 0x36, 0x98,
+	0x33, 0xfa, 0xc1, 0xa6, 0xe7, 0xdb, 0xc1, 0x40, 0x91, 0x2a, 0xd2, 0xf2, 0x5c, 0x43, 0xf9, 0xed,
+	0x97, 0xd5, 0x22, 0x0d, 0x74, 0xd7, 0x34, 0x7d, 0x88, 0xd0, 0xc3, 0xc0, 0xb7, 0x5d, 0xab, 0x75,
+	0x60, 0x2a, 0xdf, 0x06, 0xb3, 0xc4, 0xb7, 0x32, 0x59, 0x91, 0x96, 0x0b, 0x37, 0xcf, 0xe8, 0x0c,
+	0x01, 0x3a, 0x71, 0xde, 0x98, 0x7b, 0x3e, 0x2c, 0x4f, 0x3c, 0xdb, 0xdf, 0x5d, 0x91, 0x5a, 0xd4,
+	0xba, 0x7e, 0xe3, 0x9b, 0xfd, 0xdd, 0x95, 0x03, 0x3f, 0x4f, 0xf7, 0x77, 0x57, 0xde, 0x0a, 0x01,
+	0x3f, 0x8e, 0x20, 0x73, 0x08, 0xb5, 0x05, 0x70, 0x9e, 0x13, 0xb5, 0x20, 0xea, 0x79, 0x2e, 0x82,
+	0xda, 0x0f, 0x93, 0xe0, 0x5c, 0x13, 0x59, 0xf7, 0x7c, 0x68, 0x04, 0xf0, 0x61, 0x60, 0x6c, 0x85,
+	0x20, 0xb1, 0x1b, 0x59, 0x01, 0xc7, 0x3a, 0xa1, 0xd8, 0xf3, 0x49, 0x56, 0xad, 0xd1, 0x52, 0x5e,
+	0x02, 0xf3, 0x3d, 0xdf, 0xde, 0x81, 0x1b, 0x86, 0xe3, 0xf5, 0xdd, 0x00, 0xe3, 0x9f, 0x6b, 0x15,
+	0xb0, 0xec, 0x2e, 0x16, 0xc9, 0x65, 0x40, 0x96, 0x1b, 0x26, 0x74, 0x3d, 0x47, 0x99, 0xc2, 0x16,
+	0x00, 0x8b, 0xee, 0x87, 0x12, 0xb9, 0x0a, 0x4e, 0x20, 0x12, 0x8e, 0x9a, 0x4c, 0x63, 0x93, 0x79,
+	0x2a, 0x24, 0x46, 0x2a, 0x38, 0x6e, 0xf6, 0x7d, 0x23, 0xb0, 0x3d, 0x57, 0x99, 0xc1, 0xfa, 0x68,
+	0x2d, 0x5f, 0x00, 0x73, 0x8e, 0xed, 0x6e, 0x84, 0xf6, 0x50, 0x99, 0x25, 0x4a, 0xc7, 0x76, 0xc3,
+	0x1c, 0xa0, 0x2c, 0x83, 0xe9, 0xae, 0xd7, 0xd9, 0x52, 0x8e, 0x61, 0x39, 0xfe, 0x5d, 0x7f, 0x27,
+	0xe4, 0x6d, 0x94, 0x43, 0xc8, 0xda, 0xc5, 0x04, 0x6b, 0x02, 0x1a, 0xb4, 0xf7, 0x41, 0x49, 0xac,
+	0x19, 0x71, 0x18, 0x22, 0x21, 0x3e, 0x36, 0x6c, 0x93, 0x52, 0x75, 0x9c, 0x08, 0xd6, 0x4d, 0xed,
+	0x27, 0x09, 0x13, 0x4c, 0xc8, 0xcf, 0x4b, 0x70, 0xcc, 0xe3, 0x64, 0xdc, 0x63, 0x8c, 0x94, 0xa9,
+	0x38, 0x29, 0x79, 0x72, 0x14, 0x20, 0xd1, 0x2a, 0x38, 0x47, 0x81, 0x26, 0xaa, 0x93, 0xef, 0x24,
+	0x70, 0xb2, 0x89, 0xac, 0x8f, 0x3c, 0xc2, 0xb0, 0xed, 0x5a, 0x6f, 0x0a, 0xff, 0x1c, 0x98, 0xa5,
+	0x65, 0x43, 0xc0, 0xd3, 0x55, 0x7d, 0x95, 0x87, 0xbe, 0x98, 0x80, 0xce, 0x44, 0xd7, 0x14, 0x4c,
+	0x2b, 0x23, 0x89, 0xa0, 0x6e, 0x63, 0xa4, 0x1f, 0x3c, 0xb6, 0x83, 0xc3, 0x21, 0xcd, 0x83, 0x88,
+	0x89, 0x42, 0x11, 0x31, 0x92, 0x08, 0xd1, 0xb7, 0xa4, 0x06, 0xee, 0x75, 0x0d, 0xdb, 0x89, 0xd1,
+	0x8b, 0xde, 0x14, 0x5a, 0x9e, 0x5a, 0x4e, 0x46, 0xd3, 0xee, 0x90, 0x5a, 0x4e, 0x6a, 0xa2, 0x5a,
+	0x3e, 0xd8, 0x1d, 0x89, 0xdd, 0x1d, 0xed, 0x99, 0x04, 0x2e, 0x34, 0x91, 0x75, 0xdf, 0x46, 0x81,
+	0x6f, 0xb7, 0xfb, 0x5c, 0x99, 0xa0, 0xa3, 0x2e, 0x86, 0x3a, 0x9f, 0xdf, 0xd5, 0x44, 0x7e, 0x69,
+	0x50, 0xb4, 0x4b, 0xa0, 0x9a, 0xa1, 0x8e, 0x36, 0xe5, 0x1f, 0x89, 0xe9, 0x7c, 0x9f, 0xfa, 0x86,
+	0xf9, 0x7f, 0x75, 0x3e, 0xf6, 0xfc, 0x4e, 0x0b, 0x9a, 0x9a, 0xe1, 0x6f, 0xc1, 0x20, 0x24, 0x8b,
+	0x76, 0x3c, 0x22, 0x58, 0x37, 0xe5, 0x22, 0x98, 0x41, 0x5d, 0x2f, 0x40, 0xb4, 0xdb, 0x91, 0x45,
+	0xfe, 0xb6, 0x16, 0xcb, 0x31, 0xd6, 0xd6, 0x62, 0x9a, 0x7c, 0x6d, 0xed, 0xa9, 0x04, 0x94, 0x26,
+	0xb2, 0xee, 0x76, 0x02, 0x7b, 0xfb, 0x35, 0xf8, 0xcb, 0x2c, 0xea, 0x77, 0xf9, 0x4c, 0x2e, 0x27,
+	0x32, 0x11, 0xc6, 0xd3, 0x34, 0x50, 0x49, 0xd3, 0xf1, 0x67, 0xf0, 0x3e, 0xec, 0xc2, 0xa3, 0xe9,
+	0xc3, 0x79, 0x88, 0x17, 0x44, 0xa3, 0xbd, 0x56, 0xa0, 0x89, 0xa0, 0x7e, 0x0d, 0x8a, 0xd1, 0xd6,
+	0xe0, 0x92, 0x19, 0x8b, 0xb3, 0x08, 0x66, 0x48, 0xb5, 0x11, 0x8c, 0x64, 0x51, 0xbf, 0xc5, 0x03,
+	0xd4, 0x52, 0x2a, 0x83, 0x09, 0xa2, 0x95, 0xc0, 0xa2, 0x48, 0x1e, 0x81, 0xfb, 0x55, 0x02, 0x32,
+	0x6d, 0xbc, 0x87, 0xc0, 0x26, 0x3f, 0x88, 0x1f, 0xfc, 0x86, 0x1e, 0xce, 0x39, 0x7f, 0x0c, 0xcb,
+	0x67, 0xc9, 0xd4, 0x84, 0xcc, 0x2d, 0xdd, 0xf6, 0x6a, 0x8e, 0x11, 0x6c, 0xea, 0xeb, 0x6e, 0xf0,
+	0x6a, 0x58, 0x3e, 0x31, 0x30, 0x9c, 0x6e, 0x5d, 0xa3, 0xed, 0x28, 0x6a, 0x14, 0x6b, 0x7c, 0x8e,
+	0x15, 0xe1, 0xad, 0xc1, 0x66, 0xb8, 0x08, 0xd4, 0xa4, 0x34, 0xca, 0xef, 0x11, 0x4e, 0x2f, 0xec,
+	0xe2, 0x87, 0xa1, 0x3e, 0x07, 0x2c, 0x2e, 0x04, 0x85, 0xc5, 0x49, 0xf9, 0x9a, 0x08, 0x3b, 0x37,
+	0xa3, 0x46, 0xff, 0x49, 0x4d, 0xf0, 0x41, 0xb4, 0x27, 0x12, 0x29, 0x0a, 0x5e, 0x11, 0xb5, 0x8a,
+	0xaf, 0xc0, 0x31, 0xb2, 0x1f, 0x48, 0x91, 0x2a, 0x53, 0xcb, 0x85, 0x9b, 0x0b, 0x3a, 0x9d, 0x7e,
+	0xc3, 0x99, 0x5c, 0xa7, 0x33, 0xb9, 0x7e, 0xcf, 0xb3, 0xdd, 0xc6, 0xb5, 0x70, 0xa7, 0xff, 0x1a,
+	0x96, 0x4f, 0xd3, 0x2f, 0xae, 0x7b, 0x8e, 0x1d, 0x40, 0xa7, 0x17, 0x0c, 0x5e, 0x0d, 0xcb, 0x27,
+	0xd9, 0x5d, 0x46, 0x5a, 0x6b, 0xe4, 0x56, 0xfb, 0x71, 0x52, 0x5c, 0x97, 0x0f, 0x3b, 0x9b, 0xd0,
+	0xec, 0x77, 0xe1, 0x6b, 0x17, 0xe0, 0xd8, 0x36, 0xfd, 0x39, 0x98, 0x37, 0x0d, 0xbb, 0x3b, 0x18,
+	0xb5, 0x7a, 0xdc, 0xaa, 0x1b, 0x6f, 0x8f, 0xab, 0xd3, 0x33, 0x24, 0x03, 0xf6, 0x53, 0xad, 0x55,
+	0xc0, 0x4b, 0x7a, 0x41, 0x64, 0x0c, 0xb5, 0xf5, 0xf7, 0xf8, 0xed, 0x59, 0x19, 0x7f, 0x64, 0x47,
+	0x14, 0x68, 0x1f, 0x82, 0x8b, 0x59, 0xfa, 0x68, 0xb7, 0xca, 0xa0, 0x80, 0xa8, 0xec, 0xa0, 0xb5,
+	0x83, 0x91, 0x68, 0xdd, 0xd4, 0x9e, 0x93, 0xfd, 0x26, 0xf3, 0xe0, 0x11, 0x91, 0xcd, 0x46, 0x9c,
+	0xe2, 0x23, 0x66, 0xdd, 0x89, 0x79, 0x38, 0x49, 0x45, 0xaa, 0x5d, 0xc6, 0x9c, 0xa4, 0xea, 0xa3,
+	0xf3, 0xf5, 0xb7, 0x04, 0x16, 0x62, 0x53, 0xc3, 0x61, 0x4e, 0xd9, 0xf8, 0xe2, 0x3a, 0x68, 0x7f,
+	0xd3, 0x87, 0x6a, 0x7f, 0x77, 0x78, 0x6e, 0xae, 0x64, 0xcc, 0x49, 0xb1, 0x33, 0x5d, 0x05, 0x4b,
+	0xa9, 0xca, 0x11, 0x2b, 0x37, 0x87, 0x27, 0xc0, 0x54, 0x13, 0x59, 0x72, 0x0b, 0xcc, 0xc7, 0x9e,
+	0xbc, 0x8b, 0xb1, 0xa7, 0x2a, 0xf7, 0xb6, 0x54, 0x2f, 0x66, 0x69, 0xa3, 0x2a, 0xb4, 0xc0, 0x19,
+	0xd1, 0xab, 0xb3, 0xca, 0x7f, 0x2c, 0x30, 0x52, 0xaf, 0xe5, 0x30, 0x62, 0x03, 0x89, 0x5e, 0x5f,
+	0x55, 0x31, 0xca, 0x31, 0x81, 0x32, 0xde, 0x48, 0xf2, 0xc7, 0xa0, 0xc0, 0xbe, 0x8f, 0x2e, 0xf0,
+	0xdf, 0x32, 0x4a, 0xb5, 0x9a, 0xa1, 0x64, 0x1d, 0xb2, 0xcf, 0x98, 0x84, 0x43, 0x46, 0x99, 0x74,
+	0x28, 0x78, 0x88, 0x60, 0xce, 0x05, 0x8f, 0x90, 0x24, 0xe7, 0x49, 0x23, 0x01, 0xe7, 0x19, 0xcf,
+	0x88, 0x6d, 0xa0, 0xa4, 0x3e, 0x15, 0x96, 0x79, 0x47, 0x69, 0x96, 0xea, 0x8d, 0xbc, 0x96, 0xc9,
+	0xa2, 0x8a, 0x0f, 0xa4, 0x29, 0x45, 0x15, 0x33, 0x4a, 0x2b, 0x2a, 0xf1, 0x70, 0xec, 0x80, 0xb3,
+	0xe2, 0xd9, 0xf7, 0x12, 0xef, 0x45, 0x68, 0xa6, 0xae, 0xe6, 0x32, 0x63, 0xf3, 0x12, 0x4d, 0xae,
+	0x89, 0xbc, 0x04, 0x46, 0xc9, 0xbc, 0x32, 0x66, 0x4f, 0xd9, 0x00, 0xa7, 0x93, 0x83, 0xe7, 0x92,
+	0x98, 0x19, 0xc6, 0x44, 0xbd, 0x3a, 0xd6, 0x24, 0x0a, 0xf1, 0x25, 0x38, 0xc5, 0x4f, 0x8f, 0x65,
+	0xd1, 0x69, 0x60, 0xdd, 0x5f, 0x19, 0x63, 0xc0, 0x3a, 0xe7, 0x67, 0xb7, 0xb2, 0xe8, 0x64, 0x64,
+	0x3a, 0x4f, 0x19, 0xc2, 0x30, 0x39, 0x89, 0x09, 0x6c, 0x49, 0x78, 0x2e, 0x58, 0x13, 0x01, 0x39,
+	0xa9, 0x93, 0xd4, 0x00, 0x2c, 0xa4, 0xcf, 0x38, 0xe3, 0x49, 0x1e, 0x99, 0xaa, 0x6b, 0xb9, 0x4d,
+	0xd9, 0xd0, 0xe9, 0x37, 0xfe, 0x55, 0x71, 0x23, 0xcc, 0x15, 0x7a, 0xec, 0xed, 0x2b, 0xf7, 0xc0,
+	0xb9, 0x94, 0x9b, 0xf7, 0x72, 0x7a, 0x0b, 0x88, 0x51, 0xac, 0xe7, 0xb3, 0x1b, 0x45, 0x54, 0x67,
+	0x9e, 0xec, 0xef, 0xae, 0x48, 0x8d, 0x07, 0xcf, 0x5f, 0x96, 0xa4, 0x17, 0x2f, 0x4b, 0xd2, 0x9f,
+	0x2f, 0x4b, 0xd2, 0xf7, 0x7b, 0xa5, 0x89, 0x17, 0x7b, 0xa5, 0x89, 0xdf, 0xf7, 0x4a, 0x13, 0x5f,
+	0x5c, 0xb7, 0xec, 0x60, 0xb3, 0xdf, 0xd6, 0x3b, 0x9e, 0x53, 0x6b, 0xef, 0xc0, 0x55, 0xa3, 0xdb,
+	0xdb, 0x34, 0x02, 0x68, 0xe0, 0x15, 0x73, 0xc3, 0x06, 0x83, 0x1e, 0x44, 0xed, 0x59, 0xfc, 0xe7,
+	0xe1, 0x5b, 0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0xfb, 0x70, 0x40, 0x29, 0xda, 0x16, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1149,6 +1871,13 @@ type MsgClient interface {
 	CreateTradingReward(ctx context.Context, in *MsgCreateTradingReward, opts ...grpc.CallOption) (*MsgCreateTradingRewardResponse, error)
 	ActivateTradingReward(ctx context.Context, in *MsgActivateTradingReward, opts ...grpc.CallOption) (*MsgActivateTradingRewardResponse, error)
 	DeleteStakingReward(ctx context.Context, in *MsgDeleteStakingReward, opts ...grpc.CallOption) (*MsgDeleteStakingRewardResponse, error)
+	CreateDenomReward(ctx context.Context, in *MsgCreateDenomReward, opts ...grpc.CallOption) (*MsgCreateDenomRewardResponse, error)
+	JoinDenomReward(ctx context.Context, in *MsgJoinDenomReward, opts ...grpc.CallOption) (*MsgJoinDenomRewardResponse, error)
+	ExitDenomReward(ctx context.Context, in *MsgExitDenomReward, opts ...grpc.CallOption) (*MsgExitDenomRewardResponse, error)
+	ClaimDenomRewards(ctx context.Context, in *MsgClaimDenomRewards, opts ...grpc.CallOption) (*MsgClaimDenomRewardsResponse, error)
+	CreateDenomRewardSchedule(ctx context.Context, in *MsgCreateDenomRewardSchedule, opts ...grpc.CallOption) (*MsgCreateDenomRewardScheduleResponse, error)
+	UpdateDenomRewardSchedule(ctx context.Context, in *MsgUpdateDenomRewardSchedule, opts ...grpc.CallOption) (*MsgUpdateDenomRewardScheduleResponse, error)
+	DistributeDenomRewards(ctx context.Context, in *MsgDistributeDenomRewards, opts ...grpc.CallOption) (*MsgDistributeDenomRewardsResponse, error)
 }
 
 type msgClient struct {
@@ -1249,6 +1978,69 @@ func (c *msgClient) DeleteStakingReward(ctx context.Context, in *MsgDeleteStakin
 	return out, nil
 }
 
+func (c *msgClient) CreateDenomReward(ctx context.Context, in *MsgCreateDenomReward, opts ...grpc.CallOption) (*MsgCreateDenomRewardResponse, error) {
+	out := new(MsgCreateDenomRewardResponse)
+	err := c.cc.Invoke(ctx, "/bze.rewards.Msg/CreateDenomReward", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) JoinDenomReward(ctx context.Context, in *MsgJoinDenomReward, opts ...grpc.CallOption) (*MsgJoinDenomRewardResponse, error) {
+	out := new(MsgJoinDenomRewardResponse)
+	err := c.cc.Invoke(ctx, "/bze.rewards.Msg/JoinDenomReward", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ExitDenomReward(ctx context.Context, in *MsgExitDenomReward, opts ...grpc.CallOption) (*MsgExitDenomRewardResponse, error) {
+	out := new(MsgExitDenomRewardResponse)
+	err := c.cc.Invoke(ctx, "/bze.rewards.Msg/ExitDenomReward", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ClaimDenomRewards(ctx context.Context, in *MsgClaimDenomRewards, opts ...grpc.CallOption) (*MsgClaimDenomRewardsResponse, error) {
+	out := new(MsgClaimDenomRewardsResponse)
+	err := c.cc.Invoke(ctx, "/bze.rewards.Msg/ClaimDenomRewards", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) CreateDenomRewardSchedule(ctx context.Context, in *MsgCreateDenomRewardSchedule, opts ...grpc.CallOption) (*MsgCreateDenomRewardScheduleResponse, error) {
+	out := new(MsgCreateDenomRewardScheduleResponse)
+	err := c.cc.Invoke(ctx, "/bze.rewards.Msg/CreateDenomRewardSchedule", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateDenomRewardSchedule(ctx context.Context, in *MsgUpdateDenomRewardSchedule, opts ...grpc.CallOption) (*MsgUpdateDenomRewardScheduleResponse, error) {
+	out := new(MsgUpdateDenomRewardScheduleResponse)
+	err := c.cc.Invoke(ctx, "/bze.rewards.Msg/UpdateDenomRewardSchedule", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) DistributeDenomRewards(ctx context.Context, in *MsgDistributeDenomRewards, opts ...grpc.CallOption) (*MsgDistributeDenomRewardsResponse, error) {
+	out := new(MsgDistributeDenomRewardsResponse)
+	err := c.cc.Invoke(ctx, "/bze.rewards.Msg/DistributeDenomRewards", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// UpdateParams defines a (governance) operation for updating the module
@@ -1263,6 +2055,13 @@ type MsgServer interface {
 	CreateTradingReward(context.Context, *MsgCreateTradingReward) (*MsgCreateTradingRewardResponse, error)
 	ActivateTradingReward(context.Context, *MsgActivateTradingReward) (*MsgActivateTradingRewardResponse, error)
 	DeleteStakingReward(context.Context, *MsgDeleteStakingReward) (*MsgDeleteStakingRewardResponse, error)
+	CreateDenomReward(context.Context, *MsgCreateDenomReward) (*MsgCreateDenomRewardResponse, error)
+	JoinDenomReward(context.Context, *MsgJoinDenomReward) (*MsgJoinDenomRewardResponse, error)
+	ExitDenomReward(context.Context, *MsgExitDenomReward) (*MsgExitDenomRewardResponse, error)
+	ClaimDenomRewards(context.Context, *MsgClaimDenomRewards) (*MsgClaimDenomRewardsResponse, error)
+	CreateDenomRewardSchedule(context.Context, *MsgCreateDenomRewardSchedule) (*MsgCreateDenomRewardScheduleResponse, error)
+	UpdateDenomRewardSchedule(context.Context, *MsgUpdateDenomRewardSchedule) (*MsgUpdateDenomRewardScheduleResponse, error)
+	DistributeDenomRewards(context.Context, *MsgDistributeDenomRewards) (*MsgDistributeDenomRewardsResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -1298,6 +2097,27 @@ func (*UnimplementedMsgServer) ActivateTradingReward(ctx context.Context, req *M
 }
 func (*UnimplementedMsgServer) DeleteStakingReward(ctx context.Context, req *MsgDeleteStakingReward) (*MsgDeleteStakingRewardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteStakingReward not implemented")
+}
+func (*UnimplementedMsgServer) CreateDenomReward(ctx context.Context, req *MsgCreateDenomReward) (*MsgCreateDenomRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateDenomReward not implemented")
+}
+func (*UnimplementedMsgServer) JoinDenomReward(ctx context.Context, req *MsgJoinDenomReward) (*MsgJoinDenomRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JoinDenomReward not implemented")
+}
+func (*UnimplementedMsgServer) ExitDenomReward(ctx context.Context, req *MsgExitDenomReward) (*MsgExitDenomRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExitDenomReward not implemented")
+}
+func (*UnimplementedMsgServer) ClaimDenomRewards(ctx context.Context, req *MsgClaimDenomRewards) (*MsgClaimDenomRewardsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClaimDenomRewards not implemented")
+}
+func (*UnimplementedMsgServer) CreateDenomRewardSchedule(ctx context.Context, req *MsgCreateDenomRewardSchedule) (*MsgCreateDenomRewardScheduleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateDenomRewardSchedule not implemented")
+}
+func (*UnimplementedMsgServer) UpdateDenomRewardSchedule(ctx context.Context, req *MsgUpdateDenomRewardSchedule) (*MsgUpdateDenomRewardScheduleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDenomRewardSchedule not implemented")
+}
+func (*UnimplementedMsgServer) DistributeDenomRewards(ctx context.Context, req *MsgDistributeDenomRewards) (*MsgDistributeDenomRewardsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DistributeDenomRewards not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -1484,6 +2304,132 @@ func _Msg_DeleteStakingReward_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreateDenomReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateDenomReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateDenomReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.rewards.Msg/CreateDenomReward",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateDenomReward(ctx, req.(*MsgCreateDenomReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_JoinDenomReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgJoinDenomReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).JoinDenomReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.rewards.Msg/JoinDenomReward",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).JoinDenomReward(ctx, req.(*MsgJoinDenomReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ExitDenomReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgExitDenomReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ExitDenomReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.rewards.Msg/ExitDenomReward",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ExitDenomReward(ctx, req.(*MsgExitDenomReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ClaimDenomRewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgClaimDenomRewards)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ClaimDenomRewards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.rewards.Msg/ClaimDenomRewards",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ClaimDenomRewards(ctx, req.(*MsgClaimDenomRewards))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_CreateDenomRewardSchedule_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateDenomRewardSchedule)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateDenomRewardSchedule(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.rewards.Msg/CreateDenomRewardSchedule",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateDenomRewardSchedule(ctx, req.(*MsgCreateDenomRewardSchedule))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateDenomRewardSchedule_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateDenomRewardSchedule)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateDenomRewardSchedule(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.rewards.Msg/UpdateDenomRewardSchedule",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateDenomRewardSchedule(ctx, req.(*MsgUpdateDenomRewardSchedule))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_DistributeDenomRewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDistributeDenomRewards)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).DistributeDenomRewards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.rewards.Msg/DistributeDenomRewards",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).DistributeDenomRewards(ctx, req.(*MsgDistributeDenomRewards))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "bze.rewards.Msg",
@@ -1528,6 +2474,34 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteStakingReward",
 			Handler:    _Msg_DeleteStakingReward_Handler,
+		},
+		{
+			MethodName: "CreateDenomReward",
+			Handler:    _Msg_CreateDenomReward_Handler,
+		},
+		{
+			MethodName: "JoinDenomReward",
+			Handler:    _Msg_JoinDenomReward_Handler,
+		},
+		{
+			MethodName: "ExitDenomReward",
+			Handler:    _Msg_ExitDenomReward_Handler,
+		},
+		{
+			MethodName: "ClaimDenomRewards",
+			Handler:    _Msg_ClaimDenomRewards_Handler,
+		},
+		{
+			MethodName: "CreateDenomRewardSchedule",
+			Handler:    _Msg_CreateDenomRewardSchedule_Handler,
+		},
+		{
+			MethodName: "UpdateDenomRewardSchedule",
+			Handler:    _Msg_UpdateDenomRewardSchedule_Handler,
+		},
+		{
+			MethodName: "DistributeDenomRewards",
+			Handler:    _Msg_DistributeDenomRewards_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -2242,6 +3216,512 @@ func (m *MsgDeleteStakingRewardResponse) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgCreateDenomReward) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateDenomReward) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateDenomReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateDenomRewardResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateDenomRewardResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateDenomRewardResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgJoinDenomReward) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgJoinDenomReward) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgJoinDenomReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.Amount.Size()
+		i -= size
+		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgJoinDenomRewardResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgJoinDenomRewardResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgJoinDenomRewardResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgExitDenomReward) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgExitDenomReward) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgExitDenomReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgExitDenomRewardResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgExitDenomRewardResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgExitDenomRewardResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgClaimDenomRewards) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgClaimDenomRewards) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgClaimDenomRewards) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgClaimDenomRewardsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgClaimDenomRewardsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgClaimDenomRewardsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Amounts) > 0 {
+		for iNdEx := len(m.Amounts) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Amounts[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateDenomRewardSchedule) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateDenomRewardSchedule) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateDenomRewardSchedule) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Duration) > 0 {
+		i -= len(m.Duration)
+		copy(dAtA[i:], m.Duration)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Duration)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	{
+		size := m.DailyAmount.Size()
+		i -= size
+		if _, err := m.DailyAmount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	if len(m.PrizeDenom) > 0 {
+		i -= len(m.PrizeDenom)
+		copy(dAtA[i:], m.PrizeDenom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.PrizeDenom)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateDenomRewardScheduleResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateDenomRewardScheduleResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateDenomRewardScheduleResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ScheduleId) > 0 {
+		i -= len(m.ScheduleId)
+		copy(dAtA[i:], m.ScheduleId)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ScheduleId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateDenomRewardSchedule) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateDenomRewardSchedule) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateDenomRewardSchedule) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Duration) > 0 {
+		i -= len(m.Duration)
+		copy(dAtA[i:], m.Duration)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Duration)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.ScheduleId) > 0 {
+		i -= len(m.ScheduleId)
+		copy(dAtA[i:], m.ScheduleId)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ScheduleId)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateDenomRewardScheduleResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateDenomRewardScheduleResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateDenomRewardScheduleResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgDistributeDenomRewards) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgDistributeDenomRewards) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgDistributeDenomRewards) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.Amount.Size()
+		i -= size
+		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	if len(m.PrizeDenom) > 0 {
+		i -= len(m.PrizeDenom)
+		copy(dAtA[i:], m.PrizeDenom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.PrizeDenom)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgDistributeDenomRewardsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgDistributeDenomRewardsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgDistributeDenomRewardsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -2563,6 +4043,224 @@ func (m *MsgDeleteStakingReward) Size() (n int) {
 }
 
 func (m *MsgDeleteStakingRewardResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgCreateDenomReward) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgCreateDenomRewardResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgJoinDenomReward) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Amount.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgJoinDenomRewardResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgExitDenomReward) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgExitDenomRewardResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgClaimDenomRewards) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgClaimDenomRewardsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Amounts) > 0 {
+		for _, e := range m.Amounts {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgCreateDenomRewardSchedule) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.PrizeDenom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.DailyAmount.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = len(m.Duration)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgCreateDenomRewardScheduleResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ScheduleId)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateDenomRewardSchedule) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.ScheduleId)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Duration)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateDenomRewardScheduleResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgDistributeDenomRewards) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.PrizeDenom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Amount.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgDistributeDenomRewardsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4675,6 +6373,1482 @@ func (m *MsgDeleteStakingRewardResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgDeleteStakingRewardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateDenomReward) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateDenomReward: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateDenomReward: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateDenomRewardResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateDenomRewardResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateDenomRewardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgJoinDenomReward) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgJoinDenomReward: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgJoinDenomReward: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgJoinDenomRewardResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgJoinDenomRewardResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgJoinDenomRewardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgExitDenomReward) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgExitDenomReward: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgExitDenomReward: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgExitDenomRewardResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgExitDenomRewardResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgExitDenomRewardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgClaimDenomRewards) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgClaimDenomRewards: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgClaimDenomRewards: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgClaimDenomRewardsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgClaimDenomRewardsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgClaimDenomRewardsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amounts", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amounts = append(m.Amounts, types.Coin{})
+			if err := m.Amounts[len(m.Amounts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateDenomRewardSchedule) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateDenomRewardSchedule: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateDenomRewardSchedule: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PrizeDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PrizeDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DailyAmount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.DailyAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Duration", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Duration = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateDenomRewardScheduleResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateDenomRewardScheduleResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateDenomRewardScheduleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScheduleId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScheduleId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateDenomRewardSchedule) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateDenomRewardSchedule: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateDenomRewardSchedule: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ScheduleId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ScheduleId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Duration", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Duration = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateDenomRewardScheduleResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateDenomRewardScheduleResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateDenomRewardScheduleResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgDistributeDenomRewards) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgDistributeDenomRewards: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgDistributeDenomRewards: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PrizeDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PrizeDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgDistributeDenomRewardsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgDistributeDenomRewardsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgDistributeDenomRewardsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
