@@ -128,7 +128,10 @@ func (k Keeper) distributeStakingRewards(sr *types.StakingReward, rewardAmount s
 	}
 
 	//S = S + r / T;
-	sFloat = sFloat.Add(reward.Quo(stakedAmount))
+	// QuoTruncate (round down), never round-to-nearest. Participants claim floor(deposited·ΔS);
+	// truncating the accumulator keeps Σ deposited·ΔS ≤ T·ΔS ≤ r, so summed claims can never exceed
+	// the funded reward. The sub-unit remainder stays as dust in the pool (BZE-104).
+	sFloat = sFloat.Add(reward.QuoTruncate(stakedAmount))
 	sr.DistributedStake = sFloat.String()
 
 	return nil

@@ -265,11 +265,14 @@ func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_Same
 	suite.k.ProcessDenomRewardsDistributionQueue(suite.ctx)
 	suite.requirePrizeS("ubze", "uprize", "1.5")
 
-	// stake changes between days: day 2 uses the live T
+	// stake changes between days: day 2 uses the live T. The two schedules distribute separately, so
+	// the accumulator gains 100/300 + 50/300, each truncated at 18dp (round down, never to nearest):
+	// 0.333…333 + 0.166…666 = 0.499…999. The sub-unit shortfall stays as dust in the pool rather than
+	// being rounded up into an over-credit (BZE-104).
 	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", StakedAmount: math.NewInt(300)})
 	suite.k.EnqueueDenomRewardsDistribution(suite.ctx)
 	suite.k.ProcessDenomRewardsDistributionQueue(suite.ctx)
-	suite.requirePrizeS("ubze", "uprize", "2") // 1.5 + 150/300
+	suite.requirePrizeS("ubze", "uprize", "1.999999999999999999") // 1.5 + trunc(100/300) + trunc(50/300)
 }
 
 // Defensive paths: a schedule whose denom reward or prize record is missing, or that is already

@@ -32,6 +32,11 @@ func TestValidateDenomDistribution_Guards(t *testing.T) {
 
 // The accumulator bump matches hand-computed S += amount/T across exact, fractional and repeating
 // divisions, accumulates onto an existing S, stamps the epoch, and leaves the receiver untouched.
+//
+// The bump must TRUNCATE the quotient, never round to nearest, so the accumulator never credits
+// more than the true amount/T and summed claims stay within the escrowed amount (BZE-104). The
+// "truncates, never rounds up" case pins this: 2/3 must land on ...666, not the round-to-nearest
+// ...667.
 func TestDenomRewardPrize_WithDistribution_Math(t *testing.T) {
 	cases := []struct {
 		name        string
@@ -43,6 +48,7 @@ func TestDenomRewardPrize_WithDistribution_Math(t *testing.T) {
 		{"exact integer division", "0", 1000, 4, "250"},
 		{"exact fractional division", "0", 1, 8, "0.125"},
 		{"repeating decimal, 18dp", "0", 1000, 3, "333.333333333333333333"},
+		{"truncates, never rounds up", "0", 2, 3, "0.666666666666666666"},
 		{"accumulates onto existing S", "125", 500, 4, "250"},
 	}
 
