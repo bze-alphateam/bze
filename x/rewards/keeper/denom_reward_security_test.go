@@ -20,8 +20,7 @@ import (
 // conservation (I4), the base-behaviour freeze of the audited SR flows, SR/DR behaviour parity,
 // bounded-work proofs (I5), adversarial settle-ordering (I1), store-integrity audits (I2) and the
 // genesis round-trip under load. The per-chunk regression tests live next to their handlers; the
-// scenarios here span the whole feature through the public entry points, the way the boost
-// security suite closed out that development.
+// scenarios here span the whole feature through the public entry points.
 
 // drSecLedger records every coin flow crossing the rewards module account, so tests assert escrow
 // conservation over whole lifecycles instead of pinning individual transfers. Fee flows (captured
