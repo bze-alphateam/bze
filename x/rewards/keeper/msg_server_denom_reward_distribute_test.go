@@ -259,3 +259,28 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_SubsequentClaimIncl
 	suite.Require().NoError(err)
 	suite.Require().Equal("1000uprize", sdk.Coins(res.Amounts).String())
 }
+
+// Regression for BZE-104: the airdrop accumulator bump must truncate amount/T (round down). With a
+// staked total ~1e18 the ratio 2/3e18 is below one ulp (1e-18); the accumulator must stay at zero,
+// not gain a rounded-up ulp. This bounds every downstream claim to floor(deposited·S)=0 ≤ the
+// escrowed amount, so the shared module account is never drawn down below what was funded.
+func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_SubUlpRatio_TruncatesAccumulator() {
+	sender := sdk.AccAddress("drd-sender-03")
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(3000000000000000000)}) // 3e18
+	suite.k.SetDenomRewardPrize(suite.ctx, types.DenomRewardPrize{StakingDenom: "ubze", PrizeDenom: "uprize", DistributedStake: math.LegacyMustNewDecFromStr("0")})
+
+	suite.bank.EXPECT().HasSupply(suite.ctx, "uprize").Return(true).Times(1)
+	suite.richBalance(sender)
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(suite.ctx, sender, types.ModuleName, sdk.NewCoins(sdk.NewCoin("uprize", math.NewInt(2)))).
+		Return(nil).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, "day").Return(int64(42), nil).Times(1)
+
+	msg := types.NewMsgDistributeDenomRewards(sender.String(), "ubze", "uprize", math.NewInt(2))
+	_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, msg)
+	suite.Require().NoError(err)
+
+	prize, found := suite.k.GetDenomRewardPrize(suite.ctx, "ubze", "uprize")
+	suite.Require().True(found)
+	suite.Require().True(prize.DistributedStake.IsZero(), "accumulator must truncate the sub-ulp ratio to zero, got %s", prize.DistributedStake)
+}

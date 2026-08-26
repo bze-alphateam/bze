@@ -24,8 +24,13 @@ func ValidateDenomDistribution(stakingDenom string, amount, stakedTotal math.Int
 // WithDistribution returns the accumulator bumped by amount/T with the distribution epoch stamped:
 // S = S + amount / T. The accumulator only ever grows; T is the live staked total at the moment of
 // distribution. Pure — callers are expected to have run ValidateDenomDistribution first.
+//
+// The quotient is truncated (round down), never rounded to nearest. Participants claim
+// floor(deposited·ΔS); truncating the accumulator keeps Σ deposited·ΔS ≤ T·ΔS ≤ amount, so summed
+// claims can never exceed the escrowed amount. Any sub-unit remainder stays as dust in the pool,
+// consistent with the module's claim-side truncation (BZE-104).
 func (p DenomRewardPrize) WithDistribution(amount, stakedTotal math.Int, epoch int64) DenomRewardPrize {
-	p.DistributedStake = p.DistributedStake.Add(math.LegacyNewDecFromInt(amount).Quo(math.LegacyNewDecFromInt(stakedTotal)))
+	p.DistributedStake = p.DistributedStake.Add(math.LegacyNewDecFromInt(amount).QuoTruncate(math.LegacyNewDecFromInt(stakedTotal)))
 	p.LastDistributionEpoch = epoch
 
 	return p
