@@ -12,6 +12,7 @@ derived from it. History older than v8.0.0 lives in the
 ### State Machine Breaking
 
 * (x/rewards) [#101](https://github.com/bze-alphateam/bze/pull/101) Denom Rewards params migration: rewards module consensus version 4→5 sets the seven new `denom reward` parameter defaults (creation/prize/schedule fees, prize-denom cap, exit gas, lock, min stake), wired to the new `v8.2.0` upgrade handler.
+* (x/rewards) [#105](https://github.com/bze-alphateam/bze/pull/105) Reward distribution accumulators (staking and denom rewards) truncate the `S += amount/T` bump (`QuoTruncate`, round down) instead of rounding to nearest, so distributed rewards can never exceed the funded/escrowed amount; any sub-unit remainder stays as dust in the pool. Changes the accumulator value on the live staking-reward path, so it activates uniformly at the `v8.2.0` upgrade height.
 
 ### Features
 
