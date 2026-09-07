@@ -9,7 +9,7 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
-## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0) - 2026-09-08
+## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0)
 
 Coordinated upgrade at a height to be announced once the mainnet software-upgrade proposal passes (`v8.2.0` upgrade handler). Module migration: rewards v4→v5 (Denom Rewards parameter defaults); no store keys added or removed. **Validators must build with Go 1.26.x.**
 
