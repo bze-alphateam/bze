@@ -9,6 +9,10 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
+## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0)
+
+Coordinated upgrade at a height to be announced once the mainnet software-upgrade proposal passes (`v8.2.0` upgrade handler). Module migration: rewards v4→v5 (Denom Rewards parameter defaults); no store keys added or removed. **Validators must build with Go 1.26.x.**
+
 ### State Machine Breaking
 
 * (x/rewards) [#101](https://github.com/bze-alphateam/bze/pull/101) Denom Rewards params migration: rewards module consensus version 4→5 sets the seven new `denom reward` parameters to their defaults, wired to the new `v8.2.0` upgrade handler: `create_denom_reward_fee` = 25,000 BZE (`25000000000ubze`), `create_denom_reward_prize_fee` = 25,000 BZE, `add_denom_reward_schedule_fee` = 25,000 BZE, `max_prize_denoms_per_dr` = 50, `extra_gas_for_denom_exit` = 1,000,000, `denom_reward_lock` = 7 (days), `denom_reward_min_stake` = 0. Existing parameters are left as stored on chain.
