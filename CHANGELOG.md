@@ -11,12 +11,12 @@ derived from it. History older than v8.0.0 lives in the
 
 ### State Machine Breaking
 
-* (x/rewards) [#101](https://github.com/bze-alphateam/bze/pull/101) Denom Rewards params migration: rewards module consensus version 4→5 sets the seven new `denom reward` parameter defaults (creation/prize/schedule fees, prize-denom cap, exit gas, lock, min stake), wired to the new `v8.2.0` upgrade handler.
+* (x/rewards) [#101](https://github.com/bze-alphateam/bze/pull/101) Denom Rewards params migration: rewards module consensus version 4→5 sets the seven new `denom reward` parameters to their defaults, wired to the new `v8.2.0` upgrade handler: `create_denom_reward_fee` = 25,000 BZE (`25000000000ubze`), `create_denom_reward_prize_fee` = 25,000 BZE, `add_denom_reward_schedule_fee` = 25,000 BZE, `max_prize_denoms_per_dr` = 50, `extra_gas_for_denom_exit` = 1,000,000, `denom_reward_lock` = 7 (days), `denom_reward_min_stake` = 0. Existing parameters are left as stored on chain.
 * (x/rewards) [#105](https://github.com/bze-alphateam/bze/pull/105) Reward distribution accumulators (staking and denom rewards) truncate the `S += amount/T` bump (`QuoTruncate`, round down) instead of rounding to nearest, so distributed rewards can never exceed the funded/escrowed amount; any sub-unit remainder stays as dust in the pool. Changes the accumulator value on the live staking-reward path, so it activates uniformly at the `v8.2.0` upgrade height.
 
 ### Features
 
-* (x/tokenfactory) [#75](https://github.com/bze-alphateam/bze/pull/75) On-chain denom branding: `MsgSetDenomBranding` lets a denom admin attach a branding package (font plus light/dark colour palettes) to a factory denom, with `DenomBranding`/`AllDenomBranding` queries and genesis import/export.
+* (x/tokenfactory) [#75](https://github.com/bze-alphateam/bze/pull/75) On-chain denom branding: `MsgSetDenomBranding` lets a denom admin attach a branding package (font plus light/dark colour palettes) to a factory denom, with `DenomBranding`/`AllDenomBranding` queries, genesis import/export and a `DenomBrandingChangeEvent` typed event emitted on every set/clear.
 * (x/rewards) [#92](https://github.com/bze-alphateam/bze/pull/92) `MsgDeleteStakingReward`: permissionless removal of a finished staking reward once all stakes have exited, mirroring ExitStaking's final-exit cleanup; a removal-hook veto fails the message explicitly.
 * (x/rewards) [#101](https://github.com/bze-alphateam/bze/pull/101) Denom Rewards: add `MsgCreateDenomReward` (creates the unique per-denom staking pool with a param-snapshotted lock and min-stake, capturing the creation fee) and `MsgJoinDenomReward` (stake into a pool — first join or top-up — settling every accrued prize before the staked amount changes).
 * (x/rewards) [#101](https://github.com/bze-alphateam/bze/pull/101) Denom Rewards: add `MsgClaimDenomRewards` (pays every pending prize denom in one tx; sub-unit dust keeps accruing) and `MsgExitDenomReward` (all-or-nothing exit that settles pending prizes first, then releases the stake through the existing pending-unlock pipeline — immediately at lock 0, otherwise after lock×24 hour-epochs).
@@ -30,6 +30,7 @@ derived from it. History older than v8.0.0 lives in the
 * (x/rewards) [#91](https://github.com/bze-alphateam/bze/pull/91) Add `BeforeStakingRewardRemoval` hook as a veto point for staking reward deletion; on final exit a veto suppresses the deletion instead of failing the exit.
 * (deps) [#106](https://github.com/bze-alphateam/bze/pull/106) Bump CometBFT to v0.38.26 (blocksync and mempool message hardening, vote-extension signature validation, `double_sign_check_height` off-by-one fix, new optional `event_bus_buffer_capacity` config setting) plus `golang.org/x/*`, `jose2go` and `ulikunitz/xz` to clear reachable govulncheck findings; **Go 1.26 is now required to build `bzed`** (the Makefile check and CI enforce it): Go 1.25 reached end of life on 2026-08-19 with the Go 1.27.0 release, so only Go 1.26.x keeps receiving security fixes. Validators must build v8.2.0 with Go 1.26.
 * (x/rewards) [#101](https://github.com/bze-alphateam/bze/pull/101) Denom Rewards: numeric proto fields are now typed as `math.Int`/`math.LegacyDec` via gogoproto customtype (stores, messages and queries), so parsing/validation lives in the proto layer; wire format and genesis JSON stay string-encoded and unchanged.
+* (x/rewards) [#101](https://github.com/bze-alphateam/bze/pull/101) Denom Rewards: nine new typed events for indexers — `DenomRewardCreateEvent`, `DenomRewardJoinEvent`, `DenomRewardExitEvent`, `DenomRewardClaimEvent`, `DenomRewardPrizeCreateEvent`, `DenomRewardScheduleCreateEvent`, `DenomRewardScheduleUpdateEvent`, `DenomRewardScheduleFinishEvent` and `DenomRewardDistributionEvent` (emitted for both scheduled payouts and airdrops); see `proto/bze/rewards/events.proto` for their fields.
 * (x/rewards) [#101](https://github.com/bze-alphateam/bze/pull/101) Denom Rewards: `DenomRewardExitEvent` now carries the exited `amount` (staked amount being withdrawn, in the DR's staking denom), so indexers following exits don't need a follow-up query.
 
 ### Bug Fixes
@@ -40,7 +41,7 @@ derived from it. History older than v8.0.0 lives in the
 
 ## [v8.1.1](https://github.com/bze-alphateam/bze/releases/tag/v8.1.1) - 2026-07-05
 
-Coordinated upgrade at height 23855000 (`v811` upgrade handler).
+Coordinated upgrade at height 23855000 (`v8.1.1` upgrade handler).
 
 ### State Machine Breaking
 
@@ -57,7 +58,7 @@ Coordinated upgrade at height 23855000 (`v811` upgrade handler).
 
 ## [v8.1.0](https://github.com/bze-alphateam/bze/releases/tag/v8.1.0) - 2026-04-22
 
-Coordinated upgrade at height 22551810 (`v810` upgrade handler). Module migrations: tradebin v3→v4, rewards v3→v4, txfeecollector v1→v2; the `crisis` module store is removed. The entries below are a digest — the [release notes](https://github.com/bze-alphateam/bze/releases/tag/v8.1.0) carry the exhaustive per-module list, including every new parameter with its default and purpose.
+Coordinated upgrade at height 22551810 (`v8.1.0` upgrade handler). Module migrations: tradebin v3→v4, rewards v3→v4, txfeecollector v1→v2; the `crisis` module store is removed. The entries below are a digest — the [release notes](https://github.com/bze-alphateam/bze/releases/tag/v8.1.0) carry the exhaustive per-module list, including every new parameter with its default and purpose.
 
 ### State Machine Breaking
 
