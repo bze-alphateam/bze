@@ -36,6 +36,7 @@ derived from it. History older than v8.0.0 lives in the
 
 * (x/burner) [#73](https://github.com/bze-alphateam/bze/pull/73) Add the missing `amino.name` annotation to `MsgMoveIbcLockedCoins` so amino-JSON (e.g. Ledger) signing works.
 * (x/rewards) [#101](https://github.com/bze-alphateam/bze/pull/101) Denom Rewards: all seven DR messages now validate denom fields in `ValidateBasic` (`sdk.ValidateDenom` on staking and prize denoms), and `MsgDistributeDenomRewards` rejects a prize denom with no supply — matching the schedule path — instead of a malformed denom failing the tx through a recovered panic.
+* (x/rewards) [#107](https://github.com/bze-alphateam/bze/pull/107) Denom reward REST queries (`denom_reward`, `denom_reward_prizes`, `denom_reward_schedules`, `denom_reward_participant/{address}`) take the staking denom as a `?denom=` query parameter instead of a path segment, so factory and IBC denoms (which contain "/") are reachable over REST; gRPC and CLI unchanged.
 
 ## [v8.1.1](https://github.com/bze-alphateam/bze/releases/tag/v8.1.1) - 2026-07-05
 
