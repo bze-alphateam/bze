@@ -465,26 +465,19 @@ func local_request_Query_AllPendingUnlockParticipants_0(ctx context.Context, mar
 
 }
 
+var (
+	filter_Query_DenomReward_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
 func request_Query_DenomReward_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryDenomRewardRequest
 	var metadata runtime.ServerMetadata
 
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["denom"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "denom")
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
-	protoReq.Denom, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "denom", err)
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_DenomReward_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.DenomReward(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -496,22 +489,11 @@ func local_request_Query_DenomReward_0(ctx context.Context, marshaler runtime.Ma
 	var protoReq QueryDenomRewardRequest
 	var metadata runtime.ServerMetadata
 
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["denom"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "denom")
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
-	protoReq.Denom, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "denom", err)
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_DenomReward_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := server.DenomReward(ctx, &protoReq)
@@ -555,26 +537,19 @@ func local_request_Query_DenomRewardAll_0(ctx context.Context, marshaler runtime
 
 }
 
+var (
+	filter_Query_DenomRewardPrizes_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
 func request_Query_DenomRewardPrizes_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryDenomRewardPrizesRequest
 	var metadata runtime.ServerMetadata
 
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["denom"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "denom")
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
-	protoReq.Denom, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "denom", err)
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_DenomRewardPrizes_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.DenomRewardPrizes(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -586,22 +561,11 @@ func local_request_Query_DenomRewardPrizes_0(ctx context.Context, marshaler runt
 	var protoReq QueryDenomRewardPrizesRequest
 	var metadata runtime.ServerMetadata
 
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["denom"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "denom")
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
-	protoReq.Denom, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "denom", err)
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_DenomRewardPrizes_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := server.DenomRewardPrizes(ctx, &protoReq)
@@ -610,30 +574,12 @@ func local_request_Query_DenomRewardPrizes_0(ctx context.Context, marshaler runt
 }
 
 var (
-	filter_Query_DenomRewardSchedules_0 = &utilities.DoubleArray{Encoding: map[string]int{"denom": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+	filter_Query_DenomRewardSchedules_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
 func request_Query_DenomRewardSchedules_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryDenomRewardSchedulesRequest
 	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["denom"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "denom")
-	}
-
-	protoReq.Denom, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "denom", err)
-	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -651,24 +597,6 @@ func local_request_Query_DenomRewardSchedules_0(ctx context.Context, marshaler r
 	var protoReq QueryDenomRewardSchedulesRequest
 	var metadata runtime.ServerMetadata
 
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["denom"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "denom")
-	}
-
-	protoReq.Denom, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "denom", err)
-	}
-
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
@@ -680,6 +608,10 @@ func local_request_Query_DenomRewardSchedules_0(ctx context.Context, marshaler r
 	return msg, metadata, err
 
 }
+
+var (
+	filter_Query_DenomRewardParticipant_0 = &utilities.DoubleArray{Encoding: map[string]int{"address": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+)
 
 func request_Query_DenomRewardParticipant_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryDenomRewardParticipantRequest
@@ -703,15 +635,11 @@ func request_Query_DenomRewardParticipant_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "address", err)
 	}
 
-	val, ok = pathParams["denom"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "denom")
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
-	protoReq.Denom, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "denom", err)
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_DenomRewardParticipant_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.DenomRewardParticipant(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -741,15 +669,11 @@ func local_request_Query_DenomRewardParticipant_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "address", err)
 	}
 
-	val, ok = pathParams["denom"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "denom")
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
-	protoReq.Denom, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "denom", err)
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_DenomRewardParticipant_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := server.DenomRewardParticipant(ctx, &protoReq)
@@ -1588,15 +1512,15 @@ var (
 
 	pattern_Query_AllPendingUnlockParticipants_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bze", "rewards", "all_pending_unlock_participants"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_DenomReward_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"bze", "rewards", "denom_reward", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_DenomReward_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bze", "rewards", "denom_reward"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_DenomRewardAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bze", "rewards", "all_denom_rewards"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_DenomRewardPrizes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"bze", "rewards", "denom_reward_prizes", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_DenomRewardPrizes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bze", "rewards", "denom_reward_prizes"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_DenomRewardSchedules_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"bze", "rewards", "denom_reward_schedules", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_DenomRewardSchedules_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bze", "rewards", "denom_reward_schedules"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_DenomRewardParticipant_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"bze", "rewards", "denom_reward_participant", "address", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_DenomRewardParticipant_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"bze", "rewards", "denom_reward_participant", "address"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_DenomRewardParticipations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"bze", "rewards", "denom_reward_participations", "address"}, "", runtime.AssumeColonVerbOpt(false)))
 )

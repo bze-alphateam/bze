@@ -75,9 +75,10 @@ service Query {
 
   }
 
-  // Queries a DenomReward by its staking denom.
+  // Queries a DenomReward by its staking denom. Over REST the denom is passed as the
+  // `denom` query parameter (factory/ibc denoms contain "/", so it cannot be a path segment).
   rpc DenomReward (QueryDenomRewardRequest) returns (QueryDenomRewardResponse) {
-    option (google.api.http).get = "/bze/rewards/denom_reward/{denom}";
+    option (google.api.http).get = "/bze/rewards/denom_reward";
 
   }
 
@@ -88,21 +89,24 @@ service Query {
   }
 
   // Queries every prize accumulator of a DenomReward (bounded by max_prize_denoms_per_dr).
+  // Over REST the denom is passed as the `denom` query parameter.
   rpc DenomRewardPrizes (QueryDenomRewardPrizesRequest) returns (QueryDenomRewardPrizesResponse) {
-    option (google.api.http).get = "/bze/rewards/denom_reward_prizes/{denom}";
+    option (google.api.http).get = "/bze/rewards/denom_reward_prizes";
 
   }
 
-  // Queries the schedules of a DenomReward.
+  // Queries the schedules of a DenomReward. Over REST the denom is passed as the
+  // `denom` query parameter.
   rpc DenomRewardSchedules (QueryDenomRewardSchedulesRequest) returns (QueryDenomRewardSchedulesResponse) {
-    option (google.api.http).get = "/bze/rewards/denom_reward_schedules/{denom}";
+    option (google.api.http).get = "/bze/rewards/denom_reward_schedules";
 
   }
 
   // Queries a participant's position in a DenomReward, including the pending
-  // (claimable) amount per prize denom.
+  // (claimable) amount per prize denom. Over REST the address is a path segment and the
+  // denom is passed as the `denom` query parameter.
   rpc DenomRewardParticipant (QueryDenomRewardParticipantRequest) returns (QueryDenomRewardParticipantResponse) {
-    option (google.api.http).get = "/bze/rewards/denom_reward_participant/{address}/{denom}";
+    option (google.api.http).get = "/bze/rewards/denom_reward_participant/{address}";
 
   }
 

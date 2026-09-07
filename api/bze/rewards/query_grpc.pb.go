@@ -61,16 +61,20 @@ type QueryClient interface {
 	MarketTradingReward(ctx context.Context, in *QueryMarketTradingRewardRequest, opts ...grpc.CallOption) (*QueryMarketTradingRewardResponse, error)
 	// Queries a list of AllPendingUnlockParticipants items.
 	AllPendingUnlockParticipants(ctx context.Context, in *QueryAllPendingUnlockParticipantsRequest, opts ...grpc.CallOption) (*QueryAllPendingUnlockParticipantsResponse, error)
-	// Queries a DenomReward by its staking denom.
+	// Queries a DenomReward by its staking denom. Over REST the denom is passed as the
+	// `denom` query parameter (factory/ibc denoms contain "/", so it cannot be a path segment).
 	DenomReward(ctx context.Context, in *QueryDenomRewardRequest, opts ...grpc.CallOption) (*QueryDenomRewardResponse, error)
 	// Queries all DenomReward records.
 	DenomRewardAll(ctx context.Context, in *QueryDenomRewardAllRequest, opts ...grpc.CallOption) (*QueryDenomRewardAllResponse, error)
 	// Queries every prize accumulator of a DenomReward (bounded by max_prize_denoms_per_dr).
+	// Over REST the denom is passed as the `denom` query parameter.
 	DenomRewardPrizes(ctx context.Context, in *QueryDenomRewardPrizesRequest, opts ...grpc.CallOption) (*QueryDenomRewardPrizesResponse, error)
-	// Queries the schedules of a DenomReward.
+	// Queries the schedules of a DenomReward. Over REST the denom is passed as the
+	// `denom` query parameter.
 	DenomRewardSchedules(ctx context.Context, in *QueryDenomRewardSchedulesRequest, opts ...grpc.CallOption) (*QueryDenomRewardSchedulesResponse, error)
 	// Queries a participant's position in a DenomReward, including the pending
-	// (claimable) amount per prize denom.
+	// (claimable) amount per prize denom. Over REST the address is a path segment and the
+	// denom is passed as the `denom` query parameter.
 	DenomRewardParticipant(ctx context.Context, in *QueryDenomRewardParticipantRequest, opts ...grpc.CallOption) (*QueryDenomRewardParticipantResponse, error)
 	// Queries every DenomReward participation of an address.
 	DenomRewardParticipations(ctx context.Context, in *QueryDenomRewardParticipationsRequest, opts ...grpc.CallOption) (*QueryDenomRewardParticipationsResponse, error)
@@ -252,16 +256,20 @@ type QueryServer interface {
 	MarketTradingReward(context.Context, *QueryMarketTradingRewardRequest) (*QueryMarketTradingRewardResponse, error)
 	// Queries a list of AllPendingUnlockParticipants items.
 	AllPendingUnlockParticipants(context.Context, *QueryAllPendingUnlockParticipantsRequest) (*QueryAllPendingUnlockParticipantsResponse, error)
-	// Queries a DenomReward by its staking denom.
+	// Queries a DenomReward by its staking denom. Over REST the denom is passed as the
+	// `denom` query parameter (factory/ibc denoms contain "/", so it cannot be a path segment).
 	DenomReward(context.Context, *QueryDenomRewardRequest) (*QueryDenomRewardResponse, error)
 	// Queries all DenomReward records.
 	DenomRewardAll(context.Context, *QueryDenomRewardAllRequest) (*QueryDenomRewardAllResponse, error)
 	// Queries every prize accumulator of a DenomReward (bounded by max_prize_denoms_per_dr).
+	// Over REST the denom is passed as the `denom` query parameter.
 	DenomRewardPrizes(context.Context, *QueryDenomRewardPrizesRequest) (*QueryDenomRewardPrizesResponse, error)
-	// Queries the schedules of a DenomReward.
+	// Queries the schedules of a DenomReward. Over REST the denom is passed as the
+	// `denom` query parameter.
 	DenomRewardSchedules(context.Context, *QueryDenomRewardSchedulesRequest) (*QueryDenomRewardSchedulesResponse, error)
 	// Queries a participant's position in a DenomReward, including the pending
-	// (claimable) amount per prize denom.
+	// (claimable) amount per prize denom. Over REST the address is a path segment and the
+	// denom is passed as the `denom` query parameter.
 	DenomRewardParticipant(context.Context, *QueryDenomRewardParticipantRequest) (*QueryDenomRewardParticipantResponse, error)
 	// Queries every DenomReward participation of an address.
 	DenomRewardParticipations(context.Context, *QueryDenomRewardParticipationsRequest) (*QueryDenomRewardParticipationsResponse, error)
