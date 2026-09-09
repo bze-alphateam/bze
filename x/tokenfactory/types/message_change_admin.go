@@ -22,9 +22,12 @@ func (msg *MsgChangeAdmin) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	_, err = sdk.AccAddressFromBech32(msg.NewAdmin)
-	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid new admin address (%s)", err)
+	if msg.NewAdmin != "" {
+		// try to validate only if one was provided
+		_, err = sdk.AccAddressFromBech32(msg.NewAdmin)
+		if err != nil {
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid new admin address (%s)", err)
+		}
 	}
 
 	if msg.Creator == msg.NewAdmin {

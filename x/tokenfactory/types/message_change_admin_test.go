@@ -58,9 +58,26 @@ func TestMsgChangeAdmin_ValidateBasic(t *testing.T) {
 			err: sdkerrors.ErrInvalidAddress,
 		},
 		{
-			name: "empty new admin address",
+			name: "empty new admin address (renounce admin)",
 			msg: MsgChangeAdmin{
 				Creator:  validCreator,
+				Denom:    validDenom,
+				NewAdmin: "",
+			},
+		},
+		{
+			name: "renounce with empty denom is rejected",
+			msg: MsgChangeAdmin{
+				Creator:  validCreator,
+				Denom:    "",
+				NewAdmin: "",
+			},
+			err: sdkerrors.ErrInvalidRequest,
+		},
+		{
+			name: "renounce with invalid creator is rejected",
+			msg: MsgChangeAdmin{
+				Creator:  "invalid_address",
 				Denom:    validDenom,
 				NewAdmin: "",
 			},
