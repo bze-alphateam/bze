@@ -9,6 +9,10 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
+### State Machine Breaking
+
+* (x/tokenfactory) [#110](https://github.com/bze-alphateam/bze/pull/110) `MsgChangeAdmin` with an empty `new_admin` (admin renounce) now passes `ValidateBasic` and reaches the keeper, which already stores the empty admin. Previously every renounce was rejected at CheckTx with "invalid new admin address", so no factory denom could actually give up its admin. Once renounced, mint, burn, metadata and admin changes are refused for good.
+
 ## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0)
 
 Coordinated upgrade at a height to be announced once the mainnet software-upgrade proposal passes (`v8.2.0` upgrade handler). Module migration: rewards v4→v5 (Denom Rewards parameter defaults); no store keys added or removed. **Validators must build with Go 1.26.x.**
