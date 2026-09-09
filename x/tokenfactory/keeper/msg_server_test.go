@@ -395,6 +395,108 @@ func (suite *IntegrationTestSuite) TestChangeAdmin_Unauthorized() {
 	suite.Require().Equal(types.ErrUnauthorized, err)
 }
 
+// renounceAdmin sets up a denom with `creator` as admin, then calls
+// ChangeAdmin with NewAdmin="" so the denom enters the locked state.
+// Used by the post-renounce invariant tests.
+func (suite *IntegrationTestSuite) renounceAdmin(creator, denom string) {
+	denomAuth := types.DenomAuthority{Admin: creator}
+	err := suite.k.SetDenomAuthority(suite.ctx, denom, denomAuth)
+	suite.Require().NoError(err)
+
+	res, err := suite.msgServer.ChangeAdmin(suite.ctx, &types.MsgChangeAdmin{
+		Creator:  creator,
+		Denom:    denom,
+		NewAdmin: "",
+	})
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+
+	updated, err := suite.k.GetDenomAuthority(suite.ctx, denom)
+	suite.Require().NoError(err)
+	suite.Require().Equal("", updated.Admin)
+}
+
+// After admin is renounced (set to ""), no caller — including the former
+// admin — can mint. The denom is permanently mint-locked.
+func (suite *IntegrationTestSuite) TestChangeAdmin_AfterRenounce_MintBlocked() {
+	creator := sdk.AccAddress("creator").String()
+	denom := "factory/" + creator + "/testtoken"
+	suite.renounceAdmin(creator, denom)
+
+	suite.bank.EXPECT().GetDenomMetaData(suite.ctx, denom).Return(banktypes.Metadata{Base: denom}, true).Times(1)
+
+	res, err := suite.msgServer.Mint(suite.ctx, &types.MsgMint{
+		Creator: creator,
+		Coins:   "1000" + denom,
+	})
+
+	suite.Require().Error(err)
+	suite.Require().Nil(res)
+	suite.Require().Equal(types.ErrUnauthorized, err)
+}
+
+// After renounce, the former admin can no longer burn either.
+func (suite *IntegrationTestSuite) TestChangeAdmin_AfterRenounce_BurnBlocked() {
+	creator := sdk.AccAddress("creator").String()
+	denom := "factory/" + creator + "/testtoken"
+	suite.renounceAdmin(creator, denom)
+
+	res, err := suite.msgServer.Burn(suite.ctx, &types.MsgBurn{
+		Creator: creator,
+		Coins:   "1000" + denom,
+	})
+
+	suite.Require().Error(err)
+	suite.Require().Nil(res)
+	suite.Require().Equal(types.ErrUnauthorized, err)
+}
+
+// After renounce, no one — not even the former admin — can claim back the
+// admin role. Renounce is one-way.
+func (suite *IntegrationTestSuite) TestChangeAdmin_AfterRenounce_ChangeAdminBlocked() {
+	creator := sdk.AccAddress("creator").String()
+	newAdmin := sdk.AccAddress("newadmin").String()
+	denom := "factory/" + creator + "/testtoken"
+	suite.renounceAdmin(creator, denom)
+
+	res, err := suite.msgServer.ChangeAdmin(suite.ctx, &types.MsgChangeAdmin{
+		Creator:  creator,
+		Denom:    denom,
+		NewAdmin: newAdmin,
+	})
+
+	suite.Require().Error(err)
+	suite.Require().Nil(res)
+	suite.Require().Equal(types.ErrUnauthorized, err)
+}
+
+// After renounce, denom metadata is also frozen.
+func (suite *IntegrationTestSuite) TestChangeAdmin_AfterRenounce_SetDenomMetadataBlocked() {
+	creator := sdk.AccAddress("creator").String()
+	denom := "factory/" + creator + "/testtoken"
+	suite.renounceAdmin(creator, denom)
+
+	metadata := banktypes.Metadata{
+		Base:    denom,
+		Display: "testtoken",
+		Name:    "Test Token",
+		Symbol:  "TEST",
+		DenomUnits: []*banktypes.DenomUnit{
+			{Denom: denom, Exponent: 0},
+			{Denom: "testtoken", Exponent: 6},
+		},
+	}
+
+	res, err := suite.msgServer.SetDenomMetadata(suite.ctx, &types.MsgSetDenomMetadata{
+		Creator:  creator,
+		Metadata: metadata,
+	})
+
+	suite.Require().Error(err)
+	suite.Require().Nil(res)
+	suite.Require().Equal(types.ErrUnauthorized, err)
+}
+
 func (suite *IntegrationTestSuite) TestSetDenomMetadata_ValidRequest() {
 	creator := sdk.AccAddress("creator").String()
 	denom := "factory/" + creator + "/testtoken"
