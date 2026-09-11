@@ -13,6 +13,10 @@ derived from it. History older than v8.0.0 lives in the
 
 * (x/rewards) [#113](https://github.com/bze-alphateam/bze/pull/113) The two EndBlock distribution queues (staking rewards and denom reward schedules) now pay each entry inside a recovering cache context (`bzeutils.ApplyFuncIfNoError`), like the unlock and trading-reward queues and the epoch hooks already do. A panic while paying one entry (a corrupt store record, an accumulator overflow) is logged, that entry's writes are discarded and the rest of the batch is paid, instead of halting every node. Behaviour differs only on the panic path, so it activates with the `v8.2.0` upgrade handler.
 
+### Improvements
+
+* (x/rewards) [#113](https://github.com/bze-alphateam/bze/pull/113) `validate-genesis` now checks Denom Rewards values, not only references: no duplicate prize / participant / index / schedule records, no negative staked amounts or accumulators, participant amounts positive and summing to the pool's staked amount, participant indexes never ahead of their prize accumulator, schedules pointing at an existing prize with a positive daily amount, a non-zero duration and fewer payouts than their duration. A chain export always passes; a hand-edited genesis that would strand escrow or wedge the daily distribution pass is rejected up front instead of imported. Only genesis validation changes.
+
 ### Bug Fixes
 
 * (x/rewards) [#113](https://github.com/bze-alphateam/bze/pull/113) The rewards msg server now shares the keeper pointer instead of holding a by-value copy taken at `RegisterServices` time (which runs inside `appBuilder.Build`, before `app.go` wires any hooks). Staking-reward hooks registered through `Keeper.SetHooks` are therefore visible to `JoinStaking`, `ExitStaking` and `DeleteStakingReward`; with the copy they would have stayed no-op forever. No behaviour change on chain today, since no module registers these hooks yet.
