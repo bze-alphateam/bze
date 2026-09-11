@@ -43,7 +43,7 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	suite.bank = mockBank
 	suite.epoch = mockEpoch
 	suite.trade = trade
-	suite.msgServer = keeper.NewMsgServerImpl(k)
+	suite.msgServer = keeper.NewMsgServerImpl(suite.k)
 }
 
 func TestKeeperSuite(t *testing.T) {

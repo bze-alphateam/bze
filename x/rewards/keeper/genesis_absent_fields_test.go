@@ -16,7 +16,9 @@ import (
 // daily_amount) when a genesis file omits them: the import must not panic, every later reader
 // (queries, settle, the distribution pass) must see zero, and the re-export must render the
 // canonical zero strings — so a hand-edited or partially generated genesis cannot brick a chain
-// at InitGenesis or, worse, at the first EndBlock that touches the record.
+// at InitGenesis or, worse, at the first EndBlock that touches the record. Since BZE-142 such a
+// file is rejected by validate-genesis (a participant or schedule with a zero amount cannot come
+// from an export); InitGenesis itself does not validate, so the import path is pinned regardless.
 func (suite *IntegrationTestSuite) TestGenesisDenomRewards_AbsentNumericFields_ImportAsZero() {
 	addr := sample.AccAddress()
 	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
@@ -35,7 +37,7 @@ func (suite *IntegrationTestSuite) TestGenesisDenomRewards_AbsentNumericFields_I
 
 	var genState types.GenesisState
 	suite.Require().NotPanics(func() { cdc.MustUnmarshalJSON(raw, &genState) })
-	suite.Require().NoError(genState.Validate())
+	suite.Require().ErrorContains(genState.Validate(), "participant ubze/"+addr+" has a non-positive amount 0")
 
 	suite.Require().NotPanics(func() { rewards.InitGenesis(suite.ctx, *suite.k, genState) })
 
@@ -73,9 +75,9 @@ func (suite *IntegrationTestSuite) TestGenesisDenomRewards_AbsentNumericFields_I
 	schedule, _ = suite.k.GetDenomRewardSchedule(suite.ctx, "ubze", "000000000001")
 	suite.Require().Equal(uint32(0), schedule.Payouts)
 
-	// the re-export renders canonical zeros, so the file round-trips
+	// the re-export renders canonical zeros (and is rejected by validation for the same reason)
 	exported := rewards.ExportGenesis(suite.ctx, *suite.k)
-	suite.Require().NoError(exported.Validate())
+	suite.Require().ErrorContains(exported.Validate(), "non-positive amount 0")
 	exportedJSON := string(cdc.MustMarshalJSON(exported))
 	suite.Require().Contains(exportedJSON, `"staked_amount":"0"`)
 	suite.Require().Contains(exportedJSON, `"amount":"0"`)

@@ -105,7 +105,7 @@ func (suite *IntegrationTestSuite) TestGenesisDenomRewardsRoundTrip() {
 			bank      *testutil.MockBankKeeper
 		}{
 			{suite.msgServer, suite.ctx, suite.bank},
-			{keeper.NewMsgServerImpl(freshK), freshCtx, freshBank},
+			{keeper.NewMsgServerImpl(&freshK), freshCtx, freshBank},
 		} {
 			for _, coin := range tc.paid {
 				k.bank.EXPECT().
