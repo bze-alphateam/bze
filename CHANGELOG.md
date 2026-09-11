@@ -20,6 +20,7 @@ derived from it. History older than v8.0.0 lives in the
 ### Bug Fixes
 
 * (x/rewards) [#113](https://github.com/bze-alphateam/bze/pull/113) The rewards msg server now shares the keeper pointer instead of holding a by-value copy taken at `RegisterServices` time (which runs inside `appBuilder.Build`, before `app.go` wires any hooks). Staking-reward hooks registered through `Keeper.SetHooks` are therefore visible to `JoinStaking`, `ExitStaking` and `DeleteStakingReward`; with the copy they would have stayed no-op forever. No behaviour change on chain today, since no module registers these hooks yet.
+* (x/tradebin) [#113](https://github.com/bze-alphateam/bze/pull/113) Same fix for the tradebin msg server: it held a by-value keeper copy taken at `RegisterServices`, before `app.go` registers the order-fill hooks, so AMM swaps (`MsgMultiSwap`) never invoked them while the orderbook path did. With the current hook this changes nothing on chain (the rewards hook looks up trading rewards by orderbook market id `base/quote`, and AMM swaps report the pool id `base_quote`, so the lookup misses either way); it matters for any future hook consumer of AMM swaps.
 
 ## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0)
 
