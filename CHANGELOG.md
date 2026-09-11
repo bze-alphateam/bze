@@ -9,6 +9,10 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
+### Bug Fixes
+
+* (x/rewards) [#113](https://github.com/bze-alphateam/bze/pull/113) The rewards msg server now shares the keeper pointer instead of holding a by-value copy taken at `RegisterServices` time (which runs inside `appBuilder.Build`, before `app.go` wires any hooks). Staking-reward hooks registered through `Keeper.SetHooks` are therefore visible to `JoinStaking`, `ExitStaking` and `DeleteStakingReward`; with the copy they would have stayed no-op forever. No behaviour change on chain today, since no module registers these hooks yet.
+
 ## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0)
 
 Coordinated upgrade at a height to be announced once the mainnet software-upgrade proposal passes (`v8.2.0` upgrade handler). Module migration: rewards v4→v5 (Denom Rewards parameter defaults); no store keys added or removed. **Validators must build with Go 1.26.x.**

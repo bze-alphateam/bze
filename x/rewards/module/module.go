@@ -101,9 +101,10 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *r
 type AppModule struct {
 	AppModuleBasic
 
-	// keeper is held by pointer (like tradebin's AppModule) so hooks registered
-	// via Keeper.SetHooks after app wiring are visible to the msg server, which
-	// dereferences the keeper at RegisterServices time.
+	// keeper is held by pointer and handed to the msg server as a pointer too, so hooks
+	// registered via Keeper.SetHooks after app wiring (app.go wires hooks only after
+	// appBuilder.Build, which is where RegisterServices runs) are visible to the message
+	// handlers. A by-value copy at RegisterServices time would freeze the nil hooks forever.
 	keeper        *keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
@@ -135,7 +136,7 @@ func NewAppModule(
 
 // RegisterServices registers a gRPC query service to respond to the module-specific gRPC queries
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(*am.keeper))
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
 	m := keeper.NewMigrator(*am.keeper, am.legacySubspace)

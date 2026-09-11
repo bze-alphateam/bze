@@ -31,7 +31,7 @@ import (
 // record can be planted exactly as a v8.1.1 node stored it (keeper.SetParams would refuse it:
 // the zero Denom Rewards fee coins fail validation, which is precisely why the migration exists).
 type wiringFixture struct {
-	k        keeper.Keeper
+	k        *keeper.Keeper
 	ctx      sdk.Context
 	storeKey *storetypes.KVStoreKey
 	cdc      codec.Codec
@@ -65,7 +65,7 @@ func newWiringFixture(t *testing.T) wiringFixture {
 		epoch:    testutil.NewMockEpochKeeper(ctrl),
 		trade:    testutil.NewMockTradingKeeper(ctrl),
 	}
-	f.k = keeper.NewKeeper(
+	k := keeper.NewKeeper(
 		cdc,
 		runtime.NewKVStoreService(storeKey),
 		log.NewNopLogger(),
@@ -75,6 +75,7 @@ func newWiringFixture(t *testing.T) wiringFixture {
 		f.trade,
 		f.acc,
 	)
+	f.k = &k
 	f.ctx = sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
 
 	return f
@@ -101,10 +102,11 @@ func (f wiringFixture) plantV4Params(stakingFee, tradingFee sdk.Coin, extraGas u
 	f.ctx.KVStore(f.storeKey).Set(types.ParamsKey, bz)
 }
 
-// configurator builds the real SDK configurator + module manager the app uses, with the rewards
+// manager builds the real SDK configurator + module manager the app uses, with the rewards
 // AppModule registered exactly as app.go does (through RegisterServices). RunMigrations on this
-// manager is what the v8.2.0 upgrade handler executes.
-func (f wiringFixture) manager(t *testing.T) (*module.Manager, module.Configurator, rewards.AppModule) {
+// manager is what the v8.2.0 upgrade handler executes; the returned msg service router is what
+// BaseApp dispatches transactions through.
+func (f wiringFixture) manager(t *testing.T) (*module.Manager, module.Configurator, *baseapp.MsgServiceRouter, rewards.AppModule) {
 	t.Helper()
 
 	msr := baseapp.NewMsgServiceRouter()
@@ -113,11 +115,11 @@ func (f wiringFixture) manager(t *testing.T) (*module.Manager, module.Configurat
 	qr.SetInterfaceRegistry(f.registry)
 	cfg := module.NewConfigurator(f.cdc, msr, qr)
 
-	am := rewards.NewAppModule(f.cdc, &f.k, f.acc, f.bank, f.trade, nil)
+	am := rewards.NewAppModule(f.cdc, f.k, f.acc, f.bank, f.trade, nil)
 	mm := module.NewManager(am)
 	require.NoError(t, mm.RegisterServices(cfg))
 
-	return mm, cfg, am
+	return mm, cfg, msr, am
 }
 
 // TestRunMigrations_RewardsV4ToV5_ThroughModuleManager proves the piece the migrator unit tests
@@ -133,7 +135,7 @@ func TestRunMigrations_RewardsV4ToV5_ThroughModuleManager(t *testing.T) {
 	tradingFee := sdk.NewInt64Coin("ubze", 50_000_000000)
 	f.plantV4Params(stakingFee, tradingFee, 1_000_000)
 
-	mm, cfg, am := f.manager(t)
+	mm, cfg, _, am := f.manager(t)
 	require.Equal(t, uint64(5), am.ConsensusVersion())
 
 	newVM, err := mm.RunMigrations(f.ctx, cfg, module.VersionMap{types.ModuleName: 4})

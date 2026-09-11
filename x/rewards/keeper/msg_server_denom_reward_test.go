@@ -187,7 +187,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_CreateDenomReward_Ni
 	mockAcc := testutil.NewMockAccountKeeper(mockCtrl)
 
 	k, ctx := keeper2.RewardsKeeper(t, mockBank, mockEpoch, nil, mockAcc)
-	msgServer := keeper.NewMsgServerImpl(k)
+	msgServer := keeper.NewMsgServerImpl(&k)
 
 	creator := sdk.AccAddress("dr-creator-06")
 	suite.Require().NoError(k.SetParams(ctx, types.Params{
