@@ -9,6 +9,10 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
+### State Machine Breaking
+
+* (x/rewards) [#113](https://github.com/bze-alphateam/bze/pull/113) The two EndBlock distribution queues (staking rewards and denom reward schedules) now pay each entry inside a recovering cache context (`bzeutils.ApplyFuncIfNoError`), like the unlock and trading-reward queues and the epoch hooks already do. A panic while paying one entry (a corrupt store record, an accumulator overflow) is logged, that entry's writes are discarded and the rest of the batch is paid, instead of halting every node. Behaviour differs only on the panic path, so it activates with the `v8.2.0` upgrade handler.
+
 ### Bug Fixes
 
 * (x/rewards) [#113](https://github.com/bze-alphateam/bze/pull/113) The rewards msg server now shares the keeper pointer instead of holding a by-value copy taken at `RegisterServices` time (which runs inside `appBuilder.Build`, before `app.go` wires any hooks). Staking-reward hooks registered through `Keeper.SetHooks` are therefore visible to `JoinStaking`, `ExitStaking` and `DeleteStakingReward`; with the copy they would have stayed no-op forever. No behaviour change on chain today, since no module registers these hooks yet.

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+	"github.com/bze-alphateam/bze/bzeutils"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -51,11 +52,14 @@ func (k Keeper) ProcessStakingRewardsDistributionQueue(ctx sdk.Context) {
 
 	finished := len(rewards) < types.MaxStakingDistributionsPerBlock
 
-	// Process collected entries in a safe context
+	// Each reward is paid inside its own recovering cache context (the iterator above is already
+	// closed, as ApplyFuncIfNoError requires): a panic in one reward's pass is logged, its writes
+	// are discarded and the batch carries on, so a single bad record can neither halt the chain
+	// nor wedge the queue.
 	lastProcessedId := queue.Cursor
 	for _, sr := range rewards {
 		lastProcessedId = sr.RewardId
-		k.distributeStakingReward(ctx, sr)
+		k.safeDistributeStakingReward(ctx, sr)
 	}
 
 	if finished {
@@ -63,6 +67,24 @@ func (k Keeper) ProcessStakingRewardsDistributionQueue(ctx sdk.Context) {
 	} else {
 		queue.Cursor = lastProcessedId
 		k.SetStakingRewardsDistributionQueue(ctx, queue)
+	}
+}
+
+// safeDistributeStakingReward runs distributeStakingReward in a cache context with panic
+// recovery. On a panic nothing the pass wrote survives and the reward is skipped for this day
+// only: the next day tick enqueues it again, exactly as after a logged error.
+func (k Keeper) safeDistributeStakingReward(ctx sdk.Context, sr types.StakingReward) {
+	err := bzeutils.ApplyFuncIfNoError(ctx, func(c sdk.Context) error {
+		k.distributeStakingReward(c, sr)
+
+		return nil
+	})
+	if err != nil {
+		k.Logger().Error(
+			"staking reward distribution skipped after panic",
+			"reward_id", sr.RewardId,
+			"err", err,
+		)
 	}
 }
 
