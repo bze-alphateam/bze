@@ -849,7 +849,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 	mockAcc := testutil.NewMockAccountKeeper(mockCtrl)
 
 	k, ctx := keeper2.RewardsKeeper(t, mockBank, mockEpoch, nil, mockAcc)
-	msgServer := keeper.NewMsgServerImpl(k)
+	msgServer := keeper.NewMsgServerImpl(&k)
 
 	creator := sdk.AccAddress("creator")
 

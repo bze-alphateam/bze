@@ -7,6 +7,7 @@ import (
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
+	"go.uber.org/mock/gomock"
 )
 
 // seedDenomRewardWithPrize writes a DenomReward with the given staked total and a fresh S = 0
@@ -103,7 +104,7 @@ func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_NoQu
 // per day; the queue clears when drained and re-enqueues fine the next day.
 func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_CursorSpansBlocks_ExactlyOncePerDay() {
 	suite.epoch.EXPECT().
-		SafeGetEpochCountByIdentifier(suite.ctx, "day").
+		SafeGetEpochCountByIdentifier(gomock.Any(), "day").
 		Return(int64(7), nil).
 		AnyTimes()
 
@@ -170,7 +171,7 @@ func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_Curs
 // schedule's life equals daily × duration regardless of the gap.
 func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_ZeroStakerDay_SkipsWithoutPayout() {
 	suite.epoch.EXPECT().
-		SafeGetEpochCountByIdentifier(suite.ctx, "day").
+		SafeGetEpochCountByIdentifier(gomock.Any(), "day").
 		Return(int64(3), nil).
 		AnyTimes()
 
@@ -208,7 +209,7 @@ func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_Zero
 
 func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_FinishingPayout_DeletesAndEmitsEvent() {
 	suite.epoch.EXPECT().
-		SafeGetEpochCountByIdentifier(suite.ctx, "day").
+		SafeGetEpochCountByIdentifier(gomock.Any(), "day").
 		Return(int64(9), nil).
 		AnyTimes()
 
@@ -245,7 +246,7 @@ func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_Fini
 // amounts, and T is read live each day — a stake change between days changes the per-unit bump.
 func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_SamePrizeDenom_SharedAccumulator_LiveT() {
 	suite.epoch.EXPECT().
-		SafeGetEpochCountByIdentifier(suite.ctx, "day").
+		SafeGetEpochCountByIdentifier(gomock.Any(), "day").
 		Return(int64(5), nil).
 		AnyTimes()
 

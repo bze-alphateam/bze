@@ -54,7 +54,7 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	suite.k = &k
 	suite.bankMock = mockBank
 	suite.accountMock = mockAccount
-	suite.msgServer = keeper.NewMsgServerImpl(k)
+	suite.msgServer = keeper.NewMsgServerImpl(suite.k)
 }
 
 func TestKeeperSuite(t *testing.T) {

@@ -129,6 +129,160 @@ func TestGenesisState_ValidateDenomRewards(t *testing.T) {
 			},
 			expError: "queue cursor",
 		},
+		// value-level rules (BZE-142)
+		{
+			name: "nil numeric fields (absent in JSON) count as zero",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardList[1].StakedAmount = math.Int{}
+				gs.DenomRewardPrizeList[1].DistributedStake = math.LegacyDec{}
+			},
+		},
+		{
+			name: "more prizes than the current cap is valid (cap only gates new prizes, params may have been lowered)",
+			mutate: func(gs *GenesisState) {
+				gs.Params.MaxPrizeDenomsPerDr = 1
+				gs.DenomRewardPrizeList = append(gs.DenomRewardPrizeList, DenomRewardPrize{StakingDenom: "udenom1", PrizeDenom: "uprizec", DistributedStake: math.LegacyZeroDec()})
+			},
+		},
+		{
+			name: "index without a participant record is valid (settled positions may leave markers)",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardParticipantIndexList = append(gs.DenomRewardParticipantIndexList, DenomRewardParticipantIndex{Address: "addr9", StakingDenom: "udenom1", PrizeDenom: "uprizea", Index: math.LegacyMustNewDecFromStr("1.5")})
+			},
+		},
+		{
+			name: "negative staked amount",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardList[1].StakedAmount = math.NewInt(-1)
+			},
+			expError: "denom reward udenom2 has a negative staked amount -1",
+		},
+		{
+			name: "zero staked amount while participants exist",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardList[0].StakedAmount = math.ZeroInt()
+			},
+			expError: "denom reward udenom1 staked amount 0 does not match the sum of participant amounts 1000",
+		},
+		{
+			name: "staked amount without participants",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardList[1].StakedAmount = math.NewInt(10)
+			},
+			expError: "denom reward udenom2 staked amount 10 does not match the sum of participant amounts 0",
+		},
+		{
+			name: "participant amounts do not sum to the staked amount",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardParticipantList[1].Amount = math.NewInt(500)
+			},
+			expError: "denom reward udenom1 staked amount 1000 does not match the sum of participant amounts 900",
+		},
+		{
+			name: "negative participant amount",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardParticipantList[0].Amount = math.NewInt(-400)
+			},
+			expError: "participant udenom1/addr1 has a non-positive amount -400",
+		},
+		{
+			name: "zero participant amount",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardParticipantList[0].Amount = math.ZeroInt()
+			},
+			expError: "participant udenom1/addr1 has a non-positive amount 0",
+		},
+		{
+			name: "negative prize accumulator",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardPrizeList[1].DistributedStake = math.LegacyMustNewDecFromStr("-0.1")
+			},
+			expError: "prize udenom2/uprizeb has a negative accumulator",
+		},
+		{
+			name: "negative participant index",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardParticipantIndexList[0].Index = math.LegacyMustNewDecFromStr("-0.5")
+			},
+			expError: "index addr1/udenom1/uprizea has a negative index",
+		},
+		{
+			name: "participant index ahead of the prize accumulator",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardParticipantIndexList[0].Index = math.LegacyMustNewDecFromStr("1.500000000000000001")
+			},
+			expError: "index addr1/udenom1/uprizea is ahead of the prize accumulator",
+		},
+		{
+			name: "schedule references missing prize",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardScheduleList[1].PrizeDenom = "missing"
+			},
+			expError: "schedule udenom2/000000000002 references missing denom reward prize missing",
+		},
+		{
+			name: "schedule with zero daily amount",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardScheduleList[1].DailyAmount = math.ZeroInt()
+			},
+			expError: "schedule udenom2/000000000002 has a non-positive daily amount 0",
+		},
+		{
+			name: "schedule with negative daily amount",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardScheduleList[1].DailyAmount = math.NewInt(-50)
+			},
+			expError: "schedule udenom2/000000000002 has a non-positive daily amount -50",
+		},
+		{
+			name: "schedule with zero duration",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardScheduleList[1].Duration = 0
+			},
+			expError: "schedule udenom2/000000000002 has zero duration",
+		},
+		{
+			name: "schedule with payouts equal to duration never finishes",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardScheduleList[0].Payouts = 30
+			},
+			expError: "schedule udenom1/000000000001 has 30 payouts for a duration of 30 and would never finish",
+		},
+		{
+			name: "schedule with payouts above duration never finishes",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardScheduleList[0].Payouts = 31
+			},
+			expError: "schedule udenom1/000000000001 has 31 payouts for a duration of 30 and would never finish",
+		},
+		{
+			name: "duplicate prize",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardPrizeList = append(gs.DenomRewardPrizeList, gs.DenomRewardPrizeList[0])
+			},
+			expError: "duplicate denom reward prize udenom1/uprizea",
+		},
+		{
+			name: "duplicate participant",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardParticipantList = append(gs.DenomRewardParticipantList, gs.DenomRewardParticipantList[0])
+			},
+			expError: "duplicate denom reward participant udenom1/addr1",
+		},
+		{
+			name: "duplicate participant index",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardParticipantIndexList = append(gs.DenomRewardParticipantIndexList, gs.DenomRewardParticipantIndexList[0])
+			},
+			expError: "duplicate denom reward participant index addr1/udenom1/uprizea",
+		},
+		{
+			name: "duplicate schedule",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardScheduleList = append(gs.DenomRewardScheduleList, gs.DenomRewardScheduleList[0])
+			},
+			expError: "duplicate denom reward schedule udenom1/000000000001",
+		},
 	}
 
 	for _, tt := range tests {

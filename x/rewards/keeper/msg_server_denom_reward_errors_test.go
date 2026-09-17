@@ -271,7 +271,7 @@ func (suite *IntegrationTestSuite) nilTradeKeeperSetup() (keeper.Keeper, sdk.Con
 
 	k, ctx := keeper2.RewardsKeeper(t, mockBank, mockEpoch, nil, mockAcc)
 
-	return k, ctx, keeper.NewMsgServerImpl(k), mockBank
+	return k, ctx, keeper.NewMsgServerImpl(&k), mockBank
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_NewPrize_NilTradeKeeper() {

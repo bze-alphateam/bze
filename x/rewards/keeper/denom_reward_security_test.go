@@ -1036,7 +1036,7 @@ func (suite *IntegrationTestSuite) TestDenomRewardSecurity_GenesisRoundTripUnder
 	led2 := recordDenomRewardFlows(bank2, epoch2, trade2)
 	led2.day, led2.hour = led.day, led.hour
 	rewards.InitGenesis(ctx2, k2, *exported)
-	msgServer2 := keeper.NewMsgServerImpl(k2)
+	msgServer2 := keeper.NewMsgServerImpl(&k2)
 
 	// identical continuation on both chains: three more days finish the active schedule, the late
 	// joiner claims everything, the dormant participant exits

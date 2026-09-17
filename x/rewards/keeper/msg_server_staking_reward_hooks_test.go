@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
-	"github.com/bze-alphateam/bze/x/rewards/keeper"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -58,12 +57,12 @@ func (r *recordingStakingHooks) BeforeStakingRewardRemoval(_ sdk.Context, reward
 	return r.removalErr
 }
 
-// registerHooks registers the recording hooks on the suite keeper and rebuilds
-// the msg server so its embedded keeper copy carries the hooks.
+// registerHooks registers the recording hooks on the suite keeper. The msg server shares the
+// keeper pointer, so the hooks are visible to it without rebuilding it — the same wiring order
+// the app uses (RegisterServices first, SetHooks later).
 func (suite *IntegrationTestSuite) registerHooks() *recordingStakingHooks {
 	hooks := &recordingStakingHooks{}
 	suite.k.SetHooks(hooks)
-	suite.msgServer = keeper.NewMsgServerImpl(*suite.k)
 
 	return hooks
 }

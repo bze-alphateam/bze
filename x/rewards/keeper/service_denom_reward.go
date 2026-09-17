@@ -3,6 +3,7 @@ package keeper
 import (
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	"github.com/bze-alphateam/bze/bzeutils"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -243,11 +244,14 @@ func (k Keeper) ProcessDenomRewardsDistributionQueue(ctx sdk.Context) {
 
 	finished := len(schedules) < types.MaxDenomRewardDistributionsPerBlock
 
-	// Process collected entries in a safe context
+	// Each schedule is paid inside its own recovering cache context (the iterator above is already
+	// closed, as ApplyFuncIfNoError requires): a panic in one schedule's pass — a corrupt record
+	// failing MustUnmarshal, an accumulator overflow — is logged, its writes are discarded and the
+	// batch carries on, so a single bad schedule can neither halt the chain nor wedge the queue.
 	lastProcessedKey := queue.Cursor
 	for _, schedule := range schedules {
 		lastProcessedKey = string(types.DenomRewardScheduleKey(schedule.StakingDenom, schedule.ScheduleId))
-		k.distributeDenomRewardSchedule(ctx, schedule)
+		k.safeDistributeDenomRewardSchedule(ctx, schedule)
 	}
 
 	if finished {
@@ -255,6 +259,25 @@ func (k Keeper) ProcessDenomRewardsDistributionQueue(ctx sdk.Context) {
 	} else {
 		queue.Cursor = lastProcessedKey
 		k.SetDenomRewardsDistributionQueue(ctx, queue)
+	}
+}
+
+// safeDistributeDenomRewardSchedule runs distributeDenomRewardSchedule in a cache context with
+// panic recovery. On a panic nothing the pass wrote survives and the schedule is skipped for this
+// day only: the next day tick enqueues it again, exactly as after a logged error.
+func (k Keeper) safeDistributeDenomRewardSchedule(ctx sdk.Context, schedule types.DenomRewardSchedule) {
+	err := bzeutils.ApplyFuncIfNoError(ctx, func(c sdk.Context) error {
+		k.distributeDenomRewardSchedule(c, schedule)
+
+		return nil
+	})
+	if err != nil {
+		k.Logger().Error(
+			"denom reward schedule distribution skipped after panic",
+			"staking_denom", schedule.StakingDenom,
+			"schedule_id", schedule.ScheduleId,
+			"err", err,
+		)
 	}
 }
 

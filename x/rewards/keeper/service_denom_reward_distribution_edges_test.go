@@ -7,6 +7,7 @@ import (
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
+	"go.uber.org/mock/gomock"
 )
 
 // A scheduled payout whose accumulator bump fails (the epoch keeper cannot serve the day count)
@@ -25,7 +26,7 @@ func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_Epoc
 	})
 
 	suite.epoch.EXPECT().
-		SafeGetEpochCountByIdentifier(suite.ctx, "day").
+		SafeGetEpochCountByIdentifier(gomock.Any(), "day").
 		Return(int64(0), fmt.Errorf("epoch keeper unavailable")).
 		Times(1)
 
@@ -47,7 +48,7 @@ func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_Epoc
 
 	// the next day tick retries and finishes the schedule
 	suite.epoch.EXPECT().
-		SafeGetEpochCountByIdentifier(suite.ctx, "day").
+		SafeGetEpochCountByIdentifier(gomock.Any(), "day").
 		Return(int64(9), nil).
 		Times(1)
 	suite.k.EnqueueDenomRewardsDistribution(suite.ctx)
@@ -66,7 +67,7 @@ func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_Epoc
 // exactly once. Mirrors TestProcessStakingDistributionQueue_ExactlyAtBatchLimit.
 func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_ExactlyAtBatchLimit() {
 	suite.epoch.EXPECT().
-		SafeGetEpochCountByIdentifier(suite.ctx, "day").
+		SafeGetEpochCountByIdentifier(gomock.Any(), "day").
 		Return(int64(7), nil).
 		AnyTimes()
 
