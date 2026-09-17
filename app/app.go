@@ -357,13 +357,17 @@ func (app *App) setupUpgradeHandlers() {
 		upgrades.EmptyUpgradeHandler(),
 	)
 
-	// v8.2.0 runs module migrations (rewards v4->v5: Denom Rewards param defaults);
-	// no store keys are added or removed, so no store loader entry is needed
+	// v8.2.0 runs module migrations (rewards v4->v5: Denom Rewards param defaults,
+	// txfeecollector v2->v3: empty BlockedIbcInbound default) and then the Noble USDC
+	// wind-down; no store keys are added or removed, so no store loader entry is needed
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v820.UpgradeName,
 		v820.CreateUpgradeHandler(
 			app.Configurator(),
 			app.ModuleManager,
+			app.BankKeeper,
+			app.AccountKeeper,
+			app.TxfeecollectorKeeper,
 		),
 	)
 
