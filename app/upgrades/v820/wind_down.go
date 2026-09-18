@@ -45,14 +45,27 @@ const (
 	nobleUsdcBaseDenom = "uusdc"
 	// nobleUsdcLpDenom is the LP denomination of the USDC.n/BZE liquidity pool.
 	nobleUsdcLpDenom = "ulp_ibc/6490A7EAB61059BFC1CDDEB05917DD70BDF3A611654162A1A47DB930D40D8AF4_ubze"
-	// adminAddress is the wallet that receives the black hole's LP shares.
+	// adminAddress is the wallet that receives the black hole's LP shares. The same
+	// wallet is used on the testnet, which shares the mainnet bech32 prefix.
 	adminAddress = "bze1jx4x3kn8mlz2s03zdpf2a38x9gl66llvjqdd55"
 )
 
-// nobleUsdcWindDown is the configuration shared by mainnet and the testnets: the
-// testnets run the same values so the upgrade rehearsal exercises the same code path.
-// Where the testnet holds none of the LP denom the transfer step is simply a logged
-// no-op.
+// The testnet has no Noble channel and no USDC.n pool, so mainnet values would make
+// both steps log-and-skip no-ops there and the rehearsal would prove nothing. It runs
+// the same code against the assets it does have: its single transfer channel and the
+// LP shares its own black hole holds.
+const (
+	// testnetChannel is the only transfer channel open on bzetestnet-3.
+	testnetChannel = "channel-0"
+	// testnetBaseDenom is the denomination that arrives over it; it becomes
+	// ibc/9DA252F9F9C86132CC282EA431DFB7DE7729501F6DC9A3E0F50EC8C6EE380CC7 on BZE.
+	testnetBaseDenom = "ulmn"
+	// testnetLpDenom is the LP denomination of that voucher's pool with BZE; the
+	// testnet black hole holds shares of it, so the transfer step actually moves coins.
+	testnetLpDenom = "ulp_ibc/9DA252F9F9C86132CC282EA431DFB7DE7729501F6DC9A3E0F50EC8C6EE380CC7_ubze"
+)
+
+// nobleUsdcWindDown is the mainnet configuration.
 var nobleUsdcWindDown = WindDown{
 	BlockedInbound: []txfeecollectortypes.BlockedIbcTransfer{
 		{ChannelId: nobleUsdcChannel, BaseDenom: nobleUsdcBaseDenom},
@@ -61,13 +74,24 @@ var nobleUsdcWindDown = WindDown{
 	AdminAddress: adminAddress,
 }
 
+// testnetWindDown mirrors it on bzetestnet-3 with assets that exist there, so both
+// steps can be observed: an inbound ulmn transfer must come back with an error
+// acknowledgement, and the black hole's ulmn/BZE LP shares must land on the admin
+// address. Governance can lift the block again with MsgUpdateParams.
+var testnetWindDown = WindDown{
+	BlockedInbound: []txfeecollectortypes.BlockedIbcTransfer{
+		{ChannelId: testnetChannel, BaseDenom: testnetBaseDenom},
+	},
+	LpDenom:      testnetLpDenom,
+	AdminAddress: adminAddress,
+}
+
 // windDownByChainID keys the wind-down values by chain id. A chain id that is absent
-// (a devnet, a local test chain) runs neither part of the wind-down.
+// (a devnet, a local test chain, a retired testnet) runs neither part of the
+// wind-down: bzetestnet-3 is the only testnet still running.
 var windDownByChainID = map[string]WindDown{
 	"beezee-1":     nobleUsdcWindDown,
-	"bzetestnet-1": nobleUsdcWindDown,
-	"bzetestnet-2": nobleUsdcWindDown,
-	"bzetestnet-3": nobleUsdcWindDown,
+	"bzetestnet-3": testnetWindDown,
 }
 
 // GetWindDown returns the wind-down configuration for a chain id, and whether one
