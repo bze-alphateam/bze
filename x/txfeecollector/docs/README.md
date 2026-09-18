@@ -9,6 +9,7 @@ TxFeeCollector standardizes fees by converting module balances to the native den
   - the community pool fee collector,
   into the native denom via the trade module when possible. Skipped coins (non-swappable) can be forwarded to burner.
 - **Minimum gas price:** Ante handler enforces a per-validator minimum gas price, with cross-denom support using spot prices from the trade module.
+- **Inbound IBC filter:** Refuses incoming ICS-20 transfers listed in the `blocked_ibc_inbound` param with an error acknowledgement, so the sending chain refunds the sender and no voucher is minted here. Exits are untouched — sends, acknowledgements, timeout refunds and the channel lifecycle all behave as if the filter were not there. Every refusal emits a `BlockedIbcInboundEvent` typed event (channel, denom, amount, sender, receiver) so relayers and indexers can see what was bounced.
 - **Governance:** Parameters can be updated via `MsgUpdateParams` (authority only).
 
 ## Module Accounts
@@ -38,6 +39,11 @@ bzed tx gov submit-proposal update-params txfeecollector \
 Adjust flags to your governance CLI; the message fields are just `validator_min_gas_fee` and `authority`.
 
 ## Version History
+
+### v8.2.0
+- Added the inbound IBC transfer filter (`ibcmiddleware`), wrapping the transfer application inside the ICS-29 fee middleware, driven by the new `blocked_ibc_inbound` parameter
+- Added the `BlockedIbcInboundEvent` typed event (`proto/bze/txfeecollector/events.proto`), emitted for every refused inbound packet
+- ConsensusVersion bumped from 2 to 3
 
 ### v8.1.0
 - Added three-way fee distribution: fees split between validators/stakers, burner (`txfeecollector_burner`), and community pool (`txfeecollector_cp`) via dedicated module accounts

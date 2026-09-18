@@ -3,6 +3,7 @@ package app
 import (
 	"cosmossdk.io/core/appmodule"
 	storetypes "cosmossdk.io/store/types"
+	txfeecollectoribc "github.com/bze-alphateam/bze/x/txfeecollector/ibcmiddleware"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -142,8 +143,14 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 	)
 	app.GovKeeper.SetLegacyRouter(govRouter)
 
-	// Create IBC modules with ibcfee middleware
-	transferIBCModule := ibcfee.NewIBCMiddleware(ibctransfer.NewIBCModule(app.TransferKeeper), app.IBCFeeKeeper)
+	// Create IBC modules with ibcfee middleware.
+	// The txfeecollector inbound filter sits between the ICS-29 fee middleware and the
+	// transfer application: it answers packets listed in the BlockedIbcInbound param
+	// with an error acknowledgement (see x/txfeecollector/ibcmiddleware). Only received
+	// packets are affected - sends, acks and timeouts pass straight through.
+	transferStack := porttypes.IBCModule(ibctransfer.NewIBCModule(app.TransferKeeper))
+	transferStack = txfeecollectoribc.NewIBCMiddleware(transferStack, app.IBCFeeKeeper, app.TxfeecollectorKeeper)
+	transferIBCModule := ibcfee.NewIBCMiddleware(transferStack, app.IBCFeeKeeper)
 
 	// integration point for custom authentication modules
 	var noAuthzModule porttypes.IBCModule

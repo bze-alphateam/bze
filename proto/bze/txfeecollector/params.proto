@@ -7,6 +7,28 @@ import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/txfeecollector/types";
 
+// BlockedIbcTransfer identifies an inbound ICS-20 transfer that this chain refuses
+// to accept: a base denomination arriving on one of our channels. Only fresh mints
+// are refused - vouchers of BZE-origin tokens coming back home are never affected,
+// and nothing here touches outgoing transfers or their refunds.
+message BlockedIbcTransfer {
+  option (gogoproto.equal) = true;
+
+  // channel_id is the channel on this chain the packet is received on
+  // (the packet's destination channel), for example "channel-3".
+  string channel_id = 1 [
+    (gogoproto.moretags) = "yaml:\"channel_id\"",
+    (gogoproto.jsontag)  = "channel_id,omitempty"
+  ];
+
+  // base_denom is the denomination carried by the packet as sent by the
+  // counterparty chain, for example "uusdc".
+  string base_denom = 2 [
+    (gogoproto.moretags) = "yaml:\"base_denom\"",
+    (gogoproto.jsontag)  = "base_denom,omitempty"
+  ];
+}
+
 // Params defines the parameters for the module.
 message Params {
   option (amino.name) = "bze/x/txfeecollector/Params";
@@ -21,5 +43,14 @@ message Params {
   uint64 MaxBalanceIterations = 2 [
     (gogoproto.moretags) = "yaml:\"max_balance_iterations\"",
     (gogoproto.jsontag)      = "max_balance_iterations,omitempty"
+  ];
+
+  // BlockedIbcInbound lists the (channel, base denom) pairs whose inbound ICS-20
+  // packets are answered with an error acknowledgement instead of being minted.
+  // Empty by default; edited by governance through MsgUpdateParams.
+  repeated BlockedIbcTransfer BlockedIbcInbound = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"blocked_ibc_inbound\"",
+    (gogoproto.jsontag)  = "blocked_ibc_inbound,omitempty"
   ];
 }

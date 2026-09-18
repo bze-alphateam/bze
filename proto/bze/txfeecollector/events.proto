@@ -1,0 +1,21 @@
+syntax = "proto3";
+package bze.txfeecollector;
+
+option go_package = "github.com/bze-alphateam/bze/x/txfeecollector/types";
+
+// BlockedIbcInboundEvent is emitted when an inbound ICS-20 packet is answered with an
+// error acknowledgement because the (channel, base denom) pair it carries is listed in
+// the BlockedIbcInbound parameter. The sending chain refunds the sender when it relays
+// the acknowledgement, so the funds are never stuck.
+message BlockedIbcInboundEvent {
+  // channel is the channel on this chain the packet arrived on.
+  string channel = 1;
+  // denom is the base denomination the packet carries, as sent by the counterparty.
+  string denom = 2;
+  // amount is the refused amount.
+  string amount = 3;
+  // sender is the account on the counterparty chain the packet came from.
+  string sender = 4;
+  // receiver is the account on this chain that would have received the tokens.
+  string receiver = 5;
+}

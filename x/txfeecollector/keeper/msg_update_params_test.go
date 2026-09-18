@@ -63,3 +63,44 @@ func TestMsgUpdateParams(t *testing.T) {
 		})
 	}
 }
+
+// Governance can add and remove blocked inbound transfers after the upgrade has set
+// them: the value written by MsgUpdateParams is what the IBC filter reads back.
+func TestMsgUpdateParams_BlockedIbcInbound(t *testing.T) {
+	k, ms, ctx := setupMsgServer(t)
+	wctx := sdk.UnwrapSDKContext(ctx)
+
+	params := types.DefaultParams()
+	require.NoError(t, k.SetParams(ctx, params))
+	require.Empty(t, k.GetParams(wctx).BlockedIbcInbound)
+
+	blocked := types.DefaultParams()
+	blocked.BlockedIbcInbound = []types.BlockedIbcTransfer{
+		{ChannelId: "channel-3", BaseDenom: "uusdc"},
+		{ChannelId: "channel-13", BaseDenom: "uatom"},
+	}
+	_, err := ms.UpdateParams(wctx, &types.MsgUpdateParams{Authority: k.GetAuthority(), Params: blocked})
+	require.NoError(t, err)
+
+	stored := k.GetParams(wctx)
+	require.Equal(t, blocked.BlockedIbcInbound, stored.BlockedIbcInbound)
+	require.True(t, stored.IsInboundBlocked("channel-3", "uusdc"))
+	require.True(t, stored.IsInboundBlocked("channel-13", "uatom"))
+	require.False(t, stored.IsInboundBlocked("channel-3", "uatom"))
+
+	// an invalid entry is rejected and the stored value is left alone
+	invalid := types.DefaultParams()
+	invalid.BlockedIbcInbound = []types.BlockedIbcTransfer{
+		{ChannelId: "not a channel", BaseDenom: "uusdc"},
+	}
+	_, err = ms.UpdateParams(wctx, &types.MsgUpdateParams{Authority: k.GetAuthority(), Params: invalid})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "invalid blocked ibc inbound channel id")
+	require.Equal(t, blocked.BlockedIbcInbound, k.GetParams(wctx).BlockedIbcInbound)
+
+	// governance can lift the block again
+	lifted := types.DefaultParams()
+	_, err = ms.UpdateParams(wctx, &types.MsgUpdateParams{Authority: k.GetAuthority(), Params: lifted})
+	require.NoError(t, err)
+	require.Empty(t, k.GetParams(wctx).BlockedIbcInbound)
+}
