@@ -14,19 +14,6 @@ import (
 // UpgradeName is the name validators use in the software-upgrade proposal for v8.2.0.
 const UpgradeName = "v8.2.0"
 
-// Events emitted by the Noble USDC wind-down steps.
-const (
-	// EventTypeBlockedIbcInboundSet reports the inbound transfers blocked by the upgrade.
-	EventTypeBlockedIbcInboundSet = "blocked_ibc_inbound_set"
-	// EventTypeBlackHoleLpTransfer reports the LP shares handed to the admin address.
-	EventTypeBlackHoleLpTransfer = "black_hole_lp_transfer"
-
-	attributeKeyChannel   = "channel"
-	attributeKeyDenom     = "denom"
-	attributeKeyAmount    = "amount"
-	attributeKeyRecipient = "recipient"
-)
-
 // BankKeeper is the slice of the bank keeper the v8.2.0 handler needs.
 type BankKeeper interface {
 	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
@@ -118,13 +105,6 @@ func blockInboundTransfers(ctx sdk.Context, txfeecollector TxfeecollectorKeeper,
 
 	for _, blocked := range windDown.BlockedInbound {
 		ctx.Logger().Info("blocked inbound ibc transfer", "channel", blocked.ChannelId, "denom", blocked.BaseDenom)
-		ctx.EventManager().EmitEvent(
-			sdk.NewEvent(
-				EventTypeBlockedIbcInboundSet,
-				sdk.NewAttribute(attributeKeyChannel, blocked.ChannelId),
-				sdk.NewAttribute(attributeKeyDenom, blocked.BaseDenom),
-			),
-		)
 	}
 
 	return nil
@@ -171,19 +151,12 @@ func transferBlackHoleLpShares(ctx sdk.Context, bank BankKeeper, acc AccountKeep
 		return
 	}
 
+	// x/bank emits its own transfer event for the coins that just moved, so the upgrade
+	// step adds only the log line naming why they moved.
 	ctx.Logger().Info(
 		"transferred black hole lp shares to the admin address",
 		"denom", windDown.LpDenom,
 		"amount", balance.Amount.String(),
 		"recipient", windDown.AdminAddress,
-	)
-
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			EventTypeBlackHoleLpTransfer,
-			sdk.NewAttribute(attributeKeyDenom, windDown.LpDenom),
-			sdk.NewAttribute(attributeKeyAmount, balance.Amount.String()),
-			sdk.NewAttribute(attributeKeyRecipient, windDown.AdminAddress),
-		),
 	)
 }

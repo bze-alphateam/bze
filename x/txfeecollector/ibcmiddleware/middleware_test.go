@@ -2,11 +2,13 @@ package ibcmiddleware_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
@@ -195,10 +197,14 @@ func nobleUsdcBlocked() []types.BlockedIbcTransfer {
 	}
 }
 
+// blockedEvents returns the typed BlockedIbcInboundEvent events on the context. Typed
+// events carry the proto message name as their type.
 func blockedEvents(ctx sdk.Context) []sdk.Event {
+	evType := proto.MessageName(&types.BlockedIbcInboundEvent{})
+
 	var found []sdk.Event
 	for _, event := range ctx.EventManager().Events() {
-		if event.Type == types.EventTypeBlockedIbcInbound {
+		if event.Type == evType {
 			found = append(found, event)
 		}
 	}
@@ -220,16 +226,16 @@ func TestOnRecvPacket_BlockedDenomIsRefused(t *testing.T) {
 	events := blockedEvents(ctx)
 	require.Len(t, events, 1)
 
+	// typed-event attribute values are JSON encoded, so strings arrive quoted
 	attrs := map[string]string{}
 	for _, attr := range events[0].Attributes {
-		attrs[attr.Key] = attr.Value
+		attrs[attr.Key] = strings.Trim(attr.Value, "\"")
 	}
-	require.Equal(t, blockedChannel, attrs[types.AttributeKeyChannel])
-	require.Equal(t, blockedDenom, attrs[types.AttributeKeyDenom])
-	require.Equal(t, "1000000", attrs[types.AttributeKeyAmount])
-	require.Equal(t, "noble1sender", attrs[types.AttributeKeySender])
-	require.Equal(t, "bze1receiver", attrs[types.AttributeKeyReceiver])
-	require.NotEmpty(t, attrs[types.AttributeKeyReason])
+	require.Equal(t, blockedChannel, attrs["channel"])
+	require.Equal(t, blockedDenom, attrs["denom"])
+	require.Equal(t, "1000000", attrs["amount"])
+	require.Equal(t, "noble1sender", attrs["sender"])
+	require.Equal(t, "bze1receiver", attrs["receiver"])
 }
 
 // BZE-origin tokens coming home are unescrowed, not minted: they must pass even on the

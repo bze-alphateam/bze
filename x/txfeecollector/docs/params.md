@@ -14,7 +14,7 @@
 ## Version History
 
 ### v8.2.0
-- Added `blocked_ibc_inbound` parameter (default empty) — refuses selected inbound IBC transfers with an error acknowledgement
+- Added `blocked_ibc_inbound` parameter (default empty) — refuses selected inbound IBC transfers with an error acknowledgement and emits `BlockedIbcInboundEvent`
 - ConsensusVersion bumped from 2 to 3; migration sets the new parameter to its empty default
 
 ### v8.1.0

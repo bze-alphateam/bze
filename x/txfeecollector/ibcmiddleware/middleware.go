@@ -77,17 +77,18 @@ func (im IBCMiddleware) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet
 		return im.app.OnRecvPacket(ctx, packet, relayer)
 	}
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeBlockedIbcInbound,
-			sdk.NewAttribute(types.AttributeKeyChannel, packet.GetDestChannel()),
-			sdk.NewAttribute(types.AttributeKeyDenom, data.Denom),
-			sdk.NewAttribute(types.AttributeKeyAmount, data.Amount),
-			sdk.NewAttribute(types.AttributeKeySender, data.Sender),
-			sdk.NewAttribute(types.AttributeKeyReceiver, data.Receiver),
-			sdk.NewAttribute(types.AttributeKeyReason, types.ErrBlockedIbcInbound.Error()),
-		),
-	)
+	err := ctx.EventManager().EmitTypedEvent(&types.BlockedIbcInboundEvent{
+		Channel:  packet.GetDestChannel(),
+		Denom:    data.Denom,
+		Amount:   data.Amount,
+		Sender:   data.Sender,
+		Receiver: data.Receiver,
+	})
+	if err != nil {
+		// the packet is refused either way: an event we could not emit must not turn
+		// into a failed acknowledgement, which is a different outcome for the sender
+		ctx.Logger().Error("could not emit blocked inbound ibc transfer event", "error", err)
+	}
 
 	ctx.Logger().Info(
 		"refused blocked inbound ibc transfer",
