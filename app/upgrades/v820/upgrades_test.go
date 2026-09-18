@@ -139,21 +139,16 @@ func TestWindDownTable_Mainnet(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// bzetestnet-3 is the only testnet still running, and it runs the wind-down against
-// assets it actually has so both steps can be observed there.
+// bzetestnet-3 is the only testnet still running. It rehearses the LP share transfer
+// with shares it actually holds and blocks nothing: its single transfer channel must
+// keep working.
 func TestWindDownTable_Testnet(t *testing.T) {
 	windDown, found := v820.GetWindDown("bzetestnet-3")
 	require.True(t, found)
 
 	require.Equal(t, expectedAdmin, windDown.AdminAddress)
 	require.Equal(t, expectedTestnetLpDenom, windDown.LpDenom)
-	require.Equal(t, []txfeecollectortypes.BlockedIbcTransfer{
-		{ChannelId: "channel-0", BaseDenom: "ulmn"},
-	}, windDown.BlockedInbound)
-
-	params := txfeecollectortypes.DefaultParams()
-	params.BlockedIbcInbound = windDown.BlockedInbound
-	require.NoError(t, params.Validate())
+	require.Empty(t, windDown.BlockedInbound)
 }
 
 // The retired testnets are gone from the table: they run neither part.
@@ -208,8 +203,8 @@ func TestApplyWindDown_Mainnet(t *testing.T) {
 	require.Equal(t, 1, bank.sends)
 }
 
-// The testnet rehearsal: bzetestnet-3 blocks its own channel and moves its own LP
-// shares, and nothing keyed to mainnet applies there.
+// The testnet rehearsal: bzetestnet-3 moves its own LP shares and leaves the param
+// empty, so no inbound transfer is refused there.
 func TestApplyWindDown_Testnet(t *testing.T) {
 	ctx, bank, k := setup(t, "bzetestnet-3")
 
@@ -221,9 +216,8 @@ func TestApplyWindDown_Testnet(t *testing.T) {
 
 	require.NoError(t, v820.ApplyWindDown(ctx, bank, accountKeeper{}, k))
 
-	params := k.GetParams(ctx)
-	require.True(t, params.IsInboundBlocked("channel-0", "ulmn"))
-	require.False(t, params.IsInboundBlocked("channel-3", "uusdc"))
+	// no inbound block: the testnet keeps accepting everything it accepted before
+	require.Empty(t, k.GetParams(ctx).BlockedIbcInbound)
 
 	require.True(t, bank.balanceOf(blackHoleAddress(), expectedTestnetLpDenom).IsZero())
 	require.Equal(t, lpShares, bank.balanceOf(adminAddress(t), expectedTestnetLpDenom))

@@ -50,20 +50,11 @@ const (
 	adminAddress = "bze1jx4x3kn8mlz2s03zdpf2a38x9gl66llvjqdd55"
 )
 
-// The testnet has no Noble channel and no USDC.n pool, so mainnet values would make
-// both steps log-and-skip no-ops there and the rehearsal would prove nothing. It runs
-// the same code against the assets it does have: its single transfer channel and the
-// LP shares its own black hole holds.
-const (
-	// testnetChannel is the only transfer channel open on bzetestnet-3.
-	testnetChannel = "channel-0"
-	// testnetBaseDenom is the denomination that arrives over it; it becomes
-	// ibc/9DA252F9F9C86132CC282EA431DFB7DE7729501F6DC9A3E0F50EC8C6EE380CC7 on BZE.
-	testnetBaseDenom = "ulmn"
-	// testnetLpDenom is the LP denomination of that voucher's pool with BZE; the
-	// testnet black hole holds shares of it, so the transfer step actually moves coins.
-	testnetLpDenom = "ulp_ibc/9DA252F9F9C86132CC282EA431DFB7DE7729501F6DC9A3E0F50EC8C6EE380CC7_ubze"
-)
+// testnetLpDenom is the LP denomination bzetestnet-3's black hole holds: the shares of
+// the ulmn/BZE pool, ulmn being the only IBC voucher on that chain. The testnet has no
+// USDC.n pool, so the mainnet denomination would make the transfer step a logged no-op
+// there and the rehearsal would prove nothing.
+const testnetLpDenom = "ulp_ibc/9DA252F9F9C86132CC282EA431DFB7DE7729501F6DC9A3E0F50EC8C6EE380CC7_ubze"
 
 // nobleUsdcWindDown is the mainnet configuration.
 var nobleUsdcWindDown = WindDown{
@@ -74,14 +65,11 @@ var nobleUsdcWindDown = WindDown{
 	AdminAddress: adminAddress,
 }
 
-// testnetWindDown mirrors it on bzetestnet-3 with assets that exist there, so both
-// steps can be observed: an inbound ulmn transfer must come back with an error
-// acknowledgement, and the black hole's ulmn/BZE LP shares must land on the admin
-// address. Governance can lift the block again with MsgUpdateParams.
+// testnetWindDown runs the LP share transfer on bzetestnet-3, against shares its black
+// hole actually holds, so that step can be observed before mainnet runs the same code.
+// It blocks no inbound transfer: the testnet has a single transfer channel and blocking
+// it would cut the chain's only inbound IBC route for a param nobody needs there.
 var testnetWindDown = WindDown{
-	BlockedInbound: []txfeecollectortypes.BlockedIbcTransfer{
-		{ChannelId: testnetChannel, BaseDenom: testnetBaseDenom},
-	},
 	LpDenom:      testnetLpDenom,
 	AdminAddress: adminAddress,
 }
