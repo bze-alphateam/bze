@@ -79,6 +79,14 @@ func (k Keeper) BalanceProvidedAmounts(base, quote, reserveBase, reserveQuote ma
 func (k Keeper) swapTokens(ctx sdk.Context, input sdk.Coin, pool *types.LiquidityPool) (output sdk.Coin, err error) {
 	// MAKE SURE YOU CAPTURED THE FUNDS BEFORE CALLING THIS FUNCTION.
 	// THE MODULE WILL SEND FEES TO THEIR DESTINATION AND IT NEEDS TO BE CAPTURED BEFORE THIS FUNCTION IS CALLED.
+
+	// The no-swap invariant for halted denoms is enforced here, at the single choke point every swap
+	// goes through (user routes, module swaps, fee swaps): a halted denom is never exchanged against
+	// anything. Callers reject or fall back before funds move; this guard stays as the last line.
+	if k.isPoolHalted(ctx, pool) {
+		return output, errors.Wrapf(types.ErrDenomHalted, "pool %s is halted", pool.GetId())
+	}
+
 	if !pool.HasDenom(input.Denom) {
 		return output, fmt.Errorf("denom %s does not exist in pool %s", input.Denom, pool.GetId())
 	}

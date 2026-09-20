@@ -212,6 +212,11 @@ func (k msgServer) AddLiquidity(goCtx context.Context, msg *types.MsgAddLiquidit
 		return nil, errors.Wrapf(types.ErrMarketNotFound, "pool %s not found", msg.GetPoolId())
 	}
 
+	//a halted pool takes no new liquidity; removing liquidity stays possible
+	if k.isPoolHalted(ctx, &pool) {
+		return nil, errors.Wrapf(types.ErrDenomHalted, "pool %s is halted", pool.GetId())
+	}
+
 	poolBaseReserve := pool.ReserveBase
 	poolQuoteReserve := pool.ReserveQuote
 	if poolBaseReserve.IsZero() || poolQuoteReserve.IsZero() {
@@ -293,6 +298,10 @@ func (k msgServer) MultiSwap(goCtx context.Context, msg *types.MsgMultiSwap) (*t
 
 	pools, err := k.getRoutesPools(ctx, msg)
 	if err != nil {
+		if errors.IsOf(err, types.ErrDenomHalted) {
+			return nil, err
+		}
+
 		return nil, errors.Wrapf(types.ErrInvalidRoutes, "invalid pools (%s)", err.Error())
 	}
 
@@ -398,6 +407,15 @@ func (k msgServer) mintInitialLpTokens(ctx sdk.Context, baseCoin, quoteCoin sdk.
 func (k msgServer) validateMarketAssets(ctx sdk.Context, base, quote string) error {
 	if base == quote {
 		return errors.Wrap(types.ErrInvalidDenom, "base and quote must be different")
+	}
+
+	//no new market or pool for a halted denom
+	params := k.GetParams(ctx)
+	if params.IsDenomHalted(base) {
+		return errors.Wrapf(types.ErrDenomHalted, "denom %s is halted", base)
+	}
+	if params.IsDenomHalted(quote) {
+		return errors.Wrapf(types.ErrDenomHalted, "denom %s is halted", quote)
 	}
 
 	if !k.bankKeeper.HasSupply(ctx, base) || !k.bankKeeper.HasSupply(ctx, quote) {
@@ -525,6 +543,11 @@ func (k msgServer) getRoutesPools(ctx sdk.Context, msg *types.MsgMultiSwap) (poo
 		if !ok {
 			//stop if any pool is missing
 			return nil, fmt.Errorf("pool %s not found", route)
+		}
+
+		//a halted denom is never swapped, not even as an intermediate hop
+		if k.isPoolHalted(ctx, &p) {
+			return nil, errors.Wrapf(types.ErrDenomHalted, "pool %s is halted", route)
 		}
 
 		pools = append(pools, p)
