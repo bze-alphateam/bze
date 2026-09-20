@@ -109,3 +109,17 @@ message SwapEvent {
   ];
   string pool_id = 4;
 }
+
+// QueueMessageRefundedEvent is emitted by the EndBlock processing engine when a queued order
+// book message is refunded in full instead of being matched or saved. Today the only reason is
+// "market_halted": the message reached the engine while its market's base or quote denom was in
+// the tradebin halted_denoms param.
+message QueueMessageRefundedEvent {
+  string market_id = 1;
+  string message_type = 2;
+  string order_type = 3;
+  string amount = 4;
+  string price = 5;
+  string owner = 6;
+  string reason = 7;
+}

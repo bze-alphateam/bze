@@ -5,6 +5,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// RefundReasonMarketHalted is the QueueMessageRefundedEvent reason set by the EndBlock engine when
+// a queued buy/sell/fill message is refunded because its market's base or quote denom is halted.
+const RefundReasonMarketHalted = "market_halted"
+
 type MsgCreator interface {
 	GetCreatorAcc() sdk.AccAddress
 }

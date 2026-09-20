@@ -40,6 +40,7 @@ type ProcessingKeeper interface {
 
 	//market
 	GetMarketById(ctx sdk.Context, marketId string) (val types.Market, found bool)
+	IsMarketHalted(ctx sdk.Context, marketId string) bool
 
 	//calculator
 	GetOrderCoinsWithDust(ctx sdk.Context, orderCoinsArgs types.OrderCoinsArguments) (types.OrderCoins, error)
@@ -130,16 +131,22 @@ func (pe *ProcessingEngine) getMessageHandler() func(ctx sdk.Context, message ty
 	return func(ctx sdk.Context, message types.QueueMessage) bool {
 		var wrappingFn func(ctx sdk.Context) error
 
-		switch message.MessageType {
-		case types.MessageTypeFillBuy:
-			fallthrough
-		case types.MessageTypeFillSell:
-			wrappingFn = func(ctx sdk.Context) error {
-				return pe.fillOrder(ctx, message)
-			}
-		case types.MessageTypeCancel:
+		switch {
+		case message.MessageType == types.MessageTypeCancel:
+			//cancels are always processed: exits keep working on a halted market
 			wrappingFn = func(ctx sdk.Context) error {
 				return pe.cancelOrder(ctx, message)
+			}
+		case pe.k.IsMarketHalted(ctx, message.MarketId):
+			//the market was halted after the message was accepted (or the halt proposal passed in
+			//this very block — gov EndBlock runs before tradebin's). Nothing is matched or saved on a
+			//halted market: the escrowed funds go back to the owner in full.
+			wrappingFn = func(ctx sdk.Context) error {
+				return pe.refundHaltedMessage(ctx, message)
+			}
+		case message.MessageType == types.MessageTypeFillBuy, message.MessageType == types.MessageTypeFillSell:
+			wrappingFn = func(ctx sdk.Context) error {
+				return pe.fillOrder(ctx, message)
 			}
 		default:
 			wrappingFn = func(ctx sdk.Context) error {
@@ -574,6 +581,60 @@ func (pe *ProcessingEngine) fillOrder(ctx sdk.Context, message types.QueueMessag
 	//we haven't filled the entire message amount so we have to refund the msg owner's coins
 
 	return pe.refundMessageFunds(ctx, &message, *remainingAmount, &market, msgOwnerAddr)
+}
+
+// refundHaltedMessage refunds a buy/sell/fill message in full — the same coin math a cancel uses —
+// because its market is halted, emits QueueMessageRefundedEvent and leaves the book untouched.
+func (pe *ProcessingEngine) refundHaltedMessage(ctx sdk.Context, message types.QueueMessage) error {
+	logger := pe.logger.With(
+		"message", message,
+		"func", "refundHaltedMessage",
+	)
+	logger.Info("market is halted, refunding queue message")
+
+	msgAmountInt, ok := math.NewIntFromString(message.Amount)
+	if !ok {
+		return fmt.Errorf("could not convert queue message amount")
+	}
+
+	market, found := pe.k.GetMarketById(ctx, message.MarketId)
+	if !found {
+		//IsMarketHalted only answers true for an existing market, so this can not happen
+		return fmt.Errorf("market %s not found", message.MarketId)
+	}
+
+	msgOwnerAddr, err := sdk.AccAddressFromBech32(message.Owner)
+	if err != nil {
+		return fmt.Errorf("error on getting account address for message owner: %v", err)
+	}
+
+	err = pe.refundMessageFunds(ctx, &message, msgAmountInt, &market, msgOwnerAddr)
+	if err != nil {
+		return err
+	}
+
+	pe.emitQueueMessageRefundedEvent(ctx, &message, types.RefundReasonMarketHalted)
+	logger.Info("queue message refunded")
+
+	return nil
+}
+
+func (pe *ProcessingEngine) emitQueueMessageRefundedEvent(ctx sdk.Context, message *types.QueueMessage, reason string) {
+	err := ctx.EventManager().EmitTypedEvent(
+		&types.QueueMessageRefundedEvent{
+			MarketId:    message.MarketId,
+			MessageType: message.MessageType,
+			OrderType:   message.OrderType,
+			Amount:      message.Amount,
+			Price:       message.Price,
+			Owner:       message.Owner,
+			Reason:      reason,
+		},
+	)
+
+	if err != nil {
+		pe.logger.Error(err.Error())
+	}
 }
 
 func (pe *ProcessingEngine) refundMessageFunds(ctx sdk.Context, message *types.QueueMessage, refundAmount math.Int, market *types.Market, msgOwnerAddr sdk.AccAddress) error {
