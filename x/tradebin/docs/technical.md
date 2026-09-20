@@ -6,21 +6,27 @@
 - `MsgFillOrders` batches fills with price/amount pairs; it always follows the taker fee path and charges `fill_orders_extra_gas` once on entry and again per order added to the queue.
 - Queue processing at `EndBlock` stops after `order_book_per_block_messages` messages; leftovers remain queued for later blocks. The queue counter resets only when the queue becomes empty.
 - Maker/taker fees use params: maker fees are routed via `maker_fee_destination`, taker fees via `taker_fee_destination` (community-pool collector or burner fee collector). Create-market fees always go to the community-pool collector after optional swap to native.
+- Halted markets (`halted_denoms`, keeper helpers in `service_halt.go`): `MsgCreateOrder` and `MsgFillOrders` return `ErrDenomHalted` right after loading the market, before gas surcharges, fee capture or escrow. In the `EndBlock` engine (`getMessageHandler`) a non-cancel message on a halted market is routed to `refundHaltedMessage`, which refunds the full escrowed amount through `refundMessageFunds` (the cancel coin math, dust stored) and emits `QueueMessageRefundedEvent{reason: "market_halted"}`; the message is deleted from the queue like any processed message. Cancels are dispatched unchanged. Gov's `EndBlock` runs before tradebin's, so a passed halt proposal already applies to the queue in that block.
 
 ## Liquidity Pools
 - Pools are created with an initial deposit and optional `stable` flag; each pool has its own fee and fee destination.
 - LP tokens follow the AMM math in `liquidity_pool.go`; slippage controls use `min_lp_tokens`, `min_base`, `min_quote`.
-- `MultiSwap` walks a list of pool IDs; input/output slippage is enforced via `min_output`.
+- `MultiSwap` walks a list of pool IDs; input/output slippage is enforced via `min_output`. `getRoutesPools` refuses a route containing a pool with a halted denom (`ErrDenomHalted`, surfaced as-is rather than wrapped in `ErrInvalidRoutes`), `validateMarketAssets` refuses new markets/pools on a halted denom, and `AddLiquidity` refuses a halted pool — all before funds move.
+- `Keeper.swapTokens` is the single choke point of every swap (user routes, `ModuleSwapForNativeDenom`, `ModuleAddLiquidityWithNativeDenom`, the fee payer). It returns `ErrDenomHalted` for a pool holding a halted denom, which is what makes the no-swap invariant hold for every caller at once. `ModuleAddLiquidityWithNativeDenom` already treats a failed swap as "refund the coin to the caller"; the fee-payer entry points fall back to capturing the native fee as-is when the preferred fee denom's pool is halted.
 
 ## Inter-module Hooks
 - `native_denom` is the target for swapping captured fees and module balances; `MsgUpdateParams` enforces it exists in bank supply.
 - `min_native_liquidity_for_module_swap` must be met in the native/pair pool before helpers like `ModuleSwapForNativeDenom`, `ModuleAddLiquidityWithNativeDenom`, or the liquidity-depth checks (`HasDeepLiquidityWithNativeDenom`, `CanSwapForNativeDenom`) will act. This prevents draining shallow pools during module-driven swaps.
+- `HasLiquidityWithNativeDenom`, `HasDeepLiquidityWithNativeDenom` and `CanSwapForNativeDenom` answer `false` for a halted denom regardless of the pool depth, so the txfeecollector ante handler refuses it as a fee denom up front and the fee collector / burner classify it as non-swappable without attempting a swap (its dust takes the existing path to the black hole). Nothing changes in those modules.
 - Trading fees and the create-market fee are captured via the trade module fee paths, optionally swapped to native, then forwarded to fee collector (community pool) or burner depending on configured destinations. Fees sent to `burner` are later destroyed or swapped through burner logic depending on denom type.
 
 ## Storage / Queries
 - Prefixed stores keep markets, orders, queues, pools, and user dust; gRPC/REST exposes markets, pools, order books, and params for indexers.
 
 ## Version History
+
+### v8.2.0
+- `halted_denoms` param (`Params.IsDenomHalted`, keeper `IsDenomHalted` / `IsMarketHalted` / `isPoolHalted`), `ErrDenomHalted` (4017), `QueueMessageRefundedEvent`, `ProcessingKeeper.IsMarketHalted`, engine `refundHaltedMessage`, halt guard in `swapTokens` and in the liquidity answers. No migration, `ConsensusVersion` stays 4.
 
 ### v8.1.0
 - Fee payer service (`CaptureAndSwapUserFee`) for fee capture and conversion to native denom via liquidity pools
