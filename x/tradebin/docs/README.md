@@ -44,7 +44,7 @@ Governance can halt a denom on the DEX through the `halted_denoms` parameter (se
 
 While a denom is halted:
 - **Refused** (with `ErrDenomHalted`, before any fee or funds move): creating a market or pool with it, placing an order (`MsgCreateOrder`) or filling orders (`MsgFillOrders`) on a market whose base or quote is halted, adding liquidity to a pool that holds it, and any `MsgMultiSwap` whose route touches it — even as an intermediate hop. Paying tx fees in the denom is refused by the ante handler.
-- **Refunded**: order book messages that were already queued when the halt took effect are refunded in full by `EndBlock` instead of being matched (typed event `QueueMessageRefundedEvent`, reason `market_halted`). This happens in the very block the proposal passes and for any backlog beyond `order_book_per_block_messages`. Refunded messages are not replayed after an un-halt; resubmit them.
+- **Already queued**: order book messages accepted before the halt took effect (a block or a few earlier) execute normally in `EndBlock` — matched, saved as resting orders, or refunded exactly as today. The queue is only the asynchronous execution stage of messages the chain has already accepted (validated, fee captured, funds escrowed), and no new message can enter it once the halt is in effect, so the backlog drains within a few blocks and the market is then frozen except for cancels and liquidity removals.
 - **Still working**: `MsgCancelOrder` (refund through the queue as always), `MsgRemoveLiquidity`, bank sends, IBC transfers, staking and rewards that merely hold the denom, `MsgFundBurner`. Resting orders and pool reserves are left exactly as they are — nothing is swept or force-cancelled.
 - **Never swapped, by anyone**: user routes, module swaps (fee conversion, burner add-liquidity) and fee swaps all refuse the denom. Coins of a halted denom that other modules hold as fee dust are treated like any non-swappable IBC denom and end up locked in the burner black hole; tx-fee dust in that denom is distributed to stakers in kind.
 
@@ -55,7 +55,7 @@ A market or pool is halted iff its base **or** quote is halted. Both sides of a 
 
 1. Query the current params and copy every field: `bzed query tradebin params` (or `GET https://rest.getbze.com/bze/tradebin/params` on mainnet).
 2. Write the proposal with a single `/bze.tradebin.MsgUpdateParams` message: `authority` = the gov module account (mainnet `bze10d07y265gmmuvt4z0w9aw880jnsr700j8xlwyy`), `params` = the copied values plus `halted_denoms: ["<denom>"]`. Submit it with `bzed tx gov submit-proposal proposal.json`.
-3. Rehearse on the testnet first with a factory denom that has both a market and a pool: submit, vote, then verify each effect listed above with real transactions (orders and fills refused, queued messages refunded, cancel and remove-liquidity working, swaps through the pool refused, the denom refused as a fee denom).
+3. Rehearse on the testnet first with a factory denom that has both a market and a pool: submit, vote, then verify each effect listed above with real transactions (orders and fills refused, cancel and remove-liquidity working, swaps through the pool refused, the denom refused as a fee denom).
 4. Reverting is the same proposal without the denom.
 
 ## User Dust
@@ -84,7 +84,7 @@ Partial order fills can leave fractional coin amounts (dust) that are too small 
 ## Version History
 
 ### v8.2.0
-- Governance-halted denoms: `halted_denoms` param (ships empty), `ErrDenomHalted` on every new-position message touching a halted market or pool, EndBlock refunds of queued messages on halted markets (`QueueMessageRefundedEvent`), the no-swap invariant at `swapTokens`, and halted denoms refused as tx fee denoms. Cancel and remove-liquidity untouched.
+- Governance-halted denoms: `halted_denoms` param (ships empty), `ErrDenomHalted` on every new-position message touching a halted market or pool, the no-swap invariant at `swapTokens`, and halted denoms refused as tx fee denoms. Cancel and remove-liquidity untouched.
 
 ### v8.1.0
 - Fee payer service (`CaptureAndSwapUserFee`) for fee capture and conversion to native denom via liquidity pools

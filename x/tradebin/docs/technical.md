@@ -6,7 +6,7 @@
 - `MsgFillOrders` batches fills with price/amount pairs; it always follows the taker fee path and charges `fill_orders_extra_gas` once on entry and again per order added to the queue.
 - Queue processing at `EndBlock` stops after `order_book_per_block_messages` messages; leftovers remain queued for later blocks. The queue counter resets only when the queue becomes empty.
 - Maker/taker fees use params: maker fees are routed via `maker_fee_destination`, taker fees via `taker_fee_destination` (community-pool collector or burner fee collector). Create-market fees always go to the community-pool collector after optional swap to native.
-- Halted markets (`halted_denoms`, keeper helpers in `service_halt.go`): `MsgCreateOrder` and `MsgFillOrders` return `ErrDenomHalted` right after loading the market, before gas surcharges, fee capture or escrow. In the `EndBlock` engine (`getMessageHandler`) a non-cancel message on a halted market is routed to `refundHaltedMessage`, which refunds the full escrowed amount through `refundMessageFunds` (the cancel coin math, dust stored) and emits `QueueMessageRefundedEvent{reason: "market_halted"}`; the message is deleted from the queue like any processed message. Cancels are dispatched unchanged. Gov's `EndBlock` runs before tradebin's, so a passed halt proposal already applies to the queue in that block.
+- Halted markets (`halted_denoms`, keeper helpers in `service_halt.go`): `MsgCreateOrder` and `MsgFillOrders` return `ErrDenomHalted` right after loading the market, before gas surcharges, fee capture or escrow. The `EndBlock` engine is deliberately untouched: a queued message was already accepted (validated, fee captured, funds escrowed) a block or a few earlier, so it executes as always — the queue is the asynchronous execution stage, not a second gate. Gov's `EndBlock` runs before tradebin's, so from the block a halt proposal passes no new message enters the queue and the backlog simply drains.
 
 ## Liquidity Pools
 - Pools are created with an initial deposit and optional `stable` flag; each pool has its own fee and fee destination.
@@ -26,7 +26,7 @@
 ## Version History
 
 ### v8.2.0
-- `halted_denoms` param (`Params.IsDenomHalted`, keeper `IsDenomHalted` / `IsMarketHalted` / `isPoolHalted`), `ErrDenomHalted` (4017), `QueueMessageRefundedEvent`, `ProcessingKeeper.IsMarketHalted`, engine `refundHaltedMessage`, halt guard in `swapTokens` and in the liquidity answers. No migration, `ConsensusVersion` stays 4.
+- `halted_denoms` param (`Params.IsDenomHalted`, keeper `IsDenomHalted` / `IsMarketHalted` / `isPoolHalted`), `ErrDenomHalted` (4017), halt guards in the msg servers, in `swapTokens` and in the liquidity answers; the EndBlock engine is untouched. No migration, `ConsensusVersion` stays 4.
 
 ### v8.1.0
 - Fee payer service (`CaptureAndSwapUserFee`) for fee capture and conversion to native denom via liquidity pools
