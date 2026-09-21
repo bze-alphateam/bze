@@ -13,6 +13,7 @@
   - `order_book_queue_message_scan_extra_gas` (`uint64`, default `5000`): Gas charged per queued message scanned while validating a new order’s price.
   - `order_book_per_block_messages` (`uint64`, default `500`): Max queue messages processed in a block; processing stops at this limit and resumes next block. The queue counter resets only when the queue becomes empty.
 - **`min_native_liquidity_for_module_swap`** (`Int`, default `100000000000`): Minimum native reserves required in a native/pair pool before module-driven swaps or add-liquidity helpers execute.
+- **`halted_denoms`** (`[]string`, default empty): Denoms governance has halted on the DEX. Exact string match, at most 32 entries, no duplicates, and `native_denom` can never be listed (it would halt every market and pool). A market or pool whose base **or** quote is halted refuses `MsgCreateMarket`, `MsgCreateLiquidityPool`, `MsgCreateOrder`, `MsgFillOrders`, `MsgAddLiquidity` and any `MsgMultiSwap` route that touches it (also as an intermediate hop) with `ErrDenomHalted` (code 4017) before any fee is captured or funds are escrowed. Order book messages already queued when the halt takes effect (accepted a block or a few earlier) execute normally in `EndBlock`: the queue is only the asynchronous execution stage of messages the chain has already accepted, and no new message can enter it once the halt is in effect. `MsgCancelOrder` and `MsgRemoveLiquidity` keep working. A halted denom is never swapped by anyone — user routes, module swaps and fee swaps all refuse it — and it stops being accepted as a tx fee denom; fee dust already collected in that denom follows the non-swappable path (fee collector → burner → black hole).
 
 ### How They’re Used
 - `MsgCreateMarket` charges `create_market_fee` and forwards it to the community-pool fee collector after optional swap to `native_denom`.
@@ -20,11 +21,16 @@
 - `MsgFillOrders` always uses the taker fee path and consumes `fill_orders_extra_gas` both at entry and per order it enqueues.
 - Queue processing at `EndBlock` respects `order_book_per_block_messages`; remaining messages stay queued for later blocks.
 - Module-level swaps/add-liquidity helpers refuse to run unless the relevant native/pair pool holds at least `min_native_liquidity_for_module_swap` in native reserves.
+- `halted_denoms` is read by every order book and AMM message (the `EndBlock` engine is untouched: already-queued messages execute as always), by `swapTokens` (the single choke point of every swap) and by the liquidity answers the ante handler, the fee collector and the burner rely on (`HasLiquidityWithNativeDenom`, `HasDeepLiquidityWithNativeDenom`, `CanSwapForNativeDenom` all answer `false` for a halted denom).
 
 ### Updating
 - Params are authority-only via `MsgUpdateParams`. All fields must be supplied when updating.
+- Halting or un-halting a denom is therefore a `MsgUpdateParams` governance proposal carrying every current field plus the new `halted_denoms` list; see the governance runbook in [README.md](README.md#halted-denoms). Un-halting is the same proposal without the denom: resting orders resume matching and pools resume swapping, nothing else to do.
 
 ## Version History
+
+### v8.2.0
+- Added `halted_denoms` (default empty). No migration and no consensus version bump: a proto3 repeated field decodes as empty from the params already stored on chain.
 
 ### v8.1.0
 - Fee fields (`create_market_fee`, `market_maker_fee`, `market_taker_fee`) changed from string to `sdk.Coin` for type safety

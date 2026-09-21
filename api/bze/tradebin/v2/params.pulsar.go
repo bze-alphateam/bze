@@ -14,6 +14,52 @@ import (
 	sync "sync"
 )
 
+var _ protoreflect.List = (*_Params_13_list)(nil)
+
+type _Params_13_list struct {
+	list *[]string
+}
+
+func (x *_Params_13_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_Params_13_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfString((*x.list)[i])
+}
+
+func (x *_Params_13_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_Params_13_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_Params_13_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message Params at list field HaltedDenoms as it is not of Message kind"))
+}
+
+func (x *_Params_13_list) Truncate(n int) {
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_Params_13_list) NewElement() protoreflect.Value {
+	v := ""
+	return protoreflect.ValueOfString(v)
+}
+
+func (x *_Params_13_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
 	md_Params                                   protoreflect.MessageDescriptor
 	fd_Params_createMarketFee                   protoreflect.FieldDescriptor
@@ -28,6 +74,7 @@ var (
 	fd_Params_minNativeLiquidityForModuleSwap   protoreflect.FieldDescriptor
 	fd_Params_orderBookPerBlockMessages         protoreflect.FieldDescriptor
 	fd_Params_orderBookQueueMessageScanExtraGas protoreflect.FieldDescriptor
+	fd_Params_halted_denoms                     protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -45,6 +92,7 @@ func init() {
 	fd_Params_minNativeLiquidityForModuleSwap = md_Params.Fields().ByName("minNativeLiquidityForModuleSwap")
 	fd_Params_orderBookPerBlockMessages = md_Params.Fields().ByName("orderBookPerBlockMessages")
 	fd_Params_orderBookQueueMessageScanExtraGas = md_Params.Fields().ByName("orderBookQueueMessageScanExtraGas")
+	fd_Params_halted_denoms = md_Params.Fields().ByName("halted_denoms")
 }
 
 var _ protoreflect.Message = (*fastReflection_Params)(nil)
@@ -184,6 +232,12 @@ func (x *fastReflection_Params) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
+	if len(x.HaltedDenoms) != 0 {
+		value := protoreflect.ValueOfList(&_Params_13_list{list: &x.HaltedDenoms})
+		if !f(fd_Params_halted_denoms, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -223,6 +277,8 @@ func (x *fastReflection_Params) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.OrderBookPerBlockMessages != uint64(0)
 	case "bze.tradebin.v2.Params.orderBookQueueMessageScanExtraGas":
 		return x.OrderBookQueueMessageScanExtraGas != uint64(0)
+	case "bze.tradebin.v2.Params.halted_denoms":
+		return len(x.HaltedDenoms) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.v2.Params"))
@@ -263,6 +319,8 @@ func (x *fastReflection_Params) Clear(fd protoreflect.FieldDescriptor) {
 		x.OrderBookPerBlockMessages = uint64(0)
 	case "bze.tradebin.v2.Params.orderBookQueueMessageScanExtraGas":
 		x.OrderBookQueueMessageScanExtraGas = uint64(0)
+	case "bze.tradebin.v2.Params.halted_denoms":
+		x.HaltedDenoms = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.v2.Params"))
@@ -315,6 +373,12 @@ func (x *fastReflection_Params) Get(descriptor protoreflect.FieldDescriptor) pro
 	case "bze.tradebin.v2.Params.orderBookQueueMessageScanExtraGas":
 		value := x.OrderBookQueueMessageScanExtraGas
 		return protoreflect.ValueOfUint64(value)
+	case "bze.tradebin.v2.Params.halted_denoms":
+		if len(x.HaltedDenoms) == 0 {
+			return protoreflect.ValueOfList(&_Params_13_list{})
+		}
+		listValue := &_Params_13_list{list: &x.HaltedDenoms}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.v2.Params"))
@@ -359,6 +423,10 @@ func (x *fastReflection_Params) Set(fd protoreflect.FieldDescriptor, value proto
 		x.OrderBookPerBlockMessages = value.Uint()
 	case "bze.tradebin.v2.Params.orderBookQueueMessageScanExtraGas":
 		x.OrderBookQueueMessageScanExtraGas = value.Uint()
+	case "bze.tradebin.v2.Params.halted_denoms":
+		lv := value.List()
+		clv := lv.(*_Params_13_list)
+		x.HaltedDenoms = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.v2.Params"))
@@ -394,6 +462,12 @@ func (x *fastReflection_Params) Mutable(fd protoreflect.FieldDescriptor) protore
 			x.MarketTakerFee = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.MarketTakerFee.ProtoReflect())
+	case "bze.tradebin.v2.Params.halted_denoms":
+		if x.HaltedDenoms == nil {
+			x.HaltedDenoms = []string{}
+		}
+		value := &_Params_13_list{list: &x.HaltedDenoms}
+		return protoreflect.ValueOfList(value)
 	case "bze.tradebin.v2.Params.makerFeeDestination":
 		panic(fmt.Errorf("field makerFeeDestination of message bze.tradebin.v2.Params is not mutable"))
 	case "bze.tradebin.v2.Params.takerFeeDestination":
@@ -452,6 +526,9 @@ func (x *fastReflection_Params) NewField(fd protoreflect.FieldDescriptor) protor
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "bze.tradebin.v2.Params.orderBookQueueMessageScanExtraGas":
 		return protoreflect.ValueOfUint64(uint64(0))
+	case "bze.tradebin.v2.Params.halted_denoms":
+		list := []string{}
+		return protoreflect.ValueOfList(&_Params_13_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.v2.Params"))
@@ -564,6 +641,12 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if x.OrderBookQueueMessageScanExtraGas != 0 {
 			n += 1 + runtime.Sov(uint64(x.OrderBookQueueMessageScanExtraGas))
 		}
+		if len(x.HaltedDenoms) > 0 {
+			for _, s := range x.HaltedDenoms {
+				l = len(s)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -592,6 +675,15 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.HaltedDenoms) > 0 {
+			for iNdEx := len(x.HaltedDenoms) - 1; iNdEx >= 0; iNdEx-- {
+				i -= len(x.HaltedDenoms[iNdEx])
+				copy(dAtA[i:], x.HaltedDenoms[iNdEx])
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.HaltedDenoms[iNdEx])))
+				i--
+				dAtA[i] = 0x6a
+			}
 		}
 		if x.OrderBookQueueMessageScanExtraGas != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.OrderBookQueueMessageScanExtraGas))
@@ -1068,6 +1160,38 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
+			case 13:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field HaltedDenoms", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.HaltedDenoms = append(x.HaltedDenoms, string(dAtA[iNdEx:postIndex]))
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -1135,6 +1259,11 @@ type Params struct {
 	MinNativeLiquidityForModuleSwap   string        `protobuf:"bytes,10,opt,name=minNativeLiquidityForModuleSwap,proto3" json:"minNativeLiquidityForModuleSwap,omitempty"`
 	OrderBookPerBlockMessages         uint64        `protobuf:"varint,11,opt,name=orderBookPerBlockMessages,proto3" json:"orderBookPerBlockMessages,omitempty"`
 	OrderBookQueueMessageScanExtraGas uint64        `protobuf:"varint,12,opt,name=orderBookQueueMessageScanExtraGas,proto3" json:"orderBookQueueMessageScanExtraGas,omitempty"`
+	// halted_denoms lists the denoms governance has halted on the DEX. A market or pool whose base
+	// or quote is listed accepts no new orders, fills, pools, liquidity additions or swaps of any kind
+	// (user, module or fee swaps), and the denom is refused as a tx fee denom. Cancelling orders and
+	// removing liquidity keep working. Exact string match; the native denom can never be listed.
+	HaltedDenoms []string `protobuf:"bytes,13,rep,name=halted_denoms,json=haltedDenoms,proto3" json:"halted_denoms,omitempty"`
 }
 
 func (x *Params) Reset() {
@@ -1241,6 +1370,13 @@ func (x *Params) GetOrderBookQueueMessageScanExtraGas() uint64 {
 	return 0
 }
 
+func (x *Params) GetHaltedDenoms() []string {
+	if x != nil {
+		return x.HaltedDenoms
+	}
+	return nil
+}
+
 var File_bze_tradebin_v2_params_proto protoreflect.FileDescriptor
 
 var file_bze_tradebin_v2_params_proto_rawDesc = []byte{
@@ -1250,7 +1386,7 @@ var file_bze_tradebin_v2_params_proto_rawDesc = []byte{
 	0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61,
 	0x73, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xb2, 0x09, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xf1, 0x09, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
 	0x12, 0x65, 0x0a, 0x0f, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x4d, 0x61, 0x72, 0x6b, 0x65, 0x74,
 	0x46, 0x65, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
@@ -1325,20 +1461,24 @@ var file_bze_tradebin_v2_params_proto_rawDesc = []byte{
 	0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x5f, 0x73, 0x63, 0x61, 0x6e, 0x5f, 0x65, 0x78, 0x74,
 	0x72, 0x61, 0x5f, 0x67, 0x61, 0x73, 0x22, 0x52, 0x21, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x42, 0x6f,
 	0x6f, 0x6b, 0x51, 0x75, 0x65, 0x75, 0x65, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x53, 0x63,
-	0x61, 0x6e, 0x45, 0x78, 0x74, 0x72, 0x61, 0x47, 0x61, 0x73, 0x42, 0xbd, 0x01, 0x0a, 0x13, 0x63,
-	0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x2e,
-	0x76, 0x32, 0x42, 0x0b, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
-	0x01, 0x5a, 0x3b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a,
-	0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f,
-	0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e,
-	0x2f, 0x76, 0x32, 0x3b, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x76, 0x32, 0xa2, 0x02,
-	0x03, 0x42, 0x54, 0x58, 0xaa, 0x02, 0x0f, 0x42, 0x7a, 0x65, 0x2e, 0x54, 0x72, 0x61, 0x64, 0x65,
-	0x62, 0x69, 0x6e, 0x2e, 0x56, 0x32, 0xca, 0x02, 0x0f, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72, 0x61,
-	0x64, 0x65, 0x62, 0x69, 0x6e, 0x5c, 0x56, 0x32, 0xe2, 0x02, 0x1b, 0x42, 0x7a, 0x65, 0x5c, 0x54,
-	0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x5c, 0x56, 0x32, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
-	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x11, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x54, 0x72,
-	0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x3a, 0x3a, 0x56, 0x32, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x61, 0x6e, 0x45, 0x78, 0x74, 0x72, 0x61, 0x47, 0x61, 0x73, 0x12, 0x3d, 0x0a, 0x0d, 0x68, 0x61,
+	0x6c, 0x74, 0x65, 0x64, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x18, 0x0d, 0x20, 0x03, 0x28,
+	0x09, 0x42, 0x18, 0xf2, 0xde, 0x1f, 0x14, 0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x68, 0x61, 0x6c,
+	0x74, 0x65, 0x64, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x22, 0x52, 0x0c, 0x68, 0x61, 0x6c,
+	0x74, 0x65, 0x64, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x42, 0xbd, 0x01, 0x0a, 0x13, 0x63, 0x6f,
+	0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x2e, 0x76,
+	0x32, 0x42, 0x0b, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
+	0x5a, 0x3b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65,
+	0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61,
+	0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x2f,
+	0x76, 0x32, 0x3b, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x76, 0x32, 0xa2, 0x02, 0x03,
+	0x42, 0x54, 0x58, 0xaa, 0x02, 0x0f, 0x42, 0x7a, 0x65, 0x2e, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62,
+	0x69, 0x6e, 0x2e, 0x56, 0x32, 0xca, 0x02, 0x0f, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72, 0x61, 0x64,
+	0x65, 0x62, 0x69, 0x6e, 0x5c, 0x56, 0x32, 0xe2, 0x02, 0x1b, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72,
+	0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x5c, 0x56, 0x32, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x11, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x54, 0x72, 0x61,
+	0x64, 0x65, 0x62, 0x69, 0x6e, 0x3a, 0x3a, 0x56, 0x32, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
