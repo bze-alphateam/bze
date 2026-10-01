@@ -12,17 +12,6 @@ func (k Keeper) IsDenomHalted(ctx sdk.Context, denom string) bool {
 	return k.GetParams(ctx).IsDenomHalted(denom)
 }
 
-// IsMarketHalted reports whether the market exists and its base or quote denom is halted.
-// An unknown market is not halted (callers reject it as not found).
-func (k Keeper) IsMarketHalted(ctx sdk.Context, marketId string) bool {
-	market, found := k.GetMarketById(ctx, marketId)
-	if !found {
-		return false
-	}
-
-	return k.isMarketHalted(ctx, &market)
-}
-
 // isMarketHalted reports whether the market's base or quote denom is halted.
 func (k Keeper) isMarketHalted(ctx sdk.Context, market *types.Market) bool {
 	params := k.GetParams(ctx)

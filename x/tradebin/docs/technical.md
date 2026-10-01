@@ -26,7 +26,7 @@
 ## Version History
 
 ### v8.2.0
-- `halted_denoms` param (`Params.IsDenomHalted`, keeper `IsDenomHalted` / `IsMarketHalted` / `isPoolHalted`), `ErrDenomHalted` (4017), halt guards in the msg servers, in `swapTokens` and in the liquidity answers; the EndBlock engine is untouched. No migration, `ConsensusVersion` stays 4.
+- `halted_denoms` param (`Params.IsDenomHalted`, keeper `IsDenomHalted` / `isMarketHalted` / `isPoolHalted`), `ErrDenomHalted` (4017), halt guards in the msg servers, in `swapTokens` and in the liquidity answers; the EndBlock engine is untouched. No migration, `ConsensusVersion` stays 4.
 
 ### v8.1.0
 - Fee payer service (`CaptureAndSwapUserFee`) for fee capture and conversion to native denom via liquidity pools

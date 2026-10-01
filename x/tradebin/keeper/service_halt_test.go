@@ -80,21 +80,6 @@ func (suite *IntegrationTestSuite) TestServiceHalt_IsDenomHalted() {
 	suite.Require().False(suite.k.IsDenomHalted(suite.ctx, denomHalted), "un-halting clears the answer")
 }
 
-func (suite *IntegrationTestSuite) TestServiceHalt_IsMarketHalted() {
-	suite.k.SetMarket(suite.ctx, market)
-	suite.k.SetMarket(suite.ctx, haltedBaseMarket())
-	suite.k.SetMarket(suite.ctx, haltedQuoteMarket())
-
-	suite.Require().False(suite.k.IsMarketHalted(suite.ctx, marketIdOf(haltedBaseMarket())), "not halted before the param is set")
-
-	suite.setHaltedDenoms(denomHalted)
-
-	suite.Require().True(suite.k.IsMarketHalted(suite.ctx, marketIdOf(haltedBaseMarket())), "halted denom as base")
-	suite.Require().True(suite.k.IsMarketHalted(suite.ctx, marketIdOf(haltedQuoteMarket())), "halted denom as quote")
-	suite.Require().False(suite.k.IsMarketHalted(suite.ctx, getMarketId()), "unrelated market")
-	suite.Require().False(suite.k.IsMarketHalted(suite.ctx, "nope/"+denomHalted), "unknown market is not halted, it is not found")
-}
-
 // The three liquidity answers the ante handler, the fee collector and the burner rely on say "no"
 // for a halted denom even with a deep pool, and keep saying "yes" for everything else.
 func (suite *IntegrationTestSuite) TestServiceHalt_LiquidityAnswers_FalseForHaltedDenom() {
