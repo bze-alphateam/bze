@@ -34,4 +34,9 @@ message Params {
   ];
   uint64 orderBookPerBlockMessages = 11 [(gogoproto.moretags) = "yaml:\"order_book_per_block_messages\""];
   uint64 orderBookQueueMessageScanExtraGas = 12 [(gogoproto.moretags) = "yaml:\"order_book_queue_message_scan_extra_gas\""];
+  // halted_denoms lists the denoms governance has halted on the DEX. A market or pool whose base
+  // or quote is listed accepts no new orders, fills, pools, liquidity additions or swaps of any kind
+  // (user, module or fee swaps), and the denom is refused as a tx fee denom. Cancelling orders and
+  // removing liquidity keep working. Exact string match; the native denom can never be listed.
+  repeated string halted_denoms = 13 [(gogoproto.moretags) = "yaml:\"halted_denoms\""];
 }

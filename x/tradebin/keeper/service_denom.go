@@ -24,9 +24,11 @@ func (k Keeper) getDenomsLp(ctx sdk.Context, denom1, denom2 string) (lp types.Li
 }
 
 // HasLiquidityWithNativeDenom checks if the provided denom has a liquidity pool with the native denom.
+// A halted denom never has usable liquidity: it can not be swapped against anything.
 func (k Keeper) HasLiquidityWithNativeDenom(ctx sdk.Context, denom string) bool {
-	nativeDenom := k.getNativeDenom(ctx)
-	if nativeDenom == denom {
+	params := k.GetParams(ctx)
+	nativeDenom := params.NativeDenom
+	if nativeDenom == denom || params.IsDenomHalted(denom) {
 		return false
 	}
 
@@ -42,9 +44,12 @@ func (k Keeper) HasLiquidityWithNativeDenom(ctx sdk.Context, denom string) bool 
 // HasDeepLiquidityWithNativeDenom checks if the specified denom has sufficient liquidity when paired with the native denom.
 // This function is the same as CanSwapForNativeDenom - except that it doesn't check the amount can be swapped.
 // This function is useful when we DO NOT want to also check that the amount can be swapped.
+// A halted denom never has deep liquidity, so the ante handler refuses it as a fee denom and the fee
+// collector classifies it as non-swappable without ever attempting a swap.
 func (k Keeper) HasDeepLiquidityWithNativeDenom(ctx sdk.Context, denom string) bool {
-	nativeDenom := k.getNativeDenom(ctx)
-	if nativeDenom == denom {
+	params := k.GetParams(ctx)
+	nativeDenom := params.NativeDenom
+	if nativeDenom == denom || params.IsDenomHalted(denom) {
 		return false
 	}
 
@@ -58,7 +63,6 @@ func (k Keeper) HasDeepLiquidityWithNativeDenom(ctx sdk.Context, denom string) b
 		return false
 	}
 
-	params := k.GetParams(ctx)
 	return !nativeLpCoins.Amount.LT(params.MinNativeLiquidityForModuleSwap)
 }
 
@@ -88,9 +92,11 @@ func (k Keeper) GetDenomSpotPriceInNativeCoin(ctx sdk.Context, denom string) (sd
 }
 
 // CanSwapForNativeDenom determines if a given coin can be swapped for the native denomination in an existing liquidity pool.
+// A halted denom can never be swapped.
 func (k Keeper) CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool {
-	nativeDenom := k.getNativeDenom(ctx)
-	if nativeDenom == coin.Denom {
+	params := k.GetParams(ctx)
+	nativeDenom := params.NativeDenom
+	if nativeDenom == coin.Denom || params.IsDenomHalted(coin.Denom) {
 		return false
 	}
 
@@ -104,7 +110,6 @@ func (k Keeper) CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool {
 		return false
 	}
 
-	params := k.GetParams(ctx)
 	if nativeLpCoins.Amount.LT(params.MinNativeLiquidityForModuleSwap) {
 		return false
 	}

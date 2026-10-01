@@ -12,6 +12,10 @@ const (
 	FeeDestinationBurnerModule  = "burner"
 
 	DefaultNativeDenom = "ubze"
+
+	// MaxHaltedDenoms bounds the halted_denoms list. Every order book message and every swap scans
+	// the list once, so the bound keeps that scan a constant-size cost.
+	MaxHaltedDenoms = 32
 )
 
 var (
@@ -78,6 +82,49 @@ func (p Params) Validate() error {
 
 	if p.OrderBookPerBlockMessages < 1 {
 		return fmt.Errorf("order book per block messages must be at least 1")
+	}
+
+	if err := validateHaltedDenoms(p.HaltedDenoms, p.NativeDenom); err != nil {
+		return fmt.Errorf("invalid HaltedDenoms: %w", err)
+	}
+
+	return nil
+}
+
+// IsDenomHalted reports whether denom is listed in HaltedDenoms. Exact string comparison: a market
+// id ("base/quote") or a pool id ("base_quote") never matches, only the denom itself does.
+func (p Params) IsDenomHalted(denom string) bool {
+	for _, halted := range p.HaltedDenoms {
+		if halted == denom {
+			return true
+		}
+	}
+
+	return false
+}
+
+// validateHaltedDenoms checks the halted_denoms list: at most MaxHaltedDenoms entries, each a valid
+// denom, none equal to the native denom (halting it would halt every market and pool) and no
+// duplicates.
+func validateHaltedDenoms(haltedDenoms []string, nativeDenom string) error {
+	if len(haltedDenoms) > MaxHaltedDenoms {
+		return fmt.Errorf("at most %d halted denoms are allowed, got %d", MaxHaltedDenoms, len(haltedDenoms))
+	}
+
+	seen := make(map[string]struct{}, len(haltedDenoms))
+	for _, denom := range haltedDenoms {
+		if err := sdk.ValidateDenom(denom); err != nil {
+			return fmt.Errorf("invalid halted denom %q: %w", denom, err)
+		}
+
+		if denom == nativeDenom {
+			return fmt.Errorf("the native denom %s cannot be halted", denom)
+		}
+
+		if _, duplicate := seen[denom]; duplicate {
+			return fmt.Errorf("duplicate halted denom %s", denom)
+		}
+		seen[denom] = struct{}{}
 	}
 
 	return nil
