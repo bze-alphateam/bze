@@ -372,6 +372,52 @@ func (x *_GenesisState_9_list) IsValid() bool {
 	return x.list != nil
 }
 
+var _ protoreflect.List = (*_GenesisState_10_list)(nil)
+
+type _GenesisState_10_list struct {
+	list *[]string
+}
+
+func (x *_GenesisState_10_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_10_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfString((*x.list)[i])
+}
+
+func (x *_GenesisState_10_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_10_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_10_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message GenesisState at list field HaltedDenoms as it is not of Message kind"))
+}
+
+func (x *_GenesisState_10_list) Truncate(n int) {
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_10_list) NewElement() protoreflect.Value {
+	v := ""
+	return protoreflect.ValueOfString(v)
+}
+
+func (x *_GenesisState_10_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
 	md_GenesisState                       protoreflect.MessageDescriptor
 	fd_GenesisState_params                protoreflect.FieldDescriptor
@@ -383,6 +429,7 @@ var (
 	fd_GenesisState_order_counter         protoreflect.FieldDescriptor
 	fd_GenesisState_all_users_dust        protoreflect.FieldDescriptor
 	fd_GenesisState_liquidity_pools       protoreflect.FieldDescriptor
+	fd_GenesisState_halted_denoms         protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -397,6 +444,7 @@ func init() {
 	fd_GenesisState_order_counter = md_GenesisState.Fields().ByName("order_counter")
 	fd_GenesisState_all_users_dust = md_GenesisState.Fields().ByName("all_users_dust")
 	fd_GenesisState_liquidity_pools = md_GenesisState.Fields().ByName("liquidity_pools")
+	fd_GenesisState_halted_denoms = md_GenesisState.Fields().ByName("halted_denoms")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -518,6 +566,12 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
+	if len(x.HaltedDenoms) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_10_list{list: &x.HaltedDenoms})
+		if !f(fd_GenesisState_halted_denoms, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -551,6 +605,8 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 		return len(x.AllUsersDust) != 0
 	case "bze.tradebin.GenesisState.liquidity_pools":
 		return len(x.LiquidityPools) != 0
+	case "bze.tradebin.GenesisState.halted_denoms":
+		return len(x.HaltedDenoms) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.GenesisState"))
@@ -585,6 +641,8 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 		x.AllUsersDust = nil
 	case "bze.tradebin.GenesisState.liquidity_pools":
 		x.LiquidityPools = nil
+	case "bze.tradebin.GenesisState.halted_denoms":
+		x.HaltedDenoms = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.GenesisState"))
@@ -649,6 +707,12 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 		}
 		listValue := &_GenesisState_9_list{list: &x.LiquidityPools}
 		return protoreflect.ValueOfList(listValue)
+	case "bze.tradebin.GenesisState.halted_denoms":
+		if len(x.HaltedDenoms) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_10_list{})
+		}
+		listValue := &_GenesisState_10_list{list: &x.HaltedDenoms}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.GenesisState"))
@@ -701,6 +765,10 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 		lv := value.List()
 		clv := lv.(*_GenesisState_9_list)
 		x.LiquidityPools = *clv.list
+	case "bze.tradebin.GenesisState.halted_denoms":
+		lv := value.List()
+		clv := lv.(*_GenesisState_10_list)
+		x.HaltedDenoms = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.GenesisState"))
@@ -768,6 +836,12 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 		}
 		value := &_GenesisState_9_list{list: &x.LiquidityPools}
 		return protoreflect.ValueOfList(value)
+	case "bze.tradebin.GenesisState.halted_denoms":
+		if x.HaltedDenoms == nil {
+			x.HaltedDenoms = []string{}
+		}
+		value := &_GenesisState_10_list{list: &x.HaltedDenoms}
+		return protoreflect.ValueOfList(value)
 	case "bze.tradebin.GenesisState.order_counter":
 		panic(fmt.Errorf("field order_counter of message bze.tradebin.GenesisState is not mutable"))
 	default:
@@ -809,6 +883,9 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	case "bze.tradebin.GenesisState.liquidity_pools":
 		list := []*LiquidityPool{}
 		return protoreflect.ValueOfList(&_GenesisState_9_list{list: &list})
+	case "bze.tradebin.GenesisState.halted_denoms":
+		list := []string{}
+		return protoreflect.ValueOfList(&_GenesisState_10_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.GenesisState"))
@@ -927,6 +1004,12 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
+		if len(x.HaltedDenoms) > 0 {
+			for _, s := range x.HaltedDenoms {
+				l = len(s)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -955,6 +1038,15 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.HaltedDenoms) > 0 {
+			for iNdEx := len(x.HaltedDenoms) - 1; iNdEx >= 0; iNdEx-- {
+				i -= len(x.HaltedDenoms[iNdEx])
+				copy(dAtA[i:], x.HaltedDenoms[iNdEx])
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.HaltedDenoms[iNdEx])))
+				i--
+				dAtA[i] = 0x52
+			}
 		}
 		if len(x.LiquidityPools) > 0 {
 			for iNdEx := len(x.LiquidityPools) - 1; iNdEx >= 0; iNdEx-- {
@@ -1429,6 +1521,38 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
+			case 10:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field HaltedDenoms", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.HaltedDenoms = append(x.HaltedDenoms, string(dAtA[iNdEx:postIndex]))
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -1493,6 +1617,8 @@ type GenesisState struct {
 	OrderCounter        int64              `protobuf:"varint,7,opt,name=order_counter,json=orderCounter,proto3" json:"order_counter,omitempty"`
 	AllUsersDust        []*UserDust        `protobuf:"bytes,8,rep,name=all_users_dust,json=allUsersDust,proto3" json:"all_users_dust,omitempty"`
 	LiquidityPools      []*LiquidityPool   `protobuf:"bytes,9,rep,name=liquidity_pools,json=liquidityPools,proto3" json:"liquidity_pools,omitempty"`
+	// denoms governance halted on the DEX (one store key per denom, see MsgHaltDenoms).
+	HaltedDenoms []string `protobuf:"bytes,10,rep,name=halted_denoms,json=haltedDenoms,proto3" json:"halted_denoms,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -1578,6 +1704,13 @@ func (x *GenesisState) GetLiquidityPools() []*LiquidityPool {
 	return nil
 }
 
+func (x *GenesisState) GetHaltedDenoms() []string {
+	if x != nil {
+		return x.HaltedDenoms
+	}
+	return nil
+}
+
 var File_bze_tradebin_genesis_proto protoreflect.FileDescriptor
 
 var file_bze_tradebin_genesis_proto_rawDesc = []byte{
@@ -1589,7 +1722,7 @@ var file_bze_tradebin_genesis_proto_rawDesc = []byte{
 	0x6f, 0x74, 0x6f, 0x1a, 0x1c, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69,
 	0x6e, 0x2f, 0x76, 0x32, 0x2f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x1a, 0x18, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x2f,
-	0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xcf, 0x06, 0x0a, 0x0c,
+	0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x91, 0x07, 0x0a, 0x0c,
 	0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x3a, 0x0a, 0x06,
 	0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x17, 0x2e, 0x62,
 	0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x2e, 0x76, 0x32, 0x2e, 0x50,
@@ -1642,18 +1775,22 @@ var file_bze_tradebin_genesis_proto_rawDesc = []byte{
 	0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x42, 0x21, 0xc8, 0xde, 0x1f, 0x00,
 	0xea, 0xde, 0x1f, 0x19, 0x6c, 0x69, 0x71, 0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x5f, 0x70, 0x6f,
 	0x6f, 0x6c, 0x73, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x0e, 0x6c,
-	0x69, 0x71, 0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x73, 0x42, 0xa0, 0x01,
-	0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62,
-	0x69, 0x6e, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f,
-	0x50, 0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62,
-	0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65,
-	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69,
-	0x6e, 0xa2, 0x02, 0x03, 0x42, 0x54, 0x58, 0xaa, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x2e, 0x54, 0x72,
-	0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xca, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72, 0x61,
-	0x64, 0x65, 0x62, 0x69, 0x6e, 0xe2, 0x02, 0x18, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72, 0x61, 0x64,
-	0x65, 0x62, 0x69, 0x6e, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
-	0xea, 0x02, 0x0d, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x69, 0x71, 0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x73, 0x12, 0x40, 0x0a,
+	0x0d, 0x68, 0x61, 0x6c, 0x74, 0x65, 0x64, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x18, 0x0a,
+	0x20, 0x03, 0x28, 0x09, 0x42, 0x1b, 0xea, 0xde, 0x1f, 0x17, 0x68, 0x61, 0x6c, 0x74, 0x65, 0x64,
+	0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74,
+	0x79, 0x52, 0x0c, 0x68, 0x61, 0x6c, 0x74, 0x65, 0x64, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x42,
+	0xa0, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64,
+	0x65, 0x62, 0x69, 0x6e, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62,
+	0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x72, 0x61, 0x64, 0x65,
+	0x62, 0x69, 0x6e, 0xa2, 0x02, 0x03, 0x42, 0x54, 0x58, 0xaa, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x2e,
+	0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xca, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x5c, 0x54,
+	0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xe2, 0x02, 0x18, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72,
+	0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
+	0x74, 0x61, 0xea, 0x02, 0x0d, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62,
+	0x69, 0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

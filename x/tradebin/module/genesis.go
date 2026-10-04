@@ -53,6 +53,10 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 	for _, elem := range genState.LiquidityPools {
 		k.SetLiquidityPool(ctx, elem)
 	}
+
+	for _, denom := range genState.HaltedDenoms {
+		k.SetHaltedDenom(ctx, denom)
+	}
 }
 
 // ExportGenesis returns the module's exported genesis.
@@ -69,6 +73,7 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *types.GenesisState {
 	genesis.OrderCounter = int64(k.GetOrderCounter(ctx))
 	genesis.AllUsersDust = k.GetAllUserDust(ctx)
 	genesis.LiquidityPools = k.GetAllLiquidityPool(ctx)
+	genesis.HaltedDenoms = k.GetAllHaltedDenoms(ctx)
 	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis

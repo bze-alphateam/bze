@@ -6677,6 +6677,846 @@ func (x *fastReflection_SwapEvent) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var (
+	md_DenomHaltedEvent       protoreflect.MessageDescriptor
+	fd_DenomHaltedEvent_denom protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_tradebin_events_proto_init()
+	md_DenomHaltedEvent = File_bze_tradebin_events_proto.Messages().ByName("DenomHaltedEvent")
+	fd_DenomHaltedEvent_denom = md_DenomHaltedEvent.Fields().ByName("denom")
+}
+
+var _ protoreflect.Message = (*fastReflection_DenomHaltedEvent)(nil)
+
+type fastReflection_DenomHaltedEvent DenomHaltedEvent
+
+func (x *DenomHaltedEvent) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_DenomHaltedEvent)(x)
+}
+
+func (x *DenomHaltedEvent) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_tradebin_events_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_DenomHaltedEvent_messageType fastReflection_DenomHaltedEvent_messageType
+var _ protoreflect.MessageType = fastReflection_DenomHaltedEvent_messageType{}
+
+type fastReflection_DenomHaltedEvent_messageType struct{}
+
+func (x fastReflection_DenomHaltedEvent_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_DenomHaltedEvent)(nil)
+}
+func (x fastReflection_DenomHaltedEvent_messageType) New() protoreflect.Message {
+	return new(fastReflection_DenomHaltedEvent)
+}
+func (x fastReflection_DenomHaltedEvent_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_DenomHaltedEvent
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_DenomHaltedEvent) Descriptor() protoreflect.MessageDescriptor {
+	return md_DenomHaltedEvent
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_DenomHaltedEvent) Type() protoreflect.MessageType {
+	return _fastReflection_DenomHaltedEvent_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_DenomHaltedEvent) New() protoreflect.Message {
+	return new(fastReflection_DenomHaltedEvent)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_DenomHaltedEvent) Interface() protoreflect.ProtoMessage {
+	return (*DenomHaltedEvent)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_DenomHaltedEvent) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Denom != "" {
+		value := protoreflect.ValueOfString(x.Denom)
+		if !f(fd_DenomHaltedEvent_denom, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_DenomHaltedEvent) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.tradebin.DenomHaltedEvent.denom":
+		return x.Denom != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.DenomHaltedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.DenomHaltedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomHaltedEvent) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.tradebin.DenomHaltedEvent.denom":
+		x.Denom = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.DenomHaltedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.DenomHaltedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_DenomHaltedEvent) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.tradebin.DenomHaltedEvent.denom":
+		value := x.Denom
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.DenomHaltedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.DenomHaltedEvent does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomHaltedEvent) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.tradebin.DenomHaltedEvent.denom":
+		x.Denom = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.DenomHaltedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.DenomHaltedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomHaltedEvent) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tradebin.DenomHaltedEvent.denom":
+		panic(fmt.Errorf("field denom of message bze.tradebin.DenomHaltedEvent is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.DenomHaltedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.DenomHaltedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_DenomHaltedEvent) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tradebin.DenomHaltedEvent.denom":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.DenomHaltedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.DenomHaltedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_DenomHaltedEvent) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.tradebin.DenomHaltedEvent", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_DenomHaltedEvent) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomHaltedEvent) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_DenomHaltedEvent) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_DenomHaltedEvent) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*DenomHaltedEvent)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Denom)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*DenomHaltedEvent)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Denom) > 0 {
+			i -= len(x.Denom)
+			copy(dAtA[i:], x.Denom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Denom)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*DenomHaltedEvent)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DenomHaltedEvent: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DenomHaltedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Denom = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_DenomUnhaltedEvent       protoreflect.MessageDescriptor
+	fd_DenomUnhaltedEvent_denom protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_tradebin_events_proto_init()
+	md_DenomUnhaltedEvent = File_bze_tradebin_events_proto.Messages().ByName("DenomUnhaltedEvent")
+	fd_DenomUnhaltedEvent_denom = md_DenomUnhaltedEvent.Fields().ByName("denom")
+}
+
+var _ protoreflect.Message = (*fastReflection_DenomUnhaltedEvent)(nil)
+
+type fastReflection_DenomUnhaltedEvent DenomUnhaltedEvent
+
+func (x *DenomUnhaltedEvent) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_DenomUnhaltedEvent)(x)
+}
+
+func (x *DenomUnhaltedEvent) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_tradebin_events_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_DenomUnhaltedEvent_messageType fastReflection_DenomUnhaltedEvent_messageType
+var _ protoreflect.MessageType = fastReflection_DenomUnhaltedEvent_messageType{}
+
+type fastReflection_DenomUnhaltedEvent_messageType struct{}
+
+func (x fastReflection_DenomUnhaltedEvent_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_DenomUnhaltedEvent)(nil)
+}
+func (x fastReflection_DenomUnhaltedEvent_messageType) New() protoreflect.Message {
+	return new(fastReflection_DenomUnhaltedEvent)
+}
+func (x fastReflection_DenomUnhaltedEvent_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_DenomUnhaltedEvent
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_DenomUnhaltedEvent) Descriptor() protoreflect.MessageDescriptor {
+	return md_DenomUnhaltedEvent
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_DenomUnhaltedEvent) Type() protoreflect.MessageType {
+	return _fastReflection_DenomUnhaltedEvent_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_DenomUnhaltedEvent) New() protoreflect.Message {
+	return new(fastReflection_DenomUnhaltedEvent)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_DenomUnhaltedEvent) Interface() protoreflect.ProtoMessage {
+	return (*DenomUnhaltedEvent)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_DenomUnhaltedEvent) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Denom != "" {
+		value := protoreflect.ValueOfString(x.Denom)
+		if !f(fd_DenomUnhaltedEvent_denom, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_DenomUnhaltedEvent) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.tradebin.DenomUnhaltedEvent.denom":
+		return x.Denom != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.DenomUnhaltedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.DenomUnhaltedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomUnhaltedEvent) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.tradebin.DenomUnhaltedEvent.denom":
+		x.Denom = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.DenomUnhaltedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.DenomUnhaltedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_DenomUnhaltedEvent) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.tradebin.DenomUnhaltedEvent.denom":
+		value := x.Denom
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.DenomUnhaltedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.DenomUnhaltedEvent does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomUnhaltedEvent) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.tradebin.DenomUnhaltedEvent.denom":
+		x.Denom = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.DenomUnhaltedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.DenomUnhaltedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomUnhaltedEvent) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tradebin.DenomUnhaltedEvent.denom":
+		panic(fmt.Errorf("field denom of message bze.tradebin.DenomUnhaltedEvent is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.DenomUnhaltedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.DenomUnhaltedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_DenomUnhaltedEvent) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tradebin.DenomUnhaltedEvent.denom":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.DenomUnhaltedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.DenomUnhaltedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_DenomUnhaltedEvent) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.tradebin.DenomUnhaltedEvent", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_DenomUnhaltedEvent) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DenomUnhaltedEvent) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_DenomUnhaltedEvent) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_DenomUnhaltedEvent) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*DenomUnhaltedEvent)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Denom)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*DenomUnhaltedEvent)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Denom) > 0 {
+			i -= len(x.Denom)
+			copy(dAtA[i:], x.Denom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Denom)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*DenomUnhaltedEvent)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DenomUnhaltedEvent: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DenomUnhaltedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Denom = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -7346,6 +8186,80 @@ func (x *SwapEvent) GetPoolId() string {
 	return ""
 }
 
+// DenomHaltedEvent is emitted for every denom a MsgHaltDenoms proposal actually halts (not for denoms
+// that were already halted).
+type DenomHaltedEvent struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (x *DenomHaltedEvent) Reset() {
+	*x = DenomHaltedEvent{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_tradebin_events_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DenomHaltedEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DenomHaltedEvent) ProtoMessage() {}
+
+// Deprecated: Use DenomHaltedEvent.ProtoReflect.Descriptor instead.
+func (*DenomHaltedEvent) Descriptor() ([]byte, []int) {
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *DenomHaltedEvent) GetDenom() string {
+	if x != nil {
+		return x.Denom
+	}
+	return ""
+}
+
+// DenomUnhaltedEvent is emitted for every denom a MsgUnhaltDenoms proposal actually un-halts (not for
+// denoms that were not halted).
+type DenomUnhaltedEvent struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (x *DenomUnhaltedEvent) Reset() {
+	*x = DenomUnhaltedEvent{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_tradebin_events_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DenomUnhaltedEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DenomUnhaltedEvent) ProtoMessage() {}
+
+// Deprecated: Use DenomUnhaltedEvent.ProtoReflect.Descriptor instead.
+func (*DenomUnhaltedEvent) Descriptor() ([]byte, []int) {
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *DenomUnhaltedEvent) GetDenom() string {
+	if x != nil {
+		return x.Denom
+	}
+	return ""
+}
+
 var File_bze_tradebin_events_proto protoreflect.FileDescriptor
 
 var file_bze_tradebin_events_proto_rawDesc = []byte{
@@ -7463,18 +8377,23 @@ var file_bze_tradebin_events_proto_rawDesc = []byte{
 	0x00, 0xea, 0xde, 0x1f, 0x0d, 0x6f, 0x75, 0x74, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70,
 	0x74, 0x79, 0xf2, 0xde, 0x1f, 0x0a, 0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x6f, 0x75, 0x74, 0x22,
 	0x52, 0x03, 0x6f, 0x75, 0x74, 0x12, 0x17, 0x0a, 0x07, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x69, 0x64,
-	0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x70, 0x6f, 0x6f, 0x6c, 0x49, 0x64, 0x42, 0x9f,
-	0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64, 0x65,
-	0x62, 0x69, 0x6e, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f,
-	0x50, 0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62,
-	0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65,
-	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69,
-	0x6e, 0xa2, 0x02, 0x03, 0x42, 0x54, 0x58, 0xaa, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x2e, 0x54, 0x72,
-	0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xca, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72, 0x61,
-	0x64, 0x65, 0x62, 0x69, 0x6e, 0xe2, 0x02, 0x18, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72, 0x61, 0x64,
-	0x65, 0x62, 0x69, 0x6e, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
-	0xea, 0x02, 0x0d, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x70, 0x6f, 0x6f, 0x6c, 0x49, 0x64, 0x22, 0x28,
+	0x0a, 0x10, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x48, 0x61, 0x6c, 0x74, 0x65, 0x64, 0x45, 0x76, 0x65,
+	0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0x2a, 0x0a, 0x12, 0x44, 0x65, 0x6e, 0x6f,
+	0x6d, 0x55, 0x6e, 0x68, 0x61, 0x6c, 0x74, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x14,
+	0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64,
+	0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x9f, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65,
+	0x2e, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74,
+	0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
+	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65,
+	0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74,
+	0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xa2, 0x02, 0x03, 0x42, 0x54, 0x58, 0xaa, 0x02, 0x0c,
+	0x42, 0x7a, 0x65, 0x2e, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xca, 0x02, 0x0c, 0x42,
+	0x7a, 0x65, 0x5c, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xe2, 0x02, 0x18, 0x42, 0x7a,
+	0x65, 0x5c, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x54, 0x72,
+	0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -7489,7 +8408,7 @@ func file_bze_tradebin_events_proto_rawDescGZIP() []byte {
 	return file_bze_tradebin_events_proto_rawDescData
 }
 
-var file_bze_tradebin_events_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_bze_tradebin_events_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_bze_tradebin_events_proto_goTypes = []interface{}{
 	(*OrderCreateMessageEvent)(nil), // 0: bze.tradebin.OrderCreateMessageEvent
 	(*OrderCancelMessageEvent)(nil), // 1: bze.tradebin.OrderCancelMessageEvent
@@ -7501,11 +8420,13 @@ var file_bze_tradebin_events_proto_goTypes = []interface{}{
 	(*LiquidityAddedEvent)(nil),     // 7: bze.tradebin.LiquidityAddedEvent
 	(*LiquidityRemovedEvent)(nil),   // 8: bze.tradebin.LiquidityRemovedEvent
 	(*SwapEvent)(nil),               // 9: bze.tradebin.SwapEvent
-	(*v1beta1.Coin)(nil),            // 10: cosmos.base.v1beta1.Coin
+	(*DenomHaltedEvent)(nil),        // 10: bze.tradebin.DenomHaltedEvent
+	(*DenomUnhaltedEvent)(nil),      // 11: bze.tradebin.DenomUnhaltedEvent
+	(*v1beta1.Coin)(nil),            // 12: cosmos.base.v1beta1.Coin
 }
 var file_bze_tradebin_events_proto_depIdxs = []int32{
-	10, // 0: bze.tradebin.SwapEvent.in:type_name -> cosmos.base.v1beta1.Coin
-	10, // 1: bze.tradebin.SwapEvent.out:type_name -> cosmos.base.v1beta1.Coin
+	12, // 0: bze.tradebin.SwapEvent.in:type_name -> cosmos.base.v1beta1.Coin
+	12, // 1: bze.tradebin.SwapEvent.out:type_name -> cosmos.base.v1beta1.Coin
 	2,  // [2:2] is the sub-list for method output_type
 	2,  // [2:2] is the sub-list for method input_type
 	2,  // [2:2] is the sub-list for extension type_name
@@ -7639,6 +8560,30 @@ func file_bze_tradebin_events_proto_init() {
 				return nil
 			}
 		}
+		file_bze_tradebin_events_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DenomHaltedEvent); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bze_tradebin_events_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DenomUnhaltedEvent); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -7646,7 +8591,7 @@ func file_bze_tradebin_events_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_bze_tradebin_events_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

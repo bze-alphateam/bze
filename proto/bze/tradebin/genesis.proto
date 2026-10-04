@@ -49,4 +49,9 @@ message GenesisState {
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)  = "liquidity_pools,omitempty"
   ];
+
+  // denoms governance halted on the DEX (one store key per denom, see MsgHaltDenoms).
+  repeated string halted_denoms = 10 [
+    (gogoproto.jsontag)  = "halted_denoms,omitempty"
+  ];
 }

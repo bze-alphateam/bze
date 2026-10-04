@@ -37,5 +37,11 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgUpdateParams{},
 	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgHaltDenoms{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgUnhaltDenoms{},
+	)
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

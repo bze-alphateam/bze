@@ -47,6 +47,13 @@ func (k Keeper) CaptureAndSwapUserFee(ctx sdk.Context, payer sdk.AccAddress, fee
 		return k.payerCoinsToModule(ctx, payer, fee, toModule)
 	}
 
+	//a halted preferred denom is never swapped: the ante handler already refuses it as a fee denom,
+	//so this only pins the fallback for a tx that slipped through — the fee is captured in native denom
+	if k.isPoolHalted(ctx, &pool) {
+		k.Logger().Debug("preferred fee denom is halted, falling back to native denom", "pool", poolId)
+		return k.payerCoinsToModule(ctx, payer, fee, toModule)
+	}
+
 	nativeLpCoins, _ := pool.GetReservesCoinsByDenom(nativeDenom)
 	if !nativeLpCoins.IsPositive() {
 		k.Logger().Debug("no liquidity available, falling back to native denom", "pool", poolId)
@@ -185,6 +192,13 @@ func (k Keeper) CaptureAndTryToSwapUserFeesOrSendItAsIs(ctx sdk.Context, payer s
 	if !ok {
 		//the provided ctx denom does not have a pool with native denom. (should never happen)
 		k.Logger().Debug("liquidity pool not found, falling back to native denom", "pool_id", poolId)
+		return k.payerCoinsToModule(ctx, payer, fee, toModule)
+	}
+
+	//a halted preferred denom is never swapped: the ante handler already refuses it as a fee denom,
+	//so this only pins the fallback for a tx that slipped through — the fee is captured in native denom
+	if k.isPoolHalted(ctx, &pool) {
+		k.Logger().Debug("preferred fee denom is halted, falling back to native denom", "pool", poolId)
 		return k.payerCoinsToModule(ctx, payer, fee, toModule)
 	}
 
