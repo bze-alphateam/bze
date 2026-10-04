@@ -39,6 +39,44 @@ bzed tx tradebin multi-swap '["<pool1>","<pool2>"]' \
   --input 1000000ubze --min-output 900000ibc/xyz --from mykey
 ```
 
+## Halted Denoms
+Governance can halt a denom on the DEX with a `MsgHaltDenoms` proposal, and lift the halt with `MsgUnhaltDenoms`. This exists for tokens that may become worthless — for example a bridged asset whose issuer is winding the bridge down — so that they are never exchanged for coins that still have value. Halted denoms live in their own store, one key per denom (not in the module params): checking a denom is a single store lookup whatever the number of halted denoms, there is no cap on how many can be halted, and a halt proposal carries nothing but the denoms.
+
+While a denom is halted:
+- **Refused** (with `ErrDenomHalted`, before any fee or funds move): creating a market or pool with it, placing an order (`MsgCreateOrder`) or filling orders (`MsgFillOrders`) on a market whose base or quote is halted, adding liquidity to a pool that holds it, and any `MsgMultiSwap` whose route touches it — even as an intermediate hop. Paying tx fees in the denom is refused by the ante handler.
+- **Already queued**: order book messages accepted before the halt took effect (a block or a few earlier) execute normally in `EndBlock` — matched, saved as resting orders, or refunded exactly as today. The queue is only the asynchronous execution stage of messages the chain has already accepted (validated, fee captured, funds escrowed), and no new message can enter it once the halt is in effect, so the backlog drains within a few blocks and the market is then frozen except for cancels and liquidity removals.
+- **Still working**: `MsgCancelOrder` (refund through the queue as always), `MsgRemoveLiquidity`, bank sends, IBC transfers, staking and rewards that merely hold the denom, `MsgFundBurner`. Resting orders and pool reserves are left exactly as they are — nothing is swept or force-cancelled.
+- **Never swapped, by anyone**: user routes, module swaps (fee conversion, burner add-liquidity) and fee swaps all refuse the denom. Coins of a halted denom that other modules hold as fee dust are treated like any non-swappable IBC denom and end up locked in the burner black hole; tx-fee dust in that denom is distributed to stakers in kind.
+
+A market or pool is halted iff its base **or** quote is halted. Both sides of a book are frozen: every fill has one party receiving the halted denom, so there is no "exit-only" direction on an order book. Un-halting lets resting orders resume matching and pools resume swapping — nothing else to do.
+
+### Halt queries
+- `bzed query tradebin halted-denoms` (REST `GET /bze/tradebin/halted_denoms`, paginated) — every halted denom, in store order.
+- `bzed query tradebin denom-halted <denom>` (REST `GET /bze/tradebin/denom_halted?denom=<denom>`) — `halted: true|false` for one denom. Over REST the denom goes in the query string because ibc/factory denoms contain `/`.
+- Indexers can follow the `DenomHaltedEvent` / `DenomUnhaltedEvent` typed events, emitted once per denom whose state actually changed.
+
+### Governance runbook (halting a denom)
+1. Write the proposal with a single `/bze.tradebin.MsgHaltDenoms` message: `authority` = the gov module account (mainnet `bze10d07y265gmmuvt4z0w9aw880jnsr700j8xlwyy`), `denoms` = the denoms to halt — valid denoms, no duplicates, up to 1000 per message, never the native denom. No other field and no other parameter is involved.
+   ```json
+   {
+     "messages": [
+       {
+         "@type": "/bze.tradebin.MsgHaltDenoms",
+         "authority": "bze10d07y265gmmuvt4z0w9aw880jnsr700j8xlwyy",
+         "denoms": ["ibc/6490A7EAB61059BFC1CDDEB05917DD70BDF3A611654162A1A47DB930D40D8AF4"]
+       }
+     ],
+     "metadata": "<ipfs or url>",
+     "deposit": "<amount>ubze",
+     "title": "Halt USDC.n on the DEX",
+     "summary": "<why>"
+   }
+   ```
+   Submit it with `bzed tx gov submit-proposal proposal.json --from <key>`.
+2. Rehearse on the testnet first with a factory denom that has both a market and a pool: submit, vote, then verify each effect listed above with real transactions (orders and fills refused, cancel and remove-liquidity working, swaps through the pool refused, the denom refused as a fee denom) and check that `denom-halted` answers `true`.
+3. The message is idempotent: a denom that is already halted is left as is, so a batch proposal never fails because one of its entries was halted by an earlier proposal. Listing the native denom fails the whole proposal and halts nothing.
+4. Reverting is a `/bze.tradebin.MsgUnhaltDenoms` proposal with the same `denoms`. Un-halting a denom that is not halted is a no-op.
+
 ## User Dust
 Partial order fills can leave fractional coin amounts (dust) that are too small to settle. The module tracks dust per user address, and it accumulates across trades.
 
@@ -52,17 +90,21 @@ Partial order fills can leave fractional coin amounts (dust) that are too small 
 - `bzed query tradebin market-order <market> <buy|sell> <order-id>` – single order details.
 - `bzed query tradebin all-user-dust <address>` – fractional dust from partial fills.
 - `bzed query tradebin liquidity-pool <id>` / `liquidity-pools` – pool details and LP supply.
+- `bzed query tradebin halted-denoms` / `denom-halted <denom>` – the governance-halted denoms (paginated) and the flag for one denom.
 
 ## Fees and Destinations
 - **Create-market fee** (`create_market_fee`): always routed to community pool via `txfeecollector`.
 - **Order fees** (maker/taker): routed based on `maker_fee_destination`/`taker_fee_destination` params — valid destinations are `community_pool` or `burner`.
 - **Pool fees** (`fee` field per pool): split three ways via `fee_destination` — `treasury` % to community pool, `burner` % to burner module, `providers` % to LP holders.
 - Fees are captured from the sender, swapped to `native_denom` when possible, and forwarded to the destination module.
-- `MsgUpdateParams` is restricted to the module authority (governance).
+- `MsgUpdateParams`, `MsgHaltDenoms` and `MsgUnhaltDenoms` are restricted to the module authority (governance).
 - Queue processing at `EndBlock` is capped by `order_book_per_block_messages`; messages beyond the cap remain queued for later blocks, and the queue counter resets only after the queue is emptied.
 - Module-level swaps/add-liquidity helpers refuse to run unless the native/pair pool holds at least `min_native_liquidity_for_module_swap` in native reserves.
 
 ## Version History
+
+### v8.2.0
+- Governance-halted denoms: `MsgHaltDenoms` / `MsgUnhaltDenoms` (authority only, idempotent), the `halted-denoms` and `denom-halted` queries, `ErrDenomHalted` on every new-position message touching a halted market or pool, the no-swap invariant at `swapTokens`, and halted denoms refused as tx fee denoms. Cancel and remove-liquidity untouched. Nothing is halted at the upgrade.
 
 ### v8.1.0
 - Fee payer service (`CaptureAndSwapUserFee`) for fee capture and conversion to native denom via liquidity pools

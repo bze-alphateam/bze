@@ -23,6 +23,7 @@
 
 ### Updating
 - Params are authority-only via `MsgUpdateParams`. All fields must be supplied when updating.
+- Halting a denom on the DEX is **not** a parameter. Halted denoms have their own store (one key per denom), edited by the `MsgHaltDenoms` / `MsgUnhaltDenoms` governance messages, so a halt proposal carries nothing but the denoms and the parameter set is untouched. See the halted denoms section in [README.md](README.md#halted-denoms).
 
 ## Version History
 
