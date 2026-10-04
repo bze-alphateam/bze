@@ -26,4 +26,5 @@ var (
 	ErrResultedAmountTooLow   = sdkerrors.Register(ModuleName, 4014, "the resulted amount is too low")
 	ErrInvalidRoutes          = sdkerrors.Register(ModuleName, 4015, "invalid routes")
 	ErrInvalidPoolSwap        = sdkerrors.Register(ModuleName, 4016, "invalid pool swap")
+	ErrDenomHalted            = sdkerrors.Register(ModuleName, 4017, "denom is halted")
 )

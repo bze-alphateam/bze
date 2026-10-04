@@ -82,6 +82,11 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 		return nil, types.ErrMarketNotFound.Wrapf("market id: %s", msg.MarketId)
 	}
 
+	//no new orders on a halted market; cancelling stays possible
+	if k.isMarketHalted(ctx, &market) {
+		return nil, types.ErrDenomHalted.Wrapf("market %s is halted", msg.MarketId)
+	}
+
 	// Apply dynamic gas cost based on queue size to prevent spam attacks
 	// Formula: max(queue_size - window, 0) * queueExtraGas
 	// This makes it progressively more expensive to submit orders when the queue is full
@@ -204,6 +209,11 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 	market, found := k.GetMarketById(ctx, msg.MarketId)
 	if !found {
 		return nil, types.ErrMarketNotFound.Wrapf("market id: %s", msg.MarketId)
+	}
+
+	//no fills on a halted market
+	if k.isMarketHalted(ctx, &market) {
+		return nil, types.ErrDenomHalted.Wrapf("market %s is halted", msg.MarketId)
 	}
 
 	params := k.GetParams(ctx)
