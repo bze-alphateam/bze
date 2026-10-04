@@ -80,6 +80,20 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "pool_id"}},
 				},
 
+				{
+					RpcMethod:      "HaltedDenoms",
+					Use:            "halted-denoms",
+					Short:          "Query the denoms governance halted on the DEX (paginated)",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
+
+				{
+					RpcMethod:      "DenomHalted",
+					Use:            "denom-halted [denom]",
+					Short:          "Query whether a denom is halted on the DEX",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
+
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},
@@ -89,6 +103,14 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "UpdateParams",
+					Skip:      true, // skipped because authority gated
+				},
+				{
+					RpcMethod: "HaltDenoms",
+					Skip:      true, // skipped because authority gated
+				},
+				{
+					RpcMethod: "UnhaltDenoms",
 					Skip:      true, // skipped because authority gated
 				},
 				{

@@ -109,3 +109,15 @@ message SwapEvent {
   ];
   string pool_id = 4;
 }
+
+// DenomHaltedEvent is emitted for every denom a MsgHaltDenoms proposal actually halts (not for denoms
+// that were already halted).
+message DenomHaltedEvent {
+  string denom = 1;
+}
+
+// DenomUnhaltedEvent is emitted for every denom a MsgUnhaltDenoms proposal actually un-halts (not for
+// denoms that were not halted).
+message DenomUnhaltedEvent {
+  string denom = 1;
+}

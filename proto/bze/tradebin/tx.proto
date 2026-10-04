@@ -26,6 +26,11 @@ service Msg {
   rpc AddLiquidity        (MsgAddLiquidity       ) returns (MsgAddLiquidityResponse       );
   rpc RemoveLiquidity     (MsgRemoveLiquidity    ) returns (MsgRemoveLiquidityResponse    );
   rpc MultiSwap           (MsgMultiSwap          ) returns (MsgMultiSwapResponse          );
+
+  // HaltDenoms halts denoms on the DEX. Governance only (authority = the x/gov module account).
+  rpc HaltDenoms          (MsgHaltDenoms         ) returns (MsgHaltDenomsResponse         );
+  // UnhaltDenoms lifts the halt on denoms. Governance only.
+  rpc UnhaltDenoms        (MsgUnhaltDenoms       ) returns (MsgUnhaltDenomsResponse       );
 }
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
@@ -167,3 +172,34 @@ message MsgMultiSwapResponse {
   ];
 }
 
+// MsgHaltDenoms is the governance message that halts denoms on the DEX: no new order, fill, market, pool
+// or liquidity add touching a halted denom, no AMM swap involving it (user routes, module swaps, fee
+// swaps) and no tx fee paid in it. Exits — cancel order, remove liquidity, bank sends, IBC — keep working.
+// Idempotent: a denom that is already halted is left as is. The native denom cannot be halted.
+message MsgHaltDenoms {
+  option (cosmos.msg.v1.signer) =                    "authority";
+  option           (amino.name) = "bze/x/tradebin/MsgHaltDenoms";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // denoms to halt: valid denoms, no duplicates, at most 1000 per message.
+  repeated string denoms = 2;
+}
+
+message MsgHaltDenomsResponse {}
+
+// MsgUnhaltDenoms is the governance message that lifts the halt on denoms: resting orders resume
+// matching and pools resume swapping. Idempotent: a denom that is not halted is left as is.
+message MsgUnhaltDenoms {
+  option (cosmos.msg.v1.signer) =                      "authority";
+  option           (amino.name) = "bze/x/tradebin/MsgUnhaltDenoms";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // denoms to un-halt: valid denoms, no duplicates, at most 1000 per message.
+  repeated string denoms = 2;
+}
+
+message MsgUnhaltDenomsResponse {}

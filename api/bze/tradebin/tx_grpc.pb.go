@@ -28,6 +28,8 @@ const (
 	Msg_AddLiquidity_FullMethodName        = "/bze.tradebin.Msg/AddLiquidity"
 	Msg_RemoveLiquidity_FullMethodName     = "/bze.tradebin.Msg/RemoveLiquidity"
 	Msg_MultiSwap_FullMethodName           = "/bze.tradebin.Msg/MultiSwap"
+	Msg_HaltDenoms_FullMethodName          = "/bze.tradebin.Msg/HaltDenoms"
+	Msg_UnhaltDenoms_FullMethodName        = "/bze.tradebin.Msg/UnhaltDenoms"
 )
 
 // MsgClient is the client API for Msg service.
@@ -45,6 +47,10 @@ type MsgClient interface {
 	AddLiquidity(ctx context.Context, in *MsgAddLiquidity, opts ...grpc.CallOption) (*MsgAddLiquidityResponse, error)
 	RemoveLiquidity(ctx context.Context, in *MsgRemoveLiquidity, opts ...grpc.CallOption) (*MsgRemoveLiquidityResponse, error)
 	MultiSwap(ctx context.Context, in *MsgMultiSwap, opts ...grpc.CallOption) (*MsgMultiSwapResponse, error)
+	// HaltDenoms halts denoms on the DEX. Governance only (authority = the x/gov module account).
+	HaltDenoms(ctx context.Context, in *MsgHaltDenoms, opts ...grpc.CallOption) (*MsgHaltDenomsResponse, error)
+	// UnhaltDenoms lifts the halt on denoms. Governance only.
+	UnhaltDenoms(ctx context.Context, in *MsgUnhaltDenoms, opts ...grpc.CallOption) (*MsgUnhaltDenomsResponse, error)
 }
 
 type msgClient struct {
@@ -136,6 +142,24 @@ func (c *msgClient) MultiSwap(ctx context.Context, in *MsgMultiSwap, opts ...grp
 	return out, nil
 }
 
+func (c *msgClient) HaltDenoms(ctx context.Context, in *MsgHaltDenoms, opts ...grpc.CallOption) (*MsgHaltDenomsResponse, error) {
+	out := new(MsgHaltDenomsResponse)
+	err := c.cc.Invoke(ctx, Msg_HaltDenoms_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UnhaltDenoms(ctx context.Context, in *MsgUnhaltDenoms, opts ...grpc.CallOption) (*MsgUnhaltDenomsResponse, error) {
+	out := new(MsgUnhaltDenomsResponse)
+	err := c.cc.Invoke(ctx, Msg_UnhaltDenoms_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -151,6 +175,10 @@ type MsgServer interface {
 	AddLiquidity(context.Context, *MsgAddLiquidity) (*MsgAddLiquidityResponse, error)
 	RemoveLiquidity(context.Context, *MsgRemoveLiquidity) (*MsgRemoveLiquidityResponse, error)
 	MultiSwap(context.Context, *MsgMultiSwap) (*MsgMultiSwapResponse, error)
+	// HaltDenoms halts denoms on the DEX. Governance only (authority = the x/gov module account).
+	HaltDenoms(context.Context, *MsgHaltDenoms) (*MsgHaltDenomsResponse, error)
+	// UnhaltDenoms lifts the halt on denoms. Governance only.
+	UnhaltDenoms(context.Context, *MsgUnhaltDenoms) (*MsgUnhaltDenomsResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -184,6 +212,12 @@ func (UnimplementedMsgServer) RemoveLiquidity(context.Context, *MsgRemoveLiquidi
 }
 func (UnimplementedMsgServer) MultiSwap(context.Context, *MsgMultiSwap) (*MsgMultiSwapResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MultiSwap not implemented")
+}
+func (UnimplementedMsgServer) HaltDenoms(context.Context, *MsgHaltDenoms) (*MsgHaltDenomsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HaltDenoms not implemented")
+}
+func (UnimplementedMsgServer) UnhaltDenoms(context.Context, *MsgUnhaltDenoms) (*MsgUnhaltDenomsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnhaltDenoms not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -360,6 +394,42 @@ func _Msg_MultiSwap_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_HaltDenoms_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgHaltDenoms)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).HaltDenoms(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_HaltDenoms_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).HaltDenoms(ctx, req.(*MsgHaltDenoms))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UnhaltDenoms_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUnhaltDenoms)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UnhaltDenoms(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UnhaltDenoms_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UnhaltDenoms(ctx, req.(*MsgUnhaltDenoms))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -402,6 +472,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "MultiSwap",
 			Handler:    _Msg_MultiSwap_Handler,
+		},
+		{
+			MethodName: "HaltDenoms",
+			Handler:    _Msg_HaltDenoms_Handler,
+		},
+		{
+			MethodName: "UnhaltDenoms",
+			Handler:    _Msg_UnhaltDenoms_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

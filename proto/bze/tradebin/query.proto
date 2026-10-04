@@ -77,6 +77,17 @@ service Query {
   // Queries a list of LiquidityPool items.
   rpc LiquidityPool (QueryLiquidityPoolRequest) returns (QueryLiquidityPoolResponse) {
     option (google.api.http).get = "/bze/tradebin/liquidity_pool";
+  }
+
+  // Queries the denoms governance halted on the DEX, paginated, in store (byte) order.
+  rpc HaltedDenoms (QueryHaltedDenomsRequest) returns (QueryHaltedDenomsResponse) {
+    option (google.api.http).get = "/bze/tradebin/halted_denoms";
+  }
+
+  // Queries whether one denom is halted. Over REST the denom is passed as the `denom` query
+  // parameter (factory/ibc denoms contain "/", so it cannot be a path segment).
+  rpc DenomHalted (QueryDenomHaltedRequest) returns (QueryDenomHaltedResponse) {
+    option (google.api.http).get = "/bze/tradebin/denom_halted";
   
   }
 }
@@ -184,3 +195,19 @@ message QueryLiquidityPoolResponse {
   LiquidityPool pool = 1;
 }
 
+message QueryHaltedDenomsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryHaltedDenomsResponse {
+  repeated string denoms = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryDenomHaltedRequest {
+  string denom = 1;
+}
+
+message QueryDenomHaltedResponse {
+  bool halted = 1;
+}

@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 )
 
@@ -20,5 +22,14 @@ func DefaultGenesis() *GenesisState {
 func (gs GenesisState) Validate() error {
 	// this line is used by starport scaffolding # genesis/types/validate
 
-	return gs.Params.Validate()
+	if err := gs.Params.Validate(); err != nil {
+		return err
+	}
+
+	// one store key per halted denom: valid denoms, never the native denom, no duplicates, no cap
+	if err := ValidateHaltedDenoms(gs.HaltedDenoms, 0, gs.Params.NativeDenom); err != nil {
+		return fmt.Errorf("invalid halted_denoms: %w", err)
+	}
+
+	return nil
 }
