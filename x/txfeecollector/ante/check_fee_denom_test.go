@@ -271,3 +271,52 @@ func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_NotFeeTx() {
 	suite.Require().Contains(err.Error(), "requires tx to be a FeeTx")
 	suite.Require().False(suite.nextCalled)
 }
+
+// The three tests below build the fee as a Coins literal on purpose: sdk.NewCoins strips
+// zero-amount coins, but a decoded tx does not (AuthInfo.Fee.Amount is used verbatim).
+// The SDK tx factory produces exactly such a fee when simulating with `--gas auto` and
+// `--gas-prices`: gas is 0 at that point, so the derived fee is a single `0ubze` coin.
+
+func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_ZeroAmountCoin_Simulation() {
+	decorator := ante.NewValidateTxFeeDenomsDecorator(suite.tradeMock)
+
+	// A zero-amount fee coin must be tolerated during simulation, like an empty fee
+	tx := &mockFeeTx{
+		fee: sdk.Coins{sdk.NewCoin(denomBze, sdkmath.NewInt(0))},
+		gas: 0,
+	}
+	suite.Require().False(tx.fee.Empty(), "the literal must keep the zero coin for this test to be meaningful")
+
+	_, err := decorator.AnteHandle(suite.ctx.WithBlockHeight(10), tx, true, suite.mockNext())
+	suite.Require().NoError(err)
+	suite.Require().True(suite.nextCalled)
+}
+
+func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_ZeroAmountCoin_Genesis() {
+	decorator := ante.NewValidateTxFeeDenomsDecorator(suite.tradeMock)
+
+	// A zero-amount fee coin must be tolerated at genesis, like an empty fee
+	tx := &mockFeeTx{
+		fee: sdk.Coins{sdk.NewCoin(denomBze, sdkmath.NewInt(0))},
+		gas: 100000,
+	}
+
+	_, err := decorator.AnteHandle(suite.ctx.WithBlockHeight(0), tx, false, suite.mockNext())
+	suite.Require().NoError(err)
+	suite.Require().True(suite.nextCalled)
+}
+
+func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_ZeroAmountCoin() {
+	decorator := ante.NewValidateTxFeeDenomsDecorator(suite.tradeMock)
+
+	// Outside genesis and simulation a zero-amount fee coin is still refused, as no fee
+	tx := &mockFeeTx{
+		fee: sdk.Coins{sdk.NewCoin(denomBze, sdkmath.NewInt(0))},
+		gas: 100000,
+	}
+
+	_, err := decorator.AnteHandle(suite.ctx.WithBlockHeight(10), tx, false, suite.mockNext())
+	suite.Require().Error(err)
+	suite.Require().Contains(err.Error(), "no fee supplied")
+	suite.Require().False(suite.nextCalled)
+}

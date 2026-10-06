@@ -42,8 +42,10 @@ func (vbd ValidateTxFeeDenomsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		return ctx, sdkerrors.Wrap(storeTypes.ErrInvalidRequest, "multiple denominations for same transaction fee are not supported")
 	}
 
-	// Allow empty fees during genesis or simulation
-	if feeTx.GetFee().Empty() {
+	// Allow empty or zero fees during genesis or simulation. IsZero covers both an empty
+	// fee and a zero-amount coin: the SDK tx factory simulates with gas 0, so a client
+	// that derives the fee from gas prices (`--gas auto --gas-prices`) sends `0ubze`.
+	if feeTx.GetFee().IsZero() {
 		if simulate || ctx.BlockHeight() == 0 {
 			return next(ctx, tx, simulate)
 		}
