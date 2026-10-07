@@ -13,6 +13,9 @@ message OrderCreateMessageEvent {
   string order_type = 3;
   string amount = 4;
   string price = 5;
+  // queue message id, zero-filled 24 digits, unique within the block only
+  // (the counter resets after every block's queue processing)
+  string message_id = 6;
 }
 
 message OrderCancelMessageEvent {
@@ -20,6 +23,9 @@ message OrderCancelMessageEvent {
   string marketId = 2;
   string orderId = 3;
   string order_type = 4;
+  // queue message id, zero-filled 24 digits, unique within the block only
+  // (the counter resets after every block's queue processing)
+  string message_id = 5;
 }
 
 message MarketCreatedEvent {
@@ -36,6 +42,9 @@ message OrderExecutedEvent {
   string price = 5;
   string maker = 6;
   string taker = 7;
+  // queue message id, zero-filled 24 digits, unique within the block only
+  // (the counter resets after every block's queue processing)
+  string message_id = 8;
 }
 
 message OrderCanceledEvent {
@@ -45,6 +54,9 @@ message OrderCanceledEvent {
   string amount = 4;
   string price = 5;
   string owner = 6;
+  // queue message id, zero-filled 24 digits, unique within the block only
+  // (the counter resets after every block's queue processing)
+  string message_id = 7;
 }
 
 message OrderSavedEvent {
@@ -54,6 +66,9 @@ message OrderSavedEvent {
   string amount = 4;
   string price = 5;
   string owner = 6;
+  // queue message id, zero-filled 24 digits, unique within the block only
+  // (the counter resets after every block's queue processing)
+  string message_id = 7;
 }
 
 message PoolCreatedEvent {

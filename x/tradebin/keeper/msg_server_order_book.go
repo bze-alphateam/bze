@@ -147,7 +147,7 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 		Owner:       msg.Creator,
 	}
 
-	k.SetQueueMessage(ctx, qm)
+	qm = k.SetQueueMessage(ctx, qm)
 	k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
 
 	err = k.emitOrderCreateMessageEvent(ctx, &qm)
@@ -188,9 +188,9 @@ func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder)
 		Owner:       msg.Creator,
 	}
 
-	k.SetQueueMessage(ctx, qm)
+	qm = k.SetQueueMessage(ctx, qm)
 
-	err := k.emitOrderCancelMessageEvent(ctx, &order)
+	err := k.emitOrderCancelMessageEvent(ctx, &order, qm.MessageId)
 	if err != nil {
 		k.Logger().Error(err.Error())
 	}
@@ -263,8 +263,13 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 			Owner:       msg.Creator,
 		}
 
-		k.SetQueueMessage(ctx, qm)
+		qm = k.SetQueueMessage(ctx, qm)
 		k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
+
+		err = k.emitOrderCreateMessageEvent(ctx, &qm)
+		if err != nil {
+			k.Logger().Error(err.Error())
+		}
 
 		totalCoins = totalCoins.Add(orderCoins.Coin)
 		//take extra gas for each order to fill
@@ -323,13 +328,14 @@ func (k msgServer) emitMarketCreatedEvent(ctx sdk.Context, market *types.Market)
 	)
 }
 
-func (k msgServer) emitOrderCancelMessageEvent(ctx sdk.Context, order *types.Order) error {
+func (k msgServer) emitOrderCancelMessageEvent(ctx sdk.Context, order *types.Order, messageId string) error {
 	return ctx.EventManager().EmitTypedEvent(
 		&types.OrderCancelMessageEvent{
 			Creator:   order.Owner,
 			MarketId:  order.MarketId,
 			OrderId:   order.Id,
 			OrderType: order.OrderType,
+			MessageId: messageId,
 		},
 	)
 }
@@ -342,6 +348,7 @@ func (k msgServer) emitOrderCreateMessageEvent(ctx sdk.Context, qm *types.QueueM
 			OrderType: qm.OrderType,
 			Amount:    qm.Amount,
 			Price:     qm.Price,
+			MessageId: qm.MessageId,
 		},
 	)
 }

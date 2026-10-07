@@ -220,7 +220,7 @@ func (pe *ProcessingEngine) cancelOrder(ctx sdk.Context, message types.QueueMess
 
 	pe.removeOrderFromAggregate(ctx, &order)
 	pe.k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
-	pe.emitOrderCanceledEvent(ctx, &order)
+	pe.emitOrderCanceledEvent(ctx, &order, message.MessageId)
 	logger.Info("order cancelled")
 
 	return nil
@@ -406,7 +406,7 @@ func (pe *ProcessingEngine) saveOrder(ctx sdk.Context, message types.QueueMessag
 
 	order = pe.k.NewOrder(ctx, order)
 
-	pe.emitOrderSavedEvent(ctx, &order)
+	pe.emitOrderSavedEvent(ctx, &order, message.MessageId)
 
 	return &order
 }
@@ -471,7 +471,7 @@ func (pe *ProcessingEngine) addOrderToAggregate(ctx sdk.Context, order *types.Or
 	pe.k.SetAggregatedOrder(ctx, agg)
 }
 
-func (pe *ProcessingEngine) emitOrderExecutedEvent(ctx sdk.Context, order *types.Order, amount, userAddress string) {
+func (pe *ProcessingEngine) emitOrderExecutedEvent(ctx sdk.Context, order *types.Order, amount, userAddress, messageId string) {
 	err := ctx.EventManager().EmitTypedEvent(
 		&types.OrderExecutedEvent{
 			Id:        order.Id,
@@ -481,6 +481,7 @@ func (pe *ProcessingEngine) emitOrderExecutedEvent(ctx sdk.Context, order *types
 			Price:     order.Price,
 			Taker:     userAddress,
 			Maker:     order.Owner,
+			MessageId: messageId,
 		},
 	)
 
@@ -503,7 +504,7 @@ func (pe *ProcessingEngine) emitOrderExecutedEvent(ctx sdk.Context, order *types
 	}
 }
 
-func (pe *ProcessingEngine) emitOrderCanceledEvent(ctx sdk.Context, order *types.Order) {
+func (pe *ProcessingEngine) emitOrderCanceledEvent(ctx sdk.Context, order *types.Order, messageId string) {
 	err := ctx.EventManager().EmitTypedEvent(
 		&types.OrderCanceledEvent{
 			Id:        order.Id,
@@ -512,6 +513,7 @@ func (pe *ProcessingEngine) emitOrderCanceledEvent(ctx sdk.Context, order *types
 			Amount:    order.Amount,
 			Price:     order.Price,
 			Owner:     order.Owner,
+			MessageId: messageId,
 		},
 	)
 
@@ -520,7 +522,7 @@ func (pe *ProcessingEngine) emitOrderCanceledEvent(ctx sdk.Context, order *types
 	}
 }
 
-func (pe *ProcessingEngine) emitOrderSavedEvent(ctx sdk.Context, order *types.Order) {
+func (pe *ProcessingEngine) emitOrderSavedEvent(ctx sdk.Context, order *types.Order, messageId string) {
 	err := ctx.EventManager().EmitTypedEvent(
 		&types.OrderSavedEvent{
 			Id:        order.Id,
@@ -529,6 +531,7 @@ func (pe *ProcessingEngine) emitOrderSavedEvent(ctx sdk.Context, order *types.Or
 			Amount:    order.Amount,
 			Price:     order.Price,
 			Owner:     order.Owner,
+			MessageId: messageId,
 		},
 	)
 
@@ -672,7 +675,7 @@ func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.Aggr
 		}
 
 		pe.addHistoryOrder(ctx, &orderToFill, amountToExecute, message)
-		pe.emitOrderExecutedEvent(ctx, &orderToFill, amountToExecute.String(), message.Owner)
+		pe.emitOrderExecutedEvent(ctx, &orderToFill, amountToExecute.String(), message.Owner, message.MessageId)
 	}
 
 	if aggAmountInt.GT(zeroInt) {
