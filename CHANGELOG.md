@@ -11,7 +11,7 @@ derived from it. History older than v8.0.0 lives in the
 
 ### Improvements
 
-* (x/tradebin) [#TBD](https://github.com/bze-alphateam/bze/pull/TBD) The order book events now carry the queue message id as `message_id`: `OrderCreateMessageEvent` and `OrderCancelMessageEvent` at transaction time, and `OrderExecutedEvent`, `OrderSavedEvent` and `OrderCanceledEvent` when the EndBlock engine processes that message, so an indexer can link a transaction's order to what the matching engine did with it. The id is the 24-digit zero-filled queue counter, unique within a block only (key on height + `message_id`). `MsgFillOrders` now emits one `OrderCreateMessageEvent` per queued fill (it emitted no tradebin event before). Events only: no state, consensus or gas change, no migration.
+* (x/tradebin) [#118](https://github.com/bze-alphateam/bze/pull/118) The order book events now carry the queue message id as `message_id`: `OrderCreateMessageEvent` and `OrderCancelMessageEvent` at transaction time, and `OrderExecutedEvent`, `OrderSavedEvent` and `OrderCanceledEvent` when the EndBlock engine processes that message, so an indexer can link a transaction's order to what the matching engine did with it. The id is the 24-digit zero-filled queue counter, unique within a block only (key on height + `message_id`). `MsgFillOrders` now emits one `OrderCreateMessageEvent` per queued fill (it emitted no tradebin event before). Events only: no state, consensus or gas change, no migration.
 
 ## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0)
 
