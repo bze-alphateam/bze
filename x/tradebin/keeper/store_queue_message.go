@@ -15,8 +15,8 @@ func (k Keeper) getQueueMessageCounterStore(ctx sdk.Context) prefix.Store {
 	return k.getPrefixedStore(ctx, types.KeyPrefix(types.QueueMessageCounterPrefix))
 }
 
-// SetQueueMessage set a specific market in the store from its index
-func (k Keeper) SetQueueMessage(ctx sdk.Context, qm types.QueueMessage) {
+// SetQueueMessage stores the message under a newly assigned id and returns the stored message
+func (k Keeper) SetQueueMessage(ctx sdk.Context, qm types.QueueMessage) types.QueueMessage {
 	counter := k.GetQueueMessageCounter(ctx)
 	qm.MessageId = k.largeZeroFillId(counter)
 	qm.CreatedAt = ctx.BlockHeader().Time.Unix()
@@ -29,6 +29,8 @@ func (k Keeper) SetQueueMessage(ctx sdk.Context, qm types.QueueMessage) {
 	store.Set(key, b)
 
 	k.incrementQueueMessageCounter(ctx)
+
+	return qm
 }
 
 // GetAllQueueMessage returns all queue messages

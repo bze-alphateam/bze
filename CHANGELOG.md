@@ -9,6 +9,10 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
+### Improvements
+
+* (x/tradebin) [#118](https://github.com/bze-alphateam/bze/pull/118) The order book events now carry the queue message id as `message_id`: `OrderCreateMessageEvent` and `OrderCancelMessageEvent` at transaction time, and `OrderExecutedEvent`, `OrderSavedEvent` and `OrderCanceledEvent` when the EndBlock engine processes that message, so an indexer can link a transaction's order to what the matching engine did with it. The id is the 24-digit zero-filled queue counter, unique within a block only (key on height + `message_id`). `MsgFillOrders` now emits one `OrderCreateMessageEvent` per queued fill (it emitted no tradebin event before). Events only: no state, consensus or gas change, no migration.
+
 ## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0)
 
 Coordinated upgrade at a height to be announced once the mainnet software-upgrade proposal passes (`v8.2.0` upgrade handler). Module migrations: rewards v4→v5 (Denom Rewards parameter defaults) and txfeecollector v2→v3 (empty `blocked_ibc_inbound` default); no store keys added or removed. **Validators must build with Go 1.26.x.**
