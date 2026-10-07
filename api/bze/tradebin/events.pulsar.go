@@ -7860,8 +7860,9 @@ type OrderCreateMessageEvent struct {
 	OrderType string `protobuf:"bytes,3,opt,name=order_type,json=orderType,proto3" json:"order_type,omitempty"`
 	Amount    string `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
 	Price     string `protobuf:"bytes,5,opt,name=price,proto3" json:"price,omitempty"`
-	// queue message id, zero-filled 24 digits, unique within the block only
-	// (the counter resets after every block's queue processing)
+	// queue message id, zero-filled 24 digits. Not reused while the message is
+	// queued: the counter resets only once the queue is empty, and a message can
+	// be processed in a later block than its tx (per-block limit, retry on error).
 	MessageId string `protobuf:"bytes,6,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
 }
 
@@ -7936,8 +7937,9 @@ type OrderCancelMessageEvent struct {
 	MarketId  string `protobuf:"bytes,2,opt,name=marketId,proto3" json:"marketId,omitempty"`
 	OrderId   string `protobuf:"bytes,3,opt,name=orderId,proto3" json:"orderId,omitempty"`
 	OrderType string `protobuf:"bytes,4,opt,name=order_type,json=orderType,proto3" json:"order_type,omitempty"`
-	// queue message id, zero-filled 24 digits, unique within the block only
-	// (the counter resets after every block's queue processing)
+	// queue message id, zero-filled 24 digits. Not reused while the message is
+	// queued: the counter resets only once the queue is empty, and a message can
+	// be processed in a later block than its tx (per-block limit, retry on error).
 	MessageId string `protobuf:"bytes,5,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
 }
 
@@ -8059,8 +8061,9 @@ type OrderExecutedEvent struct {
 	Price     string `protobuf:"bytes,5,opt,name=price,proto3" json:"price,omitempty"`
 	Maker     string `protobuf:"bytes,6,opt,name=maker,proto3" json:"maker,omitempty"`
 	Taker     string `protobuf:"bytes,7,opt,name=taker,proto3" json:"taker,omitempty"`
-	// queue message id, zero-filled 24 digits, unique within the block only
-	// (the counter resets after every block's queue processing)
+	// queue message id, zero-filled 24 digits. Not reused while the message is
+	// queued: the counter resets only once the queue is empty, and a message can
+	// be processed in a later block than its tx (per-block limit, retry on error).
 	MessageId string `protobuf:"bytes,8,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
 }
 
@@ -8151,8 +8154,9 @@ type OrderCanceledEvent struct {
 	Amount    string `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
 	Price     string `protobuf:"bytes,5,opt,name=price,proto3" json:"price,omitempty"`
 	Owner     string `protobuf:"bytes,6,opt,name=owner,proto3" json:"owner,omitempty"`
-	// queue message id, zero-filled 24 digits, unique within the block only
-	// (the counter resets after every block's queue processing)
+	// queue message id, zero-filled 24 digits. Not reused while the message is
+	// queued: the counter resets only once the queue is empty, and a message can
+	// be processed in a later block than its tx (per-block limit, retry on error).
 	MessageId string `protobuf:"bytes,7,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
 }
 
@@ -8236,8 +8240,9 @@ type OrderSavedEvent struct {
 	Amount    string `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
 	Price     string `protobuf:"bytes,5,opt,name=price,proto3" json:"price,omitempty"`
 	Owner     string `protobuf:"bytes,6,opt,name=owner,proto3" json:"owner,omitempty"`
-	// queue message id, zero-filled 24 digits, unique within the block only
-	// (the counter resets after every block's queue processing)
+	// queue message id, zero-filled 24 digits. Not reused while the message is
+	// queued: the counter resets only once the queue is empty, and a message can
+	// be processed in a later block than its tx (per-block limit, retry on error).
 	MessageId string `protobuf:"bytes,7,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
 }
 
