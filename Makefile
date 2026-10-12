@@ -314,7 +314,7 @@ proto-all:
 # implicitly: build them once with e2e-image / e2e-image-ref, then run suites.
 E2E_TIMEOUT ?= 60m
 
-.PHONY: e2e-image e2e-image-ref e2e e2e-smoke e2e-denomrewards e2e-amm e2e-unit e2e-lint
+.PHONY: e2e-image e2e-image-ref e2e e2e-smoke e2e-denomrewards e2e-amm e2e-tokenfactory e2e-unit e2e-lint
 
 # Builds the working tree as bze:local.
 e2e-image:
@@ -340,6 +340,10 @@ e2e-denomrewards:
 # Runs the AMM and fees suite.
 e2e-amm:
 	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestAmm ./...
+
+# Runs the staking rewards and tokenfactory suites (in parallel).
+e2e-tokenfactory:
+	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run 'TestStakingRewards|TestTokenFactory' ./...
 
 # Runs the harness unit tests only (no Docker).
 e2e-unit:
