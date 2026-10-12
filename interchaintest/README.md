@@ -41,6 +41,7 @@ make e2e-smoke                      # the harness smoke test
 make e2e-denomrewards               # denom rewards lifecycle (~5 min)
 make e2e-amm                        # AMM swaps, liquidity and the fee path (~3 min)
 make e2e-tokenfactory               # staking rewards + tokenfactory admin and branding (~4 min)
+make e2e-halt                       # halted denoms: gov halt/unhalt, refused trading, exits
 cd interchaintest && go test -v -run TestSmoke ./...
 ```
 
