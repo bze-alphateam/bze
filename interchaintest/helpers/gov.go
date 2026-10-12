@@ -37,17 +37,26 @@ type proposalStatus struct {
 	} `json:"proposal"`
 }
 
-// SubmitAndPassProposal submits a proposal (a Proposal, or any value that
-// marshals to the submit-proposal JSON) from proposer, votes yes with every
-// validator and waits until it passed. It fails if the proposal is rejected or
-// its messages fail on execution (with the chain's failed_reason).
-func SubmitAndPassProposal(ctx context.Context, c *cosmos.CosmosChain, proposer ibc.Wallet, proposal any) (uint64, error) {
-	if p, ok := proposal.(Proposal); ok && p.Deposit == "" {
+func withDefaultDeposit(p Proposal) Proposal {
+	if p.Deposit == "" {
 		p.Deposit = chain.MinDeposit + chain.Denom
 		if p.Expedited {
 			p.Deposit = chain.ExpeditedMinDeposit + chain.Denom
 		}
-		proposal = p
+	}
+	return p
+}
+
+// SubmitAndPassProposal submits a proposal (a Proposal or *Proposal, or any value that
+// marshals to the submit-proposal JSON) from proposer, votes yes with every
+// validator and waits until it passed. It fails if the proposal is rejected or
+// its messages fail on execution (with the chain's failed_reason).
+func SubmitAndPassProposal(ctx context.Context, c *cosmos.CosmosChain, proposer ibc.Wallet, proposal any) (uint64, error) {
+	switch p := proposal.(type) {
+	case Proposal:
+		proposal = withDefaultDeposit(p)
+	case *Proposal:
+		proposal = withDefaultDeposit(*p)
 	}
 	content, err := json.Marshal(proposal)
 	if err != nil {

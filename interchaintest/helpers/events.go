@@ -15,7 +15,8 @@ const typedEventPrefix = "bze."
 
 // Event is an ABCI event with its attributes keyed by name. Attribute values of
 // typed bze events (type bze.<module>.<EventName>) are unquoted, so a string
-// field reads as `day`, not `"day"`.
+// field reads as `day`, not `"day"`. If an event repeats an attribute key, the
+// last value wins.
 type Event struct {
 	Type       string
 	Attributes map[string]string

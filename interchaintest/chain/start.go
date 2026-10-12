@@ -2,6 +2,7 @@ package chain
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/cosmos/interchaintest/v10"
@@ -10,6 +11,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
+
+// sdkConfigOnce guards the process-wide SDK config (bech32 prefixes), so suites
+// may run with t.Parallel().
+var sdkConfigOnce sync.Once
 
 // Network is a running bze e2e network.
 type Network struct {
@@ -23,7 +28,7 @@ type Network struct {
 func Start(t *testing.T, ctx context.Context, opts ...Option) Network {
 	t.Helper()
 
-	cosmos.SetSDKConfig(Bech32Prefix)
+	sdkConfigOnce.Do(func() { cosmos.SetSDKConfig(Bech32Prefix) })
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{BzeChainSpec(opts...)})
 	chains, err := cf.Chains(t.Name())
