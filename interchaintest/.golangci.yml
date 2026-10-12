@@ -1,0 +1,14 @@
+version: "2"
+
+linters:
+  enable:
+    - testpackage
+  settings:
+    testpackage:
+      # Every test is black-box: no exceptions.
+      skip-regexp: "^$"
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
