@@ -2,6 +2,7 @@ package interchaintest_test
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"strings"
 	"testing"
@@ -76,6 +77,29 @@ func TestSmoke(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, aliceBefore.Sub(amount).Sub(fee).String(), aliceAfter.String())
 		require.Equal(t, bobBefore.Add(amount).String(), bobAfter.String())
+	})
+
+	t.Run("rejected tx: simulation error with gas auto, code with fixed gas", func(t *testing.T) {
+		funds := sdkmath.NewInt(10_000_000)
+		users := interchaintest.GetAndFundTestUsers(t, ctx, "reject", funds, bze, bze)
+		carol, dave := users[0], users[1]
+		require.NoError(t, testutil.WaitForBlocks(ctx, 2, bze))
+
+		tooMuch := funds.MulRaw(2).String() + chain.Denom
+		send := []string{"bank", "send", carol.FormattedAddress(), dave.FormattedAddress(), tooMuch}
+
+		_, err := helpers.ExecTx(ctx, bze, carol, send...)
+		var simErr *helpers.SimulationError
+		require.True(t, errors.As(err, &simErr), "want a SimulationError, got %v", err)
+		require.Contains(t, simErr.Output, "insufficient funds")
+
+		// Fixed gas skips simulation: the tx is included and fails with
+		// the SDK's ErrInsufficientFunds (code 5).
+		res, err := helpers.ExecTxWith(ctx, bze, carol, []helpers.TxOption{helpers.WithGas(200_000)}, send...)
+		require.NoError(t, err)
+		require.Equal(t, uint32(5), res.Code, res.RawLog)
+		require.Equal(t, "sdk", res.Codespace)
+		require.Positive(t, res.Height)
 	})
 
 	t.Run("day epoch ticks fast and emits its start event", func(t *testing.T) {

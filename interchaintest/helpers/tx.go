@@ -16,6 +16,10 @@ const (
 	// DefaultFixedGas is the gas limit used with WithFees when WithGas is not set.
 	DefaultFixedGas uint64 = 500_000
 
+	// simulationErrorMarker prefixes the CLI error when the node's Simulate
+	// gRPC call returns a chain error (an ante or message handler rejection).
+	simulationErrorMarker = "rpc error: code = Unknown desc ="
+
 	txInclusionTimeout = 30 * time.Second
 	pollInterval       = 500 * time.Millisecond
 )
@@ -33,9 +37,13 @@ type TxResult struct {
 	Events    []Event
 }
 
-// SimulationError is returned when `--gas auto` simulation fails, i.e. the
-// chain rejected the tx before it was broadcast. Suites asserting a rejection
-// code should pass WithGas so the tx is broadcast and Code is set instead.
+// SimulationError is returned when `--gas auto` simulation fails because the
+// chain rejected the tx before it was broadcast: the CLI exited non-zero with
+// the error of the Simulate gRPC call (simulationErrorMarker). Other failures
+// (missing key, unreachable node, cancelled context) are plain errors. Output
+// holds the chain's message from the marker on, e.g. "rpc error: … spendable
+// balance … is smaller than …: insufficient funds …", but no ABCI code; suites asserting a rejection code
+// should pass WithGas so the tx is broadcast and TxResult.Code is set instead.
 type SimulationError struct {
 	Output string
 }
@@ -129,15 +137,17 @@ func ExecTxWith(ctx context.Context, chain *cosmos.CosmosChain, user ibc.Wallet,
 	}
 
 	node := chain.GetNode()
-	stdout, stderr, err := node.Exec(ctx, node.NodeCommand(cmd...), cfg.Env)
+	stdout, _, err := node.Exec(ctx, node.NodeCommand(cmd...), cfg.Env)
 	if err != nil {
-		out := strings.TrimSpace(string(stderr) + "\n" + string(stdout))
+		// On a non-zero exit interchaintest returns no stdout/stderr: the CLI
+		// output is in the error text.
+		out := err.Error()
 		// With --gas auto the CLI simulates before signing; a chain rejection
-		// then exits non-zero without printing a broadcast response.
-		if o.gas == 0 && o.fees == "" && !json.Valid(stdout) {
-			return TxResult{}, &SimulationError{Output: out}
+		// then exits with the Simulate gRPC error and broadcasts nothing.
+		if i := strings.Index(out, simulationErrorMarker); i >= 0 && o.gas == 0 && o.fees == "" && ctx.Err() == nil {
+			return TxResult{}, &SimulationError{Output: strings.TrimSpace(out[i:])}
 		}
-		return TxResult{}, fmt.Errorf("bzed tx %s: %w: %s", strings.Join(args, " "), err, out)
+		return TxResult{}, fmt.Errorf("bzed tx %s: %w", strings.Join(args, " "), err)
 	}
 
 	var broadcast txResponse
