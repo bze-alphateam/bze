@@ -44,18 +44,25 @@ func (vbd ValidateTxFeeDenomsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 
 	// Allow empty or zero fees during genesis or simulation. IsZero covers both an empty
 	// fee and a zero-amount coin: the SDK tx factory simulates with gas 0, so a client
-	// that derives the fee from gas prices (`--gas auto --gas-prices`) sends `0ubze`.
+	// that derives the fee from gas prices (`--gas auto --gas-prices`) sends `0<denom>`.
 	if feeTx.GetFee().IsZero() {
-		if simulate || ctx.BlockHeight() == 0 {
+		if ctx.BlockHeight() == 0 {
 			return next(ctx, tx, simulate)
 		}
-		return ctx, sdkerrors.Wrap(storeTypes.ErrInvalidRequest, "no fee supplied")
+		if !simulate {
+			return ctx, sdkerrors.Wrap(storeTypes.ErrInvalidRequest, "no fee supplied")
+		}
+		if feeTx.GetFee().Empty() {
+			return next(ctx, tx, simulate)
+		}
+		// A simulated zero coin still names the denom the tx will pay in: validate it like a
+		// real fee, so the simulation consumes the same gas as DeliverTx and refuses the same
+		// denoms.
+	} else if !feeTx.GetFee()[0].IsPositive() {
+		return ctx, sdkerrors.Wrap(storeTypes.ErrInvalidRequest, "the provided transaction fee must be positive")
 	}
 
 	c := feeTx.GetFee()[0]
-	if !c.IsPositive() {
-		return ctx, sdkerrors.Wrap(storeTypes.ErrInvalidRequest, "the provided transaction fee must be positive")
-	}
 
 	// Check if tradeKeeper is available before calling its methods
 	if vbd.tradeKeeper == nil {
