@@ -29,7 +29,13 @@ else
   # Docker tags cannot contain '/', so a branch like origin/main becomes origin-main.
   TAG="${2:-${REF//\//-}}"
   COMMIT="$(git rev-parse --verify "${REF}^{commit}")"
-  VERSION="$(git describe --tags "$COMMIT" 2>/dev/null | sed 's/^v//' || echo "$COMMIT")"
+  if git rev-parse -q --verify "refs/tags/${REF}" >/dev/null; then
+    # A tag names its own version: git describe would pick the newest tag on
+    # the commit (v8.2.0 over v8.2.0-rc4 when both point at it).
+    VERSION="${REF#v}"
+  else
+    VERSION="$(git describe --tags "$COMMIT" 2>/dev/null | sed 's/^v//' || echo "$COMMIT")"
+  fi
   CONTEXT="$(mktemp -d)"
   trap 'rm -rf "$CONTEXT"' EXIT
   git archive "$COMMIT" | tar -x -C "$CONTEXT"
