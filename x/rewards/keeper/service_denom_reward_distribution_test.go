@@ -329,3 +329,65 @@ func (suite *IntegrationTestSuite) TestDistributeDenomRewardSchedule_DefensiveSk
 	_, found := suite.k.GetDenomRewardsDistributionQueue(suite.ctx)
 	suite.Require().False(found)
 }
+
+// typedEvents returns every event of the given typed-event type emitted so far in suite.ctx.
+func (suite *IntegrationTestSuite) typedEvents(evType string) []sdk.Event {
+	var out []sdk.Event
+	for _, e := range suite.ctx.EventManager().Events() {
+		if e.Type == evType {
+			out = append(out, e)
+		}
+	}
+
+	return out
+}
+
+// Every daily schedule payout emits DenomRewardDistributionEvent (denom, prize denom, daily amount),
+// the finishing one included, exactly like an airdrop does; a zero-staker day pays nothing and emits
+// nothing. Regression test for BZE-170: the scheduled path used to emit only the finish event.
+func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_DailyPayout_EmitsDistributionEvent() {
+	suite.epoch.EXPECT().
+		SafeGetEpochCountByIdentifier(gomock.Any(), "day").
+		Return(int64(4), nil).
+		AnyTimes()
+
+	distributionEvent := proto.MessageName(&types.DenomRewardDistributionEvent{})
+	finishEvent := proto.MessageName(&types.DenomRewardScheduleFinishEvent{})
+	runDay := func() {
+		suite.ctx = suite.ctx.WithEventManager(sdk.NewEventManager())
+		suite.k.EnqueueDenomRewardsDistribution(suite.ctx)
+		suite.k.ProcessDenomRewardsDistributionQueue(suite.ctx)
+	}
+
+	suite.seedDenomRewardWithPrize("ubze", "uprize", 0)
+	suite.k.SetDenomRewardSchedule(suite.ctx, types.DenomRewardSchedule{
+		ScheduleId:   "000000000007",
+		StakingDenom: "ubze",
+		PrizeDenom:   "uprize",
+		DailyAmount:  math.NewInt(250),
+		Duration:     2,
+	})
+
+	// zero-staker day: skipped, no event
+	runDay()
+	suite.Require().Empty(suite.typedEvents(distributionEvent))
+
+	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", StakedAmount: math.NewInt(50)})
+
+	// regular payout: one distribution event, no finish
+	runDay()
+	events := suite.typedEvents(distributionEvent)
+	suite.Require().Len(events, 1)
+	suite.requireEventAttr(events[0], "denom", "ubze")
+	suite.requireEventAttr(events[0], "prize_denom", "uprize")
+	suite.requireEventAttr(events[0], "amount", "250")
+	suite.Require().Empty(suite.typedEvents(finishEvent))
+
+	// finishing payout: the distribution event and the finish event
+	runDay()
+	events = suite.typedEvents(distributionEvent)
+	suite.Require().Len(events, 1)
+	suite.requireEventAttr(events[0], "amount", "250")
+	suite.Require().Len(suite.typedEvents(finishEvent), 1)
+	suite.requirePrizeS("ubze", "uprize", "10")
+}

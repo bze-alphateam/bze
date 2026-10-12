@@ -284,8 +284,9 @@ func (k Keeper) safeDistributeDenomRewardSchedule(ctx sdk.Context, schedule type
 // distributeDenomRewardSchedule pays one day of a schedule into its prize accumulator. A day with
 // zero stakers is skipped WITHOUT counting a payout (Business Logic rule 15): the escrowed budget
 // is preserved and the schedule stretches until stakers return, so the total distributed over the
-// schedule's life is always daily_amount × duration. The finishing payout (payouts reaching
-// duration) deletes the schedule and emits the finish event; the accumulator keeps its value
+// schedule's life is always daily_amount × duration. Every paid day emits a
+// DenomRewardDistributionEvent, like an airdrop. The finishing payout (payouts reaching
+// duration) also deletes the schedule and emits the finish event; the accumulator keeps its value
 // forever, so already-accrued (and dust) claims are unaffected.
 func (k Keeper) distributeDenomRewardSchedule(ctx sdk.Context, schedule types.DenomRewardSchedule) {
 	logger := k.Logger().With("denom_reward_schedule", schedule)
@@ -318,6 +319,18 @@ func (k Keeper) distributeDenomRewardSchedule(ctx sdk.Context, schedule types.De
 	if err := k.distributeToDenomPrize(ctx, prize, schedule.DailyAmount, dr.StakedAmount); err != nil {
 		logger.Error(err.Error())
 		return
+	}
+
+	// every paid day is announced exactly like an airdrop, the finishing payout included
+	err := ctx.EventManager().EmitTypedEvent(
+		&types.DenomRewardDistributionEvent{
+			Denom:      schedule.StakingDenom,
+			PrizeDenom: schedule.PrizeDenom,
+			Amount:     schedule.DailyAmount.String(),
+		},
+	)
+	if err != nil {
+		k.Logger().Error(err.Error())
 	}
 
 	//increment payouts to know when the schedule finished (a.k.a. all payouts calculated)
