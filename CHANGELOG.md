@@ -9,10 +9,6 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
-### Bug Fixes
-
-* (x/txfeecollector) [#128](https://github.com/bze-alphateam/bze/pull/128) `--gas auto` with gas prices in a non-native fee denom (e.g. a factory token with a deep BZE pool) no longer underestimates gas. The client simulates with a zero fee coin in that denom; the fee-denom ante check now validates it like a real fee (same native/deep-liquidity checks, same rejection) and passes the denom on, so the estimate includes their gas. Previously the simulation skipped them and the tx could run out of gas with a gas adjustment below about 1.55. Only simulation changes (it is never part of block execution), so this is not state machine breaking.
-
 ## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0)
 
 Coordinated upgrade at a height to be announced once the mainnet software-upgrade proposal passes (`v8.2.0` upgrade handler). Module migrations: rewards v4→v5 (Denom Rewards parameter defaults) and txfeecollector v2→v3 (empty `blocked_ibc_inbound` default); no store keys added or removed. **Validators must build with Go 1.26.x.**
@@ -60,6 +56,7 @@ The handler also carries the Noble USDC wind-down. Circle is retiring USDC on th
 * (x/tradebin) [#113](https://github.com/bze-alphateam/bze/pull/113) Same fix for the tradebin msg server: it held a by-value keeper copy taken at `RegisterServices`, before `app.go` registers the order-fill hooks, so AMM swaps (`MsgMultiSwap`) never invoked them while the orderbook path did. With the current hook this changes nothing on chain (the rewards hook looks up trading rewards by orderbook market id `base/quote`, and AMM swaps report the pool id `base_quote`, so the lookup misses either way); it matters for any future hook consumer of AMM swaps.
 * (x/rewards) [#122](https://github.com/bze-alphateam/bze/pull/122) Denom Rewards: each daily schedule payout now emits `DenomRewardDistributionEvent` (staking denom, prize denom, daily amount), including the payout that finishes the schedule, as the event's description promised; before, only airdrops emitted it, so indexers saw no scheduled payouts. A skipped zero-staker day still emits nothing.
 * (x/txfeecollector) [#117](https://github.com/bze-alphateam/bze/pull/117) The fee-denom ante handler accepts a zero-amount fee coin during simulation and at genesis, as it already did for an empty fee. The SDK tx factory simulates with gas 0 and derives the fee from gas prices, so `bzed tx … --gas auto --gas-prices …` sent a `0ubze` fee and every such gas estimation failed with "the provided transaction fee must be positive"; `--gas auto` now works with `--gas-prices`. Outside genesis and simulation a zero fee is still refused ("no fee supplied"), positive fees are validated as before.
+* (x/txfeecollector) [#128](https://github.com/bze-alphateam/bze/pull/128) `--gas auto` with gas prices in a non-native fee denom (e.g. a factory token with a deep BZE pool) no longer underestimates gas. The client simulates with a zero fee coin in that denom; the fee-denom ante check now validates it like a real fee (same native/deep-liquidity checks, same rejection) and passes the denom on, so the estimate includes their gas. Previously the simulation skipped them and the tx could run out of gas with a gas adjustment below about 1.55. Only simulation changes (it is never part of block execution), so this is not state machine breaking.
 
 ## [v8.1.1](https://github.com/bze-alphateam/bze/releases/tag/v8.1.1) - 2026-07-05
 
