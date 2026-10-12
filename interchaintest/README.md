@@ -42,6 +42,7 @@ make e2e-denomrewards               # denom rewards lifecycle (~5 min)
 make e2e-amm                        # AMM swaps, liquidity and the fee path (~3 min)
 make e2e-tokenfactory               # staking rewards + tokenfactory admin and branding (~4 min)
 make e2e-halt                       # halted denoms: gov halt/unhalt, refused trading, exits
+make e2e-ibc                        # blocked inbound IBC: bze <-> simd through Hermes
 cd interchaintest && go test -v -run TestSmoke ./...
 ```
 
@@ -80,7 +81,10 @@ adds its own with `chain.WithGenesis(...)`.
 
 ## Writing a suite
 
-- Start the network with `chain.Start(t, ctx, opts...)`.
+- Start the network with `chain.Start(t, ctx, opts...)`, or with
+  `chain.StartIbc` for bze plus an ibc-go `simd` counterparty connected by a
+  Hermes relayer (pinned in `chain/ibc.go`; send and follow packets with
+  `helpers.SendIbc`, `WaitForRecv`, `WaitForAck`, `WaitForTimeout`).
 - Fund users with `interchaintest.GetAndFundTestUsers`.
 - Send messages with `helpers.ExecTx` / `helpers.ExecTxWith` (a non-zero
   `Code` is a rejection, not an error).
