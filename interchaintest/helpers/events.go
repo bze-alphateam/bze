@@ -106,3 +106,22 @@ func BlockEvents(ctx context.Context, chain *cosmos.CosmosChain, height int64, e
 	}
 	return out, nil
 }
+
+// EventsWith returns the events whose attributes include every key/value pair
+// of attrs, e.g. the DenomRewardDistributionEvent of one staking denom.
+func EventsWith(events []Event, attrs map[string]string) []Event {
+	var out []Event
+	for _, e := range events {
+		match := true
+		for k, v := range attrs {
+			if got, ok := e.Attributes[k]; !ok || got != v {
+				match = false
+				break
+			}
+		}
+		if match {
+			out = append(out, e)
+		}
+	}
+	return out
+}
