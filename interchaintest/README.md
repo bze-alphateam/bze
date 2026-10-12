@@ -7,8 +7,11 @@ through the `bzed` CLI and asserts balances, state and events.
 
 This directory is its own Go module (`github.com/bze-alphateam/bze/interchaintest`).
 It does not import the chain module: it only drives the `bzed` binary inside
-the image, so the same harness works against any bze version, including old
-releases for the upgrade suite.
+the image, so the same harness works across bze versions, including old
+releases for the upgrade suite. One exception: on v8.1.1 and older, `--gas auto`
+combined with `--gas-prices` fails (the fee collector rejected the zero
+simulation fee until v8.2.0), so the default `helpers.ExecTx` does not work
+there; send txs to those versions with `helpers.ExecTxWith` and `WithFees`.
 
 ## Prerequisites
 
@@ -38,7 +41,8 @@ make e2e-smoke                      # the harness smoke test
 cd interchaintest && go test -v -run TestSmoke ./...
 ```
 
-`go test -short` skips every e2e test.
+`go test -short` skips every e2e test and runs only the helpers' unit tests
+(`make e2e-unit`, no Docker needed). `make e2e-lint` lints the module.
 
 Each suite starts its own network and removes its containers, volumes and
 Docker network when it ends. Suites do not share state.
@@ -81,7 +85,7 @@ adds its own with `chain.WithGenesis(...)`.
 - Wait for time with `helpers.WaitForEpoch`, pass gov messages with
   `helpers.SubmitAndPassProposal`.
 - Tests live in package `interchaintest_test` and are black-box; lint them with
-  `golangci-lint run ./...` from this directory.
+  `make e2e-lint`.
 - Add a `make e2e-<suite>` target to the root Makefile.
 
 ## Runtime
