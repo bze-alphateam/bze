@@ -394,20 +394,16 @@ func (s *ammSuite) takerFeeInUsd(t *testing.T) {
 }
 
 // 8. `--gas auto` simulates with a zero fee; the txfeecollector must accept
-// that (fixed in #117). The estimate with gas prices in a factory token is too
-// low for now: the simulation skips the fee-denom checks (BZE-171), so that
-// case is skipped until the fix lands.
+// that (fixed in #117) and, for a fee in a factory token, run the same
+// fee-denom checks as the real tx so the estimate covers their gas.
 func (s *ammSuite) gasAuto(t *testing.T) {
 	for _, c := range []struct {
-		name, prices, skip string
+		name, prices string
 	}{
-		{"ubze", chain.GasPrices, ""},
-		{"factory token", "0.01" + s.usd, "BZE-171: the gas estimate misses the fee-denom checks"},
+		{"ubze", chain.GasPrices},
+		{"factory token", "0.01" + s.usd},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			if c.skip != "" {
-				t.Skip(c.skip)
-			}
 			res, err := helpers.ExecTxWith(s.ctx, s.bze, s.trader, []helpers.TxOption{helpers.WithGasPrices(c.prices)},
 				"bank", "send", s.trader.FormattedAddress(), s.lp.FormattedAddress(), coinStr(1, chain.Denom))
 			require.NoError(t, err, "gas auto with --gas-prices %s", c.prices)

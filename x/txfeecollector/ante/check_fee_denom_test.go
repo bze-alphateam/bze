@@ -2,6 +2,7 @@ package ante_test
 
 import (
 	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/bze-alphateam/bze/x/txfeecollector/ante"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"go.uber.org/mock/gomock"
@@ -280,7 +281,9 @@ func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_NotFeeTx() {
 func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_ZeroAmountCoin_Simulation() {
 	decorator := ante.NewValidateTxFeeDenomsDecorator(suite.tradeMock)
 
-	// A zero-amount fee coin must be tolerated during simulation, like an empty fee
+	// A zero-amount fee coin must be tolerated during simulation, and its denom is validated
+	suite.tradeMock.EXPECT().IsNativeDenom(gomock.Any(), denomBze).Return(true).Times(1)
+
 	tx := &mockFeeTx{
 		fee: sdk.Coins{sdk.NewCoin(denomBze, sdkmath.NewInt(0))},
 		gas: 0,
@@ -290,6 +293,65 @@ func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_ZeroAmountCoin_Simu
 	_, err := decorator.AnteHandle(suite.ctx.WithBlockHeight(10), tx, true, suite.mockNext())
 	suite.Require().NoError(err)
 	suite.Require().True(suite.nextCalled)
+	suite.Require().Equal(denomBze, suite.nextCalledWith.Value(ante.FeeDenomKey))
+}
+
+// gasConsumingTradeMock makes the denom checks consume gas like the real keeper's store reads,
+// so a test can compare the gas a simulation consumes with the gas of the real fee.
+func (suite *AnteTestSuite) gasConsumingTradeMock(denom string, native, deep bool) {
+	suite.tradeMock.EXPECT().IsNativeDenom(gomock.Any(), denom).
+		DoAndReturn(func(ctx sdk.Context, _ string) bool {
+			ctx.GasMeter().ConsumeGas(1000, "is native denom")
+			return native
+		}).Times(1)
+	if native {
+		return
+	}
+	suite.tradeMock.EXPECT().HasDeepLiquidityWithNativeDenom(gomock.Any(), denom).
+		DoAndReturn(func(ctx sdk.Context, _ string) bool {
+			ctx.GasMeter().ConsumeGas(3000, "has deep liquidity")
+			return deep
+		}).Times(1)
+}
+
+// Regression (--gas auto with a non-native fee): the CLI simulates with gas 0, so the fee is
+// a zero coin in the denom the tx will pay in. The simulation must run the same denom checks
+// as DeliverTx (same gas) and pass the denom on, or the estimate is too low to execute.
+func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_ZeroAmountCoin_Simulation_NonNative() {
+	decorator := ante.NewValidateTxFeeDenomsDecorator(suite.tradeMock)
+	ctx := suite.ctx.WithBlockHeight(10)
+
+	// gas of the real fee
+	suite.gasConsumingTradeMock(denomUsd, false, true)
+	realCtx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
+	realTx := &mockFeeTx{fee: sdk.Coins{sdk.NewCoin(denomUsd, sdkmath.NewInt(1000))}, gas: 100000}
+	_, err := decorator.AnteHandle(realCtx, realTx, false, suite.mockNext())
+	suite.Require().NoError(err)
+	realGas := realCtx.GasMeter().GasConsumed()
+	suite.Require().Positive(realGas)
+
+	// gas of the simulation with the zero coin
+	suite.nextCalled = false
+	suite.gasConsumingTradeMock(denomUsd, false, true)
+	simCtx := ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
+	simTx := &mockFeeTx{fee: sdk.Coins{sdk.NewCoin(denomUsd, sdkmath.NewInt(0))}, gas: 0}
+	_, err = decorator.AnteHandle(simCtx, simTx, true, suite.mockNext())
+	suite.Require().NoError(err)
+	suite.Require().True(suite.nextCalled)
+	suite.Require().Equal(realGas, simCtx.GasMeter().GasConsumed())
+	suite.Require().Equal(denomUsd, suite.nextCalledWith.Value(ante.FeeDenomKey))
+}
+
+// A simulated zero coin in a denom DeliverTx would refuse is refused by the simulation too.
+func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_ZeroAmountCoin_Simulation_NoLiquidity() {
+	decorator := ante.NewValidateTxFeeDenomsDecorator(suite.tradeMock)
+	suite.gasConsumingTradeMock(denomOther, false, false)
+
+	tx := &mockFeeTx{fee: sdk.Coins{sdk.NewCoin(denomOther, sdkmath.NewInt(0))}, gas: 0}
+	_, err := decorator.AnteHandle(suite.ctx.WithBlockHeight(10), tx, true, suite.mockNext())
+	suite.Require().Error(err)
+	suite.Require().Contains(err.Error(), "can be used to pay for fees only if enough liquidity is available")
+	suite.Require().False(suite.nextCalled)
 }
 
 func (suite *AnteTestSuite) TestValidateTxFeeDenomsDecorator_ZeroAmountCoin_Genesis() {

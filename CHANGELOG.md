@@ -9,6 +9,10 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
+### Bug Fixes
+
+* (x/txfeecollector) [#128](https://github.com/bze-alphateam/bze/pull/128) `--gas auto` with gas prices in a non-native fee denom (e.g. a factory token with a deep BZE pool) no longer underestimates gas. The client simulates with a zero fee coin in that denom; the fee-denom ante check now validates it like a real fee (same native/deep-liquidity checks, same rejection) and passes the denom on, so the estimate includes their gas. Previously the simulation skipped them and the tx could run out of gas with a gas adjustment below about 1.55. Only simulation changes (it is never part of block execution), so this is not state machine breaking.
+
 ## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0)
 
 Coordinated upgrade at a height to be announced once the mainnet software-upgrade proposal passes (`v8.2.0` upgrade handler). Module migrations: rewards v4→v5 (Denom Rewards parameter defaults) and txfeecollector v2→v3 (empty `blocked_ibc_inbound` default); no store keys added or removed. **Validators must build with Go 1.26.x.**
