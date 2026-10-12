@@ -314,7 +314,7 @@ proto-all:
 # implicitly: build them once with e2e-image / e2e-image-ref, then run suites.
 E2E_TIMEOUT ?= 60m
 
-.PHONY: e2e-image e2e-image-ref e2e e2e-smoke e2e-unit e2e-lint
+.PHONY: e2e-image e2e-image-ref e2e e2e-smoke e2e-denomrewards e2e-unit e2e-lint
 
 # Builds the working tree as bze:local.
 e2e-image:
@@ -332,6 +332,10 @@ e2e:
 # Runs the harness smoke test.
 e2e-smoke:
 	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestSmoke ./...
+
+# Runs the denom rewards lifecycle suite.
+e2e-denomrewards:
+	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestDenomRewards ./...
 
 # Runs the harness unit tests only (no Docker).
 e2e-unit:
