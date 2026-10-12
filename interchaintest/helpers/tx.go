@@ -53,8 +53,9 @@ func (e *SimulationError) Error() string {
 }
 
 type txOptions struct {
-	fees string
-	gas  uint64
+	fees      string
+	gas       uint64
+	gasPrices string
 }
 
 // TxOption customises ExecTxWith.
@@ -69,6 +70,19 @@ func WithFees(fees string) TxOption {
 // WithGas sets a fixed gas limit instead of --gas auto (skips simulation).
 func WithGas(gas uint64) TxOption {
 	return func(o *txOptions) { o.gas = gas }
+}
+
+// WithGasPrices replaces the chain's gas prices (e.g. "0.01ufoo" to pay in a
+// non-native denom), with --gas auto or a WithGas limit. WithFees wins over it.
+func WithGasPrices(prices string) TxOption {
+	return func(o *txOptions) { o.gasPrices = prices }
+}
+
+func (o txOptions) prices(cfg ibc.ChainConfig) string {
+	if o.gasPrices != "" {
+		return o.gasPrices
+	}
+	return cfg.GasPrices
 }
 
 type txResponse struct {
@@ -127,12 +141,12 @@ func ExecTxWith(ctx context.Context, chain *cosmos.CosmosChain, user ibc.Wallet,
 		}
 		cmd = append(cmd, "--fees", o.fees, "--gas", strconv.FormatUint(gas, 10))
 	case o.gas != 0:
-		cmd = append(cmd, "--gas", strconv.FormatUint(o.gas, 10), "--gas-prices", cfg.GasPrices)
+		cmd = append(cmd, "--gas", strconv.FormatUint(o.gas, 10), "--gas-prices", o.prices(cfg))
 	default:
 		cmd = append(cmd,
 			"--gas", "auto",
 			"--gas-adjustment", strconv.FormatFloat(cfg.GasAdjustment, 'f', -1, 64),
-			"--gas-prices", cfg.GasPrices,
+			"--gas-prices", o.prices(cfg),
 		)
 	}
 
@@ -149,7 +163,12 @@ func ExecTxWith(ctx context.Context, chain *cosmos.CosmosChain, user ibc.Wallet,
 		}
 		return TxResult{}, fmt.Errorf("bzed tx %s: %w", strings.Join(args, " "), err)
 	}
+	return awaitBroadcast(ctx, chain, stdout)
+}
 
+// awaitBroadcast decodes a `bzed tx … --output json` broadcast response and
+// waits for the tx to be included, unless CheckTx already rejected it.
+func awaitBroadcast(ctx context.Context, chain *cosmos.CosmosChain, stdout []byte) (TxResult, error) {
 	var broadcast txResponse
 	if err := json.Unmarshal(stdout, &broadcast); err != nil {
 		return TxResult{}, fmt.Errorf("decode broadcast response %q: %w", stdout, err)

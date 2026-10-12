@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/interchaintest/v10/chain/cosmos"
 )
 
@@ -124,4 +126,18 @@ func EventsWith(events []Event, attrs map[string]string) []Event {
 		}
 	}
 	return out
+}
+
+// Transferred sums the amount of denom moved from one address to another by
+// the bank "transfer" events in events (tx events, block events or both).
+func Transferred(events []Event, from, to, denom string) (sdkmath.Int, error) {
+	total := sdkmath.ZeroInt()
+	for _, e := range EventsWith(filterEvents(events, "transfer"), map[string]string{"sender": from, "recipient": to}) {
+		coins, err := sdk.ParseCoinsNormalized(e.Attributes["amount"])
+		if err != nil {
+			return sdkmath.Int{}, fmt.Errorf("parse transfer amount %q: %w", e.Attributes["amount"], err)
+		}
+		total = total.Add(coins.AmountOf(denom))
+	}
+	return total, nil
 }
