@@ -39,6 +39,7 @@ built, and the image carries it in the `org.opencontainers.image.version` label.
 make e2e                            # every suite
 make e2e-smoke                      # the harness smoke test
 make e2e-denomrewards               # denom rewards lifecycle (~5 min)
+make e2e-amm                        # AMM swaps, liquidity and the fee path (~3 min)
 cd interchaintest && go test -v -run TestSmoke ./...
 ```
 
