@@ -306,3 +306,37 @@ document:
 # ./proto -> ./x
 proto-all:
 	make proto-all -f MakefileDoc
+
+###############################################################################
+###                                  E2E                                    ###
+###############################################################################
+# The e2e suite (interchaintest/) runs bzed in Docker. Images are never built
+# implicitly: build them once with e2e-image / e2e-image-ref, then run suites.
+E2E_TIMEOUT ?= 60m
+
+.PHONY: e2e-image e2e-image-ref e2e e2e-smoke e2e-unit e2e-lint
+
+# Builds the working tree as bze:local.
+e2e-image:
+	./scripts/e2e/build-image.sh local
+
+# Builds a git ref as bze:<ref>, e.g. make e2e-image-ref REF=v8.2.0
+e2e-image-ref:
+	@if [ -z "$(REF)" ]; then echo "usage: make e2e-image-ref REF=<git-ref>"; exit 1; fi
+	./scripts/e2e/build-image.sh $(REF)
+
+# Runs every e2e suite.
+e2e:
+	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) ./...
+
+# Runs the harness smoke test.
+e2e-smoke:
+	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestSmoke ./...
+
+# Runs the harness unit tests only (no Docker).
+e2e-unit:
+	cd interchaintest && go test -short ./...
+
+# Lints the e2e module.
+e2e-lint:
+	cd interchaintest && golangci-lint run ./...
