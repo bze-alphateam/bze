@@ -21,6 +21,9 @@ const (
 	// DenomRewardLock is the rewards denom_reward_lock param, in days
 	// (24 hour epochs, about 2 minutes with the fast epochs).
 	DenomRewardLock = 1
+	// DenomRewardLockKey is the genesis key of the DenomRewardLock override.
+	// The param exists from v8.2.0 on.
+	DenomRewardLockKey = "app_state.rewards.params.denomRewardLock"
 )
 
 // epoch returns a not-yet-started epoch, in the shape `bzed init` writes it.
@@ -52,7 +55,7 @@ func DefaultGenesis() []cosmos.GenesisKV {
 		cosmos.NewGenesisKV("app_state.gov.params.expedited_min_deposit", []map[string]string{{"denom": Denom, "amount": ExpeditedMinDeposit}}),
 
 		// The rewards genesis uses camelCase JSON names (as `bzed init` writes them).
-		cosmos.NewGenesisKV("app_state.rewards.params.denomRewardLock", DenomRewardLock),
+		cosmos.NewGenesisKV(DenomRewardLockKey, DenomRewardLock),
 
 		cosmos.NewGenesisKV("app_state.staking.params.bond_denom", Denom),
 		cosmos.NewGenesisKV("app_state.mint.params.mint_denom", Denom),
