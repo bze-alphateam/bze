@@ -4,6 +4,7 @@ package chain
 
 import (
 	"os"
+	"slices"
 
 	"github.com/cosmos/interchaintest/v10"
 	"github.com/cosmos/interchaintest/v10/chain/cosmos"
@@ -84,6 +85,21 @@ func WithImage(tag string) Option {
 // WithGenesis appends genesis overrides, applied after DefaultGenesis().
 func WithGenesis(extra ...cosmos.GenesisKV) Option {
 	return func(s *spec) { s.genesis = append(s.genesis, extra...) }
+}
+
+// WithoutGenesis drops the genesis overrides set so far on the given keys,
+// e.g. DenomRewardLockKey for a release that predates the param (its genesis
+// would not parse with an unknown field).
+func WithoutGenesis(keys ...string) Option {
+	return func(s *spec) {
+		kept := s.genesis[:0:0]
+		for _, kv := range s.genesis {
+			if !slices.Contains(keys, kv.Key) {
+				kept = append(kept, kv)
+			}
+		}
+		s.genesis = kept
+	}
 }
 
 // BzeChainSpec returns the interchaintest spec of a bze e2e network: one

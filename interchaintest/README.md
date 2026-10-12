@@ -36,15 +36,19 @@ built, and the image carries it in the `org.opencontainers.image.version` label.
 ## Run
 
 ```bash
-make e2e                            # every suite
+make e2e                            # every suite but the upgrade suite
 make e2e-smoke                      # the harness smoke test
 make e2e-denomrewards               # denom rewards lifecycle (~5 min)
 make e2e-amm                        # AMM swaps, liquidity and the fee path (~3 min)
 make e2e-tokenfactory               # staking rewards + tokenfactory admin and branding (~4 min)
 make e2e-halt                       # halted denoms: gov halt/unhalt, refused trading, exits
 make e2e-ibc                        # blocked inbound IBC: bze <-> simd through Hermes
+make e2e-upgrade                    # chain upgrade from the previous release (see below)
 cd interchaintest && go test -v -run TestSmoke ./...
 ```
+
+`make e2e` runs every suite but the upgrade suite, which needs the previous
+release's image and a plan name the candidate has a handler for (see below).
 
 `go test -short` skips every e2e test and runs only the helpers' unit tests
 (`make e2e-unit`, no Docker needed). `make e2e-lint` lints the module.
@@ -58,10 +62,57 @@ Docker network when it ends. Suites do not share state.
 |---|---|---|
 | `E2E_BZE_IMAGE_TAG` | `local` | Tag of the `bze` image to run |
 | `E2E_TIMEOUT` (make only) | `60m` | `go test -timeout` of the make targets |
+| `E2E_UPGRADE_FROM` | `v8.2.0-rc5` | Upgrade suite: image tag the network starts on (the previous release) |
+| `E2E_UPGRADE_TO` | `local` | Upgrade suite: image tag the validators switch to at the plan height |
+| `E2E_UPGRADE_NAME` | `v8.3.0` | Upgrade suite: plan name, must equal the candidate's `UpgradeName` |
 | `KEEP_CONTAINERS` | unset | Any value keeps the containers after the test, for debugging (remove them by hand) |
 | `ICTEST_SKIP_FAILURE_CLEANUP` | unset | Any value keeps Docker volumes and temp dirs of failed tests |
 | `SHOW_CONTAINER_LOGS` | unset | `always` prints container logs after each test, otherwise only on failure |
 | `CONTAINER_LOG_TAIL` | `50` | Number of container log lines printed |
+
+## Before every release tag: the upgrade suite
+
+Every `bze` tag (release candidate or final) is preceded by a local run of the
+upgrade suite from the previous release, and its result goes with the tag
+request. `TestChainUpgrade` starts two validators on the previous release,
+seeds state in the custom modules (only what that release supports), passes a
+software-upgrade proposal, lets the chain halt at the plan height, restarts
+the validators on the candidate image and checks:
+
+- the chain halts at exactly the plan height, resumes on the candidate, and
+  `bzed version` changed;
+- the upgrade block changes no supply other than what its own bank events
+  mint (inflation) and burn, and no seeded account, module balance, pool, LP
+  supply, market, resting order, denom admin, metadata, branding or halted
+  denom;
+- staking and denom rewards keep their stakes, accumulators, schedules and
+  pending amounts, and the next `day` tick pays exactly one day (the epoch
+  hooks are still wired);
+- a pending unlock is returned at its `hour` epoch;
+- one tx per custom module works on the candidate;
+- the checks of the handler itself, in `upgradeChecks` (`upgrade_test.go`),
+  keyed by upgrade name. A release that adds a handler adds its entry.
+
+Steps, for a candidate `vX.Y.Z` whose previous release is `vP`:
+
+1. Build the previous release: `make e2e-image-ref REF=vP` (gives `bze:vP`).
+2. Build the candidate: `make e2e-image` (the working tree, as `bze:local`).
+3. Run the suite (about 6 minutes):
+
+   ```bash
+   E2E_UPGRADE_FROM=vP E2E_UPGRADE_NAME=vX.Y.Z make e2e-upgrade
+   ```
+
+4. Attach the outcome (pass/fail, runtime, the `upgrade block` and version
+   log lines) to the tag request.
+
+`E2E_UPGRADE_NAME` must be the `UpgradeName` of the candidate's handler in
+`app/upgrades/`. For example, the v8.2.0 handler is checked from v8.1.1 with
+`E2E_UPGRADE_FROM=v8.1.1 E2E_UPGRADE_NAME=v8.2.0` after
+`make e2e-image-ref REF=v8.1.1`.
+
+All txs use a fixed gas limit, because `--gas auto` does not work on v8.1.1
+and older.
 
 ## The e2e network
 

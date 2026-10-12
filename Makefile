@@ -314,7 +314,7 @@ proto-all:
 # implicitly: build them once with e2e-image / e2e-image-ref, then run suites.
 E2E_TIMEOUT ?= 60m
 
-.PHONY: e2e-image e2e-image-ref e2e e2e-smoke e2e-denomrewards e2e-amm e2e-tokenfactory e2e-halt e2e-ibc e2e-unit e2e-lint
+.PHONY: e2e-image e2e-image-ref e2e e2e-smoke e2e-denomrewards e2e-amm e2e-tokenfactory e2e-halt e2e-ibc e2e-upgrade e2e-unit e2e-lint
 
 # Builds the working tree as bze:local.
 e2e-image:
@@ -325,9 +325,10 @@ e2e-image-ref:
 	@if [ -z "$(REF)" ]; then echo "usage: make e2e-image-ref REF=<git-ref>"; exit 1; fi
 	./scripts/e2e/build-image.sh $(REF)
 
-# Runs every e2e suite.
+# Runs every e2e suite but the upgrade suite, which needs the previous
+# release's image and a plan name (make e2e-upgrade).
 e2e:
-	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) ./...
+	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -skip TestChainUpgrade ./...
 
 # Runs the harness smoke test.
 e2e-smoke:
@@ -352,6 +353,11 @@ e2e-halt:
 # Runs the blocked inbound IBC suite (bze <-> simd through Hermes).
 e2e-ibc:
 	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestBlockedInboundIbc ./...
+
+# Runs the chain upgrade suite: E2E_UPGRADE_FROM -> E2E_UPGRADE_TO through a gov
+# plan named E2E_UPGRADE_NAME (see interchaintest/README.md). Run before every tag.
+e2e-upgrade:
+	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestChainUpgrade ./...
 
 # Runs the harness unit tests only (no Docker).
 e2e-unit:

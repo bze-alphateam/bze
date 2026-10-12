@@ -52,6 +52,12 @@ func withDefaultDeposit(p Proposal) Proposal {
 // validator and waits until it passed. It fails if the proposal is rejected or
 // its messages fail on execution (with the chain's failed_reason).
 func SubmitAndPassProposal(ctx context.Context, c *cosmos.CosmosChain, proposer ibc.Wallet, proposal any) (uint64, error) {
+	return SubmitAndPassProposalWith(ctx, c, proposer, nil, proposal)
+}
+
+// SubmitAndPassProposalWith is SubmitAndPassProposal with options for the
+// submit tx (e.g. WithGas for releases where --gas auto does not work).
+func SubmitAndPassProposalWith(ctx context.Context, c *cosmos.CosmosChain, proposer ibc.Wallet, opts []TxOption, proposal any) (uint64, error) {
 	switch p := proposal.(type) {
 	case Proposal:
 		proposal = withDefaultDeposit(p)
@@ -69,7 +75,7 @@ func SubmitAndPassProposal(ctx context.Context, c *cosmos.CosmosChain, proposer 
 		return 0, fmt.Errorf("write proposal file: %w", err)
 	}
 
-	res, err := ExecTx(ctx, c, proposer, "gov", "submit-proposal", path.Join(node.HomeDir(), rel))
+	res, err := ExecTxWith(ctx, c, proposer, opts, "gov", "submit-proposal", path.Join(node.HomeDir(), rel))
 	if err != nil {
 		return 0, fmt.Errorf("submit proposal: %w", err)
 	}
@@ -89,10 +95,41 @@ func SubmitAndPassProposal(ctx context.Context, c *cosmos.CosmosChain, proposer 
 		return 0, fmt.Errorf("no proposal_id in submit_proposal events of tx %s", res.TxHash)
 	}
 
-	if err := c.VoteOnProposalAllValidators(ctx, id, "yes"); err != nil {
+	if err := voteYesAllValidators(ctx, c, id, opts); err != nil {
 		return id, fmt.Errorf("vote on proposal %d: %w", id, err)
 	}
 	return id, WaitForProposalPassed(ctx, c, id)
+}
+
+// validatorKey is the key interchaintest gives each validator in its node's keyring.
+const validatorKey = "validator"
+
+// voteYesAllValidators votes yes with every validator. interchaintest votes
+// with --gas auto; with a fixed gas limit or fee in opts the votes use them too.
+func voteYesAllValidators(ctx context.Context, c *cosmos.CosmosChain, id uint64, opts []TxOption) error {
+	var o txOptions
+	for _, opt := range opts {
+		opt(&o)
+	}
+	if o.gas == 0 && o.fees == "" {
+		return c.VoteOnProposalAllValidators(ctx, id, "yes")
+	}
+	gas := o.gas
+	if gas == 0 {
+		gas = DefaultFixedGas
+	}
+	args := []string{"gov", "vote", strconv.FormatUint(id, 10), "yes", "--gas", strconv.FormatUint(gas, 10)}
+	if o.fees != "" {
+		args = append(args, "--fees", o.fees)
+	} else {
+		args = append(args, "--gas-prices", o.prices(c.Config()))
+	}
+	for _, v := range c.Validators {
+		if _, err := v.ExecTx(ctx, validatorKey, args...); err != nil {
+			return fmt.Errorf("validator %s: %w", v.Name(), err)
+		}
+	}
+	return nil
 }
 
 // WaitForProposalPassed polls the proposal until PROPOSAL_STATUS_PASSED (nil),
