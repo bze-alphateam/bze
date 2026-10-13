@@ -11,6 +11,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/interchaintest/v10"
+	"github.com/cosmos/interchaintest/v10/chain/cosmos"
 	"github.com/cosmos/interchaintest/v10/testutil"
 	"github.com/stretchr/testify/require"
 
@@ -125,4 +126,72 @@ func TestSmoke(t *testing.T) {
 		}
 		require.True(t, found, "no day EpochStartEvent at height %d: %+v", day.CurrentEpochStartHeight, events)
 	})
+
+	t.Run("every epoch starts at 1 in the first block", func(t *testing.T) {
+		// genesis leaves the epochs unstarted: the first block initialises
+		// them, emits their start events and no end event
+		events := smokeEpochEvents(t, ctx, bze, 1)
+		for _, id := range []string{"day", "hour", "week"} {
+			require.Contains(t, events, smokeEpochEvent{"start", id, "1"}, "no %s start event in block 1", id)
+		}
+		for _, e := range events {
+			require.NotEqual(t, "end", e.kind, "block 1 must not end an epoch: %+v", events)
+		}
+	})
+
+	t.Run("week epoch ticks, its end event before its start event", func(t *testing.T) {
+		waitCtx, cancel := context.WithTimeout(ctx, 4*time.Minute)
+		defer cancel()
+		require.NoError(t, helpers.WaitForEpoch(waitCtx, bze, "week", 2))
+
+		week, err := helpers.Epoch(ctx, bze, "week")
+		require.NoError(t, err)
+		require.Equal(t, int64(2), int64(week.CurrentEpoch))
+		require.Equal(t, chain.WeekEpochDuration, week.Duration)
+		require.Greater(t, int64(week.CurrentEpochStartHeight), int64(1))
+
+		var order []smokeEpochEvent
+		for _, e := range smokeEpochEvents(t, ctx, bze, int64(week.CurrentEpochStartHeight)) {
+			if e.identifier == "week" {
+				order = append(order, e)
+			}
+		}
+		require.Equal(t, []smokeEpochEvent{{"end", "week", "1"}, {"start", "week", "2"}}, order,
+			"the tick must end week 1 and then start week 2")
+	})
+}
+
+// smokeEpochEvent is an epochs module event: kind "start" or "end".
+type smokeEpochEvent struct {
+	kind, identifier, epoch string
+}
+
+// smokeEpochEvents returns the epoch start and end events of a block in the
+// order the block emitted them (helpers.BlockEvents filters by type, which
+// loses the order between the two types).
+func smokeEpochEvents(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain, height int64) []smokeEpochEvent {
+	t.Helper()
+	res, err := bze.GetNode().Client.BlockResults(ctx, &height)
+	require.NoError(t, err)
+	var out []smokeEpochEvent
+	for _, e := range res.FinalizeBlockEvents {
+		kind := map[string]string{
+			"bze.epochs.EpochStartEvent": "start",
+			"bze.epochs.EpochEndEvent":   "end",
+		}[e.Type]
+		if kind == "" {
+			continue
+		}
+		ev := smokeEpochEvent{kind: kind}
+		for _, a := range e.Attributes {
+			switch a.Key {
+			case "identifier":
+				ev.identifier = helpers.Unquote(a.Value)
+			case "epoch":
+				ev.epoch = helpers.Unquote(a.Value)
+			}
+		}
+		out = append(out, ev)
+	}
+	return out
 }
