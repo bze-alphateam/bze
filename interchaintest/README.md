@@ -43,6 +43,7 @@ make e2e-amm                        # AMM swaps, liquidity and the fee path (~3 
 make e2e-tokenfactory               # staking rewards + tokenfactory admin and branding (~4 min)
 make e2e-halt                       # halted denoms: gov halt/unhalt, refused trading, exits
 make e2e-ibc                        # blocked inbound IBC: bze <-> simd through Hermes
+make e2e-orderbook                  # order-book engine: fills, remainders, dust, cancels, refusals, queue limits
 make e2e-upgrade                    # chain upgrade from the previous release (see below)
 cd interchaintest && go test -v -run TestSmoke ./...
 ```
