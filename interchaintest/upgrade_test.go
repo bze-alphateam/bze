@@ -429,6 +429,10 @@ func (s *upgradeSuite) statePreserved(t *testing.T) {
 	require.Equal(t, b.Metadata, a.Metadata, "denom metadata")
 	require.Equal(t, b.Branding, a.Branding, "denom branding")
 	require.Equal(t, b.Halted, a.Halted, "halted denoms")
+	// a handler may add tradebin params, but never changes the ones before it
+	for name, raw := range b.TradebinParams {
+		require.JSONEq(t, string(raw), string(a.TradebinParams[name]), "tradebin param %s", name)
+	}
 
 	ticks := a.Day - b.Day
 	require.Contains(t, []int64{0, 1}, ticks, "day epochs ticked in the upgrade block")
@@ -732,6 +736,8 @@ type upgradeSnapshot struct {
 	Branding    *brandingInfo
 	Halted      []string
 	Rewards     upRewardsState
+	// TradebinParams are the tradebin params as the query prints them
+	TradebinParams map[string]json.RawMessage
 }
 
 // upRewardsState is the rewards state the day payouts move.
@@ -762,6 +768,8 @@ func (s *upgradeSuite) snapshot(t *testing.T, height int64) upgradeSnapshot {
 		Orders:      map[string][]map[string]any{},
 		Authorities: map[string]map[string]any{},
 		Rewards:     s.rewardsState(t, height),
+
+		TradebinParams: s.params(t, height, "tradebin"),
 	}
 	for name, addr := range s.accounts {
 		snap.Balances[name] = s.balances(t, height, addr)
