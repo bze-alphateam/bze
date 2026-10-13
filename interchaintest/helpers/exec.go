@@ -1,10 +1,10 @@
 package helpers
 
 import (
+	"archive/tar"
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"path"
 	"strings"
 
@@ -22,16 +22,10 @@ import (
 // non-zero exit returns an error worded like interchaintest's, "exit code N:
 // <stdout> <stderr>", which the rejection and simulation parsing relies on.
 func execNode(ctx context.Context, node *cosmos.ChainNode, cmd []string) ([]byte, []byte, error) {
-	return execNodeStdin(ctx, node, cmd, nil)
-}
-
-// execNodeStdin is execNode with stdin fed from stdin (nil: no stdin).
-func execNodeStdin(ctx context.Context, node *cosmos.ChainNode, cmd []string, stdin []byte) ([]byte, []byte, error) {
 	cli := node.DockerClient
 	created, err := cli.ContainerExecCreate(ctx, node.Name(), container.ExecOptions{
 		Cmd:          cmd,
 		Env:          node.Chain.Config().Env,
-		AttachStdin:  stdin != nil,
 		AttachStdout: true,
 		AttachStderr: true,
 	})
@@ -43,15 +37,6 @@ func execNodeStdin(ctx context.Context, node *cosmos.ChainNode, cmd []string, st
 		return nil, nil, fmt.Errorf("attach exec %s in %s: %w", strings.Join(cmd, " "), node.Name(), err)
 	}
 	defer attached.Close()
-
-	if stdin != nil {
-		if _, err := io.Copy(attached.Conn, bytes.NewReader(stdin)); err != nil {
-			return nil, nil, fmt.Errorf("write stdin of %s: %w", strings.Join(cmd, " "), err)
-		}
-		if err := attached.CloseWrite(); err != nil {
-			return nil, nil, fmt.Errorf("close stdin of %s: %w", strings.Join(cmd, " "), err)
-		}
-	}
 
 	var stdout, stderr bytes.Buffer
 	copied := make(chan error, 1)
@@ -79,9 +64,27 @@ func execNodeStdin(ctx context.Context, node *cosmos.ChainNode, cmd []string, st
 }
 
 // writeNodeFile writes content to relPath under the node's home directory,
-// creating its directory, from inside the node's container.
+// creating its directory. It copies a tar into the running container, so it
+// needs no tools in the image (the simd image has no shell utilities).
 func writeNodeFile(ctx context.Context, node *cosmos.ChainNode, content []byte, relPath string) error {
-	dst := path.Join(node.HomeDir(), relPath)
-	_, _, err := execNodeStdin(ctx, node, []string{"sh", "-c", `mkdir -p "$(dirname "$1")" && cat > "$1"`, "sh", dst}, content)
-	return err
+	var buf bytes.Buffer
+	tw := tar.NewWriter(&buf)
+	if dir := path.Dir(relPath); dir != "." {
+		if err := tw.WriteHeader(&tar.Header{Typeflag: tar.TypeDir, Name: dir + "/", Mode: 0o755}); err != nil {
+			return err
+		}
+	}
+	if err := tw.WriteHeader(&tar.Header{Typeflag: tar.TypeReg, Name: relPath, Mode: 0o644, Size: int64(len(content))}); err != nil {
+		return err
+	}
+	if _, err := tw.Write(content); err != nil {
+		return err
+	}
+	if err := tw.Close(); err != nil {
+		return err
+	}
+	if err := node.DockerClient.CopyToContainer(ctx, node.Name(), node.HomeDir(), &buf, container.CopyToContainerOptions{}); err != nil {
+		return fmt.Errorf("copy %s into %s: %w", relPath, node.Name(), err)
+	}
+	return nil
 }
