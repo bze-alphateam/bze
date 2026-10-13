@@ -117,6 +117,15 @@ Steps, for a candidate `vX.Y.Z` whose previous release is `vP`:
 `E2E_UPGRADE_FROM=v8.1.1 E2E_UPGRADE_NAME=v8.2.0` after
 `make e2e-image-ref REF=v8.1.1`.
 
+A handler that branches on the chain id runs on a network with the live
+chain's id. The v8.2.0 entry is one: its network is `beezee-1`, linked to
+simd through Hermes, and channel-3 carries simd's `uusdc`, so the USDC.n
+voucher and the USDC.n/BZE LP denom are the exact mainnet ones. The suite
+locks LP shares in the black hole before the upgrade and checks that the
+handler moves exactly those to the wind-down admin, blocks `uusdc` on
+channel-3 (refused and refunded, while other denoms and exits still work),
+and changes nothing else.
+
 All txs use a fixed gas limit, because `--gas auto` does not work on v8.1.1
 and older.
 

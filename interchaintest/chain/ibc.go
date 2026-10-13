@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/interchaintest/v10/ibc"
 	"github.com/cosmos/interchaintest/v10/relayer"
 	"github.com/cosmos/interchaintest/v10/testreporter"
+	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -58,6 +59,7 @@ type IbcNetwork struct {
 	Bze, Simd *cosmos.CosmosChain
 	Relayer   ibc.Relayer
 	Reporter  ibc.RelayerExecReporter
+	Docker    *client.Client
 
 	// BzeChannel is the transfer channel on bze, SimdChannel its counterparty
 	// on simd.
@@ -126,7 +128,7 @@ func StartIbc(t *testing.T, ctx context.Context, simdGenesis []ibc.WalletAmount,
 		_ = ic.Close()
 	})
 
-	channel, err := ibc.GetTransferChannel(ctx, r, rep, ChainID, SimdChainID)
+	channel, err := ibc.GetTransferChannel(ctx, r, rep, bze.Config().ChainID, SimdChainID)
 	require.NoError(t, err)
 
 	require.NoError(t, r.StartRelayer(ctx, rep, IbcPath))
@@ -139,6 +141,7 @@ func StartIbc(t *testing.T, ctx context.Context, simdGenesis []ibc.WalletAmount,
 		Simd:        simd,
 		Relayer:     r,
 		Reporter:    rep,
+		Docker:      dockerClient,
 		BzeChannel:  channel.ChannelID,
 		SimdChannel: channel.Counterparty.ChannelID,
 	}

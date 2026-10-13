@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	// ChainID is the chain id of every e2e bze network.
+	// ChainID is the default chain id of the e2e bze networks (WithChainID).
 	ChainID = "bze-e2e-1"
 	// Name is the interchaintest chain name.
 	Name = "bze"
@@ -64,6 +64,7 @@ func BzeImage(tag string) ibc.DockerImage {
 }
 
 type spec struct {
+	chainID      string
 	validators   int
 	image        string
 	genesis      []cosmos.GenesisKV
@@ -76,6 +77,12 @@ type Option func(*spec)
 // WithValidators sets the number of validators (default 1).
 func WithValidators(n int) Option {
 	return func(s *spec) { s.validators = n }
+}
+
+// WithChainID sets the chain id (default ChainID), e.g. a live chain's id for
+// code that branches on it, like an upgrade handler.
+func WithChainID(id string) Option {
+	return func(s *spec) { s.chainID = id }
 }
 
 // WithImage sets the bze image tag (default DefaultTag()).
@@ -112,7 +119,7 @@ func WithoutGenesis(keys ...string) Option {
 // BzeChainSpec returns the interchaintest spec of a bze e2e network: one
 // validator, no full nodes, 1 s blocks and the fast-epoch genesis.
 func BzeChainSpec(opts ...Option) *interchaintest.ChainSpec {
-	s := spec{validators: 1, image: DefaultTag(), genesis: DefaultGenesis(), minGasPrices: GasPrices}
+	s := spec{chainID: ChainID, validators: 1, image: DefaultTag(), genesis: DefaultGenesis(), minGasPrices: GasPrices}
 	for _, opt := range opts {
 		opt(&s)
 	}
@@ -128,7 +135,7 @@ func BzeChainSpec(opts ...Option) *interchaintest.ChainSpec {
 		ChainConfig: ibc.ChainConfig{
 			Type:           "cosmos",
 			Name:           Name,
-			ChainID:        ChainID,
+			ChainID:        s.chainID,
 			Images:         []ibc.DockerImage{image},
 			Bin:            Bin,
 			Bech32Prefix:   Bech32Prefix,
