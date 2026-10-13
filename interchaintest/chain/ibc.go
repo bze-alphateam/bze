@@ -40,6 +40,18 @@ const (
 	TransferPort = "transfer"
 )
 
+// SimdGenesis returns the genesis overrides of the counterparty: the same
+// short gov voting periods and deposits as bze (in stake), so suites can pass
+// simd proposals (e.g. a channel upgrade, which is authority-gated).
+func SimdGenesis() []cosmos.GenesisKV {
+	return []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", VotingPeriod),
+		cosmos.NewGenesisKV("app_state.gov.params.expedited_voting_period", ExpeditedVotingPeriod),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit", []map[string]string{{"denom": SimdDenom, "amount": MinDeposit}}),
+		cosmos.NewGenesisKV("app_state.gov.params.expedited_min_deposit", []map[string]string{{"denom": SimdDenom, "amount": ExpeditedMinDeposit}}),
+	}
+}
+
 // IbcNetwork is a running bze network, an ibc-go simd counterparty and a
 // Hermes relayer with an open ICS-20 channel between them.
 type IbcNetwork struct {
@@ -53,7 +65,7 @@ type IbcNetwork struct {
 }
 
 // SimdChainSpec returns the interchaintest spec of the counterparty: one
-// validator, no full nodes, free txs (0 gas price).
+// validator, no full nodes, free txs (0 gas price), SimdGenesis.
 func SimdChainSpec() *interchaintest.ChainSpec {
 	validators, fullNodes := 1, 0
 	return &interchaintest.ChainSpec{
@@ -61,10 +73,11 @@ func SimdChainSpec() *interchaintest.ChainSpec {
 		ChainName: "simd",
 		Version:   SimdVersion,
 		ChainConfig: ibc.ChainConfig{
-			ChainID:      SimdChainID,
-			Bech32Prefix: SimdBech32Prefix,
-			Denom:        SimdDenom,
-			GasPrices:    "0.0" + SimdDenom,
+			ChainID:       SimdChainID,
+			Bech32Prefix:  SimdBech32Prefix,
+			Denom:         SimdDenom,
+			GasPrices:     "0.0" + SimdDenom,
+			ModifyGenesis: cosmos.ModifyGenesis(SimdGenesis()),
 		},
 		NumValidators: &validators,
 		NumFullNodes:  &fullNodes,
