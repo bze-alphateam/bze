@@ -57,6 +57,11 @@ const (
 	// long enough never to finish during the suite
 	srCPrize    = 1_000
 	srCDuration = 30
+	// reward D, created by a payer holding no ubze at all (step 12b)
+	srDPrize      = 1_000
+	srDDuration   = 1
+	srZeroFunds   = 1_000_000 // the ubze the payer starts with and sends away
+	srZeroFeeToks = 100_000_000
 
 	srAliceJoinB  = 300
 	srAliceTopUpB = 200
@@ -82,6 +87,8 @@ const (
 	srPoolDest   = `{"treasury":"0","burner":"0","providers":"1"}`
 	srFeeTxFee   = 1_000 // fee units, swappable (its 0.2% is 2 units)
 	srFeeTxGas   = 1_000_000
+	// a fee paid in another denom may buy at most this much more than the fee
+	srFeeTolerancePct = 1
 
 	srTxGas = 500_000
 
@@ -127,6 +134,7 @@ func TestStakingRewards(t *testing.T) {
 	t.Run("9 delete refused while unfinished", s.deleteUnfinished)
 	t.Run("11 create refusals", s.createRefusals)
 	t.Run("12 create fee paid in a non-native denom", s.createFeeInFactoryToken)
+	t.Run("12b create fee paid by a payer holding no ubze", s.createWithoutUbze)
 	t.Run("13 anyone may extend a staking reward", s.update)
 	t.Run("14 anyone may distribute to the stakers", s.distribute)
 	t.Run("15 a top-up pays the pending first", s.topUp)
@@ -183,8 +191,8 @@ func setupStakingRewards(t *testing.T, ctx context.Context, bze *cosmos.CosmosCh
 	s.fee = "factory/" + s.erin.FormattedAddress() + "/fee"
 	const (
 		aliceStb = srAliceJoinB + srAliceTopUpB
-		bobStb   = srBobJoinB + srBobReJoinB + srBobJoinB2 // C's stake comes back before B's are needed
-		erinPrz  = srCPrize * srCDuration
+		bobStb   = srBobJoinB + srBobReJoinB + srBobJoinB2     // C's stake comes back before B's are needed
+		erinPrz  = srCPrize*srCDuration + srDPrize*srDDuration // erin forwards D's budget in step 12b
 	)
 	for denom, amount := range map[string]int64{
 		s.stk: srAliceStake + srBobStake + srCarolStake,
@@ -434,9 +442,9 @@ func (s *stakingRewardsSuite) createRefusals(t *testing.T) {
 
 // 12. erin pays the tx fee in her factory token, which has a deep ubze pool:
 // the create fee (in ubze) is then taken in that token too. The chain takes
-// the input that buys the fee from the pool (CalculateOptimalInputForOutput,
-// rounded up), swaps it and sends the whole swap output to the community-pool
-// collector; erin spends no ubze. The EndBlock then swaps the tx fee on the
+// the input that buys the fee from the pool (rounded up), swaps it and sends
+// the whole swap output to the community-pool collector: at least the fee and
+// at most srFeeTolerancePct above it; erin spends no ubze. The EndBlock then swaps the tx fee on the
 // reserves the fee swap left.
 func (s *stakingRewardsSuite) createFeeInFactoryToken(t *testing.T) {
 	erin := s.erin.FormattedAddress()
@@ -466,24 +474,28 @@ func (s *stakingRewardsSuite) createFeeInFactoryToken(t *testing.T) {
 	budget := sdkmath.NewInt(srCPrize * srCDuration)
 	s.funded = s.funded.Add(budget)
 
-	// the fee swap runs on the pool as the previous block left it
-	pool := s.poolAt(t, poolID, res.Height-1)
-	poolFee := sdkmath.LegacyMustNewDecFromStr(pool.Fee)
-	in := srInputFor(createFee, pool.reserveBase(), pool.reserveQuote(), poolFee)
-	out := srSwapOut(in, pool.reserveBase(), pool.reserveQuote(), poolFee)
-	require.True(t, out.GTE(createFee), "the rounded-up input must buy at least the fee: %s for %s", out, createFee)
+	// The price of a fee paid in another denom is the pool's, never a fixed
+	// one: the chain must deliver at least the fee in ubze, and only a little
+	// more (it rounds the input up), never an arbitrary amount.
+	in := s.transferred(t, res, erin, s.tradebin, s.fee)
+	out := s.transferred(t, res, s.tradebin, s.module, chain.Denom)
+	require.True(t, in.IsPositive(), "the fee's input must go to tradebin for the swap")
+	require.Equal(t, out.String(), s.transferred(t, res, s.module, s.cpCollector, chain.Denom).String(), "the whole swap output must reach the txfeecollector_cp module")
+	require.True(t, out.GTE(createFee), "the community pool must get at least the create fee: %s for %s", out, createFee)
+	maxOut := createFee.Add(createFee.MulRaw(srFeeTolerancePct).QuoRaw(100))
+	require.True(t, out.LTE(maxOut), "the swapped create fee %s must stay within %d%% of the fee %s", out, srFeeTolerancePct, createFee)
 	t.Logf("create fee %s ubze bought with %s %s; the swap gave %s ubze (%s above the fee)", createFee, in, s.fee, out, out.Sub(createFee))
 
 	paid, err := helpers.TxFee(res, s.fee)
 	require.NoError(t, err)
 	require.Equal(t, txFee.Amount, paid, "tx fee in the factory token")
-	require.Equal(t, in.String(), s.transferred(t, res, erin, s.tradebin, s.fee).String(), "the fee's input goes to tradebin for the swap")
-	require.Equal(t, out.String(), s.transferred(t, res, s.tradebin, s.module, chain.Denom).String(), "the swap output goes to the rewards module")
-	require.Equal(t, out.String(), s.transferred(t, res, s.module, s.cpCollector, chain.Denom).String(), "the swapped create fee must reach the txfeecollector_cp module")
 	require.Equal(t, ubzeBefore.String(), s.balance(t, erin, chain.Denom).String(), "erin must spend no ubze")
 	require.Equal(t, feeBefore.Sub(in).Sub(txFee.Amount).String(), s.balance(t, erin, s.fee).String(), "erin pays the fee's input and the tx fee in her token")
 	require.Equal(t, przBefore.Sub(budget).String(), s.balance(t, erin, s.prz).String())
 
+	// the fee swap ran on the pool as the previous block left it
+	pool := s.poolAt(t, poolID, res.Height-1)
+	poolFee := sdkmath.LegacyMustNewDecFromStr(pool.Fee)
 	// the providers keep the pool fee, so the input reserve grows by the whole input
 	base, quote := pool.reserveBase().Add(in), pool.reserveQuote().Sub(out)
 	txOut := srSwapOut(txFee.Amount, base, quote, poolFee)
@@ -496,6 +508,38 @@ func (s *stakingRewardsSuite) createFeeInFactoryToken(t *testing.T) {
 	after := s.poolAt(t, poolID, res.Height)
 	require.Equal(t, base.Add(txFee.Amount).String(), after.reserveBase().String(), "fee token reserve")
 	require.Equal(t, quote.Sub(txOut).String(), after.reserveQuote().String(), "ubze reserve")
+	s.requireEscrow(t)
+}
+
+// 12b. Paying in a fee token must not need ubze at all: gina holds only the
+// fee token and D's budget, pays the tx fee and the create fee in the token
+// and creates D. Her ubze balance stays 0.
+func (s *stakingRewardsSuite) createWithoutUbze(t *testing.T) {
+	t.Skip("BZE-185: the rewards balance pre-check requires the whole create fee in ubze")
+
+	gina := interchaintest.GetAndFundTestUsers(t, s.ctx, "srzero", sdkmath.NewInt(srZeroFunds), s.bze)[0]
+	require.NoError(t, testutil.WaitForBlocks(s.ctx, 2, s.bze))
+	addr := gina.FormattedAddress()
+	feeOpts := []helpers.TxOption{helpers.WithFees(coinStr(srFeeTxFee, s.fee)), helpers.WithGas(srFeeTxGas)}
+	budget := coins(srDPrize*srDDuration, s.prz)
+	s.mustExec(t, s.erin, "bank", "send", s.erin.FormattedAddress(), addr,
+		budget.Add(sdk.NewInt64Coin(s.fee, srZeroFeeToks)).String())
+	// gina sends all her ubze away, paying that tx in the fee token
+	s.mustExecWith(t, gina, feeOpts, "bank", "send", addr, s.erin.FormattedAddress(), coinStr(srZeroFunds, chain.Denom))
+	require.True(t, s.balance(t, addr, chain.Denom).IsZero(), "gina must hold no ubze")
+
+	createFee := s.params.CreateStakingRewardFee.Amount
+	res := s.mustExecWith(t, gina, feeOpts,
+		"rewards", "create-staking-reward", strconv.Itoa(srDPrize), s.prz, s.stb, strconv.Itoa(srDDuration), "1", "0")
+	created := s.requireTxEvent(t, res, "StakingRewardCreateEvent", map[string]string{"prize_amount": strconv.Itoa(srDPrize), "staking_denom": s.stb})
+	require.NotEmpty(t, created.Attributes["reward_id"])
+	s.funded = s.funded.Add(budget.AmountOf(s.prz))
+
+	out := s.transferred(t, res, s.module, s.cpCollector, chain.Denom)
+	require.True(t, out.GTE(createFee), "the community pool must get at least the create fee: %s for %s", out, createFee)
+	require.True(t, out.LTE(createFee.Add(createFee.MulRaw(srFeeTolerancePct).QuoRaw(100))), "the swapped create fee %s must stay within %d%% of %s", out, srFeeTolerancePct, createFee)
+	require.True(t, s.balance(t, addr, chain.Denom).IsZero(), "gina still holds no ubze")
+	require.True(t, s.balance(t, addr, s.prz).IsZero(), "gina's budget is escrowed")
 	s.requireEscrow(t)
 }
 
@@ -1152,14 +1196,6 @@ func (s *stakingRewardsSuite) minNativeLiquidity(t *testing.T) sdkmath.Int {
 	minLiquidity := parseInt(res.Params.MinNativeLiquidityForModuleSwap)
 	require.True(t, minLiquidity.IsPositive(), "tradebin param minNativeLiquidityForModuleSwap missing")
 	return minLiquidity
-}
-
-// srInputFor is tradebin's CalculateOptimalInputForOutput, in its order of
-// LegacyDec operations: ⌈(out × inReserve / (outReserve − out)) / (1 − fee)⌉.
-func srInputFor(out, inReserve, outReserve sdkmath.Int, fee sdkmath.LegacyDec) sdkmath.Int {
-	o := sdkmath.LegacyNewDecFromInt(out)
-	net := o.Mul(sdkmath.LegacyNewDecFromInt(inReserve)).Quo(sdkmath.LegacyNewDecFromInt(outReserve).Sub(o))
-	return net.Quo(sdkmath.LegacyOneDec().Sub(fee)).Ceil().TruncateInt()
 }
 
 // srSwapOut is tradebin's swapTokens output: the pool fee ⌊in × fee⌋ comes

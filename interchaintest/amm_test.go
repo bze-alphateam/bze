@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/big"
 	"strings"
 	"testing"
@@ -79,6 +80,13 @@ const (
 	ammMinPoolFee        = "0.001"
 	ammTreasuryFeeDest   = `{"treasury":"0.3","burner":"0.2","providers":"0.5"}`
 	ammTreasurySwapInput = 123_456_789
+
+	// step 19: a dust pool, one unit of each side
+	ammDustInputs = 1_000_000_000 // dst sent to trader
+	// step 20: a deposit of 1e5 × the reserves mints 1e20 LP, past uint64
+	ammBigMint    = 10_000_000_000_000_000
+	ammBigReserve = 1_000_000_000
+	ammBigDeposit = 100_000_000_000_000
 )
 
 // TestAmm runs the tradebin AMM and the fee path on one network: pools,
@@ -117,6 +125,9 @@ func TestAmm(t *testing.T) {
 	t.Run("16 create pool refusals", s.createPoolRefusals)
 	t.Run("17 swap refusals", s.swapRefusals)
 	t.Run("18 create market refusals", s.createMarketRefusals)
+	t.Run("19 a dust pool cannot be traded", s.dustPool)
+	t.Run("20 slippage refusal above uint64", s.slippageAboveUint64)
+	t.Run("21 swap above the balance", s.swapAboveBalance)
 }
 
 type ammSuite struct {
@@ -805,7 +816,104 @@ func (s *ammSuite) swapRefusals(t *testing.T) {
 		{"duplicate pool in routes", swap([]string{s.usdPool, s.usdPool}, bze(1_000_000), oneUsd), 4015, ammCodespace, "duplicate route " + s.usdPool, true},
 		{"more than MaxRoutes", swap(tooMany, bze(1_000_000), oneUsd), 4015, ammCodespace, "routes length must be between 1 and 5", true},
 		{"no routes", swap([]string{}, bze(1_000_000), oneUsd), 4015, ammCodespace, "routes length must be between 1 and 5", true},
-		{"insufficient balance", swap([]string{s.usdPool}, bze(ammLpFunds), oneUsd), 10, "sdk", "could not capture user input coins", false},
+	})
+}
+
+// ammSwapMsg is a MsgMultiSwap from user.
+func ammSwapMsg(user ibc.Wallet, routes []string, in, minOut sdk.Coin) map[string]any {
+	return map[string]any{
+		"@type": "/bze.tradebin.MsgMultiSwap", "creator": user.FormattedAddress(), "routes": routes,
+		"input":      map[string]string{"denom": in.Denom, "amount": in.Amount.String()},
+		"min_output": map[string]string{"denom": minOut.Denom, "amount": minOut.Amount.String()},
+	}
+}
+
+// 19. A pool created with one unit of each side is accepted (there is no
+// minimum: one unit may be worth a lot one day), but it can never be traded:
+// its output reserve is 1 and a swap always pays less than the reserve, so
+// every output truncates to 0 and is refused, whatever the input, in either
+// direction and as a hop of a longer route. Nothing moves but the tx fee.
+func (s *ammSuite) dustPool(t *testing.T) {
+	factory := "factory/" + s.lp.FormattedAddress() + "/"
+	dst := factory + "dst"
+	s.mustExec(t, s.lp, "tokenfactory", "create-denom", "dst")
+	s.mustExec(t, s.lp, "tokenfactory", "mint", coinStr(ammMint, dst))
+	s.mustExec(t, s.lp, "bank", "send", s.lp.FormattedAddress(), s.trader.FormattedAddress(), coinStr(ammDustInputs, dst))
+	// "factory/…/dst" sorts before "factory/…/usd"
+	dustPool := dst + "_" + s.usd
+	s.createPool(t, ammPoolArgs{
+		base: dst, quote: s.usd, initBase: 1, initQuote: 1, fee: ammPoolFee, feeDest: ammFeeDest,
+		wantID: dustPool, wantBase: dst, wantQuote: s.usd, wantReserveBase: 1, wantReserveQuote: 1,
+	})
+
+	swap := func(routes []string, in, minOut sdk.Coin) map[string]any {
+		return ammSwapMsg(s.trader, routes, in, minOut)
+	}
+	noOutput := "non positive output on swap tokens"
+	var cases []ammRefusal
+	for _, in := range []int64{1_000, 1_000_000, ammDustInputs} {
+		cases = append(cases,
+			ammRefusal{fmt.Sprintf("dst to usd, %d in", in), swap([]string{dustPool}, sdk.NewInt64Coin(dst, in), sdk.NewInt64Coin(s.usd, 1)),
+				4016, ammCodespace, noOutput, false},
+			ammRefusal{fmt.Sprintf("usd to dst, %d in", in), swap([]string{dustPool}, sdk.NewInt64Coin(s.usd, in), sdk.NewInt64Coin(dst, 1)),
+				4016, ammCodespace, noOutput, false},
+		)
+	}
+	cases = append(cases,
+		// ⌊1 × 0.002⌋ = 0: the smallest input is refused before the pool math
+		ammRefusal{"one unit in", swap([]string{dustPool}, sdk.NewInt64Coin(dst, 1), sdk.NewInt64Coin(s.usd, 1)),
+			4016, ammCodespace, "amount is too low to be traded", false},
+		// ubze → usd through the deep pool, then usd → dst through the dust pool
+		ammRefusal{"second hop of a route", swap([]string{s.usdPool, dustPool}, sdk.NewInt64Coin(chain.Denom, ammSwapInput), sdk.NewInt64Coin(dst, 1)),
+			4016, ammCodespace, noOutput, false},
+	)
+	s.requireRefusals(t, s.trader, []string{chain.Denom, s.usd, dst}, cases)
+
+	pool := s.pool(t, dustPool)
+	require.Equal(t, sdkmath.OneInt(), pool.reserveBase(), "dust base reserve")
+	require.Equal(t, sdkmath.OneInt(), pool.reserveQuote(), "dust quote reserve")
+}
+
+// 20. The add-liquidity slippage guard of a deposit that mints more than a
+// uint64 of LP: big1/big2 starts at 1e9/1e9 (1e15 LP) and a deposit of 1e14
+// of each side mints 1e20. MinLpTokens one above must be refused with 4014
+// like any slippage refusal; the chain formats the minted amount with
+// Uint64(), which panics past 2^64 instead.
+func (s *ammSuite) slippageAboveUint64(t *testing.T) {
+	t.Skip("BZE-183: the AddLiquidity slippage refusal panics when the minted LP does not fit a uint64")
+
+	factory := "factory/" + s.lp.FormattedAddress() + "/"
+	big1, big2 := factory+"big1", factory+"big2"
+	for _, sub := range []string{"big1", "big2"} {
+		s.mustExec(t, s.lp, "tokenfactory", "create-denom", sub)
+		s.mustExec(t, s.lp, "tokenfactory", "mint", coinStr(ammBigMint, factory+sub))
+	}
+	bigPool := big1 + "_" + big2
+	pool := s.createPool(t, ammPoolArgs{
+		base: big1, quote: big2, initBase: ammBigReserve, initQuote: ammBigReserve, fee: ammPoolFee, feeDest: ammFeeDest,
+		wantID: bigPool, wantBase: big1, wantQuote: big2, wantReserveBase: ammBigReserve, wantReserveQuote: ammBigReserve,
+	})
+
+	deposit := sdkmath.NewInt(ammBigDeposit)
+	d := ammDeposit(deposit, deposit, pool.reserveBase(), pool.reserveQuote(), s.supply(t, pool.LpDenom))
+	require.True(t, d.minted.GT(sdkmath.NewIntFromUint64(math.MaxUint64)), "the deposit must mint past uint64, mints %s", d.minted)
+	over := d.minted.AddRaw(1)
+	s.requireRefusals(t, s.lp, []string{chain.Denom, big1, big2, pool.LpDenom}, []ammRefusal{
+		{"add, min LP one above a minted amount past uint64", map[string]any{
+			"@type": "/bze.tradebin.MsgAddLiquidity", "creator": s.lp.FormattedAddress(), "pool_id": bigPool,
+			"base_amount": deposit.String(), "quote_amount": deposit.String(), "min_lp_tokens": over.String(),
+		}, 4014, ammCodespace, fmt.Sprintf("Minted %s, expected minimum: %s", d.minted, over), false},
+	})
+}
+
+// 21. A swap whose input is above the trader's balance is refused with the
+// bank's insufficient funds (sdk 5), like any other spend above the balance.
+func (s *ammSuite) swapAboveBalance(t *testing.T) {
+	t.Skip("BZE-184: MultiSwap reports a balance shortfall as invalid coins (sdk 10)")
+
+	s.requireRefusals(t, s.trader, []string{chain.Denom, s.usd, s.abc}, []ammRefusal{
+		{"input above the balance", ammSwapMsg(s.trader, []string{s.usdPool}, sdk.NewInt64Coin(chain.Denom, ammLpFunds), sdk.NewInt64Coin(s.usd, 1)),
+			5, "sdk", "insufficient funds", false},
 	})
 }
 
