@@ -2,8 +2,12 @@ package interchaintest_test
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"math/big"
+	"strings"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -56,15 +60,37 @@ const (
 	ammOrderAmount = 1_000
 
 	tradebinEventPrefix = "bze.tradebin."
+	ammCodespace        = "tradebin"
+	ammMaxRoutes        = 5 // tradebin MaxRoutes
+
+	// steps 10, 11 and 14
+	ammBaseSwapInput = 100_000_000   // 100 usd swapped to ubze
+	ammExcessBze     = 1_000_000_000 // ubze of the excess-base deposit
+	ammGuardUsd      = 400_000_007   // usd of the slippage-guard deposit
+
+	// step 12: rev/ubze sent as ubze/rev; sqrt(4e9 × 1e9) = 2e9
+	revPoolBze    = 4_000_000_000
+	revPoolRev    = 1_000_000_000
+	ammMaxPoolFee = "0.05"
+
+	// step 15: abc/ubze with a treasury share; sqrt(1e9 × 4e9) = 2e9
+	cpPoolAbc            = 1_000_000_000
+	cpPoolBze            = 4_000_000_000
+	ammMinPoolFee        = "0.001"
+	ammTreasuryFeeDest   = `{"treasury":"0.3","burner":"0.2","providers":"0.5"}`
+	ammTreasurySwapInput = 123_456_789
 )
 
 // TestAmm runs the tradebin AMM and the fee path on one network: pools,
 // liquidity, single and multi-hop swaps with exact outputs, a tx fee paid in a
 // factory token and swapped to ubze in the txfeecollector EndBlock, the taker
 // fee charged in that token and burned, --gas auto with --gas-prices in ubze
-// and in a factory token, and the message_id that links the order events of a
-// MsgFillOrders to the EndBlock engine events. Subtests run in order and share
-// state; the step numbers match the scenario of the suite's design.
+// and in a factory token, the message_id that links the order events of a
+// MsgFillOrders to the EndBlock engine events, then the swap and deposit
+// directions the first steps leave out, slippage guards, a pool fee share to
+// the community pool, LP denom metadata and the create-pool, swap and
+// create-market refusals. Subtests run in order and share state; the step
+// numbers match the scenario of the suite's design.
 func TestAmm(t *testing.T) {
 	if testing.Short() {
 		t.Skip("e2e: skipped in short mode")
@@ -82,6 +108,15 @@ func TestAmm(t *testing.T) {
 	t.Run("7 taker fee in the fee denom", s.takerFeeInUsd)
 	t.Run("8 gas auto with gas prices", s.gasAuto)
 	t.Run("9 fill orders and message ids", s.fillOrders)
+	t.Run("10 swap base to quote", s.swapBaseToQuote)
+	t.Run("11 add liquidity with excess base", s.addExcessBase)
+	t.Run("12 pool with base and quote reversed", s.reversedPool)
+	t.Run("13 LP denom metadata", s.lpMetadata)
+	t.Run("14 slippage guards", s.slippageGuards)
+	t.Run("15 pool fee treasury share", s.treasuryShare)
+	t.Run("16 create pool refusals", s.createPoolRefusals)
+	t.Run("17 swap refusals", s.swapRefusals)
+	t.Run("18 create market refusals", s.createMarketRefusals)
 }
 
 type ammSuite struct {
@@ -94,8 +129,11 @@ type ammSuite struct {
 	market                   string
 	params                   tradebinParams
 
+	// steps 12 and 15: rev/ubze created as ubze/rev, abc/ubze with a treasury share
+	rev, revPool, cpPool string
+
 	// module account addresses
-	tradebin, burner, blackHole, feeCollector, txFees, burnerFees, cpFees string
+	tradebin, burner, blackHole, feeCollector, txFees, burnerFees, cpFees, distribution string
 }
 
 func setupAmm(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain) *ammSuite {
@@ -127,6 +165,9 @@ func setupAmm(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain) *ammSu
 	s.usdPool = s.usd + "_" + chain.Denom
 	s.abcPool = s.abc + "_" + s.usd
 	s.market = s.abc + "/" + s.usd
+	s.rev = factory + "rev"
+	s.revPool = s.rev + "_" + chain.Denom
+	s.cpPool = s.abc + "_" + chain.Denom
 
 	for name, addr := range map[string]*string{
 		"tradebin":              &s.tradebin,
@@ -136,6 +177,7 @@ func setupAmm(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain) *ammSu
 		"txfeecollector":        &s.txFees,
 		"txfeecollector_burner": &s.burnerFees,
 		"txfeecollector_cp":     &s.cpFees,
+		"distribution":          &s.distribution,
 	} {
 		var err error
 		*addr, err = helpers.ModuleAddress(ctx, bze, name)
@@ -505,6 +547,482 @@ func (s *ammSuite) createAndCancel(t *testing.T) {
 	require.Equal(t, before, s.balance(t, s.maker.FormattedAddress(), s.abc), "cancel refunds the order amount")
 }
 
+// 10. usd → ubze through the usd/ubze pool, the base-to-quote direction:
+// exact output, half the pool fee (in usd) burned, the taker fee to the burner.
+func (s *ammSuite) swapBaseToQuote(t *testing.T) {
+	pool := s.pool(t, s.usdPool)
+	in := sdkmath.NewInt(ammBaseSwapInput)
+	q := quoteSwap(in, pool.reserveBase(), pool.reserveQuote())
+	before := s.balances(t, s.trader, chain.Denom, s.usd)
+
+	res := s.mustExec(t, s.trader, "tradebin", "multi-swap", s.usdPool, sdk.NewCoin(s.usd, in).String(), coinStr(1, chain.Denom))
+
+	s.requireSwap(t, res.Events, s.trader.FormattedAddress(), s.usdPool, sdk.NewCoin(s.usd, in), sdk.NewCoin(chain.Denom, q.out))
+	after := s.pool(t, s.usdPool)
+	require.Equal(t, pool.reserveBase().Add(q.inReserveAdd), after.reserveBase(), "usd reserve")
+	require.Equal(t, pool.reserveQuote().Sub(q.out), after.reserveQuote(), "ubze reserve")
+
+	want := before.Add(sdk.NewCoin(chain.Denom, q.out)).Sub(sdk.NewCoin(s.usd, in), sdk.NewCoin(chain.Denom, s.params.MarketTakerFee.Amount.Add(s.txFee(t, res))))
+	require.Equal(t, want, s.balances(t, s.trader, chain.Denom, s.usd), "trader balances")
+
+	require.Equal(t, q.burned, s.transferred(t, res.Events, s.tradebin, s.burner, s.usd), "swap fee to the burner")
+	s.requireTakerFeeBurned(t, res)
+}
+
+// 11. A deposit with twice the usd the ubze needs: the chain takes
+// ⌊ubze × usd reserve / ubze reserve⌋ usd and all the ubze, mints on the
+// smaller of the two ratios and leaves the excess usd with the user.
+func (s *ammSuite) addExcessBase(t *testing.T) {
+	pool := s.pool(t, s.usdPool)
+	supply := s.supply(t, pool.LpDenom)
+	bze := sdkmath.NewInt(ammExcessBze)
+	usd := bze.Mul(pool.reserveBase()).Quo(pool.reserveQuote()).MulRaw(2).AddRaw(12_345)
+	d := ammDeposit(usd, bze, pool.reserveBase(), pool.reserveQuote(), supply)
+	require.Equal(t, bze, d.quote, "all the ubze is taken")
+	require.True(t, d.base.LT(usd), "only part of the usd is taken")
+	before := s.balances(t, s.lp, chain.Denom, s.usd, pool.LpDenom)
+
+	res := s.mustExec(t, s.lp, "tradebin", "add-liquidity", s.usdPool, usd.String(), bze.String(), "1")
+
+	s.requireTxEvent(t, res, "LiquidityAddedEvent", map[string]string{
+		"pool_id":      s.usdPool,
+		"baseAmount":   d.base.String(),
+		"quoteAmount":  d.quote.String(),
+		"mintedAmount": d.minted.String(),
+	})
+	after := s.pool(t, s.usdPool)
+	require.Equal(t, pool.reserveBase().Add(d.base), after.reserveBase())
+	require.Equal(t, pool.reserveQuote().Add(d.quote), after.reserveQuote())
+	require.Equal(t, supply.Add(d.minted), s.supply(t, pool.LpDenom))
+	require.Equal(t, d.base, s.transferred(t, res.Events, s.lp.FormattedAddress(), s.tradebin, s.usd), "usd taken")
+
+	want := before.Sub(sdk.NewCoin(s.usd, d.base), sdk.NewCoin(chain.Denom, s.txFee(t, res).Add(d.quote))).
+		Add(sdk.NewCoin(pool.LpDenom, d.minted))
+	require.Equal(t, want, s.balances(t, s.lp, chain.Denom, s.usd, pool.LpDenom), "lp balances: the excess usd stays")
+}
+
+// 12. A pool created as ubze/rev is stored as rev/ubze (denoms sorted, the
+// amounts swapped with them), under that id only; the 0.05 fee bound is
+// accepted.
+func (s *ammSuite) reversedPool(t *testing.T) {
+	s.mustExec(t, s.lp, "tokenfactory", "create-denom", "rev")
+	s.mustExec(t, s.lp, "tokenfactory", "mint", coinStr(ammMint, s.rev))
+
+	s.createPool(t, ammPoolArgs{
+		base: chain.Denom, quote: s.rev, initBase: revPoolBze, initQuote: revPoolRev,
+		fee: ammMaxPoolFee, feeDest: ammFeeDest,
+		wantID: s.revPool, wantBase: s.rev, wantQuote: chain.Denom, wantReserveBase: revPoolRev, wantReserveQuote: revPoolBze,
+	})
+	s.requireNoPool(t, chain.Denom+"_"+s.rev)
+}
+
+// 13. The LP denom of a new pool is ulp/<uppercase hex sha256(pool id)>, with
+// bank metadata: base unit ulp/<hash> at exponent 0, display unit lp/<hash>
+// at exponent 6, no name or symbol.
+func (s *ammSuite) lpMetadata(t *testing.T) {
+	sum := sha256.Sum256([]byte(s.revPool))
+	hash := strings.ToUpper(hex.EncodeToString(sum[:]))
+	base, display := "ulp/"+hash, "lp/"+hash
+	require.Len(t, base, 68)
+	require.Equal(t, base, s.pool(t, s.revPool).LpDenom, "pool lp denom")
+
+	res, err := helpers.Query[struct {
+		Metadata struct {
+			Name       string `json:"name"`
+			Symbol     string `json:"symbol"`
+			Display    string `json:"display"`
+			Base       string `json:"base"`
+			DenomUnits []struct {
+				Denom    string        `json:"denom"`
+				Exponent helpers.Int64 `json:"exponent"`
+			} `json:"denom_units"`
+		} `json:"metadata"`
+	}](s.ctx, s.bze, "bank", "denom-metadata", base)
+	require.NoError(t, err)
+	md := res.Metadata
+	assert.Equal(t, base, md.Base)
+	assert.Equal(t, display, md.Display)
+	assert.Empty(t, md.Name)
+	assert.Empty(t, md.Symbol)
+	require.Len(t, md.DenomUnits, 2, "%+v", md.DenomUnits)
+	assert.Equal(t, base, md.DenomUnits[0].Denom)
+	assert.EqualValues(t, 0, md.DenomUnits[0].Exponent)
+	assert.Equal(t, display, md.DenomUnits[1].Denom)
+	assert.EqualValues(t, 6, md.DenomUnits[1].Exponent)
+}
+
+// 14. Slippage guards: a MinLpTokens one above what the deposit mints and a
+// MinBase or MinQuote one above what the burn pays are refused and move
+// nothing but the tx fee; the exact amounts then pass. The chain's decimal
+// math is replayed with LegacyDec (ammDeposit, ammWithdraw).
+func (s *ammSuite) slippageGuards(t *testing.T) {
+	addMsg := func(base, quote, minLp sdkmath.Int) map[string]any {
+		return map[string]any{
+			"@type": "/bze.tradebin.MsgAddLiquidity", "creator": s.lp.FormattedAddress(), "pool_id": s.usdPool,
+			"base_amount": base.String(), "quote_amount": quote.String(), "min_lp_tokens": minLp.String(),
+		}
+	}
+	removeMsg := func(lp, minBase, minQuote sdkmath.Int) map[string]any {
+		return map[string]any{
+			"@type": "/bze.tradebin.MsgRemoveLiquidity", "creator": s.lp.FormattedAddress(), "pool_id": s.usdPool,
+			"lp_tokens": lp.String(), "min_base": minBase.String(), "min_quote": minQuote.String(),
+		}
+	}
+
+	pool := s.pool(t, s.usdPool)
+	supply := s.supply(t, pool.LpDenom)
+	usd := sdkmath.NewInt(ammGuardUsd)
+	bze := usd.Mul(pool.reserveQuote()).Quo(pool.reserveBase()).AddRaw(1_000)
+	d := ammDeposit(usd, bze, pool.reserveBase(), pool.reserveQuote(), supply)
+	over := d.minted.AddRaw(1)
+	s.requireRefusals(t, s.lp, []string{chain.Denom, s.usd, pool.LpDenom}, []ammRefusal{
+		{"add, min LP one above the minted", addMsg(usd, bze, over), 4014, ammCodespace,
+			fmt.Sprintf("Minted %s, expected minimum: %s", d.minted, over), false},
+	})
+	before := s.balances(t, s.lp, chain.Denom, s.usd, pool.LpDenom)
+	res := s.mustExecMsgs(t, s.lp, addMsg(usd, bze, d.minted))
+	s.requireTxEvent(t, res, "LiquidityAddedEvent", map[string]string{
+		"pool_id": s.usdPool, "baseAmount": d.base.String(), "quoteAmount": d.quote.String(), "mintedAmount": d.minted.String(),
+	})
+	want := before.Sub(sdk.NewCoin(s.usd, d.base), sdk.NewCoin(chain.Denom, d.quote.Add(s.txFee(t, res)))).Add(sdk.NewCoin(pool.LpDenom, d.minted))
+	require.Equal(t, want, s.balances(t, s.lp, chain.Denom, s.usd, pool.LpDenom), "lp balances")
+
+	pool = s.pool(t, s.usdPool)
+	supply = s.supply(t, pool.LpDenom)
+	burn := s.balance(t, s.lp.FormattedAddress(), pool.LpDenom).QuoRaw(7)
+	outUsd, outBze := ammWithdraw(burn, supply, pool.reserveBase(), pool.reserveQuote())
+	s.requireRefusals(t, s.lp, []string{chain.Denom, s.usd, pool.LpDenom}, []ammRefusal{
+		{"remove, min base one above the paid", removeMsg(burn, outUsd.AddRaw(1), outBze), 4014, ammCodespace,
+			fmt.Sprintf("base amount too low, got %s, minimum %s", outUsd, outUsd.AddRaw(1)), false},
+		{"remove, min quote one above the paid", removeMsg(burn, outUsd, outBze.AddRaw(1)), 4014, ammCodespace,
+			fmt.Sprintf("quote amount too low, got %s, minimum %s", outBze, outBze.AddRaw(1)), false},
+	})
+	before = s.balances(t, s.lp, chain.Denom, s.usd, pool.LpDenom)
+	res = s.mustExecMsgs(t, s.lp, removeMsg(burn, outUsd, outBze))
+	s.requireTxEvent(t, res, "LiquidityRemovedEvent", map[string]string{
+		"pool_id": s.usdPool, "baseAmount": outUsd.String(), "quoteAmount": outBze.String(),
+	})
+	after := s.pool(t, s.usdPool)
+	require.Equal(t, pool.reserveBase().Sub(outUsd), after.reserveBase())
+	require.Equal(t, pool.reserveQuote().Sub(outBze), after.reserveQuote())
+	require.Equal(t, supply.Sub(burn), s.supply(t, pool.LpDenom), "LP supply")
+	want = before.Add(sdk.NewCoin(s.usd, outUsd), sdk.NewCoin(chain.Denom, outBze)).Sub(sdk.NewCoin(pool.LpDenom, burn), sdk.NewCoin(chain.Denom, s.txFee(t, res)))
+	require.Equal(t, want, s.balances(t, s.lp, chain.Denom, s.usd, pool.LpDenom), "lp balances")
+}
+
+// 15. abc/ubze with fee 0.001 (the lower bound) and fee destination
+// treasury 0.3 / burner 0.2 / providers 0.5. A ubze → abc swap sends
+// ⌊⌊in × 0.001⌋ × 0.3⌋ ubze to txfeecollector_cp, which funds the community
+// pool with it in EndBlock, and ⌊⌊in × 0.001⌋ × 0.2⌋ to the burner; the rest
+// of the fee stays in the reserves.
+func (s *ammSuite) treasuryShare(t *testing.T) {
+	pool := s.createPool(t, ammPoolArgs{
+		base: s.abc, quote: chain.Denom, initBase: cpPoolAbc, initQuote: cpPoolBze,
+		fee: ammMinPoolFee, feeDest: ammTreasuryFeeDest,
+		wantID: s.cpPool, wantBase: s.abc, wantQuote: chain.Denom, wantReserveBase: cpPoolAbc, wantReserveQuote: cpPoolBze,
+	})
+
+	in := sdkmath.NewInt(ammTreasurySwapInput)
+	q := ammQuoteSwap(in, pool.reserveQuote(), pool.reserveBase(), ammMinPoolFee, "0.3", "0.2")
+	// the scenario's numbers: fee 123,456, treasury 37,036 (37,036.8), burner 24,691 (24,691.2)
+	require.Equal(t, sdkmath.NewInt(123_456), q.fee)
+	require.Equal(t, sdkmath.NewInt(37_036), q.treasury)
+	require.Equal(t, sdkmath.NewInt(24_691), q.burned)
+	before := s.balances(t, s.trader, chain.Denom, s.abc)
+
+	res := s.mustExec(t, s.trader, "tradebin", "multi-swap", s.cpPool, sdk.NewCoin(chain.Denom, in).String(), coinStr(1, s.abc))
+
+	s.requireSwap(t, res.Events, s.trader.FormattedAddress(), s.cpPool, sdk.NewCoin(chain.Denom, in), sdk.NewCoin(s.abc, q.out))
+	require.Equal(t, q.treasury, s.transferred(t, res.Events, s.tradebin, s.cpFees, chain.Denom), "treasury share to txfeecollector_cp")
+	require.Equal(t, q.burned, s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "burner share to the burner")
+	s.requireTakerFeeBurned(t, res)
+
+	after := s.pool(t, s.cpPool)
+	require.Equal(t, pool.reserveQuote().Add(q.inReserveAdd), after.reserveQuote(), "ubze reserve keeps the providers share")
+	require.Equal(t, pool.reserveBase().Sub(q.out), after.reserveBase(), "abc reserve")
+	want := before.Add(sdk.NewCoin(s.abc, q.out)).Sub(sdk.NewCoin(chain.Denom, in.Add(s.params.MarketTakerFee.Amount).Add(s.txFee(t, res))))
+	require.Equal(t, want, s.balances(t, s.trader, chain.Denom, s.abc), "trader balances")
+
+	block := s.blockEvents(t, res.Height)
+	require.Equal(t, q.treasury, s.transferred(t, block, s.cpFees, s.distribution, chain.Denom), "treasury share to the community pool in EndBlock")
+	require.True(t, s.balance(t, s.cpFees, chain.Denom).IsZero(), "txfeecollector_cp keeps ubze after EndBlock")
+}
+
+// 16. Pools the msg server or ValidateBasic refuse: nothing moves but the tx
+// fee (none when CheckTx refused it), no pool appears. A refused fee or fee
+// destination is tried on a pair with no pool, so the duplicate check passes.
+func (s *ammSuite) createPoolRefusals(t *testing.T) {
+	noSupply := "factory/" + s.lp.FormattedAddress() + "/nosupply"
+	pool := func(base, quote, fee, feeDest string, stable bool, initBase int64) map[string]any {
+		return map[string]any{
+			"@type": "/bze.tradebin.MsgCreateLiquidityPool", "creator": s.lp.FormattedAddress(),
+			"base": base, "quote": quote, "fee": fee, "fee_dest": feeDest, "stable": stable,
+			"initial_base": sdkmath.NewInt(initBase).String(), "initial_quote": sdkmath.NewInt(revPoolRev).String(),
+		}
+	}
+	fresh := func(fee, feeDest string) map[string]any {
+		return pool(s.rev, s.usd, fee, feeDest, false, revPoolRev)
+	}
+	s.requireRefusals(t, s.lp, []string{chain.Denom, s.usd, s.rev}, []ammRefusal{
+		{"duplicate pool", pool(s.usd, chain.Denom, ammPoolFee, ammFeeDest, false, revPoolRev), 4000, ammCodespace, "market already exists", false},
+		{"duplicate pool, reversed", pool(chain.Denom, s.usd, ammPoolFee, ammFeeDest, false, revPoolRev), 4000, ammCodespace, "market already exists", false},
+		{"fee below 0.001", fresh("0.0009", ammFeeDest), 10, "sdk", "fee must be at least 0.001 (0.1%)", false},
+		{"fee above 0.05", fresh("0.0501", ammFeeDest), 10, "sdk", "fee must be at most 0.05 (5%)", false},
+		{"fee destination sums to 0.9", fresh(ammPoolFee, `{"treasury":"0","burner":"0.5","providers":"0.4"}`), 4012, ammCodespace, "invalid fee destination", false},
+		{"fee destination sums to 1.1", fresh(ammPoolFee, `{"treasury":"0.1","burner":"0.5","providers":"0.5"}`), 4012, ammCodespace, "invalid fee destination", false},
+		{"negative fee destination", fresh(ammPoolFee, `{"treasury":"-0.1","burner":"0.6","providers":"0.5"}`), 4013, ammCodespace, "negative fee destination", false},
+		{"stable pool", pool(s.rev, s.usd, ammPoolFee, ammFeeDest, true, revPoolRev), 18, "sdk", "stable pools are not supported yet", true},
+		{"denom without supply", pool(noSupply, s.usd, ammPoolFee, ammFeeDest, false, revPoolRev), 4001, ammCodespace, "no supply found for the provided denom", false},
+		{"base equals quote", pool(s.usd, s.usd, ammPoolFee, ammFeeDest, false, revPoolRev), 18, "sdk", "base and quote cannot be the same", true},
+		{"no initial liquidity", pool(s.rev, s.usd, ammPoolFee, ammFeeDest, false, 0), 18, "sdk", "missing initial liquidity", true},
+	})
+	s.requireNoPool(t, s.rev+"_"+s.usd)
+	s.requireNoPool(t, noSupply+"_"+s.usd)
+}
+
+// 17. Swaps the msg server or ValidateBasic refuse: the input never leaves
+// the trader, no pool moves and no taker fee is charged.
+func (s *ammSuite) swapRefusals(t *testing.T) {
+	swap := func(routes []string, in, minOut sdk.Coin) map[string]any {
+		return map[string]any{
+			"@type": "/bze.tradebin.MsgMultiSwap", "creator": s.trader.FormattedAddress(), "routes": routes,
+			"input":      map[string]string{"denom": in.Denom, "amount": in.Amount.String()},
+			"min_output": map[string]string{"denom": minOut.Denom, "amount": minOut.Amount.String()},
+		}
+	}
+	bze := func(amount int64) sdk.Coin { return sdk.NewInt64Coin(chain.Denom, amount) }
+	oneUsd := sdk.NewInt64Coin(s.usd, 1)
+	tooMany := []string{s.usdPool, s.abcPool, s.revPool, s.cpPool, "x_" + chain.Denom, "y_" + chain.Denom}
+	require.Len(t, tooMany, ammMaxRoutes+1)
+	s.requireRefusals(t, s.trader, []string{chain.Denom, s.usd, s.abc}, []ammRefusal{
+		// ⌊1 × 0.002⌋ = 0: a swap must pay a positive pool fee
+		{"amount too small", swap([]string{s.usdPool}, bze(1), oneUsd), 4016, ammCodespace, "amount is too low to be traded", false},
+		{"input denom not in the first pool", swap([]string{s.abcPool}, bze(1_000_000), oneUsd), 4016, ammCodespace,
+			fmt.Sprintf("denom %s does not exist in pool %s", chain.Denom, s.abcPool), false},
+		{"output denom is not the min output denom", swap([]string{s.usdPool}, bze(1_000_000), sdk.NewInt64Coin(s.abc, 1)), 4016, ammCodespace,
+			fmt.Sprintf("expected %s output, got %s", s.abc, s.usd), false},
+		{"unknown pool", swap([]string{"x_" + chain.Denom}, bze(1_000_000), oneUsd), 4015, ammCodespace, "pool x_" + chain.Denom + " not found", false},
+		{"duplicate pool in routes", swap([]string{s.usdPool, s.usdPool}, bze(1_000_000), oneUsd), 4015, ammCodespace, "duplicate route " + s.usdPool, true},
+		{"more than MaxRoutes", swap(tooMany, bze(1_000_000), oneUsd), 4015, ammCodespace, "routes length must be between 1 and 5", true},
+		{"no routes", swap([]string{}, bze(1_000_000), oneUsd), 4015, ammCodespace, "routes length must be between 1 and 5", true},
+		{"insufficient balance", swap([]string{s.usdPool}, bze(ammLpFunds), oneUsd), 10, "sdk", "could not capture user input coins", false},
+	})
+}
+
+// 18. Markets the msg server or ValidateBasic refuse: the existing abc/usd,
+// also asked as usd/abc (the alias index), base equal to quote and a denom
+// without supply. No market appears and no create fee is charged.
+func (s *ammSuite) createMarketRefusals(t *testing.T) {
+	market := func(base, quote string) map[string]any {
+		return map[string]any{"@type": "/bze.tradebin.MsgCreateMarket", "creator": s.lp.FormattedAddress(), "base": base, "quote": quote}
+	}
+	s.requireRefusals(t, s.lp, []string{chain.Denom, s.usd, s.abc}, []ammRefusal{
+		{"duplicate market", market(s.abc, s.usd), 4000, ammCodespace, "market already exists", false},
+		{"duplicate market, reversed", market(s.usd, s.abc), 4000, ammCodespace, "market already exists", false},
+		{"base equals quote", market(s.usd, s.usd), 4010, ammCodespace, "invalid denom provided", true},
+		{"denom without supply", market("factory/"+s.lp.FormattedAddress()+"/nosupply", s.usd), 4001, ammCodespace, "no supply found for the provided denom", false},
+	})
+}
+
+// ammPoolArgs is a create-liquidity-pool as sent and the pool the chain
+// should store for it.
+type ammPoolArgs struct {
+	base, quote                       string
+	initBase, initQuote               int64
+	fee, feeDest                      string
+	wantID, wantBase, wantQuote       string
+	wantReserveBase, wantReserveQuote int64
+}
+
+// createPool creates a pool as the lp and asserts it like step 1: id, sorted
+// denoms, reserves, fee and fee destination, the initial LP locked in the
+// black hole, the create fee to the community pool collector and the lp's
+// spending.
+func (s *ammSuite) createPool(t *testing.T, a ammPoolArgs) poolInfo {
+	t.Helper()
+	// one of the pair is ubze in this suite; balances must not count it twice
+	denoms := []string{chain.Denom}
+	for _, d := range []string{a.base, a.quote} {
+		if d != chain.Denom {
+			denoms = append(denoms, d)
+		}
+	}
+	before := s.balances(t, s.lp, denoms...)
+	res := s.mustExecWith(t, s.lp, []helpers.TxOption{helpers.WithGas(ammTxGas)},
+		"tradebin", "create-liquidity-pool", a.base, a.quote, a.fee, a.feeDest, "false",
+		sdkmath.NewInt(a.initBase).String(), sdkmath.NewInt(a.initQuote).String())
+
+	ev := s.requireTxEvent(t, res, "PoolCreatedEvent", map[string]string{"creator": s.lp.FormattedAddress(), "base": a.wantBase, "quote": a.wantQuote})
+	pool := s.pool(t, a.wantID)
+	require.Equal(t, a.wantBase, pool.Base)
+	require.Equal(t, a.wantQuote, pool.Quote)
+	require.Equal(t, ev.Attributes["lp_denom"], pool.LpDenom)
+	require.Equal(t, sdkmath.NewInt(a.wantReserveBase), pool.reserveBase(), "base reserve")
+	require.Equal(t, sdkmath.NewInt(a.wantReserveQuote), pool.reserveQuote(), "quote reserve")
+	ammRequireDec(t, a.fee, pool.Fee, "pool fee")
+	var dest map[string]string
+	require.NoError(t, json.Unmarshal([]byte(a.feeDest), &dest))
+	ammRequireDec(t, dest["treasury"], pool.FeeDest.Treasury, "treasury share")
+	ammRequireDec(t, dest["burner"], pool.FeeDest.Burner, "burner share")
+	ammRequireDec(t, dest["providers"], pool.FeeDest.Providers, "providers share")
+
+	wantLP := sqrtInt(sdkmath.NewInt(a.initBase).MulRaw(a.initQuote)).MulRaw(lpScale)
+	require.Equal(t, wantLP, s.supply(t, pool.LpDenom), "LP supply")
+	require.Equal(t, wantLP, s.transferred(t, res.Events, s.tradebin, s.blackHole, pool.LpDenom), "initial LP to the black hole")
+	require.Equal(t, s.params.CreateMarketFee.Amount, s.transferred(t, res.Events, s.tradebin, s.cpFees, chain.Denom), "create fee to the community pool collector")
+
+	spent := sdk.NewCoins().Add(sdk.NewInt64Coin(a.base, a.initBase), sdk.NewInt64Coin(a.quote, a.initQuote), s.params.CreateMarketFee, sdk.NewCoin(chain.Denom, s.txFee(t, res)))
+	require.Equal(t, before.Sub(spent...), s.balances(t, s.lp, denoms...), "lp balances")
+	return pool
+}
+
+// ammRequireDec compares two decimals whatever their printed precision (the
+// chain prints LegacyDec with 18 decimals). An omitted zero reads as "".
+func ammRequireDec(t *testing.T, want, got, what string) {
+	t.Helper()
+	dec := func(v string) sdkmath.LegacyDec {
+		if v == "" {
+			return sdkmath.LegacyZeroDec()
+		}
+		d, err := sdkmath.LegacyNewDecFromStr(v)
+		require.NoError(t, err, "%s: %q", what, v)
+		return d
+	}
+	w, g := dec(want), dec(got)
+	require.True(t, w.Equal(g), "%s: want %s, got %s", what, w, g)
+}
+
+// ammRefusal is a message the chain must refuse with code in codespace and a
+// raw log containing reason; checkTx tells whether ValidateBasic refuses it
+// in CheckTx (never included, no fee) or the msg server in DeliverTx.
+type ammRefusal struct {
+	name      string
+	msg       map[string]any
+	code      uint32
+	codespace string
+	reason    string
+	checkTx   bool
+}
+
+// requireRefusals sends each refused message as its own tx from user (signed
+// and broadcast, so the CLI's own ValidateBasic does not stop it) and asserts
+// the code, the reason and that pools, LP supplies, markets and the user's
+// denoms are unchanged but for the tx fee.
+func (s *ammSuite) requireRefusals(t *testing.T, user ibc.Wallet, denoms []string, cases []ammRefusal) {
+	t.Helper()
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			state := s.state(t)
+			before := s.balances(t, user, denoms...)
+			res, err := helpers.ExecMsgs(s.ctx, s.bze, user, []helpers.TxOption{helpers.WithGas(ammTxGas)}, c.msg)
+			reason, err := helpers.RejectionReason(res, err)
+			require.NoError(t, err)
+			require.Contains(t, reason, c.reason)
+			require.EqualValues(t, c.code, res.Code, reason)
+			require.Equal(t, c.codespace, res.Codespace, reason)
+			require.Equal(t, c.checkTx, res.Height == 0, "refused by CheckTx: want %v, got height %d", c.checkTx, res.Height)
+
+			require.Equal(t, state, s.state(t), "state moved on a refused tx")
+			want := before
+			if res.Height > 0 {
+				want = before.Sub(sdk.NewCoin(chain.Denom, s.txFee(t, res)))
+			}
+			require.Equal(t, want, s.balances(t, user, denoms...), "a refused tx only costs the tx fee")
+		})
+	}
+}
+
+func (s *ammSuite) mustExecMsgs(t *testing.T, user ibc.Wallet, msgs ...any) helpers.TxResult {
+	t.Helper()
+	res, err := helpers.ExecMsgs(s.ctx, s.bze, user, []helpers.TxOption{helpers.WithGas(ammTxGas)}, msgs...)
+	require.NoError(t, err)
+	require.Zero(t, res.Code, res.RawLog)
+	return res
+}
+
+// ammState is what a refused tx must not change: every pool as the chain
+// prints it, every pool's LP supply and every market.
+type ammState struct {
+	Pools    string
+	Supplies map[string]string
+	Markets  string
+}
+
+func (s *ammSuite) state(t *testing.T) ammState {
+	t.Helper()
+	pools, err := helpers.Query[struct {
+		List json.RawMessage `json:"list"`
+	}](s.ctx, s.bze, "tradebin", "all-liquidity-pools")
+	require.NoError(t, err)
+	var list []poolInfo
+	require.NoError(t, json.Unmarshal(pools.List, &list))
+	require.NotEmpty(t, list)
+	supplies := map[string]string{}
+	for _, p := range list {
+		supplies[p.LpDenom] = s.supply(t, p.LpDenom).String()
+	}
+	markets, err := helpers.Query[struct {
+		Market json.RawMessage `json:"market"`
+	}](s.ctx, s.bze, "tradebin", "all-markets")
+	require.NoError(t, err)
+	return ammState{Pools: string(pools.List), Supplies: supplies, Markets: string(markets.Market)}
+}
+
+func (s *ammSuite) requireNoPool(t *testing.T, id string) {
+	t.Helper()
+	_, err := helpers.Query[json.RawMessage](s.ctx, s.bze, "tradebin", "liquidity-pool", id)
+	require.Error(t, err, "pool %s exists", id)
+	require.Contains(t, err.Error(), "not found")
+}
+
+// ammSwap is one swap replayed with the chain's decimal math, for any pool
+// fee and fee destination:
+//
+//	fee = ⌊in × poolFee⌋, treasury = ⌊fee × t⌋, burned = ⌊fee × b⌋
+//	net = in − fee, out = ⌊outReserve × net / (inReserve + net)⌋
+//	the input reserve grows by in − treasury − burned
+type ammSwap struct {
+	fee, treasury, burned, out, inReserveAdd sdkmath.Int
+}
+
+func ammQuoteSwap(in, inReserve, outReserve sdkmath.Int, poolFee, treasury, burner string) ammSwap {
+	fee := sdkmath.LegacyNewDecFromInt(in).Mul(sdkmath.LegacyMustNewDecFromStr(poolFee)).TruncateInt()
+	feeDec := sdkmath.LegacyNewDecFromInt(fee)
+	tr := feeDec.Mul(sdkmath.LegacyMustNewDecFromStr(treasury)).TruncateInt()
+	burned := feeDec.Mul(sdkmath.LegacyMustNewDecFromStr(burner)).TruncateInt()
+	net := in.Sub(fee)
+	out := sdkmath.LegacyNewDecFromInt(outReserve.Mul(net)).Quo(sdkmath.LegacyNewDecFromInt(inReserve.Add(net))).TruncateInt()
+	return ammSwap{fee: fee, treasury: tr, burned: burned, out: out, inReserveAdd: in.Sub(tr).Sub(burned)}
+}
+
+// ammDepositResult is what an add-liquidity takes and mints.
+type ammDepositResult struct {
+	base, quote, minted sdkmath.Int
+}
+
+// ammDeposit replays the chain's add-liquidity: the side that would need
+// more than was offered of the other is cut to the pool ratio (rounded down),
+// and the LP minted is the smaller of the two deposit/reserve ratios times
+// the supply, in LegacyDec, truncated.
+func ammDeposit(base, quote, reserveBase, reserveQuote, supply sdkmath.Int) ammDepositResult {
+	d := ammDepositResult{base: base, quote: base.Mul(reserveQuote).Quo(reserveBase)}
+	if d.quote.GT(quote) {
+		d.base, d.quote = quote.Mul(reserveBase).Quo(reserveQuote), quote
+	}
+	baseRatio := sdkmath.LegacyNewDecFromInt(d.base).Quo(sdkmath.LegacyNewDecFromInt(reserveBase))
+	quoteRatio := sdkmath.LegacyNewDecFromInt(d.quote).Quo(sdkmath.LegacyNewDecFromInt(reserveQuote))
+	d.minted = sdkmath.LegacyMinDec(baseRatio, quoteRatio).Mul(sdkmath.LegacyNewDecFromInt(supply)).TruncateInt()
+	return d
+}
+
+// ammWithdraw replays the chain's remove-liquidity: each reserve times
+// burn / supply, in LegacyDec, truncated.
+func ammWithdraw(burn, supply, reserveBase, reserveQuote sdkmath.Int) (base, quote sdkmath.Int) {
+	share := sdkmath.LegacyNewDecFromInt(burn).Quo(sdkmath.LegacyNewDecFromInt(supply))
+	return sdkmath.LegacyNewDecFromInt(reserveBase).Mul(share).TruncateInt(),
+		sdkmath.LegacyNewDecFromInt(reserveQuote).Mul(share).TruncateInt()
+}
+
 // swapQuote is one constant-product swap with the pool fee taken from the
 // input, rounded down like the chain (fee 0.002, half of it burned):
 //
@@ -681,6 +1199,11 @@ type poolInfo struct {
 	Fee          string `json:"fee"`
 	ReserveBase  string `json:"reserve_base"`
 	ReserveQuote string `json:"reserve_quote"`
+	FeeDest      struct {
+		Treasury  string `json:"treasury"`
+		Burner    string `json:"burner"`
+		Providers string `json:"providers"`
+	} `json:"fee_dest"`
 }
 
 func (p poolInfo) reserveBase() sdkmath.Int  { return parseInt(p.ReserveBase) }
