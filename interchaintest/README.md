@@ -120,11 +120,13 @@ Steps, for a candidate `vX.Y.Z` whose previous release is `vP`:
 A handler that branches on the chain id runs on a network with the live
 chain's id. The v8.2.0 entry is one: its network is `beezee-1`, linked to
 simd through Hermes, and channel-3 carries simd's `uusdc`, so the USDC.n
-voucher and the USDC.n/BZE LP denom are the exact mainnet ones. The suite
-locks LP shares in the black hole before the upgrade and checks that the
-handler moves exactly those to the wind-down admin, blocks `uusdc` on
-channel-3 (refused and refunded, while other denoms and exits still work),
-and changes nothing else.
+voucher is the exact mainnet one. The USDC.n/BZE pool is added to genesis,
+because on mainnet it predates v8.1.1 and has a legacy LP denom
+(`ulp_<base>_<quote>`) no release since can create; the black hole and a
+wallet hold its shares. The suite checks that the handler moves exactly the
+black hole's shares to the wind-down admin, blocks `uusdc` on channel-3
+(refused and refunded, while other denoms and exits still work) and changes
+nothing else, and that the wallet can still withdraw from the legacy pool.
 
 All txs use a fixed gas limit, because `--gas auto` does not work on v8.1.1
 and older.

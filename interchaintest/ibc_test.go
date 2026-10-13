@@ -925,13 +925,20 @@ func (s *ibcSuite) supply(t *testing.T, c *cosmos.CosmosChain, denom string) sdk
 // account can be funded in simd's genesis before its key exists.
 func newSimdAccount(t *testing.T) (string, string) {
 	t.Helper()
+	return newAccount(t, chain.SimdBech32Prefix)
+}
+
+// newAccount returns a fresh mnemonic and its address with the bech32
+// prefix, so the account can be given genesis state before its key exists.
+func newAccount(t *testing.T, prefix string) (string, string) {
+	t.Helper()
 	entropy, err := bip39.NewEntropy(256)
 	require.NoError(t, err)
 	mnemonic, err := bip39.NewMnemonic(entropy)
 	require.NoError(t, err)
 	derived, err := hd.Secp256k1.Derive()(mnemonic, "", hd.CreateHDPath(sdk.CoinType, 0, 0).String())
 	require.NoError(t, err)
-	addr, err := sdk.Bech32ifyAddressBytes(chain.SimdBech32Prefix, hd.Secp256k1.Generate()(derived).PubKey().Address())
+	addr, err := sdk.Bech32ifyAddressBytes(prefix, hd.Secp256k1.Generate()(derived).PubKey().Address())
 	require.NoError(t, err)
 	return mnemonic, addr
 }

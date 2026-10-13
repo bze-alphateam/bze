@@ -3,6 +3,8 @@
 package chain
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"slices"
 
@@ -68,6 +70,7 @@ type spec struct {
 	validators   int
 	image        string
 	genesis      []cosmos.GenesisKV
+	edits        []func(map[string]any) error
 	minGasPrices string
 }
 
@@ -99,6 +102,12 @@ func WithMinGasPrices(prices string) Option {
 // WithGenesis appends genesis overrides, applied after DefaultGenesis().
 func WithGenesis(extra ...cosmos.GenesisKV) Option {
 	return func(s *spec) { s.genesis = append(s.genesis, extra...) }
+}
+
+// WithGenesisEdit edits the genesis JSON after the overrides, e.g. to append
+// bank balances or module state a key override would replace whole.
+func WithGenesisEdit(edit func(genesis map[string]any) error) Option {
+	return func(s *spec) { s.edits = append(s.edits, edit) }
 }
 
 // WithoutGenesis drops the genesis overrides set so far on the given keys,
@@ -144,7 +153,7 @@ func BzeChainSpec(opts ...Option) *interchaintest.ChainSpec {
 			GasPrices:      GasPrices,
 			GasAdjustment:  GasAdjustment,
 			TrustingPeriod: trustingPeriod,
-			ModifyGenesis:  cosmos.ModifyGenesis(s.genesis),
+			ModifyGenesis:  modifyGenesis(s.genesis, s.edits),
 			ConfigFileOverrides: map[string]any{
 				"config/config.toml": testutil.Toml{
 					"consensus": testutil.Toml{
@@ -158,5 +167,26 @@ func BzeChainSpec(opts ...Option) *interchaintest.ChainSpec {
 		},
 		NumValidators: &validators,
 		NumFullNodes:  &fullNodes,
+	}
+}
+
+// modifyGenesis applies the key overrides, then the edits.
+func modifyGenesis(kvs []cosmos.GenesisKV, edits []func(map[string]any) error) func(ibc.ChainConfig, []byte) ([]byte, error) {
+	overrides := cosmos.ModifyGenesis(kvs)
+	return func(cfg ibc.ChainConfig, genesis []byte) ([]byte, error) {
+		out, err := overrides(cfg, genesis)
+		if err != nil || len(edits) == 0 {
+			return out, err
+		}
+		var g map[string]any
+		if err := json.Unmarshal(out, &g); err != nil {
+			return nil, fmt.Errorf("decode genesis: %w", err)
+		}
+		for _, edit := range edits {
+			if err := edit(g); err != nil {
+				return nil, fmt.Errorf("edit genesis: %w", err)
+			}
+		}
+		return json.Marshal(g)
 	}
 }
