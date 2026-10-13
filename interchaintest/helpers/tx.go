@@ -21,7 +21,8 @@ const (
 	simulationErrorMarker = "rpc error: code = Unknown desc ="
 
 	txInclusionTimeout = 30 * time.Second
-	pollInterval       = 500 * time.Millisecond
+	// indexRetry spaces the reads of a tx the node has not indexed yet.
+	indexRetry = 200 * time.Millisecond
 )
 
 // TxResult is a broadcast transaction. Code is the CheckTx code when the tx was
@@ -195,22 +196,51 @@ func awaitBroadcast(ctx context.Context, chain *cosmos.CosmosChain, stdout []byt
 	return WaitForTx(ctx, chain, broadcast.TxHash)
 }
 
-// WaitForTx polls `bzed q tx <hash>` until the tx is included or 30 s pass.
+// WaitForTx waits up to 30 s for the tx to be included, following the chain's
+// blocks, then reads its result with `bzed q tx <hash>`.
 func WaitForTx(ctx context.Context, chain *cosmos.CosmosChain, txHash string) (TxResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, txInclusionTimeout)
 	defer cancel()
 
-	var lastErr error
+	w, err := watchBlocks(ctx, chain)
+	if err != nil {
+		return TxResult{}, err
+	}
+	defer w.Close()
+
+	// Watching first, then checking: a tx included before the watch's
+	// lookback is already in the node's tx index.
+	if res, err := Query[txResponse](ctx, chain, "tx", txHash); err == nil {
+		return res.result(), nil
+	}
+	hash := strings.ToUpper(txHash)
+	_, err = w.until(ctx, func(b streamBlock) (bool, error) {
+		for _, tx := range b.Txs {
+			if tx.Hash == hash {
+				return true, nil
+			}
+		}
+		return false, nil
+	})
+	if err != nil {
+		return TxResult{}, fmt.Errorf("tx %s not included: %w", txHash, err)
+	}
+	return queryIncludedTx(ctx, chain, txHash)
+}
+
+// queryIncludedTx reads an included tx with `bzed q tx <hash>`. The node
+// indexes a block's txs just after announcing it, so a miss is retried
+// briefly.
+func queryIncludedTx(ctx context.Context, chain *cosmos.CosmosChain, txHash string) (TxResult, error) {
 	for {
 		res, err := Query[txResponse](ctx, chain, "tx", txHash)
 		if err == nil {
 			return res.result(), nil
 		}
-		lastErr = err
 		select {
 		case <-ctx.Done():
-			return TxResult{}, fmt.Errorf("tx %s not included: %w (last error: %v)", txHash, ctx.Err(), lastErr)
-		case <-time.After(pollInterval):
+			return TxResult{}, fmt.Errorf("tx %s included but not queryable: %w (last error: %v)", txHash, ctx.Err(), err)
+		case <-time.After(indexRetry):
 		}
 	}
 }

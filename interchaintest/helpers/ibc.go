@@ -86,32 +86,42 @@ type txSearch struct {
 	Txs []txResponse `json:"txs"`
 }
 
-// waitForPacketTx polls `q txs` for the successful tx emitting eventType for
-// the packet, for up to two minutes. A relayer may batch several packets into
-// one tx, so callers select the packet's events by their attributes.
+// waitForPacketTx waits up to two minutes for the successful tx emitting
+// eventType for the packet, following the chain's blocks, and reads it with
+// `q tx`. A relayer may batch several packets into one tx, so callers select
+// the packet's events by their attributes.
 func waitForPacketTx(ctx context.Context, chain *cosmos.CosmosChain, eventType, channelAttr, channel string, sequence uint64) (TxResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, packetTimeout)
 	defer cancel()
 
+	w, err := watchBlocks(ctx, chain)
+	if err != nil {
+		return TxResult{}, err
+	}
+	defer w.Close()
+
+	// Watching first, then checking the tx index for an earlier delivery.
 	query := fmt.Sprintf("%s.%s='%s' AND %s.packet_sequence='%d'", eventType, channelAttr, channel, eventType, sequence)
-	var lastErr error
-	for {
-		res, err := Query[txSearch](ctx, chain, "txs", "--query", query)
-		switch {
-		case err != nil:
-			lastErr = err
-		case len(res.Txs) > 0:
-			for _, tx := range res.Txs {
-				if tx.Code == 0 {
-					return tx.result(), nil
-				}
+	if res, err := Query[txSearch](ctx, chain, "txs", "--query", query); err == nil {
+		for _, tx := range res.Txs {
+			if tx.Code == 0 {
+				return tx.result(), nil
 			}
-			lastErr = fmt.Errorf("only failed txs match %q", query)
-		}
-		select {
-		case <-ctx.Done():
-			return TxResult{}, fmt.Errorf("no %s tx for %s sequence %d: %w (last error: %v)", eventType, channel, sequence, ctx.Err(), lastErr)
-		case <-time.After(pollInterval):
 		}
 	}
+	attrs := map[string]string{channelAttr: channel, "packet_sequence": strconv.FormatUint(sequence, 10)}
+	var hash string
+	_, err = w.until(ctx, func(b streamBlock) (bool, error) {
+		for _, tx := range b.Txs {
+			if tx.Code == 0 && len(EventsWith(filterEvents(tx.Events, eventType), attrs)) > 0 {
+				hash = tx.Hash
+				return true, nil
+			}
+		}
+		return false, nil
+	})
+	if err != nil {
+		return TxResult{}, fmt.Errorf("no %s tx for %s sequence %d: %w", eventType, channel, sequence, err)
+	}
+	return queryIncludedTx(ctx, chain, hash)
 }

@@ -26,19 +26,20 @@ func AppVersion(ctx context.Context, chain *cosmos.CosmosChain) (string, error) 
 // WaitForHeight blocks until the chain's latest height is at least h and
 // returns it, or fails when ctx ends. Bound it with a context deadline.
 func WaitForHeight(ctx context.Context, chain *cosmos.CosmosChain, h int64) (int64, error) {
-	var cur int64
-	var err error
-	for {
-		cur, err = chain.Height(ctx)
-		if err == nil && cur >= h {
-			return cur, nil
-		}
-		select {
-		case <-ctx.Done():
-			return cur, fmt.Errorf("height %d not reached (latest %d, last error %v): %w", h, cur, err, ctx.Err())
-		case <-time.After(pollInterval):
-		}
+	w, err := watchBlocks(ctx, chain)
+	if err != nil {
+		return 0, err
 	}
+	defer w.Close()
+
+	if cur := w.Height(); cur >= h {
+		return cur, nil
+	}
+	b, err := w.until(ctx, func(b streamBlock) (bool, error) { return b.Height >= h, nil })
+	if err != nil {
+		return w.Height(), fmt.Errorf("height %d not reached (latest %d): %w", h, w.Height(), err)
+	}
+	return b.Height, nil
 }
 
 // WaitForHalt waits until the chain reaches haltHeight, then watches it for
