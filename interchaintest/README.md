@@ -38,11 +38,11 @@ built, and the image carries it in the `org.opencontainers.image.version` label.
 ```bash
 make e2e                            # every suite but the upgrade suite
 make e2e-smoke                      # the harness smoke test
-make e2e-denomrewards               # denom rewards lifecycle (~5 min)
+make e2e-denomrewards               # denom rewards lifecycle (~8 min)
 make e2e-amm                        # AMM swaps, liquidity and the fee path (~3 min)
-make e2e-tokenfactory               # staking rewards + tokenfactory admin and branding (~4 min)
-make e2e-halt                       # halted denoms: gov halt/unhalt, refused trading, exits
-make e2e-ibc                        # blocked inbound IBC: bze <-> simd through Hermes
+make e2e-tokenfactory               # staking rewards + tokenfactory admin and branding (~5 min)
+make e2e-halt                       # halted denoms: gov halt/unhalt, refused trading, exits (~5 min)
+make e2e-ibc                        # blocked inbound IBC: bze <-> simd through Hermes (~12 min)
 make e2e-fees                       # fee destinations, minimum gas prices, ante refusals, fee grants, txfeecollector params
 make e2e-orderbook                  # order-book engine: fills, remainders, dust, cancels, refusals, queue limits
 make e2e-tradingrewards             # trading rewards: create, gov activation, hooks, leaderboard, payout, cleanup (~20 min)
@@ -144,6 +144,10 @@ adds its own with `chain.WithGenesis(...)`.
   Hermes relayer (pinned in `chain/ibc.go`; send and follow packets with
   `helpers.SendIbc`, `WaitForRecv`, `WaitForAck`, `WaitForTimeout`).
 - Fund users with `interchaintest.GetAndFundTestUsers`.
+- The helpers run every `bzed` CLI command inside the node's running
+  container (`docker exec`, `helpers/exec.go`), not in a fresh container per
+  command as interchaintest's `ChainNode.Exec` does; use the helpers, not
+  `ChainNode.Exec`, in suites.
 - Send messages with `helpers.ExecTx` / `helpers.ExecTxWith` (a non-zero
   `Code` is a rejection, not an error; `helpers.WithFlags` appends raw CLI
   flags that win over the defaults, e.g. `--gas 0`).
