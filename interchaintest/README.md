@@ -44,6 +44,7 @@ make e2e-tokenfactory               # staking rewards + tokenfactory admin and b
 make e2e-halt                       # halted denoms: gov halt/unhalt, refused trading, exits
 make e2e-ibc                        # blocked inbound IBC: bze <-> simd through Hermes
 make e2e-orderbook                  # order-book engine: fills, remainders, dust, cancels, refusals, queue limits
+make e2e-tradingrewards             # trading rewards: create, gov activation, hooks, leaderboard, payout, cleanup (~20 min)
 make e2e-upgrade                    # chain upgrade from the previous release (see below)
 cd interchaintest && go test -v -run TestSmoke ./...
 ```
@@ -153,3 +154,10 @@ adds its own with `chain.WithGenesis(...)`.
 Building an image from scratch takes about 3–4 minutes (Go build caches make
 rebuilds faster). The smoke test takes about a minute, most of it network
 start-up.
+
+## Known gaps
+
+- Trading rewards: the 30-day expiry of a pending reward, which burns its
+  escrow, takes 720 `hour` epochs (about an hour) and is covered by unit tests
+  only. The trading reward candidates (every trader's running total) have no
+  query, so the suite sees them only through the leaderboard.
