@@ -138,8 +138,10 @@ func TestDenomRewards(t *testing.T) {
 	t.Run("14 schedules on a new and on existing prize denoms", s.schedulesCoexist)
 	t.Run("15 exit pays every prize, re-join while the unlock is pending", s.exitAndRejoin)
 	t.Run("16 prize denom cap", s.prizeDenomCap)
-	t.Run("17 refusals leave the state unchanged", s.refusals)
-	t.Run("18 the pending unlock pays beside the new position", s.unlockBesideNewPosition)
+	// the unlock runs before the refusals: an unlock paid while a refusal is
+	// checked would read as a state change
+	t.Run("17 the pending unlock pays beside the new position", s.unlockBesideNewPosition)
+	t.Run("18 refusals leave the state unchanged", s.refusals)
 }
 
 type denomRewardsSuite struct {
