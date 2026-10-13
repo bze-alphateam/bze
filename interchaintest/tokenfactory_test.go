@@ -323,7 +323,16 @@ func (s *tokenFactorySuite) createRefusals(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			msg := map[string]any{"@type": "/bze.tokenfactory.MsgCreateDenom", "creator": admin, "subdenom": c.subdenom}
 			s.requireMsgRefused(t, s.admin, msg, c.want)
-			if c.subdenom != "tok" && c.subdenom != "" {
+			if c.subdenom == "tok!" {
+				// an invalid denom can not be stored: the bank query refuses it
+				// before looking for metadata
+				denom := "factory/" + admin + "/" + c.subdenom
+				_, err := s.authorityOf(denom)
+				require.ErrorContains(t, err, "denom authority not found for denom "+denom)
+				_, err = s.metadataOf(denom)
+				require.ErrorContains(t, err, "invalid denom: "+denom)
+				require.True(t, s.supplyOf(t, denom).IsZero(), "%s has supply", denom)
+			} else if c.subdenom != "tok" && c.subdenom != "" {
 				s.requireNoDenom(t, "factory/"+admin+"/"+c.subdenom)
 			}
 		})

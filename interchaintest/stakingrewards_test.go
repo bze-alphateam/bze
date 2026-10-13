@@ -163,6 +163,8 @@ type stakingRewardsSuite struct {
 	// funded is all prz escrowed by staking rewards, paid all prz paid out of
 	// the escrow; the module holds exactly baseline + funded - paid
 	funded, paid sdkmath.Int
+	// paidA is what the first reward (rewardID) paid out, for its dust check
+	paidA sdkmath.Int
 
 	rewardID string
 	window   int64 // the day epoch D
@@ -176,7 +178,7 @@ func setupStakingRewards(t *testing.T, ctx context.Context, bze *cosmos.CosmosCh
 	s := &stakingRewardsSuite{
 		ctx: ctx, bze: bze,
 		baseline: map[string]sdkmath.Int{},
-		funded:   sdkmath.ZeroInt(), paid: sdkmath.ZeroInt(),
+		funded:   sdkmath.ZeroInt(), paid: sdkmath.ZeroInt(), paidA: sdkmath.ZeroInt(),
 		unlockAt: map[string]int64{},
 	}
 
@@ -356,6 +358,7 @@ func (s *stakingRewardsSuite) claim(t *testing.T) {
 		"reward_id": s.rewardID, "address": alice, "amount": pending.String(),
 	})
 	s.paid = s.paid.Add(pending)
+	s.paidA = s.paidA.Add(pending)
 	require.Equal(t, before.Add(pending).String(), s.balance(t, alice, s.prz).String())
 	s.requirePending(t, s.alice, 0)
 	s.requireEscrow(t)
@@ -382,6 +385,7 @@ func (s *stakingRewardsSuite) exit(t *testing.T) {
 
 		// the exit pays what is pending and locks the stake
 		s.paid = s.paid.Add(pending)
+		s.paidA = s.paidA.Add(pending)
 		require.Equal(t, przBefore.Add(pending).String(), s.balance(t, addr, s.prz).String(), "exit must pay %s's pending", user.KeyName())
 		require.Equal(t, stkBefore.String(), s.balance(t, addr, s.stk).String(), "the stake stays locked until the unlock epoch")
 		require.Equal(t, stakedBefore.Sub(amount).String(), s.stakingReward(t).staked().String())
@@ -495,7 +499,8 @@ func (s *stakingRewardsSuite) createFeeInFactoryToken(t *testing.T) {
 
 	// the fee swap ran on the pool as the previous block left it
 	pool := s.poolAt(t, poolID, res.Height-1)
-	poolFee := sdkmath.LegacyMustNewDecFromStr(pool.Fee)
+	// the query prints the stored LegacyDec as its 18-decimal scaled integer
+	poolFee := sdkmath.LegacyNewDecFromIntWithPrec(parseInt(pool.Fee), sdkmath.LegacyPrecision)
 	// the providers keep the pool fee, so the input reserve grows by the whole input
 	base, quote := pool.reserveBase().Add(in), pool.reserveQuote().Sub(out)
 	txOut := srSwapOut(txFee.Amount, base, quote, poolFee)
@@ -790,6 +795,7 @@ func (s *stakingRewardsSuite) lastExitRemoves(t *testing.T) {
 	// MsgDeleteStakingReward has nothing left to delete
 	s.requireTxEvent(t, res, "StakingRewardFinishEvent", map[string]string{"reward_id": s.rewardID})
 	s.paid = s.paid.Add(pending)
+	s.paidA = s.paidA.Add(pending)
 	require.Equal(t, przBefore.Add(pending).String(), s.balance(t, carol, s.prz).String())
 	s.requireQueuedUnlock(t, s.carol, res.Height, sdkmath.NewInt(srCarolStake))
 
@@ -801,8 +807,8 @@ func (s *stakingRewardsSuite) lastExitRemoves(t *testing.T) {
 	s.requireRefused(t, "invalid reward_id", s.dave, "rewards", "delete-staking-reward", s.rewardID)
 
 	// what the rounding left behind stays in the module: the reward's whole
-	// budget minus everything paid
-	dust := sdkmath.NewInt(srPrize * srDuration).Sub(s.paid)
+	// budget minus everything it paid
+	dust := sdkmath.NewInt(srPrize * srDuration).Sub(s.paidA)
 	require.Equal(t, dust.String(), sdkmath.NewInt(srPrize-
 		mulFloor(srAliceStake, s.delta2)-mulFloor(srBobStake, s.delta2)-mulFloor(srCarolStake, s.delta2)).String(),
 		"the dust must be exactly the second payout's remainder")
