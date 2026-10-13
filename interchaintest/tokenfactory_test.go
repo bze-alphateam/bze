@@ -230,7 +230,7 @@ func (s *tokenFactorySuite) createFeeAndDefaultMetadata(t *testing.T) {
 	before := s.allBalances(t, payer)
 
 	res := s.mustExec(t, s.payer, "tokenfactory", "create-denom", "gas")
-	require.Equal(t, before.Sub(fee, sdk.NewCoin(chain.Denom, s.txFee(t, res))), s.allBalances(t, payer),
+	require.Equal(t, before.Sub(fee.Add(sdk.NewCoin(chain.Denom, s.txFee(t, res)))), s.allBalances(t, payer),
 		"payer must pay exactly the create fee and the tx fee")
 	events := helpers.TxEvents(res, "transfer")
 	require.Equal(t, fee.Amount.String(), s.transferred(t, events, payer, s.tfModule, chain.Denom).String(), "the create fee to the tokenfactory module")

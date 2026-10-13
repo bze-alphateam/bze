@@ -979,7 +979,11 @@ func (s *ammSuite) createPool(t *testing.T, a ammPoolArgs) poolInfo {
 	require.Equal(t, wantLP, s.transferred(t, res.Events, s.tradebin, s.blackHole, pool.LpDenom), "initial LP to the black hole")
 	require.Equal(t, s.params.CreateMarketFee.Amount, s.transferred(t, res.Events, s.tradebin, s.cpFees, chain.Denom), "create fee to the community pool collector")
 
-	spent := sdk.NewCoins().Add(sdk.NewInt64Coin(a.base, a.initBase), sdk.NewInt64Coin(a.quote, a.initQuote), s.params.CreateMarketFee, sdk.NewCoin(chain.Denom, s.txFee(t, res)))
+	// Coins.Add needs its arguments sorted: add one coin at a time
+	spent := sdk.NewCoins()
+	for _, c := range []sdk.Coin{sdk.NewInt64Coin(a.base, a.initBase), sdk.NewInt64Coin(a.quote, a.initQuote), s.params.CreateMarketFee, sdk.NewCoin(chain.Denom, s.txFee(t, res))} {
+		spent = spent.Add(c)
+	}
 	require.Equal(t, before.Sub(spent...), s.balances(t, s.lp, denoms...), "lp balances")
 	return pool
 }
