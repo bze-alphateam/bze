@@ -48,6 +48,7 @@ make e2e-orderbook                  # order-book engine: fills, remainders, dust
 make e2e-tradingrewards             # trading rewards: create, gov activation, hooks, leaderboard, payout, cleanup (~20 min)
 make e2e-burner                     # burner: fund routing, periodic burn and interval, raffles, locked IBC coins (~15 min)
 make e2e-cointrunk                  # cointrunk: domains and publishers by gov, free and paid articles, monthly limit, respect tax
+make e2e-params                     # tradebin, rewards and tokenfactory params by gov: authority, refusals, each param's effect on a real tx
 make e2e-upgrade                    # chain upgrade from the previous release (see below)
 cd interchaintest && go test -v -run TestSmoke ./...
 ```
@@ -88,8 +89,8 @@ the validators on the candidate image and checks:
   `bzed version` changed;
 - the upgrade block changes no supply other than what its own bank events
   mint (inflation) and burn, and no seeded account, module balance, pool, LP
-  supply, market, resting order, denom admin, metadata, branding or halted
-  denom;
+  supply, market, resting order, denom admin, metadata, branding, halted
+  denom or tradebin param;
 - staking and denom rewards keep their stakes, accumulators, schedules and
   pending amounts, and the next `day` tick pays exactly one day (the epoch
   hooks are still wired);
