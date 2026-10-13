@@ -56,6 +56,7 @@ type txOptions struct {
 	fees      string
 	gas       uint64
 	gasPrices string
+	flags     []string
 }
 
 // TxOption customises ExecTxWith.
@@ -76,6 +77,13 @@ func WithGas(gas uint64) TxOption {
 // non-native denom), with --gas auto or a WithGas limit. WithFees wins over it.
 func WithGasPrices(prices string) TxOption {
 	return func(o *txOptions) { o.gasPrices = prices }
+}
+
+// WithFlags appends raw CLI flags after the ones ExecTxWith sets, so they win
+// over them (e.g. "--gas", "0", or "--gas-prices", "" to simulate and send an
+// empty fee).
+func WithFlags(flags ...string) TxOption {
+	return func(o *txOptions) { o.flags = append(o.flags, flags...) }
 }
 
 func (o txOptions) prices(cfg ibc.ChainConfig) string {
@@ -149,6 +157,8 @@ func ExecTxWith(ctx context.Context, chain *cosmos.CosmosChain, user ibc.Wallet,
 			"--gas-prices", o.prices(cfg),
 		)
 	}
+
+	cmd = append(cmd, o.flags...)
 
 	node := chain.GetNode()
 	stdout, _, err := node.Exec(ctx, node.NodeCommand(cmd...), cfg.Env)

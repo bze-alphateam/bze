@@ -64,9 +64,10 @@ func BzeImage(tag string) ibc.DockerImage {
 }
 
 type spec struct {
-	validators int
-	image      string
-	genesis    []cosmos.GenesisKV
+	validators   int
+	image        string
+	genesis      []cosmos.GenesisKV
+	minGasPrices string
 }
 
 // Option customises BzeChainSpec.
@@ -80,6 +81,12 @@ func WithValidators(n int) Option {
 // WithImage sets the bze image tag (default DefaultTag()).
 func WithImage(tag string) Option {
 	return func(s *spec) { s.image = tag }
+}
+
+// WithMinGasPrices sets the nodes' minimum-gas-prices (default GasPrices).
+// Txs still pay GasPrices by default.
+func WithMinGasPrices(prices string) Option {
+	return func(s *spec) { s.minGasPrices = prices }
 }
 
 // WithGenesis appends genesis overrides, applied after DefaultGenesis().
@@ -105,7 +112,7 @@ func WithoutGenesis(keys ...string) Option {
 // BzeChainSpec returns the interchaintest spec of a bze e2e network: one
 // validator, no full nodes, 1 s blocks and the fast-epoch genesis.
 func BzeChainSpec(opts ...Option) *interchaintest.ChainSpec {
-	s := spec{validators: 1, image: DefaultTag(), genesis: DefaultGenesis()}
+	s := spec{validators: 1, image: DefaultTag(), genesis: DefaultGenesis(), minGasPrices: GasPrices}
 	for _, opt := range opts {
 		opt(&s)
 	}
@@ -138,7 +145,7 @@ func BzeChainSpec(opts ...Option) *interchaintest.ChainSpec {
 					},
 				},
 				"config/app.toml": testutil.Toml{
-					"minimum-gas-prices": GasPrices,
+					"minimum-gas-prices": s.minGasPrices,
 				},
 			},
 		},

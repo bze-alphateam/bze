@@ -43,6 +43,7 @@ make e2e-amm                        # AMM swaps, liquidity and the fee path (~3 
 make e2e-tokenfactory               # staking rewards + tokenfactory admin and branding (~4 min)
 make e2e-halt                       # halted denoms: gov halt/unhalt, refused trading, exits
 make e2e-ibc                        # blocked inbound IBC: bze <-> simd through Hermes
+make e2e-fees                       # fee destinations, minimum gas prices, ante refusals, fee grants, txfeecollector params
 make e2e-orderbook                  # order-book engine: fills, remainders, dust, cancels, refusals, queue limits
 make e2e-tradingrewards             # trading rewards: create, gov activation, hooks, leaderboard, payout, cleanup (~20 min)
 make e2e-upgrade                    # chain upgrade from the previous release (see below)
@@ -134,13 +135,15 @@ adds its own with `chain.WithGenesis(...)`.
 
 ## Writing a suite
 
-- Start the network with `chain.Start(t, ctx, opts...)`, or with
+- Start the network with `chain.Start(t, ctx, opts...)` (options such as
+  `chain.WithGenesis` or `chain.WithMinGasPrices`), or with
   `chain.StartIbc` for bze plus an ibc-go `simd` counterparty connected by a
   Hermes relayer (pinned in `chain/ibc.go`; send and follow packets with
   `helpers.SendIbc`, `WaitForRecv`, `WaitForAck`, `WaitForTimeout`).
 - Fund users with `interchaintest.GetAndFundTestUsers`.
 - Send messages with `helpers.ExecTx` / `helpers.ExecTxWith` (a non-zero
-  `Code` is a rejection, not an error).
+  `Code` is a rejection, not an error; `helpers.WithFlags` appends raw CLI
+  flags that win over the defaults, e.g. `--gas 0`).
 - Read state with `helpers.Query[T]`, `helpers.Balance`, events with
   `helpers.TxEvents` / `helpers.BlockEvents`.
 - Wait for time with `helpers.WaitForEpoch`, pass gov messages with
