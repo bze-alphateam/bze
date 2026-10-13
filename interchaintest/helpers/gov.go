@@ -71,7 +71,7 @@ func SubmitAndPassProposalWith(ctx context.Context, c *cosmos.CosmosChain, propo
 
 	node := c.GetNode()
 	rel := path.Join("proposals", strconv.FormatInt(time.Now().UnixNano(), 10)+".json")
-	if err := node.WriteFile(ctx, content, rel); err != nil {
+	if err := writeNodeFile(ctx, node, content, rel); err != nil {
 		return 0, fmt.Errorf("write proposal file: %w", err)
 	}
 
@@ -104,29 +104,17 @@ func SubmitAndPassProposalWith(ctx context.Context, c *cosmos.CosmosChain, propo
 // validatorKey is the key interchaintest gives each validator in its node's keyring.
 const validatorKey = "validator"
 
-// voteYesAllValidators votes yes with every validator. interchaintest votes
-// with --gas auto; with a fixed gas limit or fee in opts the votes use them too.
+// voteYesAllValidators votes yes with every validator, each with its own key
+// on its own node, with the submit tx's options (--gas auto by default; a
+// fixed gas limit or fee for releases where --gas auto does not work).
 func voteYesAllValidators(ctx context.Context, c *cosmos.CosmosChain, id uint64, opts []TxOption) error {
-	var o txOptions
-	for _, opt := range opts {
-		opt(&o)
-	}
-	if o.gas == 0 && o.fees == "" {
-		return c.VoteOnProposalAllValidators(ctx, id, "yes")
-	}
-	gas := o.gas
-	if gas == 0 {
-		gas = DefaultFixedGas
-	}
-	args := []string{"gov", "vote", strconv.FormatUint(id, 10), "yes", "--gas", strconv.FormatUint(gas, 10)}
-	if o.fees != "" {
-		args = append(args, "--fees", o.fees)
-	} else {
-		args = append(args, "--gas-prices", o.prices(c.Config()))
-	}
 	for _, v := range c.Validators {
-		if _, err := v.ExecTx(ctx, validatorKey, args...); err != nil {
+		res, err := execTxOn(ctx, c, v, validatorKey, opts, "gov", "vote", strconv.FormatUint(id, 10), "yes")
+		if err != nil {
 			return fmt.Errorf("validator %s: %w", v.Name(), err)
+		}
+		if res.Code != 0 {
+			return fmt.Errorf("validator %s: vote refused: code %d: %s", v.Name(), res.Code, res.RawLog)
 		}
 	}
 	return nil

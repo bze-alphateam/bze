@@ -97,7 +97,7 @@ func ExecMsgs(ctx context.Context, chain *cosmos.CosmosChain, user ibc.Wallet, o
 
 	node := chain.GetNode()
 	name := fmt.Sprintf("tx-%s-%d", user.KeyName(), txFileSeq.Add(1))
-	if err := node.WriteFile(ctx, unsigned, name+".json"); err != nil {
+	if err := writeNodeFile(ctx, node, unsigned, name+".json"); err != nil {
 		return TxResult{}, fmt.Errorf("write unsigned tx: %w", err)
 	}
 	unsignedPath := path.Join(node.HomeDir(), name+".json")
@@ -109,10 +109,10 @@ func ExecMsgs(ctx context.Context, chain *cosmos.CosmosChain, user ibc.Wallet, o
 		"--chain-id", cfg.ChainID,
 		"--output-document", signedPath,
 	)
-	if _, _, err := node.Exec(ctx, sign, cfg.Env); err != nil {
+	if _, _, err := execNode(ctx, node, sign); err != nil {
 		return TxResult{}, fmt.Errorf("sign tx: %w", err)
 	}
-	stdout, _, err := node.Exec(ctx, node.NodeCommand("tx", "broadcast", signedPath, "--output", "json"), cfg.Env)
+	stdout, _, err := execNode(ctx, node, node.NodeCommand("tx", "broadcast", signedPath, "--output", "json"))
 	if err != nil {
 		return TxResult{}, fmt.Errorf("broadcast tx: %w", err)
 	}

@@ -127,6 +127,12 @@ func ExecTx(ctx context.Context, chain *cosmos.CosmosChain, user ibc.Wallet, arg
 
 // ExecTxWith is ExecTx with options (WithFees, WithGas).
 func ExecTxWith(ctx context.Context, chain *cosmos.CosmosChain, user ibc.Wallet, opts []TxOption, args ...string) (TxResult, error) {
+	return execTxOn(ctx, chain, chain.GetNode(), user.KeyName(), opts, args...)
+}
+
+// execTxOn is ExecTxWith signed with keyName from node's keyring, e.g. a
+// validator's own key on its node.
+func execTxOn(ctx context.Context, chain *cosmos.CosmosChain, node *cosmos.ChainNode, keyName string, opts []TxOption, args ...string) (TxResult, error) {
 	var o txOptions
 	for _, opt := range opts {
 		opt(&o)
@@ -135,7 +141,7 @@ func ExecTxWith(ctx context.Context, chain *cosmos.CosmosChain, user ibc.Wallet,
 	cfg := chain.Config()
 	cmd := append([]string{"tx"}, args...)
 	cmd = append(cmd,
-		"--from", user.KeyName(),
+		"--from", keyName,
 		"--keyring-backend", "test",
 		"--chain-id", cfg.ChainID,
 		"--output", "json",
@@ -160,8 +166,7 @@ func ExecTxWith(ctx context.Context, chain *cosmos.CosmosChain, user ibc.Wallet,
 
 	cmd = append(cmd, o.flags...)
 
-	node := chain.GetNode()
-	stdout, _, err := node.Exec(ctx, node.NodeCommand(cmd...), cfg.Env)
+	stdout, _, err := execNode(ctx, node, node.NodeCommand(cmd...))
 	if err != nil {
 		// On a non-zero exit interchaintest returns no stdout/stderr: the CLI
 		// output is in the error text.
