@@ -331,7 +331,8 @@ func (s *tokenFactorySuite) createRefusals(t *testing.T) {
 				require.ErrorContains(t, err, "denom authority not found for denom "+denom)
 				_, err = s.metadataOf(denom)
 				require.ErrorContains(t, err, "invalid denom: "+denom)
-				require.True(t, s.supplyOf(t, denom).IsZero(), "%s has supply", denom)
+				_, err = helpers.Query[json.RawMessage](s.ctx, s.bze, "bank", "total-supply-of", denom)
+				require.ErrorContains(t, err, "invalid denom: "+denom)
 			} else if c.subdenom != "tok" && c.subdenom != "" {
 				s.requireNoDenom(t, "factory/"+admin+"/"+c.subdenom)
 			}
