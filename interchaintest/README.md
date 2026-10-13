@@ -47,6 +47,7 @@ make e2e-fees                       # fee destinations, minimum gas prices, ante
 make e2e-orderbook                  # order-book engine: fills, remainders, dust, cancels, refusals, queue limits
 make e2e-tradingrewards             # trading rewards: create, gov activation, hooks, leaderboard, payout, cleanup (~20 min)
 make e2e-burner                     # burner: fund routing, periodic burn and interval, raffles, locked IBC coins (~15 min)
+make e2e-cointrunk                  # cointrunk: domains and publishers by gov, free and paid articles, monthly limit, respect tax
 make e2e-upgrade                    # chain upgrade from the previous release (see below)
 cd interchaintest && go test -v -run TestSmoke ./...
 ```
@@ -168,3 +169,6 @@ start-up.
 - Burner: raffles run with `duration` 1 (24 `hour` epochs); the cap of 200
   raffle tickets executing per block and the batching of periodic burns (100
   denoms per block) and raffle cleanups (50 per block) are unit-tested only.
+- CoinTrunk: the monthly counter of paid articles is keyed by the block-time
+  month, so its reset at a new month is not reachable on a real-time network;
+  no test covers the reset yet.

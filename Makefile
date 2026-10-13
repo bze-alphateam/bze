@@ -314,7 +314,7 @@ proto-all:
 # implicitly: build them once with e2e-image / e2e-image-ref, then run suites.
 E2E_TIMEOUT ?= 60m
 
-.PHONY: e2e-image e2e-image-ref e2e e2e-smoke e2e-denomrewards e2e-amm e2e-tokenfactory e2e-halt e2e-ibc e2e-orderbook e2e-tradingrewards e2e-burner e2e-fees e2e-upgrade e2e-unit e2e-lint
+.PHONY: e2e-image e2e-image-ref e2e e2e-smoke e2e-denomrewards e2e-amm e2e-tokenfactory e2e-halt e2e-ibc e2e-orderbook e2e-tradingrewards e2e-burner e2e-fees e2e-cointrunk e2e-upgrade e2e-unit e2e-lint
 
 # Builds the working tree as bze:local.
 e2e-image:
@@ -369,6 +369,9 @@ e2e-ibc:
 # Runs the fee destinations and minimum gas price suite.
 e2e-fees:
 	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestFees ./...
+
+e2e-cointrunk:
+	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestCointrunk ./...
 
 # Runs the chain upgrade suite: E2E_UPGRADE_FROM -> E2E_UPGRADE_TO through a gov
 # plan named E2E_UPGRADE_NAME (see interchaintest/README.md). Run before every tag.
