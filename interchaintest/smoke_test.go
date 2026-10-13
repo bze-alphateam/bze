@@ -147,7 +147,12 @@ func TestSmoke(t *testing.T) {
 		week, err := helpers.Epoch(ctx, bze, "week")
 		require.NoError(t, err)
 		require.Equal(t, int64(2), int64(week.CurrentEpoch))
-		require.Equal(t, chain.WeekEpochDuration, week.Duration)
+		// the chain prints a Go duration (3m30s), genesis sets 210s
+		want, err := time.ParseDuration(chain.WeekEpochDuration)
+		require.NoError(t, err)
+		got, err := time.ParseDuration(week.Duration)
+		require.NoError(t, err)
+		require.Equal(t, want, got)
 		require.Greater(t, int64(week.CurrentEpochStartHeight), int64(1))
 
 		var order []smokeEpochEvent

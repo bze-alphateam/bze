@@ -984,20 +984,20 @@ func (s *ammSuite) createPool(t *testing.T, a ammPoolArgs) poolInfo {
 	return pool
 }
 
-// ammRequireDec compares two decimals whatever their printed precision (the
-// chain prints LegacyDec with 18 decimals). An omitted zero reads as "".
+// ammRequireDec compares a decimal as sent with one the chain stored. The
+// query prints LegacyDec fields as their 18-decimal scaled integer
+// (0.05 → "50000000000000000"); an omitted zero reads as "".
 func ammRequireDec(t *testing.T, want, got, what string) {
 	t.Helper()
-	dec := func(v string) sdkmath.LegacyDec {
-		if v == "" {
-			return sdkmath.LegacyZeroDec()
-		}
-		d, err := sdkmath.LegacyNewDecFromStr(v)
-		require.NoError(t, err, "%s: %q", what, v)
-		return d
+	w, err := sdkmath.LegacyNewDecFromStr(want)
+	require.NoError(t, err, "%s: %q", what, want)
+	g := sdkmath.LegacyZeroDec()
+	if got != "" {
+		raw, ok := sdkmath.NewIntFromString(got)
+		require.True(t, ok, "%s: %q is not a scaled integer", what, got)
+		g = sdkmath.LegacyNewDecFromIntWithPrec(raw, sdkmath.LegacyPrecision)
 	}
-	w, g := dec(want), dec(got)
-	require.True(t, w.Equal(g), "%s: want %s, got %s", what, w, g)
+	require.True(t, w.Equal(g), "%s: want %s, got %s (%s)", what, w, g, got)
 }
 
 // ammRefusal is a message the chain must refuse with code in codespace and a
