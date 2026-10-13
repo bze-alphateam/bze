@@ -124,13 +124,6 @@ func (w *blockWatch) Close() {
 	})
 }
 
-// Height returns the latest block height the stream has seen.
-func (w *blockWatch) Height() int64 {
-	w.stream.mu.Lock()
-	defer w.stream.mu.Unlock()
-	return w.stream.height
-}
-
 // until hands match every block after the watch's position, in height order,
 // and returns the first block it accepts. It fails when match fails or ctx
 // ends.
