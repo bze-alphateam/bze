@@ -49,7 +49,7 @@ build: check-version check-network go.sum
 		go build -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/bzed ./cmd/bzed
 
 build-win64: check-version check-network go.sum
-		go build -buildmode=exe -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/win64/bzed.exe ./cmd/bzed
+		GOOS=windows GOARCH=amd64 go build -buildmode=exe -mod=readonly $(BUILD_FLAGS) $(BUILD_TAGS) -trimpath -o $(BUILDDIR)/win64/bzed.exe ./cmd/bzed
 
 .PHONY: build
 
