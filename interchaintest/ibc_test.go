@@ -35,6 +35,17 @@ const (
 	ibcStakeHome   = 400_000   // 5. stake vouchers bze -> simd
 	ibcVoucherHome = 600_000   // 6. ubze vouchers simd -> bze
 	ibcTimeoutOut  = 100_000   // 8. ubze bze -> simd, timed out
+	ibcFeeIn       = 200_000   // 9. stake and utoken over the fee channel
+	ibcScopeIn     = 150_000   // 10. stake over the second and the main channel
+	ibcMultiHopOut = 300_000   // 10. stake vouchers bze -> simd over the second channel
+	ibcMultiHopIn  = 100_000   // 10. those vouchers back to bze over the main channel, per transfer
+	ibcErrAckOut   = 200_000   // 11. ubze bze -> an address simd cannot decode
+	ibcUpgradeIn   = 120_000   // 12. and 13. stake and utoken over the upgraded channel
+
+	// ibcTransferVersion is the plain ICS-20 channel version, ibcFeeVersion
+	// the ICS-29 fee middleware wrapping it.
+	ibcTransferVersion = "ics20-1"
+	ibcFeeVersion      = `{"fee_version":"ics29-1","app_version":"ics20-1"}`
 
 	ibcBlockedEvent = "bze.txfeecollector.BlockedIbcInboundEvent"
 	// ibcCallbackErrorPrefix is what ibc-go puts on the type and attribute keys
@@ -45,6 +56,10 @@ const (
 	// (txfeecollector code 1101): ibc-go keeps only the ABCI code.
 	ibcBlockedAckError = "ABCI code: 1101: error handling packet: see events for details"
 	ibcTransferEvent   = "fungible_token_packet"
+	// ibcInvalidReceiverAckError is the error acknowledgement of a receiver
+	// the transfer app cannot decode: the bech32 error is not a registered
+	// error, so it carries the internal ABCI code 1.
+	ibcInvalidReceiverAckError = "ABCI code: 1: error handling packet: see events for details"
 )
 
 // TestBlockedInboundIbc connects bze to an ibc-go simd chain through the Hermes
@@ -52,7 +67,10 @@ const (
 // stack: a (channel, base denom) pair blocked by a governance proposal is
 // answered with an error acknowledgement, refunded on simd and leaves no
 // voucher on bze, while other denoms, outgoing transfers, returning BZE
-// vouchers and timeouts behave as without the filter. Subtests run in order
+// vouchers and timeouts behave as without the filter. Steps 9-13 add an
+// ICS-29 fee channel, the channel scope and exact path match of the list, an
+// error ack on an outgoing transfer and channel upgrades started from either
+// chain, which reach the transfer app through the filter. Subtests run in order
 // and share state; the step numbers match the scenario of the suite's design.
 func TestBlockedInboundIbc(t *testing.T) {
 	if testing.Short() {
@@ -76,6 +94,11 @@ func TestBlockedInboundIbc(t *testing.T) {
 	t.Run("6 returning vouchers pass", s.returningVouchers)
 	t.Run("7 unblock by governance", s.unblock)
 	t.Run("8 timeout refunds", s.timeout)
+	t.Run("9 fee-enabled channel is filtered", s.feeChannel)
+	t.Run("10 blocking is channel-scoped and path-exact", s.channelScope)
+	t.Run("11 outgoing error ack refunds", s.outgoingErrorAck)
+	t.Run("12 channel upgrade initiated on bze", s.upgradeFromBze)
+	t.Run("13 channel upgrade initiated on simd", s.upgradeFromSimd)
 }
 
 type ibcSuite struct {
@@ -91,6 +114,18 @@ type ibcSuite struct {
 	stakeVoucher, otherVoucher, ubzeVoucher string
 	// bzeEscrow escrows ubze on bze, simdEscrow escrows stake on simd
 	bzeEscrow, simdEscrow string
+
+	// main is the channel StartIbc opened; fee (step 9) and second (step 10,
+	// upgraded in steps 12 and 13) are opened by the suite
+	main, fee, second ibcChannel
+}
+
+// ibcChannel is a transfer channel between bze and simd: its id and escrow
+// account on each end, and whether the ICS-29 fee middleware is enabled on it.
+type ibcChannel struct {
+	bze, simd             string
+	bzeEscrow, simdEscrow string
+	fee                   bool
 }
 
 func setupIbc(t *testing.T, ctx context.Context, net chain.IbcNetwork, simdMnemonic string) *ibcSuite {
@@ -113,6 +148,7 @@ func setupIbc(t *testing.T, ctx context.Context, net chain.IbcNetwork, simdMnemo
 	require.NoError(t, err)
 	s.simdEscrow, err = helpers.EscrowAddress(chain.SimdBech32Prefix, net.SimdChannel)
 	require.NoError(t, err)
+	s.main = s.newChannel(t, net.BzeChannel, net.SimdChannel, false)
 
 	require.Empty(t, s.blockedParam(t), "nothing is blocked by default")
 	return s
@@ -142,30 +178,7 @@ func (s *ibcSuite) block(t *testing.T) {
 // 3. The blocked transfer is answered with an error acknowledgement: bze
 // emits BlockedIbcInboundEvent and mints nothing, simd refunds the sender.
 func (s *ibcSuite) blockedInbound(t *testing.T) {
-	voucherSupply := s.supply(t, s.bze, s.stakeVoucher)
-	in := s.transferIn(t, chain.SimdDenom, ibcBlockedIn)
-
-	// bze: the filter answered, the transfer app never saw the packet
-	events := helpers.EventsWith(blockedEvents(in.recv), map[string]string{
-		"channel":  s.net.BzeChannel,
-		"denom":    chain.SimdDenom,
-		"amount":   strconv.Itoa(ibcBlockedIn),
-		"sender":   s.simdUser.FormattedAddress(),
-		"receiver": s.bzeUser.FormattedAddress(),
-	})
-	require.Len(t, events, 1, "one BlockedIbcInboundEvent with the packet's fields: %+v", blockedEvents(in.recv))
-	require.Empty(t, helpers.TxEvents(in.recv, ibcBlockedEvent), "emitted only under the callback error prefix")
-	require.Equal(t, `{"error":"`+ibcBlockedAckError+`"}`, in.writtenAck(t))
-	require.Empty(t, in.recvTransferEvents(), "the transfer app did not handle the packet")
-
-	// simd: the error ack was relayed and the transfer refunded
-	require.Len(t, helpers.EventsWith(helpers.TxEvents(in.ack, ibcTransferEvent), map[string]string{"error": ibcBlockedAckError}), 1, "simd processed an error ack")
-
-	// exact balances on both chains
-	require.Equal(t, in.senderBefore.Sub(in.fee), s.balance(t, s.simd, s.simdUser, chain.SimdDenom), "simd user refunded, minus the tx fee only")
-	require.Equal(t, in.escrowBefore, s.balanceOf(t, s.simd, s.simdEscrow, chain.SimdDenom), "simd escrow released")
-	require.Equal(t, in.receiverBefore, s.balance(t, s.bze, s.bzeUser, s.stakeVoucher), "no voucher minted")
-	require.Equal(t, voucherSupply, s.supply(t, s.bze, s.stakeVoucher), "voucher supply unchanged")
+	s.transferIn(t, chain.SimdDenom, ibcBlockedIn).requireRefused(t)
 }
 
 // 4. A different simd denom on the same channel is not listed and arrives.
@@ -283,57 +296,222 @@ func (s *ibcSuite) timeout(t *testing.T) {
 	require.Equal(t, vouchers, s.balance(t, s.simd, s.simdUser, s.ubzeVoucher), "nothing minted on simd")
 }
 
+// 9. A channel opened with the ICS-29 fee version stacks the fee middleware
+// over the filter on both ends. A denom blocked on it is refused exactly as
+// on a plain channel (the error ack wrapped in the fee acknowledgement) and
+// an unlisted denom arrives.
+func (s *ibcSuite) feeChannel(t *testing.T) {
+	s.fee = s.openChannel(t, ibcFeeVersion)
+	s.setBlocked(t, "Block stake on the fee channel", blockedEntry{s.fee.bze, chain.SimdDenom})
+
+	s.transferInOn(t, s.fee, chain.SimdDenom, ibcFeeIn).requireRefused(t)
+	s.transferInOn(t, s.fee, ibcOtherDenom, ibcFeeIn).requireAccepted(t)
+}
+
+// 10. The filter compares the packet's destination channel and denom exactly.
+// stake blocked on the main channel arrives through a second channel between
+// the same chains. A voucher path is matched whole: simd sends back stake
+// vouchers it holds under "transfer/<simd second>/transfer/<bze main>/stake";
+// an entry for the base denom stake does not catch that path, an entry for
+// the path does and no longer catches plain stake.
+func (s *ibcSuite) channelScope(t *testing.T) {
+	s.second = s.openChannel(t, ibcTransferVersion)
+	s.setBlocked(t, "Block stake on the main channel", blockedEntry{s.main.bze, chain.SimdDenom})
+
+	s.transferInOn(t, s.second, chain.SimdDenom, ibcScopeIn).requireAccepted(t)
+	s.transferIn(t, chain.SimdDenom, ibcScopeIn).requireRefused(t)
+
+	// stake vouchers of the main channel leave bze over the second channel
+	path := strings.Join([]string{chain.TransferPort, s.second.simd, chain.TransferPort, s.main.bze, chain.SimdDenom}, "/")
+	out, err := helpers.SendIbc(s.ctx, s.bze, s.bzeUser, s.second.bze, s.simdUser.FormattedAddress(), sdk.NewInt64Coin(s.stakeVoucher, ibcMultiHopOut))
+	require.NoError(t, err)
+	_, err = helpers.WaitForRecv(s.ctx, s.simd, s.second.simd, out.Sequence)
+	require.NoError(t, err)
+	_, err = helpers.WaitForAck(s.ctx, s.bze, out)
+	require.NoError(t, err)
+	require.Equal(t, sdkmath.NewInt(ibcMultiHopOut), s.balance(t, s.simd, s.simdUser, simdDenomOf(path)), "simd holds the two-hop vouchers")
+
+	// back over the main channel the packet carries the path, not "stake"
+	s.transferIn(t, path, ibcMultiHopIn).requireAccepted(t)
+
+	s.setBlocked(t, "Block the stake voucher path on the main channel", blockedEntry{s.main.bze, path})
+	s.transferIn(t, path, ibcMultiHopIn).requireRefused(t)
+	s.transferIn(t, chain.SimdDenom, ibcScopeIn).requireAccepted(t)
+}
+
+// 11. An outgoing transfer to a receiver simd cannot decode (a bze address)
+// is answered by simd's transfer app with an error acknowledgement. The
+// filter forwards it to the transfer app, which refunds the sender exactly:
+// the escrow is back where it was and nothing was minted on simd.
+func (s *ibcSuite) outgoingErrorAck(t *testing.T) {
+	ubze := s.balance(t, s.bze, s.bzeUser, chain.Denom)
+	escrow := s.balanceOf(t, s.bze, s.main.bzeEscrow, chain.Denom)
+	voucherSupply := s.supply(t, s.simd, s.ubzeVoucher)
+	receiver := s.bzeUser.FormattedAddress()
+
+	out, err := helpers.SendIbc(s.ctx, s.bze, s.bzeUser, s.main.bze, receiver, sdk.NewInt64Coin(chain.Denom, ibcErrAckOut))
+	require.NoError(t, err)
+	fee, err := helpers.TxFee(out.Tx, chain.Denom)
+	require.NoError(t, err)
+	require.Equal(t, escrow.AddRaw(ibcErrAckOut), s.balanceOf(t, s.bze, s.main.bzeEscrow, chain.Denom), "escrowed while in flight")
+
+	// simd: the transfer app refused the receiver
+	recv, err := helpers.WaitForRecv(s.ctx, s.simd, s.main.simd, out.Sequence)
+	require.NoError(t, err)
+	refused := helpers.EventsWith(callbackEvents(recv, ibcTransferEvent), map[string]string{
+		"receiver": receiver,
+		"denom":    chain.Denom,
+		"amount":   strconv.Itoa(ibcErrAckOut),
+		"success":  "false",
+	})
+	require.Len(t, refused, 1, "simd's transfer app refused the packet: %+v", callbackEvents(recv, ibcTransferEvent))
+	require.Equal(t, "failed to decode receiver address: "+receiver+": invalid Bech32 prefix; expected "+chain.SimdBech32Prefix+", got "+chain.Bech32Prefix,
+		refused[0].Attributes["error"])
+	require.Equal(t, `{"error":"`+ibcInvalidReceiverAckError+`"}`, packetAck(t, recv, s.main.simd, out.Sequence))
+
+	// bze: the error ack reached the transfer app and refunded the sender
+	ack, err := helpers.WaitForAck(s.ctx, s.bze, out)
+	require.NoError(t, err)
+	require.Len(t, helpers.EventsWith(helpers.TxEvents(ack, ibcTransferEvent), map[string]string{"error": ibcInvalidReceiverAckError}), 1, "bze processed the error ack")
+
+	require.Equal(t, ubze.Sub(fee), s.balance(t, s.bze, s.bzeUser, chain.Denom), "refunded, minus the tx fee only")
+	require.Equal(t, escrow, s.balanceOf(t, s.bze, s.main.bzeEscrow, chain.Denom), "bze escrow released")
+	require.Equal(t, voucherSupply, s.supply(t, s.simd, s.ubzeVoucher), "nothing minted on simd")
+}
+
+// 12. A gov proposal on bze starts upgrading the second channel to the fee
+// version (MsgChannelUpgradeInit is authority-gated) and Hermes completes
+// the handshake: TRY on simd, ACK on bze, CONFIRM on simd, OPEN on bze. On
+// bze the INIT, ACK and OPEN callbacks reach the transfer app through the
+// filter. Both ends end open on the fee version and the channel still
+// carries packets, filtered.
+func (s *ibcSuite) upgradeFromBze(t *testing.T) {
+	bzeEnd, simdEnd := s.upgradeEnds(t, s.second)
+	s.relayerStopped(t, func() {
+		s.initUpgrade(t, bzeEnd, s.admin, "", ibcFeeVersion)
+		ch := s.channelEnd(t, s.bze, s.second.bze)
+		require.Equal(t, "STATE_OPEN", ch.State, "INIT keeps the channel open")
+		require.Equal(t, helpers.Int64(1), ch.UpgradeSequence, "INIT stored the upgrade")
+		s.completeUpgrade(t, bzeEnd, simdEnd)
+	})
+	s.second.fee = true
+	s.requireChannelOpen(t, s.second, ibcFeeVersion, 1)
+
+	s.setBlocked(t, "Block stake on the upgraded channel", blockedEntry{s.second.bze, chain.SimdDenom})
+	s.transferInOn(t, s.second, chain.SimdDenom, ibcUpgradeIn).requireRefused(t)
+	s.transferInOn(t, s.second, ibcOtherDenom, ibcUpgradeIn).requireAccepted(t)
+}
+
+// 13. A gov proposal on simd upgrades the channel back to plain ics20-1 and
+// Hermes completes the handshake the other way round: TRY on bze reaches the
+// transfer app through the filter, and CONFIRM on bze opens the channel (the
+// OPEN callback). The blocked list still applies on the plain channel.
+func (s *ibcSuite) upgradeFromSimd(t *testing.T) {
+	bzeEnd, simdEnd := s.upgradeEnds(t, s.second)
+	s.relayerStopped(t, func() {
+		s.initUpgrade(t, simdEnd, s.simdUser, chain.MinDeposit+chain.SimdDenom, ibcTransferVersion)
+		s.completeUpgrade(t, simdEnd, bzeEnd)
+	})
+	s.second.fee = false
+	s.requireChannelOpen(t, s.second, ibcTransferVersion, 2)
+
+	s.transferInOn(t, s.second, chain.SimdDenom, ibcUpgradeIn).requireRefused(t)
+	s.transferInOn(t, s.second, ibcOtherDenom, ibcUpgradeIn).requireAccepted(t)
+}
+
 // inbound is a simd -> bze transfer from simdUser to bzeUser, relayed both
 // ways, with the balances taken before it was sent.
 type inbound struct {
-	denom     string
-	amount    int64
-	send      helpers.IbcTransfer
-	recv, ack helpers.TxResult
-	fee       sdkmath.Int // simd tx fee in stake
+	ch ibcChannel
+	// denom is the denom the packet carries (a base denom or a path),
+	// simdDenom the coin simdUser sent
+	denom, simdDenom string
+	amount           int64
+	send             helpers.IbcTransfer
+	recv, ack        helpers.TxResult
+	fee              sdkmath.Int // simd tx fee in stake
 
-	senderBefore, escrowBefore, receiverBefore sdkmath.Int
-	s                                          *ibcSuite
+	senderBefore, escrowBefore, receiverBefore, supplyBefore sdkmath.Int
+	s                                                        *ibcSuite
 }
 
-// transferIn sends amount of a simd denom from simdUser to bzeUser and waits
-// until the packet is received on bze and acknowledged on simd.
+// transferIn sends amount of a simd denom from simdUser to bzeUser over the
+// main channel and waits until the packet is received on bze and
+// acknowledged on simd.
 func (s *ibcSuite) transferIn(t *testing.T, denom string, amount int64) inbound {
 	t.Helper()
+	return s.transferInOn(t, s.main, denom, amount)
+}
+
+// transferInOn is transferIn over ch. denom is the denom the packet carries:
+// a simd base denom, or the path of a voucher simdUser holds.
+func (s *ibcSuite) transferInOn(t *testing.T, ch ibcChannel, denom string, amount int64) inbound {
+	t.Helper()
+	voucher := helpers.IbcDenom(ch.bze, denom)
 	in := inbound{
+		ch:             ch,
 		denom:          denom,
+		simdDenom:      simdDenomOf(denom),
 		amount:         amount,
-		senderBefore:   s.balance(t, s.simd, s.simdUser, chain.SimdDenom),
-		escrowBefore:   s.balanceOf(t, s.simd, s.simdEscrow, chain.SimdDenom),
-		receiverBefore: s.balance(t, s.bze, s.bzeUser, helpers.IbcDenom(s.net.BzeChannel, denom)),
+		receiverBefore: s.balance(t, s.bze, s.bzeUser, voucher),
+		supplyBefore:   s.supply(t, s.bze, voucher),
 		s:              s,
 	}
+	in.senderBefore = s.balance(t, s.simd, s.simdUser, in.simdDenom)
+	in.escrowBefore = s.balanceOf(t, s.simd, ch.simdEscrow, in.simdDenom)
 	var err error
-	in.send, err = helpers.SendIbc(s.ctx, s.simd, s.simdUser, s.net.SimdChannel, s.bzeUser.FormattedAddress(), sdk.NewInt64Coin(denom, amount))
+	in.send, err = helpers.SendIbc(s.ctx, s.simd, s.simdUser, ch.simd, s.bzeUser.FormattedAddress(), sdk.NewInt64Coin(in.simdDenom, amount))
 	require.NoError(t, err)
 	in.fee, err = helpers.TxFee(in.send.Tx, chain.SimdDenom)
 	require.NoError(t, err)
-	in.recv, err = helpers.WaitForRecv(s.ctx, s.bze, s.net.BzeChannel, in.send.Sequence)
+	in.recv, err = helpers.WaitForRecv(s.ctx, s.bze, ch.bze, in.send.Sequence)
 	require.NoError(t, err)
 	in.ack, err = helpers.WaitForAck(s.ctx, s.simd, in.send)
 	require.NoError(t, err)
 	return in
 }
 
-// writtenAck returns the acknowledgement bze wrote for the packet.
-func (in inbound) writtenAck(t *testing.T) string {
-	t.Helper()
-	acks := helpers.EventsWith(helpers.TxEvents(in.recv, "write_acknowledgement"), map[string]string{
-		"packet_dst_channel": in.s.net.BzeChannel,
-		"packet_sequence":    strconv.FormatUint(in.send.Sequence, 10),
-	})
-	require.Len(t, acks, 1, "one write_acknowledgement for the packet")
-	return acks[0].Attributes["packet_ack"]
+// simdDenomOf returns the coin simd holds for a packet denom: a base denom is
+// itself, a path "transfer/<simd channel>/<rest>" is the voucher of rest
+// received on that channel.
+func simdDenomOf(packetDenom string) string {
+	parts := strings.SplitN(packetDenom, "/", 3)
+	if len(parts) < 3 {
+		return packetDenom
+	}
+	return helpers.IbcDenom(parts[1], parts[2])
 }
 
-// recvTransferEvents returns the transfer app's events on bze for this packet.
+// writtenAck returns the acknowledgement bze wrote for the packet, as written
+// (wrapped in the ICS-29 acknowledgement on a fee channel).
+func (in inbound) writtenAck(t *testing.T) string {
+	t.Helper()
+	return packetAck(t, in.recv, in.ch.bze, in.send.Sequence)
+}
+
+// appAck returns the transfer acknowledgement bze wrote for the packet. On a
+// fee channel it is unwrapped from the ICS-29 acknowledgement, whose
+// underlying_app_success must be appSuccess.
+func (in inbound) appAck(t *testing.T, appSuccess bool) string {
+	t.Helper()
+	written := in.writtenAck(t)
+	if !in.ch.fee {
+		return written
+	}
+	var wrapped struct {
+		AppAcknowledgement   []byte `json:"app_acknowledgement"`
+		UnderlyingAppSuccess bool   `json:"underlying_app_success"`
+	}
+	require.NoError(t, json.Unmarshal([]byte(written), &wrapped), "fee channel ack %s", written)
+	require.NotEmpty(t, wrapped.AppAcknowledgement, "the fee middleware wrapped the ack: %s", written)
+	require.Equal(t, appSuccess, wrapped.UnderlyingAppSuccess, "underlying_app_success of %s", written)
+	return string(wrapped.AppAcknowledgement)
+}
+
+// recvTransferEvents returns the transfer app's events on bze for this
+// packet, under the callback error prefix too.
 func (in inbound) recvTransferEvents() []helpers.Event {
-	return helpers.EventsWith(helpers.TxEvents(in.recv, ibcTransferEvent), map[string]string{
+	return helpers.EventsWith(callbackEvents(in.recv, ibcTransferEvent), map[string]string{
 		"sender":   in.s.simdUser.FormattedAddress(),
 		"receiver": in.s.bzeUser.FormattedAddress(),
 		"denom":    in.denom,
@@ -346,12 +524,59 @@ func (in inbound) recvTransferEvents() []helpers.Event {
 func (in inbound) requireAccepted(t *testing.T) {
 	t.Helper()
 	require.Empty(t, blockedEvents(in.recv), "not refused")
-	require.Equal(t, `{"result":"AQ=="}`, in.writtenAck(t), "success acknowledgement")
+	require.Equal(t, `{"result":"AQ=="}`, in.appAck(t, true), "success acknowledgement")
 	recvd := in.recvTransferEvents()
 	require.Len(t, recvd, 1)
 	require.Equal(t, "true", recvd[0].Attributes["success"])
 	require.Empty(t, helpers.EventsWith(helpers.TxEvents(in.ack, ibcTransferEvent), map[string]string{"error": ibcBlockedAckError}))
-	require.Equal(t, in.receiverBefore.AddRaw(in.amount), in.s.balance(t, in.s.bze, in.s.bzeUser, helpers.IbcDenom(in.s.net.BzeChannel, in.denom)))
+	require.Equal(t, in.receiverBefore.AddRaw(in.amount), in.s.balance(t, in.s.bze, in.s.bzeUser, helpers.IbcDenom(in.ch.bze, in.denom)))
+}
+
+// requireRefused asserts the filter answered the packet with an error
+// acknowledgement: bze emitted BlockedIbcInboundEvent and minted nothing, simd
+// processed the error ack and refunded the sender.
+func (in inbound) requireRefused(t *testing.T) {
+	t.Helper()
+	s := in.s
+
+	// bze: the filter answered, the transfer app never saw the packet
+	events := helpers.EventsWith(blockedEvents(in.recv), map[string]string{
+		"channel":  in.ch.bze,
+		"denom":    in.denom,
+		"amount":   strconv.FormatInt(in.amount, 10),
+		"sender":   s.simdUser.FormattedAddress(),
+		"receiver": s.bzeUser.FormattedAddress(),
+	})
+	require.Len(t, events, 1, "one BlockedIbcInboundEvent with the packet's fields: %+v", blockedEvents(in.recv))
+	require.Empty(t, helpers.TxEvents(in.recv, ibcBlockedEvent), "emitted only under the callback error prefix")
+	require.Equal(t, `{"error":"`+ibcBlockedAckError+`"}`, in.appAck(t, false))
+	require.Empty(t, in.recvTransferEvents(), "the transfer app did not handle the packet")
+
+	// simd: the error ack was relayed and the transfer refunded
+	require.Len(t, helpers.EventsWith(helpers.TxEvents(in.ack, ibcTransferEvent), map[string]string{"error": ibcBlockedAckError}), 1, "simd processed an error ack")
+
+	// exact balances on both chains
+	sender := in.senderBefore
+	if in.simdDenom == chain.SimdDenom {
+		sender = sender.Sub(in.fee)
+	}
+	voucher := helpers.IbcDenom(in.ch.bze, in.denom)
+	require.Equal(t, sender, s.balance(t, s.simd, s.simdUser, in.simdDenom), "simd user refunded, minus the tx fee only")
+	require.Equal(t, in.escrowBefore, s.balanceOf(t, s.simd, in.ch.simdEscrow, in.simdDenom), "simd escrow released")
+	require.Equal(t, in.receiverBefore, s.balance(t, s.bze, s.bzeUser, voucher), "no voucher minted")
+	require.Equal(t, in.supplyBefore, s.supply(t, s.bze, voucher), "voucher supply unchanged")
+}
+
+// packetAck returns the acknowledgement a recv tx wrote for the packet with
+// destination channel and sequence.
+func packetAck(t *testing.T, recv helpers.TxResult, channel string, sequence uint64) string {
+	t.Helper()
+	acks := helpers.EventsWith(helpers.TxEvents(recv, "write_acknowledgement"), map[string]string{
+		"packet_dst_channel": channel,
+		"packet_sequence":    strconv.FormatUint(sequence, 10),
+	})
+	require.Len(t, acks, 1, "one write_acknowledgement for the packet")
+	return acks[0].Attributes["packet_ack"]
 }
 
 // transferOut sends amount ubze from bzeUser to simdUser, waits for the ack
@@ -378,9 +603,17 @@ func (s *ibcSuite) transferOut(t *testing.T, amount int64) {
 // callback error prefix removed from type and keys and the values unquoted,
 // plus any emitted without the prefix.
 func blockedEvents(res helpers.TxResult) []helpers.Event {
-	out := helpers.TxEvents(res, ibcBlockedEvent)
-	for _, e := range helpers.TxEvents(res, ibcCallbackErrorPrefix+ibcBlockedEvent) {
-		ev := helpers.Event{Type: ibcBlockedEvent, Attributes: make(map[string]string, len(e.Attributes))}
+	return callbackEvents(res, ibcBlockedEvent)
+}
+
+// callbackEvents returns the events of eventType in a recv tx: those emitted
+// as is, plus those ibc-go rewrote with the callback error prefix (because
+// the callback returned an error ack), with the prefix removed from type and
+// keys and the values unquoted.
+func callbackEvents(res helpers.TxResult, eventType string) []helpers.Event {
+	out := helpers.TxEvents(res, eventType)
+	for _, e := range helpers.TxEvents(res, ibcCallbackErrorPrefix+eventType) {
+		ev := helpers.Event{Type: eventType, Attributes: make(map[string]string, len(e.Attributes))}
 		for k, v := range e.Attributes {
 			ev.Attributes[strings.TrimPrefix(k, ibcCallbackErrorPrefix)] = helpers.Unquote(v)
 		}
@@ -496,6 +729,175 @@ func (s *ibcSuite) setBlocked(t *testing.T, title string, entries ...blockedEntr
 	require.NoError(t, err)
 }
 
+// channelEnd is a transfer channel end as `q ibc channel` prints it.
+type channelEnd struct {
+	State        string `json:"state"`
+	Ordering     string `json:"ordering"`
+	Counterparty struct {
+		ChannelID string `json:"channel_id"`
+	} `json:"counterparty"`
+	ConnectionHops  []string      `json:"connection_hops"`
+	Version         string        `json:"version"`
+	ChannelID       string        `json:"channel_id"`
+	UpgradeSequence helpers.Int64 `json:"upgrade_sequence"`
+}
+
+func (s *ibcSuite) newChannel(t *testing.T, bzeID, simdID string, fee bool) ibcChannel {
+	t.Helper()
+	ch := ibcChannel{bze: bzeID, simd: simdID, fee: fee}
+	var err error
+	ch.bzeEscrow, err = helpers.EscrowAddress(chain.Bech32Prefix, bzeID)
+	require.NoError(t, err)
+	ch.simdEscrow, err = helpers.EscrowAddress(chain.SimdBech32Prefix, simdID)
+	require.NoError(t, err)
+	return ch
+}
+
+func (s *ibcSuite) channels(t *testing.T, c *cosmos.CosmosChain) []channelEnd {
+	t.Helper()
+	res, err := helpers.Query[struct {
+		Channels []channelEnd `json:"channels"`
+	}](s.ctx, c, "ibc", "channel", "channels")
+	require.NoError(t, err)
+	return res.Channels
+}
+
+func (s *ibcSuite) channelEnd(t *testing.T, c *cosmos.CosmosChain, channel string) channelEnd {
+	t.Helper()
+	res, err := helpers.Query[struct {
+		Channel channelEnd `json:"channel"`
+	}](s.ctx, c, "ibc", "channel", "end", chain.TransferPort, channel)
+	require.NoError(t, err)
+	return res.Channel
+}
+
+// openChannel opens another unordered transfer channel between bze and simd
+// with version, on the existing connection, and returns it.
+func (s *ibcSuite) openChannel(t *testing.T, version string) ibcChannel {
+	t.Helper()
+	known := map[string]bool{}
+	for _, c := range s.channels(t, s.bze) {
+		known[c.ChannelID] = true
+	}
+	s.relayerStopped(t, func() {
+		require.NoError(t, s.net.Relayer.CreateChannel(s.ctx, s.net.Reporter, chain.IbcPath, ibc.CreateChannelOptions{
+			SourcePortName: chain.TransferPort,
+			DestPortName:   chain.TransferPort,
+			Order:          ibc.Unordered,
+			Version:        version,
+		}))
+	})
+	var opened []channelEnd
+	for _, c := range s.channels(t, s.bze) {
+		if !known[c.ChannelID] {
+			opened = append(opened, c)
+		}
+	}
+	require.Len(t, opened, 1, "one new channel on bze")
+	ch := s.newChannel(t, opened[0].ChannelID, opened[0].Counterparty.ChannelID, version != ibcTransferVersion)
+	s.requireChannelOpen(t, ch, version, 0)
+	return ch
+}
+
+// requireChannelOpen asserts both ends of ch are open, unordered, point at
+// each other and carry version at upgrade sequence upgradeSequence.
+func (s *ibcSuite) requireChannelOpen(t *testing.T, ch ibcChannel, version string, upgradeSequence int64) {
+	t.Helper()
+	for _, end := range []struct {
+		c                     *cosmos.CosmosChain
+		channel, counterparty string
+	}{{s.bze, ch.bze, ch.simd}, {s.simd, ch.simd, ch.bze}} {
+		got := s.channelEnd(t, end.c, end.channel)
+		require.Equal(t, "STATE_OPEN", got.State, "%s %s", end.c.Config().ChainID, end.channel)
+		require.Equal(t, "ORDER_UNORDERED", got.Ordering, "%s %s", end.c.Config().ChainID, end.channel)
+		require.Equal(t, end.counterparty, got.Counterparty.ChannelID, "%s %s", end.c.Config().ChainID, end.channel)
+		require.Equal(t, version, got.Version, "%s %s", end.c.Config().ChainID, end.channel)
+		require.Equal(t, helpers.Int64(upgradeSequence), got.UpgradeSequence, "%s %s", end.c.Config().ChainID, end.channel)
+	}
+}
+
+// relayerStopped runs f with the relayer stopped, so Hermes CLI commands do
+// not race the running relayer on the same channels and keys, and restarts
+// it afterwards (also when f fails).
+func (s *ibcSuite) relayerStopped(t *testing.T, f func()) {
+	t.Helper()
+	r, rep := s.net.Relayer, s.net.Reporter
+	require.NoError(t, r.StopRelayer(s.ctx, rep))
+	defer func() {
+		if err := r.StartRelayer(s.ctx, rep, chain.IbcPath); err != nil {
+			t.Errorf("restart relayer: %v", err)
+		}
+	}()
+	f()
+}
+
+// upgradeEnd is one end of a channel to upgrade.
+type upgradeEnd struct {
+	c                   *cosmos.CosmosChain
+	channel, connection string
+}
+
+func (s *ibcSuite) upgradeEnds(t *testing.T, ch ibcChannel) (bzeEnd, simdEnd upgradeEnd) {
+	t.Helper()
+	b, sd := s.channelEnd(t, s.bze, ch.bze), s.channelEnd(t, s.simd, ch.simd)
+	require.Len(t, b.ConnectionHops, 1)
+	require.Len(t, sd.ConnectionHops, 1)
+	return upgradeEnd{s.bze, ch.bze, b.ConnectionHops[0]}, upgradeEnd{s.simd, ch.simd, sd.ConnectionHops[0]}
+}
+
+// initUpgrade passes a proposal on end's chain with a MsgChannelUpgradeInit
+// to version (same ordering and connection); deposit "" is bze's default.
+func (s *ibcSuite) initUpgrade(t *testing.T, end upgradeEnd, proposer ibc.Wallet, deposit, version string) {
+	t.Helper()
+	authority, err := helpers.GovAuthority(s.ctx, end.c)
+	require.NoError(t, err)
+	_, err = helpers.SubmitAndPassProposal(s.ctx, end.c, proposer, helpers.Proposal{
+		Messages: []any{map[string]any{
+			"@type":      "/ibc.core.channel.v1.MsgChannelUpgradeInit",
+			"port_id":    chain.TransferPort,
+			"channel_id": end.channel,
+			"fields": map[string]any{
+				"ordering":        "ORDER_UNORDERED",
+				"connection_hops": []string{end.connection},
+				"version":         version,
+			},
+			"signer": authority,
+		}},
+		Deposit: deposit,
+		Title:   "Upgrade " + end.channel,
+		Summary: "e2e: upgrade " + end.channel + " to " + version,
+	})
+	require.NoError(t, err)
+}
+
+// completeUpgrade relays the handshake an INIT on init started, with the
+// relayer stopped: TRY on the counterparty, ACK on init, CONFIRM on the
+// counterparty (which opens it there, nothing being in flight), OPEN on init.
+func (s *ibcSuite) completeUpgrade(t *testing.T, init, counterparty upgradeEnd) {
+	t.Helper()
+	s.hermesUpgradeStep(t, "try", counterparty, init)
+	s.hermesUpgradeStep(t, "ack", init, counterparty)
+	s.hermesUpgradeStep(t, "confirm", counterparty, init)
+	s.hermesUpgradeStep(t, "open", init, counterparty)
+}
+
+// hermesUpgradeStep runs `hermes tx chan-upgrade-<step>`, sending the step's
+// message to dst with proofs from src.
+func (s *ibcSuite) hermesUpgradeStep(t *testing.T, step string, dst, src upgradeEnd) {
+	t.Helper()
+	res := s.net.Relayer.Exec(s.ctx, s.net.Reporter, []string{
+		"hermes", "--json", "tx", "chan-upgrade-" + step,
+		"--dst-chain", dst.c.Config().ChainID,
+		"--src-chain", src.c.Config().ChainID,
+		"--dst-connection", dst.connection,
+		"--dst-port", chain.TransferPort,
+		"--src-port", chain.TransferPort,
+		"--dst-channel", dst.channel,
+		"--src-channel", src.channel,
+	}, nil)
+	require.NoError(t, res.Err, "hermes chan-upgrade-%s: %s %s", step, res.Stdout, res.Stderr)
+}
+
 func (s *ibcSuite) balance(t *testing.T, c *cosmos.CosmosChain, user ibc.Wallet, denom string) sdkmath.Int {
 	t.Helper()
 	return s.balanceOf(t, c, user.FormattedAddress(), denom)
@@ -523,13 +925,20 @@ func (s *ibcSuite) supply(t *testing.T, c *cosmos.CosmosChain, denom string) sdk
 // account can be funded in simd's genesis before its key exists.
 func newSimdAccount(t *testing.T) (string, string) {
 	t.Helper()
+	return newAccount(t, chain.SimdBech32Prefix)
+}
+
+// newAccount returns a fresh mnemonic and its address with the bech32
+// prefix, so the account can be given genesis state before its key exists.
+func newAccount(t *testing.T, prefix string) (string, string) {
+	t.Helper()
 	entropy, err := bip39.NewEntropy(256)
 	require.NoError(t, err)
 	mnemonic, err := bip39.NewMnemonic(entropy)
 	require.NoError(t, err)
 	derived, err := hd.Secp256k1.Derive()(mnemonic, "", hd.CreateHDPath(sdk.CoinType, 0, 0).String())
 	require.NoError(t, err)
-	addr, err := sdk.Bech32ifyAddressBytes(chain.SimdBech32Prefix, hd.Secp256k1.Generate()(derived).PubKey().Address())
+	addr, err := sdk.Bech32ifyAddressBytes(prefix, hd.Secp256k1.Generate()(derived).PubKey().Address())
 	require.NoError(t, err)
 	return mnemonic, addr
 }

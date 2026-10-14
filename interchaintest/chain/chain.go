@@ -3,6 +3,8 @@
 package chain
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"slices"
 
@@ -13,7 +15,7 @@ import (
 )
 
 const (
-	// ChainID is the chain id of every e2e bze network.
+	// ChainID is the default chain id of the e2e bze networks (WithChainID).
 	ChainID = "bze-e2e-1"
 	// Name is the interchaintest chain name.
 	Name = "bze"
@@ -64,9 +66,11 @@ func BzeImage(tag string) ibc.DockerImage {
 }
 
 type spec struct {
+	chainID      string
 	validators   int
 	image        string
 	genesis      []cosmos.GenesisKV
+	edits        []func(map[string]any) error
 	minGasPrices string
 }
 
@@ -76,6 +80,12 @@ type Option func(*spec)
 // WithValidators sets the number of validators (default 1).
 func WithValidators(n int) Option {
 	return func(s *spec) { s.validators = n }
+}
+
+// WithChainID sets the chain id (default ChainID), e.g. a live chain's id for
+// code that branches on it, like an upgrade handler.
+func WithChainID(id string) Option {
+	return func(s *spec) { s.chainID = id }
 }
 
 // WithImage sets the bze image tag (default DefaultTag()).
@@ -92,6 +102,12 @@ func WithMinGasPrices(prices string) Option {
 // WithGenesis appends genesis overrides, applied after DefaultGenesis().
 func WithGenesis(extra ...cosmos.GenesisKV) Option {
 	return func(s *spec) { s.genesis = append(s.genesis, extra...) }
+}
+
+// WithGenesisEdit edits the genesis JSON after the overrides, e.g. to append
+// bank balances or module state a key override would replace whole.
+func WithGenesisEdit(edit func(genesis map[string]any) error) Option {
+	return func(s *spec) { s.edits = append(s.edits, edit) }
 }
 
 // WithoutGenesis drops the genesis overrides set so far on the given keys,
@@ -112,7 +128,7 @@ func WithoutGenesis(keys ...string) Option {
 // BzeChainSpec returns the interchaintest spec of a bze e2e network: one
 // validator, no full nodes, 1 s blocks and the fast-epoch genesis.
 func BzeChainSpec(opts ...Option) *interchaintest.ChainSpec {
-	s := spec{validators: 1, image: DefaultTag(), genesis: DefaultGenesis(), minGasPrices: GasPrices}
+	s := spec{chainID: ChainID, validators: 1, image: DefaultTag(), genesis: DefaultGenesis(), minGasPrices: GasPrices}
 	for _, opt := range opts {
 		opt(&s)
 	}
@@ -128,7 +144,7 @@ func BzeChainSpec(opts ...Option) *interchaintest.ChainSpec {
 		ChainConfig: ibc.ChainConfig{
 			Type:           "cosmos",
 			Name:           Name,
-			ChainID:        ChainID,
+			ChainID:        s.chainID,
 			Images:         []ibc.DockerImage{image},
 			Bin:            Bin,
 			Bech32Prefix:   Bech32Prefix,
@@ -137,7 +153,7 @@ func BzeChainSpec(opts ...Option) *interchaintest.ChainSpec {
 			GasPrices:      GasPrices,
 			GasAdjustment:  GasAdjustment,
 			TrustingPeriod: trustingPeriod,
-			ModifyGenesis:  cosmos.ModifyGenesis(s.genesis),
+			ModifyGenesis:  modifyGenesis(s.genesis, s.edits),
 			ConfigFileOverrides: map[string]any{
 				"config/config.toml": testutil.Toml{
 					"consensus": testutil.Toml{
@@ -151,5 +167,26 @@ func BzeChainSpec(opts ...Option) *interchaintest.ChainSpec {
 		},
 		NumValidators: &validators,
 		NumFullNodes:  &fullNodes,
+	}
+}
+
+// modifyGenesis applies the key overrides, then the edits.
+func modifyGenesis(kvs []cosmos.GenesisKV, edits []func(map[string]any) error) func(ibc.ChainConfig, []byte) ([]byte, error) {
+	overrides := cosmos.ModifyGenesis(kvs)
+	return func(cfg ibc.ChainConfig, genesis []byte) ([]byte, error) {
+		out, err := overrides(cfg, genesis)
+		if err != nil || len(edits) == 0 {
+			return out, err
+		}
+		var g map[string]any
+		if err := json.Unmarshal(out, &g); err != nil {
+			return nil, fmt.Errorf("decode genesis: %w", err)
+		}
+		for _, edit := range edits {
+			if err := edit(g); err != nil {
+				return nil, fmt.Errorf("edit genesis: %w", err)
+			}
+		}
+		return json.Marshal(g)
 	}
 }

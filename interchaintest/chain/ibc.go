@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/interchaintest/v10/ibc"
 	"github.com/cosmos/interchaintest/v10/relayer"
 	"github.com/cosmos/interchaintest/v10/testreporter"
+	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -40,12 +41,25 @@ const (
 	TransferPort = "transfer"
 )
 
+// SimdGenesis returns the genesis overrides of the counterparty: the same
+// short gov voting periods and deposits as bze (in stake), so suites can pass
+// simd proposals (e.g. a channel upgrade, which is authority-gated).
+func SimdGenesis() []cosmos.GenesisKV {
+	return []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", VotingPeriod),
+		cosmos.NewGenesisKV("app_state.gov.params.expedited_voting_period", ExpeditedVotingPeriod),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit", []map[string]string{{"denom": SimdDenom, "amount": MinDeposit}}),
+		cosmos.NewGenesisKV("app_state.gov.params.expedited_min_deposit", []map[string]string{{"denom": SimdDenom, "amount": ExpeditedMinDeposit}}),
+	}
+}
+
 // IbcNetwork is a running bze network, an ibc-go simd counterparty and a
 // Hermes relayer with an open ICS-20 channel between them.
 type IbcNetwork struct {
 	Bze, Simd *cosmos.CosmosChain
 	Relayer   ibc.Relayer
 	Reporter  ibc.RelayerExecReporter
+	Docker    *client.Client
 
 	// BzeChannel is the transfer channel on bze, SimdChannel its counterparty
 	// on simd.
@@ -53,7 +67,7 @@ type IbcNetwork struct {
 }
 
 // SimdChainSpec returns the interchaintest spec of the counterparty: one
-// validator, no full nodes, free txs (0 gas price).
+// validator, no full nodes, free txs (0 gas price), SimdGenesis.
 func SimdChainSpec() *interchaintest.ChainSpec {
 	validators, fullNodes := 1, 0
 	return &interchaintest.ChainSpec{
@@ -61,10 +75,11 @@ func SimdChainSpec() *interchaintest.ChainSpec {
 		ChainName: "simd",
 		Version:   SimdVersion,
 		ChainConfig: ibc.ChainConfig{
-			ChainID:      SimdChainID,
-			Bech32Prefix: SimdBech32Prefix,
-			Denom:        SimdDenom,
-			GasPrices:    "0.0" + SimdDenom,
+			ChainID:       SimdChainID,
+			Bech32Prefix:  SimdBech32Prefix,
+			Denom:         SimdDenom,
+			GasPrices:     "0.0" + SimdDenom,
+			ModifyGenesis: cosmos.ModifyGenesis(SimdGenesis()),
 		},
 		NumValidators: &validators,
 		NumFullNodes:  &fullNodes,
@@ -113,7 +128,7 @@ func StartIbc(t *testing.T, ctx context.Context, simdGenesis []ibc.WalletAmount,
 		_ = ic.Close()
 	})
 
-	channel, err := ibc.GetTransferChannel(ctx, r, rep, ChainID, SimdChainID)
+	channel, err := ibc.GetTransferChannel(ctx, r, rep, bze.Config().ChainID, SimdChainID)
 	require.NoError(t, err)
 
 	require.NoError(t, r.StartRelayer(ctx, rep, IbcPath))
@@ -126,6 +141,7 @@ func StartIbc(t *testing.T, ctx context.Context, simdGenesis []ibc.WalletAmount,
 		Simd:        simd,
 		Relayer:     r,
 		Reporter:    rep,
+		Docker:      dockerClient,
 		BzeChannel:  channel.ChannelID,
 		SimdChannel: channel.Counterparty.ChannelID,
 	}

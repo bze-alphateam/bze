@@ -17,7 +17,8 @@ import (
 // come back as strings (use Int64 or parse them with cosmossdk.io/math).
 func Query[T any](ctx context.Context, chain *cosmos.CosmosChain, args ...string) (T, error) {
 	var out T
-	stdout, _, err := chain.GetNode().ExecQuery(ctx, args...)
+	node := chain.GetNode()
+	stdout, _, err := execNode(ctx, node, node.QueryCommand(args...))
 	if err != nil {
 		// The CLI output of a failed query is in err (interchaintest returns no stderr then).
 		return out, fmt.Errorf("bzed q %s: %w", strings.Join(args, " "), err)

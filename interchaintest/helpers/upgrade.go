@@ -23,8 +23,13 @@ func AppVersion(ctx context.Context, chain *cosmos.CosmosChain) (string, error) 
 	return res.Response.Version, nil
 }
 
+// heightPoll spaces WaitForHeight's reads of the node's status.
+const heightPoll = 500 * time.Millisecond
+
 // WaitForHeight blocks until the chain's latest height is at least h and
-// returns it, or fails when ctx ends. Bound it with a context deadline.
+// returns it, or fails when ctx ends. Bound it with a context deadline. It
+// polls the node's RPC status (no CLI process), which also counts the block
+// an upgrade halt stores without executing; the block stream never sees it.
 func WaitForHeight(ctx context.Context, chain *cosmos.CosmosChain, h int64) (int64, error) {
 	var cur int64
 	var err error
@@ -36,7 +41,7 @@ func WaitForHeight(ctx context.Context, chain *cosmos.CosmosChain, h int64) (int
 		select {
 		case <-ctx.Done():
 			return cur, fmt.Errorf("height %d not reached (latest %d, last error %v): %w", h, cur, err, ctx.Err())
-		case <-time.After(pollInterval):
+		case <-time.After(heightPoll):
 		}
 	}
 }

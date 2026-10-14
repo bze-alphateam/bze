@@ -3,6 +3,8 @@ package interchaintest_test
 import (
 	"context"
 	"encoding/json"
+	"strconv"
+	"strings"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -27,12 +29,35 @@ const (
 	tfOtherMint = 5_000
 
 	tfEventPrefix = "bze.tokenfactory."
+
+	// the payer creates the gas denom and its ubze pool, then pays a create
+	// fee with a tx fee in gas
+	tfPayerFunds = 300_000_000_000 // 300,000 BZE: two create fees, a pool fee and the pool's ubze side
+	tfGasMint    = 1_000_000_000_000
+	// the ubze side is twice MinNativeLiquidityForModuleSwap (1e11), so it
+	// stays above it after the create fee is bought out of it
+	tfPoolGas   = 200_000_000_000
+	tfPoolBze   = 200_000_000_000
+	tfPoolFee   = "0.002"
+	tfPoolDest  = `{"treasury":"0","burner":"0","providers":"1"}`
+	tfPoolTxGas = 500_000
+	tfGasTxGas  = 1_000_000
+	tfGasTxFee  = 20_000 // gas, twice the minimum at the pool's 1:1 price
+
+	tfCodespace = "tokenfactory"
+	tfUndefined = "undefined" // a plain Go error: codespace undefined, code 1
+	tfSdk       = "sdk"
+	tfMaxSubLen = 44
+	tfMaxFont   = 32
 )
 
 // TestTokenFactory drives a factory denom through its admin's whole life on a
 // real network: create, mint, burn, metadata, on-chain branding, an admin
 // handover and back, then the renounce that freezes the denom for everyone.
-// Subtests run in order and share state.
+// Before the renounce, while the admin is live, a second account creates a
+// denom and a ubze pool for it and pays a create fee through that pool, and
+// the module's refusals are checked one by one. Subtests run in order and
+// share state.
 func TestTokenFactory(t *testing.T) {
 	if testing.Short() {
 		t.Skip("e2e: skipped in short mode")
@@ -45,6 +70,13 @@ func TestTokenFactory(t *testing.T) {
 	t.Run("1 create, mint, burn and set metadata", s.createAndUse)
 	t.Run("2 branding set, clear and refusals", s.branding)
 	t.Run("3 change admin and back", s.changeAdmin)
+	t.Run("5 create fee to the community pool and default metadata", s.createFeeAndDefaultMetadata)
+	t.Run("6 create fee paid with a non-native tx fee denom", s.createFeeNonNative)
+	t.Run("7 create-denom refusals", s.createRefusals)
+	t.Run("8 mint and burn refusals", s.mintBurnRefusals)
+	t.Run("9 change-admin refusals", s.changeAdminRefusals)
+	t.Run("10 metadata and branding refusals", s.metadataBrandingRefusals)
+	t.Run("11 queries of unknown denoms", s.unknownDenomQueries)
 	t.Run("4 renounce freezes the denom", s.renounce)
 }
 
@@ -52,16 +84,34 @@ type tokenFactorySuite struct {
 	ctx context.Context
 	bze *cosmos.CosmosChain
 
-	admin, other ibc.Wallet
-	denom        string
+	admin, other, payer ibc.Wallet
+	denom               string
+	// gas is the payer's denom, gasPool its ubze pool and lpDenom the pool's
+	// LP denom; nope is a factory denom nobody created
+	gas, gasPool, lpDenom, nope string
+	tfModule, tradebin, cp      string
 }
 
 func setupTokenFactory(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain) *tokenFactorySuite {
 	s := &tokenFactorySuite{ctx: ctx, bze: bze}
 	s.admin = interchaintest.GetAndFundTestUsers(t, ctx, "tfadmin", sdkmath.NewInt(tfAdminFunds), bze)[0]
 	s.other = interchaintest.GetAndFundTestUsers(t, ctx, "tfother", sdkmath.NewInt(tfUserFunds), bze)[0]
+	s.payer = interchaintest.GetAndFundTestUsers(t, ctx, "tfpayer", sdkmath.NewInt(tfPayerFunds), bze)[0]
 	require.NoError(t, testutil.WaitForBlocks(ctx, 2, bze))
 	s.denom = "factory/" + s.admin.FormattedAddress() + "/tok"
+	s.nope = "factory/" + s.admin.FormattedAddress() + "/nope"
+	s.gas = "factory/" + s.payer.FormattedAddress() + "/gas"
+	// pool ids order the denoms: "factory/…" sorts before "ubze"
+	s.gasPool = s.gas + "_" + chain.Denom
+	for name, addr := range map[string]*string{
+		"tokenfactory":      &s.tfModule,
+		"tradebin":          &s.tradebin,
+		"txfeecollector_cp": &s.cp,
+	} {
+		var err error
+		*addr, err = helpers.ModuleAddress(ctx, bze, name)
+		require.NoError(t, err)
+	}
 	return s
 }
 
@@ -168,6 +218,327 @@ func (s *tokenFactorySuite) renounce(t *testing.T) {
 	s.mustExec(t, s.admin, "bank", "send", admin, other, coinStr(tfSend, s.denom))
 	require.Equal(t, before.AddRaw(tfSend).String(), s.balance(t, other, s.denom).String())
 	require.Equal(t, sdkmath.NewInt(tfMint-tfBurn+tfOtherMint).String(), s.supply(t).String())
+}
+
+// 5. The payer creates the gas denom paying the create fee in ubze: the fee
+// goes from the payer to the tokenfactory module and on to the community-pool
+// collector, and the new denom gets the default bank metadata, one exponent-0
+// unit named after the denom and nothing else.
+func (s *tokenFactorySuite) createFeeAndDefaultMetadata(t *testing.T) {
+	payer := s.payer.FormattedAddress()
+	fee := s.createDenomFee(t)
+	before := s.allBalances(t, payer)
+
+	res := s.mustExec(t, s.payer, "tokenfactory", "create-denom", "gas")
+	require.Equal(t, before.Sub(fee.Add(sdk.NewCoin(chain.Denom, s.txFee(t, res)))), s.allBalances(t, payer),
+		"payer must pay exactly the create fee and the tx fee")
+	events := helpers.TxEvents(res, "transfer")
+	require.Equal(t, fee.Amount.String(), s.transferred(t, events, payer, s.tfModule, chain.Denom).String(), "the create fee to the tokenfactory module")
+	require.Equal(t, fee.Amount.String(), s.transferred(t, events, s.tfModule, s.cp, chain.Denom).String(), "the create fee to the txfeecollector_cp module")
+
+	admin, err := s.authorityOf(s.gas)
+	require.NoError(t, err)
+	require.Equal(t, payer, admin)
+	require.Equal(t, "0", s.supplyOf(t, s.gas).String())
+	md, err := s.metadataOf(s.gas)
+	require.NoError(t, err)
+	require.Equal(t, tfMetadata{Base: s.gas, DenomUnits: []tfDenomUnit{{Denom: s.gas}}}, md, "default metadata of a new denom")
+}
+
+// 6. With a tx fee in gas, the create fee is bought with gas: the chain takes
+// from the payer the gas that buys the fee out of the gas/ubze pool (the
+// input rounded up), swaps it and sends the whole swap output to the
+// community-pool collector, so the collector gets at least the fee. The payer
+// spends no ubze. The swap output itself is not computed: it must be at least
+// the fee and at most 1% above it.
+func (s *tokenFactorySuite) createFeeNonNative(t *testing.T) {
+	payer := s.payer.FormattedAddress()
+	s.mustExec(t, s.payer, "tokenfactory", "mint", coinStr(tfGasMint, s.gas))
+	s.mustExecWith(t, s.payer, []helpers.TxOption{helpers.WithGas(tfPoolTxGas)},
+		"tradebin", "create-liquidity-pool", s.gas, chain.Denom, tfPoolFee, tfPoolDest, "false",
+		strconv.Itoa(tfPoolGas), strconv.Itoa(tfPoolBze))
+	pool := s.pool(t)
+	require.Equal(t, s.gas, pool.Base)
+	require.Equal(t, sdkmath.NewInt(tfPoolBze).String(), pool.reserveQuote().String())
+	require.True(t, pool.reserveQuote().GTE(s.minNativeLiquidity(t)), "the pool must be deep enough to pay fees in gas")
+	s.lpDenom = pool.LpDenom
+
+	fee := s.createDenomFee(t)
+	before := s.allBalances(t, payer)
+	res := s.mustExecWith(t, s.payer, []helpers.TxOption{helpers.WithFees(coinStr(tfGasTxFee, s.gas)), helpers.WithGas(tfGasTxGas)},
+		"tokenfactory", "create-denom", "tkn")
+	paid, err := helpers.TxFee(res, s.gas)
+	require.NoError(t, err)
+	require.Equal(t, sdkmath.NewInt(tfGasTxFee).String(), paid.String(), "tx fee in gas")
+	require.True(t, s.txFee(t, res).IsZero(), "no ubze tx fee")
+
+	events := helpers.TxEvents(res, "transfer")
+	gasIn := s.transferred(t, events, payer, s.tradebin, s.gas)
+	require.True(t, gasIn.IsPositive(), "the payer must pay the create fee in gas to tradebin")
+	require.Equal(t, before.Sub(sdk.NewCoin(s.gas, gasIn.AddRaw(tfGasTxFee))), s.allBalances(t, payer),
+		"the payer pays the tx fee and exactly the gas tradebin took, and no ubze")
+	require.True(t, s.transferred(t, events, payer, s.tfModule, chain.Denom).IsZero(), "no ubze from the payer")
+
+	swapped := s.transferred(t, events, s.tradebin, s.tfModule, chain.Denom)
+	toCp := s.transferred(t, events, s.tfModule, s.cp, chain.Denom)
+	require.Equal(t, swapped.String(), toCp.String(), "the whole swap output must reach the txfeecollector_cp module")
+	require.True(t, toCp.GTE(fee.Amount), "the collector got %s, less than the create fee %s", toCp, fee.Amount)
+	require.True(t, toCp.LTE(fee.Amount.Add(fee.Amount.QuoRaw(100))), "the collector got %s, more than 1%% above the create fee %s", toCp, fee.Amount)
+	t.Logf("create fee %s bought with %s%s: %subze to the collector", fee, gasIn, s.gas, toCp)
+
+	tkn := "factory/" + payer + "/tkn"
+	admin, err := s.authorityOf(tkn)
+	require.NoError(t, err)
+	require.Equal(t, payer, admin)
+}
+
+// tfRefusal is how the chain refuses a message: in CheckTx (ValidateBasic,
+// never included, nothing paid) or in DeliverTx (included, the tx fee paid).
+type tfRefusal struct {
+	checkTx   bool
+	codespace string
+	code      uint32
+	reason    string
+}
+
+// 7. Refused denom creations charge no create fee and create nothing. The
+// chain checks the subdenom for "_" and "/" (ValidateBasic), its length, that
+// the subdenom itself has no supply, and the full denom's characters; it does
+// not compare the full denom with supplied denoms (only with denoms that have
+// bank metadata, the duplicate case).
+func (s *tokenFactorySuite) createRefusals(t *testing.T) {
+	admin := s.admin.FormattedAddress()
+	for _, c := range []struct {
+		name, subdenom string
+		want           tfRefusal
+	}{
+		{"duplicate subdenom", "tok", tfRefusal{false, tfCodespace, 1101, "attempting to create a denom that already exists (has bank metadata)"}},
+		{"empty subdenom", "", tfRefusal{true, tfSdk, 18, "subdenom must not be empty"}},
+		{"underscore", "a_b", tfRefusal{true, tfSdk, 18, "subdenom should not contain _"}},
+		{"slash", "a/b", tfRefusal{true, tfSdk, 18, "subdenom should not contain /"}},
+		{"45 characters", strings.Repeat("a", tfMaxSubLen+1), tfRefusal{false, tfCodespace, 1106, "subdenom too long, max length is 44 bytes"}},
+		{"subdenom with supply", chain.Denom, tfRefusal{false, tfUndefined, 1, "can't create subdenoms that are the same as a native denom"}},
+		{"invalid denom character", "tok!", tfRefusal{false, tfUndefined, 1, "invalid denom: factory/" + admin + "/tok!"}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			msg := map[string]any{"@type": "/bze.tokenfactory.MsgCreateDenom", "creator": admin, "subdenom": c.subdenom}
+			s.requireMsgRefused(t, s.admin, msg, c.want)
+			if c.subdenom == "tok!" {
+				// an invalid denom can not be stored: the bank query refuses it
+				// before looking for metadata
+				denom := "factory/" + admin + "/" + c.subdenom
+				_, err := s.authorityOf(denom)
+				require.ErrorContains(t, err, "denom authority not found for denom "+denom)
+				_, err = s.metadataOf(denom)
+				require.ErrorContains(t, err, "invalid denom: "+denom)
+				_, err = helpers.Query[json.RawMessage](s.ctx, s.bze, "bank", "total-supply-of", denom)
+				require.ErrorContains(t, err, "invalid denom: "+denom)
+			} else if c.subdenom != "tok" && c.subdenom != "" {
+				s.requireNoDenom(t, "factory/"+admin+"/"+c.subdenom)
+			}
+		})
+	}
+}
+
+// 8. Mint checks the denom has bank metadata, then that it is a factory
+// denom; burn checks only the denom's admin, then the balance.
+func (s *tokenFactorySuite) mintBurnRefusals(t *testing.T) {
+	admin, other := s.admin.FormattedAddress(), s.other.FormattedAddress()
+	_, err := s.metadataOf(chain.Denom)
+	require.ErrorContains(t, err, "client metadata for denom "+chain.Denom, "ubze has no bank metadata on the e2e network")
+	balance := sdk.NewCoin(s.denom, s.balance(t, admin, s.denom))
+	above := balance.AddAmount(sdkmath.OneInt())
+	lpSupply := s.supplyOf(t, s.lpDenom)
+
+	for _, c := range []struct {
+		name string
+		user ibc.Wallet
+		msg  map[string]any
+		want tfRefusal
+	}{
+		{"mint a denom without metadata", s.admin, mintMsg(admin, coinStr(1, chain.Denom)), tfRefusal{false, tfCodespace, 1108, "denom: " + chain.Denom + ": denom does not exist"}},
+		{"mint an LP denom", s.admin, mintMsg(admin, coinStr(1, s.lpDenom)), tfRefusal{false, tfCodespace, 1103, "not enough parts of denom " + s.lpDenom + ": invalid denom"}},
+		{"mint an unknown factory denom", s.admin, mintMsg(admin, coinStr(1, s.nope)), tfRefusal{false, tfCodespace, 1108, "denom: " + s.nope + ": denom does not exist"}},
+		{"burn ubze", s.admin, burnMsg(admin, coinStr(1, chain.Denom)), tfRefusal{false, tfUndefined, 1, "denom authority not found for denom " + chain.Denom}},
+		{"burn an LP denom", s.admin, burnMsg(admin, coinStr(1, s.lpDenom)), tfRefusal{false, tfUndefined, 1, "denom authority not found for denom " + s.lpDenom}},
+		{"burn an unknown factory denom", s.admin, burnMsg(admin, coinStr(1, s.nope)), tfRefusal{false, tfUndefined, 1, "denom authority not found for denom " + s.nope}},
+		{"burn above the balance", s.admin, burnMsg(admin, above.String()), tfRefusal{false, tfSdk, 5, "spendable balance " + balance.String() + " is smaller than " + above.String()}},
+		{"burn by a non-admin", s.other, burnMsg(other, coinStr(1, s.denom)), tfRefusal{false, tfCodespace, 1102, "unauthorized account"}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			s.requireMsgRefused(t, c.user, c.msg, c.want)
+		})
+	}
+	require.Equal(t, lpSupply.String(), s.supplyOf(t, s.lpDenom).String(), "LP supply")
+	s.requireNoDenom(t, s.nope)
+}
+
+// 9. ChangeAdmin refuses the creator itself and invalid addresses in
+// ValidateBasic, an unknown denom and a non-admin (also renouncing) in
+// DeliverTx.
+func (s *tokenFactorySuite) changeAdminRefusals(t *testing.T) {
+	admin, other := s.admin.FormattedAddress(), s.other.FormattedAddress()
+	for _, c := range []struct {
+		name string
+		user ibc.Wallet
+		msg  map[string]any
+		want tfRefusal
+	}{
+		{"to self", s.admin, s.changeAdminMsg(admin, admin), tfRefusal{true, tfSdk, 7, "new admin must be different from creator"}},
+		{"to an invalid address", s.admin, s.changeAdminMsg(admin, "bze1invalid"), tfRefusal{true, tfSdk, 7, "invalid new admin address"}},
+		{"renounce by a non-admin", s.other, s.changeAdminMsg(other, ""), tfRefusal{false, tfCodespace, 1102, "unauthorized account"}},
+		{"on an unknown denom", s.admin, tfChangeAdminMsg(admin, s.nope, other), tfRefusal{false, tfUndefined, 1, "denom authority not found for denom " + s.nope}},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			s.requireMsgRefused(t, c.user, c.msg, c.want)
+		})
+	}
+	s.requireNoDenom(t, s.nope)
+}
+
+// 10. Metadata is validated by the bank rules in DeliverTx (the message's
+// ValidateBasic checks only the creator) and needs the denom's admin, which a
+// non-factory denom never has. Branding is validated in ValidateBasic: a
+// complete package, a font slug and #RRGGBB colours.
+func (s *tokenFactorySuite) metadataBrandingRefusals(t *testing.T) {
+	admin, other := s.admin.FormattedAddress(), s.other.FormattedAddress()
+	base := tfDenomUnit{Denom: s.denom}
+	tok := tfDenomUnit{Denom: "TOK", Exponent: 6}
+	for _, c := range []struct {
+		name string
+		user ibc.Wallet
+		msg  map[string]any
+		want tfRefusal
+	}{
+		{"blank name", s.admin, tfMetadataMsg(admin, s.denom, "TOK", "", base, tok), tfRefusal{false, tfUndefined, 1, "name field cannot be blank"}},
+		{"display not a unit", s.admin, tfMetadataMsg(admin, s.denom, "XYZ", "Token", base, tok), tfRefusal{false, tfUndefined, 1, "metadata must contain a denomination unit with display denom 'XYZ'"}},
+		{"base not the first unit", s.admin, tfMetadataMsg(admin, s.denom, "TOK", "Token", tok, base), tfRefusal{false, tfUndefined, 1, "metadata's first denomination unit must be the one with base denom '" + s.denom + "'"}},
+		{"unsorted exponents", s.admin, tfMetadataMsg(admin, s.denom, "TOK", "Token", base, tok, tfDenomUnit{Denom: "mTOK", Exponent: 3}), tfRefusal{false, tfUndefined, 1, "denom units should be sorted asc by exponent"}},
+		{"someone else's denom", s.other, s.metadataMsg(other, "Hijack"), tfRefusal{false, tfCodespace, 1102, "unauthorized account"}},
+		{"unknown denom", s.admin, tfMetadataMsg(admin, s.nope, "TOK", "Nope", tfDenomUnit{Denom: s.nope}, tok), tfRefusal{false, tfUndefined, 1, "denom authority not found for denom " + s.nope}},
+		{"ubze", s.admin, tfMetadataMsg(admin, chain.Denom, "BZE", "BZE", tfDenomUnit{Denom: chain.Denom}, tfDenomUnit{Denom: "BZE", Exponent: 6}), tfRefusal{false, tfUndefined, 1, "denom authority not found for denom " + chain.Denom}},
+	} {
+		t.Run("metadata "+c.name, func(t *testing.T) {
+			s.requireMsgRefused(t, c.user, c.msg, c.want)
+		})
+	}
+	_, err := s.metadataOf(chain.Denom)
+	require.ErrorContains(t, err, "client metadata for denom "+chain.Denom, "ubze must still have no metadata")
+
+	// a stored branding, so the refusals must leave it as it is
+	s.mustExecMsg(t, s.admin, s.brandingMsg(admin, tfBranding("inter")))
+	light := map[string]any{"background": "#FFFFFF", "text": "#111111", "primary": "#FF8800", "secondary": "#0088FF"}
+	dark := map[string]any{"background": "#000000", "text": "#EEEEEE", "primary": "#FFAA33", "secondary": "#33AAFF"}
+	with := func(p map[string]any, key, value string) map[string]any {
+		out := map[string]any{key: value}
+		for k, v := range p {
+			if k != key {
+				out[k] = v
+			}
+		}
+		return out
+	}
+	full := map[string]any{"font": "inter", "light": light, "dark": dark}
+	longFont := strings.Repeat("a", tfMaxFont+1)
+	for _, c := range []struct {
+		name     string
+		denom    string
+		branding map[string]any
+		want     tfRefusal
+	}{
+		{"colour name", s.denom, map[string]any{"font": "inter", "light": with(light, "primary", "blue"), "dark": dark}, tfRefusal{true, tfCodespace, 1111, "invalid light primary color: blue"}},
+		{"short hex colour", s.denom, map[string]any{"font": "inter", "light": light, "dark": with(dark, "text", "#12345")}, tfRefusal{true, tfCodespace, 1111, "invalid dark text color: #12345"}},
+		{"colour without #", s.denom, map[string]any{"font": "inter", "light": with(light, "background", "FFFFFF"), "dark": dark}, tfRefusal{true, tfCodespace, 1111, "invalid light background color: FFFFFF"}},
+		{"missing dark palette", s.denom, map[string]any{"font": "inter", "light": light}, tfRefusal{true, tfCodespace, 1111, "dark palette is missing"}},
+		{"font only", s.denom, map[string]any{"font": "inter"}, tfRefusal{true, tfCodespace, 1111, "light palette is missing"}},
+		{"empty font", s.denom, map[string]any{"light": light, "dark": dark}, tfRefusal{true, tfCodespace, 1111, "invalid font: : invalid branding"}},
+		{"font too long", s.denom, map[string]any{"font": longFont, "light": light, "dark": dark}, tfRefusal{true, tfCodespace, 1111, "invalid font: " + longFont}},
+		{"empty denom", "", full, tfRefusal{true, tfCodespace, 1103, "denom cannot be empty"}},
+		{"unknown denom", s.nope, full, tfRefusal{false, tfUndefined, 1, "denom authority not found for denom " + s.nope}},
+	} {
+		t.Run("branding "+c.name, func(t *testing.T) {
+			msg := map[string]any{"@type": "/bze.tokenfactory.MsgSetDenomBranding", "creator": admin, "denom": c.denom, "branding": c.branding}
+			s.requireMsgRefused(t, s.admin, msg, c.want)
+		})
+	}
+	s.requireNoDenom(t, s.nope)
+}
+
+// 11. Queries of a denom nobody created: the authority query fails with the
+// keeper's error, the branding query answers NotFound, the branding list
+// leaves it out and bank has no metadata nor supply for it.
+func (s *tokenFactorySuite) unknownDenomQueries(t *testing.T) {
+	s.requireNoDenom(t, s.nope)
+	_, err := helpers.Query[struct {
+		Branding *brandingInfo `json:"branding"`
+	}](s.ctx, s.bze, "tokenfactory", "denom-branding", s.nope)
+	require.ErrorContains(t, err, "not found")
+	all, err := helpers.Query[struct {
+		DenomBrandings []struct {
+			Denom string `json:"denom"`
+		} `json:"denom_brandings"`
+	}](s.ctx, s.bze, "tokenfactory", "all-denom-branding")
+	require.NoError(t, err)
+	var listed []string
+	for _, r := range all.DenomBrandings {
+		listed = append(listed, r.Denom)
+	}
+	require.Equal(t, []string{s.denom}, listed, "only the admin's denom is branded")
+}
+
+// requireNoDenom asserts denom has no admin, no bank metadata and no supply.
+func (s *tokenFactorySuite) requireNoDenom(t *testing.T, denom string) {
+	t.Helper()
+	_, err := s.authorityOf(denom)
+	require.ErrorContains(t, err, "denom authority not found for denom "+denom)
+	_, err = s.metadataOf(denom)
+	require.ErrorContains(t, err, "client metadata for denom "+denom)
+	require.True(t, s.supplyOf(t, denom).IsZero(), "%s has supply", denom)
+}
+
+// requireMsgRefused asserts the message is refused as want says, that the
+// admin's denom did not change and that the user paid at most the tx fee.
+func (s *tokenFactorySuite) requireMsgRefused(t *testing.T, user ibc.Wallet, msg any, want tfRefusal) {
+	t.Helper()
+	addr := user.FormattedAddress()
+	before, balances := s.denomState(t), s.allBalances(t, addr)
+	res, err := helpers.ExecMsgs(s.ctx, s.bze, user, nil, msg)
+	why, err := helpers.RejectionReason(res, err)
+	require.NoError(t, err, "msg %v", msg)
+	require.Contains(t, why, want.reason)
+	require.Equal(t, want.codespace, res.Codespace, why)
+	require.EqualValues(t, want.code, res.Code, why)
+	if want.checkTx {
+		require.Zero(t, res.Height, "a tx refused in CheckTx must not be included")
+		require.Equal(t, balances, s.allBalances(t, addr), "a tx refused in CheckTx must cost nothing")
+	} else {
+		require.Positive(t, res.Height, "a tx refused in DeliverTx is included")
+		require.Equal(t, balances.Sub(sdk.NewCoin(chain.Denom, s.txFee(t, res))), s.allBalances(t, addr), "a refused tx must cost only its fee")
+	}
+	require.Equal(t, before, s.denomState(t), "a refused tx must not change the denom")
+}
+
+func tfChangeAdminMsg(creator, denom, newAdmin string) map[string]any {
+	return map[string]any{"@type": "/bze.tokenfactory.MsgChangeAdmin", "creator": creator, "denom": denom, "newAdmin": newAdmin}
+}
+
+func tfMetadataMsg(creator, base, display, name string, units ...tfDenomUnit) map[string]any {
+	du := make([]map[string]any, 0, len(units))
+	for _, u := range units {
+		du = append(du, map[string]any{"denom": u.Denom, "exponent": u.Exponent})
+	}
+	return map[string]any{
+		"@type":   "/bze.tokenfactory.MsgSetDenomMetadata",
+		"creator": creator,
+		"metadata": map[string]any{
+			"description": name + " for the e2e suite",
+			"denom_units": du,
+			"base":        base,
+			"display":     display,
+			"name":        name,
+			"symbol":      "TOK",
+		},
+	}
 }
 
 func (s *tokenFactorySuite) requireAdminChange(t *testing.T, res helpers.TxResult, from, to string) {
@@ -349,13 +720,106 @@ func (s *tokenFactorySuite) metadata(t *testing.T) metadataInfo {
 
 func (s *tokenFactorySuite) supply(t *testing.T) sdkmath.Int {
 	t.Helper()
+	return s.supplyOf(t, s.denom)
+}
+
+func (s *tokenFactorySuite) supplyOf(t *testing.T, denom string) sdkmath.Int {
+	t.Helper()
 	res, err := helpers.Query[struct {
 		Amount struct {
 			Amount string `json:"amount"`
 		} `json:"amount"`
-	}](s.ctx, s.bze, "bank", "total-supply-of", s.denom)
+	}](s.ctx, s.bze, "bank", "total-supply-of", denom)
 	require.NoError(t, err)
 	return parseInt(res.Amount.Amount)
+}
+
+func (s *tokenFactorySuite) authorityOf(denom string) (string, error) {
+	res, err := helpers.Query[struct {
+		DenomAuthority struct {
+			Admin string `json:"admin"`
+		} `json:"denomAuthority"`
+	}](s.ctx, s.bze, "tokenfactory", "denom-authority", denom)
+	return res.DenomAuthority.Admin, err
+}
+
+// tfMetadata is the whole bank metadata of a denom; the query omits empty
+// fields and zero exponents.
+type tfMetadata struct {
+	Description string        `json:"description"`
+	DenomUnits  []tfDenomUnit `json:"denom_units"`
+	Base        string        `json:"base"`
+	Display     string        `json:"display"`
+	Name        string        `json:"name"`
+	Symbol      string        `json:"symbol"`
+	URI         string        `json:"uri"`
+	URIHash     string        `json:"uri_hash"`
+}
+
+type tfDenomUnit struct {
+	Denom    string   `json:"denom"`
+	Exponent uint32   `json:"exponent"`
+	Aliases  []string `json:"aliases"`
+}
+
+func (s *tokenFactorySuite) metadataOf(denom string) (tfMetadata, error) {
+	res, err := helpers.Query[struct {
+		Metadata tfMetadata `json:"metadata"`
+	}](s.ctx, s.bze, "bank", "denom-metadata", denom)
+	return res.Metadata, err
+}
+
+// allBalances returns every balance of addr.
+func (s *tokenFactorySuite) allBalances(t *testing.T, addr string) sdk.Coins {
+	t.Helper()
+	res, err := helpers.Query[struct {
+		Balances []struct {
+			Denom  string `json:"denom"`
+			Amount string `json:"amount"`
+		} `json:"balances"`
+	}](s.ctx, s.bze, "bank", "balances", addr)
+	require.NoError(t, err)
+	out := sdk.NewCoins()
+	for _, b := range res.Balances {
+		out = out.Add(sdk.NewCoin(b.Denom, parseInt(b.Amount)))
+	}
+	return out
+}
+
+func (s *tokenFactorySuite) transferred(t *testing.T, events []helpers.Event, from, to, denom string) sdkmath.Int {
+	t.Helper()
+	got, err := helpers.Transferred(events, from, to, denom)
+	require.NoError(t, err)
+	return got
+}
+
+func (s *tokenFactorySuite) mustExecWith(t *testing.T, user ibc.Wallet, opts []helpers.TxOption, args ...string) helpers.TxResult {
+	t.Helper()
+	res, err := helpers.ExecTxWith(s.ctx, s.bze, user, opts, args...)
+	require.NoError(t, err)
+	require.Zero(t, res.Code, "tx %v failed: %s", args, res.RawLog)
+	return res
+}
+
+func (s *tokenFactorySuite) pool(t *testing.T) poolInfo {
+	t.Helper()
+	res, err := helpers.Query[struct {
+		Pool poolInfo `json:"pool"`
+	}](s.ctx, s.bze, "tradebin", "liquidity-pool", s.gasPool)
+	require.NoError(t, err)
+	require.Equal(t, s.gasPool, res.Pool.ID, "pool %s not found", s.gasPool)
+	return res.Pool
+}
+
+func (s *tokenFactorySuite) minNativeLiquidity(t *testing.T) sdkmath.Int {
+	t.Helper()
+	res, err := helpers.Query[struct {
+		Params struct {
+			MinNativeLiquidityForModuleSwap string `json:"minNativeLiquidityForModuleSwap"`
+		} `json:"params"`
+	}](s.ctx, s.bze, "tradebin", "params")
+	require.NoError(t, err)
+	return parseInt(res.Params.MinNativeLiquidityForModuleSwap)
 }
 
 func (s *tokenFactorySuite) balance(t *testing.T, addr, denom string) sdkmath.Int {

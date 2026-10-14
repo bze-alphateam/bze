@@ -3,10 +3,14 @@ package helpers
 import (
 	"context"
 	"fmt"
-	"time"
+	"strconv"
 
 	"github.com/cosmos/interchaintest/v10/chain/cosmos"
 )
+
+// epochStartEvent is the typed event the epochs module emits when an epoch
+// starts, with the identifier and the new epoch number.
+const epochStartEvent = "bze.epochs.EpochStartEvent"
 
 // EpochInfo is one entry of `bzed q epochs all`.
 type EpochInfo struct {
@@ -48,17 +52,39 @@ func CurrentEpoch(ctx context.Context, chain *cosmos.CosmosChain, identifier str
 }
 
 // WaitForEpoch blocks until the epoch's current number is at least n, or ctx
-// ends. Bound it with a context deadline.
+// ends: it follows the chain's blocks for the epoch's start event, then reads
+// the epoch with the CLI. Bound it with a context deadline.
 func WaitForEpoch(ctx context.Context, chain *cosmos.CosmosChain, identifier string, n int64) error {
-	for {
-		cur, err := CurrentEpoch(ctx, chain, identifier)
-		if err == nil && cur >= n {
-			return nil
-		}
-		select {
-		case <-ctx.Done():
-			return fmt.Errorf("epoch %s did not reach %d (current %d, last error %v): %w", identifier, n, cur, err, ctx.Err())
-		case <-time.After(pollInterval):
-		}
+	w, err := watchBlocks(ctx, chain)
+	if err != nil {
+		return err
 	}
+	defer w.Close()
+
+	cur, err := CurrentEpoch(ctx, chain, identifier)
+	for err != nil || cur < n {
+		failed := err != nil
+		_, werr := w.until(ctx, func(b streamBlock) (bool, error) {
+			if failed {
+				// The last read failed: read again on the next block.
+				return true, nil
+			}
+			for _, e := range filterEvents(b.Events, epochStartEvent) {
+				if e.Attributes["identifier"] != identifier {
+					continue
+				}
+				started, perr := strconv.ParseInt(e.Attributes["epoch"], 10, 64)
+				if perr != nil {
+					return false, fmt.Errorf("epoch start event at height %d: %w", b.Height, perr)
+				}
+				return started >= n, nil
+			}
+			return false, nil
+		})
+		if werr != nil {
+			return fmt.Errorf("epoch %s did not reach %d (current %d, last error %v): %w", identifier, n, cur, err, werr)
+		}
+		cur, err = CurrentEpoch(ctx, chain, identifier)
+	}
+	return nil
 }
