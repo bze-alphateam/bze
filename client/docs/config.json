@@ -31,10 +31,13 @@
       }
     },
     {
+      "url": "../../tmp-swagger-gen/bze/epochs/query.swagger.json"
+    },
+    {
       "url": "../../tmp-swagger-gen/bze/rewards/query.swagger.json",
       "operationIds": {
         "rename": {
-          "Params": "RwewardsParams"
+          "Params": "RewardsParams"
         }
       }
     },
@@ -115,6 +118,21 @@
       "operationIds": {
         "rename": {
           "Params": "GovParams"
+        }
+      }
+    },
+    {
+      "url": "../../tmp-swagger-gen/cosmos/gov/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "GovV1Params",
+          "Proposal": "GovV1Proposal",
+          "Proposals": "GovV1Proposals",
+          "Vote": "GovV1Vote",
+          "Votes": "GovV1Votes",
+          "Deposit": "GovV1Deposit",
+          "Deposits": "GovV1Deposits",
+          "TallyResult": "GovV1TallyResult"
         }
       }
     },
