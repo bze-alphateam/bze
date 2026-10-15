@@ -22,6 +22,7 @@ derived from it. History older than v8.0.0 lives in the
 
 * (app) [#141](https://github.com/bze-alphateam/bze/pull/141) The code now keeps only the upgrade handler of the release it builds (`v8.3.0`). The handlers of v5.1.2 through v8.2.0 are removed, because each one runs once at its height. Nodes syncing from genesis already switch to each release's own binary at its upgrade height (for example with Cosmovisor), so nothing changes for operators.
 * (x/rewards) [#143](https://github.com/bze-alphateam/bze/pull/143) A `bzed export` taken in the block where the denom rewards distribution queue stops on a schedule that just made its final payout now passes `validate-genesis` and imports. Genesis validation only requires the queue cursor to be a well-formed schedule key of an existing denom reward, not a schedule that still exists. Only genesis validation changes.
+* (x/txfeecollector) [#143](https://github.com/bze-alphateam/bze/pull/143) `blocked_ibc_inbound` entries must name the channel exactly as IBC packets do: `channel-{N}` without leading zeros. Ids like `Channel-3`, `channel_3` or `channel-03` used to pass validation but never matched a packet, so the entry blocked nothing. This applies to genesis import and `MsgUpdateParams`. The stored mainnet value `channel-3` stays valid.
 
 ### Bug Fixes
 
