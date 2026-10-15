@@ -13,9 +13,9 @@ derived from it. History older than v8.0.0 lives in the
 
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.
 
-## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0)
+## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0) - 2026-10-14
 
-Coordinated upgrade at a height to be announced once the mainnet software-upgrade proposal passes (`v8.2.0` upgrade handler). Module migrations: rewards v4→v5 (Denom Rewards parameter defaults) and txfeecollector v2→v3 (empty `blocked_ibc_inbound` default); no store keys added or removed. **Validators must build with Go 1.26.x.**
+Coordinated upgrade at height 25263600 (`v8.2.0` upgrade handler). Module migrations: rewards v4→v5 (Denom Rewards parameter defaults) and txfeecollector v2→v3 (empty `blocked_ibc_inbound` default); no store keys added or removed. **Validators must build with Go 1.26.x.**
 
 The handler also carries the Noble USDC wind-down. Circle is retiring USDC on the Noble chain, so from 2027-01-12 the `USDC.n` vouchers held on BeeZee lose their backing. At the upgrade height the chain stops accepting new inbound `uusdc` from Noble (exits stay open — outgoing transfers, refunds and the channel itself are untouched) and **transfers the protocol-owned USDC.n/BZE liquidity-pool shares held by the burner black hole to the team's admin address `bze1jx4x3kn8mlz2s03zdpf2a38x9gl66llvjqdd55`**, so that liquidity can be withdrawn, migrated to Injective-issued USDC (`USDC.inj`) and locked in the black hole again as a USDC.inj/BZE pool. Every other black-hole balance stays where it is. The migration values are hardcoded for this release and will be removed afterwards.
 
