@@ -980,7 +980,7 @@ func (s *upgradeSuite) v830Before(t *testing.T) any {
 	for name, want := range map[string]int64{"capability": 1, "feeibc": 2, "ibc": 6, "transfer": 5, "interchainaccounts": 3} {
 		require.Equal(t, want, st.versions[name], "%s module version before", name)
 	}
-	require.True(t, s.supported(t, "ibc-fee", "incentivized-packets"), "the fee module answers before the upgrade")
+	require.True(t, s.supported(t, "ibc-fee", "packets"), "the fee module answers before the upgrade")
 
 	s.ibc.transferIn(t, chain.SimdDenom, upV830In).requireAccepted(t)
 	st.voucher = helpers.IbcDenom(s.ibc.main.bze, chain.SimdDenom)
@@ -1005,7 +1005,7 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 		}
 		require.Equal(t, v, versions[name], "%s module version unchanged", name)
 	}
-	require.False(t, s.supported(t, "ibc-fee", "incentivized-packets"), "the fee module is gone from the CLI")
+	require.False(t, s.supported(t, "ibc-fee", "packets"), "the fee module is gone from the CLI")
 
 	// the channel opened before the upgrade is still open on both ends
 	s.ibc.requireChannelOpen(t, s.ibc.main)
