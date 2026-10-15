@@ -9,6 +9,10 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
+### Features
+
+* (x/tradebin) [#152](https://github.com/bze-alphateam/bze/pull/152) Every order book message the EndBlock engine processes now leaves an event carrying its `message_id`, so indexers can tell "processed" from "still queued". New typed events: `OrderMessageRefundedEvent` when the unexecuted part of a message is returned (`reason` `no_match`, `unfilled_remainder` or `below_min_amount`; `refund` is empty when the amount rounded to zero and only dust was stored), `OrderCancelSkippedEvent` when a cancel finds no order (`order_not_found`), and `OrderMessageFailedEvent` every block a message fails and stays queued (`processing_error`). Events only: funds, orders, dust and the queue are handled exactly as before, existing events are unchanged, no migration.
+
 ### Bug Fixes
 
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.

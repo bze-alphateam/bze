@@ -153,6 +153,9 @@ func (pe *ProcessingEngine) getMessageHandler() func(ctx sdk.Context, message ty
 			pe.logger.Error("error on handling queue message", "message", message)
 			//let the iteration continue, we don't want to block the entire processing engine.
 			//the message will be processed again on the next block.
+			//the cache context's events were discarded with its writes, so the failure is emitted on the
+			//outer context.
+			pe.emitOrderMessageFailedEvent(ctx, &message)
 
 			return true
 		}
@@ -177,6 +180,8 @@ func (pe *ProcessingEngine) cancelOrder(ctx sdk.Context, message types.QueueMess
 	order, found := pe.k.GetOrder(ctx, message.MarketId, message.OrderType, message.OrderId)
 	if !found {
 		logger.Error("could not find order")
+		pe.emitOrderCancelSkippedEvent(ctx, &message)
+
 		return nil
 	}
 	pe.k.RemoveOrder(ctx, order)
@@ -282,7 +287,7 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 
 	logger.Info("message remaining amount is too low, returning dust")
 
-	return pe.refundMessageFunds(ctx, &message, *remaining, &market, msgOwnerAddr)
+	return pe.refundMessageFunds(ctx, &message, *remaining, &market, msgOwnerAddr, types.RefundReasonBelowMinAmount)
 }
 
 func (pe *ProcessingEngine) fundUsersAccounts(ctx sdk.Context, order *types.Order, market *types.Market, amount math.Int, taker sdk.AccAddress) error {
@@ -540,6 +545,62 @@ func (pe *ProcessingEngine) emitOrderSavedEvent(ctx sdk.Context, order *types.Or
 	}
 }
 
+func (pe *ProcessingEngine) emitOrderMessageRefundedEvent(ctx sdk.Context, message *types.QueueMessage, amount math.Int, refund sdk.Coin, reason string) {
+	refundStr := ""
+	if refund.IsPositive() {
+		refundStr = refund.String()
+	}
+
+	err := ctx.EventManager().EmitTypedEvent(
+		&types.OrderMessageRefundedEvent{
+			MessageId: message.MessageId,
+			MarketId:  message.MarketId,
+			OrderType: message.OrderType,
+			Owner:     message.Owner,
+			Amount:    amount.String(),
+			Refund:    refundStr,
+			Reason:    reason,
+		},
+	)
+
+	if err != nil {
+		pe.logger.Error(err.Error())
+	}
+}
+
+func (pe *ProcessingEngine) emitOrderCancelSkippedEvent(ctx sdk.Context, message *types.QueueMessage) {
+	err := ctx.EventManager().EmitTypedEvent(
+		&types.OrderCancelSkippedEvent{
+			MessageId: message.MessageId,
+			MarketId:  message.MarketId,
+			OrderType: message.OrderType,
+			OrderId:   message.OrderId,
+			Owner:     message.Owner,
+			Reason:    types.CancelSkippedReasonOrderNotFound,
+		},
+	)
+
+	if err != nil {
+		pe.logger.Error(err.Error())
+	}
+}
+
+func (pe *ProcessingEngine) emitOrderMessageFailedEvent(ctx sdk.Context, message *types.QueueMessage) {
+	err := ctx.EventManager().EmitTypedEvent(
+		&types.OrderMessageFailedEvent{
+			MessageId:   message.MessageId,
+			MarketId:    message.MarketId,
+			MessageType: message.MessageType,
+			Owner:       message.Owner,
+			Reason:      types.MessageFailedReasonProcessingError,
+		},
+	)
+
+	if err != nil {
+		pe.logger.Error(err.Error())
+	}
+}
+
 func (pe *ProcessingEngine) fillOrder(ctx sdk.Context, message types.QueueMessage) error {
 	logger := pe.logger.With(
 		"message", message,
@@ -561,7 +622,7 @@ func (pe *ProcessingEngine) fillOrder(ctx sdk.Context, message types.QueueMessag
 	agg, found := pe.k.GetAggregatedOrder(ctx, message.MarketId, types.TheOtherOrderType(message.OrderType), message.Price)
 	if !found {
 		//no pending orders to fill. refund the amount for this order
-		return pe.refundMessageFunds(ctx, &message, msgAmountInt, &market, msgOwnerAddr)
+		return pe.refundMessageFunds(ctx, &message, msgAmountInt, &market, msgOwnerAddr, types.RefundReasonNoMatch)
 	}
 
 	remainingAmount, err := pe.fillAggregatedOrder(ctx, &agg, &message, msgAmountInt, &market)
@@ -576,10 +637,12 @@ func (pe *ProcessingEngine) fillOrder(ctx sdk.Context, message types.QueueMessag
 
 	//we haven't filled the entire message amount so we have to refund the msg owner's coins
 
-	return pe.refundMessageFunds(ctx, &message, *remainingAmount, &market, msgOwnerAddr)
+	return pe.refundMessageFunds(ctx, &message, *remainingAmount, &market, msgOwnerAddr, types.RefundReasonUnfilledRemainder)
 }
 
-func (pe *ProcessingEngine) refundMessageFunds(ctx sdk.Context, message *types.QueueMessage, refundAmount math.Int, market *types.Market, msgOwnerAddr sdk.AccAddress) error {
+// refundMessageFunds returns refundAmount (base denom) of the message to its owner and emits an
+// OrderMessageRefundedEvent with the given reason in the same context as the bank send.
+func (pe *ProcessingEngine) refundMessageFunds(ctx sdk.Context, message *types.QueueMessage, refundAmount math.Int, market *types.Market, msgOwnerAddr sdk.AccAddress, reason string) error {
 	coinReq := types.OrderCoinsArguments{
 		OrderType:    message.OrderType,
 		OrderPrice:   message.Price,
@@ -604,6 +667,7 @@ func (pe *ProcessingEngine) refundMessageFunds(ctx sdk.Context, message *types.Q
 		pe.logger.Info("will not send dust to order message owner because the amount is 0 (zero) but will save dust", "orderCoins", orderCoins)
 	}
 	pe.k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
+	pe.emitOrderMessageRefundedEvent(ctx, message, refundAmount, orderCoins.Coin, reason)
 
 	return nil
 }

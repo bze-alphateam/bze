@@ -77,6 +77,20 @@ A market or pool is halted iff its base **or** quote is halted. Both sides of a 
 3. The message is idempotent: a denom that is already halted is left as is, so a batch proposal never fails because one of its entries was halted by an earlier proposal. Listing the native denom fails the whole proposal and halts nothing.
 4. Reverting is a `/bze.tradebin.MsgUnhaltDenoms` proposal with the same `denoms`. Un-halting a denom that is not halted is a no-op.
 
+## Order Book Engine Events
+`MsgCreateOrder`, `MsgFillOrders` and `MsgCancelOrder` only queue messages: the transaction emits `OrderCreateMessageEvent` / `OrderCancelMessageEvent` with the queue `message_id`, and the EndBlock engine executes the message in the same block or, past `order_book_per_block_messages`, a later one. Every message the engine removes from the queue emits at least one of the events below with the same `message_id`:
+
+| Event | When |
+| --- | --- |
+| `OrderExecutedEvent` | once per resting order a create or fill message matched |
+| `OrderSavedEvent` | a create message (or its remainder) rests on the book as a new order |
+| `OrderMessageRefundedEvent` | the unexecuted part of a message is returned. `reason`: `no_match` (fill, nothing at its price), `unfilled_remainder` (fill, partly matched), `below_min_amount` (create, the remainder was not placed: below the minimum amount, or opposite orders were left at the price). `amount` is the base amount returned, `refund` the coin sent (empty when it rounded to zero and only dust was stored) |
+| `OrderCanceledEvent` | a cancel removed its order and refunded it |
+| `OrderCancelSkippedEvent` | a cancel found no order (filled or cancelled meanwhile), `reason` `order_not_found` |
+| `OrderMessageFailedEvent` | processing the message failed: its writes are discarded, it stays queued and is retried next block, and this event is emitted again for every block it fails. `reason` is always `processing_error` |
+
+So per message type: a create ends with executed, saved and/or refunded events; a fill with executed and/or refunded events; a cancel with a canceled or a skipped event.
+
 ## User Dust
 Partial order fills can leave fractional coin amounts (dust) that are too small to settle. The module tracks dust per user address, and it accumulates across trades.
 
@@ -102,6 +116,9 @@ Partial order fills can leave fractional coin amounts (dust) that are too small 
 - Module-level swaps/add-liquidity helpers refuse to run unless the native/pair pool holds at least `min_native_liquidity_for_module_swap` in native reserves.
 
 ## Version History
+
+### v8.3.0
+- Order book engine outcome events: `OrderMessageRefundedEvent`, `OrderCancelSkippedEvent` and `OrderMessageFailedEvent`, so every processed queue message leaves an event with its `message_id`.
 
 ### v8.2.0
 - Governance-halted denoms: `MsgHaltDenoms` / `MsgUnhaltDenoms` (authority only, idempotent), the `halted-denoms` and `denom-halted` queries, `ErrDenomHalted` on every new-position message touching a halted market or pool, the no-swap invariant at `swapTokens`, and halted denoms refused as tx fee denoms. Cancel and remove-liquidity untouched. Nothing is halted at the upgrade.

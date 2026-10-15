@@ -141,3 +141,51 @@ message DenomHaltedEvent {
 message DenomUnhaltedEvent {
   string denom = 1;
 }
+
+// OrderMessageRefundedEvent is emitted by the EndBlock order book engine when
+// the unexecuted part of a queued message is returned to its owner. Without it
+// a fill message with no match would leave no trace of its processing.
+message OrderMessageRefundedEvent {
+  // queue message id, zero-filled 24 digits (see OrderCreateMessageEvent)
+  string message_id = 1;
+  string market_id = 2;
+  // the side of the queue message
+  string order_type = 3;
+  string owner = 4;
+  // base-denom amount of the message that was not executed
+  string amount = 5;
+  // the coin actually sent back (coin string); empty when it rounded to zero
+  // and only dust was stored
+  string refund = 6;
+  // no_match | unfilled_remainder | below_min_amount
+  string reason = 7;
+}
+
+// OrderCancelSkippedEvent is emitted when a queued cancel finds no order to
+// cancel (it was filled or cancelled in the meantime). The message is removed
+// from the queue and nothing else happens.
+message OrderCancelSkippedEvent {
+  // queue message id, zero-filled 24 digits (see OrderCreateMessageEvent)
+  string message_id = 1;
+  string market_id = 2;
+  string order_type = 3;
+  string order_id = 4;
+  // the sender of the cancel
+  string owner = 5;
+  // order_not_found
+  string reason = 6;
+}
+
+// OrderMessageFailedEvent is emitted when processing a queued message fails.
+// Its writes are discarded and the message stays queued: it is retried next
+// block and this event is emitted again for every block it fails.
+message OrderMessageFailedEvent {
+  // queue message id, zero-filled 24 digits (see OrderCreateMessageEvent)
+  string message_id = 1;
+  string market_id = 2;
+  // the queue message type: buy | sell | cancel | fill_buy | fill_sell
+  string message_type = 3;
+  string owner = 4;
+  // processing_error (a fixed value, never the error text)
+  string reason = 5;
+}

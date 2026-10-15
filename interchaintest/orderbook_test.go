@@ -257,6 +257,7 @@ func (s *orderBookSuite) remainderRefunded(t *testing.T) {
 	s.requireExecuted(t, res.Height, msgID, s.maker1, obExec{takerBuy, s.taker, "buy", "150", "3"})
 	s.requireNotSaved(t, res.Height, msgID)
 	require.Equal(t, sdkmath.OneInt(), s.transferred(t, s.blockEvents(t, res.Height), s.tradebin, s.maker1.FormattedAddress(), s.ob), "1 ob refunded")
+	s.requireRefunded(t, res.Height, msgID, s.maker1, "sell", "1", "1"+s.ob, "below_min_amount")
 	want.move(s.maker1, s.ob, -150)
 	want.move(s.maker1, chain.Denom, 450)
 	want.move(s.taker, s.ob, 150)
@@ -282,6 +283,7 @@ func (s *orderBookSuite) keepsMinimum(t *testing.T) {
 	s.requireExecuted(t, res.Height, msgID, s.taker, obExec{s.maker2Sell, s.maker2, "sell", "598", "4"})
 	s.requireNotSaved(t, res.Height, msgID)
 	require.Equal(t, sdkmath.NewInt(4), s.transferred(t, s.blockEvents(t, res.Height), s.tradebin, s.taker.FormattedAddress(), chain.Denom), "1 ob × 4 refunded")
+	s.requireRefunded(t, res.Height, msgID, s.taker, "buy", "1", "4"+chain.Denom, "below_min_amount")
 	want.move(s.taker, chain.Denom, -598*4)
 	want.move(s.taker, s.ob, 598)
 	want.move(s.maker2, chain.Denom, 598*4)
@@ -399,6 +401,8 @@ func (s *orderBookSuite) fillRefunds(t *testing.T) {
 	s.requireExecuted(t, res.Height, ids[0], s.taker)
 	s.requireExecuted(t, res.Height, ids[1], s.taker, obExec{buy15ID, s.maker1, "buy", "100", "1.5"})
 	require.Equal(t, sdkmath.NewInt(50+50), s.transferred(t, s.blockEvents(t, res.Height), s.tradebin, s.taker.FormattedAddress(), s.ob), "50 ob refunded at 1.7, 50 at 1.5")
+	s.requireRefunded(t, res.Height, ids[0], s.taker, "sell", "50", "50"+s.ob, "no_match")
+	s.requireRefunded(t, res.Height, ids[1], s.taker, "sell", "50", "50"+s.ob, "unfilled_remainder")
 	want.move(s.taker, s.ob, -100)
 	want.move(s.taker, chain.Denom, 150)
 	want.move(s.maker1, s.ob, 100)
@@ -482,8 +486,8 @@ func (s *orderBookSuite) cancelRefusals(t *testing.T) {
 
 // 12. maker2 fills its own resting sell and cancels it in one tx. The fill is
 // queued first, so the engine executes it and the cancel finds nothing: no
-// OrderCanceledEvent, no refund, the ob locked by the order comes back through
-// the fill.
+// OrderCanceledEvent but an OrderCancelSkippedEvent, no refund, the ob locked
+// by the order comes back through the fill.
 func (s *orderBookSuite) fillBeforeCancel(t *testing.T) {
 	want := s.snapshot(t)
 	res := s.mustExecMsgs(t, s.maker2, obFillGas,
@@ -500,6 +504,11 @@ func (s *orderBookSuite) fillBeforeCancel(t *testing.T) {
 	canceled, err := helpers.BlockEvents(s.ctx, s.bze, res.Height, tradebinEventPrefix+"OrderCanceledEvent")
 	require.NoError(t, err)
 	require.Empty(t, canceled, "the cancel found no order")
+	skipped := s.engineEvents(t, res.Height, "OrderCancelSkippedEvent", map[string]string{"message_id": cancel})
+	require.Len(t, skipped, 1, "the skipped cancel is reported")
+	e := skipped[0].Attributes
+	require.Equal(t, []string{s.market, "sell", s.maker2Sell, s.maker2.FormattedAddress(), "order_not_found"},
+		[]string{e["market_id"], e["order_type"], e["order_id"], e["owner"], e["reason"]})
 	want.move(s.maker2, s.ob, 2)
 
 	s.requireBalances(t, want)
@@ -855,6 +864,19 @@ func (s *orderBookSuite) requireSaved(t *testing.T, height int64, msgID string, 
 	require.True(t, found, "saved order %s is on the book", e.Attributes["id"])
 	require.Equal(t, amount, order.Amount)
 	return e.Attributes["id"]
+}
+
+// requireRefunded asserts the one OrderMessageRefundedEvent of a queue
+// message: the unexecuted base amount, the coin sent back and the reason.
+func (s *orderBookSuite) requireRefunded(t *testing.T, height int64, msgID string, owner ibc.Wallet, typ, amount, refund, reason string) {
+	t.Helper()
+	got := s.engineEvents(t, height, "OrderMessageRefundedEvent", map[string]string{"message_id": msgID})
+	require.Len(t, got, 1, "refunds of message %s at height %d", msgID, height)
+	e := got[0].Attributes
+	require.Equal(t,
+		[]string{s.market, typ, owner.FormattedAddress(), amount, refund, reason},
+		[]string{e["market_id"], e["order_type"], e["owner"], e["amount"], e["refund"], e["reason"]},
+		"refund of message %s", msgID)
 }
 
 func (s *orderBookSuite) requireNotSaved(t *testing.T, height int64, msgID string) {
