@@ -9,6 +9,7 @@ import (
 	v810 "github.com/bze-alphateam/bze/app/upgrades/v810"
 	v811 "github.com/bze-alphateam/bze/app/upgrades/v811"
 	v820 "github.com/bze-alphateam/bze/app/upgrades/v820"
+	v830 "github.com/bze-alphateam/bze/app/upgrades/v830"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -368,6 +369,17 @@ func (app *App) setupUpgradeHandlers() {
 			app.BankKeeper,
 			app.AccountKeeper,
 			app.TxfeecollectorKeeper,
+		),
+	)
+
+	// v8.3.0 moves the chain to cosmos-sdk v0.53; no SDK module bumps its
+	// ConsensusVersion between v0.50 and v0.53, so RunMigrations has nothing to do
+	// for them; no store keys are added or removed, so no store loader entry is needed
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v830.UpgradeName,
+		v830.CreateUpgradeHandler(
+			app.Configurator(),
+			app.ModuleManager,
 		),
 	)
 
