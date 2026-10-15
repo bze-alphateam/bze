@@ -17,12 +17,11 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 
 	"github.com/bze-alphateam/bze/x/txfeecollector/types"
 )
@@ -45,7 +44,7 @@ var _ porttypes.Middleware = (*IBCMiddleware)(nil)
 // NewIBCMiddleware wraps app with the inbound filter.
 //
 // ics4 is only used by the ICS4Wrapper methods, which this middleware passes straight
-// through: the send path of the transfer module is wired to the ICS-29 fee keeper
+// through: the send path of the transfer module is wired to the IBC channel keeper
 // directly, so nothing this middleware does can affect outgoing packets.
 func NewIBCMiddleware(app porttypes.IBCModule, ics4 porttypes.ICS4Wrapper, keeper ParamsKeeper) IBCMiddleware {
 	return IBCMiddleware{
@@ -59,22 +58,23 @@ func NewIBCMiddleware(app porttypes.IBCModule, ics4 porttypes.ICS4Wrapper, keepe
 // mint of a blocked (destination channel, base denom) pair. Anything else - including
 // packets this middleware cannot parse as an ICS-20 transfer - reaches the wrapped
 // application untouched.
-func (im IBCMiddleware) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
+func (im IBCMiddleware) OnRecvPacket(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
 	var data ibctransfertypes.FungibleTokenPacketData
 	if err := ibctransfertypes.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		// not an ICS-20 transfer packet: let the application decide what to do with it
-		return im.app.OnRecvPacket(ctx, packet, relayer)
+		return im.app.OnRecvPacket(ctx, channelVersion, packet, relayer)
 	}
 
 	// Tokens that originally left this chain are unescrowed on the way back, not
 	// minted, so returning vouchers must always be accepted - blocking them would
 	// strand BZE-origin funds on the counterparty chain.
+	//nolint:staticcheck // the plain string-prefix check is kept on purpose: same answer as before ibc-go v10
 	if ibctransfertypes.ReceiverChainIsSource(packet.GetSourcePort(), packet.GetSourceChannel(), data.Denom) {
-		return im.app.OnRecvPacket(ctx, packet, relayer)
+		return im.app.OnRecvPacket(ctx, channelVersion, packet, relayer)
 	}
 
 	if !im.keeper.GetParams(ctx).IsInboundBlocked(packet.GetDestChannel(), data.Denom) {
-		return im.app.OnRecvPacket(ctx, packet, relayer)
+		return im.app.OnRecvPacket(ctx, channelVersion, packet, relayer)
 	}
 
 	err := ctx.EventManager().EmitTypedEvent(&types.BlockedIbcInboundEvent{
@@ -103,13 +103,13 @@ func (im IBCMiddleware) OnRecvPacket(ctx sdk.Context, packet channeltypes.Packet
 
 // OnAcknowledgementPacket passes through: it carries the counterparty's answer to a
 // packet this chain sent, including the refunds of blocked transfers we bounced back.
-func (im IBCMiddleware) OnAcknowledgementPacket(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
-	return im.app.OnAcknowledgementPacket(ctx, packet, acknowledgement, relayer)
+func (im IBCMiddleware) OnAcknowledgementPacket(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
+	return im.app.OnAcknowledgementPacket(ctx, channelVersion, packet, acknowledgement, relayer)
 }
 
 // OnTimeoutPacket passes through so outgoing transfers are refunded as usual.
-func (im IBCMiddleware) OnTimeoutPacket(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) error {
-	return im.app.OnTimeoutPacket(ctx, packet, relayer)
+func (im IBCMiddleware) OnTimeoutPacket(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress) error {
+	return im.app.OnTimeoutPacket(ctx, channelVersion, packet, relayer)
 }
 
 func (im IBCMiddleware) OnChanOpenInit(
@@ -118,11 +118,10 @@ func (im IBCMiddleware) OnChanOpenInit(
 	connectionHops []string,
 	portID string,
 	channelID string,
-	channelCap *capabilitytypes.Capability,
 	counterparty channeltypes.Counterparty,
 	version string,
 ) (string, error) {
-	return im.app.OnChanOpenInit(ctx, order, connectionHops, portID, channelID, channelCap, counterparty, version)
+	return im.app.OnChanOpenInit(ctx, order, connectionHops, portID, channelID, counterparty, version)
 }
 
 func (im IBCMiddleware) OnChanOpenTry(
@@ -131,11 +130,10 @@ func (im IBCMiddleware) OnChanOpenTry(
 	connectionHops []string,
 	portID string,
 	channelID string,
-	channelCap *capabilitytypes.Capability,
 	counterparty channeltypes.Counterparty,
 	counterpartyVersion string,
 ) (string, error) {
-	return im.app.OnChanOpenTry(ctx, order, connectionHops, portID, channelID, channelCap, counterparty, counterpartyVersion)
+	return im.app.OnChanOpenTry(ctx, order, connectionHops, portID, channelID, counterparty, counterpartyVersion)
 }
 
 func (im IBCMiddleware) OnChanOpenAck(ctx sdk.Context, portID, channelID, counterpartyChannelID, counterpartyVersion string) error {
@@ -158,24 +156,22 @@ func (im IBCMiddleware) OnChanCloseConfirm(ctx sdk.Context, portID, channelID st
 // touches outgoing packets.
 func (im IBCMiddleware) SendPacket(
 	ctx sdk.Context,
-	chanCap *capabilitytypes.Capability,
 	sourcePort string,
 	sourceChannel string,
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
 	data []byte,
 ) (sequence uint64, err error) {
-	return im.ics4.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+	return im.ics4.SendPacket(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 }
 
 // WriteAcknowledgement implements the ICS4Wrapper interface: pass through.
 func (im IBCMiddleware) WriteAcknowledgement(
 	ctx sdk.Context,
-	chanCap *capabilitytypes.Capability,
 	packet ibcexported.PacketI,
 	ack ibcexported.Acknowledgement,
 ) error {
-	return im.ics4.WriteAcknowledgement(ctx, chanCap, packet, ack)
+	return im.ics4.WriteAcknowledgement(ctx, packet, ack)
 }
 
 // GetAppVersion implements the ICS4Wrapper interface: pass through.
@@ -183,77 +179,20 @@ func (im IBCMiddleware) GetAppVersion(ctx sdk.Context, portID, channelID string)
 	return im.ics4.GetAppVersion(ctx, portID, channelID)
 }
 
-// The transfer application implements the optional UpgradableModule and
-// PacketDataUnmarshaler interfaces, and the ICS-29 fee middleware above this one
-// reaches for them through a type assertion on the module it wraps. Sitting in
-// between, the filter must forward both, otherwise channel upgrades on the transfer
-// stack and ADR-008 packet unmarshalling would stop working.
-var (
-	_ porttypes.UpgradableModule      = (*IBCMiddleware)(nil)
-	_ porttypes.PacketDataUnmarshaler = (*IBCMiddleware)(nil)
-)
-
-func (im IBCMiddleware) OnChanUpgradeInit(
-	ctx sdk.Context,
-	portID, channelID string,
-	proposedOrder channeltypes.Order,
-	proposedConnectionHops []string,
-	proposedVersion string,
-) (string, error) {
-	cbs, ok := im.app.(porttypes.UpgradableModule)
-	if !ok {
-		return "", errorsmod.Wrap(porttypes.ErrInvalidRoute, "upgrade route not found to module in application callstack")
-	}
-
-	return cbs.OnChanUpgradeInit(ctx, portID, channelID, proposedOrder, proposedConnectionHops, proposedVersion)
-}
-
-func (im IBCMiddleware) OnChanUpgradeTry(
-	ctx sdk.Context,
-	portID, channelID string,
-	proposedOrder channeltypes.Order,
-	proposedConnectionHops []string,
-	counterpartyVersion string,
-) (string, error) {
-	cbs, ok := im.app.(porttypes.UpgradableModule)
-	if !ok {
-		return "", errorsmod.Wrap(porttypes.ErrInvalidRoute, "upgrade route not found to module in application callstack")
-	}
-
-	return cbs.OnChanUpgradeTry(ctx, portID, channelID, proposedOrder, proposedConnectionHops, counterpartyVersion)
-}
-
-func (im IBCMiddleware) OnChanUpgradeAck(ctx sdk.Context, portID, channelID, counterpartyVersion string) error {
-	cbs, ok := im.app.(porttypes.UpgradableModule)
-	if !ok {
-		return errorsmod.Wrap(porttypes.ErrInvalidRoute, "upgrade route not found to module in application callstack")
-	}
-
-	return cbs.OnChanUpgradeAck(ctx, portID, channelID, counterpartyVersion)
-}
-
-func (im IBCMiddleware) OnChanUpgradeOpen(
-	ctx sdk.Context,
-	portID, channelID string,
-	proposedOrder channeltypes.Order,
-	proposedConnectionHops []string,
-	proposedVersion string,
-) {
-	cbs, ok := im.app.(porttypes.UpgradableModule)
-	if !ok {
-		panic(errorsmod.Wrap(porttypes.ErrInvalidRoute, "upgrade route not found to module in application callstack"))
-	}
-
-	cbs.OnChanUpgradeOpen(ctx, portID, channelID, proposedOrder, proposedConnectionHops, proposedVersion)
-}
+// The transfer application implements the optional PacketDataUnmarshaler interface
+// (ADR 008), which callers reach through a type assertion on the module routed for
+// the port. Sitting on top of the transfer application, the filter must forward it,
+// otherwise packet unmarshalling would stop working for the transfer stack. (ibc-go
+// v10 removed channel upgradability, so UpgradableModule no longer exists.)
+var _ porttypes.PacketDataUnmarshaler = (*IBCMiddleware)(nil)
 
 // UnmarshalPacketData forwards to the wrapped application, which owns the packet
 // format. This implements the optional PacketDataUnmarshaler interface (ADR 008).
-func (im IBCMiddleware) UnmarshalPacketData(bz []byte) (interface{}, error) {
+func (im IBCMiddleware) UnmarshalPacketData(ctx sdk.Context, portID, channelID string, bz []byte) (any, string, error) {
 	unmarshaler, ok := im.app.(porttypes.PacketDataUnmarshaler)
 	if !ok {
-		return nil, errorsmod.Wrapf(types.ErrUnsupportedPacketUnmarshal, "underlying app does not implement %T", (*porttypes.PacketDataUnmarshaler)(nil))
+		return nil, "", errorsmod.Wrapf(types.ErrUnsupportedPacketUnmarshal, "underlying app does not implement %T", (*porttypes.PacketDataUnmarshaler)(nil))
 	}
 
-	return unmarshaler.UnmarshalPacketData(bz)
+	return unmarshaler.UnmarshalPacketData(ctx, portID, channelID, bz)
 }

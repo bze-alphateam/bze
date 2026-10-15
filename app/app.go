@@ -75,15 +75,11 @@ import (
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/staking" // import for side-effects
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	_ "github.com/cosmos/ibc-go/modules/capability" // import for side-effects
-	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
-	_ "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts" // import for side-effects
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
-	icahostkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/keeper"
-	_ "github.com/cosmos/ibc-go/v8/modules/apps/29-fee" // import for side-effects
-	ibcfeekeeper "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/keeper"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	_ "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts" // import for side-effects
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/keeper"
+	icahostkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/keeper"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 
 	burnermodulekeeper "github.com/bze-alphateam/bze/x/burner/keeper"
 	cointrunkmodulekeeper "github.com/bze-alphateam/bze/x/cointrunk/keeper"
@@ -144,18 +140,9 @@ type App struct {
 
 	// IBC
 	IBCKeeper           *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
-	CapabilityKeeper    *capabilitykeeper.Keeper
-	IBCFeeKeeper        ibcfeekeeper.Keeper
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICAHostKeeper       icahostkeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
-
-	// Scoped IBC
-	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
-	ScopedIBCTransferKeeper   capabilitykeeper.ScopedKeeper
-	ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
-	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
-	ScopedKeepers             map[string]capabilitykeeper.ScopedKeeper
 
 	BurnerKeeper         burnermodulekeeper.Keeper
 	EpochKeeper          *epochmodulekeeper.Keeper
@@ -219,7 +206,7 @@ func New(
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) (*App, error) {
 	var (
-		app        = &App{ScopedKeepers: make(map[string]capabilitykeeper.ScopedKeeper)}
+		app        = &App{}
 		appBuilder *runtime.AppBuilder
 
 		// merge the AppConfig and other configuration in one config
@@ -233,7 +220,6 @@ func New(
 				// Passing the getter, the app IBC Keeper will always be accessible.
 				// This needs to be removed after IBC supports App Wiring.
 				app.GetIBCKeeper,
-				app.GetCapabilityScopedKeeper,
 
 				// here alternative options can be supplied to the DI container.
 				// those options can be used f.e to override the default behavior of some modules.
@@ -372,9 +358,10 @@ func (app *App) setupUpgradeHandlers() {
 		),
 	)
 
-	// v8.3.0 moves the chain to cosmos-sdk v0.53; no SDK module bumps its
-	// ConsensusVersion between v0.50 and v0.53, so RunMigrations has nothing to do
-	// for them; no store keys are added or removed, so no store loader entry is needed
+	// v8.3.0 moves the chain to cosmos-sdk v0.53 and ibc-go v10. No SDK module bumps
+	// its ConsensusVersion between v0.50 and v0.53; RunMigrations runs the ibc-go v10
+	// module migrations. The capability and feeibc stores are deleted by the store
+	// loader below
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v830.UpgradeName,
 		v830.CreateUpgradeHandler(
@@ -390,6 +377,11 @@ func (app *App) setupUpgradeHandlers() {
 
 	if upgradeInfo.Name == v810.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := v810.GetStoreUpgrades()
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
+	}
+
+	if upgradeInfo.Name == v830.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := v830.GetStoreUpgrades()
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
 	}
 }
@@ -460,16 +452,6 @@ func (app *App) GetSubspace(moduleName string) paramstypes.Subspace {
 // GetIBCKeeper returns the IBC keeper.
 func (app *App) GetIBCKeeper() *ibckeeper.Keeper {
 	return app.IBCKeeper
-}
-
-// GetCapabilityScopedKeeper returns the capability scoped keeper.
-func (app *App) GetCapabilityScopedKeeper(moduleName string) capabilitykeeper.ScopedKeeper {
-	sk, ok := app.ScopedKeepers[moduleName]
-	if !ok {
-		sk = app.CapabilityKeeper.ScopeToModule(moduleName)
-		app.ScopedKeepers[moduleName] = sk
-	}
-	return sk
 }
 
 // SimulationManager implements the SimulationApp interface.
