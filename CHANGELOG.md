@@ -11,7 +11,7 @@ derived from it. History older than v8.0.0 lives in the
 
 ### Improvements
 
-* (build) [#PR](https://github.com/bze-alphateam/bze/pull/PR) Every release tag now gets a `bzed` container image, built from source by CI and published to `ghcr.io/bze-alphateam/bzed` as `:<tag>` and `:<sha8>` (the tagged commit). One image serves mainnet and testnet. Images are built only for `v*` tags (or by hand for an existing tag), never for branch pushes. The image also ships `curl` and an empty `~/.bze` owned by the `bze` user, for node start scripts.
+* (build) [#153](https://github.com/bze-alphateam/bze/pull/153) Every release tag now gets a `bzed` container image, built from source by CI and published to `ghcr.io/bze-alphateam/bzed` as `:<tag>` and `:<sha8>` (the tagged commit). One image serves mainnet and testnet. Images are built only for `v*` tags (or by hand for an existing tag), never for branch pushes. The image also ships `curl` and an empty `~/.bze` owned by the `bze` user, for node start scripts.
 
 ### Bug Fixes
 
