@@ -11,6 +11,7 @@ derived from it. History older than v8.0.0 lives in the
 
 ### Bug Fixes
 
+* (x/tradebin) [#149](https://github.com/bze-alphateam/bze/pull/149) An `AddLiquidity` refused by its `min_lp_tokens` slippage guard now always fails with `tradebin` code 4014 "resulted amount too low" and the exact minted amount in the log. When the deposit minted more LP than fits a uint64 (about 1.8e19), formatting the message panicked, so the tx failed with a recovered panic that clients could not tell apart from other failures. No state changed in either case.
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.
 
 ## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0) - 2026-10-14
