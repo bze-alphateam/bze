@@ -5,10 +5,6 @@ import (
 	"net/http"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/bze-alphateam/bze/app/upgrades"
-	v810 "github.com/bze-alphateam/bze/app/upgrades/v810"
-	v811 "github.com/bze-alphateam/bze/app/upgrades/v811"
-	v820 "github.com/bze-alphateam/bze/app/upgrades/v820"
 	v830 "github.com/bze-alphateam/bze/app/upgrades/v830"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/gorilla/mux"
@@ -329,35 +325,10 @@ func New(
 	return app, nil
 }
 
+// setupUpgradeHandlers registers the handlers of the release this code builds.
+// Older handlers are removed once their release has shipped: each one runs once
+// at its height, and nodes syncing from genesis run the binaries of those releases.
 func (app *App) setupUpgradeHandlers() {
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v810.UpgradeName,
-		v810.CreateUpgradeHandler(
-			app.Configurator(),
-			app.ModuleManager,
-		),
-	)
-
-	// v8.1.1 only changes LP denom derivation for new pools: no migrations, no store changes
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v811.UpgradeName,
-		upgrades.EmptyUpgradeHandler(),
-	)
-
-	// v8.2.0 runs module migrations (rewards v4->v5: Denom Rewards param defaults,
-	// txfeecollector v2->v3: empty BlockedIbcInbound default) and then the Noble USDC
-	// wind-down; no store keys are added or removed, so no store loader entry is needed
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v820.UpgradeName,
-		v820.CreateUpgradeHandler(
-			app.Configurator(),
-			app.ModuleManager,
-			app.BankKeeper,
-			app.AccountKeeper,
-			app.TxfeecollectorKeeper,
-		),
-	)
-
 	// v8.3.0 moves the chain to cosmos-sdk v0.53 and ibc-go v10. No SDK module bumps
 	// its ConsensusVersion between v0.50 and v0.53; RunMigrations runs the ibc-go v10
 	// module migrations. The capability and feeibc stores are deleted by the store
@@ -373,11 +344,6 @@ func (app *App) setupUpgradeHandlers() {
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(err)
-	}
-
-	if upgradeInfo.Name == v810.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := v810.GetStoreUpgrades()
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
 	}
 
 	if upgradeInfo.Name == v830.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
