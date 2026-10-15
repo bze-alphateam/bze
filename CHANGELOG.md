@@ -9,6 +9,10 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
+### State Machine Breaking
+
+* (x/tradebin) [#146](https://github.com/bze-alphateam/bze/pull/146) AMM swaps now count toward the trading reward of the pair's order-book market: a swap through the `base_quote` pool reports its volume to the market id of the same pair (in either orientation, `base/quote` or `quote/base`), in that market's base denom, exactly like an order-book fill. Swaps used to report the pool id only, so a reward on the market never saw them. A reward created on the pool id itself still counts the pool's swaps as before. Changes leaderboard state, so it activates at the upgrade height of the release that ships it.
+
 ### Bug Fixes
 
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.

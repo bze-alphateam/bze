@@ -32,6 +32,7 @@ What you can do:
 - **Create a reward** (`MsgCreateTradingReward`): fund a prize pool/denom, pick target `market_id`, set duration and number of slots (payout rounds). A creation fee may apply (swapped to native and sent to the fee collector module).
 - **Activate** (`MsgActivateTradingReward`): governance/authority-only step that moves a pending reward into the active set for its market.
 - Traders earn according to on-chain trading volume/logic of the module; leaderboard and distribution run automatically from the funded pool.
+- Volume counted for a market id `base/quote`: order-book fills on that market and AMM swaps through the liquidity pool of the same pair, both in the market's base denom. A reward on a pool id (`base_quote`) counts that pool's swaps only.
 
 Example:
 ```bash

@@ -165,3 +165,61 @@ func TestOnOrderFillHooks_MsgServerSharesTheKeeper(t *testing.T) {
 	require.Len(t, f.k.GetOnOrderFillHooks(), 1)
 	require.Len(t, view.GetOnOrderFillHooks(), 1, "the msg server must see hooks registered after it was built")
 }
+
+// swapOutput is what the swapper received: the pool's quote reserve drop (fees are taken from the input).
+func (f wiringFixture) swapOutput(t *testing.T) math.Int {
+	t.Helper()
+	updated, found := f.k.GetLiquidityPool(f.ctx, "pool1")
+	require.True(t, found)
+
+	return math.NewInt(2_000_000).Sub(updated.ReserveQuote)
+}
+
+// Trading rewards are keyed by the order book market id (base/quote), while the AMM used to report
+// only the pool id, so swap volume never reached a reward's leaderboard (BZE-157). A swap through a
+// pool whose pair has a market in the pool's orientation also reports the market id, with the
+// amount in the market's base denomination.
+func TestOnOrderFillHooks_AmmSwap_ReportsPairMarket(t *testing.T) {
+	f := newWiringFixture(t)
+	f.k.SetMarket(f.ctx, types.Market{Base: "ubze", Quote: "stake", Creator: "creator"})
+
+	var calls []string
+	f.k.SetOnOrderFillHooks([]types.OnMarketOrderFill{recordingHook(&calls)})
+	creator := f.swapThroughRouter(t, f.registerServices(t))
+
+	require.Equal(t, []string{
+		"pool1 1000 " + creator.String(),
+		"ubze/stake 1000 " + creator.String(),
+	}, calls)
+}
+
+// A market created in the reversed orientation (stake/ubze) is the pair's market too; its base is
+// the pool's quote, so the volume is the swap's stake leg.
+func TestOnOrderFillHooks_AmmSwap_ReportsReversedPairMarket(t *testing.T) {
+	f := newWiringFixture(t)
+	f.k.SetMarket(f.ctx, types.Market{Base: "stake", Quote: "ubze", Creator: "creator"})
+
+	var calls []string
+	f.k.SetOnOrderFillHooks([]types.OnMarketOrderFill{recordingHook(&calls)})
+	creator := f.swapThroughRouter(t, f.registerServices(t))
+
+	out := f.swapOutput(t)
+	require.True(t, out.IsPositive())
+	require.Equal(t, []string{
+		"pool1 1000 " + creator.String(),
+		"stake/ubze " + out.String() + " " + creator.String(),
+	}, calls)
+}
+
+// A market of another pair is not credited: without a market for the pool's pair only the pool id
+// is reported, as before.
+func TestOnOrderFillHooks_AmmSwap_NoPairMarket_ReportsPoolOnly(t *testing.T) {
+	f := newWiringFixture(t)
+	f.k.SetMarket(f.ctx, types.Market{Base: "ubze", Quote: "other", Creator: "creator"})
+
+	var calls []string
+	f.k.SetOnOrderFillHooks([]types.OnMarketOrderFill{recordingHook(&calls)})
+	creator := f.swapThroughRouter(t, f.registerServices(t))
+
+	require.Equal(t, []string{"pool1 1000 " + creator.String()}, calls)
+}

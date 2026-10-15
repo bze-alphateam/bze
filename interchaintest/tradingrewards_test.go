@@ -281,9 +281,11 @@ func (s *tradingRewardsSuite) activate(t *testing.T) {
 // 4. The order-book hook credits the taker with the base amount executed,
 // buying or selling, never the maker. t3 trades first, t1 trades more; when
 // t3 tops up to t1's amount the tie goes to t3, whose leaderboard entry is
-// older. Swaps on the pool credit the pool's reward B with the base amount
-// (the swap output when buying tr, the input when selling it) and never the
-// market's reward A: a reward counts trades on its own market id only.
+// older. Swaps on the pool credit the pool's reward B and, since the pool's
+// pair has the order-book market tr/ubze, the market's reward A too, both
+// with the base amount (the swap output when buying tr, the input when
+// selling it). t2's swaps outweigh every trade, so t2 tops A and t1, tied
+// with the older t3, is cut.
 func (s *tradingRewardsSuite) hooks(t *testing.T) {
 	s.trade(t, s.t3, "buy", 500)
 	s.requireLeaderboard(t, s.rewardA, trPlace{s.t3, 500})
@@ -301,23 +303,23 @@ func (s *tradingRewardsSuite) hooks(t *testing.T) {
 
 	out := s.swap(t, s.t2, sdk.NewInt64Coin(chain.Denom, trSwapBze))
 	s.requireLeaderboard(t, s.rewardB, trPlace{s.t2, out.Int64()})
+	s.requireLeaderboard(t, s.rewardA, trPlace{s.t2, out.Int64()}, trPlace{s.t3, 3000})
 	s.swap(t, s.t2, sdk.NewInt64Coin(s.tr, trSwapBase))
 	s.swapped = out.Int64() + trSwapBase
 	s.requireLeaderboard(t, s.rewardB, trPlace{s.t2, s.swapped})
 
-	// the maker filled every trade above and the swaps never reached reward A
-	s.requireLeaderboard(t, s.rewardA, trPlace{s.t3, 3000}, trPlace{s.t1, 3000})
+	// the maker filled every trade above and never reached either board
+	s.requireLeaderboard(t, s.rewardA, trPlace{s.t2, s.swapped}, trPlace{s.t3, 3000})
 }
 
-// 5. With two slots, a third trader is cut from the leaderboard but keeps
-// the amount traded: when t2 trades again the total puts it back on top and
-// t1 is cut.
+// 5. With two slots, the cut t1 stays off the board while t2's order-book
+// trades add to the volume its swaps already put on A.
 func (s *tradingRewardsSuite) trim(t *testing.T) {
 	s.trade(t, s.t2, "buy", 1000)
-	s.requireLeaderboard(t, s.rewardA, trPlace{s.t3, 3000}, trPlace{s.t1, 3000})
+	s.requireLeaderboard(t, s.rewardA, trPlace{s.t2, s.swapped + 1000}, trPlace{s.t3, 3000})
 
 	s.trade(t, s.t2, "buy", 2500)
-	s.requireLeaderboard(t, s.rewardA, trPlace{s.t2, 3500}, trPlace{s.t3, 3000})
+	s.requireLeaderboard(t, s.rewardA, trPlace{s.t2, s.swapped + 3500}, trPlace{s.t3, 3000})
 
 	cur, err := helpers.CurrentEpoch(s.ctx, s.bze, "hour")
 	require.NoError(t, err)
@@ -388,7 +390,7 @@ func (s *tradingRewardsSuite) payout(t *testing.T) {
 	s.requireLeaderboard(t, s.rewardB, trPlace{s.t2, s.swapped})
 
 	s.trade(t, s.t1, "buy", 100)
-	s.requireLeaderboard(t, s.rewardA, trPlace{s.t2, 3500}, trPlace{s.t3, 3000})
+	s.requireLeaderboard(t, s.rewardA, trPlace{s.t2, s.swapped + 3500}, trPlace{s.t3, 3000})
 
 	s.rewardE = s.createReward(t, trRewardE, s.trMarket)
 	s.requireEscrow(t)

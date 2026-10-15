@@ -506,20 +506,47 @@ func (k msgServer) onSwapSuccess(ctx sdk.Context, pool *types.LiquidityPool, use
 	}
 
 	//order hooks should be called with the amount traded of the base denomination
-	baseAmount := input.Amount
-	if pool.GetBase() == output.Denom {
-		baseAmount = output.Amount
+	k.callOrderFillHooks(ctx, pool.GetId(), swapBaseAmount(pool.GetBase(), input, output), userAddress)
+
+	//the pair's order book market (if any) is credited with the swap too, in the market's base
+	//denomination: trading rewards are keyed by market id (base/quote), not by pool id (base_quote)
+	market, found := k.getPairMarket(ctx, pool.GetBase(), pool.GetQuote())
+	if !found {
+		return
 	}
 
-	//call hooks for the filled order
+	k.callOrderFillHooks(ctx, types.CreateMarketId(market.Base, market.Quote), swapBaseAmount(market.Base, input, output), userAddress)
+}
+
+// getPairMarket returns the order book market of a pair in whichever orientation it was created.
+// CreateMarket rejects a pair whose reversed market exists, so at most one of the two is found.
+func (k msgServer) getPairMarket(ctx sdk.Context, denomA, denomB string) (types.Market, bool) {
+	market, found := k.GetMarket(ctx, denomA, denomB)
+	if found {
+		return market, true
+	}
+
+	return k.GetMarket(ctx, denomB, denomA)
+}
+
+// swapBaseAmount returns the amount of the swap's leg in baseDenom.
+func swapBaseAmount(baseDenom string, input, output sdk.Coin) math.Int {
+	if output.Denom == baseDenom {
+		return output.Amount
+	}
+
+	return input.Amount
+}
+
+func (k msgServer) callOrderFillHooks(ctx sdk.Context, marketId string, baseAmount math.Int, userAddress sdk.AccAddress) {
 	for _, h := range k.GetOnOrderFillHooks() {
 		wrappedFn := func(ctx sdk.Context) error {
-			h(ctx, pool.GetId(), baseAmount.String(), userAddress.String())
+			h(ctx, marketId, baseAmount.String(), userAddress.String())
 
 			return nil
 		}
 
-		err = bzeutils.ApplyFuncIfNoError(ctx, wrappedFn)
+		err := bzeutils.ApplyFuncIfNoError(ctx, wrappedFn)
 		if err != nil {
 			k.Logger().Error(err.Error())
 		}
