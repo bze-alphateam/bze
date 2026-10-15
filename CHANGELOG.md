@@ -9,6 +9,10 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
+### State Machine Breaking
+
+* (deps) [#139](https://github.com/bze-alphateam/bze/pull/139) Cosmos SDK v0.50.15 → v0.53.8 (release family 2025.1). The v0.50 line is end-of-life upstream; v0.53 carries the 2026 security fixes. The `cosmossdk.io` modules move with it (`math` v1.5.3, `store` v1.1.2, `api` v0.9.2, `x/tx` v0.14.0, `collections` v1.3.1, `log` v1.6.1, `client/v2` v2.0.0-beta.11, `x/upgrade`, `x/evidence`, `x/feegrant`, `x/circuit` and `x/nft` v0.2.0). `x/auth` now runs in PreBlock, as v0.53 requires. No SDK module changes its consensus version, so the new `v8.3.0` upgrade handler runs no SDK migration. CometBFT stays on v0.38.26 and Go on 1.26. No new optional v0.53 module is wired (`x/protocolpool`, the SDK `x/epochs`, unordered transactions). New config keys written by `bzed init`, both optional with safe defaults: `historical-grpc-address-block-range` in `app.toml` (historical gRPC query routing, disabled when empty) and `keyring-default-keyname` in `client.toml`. Existing config files keep working unchanged.
+
 ### Bug Fixes
 
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.
