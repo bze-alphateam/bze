@@ -437,6 +437,10 @@ func (s *stakingRewardsSuite) createRefusals(t *testing.T) {
 		{"duration 0", durationRange, msg("1", "0", "0")},
 		{"duration above 100 years", durationRange, msg("1", strconv.Itoa(srMaxDuration+1), "0")},
 		{"lock above 10 years", fmt.Sprintf("locking time should be between 0 and %d days", srMaxLock), msg("1", "1", strconv.Itoa(srMaxLock+1))},
+		// min_stake is stored as a uint64
+		{"min stake above uint64", "min stake must not exceed 18446744073709551615", s.rewardsMsg("MsgCreateStakingReward", s.creator,
+			"prize_amount", "1", "prize_denom", s.prz, "staking_denom", s.stk,
+			"duration", "1", "min_stake", "18446744073709551616", "lock", "0")},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			s.requireRefusedMsg(t, c.reason, s.creator, c.msg)

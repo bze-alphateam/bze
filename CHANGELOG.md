@@ -11,6 +11,8 @@ derived from it. History older than v8.0.0 lives in the
 
 ### Bug Fixes
 
+* (x/rewards) [#155](https://github.com/bze-alphateam/bze/pull/155) `MsgCreateStakingReward` refuses a `min_stake` above the uint64 maximum with `invalid min stake`. It used to panic.
+* (x/cointrunk) [#155](https://github.com/bze-alphateam/bze/pull/155) `MsgPayPublisherRespect` refuses an amount above the uint64 maximum with `amount too large`. It used to panic after the payment was made, reverting the tx.
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.
 
 ## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0) - 2026-10-14
