@@ -971,6 +971,10 @@ type v830State struct {
 	voucher string
 }
 
+// upV830Deleted are the stores the v8.3.0 store loader deletes (x/capability
+// and the ICS-29 fee middleware, both removed with ibc-go v10).
+var upV830Deleted = []string{"capability", "feeibc"}
+
 const (
 	upV830In  = 300_000 // stake simd -> bze over the main channel, before and after
 	upV830Out = 100_000 // stake vouchers bze -> simd after the upgrade
@@ -982,6 +986,11 @@ func (s *upgradeSuite) v830Before(t *testing.T) any {
 		require.Equal(t, want, st.versions[name], "%s module version before", name)
 	}
 	require.True(t, s.supported(t, "ibc-fee", "packets"), "the fee module answers before the upgrade")
+	for _, store := range upV830Deleted {
+		res, err := helpers.StoreQuery(s.ctx, s.bze, store, 0)
+		require.NoError(t, err)
+		require.Zero(t, res.Code, "the %s store is mounted before the upgrade: %s", store, res.Log)
+	}
 
 	s.ibc.transferIn(t, chain.SimdDenom, upV830In).requireAccepted(t)
 	st.voucher = helpers.IbcDenom(s.ibc.main.bze, chain.SimdDenom)
@@ -1009,6 +1018,18 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 		require.Equal(t, v, versions[name], "%s module version unchanged", name)
 	}
 	require.False(t, s.supported(t, "ibc-fee", "packets"), "the fee module is gone from the CLI")
+
+	// the store loader deleted the two stores: a raw query fails with the
+	// multistore's own error, while a kept store (ibc) still answers
+	for _, store := range upV830Deleted {
+		res, err := helpers.StoreQuery(s.ctx, s.bze, store, 0)
+		require.NoError(t, err)
+		require.NotZero(t, res.Code, "the %s store is gone after the upgrade", store)
+		require.Contains(t, res.Log, "no such store: "+store, "the %s store is gone after the upgrade", store)
+	}
+	res, err := helpers.StoreQuery(s.ctx, s.bze, "ibc", 0)
+	require.NoError(t, err)
+	require.Zero(t, res.Code, "the ibc store still answers: %s", res.Log)
 
 	// the channel opened before the upgrade is still open on both ends
 	s.ibc.requireChannelOpen(t, s.ibc.main)

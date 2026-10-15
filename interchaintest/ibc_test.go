@@ -46,6 +46,9 @@ const (
 	// ibc-go v10 removed: bze no longer opens such channels.
 	ibcTransferVersion = "ics20-1"
 	ibcFeeVersion      = `{"fee_version":"ics29-1","app_version":"ics20-1"}`
+	// ibcInvalidVersionError is the transfer app's refusal of a channel
+	// version other than ics20-1 (ibc-go v10 ErrInvalidVersion).
+	ibcInvalidVersionError = "invalid ICS20 version"
 	// ibcUpgradeInitMsg is the channel upgrade message ibc-go v10 removed.
 	ibcUpgradeInitMsg = "/ibc.core.channel.v1.MsgChannelUpgradeInit"
 
@@ -311,7 +314,9 @@ func (s *ibcSuite) timeout(t *testing.T) {
 // fee version cannot be opened, and bze has no new channel afterwards.
 func (s *ibcSuite) feeChannelRefused(t *testing.T) {
 	before := len(s.channels(t, s.bze))
-	require.Error(t, s.createChannel(t, ibcFeeVersion), "a fee channel handshake fails")
+	// the transfer app refuses the version at the handshake (ibc-go v10
+	// transfer's ErrInvalidVersion), not anything else on the way
+	require.ErrorContains(t, s.createChannel(t, ibcFeeVersion), ibcInvalidVersionError, "a fee channel handshake fails on its version")
 	for _, c := range s.channels(t, s.bze) {
 		require.NotEqual(t, ibcFeeVersion, c.Version, "no channel carries the fee version: %+v", c)
 	}
