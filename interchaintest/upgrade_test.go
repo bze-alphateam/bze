@@ -383,7 +383,7 @@ func (s *upgradeSuite) seed(t *testing.T) {
 	})
 	if s.features.branding {
 		s.execMsg(t, s.admin, map[string]any{
-			"@type": "/bze.tokenfactory.MsgSetDenomBranding", "creator": s.admin.FormattedAddress(), "denom": s.usd, "branding": tfBranding("Inter"),
+			"@type": "/bze.tokenfactory.MsgSetDenomBranding", "creator": s.admin.FormattedAddress(), "denom": s.usd, "branding": tfBranding("inter"),
 		})
 	}
 

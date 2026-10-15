@@ -2,6 +2,7 @@ package interchaintest_test
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"strconv"
 	"strings"
@@ -283,12 +284,23 @@ func (s *ibcSuite) timeout(t *testing.T) {
 	require.NoError(t, r.StartRelayer(s.ctx, rep, chain.IbcPath))
 	res, err := helpers.WaitForTimeout(s.ctx, s.bze, out)
 	require.NoError(t, err)
+	// ibc-go v10: the refund goes to "receiver" (the sender of the packet) and
+	// the coins are a JSON token in "refund_tokens"
 	refunds := helpers.EventsWith(helpers.TxEvents(res, "timeout"), map[string]string{
-		"refund_receiver": s.bzeUser.FormattedAddress(),
-		"refund_denom":    chain.Denom,
-		"refund_amount":   strconv.Itoa(ibcTimeoutOut),
+		"receiver": s.bzeUser.FormattedAddress(),
 	})
 	require.Len(t, refunds, 1, "the transfer app refunded the timed-out packet")
+	var refunded struct {
+		Denom struct {
+			Base  string            `json:"base"`
+			Trace []json.RawMessage `json:"trace"`
+		} `json:"denom"`
+		Amount string `json:"amount"`
+	}
+	require.NoError(t, json.Unmarshal([]byte(refunds[0].Attributes["refund_tokens"]), &refunded), "refund_tokens %s", refunds[0].Attributes["refund_tokens"])
+	require.Equal(t, chain.Denom, refunded.Denom.Base, "refunded denom")
+	require.Empty(t, refunded.Denom.Trace, "ubze is native")
+	require.Equal(t, strconv.Itoa(ibcTimeoutOut), refunded.Amount, "refunded amount")
 
 	require.Equal(t, ubze.Sub(fee), s.balance(t, s.bze, s.bzeUser, chain.Denom), "refunded, minus the tx fee only")
 	require.Equal(t, escrow, s.balanceOf(t, s.bze, s.bzeEscrow, chain.Denom), "bze escrow released")
@@ -363,8 +375,7 @@ func (s *ibcSuite) outgoingErrorAck(t *testing.T) {
 		"success":  "false",
 	})
 	require.Len(t, refused, 1, "simd's transfer app refused the packet: %+v", callbackEvents(recv, ibcTransferEvent))
-	require.Equal(t, "failed to decode receiver address: "+receiver+": invalid Bech32 prefix; expected "+chain.SimdBech32Prefix+", got "+chain.Bech32Prefix,
-		refused[0].Attributes["error"])
+	require.Equal(t, "failed to decode receiver address: "+receiver+": invalid address", refused[0].Attributes["error"])
 	require.Equal(t, `{"error":"`+ibcInvalidReceiverAckError+`"}`, packetAck(t, recv, s.main.simd, out.Sequence))
 
 	// bze: the error ack reached the transfer app and refunded the sender
@@ -539,7 +550,10 @@ func packetAck(t *testing.T, recv helpers.TxResult, channel string, sequence uin
 		"packet_sequence":    strconv.FormatUint(sequence, 10),
 	})
 	require.Len(t, acks, 1, "one write_acknowledgement for the packet")
-	return acks[0].Attributes["packet_ack"]
+	// ibc-go v10 emits the acknowledgement hex-encoded only
+	ack, err := hex.DecodeString(acks[0].Attributes["packet_ack_hex"])
+	require.NoError(t, err, "packet_ack_hex %q", acks[0].Attributes["packet_ack_hex"])
+	return string(ack)
 }
 
 // transferOut sends amount ubze from bzeUser to simdUser, waits for the ack
