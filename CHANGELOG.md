@@ -21,6 +21,7 @@ derived from it. History older than v8.0.0 lives in the
 ### Improvements
 
 * (app) [#141](https://github.com/bze-alphateam/bze/pull/141) The code now keeps only the upgrade handler of the release it builds (`v8.3.0`). The handlers of v5.1.2 through v8.2.0 are removed, because each one runs once at its height. Nodes syncing from genesis already switch to each release's own binary at its upgrade height (for example with Cosmovisor), so nothing changes for operators.
+* (x/rewards) [#143](https://github.com/bze-alphateam/bze/pull/143) A `bzed export` taken in the block where the denom rewards distribution queue stops on a schedule that just made its final payout now passes `validate-genesis` and imports. Genesis validation only requires the queue cursor to be a well-formed schedule key of an existing denom reward, not a schedule that still exists. Only genesis validation changes.
 
 ### Bug Fixes
 
