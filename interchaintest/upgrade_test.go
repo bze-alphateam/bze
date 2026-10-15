@@ -977,7 +977,7 @@ const (
 
 func (s *upgradeSuite) v830Before(t *testing.T) any {
 	st := v830State{versions: s.moduleVersions(t, 0)}
-	for name, want := range map[string]int64{"capability": 1, "feeibc": 1, "ibc": 6, "transfer": 5, "interchainaccounts": 3} {
+	for name, want := range map[string]int64{"capability": 1, "feeibc": 2, "ibc": 6, "transfer": 5, "interchainaccounts": 3} {
 		require.Equal(t, want, st.versions[name], "%s module version before", name)
 	}
 	require.True(t, s.supported(t, "ibc-fee", "incentivized-packets"), "the fee module answers before the upgrade")

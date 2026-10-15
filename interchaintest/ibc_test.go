@@ -59,9 +59,9 @@ const (
 	ibcBlockedAckError = "ABCI code: 1101: error handling packet: see events for details"
 	ibcTransferEvent   = "fungible_token_packet"
 	// ibcInvalidReceiverAckError is the error acknowledgement of a receiver
-	// the transfer app cannot decode: the bech32 error is not a registered
-	// error, so it carries the internal ABCI code 1.
-	ibcInvalidReceiverAckError = "ABCI code: 1: error handling packet: see events for details"
+	// simd's transfer app cannot decode: ibc-go v10 wraps it as
+	// ibcerrors.ErrInvalidAddress, ABCI code 5.
+	ibcInvalidReceiverAckError = "ABCI code: 5: error handling packet: see events for details"
 )
 
 // TestBlockedInboundIbc connects bze to an ibc-go simd chain through the Hermes
