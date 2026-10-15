@@ -909,8 +909,6 @@ func (s *ammSuite) slippageAboveUint64(t *testing.T) {
 // 21. A swap whose input is above the trader's balance is refused with the
 // bank's insufficient funds (sdk 5), like any other spend above the balance.
 func (s *ammSuite) swapAboveBalance(t *testing.T) {
-	t.Skip("BZE-184: MultiSwap reports a balance shortfall as invalid coins (sdk 10)")
-
 	s.requireRefusals(t, s.trader, []string{chain.Denom, s.usd, s.abc}, []ammRefusal{
 		{"input above the balance", ammSwapMsg(s.trader, []string{s.usdPool}, sdk.NewInt64Coin(chain.Denom, ammLpFunds), sdk.NewInt64Coin(s.usd, 1)),
 			5, "sdk", "insufficient funds", false},

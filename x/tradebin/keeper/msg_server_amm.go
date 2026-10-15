@@ -308,7 +308,7 @@ func (k msgServer) MultiSwap(goCtx context.Context, msg *types.MsgMultiSwap) (*t
 	//capture user input coins
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, creatorAcc, types.ModuleName, sdk.NewCoins(*ic))
 	if err != nil {
-		return nil, errors.Wrapf(sdkerrors.ErrInvalidCoins, "could not capture user input coins %s", err.Error())
+		return nil, errors.Wrap(err, "could not capture user input coins")
 	}
 
 	inputCoin := *ic

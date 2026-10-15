@@ -9,6 +9,10 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
+### State Machine Breaking
+
+* (x/tradebin) [#151](https://github.com/bze-alphateam/bze/pull/151) `MsgMultiSwap` refused for a balance below the swap input now fails with the bank's insufficient funds error (`sdk` code 5) instead of invalid coins (`sdk` code 10), so wallets and dapps can show the usual "not enough balance" message. Only the result code of the refused transaction changes; no migration.
+
 ### Bug Fixes
 
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.
