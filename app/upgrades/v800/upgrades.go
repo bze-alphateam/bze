@@ -36,13 +36,17 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
-	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
-	ibcfeetypes "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	icacontrollertypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/types"
+	icahosttypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 )
 
 const UpgradeName = "v8.0.0"
+
+// ibcFeeStoreName is the ICS-29 fee module's name and store key ("feeibc"), the
+// value of ibcFeeStoreName in ibc-go v8. ibc-go v10 removed the module, so it
+// is spelled out here to keep this historical store upgrade unchanged.
+const ibcFeeStoreName = "feeibc"
 
 func CreateUpgradeHandler(
 	cfg module.Configurator,
@@ -158,7 +162,7 @@ func CreateUpgradeHandler(
 
 func GetStoreUpgrades() *storetypes.StoreUpgrades {
 	return &storetypes.StoreUpgrades{
-		Added:   []string{nft.ModuleName, group.ModuleName, circuittypes.ModuleName, consensustypes.ModuleName, crisistypes.ModuleName, ibcfeetypes.ModuleName, "icacontroller", "icahost", txfeecollectormoduletypes.ModuleName},
+		Added:   []string{nft.ModuleName, group.ModuleName, circuittypes.ModuleName, consensustypes.ModuleName, crisistypes.ModuleName, ibcFeeStoreName, "icacontroller", "icahost", txfeecollectormoduletypes.ModuleName},
 		Deleted: []string{"scavenge"},
 	}
 }

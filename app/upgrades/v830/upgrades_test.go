@@ -92,3 +92,12 @@ func TestHandler_MigrationErrorFailsTheUpgrade(t *testing.T) {
 	_, err := handler(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 1})
 	require.ErrorContains(t, err, "boom")
 }
+
+// The stores of the modules ibc-go v10 removed are deleted at the upgrade
+// height, spelled out so a typo cannot leave one behind or delete a live store.
+func TestGetStoreUpgrades_DeletesCapabilityAndFeeStores(t *testing.T) {
+	upgrades := v830.GetStoreUpgrades()
+	require.Empty(t, upgrades.Added)
+	require.Empty(t, upgrades.Renamed)
+	require.ElementsMatch(t, []string{"capability", "feeibc"}, upgrades.Deleted)
+}

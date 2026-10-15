@@ -176,7 +176,7 @@ type upgradeCheck struct {
 	moves func(s *upgradeSuite, before any) []upgradeMove
 	// mainnet runs the network as beezee-1, linked to simd over IBC, with
 	// mainnet's legacy USDC.n/BZE pool in genesis (legacyUsdcPool), for a
-	// handler that branches on the mainnet chain id
+	// handler that branches on the mainnet chain id or touches IBC
 	mainnet bool
 }
 
@@ -190,7 +190,8 @@ type upgradeMove struct {
 // adds its entry, with the assertions of what that handler changes.
 var upgradeChecks = map[string]upgradeCheck{
 	"v8.2.0": {before: (*upgradeSuite).v820Before, after: (*upgradeSuite).v820After, moves: (*upgradeSuite).v820Moves, mainnet: true},
-	"v8.3.0": {before: (*upgradeSuite).v830Before, after: (*upgradeSuite).v830After},
+	// v8.3.0 runs linked to simd (mainnet) to prove IBC across the ibc-go v10 move
+	"v8.3.0": {before: (*upgradeSuite).v830Before, after: (*upgradeSuite).v830After, mainnet: true},
 }
 
 // upgradeFeatures are the features of the previous release the seed uses.
@@ -304,7 +305,7 @@ func (s *upgradeSuite) linkSimd(t *testing.T, net chain.IbcNetwork, simdMnemonic
 	require.NoError(t, err)
 	require.NoError(t, testutil.WaitForBlocks(s.ctx, 2, net.Simd))
 	s.ibc = &ibcSuite{ctx: s.ctx, net: net, bze: net.Bze, simd: net.Simd, admin: s.admin, bzeUser: s.admin, simdUser: simdUser, gov: s.gov}
-	s.ibc.main = s.ibc.newChannel(t, net.BzeChannel, net.SimdChannel, false)
+	s.ibc.main = s.ibc.newChannel(t, net.BzeChannel, net.SimdChannel)
 	require.Equal(t, sdkmath.NewInt(upUsdcFunds), s.ibc.balance(t, net.Simd, simdUser, upUsdcBase), "simd user holds the genesis uusdc")
 }
 
@@ -382,7 +383,7 @@ func (s *upgradeSuite) seed(t *testing.T) {
 	})
 	if s.features.branding {
 		s.execMsg(t, s.admin, map[string]any{
-			"@type": "/bze.tokenfactory.MsgSetDenomBranding", "creator": s.admin.FormattedAddress(), "denom": s.usd, "branding": tfBranding("Inter"),
+			"@type": "/bze.tokenfactory.MsgSetDenomBranding", "creator": s.admin.FormattedAddress(), "denom": s.usd, "branding": tfBranding("inter"),
 		})
 	}
 
@@ -810,7 +811,7 @@ func (s *upgradeSuite) v820Before(t *testing.T) any {
 
 	// uusdc arrives over channel-3 as the mainnet USDC.n voucher
 	in := s.ibc.transferInOn(t, st.usdcChannel, upUsdcBase, upUsdcIn)
-	require.Equal(t, `{"result":"AQ=="}`, in.appAck(t, true), "uusdc accepted before the upgrade")
+	require.Equal(t, `{"result":"AQ=="}`, in.writtenAck(t), "uusdc accepted before the upgrade")
 	require.Equal(t, upUsdcVoucher, helpers.IbcDenom(upUsdcChannel, upUsdcBase), "the mainnet USDC.n voucher")
 	require.Equal(t, sdkmath.NewInt(upUsdcIn), s.balance(t, s.admin.FormattedAddress(), upUsdcVoucher))
 
@@ -846,7 +847,7 @@ func (s *upgradeSuite) v820UsdcChannel(t *testing.T) ibcChannel {
 	ch := s.ibc.main
 	for ch.bze != upUsdcChannel {
 		require.Less(t, len(s.ibc.channels(t, s.bze)), 4, "bze has no %s", upUsdcChannel)
-		ch = s.ibc.openChannel(t, ibcTransferVersion)
+		ch = s.ibc.openChannel(t)
 	}
 	return ch
 }
@@ -954,16 +955,113 @@ func (s *upgradeSuite) v820After(t *testing.T, before any) {
 	s.createDenomReward(t)
 }
 
-// v8.3.0: TODO(BZE-154, BZE-155, BZE-152) — each story adds the assertions of
-// its part of the v8.3.0 handler here: the capability and feeibc stores gone
-// (BZE-154), the group and nft stores gone (BZE-155), x/dao added with its
-// params (BZE-152), and the module versions after the upgrade.
+// v8.3.0: TODO(BZE-155, BZE-152) — each story adds the assertions of its part
+// of the v8.3.0 handler here: the group and nft stores gone (BZE-155), x/dao
+// added with its params (BZE-152).
+//
+// BZE-154 (cosmos-sdk v0.53 + ibc-go v10): the capability and feeibc modules
+// are gone (their version entries stay frozen: x/upgrade never deletes one),
+// ibc-go v10 migrated core (6 -> 8) and transfer (5 -> 6), no other module
+// version moved, and IBC keeps working over the
+// channel opened before the upgrade, including the voucher it minted.
+type v830State struct {
+	versions map[string]int64
+	// voucher is the stake voucher bze minted over the main channel before
+	// the upgrade
+	voucher string
+}
+
+// upV830Deleted are the stores the v8.3.0 store loader deletes (x/capability
+// and the ICS-29 fee middleware, both removed with ibc-go v10).
+var upV830Deleted = []string{"capability", "feeibc"}
+
+const (
+	upV830In  = 300_000 // stake simd -> bze over the main channel, before and after
+	upV830Out = 100_000 // stake vouchers bze -> simd after the upgrade
+)
+
 func (s *upgradeSuite) v830Before(t *testing.T) any {
-	return s.moduleVersions(t, 0)
+	st := v830State{versions: s.moduleVersions(t, 0)}
+	for name, want := range map[string]int64{"capability": 1, "feeibc": 2, "ibc": 6, "transfer": 5, "interchainaccounts": 3} {
+		require.Equal(t, want, st.versions[name], "%s module version before", name)
+	}
+	require.True(t, s.supported(t, "ibc-fee", "packets"), "the fee module answers before the upgrade")
+	for _, store := range upV830Deleted {
+		res, err := helpers.StoreQuery(s.ctx, s.bze, store, 0)
+		require.NoError(t, err)
+		require.Zero(t, res.Code, "the %s store is mounted before the upgrade: %s", store, res.Log)
+	}
+
+	s.ibc.transferIn(t, chain.SimdDenom, upV830In).requireAccepted(t)
+	st.voucher = helpers.IbcDenom(s.ibc.main.bze, chain.SimdDenom)
+	return st
 }
 
 func (s *upgradeSuite) v830After(t *testing.T, before any) {
-	t.Logf("module versions before %v, after %v", before, s.moduleVersions(t, s.plan))
+	b := before.(v830State)
+
+	// module versions: the ibc-go v10 migrations ran, everything else as
+	// before. x/upgrade never deletes a version entry, so the removed capability
+	// and feeibc modules keep their last versions; their stores are deleted by
+	// the store loader and their CLI is gone (checked below)
+	versions := s.moduleVersions(t, s.plan)
+	t.Logf("module versions before %v, after %v", b.versions, versions)
+	require.Equal(t, int64(1), versions["capability"], "capability entry frozen, no migration")
+	require.Equal(t, int64(2), versions["feeibc"], "feeibc entry frozen, no migration")
+	require.Equal(t, int64(8), versions["ibc"], "ibc core migrated 6 -> 8")
+	require.Equal(t, int64(6), versions["transfer"], "transfer migrated 5 -> 6")
+	for name, v := range b.versions {
+		switch name {
+		case "capability", "feeibc", "ibc", "transfer":
+			continue
+		}
+		require.Equal(t, v, versions[name], "%s module version unchanged", name)
+	}
+	require.False(t, s.supported(t, "ibc-fee", "packets"), "the fee module is gone from the CLI")
+
+	// the store loader deleted the two stores: a raw query fails with the
+	// multistore's own error, while a kept store (ibc) still answers
+	for _, store := range upV830Deleted {
+		res, err := helpers.StoreQuery(s.ctx, s.bze, store, 0)
+		require.NoError(t, err)
+		require.NotZero(t, res.Code, "the %s store is gone after the upgrade", store)
+		require.Contains(t, res.Log, "no such store: "+store, "the %s store is gone after the upgrade", store)
+	}
+	res, err := helpers.StoreQuery(s.ctx, s.bze, "ibc", 0)
+	require.NoError(t, err)
+	require.Zero(t, res.Code, "the ibc store still answers: %s", res.Log)
+
+	// the channel opened before the upgrade is still open on both ends
+	s.ibc.requireChannelOpen(t, s.ibc.main)
+
+	// the transfer migration turned the voucher's denom trace into a denom
+	denom := query[struct {
+		Denom struct {
+			Base  string `json:"base"`
+			Trace []struct {
+				PortID    string `json:"port_id"`
+				ChannelID string `json:"channel_id"`
+			} `json:"trace"`
+		} `json:"denom"`
+	}](t, s, 0, "ibc-transfer", "denom", b.voucher).Denom
+	require.Equal(t, chain.SimdDenom, denom.Base, "voucher base denom")
+	require.Len(t, denom.Trace, 1, "voucher trace")
+	require.Equal(t, chain.TransferPort, denom.Trace[0].PortID)
+	require.Equal(t, s.ibc.main.bze, denom.Trace[0].ChannelID)
+
+	// IBC keeps working on the same channel: stake arrives, vouchers leave
+	s.ibc.transferIn(t, chain.SimdDenom, upV830In).requireAccepted(t)
+	vouchers := s.ibc.balance(t, s.bze, s.ibc.bzeUser, b.voucher)
+	out, err := helpers.SendIbc(s.ctx, s.bze, s.ibc.bzeUser, s.ibc.main.bze, s.ibc.simdUser.FormattedAddress(), sdk.NewInt64Coin(b.voucher, upV830Out))
+	require.NoError(t, err)
+	_, err = helpers.WaitForRecv(s.ctx, s.ibc.simd, s.ibc.main.simd, out.Sequence)
+	require.NoError(t, err)
+	_, err = helpers.WaitForAck(s.ctx, s.bze, out)
+	require.NoError(t, err)
+	require.Equal(t, vouchers.SubRaw(upV830Out), s.ibc.balance(t, s.bze, s.ibc.bzeUser, b.voucher), "stake vouchers left bze")
+
+	// the ICA host still answers
+	require.True(t, s.supported(t, "interchain-accounts", "host", "params"), "ICA host params")
 }
 
 // upgradeSnapshot is the state that must survive the upgrade, read at one height.

@@ -19,7 +19,8 @@ func CreateUpgradeHandler(
 		ctx := sdk.UnwrapSDKContext(c)
 
 		// RunMigrations triggers module-level migrations based on ConsensusVersion
-		// changes. The cosmos-sdk v0.50 -> v0.53 bump changes no module's version.
+		// changes: the ibc-go v10 module migrations. The cosmos-sdk v0.50 -> v0.53
+		// bump changes no module's version.
 		return mm.RunMigrations(ctx, cfg, vm)
 	}
 }
