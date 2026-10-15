@@ -26,6 +26,7 @@ derived from it. History older than v8.0.0 lives in the
 ### Bug Fixes
 
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.
+* (x/rewards) [#143](https://github.com/bze-alphateam/bze/pull/143) `MsgUpdateDenomRewardSchedule` checks that the extra days are at most 36500 before it computes the extra budget. A handler reached without `ValidateBasic` used to panic on a math overflow, which turned into a failed transaction. It now returns the duration error. Only the error changes: the same transactions fail as before.
 
 ## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0) - 2026-10-14
 

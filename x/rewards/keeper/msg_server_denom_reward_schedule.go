@@ -161,6 +161,11 @@ func (k msgServer) UpdateDenomRewardSchedule(goCtx context.Context, msg *types.M
 	if extraDays <= 0 {
 		return nil, types.ErrInvalidDuration
 	}
+	// bound the extra days before getScheduleBudget multiplies by them: its overflow guard assumes
+	// days <= HundredYearsInDays, and the handler must not rely on ValidateBasic having run
+	if extraDays > types.HundredYearsInDays {
+		return nil, errors.Wrapf(types.ErrInvalidDuration, "duration should be between 1 and %d days", types.HundredYearsInDays)
+	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	schedule, found := k.GetDenomRewardSchedule(ctx, msg.Denom, msg.ScheduleId)
