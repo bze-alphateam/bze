@@ -12,6 +12,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/interchaintest/v10"
 	"github.com/cosmos/interchaintest/v10/chain/cosmos"
 	"github.com/cosmos/interchaintest/v10/ibc"
@@ -689,15 +690,17 @@ func (s *upgradeSuite) createDenomReward(t *testing.T) {
 // the voucher and the pool's LP denom are the exact mainnet ones. The handler
 // blocks uusdc on channel-3 and hands the black hole's USDC.n/BZE LP shares to
 // the wind-down admin, touching nothing else. The Denom Rewards messages work.
-// v8.3.0: TODO(BZE-155, BZE-152) — each story adds the assertions of its part
-// of the v8.3.0 handler here: the group and nft stores gone (BZE-155), x/dao
-// added with its params (BZE-152).
+// v8.3.0: TODO(BZE-152) — x/dao added with its params.
 //
 // BZE-154 (cosmos-sdk v0.53 + ibc-go v10): the capability and feeibc modules
 // are gone (their version entries stay frozen: x/upgrade never deletes one),
 // ibc-go v10 migrated core (6 -> 8) and transfer (5 -> 6), no other module
 // version moved, and IBC keeps working over the
 // channel opened before the upgrade, including the voucher it minted.
+//
+// BZE-155: the unused x/group and x/nft modules are gone: their stores are
+// deleted, their version entries frozen, their CLI queries unknown, and the
+// nft module account (left on chain, empty) still refuses funds.
 type v830State struct {
 	versions map[string]int64
 	// voucher is the stake voucher bze minted over the main channel before
@@ -705,9 +708,14 @@ type v830State struct {
 	voucher string
 }
 
-// upV830Deleted are the stores the v8.3.0 store loader deletes (x/capability
-// and the ICS-29 fee middleware, both removed with ibc-go v10).
-var upV830Deleted = []string{"capability", "feeibc"}
+// upV830Deleted are the stores the v8.3.0 store loader deletes: x/capability
+// and the ICS-29 fee middleware (both removed with ibc-go v10), x/group and
+// x/nft (removed from the app).
+var upV830Deleted = []string{"capability", "feeibc", "group", "nft"}
+
+// upV830Frozen are the version entries of the removed modules: x/upgrade never
+// deletes one, so they keep their v8.2.0 values.
+var upV830Frozen = map[string]int64{"capability": 1, "feeibc": 2, "group": 2, "nft": 1}
 
 const (
 	upV830In  = 300_000 // stake simd -> bze over the main channel, before and after
@@ -716,10 +724,16 @@ const (
 
 func (s *upgradeSuite) v830Before(t *testing.T) any {
 	st := v830State{versions: s.moduleVersions(t, 0)}
-	for name, want := range map[string]int64{"capability": 1, "feeibc": 2, "ibc": 6, "transfer": 5, "interchainaccounts": 3} {
+	for name, want := range map[string]int64{"ibc": 6, "transfer": 5, "interchainaccounts": 3} {
+		require.Equal(t, want, st.versions[name], "%s module version before", name)
+	}
+	for name, want := range upV830Frozen {
 		require.Equal(t, want, st.versions[name], "%s module version before", name)
 	}
 	require.True(t, s.supported(t, "ibc-fee", "packets"), "the fee module answers before the upgrade")
+	require.True(t, s.supported(t, "group", "groups"), "x/group answers before the upgrade")
+	require.True(t, s.supported(t, "nft", "classes"), "x/nft answers before the upgrade")
+	s.requireNftAccountBlocked(t)
 	for _, store := range upV830Deleted {
 		res, err := helpers.StoreQuery(s.ctx, s.bze, store, 0)
 		require.NoError(t, err)
@@ -735,25 +749,29 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	b := before.(v830State)
 
 	// module versions: the ibc-go v10 migrations ran, everything else as
-	// before. x/upgrade never deletes a version entry, so the removed capability
-	// and feeibc modules keep their last versions; their stores are deleted by
-	// the store loader and their CLI is gone (checked below)
+	// before. x/upgrade never deletes a version entry, so the removed
+	// capability, feeibc, group and nft modules keep their last versions; their
+	// stores are deleted by the store loader and their CLI is gone (checked below)
 	versions := s.moduleVersions(t, s.plan)
 	t.Logf("module versions before %v, after %v", b.versions, versions)
-	require.Equal(t, int64(1), versions["capability"], "capability entry frozen, no migration")
-	require.Equal(t, int64(2), versions["feeibc"], "feeibc entry frozen, no migration")
+	for name, want := range upV830Frozen {
+		require.Equal(t, want, versions[name], "%s entry frozen, no migration", name)
+	}
 	require.Equal(t, int64(8), versions["ibc"], "ibc core migrated 6 -> 8")
 	require.Equal(t, int64(6), versions["transfer"], "transfer migrated 5 -> 6")
 	for name, v := range b.versions {
 		switch name {
-		case "capability", "feeibc", "ibc", "transfer":
+		case "ibc", "transfer":
 			continue
 		}
 		require.Equal(t, v, versions[name], "%s module version unchanged", name)
 	}
 	require.False(t, s.supported(t, "ibc-fee", "packets"), "the fee module is gone from the CLI")
+	require.False(t, s.supported(t, "group", "groups"), "x/group is gone from the CLI")
+	require.False(t, s.supported(t, "nft", "classes"), "x/nft is gone from the CLI")
+	s.requireNftAccountBlocked(t)
 
-	// the store loader deleted the two stores: a raw query fails with the
+	// the store loader deleted the four stores: a raw query fails with the
 	// multistore's own error, while a kept store (ibc) still answers
 	for _, store := range upV830Deleted {
 		res, err := helpers.StoreQuery(s.ctx, s.bze, store, 0)
@@ -1073,6 +1091,19 @@ func query[T any](t *testing.T, s *upgradeSuite, height int64, args ...string) T
 
 // supported reports whether the running release has the query; an unknown
 // command means it does not.
+// requireNftAccountBlocked checks that the x/nft module account refuses funds,
+// before the upgrade as a module account and after it as a blocked address
+// kept for the removed module.
+func (s *upgradeSuite) requireNftAccountBlocked(t *testing.T) {
+	t.Helper()
+	nftAddr, err := sdk.Bech32ifyAddressBytes(chain.Bech32Prefix, authtypes.NewModuleAddress("nft"))
+	require.NoError(t, err)
+	res, err := helpers.ExecTxWith(s.ctx, s.bze, s.admin, s.txOpts(), "bank", "send", s.admin.FormattedAddress(), nftAddr, coinStr(1, chain.Denom))
+	require.NoError(t, err)
+	require.NotZero(t, res.Code, "sending to the nft module account must fail")
+	require.Contains(t, res.RawLog, nftAddr+" is not allowed to receive funds")
+}
+
 func (s *upgradeSuite) supported(t *testing.T, args ...string) bool {
 	t.Helper()
 	_, err := helpers.Query[json.RawMessage](s.ctx, s.bze, args...)
