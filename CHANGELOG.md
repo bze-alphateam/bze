@@ -9,6 +9,10 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
+### State Machine Breaking
+
+* (x/rewards) [#145](https://github.com/bze-alphateam/bze/pull/145) Reward creation fees can be paid in a non-native fee denom. Creating a staking reward, a trading reward, a denom reward or a denom reward schedule, and the prize fee for a new prize denom, used to require the whole fee as spendable ubze before charging it, even when the tx paid in another fee denom and the fee would have been taken in that denom and swapped. Only the escrowed budget is pre-checked now; the fee is taken in the tx fee denom when possible, in ubze otherwise, and a payer who can pay it in neither is refused with an insufficient-funds error naming the fee. Transactions that were refused now succeed, so the change activates with the `v8.3.0` upgrade.
+
 ### Bug Fixes
 
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.
