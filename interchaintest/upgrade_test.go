@@ -12,7 +12,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/interchaintest/v10"
 	"github.com/cosmos/interchaintest/v10/chain/cosmos"
 	"github.com/cosmos/interchaintest/v10/ibc"
@@ -81,27 +80,6 @@ const (
 	upHaltTimeout = 2 * time.Minute
 	// upRestartTimeout bounds the wait for the candidate's first blocks.
 	upRestartTimeout = 2 * time.Minute
-
-	// v8.2.0 Noble USDC wind-down rehearsal (app/upgrades/v820/wind_down.go):
-	// the network runs as beezee-1, linked to simd, whose uusdc reaches bze
-	// over channel-3 as the exact mainnet USDC.n voucher.
-	upMainnetChainID = "beezee-1"
-	upUsdcChannel    = "channel-3"
-	upUsdcBase       = "uusdc"
-	upUsdcVoucher    = "ibc/6490A7EAB61059BFC1CDDEB05917DD70BDF3A611654162A1A47DB930D40D8AF4"
-	upUsdcLpDenom    = "ulp_" + upUsdcVoucher + "_ubze"
-	upWindDownAdmin  = "bze1jx4x3kn8mlz2s03zdpf2a38x9gl66llvjqdd55"
-	upUsdcFunds      = 10_000_000_000 // simd user's genesis uusdc
-	upUsdcIn         = 1_000_000_000  // uusdc sent to admin before the upgrade
-	upAliceLpLocked  = 10_000         // alice locks usd/ubze LP shares: they stay locked
-	upUsdcAfter      = 100_000        // each transfer after the upgrade
-	// the USDC.n/BZE pool comes from genesis, as on mainnet it predates the
-	// "ulp/<hash>" LP denoms of v8.1.1: its reserves, the shares the black
-	// hole holds and those a wallet holds
-	upLegacyReserveUsdc = 500_000_000
-	upLegacyReserveBze  = 2_000_000_000
-	upLegacyLocked      = 600_000_000
-	upLegacyHeld        = 400_000_000
 )
 
 // TestChainUpgrade runs a software upgrade on a two-validator network: it
@@ -128,20 +106,11 @@ func TestChainUpgrade(t *testing.T) {
 		chain.WithoutGenesis(chain.DenomRewardLockKey),
 	}
 	var s *upgradeSuite
-	if check.mainnet {
-		mnemonic, simdAddr := newSimdAccount(t)
-		holderMnemonic, holderAddr := newAccount(t, chain.Bech32Prefix)
-		inet := chain.StartIbc(t, ctx, []ibc.WalletAmount{{
-			Address: simdAddr,
-			Denom:   upUsdcBase,
-			Amount:  sdkmath.NewInt(upUsdcFunds),
-		}}, append(opts, chain.WithChainID(upMainnetChainID), chain.WithGenesisEdit(legacyUsdcPool(holderAddr)))...)
+	if check.ibc {
+		mnemonic, _ := newSimdAccount(t)
+		inet := chain.StartIbc(t, ctx, nil, opts...)
 		s = setupUpgrade(t, ctx, chain.Network{Chain: inet.Bze, Docker: inet.Docker}, cfg, check)
 		s.linkSimd(t, inet, mnemonic)
-		var err error
-		s.lpHolder, err = interchaintest.GetAndFundTestUserWithMnemonic(ctx, "up-lp", holderMnemonic, sdkmath.NewInt(upUserFunds), inet.Bze)
-		require.NoError(t, err)
-		require.Equal(t, holderAddr, s.lpHolder.FormattedAddress())
 	} else {
 		s = setupUpgrade(t, ctx, chain.Start(t, ctx, opts...), cfg, check)
 	}
@@ -174,10 +143,8 @@ type upgradeCheck struct {
 	// moves are the balances the handler moves between s.accounts (by name),
 	// the only balance changes step 4 accepts besides a block's own
 	moves func(s *upgradeSuite, before any) []upgradeMove
-	// mainnet runs the network as beezee-1, linked to simd over IBC, with
-	// mainnet's legacy USDC.n/BZE pool in genesis (legacyUsdcPool), for a
-	// handler that branches on the mainnet chain id or touches IBC
-	mainnet bool
+	// ibc links the network to simd over IBC, for a handler that touches IBC
+	ibc bool
 }
 
 // upgradeMove is a coin the handler moves from one account to another.
@@ -186,12 +153,12 @@ type upgradeMove struct {
 	coin     sdk.Coin
 }
 
-// upgradeChecks is keyed by upgrade name. Each release that adds a handler
-// adds its entry, with the assertions of what that handler changes.
+// upgradeChecks is keyed by upgrade name. It holds the entry of the handler
+// the code builds; a release line replaces the previous release's entry with
+// its own, the way app/upgrades keeps only the current handler.
 var upgradeChecks = map[string]upgradeCheck{
-	"v8.2.0": {before: (*upgradeSuite).v820Before, after: (*upgradeSuite).v820After, moves: (*upgradeSuite).v820Moves, mainnet: true},
-	// v8.3.0 runs linked to simd (mainnet) to prove IBC across the ibc-go v10 move
-	"v8.3.0": {before: (*upgradeSuite).v830Before, after: (*upgradeSuite).v830After, mainnet: true},
+	// v8.3.0 runs linked to simd to prove IBC across the ibc-go v10 move
+	"v8.3.0": {before: (*upgradeSuite).v830Before, after: (*upgradeSuite).v830After, ibc: true},
 }
 
 // upgradeFeatures are the features of the previous release the seed uses.
@@ -226,87 +193,19 @@ type upgradeSuite struct {
 	before, after  upgradeSnapshot
 	// blackHoleAddr and burnerAddr are the burner modules' accounts
 	blackHoleAddr, burnerAddr string
-	// ibc is the simd link of a mainnet run (upgradeCheck.mainnet), nil
-	// otherwise; it reuses the IBC suite's transfer helpers
+	// ibc is the simd link of a run with upgradeCheck.ibc, nil otherwise; it
+	// reuses the IBC suite's transfer helpers
 	ibc *ibcSuite
-	// lpHolder holds the legacy pool's shares outside the black hole (mainnet runs)
-	lpHolder ibc.Wallet
 }
 
-// legacyUsdcPool adds the USDC.n/BZE pool to genesis the way mainnet holds
-// it: created before v8.1.1, so its LP denom is "ulp_<base>_<quote>", which
-// no release since can create. The tradebin module holds the reserves, the
-// black hole and holder the shares. The bank supply is recomputed from the
-// balances.
-func legacyUsdcPool(holder string) func(map[string]any) error {
-	return func(g map[string]any) error {
-		app, ok := g["app_state"].(map[string]any)
-		if !ok {
-			return fmt.Errorf("genesis has no app_state")
-		}
-		bank, ok := app["bank"].(map[string]any)
-		if !ok {
-			return fmt.Errorf("genesis has no bank state")
-		}
-		tradebin, ok := app["tradebin"].(map[string]any)
-		if !ok {
-			return fmt.Errorf("genesis has no tradebin state")
-		}
-		moduleAddr := func(name string) (string, error) {
-			return sdk.Bech32ifyAddressBytes(chain.Bech32Prefix, authtypes.NewModuleAddress(name))
-		}
-		tradebinAddr, err := moduleAddr("tradebin")
-		if err != nil {
-			return err
-		}
-		blackHoleAddr, err := moduleAddr("burner_black_hole")
-		if err != nil {
-			return err
-		}
-		balances, _ := bank["balances"].([]any)
-		for _, b := range []struct {
-			addr  string
-			coins sdk.Coins
-		}{
-			{tradebinAddr, sdk.NewCoins(sdk.NewInt64Coin(upUsdcVoucher, upLegacyReserveUsdc), sdk.NewInt64Coin(chain.Denom, upLegacyReserveBze))},
-			{blackHoleAddr, sdk.NewCoins(sdk.NewInt64Coin(upUsdcLpDenom, upLegacyLocked))},
-			{holder, sdk.NewCoins(sdk.NewInt64Coin(upUsdcLpDenom, upLegacyHeld))},
-		} {
-			coins := make([]any, 0, len(b.coins))
-			for _, c := range b.coins {
-				coins = append(coins, map[string]any{"denom": c.Denom, "amount": c.Amount.String()})
-			}
-			balances = append(balances, map[string]any{"address": b.addr, "coins": coins})
-		}
-		bank["balances"] = balances
-		bank["supply"] = []any{}
-
-		pools, _ := tradebin["liquidity_pools"].([]any)
-		tradebin["liquidity_pools"] = append(pools, map[string]any{
-			"id":            upUsdcVoucher + "_" + chain.Denom,
-			"base":          upUsdcVoucher,
-			"quote":         chain.Denom,
-			"lp_denom":      upUsdcLpDenom,
-			"creator":       holder,
-			"fee":           ammPoolFee,
-			"fee_dest":      map[string]any{"treasury": "0", "burner": "0.5", "providers": "0.5"},
-			"reserve_base":  strconv.Itoa(upLegacyReserveUsdc),
-			"reserve_quote": strconv.Itoa(upLegacyReserveBze),
-			"stable":        false,
-		})
-		return nil
-	}
-}
-
-// linkSimd prepares the IBC side of a mainnet run: a simd user holding
-// uusdc, transfers to and from admin.
+// linkSimd prepares the IBC side of a run linked to simd: a funded simd user,
+// transfers to and from admin over the channel StartIbc opened.
 func (s *upgradeSuite) linkSimd(t *testing.T, net chain.IbcNetwork, simdMnemonic string) {
 	simdUser, err := interchaintest.GetAndFundTestUserWithMnemonic(s.ctx, "up-simd", simdMnemonic, sdkmath.NewInt(ibcSimdFunds), net.Simd)
 	require.NoError(t, err)
 	require.NoError(t, testutil.WaitForBlocks(s.ctx, 2, net.Simd))
 	s.ibc = &ibcSuite{ctx: s.ctx, net: net, bze: net.Bze, simd: net.Simd, admin: s.admin, bzeUser: s.admin, simdUser: simdUser, gov: s.gov}
 	s.ibc.main = s.ibc.newChannel(t, net.BzeChannel, net.SimdChannel)
-	require.Equal(t, sdkmath.NewInt(upUsdcFunds), s.ibc.balance(t, net.Simd, simdUser, upUsdcBase), "simd user holds the genesis uusdc")
 }
 
 func setupUpgrade(t *testing.T, ctx context.Context, net chain.Network, cfg chain.Upgrade, check upgradeCheck) *upgradeSuite {
@@ -790,171 +689,6 @@ func (s *upgradeSuite) createDenomReward(t *testing.T) {
 // the voucher and the pool's LP denom are the exact mainnet ones. The handler
 // blocks uusdc on channel-3 and hands the black hole's USDC.n/BZE LP shares to
 // the wind-down admin, touching nothing else. The Denom Rewards messages work.
-type v820State struct {
-	versions                   map[string]int64
-	rewardsParams, txFeeParams map[string]json.RawMessage
-	blackHole                  sdk.Coins
-	// lpLocked is the black hole's USDC.n/BZE LP shares the handler moves
-	lpLocked sdk.Coin
-	// usdcChannel is channel-3 on bze and its simd counterparty
-	usdcChannel ibcChannel
-}
-
-func (s *upgradeSuite) v820Before(t *testing.T) any {
-	require.NotNil(t, s.ibc, "v8.2.0 runs as beezee-1 linked to simd")
-	st := v820State{
-		versions:    s.moduleVersions(t, 0),
-		usdcChannel: s.v820UsdcChannel(t),
-	}
-	require.Equal(t, int64(4), st.versions["rewards"], "rewards module version before")
-	require.Equal(t, int64(2), st.versions["txfeecollector"], "txfeecollector module version before")
-
-	// uusdc arrives over channel-3 as the mainnet USDC.n voucher
-	in := s.ibc.transferInOn(t, st.usdcChannel, upUsdcBase, upUsdcIn)
-	require.Equal(t, `{"result":"AQ=="}`, in.writtenAck(t), "uusdc accepted before the upgrade")
-	require.Equal(t, upUsdcVoucher, helpers.IbcDenom(upUsdcChannel, upUsdcBase), "the mainnet USDC.n voucher")
-	require.Equal(t, sdkmath.NewInt(upUsdcIn), s.balance(t, s.admin.FormattedAddress(), upUsdcVoucher))
-
-	// the genesis USDC.n/BZE pool has the mainnet LP denom, its shares split
-	// between the black hole and lpHolder; alice locks usd/ubze shares next
-	// to them, which must stay locked
-	legacy := s.pool(t, 0, upUsdcVoucher+"_"+chain.Denom)
-	require.Equal(t, upUsdcLpDenom, legacy.LpDenom, "the mainnet USDC.n/BZE LP denom")
-	require.Equal(t, sdkmath.NewInt(upLegacyLocked+upLegacyHeld), s.supply(t, upUsdcLpDenom), "USDC.n/BZE LP supply")
-	require.Equal(t, sdkmath.NewInt(upLegacyHeld), s.balance(t, s.lpHolder.FormattedAddress(), upUsdcLpDenom), "lpHolder's shares")
-	st.lpLocked = sdk.NewCoin(upUsdcLpDenom, s.balance(t, s.blackHoleAddr, upUsdcLpDenom))
-	require.Equal(t, sdkmath.NewInt(upLegacyLocked), st.lpLocked.Amount, "the black hole's USDC.n/BZE shares")
-	usdLp := s.pool(t, 0, s.usdPool).LpDenom
-	blackHole := s.balances(t, 0, s.blackHoleAddr)
-	s.exec(t, s.alice, "burner", "fund-burner", coinStr(upAliceLpLocked, usdLp))
-	st.blackHole = s.balances(t, 0, s.blackHoleAddr)
-	require.Equal(t, blackHole.Add(sdk.NewInt64Coin(usdLp, upAliceLpLocked)).String(), st.blackHole.String(),
-		"fund-burner locked alice's usd/ubze shares in the black hole")
-	s.accounts["lp holder"] = s.lpHolder.FormattedAddress()
-
-	// the wind-down admin is an ordinary wallet; step 4 checks its balances
-	s.accounts["wind-down admin"] = upWindDownAdmin
-	require.True(t, s.balances(t, 0, upWindDownAdmin).IsZero(), "the wind-down admin starts empty")
-
-	st.rewardsParams = s.params(t, 0, "rewards")
-	st.txFeeParams = s.params(t, 0, "txfeecollector")
-	return st
-}
-
-// v820UsdcChannel opens transfer channels to simd until bze has channel-3,
-// the channel id of the Noble link on mainnet, and returns it.
-func (s *upgradeSuite) v820UsdcChannel(t *testing.T) ibcChannel {
-	ch := s.ibc.main
-	for ch.bze != upUsdcChannel {
-		require.Less(t, len(s.ibc.channels(t, s.bze)), 4, "bze has no %s", upUsdcChannel)
-		ch = s.ibc.openChannel(t)
-	}
-	return ch
-}
-
-func (s *upgradeSuite) v820Moves(before any) []upgradeMove {
-	b := before.(v820State)
-	return []upgradeMove{{from: "burner_black_hole module", to: "wind-down admin", coin: b.lpLocked}}
-}
-
-func (s *upgradeSuite) v820After(t *testing.T, before any) {
-	b := before.(v820State)
-
-	versions := s.moduleVersions(t, s.plan)
-	require.Equal(t, int64(5), versions["rewards"], "rewards module version after")
-	require.Equal(t, int64(3), versions["txfeecollector"], "txfeecollector module version after")
-	for name, v := range b.versions {
-		if name != "rewards" && name != "txfeecollector" {
-			require.Equal(t, v, versions[name], "module %s version", name)
-		}
-	}
-	require.Len(t, versions, len(b.versions), "no module added or removed")
-
-	// rewards: the old params are kept, the Denom Rewards params get their
-	// defaults (x/rewards/types/params.go)
-	rewards := s.params(t, s.plan, "rewards")
-	for name, raw := range b.rewardsParams {
-		require.JSONEq(t, string(raw), string(rewards[name]), "rewards param %s", name)
-	}
-	fee := `{"denom":"ubze","amount":"25000000000"}`
-	for _, p := range []struct{ camel, snake, want string }{
-		{"createDenomRewardFee", "create_denom_reward_fee", fee},
-		{"createDenomRewardPrizeFee", "create_denom_reward_prize_fee", fee},
-		{"addDenomRewardScheduleFee", "add_denom_reward_schedule_fee", fee},
-		{"maxPrizeDenomsPerDr", "max_prize_denoms_per_dr", "50"},
-		{"extraGasForDenomExit", "extra_gas_for_denom_exit", `"1000000"`},
-		{"denomRewardLock", "denom_reward_lock", "7"},
-	} {
-		raw, ok := rewards[p.camel]
-		if !ok {
-			raw, ok = rewards[p.snake]
-		}
-		require.True(t, ok, "rewards param %s missing from %v", p.camel, rewards)
-		require.JSONEq(t, p.want, string(raw), "rewards param %s", p.camel)
-	}
-	for _, k := range []string{"denomRewardMinStake", "denom_reward_min_stake"} {
-		if raw, ok := rewards[k]; ok {
-			require.Contains(t, []string{`"0"`, "0"}, string(raw), "denom_reward_min_stake defaults to 0")
-		}
-	}
-
-	// txfeecollector: uusdc on channel-3 blocked, the rest unchanged
-	txFee := s.params(t, s.plan, "txfeecollector")
-	for name, raw := range b.txFeeParams {
-		require.JSONEq(t, string(raw), string(txFee[name]), "txfeecollector param %s", name)
-	}
-	require.Equal(t, []blockedEntry{{upUsdcChannel, upUsdcBase}}, s.ibc.blockedParam(t), "blocked_ibc_inbound")
-
-	// the black hole's USDC.n/BZE shares went to the wind-down admin in the
-	// upgrade block, with a bank transfer; every other locked coin stayed
-	require.Equal(t, b.blackHole.Sub(b.lpLocked).String(), s.balances(t, s.plan, s.blackHoleAddr).String(), "black hole balances")
-	require.True(t, s.balances(t, s.plan, s.blackHoleAddr).AmountOf(upUsdcLpDenom).IsZero(), "no USDC.n/BZE shares left in the black hole")
-	require.Equal(t, sdk.NewCoins(b.lpLocked).String(), s.balances(t, s.plan, upWindDownAdmin).String(), "the wind-down admin holds exactly the moved shares")
-	transfers, err := helpers.BlockEvents(s.ctx, s.bze, s.plan, "transfer")
-	require.NoError(t, err)
-	require.Len(t, helpers.EventsWith(transfers, map[string]string{
-		"sender": s.blackHoleAddr, "recipient": upWindDownAdmin, "amount": b.lpLocked.String(),
-	}), 1, "one transfer of the shares in the upgrade block: %+v", transfers)
-
-	// the block works on the transfer stack: uusdc over channel-3 is refused
-	// and refunded, stake over channel-3 and uusdc over channel-0 arrive
-	s.ibc.transferInOn(t, b.usdcChannel, upUsdcBase, upUsdcAfter).requireRefused(t)
-	s.ibc.transferInOn(t, b.usdcChannel, chain.SimdDenom, upUsdcAfter).requireAccepted(t)
-	s.ibc.transferInOn(t, s.ibc.main, upUsdcBase, upUsdcAfter).requireAccepted(t)
-
-	// exits are untouched: USDC.n leaves over channel-3 and arrives on simd
-	usdc := s.ibc.balance(t, s.ibc.simd, s.ibc.simdUser, upUsdcBase)
-	vouchers := s.balance(t, s.admin.FormattedAddress(), upUsdcVoucher)
-	out, err := helpers.SendIbc(s.ctx, s.bze, s.admin, upUsdcChannel, s.ibc.simdUser.FormattedAddress(), sdk.NewInt64Coin(upUsdcVoucher, upUsdcAfter))
-	require.NoError(t, err)
-	_, err = helpers.WaitForRecv(s.ctx, s.ibc.simd, b.usdcChannel.simd, out.Sequence)
-	require.NoError(t, err)
-	_, err = helpers.WaitForAck(s.ctx, s.bze, out)
-	require.NoError(t, err)
-	require.Equal(t, vouchers.SubRaw(upUsdcAfter), s.balance(t, s.admin.FormattedAddress(), upUsdcVoucher), "USDC.n left bze")
-	require.Equal(t, usdc.AddRaw(upUsdcAfter), s.ibc.balance(t, s.ibc.simd, s.ibc.simdUser, upUsdcBase), "uusdc released on simd")
-
-	// the legacy pool still works with its old LP denom: lpHolder withdraws
-	// its whole share, the shares are burned and the reserves pay it out
-	poolID := upUsdcVoucher + "_" + chain.Denom
-	pool := s.pool(t, 0, poolID)
-	holder := s.lpHolder.FormattedAddress()
-	usdcBefore, bzeBefore := s.balance(t, holder, upUsdcVoucher), s.balance(t, holder, chain.Denom)
-	lpSupply := s.supply(t, upUsdcLpDenom)
-	res := s.exec(t, s.lpHolder, "tradebin", "remove-liquidity", poolID, strconv.Itoa(upLegacyHeld), "1", "1")
-	gotUsdc := s.balance(t, holder, upUsdcVoucher).Sub(usdcBefore)
-	gotBze := s.balance(t, holder, chain.Denom).Sub(bzeBefore).Add(s.txFee(t, res))
-	require.True(t, gotUsdc.IsPositive() && gotBze.IsPositive(), "lpHolder received both reserves: %s, %s", gotUsdc, gotBze)
-	after := s.pool(t, 0, poolID)
-	require.Equal(t, parseInt(pool.ReserveBase).Sub(gotUsdc).String(), after.ReserveBase, "USDC.n reserve paid out")
-	require.Equal(t, parseInt(pool.ReserveQuote).Sub(gotBze).String(), after.ReserveQuote, "ubze reserve paid out")
-	require.Equal(t, lpSupply.SubRaw(upLegacyHeld), s.supply(t, upUsdcLpDenom), "the withdrawn shares are burned")
-	require.True(t, s.balance(t, holder, upUsdcLpDenom).IsZero(), "lpHolder has no shares left")
-
-	// the new messages work
-	s.createDenomReward(t)
-}
-
 // v8.3.0: TODO(BZE-155, BZE-152) — each story adds the assertions of its part
 // of the v8.3.0 handler here: the group and nft stores gone (BZE-155), x/dao
 // added with its params (BZE-152).

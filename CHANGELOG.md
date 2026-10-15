@@ -18,6 +18,10 @@ derived from it. History older than v8.0.0 lives in the
 
 * (ibc) [#140](https://github.com/bze-alphateam/bze/pull/140) Removed with ibc-go v10: the `bzed query ibc-fee` / `bzed tx ibc-fee` commands and the `/ibc/apps/fee/v1/*` REST routes; channel upgrade messages and queries (`MsgChannelUpgrade*`); the denom-trace transfer queries. Clients that resolve `ibc/<hash>` denoms through `/ibc/apps/transfer/v1/denom_traces` must switch to `/ibc/apps/transfer/v1/denoms` and `/ibc/apps/transfer/v1/denoms/{hash}` (`bzed query ibc-transfer denom|denoms`), which return the base denom and the trace as a list of hops.
 
+### Improvements
+
+* (app) [#141](https://github.com/bze-alphateam/bze/pull/141) The code now keeps only the upgrade handler of the release it builds (`v8.3.0`). The handlers of v5.1.2 through v8.2.0 are removed, because each one runs once at its height. Nodes syncing from genesis already switch to each release's own binary at its upgrade height (for example with Cosmovisor), so nothing changes for operators.
+
 ### Bug Fixes
 
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.
