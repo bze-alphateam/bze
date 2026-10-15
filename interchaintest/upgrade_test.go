@@ -960,8 +960,9 @@ func (s *upgradeSuite) v820After(t *testing.T, before any) {
 // added with its params (BZE-152).
 //
 // BZE-154 (cosmos-sdk v0.53 + ibc-go v10): the capability and feeibc modules
-// and stores are gone, ibc-go v10 migrated core (6 -> 8) and transfer
-// (5 -> 6), no other module version moved, and IBC keeps working over the
+// are gone (their version entries stay frozen: x/upgrade never deletes one),
+// ibc-go v10 migrated core (6 -> 8) and transfer (5 -> 6), no other module
+// version moved, and IBC keeps working over the
 // channel opened before the upgrade, including the voucher it minted.
 type v830State struct {
 	versions map[string]int64
@@ -990,12 +991,14 @@ func (s *upgradeSuite) v830Before(t *testing.T) any {
 func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	b := before.(v830State)
 
-	// module versions: capability and feeibc gone, the ibc-go v10 migrations
-	// ran, everything else as before
+	// module versions: the ibc-go v10 migrations ran, everything else as
+	// before. x/upgrade never deletes a version entry, so the removed capability
+	// and feeibc modules keep their last versions; their stores are deleted by
+	// the store loader and their CLI is gone (checked below)
 	versions := s.moduleVersions(t, s.plan)
 	t.Logf("module versions before %v, after %v", b.versions, versions)
-	require.NotContains(t, versions, "capability", "capability module removed")
-	require.NotContains(t, versions, "feeibc", "29-fee module removed")
+	require.Equal(t, int64(1), versions["capability"], "capability entry frozen, no migration")
+	require.Equal(t, int64(2), versions["feeibc"], "feeibc entry frozen, no migration")
 	require.Equal(t, int64(8), versions["ibc"], "ibc core migrated 6 -> 8")
 	require.Equal(t, int64(6), versions["transfer"], "transfer migrated 5 -> 6")
 	for name, v := range b.versions {
