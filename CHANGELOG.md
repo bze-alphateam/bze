@@ -9,6 +9,14 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
+### State Machine Breaking
+
+* (x/tokenfactory) [#153](https://github.com/bze-alphateam/bze/pull/153) New governance message `MsgSetDenomAdmin`. Nodes without it reject the transaction, so it ships with the v8.3.0 coordinated upgrade. No store change and no migration: the tokenfactory consensus version stays 3. No action for validators beyond the upgrade.
+
+### Features
+
+* (x/tokenfactory) [#153](https://github.com/bze-alphateam/bze/pull/153) `MsgSetDenomAdmin` (gov authority only) sets the admin of a factory denom to any valid, non-empty account address, whatever its current admin is. That includes renounced denoms, which until now nobody could ever change again. The main use is handing a token to a DAO, but the new admin need not be one. Only denoms with a tokenfactory authority record are accepted (`ubze`, IBC and LP denoms are refused with `ErrDenomDoesNotExist`), one denom per message, and governance cannot use it to remove an admin. It emits `DenomAdminChangeEvent` with the previous admin. `MsgChangeAdmin` is unchanged. Governance runbook in `x/tokenfactory/docs/README.md`.
+
 ### Bug Fixes
 
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.
