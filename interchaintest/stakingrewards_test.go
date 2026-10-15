@@ -30,8 +30,7 @@ const (
 	srCreatorFunds = 250_000_000_000 // 250,000 BZE: three denoms, three staking rewards
 	srUserFunds    = 1_000_000_000   // 1,000 BZE for gas
 	// erin pays the create fee in a factory token: the denom, a pool whose ubze
-	// side stays above MinNativeLiquidityForModuleSwap (1e11) after the fee
-	// swap, and the 25,000 BZE the create checks as spendable first
+	// side stays above MinNativeLiquidityForModuleSwap (1e11) after the fee swap
 	srErinFunds = 250_000_000_000
 
 	srPrize    = 1_000_000
@@ -520,8 +519,6 @@ func (s *stakingRewardsSuite) createFeeInFactoryToken(t *testing.T) {
 // fee token and D's budget, pays the tx fee and the create fee in the token
 // and creates D. Her ubze balance stays 0.
 func (s *stakingRewardsSuite) createWithoutUbze(t *testing.T) {
-	t.Skip("BZE-185: the rewards balance pre-check requires the whole create fee in ubze")
-
 	gina := interchaintest.GetAndFundTestUsers(t, s.ctx, "srzero", sdkmath.NewInt(srZeroFunds), s.bze)[0]
 	require.NoError(t, testutil.WaitForBlocks(s.ctx, 2, s.bze))
 	addr := gina.FormattedAddress()
