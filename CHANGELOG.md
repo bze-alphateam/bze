@@ -9,6 +9,10 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
+### State Machine Breaking
+
+* (x/burner) [#150](https://github.com/bze-alphateam/bze/pull/150) The burner recognises the hashed LP share denoms (`ulp/<hash>`) minted by pools created since v8.1.1, not only the legacy `ulp_<base>_<quote>` ones. `MsgFundBurner` and the periodic burn always lock such LP shares in the black hole; before, they were treated as IBC vouchers and would have been swapped for BZE and added to a pool if an LP share/BZE pool with enough liquidity existed. `MsgMoveIbcLockedCoins` now refuses them as LP shares ("cannot move LP shares") instead of as non-IBC denoms. No migration: LP shares already in the black hole stay there.
+
 ### Bug Fixes
 
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.
