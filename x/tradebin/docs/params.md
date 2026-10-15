@@ -19,7 +19,7 @@
 - `MsgCreateOrder` decides maker vs. taker by whether the price crosses existing opposite liquidity; it charges the corresponding fee, applies queue-surcharge gas when the global queue counter is above `order_book_extra_gas_window`, and spends scan gas per queued message while checking prices.
 - `MsgFillOrders` always uses the taker fee path and consumes `fill_orders_extra_gas` both at entry and per order it enqueues.
 - Queue processing at `EndBlock` respects `order_book_per_block_messages`; remaining messages stay queued for later blocks.
-- Module-level swaps/add-liquidity helpers refuse to run unless the relevant native/pair pool holds at least `min_native_liquidity_for_module_swap` in native reserves.
+- Module-level swaps/add-liquidity helpers refuse to run unless the relevant native/pair pool holds more than `min_native_liquidity_for_module_swap` in native reserves.
 
 ### Updating
 - Params are authority-only via `MsgUpdateParams`. All fields must be supplied when updating.

@@ -9,6 +9,10 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
+### State Machine Breaking
+
+* (x/tradebin) [#148](https://github.com/bze-alphateam/bze/pull/148) A pool whose ubze side is exactly `min_native_liquidity_for_module_swap` no longer counts as deep: the ante handler refuses its denom as a tx fee and the txfeecollector no longer classifies its coins as swappable, matching the module swap, which already required strictly more. Before, a fee in such a denom was accepted, then the EndBlock conversion failed every block and, because all swappable coins convert in one call, also held back the conversion of every other fee denom waiting in the txfeecollector.
+
 ### Bug Fixes
 
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.
