@@ -9,6 +9,10 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
+### State Machine Breaking
+
+* (x/rewards) [#147](https://github.com/bze-alphateam/bze/pull/147) Trading rewards start their countdown at the first trade on their market or pool, not at the governance activation. An activated reward nobody trades on stays active with `expire_at = 0`, keeps its escrow and keeps its market (no other trading reward can run on it) until someone trades. Previously such a reward reached its expiry with no leaderboard and was skipped forever: escrow locked, market blocked. At payout, the prize of the slots nobody filled is sent to the burner module instead of staying in the rewards module. New `TradingRewardStartEvent` (emitted by the first trade) and `unpaid_burnt` field on `TradingRewardDistributionEvent`. Rewards module consensus version 5→6: the migration puts every active trading reward without a leaderboard back to waiting for its first trade.
+
 ### Bug Fixes
 
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.
