@@ -154,22 +154,23 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_CreateDenomReward_In
 	suite.Require().Nil(res)
 }
 
-// A creator who cannot cover the fee is rejected before any state is written.
+// A creator who cannot cover the fee is refused by the fee capture before any state is written.
 func (suite *IntegrationTestSuite) TestMsgServerDenomReward_CreateDenomReward_InsufficientFunds() {
 	creator := sdk.AccAddress("dr-creator-05")
+	fee := sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(25000)))
 
 	suite.Require().NoError(suite.k.SetParams(suite.ctx, types.Params{
-		CreateDenomRewardFee: sdk.NewCoin("ubze", math.NewInt(25000)),
+		CreateDenomRewardFee: fee[0],
 	}))
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ubze").Return(true).Times(1)
-	suite.bank.EXPECT().SpendableCoins(suite.ctx, creator).
-		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(1)))).Times(1)
+	suite.trade.EXPECT().CaptureAndSwapUserFee(suite.ctx, creator, fee, types.ModuleName).
+		Return(nil, sdkerrors.ErrInsufficientFunds).Times(1)
 
 	msg := types.NewMsgCreateDenomReward(creator.String(), "ubze")
 	res, err := suite.msgServer.CreateDenomReward(suite.ctx, msg)
-	suite.Require().Error(err)
-	suite.Require().Contains(err.Error(), "user balance is too low")
+	suite.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
+	suite.Require().Contains(err.Error(), "could not pay the fee 25000ubze")
 	suite.Require().Nil(res)
 
 	_, found := suite.k.GetDenomReward(suite.ctx, "ubze")
@@ -195,8 +196,6 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_CreateDenomReward_Ni
 	}))
 
 	mockBank.EXPECT().HasSupply(ctx, "ubze").Return(true).Times(1)
-	mockBank.EXPECT().SpendableCoins(ctx, creator).
-		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(1_000_000)))).Times(1)
 
 	msg := types.NewMsgCreateDenomReward(creator.String(), "ubze")
 	res, err := msgServer.CreateDenomReward(ctx, msg)

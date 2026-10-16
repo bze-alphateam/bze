@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/big"
 	"strings"
 
 	"cosmossdk.io/math"
@@ -242,16 +243,17 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_BudgetOverflow
 	suite.Require().ErrorIs(err, types.ErrInvalidAmount)
 }
 
-// A balance below budget + schedule fee is rejected before any capture or escrow.
+// A balance below the budget is rejected before any capture or escrow. The fees are not part of the
+// pre-check: they may be paid in the tx fee denom, which only the fee capture can judge.
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_InsufficientBalance() {
 	creator := sdk.AccAddress("drs-creator-10")
 	suite.setDrMoneyInParams(50)
 	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)})
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ufoo").Return(true).Times(1)
-	// covers the budget but not the schedule fee
+	// plenty for the fees, one short of the 1000 x 30 budget
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, creator).
-		Return(sdk.NewCoins(sdk.NewCoin("ufoo", math.NewInt(30_000)))).Times(1)
+		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(1_000_000)), sdk.NewCoin("ufoo", math.NewInt(29_999)))).Times(1)
 
 	_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", math.NewInt(1000), "30"))
 	suite.Require().Error(err)
@@ -341,6 +343,27 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Update_PostExtensionB
 
 	schedule, _ := suite.k.GetDenomRewardSchedule(suite.ctx, "ubze", "000000000000")
 	suite.Require().Equal(uint32(36500), schedule.Duration)
+}
+
+// An extension beyond HundredYearsInDays is rejected before the budget is computed, even when the
+// handler is reached without ValidateBasic. With a 240-bit daily amount, daily × 2^31-1 would
+// overflow math.Int, which panics instead of returning an error (BZE-149).
+func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Update_HugeExtraDaysRejectedBeforeBudget() {
+	creator := sdk.AccAddress("drs-updater-06")
+	daily := math.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 239))
+	suite.Require().Equal(240, daily.BigInt().BitLen())
+	suite.k.SetDenomRewardSchedule(suite.ctx, types.DenomRewardSchedule{
+		ScheduleId: "000000000000", StakingDenom: "ubze", PrizeDenom: "ufoo", DailyAmount: daily, Duration: 10, Payouts: 0,
+	})
+
+	var err error
+	suite.Require().NotPanics(func() {
+		_, err = suite.msgServer.UpdateDenomRewardSchedule(suite.ctx, types.NewMsgUpdateDenomRewardSchedule(creator.String(), "ubze", "000000000000", "2147483647"))
+	})
+	suite.Require().ErrorIs(err, types.ErrInvalidDuration)
+
+	schedule, _ := suite.k.GetDenomRewardSchedule(suite.ctx, "ubze", "000000000000")
+	suite.Require().Equal(uint32(10), schedule.Duration)
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Update_NotFound() {
