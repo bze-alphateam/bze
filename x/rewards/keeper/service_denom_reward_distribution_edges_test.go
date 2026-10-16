@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+	"github.com/bze-alphateam/bze/testutil/sample"
+	rewards "github.com/bze-alphateam/bze/x/rewards/module"
 	"github.com/bze-alphateam/bze/x/rewards/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -134,4 +136,50 @@ func (suite *IntegrationTestSuite) TestEnqueueDenomRewardsDistribution_NotPendin
 	suite.Require().True(found)
 	suite.Require().True(queue.Pending)
 	suite.Require().Equal("", queue.Cursor)
+}
+
+// When the last schedule of a full batch makes its finishing payout, it is deleted in the same
+// block that stores its key as the queue cursor. An export taken at that height must still pass
+// genesis validation (BZE-149): the cursor is a schedule key that no longer has a schedule.
+func (suite *IntegrationTestSuite) TestProcessDenomRewardsDistributionQueue_CursorAtFinishedSchedule_ExportStaysValid() {
+	suite.epoch.EXPECT().
+		SafeGetEpochCountByIdentifier(gomock.Any(), "day").
+		Return(int64(7), nil).
+		AnyTimes()
+
+	suite.seedDenomRewardWithPrize("ubze", "uprize", 100)
+	suite.k.SetDenomRewardParticipant(suite.ctx, types.DenomRewardParticipant{
+		Address:      sample.AccAddress(),
+		StakingDenom: "ubze",
+		Amount:       math.NewInt(100),
+	})
+	limit := types.MaxDenomRewardDistributionsPerBlock
+	for i := 1; i <= limit+1; i++ {
+		schedule := types.DenomRewardSchedule{
+			ScheduleId:   fmt.Sprintf("%012d", i),
+			StakingDenom: "ubze",
+			PrizeDenom:   "uprize",
+			DailyAmount:  math.NewInt(100),
+			Duration:     5,
+		}
+		if i == limit {
+			// the last schedule of the first batch is on its final payout
+			schedule.Payouts = schedule.Duration - 1
+		}
+		suite.k.SetDenomRewardSchedule(suite.ctx, schedule)
+	}
+	suite.k.SetDenomRewardScheduleCounter(suite.ctx, uint64(limit+1))
+
+	suite.k.EnqueueDenomRewardsDistribution(suite.ctx)
+	suite.k.ProcessDenomRewardsDistributionQueue(suite.ctx)
+
+	finishedID := fmt.Sprintf("%012d", limit)
+	_, found := suite.k.GetDenomRewardSchedule(suite.ctx, "ubze", finishedID)
+	suite.Require().False(found)
+	queue, found := suite.k.GetDenomRewardsDistributionQueue(suite.ctx)
+	suite.Require().True(found)
+	suite.Require().Equal(string(types.DenomRewardScheduleKey("ubze", finishedID)), queue.Cursor)
+
+	exported := rewards.ExportGenesis(suite.ctx, *suite.k)
+	suite.Require().NoError(exported.Validate())
 }
