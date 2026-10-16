@@ -46,6 +46,8 @@ func (k Keeper) HasLiquidityWithNativeDenom(ctx sdk.Context, denom string) bool 
 // This function is useful when we DO NOT want to also check that the amount can be swapped.
 // A halted denom never has deep liquidity, so the ante handler refuses it as a fee denom and the fee
 // collector classifies it as non-swappable without ever attempting a swap.
+// Deep means strictly more than MinNativeLiquidityForModuleSwap native reserves, the same boundary
+// CanSwapForNativeDenom and ModuleSwapForNativeDenom use, so a fee accepted here can always be swapped.
 func (k Keeper) HasDeepLiquidityWithNativeDenom(ctx sdk.Context, denom string) bool {
 	params := k.GetParams(ctx)
 	nativeDenom := params.NativeDenom
@@ -63,7 +65,7 @@ func (k Keeper) HasDeepLiquidityWithNativeDenom(ctx sdk.Context, denom string) b
 		return false
 	}
 
-	return !nativeLpCoins.Amount.LT(params.MinNativeLiquidityForModuleSwap)
+	return nativeLpCoins.Amount.GT(params.MinNativeLiquidityForModuleSwap)
 }
 
 func (k Keeper) GetDenomSpotPriceInNativeCoin(ctx sdk.Context, denom string) (sdk.DecCoin, error) {
@@ -110,7 +112,7 @@ func (k Keeper) CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool {
 		return false
 	}
 
-	if nativeLpCoins.Amount.LT(params.MinNativeLiquidityForModuleSwap) {
+	if !nativeLpCoins.Amount.GT(params.MinNativeLiquidityForModuleSwap) {
 		return false
 	}
 
