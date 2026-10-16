@@ -188,6 +188,41 @@ func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_WithLPTokens() {
 	suite.Require().NotNil(res)
 }
 
+func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_WithHashedLPTokens() {
+	creator := sdk.AccAddress("creator").String()
+	amount := "1000ubze,500ulp/0A1B2C3D4E5F"
+
+	msg := &types.MsgFundBurner{
+		Creator: creator,
+		Amount:  amount,
+	}
+
+	creatorAddr, err := sdk.AccAddressFromBech32(creator)
+	suite.Require().NoError(err)
+
+	burnableCoin := sdk.NewCoins(sdk.NewInt64Coin("ubze", 1000))
+	lockableCoin := sdk.NewCoins(sdk.NewInt64Coin("ulp/0A1B2C3D4E5F", 500))
+
+	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ubze").Return(true).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ulp/0A1B2C3D4E5F").Return(false).Times(1)
+	// even with a deep enough LP/ubze pool the LP shares must be locked, never swapped
+	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, gomock.Any()).Return(true).AnyTimes()
+
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(suite.ctx, creatorAddr, types.BlackHoleModuleName, lockableCoin).
+		Return(nil).
+		Times(1)
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(suite.ctx, creatorAddr, types.ModuleName, burnableCoin).
+		Return(nil).
+		Times(1)
+
+	res, err := suite.msgServer.FundBurner(suite.ctx, msg)
+
+	suite.Require().NoError(err)
+	suite.Require().NotNil(res)
+}
+
 func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_OnlyUnprocessableCoins() {
 	creator := sdk.AccAddress("creator").String()
 	amount := "1000ibc/INVALID"
