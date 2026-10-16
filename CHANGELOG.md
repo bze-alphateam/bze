@@ -35,6 +35,8 @@ derived from it. History older than v8.0.0 lives in the
 * (x/tradebin) [#149](https://github.com/bze-alphateam/bze/pull/149) An `AddLiquidity` refused by its `min_lp_tokens` slippage guard now always fails with `tradebin` code 4014 "resulted amount too low" and the exact minted amount in the log. When the deposit minted more LP than fits a uint64 (about 1.8e19), formatting the message panicked, so the tx failed with a recovered panic that clients could not tell apart from other failures. No state changed in either case.
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.
 * (x/rewards) [#143](https://github.com/bze-alphateam/bze/pull/143) `MsgUpdateDenomRewardSchedule` checks that the extra days are at most 36500 before it computes the extra budget. A handler reached without `ValidateBasic` used to panic on a math overflow, which turned into a failed transaction. It now returns the duration error. Only the error changes: the same transactions fail as before.
+* (x/rewards) [#155](https://github.com/bze-alphateam/bze/pull/155) `MsgCreateStakingReward` refuses a `min_stake` above the uint64 maximum with `invalid min stake`. It used to panic.
+* (x/cointrunk) [#155](https://github.com/bze-alphateam/bze/pull/155) `MsgPayPublisherRespect` refuses an amount above the uint64 maximum with `amount too large`. It used to panic after the payment was made, reverting the tx.
 
 ## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0) - 2026-10-14
 

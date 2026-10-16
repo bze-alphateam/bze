@@ -1,6 +1,8 @@
 package types
 
 import (
+	"math"
+
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -40,6 +42,10 @@ func (msg *MsgPayPublisherRespect) ValidateBasic() error {
 
 	if !amount.IsPositive() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "invalid amount: amount should be positive")
+	}
+
+	if !amount.Amount.IsUint64() {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "amount too large: must not exceed %d", uint64(math.MaxUint64))
 	}
 
 	return nil
