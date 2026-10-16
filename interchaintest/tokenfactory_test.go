@@ -53,7 +53,8 @@ const (
 
 // TestTokenFactory drives a factory denom through its admin's whole life on a
 // real network: create, mint, burn, metadata, on-chain branding, an admin
-// handover and back, then the renounce that freezes the denom for everyone.
+// handover and back, then the renounce that freezes the denom for everyone,
+// and the governance proposal that gives the renounced denom a new admin.
 // Before the renounce, while the admin is live, a second account creates a
 // denom and a ubze pool for it and pays a create fee through that pool, and
 // the module's refusals are checked one by one. Subtests run in order and
@@ -78,6 +79,7 @@ func TestTokenFactory(t *testing.T) {
 	t.Run("10 metadata and branding refusals", s.metadataBrandingRefusals)
 	t.Run("11 queries of unknown denoms", s.unknownDenomQueries)
 	t.Run("4 renounce freezes the denom", s.renounce)
+	t.Run("12 governance assigns an admin to the renounced denom", s.govSetAdmin)
 }
 
 type tokenFactorySuite struct {
@@ -218,6 +220,49 @@ func (s *tokenFactorySuite) renounce(t *testing.T) {
 	s.mustExec(t, s.admin, "bank", "send", admin, other, coinStr(tfSend, s.denom))
 	require.Equal(t, before.AddRaw(tfSend).String(), s.balance(t, other, s.denom).String())
 	require.Equal(t, sdkmath.NewInt(tfMint-tfBurn+tfOtherMint).String(), s.supply(t).String())
+}
+
+// 12. A governance proposal with MsgSetDenomAdmin gives the renounced denom
+// to other: the event carries the empty previous admin, other can mint and
+// hand the denom on, the renounced creator stays refused. The same message
+// signed by a plain account is refused.
+func (s *tokenFactorySuite) govSetAdmin(t *testing.T) {
+	admin, other := s.admin.FormattedAddress(), s.other.FormattedAddress()
+	gov, err := helpers.GovAuthority(s.ctx, s.bze)
+	require.NoError(t, err)
+
+	s.requireRefused(t, "expected gov account", s.admin, tfSetDenomAdminMsg(admin, s.denom, admin))
+
+	from, err := s.bze.Height(s.ctx)
+	require.NoError(t, err)
+	_, err = helpers.SubmitAndPassProposal(s.ctx, s.bze, s.admin, helpers.Proposal{
+		Messages: []any{tfSetDenomAdminMsg(gov, s.denom, other)},
+		Title:    "Give tok to other",
+		Summary:  "e2e: MsgSetDenomAdmin on a renounced denom",
+	})
+	require.NoError(t, err)
+	require.Equal(t, other, s.authority(t))
+
+	to, err := s.bze.Height(s.ctx)
+	require.NoError(t, err)
+	var events []helpers.Event
+	for h := from; h <= to; h++ {
+		got, err := helpers.BlockEvents(s.ctx, s.bze, h, tfEventPrefix+"DenomAdminChangeEvent")
+		require.NoError(t, err)
+		events = append(events, helpers.EventsWith(got, map[string]string{"denom": s.denom})...)
+	}
+	require.Len(t, events, 1, "one DenomAdminChangeEvent in the block that executed the proposal")
+	require.Empty(t, events[0].Attributes["admin"], "the previous admin of a renounced denom is empty")
+	require.Equal(t, other, events[0].Attributes["new_admin"])
+
+	s.requireRefused(t, "unauthorized", s.admin, mintMsg(admin, coinStr(1, s.denom)))
+	before := s.supply(t)
+	s.mustExec(t, s.other, "tokenfactory", "mint", coinStr(tfOtherMint, s.denom))
+	require.Equal(t, before.AddRaw(tfOtherMint).String(), s.supply(t).String())
+
+	res := s.mustExec(t, s.other, "tokenfactory", "change-admin", s.denom, admin)
+	s.requireAdminChange(t, res, other, admin)
+	require.Equal(t, admin, s.authority(t))
 }
 
 // 5. The payer creates the gas denom paying the create fee in ubze: the fee
@@ -516,6 +561,10 @@ func (s *tokenFactorySuite) requireMsgRefused(t *testing.T, user ibc.Wallet, msg
 		require.Equal(t, balances.Sub(sdk.NewCoin(chain.Denom, s.txFee(t, res))), s.allBalances(t, addr), "a refused tx must cost only its fee")
 	}
 	require.Equal(t, before, s.denomState(t), "a refused tx must not change the denom")
+}
+
+func tfSetDenomAdminMsg(authority, denom, newAdmin string) map[string]any {
+	return map[string]any{"@type": "/bze.tokenfactory.MsgSetDenomAdmin", "authority": authority, "denom": denom, "new_admin": newAdmin}
 }
 
 func tfChangeAdminMsg(creator, denom, newAdmin string) map[string]any {

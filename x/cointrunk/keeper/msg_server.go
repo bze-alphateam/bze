@@ -127,6 +127,12 @@ func (k msgServer) PayPublisherRespect(goCtx context.Context, msg *types.MsgPayP
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid amount (%s)", err)
 	}
 
+	// the event and the response carry the amounts as uint64; the tax and the
+	// publisher reward never exceed the amount, so this covers all three
+	if !coin.Amount.IsUint64() {
+		return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "amount too large")
+	}
+
 	publisherRespectParams := k.PublisherRespectParams(ctx)
 	if coin.Denom != publisherRespectParams.Denom {
 		return nil, errors.Wrapf(
