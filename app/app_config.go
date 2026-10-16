@@ -65,8 +65,13 @@ import (
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
-// removedNftModuleName is the module name of x/nft (nft.ModuleName), removed in v8.3.0.
-const removedNftModuleName = "nft"
+// Module names of modules removed in v8.3.0, kept so their addresses stay blocked.
+const (
+	// removedNftModuleName is the module name of x/nft (nft.ModuleName).
+	removedNftModuleName = "nft"
+	// removedFeeIbcModuleName is the module name of the ICS-29 fee middleware (ibcfeetypes.ModuleName).
+	removedFeeIbcModuleName = "feeibc"
+)
 
 var (
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -188,9 +193,11 @@ var (
 		minttypes.ModuleName,
 		stakingtypes.BondedPoolName,
 		stakingtypes.NotBondedPoolName,
-		// the x/nft module was removed in v8.3.0; its module account stays on chain
-		// (empty) and remains blocked so no funds can be sent to it
+		// x/nft and the ICS-29 fee middleware were removed in v8.3.0. Their
+		// addresses stay blocked: nobody holds a key for them, so anything sent
+		// there would be stranded
 		removedNftModuleName,
+		removedFeeIbcModuleName,
 		txfeecollectormoduletypes.ModuleName,
 		txfeecollectormoduletypes.BurnerFeeCollector,
 		txfeecollectormoduletypes.CpFeeCollector,

@@ -733,7 +733,7 @@ func (s *upgradeSuite) v830Before(t *testing.T) any {
 	require.True(t, s.supported(t, "ibc-fee", "packets"), "the fee module answers before the upgrade")
 	require.True(t, s.supported(t, "group", "groups"), "x/group answers before the upgrade")
 	require.True(t, s.supported(t, "nft", "classes"), "x/nft answers before the upgrade")
-	s.requireNftAccountBlocked(t)
+	s.requireAccountBlocked(t, "nft")
 	for _, store := range upV830Deleted {
 		res, err := helpers.StoreQuery(s.ctx, s.bze, store, 0)
 		require.NoError(t, err)
@@ -769,7 +769,10 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	require.False(t, s.supported(t, "ibc-fee", "packets"), "the fee module is gone from the CLI")
 	require.False(t, s.supported(t, "group", "groups"), "x/group is gone from the CLI")
 	require.False(t, s.supported(t, "nft", "classes"), "x/nft is gone from the CLI")
-	s.requireNftAccountBlocked(t)
+	// both removed modules' addresses refuse funds. v8.2.0 never blocked the
+	// feeibc account, so that check is after the upgrade only
+	s.requireAccountBlocked(t, "nft")
+	s.requireAccountBlocked(t, "feeibc")
 
 	// the store loader deleted the four stores: a raw query fails with the
 	// multistore's own error, while a kept store (ibc) still answers
@@ -1089,21 +1092,21 @@ func query[T any](t *testing.T, s *upgradeSuite, height int64, args ...string) T
 	return res
 }
 
-// supported reports whether the running release has the query; an unknown
-// command means it does not.
-// requireNftAccountBlocked checks that the x/nft module account refuses funds,
-// before the upgrade as a module account and after it as a blocked address
-// kept for the removed module.
-func (s *upgradeSuite) requireNftAccountBlocked(t *testing.T) {
+// requireAccountBlocked checks that the module address of the named module
+// refuses funds: as a blocked module account, or as a blocked address kept
+// for a removed module.
+func (s *upgradeSuite) requireAccountBlocked(t *testing.T, module string) {
 	t.Helper()
-	nftAddr, err := sdk.Bech32ifyAddressBytes(chain.Bech32Prefix, authtypes.NewModuleAddress("nft"))
+	addr, err := sdk.Bech32ifyAddressBytes(chain.Bech32Prefix, authtypes.NewModuleAddress(module))
 	require.NoError(t, err)
-	res, err := helpers.ExecTxWith(s.ctx, s.bze, s.admin, s.txOpts(), "bank", "send", s.admin.FormattedAddress(), nftAddr, coinStr(1, chain.Denom))
+	res, err := helpers.ExecTxWith(s.ctx, s.bze, s.admin, s.txOpts(), "bank", "send", s.admin.FormattedAddress(), addr, coinStr(1, chain.Denom))
 	require.NoError(t, err)
-	require.NotZero(t, res.Code, "sending to the nft module account must fail")
-	require.Contains(t, res.RawLog, nftAddr+" is not allowed to receive funds")
+	require.NotZero(t, res.Code, "sending to the %s module address must fail", module)
+	require.Contains(t, res.RawLog, addr+" is not allowed to receive funds")
 }
 
+// supported reports whether the running release has the query; an unknown
+// command means it does not.
 func (s *upgradeSuite) supported(t *testing.T, args ...string) bool {
 	t.Helper()
 	_, err := helpers.Query[json.RawMessage](s.ctx, s.bze, args...)
