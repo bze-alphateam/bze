@@ -243,16 +243,17 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_BudgetOverflow
 	suite.Require().ErrorIs(err, types.ErrInvalidAmount)
 }
 
-// A balance below budget + schedule fee is rejected before any capture or escrow.
+// A balance below the budget is rejected before any capture or escrow. The fees are not part of the
+// pre-check: they may be paid in the tx fee denom, which only the fee capture can judge.
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_InsufficientBalance() {
 	creator := sdk.AccAddress("drs-creator-10")
 	suite.setDrMoneyInParams(50)
 	suite.k.SetDenomReward(suite.ctx, types.DenomReward{StakingDenom: "ubze", Lock: 7, MinStake: 0, StakedAmount: math.NewInt(0)})
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ufoo").Return(true).Times(1)
-	// covers the budget but not the schedule fee
+	// plenty for the fees, one short of the 1000 x 30 budget
 	suite.bank.EXPECT().SpendableCoins(suite.ctx, creator).
-		Return(sdk.NewCoins(sdk.NewCoin("ufoo", math.NewInt(30_000)))).Times(1)
+		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(1_000_000)), sdk.NewCoin("ufoo", math.NewInt(29_999)))).Times(1)
 
 	_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", math.NewInt(1000), "30"))
 	suite.Require().Error(err)

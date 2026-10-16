@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
-	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -77,13 +76,9 @@ func (k msgServer) CreateDenomRewardSchedule(goCtx context.Context, msg *types.M
 	params := k.GetParams(ctx)
 	fee := k.getRewardCreationFee(ctx, params.AddDenomRewardScheduleFee)
 
-	// the balance is pre-checked for budget + schedule fee together (mirrors CreateStakingReward);
-	// ensureDenomRewardPrize pre-checks the prize fee on its own when the prize denom is new
-	neededBalance := budget
-	if fee != nil {
-		neededBalance = neededBalance.Add(fee...)
-	}
-	if err = k.checkUserBalances(ctx, neededBalance, acc); err != nil {
+	// only the budget is pre-checked (mirrors CreateStakingReward): the schedule fee and the prize fee
+	// may be paid in the tx fee denom, captureCreationFee decides whether they can be paid
+	if err = k.checkUserBalances(ctx, budget, acc); err != nil {
 		return nil, err
 	}
 
@@ -92,19 +87,8 @@ func (k msgServer) CreateDenomRewardSchedule(goCtx context.Context, msg *types.M
 		return nil, err
 	}
 
-	if fee != nil {
-		// the fee can be captured only if the trade keeper is available to swap it
-		if k.tradeKeeper == nil {
-			return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "trade keeper is not available")
-		}
-		capturedFee, err := k.tradeKeeper.CaptureAndSwapUserFee(ctx, acc, fee, types.ModuleName)
-		if err != nil {
-			return nil, err
-		}
-
-		if err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, capturedFee); err != nil {
-			return nil, err
-		}
+	if err = k.captureCreationFee(ctx, acc, fee); err != nil {
+		return nil, err
 	}
 
 	// escrow the full budget up front

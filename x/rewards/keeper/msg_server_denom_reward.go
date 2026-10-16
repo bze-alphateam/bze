@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
-	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -45,24 +44,8 @@ func (k msgServer) CreateDenomReward(goCtx context.Context, msg *types.MsgCreate
 	// capture the creation fee exactly like CreateStakingReward: trade-keeper capture-and-swap into
 	// the module account, then forward to the fee collector. A zero/invalid fee param makes creation
 	// free (getRewardCreationFee returns nil).
-	fee := k.getRewardCreationFee(ctx, params.CreateDenomRewardFee)
-	if fee != nil {
-		if err = k.checkUserBalances(ctx, fee, acc); err != nil {
-			return nil, err
-		}
-
-		// the fee can be captured only if the trade keeper is available to swap it
-		if k.tradeKeeper == nil {
-			return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "trade keeper is not available")
-		}
-		capturedFee, err := k.tradeKeeper.CaptureAndSwapUserFee(ctx, acc, fee, types.ModuleName)
-		if err != nil {
-			return nil, err
-		}
-
-		if err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, capturedFee); err != nil {
-			return nil, err
-		}
+	if err = k.captureCreationFee(ctx, acc, k.getRewardCreationFee(ctx, params.CreateDenomRewardFee)); err != nil {
+		return nil, err
 	}
 
 	// param snapshot: lock and min_stake are frozen from the current params (Business Logic rule 3)
