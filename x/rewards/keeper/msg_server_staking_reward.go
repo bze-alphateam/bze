@@ -45,12 +45,8 @@ func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCrea
 	}
 	fee := k.getRewardCreationFee(ctx, k.GetParams(ctx).CreateStakingRewardFee)
 
-	neededBalance := toCapture
-	if fee != nil {
-		neededBalance = neededBalance.Add(fee...)
-	}
-
-	err = k.checkUserBalances(ctx, neededBalance, acc)
+	//only the budget is pre-checked: the fee may be paid in the tx fee denom, captureCreationFee decides
+	err = k.checkUserBalances(ctx, toCapture, acc)
 	if err != nil {
 		return nil, err
 	}
@@ -60,20 +56,8 @@ func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	if fee != nil {
-		//staking rewards with fees can be created only if the trade keeper is available to capture that fee
-		if k.tradeKeeper == nil {
-			return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "trade keeper is not available")
-		}
-		capturedFee, err := k.tradeKeeper.CaptureAndSwapUserFee(ctx, acc, fee, types.ModuleName)
-		if err != nil {
-			return nil, err
-		}
-
-		err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, capturedFee)
-		if err != nil {
-			return nil, err
-		}
+	if err = k.captureCreationFee(ctx, acc, fee); err != nil {
+		return nil, err
 	}
 
 	//add ID
@@ -467,6 +451,28 @@ func (k msgServer) getRewardCreationFee(_ sdk.Context, feeParam sdk.Coin) sdk.Co
 	}
 
 	return sdk.NewCoins(feeParam)
+}
+
+// captureCreationFee charges a reward creation fee (nil = free) and forwards it to the community pool fee
+// collector. The trade keeper takes it in the tx fee denom when the payer prefers one with a deep enough
+// ubze pool, and falls back to ubze otherwise, so callers must not pre-check the fee in ubze: a payer
+// holding only the fee token would be refused. Every reward fee goes through here so the paths can't drift.
+func (k msgServer) captureCreationFee(ctx sdk.Context, payer sdk.AccAddress, fee sdk.Coins) error {
+	if fee == nil {
+		return nil
+	}
+
+	//the fee can be captured only if the trade keeper is available to swap it
+	if k.tradeKeeper == nil {
+		return errors.Wrapf(sdkerrors.ErrInvalidRequest, "trade keeper is not available")
+	}
+
+	capturedFee, err := k.tradeKeeper.CaptureAndSwapUserFee(ctx, payer, fee, types.ModuleName)
+	if err != nil {
+		return errors.Wrapf(err, "could not pay the fee %s", fee)
+	}
+
+	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, capturedFee)
 }
 
 func (k msgServer) checkUserBalances(ctx sdk.Context, neededCoins sdk.Coins, address sdk.AccAddress) error {

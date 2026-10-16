@@ -575,20 +575,14 @@ func (s *burnerSuite) moveLocked(t *testing.T) {
 	for _, c := range []struct {
 		name, denom, codespace, reason string
 		code                           uint32
-		parked                         string
 	}{
-		{"nothing locked", s.other, burnerCodespace, "no coins to move", 1102, ""},
-		// pools created since v8.1.1 mint ulp/<hash> LP denoms, which
-		// IsLpTokenDenom does not match yet: refused as "only ibc denoms"
-		{"LP share", s.stakeLp, sdkCodespace, "cannot move LP shares", 18,
-			"BZE-182: hashed LP denoms are not recognised as LP shares by the burner"},
-		{"not an IBC denom", s.brn, sdkCodespace, "only ibc denoms are allowed", 18, ""},
-		{"unknown IBC denom", "ibc/" + strings.Repeat("0", 64), burnerCodespace, "denom does not exist", 1102, ""},
+		{"nothing locked", s.other, burnerCodespace, "no coins to move", 1102},
+		// pools created since v8.1.1 mint ulp/<hash> LP denoms
+		{"LP share", s.stakeLp, sdkCodespace, "cannot move LP shares", 18},
+		{"not an IBC denom", s.brn, sdkCodespace, "only ibc denoms are allowed", 18},
+		{"unknown IBC denom", "ibc/" + strings.Repeat("0", 64), burnerCodespace, "denom does not exist", 1102},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			if c.parked != "" {
-				t.Skip(c.parked)
-			}
 			refuse(t, c.denom, c.codespace, c.code, c.reason)
 		})
 	}
