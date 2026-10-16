@@ -23,9 +23,7 @@ import (
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	_ "cosmossdk.io/x/feegrant/module" // import for side-effects
-	nftkeeper "cosmossdk.io/x/nft/keeper"
-	_ "cosmossdk.io/x/nft/module" // import for side-effects
-	_ "cosmossdk.io/x/upgrade"    // import for side-effects
+	_ "cosmossdk.io/x/upgrade"         // import for side-effects
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -59,9 +57,7 @@ import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
-	_ "github.com/cosmos/cosmos-sdk/x/group/module" // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/mint"         // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/mint" // import for side-effects
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/params" // import for side-effects
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
@@ -130,8 +126,6 @@ type App struct {
 	AuthzKeeper          authzkeeper.Keeper
 	EvidenceKeeper       evidencekeeper.Keeper
 	FeeGrantKeeper       feegrantkeeper.Keeper
-	GroupKeeper          groupkeeper.Keeper
-	NFTKeeper            nftkeeper.Keeper
 	CircuitBreakerKeeper circuitkeeper.Keeper
 
 	// IBC
@@ -245,8 +239,6 @@ func New(
 		&app.AuthzKeeper,
 		&app.EvidenceKeeper,
 		&app.FeeGrantKeeper,
-		&app.NFTKeeper,
-		&app.GroupKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.BurnerKeeper,
 		&app.EpochKeeper,
