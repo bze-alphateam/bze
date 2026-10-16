@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
@@ -1738,6 +1739,41 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_InsufficientFunds() {
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "could not capture user input coins")
 	suite.Require().Contains(err.Error(), "insufficient funds")
+}
+
+// A balance shortfall keeps the bank's insufficient funds error (sdk code 5)
+// so wallets can show the usual "not enough balance" message.
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_InsufficientFunds_KeepsBankError() {
+	creator := sdk.AccAddress("creator")
+	suite.k.SetLiquidityPool(suite.ctx, types.LiquidityPool{
+		Id:           "pool1",
+		Base:         denomBze,
+		Quote:        denomStake,
+		LpDenom:      "lp_pool1",
+		ReserveBase:  math.NewInt(1000000),
+		ReserveQuote: math.NewInt(2000000),
+		Fee:          math.LegacyNewDecWithPrec(3, 3),
+		Creator:      creator.String(),
+	})
+
+	inputCoin := sdk.NewCoin(denomBze, math.NewInt(1000))
+	msg := types.MsgMultiSwap{
+		Creator:   creator.String(),
+		Routes:    []string{"pool1"},
+		Input:     inputCoin,
+		MinOutput: sdk.NewCoin(denomStake, math.NewInt(1900)),
+	}
+
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(suite.ctx, creator, types.ModuleName, sdk.NewCoins(inputCoin)).
+		Return(errors.Wrapf(sdkerrors.ErrInsufficientFunds, "spendable balance 10ubze is smaller than %s", inputCoin))
+
+	_, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
+
+	suite.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
+	suite.Require().NotErrorIs(err, sdkerrors.ErrInvalidCoins)
+	suite.Require().Contains(err.Error(), "could not capture user input coins")
+	suite.Require().Contains(err.Error(), inputCoin.String())
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_DenomNotInPool() {
