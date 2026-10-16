@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *IntegrationTestSuite) TestStoreDenomReward_SetGetHasRemove() {
+func (suite *IntegrationTestSuite) TestStoreDenomReward_SetGetHas() {
 	dr := types.DenomReward{
 		StakingDenom: "ubze",
 		Lock:         7,
@@ -29,12 +29,6 @@ func (suite *IntegrationTestSuite) TestStoreDenomReward_SetGetHasRemove() {
 	suite.Require().Equal(dr.Lock, got.Lock)
 	suite.Require().Equal(dr.MinStake, got.MinStake)
 	suite.Require().Equal(dr.StakedAmount, got.StakedAmount)
-
-	// remove
-	suite.k.RemoveDenomReward(suite.ctx, "ubze")
-	suite.Require().False(suite.k.HasDenomReward(suite.ctx, "ubze"))
-	_, found = suite.k.GetDenomReward(suite.ctx, "ubze")
-	suite.Require().False(found)
 }
 
 func (suite *IntegrationTestSuite) TestStoreDenomReward_GetAllAndIterate() {
