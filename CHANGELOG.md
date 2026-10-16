@@ -11,11 +11,21 @@ derived from it. History older than v8.0.0 lives in the
 
 ### State Machine Breaking
 
+* (deps) [#139](https://github.com/bze-alphateam/bze/pull/139) Cosmos SDK v0.50.15 → v0.53.8 (release family 2025.1). The v0.50 line is end-of-life upstream; v0.53 carries the 2026 security fixes. The `cosmossdk.io` modules move with it (`math` v1.5.3, `store` v1.1.2, `api` v0.9.2, `x/tx` v0.14.0, `collections` v1.3.1, `log` v1.6.1, `client/v2` v2.0.0-beta.11, `x/upgrade`, `x/evidence`, `x/feegrant`, `x/circuit` and `x/nft` v0.2.0). `x/auth` now runs in PreBlock, as v0.53 requires. No SDK module changes its consensus version, so the new `v8.3.0` upgrade handler runs no SDK migration. CometBFT stays on v0.38.26 and Go on 1.26. No new optional v0.53 module is wired (`x/protocolpool`, the SDK `x/epochs`, unordered transactions). New config keys written by `bzed init`, both optional with safe defaults: `historical-grpc-address-block-range` in `app.toml` (historical gRPC query routing, disabled when empty) and `keyring-default-keyname` in `client.toml`. Existing config files keep working unchanged.
+* (deps) [#140](https://github.com/bze-alphateam/bze/pull/140) ibc-go v8.8.0 → v10.7.0. The `capability` module and the ICS-29 fee middleware (`feeibc`) are removed and the `v8.3.0` upgrade deletes their stores. No fee-incentivized packets were in flight on mainnet and the fee module account held nothing. Module migrations: ibc core 6→8 (localhost client made stateless, channel-upgrade state dropped) and transfer 5→6 (denom traces become `Denom` records). ICS-20 v1 transfers, the ICA host and controller, and the 07-tendermint and 06-solomachine light clients keep working on the existing channels, and the `blocked_ibc_inbound` filter still sits on the transfer stack. No IBC v2 application is wired.
 * (x/tokenfactory) [#154](https://github.com/bze-alphateam/bze/pull/154) New governance message `MsgSetDenomAdmin`. Nodes without it reject the transaction, so it ships with the v8.3.0 coordinated upgrade. No store change and no migration: the tokenfactory consensus version stays 3. No action for validators beyond the upgrade.
+
+### API Breaking
+
+* (ibc) [#140](https://github.com/bze-alphateam/bze/pull/140) Removed with ibc-go v10: the `bzed query ibc-fee` / `bzed tx ibc-fee` commands and the `/ibc/apps/fee/v1/*` REST routes; channel upgrade messages and queries (`MsgChannelUpgrade*`); the denom-trace transfer queries. Clients that resolve `ibc/<hash>` denoms through `/ibc/apps/transfer/v1/denom_traces` must switch to `/ibc/apps/transfer/v1/denoms` and `/ibc/apps/transfer/v1/denoms/{hash}` (`bzed query ibc-transfer denom|denoms`), which return the base denom and the trace as a list of hops.
 
 ### Features
 
 * (x/tokenfactory) [#154](https://github.com/bze-alphateam/bze/pull/154) `MsgSetDenomAdmin` (gov authority only) sets the admin of a factory denom to any valid, non-empty account address, whatever its current admin is. That includes renounced denoms, which until now nobody could ever change again. The main use is handing a token to a DAO, but the new admin need not be one. Only denoms with a tokenfactory authority record are accepted (`ubze`, IBC and LP denoms are refused with `ErrDenomDoesNotExist`), one denom per message, and governance cannot use it to remove an admin. It emits `DenomAdminChangeEvent` with the previous admin. `MsgChangeAdmin` is unchanged. Governance runbook in `x/tokenfactory/docs/README.md`.
+
+### Improvements
+
+* (app) [#141](https://github.com/bze-alphateam/bze/pull/141) The code now keeps only the upgrade handler of the release it builds (`v8.3.0`). The handlers of v5.1.2 through v8.2.0 are removed, because each one runs once at its height. Nodes syncing from genesis already switch to each release's own binary at its upgrade height (for example with Cosmovisor), so nothing changes for operators.
 
 ### Bug Fixes
 
