@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/rewards/types"
+	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -21,10 +22,22 @@ func (suite *IntegrationTestSuite) feeTokenOnlyBalance(acc sdk.AccAddress, budge
 		AnyTimes()
 }
 
+// swapRoundUp is how many ubze above the fee param a swap may hand back: tradebin rounds the
+// optimal input up, so the captured amount can exceed the param by a few units.
+const swapRoundUp = 3
+
 // expectFeePaidInFeeToken wires a capture that succeeds the way tradebin does when the payer
-// prefers another fee denom: it takes the fee token, swaps it and hands the module ubze.
+// prefers another fee denom: it takes the fee token, swaps it and hands the module a few ubze more
+// than the param. Exactly what the capture returned must reach the community pool fee collector,
+// so the module keeps no ubze from the swap.
 func (suite *IntegrationTestSuite) expectFeePaidInFeeToken(acc sdk.AccAddress, fee sdk.Coins) {
-	suite.expectFeeCapture(acc, fee)
+	captured := fee.Add(sdk.NewCoin("ubze", math.NewInt(swapRoundUp)))
+	suite.trade.EXPECT().
+		CaptureAndSwapUserFee(suite.ctx, acc, fee, types.ModuleName).
+		Return(captured, nil).Times(1)
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, captured).
+		Return(nil).Times(1)
 }
 
 // expectFeeUnpayable wires a capture that fails the way the bank does when neither denom covers it.

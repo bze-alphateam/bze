@@ -531,6 +531,7 @@ func (s *stakingRewardsSuite) createWithoutUbze(t *testing.T) {
 	require.True(t, s.balance(t, addr, chain.Denom).IsZero(), "gina must hold no ubze")
 
 	createFee := s.params.CreateStakingRewardFee.Amount
+	moduleUbze := s.balance(t, s.module, chain.Denom)
 	res := s.mustExecWith(t, gina, feeOpts,
 		"rewards", "create-staking-reward", strconv.Itoa(srDPrize), s.prz, s.stb, strconv.Itoa(srDDuration), "1", "0")
 	created := s.requireTxEvent(t, res, "StakingRewardCreateEvent", map[string]string{"prize_amount": strconv.Itoa(srDPrize), "staking_denom": s.stb})
@@ -538,6 +539,8 @@ func (s *stakingRewardsSuite) createWithoutUbze(t *testing.T) {
 	s.funded = s.funded.Add(budget.AmountOf(s.prz))
 
 	out := s.transferred(t, res, s.module, s.cpCollector, chain.Denom)
+	require.Equal(t, s.transferred(t, res, s.tradebin, s.module, chain.Denom).String(), out.String(), "the whole swap output must reach the txfeecollector_cp module")
+	require.Equal(t, moduleUbze.String(), s.balance(t, s.module, chain.Denom).String(), "the rewards module keeps no ubze from the fee swap")
 	require.True(t, out.GTE(createFee), "the community pool must get at least the create fee: %s for %s", out, createFee)
 	require.True(t, out.LTE(createFee.Add(createFee.MulRaw(srFeeTolerancePct).QuoRaw(100))), "the swapped create fee %s must stay within %d%% of %s", out, srFeeTolerancePct, createFee)
 	require.True(t, s.balance(t, addr, chain.Denom).IsZero(), "gina still holds no ubze")
