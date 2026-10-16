@@ -29,6 +29,7 @@ derived from it. History older than v8.0.0 lives in the
 ### Features
 
 * (x/tokenfactory) [#154](https://github.com/bze-alphateam/bze/pull/154) `MsgSetDenomAdmin` (gov authority only) sets the admin of a factory denom to any valid, non-empty account address, whatever its current admin is. That includes renounced denoms, which until now nobody could ever change again. The main use is handing a token to a DAO, but the new admin need not be one. Only denoms with a tokenfactory authority record are accepted (`ubze`, IBC and LP denoms are refused with `ErrDenomDoesNotExist`), one denom per message, and governance cannot use it to remove an admin. It emits `DenomAdminChangeEvent` with the previous admin. `MsgChangeAdmin` is unchanged. Governance runbook in `x/tokenfactory/docs/README.md`.
+* (x/tradebin) [#152](https://github.com/bze-alphateam/bze/pull/152) Every order book message the EndBlock engine processes now leaves an event carrying its `message_id`, so indexers can tell "processed" from "still queued". New typed events: `OrderMessageRefundedEvent` when the unexecuted part of a message is returned (`reason` `no_match`, `unfilled_remainder` or `below_min_amount`; `refund` is empty when the amount rounded to zero and only dust was stored), `OrderCancelSkippedEvent` when a cancel finds no order (`order_not_found`), and `OrderMessageFailedEvent` every block a message fails and stays queued (`processing_error`). Events only: funds, orders, dust and the queue are handled exactly as before, existing events are unchanged, no migration.
 
 ### Improvements
 
