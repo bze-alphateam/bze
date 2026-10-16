@@ -547,7 +547,8 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	suite.Require().Error(err)
 	suite.Require().Nil(response)
-	suite.Require().Equal(swapError, err)
+	suite.Require().ErrorIs(err, swapError)
+	suite.Require().Contains(err.Error(), "could not pay the fee 200ubze")
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingReward_EpochCatchingUp() {

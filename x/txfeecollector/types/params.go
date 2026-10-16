@@ -6,7 +6,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	host "github.com/cosmos/ibc-go/v10/modules/core/24-host"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 )
 
 const DefaultMaxBalanceIterations = uint64(100)
@@ -124,8 +124,10 @@ func validateBlockedIbcInbound(i interface{}) error {
 
 	seen := make(map[string]struct{}, len(v))
 	for _, blocked := range v {
-		if err := host.ChannelIdentifierValidator(blocked.ChannelId); err != nil {
-			return fmt.Errorf("invalid blocked ibc inbound channel id %q: %w", blocked.ChannelId, err)
+		// packets always carry the canonical channel-{N} (no leading zeros); any other id would be
+		// accepted but never match a packet
+		if !isCanonicalChannelID(blocked.ChannelId) {
+			return fmt.Errorf("invalid blocked ibc inbound channel id %q: expected the form channel-{N}", blocked.ChannelId)
 		}
 
 		if err := sdk.ValidateDenom(blocked.BaseDenom); err != nil {
@@ -140,4 +142,15 @@ func validateBlockedIbcInbound(i interface{}) error {
 	}
 
 	return nil
+}
+
+// isCanonicalChannelID reports whether id is exactly the identifier ibc-go generates for its
+// channel sequence: channel-{N} with N written without leading zeros.
+func isCanonicalChannelID(id string) bool {
+	sequence, err := channeltypes.ParseChannelSequence(id)
+	if err != nil {
+		return false
+	}
+
+	return channeltypes.FormatChannelIdentifier(sequence) == id
 }
