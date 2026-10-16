@@ -160,10 +160,12 @@ func (k Keeper) distributeTradingRewards(ctx sdk.Context, epochNumber int64) {
 			continue
 		}
 
+		//the first trade creates the leaderboard and starts the countdown, so a reward reaching its payout always
+		//has one. A missing leaderboard can only come from state written before that rule: finish the reward as if
+		//nobody traded, so its market is freed and its escrow is burnt instead of being left behind
 		leaderboard, found := k.GetTradingRewardLeaderboard(ctx, tr.RewardId)
 		if !found {
-			logger.Error("trading reward leaderboard not found")
-			continue
+			logger.Error("trading reward leaderboard not found. finishing it with no winners")
 		}
 
 		var eventWinners []string
@@ -181,6 +183,9 @@ func (k Keeper) distributeTradingRewards(ctx sdk.Context, epochNumber int64) {
 			eventWinners = append(eventWinners, winner.Address)
 		}
 
+		//the prize of the slots nobody filled is burnt
+		unpaidBurnt := k.burnUnfilledTradingRewardSlots(ctx, tr, len(leaderboard.List))
+
 		//the trading reward is finished. remove the market id
 		k.RemoveMarketIdRewardId(ctx, tr.MarketId)
 		//extend the expiration of this paid trading reward for another period just to display the winners
@@ -193,12 +198,65 @@ func (k Keeper) distributeTradingRewards(ctx sdk.Context, epochNumber int64) {
 				PrizeAmount: rewardPerSlot.String(),
 				PrizeDenom:  tr.PrizeDenom,
 				Winners:     eventWinners,
+				UnpaidBurnt: unpaidBurnt,
 			},
 		)
 
 		if err != nil {
 			k.Logger().Error(err.Error())
 		}
+	}
+}
+
+// burnUnfilledTradingRewardSlots sends the prize of the slots no trader filled to the burner and returns the
+// burnt coins as a string (empty when every slot was filled or the burn failed).
+func (k Keeper) burnUnfilledTradingRewardSlots(ctx sdk.Context, tr types.TradingReward, filledSlots int) string {
+	if filledSlots >= int(tr.Slots) {
+		return ""
+	}
+
+	logger := k.Logger().With("trading_reward", tr, "filled_slots", filledSlots)
+	toBurn, err := k.getAmountToCapture(tr.PrizeDenom, tr.PrizeAmount, int64(int(tr.Slots)-filledSlots))
+	if err != nil {
+		logger.Error("could not compute the prize of the unfilled slots", "err", err.Error())
+		return ""
+	}
+
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, burnermoduletypes.ModuleName, toBurn)
+	if err != nil {
+		//should never happen: the whole prize was escrowed at creation
+		logger.Error("could not burn the prize of the unfilled slots", "to_burn", toBurn, "err", err.Error())
+		return ""
+	}
+
+	return toBurn.String()
+}
+
+// startTradingRewardCountdown starts the countdown of an active trading reward on its first trade: it sets the
+// payout epoch and writes the active expiration the payout hook looks for. On failure the reward is left untouched,
+// so the next trade tries again; the trade itself is never refused because of it.
+func (k Keeper) startTradingRewardCountdown(ctx sdk.Context, tr types.TradingReward) {
+	expireAt, err := k.getNewTradingRewardExpireAt(ctx, tr.Duration)
+	if err != nil {
+		k.Logger().Error("could not start the trading reward countdown", "reward_id", tr.RewardId, "err", err.Error())
+		return
+	}
+
+	tr.ExpireAt = expireAt
+	k.SetActiveTradingReward(ctx, tr)
+	k.SetActiveTradingRewardExpiration(ctx, types.TradingRewardExpiration{
+		RewardId: tr.RewardId,
+		ExpireAt: tr.ExpireAt,
+	})
+
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.TradingRewardStartEvent{
+			RewardId: tr.RewardId,
+			ExpireAt: tr.ExpireAt,
+		},
+	)
+	if err != nil {
+		k.Logger().Error(err.Error())
 	}
 }
 
