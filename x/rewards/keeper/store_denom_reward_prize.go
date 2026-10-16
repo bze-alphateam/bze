@@ -26,12 +26,6 @@ func (k Keeper) GetDenomRewardPrize(ctx sdk.Context, stakingDenom, prizeDenom st
 	return val, true
 }
 
-// RemoveDenomRewardPrize removes a DenomRewardPrize from the store.
-func (k Keeper) RemoveDenomRewardPrize(ctx sdk.Context, stakingDenom, prizeDenom string) {
-	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.DenomRewardPrizeKeyPrefix))
-	store.Delete(types.DenomRewardPrizeKey(stakingDenom, prizeDenom))
-}
-
 // IterateDenomRewardPrizes iterates every prize (accumulator) of a staking denom in
 // deterministic lexicographic order. Bounded by max_prize_denoms_per_dr.
 func (k Keeper) IterateDenomRewardPrizes(ctx sdk.Context, stakingDenom string, msgHandler func(ctx sdk.Context, prize types.DenomRewardPrize) (stop bool)) {
