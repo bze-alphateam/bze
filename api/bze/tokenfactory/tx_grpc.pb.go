@@ -26,6 +26,7 @@ const (
 	Msg_ChangeAdmin_FullMethodName      = "/bze.tokenfactory.Msg/ChangeAdmin"
 	Msg_SetDenomMetadata_FullMethodName = "/bze.tokenfactory.Msg/SetDenomMetadata"
 	Msg_SetDenomBranding_FullMethodName = "/bze.tokenfactory.Msg/SetDenomBranding"
+	Msg_SetDenomAdmin_FullMethodName    = "/bze.tokenfactory.Msg/SetDenomAdmin"
 )
 
 // MsgClient is the client API for Msg service.
@@ -41,6 +42,9 @@ type MsgClient interface {
 	ChangeAdmin(ctx context.Context, in *MsgChangeAdmin, opts ...grpc.CallOption) (*MsgChangeAdminResponse, error)
 	SetDenomMetadata(ctx context.Context, in *MsgSetDenomMetadata, opts ...grpc.CallOption) (*MsgSetDenomMetadataResponse, error)
 	SetDenomBranding(ctx context.Context, in *MsgSetDenomBranding, opts ...grpc.CallOption) (*MsgSetDenomBrandingResponse, error)
+	// SetDenomAdmin assigns a new admin to a factory denom.
+	// Governance only (authority = the x/gov module account).
+	SetDenomAdmin(ctx context.Context, in *MsgSetDenomAdmin, opts ...grpc.CallOption) (*MsgSetDenomAdminResponse, error)
 }
 
 type msgClient struct {
@@ -114,6 +118,15 @@ func (c *msgClient) SetDenomBranding(ctx context.Context, in *MsgSetDenomBrandin
 	return out, nil
 }
 
+func (c *msgClient) SetDenomAdmin(ctx context.Context, in *MsgSetDenomAdmin, opts ...grpc.CallOption) (*MsgSetDenomAdminResponse, error) {
+	out := new(MsgSetDenomAdminResponse)
+	err := c.cc.Invoke(ctx, Msg_SetDenomAdmin_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -127,6 +140,9 @@ type MsgServer interface {
 	ChangeAdmin(context.Context, *MsgChangeAdmin) (*MsgChangeAdminResponse, error)
 	SetDenomMetadata(context.Context, *MsgSetDenomMetadata) (*MsgSetDenomMetadataResponse, error)
 	SetDenomBranding(context.Context, *MsgSetDenomBranding) (*MsgSetDenomBrandingResponse, error)
+	// SetDenomAdmin assigns a new admin to a factory denom.
+	// Governance only (authority = the x/gov module account).
+	SetDenomAdmin(context.Context, *MsgSetDenomAdmin) (*MsgSetDenomAdminResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -154,6 +170,9 @@ func (UnimplementedMsgServer) SetDenomMetadata(context.Context, *MsgSetDenomMeta
 }
 func (UnimplementedMsgServer) SetDenomBranding(context.Context, *MsgSetDenomBranding) (*MsgSetDenomBrandingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetDenomBranding not implemented")
+}
+func (UnimplementedMsgServer) SetDenomAdmin(context.Context, *MsgSetDenomAdmin) (*MsgSetDenomAdminResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetDenomAdmin not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -294,6 +313,24 @@ func _Msg_SetDenomBranding_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SetDenomAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetDenomAdmin)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetDenomAdmin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_SetDenomAdmin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetDenomAdmin(ctx, req.(*MsgSetDenomAdmin))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -328,6 +365,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetDenomBranding",
 			Handler:    _Msg_SetDenomBranding_Handler,
+		},
+		{
+			MethodName: "SetDenomAdmin",
+			Handler:    _Msg_SetDenomAdmin_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

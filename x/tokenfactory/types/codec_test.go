@@ -26,6 +26,8 @@ func TestRegisterInterfaces_ResolvesEveryMsg(t *testing.T) {
 		&types.MsgUpdateParams{},
 		// v8.2.0: on-chain denom branding
 		&types.MsgSetDenomBranding{},
+		// v8.3.0: governance assigns a denom admin
+		&types.MsgSetDenomAdmin{},
 	}
 
 	for _, msg := range msgs {
