@@ -29,6 +29,19 @@ func (suite *IntegrationTestSuite) TestMsgServer_MoveIbcLockedCoins_LpTokenDenom
 	suite.Require().Contains(err.Error(), "cannot burn LP tokens")
 }
 
+func (suite *IntegrationTestSuite) TestMsgServer_MoveIbcLockedCoins_HashedLpTokenDenom() {
+	msg := &types.MsgMoveIbcLockedCoins{
+		Creator: sdk.AccAddress("creator").String(),
+		Denom:   "ulp/0A1B2C3D4E5F",
+	}
+
+	res, err := suite.msgServer.MoveIbcLockedCoins(suite.ctx, msg)
+
+	suite.Require().Error(err)
+	suite.Require().Nil(res)
+	suite.Require().Contains(err.Error(), "cannot burn LP tokens")
+}
+
 func (suite *IntegrationTestSuite) TestMsgServer_MoveIbcLockedCoins_DenomNoSupply() {
 	denom := "ibc/ABC123"
 	msg := &types.MsgMoveIbcLockedCoins{

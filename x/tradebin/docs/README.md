@@ -99,7 +99,7 @@ Partial order fills can leave fractional coin amounts (dust) that are too small 
 - Fees are captured from the sender, swapped to `native_denom` when possible, and forwarded to the destination module.
 - `MsgUpdateParams`, `MsgHaltDenoms` and `MsgUnhaltDenoms` are restricted to the module authority (governance).
 - Queue processing at `EndBlock` is capped by `order_book_per_block_messages`; messages beyond the cap remain queued for later blocks, and the queue counter resets only after the queue is emptied.
-- Module-level swaps/add-liquidity helpers refuse to run unless the native/pair pool holds at least `min_native_liquidity_for_module_swap` in native reserves.
+- Module-level swaps/add-liquidity helpers refuse to run unless the native/pair pool holds more than `min_native_liquidity_for_module_swap` in native reserves.
 
 ## Version History
 
