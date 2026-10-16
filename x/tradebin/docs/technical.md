@@ -16,7 +16,7 @@
 
 ## Inter-module Hooks
 - `native_denom` is the target for swapping captured fees and module balances; `MsgUpdateParams` enforces it exists in bank supply.
-- `min_native_liquidity_for_module_swap` must be met in the native/pair pool before helpers like `ModuleSwapForNativeDenom`, `ModuleAddLiquidityWithNativeDenom`, or the liquidity-depth checks (`HasDeepLiquidityWithNativeDenom`, `CanSwapForNativeDenom`) will act. This prevents draining shallow pools during module-driven swaps.
+- `min_native_liquidity_for_module_swap` must be exceeded (strictly more native reserves) in the native/pair pool before helpers like `ModuleSwapForNativeDenom`, `ModuleAddLiquidityWithNativeDenom`, or the liquidity-depth checks (`HasDeepLiquidityWithNativeDenom`, `CanSwapForNativeDenom`) will act. This prevents draining shallow pools during module-driven swaps.
 - `HasLiquidityWithNativeDenom`, `HasDeepLiquidityWithNativeDenom` and `CanSwapForNativeDenom` answer `false` for a halted denom regardless of the pool depth, so the txfeecollector ante handler refuses it as a fee denom up front and the fee collector / burner classify it as non-swappable without attempting a swap (its dust takes the existing path to the black hole). Nothing changes in those modules.
 - Trading fees and the create-market fee are captured via the trade module fee paths, optionally swapped to native, then forwarded to fee collector (community pool) or burner depending on configured destinations. Fees sent to `burner` are later destroyed or swapped through burner logic depending on denom type.
 

@@ -248,7 +248,7 @@ func (k msgServer) AddLiquidity(goCtx context.Context, msg *types.MsgAddLiquidit
 	}
 
 	if minted.Amount.LT(msg.MinLpTokens) {
-		return nil, errors.Wrapf(types.ErrResultedAmountTooLow, "could not mint the minimum expected lp tokens. Minted %d, expected minimum: %s", minted.Amount.Uint64(), msg.MinLpTokens.String())
+		return nil, errors.Wrapf(types.ErrResultedAmountTooLow, "could not mint the minimum expected lp tokens. Minted %s, expected minimum: %s", minted.Amount.String(), msg.MinLpTokens.String())
 	}
 
 	//send LP tokens to user

@@ -101,7 +101,7 @@ func (suite *IntegrationTestSuite) TestServiceDenom_CanSwapForNativeDenom_Suffic
 		Id:           "ubze_uother",
 		Base:         nativeDenom,
 		Quote:        otherDenom,
-		ReserveBase:  math.NewInt(100_000_000_000), // Greater than minNativeAmountForSwap (50B)
+		ReserveBase:  math.NewInt(200_000_000_000), // more than MinNativeLiquidityForModuleSwap (default 1e11)
 		ReserveQuote: math.NewInt(1_000_000_000),
 	}
 	suite.k.SetLiquidityPool(suite.ctx, pool)
@@ -1193,9 +1193,9 @@ func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDe
 	}
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	// Should return true because amount >= threshold (LT check passes when amount is NOT less than threshold)
+	// Deep means strictly more than the threshold, the same boundary the module swap uses
 	result := suite.k.HasDeepLiquidityWithNativeDenom(suite.ctx, otherDenom)
-	suite.Require().True(result)
+	suite.Require().False(result)
 }
 
 func (suite *IntegrationTestSuite) TestServiceDenom_HasDeepLiquidityWithNativeDenom_JustAboveThreshold() {

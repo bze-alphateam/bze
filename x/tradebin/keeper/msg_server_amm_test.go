@@ -579,6 +579,36 @@ func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_MinLpTokensNotMet() {
 	suite.Require().Contains(err.Error(), "could not mint the minimum expected lp tokens")
 }
 
+func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_MinLpTokensNotMet_MintedAboveUint64() {
+
+	testLp := getValidLp()
+	testAcc := getTestAccount()
+	suite.k.SetLiquidityPool(suite.ctx, testLp)
+
+	//the same deposit as above against a supply of 1e21 mints 1e20 LP, past the 2^64 of a uint64
+	supply, ok := math.NewIntFromString("1000000000000000000000")
+	suite.Require().True(ok)
+	mintedAmount, ok := math.NewIntFromString("100000000000000000000")
+	suite.Require().True(ok)
+	suite.Require().False(mintedAmount.IsUint64())
+
+	msg := &types.MsgAddLiquidity{
+		Creator:     testAcc.String(),
+		PoolId:      testLp.Id,
+		BaseAmount:  math.NewInt(100),
+		QuoteAmount: math.NewInt(200),
+		MinLpTokens: mintedAmount.AddRaw(1),
+	}
+
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), testAcc, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ubze", 100), sdk.NewInt64Coin("uusdc", 200))).Times(1).Return(nil)
+	suite.bankMock.EXPECT().GetSupply(suite.ctx, testLp.GetLpDenom()).Times(1).Return(sdk.NewCoin(testLp.GetLpDenom(), supply))
+	suite.bankMock.EXPECT().MintCoins(suite.ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(testLp.GetLpDenom(), mintedAmount))).Return(nil)
+
+	_, err := suite.msgServer.AddLiquidity(suite.ctx, msg)
+	suite.Require().ErrorIs(err, types.ErrResultedAmountTooLow)
+	suite.Require().Contains(err.Error(), "Minted 100000000000000000000, expected minimum: 100000000000000000001")
+}
+
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_ErrorOnSendingLpTokens() {
 
 	testLp := getValidLp()

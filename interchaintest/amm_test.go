@@ -877,11 +877,8 @@ func (s *ammSuite) dustPool(t *testing.T) {
 // 20. The add-liquidity slippage guard of a deposit that mints more than a
 // uint64 of LP: big1/big2 starts at 1e9/1e9 (1e15 LP) and a deposit of 1e14
 // of each side mints 1e20. MinLpTokens one above must be refused with 4014
-// like any slippage refusal; the chain formats the minted amount with
-// Uint64(), which panics past 2^64 instead.
+// like any slippage refusal, with the exact minted amount in the log.
 func (s *ammSuite) slippageAboveUint64(t *testing.T) {
-	t.Skip("BZE-183: the AddLiquidity slippage refusal panics when the minted LP does not fit a uint64")
-
 	factory := "factory/" + s.lp.FormattedAddress() + "/"
 	big1, big2 := factory+"big1", factory+"big2"
 	for _, sub := range []string{"big1", "big2"} {
