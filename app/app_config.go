@@ -1,8 +1,6 @@
 package app
 
 import (
-	"time"
-
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
@@ -15,9 +13,7 @@ import (
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	govmodulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
-	groupmodulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
-	nftmodulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
@@ -28,7 +24,6 @@ import (
 	circuittypes "cosmossdk.io/x/circuit/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
-	"cosmossdk.io/x/nft"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	burnermodulev1 "github.com/bze-alphateam/bze/api/bze/burner/module"
 	cointrunkmodulev1 "github.com/bze-alphateam/bze/api/bze/cointrunk/module"
@@ -60,7 +55,6 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -68,8 +62,15 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
-	"google.golang.org/protobuf/types/known/durationpb"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
+)
+
+// Module names of modules removed in v8.3.0, kept so their addresses stay blocked.
+const (
+	// removedNftModuleName is the module name of x/nft (nft.ModuleName).
+	removedNftModuleName = "nft"
+	// removedFeeIbcModuleName is the module name of the ICS-29 fee middleware (ibcfeetypes.ModuleName).
+	removedFeeIbcModuleName = "feeibc"
 )
 
 var (
@@ -95,8 +96,6 @@ var (
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
-		nft.ModuleName,
-		group.ModuleName,
 		consensustypes.ModuleName,
 		circuittypes.ModuleName,
 		// chain modules
@@ -143,7 +142,6 @@ var (
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		feegrant.ModuleName,
-		group.ModuleName,
 		genutiltypes.ModuleName,
 		// ibc modules
 		ibcexported.ModuleName,
@@ -174,7 +172,6 @@ var (
 		{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
 		{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
 		{Account: govtypes.ModuleName, Permissions: []string{authtypes.Burner}},
-		{Account: nft.ModuleName},
 		{Account: ibctransfertypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner}},
 		{Account: icatypes.ModuleName},
 		{Account: rewardsmoduletypes.ModuleName, Permissions: []string{authtypes.Burner}},
@@ -196,7 +193,11 @@ var (
 		minttypes.ModuleName,
 		stakingtypes.BondedPoolName,
 		stakingtypes.NotBondedPoolName,
-		nft.ModuleName,
+		// x/nft and the ICS-29 fee middleware were removed in v8.3.0. Their
+		// addresses stay blocked: nobody holds a key for them, so anything sent
+		// there would be stranded
+		removedNftModuleName,
+		removedFeeIbcModuleName,
 		txfeecollectormoduletypes.ModuleName,
 		txfeecollectormoduletypes.BurnerFeeCollector,
 		txfeecollectormoduletypes.CpFeeCollector,
@@ -237,10 +238,6 @@ var (
 					// Authority: "group", // A custom module authority can be set using a module name
 					// Authority: "cosmos1cwwv22j5ca08ggdv9c2uky355k908694z577tv", // or a specific address
 				}),
-			},
-			{
-				Name:   nft.ModuleName,
-				Config: appconfig.WrapAny(&nftmodulev1.Module{}),
 			},
 			{
 				Name:   vestingtypes.ModuleName,
@@ -296,13 +293,6 @@ var (
 			{
 				Name:   minttypes.ModuleName,
 				Config: appconfig.WrapAny(&mintmodulev1.Module{}),
-			},
-			{
-				Name: group.ModuleName,
-				Config: appconfig.WrapAny(&groupmodulev1.Module{
-					MaxExecutionPeriod: durationpb.New(time.Second * 1209600),
-					MaxMetadataLen:     255,
-				}),
 			},
 			{
 				Name:   feegrant.ModuleName,
