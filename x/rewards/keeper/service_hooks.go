@@ -121,6 +121,11 @@ func (k Keeper) GetOnOrderFillHook() func(ctx sdk.Context, marketId, amountTrade
 			return
 		}
 
+		//the first trade on an activated reward starts its countdown
+		if reward.ExpireAt == 0 {
+			k.startTradingRewardCountdown(ctx, reward)
+		}
+
 		candidateAmount = candidateAmount.Add(tradedAmount)
 		candidate.Amount = candidateAmount.String()
 		k.SetTradingRewardCandidate(ctx, candidate)
