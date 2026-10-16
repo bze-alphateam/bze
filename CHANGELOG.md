@@ -23,10 +23,13 @@ derived from it. History older than v8.0.0 lives in the
 ### Improvements
 
 * (app) [#141](https://github.com/bze-alphateam/bze/pull/141) The code now keeps only the upgrade handler of the release it builds (`v8.3.0`). The handlers of v5.1.2 through v8.2.0 are removed, because each one runs once at its height. Nodes syncing from genesis already switch to each release's own binary at its upgrade height (for example with Cosmovisor), so nothing changes for operators.
+* (x/rewards) [#143](https://github.com/bze-alphateam/bze/pull/143) A `bzed export` taken in the block where the denom rewards distribution queue stops on a schedule that just made its final payout now passes `validate-genesis` and imports. Genesis validation only requires the queue cursor to be a well-formed schedule key of an existing denom reward, not a schedule that still exists. Only genesis validation changes.
+* (x/txfeecollector) [#143](https://github.com/bze-alphateam/bze/pull/143) `blocked_ibc_inbound` entries must name the channel exactly as IBC packets do: `channel-{N}` without leading zeros. Ids like `Channel-3`, `channel_3` or `channel-03` used to pass validation but never matched a packet, so the entry blocked nothing. This applies to genesis import and `MsgUpdateParams`. The stored mainnet value `channel-3` stays valid.
 
 ### Bug Fixes
 
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.
+* (x/rewards) [#143](https://github.com/bze-alphateam/bze/pull/143) `MsgUpdateDenomRewardSchedule` checks that the extra days are at most 36500 before it computes the extra budget. A handler reached without `ValidateBasic` used to panic on a math overflow, which turned into a failed transaction. It now returns the duration error. Only the error changes: the same transactions fail as before.
 
 ## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0) - 2026-10-14
 
