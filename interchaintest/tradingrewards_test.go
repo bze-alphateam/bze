@@ -45,6 +45,7 @@ const (
 	trMakerSell  = 10_000
 	trMakerBuy   = 1_000
 	trPendingBuy = 100 // a trade while the rewards are still pending
+	trFewerBuy   = 200 // t1, the only trader on reward D
 
 	trDuration       = 2 // days
 	trPendingDays    = 30
@@ -61,16 +62,19 @@ const (
 var (
 	trRewardA = trSpec{prize: 1_000_000, slots: 2} // the tr/ubze market
 	trRewardB = trSpec{prize: 700_000, slots: 1}   // the tr_ubze pool
-	trRewardD = trSpec{prize: 300_000, slots: 3}   // a second pending reward on the market, never activated
-	trRewardE = trSpec{prize: 400_000, slots: 1}   // created on the market once A has paid out
+	trRewardD = trSpec{prize: 300_000, slots: 3}   // a second pending reward on the market, activated once A has paid out
+	trRewardE = trSpec{prize: 400_000, slots: 1}   // created on the market once A has paid out, never activated
+	trRewardF = trSpec{prize: 500_000, slots: 2}   // created on the pool once B has paid out, activated, never traded
 )
 
 // TestTradingRewards runs the trading rewards of the rewards module end to
 // end: create (escrow, fee, pending record), the create refusals, activation
 // by a real gov proposal and its refusals, the tradebin hooks that credit
-// order-book takers and AMM swappers, the leaderboard (order, ties, trim to
-// the slots), the payout at expiry, the display week and the cleanup after
-// it. Every step asserts the exact balances of the parties, the prize paid to
+// order-book takers and AMM swappers, the countdown that starts at the first
+// trade, the leaderboard (order, ties, trim to the slots), the payout at
+// expiry, the display week and the cleanup after it, the burn of the slots
+// nobody filled and a reward nobody trades on waiting for its first trade.
+// Every step asserts the exact balances of the parties, the prize paid to
 // each winner and the rewards module escrow. Subtests run in order and share
 // state; the cleanup step waits a week of hour epochs (about 15 minutes).
 func TestTradingRewards(t *testing.T) {
@@ -110,10 +114,11 @@ type tradingRewardsSuite struct {
 	createFee                  sdk.Coin
 	baseline                   sdk.Coins // rewards module before the first trading reward
 
-	rewardA, rewardB, rewardD, rewardE string
-	live                               map[string]trSpec // rewards whose escrow the module still holds
-	expireAt                           int64             // A and B, activated by the same proposal
-	swapped                            int64             // tr t2 swapped on the pool: reward B's credit
+	rewardA, rewardB, rewardD, rewardE, rewardF string
+	live                                        map[string]trSpec // rewards whose escrow the module still holds
+	expireAtA, expireAtB                        int64             // set by the first trade on each reward
+	activatedDF                                 int64             // hour epoch of the proposal that activated D and F
+	swapped                                     int64             // tr t2 swapped on the pool: reward B's credit
 }
 
 func setupTradingRewards(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain) *tradingRewardsSuite {
@@ -216,10 +221,10 @@ func (s *tradingRewardsSuite) createRefusals(t *testing.T) {
 
 // 3. Only governance activates a reward. A proposal activating an unknown
 // reward fails; the same msg signed by a user is refused. One proposal
-// activates A and B: they move from pending to active, their markets map to
-// them and they expire 2 days of hour epochs after the block that executed
-// the proposal. Activating A again fails, and so does D, pending on a market
-// that now has an active reward; a new reward on that market is refused.
+// activates A and B: they move from pending to active and their markets map
+// to them, but their countdown waits for the first trade (expire_at 0).
+// Activating A again fails, and so does D, pending on a market that now has
+// an active reward; a new reward on that market is refused.
 func (s *tradingRewardsSuite) activate(t *testing.T) {
 	t.Run("unknown reward", func(t *testing.T) {
 		s.requireProposalFails(t, "activate an unknown trading reward", "trading reward not found", s.activateMsg("999999999999"))
@@ -244,10 +249,10 @@ func (s *tradingRewardsSuite) activate(t *testing.T) {
 		require.NoError(t, err)
 
 		height := s.activationHeight(t, s.rewardA, s.rewardB)
-		s.expireAt = s.hourAt(t, height) + trDuration*24
+		require.Empty(t, s.rewardEvents(t, height, "TradingRewardStartEvent"), "activation starts no countdown")
 		for id, market := range map[string]string{s.rewardA: s.trMarket, s.rewardB: s.trPool} {
 			spec := s.live[id]
-			require.Equal(t, s.wantReward(id, spec, market, s.expireAt), s.reward(t, id), "active reward %s", id)
+			require.Equal(t, s.wantReward(id, spec, market, 0), s.reward(t, id), "active reward %s", id)
 			mapped, found := s.marketReward(t, market)
 			require.True(t, found, "market %s has no trading reward", market)
 			require.Equal(t, id, mapped)
@@ -279,13 +284,17 @@ func (s *tradingRewardsSuite) activate(t *testing.T) {
 }
 
 // 4. The order-book hook credits the taker with the base amount executed,
-// buying or selling, never the maker. t3 trades first, t1 trades more; when
+// buying or selling, never the maker. The first trade on each reward starts
+// its countdown: it expires 2 days of hour epochs after the block of that
+// trade, and later trades leave it alone. t3 trades first, t1 trades more; when
 // t3 tops up to t1's amount the tie goes to t3, whose leaderboard entry is
 // older. Swaps on the pool credit the pool's reward B with the base amount
 // (the swap output when buying tr, the input when selling it) and never the
 // market's reward A: a reward counts trades on its own market id only.
 func (s *tradingRewardsSuite) hooks(t *testing.T) {
-	s.trade(t, s.t3, "buy", 500)
+	height := s.trade(t, s.t3, "buy", 500)
+	s.expireAtA = s.hourAt(t, height) + trDuration*24
+	s.requireStarted(t, s.rewardEvents(t, height, "TradingRewardStartEvent"), s.rewardA, s.expireAtA)
 	s.requireLeaderboard(t, s.rewardA, trPlace{s.t3, 500})
 	// the next entry must be created in a later second than t3's
 	require.NoError(t, testutil.WaitForBlocks(s.ctx, 2, s.bze))
@@ -299,7 +308,9 @@ func (s *tradingRewardsSuite) hooks(t *testing.T) {
 	board := s.requireLeaderboard(t, s.rewardA, trPlace{s.t3, 3000}, trPlace{s.t1, 3000})
 	require.Less(t, board[0].CreatedAt, board[1].CreatedAt, "the tie goes to the older entry")
 
-	out := s.swap(t, s.t2, sdk.NewInt64Coin(chain.Denom, trSwapBze))
+	out, res := s.swap(t, s.t2, sdk.NewInt64Coin(chain.Denom, trSwapBze))
+	s.expireAtB = s.hourAt(t, res.Height) + trDuration*24
+	s.requireStarted(t, helpers.TxEvents(res, drEventPrefix+"TradingRewardStartEvent"), s.rewardB, s.expireAtB)
 	s.requireLeaderboard(t, s.rewardB, trPlace{s.t2, out.Int64()})
 	s.swap(t, s.t2, sdk.NewInt64Coin(s.tr, trSwapBase))
 	s.swapped = out.Int64() + trSwapBase
@@ -307,6 +318,9 @@ func (s *tradingRewardsSuite) hooks(t *testing.T) {
 
 	// the maker filled every trade above and the swaps never reached reward A
 	s.requireLeaderboard(t, s.rewardA, trPlace{s.t3, 3000}, trPlace{s.t1, 3000})
+	// later trades did not move the countdowns
+	require.Equal(t, s.wantReward(s.rewardA, trRewardA, s.trMarket, s.expireAtA), s.reward(t, s.rewardA))
+	require.Equal(t, s.wantReward(s.rewardB, trRewardB, s.trPool, s.expireAtB), s.reward(t, s.rewardB))
 }
 
 // 5. With two slots, a third trader is cut from the leaderboard but keeps
@@ -321,42 +335,50 @@ func (s *tradingRewardsSuite) trim(t *testing.T) {
 
 	cur, err := helpers.CurrentEpoch(s.ctx, s.bze, "hour")
 	require.NoError(t, err)
-	require.Less(t, cur, s.expireAt, "the trades must land before the rewards expire")
+	require.Less(t, cur, min(s.expireAtA, s.expireAtB), "the trades must land before the rewards expire")
 }
 
-// 6. At the end of the hour epoch the rewards expire on, every winner gets
-// the prize per slot: t2 and t3 for A, t2 for B, nothing for t1. The markets
-// are free again (a new reward on the market is accepted), trades no longer
-// count, and the paid rewards and their leaderboards stay queryable for the
-// display week.
+// 6. At the end of the hour epoch each reward expires on, every winner gets
+// the prize per slot: t2 and t3 for A, t2 for B, nothing for t1. Every slot
+// was filled, so nothing is burnt. The markets are free again (a new reward
+// on the market is accepted), trades no longer count, and the paid rewards
+// and their leaderboards stay queryable for the display week.
 func (s *tradingRewardsSuite) payout(t *testing.T) {
 	before := map[string]sdkmath.Int{}
 	for _, u := range []ibc.Wallet{s.t1, s.t2, s.t3} {
 		before[u.FormattedAddress()] = s.balance(t, u.FormattedAddress(), s.prize)
 	}
 
-	height := s.epochEndHeight(t, s.expireAt, trPayoutWait)
-	events := s.rewardEvents(t, height, "TradingRewardDistributionEvent")
-	require.Len(t, events, 2, "distributions at height %d: %+v", height, events)
+	s.epochEndHeight(t, max(s.expireAtA, s.expireAtB), trPayoutWait)
+	var all []helpers.Event
+	heights := map[int64]bool{}
 	for id, want := range map[string]struct {
-		spec    trSpec
-		winners []ibc.Wallet
+		spec     trSpec
+		expireAt int64
+		winners  []ibc.Wallet
 	}{
-		s.rewardA: {trRewardA, []ibc.Wallet{s.t2, s.t3}},
-		s.rewardB: {trRewardB, []ibc.Wallet{s.t2}},
+		s.rewardA: {trRewardA, s.expireAtA, []ibc.Wallet{s.t2, s.t3}},
+		s.rewardB: {trRewardB, s.expireAtB, []ibc.Wallet{s.t2}},
 	} {
+		height := s.epochStartHeight(t, want.expireAt+1)
+		events := s.rewardEvents(t, height, "TradingRewardDistributionEvent")
 		ev := helpers.EventsWith(events, map[string]string{
 			"reward_id":    id,
 			"prize_amount": coinStr(want.spec.prize, s.prize),
 			"prize_denom":  s.prize,
 		})
-		require.Len(t, ev, 1, "distribution of %s: %+v", id, events)
+		require.Len(t, ev, 1, "distribution of %s at height %d: %+v", id, height, events)
 		var winners []string
 		require.NoError(t, json.Unmarshal([]byte(ev[0].Attributes["winners"]), &winners), "winners %q", ev[0].Attributes["winners"])
 		require.Equal(t, addresses(want.winners...), winners, "winners of %s", id)
+		require.Empty(t, ev[0].Attributes["unpaid_burnt"], "every slot of %s was filled", id)
+		if !heights[height] {
+			heights[height] = true
+			all = append(all, s.blockEvents(t, height)...)
+		}
 	}
+	require.Zero(t, s.transferred(t, all, s.rewards, s.burner, s.prize).Int64(), "nothing burnt")
 
-	all := s.blockEvents(t, height)
 	for _, w := range []struct {
 		user ibc.Wallet
 		won  int64
@@ -376,13 +398,14 @@ func (s *tradingRewardsSuite) payout(t *testing.T) {
 	for _, r := range []struct {
 		id, market string
 		spec       trSpec
+		expireAt   int64
 	}{
-		{s.rewardA, s.trMarket, trRewardA},
-		{s.rewardB, s.trPool, trRewardB},
+		{s.rewardA, s.trMarket, trRewardA, s.expireAtA},
+		{s.rewardB, s.trPool, trRewardB, s.expireAtB},
 	} {
 		_, found := s.marketReward(t, r.market)
 		require.False(t, found, "market %s still mapped after the payout", r.market)
-		require.Equal(t, s.wantReward(r.id, r.spec, r.market, s.expireAt), s.reward(t, r.id), "paid reward %s stays queryable", r.id)
+		require.Equal(t, s.wantReward(r.id, r.spec, r.market, r.expireAt), s.reward(t, r.id), "paid reward %s stays queryable", r.id)
 	}
 	require.ElementsMatch(t, []string{s.rewardA, s.rewardB}, s.rewardIDs(t, "active"), "active rewards during the display week")
 	s.requireLeaderboard(t, s.rewardB, trPlace{s.t2, s.swapped})
@@ -398,8 +421,11 @@ func (s *tradingRewardsSuite) payout(t *testing.T) {
 // leaderboards are removed, and nobody is paid twice.
 func (s *tradingRewardsSuite) cleanup(t *testing.T) {
 	before := s.prizeBalances(t)
-	height := s.epochEndHeight(t, s.expireAt+trDisplayEpochs, trCleanupWait)
-	require.Empty(t, s.rewardEvents(t, height, "TradingRewardDistributionEvent"), "no second distribution")
+	s.epochEndHeight(t, max(s.expireAtA, s.expireAtB)+trDisplayEpochs, trCleanupWait)
+	for _, expireAt := range []int64{s.expireAtA, s.expireAtB} {
+		height := s.epochStartHeight(t, expireAt+trDisplayEpochs+1)
+		require.Empty(t, s.rewardEvents(t, height, "TradingRewardDistributionEvent"), "no second distribution at height %d", height)
+	}
 
 	for _, id := range []string{s.rewardA, s.rewardB} {
 		_, err := s.queryReward(id)
@@ -413,22 +439,77 @@ func (s *tradingRewardsSuite) cleanup(t *testing.T) {
 	s.requireEscrow(t)
 }
 
-// 8. A reward with more slots than traders pays the traders; where the
-// prize of the empty slots goes is decided and fixed by BZE-173.
+// 8. One proposal activates D (3 slots, on the now free market) and F (on
+// the now free pool). Only t1 trades on D: at expiry t1 gets one slot's
+// prize, the prize of the two slots nobody filled goes to the burner, and
+// the market is free again.
 func (s *tradingRewardsSuite) fewerTraders(t *testing.T) {
-	t.Skip("BZE-173: assert the winner's prize and the destination of the unfilled slots (slots 3, one trader) once the fix decides it")
+	s.rewardF = s.createReward(t, trRewardF, s.trPool)
+	_, err := helpers.SubmitAndPassProposal(s.ctx, s.bze, s.creator, helpers.Proposal{
+		Messages: []any{s.activateMsg(s.rewardD), s.activateMsg(s.rewardF)},
+		Title:    "activate trading rewards D and F",
+		Summary:  "e2e: a reward with fewer traders than slots and a reward nobody trades on",
+	})
+	require.NoError(t, err)
+	s.activatedDF = s.hourAt(t, s.activationHeight(t, s.rewardD, s.rewardF))
+
+	before := s.balance(t, s.t1.FormattedAddress(), s.prize)
+	height := s.trade(t, s.t1, "buy", trFewerBuy)
+	expireAt := s.hourAt(t, height) + trDuration*24
+	s.requireStarted(t, s.rewardEvents(t, height, "TradingRewardStartEvent"), s.rewardD, expireAt)
+	s.requireLeaderboard(t, s.rewardD, trPlace{s.t1, trFewerBuy})
+
+	s.epochEndHeight(t, expireAt, trPayoutWait)
+	height = s.epochStartHeight(t, expireAt+1)
+	unfilled := coinStr(trRewardD.prize*(trRewardD.slots-1), s.prize)
+	events := helpers.EventsWith(s.rewardEvents(t, height, "TradingRewardDistributionEvent"), map[string]string{
+		"reward_id":    s.rewardD,
+		"prize_amount": coinStr(trRewardD.prize, s.prize),
+		"unpaid_burnt": unfilled,
+	})
+	require.Len(t, events, 1, "distribution of D at height %d", height)
+
+	all := s.blockEvents(t, height)
+	addr := s.t1.FormattedAddress()
+	require.Equal(t, sdkmath.NewInt(trRewardD.prize), s.transferred(t, all, s.rewards, addr, s.prize), "prize paid to t1")
+	require.Equal(t, before.AddRaw(trRewardD.prize), s.balance(t, addr, s.prize), "prize balance of t1")
+	require.Equal(t, sdkmath.NewInt(trRewardD.prize*(trRewardD.slots-1)), s.transferred(t, all, s.rewards, s.burner, s.prize), "unfilled slots burnt")
+	delete(s.live, s.rewardD)
+	s.requireEscrow(t)
+
+	_, found := s.marketReward(t, s.trMarket)
+	require.False(t, found, "market still mapped after D's payout")
 }
 
-// 9. An activated reward nobody trades on never finishes today: no
-// leaderboard, so the payout skips it before freeing the market or the escrow.
+// 9. F, activated with D, saw no trade: well past its duration it is still
+// active with no countdown (expire_at 0), keeps its escrow and keeps the
+// pool, so a new reward on the pool is refused.
 func (s *tradingRewardsSuite) noTrades(t *testing.T) {
-	t.Skip("BZE-173: assert the reward finishes at expiry, frees the market and moves the escrow once the fix lands")
+	cur, err := helpers.CurrentEpoch(s.ctx, s.bze, "hour")
+	require.NoError(t, err)
+	require.Greater(t, cur, s.activatedDF+trDuration*24, "F must be past the expiry its activation would have set")
+
+	require.Equal(t, s.wantReward(s.rewardF, trRewardF, s.trPool, 0), s.reward(t, s.rewardF), "F waits for its first trade")
+	require.Contains(t, s.rewardIDs(t, "active"), s.rewardF)
+	_, found := s.leaderboard(t, s.rewardF)
+	require.False(t, found, "F has no leaderboard")
+	mapped, found := s.marketReward(t, s.trPool)
+	require.True(t, found, "the pool stays mapped to F")
+	require.Equal(t, s.rewardF, mapped)
+
+	before := s.balances(t, s.creator, chain.Denom, s.prize)
+	res, err := helpers.ExecTxWith(s.ctx, s.bze, s.creator, []helpers.TxOption{helpers.WithGas(trTxGas)},
+		"rewards", "create-trading-reward", "1000", s.prize, "2", s.trPool, "1")
+	s.requireRefused(t, res, err, rewardsCodespace, 5010, "a reward is already running for this market")
+	require.Equal(t, before.Sub(s.paidFee(t, res)...), s.balances(t, s.creator, chain.Denom, s.prize), "creator balances")
+	s.requireEscrow(t)
 }
 
 // 10. The rewards module holds exactly the escrow of the rewards not paid
-// yet (D and E, both pending); fees only passed through it.
+// yet (E pending, F active with no trades); fees only passed through it and
+// D's unfilled slots left it for the burner.
 func (s *tradingRewardsSuite) conservation(t *testing.T) {
-	require.Equal(t, map[string]trSpec{s.rewardD: trRewardD, s.rewardE: trRewardE}, s.live)
+	require.Equal(t, map[string]trSpec{s.rewardE: trRewardE, s.rewardF: trRewardF}, s.live)
 	s.requireEscrow(t)
 }
 
@@ -472,8 +553,9 @@ func (s *tradingRewardsSuite) createReward(t *testing.T, spec trSpec, market str
 }
 
 // trade sends a taker order against the maker's resting order at the price
-// for its side and asserts the execution and the taker's balances.
-func (s *tradingRewardsSuite) trade(t *testing.T, u ibc.Wallet, typ string, amount int64) {
+// for its side, asserts the execution and the taker's balances and returns
+// the height of the block that executed it.
+func (s *tradingRewardsSuite) trade(t *testing.T, u ibc.Wallet, typ string, amount int64) int64 {
 	t.Helper()
 	price := trSellPrice
 	if typ == "sell" {
@@ -496,11 +578,12 @@ func (s *tradingRewardsSuite) trade(t *testing.T, u ibc.Wallet, typ string, amou
 		want = before.Add(sdk.NewCoin(chain.Denom, quote)).Sub(sdk.NewInt64Coin(s.tr, amount), sdk.NewCoin(chain.Denom, fee))
 	}
 	require.Equal(t, want, s.balances(t, u, chain.Denom, s.tr), "balances of %s", u.KeyName())
+	return res.Height
 }
 
 // swap swaps in on the tr/ubze pool with the exact output, asserts the
-// swapper's balances and returns the output amount.
-func (s *tradingRewardsSuite) swap(t *testing.T, u ibc.Wallet, in sdk.Coin) sdkmath.Int {
+// swapper's balances and returns the output amount and the tx.
+func (s *tradingRewardsSuite) swap(t *testing.T, u ibc.Wallet, in sdk.Coin) (sdkmath.Int, helpers.TxResult) {
 	t.Helper()
 	pool := s.pool(t, s.trPool)
 	q, outDenom := quoteSwap(in.Amount, pool.reserveQuote(), pool.reserveBase()), s.tr
@@ -515,7 +598,7 @@ func (s *tradingRewardsSuite) swap(t *testing.T, u ibc.Wallet, in sdk.Coin) sdkm
 	s.requireSwap(t, res.Events, u.FormattedAddress(), s.trPool, in, out)
 	fee := sdk.NewCoin(chain.Denom, s.params.MarketTakerFee.Amount.Add(s.txFee(t, res)))
 	require.Equal(t, before.Add(out).Sub(in).Sub(fee), s.balances(t, u, chain.Denom, s.tr), "balances of %s", u.KeyName())
-	return q.out
+	return q.out, res
 }
 
 type trReward struct {
@@ -682,6 +765,37 @@ func (s *tradingRewardsSuite) hourAt(t *testing.T, height int64) int64 {
 	}](s.ctx, s.bze, "epochs", "identifier", "hour", "--height", strconv.FormatInt(height, 10))
 	require.NoError(t, err)
 	return int64(res.CurrentEpoch)
+}
+
+// requireStarted asserts events hold exactly one TradingRewardStartEvent, for
+// id with expireAt, and that the reward now carries that expire_at.
+func (s *tradingRewardsSuite) requireStarted(t *testing.T, events []helpers.Event, id string, expireAt int64) {
+	t.Helper()
+	require.Len(t, events, 1, "TradingRewardStartEvent: %+v", events)
+	require.Equal(t, id, events[0].Attributes["reward_id"])
+	require.Equal(t, strconv.FormatInt(expireAt, 10), events[0].Attributes["expire_at"])
+	require.EqualValues(t, expireAt, s.reward(t, id).ExpireAt, "expire_at of %s", id)
+}
+
+// epochStartHeight finds the first block of hour epoch n, which has already
+// started: the block whose BeginBlock ran the AfterEpochEnd hooks for n-1.
+// Hour epochs are monotonic in height, so it binary-searches the heights.
+func (s *tradingRewardsSuite) epochStartHeight(t *testing.T, n int64) int64 {
+	t.Helper()
+	cur, err := s.bze.Height(s.ctx)
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, s.hourAt(t, cur), n, "hour epoch %d has not started at height %d", n, cur)
+	lo, hi := int64(1), cur // the answer is in (lo, hi]
+	for hi-lo > 1 {
+		mid := lo + (hi-lo)/2
+		if s.hourAt(t, mid) >= n {
+			hi = mid
+		} else {
+			lo = mid
+		}
+	}
+	require.EqualValues(t, n, s.hourAt(t, hi), "first block of hour epoch %d", n)
+	return hi
 }
 
 // epochEndHeight waits for hour epoch n to end and returns the height of the
