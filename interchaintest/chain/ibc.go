@@ -17,10 +17,12 @@ import (
 const (
 	// SimdName is interchaintest's built-in ibc-go simapp chain.
 	SimdName = "ibc-go-simd"
+	// SimdImage is the official ibc-go simapp image. The heighliner registry
+	// interchaintest pulls ibc-go-simd from by default has no v10 builds.
+	SimdImage = "ghcr.io/cosmos/ibc-go-simd"
 	// SimdVersion is the ibc-go-simd image tag. It follows bze's ibc-go major
-	// line (v8, SDK 0.50); BZE-154 bumps it to the ibc-go v10 line together
-	// with the chain.
-	SimdVersion = "v8.5.1"
+	// line (v10, SDK 0.53).
+	SimdVersion = "v10.7.0"
 	// SimdChainID is the chain id of the counterparty chain.
 	SimdChainID = "simd-e2e-1"
 	// SimdDenom is the counterparty's staking and fee denom.
@@ -75,7 +77,12 @@ func SimdChainSpec() *interchaintest.ChainSpec {
 		ChainName: "simd",
 		Version:   SimdVersion,
 		ChainConfig: ibc.ChainConfig{
-			ChainID:       SimdChainID,
+			ChainID: SimdChainID,
+			Images: []ibc.DockerImage{{
+				Repository: SimdImage,
+				Version:    SimdVersion,
+				UIDGID:     "1025:1025",
+			}},
 			Bech32Prefix:  SimdBech32Prefix,
 			Denom:         SimdDenom,
 			GasPrices:     "0.0" + SimdDenom,
