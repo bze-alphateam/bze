@@ -136,11 +136,12 @@ func TestRunMigrations_RewardsV4ToV5_ThroughModuleManager(t *testing.T) {
 	f.plantV4Params(stakingFee, tradingFee, 1_000_000)
 
 	mm, cfg, _, am := f.manager(t)
-	require.Equal(t, uint64(5), am.ConsensusVersion())
+	require.Equal(t, uint64(6), am.ConsensusVersion())
 
+	// 4→5 and then 5→6 (which finds no trading reward to reset)
 	newVM, err := mm.RunMigrations(f.ctx, cfg, module.VersionMap{types.ModuleName: 4})
 	require.NoError(t, err)
-	require.Equal(t, uint64(5), newVM[types.ModuleName])
+	require.Equal(t, uint64(6), newVM[types.ModuleName])
 
 	got := f.k.GetParams(f.ctx)
 	expected := types.DefaultParams()
@@ -150,10 +151,49 @@ func TestRunMigrations_RewardsV4ToV5_ThroughModuleManager(t *testing.T) {
 	require.True(t, got.Equal(&expected), "params after upgrade:\n got %v\nwant %v", got, expected)
 	require.NoError(t, got.Validate())
 
-	// a re-run from the new version is a no-op (no migration registered at 5), params unchanged
+	// a re-run from the new version is a no-op (no migration registered at 6), params unchanged
 	again, err := mm.RunMigrations(f.ctx, cfg, newVM)
 	require.NoError(t, err)
-	require.Equal(t, uint64(5), again[types.ModuleName])
+	require.Equal(t, uint64(6), again[types.ModuleName])
 	after := f.k.GetParams(f.ctx)
 	require.True(t, after.Equal(&expected))
+}
+
+// TestRunMigrations_RewardsV5ToV6_ThroughModuleManager runs the 5→6 migration the way the v8.3.0
+// upgrade handler does, from the VersionMap a v8.2.0 node holds ({rewards: 5}): an active trading
+// reward nobody traded on goes back to waiting for its first trade (no payout epoch, no active
+// expiration), while a reward that already had a trade keeps its countdown.
+func TestRunMigrations_RewardsV5ToV6_ThroughModuleManager(t *testing.T) {
+	f := newWiringFixture(t)
+
+	untraded := types.TradingReward{RewardId: "untraded", PrizeAmount: "10", PrizeDenom: "ubze", Duration: 1, MarketId: "a/b", Slots: 2, ExpireAt: 40}
+	traded := types.TradingReward{RewardId: "traded", PrizeAmount: "10", PrizeDenom: "ubze", Duration: 1, MarketId: "c/d", Slots: 2, ExpireAt: 900}
+	for _, tr := range []types.TradingReward{untraded, traded} {
+		f.k.SetActiveTradingReward(f.ctx, tr)
+		f.k.SetActiveTradingRewardExpiration(f.ctx, types.TradingRewardExpiration{RewardId: tr.RewardId, ExpireAt: tr.ExpireAt})
+		f.k.SetMarketIdRewardId(f.ctx, types.MarketIdTradingRewardId{RewardId: tr.RewardId, MarketId: tr.MarketId})
+	}
+	f.k.SetTradingRewardLeaderboard(f.ctx, types.TradingRewardLeaderboard{
+		RewardId: traded.RewardId,
+		List:     []types.TradingRewardLeaderboardEntry{{Address: "bze1x", Amount: "1"}},
+	})
+
+	mm, cfg, _, _ := f.manager(t)
+	newVM, err := mm.RunMigrations(f.ctx, cfg, module.VersionMap{types.ModuleName: 5})
+	require.NoError(t, err)
+	require.Equal(t, uint64(6), newVM[types.ModuleName])
+
+	got, found := f.k.GetActiveTradingReward(f.ctx, untraded.RewardId)
+	require.True(t, found)
+	require.Zero(t, got.ExpireAt)
+	_, found = f.k.GetMarketIdRewardId(f.ctx, untraded.MarketId)
+	require.True(t, found, "the untraded reward keeps its market")
+
+	got, _ = f.k.GetActiveTradingReward(f.ctx, traded.RewardId)
+	require.Equal(t, traded.ExpireAt, got.ExpireAt)
+
+	require.Equal(t,
+		[]types.TradingRewardExpiration{{RewardId: traded.RewardId, ExpireAt: traded.ExpireAt}},
+		f.k.GetAllActiveTradingRewardExpiration(f.ctx),
+	)
 }
