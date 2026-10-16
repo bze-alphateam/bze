@@ -12,11 +12,9 @@ const (
 	UpgradeNameEnv = "E2E_UPGRADE_NAME"
 )
 
-// Upgrade defaults: the next release (v8.3.0) upgrades from v8.2.0. There is no
-// final v8.2.0 tag yet, so the latest release candidate stands in for it; switch
-// to v8.2.0 once it is tagged.
+// Upgrade defaults: the next release (v8.3.0) upgrades from v8.2.0.
 const (
-	DefaultUpgradeFrom = "v8.2.0-rc5"
+	DefaultUpgradeFrom = "v8.2.0"
 	DefaultUpgradeTo   = DefaultImageTag
 	DefaultUpgradeName = "v8.3.0"
 )

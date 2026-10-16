@@ -9,12 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	porttypes "github.com/cosmos/ibc-go/v10/modules/core/05-port/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 	"github.com/stretchr/testify/require"
 
 	"github.com/bze-alphateam/bze/x/txfeecollector/ibcmiddleware"
@@ -40,47 +39,20 @@ type recordingApp struct {
 	openAckCalls int
 	closeCalls   int
 
-	upgradeInitCalls int
-	upgradeTryCalls  int
-	upgradeAckCalls  int
-	upgradeOpenCalls int
-	unmarshalCalls   int
+	unmarshalCalls int
+
+	// lastChannelVersion is the channel version the last packet callback received.
+	lastChannelVersion string
 }
 
-// The transfer application implements these two optional interfaces and the ICS-29 fee
-// middleware above the filter reaches for them by type assertion, so the fake app
-// implements them too.
-var (
-	_ porttypes.UpgradableModule      = (*recordingApp)(nil)
-	_ porttypes.PacketDataUnmarshaler = (*recordingApp)(nil)
-)
+// The transfer application implements the optional PacketDataUnmarshaler interface,
+// reached by type assertion on the routed module, so the fake app implements it too.
+var _ porttypes.PacketDataUnmarshaler = (*recordingApp)(nil)
 
-func (a *recordingApp) OnChanUpgradeInit(_ sdk.Context, _, _ string, _ channeltypes.Order, _ []string, version string) (string, error) {
-	a.upgradeInitCalls++
-
-	return version, nil
-}
-
-func (a *recordingApp) OnChanUpgradeTry(_ sdk.Context, _, _ string, _ channeltypes.Order, _ []string, version string) (string, error) {
-	a.upgradeTryCalls++
-
-	return version, nil
-}
-
-func (a *recordingApp) OnChanUpgradeAck(_ sdk.Context, _, _, _ string) error {
-	a.upgradeAckCalls++
-
-	return nil
-}
-
-func (a *recordingApp) OnChanUpgradeOpen(_ sdk.Context, _, _ string, _ channeltypes.Order, _ []string, _ string) {
-	a.upgradeOpenCalls++
-}
-
-func (a *recordingApp) UnmarshalPacketData(bz []byte) (interface{}, error) {
+func (a *recordingApp) UnmarshalPacketData(_ sdk.Context, _, _ string, bz []byte) (any, string, error) {
 	a.unmarshalCalls++
 
-	return string(bz), nil
+	return string(bz), ibctransfertypes.V1, nil
 }
 
 // plainApp implements nothing but porttypes.IBCModule, to prove the filter reports a
@@ -89,20 +61,23 @@ type plainApp struct {
 	porttypes.IBCModule
 }
 
-func (a *recordingApp) OnRecvPacket(_ sdk.Context, _ channeltypes.Packet, _ sdk.AccAddress) ibcexported.Acknowledgement {
+func (a *recordingApp) OnRecvPacket(_ sdk.Context, channelVersion string, _ channeltypes.Packet, _ sdk.AccAddress) ibcexported.Acknowledgement {
 	a.recvCalls++
+	a.lastChannelVersion = channelVersion
 
 	return channeltypes.NewResultAcknowledgement([]byte{byte(1)})
 }
 
-func (a *recordingApp) OnAcknowledgementPacket(_ sdk.Context, _ channeltypes.Packet, _ []byte, _ sdk.AccAddress) error {
+func (a *recordingApp) OnAcknowledgementPacket(_ sdk.Context, channelVersion string, _ channeltypes.Packet, _ []byte, _ sdk.AccAddress) error {
 	a.ackCalls++
+	a.lastChannelVersion = channelVersion
 
 	return nil
 }
 
-func (a *recordingApp) OnTimeoutPacket(_ sdk.Context, _ channeltypes.Packet, _ sdk.AccAddress) error {
+func (a *recordingApp) OnTimeoutPacket(_ sdk.Context, channelVersion string, _ channeltypes.Packet, _ sdk.AccAddress) error {
 	a.timeoutCalls++
+	a.lastChannelVersion = channelVersion
 
 	return nil
 }
@@ -134,13 +109,13 @@ type unusedICS4Wrapper struct {
 	t *testing.T
 }
 
-func (w unusedICS4Wrapper) SendPacket(sdk.Context, *capabilitytypes.Capability, string, string, clienttypes.Height, uint64, []byte) (uint64, error) {
+func (w unusedICS4Wrapper) SendPacket(sdk.Context, string, string, clienttypes.Height, uint64, []byte) (uint64, error) {
 	w.t.Fatal("SendPacket must not be called by the inbound filter")
 
 	return 0, nil
 }
 
-func (w unusedICS4Wrapper) WriteAcknowledgement(sdk.Context, *capabilitytypes.Capability, ibcexported.PacketI, ibcexported.Acknowledgement) error {
+func (w unusedICS4Wrapper) WriteAcknowledgement(sdk.Context, ibcexported.PacketI, ibcexported.Acknowledgement) error {
 	w.t.Fatal("WriteAcknowledgement must not be called by the inbound filter")
 
 	return nil
@@ -217,7 +192,7 @@ func blockedEvents(ctx sdk.Context) []sdk.Event {
 func TestOnRecvPacket_BlockedDenomIsRefused(t *testing.T) {
 	ctx, im, app := setup(t, nobleUsdcBlocked())
 
-	ack := im.OnRecvPacket(ctx, transferPacket(blockedDenom, blockedChannel), sdk.AccAddress{})
+	ack := im.OnRecvPacket(ctx, ibctransfertypes.V1, transferPacket(blockedDenom, blockedChannel), sdk.AccAddress{})
 
 	require.NotNil(t, ack)
 	require.False(t, ack.Success())
@@ -244,7 +219,7 @@ func TestOnRecvPacket_ReturningNativeTokensPass(t *testing.T) {
 	ctx, im, app := setup(t, nobleUsdcBlocked())
 
 	returning := ibctransfertypes.GetPrefixedDenom(ibctransfertypes.PortID, counterpartyChannel, "ubze")
-	ack := im.OnRecvPacket(ctx, transferPacket(returning, blockedChannel), sdk.AccAddress{})
+	ack := im.OnRecvPacket(ctx, ibctransfertypes.V1, transferPacket(returning, blockedChannel), sdk.AccAddress{})
 
 	require.True(t, ack.Success())
 	require.Equal(t, 1, app.recvCalls)
@@ -256,7 +231,7 @@ func TestOnRecvPacket_ReturningBlockedDenomVoucherPasses(t *testing.T) {
 	ctx, im, app := setup(t, nobleUsdcBlocked())
 
 	returning := ibctransfertypes.GetPrefixedDenom(ibctransfertypes.PortID, counterpartyChannel, blockedDenom)
-	ack := im.OnRecvPacket(ctx, transferPacket(returning, blockedChannel), sdk.AccAddress{})
+	ack := im.OnRecvPacket(ctx, ibctransfertypes.V1, transferPacket(returning, blockedChannel), sdk.AccAddress{})
 
 	require.True(t, ack.Success())
 	require.Equal(t, 1, app.recvCalls)
@@ -267,7 +242,7 @@ func TestOnRecvPacket_ReturningBlockedDenomVoucherPasses(t *testing.T) {
 func TestOnRecvPacket_OtherChannelPasses(t *testing.T) {
 	ctx, im, app := setup(t, nobleUsdcBlocked())
 
-	ack := im.OnRecvPacket(ctx, transferPacket(blockedDenom, "channel-13"), sdk.AccAddress{})
+	ack := im.OnRecvPacket(ctx, ibctransfertypes.V1, transferPacket(blockedDenom, "channel-13"), sdk.AccAddress{})
 
 	require.True(t, ack.Success())
 	require.Equal(t, 1, app.recvCalls)
@@ -278,7 +253,7 @@ func TestOnRecvPacket_OtherChannelPasses(t *testing.T) {
 func TestOnRecvPacket_OtherDenomPasses(t *testing.T) {
 	ctx, im, app := setup(t, nobleUsdcBlocked())
 
-	ack := im.OnRecvPacket(ctx, transferPacket("ustake", blockedChannel), sdk.AccAddress{})
+	ack := im.OnRecvPacket(ctx, ibctransfertypes.V1, transferPacket("ustake", blockedChannel), sdk.AccAddress{})
 
 	require.True(t, ack.Success())
 	require.Equal(t, 1, app.recvCalls)
@@ -290,7 +265,7 @@ func TestOnRecvPacket_OtherDenomPasses(t *testing.T) {
 func TestOnRecvPacket_EmptyParamIsTransparent(t *testing.T) {
 	ctx, im, app := setup(t, nil)
 
-	ack := im.OnRecvPacket(ctx, transferPacket(blockedDenom, blockedChannel), sdk.AccAddress{})
+	ack := im.OnRecvPacket(ctx, ibctransfertypes.V1, transferPacket(blockedDenom, blockedChannel), sdk.AccAddress{})
 
 	require.True(t, ack.Success())
 	require.Equal(t, 1, app.recvCalls)
@@ -304,7 +279,7 @@ func TestOnRecvPacket_NonTransferPacketPasses(t *testing.T) {
 	packet := transferPacket(blockedDenom, blockedChannel)
 	packet.Data = []byte("not a transfer packet")
 
-	ack := im.OnRecvPacket(ctx, packet, sdk.AccAddress{})
+	ack := im.OnRecvPacket(ctx, ibctransfertypes.V1, packet, sdk.AccAddress{})
 
 	require.True(t, ack.Success())
 	require.Equal(t, 1, app.recvCalls)
@@ -328,11 +303,13 @@ func TestOutgoingPacketCallbacksPassThrough(t *testing.T) {
 		0,
 	)
 
-	require.NoError(t, im.OnAcknowledgementPacket(ctx, outgoing, channeltypes.NewResultAcknowledgement([]byte{byte(1)}).Acknowledgement(), sdk.AccAddress{}))
+	require.NoError(t, im.OnAcknowledgementPacket(ctx, ibctransfertypes.V1, outgoing, channeltypes.NewResultAcknowledgement([]byte{byte(1)}).Acknowledgement(), sdk.AccAddress{}))
 	require.Equal(t, 1, app.ackCalls)
+	require.Equal(t, ibctransfertypes.V1, app.lastChannelVersion)
 
-	require.NoError(t, im.OnTimeoutPacket(ctx, outgoing, sdk.AccAddress{}))
+	require.NoError(t, im.OnTimeoutPacket(ctx, ibctransfertypes.V1, outgoing, sdk.AccAddress{}))
 	require.Equal(t, 1, app.timeoutCalls)
+	require.Equal(t, ibctransfertypes.V1, app.lastChannelVersion)
 
 	require.Empty(t, blockedEvents(ctx))
 }
@@ -342,70 +319,35 @@ func TestOutgoingPacketCallbacksPassThrough(t *testing.T) {
 func TestHandshakeCallbacksPassThrough(t *testing.T) {
 	ctx, im, app := setup(t, nobleUsdcBlocked())
 
-	require.NoError(t, im.OnChanOpenAck(ctx, ibctransfertypes.PortID, blockedChannel, counterpartyChannel, ibctransfertypes.Version))
+	require.NoError(t, im.OnChanOpenAck(ctx, ibctransfertypes.PortID, blockedChannel, counterpartyChannel, ibctransfertypes.V1))
 	require.Equal(t, 1, app.openAckCalls)
 
 	require.NoError(t, im.OnChanCloseInit(ctx, ibctransfertypes.PortID, blockedChannel))
 	require.Equal(t, 1, app.closeCalls)
 }
 
-// The filter sits between the ICS-29 fee middleware and the transfer application, and
-// the fee middleware finds the transfer module's optional interfaces by type-asserting
-// the module it wraps. Were these not forwarded, channel upgrades on the transfer stack
-// would fail with "upgrade route not found" and ADR-008 unmarshalling would break.
-func TestUpgradeCallbacksForwardToTheApp(t *testing.T) {
+// Packet unmarshalling (ADR 008) is found by type-asserting the module routed for the
+// transfer port, which is this filter. Were it not forwarded, callers relying on it
+// would break.
+func TestUnmarshalPacketDataForwardsToTheApp(t *testing.T) {
 	ctx, im, app := setup(t, nobleUsdcBlocked())
 
-	hops := []string{"connection-0"}
-
-	version, err := im.OnChanUpgradeInit(ctx, ibctransfertypes.PortID, blockedChannel, channeltypes.UNORDERED, hops, ibctransfertypes.Version)
-	require.NoError(t, err)
-	require.Equal(t, ibctransfertypes.Version, version)
-	require.Equal(t, 1, app.upgradeInitCalls)
-
-	version, err = im.OnChanUpgradeTry(ctx, ibctransfertypes.PortID, blockedChannel, channeltypes.UNORDERED, hops, ibctransfertypes.Version)
-	require.NoError(t, err)
-	require.Equal(t, ibctransfertypes.Version, version)
-	require.Equal(t, 1, app.upgradeTryCalls)
-
-	require.NoError(t, im.OnChanUpgradeAck(ctx, ibctransfertypes.PortID, blockedChannel, ibctransfertypes.Version))
-	require.Equal(t, 1, app.upgradeAckCalls)
-
-	im.OnChanUpgradeOpen(ctx, ibctransfertypes.PortID, blockedChannel, channeltypes.UNORDERED, hops, ibctransfertypes.Version)
-	require.Equal(t, 1, app.upgradeOpenCalls)
-}
-
-func TestUnmarshalPacketDataForwardsToTheApp(t *testing.T) {
-	_, im, app := setup(t, nobleUsdcBlocked())
-
-	got, err := im.UnmarshalPacketData([]byte("packet"))
+	got, version, err := im.UnmarshalPacketData(ctx, ibctransfertypes.PortID, blockedChannel, []byte("packet"))
 	require.NoError(t, err)
 	require.Equal(t, "packet", got)
+	require.Equal(t, ibctransfertypes.V1, version)
 	require.Equal(t, 1, app.unmarshalCalls)
 }
 
-// An application that implements neither optional interface produces the same errors
-// the ICS-29 fee middleware produces in that situation, never a nil dereference.
-func TestOptionalInterfacesMissingOnTheApp(t *testing.T) {
+// An application that does not implement the optional interface produces an error,
+// never a nil dereference.
+func TestUnmarshalPacketDataMissingOnTheApp(t *testing.T) {
 	storeKey := storetypes.NewKVStoreKey(types.ModuleName)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 
 	im := ibcmiddleware.NewIBCMiddleware(plainApp{}, unusedICS4Wrapper{t: t}, paramsKeeper{params: types.DefaultParams()})
-	hops := []string{"connection-0"}
 
-	_, err := im.OnChanUpgradeInit(ctx, ibctransfertypes.PortID, blockedChannel, channeltypes.UNORDERED, hops, ibctransfertypes.Version)
-	require.Error(t, err)
-
-	_, err = im.OnChanUpgradeTry(ctx, ibctransfertypes.PortID, blockedChannel, channeltypes.UNORDERED, hops, ibctransfertypes.Version)
-	require.Error(t, err)
-
-	require.Error(t, im.OnChanUpgradeAck(ctx, ibctransfertypes.PortID, blockedChannel, ibctransfertypes.Version))
-
-	require.Panics(t, func() {
-		im.OnChanUpgradeOpen(ctx, ibctransfertypes.PortID, blockedChannel, channeltypes.UNORDERED, hops, ibctransfertypes.Version)
-	})
-
-	_, err = im.UnmarshalPacketData([]byte("packet"))
+	_, _, err := im.UnmarshalPacketData(ctx, ibctransfertypes.PortID, blockedChannel, []byte("packet"))
 	require.Error(t, err)
 }

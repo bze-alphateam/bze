@@ -68,7 +68,7 @@ Docker network when it ends. Suites do not share state.
 |---|---|---|
 | `E2E_BZE_IMAGE_TAG` | `local` | Tag of the `bze` image to run |
 | `E2E_TIMEOUT` (make only) | `60m` | `go test -timeout` of the make targets |
-| `E2E_UPGRADE_FROM` | `v8.2.0-rc5` | Upgrade suite: image tag the network starts on (the previous release) |
+| `E2E_UPGRADE_FROM` | `v8.2.0` | Upgrade suite: image tag the network starts on (the previous release) |
 | `E2E_UPGRADE_TO` | `local` | Upgrade suite: image tag the validators switch to at the plan height |
 | `E2E_UPGRADE_NAME` | `v8.3.0` | Upgrade suite: plan name, must equal the candidate's `UpgradeName` |
 | `KEEP_CONTAINERS` | unset | Any value keeps the containers after the test, for debugging (remove them by hand) |
@@ -113,20 +113,15 @@ Steps, for a candidate `vX.Y.Z` whose previous release is `vP`:
    log lines) to the tag request.
 
 `E2E_UPGRADE_NAME` must be the `UpgradeName` of the candidate's handler in
-`app/upgrades/`. For example, the v8.2.0 handler is checked from v8.1.1 with
-`E2E_UPGRADE_FROM=v8.1.1 E2E_UPGRADE_NAME=v8.2.0` after
-`make e2e-image-ref REF=v8.1.1`.
+`app/upgrades/`. The code keeps only the handler of the release it builds, and
+`upgradeChecks` only that handler's entry. For example, the v8.3.0 handler is
+checked from v8.2.0 with `E2E_UPGRADE_FROM=v8.2.0 E2E_UPGRADE_NAME=v8.3.0`
+after `make e2e-image-ref REF=v8.2.0`.
 
-A handler that branches on the chain id runs on a network with the live
-chain's id. The v8.2.0 entry is one: its network is `beezee-1`, linked to
-simd through Hermes, and channel-3 carries simd's `uusdc`, so the USDC.n
-voucher is the exact mainnet one. The USDC.n/BZE pool is added to genesis,
-because on mainnet it predates v8.1.1 and has a legacy LP denom
-(`ulp_<base>_<quote>`) no release since can create; the black hole and a
-wallet hold its shares. The suite checks that the handler moves exactly the
-black hole's shares to the wind-down admin, blocks `uusdc` on channel-3
-(refused and refunded, while other denoms and exits still work) and changes
-nothing else, and that the wallet can still withdraw from the legacy pool.
+A handler that touches IBC sets `ibc` on its entry: the network is linked to
+simd through Hermes before the upgrade. The v8.3.0 entry is one (ibc-go v8 to
+v10). It checks that IBC keeps working on the channel opened before the
+upgrade.
 
 All txs use a fixed gas limit, because `--gas auto` does not work on v8.1.1
 and older.
