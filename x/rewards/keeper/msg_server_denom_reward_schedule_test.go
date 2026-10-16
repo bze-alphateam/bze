@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/big"
 	"strings"
 
 	"cosmossdk.io/math"
@@ -341,6 +342,27 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Update_PostExtensionB
 
 	schedule, _ := suite.k.GetDenomRewardSchedule(suite.ctx, "ubze", "000000000000")
 	suite.Require().Equal(uint32(36500), schedule.Duration)
+}
+
+// An extension beyond HundredYearsInDays is rejected before the budget is computed, even when the
+// handler is reached without ValidateBasic. With a 240-bit daily amount, daily × 2^31-1 would
+// overflow math.Int, which panics instead of returning an error (BZE-149).
+func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Update_HugeExtraDaysRejectedBeforeBudget() {
+	creator := sdk.AccAddress("drs-updater-06")
+	daily := math.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 239))
+	suite.Require().Equal(240, daily.BigInt().BitLen())
+	suite.k.SetDenomRewardSchedule(suite.ctx, types.DenomRewardSchedule{
+		ScheduleId: "000000000000", StakingDenom: "ubze", PrizeDenom: "ufoo", DailyAmount: daily, Duration: 10, Payouts: 0,
+	})
+
+	var err error
+	suite.Require().NotPanics(func() {
+		_, err = suite.msgServer.UpdateDenomRewardSchedule(suite.ctx, types.NewMsgUpdateDenomRewardSchedule(creator.String(), "ubze", "000000000000", "2147483647"))
+	})
+	suite.Require().ErrorIs(err, types.ErrInvalidDuration)
+
+	schedule, _ := suite.k.GetDenomRewardSchedule(suite.ctx, "ubze", "000000000000")
+	suite.Require().Equal(uint32(10), schedule.Duration)
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Update_NotFound() {
