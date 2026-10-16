@@ -335,6 +335,8 @@ func (s *cointrunkSuite) publisherRespect(t *testing.T) {
 		{"wrong denom", s.fan, s.pub1.FormattedAddress(), "1000uatom", 18, "invalid coin denom. Accepted (ubze) got (uatom)"},
 		{"unknown publisher", s.fan, s.anon.FormattedAddress(), coinStr(1000, chain.Denom), 18, fmt.Sprintf("publisher (%s) could not be found", s.anon.FormattedAddress())},
 		{"zero amount", s.fan, s.pub1.FormattedAddress(), coinStr(0, chain.Denom), 10, "invalid amount: amount should be positive"},
+		// the event and the response carry the amounts as uint64
+		{"amount above uint64", s.fan, s.pub1.FormattedAddress(), "18446744073709551616" + chain.Denom, 18, "amount too large"},
 		// the reward is sent first: the payer covers it, not the tax after it
 		{"cannot pay the tax", s.poor, s.pub1.FormattedAddress(), coinStr(ctPoorFunds, chain.Denom), 18, "Could not fund community pool (spendable balance"},
 		{"cannot pay the reward", s.poor, s.pub1.FormattedAddress(), coinStr(ctAdminFunds, chain.Denom), 5, "insufficient funds"},

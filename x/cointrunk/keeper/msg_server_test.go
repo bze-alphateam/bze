@@ -8,6 +8,7 @@ import (
 
 	"github.com/bze-alphateam/bze/x/cointrunk/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func (suite *IntegrationTestSuite) TestAddArticle_ValidRequest_PublishedByActivePublisher() {
@@ -447,4 +448,43 @@ func (suite *IntegrationTestSuite) TestPayPublisherRespect_BankError() {
 	suite.Require().Error(err)
 	suite.Require().Nil(res)
 	suite.Require().Equal(bankError, err)
+}
+
+// An amount past uint64 is refused before any transfer: the mocked bank and
+// distribution keepers expect no call, and the publisher's respect stays.
+func (suite *IntegrationTestSuite) TestPayPublisherRespect_AmountAboveUint64() {
+	publisher := types.Publisher{
+		Name:    "Test Publisher",
+		Address: sdk.AccAddress("publisher").String(),
+		Active:  true,
+		Respect: "100",
+	}
+	suite.k.SetPublisher(suite.ctx, publisher)
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, types.Params{
+		AnonArticleLimit: 10,
+		AnonArticleCost:  sdk.NewInt64Coin("ubze", 1000),
+		PublisherRespectParams: types.PublisherRespectParams{
+			Tax:   math.LegacyMustNewDecFromStr("0.1"),
+			Denom: "ubze",
+		},
+	}))
+
+	var (
+		res *types.MsgPayPublisherRespectResponse
+		err error
+	)
+	suite.Require().NotPanics(func() {
+		res, err = suite.msgServer.PayPublisherRespect(suite.ctx, &types.MsgPayPublisherRespect{
+			Creator: sdk.AccAddress("creator").String(),
+			Address: publisher.Address,
+			Amount:  "18446744073709551616ubze",
+		})
+	})
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
+	suite.Require().ErrorContains(err, "amount too large")
+	suite.Require().Nil(res)
+
+	stored, found := suite.k.GetPublisher(suite.ctx, publisher.Address)
+	suite.Require().True(found)
+	suite.Require().Equal("100", stored.Respect)
 }

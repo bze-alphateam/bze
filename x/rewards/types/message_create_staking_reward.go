@@ -1,6 +1,7 @@
 package types
 
 import (
+	stdmath "math"
 	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
@@ -59,6 +60,10 @@ func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 	minStake, ok := math.NewIntFromString(msg.MinStake)
 	if !ok || minStake.IsNegative() {
 		return sr, ErrInvalidMinStake
+	}
+	// min_stake is stored and emitted as a uint64
+	if !minStake.IsUint64() {
+		return sr, errorsmod.Wrapf(ErrInvalidMinStake, "min stake must not exceed %d", uint64(stdmath.MaxUint64))
 	}
 	sr.MinStake = minStake.Uint64()
 

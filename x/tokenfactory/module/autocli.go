@@ -47,6 +47,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Skip:      true, // skipped because authority gated
 				},
 				{
+					RpcMethod: "SetDenomAdmin",
+					Skip:      true, // skipped because authority gated
+				},
+				{
 					RpcMethod:      "CreateDenom",
 					Use:            "create-denom [subdenom]",
 					Short:          "Send a create-denom tx",
