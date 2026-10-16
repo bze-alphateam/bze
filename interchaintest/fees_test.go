@@ -58,6 +58,11 @@ const (
 	feUserNsw = 100_000_000
 	feUserGld = 10_000_000
 	feUserPul = 1_000_000
+	// step 11: thr is worth 1000 ubze; its pool's ubze side is exactly
+	// MinNativeLiquidityForModuleSwap
+	feUserThr    = 1_000_000
+	feThrPoolThr = 100_000_000
+	feThrFee     = 10
 
 	feSendGas   = 200_000
 	feTxGas     = 500_000
@@ -475,9 +480,24 @@ func (s *feesSuite) simulation(t *testing.T) {
 }
 
 // 11. A fee pool whose ubze side is exactly MinNativeLiquidityForModuleSwap
-// accepts fees but the module swap refuses them (>= vs >).
+// is not deep: the module swap needs strictly more, so the ante refuses its
+// denom as a fee instead of accepting a fee the EndBlock could not convert.
 func (s *feesSuite) thresholdBoundary(t *testing.T) {
-	t.Skip("BZE-174: pool ubze side exactly at MinNativeLiquidityForModuleSwap, fee paid in its denom; assert the EndBlock converts it and empties the txfeecollector once the fix lands")
+	require.True(t, s.minLiquidity.IsInt64(), "threshold %s", s.minLiquidity)
+	factory := "factory/" + s.admin.FormattedAddress() + "/"
+	thr := factory + "thr"
+	s.mustExec(t, s.admin, "tokenfactory", "create-denom", "thr")
+	s.mustExec(t, s.admin, "tokenfactory", "mint", coinStr(feMint, thr))
+	s.mustExec(t, s.admin, "bank", "send", s.admin.FormattedAddress(), s.u1.FormattedAddress(), coinStr(feUserThr, thr))
+	s.createPool(t, thr, chain.Denom, feProvidersDest, feThrPoolThr, s.minLiquidity.Int64())
+	require.Equal(t, s.minLiquidity, s.pool(t, thr+"_"+chain.Denom).reserveQuote(), "ubze side exactly at the threshold")
+
+	before := s.addrBalances(t, s.u1.FormattedAddress(), 0)
+	res, err := helpers.ExecTxWith(s.ctx, s.bze, s.u1, []helpers.TxOption{helpers.WithFees(coinStr(feThrFee, thr)), helpers.WithGas(feSendGas)},
+		"bank", "send", s.u1.FormattedAddress(), s.admin.FormattedAddress(), coinStr(1, chain.Denom))
+	s.requireRefused(t, res, err, "store", 7, "can be used to pay for fees only if enough liquidity is available")
+	require.Zero(t, res.Height, "refused by CheckTx")
+	require.Equal(t, before, s.addrBalances(t, s.u1.FormattedAddress(), 0), "nothing charged")
 }
 
 // 12. A granter pays the grantee's fees within the spend limit, in ubze and
