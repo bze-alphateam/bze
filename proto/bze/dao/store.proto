@@ -35,11 +35,14 @@ enum FundsDestination {
   TREASURY = 1;
 }
 
-// VoteOption is a voter's choice on a proposal.
+// VoteOption is a voter's choice on a proposal. The zero value is
+// UNSPECIFIED, what an omitted option decodes to, so it can never be counted
+// as a vote.
 enum VoteOption {
-  YES = 0;
-  NO = 1;
-  ABSTAIN = 2;
+  VOTE_OPTION_UNSPECIFIED = 0;
+  YES = 1;
+  NO = 2;
+  ABSTAIN = 3;
 }
 
 // ProposalStatus is the lifecycle state of a proposal.
