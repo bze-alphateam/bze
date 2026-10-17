@@ -19,3 +19,17 @@ message EventAdminExecuted {
   string admin = 2;
   uint64 msg_count = 3;
 }
+
+// EventAdminNominated is emitted when a DAO's admin nominates a successor.
+message EventAdminNominated {
+  uint64 id = 1;
+  string admin = 2;
+  string nominee = 3;
+}
+
+// EventAdminChanged is emitted when a DAO's admin changes.
+message EventAdminChanged {
+  uint64 id = 1;
+  string old_admin = 2;
+  string new_admin = 3;
+}

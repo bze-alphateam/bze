@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_UpdateParams_FullMethodName = "/bze.dao.Msg/UpdateParams"
-	Msg_CreateDao_FullMethodName    = "/bze.dao.Msg/CreateDao"
-	Msg_AdminExecute_FullMethodName = "/bze.dao.Msg/AdminExecute"
+	Msg_UpdateParams_FullMethodName  = "/bze.dao.Msg/UpdateParams"
+	Msg_CreateDao_FullMethodName     = "/bze.dao.Msg/CreateDao"
+	Msg_AdminExecute_FullMethodName  = "/bze.dao.Msg/AdminExecute"
+	Msg_NominateAdmin_FullMethodName = "/bze.dao.Msg/NominateAdmin"
 )
 
 // MsgClient is the client API for Msg service.
@@ -37,6 +38,10 @@ type MsgClient interface {
 	// AdminExecute lets the external admin of a DAO run messages as the DAO.
 	// Every message must be signed by the DAO account only.
 	AdminExecute(ctx context.Context, in *MsgAdminExecute, opts ...grpc.CallOption) (*MsgAdminExecuteResponse, error)
+	// NominateAdmin is the first step of the admin handover: the current admin
+	// nominates a successor, who accepts later. An empty nominee hands the DAO to
+	// its own voters at once.
+	NominateAdmin(ctx context.Context, in *MsgNominateAdmin, opts ...grpc.CallOption) (*MsgNominateAdminResponse, error)
 }
 
 type msgClient struct {
@@ -74,6 +79,15 @@ func (c *msgClient) AdminExecute(ctx context.Context, in *MsgAdminExecute, opts 
 	return out, nil
 }
 
+func (c *msgClient) NominateAdmin(ctx context.Context, in *MsgNominateAdmin, opts ...grpc.CallOption) (*MsgNominateAdminResponse, error) {
+	out := new(MsgNominateAdminResponse)
+	err := c.cc.Invoke(ctx, Msg_NominateAdmin_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -87,6 +101,10 @@ type MsgServer interface {
 	// AdminExecute lets the external admin of a DAO run messages as the DAO.
 	// Every message must be signed by the DAO account only.
 	AdminExecute(context.Context, *MsgAdminExecute) (*MsgAdminExecuteResponse, error)
+	// NominateAdmin is the first step of the admin handover: the current admin
+	// nominates a successor, who accepts later. An empty nominee hands the DAO to
+	// its own voters at once.
+	NominateAdmin(context.Context, *MsgNominateAdmin) (*MsgNominateAdminResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -102,6 +120,9 @@ func (UnimplementedMsgServer) CreateDao(context.Context, *MsgCreateDao) (*MsgCre
 }
 func (UnimplementedMsgServer) AdminExecute(context.Context, *MsgAdminExecute) (*MsgAdminExecuteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AdminExecute not implemented")
+}
+func (UnimplementedMsgServer) NominateAdmin(context.Context, *MsgNominateAdmin) (*MsgNominateAdminResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NominateAdmin not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -170,6 +191,24 @@ func _Msg_AdminExecute_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_NominateAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgNominateAdmin)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).NominateAdmin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_NominateAdmin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).NominateAdmin(ctx, req.(*MsgNominateAdmin))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -188,6 +227,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AdminExecute",
 			Handler:    _Msg_AdminExecute_Handler,
+		},
+		{
+			MethodName: "NominateAdmin",
+			Handler:    _Msg_NominateAdmin_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

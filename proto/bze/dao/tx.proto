@@ -26,6 +26,11 @@ service Msg {
   // AdminExecute lets the external admin of a DAO run messages as the DAO.
   // Every message must be signed by the DAO account only.
   rpc AdminExecute (MsgAdminExecute) returns (MsgAdminExecuteResponse);
+
+  // NominateAdmin is the first step of the admin handover: the current admin
+  // nominates a successor, who accepts later. An empty nominee hands the DAO to
+  // its own voters at once.
+  rpc NominateAdmin (MsgNominateAdmin) returns (MsgNominateAdminResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -84,3 +89,18 @@ message MsgAdminExecute {
 
 // MsgAdminExecuteResponse is the Msg/AdminExecute response type.
 message MsgAdminExecuteResponse {}
+
+// MsgNominateAdmin is the Msg/NominateAdmin request type.
+message MsgNominateAdmin {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "bze/x/dao/MsgNominateAdmin";
+
+  // authority must be the DAO's current admin (the DAO itself when self-owned).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 dao_id = 2;
+  // nominee becomes the pending admin; empty makes the DAO self-owned at once.
+  string nominee = 3;
+}
+
+// MsgNominateAdminResponse is the Msg/NominateAdmin response type.
+message MsgNominateAdminResponse {}

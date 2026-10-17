@@ -45,3 +45,26 @@ func (k Keeper) setNewDao(ctx context.Context, dao types.Dao) {
 	k.getPrefixedStore(ctx, types.KeyPrefix(types.DaoAddressKeyPrefix)).Set(types.DaoAddressKey(daoAddr), sdk.Uint64ToBigEndian(dao.Id))
 	k.getPrefixedStore(ctx, types.KeyPrefix(types.DaoAdminKeyPrefix)).Set(types.DaoAdminKey(admin, dao.Id), []byte{})
 }
+
+// setDao rewrites the record of an existing DAO. Its address and admin must be
+// unchanged; setAdmin changes the admin.
+func (k Keeper) setDao(ctx context.Context, dao types.Dao) {
+	k.getPrefixedStore(ctx, types.KeyPrefix(types.DaoKeyPrefix)).Set(types.DaoKey(dao.Id), k.cdc.MustMarshal(&dao))
+}
+
+// setAdmin makes newAdmin the DAO's admin, clears any pending nomination and
+// moves the DAO's admin index entry, in one place. newAdmin must be a valid
+// bech32 address. It returns the updated DAO.
+func (k Keeper) setAdmin(ctx context.Context, dao types.Dao, newAdmin sdk.AccAddress) types.Dao {
+	oldAdmin := sdk.MustAccAddressFromBech32(dao.Admin)
+
+	adminIndex := k.getPrefixedStore(ctx, types.KeyPrefix(types.DaoAdminKeyPrefix))
+	adminIndex.Delete(types.DaoAdminKey(oldAdmin, dao.Id))
+	adminIndex.Set(types.DaoAdminKey(newAdmin, dao.Id), []byte{})
+
+	dao.Admin = newAdmin.String()
+	dao.PendingAdmin = ""
+	k.setDao(ctx, dao)
+
+	return dao
+}
