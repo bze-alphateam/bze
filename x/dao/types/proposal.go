@@ -2,6 +2,7 @@ package types
 
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
 )
 
@@ -11,4 +12,9 @@ var _ codectypes.UnpackInterfacesMessage = &Proposal{}
 // stored proposal are resolved when it is read.
 func (p Proposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return sdktx.UnpackInterfaces(unpacker, p.Msgs)
+}
+
+// UnpackMsgs returns the proposal's messages.
+func (p Proposal) UnpackMsgs() ([]sdk.Msg, error) {
+	return sdktx.GetMsgs(p.Msgs, "dao proposal")
 }
