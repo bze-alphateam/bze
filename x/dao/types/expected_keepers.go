@@ -21,6 +21,7 @@ type AccountKeeper interface {
 type BankKeeper interface {
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
 // RewardsKeeper defines the expected rewards keeper. Stake DAOs vote with the
@@ -28,4 +29,6 @@ type BankKeeper interface {
 type RewardsKeeper interface {
 	GetStakingReward(ctx sdk.Context, rewardId string) (rewardstypes.StakingReward, bool)
 	GetDenomReward(ctx sdk.Context, stakingDenom string) (rewardstypes.DenomReward, bool)
+	GetStakingRewardParticipant(ctx sdk.Context, address, rewardId string) (rewardstypes.StakingRewardParticipant, bool)
+	GetDenomRewardParticipant(ctx sdk.Context, stakingDenom, address string) (rewardstypes.DenomRewardParticipant, bool)
 }

@@ -20,6 +20,9 @@ func TestDefaultParams_AreValid(t *testing.T) {
 	require.Equal(t, uint64(128), p.MaxStaticMembers)
 	require.Equal(t, uint64(16), p.MaxMsgsPerProposal)
 	require.Equal(t, uint64(20_000), p.MaxProposalBytes)
+	require.Equal(t, uint64(10), p.MaxOpenProposals)
+	require.Equal(t, uint64(140), p.MaxTitleLen)
+	require.Equal(t, uint64(5_000), p.MaxSummaryLen)
 	require.Equal(t, time.Hour, p.MinVotingPeriod)
 	require.Equal(t, 90*24*time.Hour, p.MaxVotingPeriod)
 	require.Equal(t, sdk.NewInt64Coin("ubze", 50_000_000_000), p.DaoCreationFee)
@@ -53,6 +56,11 @@ func TestParams_Validate(t *testing.T) {
 		{desc: "zero msgs per proposal", mutate: func(p *types.Params) { p.MaxMsgsPerProposal = 0 }, wantErr: "max_msgs_per_proposal"},
 		{desc: "one proposal byte", mutate: func(p *types.Params) { p.MaxProposalBytes = 1 }},
 		{desc: "zero proposal bytes", mutate: func(p *types.Params) { p.MaxProposalBytes = 0 }, wantErr: "max_proposal_bytes"},
+		{desc: "one open proposal", mutate: func(p *types.Params) { p.MaxOpenProposals = 1 }},
+		{desc: "zero open proposals", mutate: func(p *types.Params) { p.MaxOpenProposals = 0 }, wantErr: "max_open_proposals"},
+		{desc: "one title byte", mutate: func(p *types.Params) { p.MaxTitleLen = 1 }},
+		{desc: "zero title bytes", mutate: func(p *types.Params) { p.MaxTitleLen = 0 }, wantErr: "max_title_len"},
+		{desc: "zero summary bytes", mutate: func(p *types.Params) { p.MaxSummaryLen = 0 }},
 		{desc: "unknown destination", mutate: func(p *types.Params) { p.DaoCreationFeeDestination = "treasury" }, wantErr: "dao_creation_fee_destination"},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {

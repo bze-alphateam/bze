@@ -55,3 +55,12 @@ func TestRegisterInterfaces_RegistersMsgWithdrawAdminNomination(t *testing.T) {
 	require.NoError(t, err)
 	require.IsType(t, &types.MsgWithdrawAdminNomination{}, msg)
 }
+
+func TestRegisterInterfaces_RegistersMsgSubmitProposal(t *testing.T) {
+	registry := codectypes.NewInterfaceRegistry()
+	types.RegisterInterfaces(registry)
+
+	msg, err := registry.Resolve("/bze.dao.MsgSubmitProposal")
+	require.NoError(t, err)
+	require.IsType(t, &types.MsgSubmitProposal{}, msg)
+}

@@ -2,12 +2,13 @@
 
 The DAO module lets anyone create an on-chain organisation with its own treasury, run proposals and execute them as the DAO.
 
-> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, but proposals and voting are not there yet. Each feature adds its section to this page as it lands.
+> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, and proposals can be submitted, but voting and execution are not there yet. Each feature adds its section to this page as it lands.
 
 ## Concepts
 - **DAO account**: every DAO gets its own account, derived from its id (`address.Module("dao", uint64-big-endian(id))`). Nobody holds a key for it; it is the DAO's treasury.
 - **Electorate**: a DAO votes either through a fixed member list (`static-list`, one vote per member) or through the stakers of `x/rewards` programs (`stake`): up to `max_sr_per_dao` staking rewards and/or one Denom Reward, all staking the same denom. The two kinds are never mixed.
 - **Sources and pins**: each staking reward or Denom Reward in a stake electorate is a *source*. The module counts how many DAOs use each source; a staking reward used by any DAO cannot be deleted from `x/rewards` (its removal is vetoed until no DAO uses it).
+- **Join records**: when stake joins a source that a DAO or an open proposal uses, the module records the block height. Stake counts for a proposal only when it joined strictly before the block the proposal was submitted in (or has no record: it joined while nothing used the source). Topping up keeps the record; exiting deletes it.
 - **Admin**: optional. Without one the DAO owns itself (its admin is its own address). The admin can be a person or another DAO. An external admin is a superuser: it can run any message as the DAO, including spending the treasury.
 
 ## Messages
@@ -34,6 +35,13 @@ The DAO module lets anyone create an on-chain organisation with its own treasury
 - `MsgWithdrawAdminNomination`: cancels a pending handover before the nominee accepts it. Rules:
   - The signer (`authority`) must be the DAO's current admin, signing as for `MsgNominateAdmin`. The nominee cannot withdraw; it simply does not accept.
   - A nomination must be pending. It is cleared, the admin stays in charge and can nominate again.
+- `MsgSubmitProposal`: opens a proposal of zero or more messages that the DAO runs if it passes. Returns the proposal id. Rules:
+  - The signer (`proposer`) must be a voter: a member of a `static-list` DAO, or for a `stake` DAO an address with eligible stake in one of its sources now (see join records). With `open_submission` anyone can propose. The DAO account itself can always propose (through a proposal or its admin) and pays from its treasury.
+  - The DAO must have voting power: members, or stake in its sources. At most `max_open_proposals` proposals of a DAO can be in voting at once.
+  - `title` 1–`max_title_len` bytes, `summary` up to `max_summary_len` bytes; 0 to `max_msgs_per_proposal` messages, at most `max_proposal_bytes` bytes in total. Every signer of every message must be the DAO account.
+  - `expedited` needs `allow_expedite` in the config; voting then lasts `expedited_period` instead of `voting_period`.
+  - `proposal_cost` (if set) is paid to the burner (`cost_destination` `BURN`) or the DAO's treasury (`TREASURY`); `proposal_deposit` (if set) is escrowed in the `dao` module account.
+  - The proposal pins the DAO's config, its electorate and its total voting power (member count, or the stake of its sources): later DAO changes never move an open vote. Every source it pins counts as used, so a staking reward a proposal votes with cannot be deleted.
 - `MsgUpdateParams` **(authority)**: replaces the module parameters. Reserved for the module authority (governance).
 
 Example (CLI):
@@ -64,9 +72,13 @@ bzed tx dao accept-admin-nomination 1 --from nominee
 # As the admin of DAO 1, withdraw the pending nomination before it is accepted
 bzed tx dao withdraw-admin-nomination 1 --from admin
 
+# As a member of DAO 1, propose to pay 1 BZE from its treasury (msg.json holds the MsgSend,
+# from the DAO address); several messages are several arguments
+bzed tx dao submit-proposal 1 "Fund tooling" msg.json --summary "Pays the tooling team" --from member
+
 # Submit a governance proposal that sets the module parameters (all of them)
 bzed tx dao update-params \
-  '{"max_sr_per_dao":"5","max_static_members":"128","max_msgs_per_proposal":"16","max_proposal_bytes":"20000","min_voting_period":"3600s","max_voting_period":"7776000s","dao_creation_fee":{"denom":"ubze","amount":"50000000000"},"dao_creation_fee_destination":"burner","min_electorate_lock_days":5}' \
+  '{"max_sr_per_dao":"5","max_static_members":"128","max_open_proposals":"10","max_msgs_per_proposal":"16","max_proposal_bytes":"20000","max_title_len":"140","max_summary_len":"5000","min_voting_period":"3600s","max_voting_period":"7776000s","dao_creation_fee":{"denom":"ubze","amount":"50000000000"},"dao_creation_fee_destination":"burner","min_electorate_lock_days":5}' \
   --deposit 1000000ubze --title "Update x/dao params" --summary "..." \
   --from mykey
 ```
@@ -77,6 +89,7 @@ bzed tx dao update-params \
 - `bze.dao.EventAdminNominated{id, admin, nominee}`
 - `bze.dao.EventAdminChanged{id, old_admin, new_admin}`, when a nominee accepts or the DAO is handed to its voters
 - `bze.dao.EventAdminNominationWithdrawn{id, nominee}`
+- `bze.dao.EventProposalSubmitted{id, dao_id, proposer, expedited, voting_end, denominator}`
 
 ## Queries
 - `bzed query dao params` – show the module parameters.
@@ -86,8 +99,11 @@ bzed tx dao update-params \
 | --- | --- | --- |
 | `max_sr_per_dao` | 5 | Most staking rewards a stake DAO's electorate can have. |
 | `max_static_members` | 128 | Most members a static-list DAO can have. |
-| `max_msgs_per_proposal` | 16 | Most messages a `MsgAdminExecute` (and later a proposal) can carry. |
+| `max_open_proposals` | 10 | Most proposals a DAO can have in voting at once. |
+| `max_msgs_per_proposal` | 16 | Most messages a proposal or a `MsgAdminExecute` can carry. |
 | `max_proposal_bytes` | 20,000 | Most bytes those messages can take in total. |
+| `max_title_len` | 140 | Longest proposal title, in bytes. |
+| `max_summary_len` | 5,000 | Longest proposal summary, in bytes (0 allows titles only). |
 | `min_voting_period` | 1h | Shortest voting or expedited period a DAO may configure. |
 | `max_voting_period` | 90 days | Longest voting or expedited period a DAO may configure. |
 | `dao_creation_fee` | 50,000 BZE (`50000000000ubze`) | Paid by the creator. A zero amount makes creation free. |

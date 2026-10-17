@@ -4,6 +4,7 @@ package bze.dao;
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/dao/types";
@@ -32,6 +33,34 @@ enum FundsDestination {
   BURN = 0;
   // TREASURY sends the funds to the DAO's own account.
   TREASURY = 1;
+}
+
+// VoteOption is a voter's choice on a proposal. The zero value is
+// UNSPECIFIED, what an omitted option decodes to, so it can never be counted
+// as a vote.
+enum VoteOption {
+  VOTE_OPTION_UNSPECIFIED = 0;
+  YES = 1;
+  NO = 2;
+  ABSTAIN = 3;
+}
+
+// ProposalStatus is the lifecycle state of a proposal.
+enum ProposalStatus {
+  // VOTING is open for votes, until voting_end or an early decision.
+  VOTING = 0;
+  // REJECTED did not pass.
+  REJECTED = 1;
+  // EXECUTED passed and its messages ran.
+  EXECUTED = 2;
+  // EXECUTION_FAILED passed but its messages failed; it can be retried.
+  EXECUTION_FAILED = 3;
+  // EXPIRED passed but was not executed within the execution window.
+  EXPIRED = 4;
+  // CANCELLED was withdrawn by its proposer.
+  CANCELLED = 5;
+  // VOIDED was closed because its DAO was deleted.
+  VOIDED = 6;
 }
 
 // DaoConfig holds the voting rules of a DAO.
@@ -92,4 +121,49 @@ message Dao {
   StakeElectorate electorate = 10;
   // created_at is the block time (unix seconds) the DAO was created at.
   int64 created_at = 11;
+}
+
+// Proposal is a DAO proposal. It pins the DAO's config, electorate and quorum
+// denominator at submission, so later DAO changes never move an open vote.
+message Proposal {
+  uint64 id = 1;
+  uint64 dao_id = 2;
+  string proposer = 3;
+  string title = 4;
+  string summary = 5;
+  // msgs run as the DAO if the proposal passes.
+  repeated google.protobuf.Any msgs = 6 [(cosmos_proto.accepts_interface) = "cosmos.base.v1beta1.Msg"];
+  bool expedited = 7;
+  ProposalStatus status = 8;
+  // submit_height is the join-eligibility reference: stake joined at or after
+  // it does not count.
+  int64 submit_height = 9;
+  // submit_time and voting_end are block times in unix seconds.
+  int64 submit_time = 10;
+  int64 voting_end = 11;
+  // pinned_config is the DAO's config at submission.
+  DaoConfig pinned_config = 12 [(gogoproto.nullable) = false];
+  // pinned_electorate is the stake electorate at submission (stake DAOs only).
+  StakeElectorate pinned_electorate = 13;
+  // pinned_denominator is the total voting power at submission: the member
+  // count, or the summed stake of the pinned sources.
+  string pinned_denominator = 14 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  // pinned_deposit is the deposit escrowed by the proposer, if any.
+  cosmos.base.v1beta1.Coin pinned_deposit = 15;
+  // yes, no and abstain are the running tallies.
+  string yes = 16 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  string no = 17 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  string abstain = 18 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  // cleanup_cursor is where the ballot cleanup of a finished proposal resumes.
+  string cleanup_cursor = 19;
+}
+
+// JoinRecord is the height an address joined an electorate source while the
+// source was pinned. Stake joined at or after a proposal's submit height does
+// not vote on it.
+message JoinRecord {
+  // source is sr/{reward_id} or dr/{staking_denom}.
+  string source = 1;
+  string address = 2;
+  int64 height = 3;
 }
