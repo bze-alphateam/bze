@@ -32,6 +32,22 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
 					GovProposal:    true, // authority gated: wrapped in a x/gov proposal, authority filled with the gov address
 				},
+				{
+					RpcMethod: "CreateDao",
+					Use:       "create-dao [type] [name] [config]",
+					Short:     "Create a DAO; the creator pays the creation fee",
+					Long: "Create a DAO with its own derived account. type is static-list (stake is not supported yet), " +
+						"config is the DaoConfig as JSON: ratios as 18-decimal integers (500000000000000000 = 0.5), periods as seconds (\"259200s\"). A static-list DAO needs --members. Without --admin the DAO is self-owned.",
+					Example: `bzed tx dao create-dao static-list "My DAO" '{"min_quorum":"500000000000000000","threshold":"500000000000000000","voting_period":"259200s",` +
+						`"expedited_period":"86400s","expedite_quorum":"600000000000000000","expedite_threshold":"660000000000000000"}' ` +
+						`--members bze1...,bze1... --description "..." --from mykey`,
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "type"}, {ProtoField: "name"}, {ProtoField: "config"}},
+					FlagOptions: map[string]*autocliv1.FlagOptions{
+						"admin":       {Usage: "admin address (a person or another DAO); empty = self-owned"},
+						"description": {Usage: "DAO description, at most 2000 bytes"},
+						"members":     {Usage: "comma-separated member addresses of a static-list DAO"},
+					},
+				},
 			},
 		},
 	}

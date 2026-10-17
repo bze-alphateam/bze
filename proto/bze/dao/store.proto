@@ -1,0 +1,95 @@
+syntax = "proto3";
+package bze.dao;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/dao/types";
+
+// DaoType is the kind of electorate a DAO has. The two kinds are never mixed.
+enum DaoType {
+  // DAO_TYPE_STATIC_LIST is a fixed list of member addresses, one vote each.
+  DAO_TYPE_STATIC_LIST = 0;
+  // DAO_TYPE_STAKE is an electorate of staking rewards and/or one Denom Reward.
+  DAO_TYPE_STAKE = 1;
+}
+
+// DepositRefundPolicy decides when a proposal deposit goes back to the proposer.
+enum DepositRefundPolicy {
+  // ALWAYS refunds the deposit whatever the outcome.
+  ALWAYS = 0;
+  // ONLY_PASSED refunds the deposit only when the proposal passed.
+  ONLY_PASSED = 1;
+  // NEVER keeps the deposit.
+  NEVER = 2;
+}
+
+// FundsDestination is where kept proposal funds (cost, kept deposits) go.
+enum FundsDestination {
+  // BURN sends the funds to the burner.
+  BURN = 0;
+  // TREASURY sends the funds to the DAO's own account.
+  TREASURY = 1;
+}
+
+// DaoConfig holds the voting rules of a DAO.
+message DaoConfig {
+  // min_quorum is the share of the electorate that must vote, in (0, 1].
+  string min_quorum = 1 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
+  // threshold is the share of yes votes needed to pass, in (0, 1].
+  string threshold = 2 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
+  // voting_period is how long a normal proposal stays open.
+  google.protobuf.Duration voting_period = 3 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  // allow_expedite enables expedited proposals.
+  bool allow_expedite = 4;
+  // expedited_period is how long an expedited proposal stays open; never longer than voting_period.
+  google.protobuf.Duration expedited_period = 5 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
+  // expedite_quorum is the quorum of an expedited proposal, at least min_quorum.
+  string expedite_quorum = 6 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
+  // expedite_threshold is the threshold of an expedited proposal, at least threshold;
+  // its base is the full denominator.
+  string expedite_threshold = 7 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
+  // open_submission lets anyone submit proposals; false (default) = members only.
+  bool open_submission = 8;
+  // proposal_cost is an optional non-refundable fee to submit a proposal.
+  cosmos.base.v1beta1.Coin proposal_cost = 9;
+  // proposal_deposit is an optional deposit locked while a proposal is open.
+  cosmos.base.v1beta1.Coin proposal_deposit = 10;
+  // deposit_refund_policy decides when the deposit is refunded.
+  DepositRefundPolicy deposit_refund_policy = 11;
+  // cost_destination is where proposal costs go.
+  FundsDestination cost_destination = 12;
+  // kept_deposit_destination is where kept deposits go.
+  FundsDestination kept_deposit_destination = 13;
+}
+
+// StakeElectorate lists the reward programs whose stakers vote in a stake DAO.
+message StakeElectorate {
+  // sr_ids are the staking reward ids, at most max_sr_per_dao.
+  repeated string sr_ids = 1;
+  // dr_denom optionally names one Denom Reward by its staking denom.
+  string dr_denom = 2;
+}
+
+// Dao is a DAO record.
+message Dao {
+  uint64 id = 1;
+  // address is the DAO's derived account (bech32).
+  string address = 2;
+  // admin is always set; equal to address when the DAO is self-owned.
+  string admin = 3;
+  // pending_admin is empty unless an admin nomination is pending.
+  string pending_admin = 4;
+  DaoType type = 5;
+  string name = 6;
+  string description = 7;
+  DaoConfig config = 8 [(gogoproto.nullable) = false];
+  // members is the electorate of a DAO_TYPE_STATIC_LIST DAO.
+  repeated string members = 9;
+  // electorate is the electorate of a DAO_TYPE_STAKE DAO.
+  StakeElectorate electorate = 10;
+  // created_at is the block time (unix seconds) the DAO was created at.
+  int64 created_at = 11;
+}

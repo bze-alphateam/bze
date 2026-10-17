@@ -5,18 +5,23 @@ package types
 
 import (
 	fmt "fmt"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	_ "google.golang.org/protobuf/types/known/durationpb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -25,8 +30,18 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Params defines the parameters for the module. Each parameter is added by the
-// change that first uses it.
+// change that first uses it; field numbers follow the module's final layout.
 type Params struct {
+	// max_static_members caps the member list of a static-list DAO.
+	MaxStaticMembers uint64 `protobuf:"varint,2,opt,name=max_static_members,json=maxStaticMembers,proto3" json:"max_static_members,omitempty"`
+	// min_voting_period is the shortest voting (and expedited) period a DAO may configure.
+	MinVotingPeriod time.Duration `protobuf:"bytes,8,opt,name=min_voting_period,json=minVotingPeriod,proto3,stdduration" json:"min_voting_period"`
+	// max_voting_period is the longest voting (and expedited) period a DAO may configure.
+	MaxVotingPeriod time.Duration `protobuf:"bytes,9,opt,name=max_voting_period,json=maxVotingPeriod,proto3,stdduration" json:"max_voting_period"`
+	// dao_creation_fee is charged to the creator of a DAO; a zero amount makes creation free.
+	DaoCreationFee types.Coin `protobuf:"bytes,12,opt,name=dao_creation_fee,json=daoCreationFee,proto3" json:"dao_creation_fee"`
+	// dao_creation_fee_destination is "burner" or "community_pool".
+	DaoCreationFeeDestination string `protobuf:"bytes,13,opt,name=dao_creation_fee_destination,json=daoCreationFeeDestination,proto3" json:"dao_creation_fee_destination,omitempty"`
 }
 
 func (m *Params) Reset()         { *m = Params{} }
@@ -62,6 +77,41 @@ func (m *Params) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Params proto.InternalMessageInfo
 
+func (m *Params) GetMaxStaticMembers() uint64 {
+	if m != nil {
+		return m.MaxStaticMembers
+	}
+	return 0
+}
+
+func (m *Params) GetMinVotingPeriod() time.Duration {
+	if m != nil {
+		return m.MinVotingPeriod
+	}
+	return 0
+}
+
+func (m *Params) GetMaxVotingPeriod() time.Duration {
+	if m != nil {
+		return m.MaxVotingPeriod
+	}
+	return 0
+}
+
+func (m *Params) GetDaoCreationFee() types.Coin {
+	if m != nil {
+		return m.DaoCreationFee
+	}
+	return types.Coin{}
+}
+
+func (m *Params) GetDaoCreationFeeDestination() string {
+	if m != nil {
+		return m.DaoCreationFeeDestination
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*Params)(nil), "bze.dao.Params")
 }
@@ -69,18 +119,33 @@ func init() {
 func init() { proto.RegisterFile("bze/dao/params.proto", fileDescriptor_d096a857edc43c46) }
 
 var fileDescriptor_d096a857edc43c46 = []byte{
-	// 171 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x49, 0xaa, 0x4a, 0xd5,
-	0x4f, 0x49, 0xcc, 0xd7, 0x2f, 0x48, 0x2c, 0x4a, 0xcc, 0x2d, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9,
-	0x17, 0x62, 0x4f, 0xaa, 0x4a, 0xd5, 0x4b, 0x49, 0xcc, 0x97, 0x12, 0x4c, 0xcc, 0xcd, 0xcc, 0xcb,
-	0xd7, 0x07, 0x93, 0x10, 0x39, 0x29, 0x91, 0xf4, 0xfc, 0xf4, 0x7c, 0x30, 0x53, 0x1f, 0xc4, 0x82,
-	0x88, 0x2a, 0x29, 0x73, 0xb1, 0x05, 0x80, 0x4d, 0xb0, 0x92, 0x7c, 0xb1, 0x40, 0x9e, 0xb1, 0xeb,
-	0xf9, 0x06, 0x2d, 0x01, 0x90, 0xd1, 0x15, 0x60, 0xc3, 0x21, 0x52, 0x4e, 0x4e, 0x27, 0x1e, 0xc9,
-	0x31, 0x5e, 0x78, 0x24, 0xc7, 0xf8, 0xe0, 0x91, 0x1c, 0xe3, 0x84, 0xc7, 0x72, 0x0c, 0x17, 0x1e,
-	0xcb, 0x31, 0xdc, 0x78, 0x2c, 0xc7, 0x10, 0xa5, 0x91, 0x9e, 0x59, 0x92, 0x51, 0x9a, 0xa4, 0x97,
-	0x9c, 0x9f, 0xab, 0x9f, 0x54, 0x95, 0xaa, 0x9b, 0x98, 0x53, 0x90, 0x91, 0x58, 0x92, 0x9a, 0x08,
-	0xe6, 0x41, 0x0d, 0x29, 0xa9, 0x2c, 0x48, 0x2d, 0x4e, 0x62, 0x03, 0xdb, 0x67, 0x0c, 0x08, 0x00,
-	0x00, 0xff, 0xff, 0x08, 0x85, 0x15, 0x3b, 0xb9, 0x00, 0x00, 0x00,
+	// 408 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0xb1, 0x6e, 0xd4, 0x40,
+	0x10, 0x86, 0xbd, 0x80, 0x02, 0x67, 0x08, 0x5c, 0xac, 0x14, 0xbe, 0x08, 0xf9, 0x4e, 0x54, 0x56,
+	0x04, 0xbb, 0x0a, 0x74, 0x34, 0x48, 0x4e, 0x44, 0x07, 0x8a, 0x0e, 0x44, 0x41, 0x63, 0xcd, 0xda,
+	0x13, 0x67, 0xa5, 0xac, 0xc7, 0xf2, 0xee, 0x45, 0xe6, 0x1e, 0x81, 0x02, 0x51, 0x52, 0x52, 0x52,
+	0xe6, 0x31, 0x52, 0xa6, 0xa4, 0x02, 0x74, 0x57, 0x84, 0xc7, 0x40, 0x5e, 0xfb, 0x84, 0xee, 0xba,
+	0x34, 0xab, 0x99, 0x9d, 0xf9, 0xbf, 0x59, 0xfd, 0x3b, 0xfe, 0xae, 0x9c, 0xa3, 0xc8, 0x81, 0x44,
+	0x05, 0x35, 0x68, 0xc3, 0xab, 0x9a, 0x2c, 0x05, 0x77, 0xe5, 0x1c, 0x79, 0x0e, 0xb4, 0xb7, 0x03,
+	0x5a, 0x95, 0x24, 0xdc, 0xd9, 0xd5, 0xf6, 0xa2, 0x8c, 0x8c, 0x26, 0x23, 0x24, 0x18, 0x14, 0xe7,
+	0x07, 0x12, 0x2d, 0x1c, 0x88, 0x8c, 0x54, 0xd9, 0xd7, 0x77, 0x0b, 0x2a, 0xc8, 0x85, 0xa2, 0x8d,
+	0x56, 0xaa, 0x82, 0xa8, 0x38, 0x43, 0xe1, 0x32, 0x39, 0x3b, 0x11, 0xf9, 0xac, 0x06, 0xab, 0xa8,
+	0x57, 0x3d, 0xf9, 0x72, 0xdb, 0xdf, 0x3a, 0x76, 0x4f, 0x08, 0x9e, 0xfa, 0x81, 0x86, 0x26, 0x35,
+	0x16, 0xac, 0xca, 0x52, 0x8d, 0x5a, 0x62, 0x6d, 0xc2, 0x5b, 0x13, 0x16, 0xdf, 0x99, 0x0e, 0x35,
+	0x34, 0xef, 0x5c, 0xe1, 0x4d, 0x77, 0x1f, 0xbc, 0xf7, 0x77, 0xb4, 0x2a, 0xd3, 0x73, 0xb2, 0xaa,
+	0x2c, 0xd2, 0x0a, 0x6b, 0x45, 0x79, 0x78, 0x6f, 0xc2, 0xe2, 0xfb, 0xcf, 0x47, 0xbc, 0x1b, 0xca,
+	0x57, 0x43, 0xf9, 0x51, 0x3f, 0x34, 0xd9, 0xbe, 0xfc, 0x35, 0xf6, 0xbe, 0xfd, 0x1e, 0xb3, 0x1f,
+	0xd7, 0x17, 0xfb, 0x6c, 0xfa, 0x48, 0xab, 0xf2, 0x83, 0x23, 0x1c, 0x3b, 0x80, 0xa3, 0x42, 0xb3,
+	0x41, 0x1d, 0xdc, 0x98, 0x0a, 0xcd, 0x1a, 0xf5, 0xad, 0x3f, 0xcc, 0x81, 0xd2, 0xac, 0x46, 0xd7,
+	0x9f, 0x9e, 0x20, 0x86, 0x0f, 0x7a, 0x68, 0xe7, 0x2a, 0x6f, 0x5d, 0xe5, 0xbd, 0xab, 0xfc, 0x90,
+	0x54, 0x99, 0x0c, 0x5a, 0x68, 0x07, 0x7c, 0x98, 0x03, 0x1d, 0xf6, 0xe2, 0xd7, 0x88, 0xc1, 0x2b,
+	0xff, 0xf1, 0x26, 0x2f, 0xcd, 0xd1, 0x58, 0x55, 0xba, 0x3c, 0xdc, 0x9e, 0xb0, 0x78, 0x30, 0x1d,
+	0xad, 0xab, 0x8e, 0xfe, 0x37, 0xbc, 0x1c, 0xfd, 0xfd, 0x3e, 0x66, 0x9f, 0xaf, 0x2f, 0xf6, 0x87,
+	0xed, 0x1a, 0x34, 0x6e, 0x11, 0xba, 0x5f, 0x48, 0x92, 0xcb, 0x45, 0xc4, 0xae, 0x16, 0x11, 0xfb,
+	0xb3, 0x88, 0xd8, 0xd7, 0x65, 0xe4, 0x5d, 0x2d, 0x23, 0xef, 0xe7, 0x32, 0xf2, 0x3e, 0xc6, 0x85,
+	0xb2, 0xa7, 0x33, 0xc9, 0x33, 0xd2, 0x42, 0xce, 0xf1, 0x19, 0x9c, 0x55, 0xa7, 0x60, 0x11, 0x5c,
+	0xd6, 0x43, 0xec, 0xa7, 0x0a, 0x8d, 0xdc, 0x72, 0x16, 0xbd, 0xf8, 0x17, 0x00, 0x00, 0xff, 0xff,
+	0xc2, 0xec, 0x92, 0x6c, 0x65, 0x02, 0x00, 0x00,
 }
 
 func (this *Params) Equal(that interface{}) bool {
@@ -100,6 +165,21 @@ func (this *Params) Equal(that interface{}) bool {
 	if that1 == nil {
 		return this == nil
 	} else if this == nil {
+		return false
+	}
+	if this.MaxStaticMembers != that1.MaxStaticMembers {
+		return false
+	}
+	if this.MinVotingPeriod != that1.MinVotingPeriod {
+		return false
+	}
+	if this.MaxVotingPeriod != that1.MaxVotingPeriod {
+		return false
+	}
+	if !this.DaoCreationFee.Equal(&that1.DaoCreationFee) {
+		return false
+	}
+	if this.DaoCreationFeeDestination != that1.DaoCreationFeeDestination {
 		return false
 	}
 	return true
@@ -124,6 +204,44 @@ func (m *Params) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.DaoCreationFeeDestination) > 0 {
+		i -= len(m.DaoCreationFeeDestination)
+		copy(dAtA[i:], m.DaoCreationFeeDestination)
+		i = encodeVarintParams(dAtA, i, uint64(len(m.DaoCreationFeeDestination)))
+		i--
+		dAtA[i] = 0x6a
+	}
+	{
+		size, err := m.DaoCreationFee.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintParams(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x62
+	n2, err2 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.MaxVotingPeriod, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.MaxVotingPeriod):])
+	if err2 != nil {
+		return 0, err2
+	}
+	i -= n2
+	i = encodeVarintParams(dAtA, i, uint64(n2))
+	i--
+	dAtA[i] = 0x4a
+	n3, err3 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.MinVotingPeriod, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.MinVotingPeriod):])
+	if err3 != nil {
+		return 0, err3
+	}
+	i -= n3
+	i = encodeVarintParams(dAtA, i, uint64(n3))
+	i--
+	dAtA[i] = 0x42
+	if m.MaxStaticMembers != 0 {
+		i = encodeVarintParams(dAtA, i, uint64(m.MaxStaticMembers))
+		i--
+		dAtA[i] = 0x10
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -144,6 +262,19 @@ func (m *Params) Size() (n int) {
 	}
 	var l int
 	_ = l
+	if m.MaxStaticMembers != 0 {
+		n += 1 + sovParams(uint64(m.MaxStaticMembers))
+	}
+	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.MinVotingPeriod)
+	n += 1 + l + sovParams(uint64(l))
+	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.MaxVotingPeriod)
+	n += 1 + l + sovParams(uint64(l))
+	l = m.DaoCreationFee.Size()
+	n += 1 + l + sovParams(uint64(l))
+	l = len(m.DaoCreationFeeDestination)
+	if l > 0 {
+		n += 1 + l + sovParams(uint64(l))
+	}
 	return n
 }
 
@@ -182,6 +313,156 @@ func (m *Params) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: Params: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxStaticMembers", wireType)
+			}
+			m.MaxStaticMembers = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxStaticMembers |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinVotingPeriod", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.MinVotingPeriod, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxVotingPeriod", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.MaxVotingPeriod, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoCreationFee", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.DaoCreationFee.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoCreationFeeDestination", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowParams
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthParams
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthParams
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DaoCreationFeeDestination = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipParams(dAtA[iNdEx:])

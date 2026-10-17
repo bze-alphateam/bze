@@ -30,3 +30,12 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgUpdateParams_ValidateBasic_RejectsInvalidParams(t *testing.T) {
+	params := types.DefaultParams()
+	params.DaoCreationFeeDestination = "nowhere"
+
+	msg := types.MsgUpdateParams{Authority: sample.AccAddress(), Params: params}
+
+	require.ErrorContains(t, msg.ValidateBasic(), "dao_creation_fee_destination")
+}

@@ -19,12 +19,18 @@ func TestGenesisState_Validate(t *testing.T) {
 	for _, tc := range []struct {
 		desc     string
 		genState types.GenesisState
+		wantErr  bool
 	}{
 		{desc: "default", genState: *types.DefaultGenesis()},
-		{desc: "zero value", genState: types.GenesisState{}},
+		{desc: "zero value has invalid params", genState: types.GenesisState{}, wantErr: true},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
-			require.NoError(t, tc.genState.Validate())
+			err := tc.genState.Validate()
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
 		})
 	}
 }

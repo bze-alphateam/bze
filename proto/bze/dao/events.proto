@@ -1,0 +1,14 @@
+syntax = "proto3";
+package bze.dao;
+
+import "bze/dao/store.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/dao/types";
+
+// EventDaoCreated is emitted when a DAO is created.
+message EventDaoCreated {
+  uint64 id = 1;
+  string address = 2;
+  string admin = 3;
+  DaoType type = 4;
+}
