@@ -22,4 +22,8 @@ message GenesisState {
   uint64 dao_count = 3;
   // proposal_count is the last proposal id handed out.
   uint64 proposal_count = 4;
+  // proposals are all the proposal records, by id. The open markers, the DAO
+  // proposal index and the proposal part of the source pins are rebuilt from
+  // them on import.
+  repeated Proposal proposals = 5 [(gogoproto.nullable) = false];
 }

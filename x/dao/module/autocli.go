@@ -41,6 +41,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:        "bzed q dao dao-controller 1",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}},
 				},
+				{
+					RpcMethod: "Proposal",
+					Use:       "proposal [proposal-id]",
+					Short:     "Shows a proposal with its live status",
+					Long: "Shows the proposal record and, at the current block: voting_ended (it is VOTING past its voting end, so it can be settled), " +
+						"retry_deadline (the end of the retry window of an EXECUTION_FAILED proposal, unix seconds, else 0) and " +
+						"expedite_settleable (an expedited proposal whose tally already meets the expedite bars before its voting end).",
+					Example:        "bzed q dao proposal 1",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{

@@ -56,7 +56,29 @@ func validGenesis() types.GenesisState {
 			},
 		},
 		DaoCount:      2,
+		Proposals: []types.Proposal{
+			validProposal(3, 1, types.ProposalStatus_VOTING),
+			validProposal(9, 2, types.ProposalStatus_CANCELLED),
+		},
 		ProposalCount: 9,
+	}
+}
+
+func validProposal(id, daoId uint64, status types.ProposalStatus) types.Proposal {
+	deposit := sdk.NewInt64Coin("ubze", 1_000)
+
+	return types.Proposal{
+		Id:                id,
+		DaoId:             daoId,
+		Proposer:          sdk.AccAddress("dao_member_a________").String(),
+		Title:             "Fund tooling",
+		Status:            status,
+		PinnedConfig:      genesisConfig(),
+		PinnedDenominator: math.NewInt(10),
+		PinnedDeposit:     &deposit,
+		Yes:               math.NewInt(3),
+		No:                math.ZeroInt(),
+		Abstain:           math.ZeroInt(),
 	}
 }
 
@@ -98,6 +120,20 @@ func TestGenesisState_Validate(t *testing.T) {
 			gs.Daos[1].Electorate.SrIds = []string{"1", "1"}
 		}, wantErr: "duplicate staking reward"},
 		{desc: "unknown type", mutate: func(gs *types.GenesisState) { gs.Daos[1].Type = 9 }, wantErr: "unknown dao type"},
+		{desc: "no proposals", mutate: func(gs *types.GenesisState) { gs.Proposals = nil }},
+		{desc: "proposal without a deposit", mutate: func(gs *types.GenesisState) { gs.Proposals[0].PinnedDeposit = nil }},
+		{desc: "duplicate proposal id", mutate: func(gs *types.GenesisState) { gs.Proposals[1].Id = 3 }, wantErr: "duplicate proposal id 3"},
+		{desc: "proposal id above the counter", mutate: func(gs *types.GenesisState) { gs.ProposalCount = 8 }, wantErr: "proposal id 9 is outside [1, proposal_count 8]"},
+		{desc: "proposal id zero", mutate: func(gs *types.GenesisState) { gs.Proposals[0].Id = 0 }, wantErr: "proposal id 0 is outside"},
+		{desc: "proposal of an unknown dao", mutate: func(gs *types.GenesisState) { gs.Proposals[1].DaoId = 3 }, wantErr: "proposal 9 belongs to unknown dao 3"},
+		{desc: "unknown proposal status", mutate: func(gs *types.GenesisState) { gs.Proposals[0].Status = 6 }, wantErr: "unknown status 6"},
+		{desc: "invalid proposer", mutate: func(gs *types.GenesisState) { gs.Proposals[0].Proposer = "bad" }, wantErr: "invalid proposer address"},
+		{desc: "negative yes", mutate: func(gs *types.GenesisState) { gs.Proposals[0].Yes = math.NewInt(-1) }, wantErr: "yes must be a non-negative integer"},
+		{desc: "negative no", mutate: func(gs *types.GenesisState) { gs.Proposals[0].No = math.NewInt(-1) }, wantErr: "no must be a non-negative integer"},
+		{desc: "missing abstain", mutate: func(gs *types.GenesisState) { gs.Proposals[0].Abstain = math.Int{} }, wantErr: "abstain must be a non-negative integer"},
+		{desc: "negative denominator", mutate: func(gs *types.GenesisState) { gs.Proposals[0].PinnedDenominator = math.NewInt(-1) }, wantErr: "pinned_denominator must be a non-negative integer"},
+		{desc: "invalid deposit denom", mutate: func(gs *types.GenesisState) { gs.Proposals[0].PinnedDeposit.Denom = "!" }, wantErr: "invalid pinned_deposit"},
+		{desc: "negative deposit", mutate: func(gs *types.GenesisState) { gs.Proposals[0].PinnedDeposit.Amount = math.NewInt(-5) }, wantErr: "invalid pinned_deposit"},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
 			gs := validGenesis()
