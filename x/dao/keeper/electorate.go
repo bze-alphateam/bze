@@ -64,7 +64,7 @@ func (k Keeper) validateStakeSources(ctx sdk.Context, electorate, current *types
 	}
 
 	kept := make(map[string]struct{})
-	for _, source := range electorateSources(current) {
+	for _, source := range current.Sources() {
 		kept[string(source)] = struct{}{}
 	}
 	checkLock := func(key []byte, source string, lock uint32) error {
@@ -141,22 +141,4 @@ func validateSourceLock(source string, lock, minLock uint32) error {
 	}
 
 	return nil
-}
-
-// electorateSources lists the source keys of a stake electorate.
-func electorateSources(electorate *types.StakeElectorate) [][]byte {
-	if electorate.IsEmpty() {
-		return nil
-	}
-
-	sources := make([][]byte, 0, len(electorate.SrIds)+1)
-	for _, id := range electorate.SrIds {
-		sources = append(sources, types.StakingRewardSource(id))
-	}
-
-	if electorate.DrDenom != "" {
-		sources = append(sources, types.DenomRewardSource(electorate.DrDenom))
-	}
-
-	return sources
 }

@@ -1,6 +1,9 @@
 package types
 
 import (
+	"fmt"
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
@@ -20,7 +23,7 @@ const (
 	DaoAddressKeyPrefix = "dao/a/"
 	// DaoAdminKeyPrefix indexes DAOs by admin: {admin}/{dao_id}.
 	DaoAdminKeyPrefix = "dao/m/"
-	// PinKeyPrefix counts the DAOs (and later the open proposals) that use an
+	// PinKeyPrefix counts the DAOs and the proposals in voting that use an
 	// electorate source: {source} -> uint64.
 	PinKeyPrefix = "dao/p/"
 	// ProposalKeyPrefix holds the Proposal records by id.
@@ -86,6 +89,18 @@ func JoinKey(source []byte, addr sdk.AccAddress) []byte {
 	return append(address.MustLengthPrefix(source), address.MustLengthPrefix(addr.Bytes())...)
 }
 
+// SplitSourceAddressKey splits a JoinKey, or a VoteIndexKey, into its source
+// and address and whatever follows them (the proposal id of a VoteIndexKey).
+func SplitSourceAddressKey(key []byte) (source []byte, addr sdk.AccAddress, rest []byte) {
+	sourceLen := int(key[0])
+	source = key[1 : 1+sourceLen]
+	key = key[1+sourceLen:]
+
+	addrLen := int(key[0])
+
+	return source, key[1 : 1+addrLen], key[1+addrLen:]
+}
+
 // ProposalBallotsPrefix is the part of BallotKeyPrefix keys that holds one
 // proposal's ballots.
 func ProposalBallotsPrefix(proposalId uint64) []byte {
@@ -137,6 +152,18 @@ func StakingRewardSource(rewardId string) []byte {
 // DenomRewardSource is the source key of a Denom Reward: dr/{staking_denom}.
 func DenomRewardSource(stakingDenom string) []byte {
 	return sourceKey(sourceDenomReward, stakingDenom)
+}
+
+// ValidateSource checks the form of a source key: sr/{reward_id} or
+// dr/{staking_denom}, with a non-empty id.
+func ValidateSource(source string) error {
+	for _, kind := range []string{sourceStakingReward, sourceDenomReward} {
+		if strings.HasPrefix(source, kind) && len(source) > len(kind) {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("invalid source %q: want %s{reward_id} or %s{staking_denom}", source, sourceStakingReward, sourceDenomReward)
 }
 
 // sourceKey builds every electorate source key, so all stores that refer to a

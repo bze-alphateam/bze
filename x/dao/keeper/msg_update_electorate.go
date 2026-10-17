@@ -69,19 +69,19 @@ func (k msgServer) UpdateElectorate(goCtx context.Context, msg *types.MsgUpdateE
 // adds one to each source in next but not in previous.
 func (k Keeper) repinSources(ctx sdk.Context, previous, next *types.StakeElectorate) {
 	nextSources := make(map[string]struct{})
-	for _, source := range electorateSources(next) {
+	for _, source := range next.Sources() {
 		nextSources[string(source)] = struct{}{}
 	}
 
 	previousSources := make(map[string]struct{})
-	for _, source := range electorateSources(previous) {
+	for _, source := range previous.Sources() {
 		previousSources[string(source)] = struct{}{}
 		if _, ok := nextSources[string(source)]; !ok {
 			k.unpinSource(ctx, source)
 		}
 	}
 
-	for _, source := range electorateSources(next) {
+	for _, source := range next.Sources() {
 		if _, ok := previousSources[string(source)]; !ok {
 			k.pinSource(ctx, source)
 		}

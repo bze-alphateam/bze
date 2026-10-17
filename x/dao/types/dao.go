@@ -141,6 +141,24 @@ func (e *StakeElectorate) IsEmpty() bool {
 	return e == nil || (len(e.SrIds) == 0 && e.DrDenom == "")
 }
 
+// Sources lists the source keys of a stake electorate, staking rewards first.
+func (e *StakeElectorate) Sources() [][]byte {
+	if e.IsEmpty() {
+		return nil
+	}
+
+	sources := make([][]byte, 0, len(e.SrIds)+1)
+	for _, id := range e.SrIds {
+		sources = append(sources, StakingRewardSource(id))
+	}
+
+	if e.DrDenom != "" {
+		sources = append(sources, DenomRewardSource(e.DrDenom))
+	}
+
+	return sources
+}
+
 // validateRatio requires value in (0, 1].
 func validateRatio(name string, value math.LegacyDec) error {
 	if value.IsNil() || !value.IsPositive() || value.GT(math.LegacyOneDec()) {

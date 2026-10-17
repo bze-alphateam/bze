@@ -102,13 +102,14 @@ func TestGenesis_DefaultRoundTrip(t *testing.T) {
 }
 
 // Export, import into a fresh keeper and export again give the same state; the
-// address and admin indexes and the DAO pins are rebuilt on import.
+// address and admin indexes are rebuilt on import, the pins imported as they are.
 func TestGenesis_DaosRoundTrip(t *testing.T) {
 	genesisState := types.GenesisState{
 		Params:        types.DefaultParams(),
 		Daos:          genesisDaos(),
 		DaoCount:      3,
 		ProposalCount: 5,
+		Pins:          []types.PinCount{{Source: "dr/ubze", Count: 1}, {Source: "sr/3", Count: 2}, {Source: "sr/7", Count: 1}},
 	}
 	require.NoError(t, genesisState.Validate())
 
@@ -168,11 +169,12 @@ func genesisProposal(id, daoId uint64, status types.ProposalStatus) types.Propos
 	}
 }
 
-// genesisProposals returns a proposal in every status, ids 1..8 with 6 missing
+// genesisProposals returns a proposal in every status, ids 1..9 with 6 missing
 // (cleaned up): 1 and 2 are VOTING with a deposit each (2 on stake DAO 2, over
 // SR 3 and the ubze DR), 3 is expedited and VOTING without a deposit, the
 // others are finished or failed, some with a released deposit and a pinned
-// electorate that must not count.
+// electorate that must not count. The tallies of the proposals in voting are
+// those of genesisBallots.
 func genesisProposals(t *testing.T) []types.Proposal {
 	send, err := codectypes.NewAnyWithValue(&banktypes.MsgSend{
 		FromAddress: types.DaoAddress(1).String(),
@@ -184,13 +186,16 @@ func genesisProposals(t *testing.T) []types.Proposal {
 	voting := genesisProposal(1, 1, types.ProposalStatus_VOTING)
 	voting.Msgs = []*codectypes.Any{send}
 	voting.PinnedDeposit = ubze(1_000)
+	voting.Yes, voting.No, voting.Abstain = math.OneInt(), math.OneInt(), math.ZeroInt()
 
 	stakeVoting := genesisProposal(2, 2, types.ProposalStatus_VOTING)
 	stakeVoting.PinnedElectorate = &types.StakeElectorate{SrIds: []string{"3"}, DrDenom: "ubze"}
 	stakeVoting.PinnedDeposit = ubze(500)
+	stakeVoting.Yes, stakeVoting.No, stakeVoting.Abstain = math.NewInt(10), math.ZeroInt(), math.ZeroInt()
 
 	expedited := genesisProposal(3, 1, types.ProposalStatus_VOTING)
 	expedited.Expedited = true
+	expedited.Yes, expedited.No, expedited.Abstain = math.ZeroInt(), math.ZeroInt(), math.OneInt()
 
 	failed := genesisProposal(5, 2, types.ProposalStatus_EXECUTION_FAILED)
 	failed.PinnedElectorate = &types.StakeElectorate{SrIds: []string{"7"}}
@@ -212,6 +217,29 @@ func genesisProposals(t *testing.T) []types.Proposal {
 	}
 }
 
+// genesisBallots: on 1 a yes and a no member vote; on 2 memberA's yes counts
+// shares of SR 3 and the ubze DR, memberB's no was reduced to 0 by exits; on
+// 3 one abstain; on finished 5 a ballot whose tally is final.
+func genesisBallots() []types.Ballot {
+	return []types.Ballot{
+		{ProposalId: 1, Voter: memberA.String(), Option: types.VoteOption_YES, Weight: math.OneInt()},
+		{ProposalId: 1, Voter: memberB.String(), Option: types.VoteOption_NO, Weight: math.OneInt()},
+		{ProposalId: 2, Voter: memberA.String(), Option: types.VoteOption_YES, Weight: math.NewInt(10), Shares: []types.BallotShare{
+			{Source: "sr/3", Amount: math.NewInt(4)},
+			{Source: "dr/ubze", Amount: math.NewInt(6)},
+		}},
+		{ProposalId: 2, Voter: memberB.String(), Option: types.VoteOption_NO, Weight: math.ZeroInt()},
+		{ProposalId: 3, Voter: memberA.String(), Option: types.VoteOption_ABSTAIN, Weight: math.OneInt()},
+		{ProposalId: 5, Voter: memberB.String(), Option: types.VoteOption_YES, Weight: math.NewInt(3), Shares: []types.BallotShare{
+			{Source: "sr/7", Amount: math.NewInt(3)},
+		}},
+	}
+}
+
+// proposalsGenesis is the full state: the DAOs, proposals and ballots above,
+// the vote index of memberA's shares on 2 plus leftovers of finished 5 and
+// cleaned-up 6, join records (one on a source no longer pinned) and the pins
+// of the DAOs and of proposal 2. Every list is in export order.
 func proposalsGenesis(t *testing.T) types.GenesisState {
 	gs := types.GenesisState{
 		Params:        types.DefaultParams(),
@@ -219,6 +247,18 @@ func proposalsGenesis(t *testing.T) types.GenesisState {
 		DaoCount:      3,
 		Proposals:     genesisProposals(t),
 		ProposalCount: 10,
+		Ballots:       genesisBallots(),
+		VoteIndex: []types.VoteIndexEntry{
+			{Source: "sr/3", Address: memberA.String(), ProposalId: 2},
+			{Source: "sr/3", Address: memberA.String(), ProposalId: 6},
+			{Source: "sr/7", Address: memberB.String(), ProposalId: 5},
+			{Source: "dr/ubze", Address: memberA.String(), ProposalId: 2},
+		},
+		JoinRecords: []types.JoinRecord{
+			{Source: "sr/1", Address: outsider.String(), Height: 7},
+			{Source: "sr/3", Address: memberB.String(), Height: 150},
+		},
+		Pins: []types.PinCount{{Source: "dr/ubze", Count: 2}, {Source: "sr/3", Count: 3}, {Source: "sr/7", Count: 1}},
 	}
 	require.NoError(t, gs.Validate())
 
@@ -228,9 +268,9 @@ func proposalsGenesis(t *testing.T) types.GenesisState {
 // the deposits of proposals 1 and 2, the only ones in voting with one
 var votingEscrow = sdk.NewCoins(sdk.NewInt64Coin("ubze", 1_500))
 
-// Proposals in every status survive export and import; the open markers and the
-// DAO proposal index are rebuilt, and the sources are pinned by the DAOs and
-// the proposals in voting only (I4).
+// The full state survives export and import; the open markers and the DAO
+// proposal index are rebuilt, the ballots, vote index, join records and pins
+// are imported as they are.
 func TestGenesis_ProposalsRoundTrip(t *testing.T) {
 	genesisState := proposalsGenesis(t)
 
@@ -274,6 +314,19 @@ func TestGenesis_ProposalsRoundTrip(t *testing.T) {
 	require.Equal(t, uint64(3), fresh.GetSourcePins(freshCtx, types.StakingRewardSource("3")))
 	require.Equal(t, uint64(1), fresh.GetSourcePins(freshCtx, types.StakingRewardSource("7")))
 	require.Equal(t, uint64(2), fresh.GetSourcePins(freshCtx, types.DenomRewardSource("ubze")))
+
+	// the imported ballots, index and join records are the ones the keeper reads
+	for _, b := range genesisBallots() {
+		stored, found := fresh.GetBallot(freshCtx, b.ProposalId, sdk.MustAccAddressFromBech32(b.Voter))
+		require.True(t, found)
+		require.Equal(t, b, stored)
+	}
+	require.True(t, fresh.HasVoteIndex(freshCtx, types.DenomRewardSource("ubze"), memberA, 2))
+	require.True(t, fresh.HasVoteIndex(freshCtx, types.StakingRewardSource("7"), memberB, 5))
+	require.False(t, fresh.HasVoteIndex(freshCtx, types.StakingRewardSource("3"), memberB, 2))
+	record, found := fresh.GetJoinRecord(freshCtx, types.StakingRewardSource("3"), memberB)
+	require.True(t, found)
+	require.Equal(t, int64(150), record.Height)
 }
 
 // I1: the import fails unless the dao module account holds at least the
@@ -301,7 +354,7 @@ func TestGenesis_DepositEscrow(t *testing.T) {
 			}
 
 			require.PanicsWithError(t,
-				"dao module account holds "+tc.balance.String()+", less than the deposits of the proposals in voting ("+votingEscrow.String()+")",
+				"I1: dao module account holds "+tc.balance.String()+", less than the deposits of the proposals in voting ("+votingEscrow.String()+")",
 				initGenesis)
 		})
 	}
@@ -312,9 +365,61 @@ func TestGenesis_DepositEscrow(t *testing.T) {
 func TestGenesis_NoEscrowSkipsBalance(t *testing.T) {
 	genesisState := proposalsGenesis(t)
 	genesisState.Proposals[0].PinnedDeposit = nil
-	genesisState.Proposals[1].Status = types.ProposalStatus_CANCELLED
+	genesisState.Proposals[1].PinnedDeposit = nil
 
 	k, ctx := keepertest.DaoKeeper(t, keepertest.DaoCodec(), nil, nil, testutil.NewMockBankKeeper(gomock.NewController(t)), nil)
 	dao.InitGenesis(ctx, &k, genesisState)
 	require.Len(t, k.GetAllProposals(ctx), len(genesisState.Proposals))
+}
+
+// Each broken invariant fails the import with an error naming it.
+func TestGenesis_BrokenInvariants(t *testing.T) {
+	for _, tc := range []struct {
+		invariant string
+		balance   sdk.Coins
+		mutate    func(gs *types.GenesisState)
+		wantErr   string
+	}{
+		{"I1", sdk.NewCoins(sdk.NewInt64Coin("ubze", 1_499)), func(*types.GenesisState) {}, "I1: dao module account holds 1499ubze"},
+		{"I2", votingEscrow, func(gs *types.GenesisState) { gs.Proposals[0].Yes = math.NewInt(2) }, "I2: proposal 1 has YES 2, its ballots add up to 1"},
+		{"I2 removed member", votingEscrow, func(gs *types.GenesisState) { gs.Ballots[1].Weight = math.ZeroInt() }, "I2: proposal 1 has NO 1, its ballots add up to 0"},
+		{"I3", votingEscrow, func(gs *types.GenesisState) { gs.Ballots[2].Shares[0].Amount = math.NewInt(5) }, "I3: weight 10 is not the sum of its shares 11"},
+		{"I3 unpinned source", votingEscrow, func(gs *types.GenesisState) { gs.Ballots[2].Shares[0].Source = "sr/7" }, "I3: share of sr/7, a source the proposal did not pin"},
+		{"I3 static shares", votingEscrow, func(gs *types.GenesisState) {
+			gs.Ballots[0].Shares = []types.BallotShare{{Source: "sr/3", Amount: math.OneInt()}}
+		}, "I3: a static-list ballot has no shares"},
+		{"I3 static weight", votingEscrow, func(gs *types.GenesisState) {
+			gs.Ballots[0].Weight = math.NewInt(2)
+			gs.Proposals[0].Yes = math.NewInt(2)
+		}, "I3: a static-list ballot weighs at most 1, got 2"},
+		{"I4", votingEscrow, func(gs *types.GenesisState) { gs.Pins[1].Count = 2 }, "I4: sr/3 has 2 pins, the daos and proposals in voting use it 3 times"},
+		{"I4 missing", votingEscrow, func(gs *types.GenesisState) { gs.Pins = gs.Pins[1:] }, "I4: dr/ubze has no pins, the daos and proposals in voting use it 2 times"},
+		{"I4 stray", votingEscrow, func(gs *types.GenesisState) {
+			gs.Pins = append(gs.Pins, types.PinCount{Source: "sr/9", Count: 1})
+		}, "I4: sr/9 has 1 pins, the daos and proposals in voting use it 0 times"},
+		{"I5 dao", votingEscrow, func(gs *types.GenesisState) { gs.DaoCount = 2 }, "I5: dao id 3 is outside [1, dao_count 2]"},
+		{"I5 proposal", votingEscrow, func(gs *types.GenesisState) { gs.ProposalCount = 8 }, "I5: proposal id 9 is outside [1, proposal_count 8]"},
+		{"I5 vote index", votingEscrow, func(gs *types.GenesisState) { gs.VoteIndex[1].ProposalId = 11 }, "I5: vote-index entry of proposal 11, outside [1, proposal_count 10]"},
+		{"I6 missing entry", votingEscrow, func(gs *types.GenesisState) { gs.VoteIndex = gs.VoteIndex[1:] }, "I6: the sr/3 share of " + memberA.String() + " on proposal 2 has no vote-index entry"},
+		{"I6 stray entry", votingEscrow, func(gs *types.GenesisState) {
+			gs.VoteIndex = append(gs.VoteIndex, types.VoteIndexEntry{Source: "sr/3", Address: memberB.String(), ProposalId: 2})
+		}, "I6: vote-index entry sr/3/" + memberB.String() + "/2 names no share of a ballot"},
+		{"I7", votingEscrow, func(gs *types.GenesisState) { gs.Daos[1].PendingAdmin = admin.String() }, "I7: pending_admin is the admin"},
+		{"I7 no admin", votingEscrow, func(gs *types.GenesisState) { gs.Daos[0].Admin = "" }, "I7: admin is not set"},
+	} {
+		t.Run(tc.invariant, func(t *testing.T) {
+			gs := proposalsGenesis(t)
+			tc.mutate(&gs)
+
+			k, ctx := genesisKeeper(t, tc.balance)
+			defer func() {
+				r := recover()
+				require.NotNil(t, r, "the import must fail")
+				err, ok := r.(error)
+				require.True(t, ok, "panic with %v", r)
+				require.ErrorContains(t, err, tc.wantErr)
+			}()
+			dao.InitGenesis(ctx, &k, gs)
+		})
+	}
 }
