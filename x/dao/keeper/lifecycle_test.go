@@ -1035,3 +1035,119 @@ func (suite *IntegrationTestSuite) TestCleanupProposal_D20_Refusals() {
 	_, err = suite.msgServer.CleanupProposal(suite.ctx, types.NewMsgCleanupProposal("bze1nope", id, 0))
 	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidAddress)
 }
+
+// requireBallot checks the voter's stored ballot on the proposal.
+func (suite *IntegrationTestSuite) requireBallot(proposalId uint64, voter sdk.AccAddress, option types.VoteOption, weight int64) {
+	ballot, found := suite.k.GetBallot(suite.ctx, proposalId, voter)
+	suite.Require().True(found, "ballot of %s", voter)
+	suite.Require().Equal(option, ballot.Option)
+	suite.Require().Equal(math.NewInt(weight), ballot.Weight)
+}
+
+// D21: removing a member zeroes their ballots on the DAO's proposals in
+// voting, keeping the records; a closed proposal keeps its ballot. Re-added,
+// the member's old ballot stays 0 until they vote again, the same option
+// included, at weight 1. I2 holds throughout.
+func (suite *IntegrationTestSuite) TestUpdateMembers_D21_RemovedMemberStopsCounting() {
+	suite.createAdminDao()
+	closed, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberB, closed, types.VoteOption_YES))
+	suite.Require().NoError(suite.cancel(memberA, closed))
+
+	first, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	second, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, first, types.VoteOption_YES))
+	suite.Require().NoError(suite.vote(memberB, first, types.VoteOption_YES))
+	suite.Require().NoError(suite.vote(memberB, second, types.VoteOption_NO))
+	suite.requireTally(first, 2, 0, 0)
+	suite.requireTally(second, 0, 1, 0)
+
+	remove := types.NewMsgUpdateMembers(daoAddress(1).String(), 1, nil, []string{memberB.String()})
+	suite.Require().NoError(suite.adminExecute(adminAddr, 1, remove))
+
+	suite.requireMembers(memberA)
+	suite.requireTally(first, 1, 0, 0)
+	suite.requireTally(second, 0, 0, 0)
+	suite.requireBallot(first, memberB, types.VoteOption_YES, 0)
+	suite.requireBallot(second, memberB, types.VoteOption_NO, 0)
+	suite.requireBallot(closed, memberB, types.VoteOption_YES, 1)
+	suite.requireInvariants(first, memberA, memberB)
+	suite.requireInvariants(second, memberA, memberB)
+	attrs := suite.lastEventAttrs(&types.EventBallotReduced{})
+	suite.Require().Equal(`"`+strconv.FormatUint(second, 10)+`"`, attrs["proposal_id"])
+	suite.Require().Equal(`"`+memberB.String()+`"`, attrs["voter"])
+	suite.Require().Equal(`""`, attrs["source"])
+	suite.Require().Equal(`"1"`, attrs["amount"])
+
+	suite.Require().ErrorIs(suite.vote(memberB, first, types.VoteOption_NO), types.ErrNoVotingPower)
+
+	add := types.NewMsgUpdateMembers(daoAddress(1).String(), 1, []string{memberB.String()}, nil)
+	suite.Require().NoError(suite.adminExecute(adminAddr, 1, add))
+
+	suite.requireMembers(memberA, memberB)
+	suite.requireBallot(first, memberB, types.VoteOption_YES, 0)
+	suite.requireTally(first, 1, 0, 0)
+
+	suite.Require().NoError(suite.vote(memberB, first, types.VoteOption_YES))
+	suite.requireBallot(first, memberB, types.VoteOption_YES, 1)
+	suite.requireTally(first, 2, 0, 0)
+	suite.Require().ErrorIs(suite.vote(memberB, first, types.VoteOption_YES), types.ErrSameVote)
+
+	suite.Require().NoError(suite.vote(memberB, second, types.VoteOption_ABSTAIN))
+	suite.requireTally(second, 0, 0, 1)
+	suite.requireInvariants(first, memberA, memberB)
+	suite.requireInvariants(second, memberA, memberB)
+}
+
+// An added member votes on a proposal opened before they joined; the pinned
+// denominator stays at the member count of submission.
+func (suite *IntegrationTestSuite) TestUpdateMembers_AddedMemberVotesOnOpenProposal() {
+	suite.createAdminDao()
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+
+	add := types.NewMsgUpdateMembers(daoAddress(1).String(), 1, []string{memberC.String()}, nil)
+	suite.Require().NoError(suite.adminExecute(adminAddr, 1, add))
+
+	suite.Require().NoError(suite.vote(memberC, id, types.VoteOption_YES))
+	suite.requireBallot(id, memberC, types.VoteOption_YES, 1)
+	suite.requireTally(id, 1, 0, 0)
+	suite.requireInvariants(id, memberA, memberB, memberC)
+
+	proposal, _ := suite.k.GetProposal(suite.ctx, id)
+	suite.Require().Equal(math.NewInt(2), proposal.PinnedDenominator)
+}
+
+// A self-owned DAO changes its members through a passed proposal. The
+// proposal left voting before its messages ran, so its own ballot of the
+// removed member stays.
+func (suite *IntegrationTestSuite) TestUpdateMembers_ThroughProposal() {
+	suite.createStaticDao(noConfigChange)
+	id := suite.passedProposal(types.NewMsgUpdateMembers(daoAddress(1).String(), 1, []string{memberC.String()}, []string{memberB.String()}))
+	suite.endVoting(id, 0)
+
+	status, err := suite.settle(id)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
+	suite.requireExecuted("")
+	suite.requireMembers(memberA, memberC)
+	suite.requireBallot(id, memberB, types.VoteOption_YES, 1)
+	suite.requireTally(id, 2, 0, 0)
+}
+
+// D11 through a proposal: removing every member ends EXECUTION_FAILED and
+// changes nothing.
+func (suite *IntegrationTestSuite) TestUpdateMembers_D11_ThroughProposal() {
+	suite.createStaticDao(noConfigChange)
+	id := suite.passedProposal(types.NewMsgUpdateMembers(daoAddress(1).String(), 1, nil, []string{memberA.String(), memberB.String()}))
+	suite.endVoting(id, 0)
+
+	status, err := suite.settle(id)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_EXECUTION_FAILED, status)
+	suite.requireExecuted("message failed")
+	suite.requireMembers(memberA, memberB)
+}

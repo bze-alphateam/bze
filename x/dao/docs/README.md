@@ -2,7 +2,7 @@
 
 The DAO module lets anyone create an on-chain organisation with its own treasury, run proposals and execute them as the DAO.
 
-> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, and proposals can be submitted, voted on, cancelled and settled, which runs the passed ones. Expedited proposals can be settled early, finished proposals can be cleaned up, and a DAO can change its own config, name and description, and a stake DAO its reward sources. Each feature adds its section to this page as it lands.
+> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, and proposals can be submitted, voted on, cancelled and settled, which runs the passed ones. Expedited proposals can be settled early, finished proposals can be cleaned up, and a DAO can change its own config, name and description, a stake DAO its reward sources and a static-list DAO its members. Each feature adds its section to this page as it lands.
 
 ## Concepts
 - **DAO account**: every DAO gets its own account, derived from its id (`address.Module("dao", uint64-big-endian(id))`). Nobody holds a key for it; it is the DAO's treasury.
@@ -46,7 +46,7 @@ The DAO module lets anyone create an on-chain organisation with its own treasury
 - `MsgVote`: casts or changes the signer's (`voter`) ballot: `YES`, `NO` or `ABSTAIN`. Rules:
   - The proposal must be in voting, and the block time strictly before its `voting_end`.
   - Weight: in a `static-list` DAO, 1 if the voter is on the DAO's member list now; in a `stake` DAO, the voter's stake in each source the proposal pinned, counting only stake with no join record or one strictly below the proposal's submit height. Zero weight is refused.
-  - Voting again with another option replaces the ballot at the voter's current weight, so stake added since the last vote counts; the same option twice is refused.
+  - Voting again with another option replaces the ballot at the voter's current weight, so stake added since the last vote counts; the same option twice is refused, unless the old ballot was zeroed by a member removal (see `MsgUpdateMembers`).
   - Exiting a staking reward or Denom Reward takes its share out of the voter's ballots on every proposal in voting (`EventBallotReduced`). Rejoining does not bring it back on those proposals.
 - `MsgCancelProposal`: the proposer (`proposer`) withdraws their proposal. Rules:
   - The proposal must be in voting. Cancelling is allowed after `voting_end` too, until the proposal is settled. Only the address that submitted it can cancel (a proposal the DAO submitted is cancelled by the DAO, through a proposal or its admin).
@@ -75,6 +75,12 @@ The DAO module lets anyone create an on-chain organisation with its own treasury
   - Only an added source must have a lock of at least `min_electorate_lock_days`. A source the DAO already has stays valid after the param was raised; one it dropped is new again if it comes back.
   - A self-owned DAO must keep a live electorate: at least one source, with some stake (`ErrElectorateNotLive`). A DAO with an external admin may empty its sources.
   - Open proposals keep the electorate and denominator they pinned and are decided with them; each keeps its own pin on its sources, so a dropped source keeps recording joins and cannot be removed from `x/rewards` until those proposals finish.
+- `MsgUpdateMembers`: adds members to and removes members from a static-list DAO (`add` and `remove` lists, not a full replacement). Rules:
+  - The signer rule is the same as for `MsgUpdateDaoConfig`. A stake DAO is refused (`ErrInvalidDaoType`).
+  - At least one list is non-empty; each holds unique valid addresses (the same address in another case is a duplicate), and no address is in both. Every added address must not be a member yet, every removed one must be a member.
+  - The result keeps 1 to `max_static_members` members, so a self-owned DAO always keeps a voter. Removed members leave the list in place; added ones are appended.
+  - A removed member's ballots on the DAO's proposals in voting stop counting at once: each ballot's weight is taken out of the tally and set to 0 (`EventBallotReduced` with an empty `source`). The ballot stays, and the member can't vote again unless they are added back; then they vote again at weight 1, the same option included. Proposals that already left voting keep their ballots.
+  - Added members can vote on proposals already in voting. The denominator those proposals pinned does not change.
 - `MsgUpdateParams` **(authority)**: replaces the module parameters. Reserved for the module authority (governance).
 
 Example (CLI):
@@ -136,6 +142,9 @@ bzed tx dao update-metadata 1 "Bee Guild" "Funds BZE tooling" --from bze1<dao ad
 # Replace stake DAO 1's sources the same way
 bzed tx dao update-electorate 1 '{"sr_ids":["3","7"],"dr_denom":"ubze"}' --from bze1<dao address> --generate-only
 
+# Add and remove members of static-list DAO 1 the same way (repeat a flag or comma-separate)
+bzed tx dao update-members 1 --add bze1<new member> --remove bze1<old member> --from bze1<dao address> --generate-only
+
 # Submit a governance proposal that sets the module parameters (all of them)
 bzed tx dao update-params \
   '{"max_sr_per_dao":"5","max_static_members":"128","max_open_proposals":"10","max_msgs_per_proposal":"16","max_proposal_bytes":"20000","max_title_len":"140","max_summary_len":"5000","min_voting_period":"3600s","max_voting_period":"7776000s","execution_window":"1209600s","cleanup_batch_size":"100","dao_creation_fee":{"denom":"ubze","amount":"50000000000"},"dao_creation_fee_destination":"burner","min_electorate_lock_days":5}' \
@@ -151,7 +160,7 @@ bzed tx dao update-params \
 - `bze.dao.EventAdminNominationWithdrawn{id, nominee}`
 - `bze.dao.EventProposalSubmitted{id, dao_id, proposer, expedited, voting_end, denominator}`
 - `bze.dao.EventVote{proposal_id, voter, option, weight}`, on every vote and revote
-- `bze.dao.EventBallotReduced{proposal_id, voter, source, amount}`, when an exit takes a share out of a ballot
+- `bze.dao.EventBallotReduced{proposal_id, voter, source, amount}`, when an exit takes a share out of a ballot, or a removed member's ballot is zeroed (`source` empty)
 - `bze.dao.EventProposalCancelled{id}`
 - `bze.dao.EventDepositReleased{id, refunded, destination, amount}`, when a deposit leaves escrow (`destination` is the receiving address)
 - `bze.dao.EventProposalSettled{id, status, yes, no, abstain, denominator, expedited_early}`, on every settle, with the status it left the proposal in; `expedited_early` is true for a settle before the voting end
@@ -160,6 +169,7 @@ bzed tx dao update-params \
 - `bze.dao.EventDaoConfigUpdated{id, fields}`, `fields` are the proto names of the config fields whose value changed, in proto order
 - `bze.dao.EventDaoMetadataUpdated{id}`
 - `bze.dao.EventDaoElectorateUpdated{id, sr_ids, dr_denom}`, with the new sources
+- `bze.dao.EventDaoMembersUpdated{id, added, removed}`, with the changed addresses
 
 ## Queries
 - `bzed query dao params` – show the module parameters.
