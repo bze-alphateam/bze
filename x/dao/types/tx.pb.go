@@ -859,7 +859,7 @@ func (m *MsgVote) GetOption() VoteOption {
 	if m != nil {
 		return m.Option
 	}
-	return VoteOption_YES
+	return VoteOption_VOTE_OPTION_UNSPECIFIED
 }
 
 // MsgVoteResponse is the Msg/Vote response type.
