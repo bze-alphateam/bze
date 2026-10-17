@@ -33,6 +33,12 @@ const (
 	// JoinKeyPrefix holds the height an address joined a pinned source:
 	// {source}/{address} -> int64.
 	JoinKeyPrefix = "join/"
+	// BallotKeyPrefix holds the ballots: {proposal_id}/{voter} -> Ballot.
+	BallotKeyPrefix = "ballot/"
+	// VoteIndexKeyPrefix marks every counted stake share of a ballot:
+	// {source}/{address}/{proposal_id}. The Exit hook finds an address's open
+	// ballots on a source through it.
+	VoteIndexKeyPrefix = "vidx/"
 
 	// sourceStakingReward and sourceDenomReward prefix the electorate source keys.
 	sourceStakingReward = "sr/"
@@ -78,6 +84,29 @@ func DaoProposalKey(daoId, proposalId uint64) []byte {
 // length-prefixed: sources and addresses have variable lengths.
 func JoinKey(source []byte, addr sdk.AccAddress) []byte {
 	return append(address.MustLengthPrefix(source), address.MustLengthPrefix(addr.Bytes())...)
+}
+
+// ProposalBallotsPrefix is the part of BallotKeyPrefix keys that holds one
+// proposal's ballots.
+func ProposalBallotsPrefix(proposalId uint64) []byte {
+	return sdk.Uint64ToBigEndian(proposalId)
+}
+
+// BallotKey is the key of a ballot inside BallotKeyPrefix: {proposal_id}/{voter}.
+func BallotKey(proposalId uint64, voter sdk.AccAddress) []byte {
+	return append(ProposalBallotsPrefix(proposalId), address.MustLengthPrefix(voter.Bytes())...)
+}
+
+// VoteIndexPrefix is the part of VoteIndexKeyPrefix keys that holds one
+// address's ballots counting a source: {source}/{address}/.
+func VoteIndexPrefix(source []byte, addr sdk.AccAddress) []byte {
+	return JoinKey(source, addr)
+}
+
+// VoteIndexKey is the key of a vote-index entry inside VoteIndexKeyPrefix:
+// {source}/{address}/{proposal_id}.
+func VoteIndexKey(source []byte, addr sdk.AccAddress, proposalId uint64) []byte {
+	return append(VoteIndexPrefix(source, addr), sdk.Uint64ToBigEndian(proposalId)...)
 }
 
 // DaoKey is the key of a Dao inside DaoKeyPrefix.

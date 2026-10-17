@@ -180,3 +180,253 @@ func (suite *IntegrationTestSuite) TestSubmitProposal_OpenStakeDao() {
 	suite.Require().Equal(math.NewInt(110), proposal.PinnedDenominator)
 	suite.Require().Equal(&types.StakeElectorate{SrIds: []string{"1", "5"}}, proposal.PinnedElectorate)
 }
+
+// stakeSource joins (or leaves, at amount 0) one source of the stake DAO
+// through x/rewards: the participant changes and the matching hook fires.
+type stakeSource struct {
+	name   string
+	source []byte
+	join   func(suite *IntegrationTestSuite, s stakes, addr sdk.AccAddress, amount int64)
+	exit   func(suite *IntegrationTestSuite, s stakes, addr sdk.AccAddress)
+}
+
+var stakeSources = []stakeSource{
+	{
+		name:   "staking reward",
+		source: srSource,
+		join: func(suite *IntegrationTestSuite, s stakes, addr sdk.AccAddress, amount int64) {
+			s.joinSr("1", addr, amount)
+			suite.Require().NoError(suite.k.StakingRewardHooks().AfterStakingRewardJoin(suite.ctx, "1", addr.String(), math.NewInt(amount), stakeDenom))
+		},
+		exit: func(suite *IntegrationTestSuite, s stakes, addr sdk.AccAddress) {
+			amount := s.sr["1"][addr.String()]
+			delete(s.sr["1"], addr.String())
+			suite.Require().NoError(suite.k.StakingRewardHooks().AfterStakingRewardExit(suite.ctx, "1", addr.String(), math.NewInt(amount), stakeDenom))
+		},
+	},
+	{
+		name:   "denom reward",
+		source: drSource,
+		join: func(suite *IntegrationTestSuite, s stakes, addr sdk.AccAddress, amount int64) {
+			s.joinDr(stakeDenom, addr, amount)
+			suite.Require().NoError(suite.k.DenomRewardHooks().AfterDenomRewardJoin(suite.ctx, stakeDenom, addr.String(), math.NewInt(amount)))
+		},
+		exit: func(suite *IntegrationTestSuite, s stakes, addr sdk.AccAddress) {
+			amount := s.dr[stakeDenom][addr.String()]
+			delete(s.dr[stakeDenom], addr.String())
+			suite.Require().NoError(suite.k.DenomRewardHooks().AfterDenomRewardExit(suite.ctx, stakeDenom, addr.String(), math.NewInt(amount)))
+		},
+	},
+}
+
+// counted is everything the proposal's tally holds.
+func (suite *IntegrationTestSuite) counted(proposalId uint64) math.Int {
+	proposal, _ := suite.k.GetProposal(suite.ctx, proposalId)
+	return proposal.Yes.Add(proposal.No).Add(proposal.Abstain)
+}
+
+// D2: coins that voted, left and moved to another address cannot vote again
+// on the same proposal, from either address: the counted weight never
+// exceeds the coins.
+func (suite *IntegrationTestSuite) TestVote_D2_ExitMoveRejoinCannotDoubleVote() {
+	for _, src := range stakeSources {
+		suite.Run(src.name, func() {
+			suite.SetupTest()
+			s := suite.createStakeDao()
+			suite.atBlock(5)
+			src.join(suite, s, memberA, 30)
+			suite.atBlock(10)
+			// memberB proposes with stake that has no join record
+			s.joinDr(stakeDenom, memberB, 1)
+			id, err := suite.submit(memberB, 1, false)
+			suite.Require().NoError(err)
+
+			suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+			suite.requireTally(id, 30, 0, 0)
+
+			suite.atBlock(11)
+			src.exit(suite, s, memberA)
+			ballot, _ := suite.k.GetBallot(suite.ctx, id, memberA)
+			suite.Require().True(ballot.Weight.IsZero())
+			suite.Require().Empty(ballot.Shares)
+			suite.Require().False(suite.k.HasVoteIndex(suite.ctx, src.source, memberA, id))
+			suite.requireInvariants(id, memberA, memberC)
+
+			// the coins move to memberC, who joins and votes
+			src.join(suite, s, memberC, 30)
+			suite.Require().ErrorIs(suite.vote(memberC, id, types.VoteOption_YES), types.ErrNoVotingPower)
+
+			// memberA gets coins back and rejoins
+			suite.atBlock(12)
+			src.join(suite, s, memberA, 30)
+			suite.Require().ErrorIs(suite.vote(memberA, id, types.VoteOption_NO), types.ErrNoVotingPower)
+
+			suite.Require().True(suite.counted(id).LTE(math.NewInt(30)))
+			suite.requireTally(id, 0, 0, 0)
+			suite.requireInvariants(id, memberA, memberC)
+		})
+	}
+}
+
+// D3: stake that left and came back after the submit has no weight on the
+// proposal, nor has stake that joined in the submit block; a proposal
+// submitted after the rejoin counts it.
+func (suite *IntegrationTestSuite) TestVote_D3_RejoinAfterSubmitHasNoWeight() {
+	for _, src := range stakeSources {
+		suite.Run(src.name, func() {
+			suite.SetupTest()
+			s := suite.createStakeDao()
+			s.joinSr("1", memberB, 1) // no record: proposes and stays eligible
+			if src.name == "staking reward" {
+				s.joinSr("1", memberA, 30)
+			} else {
+				s.joinDr(stakeDenom, memberA, 30)
+			}
+
+			suite.atBlock(5)
+			src.exit(suite, s, memberA)
+
+			suite.atBlock(10)
+			src.join(suite, s, memberC, 20) // same block as the submit
+			first, err := suite.submit(memberB, 1, false)
+			suite.Require().NoError(err)
+
+			suite.atBlock(11)
+			src.join(suite, s, memberA, 30)
+			suite.Require().ErrorIs(suite.vote(memberA, first, types.VoteOption_YES), types.ErrNoVotingPower)
+			suite.Require().ErrorIs(suite.vote(memberC, first, types.VoteOption_YES), types.ErrNoVotingPower)
+			suite.requireTally(first, 0, 0, 0)
+
+			suite.atBlock(12)
+			second, err := suite.submit(memberB, 1, false)
+			suite.Require().NoError(err)
+			suite.Require().NoError(suite.vote(memberA, second, types.VoteOption_YES))
+			suite.Require().NoError(suite.vote(memberC, second, types.VoteOption_NO))
+			suite.requireTally(second, 30, 20, 0)
+			suite.requireInvariants(second, memberA, memberC)
+		})
+	}
+}
+
+// D4: stake that joined after the submit has no weight; stake with no join
+// record (it joined before the source was pinned) counts.
+func (suite *IntegrationTestSuite) TestVote_D4_JoinAfterSubmit() {
+	for _, src := range stakeSources {
+		suite.Run(src.name, func() {
+			suite.SetupTest()
+			s := suite.createStakeDao()
+			s.joinSr("1", memberB, 40)
+			s.joinDr(stakeDenom, memberB, 10)
+			suite.atBlock(10)
+			id, err := suite.submit(memberB, 1, false)
+			suite.Require().NoError(err)
+
+			suite.atBlock(11)
+			src.join(suite, s, memberC, 25)
+			suite.Require().ErrorIs(suite.vote(memberC, id, types.VoteOption_YES), types.ErrNoVotingPower)
+
+			_, found := suite.k.GetJoinRecord(suite.ctx, src.source, memberB)
+			suite.Require().False(found)
+			suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_YES))
+			suite.requireTally(id, 50, 0, 0)
+			suite.requireInvariants(id, memberB, memberC)
+		})
+	}
+}
+
+// D5: a top-up during the vote counts once the voter votes again (the
+// accepted residual); the cast ballot is not amplified on its own, and an
+// exit zeroes it.
+func (suite *IntegrationTestSuite) TestVote_D5_IncreaseCountsOnRevote() {
+	s := suite.createStakeDao()
+	s.joinSr("1", memberA, 30)
+	suite.atBlock(10)
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+
+	suite.atBlock(11)
+	s.joinSr("1", memberA, 50)
+	suite.Require().NoError(suite.k.StakingRewardHooks().AfterStakingRewardIncrease(suite.ctx, "1", memberA.String(), math.NewInt(20), math.NewInt(50), stakeDenom))
+	suite.requireTally(id, 30, 0, 0)
+
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_NO))
+	suite.requireTally(id, 0, 50, 0)
+	suite.requireInvariants(id, memberA)
+
+	stakeSources[0].exit(suite, s, memberA)
+	suite.requireTally(id, 0, 0, 0)
+	ballot, _ := suite.k.GetBallot(suite.ctx, id, memberA)
+	suite.Require().True(ballot.Weight.IsZero())
+	suite.requireInvariants(id, memberA)
+}
+
+// D15: a staker whose every share is ineligible, or who has no stake in the
+// proposal's sources, has no vote.
+func (suite *IntegrationTestSuite) TestVote_D15_NoEligibleShare() {
+	s := suite.createStakeDao()
+	s.joinSr("1", memberB, 1)
+	s.joinSr("5", attackerAddr, 1_000) // outside the electorate
+	suite.atBlock(10)
+	id, err := suite.submit(memberB, 1, false)
+	suite.Require().NoError(err)
+
+	suite.atBlock(11)
+	stakeSources[0].join(suite, s, memberA, 10)
+	stakeSources[1].join(suite, s, memberA, 10)
+
+	suite.Require().ErrorIs(suite.vote(memberA, id, types.VoteOption_YES), types.ErrNoVotingPower)
+	suite.Require().ErrorIs(suite.vote(attackerAddr, id, types.VoteOption_YES), types.ErrNoVotingPower)
+	_, found := suite.k.GetBallot(suite.ctx, id, memberA)
+	suite.Require().False(found)
+	suite.Require().False(suite.k.HasVoteIndex(suite.ctx, srSource, memberA, id))
+	suite.requireTally(id, 0, 0, 0)
+}
+
+// A voter in two staking rewards and the Denom Reward gets one share per
+// source; leaving one source zeroes only that share.
+func (suite *IntegrationTestSuite) TestVote_SharePerSource() {
+	suite.stubRewards(defaultRewardsState())
+	s := suite.stubStakes()
+	suite.expectCreation(1)
+	_, err := suite.msgServer.CreateDao(suite.ctx, validStakeDaoMsg([]string{"1", "5"}, stakeDenom))
+	suite.Require().NoError(err)
+
+	s.joinSr("1", memberA, 10)
+	s.joinSr("5", memberA, 20)
+	s.joinDr(stakeDenom, memberA, 30)
+	suite.atBlock(10)
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_ABSTAIN))
+	ballot, _ := suite.k.GetBallot(suite.ctx, id, memberA)
+	suite.Require().Equal(math.NewInt(60), ballot.Weight)
+	suite.Require().Equal([]types.BallotShare{
+		{Source: "sr/1", Amount: math.NewInt(10)},
+		{Source: "sr/5", Amount: math.NewInt(20)},
+		{Source: "dr/ubze", Amount: math.NewInt(30)},
+	}, ballot.Shares)
+	suite.requireTally(id, 0, 0, 60)
+	suite.requireInvariants(id, memberA)
+	// the event carries the ballot's weight, the sum of the shares
+	attrs := suite.lastVoteEvent()
+	suite.Require().Equal(`"ABSTAIN"`, attrs["option"])
+	suite.Require().Equal(`"60"`, attrs["weight"])
+
+	sr5 := types.StakingRewardSource("5")
+	delete(s.sr["5"], memberA.String())
+	suite.Require().NoError(suite.k.StakingRewardHooks().AfterStakingRewardExit(suite.ctx, "5", memberA.String(), math.NewInt(20), stakeDenom))
+
+	ballot, _ = suite.k.GetBallot(suite.ctx, id, memberA)
+	suite.Require().Equal(math.NewInt(40), ballot.Weight)
+	suite.Require().Equal([]types.BallotShare{
+		{Source: "sr/1", Amount: math.NewInt(10)},
+		{Source: "dr/ubze", Amount: math.NewInt(30)},
+	}, ballot.Shares)
+	suite.Require().False(suite.k.HasVoteIndex(suite.ctx, sr5, memberA, id))
+	suite.Require().True(suite.k.HasVoteIndex(suite.ctx, srSource, memberA, id))
+	suite.Require().True(suite.k.HasVoteIndex(suite.ctx, drSource, memberA, id))
+	suite.requireTally(id, 0, 0, 40)
+	suite.requireInvariants(id, memberA)
+}

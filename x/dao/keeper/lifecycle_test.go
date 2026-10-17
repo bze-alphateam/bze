@@ -487,3 +487,128 @@ func (suite *IntegrationTestSuite) TestSubmitProposal_NoVotingPowerRejected() {
 	_, err = suite.submit(memberA, 2, false)
 	suite.Require().ErrorIs(err, types.ErrNoVotingPower)
 }
+
+// lastVoteEvent returns the attributes of the last EventVote emitted.
+func (suite *IntegrationTestSuite) lastVoteEvent() map[string]string {
+	var attrs map[string]string
+	for _, event := range suite.ctx.EventManager().Events() {
+		if event.Type != proto.MessageName(&types.EventVote{}) {
+			continue
+		}
+		attrs = map[string]string{}
+		for _, attr := range event.Attributes {
+			attrs[attr.Key] = attr.Value
+		}
+	}
+
+	return attrs
+}
+
+// A member's vote is stored with weight 1, counted in the tally and announced.
+func (suite *IntegrationTestSuite) TestVote_StaticMemberVotes() {
+	suite.createStaticDao(noConfigChange)
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+
+	suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_NO))
+
+	ballot, found := suite.k.GetBallot(suite.ctx, id, memberB)
+	suite.Require().True(found)
+	suite.Require().Equal(types.Ballot{ProposalId: id, Voter: memberB.String(), Option: types.VoteOption_NO, Weight: math.OneInt()}, ballot)
+	suite.requireTally(id, 0, 1, 0)
+	suite.requireInvariants(id, memberA, memberB)
+
+	attrs := suite.lastVoteEvent()
+	suite.Require().Equal(`"1"`, attrs["proposal_id"])
+	suite.Require().Equal(`"`+memberB.String()+`"`, attrs["voter"])
+	suite.Require().Equal(`"NO"`, attrs["option"])
+	suite.Require().Equal(`"1"`, attrs["weight"])
+}
+
+// D15: an address that is not on the DAO's list has no vote.
+func (suite *IntegrationTestSuite) TestVote_NonMemberRejected() {
+	suite.createStaticDao(noConfigChange)
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+
+	for _, voter := range []sdk.AccAddress{memberC, attackerAddr, daoAddress(1)} {
+		err = suite.vote(voter, id, types.VoteOption_YES)
+		suite.Require().ErrorIs(err, types.ErrNoVotingPower, voter.String())
+		_, found := suite.k.GetBallot(suite.ctx, id, voter)
+		suite.Require().False(found)
+	}
+	suite.requireTally(id, 0, 0, 0)
+}
+
+// D18: voting closes at voting_end itself; the last second before it is open.
+func (suite *IntegrationTestSuite) TestVote_ClosesAtVotingEnd() {
+	suite.createStaticDao(noConfigChange)
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	proposal, _ := suite.k.GetProposal(suite.ctx, id)
+
+	suite.ctx = suite.ctx.WithBlockTime(time.Unix(proposal.VotingEnd-1, 0))
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+
+	suite.ctx = suite.ctx.WithBlockTime(time.Unix(proposal.VotingEnd, 0))
+	err = suite.vote(memberB, id, types.VoteOption_YES)
+	suite.Require().ErrorIs(err, types.ErrVotingClosed)
+
+	suite.ctx = suite.ctx.WithBlockTime(time.Unix(proposal.VotingEnd+3600, 0))
+	err = suite.vote(memberA, id, types.VoteOption_NO)
+	suite.Require().ErrorIs(err, types.ErrVotingClosed)
+
+	suite.requireTally(id, 1, 0, 0)
+}
+
+// An expedited proposal closes at the end of its shorter period.
+func (suite *IntegrationTestSuite) TestVote_ExpeditedClosesEarlier() {
+	suite.createStaticDao(noConfigChange)
+	suite.atBlock(10)
+	id, err := suite.submit(memberA, 1, true)
+	suite.Require().NoError(err)
+
+	suite.ctx = suite.ctx.WithBlockTime(time.Unix(submitTime+10+int64((24*time.Hour).Seconds()), 0))
+	err = suite.vote(memberA, id, types.VoteOption_YES)
+	suite.Require().ErrorIs(err, types.ErrVotingClosed)
+}
+
+// A vote on an unknown proposal, or an invalid message, changes nothing.
+func (suite *IntegrationTestSuite) TestVote_InvalidRequests() {
+	suite.createStaticDao(noConfigChange)
+
+	err := suite.vote(memberA, 1, types.VoteOption_YES)
+	suite.Require().ErrorIs(err, types.ErrProposalNotFound)
+
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+
+	err = suite.vote(memberA, id, types.VoteOption(7))
+	suite.Require().ErrorIs(err, types.ErrInvalidVote)
+
+	_, err = suite.msgServer.Vote(suite.ctx, &types.MsgVote{Voter: "bze1nope", ProposalId: id})
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidAddress)
+
+	suite.requireTally(id, 0, 0, 0)
+}
+
+// A vote whose option is left out decodes to UNSPECIFIED and is rejected, so
+// it can never count as YES; no ballot is stored.
+func (suite *IntegrationTestSuite) TestVote_OmittedOptionRejected() {
+	suite.createStaticDao(noConfigChange)
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+
+	// the wire form of a vote without the option field
+	bz, err := (&types.MsgVote{Voter: memberA.String(), ProposalId: id}).Marshal()
+	suite.Require().NoError(err)
+	var decoded types.MsgVote
+	suite.Require().NoError(decoded.Unmarshal(bz))
+	suite.Require().Equal(types.VoteOption_VOTE_OPTION_UNSPECIFIED, decoded.Option)
+
+	_, err = suite.msgServer.Vote(suite.ctx, &decoded)
+	suite.Require().ErrorIs(err, types.ErrInvalidVote)
+	_, found := suite.k.GetBallot(suite.ctx, id, memberA)
+	suite.Require().False(found)
+	suite.requireTally(id, 0, 0, 0)
+}

@@ -13,7 +13,8 @@ import (
 )
 
 // The app registers x/dao on the x/rewards Denom Reward hooks: joining a
-// Denom Reward a DAO votes with writes the join record, exiting deletes it.
+// Denom Reward a DAO votes with writes the join record; exiting deletes it
+// and takes the stake out of the staker's open ballot.
 func TestDaoDenomRewardHooks_Wired(t *testing.T) {
 	bApp, ctx, admin, _ := newAdminDaoApp(t)
 	staker := sdk.AccAddress("dao_staker__________")
@@ -44,8 +45,26 @@ func TestDaoDenomRewardHooks_Wired(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, int64(3), record.Height)
 
+	// DAO 1 is the helper's static-list DAO; the stake DAO is 2
+	ctx = ctx.WithBlockHeight(4)
+	submitMsg, err := daotypes.NewMsgSubmitProposal(staker.String(), 2, "signal", "", nil, false)
+	require.NoError(t, err)
+	_, err = runAsTx(bApp, ctx, submitMsg)
+	require.NoError(t, err)
+	proposalId := bApp.DaoKeeper.GetProposalCounter(ctx)
+	_, err = runAsTx(bApp, ctx, daotypes.NewMsgVote(staker.String(), proposalId, daotypes.VoteOption_YES))
+	require.NoError(t, err)
+	proposal, _ := bApp.DaoKeeper.GetProposal(ctx, proposalId)
+	require.Equal(t, math.NewInt(400), proposal.Yes)
+
 	_, err = runAsTx(bApp, ctx, &rewardstypes.MsgExitDenomReward{Creator: staker.String(), Denom: "ubze"})
 	require.NoError(t, err)
 	_, found = bApp.DaoKeeper.GetJoinRecord(ctx, daotypes.DenomRewardSource("ubze"), staker)
 	require.False(t, found)
+
+	proposal, _ = bApp.DaoKeeper.GetProposal(ctx, proposalId)
+	require.True(t, proposal.Yes.IsZero())
+	ballot, _ := bApp.DaoKeeper.GetBallot(ctx, proposalId, staker)
+	require.True(t, ballot.Weight.IsZero())
+	require.False(t, bApp.DaoKeeper.HasVoteIndex(ctx, daotypes.DenomRewardSource("ubze"), staker, proposalId))
 }

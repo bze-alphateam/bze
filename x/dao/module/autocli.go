@@ -55,7 +55,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long: "Run messages as the DAO, in order; if one fails, none is applied. Every message must be signed by the DAO account only, " +
 						"so it can spend the treasury but never another address. Each message is a JSON Any (with \"@type\") or a .json file holding one. " +
 						"A self-owned DAO has no admin and executes through its proposals.",
-					Example: `bzed tx dao admin-execute 1 '{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"bze1<dao>","to_address":"bze1...","amount":[{"denom":"ubze","amount":"1000000"}]}' --from admin`,
+					Example:        `bzed tx dao admin-execute 1 '{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"bze1<dao>","to_address":"bze1...","amount":[{"denom":"ubze","amount":"1000000"}]}' --from admin`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}, {ProtoField: "msgs", Varargs: true}},
 				},
 				{
@@ -96,6 +96,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						"summary":   {Usage: "proposal summary"},
 						"expedited": {Usage: "use the DAO's expedited voting period"},
 					},
+				},
+				{
+					RpcMethod: "Vote",
+					Use:       "vote [proposal-id] [option]",
+					Short:     "Vote yes, no or abstain on a DAO proposal in voting",
+					Long: "Vote on a proposal with your current voting power: one vote per member of a static-list DAO, " +
+						"or your stake in the proposal's sources that joined before it was submitted. Voting again with another option replaces your ballot. " +
+						"The option is yes, no or abstain, in lowercase.",
+					Example:        "bzed tx dao vote 1 yes --from member",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "proposal_id"}, {ProtoField: "option"}},
 				},
 			},
 		},

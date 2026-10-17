@@ -52,3 +52,23 @@ message EventProposalSubmitted {
   // denominator is the pinned total voting power (math.Int).
   string denominator = 6;
 }
+
+// EventVote is emitted when a ballot is cast or changed.
+message EventVote {
+  uint64 proposal_id = 1;
+  string voter = 2;
+  VoteOption option = 3;
+  // weight is the ballot's weight (math.Int).
+  string weight = 4;
+}
+
+// EventBallotReduced is emitted when a voter leaves an electorate source and
+// its share is taken out of a ballot on a proposal in voting.
+message EventBallotReduced {
+  uint64 proposal_id = 1;
+  string voter = 2;
+  // source is sr/{reward_id} or dr/{staking_denom}.
+  string source = 3;
+  // amount is the share removed from the ballot and its tally (math.Int).
+  string amount = 4;
+}
