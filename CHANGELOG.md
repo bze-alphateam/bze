@@ -48,6 +48,7 @@ derived from it. History older than v8.0.0 lives in the
 * (x/dao) [#171](https://github.com/bze-alphateam/bze/pull/171) DAOs can change their name and description with `MsgUpdateMetadata` (`bzed tx dao update-metadata`), signed by the DAO account only, like `MsgUpdateDaoConfig`. Name 1 to 64 bytes, description up to 2,000; emits `EventDaoMetadataUpdated`.
 * (x/dao) [#172](https://github.com/bze-alphateam/bze/pull/172) Stake DAOs can replace their staking rewards and Denom Reward with `MsgUpdateElectorate` (`bzed tx dao update-electorate`), signed by the DAO account only. Open proposals keep their pinned sources, only added sources must meet the min lock, and a self-owned DAO must keep a live electorate; emits `EventDaoElectorateUpdated`.
 * (x/dao) [#174](https://github.com/bze-alphateam/bze/pull/174) Static-list DAOs can add and remove members with `MsgUpdateMembers` (`bzed tx dao update-members`), signed by the DAO account only. A removed member's votes on open proposals stop counting at once, added members can vote on them, and at least one member must remain; emits `EventDaoMembersUpdated`.
+* (x/dao) [#175](https://github.com/bze-alphateam/bze/pull/175) Query a DAO by id (`bzed q dao dao`) or by its account (`bzed q dao dao-by-address`). DAOs and the dao and proposal id counters are exported to and imported from genesis.
 
 ### Improvements
 
