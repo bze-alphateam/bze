@@ -24,6 +24,11 @@ func (msg *MsgVote) ValidateBasic() error {
 		return errorsmod.Wrap(ErrProposalNotFound, "proposal id must be positive")
 	}
 
+	// an omitted option decodes to UNSPECIFIED: never count it as a vote
+	if msg.Option == VoteOption_VOTE_OPTION_UNSPECIFIED {
+		return errorsmod.Wrap(ErrInvalidVote, "option is not set")
+	}
+
 	if _, ok := VoteOption_name[int32(msg.Option)]; !ok {
 		return errorsmod.Wrapf(ErrInvalidVote, "unknown option %d", msg.Option)
 	}
