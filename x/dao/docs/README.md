@@ -51,7 +51,7 @@ The DAO module lets anyone create an on-chain organisation with its own treasury
 - `MsgCancelProposal`: the proposer (`proposer`) withdraws their proposal. Rules:
   - The proposal must be in voting. Cancelling is allowed after `voting_end` too, until the proposal is settled. Only the address that submitted it can cancel (a proposal the DAO submitted is cancelled by the DAO, through a proposal or its admin).
   - The proposal becomes `CANCELLED`: it takes no more votes, frees its slot under `max_open_proposals` and stops pinning its sources. Its ballots and tally stay as they were.
-  - The deposit, if any, is refunded to the proposer only when the pinned config's `deposit_refund_policy` is `ALWAYS`. Under `ONLY_PASSED` and `NEVER` it is kept and goes to the pinned `kept_deposit_destination`: the burner (`BURN`) or the DAO's treasury (`TREASURY`; burned if the DAO no longer exists). The proposal cost is never refunded.
+  - The deposit, if any, is refunded to the proposer only when the pinned config's `deposit_refund_policy` is `ALWAYS`. Under `ONLY_PASSED` and `NEVER` it is kept and goes to the pinned `kept_deposit_destination`: the burner (`BURN`) or the DAO's treasury (`TREASURY`). The proposal cost is never refunded.
 - `MsgUpdateParams` **(authority)**: replaces the module parameters. Reserved for the module authority (governance).
 
 Example (CLI):
