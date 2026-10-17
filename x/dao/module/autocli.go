@@ -138,6 +138,17 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						"limit": {Usage: "ballots to delete in this call (0 = the cleanup_batch_size param)"},
 					},
 				},
+				{
+					RpcMethod: "UpdateDaoConfig",
+					Use:       "update-dao-config [dao-id] [config]",
+					Short:     "Replace a DAO's config; signed by the DAO account only",
+					Long: "Replace the DAO's whole config, as JSON in the create-dao format (ratios as 18-decimal integers, periods as seconds). " +
+						"Only the DAO account can sign it: build the message with --generate-only and run it through admin-execute or a proposal. " +
+						"Open proposals keep the config they pinned.",
+					Example: `bzed tx dao update-dao-config 1 '{"min_quorum":"500000000000000000","threshold":"500000000000000000","voting_period":"259200s",` +
+						`"expedited_period":"86400s","expedite_quorum":"600000000000000000","expedite_threshold":"660000000000000000"}' --from bze1<dao address> --generate-only`,
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}, {ProtoField: "config"}},
+				},
 			},
 		},
 	}

@@ -81,15 +81,98 @@ func (suite *IntegrationTestSuite) expectCreation(id uint64) {
 	suite.expectFee(burnerFeeCollector)
 }
 
+type configCase struct {
+	desc    string
+	mutate  func(c *types.DaoConfig)
+	wantErr error
+}
+
+// configCases are every bound of a DaoConfig on both sides, under the default
+// params, applied to validConfig. MsgCreateDao and MsgUpdateDaoConfig share them.
+func configCases() []configCase {
+	return []configCase{
+		{desc: "zero min_quorum", mutate: func(c *types.DaoConfig) { c.MinQuorum = dec("0") }, wantErr: types.ErrInvalidConfig},
+		{desc: "negative min_quorum", mutate: func(c *types.DaoConfig) { c.MinQuorum = dec("-0.1") }, wantErr: types.ErrInvalidConfig},
+		{desc: "smallest min_quorum", mutate: func(c *types.DaoConfig) { c.MinQuorum = dec("0.000000000000000001") }},
+		{desc: "min_quorum above 1", mutate: func(c *types.DaoConfig) { c.MinQuorum = dec("1.000000000000000001") }, wantErr: types.ErrInvalidConfig},
+		{desc: "unset min_quorum", mutate: func(c *types.DaoConfig) { c.MinQuorum = math.LegacyDec{} }, wantErr: types.ErrInvalidConfig},
+		{desc: "unset expedite_threshold", mutate: func(c *types.DaoConfig) { c.ExpediteThreshold = math.LegacyDec{} }, wantErr: types.ErrInvalidConfig},
+		{desc: "zero threshold", mutate: func(c *types.DaoConfig) { c.Threshold = dec("0") }, wantErr: types.ErrInvalidConfig},
+		{desc: "threshold above 1", mutate: func(c *types.DaoConfig) { c.Threshold = dec("1.1") }, wantErr: types.ErrInvalidConfig},
+		{desc: "all ratios at 1", mutate: func(c *types.DaoConfig) {
+			one := math.LegacyOneDec()
+			c.MinQuorum, c.Threshold, c.ExpediteQuorum, c.ExpediteThreshold = one, one, one, one
+		}},
+		{desc: "zero expedite_quorum", mutate: func(c *types.DaoConfig) { c.ExpediteQuorum = dec("0") }, wantErr: types.ErrInvalidConfig},
+		{desc: "expedite_quorum above 1", mutate: func(c *types.DaoConfig) { c.ExpediteQuorum = dec("1.5") }, wantErr: types.ErrInvalidConfig},
+		{desc: "expedite_quorum below min_quorum", mutate: func(c *types.DaoConfig) { c.ExpediteQuorum = dec("0.39") }, wantErr: types.ErrInvalidConfig},
+		{desc: "expedite_quorum equal to min_quorum", mutate: func(c *types.DaoConfig) { c.ExpediteQuorum = dec("0.4") }},
+		{desc: "zero expedite_threshold", mutate: func(c *types.DaoConfig) { c.ExpediteThreshold = dec("0") }, wantErr: types.ErrInvalidConfig},
+		{desc: "expedite_threshold above 1", mutate: func(c *types.DaoConfig) { c.ExpediteThreshold = dec("2") }, wantErr: types.ErrInvalidConfig},
+		{desc: "expedite_threshold below threshold", mutate: func(c *types.DaoConfig) { c.ExpediteThreshold = dec("0.49") }, wantErr: types.ErrInvalidConfig},
+		{desc: "expedite_threshold equal to threshold", mutate: func(c *types.DaoConfig) { c.ExpediteThreshold = dec("0.5") }},
+		{desc: "invalid expedite fields checked when expedite is off", mutate: func(c *types.DaoConfig) {
+			c.AllowExpedite = false
+			c.ExpediteQuorum = dec("0")
+		}, wantErr: types.ErrInvalidConfig},
+
+		{desc: "voting period at min", mutate: func(c *types.DaoConfig) { c.VotingPeriod, c.ExpeditedPeriod = time.Hour, time.Hour }},
+		{desc: "voting period below min", mutate: func(c *types.DaoConfig) {
+			c.VotingPeriod, c.ExpeditedPeriod = time.Hour-time.Nanosecond, time.Hour-time.Nanosecond
+		}, wantErr: types.ErrInvalidConfig},
+		{desc: "voting period at max", mutate: func(c *types.DaoConfig) { c.VotingPeriod = 90 * 24 * time.Hour }},
+		{desc: "voting period above max", mutate: func(c *types.DaoConfig) { c.VotingPeriod = 90*24*time.Hour + time.Nanosecond }, wantErr: types.ErrInvalidConfig},
+		{desc: "expedited period below min", mutate: func(c *types.DaoConfig) { c.ExpeditedPeriod = time.Hour - time.Nanosecond }, wantErr: types.ErrInvalidConfig},
+		{desc: "expedited period below min when expedite is off", mutate: func(c *types.DaoConfig) {
+			c.AllowExpedite = false
+			c.ExpeditedPeriod = 0
+		}, wantErr: types.ErrInvalidConfig},
+		{desc: "expedited period equal to voting period", mutate: func(c *types.DaoConfig) { c.ExpeditedPeriod = c.VotingPeriod }},
+		{desc: "expedited period longer than voting period", mutate: func(c *types.DaoConfig) {
+			c.ExpeditedPeriod = c.VotingPeriod + time.Nanosecond
+		}, wantErr: types.ErrInvalidConfig},
+
+		{desc: "zero proposal cost and deposit", mutate: func(c *types.DaoConfig) {
+			zero := sdk.NewInt64Coin("ubze", 0)
+			c.ProposalCost, c.ProposalDeposit = &zero, &zero
+		}},
+		{desc: "positive proposal cost and deposit", mutate: func(c *types.DaoConfig) {
+			cost, deposit := sdk.NewInt64Coin("ubze", 1), sdk.NewInt64Coin("ubze", 100)
+			c.ProposalCost, c.ProposalDeposit = &cost, &deposit
+		}},
+		{desc: "negative proposal cost", mutate: func(c *types.DaoConfig) {
+			c.ProposalCost = &sdk.Coin{Denom: "ubze", Amount: math.NewInt(-1)}
+		}, wantErr: types.ErrInvalidConfig},
+		{desc: "invalid proposal cost denom", mutate: func(c *types.DaoConfig) {
+			c.ProposalCost = &sdk.Coin{Denom: "1", Amount: math.NewInt(1)}
+		}, wantErr: types.ErrInvalidConfig},
+		{desc: "negative proposal deposit", mutate: func(c *types.DaoConfig) {
+			c.ProposalDeposit = &sdk.Coin{Denom: "ubze", Amount: math.NewInt(-1)}
+		}, wantErr: types.ErrInvalidConfig},
+		{desc: "proposal deposit without amount", mutate: func(c *types.DaoConfig) {
+			c.ProposalDeposit = &sdk.Coin{Denom: "ubze"}
+		}, wantErr: types.ErrInvalidConfig},
+		{desc: "unknown deposit refund policy", mutate: func(c *types.DaoConfig) { c.DepositRefundPolicy = 3 }, wantErr: types.ErrInvalidConfig},
+		{desc: "unknown cost destination", mutate: func(c *types.DaoConfig) { c.CostDestination = 2 }, wantErr: types.ErrInvalidConfig},
+		{desc: "unknown kept deposit destination", mutate: func(c *types.DaoConfig) { c.KeptDepositDestination = 2 }, wantErr: types.ErrInvalidConfig},
+		{desc: "non-default policy and destinations", mutate: func(c *types.DaoConfig) {
+			c.DepositRefundPolicy = types.DepositRefundPolicy_NEVER
+			c.CostDestination = types.FundsDestination_TREASURY
+			c.KeptDepositDestination = types.FundsDestination_TREASURY
+		}},
+	}
+}
+
 // Every bound of the config, metadata and addresses, on both sides. A rejected
 // message touches neither the accounts, the bank (gomock fails on any
 // unexpected call) nor the store.
 func (suite *IntegrationTestSuite) TestCreateDao_ValidationMatrix() {
-	for _, tc := range []struct {
+	type createCase struct {
 		desc    string
 		mutate  func(m *types.MsgCreateDao)
 		wantErr error
-	}{
+	}
+	cases := []createCase{
 		{desc: "valid", mutate: func(m *types.MsgCreateDao) {}},
 		{desc: "invalid creator", mutate: func(m *types.MsgCreateDao) { m.Creator = "bad" }, wantErr: sdkerrors.ErrInvalidAddress},
 		{desc: "empty creator", mutate: func(m *types.MsgCreateDao) { m.Creator = "" }, wantErr: sdkerrors.ErrInvalidAddress},
@@ -103,78 +186,13 @@ func (suite *IntegrationTestSuite) TestCreateDao_ValidationMatrix() {
 		{desc: "2000 byte description", mutate: func(m *types.MsgCreateDao) { m.Description = strings.Repeat("d", 2000) }},
 		{desc: "2001 byte description", mutate: func(m *types.MsgCreateDao) { m.Description = strings.Repeat("d", 2001) }, wantErr: types.ErrInvalidMetadata},
 
-		{desc: "zero min_quorum", mutate: func(m *types.MsgCreateDao) { m.Config.MinQuorum = dec("0") }, wantErr: types.ErrInvalidConfig},
-		{desc: "negative min_quorum", mutate: func(m *types.MsgCreateDao) { m.Config.MinQuorum = dec("-0.1") }, wantErr: types.ErrInvalidConfig},
-		{desc: "smallest min_quorum", mutate: func(m *types.MsgCreateDao) { m.Config.MinQuorum = dec("0.000000000000000001") }},
-		{desc: "min_quorum above 1", mutate: func(m *types.MsgCreateDao) { m.Config.MinQuorum = dec("1.000000000000000001") }, wantErr: types.ErrInvalidConfig},
-		{desc: "unset min_quorum", mutate: func(m *types.MsgCreateDao) { m.Config.MinQuorum = math.LegacyDec{} }, wantErr: types.ErrInvalidConfig},
-		{desc: "unset expedite_threshold", mutate: func(m *types.MsgCreateDao) { m.Config.ExpediteThreshold = math.LegacyDec{} }, wantErr: types.ErrInvalidConfig},
-		{desc: "zero threshold", mutate: func(m *types.MsgCreateDao) { m.Config.Threshold = dec("0") }, wantErr: types.ErrInvalidConfig},
-		{desc: "threshold above 1", mutate: func(m *types.MsgCreateDao) { m.Config.Threshold = dec("1.1") }, wantErr: types.ErrInvalidConfig},
-		{desc: "all ratios at 1", mutate: func(m *types.MsgCreateDao) {
-			one := math.LegacyOneDec()
-			m.Config.MinQuorum, m.Config.Threshold, m.Config.ExpediteQuorum, m.Config.ExpediteThreshold = one, one, one, one
-		}},
-		{desc: "zero expedite_quorum", mutate: func(m *types.MsgCreateDao) { m.Config.ExpediteQuorum = dec("0") }, wantErr: types.ErrInvalidConfig},
-		{desc: "expedite_quorum above 1", mutate: func(m *types.MsgCreateDao) { m.Config.ExpediteQuorum = dec("1.5") }, wantErr: types.ErrInvalidConfig},
-		{desc: "expedite_quorum below min_quorum", mutate: func(m *types.MsgCreateDao) { m.Config.ExpediteQuorum = dec("0.39") }, wantErr: types.ErrInvalidConfig},
-		{desc: "expedite_quorum equal to min_quorum", mutate: func(m *types.MsgCreateDao) { m.Config.ExpediteQuorum = dec("0.4") }},
-		{desc: "zero expedite_threshold", mutate: func(m *types.MsgCreateDao) { m.Config.ExpediteThreshold = dec("0") }, wantErr: types.ErrInvalidConfig},
-		{desc: "expedite_threshold above 1", mutate: func(m *types.MsgCreateDao) { m.Config.ExpediteThreshold = dec("2") }, wantErr: types.ErrInvalidConfig},
-		{desc: "expedite_threshold below threshold", mutate: func(m *types.MsgCreateDao) { m.Config.ExpediteThreshold = dec("0.49") }, wantErr: types.ErrInvalidConfig},
-		{desc: "expedite_threshold equal to threshold", mutate: func(m *types.MsgCreateDao) { m.Config.ExpediteThreshold = dec("0.5") }},
-		{desc: "invalid expedite fields checked when expedite is off", mutate: func(m *types.MsgCreateDao) {
-			m.Config.AllowExpedite = false
-			m.Config.ExpediteQuorum = dec("0")
-		}, wantErr: types.ErrInvalidConfig},
-
-		{desc: "voting period at min", mutate: func(m *types.MsgCreateDao) { m.Config.VotingPeriod, m.Config.ExpeditedPeriod = time.Hour, time.Hour }},
-		{desc: "voting period below min", mutate: func(m *types.MsgCreateDao) {
-			m.Config.VotingPeriod, m.Config.ExpeditedPeriod = time.Hour-time.Nanosecond, time.Hour-time.Nanosecond
-		}, wantErr: types.ErrInvalidConfig},
-		{desc: "voting period at max", mutate: func(m *types.MsgCreateDao) { m.Config.VotingPeriod = 90 * 24 * time.Hour }},
-		{desc: "voting period above max", mutate: func(m *types.MsgCreateDao) { m.Config.VotingPeriod = 90*24*time.Hour + time.Nanosecond }, wantErr: types.ErrInvalidConfig},
-		{desc: "expedited period below min", mutate: func(m *types.MsgCreateDao) { m.Config.ExpeditedPeriod = time.Hour - time.Nanosecond }, wantErr: types.ErrInvalidConfig},
-		{desc: "expedited period below min when expedite is off", mutate: func(m *types.MsgCreateDao) {
-			m.Config.AllowExpedite = false
-			m.Config.ExpeditedPeriod = 0
-		}, wantErr: types.ErrInvalidConfig},
-		{desc: "expedited period equal to voting period", mutate: func(m *types.MsgCreateDao) { m.Config.ExpeditedPeriod = m.Config.VotingPeriod }},
-		{desc: "expedited period longer than voting period", mutate: func(m *types.MsgCreateDao) {
-			m.Config.ExpeditedPeriod = m.Config.VotingPeriod + time.Nanosecond
-		}, wantErr: types.ErrInvalidConfig},
-
-		{desc: "zero proposal cost and deposit", mutate: func(m *types.MsgCreateDao) {
-			zero := sdk.NewInt64Coin("ubze", 0)
-			m.Config.ProposalCost, m.Config.ProposalDeposit = &zero, &zero
-		}},
-		{desc: "positive proposal cost and deposit", mutate: func(m *types.MsgCreateDao) {
-			cost, deposit := sdk.NewInt64Coin("ubze", 1), sdk.NewInt64Coin("ubze", 100)
-			m.Config.ProposalCost, m.Config.ProposalDeposit = &cost, &deposit
-		}},
-		{desc: "negative proposal cost", mutate: func(m *types.MsgCreateDao) {
-			m.Config.ProposalCost = &sdk.Coin{Denom: "ubze", Amount: math.NewInt(-1)}
-		}, wantErr: types.ErrInvalidConfig},
-		{desc: "invalid proposal cost denom", mutate: func(m *types.MsgCreateDao) {
-			m.Config.ProposalCost = &sdk.Coin{Denom: "1", Amount: math.NewInt(1)}
-		}, wantErr: types.ErrInvalidConfig},
-		{desc: "negative proposal deposit", mutate: func(m *types.MsgCreateDao) {
-			m.Config.ProposalDeposit = &sdk.Coin{Denom: "ubze", Amount: math.NewInt(-1)}
-		}, wantErr: types.ErrInvalidConfig},
-		{desc: "proposal deposit without amount", mutate: func(m *types.MsgCreateDao) {
-			m.Config.ProposalDeposit = &sdk.Coin{Denom: "ubze"}
-		}, wantErr: types.ErrInvalidConfig},
-		{desc: "unknown deposit refund policy", mutate: func(m *types.MsgCreateDao) { m.Config.DepositRefundPolicy = 3 }, wantErr: types.ErrInvalidConfig},
-		{desc: "unknown cost destination", mutate: func(m *types.MsgCreateDao) { m.Config.CostDestination = 2 }, wantErr: types.ErrInvalidConfig},
-		{desc: "unknown kept deposit destination", mutate: func(m *types.MsgCreateDao) { m.Config.KeptDepositDestination = 2 }, wantErr: types.ErrInvalidConfig},
-		{desc: "non-default policy and destinations", mutate: func(m *types.MsgCreateDao) {
-			m.Config.DepositRefundPolicy = types.DepositRefundPolicy_NEVER
-			m.Config.CostDestination = types.FundsDestination_TREASURY
-			m.Config.KeptDepositDestination = types.FundsDestination_TREASURY
-		}},
-
 		{desc: "unknown type", mutate: func(m *types.MsgCreateDao) { m.Type = 2 }, wantErr: types.ErrInvalidDaoType},
-	} {
+	}
+	for _, cc := range configCases() {
+		cases = append(cases, createCase{desc: cc.desc, mutate: func(m *types.MsgCreateDao) { cc.mutate(&m.Config) }, wantErr: cc.wantErr})
+	}
+
+	for _, tc := range cases {
 		suite.Run(tc.desc, func() {
 			suite.SetupTest()
 			msg := validCreateDaoMsg()

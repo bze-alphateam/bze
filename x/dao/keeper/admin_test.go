@@ -589,3 +589,28 @@ func (suite *IntegrationTestSuite) TestWithdrawAdminNomination_SelfOwnedDaoWithd
 	err := suite.accept(adminAddr, 1)
 	suite.Require().ErrorIs(err, types.ErrNoPendingNomination)
 }
+
+// The external admin changes the config through MsgAdminExecute, signed as the DAO.
+func (suite *IntegrationTestSuite) TestUpdateDaoConfig_ThroughAdminExecute() {
+	suite.createAdminDao()
+	next := validConfig()
+	next.Threshold = dec("0.6")
+	next.OpenSubmission = true
+
+	suite.Require().NoError(suite.adminExecute(adminAddr, 1, types.NewMsgUpdateDaoConfig(daoAddress(1).String(), 1, next)))
+
+	suite.requireConfig(next)
+	suite.requireConfigEvent("threshold", "open_submission")
+	suite.Require().True(suite.hasEvent("bze.dao.EventAdminExecuted"))
+}
+
+// An invalid config run through MsgAdminExecute fails the whole call.
+func (suite *IntegrationTestSuite) TestUpdateDaoConfig_ThroughAdminExecuteInvalid() {
+	suite.createAdminDao()
+	next := validConfig()
+	next.Threshold = dec("0")
+
+	err := suite.adminExecute(adminAddr, 1, types.NewMsgUpdateDaoConfig(daoAddress(1).String(), 1, next))
+	suite.Require().ErrorIs(err, types.ErrInvalidConfig)
+	suite.requireConfig(validConfig())
+}
