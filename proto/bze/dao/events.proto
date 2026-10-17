@@ -33,3 +33,10 @@ message EventAdminChanged {
   string old_admin = 2;
   string new_admin = 3;
 }
+
+// EventAdminNominationWithdrawn is emitted when a DAO's admin withdraws a
+// pending nomination.
+message EventAdminNominationWithdrawn {
+  uint64 id = 1;
+  string nominee = 2;
+}

@@ -75,6 +75,14 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:        `bzed tx dao accept-admin-nomination 1 --from nominee`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}},
 				},
+				{
+					RpcMethod:      "WithdrawAdminNomination",
+					Use:            "withdraw-admin-nomination [dao-id]",
+					Short:          "Withdraw a DAO's pending admin nomination",
+					Long:           "The current admin cancels a pending handover before the nominee accepts it; the admin stays in charge and can nominate again.",
+					Example:        `bzed tx dao withdraw-admin-nomination 1 --from admin`,
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}},
+				},
 			},
 		},
 	}

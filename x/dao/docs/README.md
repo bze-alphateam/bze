@@ -31,6 +31,9 @@ The DAO module lets anyone create an on-chain organisation with its own treasury
   - A nomination must be pending, and the signer (`nominee`) must be the pending admin. A DAO nominee signs through its own proposal or admin, which proves it can act; it then administers the other DAO as its parent.
   - The nominee becomes the admin and the nomination is cleared. The former admin loses all its powers at once, `MsgAdminExecute` included.
   - The electorate is not checked: the new admin is external and can fix it.
+- `MsgWithdrawAdminNomination`: cancels a pending handover before the nominee accepts it. Rules:
+  - The signer (`authority`) must be the DAO's current admin, signing as for `MsgNominateAdmin`. The nominee cannot withdraw; it simply does not accept.
+  - A nomination must be pending. It is cleared, the admin stays in charge and can nominate again.
 - `MsgUpdateParams` **(authority)**: replaces the module parameters. Reserved for the module authority (governance).
 
 Example (CLI):
@@ -58,6 +61,9 @@ bzed tx dao nominate-admin 1 "" --from admin
 # As the nominee, accept and become the admin of DAO 1
 bzed tx dao accept-admin-nomination 1 --from nominee
 
+# As the admin of DAO 1, withdraw the pending nomination before it is accepted
+bzed tx dao withdraw-admin-nomination 1 --from admin
+
 # Submit a governance proposal that sets the module parameters (all of them)
 bzed tx dao update-params \
   '{"max_sr_per_dao":"5","max_static_members":"128","max_msgs_per_proposal":"16","max_proposal_bytes":"20000","min_voting_period":"3600s","max_voting_period":"7776000s","dao_creation_fee":{"denom":"ubze","amount":"50000000000"},"dao_creation_fee_destination":"burner","min_electorate_lock_days":5}' \
@@ -70,6 +76,7 @@ bzed tx dao update-params \
 - `bze.dao.EventAdminExecuted{id, admin, msg_count}`, after the events of the executed messages
 - `bze.dao.EventAdminNominated{id, admin, nominee}`
 - `bze.dao.EventAdminChanged{id, old_admin, new_admin}`, when a nominee accepts or the DAO is handed to its voters
+- `bze.dao.EventAdminNominationWithdrawn{id, nominee}`
 
 ## Queries
 - `bzed query dao params` – show the module parameters.

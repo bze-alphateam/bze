@@ -19,11 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_UpdateParams_FullMethodName          = "/bze.dao.Msg/UpdateParams"
-	Msg_CreateDao_FullMethodName             = "/bze.dao.Msg/CreateDao"
-	Msg_AdminExecute_FullMethodName          = "/bze.dao.Msg/AdminExecute"
-	Msg_NominateAdmin_FullMethodName         = "/bze.dao.Msg/NominateAdmin"
-	Msg_AcceptAdminNomination_FullMethodName = "/bze.dao.Msg/AcceptAdminNomination"
+	Msg_UpdateParams_FullMethodName            = "/bze.dao.Msg/UpdateParams"
+	Msg_CreateDao_FullMethodName               = "/bze.dao.Msg/CreateDao"
+	Msg_AdminExecute_FullMethodName            = "/bze.dao.Msg/AdminExecute"
+	Msg_NominateAdmin_FullMethodName           = "/bze.dao.Msg/NominateAdmin"
+	Msg_AcceptAdminNomination_FullMethodName   = "/bze.dao.Msg/AcceptAdminNomination"
+	Msg_WithdrawAdminNomination_FullMethodName = "/bze.dao.Msg/WithdrawAdminNomination"
 )
 
 // MsgClient is the client API for Msg service.
@@ -46,6 +47,9 @@ type MsgClient interface {
 	// AcceptAdminNomination is the second step of the admin handover: the
 	// pending nominee accepts and becomes the DAO's admin.
 	AcceptAdminNomination(ctx context.Context, in *MsgAcceptAdminNomination, opts ...grpc.CallOption) (*MsgAcceptAdminNominationResponse, error)
+	// WithdrawAdminNomination lets the current admin cancel a pending handover
+	// before the nominee accepts it.
+	WithdrawAdminNomination(ctx context.Context, in *MsgWithdrawAdminNomination, opts ...grpc.CallOption) (*MsgWithdrawAdminNominationResponse, error)
 }
 
 type msgClient struct {
@@ -101,6 +105,15 @@ func (c *msgClient) AcceptAdminNomination(ctx context.Context, in *MsgAcceptAdmi
 	return out, nil
 }
 
+func (c *msgClient) WithdrawAdminNomination(ctx context.Context, in *MsgWithdrawAdminNomination, opts ...grpc.CallOption) (*MsgWithdrawAdminNominationResponse, error) {
+	out := new(MsgWithdrawAdminNominationResponse)
+	err := c.cc.Invoke(ctx, Msg_WithdrawAdminNomination_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -121,6 +134,9 @@ type MsgServer interface {
 	// AcceptAdminNomination is the second step of the admin handover: the
 	// pending nominee accepts and becomes the DAO's admin.
 	AcceptAdminNomination(context.Context, *MsgAcceptAdminNomination) (*MsgAcceptAdminNominationResponse, error)
+	// WithdrawAdminNomination lets the current admin cancel a pending handover
+	// before the nominee accepts it.
+	WithdrawAdminNomination(context.Context, *MsgWithdrawAdminNomination) (*MsgWithdrawAdminNominationResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -142,6 +158,9 @@ func (UnimplementedMsgServer) NominateAdmin(context.Context, *MsgNominateAdmin) 
 }
 func (UnimplementedMsgServer) AcceptAdminNomination(context.Context, *MsgAcceptAdminNomination) (*MsgAcceptAdminNominationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AcceptAdminNomination not implemented")
+}
+func (UnimplementedMsgServer) WithdrawAdminNomination(context.Context, *MsgWithdrawAdminNomination) (*MsgWithdrawAdminNominationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawAdminNomination not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -246,6 +265,24 @@ func _Msg_AcceptAdminNomination_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_WithdrawAdminNomination_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawAdminNomination)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawAdminNomination(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_WithdrawAdminNomination_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawAdminNomination(ctx, req.(*MsgWithdrawAdminNomination))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -272,6 +309,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AcceptAdminNomination",
 			Handler:    _Msg_AcceptAdminNomination_Handler,
+		},
+		{
+			MethodName: "WithdrawAdminNomination",
+			Handler:    _Msg_WithdrawAdminNomination_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
