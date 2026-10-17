@@ -75,6 +75,7 @@ import (
 
 	burnermodulekeeper "github.com/bze-alphateam/bze/x/burner/keeper"
 	cointrunkmodulekeeper "github.com/bze-alphateam/bze/x/cointrunk/keeper"
+	daomodulekeeper "github.com/bze-alphateam/bze/x/dao/keeper"
 	epochmodulekeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
 	rewardsmodulekeeper "github.com/bze-alphateam/bze/x/rewards/keeper"
 	tokenfactorymodulekeeper "github.com/bze-alphateam/bze/x/tokenfactory/keeper"
@@ -141,6 +142,7 @@ type App struct {
 	RewardsKeeper        *rewardsmodulekeeper.Keeper
 	TradebinKeeper       *tradebinmodulekeeper.Keeper
 	TxfeecollectorKeeper *txfeecollectormodulekeeper.Keeper
+	DaoKeeper            *daomodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
@@ -247,6 +249,7 @@ func New(
 		&app.RewardsKeeper,
 		&app.TradebinKeeper,
 		&app.TxfeecollectorKeeper,
+		&app.DaoKeeper,
 		// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	); err != nil {
 		panic(err)

@@ -20,7 +20,8 @@ func CreateUpgradeHandler(
 
 		// RunMigrations triggers module-level migrations based on ConsensusVersion
 		// changes: the ibc-go v10 module migrations. The cosmos-sdk v0.50 -> v0.53
-		// bump changes no module's version.
+		// bump changes no module's version. x/dao is new: it has no VersionMap
+		// entry, so RunMigrations runs its InitGenesis with the default genesis.
 		return mm.RunMigrations(ctx, cfg, vm)
 	}
 }
