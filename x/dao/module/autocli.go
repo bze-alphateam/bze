@@ -160,10 +160,11 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "Vote",
 					Use:       "vote [proposal-id] [option]",
-					Short:     "Vote YES, NO or ABSTAIN on a DAO proposal in voting",
+					Short:     "Vote yes, no or abstain on a DAO proposal in voting",
 					Long: "Vote on a proposal with your current voting power: one vote per member of a static-list DAO, " +
-						"or your stake in the proposal's sources that joined before it was submitted. Voting again with another option replaces your ballot.",
-					Example:        "bzed tx dao vote 1 YES --from member",
+						"or your stake in the proposal's sources that joined before it was submitted. Voting again with another option replaces your ballot. " +
+						"The option is yes, no or abstain, in lowercase.",
+					Example:        "bzed tx dao vote 1 yes --from member",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "proposal_id"}, {ProtoField: "option"}},
 				},
 				{
