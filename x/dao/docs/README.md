@@ -2,7 +2,7 @@
 
 The DAO module lets anyone create an on-chain organisation with its own treasury, run proposals and execute them as the DAO.
 
-> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, and proposals can be submitted, voted on, cancelled and settled, which runs the passed ones. Expedited proposals can be settled early, and finished proposals can be cleaned up. Each feature adds its section to this page as it lands.
+> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, and proposals can be submitted, voted on, cancelled and settled, which runs the passed ones. Expedited proposals can be settled early, finished proposals can be cleaned up, and a DAO can change its own config. Each feature adds its section to this page as it lands.
 
 ## Concepts
 - **DAO account**: every DAO gets its own account, derived from its id (`address.Module("dao", uint64-big-endian(id))`). Nobody holds a key for it; it is the DAO's treasury.
@@ -64,6 +64,10 @@ The DAO module lets anyone create an on-chain organisation with its own treasury
   - Each call deletes up to `limit` ballots in voter-key order, with the vote-index entry of each of their shares; `0`, or anything above `cleanup_batch_size`, means `cleanup_batch_size`. The proposal stores where the next call resumes (`cleanup_cursor`, the last deleted voter), so no call goes over the deleted range again.
   - The call that deletes the last ballot (or finds none) also deletes the proposal and its DAO index entry, and answers `completed = true`; the proposal is then not found, by queries and by a further cleanup. Its events are the only history left.
   - The response is `{processed, completed}`: repeat the call until `completed` is true.
+- `MsgUpdateDaoConfig`: replaces the DAO's whole `config` (every field is sent; there is no partial update). Rules:
+  - The signer (`authority`) must be the DAO's own address: a self-owned DAO changes its config through a passed proposal, a DAO with an external admin also through `MsgAdminExecute`. The admin signing directly, or any other address, is refused.
+  - The new config is validated exactly as in `MsgCreateDao`, with the period bounds of the current params.
+  - Open proposals keep the config they pinned at submission and are decided with it; proposals submitted afterwards pin the new one.
 - `MsgUpdateParams` **(authority)**: replaces the module parameters. Reserved for the module authority (governance).
 
 Example (CLI):
@@ -112,6 +116,13 @@ bzed tx dao settle-proposal 1 --from anyone
 # batch, the proposal itself (anyone can); repeat until the response says completed
 bzed tx dao cleanup-proposal 1 --limit 50 --from anyone
 
+# Change DAO 1's config: generate the message as the DAO (it is signed by the DAO account only),
+# then run it through admin-execute (external admin) or a proposal (self-owned DAO)
+bzed tx dao update-dao-config 1 \
+  '{"min_quorum":"500000000000000000","threshold":"600000000000000000","voting_period":"259200s","expedited_period":"86400s","expedite_quorum":"600000000000000000","expedite_threshold":"660000000000000000"}' \
+  --from bze1<dao address> --generate-only > update.json  # the message is body.messages[0]
+bzed tx dao admin-execute 1 '<the MsgUpdateDaoConfig from update.json>' --from admin
+
 # Submit a governance proposal that sets the module parameters (all of them)
 bzed tx dao update-params \
   '{"max_sr_per_dao":"5","max_static_members":"128","max_open_proposals":"10","max_msgs_per_proposal":"16","max_proposal_bytes":"20000","max_title_len":"140","max_summary_len":"5000","min_voting_period":"3600s","max_voting_period":"7776000s","execution_window":"1209600s","cleanup_batch_size":"100","dao_creation_fee":{"denom":"ubze","amount":"50000000000"},"dao_creation_fee_destination":"burner","min_electorate_lock_days":5}' \
@@ -133,6 +144,7 @@ bzed tx dao update-params \
 - `bze.dao.EventProposalSettled{id, status, yes, no, abstain, denominator, expedited_early}`, on every settle, with the status it left the proposal in; `expedited_early` is true for a settle before the voting end
 - `bze.dao.EventProposalExecuted{id, success, error}`, after each run of a passed proposal's messages; `error` is a fixed reason (`unauthorized signer`, `message panicked`, `invalid message` or `message failed`), never the raw error
 - `bze.dao.EventProposalCleaned{id, processed, completed}`, on every cleanup batch; `completed` is true on the one that deleted the proposal
+- `bze.dao.EventDaoConfigUpdated{id, fields}`, `fields` are the proto names of the config fields whose value changed, in proto order
 
 ## Queries
 - `bzed query dao params` – show the module parameters.

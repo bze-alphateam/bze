@@ -122,3 +122,11 @@ message EventProposalCleaned {
   uint64 processed = 2;
   bool completed = 3;
 }
+
+// EventDaoConfigUpdated is emitted when a DAO's config is replaced.
+message EventDaoConfigUpdated {
+  uint64 id = 1;
+  // fields are the proto names of the config fields whose value changed, in
+  // proto order.
+  repeated string fields = 2;
+}

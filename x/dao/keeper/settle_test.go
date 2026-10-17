@@ -766,3 +766,54 @@ func (suite *IntegrationTestSuite) TestSettleProposal_WhaleSettlesEarly() {
 	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
 	suite.requireSettled(id, types.ProposalStatus_EXECUTED, true)
 }
+
+// A self-owned DAO changes its config through a passed proposal.
+func (suite *IntegrationTestSuite) TestSettleProposal_UpdatesDaoConfig() {
+	suite.createStaticDao(noConfigChange)
+	next := validConfig()
+	next.VotingPeriod = 96 * time.Hour
+	id := suite.passedProposal(types.NewMsgUpdateDaoConfig(daoAddress(1).String(), 1, next))
+
+	suite.endVoting(id, 0)
+	status, err := suite.settle(id)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
+
+	suite.requireExecuted("")
+	suite.requireConfig(next)
+	suite.requireConfigEvent("voting_period")
+}
+
+// D9 (config): a config change while P is open does not move P. Under the new
+// quorum and threshold P would fail; it is decided with its pinned values and
+// passes. A proposal submitted afterwards pins the new config.
+func (suite *IntegrationTestSuite) TestSettleProposal_D9_PinnedConfigDecides() {
+	suite.createAdminDao()
+	p, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, p, types.VoteOption_YES))
+	suite.Require().NoError(suite.vote(memberB, p, types.VoteOption_NO))
+
+	// 1 yes / 1 no: passes at threshold 0.5, fails at 0.66
+	next := validConfig()
+	next.MinQuorum = dec("0.6")
+	next.Threshold = dec("0.66")
+	suite.Require().NoError(suite.adminExecute(adminAddr, 1, types.NewMsgUpdateDaoConfig(daoAddress(1).String(), 1, next)))
+	suite.requireConfig(next)
+
+	proposal, found := suite.k.GetProposal(suite.ctx, p)
+	suite.Require().True(found)
+	suite.Require().Equal(validConfig(), proposal.PinnedConfig)
+
+	suite.endVoting(p, 0)
+	status, err := suite.settle(p)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
+	suite.requireStatus(p, types.ProposalStatus_EXECUTED)
+
+	q, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	proposal, found = suite.k.GetProposal(suite.ctx, q)
+	suite.Require().True(found)
+	suite.Require().Equal(next, proposal.PinnedConfig)
+}

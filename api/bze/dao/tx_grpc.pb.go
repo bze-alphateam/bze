@@ -30,6 +30,7 @@ const (
 	Msg_CancelProposal_FullMethodName          = "/bze.dao.Msg/CancelProposal"
 	Msg_SettleProposal_FullMethodName          = "/bze.dao.Msg/SettleProposal"
 	Msg_CleanupProposal_FullMethodName         = "/bze.dao.Msg/CleanupProposal"
+	Msg_UpdateDaoConfig_FullMethodName         = "/bze.dao.Msg/UpdateDaoConfig"
 )
 
 // MsgClient is the client API for Msg service.
@@ -70,6 +71,10 @@ type MsgClient interface {
 	// CleanupProposal deletes a finished proposal's ballots in batches and, once
 	// none remain, the proposal itself. Anyone can send it.
 	CleanupProposal(ctx context.Context, in *MsgCleanupProposal, opts ...grpc.CallOption) (*MsgCleanupProposalResponse, error)
+	// UpdateDaoConfig replaces a DAO's whole config. Only the DAO account signs
+	// it, through a passed proposal or its admin's MsgAdminExecute. Open
+	// proposals keep the config they pinned.
+	UpdateDaoConfig(ctx context.Context, in *MsgUpdateDaoConfig, opts ...grpc.CallOption) (*MsgUpdateDaoConfigResponse, error)
 }
 
 type msgClient struct {
@@ -179,6 +184,15 @@ func (c *msgClient) CleanupProposal(ctx context.Context, in *MsgCleanupProposal,
 	return out, nil
 }
 
+func (c *msgClient) UpdateDaoConfig(ctx context.Context, in *MsgUpdateDaoConfig, opts ...grpc.CallOption) (*MsgUpdateDaoConfigResponse, error) {
+	out := new(MsgUpdateDaoConfigResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateDaoConfig_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -217,6 +231,10 @@ type MsgServer interface {
 	// CleanupProposal deletes a finished proposal's ballots in batches and, once
 	// none remain, the proposal itself. Anyone can send it.
 	CleanupProposal(context.Context, *MsgCleanupProposal) (*MsgCleanupProposalResponse, error)
+	// UpdateDaoConfig replaces a DAO's whole config. Only the DAO account signs
+	// it, through a passed proposal or its admin's MsgAdminExecute. Open
+	// proposals keep the config they pinned.
+	UpdateDaoConfig(context.Context, *MsgUpdateDaoConfig) (*MsgUpdateDaoConfigResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -256,6 +274,9 @@ func (UnimplementedMsgServer) SettleProposal(context.Context, *MsgSettleProposal
 }
 func (UnimplementedMsgServer) CleanupProposal(context.Context, *MsgCleanupProposal) (*MsgCleanupProposalResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CleanupProposal not implemented")
+}
+func (UnimplementedMsgServer) UpdateDaoConfig(context.Context, *MsgUpdateDaoConfig) (*MsgUpdateDaoConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDaoConfig not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -468,6 +489,24 @@ func _Msg_CleanupProposal_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateDaoConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateDaoConfig)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateDaoConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateDaoConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateDaoConfig(ctx, req.(*MsgUpdateDaoConfig))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -518,6 +557,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CleanupProposal",
 			Handler:    _Msg_CleanupProposal_Handler,
+		},
+		{
+			MethodName: "UpdateDaoConfig",
+			Handler:    _Msg_UpdateDaoConfig_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
