@@ -14,8 +14,14 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 	}
 
 	k.SetAllDaos(ctx, genState.Daos)
+	k.SetAllProposals(ctx, genState.Proposals)
 	k.SetDaoCounter(ctx, genState.DaoCount)
 	k.SetProposalCounter(ctx, genState.ProposalCount)
+
+	// I1: x/bank imports first, so the escrow balance is known here
+	if err := k.CheckDepositEscrow(ctx); err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis returns the module's exported genesis.
@@ -25,6 +31,7 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *types.GenesisState {
 	genesis.Daos = k.GetAllDaos(ctx)
 	genesis.DaoCount = k.GetDaoCounter(ctx)
 	genesis.ProposalCount = k.GetProposalCounter(ctx)
+	genesis.Proposals = k.GetAllProposals(ctx)
 
 	return genesis
 }

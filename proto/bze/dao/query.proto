@@ -31,6 +31,11 @@ service Query {
   rpc DaoController (QueryDaoControllerRequest) returns (QueryDaoControllerResponse) {
     option (google.api.http).get = "/bze/dao/dao_controller/{dao_id}";
   }
+
+  // Proposal returns a proposal with its live status at the current block.
+  rpc Proposal (QueryProposalRequest) returns (QueryProposalResponse) {
+    option (google.api.http).get = "/bze/dao/proposal/{id}";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -87,4 +92,25 @@ message QueryDaoControllerResponse {
   ControllerEndReason end_reason = 2 [(amino.dont_omitempty) = true];
   // path lists the DAO addresses visited, in order, starting with the queried DAO.
   repeated string path = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryProposalRequest is request type for the Query/Proposal RPC method.
+message QueryProposalRequest {
+  uint64 id = 1;
+}
+
+// QueryProposalResponse is response type for the Query/Proposal RPC method.
+// The flags are computed at the current block time.
+message QueryProposalResponse {
+  Proposal proposal = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // voting_ended: the proposal is VOTING and its voting end has passed, so it
+  // can be settled.
+  bool voting_ended = 2 [(amino.dont_omitempty) = true];
+  // retry_deadline is the end of the retry window of an EXECUTION_FAILED
+  // proposal (unix seconds), 0 for any other status.
+  int64 retry_deadline = 3 [(amino.dont_omitempty) = true];
+  // expedite_settleable: the proposal is expedited, still VOTING before its
+  // voting end, and its tally already meets the expedite bars, so it can be
+  // settled early.
+  bool expedite_settleable = 4 [(amino.dont_omitempty) = true];
 }
