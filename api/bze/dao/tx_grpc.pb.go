@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	Msg_UpdateParams_FullMethodName = "/bze.dao.Msg/UpdateParams"
 	Msg_CreateDao_FullMethodName    = "/bze.dao.Msg/CreateDao"
+	Msg_AdminExecute_FullMethodName = "/bze.dao.Msg/AdminExecute"
 )
 
 // MsgClient is the client API for Msg service.
@@ -33,6 +34,9 @@ type MsgClient interface {
 	// CreateDao creates a DAO with its own derived account. Anyone can create one;
 	// the creator pays the creation fee.
 	CreateDao(ctx context.Context, in *MsgCreateDao, opts ...grpc.CallOption) (*MsgCreateDaoResponse, error)
+	// AdminExecute lets the external admin of a DAO run messages as the DAO.
+	// Every message must be signed by the DAO account only.
+	AdminExecute(ctx context.Context, in *MsgAdminExecute, opts ...grpc.CallOption) (*MsgAdminExecuteResponse, error)
 }
 
 type msgClient struct {
@@ -61,6 +65,15 @@ func (c *msgClient) CreateDao(ctx context.Context, in *MsgCreateDao, opts ...grp
 	return out, nil
 }
 
+func (c *msgClient) AdminExecute(ctx context.Context, in *MsgAdminExecute, opts ...grpc.CallOption) (*MsgAdminExecuteResponse, error) {
+	out := new(MsgAdminExecuteResponse)
+	err := c.cc.Invoke(ctx, Msg_AdminExecute_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -71,6 +84,9 @@ type MsgServer interface {
 	// CreateDao creates a DAO with its own derived account. Anyone can create one;
 	// the creator pays the creation fee.
 	CreateDao(context.Context, *MsgCreateDao) (*MsgCreateDaoResponse, error)
+	// AdminExecute lets the external admin of a DAO run messages as the DAO.
+	// Every message must be signed by the DAO account only.
+	AdminExecute(context.Context, *MsgAdminExecute) (*MsgAdminExecuteResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -83,6 +99,9 @@ func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*
 }
 func (UnimplementedMsgServer) CreateDao(context.Context, *MsgCreateDao) (*MsgCreateDaoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateDao not implemented")
+}
+func (UnimplementedMsgServer) AdminExecute(context.Context, *MsgAdminExecute) (*MsgAdminExecuteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AdminExecute not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -133,6 +152,24 @@ func _Msg_CreateDao_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_AdminExecute_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAdminExecute)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).AdminExecute(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_AdminExecute_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).AdminExecute(ctx, req.(*MsgAdminExecute))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -147,6 +184,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateDao",
 			Handler:    _Msg_CreateDao_Handler,
+		},
+		{
+			MethodName: "AdminExecute",
+			Handler:    _Msg_AdminExecute_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

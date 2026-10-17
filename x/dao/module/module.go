@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -168,6 +169,9 @@ type ModuleInputs struct {
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
 	RewardsKeeper types.RewardsKeeper
+
+	// MsgServiceRouter runs the messages a DAO executes, as in x/gov.
+	MsgServiceRouter baseapp.MessageRouter
 }
 
 type ModuleOutputs struct {
@@ -191,6 +195,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 		in.RewardsKeeper,
+		in.MsgServiceRouter,
 	)
 
 	m := NewAppModule(

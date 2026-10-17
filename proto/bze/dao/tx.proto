@@ -5,6 +5,7 @@ import "amino/amino.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
 import "bze/dao/params.proto";
 import "bze/dao/store.proto";
 
@@ -21,6 +22,10 @@ service Msg {
   // CreateDao creates a DAO with its own derived account. Anyone can create one;
   // the creator pays the creation fee.
   rpc CreateDao (MsgCreateDao) returns (MsgCreateDaoResponse);
+
+  // AdminExecute lets the external admin of a DAO run messages as the DAO.
+  // Every message must be signed by the DAO account only.
+  rpc AdminExecute (MsgAdminExecute) returns (MsgAdminExecuteResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -64,3 +69,18 @@ message MsgCreateDaoResponse {
   uint64 id = 1;
   string address = 2;
 }
+
+// MsgAdminExecute is the Msg/AdminExecute request type.
+message MsgAdminExecute {
+  option (cosmos.msg.v1.signer) = "admin";
+  option (amino.name) = "bze/x/dao/MsgAdminExecute";
+
+  // admin must be the DAO's admin at execution time; a self-owned DAO has none.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 dao_id = 2;
+  // msgs run in order as the DAO; any failure reverts the whole transaction.
+  repeated google.protobuf.Any msgs = 3 [(cosmos_proto.accepts_interface) = "cosmos.base.v1beta1.Msg"];
+}
+
+// MsgAdminExecuteResponse is the Msg/AdminExecute response type.
+message MsgAdminExecuteResponse {}

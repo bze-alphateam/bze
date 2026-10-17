@@ -13,6 +13,8 @@ const (
 
 	DefaultMaxSrPerDao               = uint64(5)
 	DefaultMaxStaticMembers          = uint64(128)
+	DefaultMaxMsgsPerProposal        = uint64(16)
+	DefaultMaxProposalBytes          = uint64(20_000)
 	DefaultMinVotingPeriod           = time.Hour
 	DefaultMaxVotingPeriod           = 90 * 24 * time.Hour
 	DefaultDaoCreationFeeDestination = FeeDestinationBurner
@@ -26,6 +28,8 @@ var DefaultDaoCreationFee = sdk.NewInt64Coin("ubze", 50_000_000_000)
 func NewParams(
 	maxSrPerDao uint64,
 	maxStaticMembers uint64,
+	maxMsgsPerProposal uint64,
+	maxProposalBytes uint64,
 	minVotingPeriod time.Duration,
 	maxVotingPeriod time.Duration,
 	daoCreationFee sdk.Coin,
@@ -35,6 +39,8 @@ func NewParams(
 	return Params{
 		MaxSrPerDao:               maxSrPerDao,
 		MaxStaticMembers:          maxStaticMembers,
+		MaxMsgsPerProposal:        maxMsgsPerProposal,
+		MaxProposalBytes:          maxProposalBytes,
 		MinVotingPeriod:           minVotingPeriod,
 		MaxVotingPeriod:           maxVotingPeriod,
 		DaoCreationFee:            daoCreationFee,
@@ -48,6 +54,8 @@ func DefaultParams() Params {
 	return NewParams(
 		DefaultMaxSrPerDao,
 		DefaultMaxStaticMembers,
+		DefaultMaxMsgsPerProposal,
+		DefaultMaxProposalBytes,
 		DefaultMinVotingPeriod,
 		DefaultMaxVotingPeriod,
 		DefaultDaoCreationFee,
@@ -64,6 +72,14 @@ func (p Params) Validate() error {
 
 	if p.MaxStaticMembers == 0 {
 		return fmt.Errorf("max_static_members must be positive")
+	}
+
+	if p.MaxMsgsPerProposal == 0 {
+		return fmt.Errorf("max_msgs_per_proposal must be positive")
+	}
+
+	if p.MaxProposalBytes == 0 {
+		return fmt.Errorf("max_proposal_bytes must be positive")
 	}
 
 	if p.MinVotingPeriod <= 0 {

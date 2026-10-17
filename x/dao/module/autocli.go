@@ -48,6 +48,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						"members":     {Usage: "comma-separated member addresses of a static-list DAO"},
 					},
 				},
+				{
+					RpcMethod: "AdminExecute",
+					Use:       "admin-execute [dao-id] [msgs...]",
+					Short:     "Run messages as a DAO; only its external admin can",
+					Long: "Run messages as the DAO, in order; if one fails, none is applied. Every message must be signed by the DAO account only, " +
+						"so it can spend the treasury but never another address. Each message is a JSON Any (with \"@type\") or a .json file holding one. " +
+						"A self-owned DAO has no admin and executes through its proposals.",
+					Example: `bzed tx dao admin-execute 1 '{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"bze1<dao>","to_address":"bze1...","amount":[{"denom":"ubze","amount":"1000000"}]}' --from admin`,
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}, {ProtoField: "msgs", Varargs: true}},
+				},
 			},
 		},
 	}

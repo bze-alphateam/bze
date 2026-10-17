@@ -13,7 +13,7 @@ func (suite *IntegrationTestSuite) TestParams_DefaultsAfterSetup() {
 }
 
 func (suite *IntegrationTestSuite) TestParams_SetAndGetRoundTrip() {
-	params := types.NewParams(2, 3, 2*time.Hour, 48*time.Hour, sdk.NewInt64Coin("ubze", 7), types.FeeDestinationCommunityPool, 9)
+	params := types.NewParams(2, 3, 4, 500, 2*time.Hour, 48*time.Hour, sdk.NewInt64Coin("ubze", 7), types.FeeDestinationCommunityPool, 9)
 
 	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
 	suite.Require().Equal(params, suite.k.GetParams(suite.ctx))

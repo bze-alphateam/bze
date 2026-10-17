@@ -19,3 +19,12 @@ func TestRegisterInterfaces_RegistersMsgUpdateParams(t *testing.T) {
 	require.IsType(t, &types.MsgUpdateParams{}, msg)
 	require.Implements(t, (*sdk.Msg)(nil), msg)
 }
+
+func TestRegisterInterfaces_RegistersMsgAdminExecute(t *testing.T) {
+	registry := codectypes.NewInterfaceRegistry()
+	types.RegisterInterfaces(registry)
+
+	msg, err := registry.Resolve("/bze.dao.MsgAdminExecute")
+	require.NoError(t, err)
+	require.IsType(t, &types.MsgAdminExecute{}, msg)
+}
