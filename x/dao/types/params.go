@@ -20,6 +20,7 @@ const (
 	DefaultMaxSummaryLen             = uint64(5_000)
 	DefaultMinVotingPeriod           = time.Hour
 	DefaultMaxVotingPeriod           = 90 * 24 * time.Hour
+	DefaultExecutionWindow           = 14 * 24 * time.Hour
 	DefaultDaoCreationFeeDestination = FeeDestinationBurner
 	DefaultMinElectorateLockDays     = uint32(5)
 )
@@ -38,6 +39,7 @@ func NewParams(
 	maxSummaryLen uint64,
 	minVotingPeriod time.Duration,
 	maxVotingPeriod time.Duration,
+	executionWindow time.Duration,
 	daoCreationFee sdk.Coin,
 	daoCreationFeeDestination string,
 	minElectorateLockDays uint32,
@@ -52,6 +54,7 @@ func NewParams(
 		MaxSummaryLen:             maxSummaryLen,
 		MinVotingPeriod:           minVotingPeriod,
 		MaxVotingPeriod:           maxVotingPeriod,
+		ExecutionWindow:           executionWindow,
 		DaoCreationFee:            daoCreationFee,
 		DaoCreationFeeDestination: daoCreationFeeDestination,
 		MinElectorateLockDays:     minElectorateLockDays,
@@ -70,6 +73,7 @@ func DefaultParams() Params {
 		DefaultMaxSummaryLen,
 		DefaultMinVotingPeriod,
 		DefaultMaxVotingPeriod,
+		DefaultExecutionWindow,
 		DefaultDaoCreationFee,
 		DefaultDaoCreationFeeDestination,
 		DefaultMinElectorateLockDays,
@@ -111,6 +115,12 @@ func (p Params) Validate() error {
 
 	if p.MaxVotingPeriod < p.MinVotingPeriod {
 		return fmt.Errorf("max_voting_period %s is lower than min_voting_period %s", p.MaxVotingPeriod, p.MinVotingPeriod)
+	}
+
+	// a zero window is valid: a failed execution can then not be retried and
+	// expires at the next settle
+	if p.ExecutionWindow < 0 {
+		return fmt.Errorf("execution_window must not be negative: %s", p.ExecutionWindow)
 	}
 
 	// a zero amount is valid and makes DAO creation free

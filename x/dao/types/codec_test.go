@@ -82,3 +82,12 @@ func TestRegisterInterfaces_RegistersMsgCancelProposal(t *testing.T) {
 	require.NoError(t, err)
 	require.IsType(t, &types.MsgCancelProposal{}, msg)
 }
+
+func TestRegisterInterfaces_RegistersMsgSettleProposal(t *testing.T) {
+	registry := codectypes.NewInterfaceRegistry()
+	types.RegisterInterfaces(registry)
+
+	msg, err := registry.Resolve("/bze.dao.MsgSettleProposal")
+	require.NoError(t, err)
+	require.IsType(t, &types.MsgSettleProposal{}, msg)
+}

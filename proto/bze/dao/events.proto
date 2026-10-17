@@ -89,3 +89,28 @@ message EventDepositReleased {
   // amount is the released deposit (sdk.Coin).
   string amount = 4;
 }
+
+// EventProposalSettled is emitted by every settle: the first one, which
+// decides the proposal from its running tally, a retry of a failed execution
+// and the expiry of a failed one.
+message EventProposalSettled {
+  uint64 id = 1;
+  ProposalStatus status = 2;
+  // yes, no, abstain and denominator are the decided tally (math.Int).
+  string yes = 3;
+  string no = 4;
+  string abstain = 5;
+  string denominator = 6;
+  // expedited_early is true when an expedited proposal was settled before its
+  // voting end.
+  bool expedited_early = 7;
+}
+
+// EventProposalExecuted is emitted after each run of a passed proposal's
+// messages.
+message EventProposalExecuted {
+  uint64 id = 1;
+  bool success = 2;
+  // error is a fixed reason on failure, never the raw error text.
+  string error = 3;
+}
