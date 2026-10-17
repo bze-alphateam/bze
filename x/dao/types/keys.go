@@ -134,9 +134,16 @@ func DaoAddressKey(daoAddr sdk.AccAddress) []byte {
 	return daoAddr.Bytes()
 }
 
-// DaoAdminKey is the key of an admin index entry inside DaoAdminKeyPrefix.
+// DaoAdminPrefix is the part of DaoAdminKeyPrefix keys that holds one admin's
+// DAOs.
+func DaoAdminPrefix(admin sdk.AccAddress) []byte {
+	return address.MustLengthPrefix(admin.Bytes())
+}
+
+// DaoAdminKey is the key of an admin index entry inside DaoAdminKeyPrefix:
+// {admin}/{dao_id}.
 func DaoAdminKey(admin sdk.AccAddress, daoId uint64) []byte {
-	return append(address.MustLengthPrefix(admin.Bytes()), sdk.Uint64ToBigEndian(daoId)...)
+	return append(DaoAdminPrefix(admin), sdk.Uint64ToBigEndian(daoId)...)
 }
 
 // DaoAddress derives the account address of a DAO from its id.
