@@ -52,6 +52,7 @@ derived from it. History older than v8.0.0 lives in the
 * (x/dao) [#176](https://github.com/bze-alphateam/bze/pull/176) Query who ultimately controls a DAO (`bzed q dao dao-controller`): the admin chain is followed to an account, a self-owned DAO, a cycle or a depth cap of 16, with the DAOs visited.
 * (x/dao) [#177](https://github.com/bze-alphateam/bze/pull/177) Query a proposal with its live status (`bzed q dao proposal`): whether voting ended, the retry deadline of a failed execution and whether an expedited proposal can settle early. Proposals are exported to and imported from genesis, and the import checks that the module account holds the deposits of the proposals in voting.
 * (x/dao) [#178](https://github.com/bze-alphateam/bze/pull/178) Voter queries: a ballot (`bzed q dao ballot`), an address's voting power in a DAO now and on each proposal in voting (`bzed q dao voting-power`) and its join record on a source (`bzed q dao join-record`). Genesis now carries the whole module state (ballots, vote index, join records, source pins), and the import fails, naming the invariant, when the tallies, ballot shares, pins, ids, vote index or admins are inconsistent.
+* (x/dao) [#179](https://github.com/bze-alphateam/bze/pull/179) Paginated listings: every DAO (`bzed q dao daos`), the DAOs of an admin (`bzed q dao daos-by-admin`), a DAO's proposals, optionally filtered by one or more statuses (`bzed q dao proposals`), and a proposal's ballots (`bzed q dao ballots`).
 
 ### Improvements
 

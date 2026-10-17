@@ -27,6 +27,10 @@ const (
 	Query_Ballot_FullMethodName        = "/bze.dao.Query/Ballot"
 	Query_VotingPower_FullMethodName   = "/bze.dao.Query/VotingPower"
 	Query_JoinRecord_FullMethodName    = "/bze.dao.Query/JoinRecord"
+	Query_Daos_FullMethodName          = "/bze.dao.Query/Daos"
+	Query_DaosByAdmin_FullMethodName   = "/bze.dao.Query/DaosByAdmin"
+	Query_Proposals_FullMethodName     = "/bze.dao.Query/Proposals"
+	Query_Ballots_FullMethodName       = "/bze.dao.Query/Ballots"
 )
 
 // QueryClient is the client API for Query service.
@@ -51,6 +55,15 @@ type QueryClient interface {
 	// JoinRecord returns the height an address joined a pinned source at. The
 	// source is in the query string: it contains a slash.
 	JoinRecord(ctx context.Context, in *QueryJoinRecordRequest, opts ...grpc.CallOption) (*QueryJoinRecordResponse, error)
+	// Daos lists every DAO, by id.
+	Daos(ctx context.Context, in *QueryDaosRequest, opts ...grpc.CallOption) (*QueryDaosResponse, error)
+	// DaosByAdmin lists the DAOs an address is the admin of, by id.
+	DaosByAdmin(ctx context.Context, in *QueryDaosByAdminRequest, opts ...grpc.CallOption) (*QueryDaosByAdminResponse, error)
+	// Proposals lists a DAO's proposals, by id, optionally only those with one
+	// of the given statuses. Cleaned-up proposals are not listed.
+	Proposals(ctx context.Context, in *QueryProposalsRequest, opts ...grpc.CallOption) (*QueryProposalsResponse, error)
+	// Ballots lists the ballots of a proposal, by voter address bytes.
+	Ballots(ctx context.Context, in *QueryBallotsRequest, opts ...grpc.CallOption) (*QueryBallotsResponse, error)
 }
 
 type queryClient struct {
@@ -133,6 +146,42 @@ func (c *queryClient) JoinRecord(ctx context.Context, in *QueryJoinRecordRequest
 	return out, nil
 }
 
+func (c *queryClient) Daos(ctx context.Context, in *QueryDaosRequest, opts ...grpc.CallOption) (*QueryDaosResponse, error) {
+	out := new(QueryDaosResponse)
+	err := c.cc.Invoke(ctx, Query_Daos_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) DaosByAdmin(ctx context.Context, in *QueryDaosByAdminRequest, opts ...grpc.CallOption) (*QueryDaosByAdminResponse, error) {
+	out := new(QueryDaosByAdminResponse)
+	err := c.cc.Invoke(ctx, Query_DaosByAdmin_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Proposals(ctx context.Context, in *QueryProposalsRequest, opts ...grpc.CallOption) (*QueryProposalsResponse, error) {
+	out := new(QueryProposalsResponse)
+	err := c.cc.Invoke(ctx, Query_Proposals_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Ballots(ctx context.Context, in *QueryBallotsRequest, opts ...grpc.CallOption) (*QueryBallotsResponse, error) {
+	out := new(QueryBallotsResponse)
+	err := c.cc.Invoke(ctx, Query_Ballots_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -155,6 +204,15 @@ type QueryServer interface {
 	// JoinRecord returns the height an address joined a pinned source at. The
 	// source is in the query string: it contains a slash.
 	JoinRecord(context.Context, *QueryJoinRecordRequest) (*QueryJoinRecordResponse, error)
+	// Daos lists every DAO, by id.
+	Daos(context.Context, *QueryDaosRequest) (*QueryDaosResponse, error)
+	// DaosByAdmin lists the DAOs an address is the admin of, by id.
+	DaosByAdmin(context.Context, *QueryDaosByAdminRequest) (*QueryDaosByAdminResponse, error)
+	// Proposals lists a DAO's proposals, by id, optionally only those with one
+	// of the given statuses. Cleaned-up proposals are not listed.
+	Proposals(context.Context, *QueryProposalsRequest) (*QueryProposalsResponse, error)
+	// Ballots lists the ballots of a proposal, by voter address bytes.
+	Ballots(context.Context, *QueryBallotsRequest) (*QueryBallotsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -185,6 +243,18 @@ func (UnimplementedQueryServer) VotingPower(context.Context, *QueryVotingPowerRe
 }
 func (UnimplementedQueryServer) JoinRecord(context.Context, *QueryJoinRecordRequest) (*QueryJoinRecordResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JoinRecord not implemented")
+}
+func (UnimplementedQueryServer) Daos(context.Context, *QueryDaosRequest) (*QueryDaosResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Daos not implemented")
+}
+func (UnimplementedQueryServer) DaosByAdmin(context.Context, *QueryDaosByAdminRequest) (*QueryDaosByAdminResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DaosByAdmin not implemented")
+}
+func (UnimplementedQueryServer) Proposals(context.Context, *QueryProposalsRequest) (*QueryProposalsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Proposals not implemented")
+}
+func (UnimplementedQueryServer) Ballots(context.Context, *QueryBallotsRequest) (*QueryBallotsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Ballots not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -343,6 +413,78 @@ func _Query_JoinRecord_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Daos_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDaosRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Daos(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Daos_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Daos(ctx, req.(*QueryDaosRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_DaosByAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDaosByAdminRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DaosByAdmin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_DaosByAdmin_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DaosByAdmin(ctx, req.(*QueryDaosByAdminRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Proposals_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryProposalsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Proposals(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Proposals_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Proposals(ctx, req.(*QueryProposalsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Ballots_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryBallotsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Ballots(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Ballots_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Ballots(ctx, req.(*QueryBallotsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -381,6 +523,22 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "JoinRecord",
 			Handler:    _Query_JoinRecord_Handler,
+		},
+		{
+			MethodName: "Daos",
+			Handler:    _Query_Daos_Handler,
+		},
+		{
+			MethodName: "DaosByAdmin",
+			Handler:    _Query_DaosByAdmin_Handler,
+		},
+		{
+			MethodName: "Proposals",
+			Handler:    _Query_Proposals_Handler,
+		},
+		{
+			MethodName: "Ballots",
+			Handler:    _Query_Ballots_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
