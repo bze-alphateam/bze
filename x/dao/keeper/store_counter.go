@@ -30,3 +30,13 @@ func (k Keeper) GetDaoCounter(ctx context.Context) uint64 {
 func (k Keeper) SetDaoCounter(ctx context.Context, value uint64) {
 	k.setCounter(ctx, types.DaoCounterKey(), value)
 }
+
+// GetProposalCounter returns the last proposal id handed out (0 before the first proposal).
+func (k Keeper) GetProposalCounter(ctx context.Context) uint64 {
+	return k.getCounter(ctx, types.ProposalCounterKey())
+}
+
+// SetProposalCounter sets the last proposal id handed out.
+func (k Keeper) SetProposalCounter(ctx context.Context, value uint64) {
+	k.setCounter(ctx, types.ProposalCounterKey(), value)
+}

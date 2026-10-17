@@ -106,6 +106,20 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 	return m.recorder
 }
 
+// SendCoins mocks base method.
+func (m *MockBankKeeper) SendCoins(ctx context.Context, fromAddr, toAddr types0.AccAddress, amt types0.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendCoins", ctx, fromAddr, toAddr, amt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendCoins indicates an expected call of SendCoins.
+func (mr *MockBankKeeperMockRecorder) SendCoins(ctx, fromAddr, toAddr, amt any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoins", reflect.TypeOf((*MockBankKeeper)(nil).SendCoins), ctx, fromAddr, toAddr, amt)
+}
+
 // SendCoinsFromAccountToModule mocks base method.
 func (m *MockBankKeeper) SendCoinsFromAccountToModule(ctx context.Context, senderAddr types0.AccAddress, recipientModule string, amt types0.Coins) error {
 	m.ctrl.T.Helper()
@@ -173,6 +187,21 @@ func (mr *MockRewardsKeeperMockRecorder) GetDenomReward(ctx, stakingDenom any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDenomReward", reflect.TypeOf((*MockRewardsKeeper)(nil).GetDenomReward), ctx, stakingDenom)
 }
 
+// GetDenomRewardParticipant mocks base method.
+func (m *MockRewardsKeeper) GetDenomRewardParticipant(ctx types0.Context, stakingDenom, address string) (types.DenomRewardParticipant, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDenomRewardParticipant", ctx, stakingDenom, address)
+	ret0, _ := ret[0].(types.DenomRewardParticipant)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
+}
+
+// GetDenomRewardParticipant indicates an expected call of GetDenomRewardParticipant.
+func (mr *MockRewardsKeeperMockRecorder) GetDenomRewardParticipant(ctx, stakingDenom, address any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDenomRewardParticipant", reflect.TypeOf((*MockRewardsKeeper)(nil).GetDenomRewardParticipant), ctx, stakingDenom, address)
+}
+
 // GetStakingReward mocks base method.
 func (m *MockRewardsKeeper) GetStakingReward(ctx types0.Context, rewardId string) (types.StakingReward, bool) {
 	m.ctrl.T.Helper()
@@ -186,4 +215,19 @@ func (m *MockRewardsKeeper) GetStakingReward(ctx types0.Context, rewardId string
 func (mr *MockRewardsKeeperMockRecorder) GetStakingReward(ctx, rewardId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStakingReward", reflect.TypeOf((*MockRewardsKeeper)(nil).GetStakingReward), ctx, rewardId)
+}
+
+// GetStakingRewardParticipant mocks base method.
+func (m *MockRewardsKeeper) GetStakingRewardParticipant(ctx types0.Context, address, rewardId string) (types.StakingRewardParticipant, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStakingRewardParticipant", ctx, address, rewardId)
+	ret0, _ := ret[0].(types.StakingRewardParticipant)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
+}
+
+// GetStakingRewardParticipant indicates an expected call of GetStakingRewardParticipant.
+func (mr *MockRewardsKeeperMockRecorder) GetStakingRewardParticipant(ctx, address, rewardId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStakingRewardParticipant", reflect.TypeOf((*MockRewardsKeeper)(nil).GetStakingRewardParticipant), ctx, address, rewardId)
 }

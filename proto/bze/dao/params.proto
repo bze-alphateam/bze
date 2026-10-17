@@ -18,10 +18,16 @@ message Params {
   uint64 max_sr_per_dao = 1;
   // max_static_members caps the member list of a static-list DAO.
   uint64 max_static_members = 2;
+  // max_open_proposals caps the proposals a DAO can have in voting at once.
+  uint64 max_open_proposals = 3;
   // max_msgs_per_proposal caps the messages of a proposal or a MsgAdminExecute.
   uint64 max_msgs_per_proposal = 4;
   // max_proposal_bytes caps the total marshalled size of those messages.
   uint64 max_proposal_bytes = 5;
+  // max_title_len is the longest proposal title, in bytes.
+  uint64 max_title_len = 6;
+  // max_summary_len is the longest proposal summary, in bytes.
+  uint64 max_summary_len = 7;
   // min_voting_period is the shortest voting (and expedited) period a DAO may configure.
   google.protobuf.Duration min_voting_period = 8 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // max_voting_period is the longest voting (and expedited) period a DAO may configure.

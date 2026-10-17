@@ -44,14 +44,7 @@ func newAdminDaoApp(t *testing.T) (*app.App, sdk.Context, sdk.AccAddress, sdk.Ac
 		Admin:   admin.String(),
 		Type:    daotypes.DaoType_DAO_TYPE_STATIC_LIST,
 		Name:    "builders",
-		Config: daotypes.DaoConfig{
-			MinQuorum:         math.LegacyMustNewDecFromStr("0.4"),
-			Threshold:         math.LegacyMustNewDecFromStr("0.5"),
-			VotingPeriod:      72 * time.Hour,
-			ExpeditedPeriod:   24 * time.Hour,
-			ExpediteQuorum:    math.LegacyMustNewDecFromStr("0.4"),
-			ExpediteThreshold: math.LegacyMustNewDecFromStr("0.5"),
-		},
+		Config:  newAdminDaoConfig(),
 		Members: []string{member.String()},
 	})
 	require.NoError(t, err)
@@ -65,6 +58,17 @@ func newAdminDaoApp(t *testing.T) (*app.App, sdk.Context, sdk.AccAddress, sdk.Ac
 	require.NoError(t, bApp.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, treasury, coins))
 
 	return bApp, ctx, admin, treasury
+}
+
+func newAdminDaoConfig() daotypes.DaoConfig {
+	return daotypes.DaoConfig{
+		MinQuorum:         math.LegacyMustNewDecFromStr("0.4"),
+		Threshold:         math.LegacyMustNewDecFromStr("0.5"),
+		VotingPeriod:      72 * time.Hour,
+		ExpeditedPeriod:   24 * time.Hour,
+		ExpediteQuorum:    math.LegacyMustNewDecFromStr("0.4"),
+		ExpediteThreshold: math.LegacyMustNewDecFromStr("0.5"),
+	}
 }
 
 // runAsTx runs msg through the app's router on a cached context that is written
