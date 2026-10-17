@@ -43,7 +43,7 @@ The DAO module lets anyone create an on-chain organisation with its own treasury
   - `expedited` needs `allow_expedite` in the config; voting then lasts `expedited_period` instead of `voting_period`.
   - `proposal_cost` (if set) is paid to the burner (`cost_destination` `BURN`) or the DAO's treasury (`TREASURY`); `proposal_deposit` (if set) is escrowed in the `dao` module account.
   - The proposal pins the DAO's config, its electorate and its total voting power (member count, or the stake of its sources): later DAO changes never move an open vote. Every source it pins counts as used, so a staking reward a proposal votes with cannot be deleted.
-- `MsgVote`: casts or changes the signer's (`voter`) ballot: `YES`, `NO` or `ABSTAIN`. A vote with no option (`VOTE_OPTION_UNSPECIFIED`, the value an omitted field decodes to) is refused. Rules:
+- `MsgVote`: casts or changes the signer's (`voter`) ballot: `YES`, `NO` or `ABSTAIN` (on the CLI: `yes`, `no` or `abstain`, in lowercase). A vote with no option (`VOTE_OPTION_UNSPECIFIED`, the value an omitted field decodes to) is refused. Rules:
   - The proposal must be in voting, and the block time strictly before its `voting_end`.
   - Weight: in a `static-list` DAO, 1 if the voter is on the DAO's member list now; in a `stake` DAO, the voter's stake in each source the proposal pinned, counting only stake with no join record or one strictly below the proposal's submit height. Zero weight is refused.
   - Voting again with another option replaces the ballot at the voter's current weight, so stake added since the last vote counts; the same option twice is refused.
@@ -93,8 +93,9 @@ bzed tx dao withdraw-admin-nomination 1 --from admin
 # from the DAO address); several messages are several arguments
 bzed tx dao submit-proposal 1 "Fund tooling" msg.json --summary "Pays the tooling team" --from member
 
-# As a member of DAO 1, vote YES on proposal 1; voting again with NO replaces the ballot
-bzed tx dao vote 1 YES --from member
+# As a member of DAO 1, vote yes on proposal 1 (yes, no or abstain, lowercase);
+# voting again with no replaces the ballot
+bzed tx dao vote 1 yes --from member
 
 # As the proposer, cancel proposal 1 while it is in voting
 bzed tx dao cancel-proposal 1 --from member
