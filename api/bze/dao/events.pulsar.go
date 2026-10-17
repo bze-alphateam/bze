@@ -8802,6 +8802,658 @@ func (x *fastReflection_EventDaoElectorateUpdated) ProtoMethods() *protoiface.Me
 	}
 }
 
+var _ protoreflect.List = (*_EventDaoMembersUpdated_2_list)(nil)
+
+type _EventDaoMembersUpdated_2_list struct {
+	list *[]string
+}
+
+func (x *_EventDaoMembersUpdated_2_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_EventDaoMembersUpdated_2_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfString((*x.list)[i])
+}
+
+func (x *_EventDaoMembersUpdated_2_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_EventDaoMembersUpdated_2_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_EventDaoMembersUpdated_2_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message EventDaoMembersUpdated at list field Added as it is not of Message kind"))
+}
+
+func (x *_EventDaoMembersUpdated_2_list) Truncate(n int) {
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_EventDaoMembersUpdated_2_list) NewElement() protoreflect.Value {
+	v := ""
+	return protoreflect.ValueOfString(v)
+}
+
+func (x *_EventDaoMembersUpdated_2_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_EventDaoMembersUpdated_3_list)(nil)
+
+type _EventDaoMembersUpdated_3_list struct {
+	list *[]string
+}
+
+func (x *_EventDaoMembersUpdated_3_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_EventDaoMembersUpdated_3_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfString((*x.list)[i])
+}
+
+func (x *_EventDaoMembersUpdated_3_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_EventDaoMembersUpdated_3_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_EventDaoMembersUpdated_3_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message EventDaoMembersUpdated at list field Removed as it is not of Message kind"))
+}
+
+func (x *_EventDaoMembersUpdated_3_list) Truncate(n int) {
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_EventDaoMembersUpdated_3_list) NewElement() protoreflect.Value {
+	v := ""
+	return protoreflect.ValueOfString(v)
+}
+
+func (x *_EventDaoMembersUpdated_3_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_EventDaoMembersUpdated         protoreflect.MessageDescriptor
+	fd_EventDaoMembersUpdated_id      protoreflect.FieldDescriptor
+	fd_EventDaoMembersUpdated_added   protoreflect.FieldDescriptor
+	fd_EventDaoMembersUpdated_removed protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_dao_events_proto_init()
+	md_EventDaoMembersUpdated = File_bze_dao_events_proto.Messages().ByName("EventDaoMembersUpdated")
+	fd_EventDaoMembersUpdated_id = md_EventDaoMembersUpdated.Fields().ByName("id")
+	fd_EventDaoMembersUpdated_added = md_EventDaoMembersUpdated.Fields().ByName("added")
+	fd_EventDaoMembersUpdated_removed = md_EventDaoMembersUpdated.Fields().ByName("removed")
+}
+
+var _ protoreflect.Message = (*fastReflection_EventDaoMembersUpdated)(nil)
+
+type fastReflection_EventDaoMembersUpdated EventDaoMembersUpdated
+
+func (x *EventDaoMembersUpdated) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_EventDaoMembersUpdated)(x)
+}
+
+func (x *EventDaoMembersUpdated) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_dao_events_proto_msgTypes[16]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_EventDaoMembersUpdated_messageType fastReflection_EventDaoMembersUpdated_messageType
+var _ protoreflect.MessageType = fastReflection_EventDaoMembersUpdated_messageType{}
+
+type fastReflection_EventDaoMembersUpdated_messageType struct{}
+
+func (x fastReflection_EventDaoMembersUpdated_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_EventDaoMembersUpdated)(nil)
+}
+func (x fastReflection_EventDaoMembersUpdated_messageType) New() protoreflect.Message {
+	return new(fastReflection_EventDaoMembersUpdated)
+}
+func (x fastReflection_EventDaoMembersUpdated_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventDaoMembersUpdated
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_EventDaoMembersUpdated) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventDaoMembersUpdated
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_EventDaoMembersUpdated) Type() protoreflect.MessageType {
+	return _fastReflection_EventDaoMembersUpdated_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_EventDaoMembersUpdated) New() protoreflect.Message {
+	return new(fastReflection_EventDaoMembersUpdated)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_EventDaoMembersUpdated) Interface() protoreflect.ProtoMessage {
+	return (*EventDaoMembersUpdated)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_EventDaoMembersUpdated) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Id != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Id)
+		if !f(fd_EventDaoMembersUpdated_id, value) {
+			return
+		}
+	}
+	if len(x.Added) != 0 {
+		value := protoreflect.ValueOfList(&_EventDaoMembersUpdated_2_list{list: &x.Added})
+		if !f(fd_EventDaoMembersUpdated_added, value) {
+			return
+		}
+	}
+	if len(x.Removed) != 0 {
+		value := protoreflect.ValueOfList(&_EventDaoMembersUpdated_3_list{list: &x.Removed})
+		if !f(fd_EventDaoMembersUpdated_removed, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_EventDaoMembersUpdated) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.dao.EventDaoMembersUpdated.id":
+		return x.Id != uint64(0)
+	case "bze.dao.EventDaoMembersUpdated.added":
+		return len(x.Added) != 0
+	case "bze.dao.EventDaoMembersUpdated.removed":
+		return len(x.Removed) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.EventDaoMembersUpdated"))
+		}
+		panic(fmt.Errorf("message bze.dao.EventDaoMembersUpdated does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventDaoMembersUpdated) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.dao.EventDaoMembersUpdated.id":
+		x.Id = uint64(0)
+	case "bze.dao.EventDaoMembersUpdated.added":
+		x.Added = nil
+	case "bze.dao.EventDaoMembersUpdated.removed":
+		x.Removed = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.EventDaoMembersUpdated"))
+		}
+		panic(fmt.Errorf("message bze.dao.EventDaoMembersUpdated does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_EventDaoMembersUpdated) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.dao.EventDaoMembersUpdated.id":
+		value := x.Id
+		return protoreflect.ValueOfUint64(value)
+	case "bze.dao.EventDaoMembersUpdated.added":
+		if len(x.Added) == 0 {
+			return protoreflect.ValueOfList(&_EventDaoMembersUpdated_2_list{})
+		}
+		listValue := &_EventDaoMembersUpdated_2_list{list: &x.Added}
+		return protoreflect.ValueOfList(listValue)
+	case "bze.dao.EventDaoMembersUpdated.removed":
+		if len(x.Removed) == 0 {
+			return protoreflect.ValueOfList(&_EventDaoMembersUpdated_3_list{})
+		}
+		listValue := &_EventDaoMembersUpdated_3_list{list: &x.Removed}
+		return protoreflect.ValueOfList(listValue)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.EventDaoMembersUpdated"))
+		}
+		panic(fmt.Errorf("message bze.dao.EventDaoMembersUpdated does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventDaoMembersUpdated) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.dao.EventDaoMembersUpdated.id":
+		x.Id = value.Uint()
+	case "bze.dao.EventDaoMembersUpdated.added":
+		lv := value.List()
+		clv := lv.(*_EventDaoMembersUpdated_2_list)
+		x.Added = *clv.list
+	case "bze.dao.EventDaoMembersUpdated.removed":
+		lv := value.List()
+		clv := lv.(*_EventDaoMembersUpdated_3_list)
+		x.Removed = *clv.list
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.EventDaoMembersUpdated"))
+		}
+		panic(fmt.Errorf("message bze.dao.EventDaoMembersUpdated does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventDaoMembersUpdated) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.dao.EventDaoMembersUpdated.added":
+		if x.Added == nil {
+			x.Added = []string{}
+		}
+		value := &_EventDaoMembersUpdated_2_list{list: &x.Added}
+		return protoreflect.ValueOfList(value)
+	case "bze.dao.EventDaoMembersUpdated.removed":
+		if x.Removed == nil {
+			x.Removed = []string{}
+		}
+		value := &_EventDaoMembersUpdated_3_list{list: &x.Removed}
+		return protoreflect.ValueOfList(value)
+	case "bze.dao.EventDaoMembersUpdated.id":
+		panic(fmt.Errorf("field id of message bze.dao.EventDaoMembersUpdated is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.EventDaoMembersUpdated"))
+		}
+		panic(fmt.Errorf("message bze.dao.EventDaoMembersUpdated does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_EventDaoMembersUpdated) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.dao.EventDaoMembersUpdated.id":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "bze.dao.EventDaoMembersUpdated.added":
+		list := []string{}
+		return protoreflect.ValueOfList(&_EventDaoMembersUpdated_2_list{list: &list})
+	case "bze.dao.EventDaoMembersUpdated.removed":
+		list := []string{}
+		return protoreflect.ValueOfList(&_EventDaoMembersUpdated_3_list{list: &list})
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.EventDaoMembersUpdated"))
+		}
+		panic(fmt.Errorf("message bze.dao.EventDaoMembersUpdated does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_EventDaoMembersUpdated) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.dao.EventDaoMembersUpdated", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_EventDaoMembersUpdated) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventDaoMembersUpdated) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_EventDaoMembersUpdated) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_EventDaoMembersUpdated) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*EventDaoMembersUpdated)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Id != 0 {
+			n += 1 + runtime.Sov(uint64(x.Id))
+		}
+		if len(x.Added) > 0 {
+			for _, s := range x.Added {
+				l = len(s)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.Removed) > 0 {
+			for _, s := range x.Removed {
+				l = len(s)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*EventDaoMembersUpdated)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Removed) > 0 {
+			for iNdEx := len(x.Removed) - 1; iNdEx >= 0; iNdEx-- {
+				i -= len(x.Removed[iNdEx])
+				copy(dAtA[i:], x.Removed[iNdEx])
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Removed[iNdEx])))
+				i--
+				dAtA[i] = 0x1a
+			}
+		}
+		if len(x.Added) > 0 {
+			for iNdEx := len(x.Added) - 1; iNdEx >= 0; iNdEx-- {
+				i -= len(x.Added[iNdEx])
+				copy(dAtA[i:], x.Added[iNdEx])
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Added[iNdEx])))
+				i--
+				dAtA[i] = 0x12
+			}
+		}
+		if x.Id != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Id))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*EventDaoMembersUpdated)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventDaoMembersUpdated: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventDaoMembersUpdated: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				}
+				x.Id = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Id |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Added", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Added = append(x.Added, string(dAtA[iNdEx:postIndex]))
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Removed", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Removed = append(x.Removed, string(dAtA[iNdEx:postIndex]))
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -9215,8 +9867,9 @@ func (x *EventVote) GetWeight() string {
 	return ""
 }
 
-// EventBallotReduced is emitted when a voter leaves an electorate source and
-// its share is taken out of a ballot on a proposal in voting.
+// EventBallotReduced is emitted when a voter's weight is taken out of a ballot
+// on a proposal in voting: the voter left an electorate source, or was removed
+// from a static-list DAO.
 type EventBallotReduced struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9224,7 +9877,8 @@ type EventBallotReduced struct {
 
 	ProposalId uint64 `protobuf:"varint,1,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
 	Voter      string `protobuf:"bytes,2,opt,name=voter,proto3" json:"voter,omitempty"`
-	// source is sr/{reward_id} or dr/{staking_denom}.
+	// source is sr/{reward_id} or dr/{staking_denom}; empty for a removed
+	// static-list member.
 	Source string `protobuf:"bytes,3,opt,name=source,proto3" json:"source,omitempty"`
 	// amount is the share removed from the ballot and its tally (math.Int).
 	Amount string `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
@@ -9710,6 +10364,59 @@ func (x *EventDaoElectorateUpdated) GetDrDenom() string {
 	return ""
 }
 
+// EventDaoMembersUpdated is emitted when members are added to or removed from
+// a static-list DAO.
+type EventDaoMembersUpdated struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id      uint64   `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Added   []string `protobuf:"bytes,2,rep,name=added,proto3" json:"added,omitempty"`
+	Removed []string `protobuf:"bytes,3,rep,name=removed,proto3" json:"removed,omitempty"`
+}
+
+func (x *EventDaoMembersUpdated) Reset() {
+	*x = EventDaoMembersUpdated{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_dao_events_proto_msgTypes[16]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EventDaoMembersUpdated) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EventDaoMembersUpdated) ProtoMessage() {}
+
+// Deprecated: Use EventDaoMembersUpdated.ProtoReflect.Descriptor instead.
+func (*EventDaoMembersUpdated) Descriptor() ([]byte, []int) {
+	return file_bze_dao_events_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *EventDaoMembersUpdated) GetId() uint64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *EventDaoMembersUpdated) GetAdded() []string {
+	if x != nil {
+		return x.Added
+	}
+	return nil
+}
+
+func (x *EventDaoMembersUpdated) GetRemoved() []string {
+	if x != nil {
+		return x.Removed
+	}
+	return nil
+}
+
 var File_bze_dao_events_proto protoreflect.FileDescriptor
 
 var file_bze_dao_events_proto_rawDesc = []byte{
@@ -9822,16 +10529,22 @@ var file_bze_dao_events_proto_rawDesc = []byte{
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12, 0x15, 0x0a, 0x06, 0x73, 0x72,
 	0x5f, 0x69, 0x64, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x05, 0x73, 0x72, 0x49, 0x64,
 	0x73, 0x12, 0x19, 0x0a, 0x08, 0x64, 0x72, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x07, 0x64, 0x72, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x81, 0x01, 0x0a,
-	0x0b, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x42, 0x0b, 0x45, 0x76,
-	0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x28, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68,
-	0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a,
-	0x65, 0x2f, 0x64, 0x61, 0x6f, 0xa2, 0x02, 0x03, 0x42, 0x44, 0x58, 0xaa, 0x02, 0x07, 0x42, 0x7a,
-	0x65, 0x2e, 0x44, 0x61, 0x6f, 0xca, 0x02, 0x07, 0x42, 0x7a, 0x65, 0x5c, 0x44, 0x61, 0x6f, 0xe2,
-	0x02, 0x13, 0x42, 0x7a, 0x65, 0x5c, 0x44, 0x61, 0x6f, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x08, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x44, 0x61, 0x6f,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x01, 0x28, 0x09, 0x52, 0x07, 0x64, 0x72, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0x58, 0x0a, 0x16,
+	0x45, 0x76, 0x65, 0x6e, 0x74, 0x44, 0x61, 0x6f, 0x4d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x55,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x64, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x64, 0x64, 0x65, 0x64, 0x18,
+	0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x05, 0x61, 0x64, 0x64, 0x65, 0x64, 0x12, 0x18, 0x0a, 0x07,
+	0x72, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x64, 0x18, 0x03, 0x20, 0x03, 0x28, 0x09, 0x52, 0x07, 0x72,
+	0x65, 0x6d, 0x6f, 0x76, 0x65, 0x64, 0x42, 0x81, 0x01, 0x0a, 0x0b, 0x63, 0x6f, 0x6d, 0x2e, 0x62,
+	0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72,
+	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
+	0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f,
+	0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x64, 0x61, 0x6f, 0xa2,
+	0x02, 0x03, 0x42, 0x44, 0x58, 0xaa, 0x02, 0x07, 0x42, 0x7a, 0x65, 0x2e, 0x44, 0x61, 0x6f, 0xca,
+	0x02, 0x07, 0x42, 0x7a, 0x65, 0x5c, 0x44, 0x61, 0x6f, 0xe2, 0x02, 0x13, 0x42, 0x7a, 0x65, 0x5c,
+	0x44, 0x61, 0x6f, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
+	0x02, 0x08, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x44, 0x61, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -9846,7 +10559,7 @@ func file_bze_dao_events_proto_rawDescGZIP() []byte {
 	return file_bze_dao_events_proto_rawDescData
 }
 
-var file_bze_dao_events_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
+var file_bze_dao_events_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_bze_dao_events_proto_goTypes = []interface{}{
 	(*EventDaoCreated)(nil),               // 0: bze.dao.EventDaoCreated
 	(*EventAdminExecuted)(nil),            // 1: bze.dao.EventAdminExecuted
@@ -9864,14 +10577,15 @@ var file_bze_dao_events_proto_goTypes = []interface{}{
 	(*EventDaoConfigUpdated)(nil),         // 13: bze.dao.EventDaoConfigUpdated
 	(*EventDaoMetadataUpdated)(nil),       // 14: bze.dao.EventDaoMetadataUpdated
 	(*EventDaoElectorateUpdated)(nil),     // 15: bze.dao.EventDaoElectorateUpdated
-	(DaoType)(0),                          // 16: bze.dao.DaoType
-	(VoteOption)(0),                       // 17: bze.dao.VoteOption
-	(ProposalStatus)(0),                   // 18: bze.dao.ProposalStatus
+	(*EventDaoMembersUpdated)(nil),        // 16: bze.dao.EventDaoMembersUpdated
+	(DaoType)(0),                          // 17: bze.dao.DaoType
+	(VoteOption)(0),                       // 18: bze.dao.VoteOption
+	(ProposalStatus)(0),                   // 19: bze.dao.ProposalStatus
 }
 var file_bze_dao_events_proto_depIdxs = []int32{
-	16, // 0: bze.dao.EventDaoCreated.type:type_name -> bze.dao.DaoType
-	17, // 1: bze.dao.EventVote.option:type_name -> bze.dao.VoteOption
-	18, // 2: bze.dao.EventProposalSettled.status:type_name -> bze.dao.ProposalStatus
+	17, // 0: bze.dao.EventDaoCreated.type:type_name -> bze.dao.DaoType
+	18, // 1: bze.dao.EventVote.option:type_name -> bze.dao.VoteOption
+	19, // 2: bze.dao.EventProposalSettled.status:type_name -> bze.dao.ProposalStatus
 	3,  // [3:3] is the sub-list for method output_type
 	3,  // [3:3] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name
@@ -10078,6 +10792,18 @@ func file_bze_dao_events_proto_init() {
 				return nil
 			}
 		}
+		file_bze_dao_events_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EventDaoMembersUpdated); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -10085,7 +10811,7 @@ func file_bze_dao_events_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_bze_dao_events_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   16,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

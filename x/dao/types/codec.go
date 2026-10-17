@@ -22,6 +22,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgUpdateDaoConfig{},
 		&MsgUpdateMetadata{},
 		&MsgUpdateElectorate{},
+		&MsgUpdateMembers{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
