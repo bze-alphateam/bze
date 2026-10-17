@@ -2,8 +2,11 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/bze-alphateam/bze/x/dao/types"
 )
@@ -70,4 +73,63 @@ func (k Keeper) countOpenProposals(ctx context.Context, daoId, limit uint64) uin
 func (k Keeper) removeProposal(ctx context.Context, proposal types.Proposal) {
 	k.getPrefixedStore(ctx, types.KeyPrefix(types.ProposalKeyPrefix)).Delete(types.ProposalKey(proposal.Id))
 	k.getPrefixedStore(ctx, types.KeyPrefix(types.DaoProposalKeyPrefix)).Delete(types.DaoProposalKey(proposal.DaoId, proposal.Id))
+}
+
+// GetAllProposals returns every proposal, by id.
+func (k Keeper) GetAllProposals(ctx context.Context) []types.Proposal {
+	iterator := k.getPrefixedStore(ctx, types.KeyPrefix(types.ProposalKeyPrefix)).Iterator(nil, nil)
+	defer iterator.Close()
+
+	var proposals []types.Proposal
+	for ; iterator.Valid(); iterator.Next() {
+		var proposal types.Proposal
+		k.cdc.MustUnmarshal(iterator.Value(), &proposal)
+		proposals = append(proposals, proposal)
+	}
+
+	return proposals
+}
+
+// SetAllProposals imports proposal records (genesis): it stores each one with
+// its DAO index entry, and a proposal in voting also with its open marker and
+// a pin on each of its sources (I4). The proposals must pass
+// GenesisState.Validate.
+func (k Keeper) SetAllProposals(ctx context.Context, proposals []types.Proposal) {
+	for _, proposal := range proposals {
+		if proposal.Status != types.ProposalStatus_VOTING {
+			k.setProposal(ctx, proposal)
+			k.getPrefixedStore(ctx, types.KeyPrefix(types.DaoProposalKeyPrefix)).Set(types.DaoProposalKey(proposal.DaoId, proposal.Id), []byte{})
+			continue
+		}
+
+		k.setNewProposal(ctx, proposal)
+		for _, source := range electorateSources(proposal.PinnedElectorate) {
+			k.pinSource(ctx, source)
+		}
+	}
+}
+
+// CheckDepositEscrow checks I1 on import: the dao module account holds at
+// least the deposits of the proposals in voting, the only ones not released
+// yet, so each can still be paid out. A surplus is allowed: before the module
+// existed its address was not blocked, so anyone could send it coins, and an
+// exact match would let such a transfer halt the upgrade or any later import.
+func (k Keeper) CheckDepositEscrow(ctx context.Context) error {
+	escrowed := sdk.NewCoins()
+	for _, proposal := range k.GetAllProposals(ctx) {
+		if proposal.Status == types.ProposalStatus_VOTING && proposal.PinnedDeposit != nil {
+			escrowed = escrowed.Add(*proposal.PinnedDeposit)
+		}
+	}
+
+	if escrowed.IsZero() {
+		return nil
+	}
+
+	balance := k.bankKeeper.GetAllBalances(ctx, authtypes.NewModuleAddress(types.ModuleName))
+	if !balance.IsAllGTE(escrowed) {
+		return fmt.Errorf("dao module account holds %s, less than the deposits of the proposals in voting (%s)", balance, escrowed)
+	}
+
+	return nil
 }

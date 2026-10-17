@@ -4,9 +4,13 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+var _ codectypes.UnpackInterfacesMessage = GenesisState{}
 
 // DefaultGenesis returns the default genesis state
 func DefaultGenesis() *GenesisState {
@@ -36,6 +40,76 @@ func (gs GenesisState) Validate() error {
 
 		if err := validateGenesisDao(dao); err != nil {
 			return errorsmod.Wrapf(err, "dao %d", dao.Id)
+		}
+	}
+
+	seenProposals := make(map[uint64]struct{}, len(gs.Proposals))
+	for _, proposal := range gs.Proposals {
+		if _, ok := seenProposals[proposal.Id]; ok {
+			return fmt.Errorf("duplicate proposal id %d", proposal.Id)
+		}
+		seenProposals[proposal.Id] = struct{}{}
+
+		// I5
+		if proposal.Id == 0 || proposal.Id > gs.ProposalCount {
+			return fmt.Errorf("proposal id %d is outside [1, proposal_count %d]", proposal.Id, gs.ProposalCount)
+		}
+
+		// DAOs are never deleted, so every proposal's DAO is in the genesis
+		if _, ok := seen[proposal.DaoId]; !ok {
+			return fmt.Errorf("proposal %d belongs to unknown dao %d", proposal.Id, proposal.DaoId)
+		}
+
+		if err := validateGenesisProposal(proposal); err != nil {
+			return errorsmod.Wrapf(err, "proposal %d", proposal.Id)
+		}
+	}
+
+	return nil
+}
+
+// UnpackInterfaces implements UnpackInterfacesMessage, so the messages of the
+// imported proposals are resolved.
+func (gs GenesisState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
+	for _, proposal := range gs.Proposals {
+		if err := proposal.UnpackInterfaces(unpacker); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// validateGenesisProposal checks the stateless rules of an imported proposal
+// record. The I1 escrow balance is checked by InitGenesis, against x/bank.
+func validateGenesisProposal(proposal Proposal) error {
+	if _, ok := ProposalStatus_name[int32(proposal.Status)]; !ok {
+		return fmt.Errorf("unknown status %d", proposal.Status)
+	}
+
+	// a refund sends the deposit back to the proposer
+	if _, err := sdk.AccAddressFromBech32(proposal.Proposer); err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid proposer address (%s)", err)
+	}
+
+	tallies := []struct {
+		name  string
+		value math.Int
+	}{
+		{"yes", proposal.Yes},
+		{"no", proposal.No},
+		{"abstain", proposal.Abstain},
+		{"pinned_denominator", proposal.PinnedDenominator},
+	}
+	for _, tally := range tallies {
+		if tally.value.IsNil() || tally.value.IsNegative() {
+			return fmt.Errorf("%s must be a non-negative integer", tally.name)
+		}
+	}
+
+	if proposal.PinnedDeposit != nil {
+		if err := proposal.PinnedDeposit.Validate(); err != nil {
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "invalid pinned_deposit (%s)", err)
 		}
 	}
 
