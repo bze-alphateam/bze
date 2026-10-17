@@ -51,6 +51,32 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:        "bzed q dao proposal 1",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}},
 				},
+				{
+					RpcMethod:      "Ballot",
+					Use:            "ballot [proposal-id] [voter]",
+					Short:          "Shows a voter's ballot on a DAO proposal",
+					Long:           "Shows the voter's option and weight; in a stake DAO also the share each source gives the weight. An exit or a member removal lowers the weight of a ballot on a proposal in voting.",
+					Example:        "bzed q dao ballot 1 bze1...",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "proposal_id"}, {ProtoField: "voter"}},
+				},
+				{
+					RpcMethod: "VotingPower",
+					Use:       "voting-power [dao-id] [address]",
+					Short:     "Shows an address's voting power in a DAO, now and on each proposal in voting",
+					Long: "current is the address's weight now: 1 or 0 in a static-list DAO, its stake in the DAO's sources in a stake DAO. " +
+						"proposals lists the weight a vote would count on each proposal in voting: stake in the sources the proposal pinned that joined before it was submitted.",
+					Example:        "bzed q dao voting-power 1 bze1...",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}, {ProtoField: "address"}},
+				},
+				{
+					RpcMethod: "JoinRecord",
+					Use:       "join-record [source] [address]",
+					Short:     "Shows the height an address joined a pinned electorate source at",
+					Long: "source is sr/{reward_id} or dr/{staking_denom}. A join is recorded only while a DAO or a proposal in voting uses the source; " +
+						"stake joined at or after a proposal's submit height does not vote on it. Not found when no join is recorded.",
+					Example:        "bzed q dao join-record sr/3 bze1...",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "source"}, {ProtoField: "address"}},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{

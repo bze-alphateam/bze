@@ -96,3 +96,53 @@ func (k Keeper) removeBallot(ctx context.Context, ballot types.Ballot) {
 
 	k.getPrefixedStore(ctx, types.KeyPrefix(types.BallotKeyPrefix)).Delete(types.BallotKey(ballot.ProposalId, voter))
 }
+
+// GetAllBallots returns every ballot, by proposal id and voter.
+func (k Keeper) GetAllBallots(ctx context.Context) []types.Ballot {
+	iterator := k.getPrefixedStore(ctx, types.KeyPrefix(types.BallotKeyPrefix)).Iterator(nil, nil)
+	defer iterator.Close()
+
+	var ballots []types.Ballot
+	for ; iterator.Valid(); iterator.Next() {
+		var ballot types.Ballot
+		k.cdc.MustUnmarshal(iterator.Value(), &ballot)
+		ballots = append(ballots, ballot)
+	}
+
+	return ballots
+}
+
+// SetAllBallots imports ballots (genesis) as they are. They must pass
+// GenesisState.Validate.
+func (k Keeper) SetAllBallots(ctx context.Context, ballots []types.Ballot) {
+	for _, ballot := range ballots {
+		k.setBallot(ctx, sdk.MustAccAddressFromBech32(ballot.Voter), ballot)
+	}
+}
+
+// GetAllVoteIndex returns every vote-index entry, by source, address and
+// proposal id.
+func (k Keeper) GetAllVoteIndex(ctx context.Context) []types.VoteIndexEntry {
+	iterator := k.getPrefixedStore(ctx, types.KeyPrefix(types.VoteIndexKeyPrefix)).Iterator(nil, nil)
+	defer iterator.Close()
+
+	var entries []types.VoteIndexEntry
+	for ; iterator.Valid(); iterator.Next() {
+		source, addr, rest := types.SplitSourceAddressKey(iterator.Key())
+		entries = append(entries, types.VoteIndexEntry{
+			Source:     string(source),
+			Address:    addr.String(),
+			ProposalId: sdk.BigEndianToUint64(rest),
+		})
+	}
+
+	return entries
+}
+
+// SetAllVoteIndex imports vote-index entries (genesis) as they are. They must
+// pass GenesisState.Validate.
+func (k Keeper) SetAllVoteIndex(ctx context.Context, entries []types.VoteIndexEntry) {
+	for _, entry := range entries {
+		k.setVoteIndex(ctx, []byte(entry.Source), sdk.MustAccAddressFromBech32(entry.Address), entry.ProposalId)
+	}
+}
