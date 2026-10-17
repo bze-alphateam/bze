@@ -4901,7 +4901,7 @@ func (x *EventVote) GetOption() VoteOption {
 	if x != nil {
 		return x.Option
 	}
-	return VoteOption_YES
+	return VoteOption_VOTE_OPTION_UNSPECIFIED
 }
 
 func (x *EventVote) GetWeight() string {
