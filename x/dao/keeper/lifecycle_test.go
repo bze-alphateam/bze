@@ -218,7 +218,8 @@ func (suite *IntegrationTestSuite) TestSubmitProposal_NonMemberNeedsOpenSubmissi
 	suite.Require().True(proposal.PinnedConfig.OpenSubmission)
 }
 
-// The DAO may have at most max_open_proposals proposals in voting.
+// The DAO may have at most max_open_proposals proposals in voting; other
+// DAOs' proposals do not count.
 func (suite *IntegrationTestSuite) TestSubmitProposal_MaxOpenProposals() {
 	suite.createStaticDao(noConfigChange)
 	params := suite.k.GetParams(suite.ctx)
@@ -233,6 +234,11 @@ func (suite *IntegrationTestSuite) TestSubmitProposal_MaxOpenProposals() {
 	_, err := suite.submit(memberB, 1, false)
 	suite.Require().ErrorIs(err, types.ErrTooManyProposals)
 	suite.Require().Equal(uint64(2), suite.k.GetProposalCounter(suite.ctx))
+
+	// the cap is per DAO: another DAO still submits
+	suite.createDao(2, func(*types.MsgCreateDao) {})
+	_, err = suite.submit(memberA, 2, false)
+	suite.Require().NoError(err)
 }
 
 // The default cap is 10.
@@ -791,4 +797,25 @@ func (suite *IntegrationTestSuite) TestCancelProposal_EscrowMatchesOpenDeposits(
 	}
 	suite.Require().Equal(ubze(40+15), open)
 	suite.Require().Equal(open, escrow)
+}
+
+// A vote whose option is left out decodes to UNSPECIFIED and is rejected, so
+// it can never count as YES; no ballot is stored.
+func (suite *IntegrationTestSuite) TestVote_OmittedOptionRejected() {
+	suite.createStaticDao(noConfigChange)
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+
+	// the wire form of a vote without the option field
+	bz, err := (&types.MsgVote{Voter: memberA.String(), ProposalId: id}).Marshal()
+	suite.Require().NoError(err)
+	var decoded types.MsgVote
+	suite.Require().NoError(decoded.Unmarshal(bz))
+	suite.Require().Equal(types.VoteOption_VOTE_OPTION_UNSPECIFIED, decoded.Option)
+
+	_, err = suite.msgServer.Vote(suite.ctx, &decoded)
+	suite.Require().ErrorIs(err, types.ErrInvalidVote)
+	_, found := suite.k.GetBallot(suite.ctx, id, memberA)
+	suite.Require().False(found)
+	suite.requireTally(id, 0, 0, 0)
 }
