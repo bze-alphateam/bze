@@ -222,3 +222,37 @@ func (suite *IntegrationTestSuite) TestExitHook_I6_PrunesIndexOfFinishedProposal
 	suite.requireTally(id, 50, 0, 0)
 	suite.Require().Equal(0, suite.ballotReducedEvents())
 }
+
+// I6 after cleanup: the cleanup deletes the vote-index entry of every share of
+// every ballot, so no vidx/ entry points at the proposal and a later Exit
+// finds nothing to prune. Entries of the voters' other proposals stay.
+func (suite *IntegrationTestSuite) TestCleanupProposal_I6_LeavesNoVoteIndex() {
+	id := suite.votedStakeProposal(3, true)
+	other, err := suite.submit(memberAddress(1), 1, false)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberAddress(1), other, types.VoteOption_YES))
+	for i := 1; i <= 3; i++ {
+		suite.Require().True(suite.k.HasVoteIndex(suite.ctx, srSource, memberAddress(i), id))
+		suite.Require().True(suite.k.HasVoteIndex(suite.ctx, drSource, memberAddress(i), id))
+	}
+
+	res, err := suite.cleanup(id, 2)
+	suite.Require().NoError(err)
+	suite.Require().False(res.Completed)
+	res, err = suite.cleanup(id, 2)
+	suite.Require().NoError(err)
+	suite.Require().True(res.Completed)
+
+	for i := 1; i <= 3; i++ {
+		suite.Require().False(suite.k.HasVoteIndex(suite.ctx, srSource, memberAddress(i), id))
+		suite.Require().False(suite.k.HasVoteIndex(suite.ctx, drSource, memberAddress(i), id))
+	}
+	suite.Require().True(suite.k.HasVoteIndex(suite.ctx, srSource, memberAddress(1), other))
+	suite.Require().True(suite.k.HasVoteIndex(suite.ctx, drSource, memberAddress(1), other))
+
+	suite.Require().NoError(suite.k.StakingRewardHooks().AfterStakingRewardExit(suite.ctx, "1", memberAddress(2).String(), math.NewInt(1), stakeDenom))
+	suite.Require().NoError(suite.k.DenomRewardHooks().AfterDenomRewardExit(suite.ctx, stakeDenom, memberAddress(2).String(), math.NewInt(1)))
+	suite.Require().Equal(0, suite.ballotReducedEvents())
+	_, found := suite.k.GetProposal(suite.ctx, id)
+	suite.Require().False(found)
+}

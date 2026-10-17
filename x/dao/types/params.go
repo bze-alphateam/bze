@@ -21,6 +21,7 @@ const (
 	DefaultMinVotingPeriod           = time.Hour
 	DefaultMaxVotingPeriod           = 90 * 24 * time.Hour
 	DefaultExecutionWindow           = 14 * 24 * time.Hour
+	DefaultCleanupBatchSize          = uint64(100)
 	DefaultDaoCreationFeeDestination = FeeDestinationBurner
 	DefaultMinElectorateLockDays     = uint32(5)
 )
@@ -40,6 +41,7 @@ func NewParams(
 	minVotingPeriod time.Duration,
 	maxVotingPeriod time.Duration,
 	executionWindow time.Duration,
+	cleanupBatchSize uint64,
 	daoCreationFee sdk.Coin,
 	daoCreationFeeDestination string,
 	minElectorateLockDays uint32,
@@ -55,6 +57,7 @@ func NewParams(
 		MinVotingPeriod:           minVotingPeriod,
 		MaxVotingPeriod:           maxVotingPeriod,
 		ExecutionWindow:           executionWindow,
+		CleanupBatchSize:          cleanupBatchSize,
 		DaoCreationFee:            daoCreationFee,
 		DaoCreationFeeDestination: daoCreationFeeDestination,
 		MinElectorateLockDays:     minElectorateLockDays,
@@ -74,6 +77,7 @@ func DefaultParams() Params {
 		DefaultMinVotingPeriod,
 		DefaultMaxVotingPeriod,
 		DefaultExecutionWindow,
+		DefaultCleanupBatchSize,
 		DefaultDaoCreationFee,
 		DefaultDaoCreationFeeDestination,
 		DefaultMinElectorateLockDays,
@@ -121,6 +125,11 @@ func (p Params) Validate() error {
 	// expires at the next settle
 	if p.ExecutionWindow < 0 {
 		return fmt.Errorf("execution_window must not be negative: %s", p.ExecutionWindow)
+	}
+
+	// a zero batch would make finished proposals impossible to clean up
+	if p.CleanupBatchSize == 0 {
+		return fmt.Errorf("cleanup_batch_size must be positive")
 	}
 
 	// a zero amount is valid and makes DAO creation free

@@ -35,6 +35,8 @@ message Params {
   // execution_window is how long after voting_end a failed execution can be
   // retried; after it the proposal expires.
   google.protobuf.Duration execution_window = 10 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // cleanup_batch_size caps the ballots one MsgCleanupProposal deletes.
+  uint64 cleanup_batch_size = 11;
   // dao_creation_fee is charged to the creator of a DAO; a zero amount makes creation free.
   cosmos.base.v1beta1.Coin dao_creation_fee = 12 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // dao_creation_fee_destination is "burner" or "community_pool".
