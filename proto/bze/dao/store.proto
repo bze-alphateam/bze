@@ -59,8 +59,6 @@ enum ProposalStatus {
   EXPIRED = 4;
   // CANCELLED was withdrawn by its proposer.
   CANCELLED = 5;
-  // VOIDED was closed because its DAO was deleted.
-  VOIDED = 6;
 }
 
 // DaoConfig holds the voting rules of a DAO.

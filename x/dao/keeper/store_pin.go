@@ -26,8 +26,6 @@ func (k Keeper) pinSource(ctx context.Context, source []byte) {
 }
 
 // unpinSource removes one user of the source and deletes the key at zero.
-//
-//nolint:unused // used once proposals, electorate changes and DAO deletion land
 func (k Keeper) unpinSource(ctx context.Context, source []byte) {
 	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.PinKeyPrefix))
 	pins := k.GetSourcePins(ctx, source)

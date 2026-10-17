@@ -1,12 +1,14 @@
 package keeper_test
 
 import (
+	"strconv"
 	"strings"
 	"time"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/gogoproto/proto"
 	"go.uber.org/mock/gomock"
@@ -583,6 +585,218 @@ func (suite *IntegrationTestSuite) TestVote_InvalidRequests() {
 	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidAddress)
 
 	suite.requireTally(id, 0, 0, 0)
+}
+
+func (suite *IntegrationTestSuite) cancel(proposer sdk.AccAddress, proposalId uint64) error {
+	_, err := suite.msgServer.CancelProposal(suite.ctx, types.NewMsgCancelProposal(proposer.String(), proposalId))
+	return err
+}
+
+// lastEventAttrs returns the attributes of the last emitted event of the
+// given type, or nil when there is none.
+func (suite *IntegrationTestSuite) lastEventAttrs(event proto.Message) map[string]string {
+	var attrs map[string]string
+	for _, e := range suite.ctx.EventManager().Events() {
+		if e.Type != proto.MessageName(event) {
+			continue
+		}
+		attrs = map[string]string{}
+		for _, attr := range e.Attributes {
+			attrs[attr.Key] = attr.Value
+		}
+	}
+
+	return attrs
+}
+
+// requireCancelled checks that the proposal left voting: CANCELLED, no open
+// marker, still in its DAO's index.
+func (suite *IntegrationTestSuite) requireCancelled(proposalId uint64) {
+	proposal, found := suite.k.GetProposal(suite.ctx, proposalId)
+	suite.Require().True(found)
+	suite.Require().Equal(types.ProposalStatus_CANCELLED, proposal.Status)
+	suite.Require().False(suite.k.IsOpenProposal(suite.ctx, proposal.DaoId, proposalId))
+	suite.Require().True(suite.k.HasDaoProposalIndex(suite.ctx, proposal.DaoId, proposalId))
+	suite.Require().Equal(`"`+strconv.FormatUint(proposalId, 10)+`"`, suite.lastEventAttrs(&types.EventProposalCancelled{})["id"])
+}
+
+// Cancel matrix: ALWAYS refunds the deposit to the proposer; ONLY_PASSED and
+// NEVER keep it and send it to the pinned kept_deposit_destination, the burner
+// or the DAO's treasury.
+func (suite *IntegrationTestSuite) TestCancelProposal_DepositMatrix() {
+	burner := authtypes.NewModuleAddress(burnerFeeCollector)
+	for _, tc := range []struct {
+		policy      types.DepositRefundPolicy
+		destination types.FundsDestination
+		refunded    bool
+		to          sdk.AccAddress
+	}{
+		{types.DepositRefundPolicy_ALWAYS, types.FundsDestination_BURN, true, memberA},
+		{types.DepositRefundPolicy_ALWAYS, types.FundsDestination_TREASURY, true, memberA},
+		{types.DepositRefundPolicy_ONLY_PASSED, types.FundsDestination_BURN, false, burner},
+		{types.DepositRefundPolicy_ONLY_PASSED, types.FundsDestination_TREASURY, false, daoAddress(1)},
+		{types.DepositRefundPolicy_NEVER, types.FundsDestination_BURN, false, burner},
+		{types.DepositRefundPolicy_NEVER, types.FundsDestination_TREASURY, false, daoAddress(1)},
+	} {
+		suite.Run(tc.policy.String()+"/"+tc.destination.String(), func() {
+			suite.SetupTest()
+			suite.createStaticDao(func(c *types.DaoConfig) {
+				c.ProposalDeposit = coinPtr(40)
+				c.DepositRefundPolicy = tc.policy
+				c.KeptDepositDestination = tc.destination
+			})
+			suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), memberA, types.ModuleName, ubze(40)).Return(nil)
+			id, err := suite.submit(memberA, 1, false)
+			suite.Require().NoError(err)
+
+			if tc.to.Equals(burner) {
+				suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, burnerFeeCollector, ubze(40)).Return(nil)
+			} else {
+				suite.bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, tc.to, ubze(40)).Return(nil)
+			}
+			suite.Require().NoError(suite.cancel(memberA, id))
+
+			suite.requireCancelled(id)
+			attrs := suite.lastEventAttrs(&types.EventDepositReleased{})
+			suite.Require().Equal(`"`+strconv.FormatUint(id, 10)+`"`, attrs["id"])
+			suite.Require().Equal(strconv.FormatBool(tc.refunded), attrs["refunded"])
+			suite.Require().Equal(`"`+tc.to.String()+`"`, attrs["destination"])
+			suite.Require().Equal(`"40ubze"`, attrs["amount"])
+		})
+	}
+}
+
+// A proposal without a deposit is cancelled with no transfer and no release event.
+func (suite *IntegrationTestSuite) TestCancelProposal_NoDeposit() {
+	suite.createStaticDao(noConfigChange)
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+
+	suite.Require().NoError(suite.cancel(memberA, id))
+	suite.requireCancelled(id)
+	suite.Require().Nil(suite.lastEventAttrs(&types.EventDepositReleased{}))
+}
+
+// A failed release fails the cancel: the proposal stays in voting.
+func (suite *IntegrationTestSuite) TestCancelProposal_ReleaseFailureKeepsVoting() {
+	suite.createStaticDao(func(c *types.DaoConfig) { c.ProposalDeposit = coinPtr(40) })
+	suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), memberA, types.ModuleName, ubze(40)).Return(nil)
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+
+	suite.bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, memberA, ubze(40)).Return(sdkerrors.ErrInsufficientFunds)
+	err = suite.cancel(memberA, id)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
+	suite.Require().ErrorContains(err, "release the deposit")
+}
+
+// Only the proposer can cancel, only while the proposal is in voting, and only once.
+func (suite *IntegrationTestSuite) TestCancelProposal_Refusals() {
+	suite.createStaticDao(noConfigChange)
+
+	err := suite.cancel(memberA, 1)
+	suite.Require().ErrorIs(err, types.ErrProposalNotFound)
+
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+
+	for _, signer := range []sdk.AccAddress{memberB, attackerAddr, daoAddress(1)} {
+		err = suite.cancel(signer, id)
+		suite.Require().ErrorIs(err, types.ErrNotProposalOwner, signer.String())
+	}
+	_, err = suite.msgServer.CancelProposal(suite.ctx, &types.MsgCancelProposal{Proposer: "bze1nope", ProposalId: id})
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidAddress)
+	suite.Require().True(suite.k.IsOpenProposal(suite.ctx, 1, id))
+
+	suite.Require().NoError(suite.cancel(memberA, id))
+	err = suite.cancel(memberA, id)
+	suite.Require().ErrorIs(err, types.ErrVotingClosed)
+	suite.requireCancelled(id)
+}
+
+// The proposer can still cancel after voting_end, until the proposal is settled.
+func (suite *IntegrationTestSuite) TestCancelProposal_AfterVotingEnd() {
+	suite.createStaticDao(noConfigChange)
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	proposal, _ := suite.k.GetProposal(suite.ctx, id)
+
+	suite.ctx = suite.ctx.WithBlockTime(time.Unix(proposal.VotingEnd+3600, 0))
+	suite.Require().NoError(suite.cancel(memberA, id))
+	suite.requireCancelled(id)
+}
+
+// A cancelled proposal takes no votes, keeps its ballots and tally, and frees
+// its slot under max_open_proposals.
+func (suite *IntegrationTestSuite) TestCancelProposal_ClosesVoting() {
+	suite.createStaticDao(noConfigChange)
+	params := suite.k.GetParams(suite.ctx)
+	params.MaxOpenProposals = 1
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
+
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_YES))
+	_, err = suite.submit(memberA, 1, false)
+	suite.Require().ErrorIs(err, types.ErrTooManyProposals)
+
+	suite.Require().NoError(suite.cancel(memberA, id))
+
+	err = suite.vote(memberA, id, types.VoteOption_NO)
+	suite.Require().ErrorIs(err, types.ErrVotingClosed)
+	err = suite.vote(memberB, id, types.VoteOption_NO)
+	suite.Require().ErrorIs(err, types.ErrVotingClosed)
+	suite.requireTally(id, 1, 0, 0)
+	_, found := suite.k.GetBallot(suite.ctx, id, memberB)
+	suite.Require().True(found)
+
+	_, err = suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+}
+
+// I1: after cancels, the module account holds exactly the deposits of the
+// proposals still in voting.
+func (suite *IntegrationTestSuite) TestCancelProposal_EscrowMatchesOpenDeposits() {
+	suite.createStaticDao(func(c *types.DaoConfig) { c.ProposalDeposit = coinPtr(40) })
+	suite.createDao(2, func(msg *types.MsgCreateDao) {
+		msg.Config.ProposalDeposit = coinPtr(15)
+		msg.Config.DepositRefundPolicy = types.DepositRefundPolicy_NEVER
+	})
+
+	escrow := sdk.NewCoins()
+	suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), types.ModuleName, gomock.Any()).
+		DoAndReturn(func(_ any, _ sdk.AccAddress, _ string, amt sdk.Coins) error {
+			escrow = escrow.Add(amt...)
+			return nil
+		}).Times(4)
+	release := func(_ any, _ string, _ any, amt sdk.Coins) error {
+		escrow = escrow.Sub(amt...)
+		return nil
+	}
+	suite.bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).DoAndReturn(release)
+	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).DoAndReturn(release)
+
+	var ids []uint64
+	for _, s := range []struct {
+		proposer sdk.AccAddress
+		daoId    uint64
+	}{{memberA, 1}, {memberB, 2}, {memberB, 1}, {memberA, 2}} {
+		id, err := suite.submit(s.proposer, s.daoId, false)
+		suite.Require().NoError(err)
+		ids = append(ids, id)
+	}
+	suite.Require().NoError(suite.cancel(memberA, ids[0]))
+	suite.Require().NoError(suite.cancel(memberB, ids[1]))
+
+	open := sdk.NewCoins()
+	for _, id := range ids {
+		proposal, _ := suite.k.GetProposal(suite.ctx, id)
+		if proposal.Status == types.ProposalStatus_VOTING {
+			open = open.Add(*proposal.PinnedDeposit)
+		}
+	}
+	suite.Require().Equal(ubze(40+15), open)
+	suite.Require().Equal(open, escrow)
 }
 
 // A vote whose option is left out decodes to UNSPECIFIED and is rejected, so

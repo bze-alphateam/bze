@@ -34,4 +34,5 @@ var (
 	ErrProposalNotFound    = sdkerrors.Register(ModuleName, 1123, "proposal not found")
 	ErrVotingClosed        = sdkerrors.Register(ModuleName, 1124, "the proposal is not open for voting")
 	ErrSameVote            = sdkerrors.Register(ModuleName, 1125, "the ballot already has this option")
+	ErrNotProposalOwner    = sdkerrors.Register(ModuleName, 1126, "signer is not the proposal's proposer")
 )
