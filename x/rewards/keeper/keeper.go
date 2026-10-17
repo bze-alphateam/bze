@@ -38,6 +38,9 @@ type (
 		// after keepers are built, via SetHooks (same approach as tradebin's
 		// SetOnOrderFillHooks).
 		hooks types.StakingRewardHooks
+		// denomRewardHooks are notified on Denom Reward participation changes,
+		// registered the same way via SetDenomRewardHooks.
+		denomRewardHooks types.DenomRewardHooks
 
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
@@ -84,6 +87,40 @@ func (k *Keeper) SetHooks(sh types.StakingRewardHooks) {
 	}
 
 	k.hooks = sh
+}
+
+// SetDenomRewardHooks sets the Denom Reward participation hooks. It panics if
+// called more than once, like SetHooks.
+func (k *Keeper) SetDenomRewardHooks(dh types.DenomRewardHooks) {
+	if k.denomRewardHooks != nil {
+		panic("cannot set denom reward hooks twice")
+	}
+
+	k.denomRewardHooks = dh
+}
+
+func (k Keeper) afterDenomRewardJoin(ctx sdk.Context, stakingDenom, address string, amount math.Int) error {
+	if k.denomRewardHooks == nil {
+		return nil
+	}
+
+	return k.denomRewardHooks.AfterDenomRewardJoin(ctx, stakingDenom, address, amount)
+}
+
+func (k Keeper) afterDenomRewardIncrease(ctx sdk.Context, stakingDenom, address string, amountAdded, newTotal math.Int) error {
+	if k.denomRewardHooks == nil {
+		return nil
+	}
+
+	return k.denomRewardHooks.AfterDenomRewardIncrease(ctx, stakingDenom, address, amountAdded, newTotal)
+}
+
+func (k Keeper) afterDenomRewardExit(ctx sdk.Context, stakingDenom, address string, unstakedAmount math.Int) error {
+	if k.denomRewardHooks == nil {
+		return nil
+	}
+
+	return k.denomRewardHooks.AfterDenomRewardExit(ctx, stakingDenom, address, unstakedAmount)
 }
 
 func (k Keeper) afterStakingRewardJoin(ctx sdk.Context, rewardId, address string, amount math.Int, stakingDenom string) error {
