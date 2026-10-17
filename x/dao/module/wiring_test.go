@@ -2,8 +2,10 @@ package dao_test
 
 import (
 	"testing"
+	"time"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
@@ -18,7 +20,10 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 
+	apidao "github.com/bze-alphateam/bze/api/bze/dao"
 	"github.com/bze-alphateam/bze/x/dao/keeper"
 	dao "github.com/bze-alphateam/bze/x/dao/module"
 	"github.com/bze-alphateam/bze/x/dao/types"
@@ -54,7 +59,7 @@ func TestRegisterServices_RoutesMsgAndQuery(t *testing.T) {
 	_, err := handler(ctx, msg)
 	require.NoError(t, err)
 
-	bad := &types.MsgUpdateParams{Authority: sdk.AccAddress("not_the_gov_account_").String()}
+	bad := &types.MsgUpdateParams{Authority: sdk.AccAddress("not_the_gov_account_").String(), Params: types.DefaultParams()}
 	_, err = handler(ctx, bad)
 	require.ErrorIs(t, err, types.ErrInvalidSigner)
 
@@ -72,10 +77,58 @@ func TestAutoCLIOptions(t *testing.T) {
 	require.Equal(t, "params", opts.Query.RpcCommandOptions[0].Use)
 
 	require.Equal(t, "bze.dao.Msg", opts.Tx.Service)
-	require.Len(t, opts.Tx.RpcCommandOptions, 1)
+	require.Len(t, opts.Tx.RpcCommandOptions, 2)
 	updateParams := opts.Tx.RpcCommandOptions[0]
 	require.Equal(t, "UpdateParams", updateParams.RpcMethod)
 	require.Equal(t, "update-params [params]", updateParams.Use)
 	require.False(t, updateParams.Skip)
 	require.True(t, updateParams.GovProposal)
+
+	createDao := opts.Tx.RpcCommandOptions[1]
+	require.Equal(t, "CreateDao", createDao.RpcMethod)
+	require.Equal(t, "create-dao [type] [name] [config]", createDao.Use)
+	require.False(t, createDao.GovProposal)
+	require.Len(t, createDao.PositionalArgs, 3)
+	require.Equal(t, "type", createDao.PositionalArgs[0].ProtoField)
+	require.Equal(t, "name", createDao.PositionalArgs[1].ProtoField)
+	require.Equal(t, "config", createDao.PositionalArgs[2].ProtoField)
+}
+
+// autocli reads the create-dao config argument as protojson into the api type
+// and sends its proto bytes; the chain must decode them into a valid DaoConfig.
+// Ratios are cosmos.Dec scalars, so raw JSON carries them as 18-decimal
+// integers; durations use the protojson form ("259200s").
+func TestCreateDaoConfigJSON_DecodesIntoValidConfig(t *testing.T) {
+	const configJSON = `{"min_quorum":"500000000000000000","threshold":"500000000000000000",` +
+		`"voting_period":"259200s","expedited_period":"86400s",` +
+		`"expedite_quorum":"600000000000000000","expedite_threshold":"660000000000000000","proposal_deposit":{"denom":"ubze","amount":"1000"},` +
+		`"deposit_refund_policy":"ONLY_PASSED","cost_destination":"TREASURY"}`
+
+	var apiConfig apidao.DaoConfig
+	require.NoError(t, protojson.Unmarshal([]byte(configJSON), &apiConfig))
+	bz, err := proto.Marshal(&apiConfig)
+	require.NoError(t, err)
+
+	var config types.DaoConfig
+	require.NoError(t, config.Unmarshal(bz))
+	require.NoError(t, config.Validate())
+	require.Equal(t, math.LegacyMustNewDecFromStr("0.5"), config.MinQuorum)
+	require.Equal(t, math.LegacyMustNewDecFromStr("0.66"), config.ExpediteThreshold)
+	require.Equal(t, 72*time.Hour, config.VotingPeriod)
+	require.Equal(t, 24*time.Hour, config.ExpeditedPeriod)
+	require.Equal(t, types.DepositRefundPolicy_ONLY_PASSED, config.DepositRefundPolicy)
+	require.Equal(t, types.FundsDestination_TREASURY, config.CostDestination)
+	require.Equal(t, "1000ubze", config.ProposalDeposit.String())
+	require.Nil(t, config.ProposalCost)
+}
+
+// A human decimal in raw JSON is not a valid cosmos.Dec on the wire.
+func TestCreateDaoConfigJSON_RejectsHumanDecimals(t *testing.T) {
+	var apiConfig apidao.DaoConfig
+	require.NoError(t, protojson.Unmarshal([]byte(`{"min_quorum":"0.5"}`), &apiConfig))
+	bz, err := proto.Marshal(&apiConfig)
+	require.NoError(t, err)
+
+	var config types.DaoConfig
+	require.Error(t, config.Unmarshal(bz))
 }

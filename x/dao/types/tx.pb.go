@@ -125,37 +125,211 @@ func (m *MsgUpdateParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
+// MsgCreateDao is the Msg/CreateDao request type.
+type MsgCreateDao struct {
+	// creator pays the creation fee.
+	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	// admin is optional; empty makes the DAO self-owned (admin = the DAO address).
+	Admin       string    `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	Type        DaoType   `protobuf:"varint,3,opt,name=type,proto3,enum=bze.dao.DaoType" json:"type,omitempty"`
+	Name        string    `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
+	Description string    `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`
+	Config      DaoConfig `protobuf:"bytes,6,opt,name=config,proto3" json:"config"`
+	// members is the electorate of a DAO_TYPE_STATIC_LIST DAO.
+	Members []string `protobuf:"bytes,7,rep,name=members,proto3" json:"members,omitempty"`
+	// electorate is the electorate of a DAO_TYPE_STAKE DAO.
+	Electorate *StakeElectorate `protobuf:"bytes,8,opt,name=electorate,proto3" json:"electorate,omitempty"`
+}
+
+func (m *MsgCreateDao) Reset()         { *m = MsgCreateDao{} }
+func (m *MsgCreateDao) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateDao) ProtoMessage()    {}
+func (*MsgCreateDao) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5135441dc59deeae, []int{2}
+}
+func (m *MsgCreateDao) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateDao) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateDao.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateDao) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateDao.Merge(m, src)
+}
+func (m *MsgCreateDao) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateDao) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateDao.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateDao proto.InternalMessageInfo
+
+func (m *MsgCreateDao) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgCreateDao) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *MsgCreateDao) GetType() DaoType {
+	if m != nil {
+		return m.Type
+	}
+	return DaoType_DAO_TYPE_STATIC_LIST
+}
+
+func (m *MsgCreateDao) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *MsgCreateDao) GetDescription() string {
+	if m != nil {
+		return m.Description
+	}
+	return ""
+}
+
+func (m *MsgCreateDao) GetConfig() DaoConfig {
+	if m != nil {
+		return m.Config
+	}
+	return DaoConfig{}
+}
+
+func (m *MsgCreateDao) GetMembers() []string {
+	if m != nil {
+		return m.Members
+	}
+	return nil
+}
+
+func (m *MsgCreateDao) GetElectorate() *StakeElectorate {
+	if m != nil {
+		return m.Electorate
+	}
+	return nil
+}
+
+// MsgCreateDaoResponse is the Msg/CreateDao response type.
+type MsgCreateDaoResponse struct {
+	Id      uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *MsgCreateDaoResponse) Reset()         { *m = MsgCreateDaoResponse{} }
+func (m *MsgCreateDaoResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateDaoResponse) ProtoMessage()    {}
+func (*MsgCreateDaoResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5135441dc59deeae, []int{3}
+}
+func (m *MsgCreateDaoResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateDaoResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateDaoResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateDaoResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateDaoResponse.Merge(m, src)
+}
+func (m *MsgCreateDaoResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateDaoResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateDaoResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateDaoResponse proto.InternalMessageInfo
+
+func (m *MsgCreateDaoResponse) GetId() uint64 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+func (m *MsgCreateDaoResponse) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*MsgUpdateParams)(nil), "bze.dao.MsgUpdateParams")
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "bze.dao.MsgUpdateParamsResponse")
+	proto.RegisterType((*MsgCreateDao)(nil), "bze.dao.MsgCreateDao")
+	proto.RegisterType((*MsgCreateDaoResponse)(nil), "bze.dao.MsgCreateDaoResponse")
 }
 
 func init() { proto.RegisterFile("bze/dao/tx.proto", fileDescriptor_5135441dc59deeae) }
 
 var fileDescriptor_5135441dc59deeae = []byte{
-	// 339 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x48, 0xaa, 0x4a, 0xd5,
-	0x4f, 0x49, 0xcc, 0xd7, 0x2f, 0xa9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x4f, 0xaa,
-	0x4a, 0xd5, 0x4b, 0x49, 0xcc, 0x97, 0x12, 0x4c, 0xcc, 0xcd, 0xcc, 0xcb, 0xd7, 0x07, 0x93, 0x10,
-	0x39, 0x29, 0xf1, 0xe4, 0xfc, 0xe2, 0xdc, 0xfc, 0x62, 0xfd, 0xdc, 0xe2, 0x74, 0xfd, 0x32, 0x43,
-	0x10, 0x05, 0x95, 0x90, 0x84, 0x48, 0xc4, 0x83, 0x79, 0xfa, 0x10, 0x0e, 0x54, 0x4a, 0x24, 0x3d,
-	0x3f, 0x3d, 0x1f, 0x22, 0x0e, 0x62, 0xc1, 0x44, 0x61, 0xf6, 0x16, 0x24, 0x16, 0x25, 0xe6, 0x42,
-	0xd5, 0x2a, 0xad, 0x66, 0xe4, 0xe2, 0xf7, 0x2d, 0x4e, 0x0f, 0x2d, 0x48, 0x49, 0x2c, 0x49, 0x0d,
-	0x00, 0xcb, 0x08, 0x99, 0x71, 0x71, 0x26, 0x96, 0x96, 0x64, 0xe4, 0x17, 0x65, 0x96, 0x54, 0x4a,
-	0x30, 0x2a, 0x30, 0x6a, 0x70, 0x3a, 0x49, 0x5c, 0xda, 0xa2, 0x2b, 0x02, 0xb5, 0xc4, 0x31, 0x25,
-	0xa5, 0x28, 0xb5, 0xb8, 0x38, 0xb8, 0xa4, 0x28, 0x33, 0x2f, 0x3d, 0x08, 0xa1, 0x54, 0xc8, 0x88,
-	0x8b, 0x0d, 0x62, 0xb6, 0x04, 0x93, 0x02, 0xa3, 0x06, 0xb7, 0x11, 0xbf, 0x1e, 0xd4, 0x63, 0x7a,
-	0x10, 0x83, 0x9d, 0x38, 0x4f, 0xdc, 0x93, 0x67, 0x58, 0xf1, 0x7c, 0x83, 0x16, 0x63, 0x10, 0x54,
-	0xa5, 0x95, 0x4e, 0xd3, 0xf3, 0x0d, 0x5a, 0x08, 0x33, 0xba, 0x9e, 0x6f, 0xd0, 0x92, 0x04, 0x39,
-	0xb4, 0x02, 0xec, 0x54, 0x34, 0x97, 0x29, 0x49, 0x72, 0x89, 0xa3, 0x09, 0x05, 0xa5, 0x16, 0x17,
-	0xe4, 0xe7, 0x15, 0xa7, 0x1a, 0x45, 0x70, 0x31, 0xfb, 0x16, 0xa7, 0x0b, 0x79, 0x71, 0xf1, 0xa0,
-	0xf8, 0x45, 0x02, 0xee, 0x06, 0x34, 0x8d, 0x52, 0x0a, 0xb8, 0x64, 0x60, 0x46, 0x4a, 0xb1, 0x36,
-	0x80, 0x9c, 0xea, 0xe4, 0x74, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9,
-	0x31, 0x4e, 0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d, 0xc7, 0x72, 0x0c, 0x51, 0x1a,
-	0xe9, 0x99, 0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0xfa, 0x49, 0x55, 0xa9, 0xba, 0x89,
-	0x39, 0x05, 0x19, 0x89, 0x25, 0xa9, 0x89, 0x60, 0x1e, 0xd4, 0x0b, 0x25, 0x95, 0x05, 0xa9, 0xc5,
-	0x49, 0x6c, 0xe0, 0xd0, 0x36, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0x76, 0x7e, 0xc6, 0x65, 0xfd,
-	0x01, 0x00, 0x00,
+	// 568 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x53, 0x3d, 0x6f, 0xd3, 0x4e,
+	0x18, 0x8f, 0xd3, 0x34, 0xf9, 0xfb, 0x5a, 0xb5, 0xfd, 0x1f, 0x81, 0x5e, 0x22, 0x61, 0xac, 0x08,
+	0x89, 0x28, 0xa2, 0xb1, 0x08, 0x02, 0xa1, 0x4e, 0x34, 0x2d, 0x0b, 0x52, 0x24, 0xe4, 0xc2, 0xc2,
+	0x82, 0xce, 0xf6, 0x83, 0x63, 0x51, 0xfb, 0xac, 0xbb, 0x2b, 0x6a, 0x32, 0x21, 0x46, 0x26, 0x76,
+	0xbe, 0x00, 0x12, 0x4b, 0x06, 0x3e, 0x44, 0xc7, 0x8a, 0x89, 0x09, 0xa1, 0x64, 0x08, 0x1f, 0x03,
+	0xf9, 0xfc, 0x92, 0x17, 0x81, 0x58, 0x12, 0xff, 0x5e, 0xf2, 0xbc, 0xfc, 0x1e, 0x07, 0xed, 0x39,
+	0x63, 0xb0, 0x3c, 0xca, 0x2c, 0x79, 0xd1, 0x8d, 0x39, 0x93, 0x0c, 0xd7, 0x9c, 0x31, 0x74, 0x3d,
+	0xca, 0x9a, 0xff, 0xd3, 0x30, 0x88, 0x98, 0xa5, 0x3e, 0x53, 0xad, 0xb9, 0xef, 0x32, 0x11, 0x32,
+	0x61, 0x85, 0xc2, 0xb7, 0xde, 0xde, 0x4b, 0xbe, 0x32, 0xa1, 0x91, 0x0a, 0xaf, 0x14, 0xb2, 0x52,
+	0x90, 0x49, 0x75, 0x9f, 0xf9, 0x2c, 0xe5, 0x93, 0xa7, 0x9c, 0xcd, 0xfb, 0xc6, 0x94, 0xd3, 0x30,
+	0xf7, 0x5e, 0xcb, 0x59, 0x21, 0x19, 0x87, 0x94, 0x6c, 0x7d, 0xd1, 0xd0, 0xee, 0x40, 0xf8, 0x2f,
+	0x62, 0x8f, 0x4a, 0x78, 0xa6, 0xec, 0xf8, 0x21, 0xd2, 0xe9, 0xb9, 0x1c, 0x32, 0x1e, 0xc8, 0x11,
+	0xd1, 0x4c, 0xad, 0xad, 0xf7, 0xc9, 0xb7, 0xaf, 0x07, 0xf5, 0xac, 0xf3, 0x91, 0xe7, 0x71, 0x10,
+	0xe2, 0x54, 0xf2, 0x20, 0xf2, 0xed, 0x85, 0x15, 0xf7, 0x50, 0x35, 0x6d, 0x48, 0xca, 0xa6, 0xd6,
+	0xde, 0xea, 0xed, 0x76, 0xb3, 0x6d, 0xbb, 0x69, 0xe1, 0xbe, 0x7e, 0xf9, 0xe3, 0x56, 0xe9, 0xf3,
+	0x7c, 0xd2, 0xd1, 0xec, 0xcc, 0x79, 0x78, 0xf7, 0xfd, 0x7c, 0xd2, 0x59, 0xd4, 0xf8, 0x30, 0x9f,
+	0x74, 0x1a, 0xc9, 0x9c, 0x17, 0x6a, 0xd2, 0xb5, 0xc9, 0x5a, 0x0d, 0xb4, 0xbf, 0x46, 0xd9, 0x20,
+	0x62, 0x16, 0x09, 0x68, 0xfd, 0x2a, 0xa3, 0xed, 0x81, 0xf0, 0x8f, 0x39, 0x50, 0x09, 0x27, 0x94,
+	0xe1, 0x1e, 0xaa, 0xb9, 0x09, 0x60, 0xfc, 0x9f, 0x3b, 0xe4, 0x46, 0x5c, 0x47, 0x9b, 0xd4, 0x0b,
+	0x83, 0x48, 0x2d, 0xa0, 0xdb, 0x29, 0xc0, 0xb7, 0x51, 0x45, 0x8e, 0x62, 0x20, 0x1b, 0xa6, 0xd6,
+	0xde, 0xe9, 0xed, 0x15, 0x5b, 0x9d, 0x50, 0xf6, 0x7c, 0x14, 0x83, 0xad, 0x54, 0x8c, 0x51, 0x25,
+	0xa2, 0x21, 0x90, 0x8a, 0xfa, 0xa9, 0x7a, 0xc6, 0x26, 0xda, 0xf2, 0x40, 0xb8, 0x3c, 0x88, 0x65,
+	0xc0, 0x22, 0xb2, 0xa9, 0xa4, 0x65, 0x0a, 0x3f, 0x40, 0x55, 0x97, 0x45, 0xaf, 0x03, 0x9f, 0x54,
+	0x55, 0x66, 0x78, 0xb9, 0xfa, 0xb1, 0x52, 0x56, 0x62, 0x4b, 0xcd, 0x98, 0xa0, 0x5a, 0x08, 0xa1,
+	0x03, 0x5c, 0x90, 0x9a, 0xb9, 0xd1, 0xd6, 0xed, 0x1c, 0xe2, 0x47, 0x08, 0xc1, 0x19, 0xb8, 0x92,
+	0x71, 0x2a, 0x81, 0xfc, 0xa7, 0x8a, 0x92, 0xa2, 0xe8, 0xa9, 0xa4, 0x6f, 0xe0, 0x49, 0xa1, 0xdb,
+	0x4b, 0xde, 0xc3, 0x3b, 0xc9, 0x29, 0xf2, 0x28, 0x92, 0x43, 0xdc, 0x58, 0x39, 0x44, 0x91, 0x6c,
+	0xeb, 0x31, 0xaa, 0x2f, 0xe3, 0xfc, 0x04, 0x78, 0x07, 0x95, 0x03, 0x4f, 0x85, 0x5d, 0xb1, 0xcb,
+	0x81, 0x97, 0x0c, 0x49, 0xd3, 0x9c, 0xb3, 0x3c, 0x73, 0xd8, 0xfb, 0xa4, 0xa1, 0x8d, 0x81, 0xf0,
+	0xf1, 0x53, 0xb4, 0xbd, 0xf2, 0xe6, 0x2d, 0x06, 0x5d, 0x3b, 0x73, 0xd3, 0xfc, 0x9b, 0x52, 0x74,
+	0x3f, 0x42, 0xfa, 0xe2, 0xf8, 0xd7, 0x97, 0xed, 0x05, 0xdd, 0xbc, 0xf9, 0x47, 0x3a, 0x2f, 0xd1,
+	0xdc, 0x7c, 0x97, 0x84, 0xdc, 0xef, 0x5f, 0x4e, 0x0d, 0xed, 0x6a, 0x6a, 0x68, 0x3f, 0xa7, 0x86,
+	0xf6, 0x71, 0x66, 0x94, 0xae, 0x66, 0x46, 0xe9, 0xfb, 0xcc, 0x28, 0xbd, 0x6c, 0xfb, 0x81, 0x1c,
+	0x9e, 0x3b, 0x5d, 0x97, 0x85, 0x96, 0x33, 0x86, 0x03, 0x7a, 0x16, 0x0f, 0xa9, 0x04, 0xaa, 0x50,
+	0x16, 0x55, 0xf2, 0x32, 0x08, 0xa7, 0xaa, 0xfe, 0x5e, 0xf7, 0x7f, 0x07, 0x00, 0x00, 0xff, 0xff,
+	0x28, 0x86, 0x1e, 0x4c, 0x03, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -173,6 +347,9 @@ type MsgClient interface {
 	// UpdateParams defines a (governance) operation for updating the module
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	// CreateDao creates a DAO with its own derived account. Anyone can create one;
+	// the creator pays the creation fee.
+	CreateDao(ctx context.Context, in *MsgCreateDao, opts ...grpc.CallOption) (*MsgCreateDaoResponse, error)
 }
 
 type msgClient struct {
@@ -192,11 +369,23 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 	return out, nil
 }
 
+func (c *msgClient) CreateDao(ctx context.Context, in *MsgCreateDao, opts ...grpc.CallOption) (*MsgCreateDaoResponse, error) {
+	out := new(MsgCreateDaoResponse)
+	err := c.cc.Invoke(ctx, "/bze.dao.Msg/CreateDao", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// UpdateParams defines a (governance) operation for updating the module
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	// CreateDao creates a DAO with its own derived account. Anyone can create one;
+	// the creator pays the creation fee.
+	CreateDao(context.Context, *MsgCreateDao) (*MsgCreateDaoResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -205,6 +394,9 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) UpdateParams(ctx context.Context, req *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+}
+func (*UnimplementedMsgServer) CreateDao(ctx context.Context, req *MsgCreateDao) (*MsgCreateDaoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateDao not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -229,6 +421,24 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreateDao_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateDao)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateDao(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.dao.Msg/CreateDao",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateDao(ctx, req.(*MsgCreateDao))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "bze.dao.Msg",
@@ -237,6 +447,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateParams",
 			Handler:    _Msg_UpdateParams_Handler,
+		},
+		{
+			MethodName: "CreateDao",
+			Handler:    _Msg_CreateDao_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -306,6 +520,128 @@ func (m *MsgUpdateParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgCreateDao) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateDao) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateDao) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Electorate != nil {
+		{
+			size, err := m.Electorate.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x42
+	}
+	if len(m.Members) > 0 {
+		for iNdEx := len(m.Members) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Members[iNdEx])
+			copy(dAtA[i:], m.Members[iNdEx])
+			i = encodeVarintTx(dAtA, i, uint64(len(m.Members[iNdEx])))
+			i--
+			dAtA[i] = 0x3a
+		}
+	}
+	{
+		size, err := m.Config.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x32
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.Name) > 0 {
+		i -= len(m.Name)
+		copy(dAtA[i:], m.Name)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Name)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.Type != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.Type))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateDaoResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateDaoResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateDaoResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Id != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.Id))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -338,6 +674,62 @@ func (m *MsgUpdateParamsResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
+	return n
+}
+
+func (m *MsgCreateDao) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Admin)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.Type != 0 {
+		n += 1 + sovTx(uint64(m.Type))
+	}
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Config.Size()
+	n += 1 + l + sovTx(uint64(l))
+	if len(m.Members) > 0 {
+		for _, s := range m.Members {
+			l = len(s)
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if m.Electorate != nil {
+		l = m.Electorate.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgCreateDaoResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Id != 0 {
+		n += 1 + sovTx(uint64(m.Id))
+	}
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
 	return n
 }
 
@@ -491,6 +883,405 @@ func (m *MsgUpdateParamsResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgUpdateParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateDao) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateDao: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateDao: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			m.Type = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Type |= DaoType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Config", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Config.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Members", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Members = append(m.Members, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Electorate", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Electorate == nil {
+				m.Electorate = &StakeElectorate{}
+			}
+			if err := m.Electorate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateDaoResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateDaoResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateDaoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			m.Id = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Id |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

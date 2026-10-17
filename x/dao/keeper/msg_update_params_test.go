@@ -29,3 +29,17 @@ func (suite *IntegrationTestSuite) TestUpdateParams_RejectsOtherSigners() {
 		suite.Require().Nil(res)
 	}
 }
+
+func (suite *IntegrationTestSuite) TestUpdateParams_RejectsInvalidParams() {
+	params := types.DefaultParams()
+	params.MaxStaticMembers = 0
+
+	res, err := suite.msgServer.UpdateParams(suite.ctx, &types.MsgUpdateParams{
+		Authority: suite.k.GetAuthority(),
+		Params:    params,
+	})
+
+	suite.Require().ErrorContains(err, "max_static_members")
+	suite.Require().Nil(res)
+	suite.Require().Equal(types.DefaultParams(), suite.k.GetParams(suite.ctx))
+}
