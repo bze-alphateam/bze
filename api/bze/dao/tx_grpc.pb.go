@@ -28,6 +28,7 @@ const (
 	Msg_SubmitProposal_FullMethodName          = "/bze.dao.Msg/SubmitProposal"
 	Msg_Vote_FullMethodName                    = "/bze.dao.Msg/Vote"
 	Msg_CancelProposal_FullMethodName          = "/bze.dao.Msg/CancelProposal"
+	Msg_SettleProposal_FullMethodName          = "/bze.dao.Msg/SettleProposal"
 )
 
 // MsgClient is the client API for Msg service.
@@ -60,6 +61,11 @@ type MsgClient interface {
 	Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error)
 	// CancelProposal lets the proposer withdraw a proposal in voting.
 	CancelProposal(ctx context.Context, in *MsgCancelProposal, opts ...grpc.CallOption) (*MsgCancelProposalResponse, error)
+	// SettleProposal decides a proposal after its voting period, releases its
+	// deposit and runs a passed proposal's messages as the DAO; it also retries a
+	// failed execution within the execution window and expires it afterwards.
+	// Anyone can send it.
+	SettleProposal(ctx context.Context, in *MsgSettleProposal, opts ...grpc.CallOption) (*MsgSettleProposalResponse, error)
 }
 
 type msgClient struct {
@@ -151,6 +157,15 @@ func (c *msgClient) CancelProposal(ctx context.Context, in *MsgCancelProposal, o
 	return out, nil
 }
 
+func (c *msgClient) SettleProposal(ctx context.Context, in *MsgSettleProposal, opts ...grpc.CallOption) (*MsgSettleProposalResponse, error) {
+	out := new(MsgSettleProposalResponse)
+	err := c.cc.Invoke(ctx, Msg_SettleProposal_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -181,6 +196,11 @@ type MsgServer interface {
 	Vote(context.Context, *MsgVote) (*MsgVoteResponse, error)
 	// CancelProposal lets the proposer withdraw a proposal in voting.
 	CancelProposal(context.Context, *MsgCancelProposal) (*MsgCancelProposalResponse, error)
+	// SettleProposal decides a proposal after its voting period, releases its
+	// deposit and runs a passed proposal's messages as the DAO; it also retries a
+	// failed execution within the execution window and expires it afterwards.
+	// Anyone can send it.
+	SettleProposal(context.Context, *MsgSettleProposal) (*MsgSettleProposalResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -214,6 +234,9 @@ func (UnimplementedMsgServer) Vote(context.Context, *MsgVote) (*MsgVoteResponse,
 }
 func (UnimplementedMsgServer) CancelProposal(context.Context, *MsgCancelProposal) (*MsgCancelProposalResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelProposal not implemented")
+}
+func (UnimplementedMsgServer) SettleProposal(context.Context, *MsgSettleProposal) (*MsgSettleProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SettleProposal not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -390,6 +413,24 @@ func _Msg_CancelProposal_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SettleProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSettleProposal)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SettleProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_SettleProposal_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SettleProposal(ctx, req.(*MsgSettleProposal))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -432,6 +473,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CancelProposal",
 			Handler:    _Msg_CancelProposal_Handler,
+		},
+		{
+			MethodName: "SettleProposal",
+			Handler:    _Msg_SettleProposal_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

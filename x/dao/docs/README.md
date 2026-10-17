@@ -2,7 +2,7 @@
 
 The DAO module lets anyone create an on-chain organisation with its own treasury, run proposals and execute them as the DAO.
 
-> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, and proposals can be submitted, voted on and cancelled, but settlement and execution are not there yet. Each feature adds its section to this page as it lands.
+> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, and proposals can be submitted, voted on, cancelled and settled, which runs the passed ones. Expedited early settlement and the cleanup of finished proposals are not there yet. Each feature adds its section to this page as it lands.
 
 ## Concepts
 - **DAO account**: every DAO gets its own account, derived from its id (`address.Module("dao", uint64-big-endian(id))`). Nobody holds a key for it; it is the DAO's treasury.
@@ -52,6 +52,12 @@ The DAO module lets anyone create an on-chain organisation with its own treasury
   - The proposal must be in voting. Cancelling is allowed after `voting_end` too, until the proposal is settled. Only the address that submitted it can cancel (a proposal the DAO submitted is cancelled by the DAO, through a proposal or its admin).
   - The proposal becomes `CANCELLED`: it takes no more votes, frees its slot under `max_open_proposals` and stops pinning its sources. Its ballots and tally stay as they were.
   - The deposit, if any, is refunded to the proposer only when the pinned config's `deposit_refund_policy` is `ALWAYS`. Under `ONLY_PASSED` and `NEVER` it is kept and goes to the pinned `kept_deposit_destination`: the burner (`BURN`) or the DAO's treasury (`TREASURY`). The proposal cost is never refunded.
+- `MsgSettleProposal`: anyone (`sender`) settles a proposal. Three cases, by the proposal's status:
+  - **In voting**, from `voting_end` on (earlier is refused): the proposal is decided from its running tally under the pinned config. It passes when `(yes + no + abstain) / denominator ≥ min_quorum` and `yes / (yes + no) ≥ threshold`; a proposal with no yes and no no votes is rejected. Both sides are compared in exact integers, so a tally sitting exactly on a bar passes. The proposal leaves voting (frees its slot and its sources' pins) and the deposit is released: a passed proposal is refunded unless `deposit_refund_policy` is `NEVER`, even when its execution fails; a rejected one only under `ALWAYS`; a kept deposit goes to the pinned `kept_deposit_destination`. A rejected proposal becomes `REJECTED`. A passed one runs its messages as the DAO, all or nothing: `EXECUTED` when every message succeeded, otherwise `EXECUTION_FAILED` with none of their effects kept. A passed proposal with no messages is `EXECUTED`.
+  - **`EXECUTION_FAILED`**, before `voting_end + execution_window`: the messages run again the same way (the deposit was already released). Success makes it `EXECUTED`; a failure leaves it `EXECUTION_FAILED`.
+  - **`EXECUTION_FAILED`**, from `voting_end + execution_window` on: the proposal becomes `EXPIRED` without running. The window is the current param value.
+  - Any other status is finished and refused.
+  - Every message is checked again when it runs: all its signers must be the DAO account. A message that panics counts as a failed execution; running out of gas fails the settle transaction itself, so a settle with too little gas never fails a passed proposal.
 - `MsgUpdateParams` **(authority)**: replaces the module parameters. Reserved for the module authority (governance).
 
 Example (CLI):
@@ -92,9 +98,12 @@ bzed tx dao vote 1 YES --from member
 # As the proposer, cancel proposal 1 while it is in voting
 bzed tx dao cancel-proposal 1 --from member
 
+# After its voting end, settle proposal 1 (anyone can); run it again to retry a failed execution
+bzed tx dao settle-proposal 1 --from anyone
+
 # Submit a governance proposal that sets the module parameters (all of them)
 bzed tx dao update-params \
-  '{"max_sr_per_dao":"5","max_static_members":"128","max_open_proposals":"10","max_msgs_per_proposal":"16","max_proposal_bytes":"20000","max_title_len":"140","max_summary_len":"5000","min_voting_period":"3600s","max_voting_period":"7776000s","dao_creation_fee":{"denom":"ubze","amount":"50000000000"},"dao_creation_fee_destination":"burner","min_electorate_lock_days":5}' \
+  '{"max_sr_per_dao":"5","max_static_members":"128","max_open_proposals":"10","max_msgs_per_proposal":"16","max_proposal_bytes":"20000","max_title_len":"140","max_summary_len":"5000","min_voting_period":"3600s","max_voting_period":"7776000s","execution_window":"1209600s","dao_creation_fee":{"denom":"ubze","amount":"50000000000"},"dao_creation_fee_destination":"burner","min_electorate_lock_days":5}' \
   --deposit 1000000ubze --title "Update x/dao params" --summary "..." \
   --from mykey
 ```
@@ -110,6 +119,8 @@ bzed tx dao update-params \
 - `bze.dao.EventBallotReduced{proposal_id, voter, source, amount}`, when an exit takes a share out of a ballot
 - `bze.dao.EventProposalCancelled{id}`
 - `bze.dao.EventDepositReleased{id, refunded, destination, amount}`, when a deposit leaves escrow (`destination` is the receiving address)
+- `bze.dao.EventProposalSettled{id, status, yes, no, abstain, denominator, expedited_early}`, on every settle, with the status it left the proposal in
+- `bze.dao.EventProposalExecuted{id, success, error}`, after each run of a passed proposal's messages; `error` is a fixed reason (`unauthorized signer`, `message panicked`, `invalid message` or `message failed`), never the raw error
 
 ## Queries
 - `bzed query dao params` – show the module parameters.
@@ -126,6 +137,7 @@ bzed tx dao update-params \
 | `max_summary_len` | 5,000 | Longest proposal summary, in bytes (0 allows titles only). |
 | `min_voting_period` | 1h | Shortest voting or expedited period a DAO may configure. |
 | `max_voting_period` | 90 days | Longest voting or expedited period a DAO may configure. |
+| `execution_window` | 14 days | How long after `voting_end` a failed execution can be retried; a settle after it expires the proposal. Zero is allowed (no retries). |
 | `dao_creation_fee` | 50,000 BZE (`50000000000ubze`) | Paid by the creator. A zero amount makes creation free. |
 | `dao_creation_fee_destination` | `burner` | `burner` or `community_pool`. |
 | `min_electorate_lock_days` | 5 | Shortest unstaking lock (days) a staking reward or Denom Reward needs to join a stake electorate. Must be at least 1. |

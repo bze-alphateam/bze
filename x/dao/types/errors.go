@@ -35,4 +35,7 @@ var (
 	ErrVotingClosed        = sdkerrors.Register(ModuleName, 1124, "the proposal is not open for voting")
 	ErrSameVote            = sdkerrors.Register(ModuleName, 1125, "the ballot already has this option")
 	ErrNotProposalOwner    = sdkerrors.Register(ModuleName, 1126, "signer is not the proposal's proposer")
+	ErrVotingNotEnded      = sdkerrors.Register(ModuleName, 1127, "the proposal's voting period has not ended")
+	ErrProposalFinished    = sdkerrors.Register(ModuleName, 1128, "the proposal is finished")
+	ErrExecutionPanic      = sdkerrors.Register(ModuleName, 1129, "a dao message panicked")
 )

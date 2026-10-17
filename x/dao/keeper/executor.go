@@ -4,6 +4,8 @@ import (
 	"bytes"
 
 	errorsmod "cosmossdk.io/errors"
+	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bze-alphateam/bze/x/dao/types"
@@ -12,13 +14,9 @@ import (
 // executeAsDao runs msgs in order as the DAO, on ctx itself: the caller decides
 // whether ctx is cached. Every signer of every message must be the DAO account
 // (port of x/group's ensureMsgAuthZ), so a DAO can never act for another
-// address (D1, D24). The handlers' events are emitted on ctx.
-func (k Keeper) executeAsDao(ctx sdk.Context, dao types.Dao, msgs []sdk.Msg) error {
-	daoAddr, err := sdk.AccAddressFromBech32(dao.Address)
-	if err != nil {
-		return err
-	}
-
+// address (D1, D24). The handlers' events are emitted on ctx. A handler that
+// panics fails with ErrExecutionPanic instead, except out of gas.
+func (k Keeper) executeAsDao(ctx sdk.Context, daoAddr sdk.AccAddress, msgs []sdk.Msg) error {
 	for i, msg := range msgs {
 		if err := k.ensureDaoSigner(msg, daoAddr); err != nil {
 			return errorsmod.Wrapf(err, "message %d", i)
@@ -29,7 +27,7 @@ func (k Keeper) executeAsDao(ctx sdk.Context, dao types.Dao, msgs []sdk.Msg) err
 			return errorsmod.Wrapf(types.ErrInvalidMsgs, "message %d: no handler for %s", i, sdk.MsgTypeURL(msg))
 		}
 
-		res, err := handler(ctx, msg)
+		res, err := safeHandle(ctx, handler, msg)
 		if err != nil {
 			return errorsmod.Wrapf(err, "message %d (%s)", i, sdk.MsgTypeURL(msg))
 		}
@@ -58,4 +56,26 @@ func (k Keeper) ensureDaoSigner(msg sdk.Msg, daoAddr sdk.AccAddress) error {
 	}
 
 	return nil
+}
+
+// safeHandle runs the handler and turns a panic into ErrExecutionPanic, as
+// x/gov's safeExecuteHandler does. Out of gas is panicked again: a settle is a
+// transaction, so swallowing it would let anyone fail a passed proposal by
+// settling it with a tiny gas limit; the whole transaction fails instead.
+func safeHandle(ctx sdk.Context, handler baseapp.MsgServiceHandler, msg sdk.Msg) (res *sdk.Result, err error) {
+	defer func() {
+		r := recover()
+		if r == nil {
+			return
+		}
+
+		switch r.(type) {
+		case storetypes.ErrorOutOfGas, storetypes.ErrorGasOverflow:
+			panic(r)
+		}
+
+		err = errorsmod.Wrapf(types.ErrExecutionPanic, "%s: %v", sdk.MsgTypeURL(msg), r)
+	}()
+
+	return handler(ctx, msg)
 }

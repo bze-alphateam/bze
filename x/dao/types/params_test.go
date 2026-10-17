@@ -25,6 +25,7 @@ func TestDefaultParams_AreValid(t *testing.T) {
 	require.Equal(t, uint64(5_000), p.MaxSummaryLen)
 	require.Equal(t, time.Hour, p.MinVotingPeriod)
 	require.Equal(t, 90*24*time.Hour, p.MaxVotingPeriod)
+	require.Equal(t, 14*24*time.Hour, p.ExecutionWindow)
 	require.Equal(t, sdk.NewInt64Coin("ubze", 50_000_000_000), p.DaoCreationFee)
 	require.Equal(t, types.FeeDestinationBurner, p.DaoCreationFeeDestination)
 }
@@ -61,6 +62,8 @@ func TestParams_Validate(t *testing.T) {
 		{desc: "one title byte", mutate: func(p *types.Params) { p.MaxTitleLen = 1 }},
 		{desc: "zero title bytes", mutate: func(p *types.Params) { p.MaxTitleLen = 0 }, wantErr: "max_title_len"},
 		{desc: "zero summary bytes", mutate: func(p *types.Params) { p.MaxSummaryLen = 0 }},
+		{desc: "zero execution window", mutate: func(p *types.Params) { p.ExecutionWindow = 0 }},
+		{desc: "negative execution window", mutate: func(p *types.Params) { p.ExecutionWindow = -time.Second }, wantErr: "execution_window"},
 		{desc: "unknown destination", mutate: func(p *types.Params) { p.DaoCreationFeeDestination = "treasury" }, wantErr: "dao_creation_fee_destination"},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
