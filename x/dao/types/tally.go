@@ -29,6 +29,23 @@ func TallyPasses(quorum, threshold math.LegacyDec, denominator, yes, no, abstain
 	return atLeast(decided.Add(abstain), denominator, quorum) && atLeast(yes, decided, threshold)
 }
 
+// ExpediteTallyPasses decides an expedited proposal before its voting end. Both
+// bars are measured against the full denominator, compared with ≥:
+//
+//	quorum: (yes + no + abstain) / denominator ≥ quorum
+//	yes:    yes / denominator ≥ threshold
+//
+// The expedite threshold is at least the regular one, so a proposal that meets
+// these bars would still pass after its voting end if every remaining unit of
+// voting power voted no (D7): early settlement only speeds up the outcome.
+func ExpediteTallyPasses(quorum, threshold math.LegacyDec, denominator, yes, no, abstain math.Int) bool {
+	if !denominator.IsPositive() || !yes.IsPositive() {
+		return false
+	}
+
+	return atLeast(yes.Add(no).Add(abstain), denominator, quorum) && atLeast(yes, denominator, threshold)
+}
+
 // atLeast reports whether part / whole ≥ ratio, as part · 10^18 ≥ ratio · whole
 // in big integers.
 func atLeast(part, whole math.Int, ratio math.LegacyDec) bool {
@@ -42,4 +59,10 @@ func atLeast(part, whole math.Int, ratio math.LegacyDec) bool {
 // pinned config's regular quorum and threshold.
 func (p Proposal) RegularTallyPasses() bool {
 	return TallyPasses(p.PinnedConfig.MinQuorum, p.PinnedConfig.Threshold, p.PinnedDenominator, p.Yes, p.No, p.Abstain)
+}
+
+// ExpediteTallyPasses decides an expedited proposal before its voting end,
+// under the pinned config's expedite quorum and threshold.
+func (p Proposal) ExpediteTallyPasses() bool {
+	return ExpediteTallyPasses(p.PinnedConfig.ExpediteQuorum, p.PinnedConfig.ExpediteThreshold, p.PinnedDenominator, p.Yes, p.No, p.Abstain)
 }

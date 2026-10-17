@@ -77,3 +77,72 @@ func TestTallyPasses_LargeStake(t *testing.T) {
 	require.True(t, types.TallyPasses(half(), half(), big, yes, yes, math.ZeroInt()))
 	require.False(t, types.TallyPasses(half(), half(), big, yes.SubRaw(1), yes, math.ZeroInt()))
 }
+
+func expeditePasses(quorum, threshold math.LegacyDec, denominator, yes, no, abstain int64) bool {
+	return types.ExpediteTallyPasses(quorum, threshold, math.NewInt(denominator), math.NewInt(yes), math.NewInt(no), math.NewInt(abstain))
+}
+
+// The expedite yes bar is measured against the full denominator, not yes + no,
+// and both bars are met at equality.
+func TestExpediteTallyPasses_Bars(t *testing.T) {
+	quorum, threshold := math.LegacyMustNewDecFromStr("0.6"), math.LegacyMustNewDecFromStr("0.66")
+	for _, tc := range []struct {
+		desc                          string
+		denominator, yes, no, abstain int64
+		want                          bool
+	}{
+		{"yes exactly at the bar", 150, 99, 0, 0, true},
+		{"yes one unit short", 150, 98, 0, 0, false},
+		{"no votes do not lower the yes bar", 150, 98, 52, 0, false},
+		{"no votes do not block a met yes bar", 150, 99, 51, 0, true},
+		{"empty denominator", 0, 0, 0, 0, false},
+		{"nobody voted", 150, 0, 0, 0, false},
+	} {
+		t.Run(tc.desc, func(t *testing.T) {
+			require.Equal(t, tc.want, expeditePasses(quorum, threshold, tc.denominator, tc.yes, tc.no, tc.abstain))
+		})
+	}
+
+	highQuorum := math.LegacyMustNewDecFromStr("0.9")
+	require.False(t, expeditePasses(highQuorum, threshold, 150, 99, 0, 35), "quorum one short")
+	require.True(t, expeditePasses(highQuorum, threshold, 150, 99, 0, 36), "abstain fills the quorum")
+}
+
+// D7: whenever the expedite bars are met, the regular bars still pass after
+// every remaining unit of voting power votes no, for any expedite config at or
+// above the regular one.
+func TestExpediteTallyPasses_D7_NoUnitCanOverturn(t *testing.T) {
+	configs := []struct{ quorum, threshold, expediteQuorum, expediteThreshold string }{
+		{"0.4", "0.5", "0.6", "0.66"},
+		{"0.5", "0.5", "0.5", "0.5"},
+		{"0.1", "0.9", "0.1", "0.9"},
+		{"1", "1", "1", "1"},
+	}
+	for _, c := range configs {
+		quorum, threshold := math.LegacyMustNewDecFromStr(c.quorum), math.LegacyMustNewDecFromStr(c.threshold)
+		expediteQuorum, expediteThreshold := math.LegacyMustNewDecFromStr(c.expediteQuorum), math.LegacyMustNewDecFromStr(c.expediteThreshold)
+		for denominator := int64(1); denominator <= 40; denominator++ {
+			for yes := int64(0); yes <= denominator; yes++ {
+				for no := int64(0); yes+no <= denominator; no++ {
+					for abstain := int64(0); yes+no+abstain <= denominator; abstain++ {
+						if !expeditePasses(expediteQuorum, expediteThreshold, denominator, yes, no, abstain) {
+							continue
+						}
+						rest := denominator - yes - no - abstain
+						if !passes(quorum, threshold, denominator, yes, no+rest, abstain) {
+							t.Fatalf("%+v: D %d, %d/%d/%d passed early but %d more no votes reject it", c, denominator, yes, no, abstain, rest)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+// Stake tallies reach 10^30 and beyond; the expedite comparison never overflows.
+func TestExpediteTallyPasses_LargeStake(t *testing.T) {
+	big, _ := math.NewIntFromString("1000000000000000000000000000000000000")
+	yes := big.QuoRaw(2)
+	require.True(t, types.ExpediteTallyPasses(half(), half(), big, yes, math.ZeroInt(), math.ZeroInt()))
+	require.False(t, types.ExpediteTallyPasses(half(), half(), big, yes.SubRaw(1), math.ZeroInt(), math.ZeroInt()))
+}
