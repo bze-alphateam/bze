@@ -39,6 +39,10 @@ service Msg {
   // WithdrawAdminNomination lets the current admin cancel a pending handover
   // before the nominee accepts it.
   rpc WithdrawAdminNomination (MsgWithdrawAdminNomination) returns (MsgWithdrawAdminNominationResponse);
+
+  // SubmitProposal opens a proposal of zero or more messages the DAO runs if it
+  // passes. It pins the DAO's config, electorate and quorum denominator.
+  rpc SubmitProposal (MsgSubmitProposal) returns (MsgSubmitProposalResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -139,3 +143,25 @@ message MsgWithdrawAdminNomination {
 
 // MsgWithdrawAdminNominationResponse is the Msg/WithdrawAdminNomination response type.
 message MsgWithdrawAdminNominationResponse {}
+
+// MsgSubmitProposal is the Msg/SubmitProposal request type.
+message MsgSubmitProposal {
+  option (cosmos.msg.v1.signer) = "proposer";
+  option (amino.name) = "bze/x/dao/MsgSubmitProposal";
+
+  // proposer must be a voter of the DAO, unless the DAO has open submission;
+  // the DAO account itself can always propose.
+  string proposer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 dao_id = 2;
+  string title = 3;
+  string summary = 4;
+  // msgs run as the DAO if the proposal passes; each must be signed by the DAO only.
+  repeated google.protobuf.Any msgs = 5 [(cosmos_proto.accepts_interface) = "cosmos.base.v1beta1.Msg"];
+  // expedited asks for the shorter expedited voting period.
+  bool expedited = 6;
+}
+
+// MsgSubmitProposalResponse is the Msg/SubmitProposal response type.
+message MsgSubmitProposalResponse {
+  uint64 proposal_id = 1;
+}

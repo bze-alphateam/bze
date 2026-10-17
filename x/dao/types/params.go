@@ -13,8 +13,11 @@ const (
 
 	DefaultMaxSrPerDao               = uint64(5)
 	DefaultMaxStaticMembers          = uint64(128)
+	DefaultMaxOpenProposals          = uint64(10)
 	DefaultMaxMsgsPerProposal        = uint64(16)
 	DefaultMaxProposalBytes          = uint64(20_000)
+	DefaultMaxTitleLen               = uint64(140)
+	DefaultMaxSummaryLen             = uint64(5_000)
 	DefaultMinVotingPeriod           = time.Hour
 	DefaultMaxVotingPeriod           = 90 * 24 * time.Hour
 	DefaultDaoCreationFeeDestination = FeeDestinationBurner
@@ -28,8 +31,11 @@ var DefaultDaoCreationFee = sdk.NewInt64Coin("ubze", 50_000_000_000)
 func NewParams(
 	maxSrPerDao uint64,
 	maxStaticMembers uint64,
+	maxOpenProposals uint64,
 	maxMsgsPerProposal uint64,
 	maxProposalBytes uint64,
+	maxTitleLen uint64,
+	maxSummaryLen uint64,
 	minVotingPeriod time.Duration,
 	maxVotingPeriod time.Duration,
 	daoCreationFee sdk.Coin,
@@ -39,8 +45,11 @@ func NewParams(
 	return Params{
 		MaxSrPerDao:               maxSrPerDao,
 		MaxStaticMembers:          maxStaticMembers,
+		MaxOpenProposals:          maxOpenProposals,
 		MaxMsgsPerProposal:        maxMsgsPerProposal,
 		MaxProposalBytes:          maxProposalBytes,
+		MaxTitleLen:               maxTitleLen,
+		MaxSummaryLen:             maxSummaryLen,
 		MinVotingPeriod:           minVotingPeriod,
 		MaxVotingPeriod:           maxVotingPeriod,
 		DaoCreationFee:            daoCreationFee,
@@ -54,8 +63,11 @@ func DefaultParams() Params {
 	return NewParams(
 		DefaultMaxSrPerDao,
 		DefaultMaxStaticMembers,
+		DefaultMaxOpenProposals,
 		DefaultMaxMsgsPerProposal,
 		DefaultMaxProposalBytes,
+		DefaultMaxTitleLen,
+		DefaultMaxSummaryLen,
 		DefaultMinVotingPeriod,
 		DefaultMaxVotingPeriod,
 		DefaultDaoCreationFee,
@@ -74,6 +86,10 @@ func (p Params) Validate() error {
 		return fmt.Errorf("max_static_members must be positive")
 	}
 
+	if p.MaxOpenProposals == 0 {
+		return fmt.Errorf("max_open_proposals must be positive")
+	}
+
 	if p.MaxMsgsPerProposal == 0 {
 		return fmt.Errorf("max_msgs_per_proposal must be positive")
 	}
@@ -81,6 +97,13 @@ func (p Params) Validate() error {
 	if p.MaxProposalBytes == 0 {
 		return fmt.Errorf("max_proposal_bytes must be positive")
 	}
+
+	// a title is required, so a zero cap would refuse every proposal
+	if p.MaxTitleLen == 0 {
+		return fmt.Errorf("max_title_len must be positive")
+	}
+
+	// a zero summary cap is valid: proposals then carry a title only
 
 	if p.MinVotingPeriod <= 0 {
 		return fmt.Errorf("min_voting_period must be positive: %s", p.MinVotingPeriod)

@@ -23,6 +23,16 @@ const (
 	// PinKeyPrefix counts the DAOs (and later the open proposals) that use an
 	// electorate source: {source} -> uint64.
 	PinKeyPrefix = "dao/p/"
+	// ProposalKeyPrefix holds the Proposal records by id.
+	ProposalKeyPrefix = "prop/v/"
+	// OpenProposalKeyPrefix marks the proposals in voting: {dao_id}/{proposal_id}.
+	OpenProposalKeyPrefix = "prop/d/"
+	// DaoProposalKeyPrefix indexes every proposal of a DAO: {dao_id}/{proposal_id}.
+	// An entry is deleted only when its proposal is cleaned up.
+	DaoProposalKeyPrefix = "prop/i/"
+	// JoinKeyPrefix holds the height an address joined a pinned source:
+	// {source}/{address} -> int64.
+	JoinKeyPrefix = "join/"
 
 	// sourceStakingReward and sourceDenomReward prefix the electorate source keys.
 	sourceStakingReward = "sr/"
@@ -40,6 +50,34 @@ func KeyPrefix(p string) []byte {
 // DaoCounterKey is the key of the dao id counter inside CounterKeyPrefix.
 func DaoCounterKey() []byte {
 	return []byte{1}
+}
+
+// ProposalCounterKey is the key of the proposal id counter inside CounterKeyPrefix.
+func ProposalCounterKey() []byte {
+	return []byte{2}
+}
+
+// ProposalKey is the key of a Proposal inside ProposalKeyPrefix.
+func ProposalKey(proposalId uint64) []byte {
+	return sdk.Uint64ToBigEndian(proposalId)
+}
+
+// DaoProposalsPrefix is the part of OpenProposalKeyPrefix and DaoProposalKeyPrefix
+// keys that holds one DAO's proposals.
+func DaoProposalsPrefix(daoId uint64) []byte {
+	return sdk.Uint64ToBigEndian(daoId)
+}
+
+// DaoProposalKey is the key of a proposal inside OpenProposalKeyPrefix and
+// DaoProposalKeyPrefix: {dao_id}/{proposal_id}.
+func DaoProposalKey(daoId, proposalId uint64) []byte {
+	return append(DaoProposalsPrefix(daoId), sdk.Uint64ToBigEndian(proposalId)...)
+}
+
+// JoinKey is the key of a join record inside JoinKeyPrefix. Both parts are
+// length-prefixed: sources and addresses have variable lengths.
+func JoinKey(source []byte, addr sdk.AccAddress) []byte {
+	return append(address.MustLengthPrefix(source), address.MustLengthPrefix(addr.Bytes())...)
 }
 
 // DaoKey is the key of a Dao inside DaoKeyPrefix.

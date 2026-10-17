@@ -468,12 +468,18 @@ func (app *App) setTradebinHooks() {
 	)
 }
 
-// setRewardsHooks registers the modules notified on staking reward changes.
-// x/dao vetoes the removal of rewards its electorates use.
+// setRewardsHooks registers the modules notified on staking reward and Denom
+// Reward changes. x/dao vetoes the removal of rewards its electorates use and
+// records when stake joins a source its DAOs or proposals vote with.
 func (app *App) setRewardsHooks() {
 	app.RewardsKeeper.SetHooks(
 		rewardsmoduletypes.NewMultiStakingRewardHooks(
 			app.DaoKeeper.StakingRewardHooks(),
+		),
+	)
+	app.RewardsKeeper.SetDenomRewardHooks(
+		rewardsmoduletypes.NewMultiDenomRewardHooks(
+			app.DaoKeeper.DenomRewardHooks(),
 		),
 	)
 }

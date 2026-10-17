@@ -40,3 +40,15 @@ message EventAdminNominationWithdrawn {
   uint64 id = 1;
   string nominee = 2;
 }
+
+// EventProposalSubmitted is emitted when a proposal is submitted.
+message EventProposalSubmitted {
+  uint64 id = 1;
+  uint64 dao_id = 2;
+  string proposer = 3;
+  bool expedited = 4;
+  // voting_end is the block time (unix seconds) voting closes at.
+  int64 voting_end = 5;
+  // denominator is the pinned total voting power (math.Int).
+  string denominator = 6;
+}
