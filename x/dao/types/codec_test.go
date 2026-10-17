@@ -109,3 +109,12 @@ func TestRegisterInterfaces_RegistersMsgUpdateDaoConfig(t *testing.T) {
 	require.NoError(t, err)
 	require.IsType(t, &types.MsgUpdateDaoConfig{}, msg)
 }
+
+func TestRegisterInterfaces_RegistersMsgUpdateMetadata(t *testing.T) {
+	registry := codectypes.NewInterfaceRegistry()
+	types.RegisterInterfaces(registry)
+
+	msg, err := registry.Resolve("/bze.dao.MsgUpdateMetadata")
+	require.NoError(t, err)
+	require.IsType(t, &types.MsgUpdateMetadata{}, msg)
+}
