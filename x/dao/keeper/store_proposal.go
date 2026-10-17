@@ -40,6 +40,11 @@ func (k Keeper) setNewProposal(ctx context.Context, proposal types.Proposal) {
 	k.getPrefixedStore(ctx, types.KeyPrefix(types.DaoProposalKeyPrefix)).Set(key, []byte{})
 }
 
+// removeOpenMarker takes the proposal out of its DAO's proposals in voting.
+func (k Keeper) removeOpenMarker(ctx context.Context, proposal types.Proposal) {
+	k.getPrefixedStore(ctx, types.KeyPrefix(types.OpenProposalKeyPrefix)).Delete(types.DaoProposalKey(proposal.DaoId, proposal.Id))
+}
+
 // setProposal writes a proposal record.
 func (k Keeper) setProposal(ctx context.Context, proposal types.Proposal) {
 	k.getPrefixedStore(ctx, types.KeyPrefix(types.ProposalKeyPrefix)).Set(types.ProposalKey(proposal.Id), k.cdc.MustMarshal(&proposal))
