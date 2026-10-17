@@ -67,6 +67,7 @@ func TestRegisterServices_RoutesMsgAndQuery(t *testing.T) {
 	require.NotNil(t, qr.Route("/bze.dao.Query/Dao"))
 	require.NotNil(t, qr.Route("/bze.dao.Query/DaoByAddress"))
 	require.NotNil(t, qr.Route("/bze.dao.Query/DaoController"))
+	require.NotNil(t, qr.Route("/bze.dao.Query/Proposal"))
 }
 
 // The CLI exposes `bzed q dao params` and `bzed tx dao update-params`; the
@@ -75,13 +76,14 @@ func TestAutoCLIOptions(t *testing.T) {
 	opts := dao.AppModule{}.AutoCLIOptions()
 
 	require.Equal(t, "bze.dao.Query", opts.Query.Service)
-	require.Len(t, opts.Query.RpcCommandOptions, 4)
+	require.Len(t, opts.Query.RpcCommandOptions, 5)
 	require.Equal(t, "Params", opts.Query.RpcCommandOptions[0].RpcMethod)
 	require.Equal(t, "params", opts.Query.RpcCommandOptions[0].Use)
 	for i, want := range []struct{ method, use, arg string }{
 		{"Dao", "dao [id]", "id"},
 		{"DaoByAddress", "dao-by-address [address]", "address"},
 		{"DaoController", "dao-controller [dao-id]", "dao_id"},
+		{"Proposal", "proposal [proposal-id]", "id"},
 	} {
 		q := opts.Query.RpcCommandOptions[i+1]
 		require.Equal(t, want.method, q.RpcMethod)

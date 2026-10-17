@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -153,10 +152,3 @@ func executionReason(err error) string {
 	}
 }
 
-// executionDeadline is the end of the window in which a failed execution can
-// be retried: voting_end plus the current execution_window param.
-func (k msgServer) executionDeadline(ctx sdk.Context, proposal types.Proposal) int64 {
-	window := k.GetParams(ctx).ExecutionWindow
-
-	return time.Unix(proposal.VotingEnd, 0).Add(window).Unix()
-}
