@@ -103,6 +103,39 @@ func (c DaoConfig) ValidatePeriods(minPeriod, maxPeriod time.Duration) error {
 	return nil
 }
 
+// ChangedFields returns the proto names of the fields whose value differs
+// between c and next, in proto order. A coin set to zero differs from an unset
+// one.
+func (c DaoConfig) ChangedFields(next DaoConfig) []string {
+	fields := []struct {
+		name    string
+		changed bool
+	}{
+		{"min_quorum", !decEqual(c.MinQuorum, next.MinQuorum)},
+		{"threshold", !decEqual(c.Threshold, next.Threshold)},
+		{"voting_period", c.VotingPeriod != next.VotingPeriod},
+		{"allow_expedite", c.AllowExpedite != next.AllowExpedite},
+		{"expedited_period", c.ExpeditedPeriod != next.ExpeditedPeriod},
+		{"expedite_quorum", !decEqual(c.ExpediteQuorum, next.ExpediteQuorum)},
+		{"expedite_threshold", !decEqual(c.ExpediteThreshold, next.ExpediteThreshold)},
+		{"open_submission", c.OpenSubmission != next.OpenSubmission},
+		{"proposal_cost", !coinEqual(c.ProposalCost, next.ProposalCost)},
+		{"proposal_deposit", !coinEqual(c.ProposalDeposit, next.ProposalDeposit)},
+		{"deposit_refund_policy", c.DepositRefundPolicy != next.DepositRefundPolicy},
+		{"cost_destination", c.CostDestination != next.CostDestination},
+		{"kept_deposit_destination", c.KeptDepositDestination != next.KeptDepositDestination},
+	}
+
+	changed := []string{}
+	for _, f := range fields {
+		if f.changed {
+			changed = append(changed, f.name)
+		}
+	}
+
+	return changed
+}
+
 // IsEmpty reports whether the electorate names no reward program at all.
 func (e *StakeElectorate) IsEmpty() bool {
 	return e == nil || (len(e.SrIds) == 0 && e.DrDenom == "")
@@ -129,4 +162,26 @@ func validateOptionalCoin(name string, coin *sdk.Coin) error {
 	}
 
 	return nil
+}
+
+// decEqual compares two decimals, an unset one being equal only to another unset one.
+func decEqual(a, b math.LegacyDec) bool {
+	if a.IsNil() || b.IsNil() {
+		return a.IsNil() == b.IsNil()
+	}
+
+	return a.Equal(b)
+}
+
+// coinEqual compares two optional coins by denom and amount.
+func coinEqual(a, b *sdk.Coin) bool {
+	if a == nil || b == nil {
+		return a == b
+	}
+
+	if a.Amount.IsNil() || b.Amount.IsNil() {
+		return a.Denom == b.Denom && a.Amount.IsNil() == b.Amount.IsNil()
+	}
+
+	return a.Denom == b.Denom && a.Amount.Equal(b.Amount)
 }
