@@ -33,13 +33,20 @@ func (k msgServer) SettleProposal(goCtx context.Context, msg *types.MsgSettlePro
 	}
 
 	now := ctx.BlockTime().Unix()
+	expeditedEarly := false
 	var err error
 	switch {
+	case proposal.Status == types.ProposalStatus_VOTING && now >= proposal.VotingEnd:
+		err = k.firstSettle(ctx, &proposal, proposal.RegularTallyPasses())
+	case proposal.Status == types.ProposalStatus_VOTING && !proposal.Expedited:
+		return nil, errorsmod.Wrapf(types.ErrVotingNotEnded, "proposal %d votes until %d", proposal.Id, proposal.VotingEnd)
 	case proposal.Status == types.ProposalStatus_VOTING:
-		if now < proposal.VotingEnd {
-			return nil, errorsmod.Wrapf(types.ErrVotingNotEnded, "proposal %d votes until %d", proposal.Id, proposal.VotingEnd)
+		// Business Logic §7: an expedited proposal settles early only as passed
+		if !proposal.ExpediteTallyPasses() {
+			return nil, errorsmod.Wrapf(types.ErrExpediteBarNotMet, "proposal %d votes until %d", proposal.Id, proposal.VotingEnd)
 		}
-		err = k.firstSettle(ctx, &proposal)
+		expeditedEarly = true
+		err = k.firstSettle(ctx, &proposal, true)
 	case proposal.Status == types.ProposalStatus_EXECUTION_FAILED && now < k.executionDeadline(ctx, proposal):
 		// a retry: the deposit was released by the first settle
 		k.execute(ctx, &proposal)
@@ -54,12 +61,13 @@ func (k msgServer) SettleProposal(goCtx context.Context, msg *types.MsgSettlePro
 	}
 
 	if err := ctx.EventManager().EmitTypedEvent(&types.EventProposalSettled{
-		Id:          proposal.Id,
-		Status:      proposal.Status,
-		Yes:         proposal.Yes.String(),
-		No:          proposal.No.String(),
-		Abstain:     proposal.Abstain.String(),
-		Denominator: proposal.PinnedDenominator.String(),
+		Id:             proposal.Id,
+		Status:         proposal.Status,
+		Yes:            proposal.Yes.String(),
+		No:             proposal.No.String(),
+		Abstain:        proposal.Abstain.String(),
+		Denominator:    proposal.PinnedDenominator.String(),
+		ExpeditedEarly: expeditedEarly,
 	}); err != nil {
 		return nil, err
 	}
@@ -67,11 +75,9 @@ func (k msgServer) SettleProposal(goCtx context.Context, msg *types.MsgSettlePro
 	return &types.MsgSettleProposalResponse{Status: proposal.Status}, nil
 }
 
-// firstSettle decides a proposal in voting from its running tally, takes it out
-// of voting, releases its deposit and runs it when it passed.
-func (k msgServer) firstSettle(ctx sdk.Context, proposal *types.Proposal) error {
-	passed := proposal.RegularTallyPasses()
-
+// firstSettle takes a decided proposal out of voting, releases its deposit and
+// runs it when it passed.
+func (k msgServer) firstSettle(ctx sdk.Context, proposal *types.Proposal, passed bool) error {
 	// Business Logic §8: a passed proposal refunds unless the policy is NEVER,
 	// even when its execution fails (D13); a rejected one only under ALWAYS
 	policy := proposal.PinnedConfig.DepositRefundPolicy
