@@ -78,6 +78,7 @@ import (
 	daomodulekeeper "github.com/bze-alphateam/bze/x/dao/keeper"
 	epochmodulekeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
 	rewardsmodulekeeper "github.com/bze-alphateam/bze/x/rewards/keeper"
+	rewardsmoduletypes "github.com/bze-alphateam/bze/x/rewards/types"
 	tokenfactorymodulekeeper "github.com/bze-alphateam/bze/x/tokenfactory/keeper"
 	tradebinmodulekeeper "github.com/bze-alphateam/bze/x/tradebin/keeper"
 	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
@@ -280,6 +281,7 @@ func New(
 	app.sm.RegisterStoreDecoders()
 	app.setEpochsHooks()
 	app.setTradebinHooks()
+	app.setRewardsHooks()
 	app.setupUpgradeHandlers()
 
 	anteOptions := ante.HandlerOptions{
@@ -463,6 +465,16 @@ func (app *App) setTradebinHooks() {
 		[]tradebintypes.OnMarketOrderFill{
 			app.RewardsKeeper.GetOnOrderFillHook(),
 		},
+	)
+}
+
+// setRewardsHooks registers the modules notified on staking reward changes.
+// x/dao vetoes the removal of rewards its electorates use.
+func (app *App) setRewardsHooks() {
+	app.RewardsKeeper.SetHooks(
+		rewardsmoduletypes.NewMultiStakingRewardHooks(
+			app.DaoKeeper.StakingRewardHooks(),
+		),
 	)
 }
 

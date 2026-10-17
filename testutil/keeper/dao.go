@@ -21,7 +21,7 @@ import (
 	"github.com/bze-alphateam/bze/x/dao/types"
 )
 
-func DaoKeeper(t testing.TB, acc types.AccountKeeper, bank types.BankKeeper) (keeper.Keeper, sdk.Context) {
+func DaoKeeper(t testing.TB, acc types.AccountKeeper, bank types.BankKeeper, rewards types.RewardsKeeper) (keeper.Keeper, sdk.Context) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	db := dbm.NewMemDB()
@@ -40,6 +40,7 @@ func DaoKeeper(t testing.TB, acc types.AccountKeeper, bank types.BankKeeper) (ke
 		authority.String(),
 		acc,
 		bank,
+		rewards,
 	)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())

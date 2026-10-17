@@ -13,7 +13,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	types "github.com/cosmos/cosmos-sdk/types"
+	types "github.com/bze-alphateam/bze/x/rewards/types"
+	types0 "github.com/cosmos/cosmos-sdk/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -42,10 +43,10 @@ func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
 }
 
 // GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) GetAccount(ctx context.Context, addr types0.AccAddress) types0.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAccount", ctx, addr)
-	ret0, _ := ret[0].(types.AccountI)
+	ret0, _ := ret[0].(types0.AccountI)
 	return ret0
 }
 
@@ -56,10 +57,10 @@ func (mr *MockAccountKeeperMockRecorder) GetAccount(ctx, addr any) *gomock.Call 
 }
 
 // NewAccountWithAddress mocks base method.
-func (m *MockAccountKeeper) NewAccountWithAddress(ctx context.Context, addr types.AccAddress) types.AccountI {
+func (m *MockAccountKeeper) NewAccountWithAddress(ctx context.Context, addr types0.AccAddress) types0.AccountI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewAccountWithAddress", ctx, addr)
-	ret0, _ := ret[0].(types.AccountI)
+	ret0, _ := ret[0].(types0.AccountI)
 	return ret0
 }
 
@@ -70,7 +71,7 @@ func (mr *MockAccountKeeperMockRecorder) NewAccountWithAddress(ctx, addr any) *g
 }
 
 // SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types.AccountI) {
+func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types0.AccountI) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetAccount", ctx, acc)
 }
@@ -106,7 +107,7 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 }
 
 // SendCoinsFromAccountToModule mocks base method.
-func (m *MockBankKeeper) SendCoinsFromAccountToModule(ctx context.Context, senderAddr types.AccAddress, recipientModule string, amt types.Coins) error {
+func (m *MockBankKeeper) SendCoinsFromAccountToModule(ctx context.Context, senderAddr types0.AccAddress, recipientModule string, amt types0.Coins) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SendCoinsFromAccountToModule", ctx, senderAddr, recipientModule, amt)
 	ret0, _ := ret[0].(error)
@@ -120,10 +121,10 @@ func (mr *MockBankKeeperMockRecorder) SendCoinsFromAccountToModule(ctx, senderAd
 }
 
 // SpendableCoins mocks base method.
-func (m *MockBankKeeper) SpendableCoins(ctx context.Context, addr types.AccAddress) types.Coins {
+func (m *MockBankKeeper) SpendableCoins(ctx context.Context, addr types0.AccAddress) types0.Coins {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SpendableCoins", ctx, addr)
-	ret0, _ := ret[0].(types.Coins)
+	ret0, _ := ret[0].(types0.Coins)
 	return ret0
 }
 
@@ -131,4 +132,58 @@ func (m *MockBankKeeper) SpendableCoins(ctx context.Context, addr types.AccAddre
 func (mr *MockBankKeeperMockRecorder) SpendableCoins(ctx, addr any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpendableCoins", reflect.TypeOf((*MockBankKeeper)(nil).SpendableCoins), ctx, addr)
+}
+
+// MockRewardsKeeper is a mock of RewardsKeeper interface.
+type MockRewardsKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockRewardsKeeperMockRecorder
+	isgomock struct{}
+}
+
+// MockRewardsKeeperMockRecorder is the mock recorder for MockRewardsKeeper.
+type MockRewardsKeeperMockRecorder struct {
+	mock *MockRewardsKeeper
+}
+
+// NewMockRewardsKeeper creates a new mock instance.
+func NewMockRewardsKeeper(ctrl *gomock.Controller) *MockRewardsKeeper {
+	mock := &MockRewardsKeeper{ctrl: ctrl}
+	mock.recorder = &MockRewardsKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockRewardsKeeper) EXPECT() *MockRewardsKeeperMockRecorder {
+	return m.recorder
+}
+
+// GetDenomReward mocks base method.
+func (m *MockRewardsKeeper) GetDenomReward(ctx types0.Context, stakingDenom string) (types.DenomReward, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDenomReward", ctx, stakingDenom)
+	ret0, _ := ret[0].(types.DenomReward)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
+}
+
+// GetDenomReward indicates an expected call of GetDenomReward.
+func (mr *MockRewardsKeeperMockRecorder) GetDenomReward(ctx, stakingDenom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDenomReward", reflect.TypeOf((*MockRewardsKeeper)(nil).GetDenomReward), ctx, stakingDenom)
+}
+
+// GetStakingReward mocks base method.
+func (m *MockRewardsKeeper) GetStakingReward(ctx types0.Context, rewardId string) (types.StakingReward, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStakingReward", ctx, rewardId)
+	ret0, _ := ret[0].(types.StakingReward)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
+}
+
+// GetStakingReward indicates an expected call of GetStakingReward.
+func (mr *MockRewardsKeeperMockRecorder) GetStakingReward(ctx, rewardId any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStakingReward", reflect.TypeOf((*MockRewardsKeeper)(nil).GetStakingReward), ctx, rewardId)
 }

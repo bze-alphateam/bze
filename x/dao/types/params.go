@@ -11,10 +11,12 @@ const (
 	FeeDestinationBurner        = "burner"
 	FeeDestinationCommunityPool = "community_pool"
 
+	DefaultMaxSrPerDao               = uint64(5)
 	DefaultMaxStaticMembers          = uint64(128)
 	DefaultMinVotingPeriod           = time.Hour
 	DefaultMaxVotingPeriod           = 90 * 24 * time.Hour
 	DefaultDaoCreationFeeDestination = FeeDestinationBurner
+	DefaultMinElectorateLockDays     = uint32(5)
 )
 
 // DefaultDaoCreationFee is 50,000 BZE.
@@ -22,34 +24,44 @@ var DefaultDaoCreationFee = sdk.NewInt64Coin("ubze", 50_000_000_000)
 
 // NewParams creates a new Params instance
 func NewParams(
+	maxSrPerDao uint64,
 	maxStaticMembers uint64,
 	minVotingPeriod time.Duration,
 	maxVotingPeriod time.Duration,
 	daoCreationFee sdk.Coin,
 	daoCreationFeeDestination string,
+	minElectorateLockDays uint32,
 ) Params {
 	return Params{
+		MaxSrPerDao:               maxSrPerDao,
 		MaxStaticMembers:          maxStaticMembers,
 		MinVotingPeriod:           minVotingPeriod,
 		MaxVotingPeriod:           maxVotingPeriod,
 		DaoCreationFee:            daoCreationFee,
 		DaoCreationFeeDestination: daoCreationFeeDestination,
+		MinElectorateLockDays:     minElectorateLockDays,
 	}
 }
 
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
 	return NewParams(
+		DefaultMaxSrPerDao,
 		DefaultMaxStaticMembers,
 		DefaultMinVotingPeriod,
 		DefaultMaxVotingPeriod,
 		DefaultDaoCreationFee,
 		DefaultDaoCreationFeeDestination,
+		DefaultMinElectorateLockDays,
 	)
 }
 
 // Validate validates the set of params
 func (p Params) Validate() error {
+	if p.MaxSrPerDao == 0 {
+		return fmt.Errorf("max_sr_per_dao must be positive")
+	}
+
 	if p.MaxStaticMembers == 0 {
 		return fmt.Errorf("max_static_members must be positive")
 	}
@@ -69,6 +81,11 @@ func (p Params) Validate() error {
 
 	if p.DaoCreationFeeDestination != FeeDestinationBurner && p.DaoCreationFeeDestination != FeeDestinationCommunityPool {
 		return fmt.Errorf("invalid dao_creation_fee_destination %q: expected %q or %q", p.DaoCreationFeeDestination, FeeDestinationBurner, FeeDestinationCommunityPool)
+	}
+
+	// a zero lock would let stake move between wallets mid-vote (D2)
+	if p.MinElectorateLockDays == 0 {
+		return fmt.Errorf("min_electorate_lock_days must be positive")
 	}
 
 	return nil

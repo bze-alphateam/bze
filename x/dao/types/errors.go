@@ -15,4 +15,5 @@ var (
 	ErrInvalidMembers    = sdkerrors.Register(ModuleName, 1104, "invalid dao members")
 	ErrInvalidElectorate = sdkerrors.Register(ModuleName, 1105, "invalid dao electorate")
 	ErrDaoAccountExists  = sdkerrors.Register(ModuleName, 1106, "an account already exists at the dao address")
+	ErrSourcePinned      = sdkerrors.Register(ModuleName, 1107, "the reward is used by a dao electorate")
 )

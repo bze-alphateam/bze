@@ -36,8 +36,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "CreateDao",
 					Use:       "create-dao [type] [name] [config]",
 					Short:     "Create a DAO; the creator pays the creation fee",
-					Long: "Create a DAO with its own derived account. type is static-list (stake is not supported yet), " +
-						"config is the DaoConfig as JSON: ratios as 18-decimal integers (500000000000000000 = 0.5), periods as seconds (\"259200s\"). A static-list DAO needs --members. Without --admin the DAO is self-owned.",
+					Long: "Create a DAO with its own derived account. type is static-list or stake, " +
+						"config is the DaoConfig as JSON: ratios as 18-decimal integers (500000000000000000 = 0.5), periods as seconds (\"259200s\"). A static-list DAO needs --members; a stake DAO takes --electorate '{\"sr_ids\":[\"3\"],\"dr_denom\":\"ubze\"}'. Without --admin the DAO is self-owned and needs a live electorate.",
 					Example: `bzed tx dao create-dao static-list "My DAO" '{"min_quorum":"500000000000000000","threshold":"500000000000000000","voting_period":"259200s",` +
 						`"expedited_period":"86400s","expedite_quorum":"600000000000000000","expedite_threshold":"660000000000000000"}' ` +
 						`--members bze1...,bze1... --description "..." --from mykey`,

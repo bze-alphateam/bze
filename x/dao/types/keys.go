@@ -20,6 +20,13 @@ const (
 	DaoAddressKeyPrefix = "dao/a/"
 	// DaoAdminKeyPrefix indexes DAOs by admin: {admin}/{dao_id}.
 	DaoAdminKeyPrefix = "dao/m/"
+	// PinKeyPrefix counts the DAOs (and later the open proposals) that use an
+	// electorate source: {source} -> uint64.
+	PinKeyPrefix = "dao/p/"
+
+	// sourceStakingReward and sourceDenomReward prefix the electorate source keys.
+	sourceStakingReward = "sr/"
+	sourceDenomReward   = "dr/"
 )
 
 var (
@@ -53,4 +60,20 @@ func DaoAdminKey(admin sdk.AccAddress, daoId uint64) []byte {
 // DaoAddress derives the account address of a DAO from its id.
 func DaoAddress(daoId uint64) sdk.AccAddress {
 	return address.Module(ModuleName, sdk.Uint64ToBigEndian(daoId))
+}
+
+// StakingRewardSource is the source key of a staking reward: sr/{reward_id}.
+func StakingRewardSource(rewardId string) []byte {
+	return sourceKey(sourceStakingReward, rewardId)
+}
+
+// DenomRewardSource is the source key of a Denom Reward: dr/{staking_denom}.
+func DenomRewardSource(stakingDenom string) []byte {
+	return sourceKey(sourceDenomReward, stakingDenom)
+}
+
+// sourceKey builds every electorate source key, so all stores that refer to a
+// source (pins, join records, proposal snapshots) agree on its form.
+func sourceKey(kind, id string) []byte {
+	return []byte(kind + id)
 }

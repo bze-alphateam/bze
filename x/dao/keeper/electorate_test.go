@@ -3,9 +3,12 @@ package keeper_test
 import (
 	"strings"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"go.uber.org/mock/gomock"
 
 	"github.com/bze-alphateam/bze/x/dao/types"
+	rewardstypes "github.com/bze-alphateam/bze/x/rewards/types"
 )
 
 // The static-list electorate rules: a non-empty list of unique valid addresses,
@@ -108,4 +111,245 @@ func memberAddress(i int) sdk.AccAddress {
 	addr := make([]byte, 20)
 	addr[0], addr[1] = byte(i>>8), byte(i)
 	return addr
+}
+
+const (
+	stakeDenom = "ubze"
+	otherDenom = "uother"
+)
+
+// rewardsState is the x/rewards state seen by the stake electorate tests.
+type rewardsState struct {
+	srs map[string]rewardstypes.StakingReward
+	drs map[string]rewardstypes.DenomReward
+}
+
+func stakingReward(id, denom string, lock uint32, staked string) rewardstypes.StakingReward {
+	return rewardstypes.StakingReward{RewardId: id, StakingDenom: denom, Lock: lock, StakedAmount: staked}
+}
+
+func denomReward(denom string, lock uint32, staked int64) rewardstypes.DenomReward {
+	return rewardstypes.DenomReward{StakingDenom: denom, Lock: lock, StakedAmount: math.NewInt(staked)}
+}
+
+// defaultRewardsState: SR 1, 5, 6 (ubze, lock 5, staked), SR 2 (ubze, nothing
+// staked), SR 3 (another denom), SR 4 (lock 4); DR ubze (lock 5), DR uother,
+// DR ulow (lock 4); SR 9 + DR uzero hold no stake.
+func defaultRewardsState() rewardsState {
+	return rewardsState{
+		srs: map[string]rewardstypes.StakingReward{
+			"1": stakingReward("1", stakeDenom, 5, "100"),
+			"2": stakingReward("2", stakeDenom, 5, "0"),
+			"3": stakingReward("3", otherDenom, 5, "10"),
+			"4": stakingReward("4", stakeDenom, 4, "10"),
+			"5": stakingReward("5", stakeDenom, 5, "10"),
+			"6": stakingReward("6", stakeDenom, 30, "10"),
+			"9": stakingReward("9", "uzero", 5, "0"),
+		},
+		drs: map[string]rewardstypes.DenomReward{
+			stakeDenom: denomReward(stakeDenom, 5, 50),
+			otherDenom: denomReward(otherDenom, 5, 1),
+			"ulow":     denomReward("ulow", 4, 1),
+			"uzero":    denomReward("uzero", 5, 0),
+		},
+	}
+}
+
+// stubRewards serves the given x/rewards state to the dao keeper.
+func (suite *IntegrationTestSuite) stubRewards(state rewardsState) {
+	suite.rewards.EXPECT().GetStakingReward(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(_ sdk.Context, id string) (rewardstypes.StakingReward, bool) {
+			sr, ok := state.srs[id]
+			return sr, ok
+		}).AnyTimes()
+	suite.rewards.EXPECT().GetDenomReward(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(_ sdk.Context, denom string) (rewardstypes.DenomReward, bool) {
+			dr, ok := state.drs[denom]
+			return dr, ok
+		}).AnyTimes()
+}
+
+func validStakeDaoMsg(srIds []string, drDenom string) *types.MsgCreateDao {
+	msg := validCreateDaoMsg()
+	msg.Type = types.DaoType_DAO_TYPE_STAKE
+	msg.Members = nil
+	msg.Electorate = &types.StakeElectorate{SrIds: srIds, DrDenom: drDenom}
+
+	return msg
+}
+
+// The stake electorate rules: up to max_sr_per_dao unique existing staking
+// rewards and/or one existing Denom Reward, one staking denom (D29), a lock of
+// at least min_electorate_lock_days (D28), no member list (D29), and a live
+// electorate unless an external admin sets it up (D11).
+func (suite *IntegrationTestSuite) TestCreateDao_StakeElectorate() {
+	for _, tc := range []struct {
+		desc    string
+		msg     func() *types.MsgCreateDao
+		wantErr string
+	}{
+		{desc: "staking rewards only", msg: func() *types.MsgCreateDao { return validStakeDaoMsg([]string{"1", "2"}, "") }},
+		{desc: "denom reward only", msg: func() *types.MsgCreateDao { return validStakeDaoMsg(nil, stakeDenom) }},
+		{desc: "staking rewards and a denom reward", msg: func() *types.MsgCreateDao { return validStakeDaoMsg([]string{"1", "5"}, stakeDenom) }},
+		{desc: "staking rewards at the cap", msg: func() *types.MsgCreateDao { return validStakeDaoMsg([]string{"1", "2", "5"}, "") }},
+		{desc: "staking rewards above the cap", msg: func() *types.MsgCreateDao {
+			return validStakeDaoMsg([]string{"1", "2", "5", "6"}, "")
+		}, wantErr: "at most 3 staking rewards"},
+		{desc: "D14: duplicate staking reward", msg: func() *types.MsgCreateDao {
+			return validStakeDaoMsg([]string{"1", "5", "1"}, "")
+		}, wantErr: "duplicate staking reward 1"},
+		{desc: "empty staking reward id", msg: func() *types.MsgCreateDao { return validStakeDaoMsg([]string{""}, "") }, wantErr: "empty staking reward id"},
+		{desc: "unknown staking reward", msg: func() *types.MsgCreateDao { return validStakeDaoMsg([]string{"1", "99"}, "") }, wantErr: "staking reward 99 not found"},
+		{desc: "unknown denom reward", msg: func() *types.MsgCreateDao { return validStakeDaoMsg([]string{"1"}, "unone") }, wantErr: "denom reward unone not found"},
+		{desc: "invalid denom reward denom", msg: func() *types.MsgCreateDao { return validStakeDaoMsg(nil, "1x") }, wantErr: "invalid denom reward denom"},
+
+		{desc: "D28: staking reward lock below the min", msg: func() *types.MsgCreateDao {
+			return validStakeDaoMsg([]string{"1", "4"}, "")
+		}, wantErr: "staking reward 4 has a 4 day lock, at least 5 days are required"},
+		{desc: "D28: denom reward lock below the min", msg: func() *types.MsgCreateDao {
+			return validStakeDaoMsg(nil, "ulow")
+		}, wantErr: "denom reward ulow has a 4 day lock, at least 5 days are required"},
+		{desc: "D28: lock exactly at the min", msg: func() *types.MsgCreateDao { return validStakeDaoMsg([]string{"5"}, stakeDenom) }},
+
+		{desc: "D29: staking reward and denom reward with different denoms", msg: func() *types.MsgCreateDao {
+			return validStakeDaoMsg([]string{"1"}, otherDenom)
+		}, wantErr: "all sources must share one staking denom"},
+		{desc: "D29: two staking rewards with different denoms", msg: func() *types.MsgCreateDao {
+			return validStakeDaoMsg([]string{"1", "3"}, "")
+		}, wantErr: "all sources must share one staking denom"},
+		{desc: "D29: stake dao with members", msg: func() *types.MsgCreateDao {
+			msg := validStakeDaoMsg([]string{"1"}, "")
+			msg.Members = []string{memberA.String()}
+			return msg
+		}, wantErr: "cannot have a member list"},
+
+		{desc: "D11: self-owned without an electorate", msg: func() *types.MsgCreateDao {
+			msg := validStakeDaoMsg(nil, "")
+			msg.Electorate = nil
+			return msg
+		}, wantErr: "needs a live electorate"},
+		{desc: "D11: self-owned with an empty electorate", msg: func() *types.MsgCreateDao { return validStakeDaoMsg(nil, "") }, wantErr: "needs a live electorate"},
+		{desc: "D11: self-owned with nothing staked", msg: func() *types.MsgCreateDao {
+			return validStakeDaoMsg([]string{"9"}, "uzero")
+		}, wantErr: "needs a live electorate"},
+		{desc: "D11: admin given as the dao address is self-owned", msg: func() *types.MsgCreateDao {
+			msg := validStakeDaoMsg([]string{"2"}, "")
+			msg.Admin = daoAddress(1).String()
+			return msg
+		}, wantErr: "needs a live electorate"},
+		{desc: "D11: external admin without an electorate", msg: func() *types.MsgCreateDao {
+			msg := validStakeDaoMsg(nil, "")
+			msg.Electorate = nil
+			msg.Admin = adminAddr.String()
+			return msg
+		}},
+		{desc: "D11: external admin with nothing staked", msg: func() *types.MsgCreateDao {
+			msg := validStakeDaoMsg([]string{"9"}, "uzero")
+			msg.Admin = adminAddr.String()
+			return msg
+		}},
+	} {
+		suite.Run(tc.desc, func() {
+			suite.SetupTest()
+			suite.stubRewards(defaultRewardsState())
+			params := types.DefaultParams()
+			params.MaxSrPerDao = 3
+			suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
+
+			msg := tc.msg()
+			if tc.wantErr == "" {
+				suite.expectCreation(1)
+			}
+
+			res, err := suite.msgServer.CreateDao(suite.ctx, msg)
+			if tc.wantErr != "" {
+				suite.Require().ErrorIs(err, types.ErrInvalidElectorate)
+				suite.Require().ErrorContains(err, tc.wantErr)
+				suite.Require().Zero(suite.k.GetDaoCounter(suite.ctx))
+				for _, id := range []string{"1", "2", "4", "5"} {
+					suite.Require().Zero(suite.k.GetSourcePins(suite.ctx, types.StakingRewardSource(id)))
+				}
+				return
+			}
+
+			suite.Require().NoError(err)
+			dao, found := suite.k.GetDao(suite.ctx, res.Id)
+			suite.Require().True(found)
+			suite.Require().Equal(types.DaoType_DAO_TYPE_STAKE, dao.Type)
+			suite.Require().Empty(dao.Members)
+			if msg.Electorate.IsEmpty() {
+				suite.Require().Nil(dao.Electorate)
+				return
+			}
+
+			suite.Require().Equal(msg.Electorate, dao.Electorate)
+			for _, id := range msg.Electorate.SrIds {
+				suite.Require().Equal(uint64(1), suite.k.GetSourcePins(suite.ctx, types.StakingRewardSource(id)))
+			}
+			if msg.Electorate.DrDenom != "" {
+				suite.Require().Equal(uint64(1), suite.k.GetSourcePins(suite.ctx, types.DenomRewardSource(msg.Electorate.DrDenom)))
+			}
+		})
+	}
+}
+
+// The default cap is 5 staking rewards.
+func (suite *IntegrationTestSuite) TestCreateDao_DefaultStakingRewardCap() {
+	state := defaultRewardsState()
+	state.srs["7"] = stakingReward("7", stakeDenom, 5, "1")
+	suite.stubRewards(state)
+
+	_, err := suite.msgServer.CreateDao(suite.ctx, validStakeDaoMsg([]string{"1", "2", "5", "6", "7", "4"}, ""))
+	suite.Require().ErrorContains(err, "at most 5 staking rewards")
+
+	suite.expectCreation(1)
+	_, err = suite.msgServer.CreateDao(suite.ctx, validStakeDaoMsg([]string{"1", "2", "5", "6", "7"}, ""))
+	suite.Require().NoError(err)
+}
+
+// I4: every DAO using a source adds one pin to it.
+func (suite *IntegrationTestSuite) TestCreateDao_PinsCountEveryDao() {
+	suite.stubRewards(defaultRewardsState())
+
+	suite.expectCreation(1)
+	_, err := suite.msgServer.CreateDao(suite.ctx, validStakeDaoMsg([]string{"1", "2"}, stakeDenom))
+	suite.Require().NoError(err)
+
+	suite.expectCreation(2)
+	_, err = suite.msgServer.CreateDao(suite.ctx, validStakeDaoMsg([]string{"1"}, stakeDenom))
+	suite.Require().NoError(err)
+
+	suite.Require().Equal(uint64(2), suite.k.GetSourcePins(suite.ctx, types.StakingRewardSource("1")))
+	suite.Require().Equal(uint64(1), suite.k.GetSourcePins(suite.ctx, types.StakingRewardSource("2")))
+	suite.Require().Equal(uint64(2), suite.k.GetSourcePins(suite.ctx, types.DenomRewardSource(stakeDenom)))
+	suite.Require().Zero(suite.k.GetSourcePins(suite.ctx, types.StakingRewardSource("5")))
+}
+
+// D28: raising min_electorate_lock_days later leaves existing DAOs as they are;
+// only new electorates must meet the new minimum.
+func (suite *IntegrationTestSuite) TestCreateDao_RaisedMinLockKeepsExistingDaos() {
+	suite.stubRewards(defaultRewardsState())
+
+	suite.expectCreation(1)
+	msg := validStakeDaoMsg([]string{"5"}, stakeDenom)
+	_, err := suite.msgServer.CreateDao(suite.ctx, msg)
+	suite.Require().NoError(err)
+	before, _ := suite.k.GetDao(suite.ctx, 1)
+
+	params := types.DefaultParams()
+	params.MinElectorateLockDays = 10
+	_, err = suite.msgServer.UpdateParams(suite.ctx, &types.MsgUpdateParams{Authority: suite.k.GetAuthority(), Params: params})
+	suite.Require().NoError(err)
+
+	after, found := suite.k.GetDao(suite.ctx, 1)
+	suite.Require().True(found)
+	suite.Require().Equal(before, after)
+	suite.Require().Equal(uint64(1), suite.k.GetSourcePins(suite.ctx, types.StakingRewardSource("5")))
+
+	_, err = suite.msgServer.CreateDao(suite.ctx, validStakeDaoMsg([]string{"5"}, stakeDenom))
+	suite.Require().ErrorContains(err, "at least 10 days are required")
+
+	suite.expectCreation(2)
+	_, err = suite.msgServer.CreateDao(suite.ctx, validStakeDaoMsg([]string{"6"}, ""))
+	suite.Require().NoError(err)
 }

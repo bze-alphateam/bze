@@ -29,15 +29,13 @@ func (k msgServer) CreateDao(goCtx context.Context, msg *types.MsgCreateDao) (*t
 		return nil, err
 	}
 
+	if err := k.validateStakeSources(ctx, msg.Electorate, params); err != nil {
+		return nil, err
+	}
+
 	creator := sdk.MustAccAddressFromBech32(msg.Creator)
 	daoId := k.GetDaoCounter(ctx) + 1
 	daoAddr := types.DaoAddress(daoId)
-
-	// read-only checks first, so nothing is charged or written for a DAO that can't be created
-	existing := k.accountKeeper.GetAccount(ctx, daoAddr)
-	if err := checkDaoAccount(existing); err != nil {
-		return nil, err
-	}
 
 	dao := types.Dao{
 		Id:          daoId,
@@ -53,9 +51,19 @@ func (k msgServer) CreateDao(goCtx context.Context, msg *types.MsgCreateDao) (*t
 	if msg.Admin != "" {
 		dao.Admin = sdk.MustAccAddressFromBech32(msg.Admin).String()
 	}
+	if !msg.Electorate.IsEmpty() {
+		dao.Electorate = msg.Electorate
+	}
 
-	if !isLiveElectorate(dao) {
-		return nil, errorsmod.Wrap(types.ErrInvalidElectorate, "the dao has no live electorate")
+	// a self-owned DAO needs voters from the start; an external admin can set the electorate up later
+	if dao.Admin == dao.Address && !k.isLiveElectorate(ctx, dao) {
+		return nil, errorsmod.Wrap(types.ErrInvalidElectorate, "a self-owned dao needs a live electorate")
+	}
+
+	// read-only checks first, so nothing is charged or written for a DAO that can't be created
+	existing := k.accountKeeper.GetAccount(ctx, daoAddr)
+	if err := checkDaoAccount(existing); err != nil {
+		return nil, err
 	}
 
 	if err := k.chargeCreationFee(ctx, creator, params); err != nil {
@@ -75,6 +83,9 @@ func (k msgServer) CreateDao(goCtx context.Context, msg *types.MsgCreateDao) (*t
 
 	k.SetDaoCounter(ctx, daoId)
 	k.setNewDao(ctx, dao)
+	for _, source := range electorateSources(dao.Electorate) {
+		k.pinSource(ctx, source)
+	}
 
 	err := ctx.EventManager().EmitTypedEvent(&types.EventDaoCreated{
 		Id:      dao.Id,

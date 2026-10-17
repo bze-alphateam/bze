@@ -173,11 +173,6 @@ func (suite *IntegrationTestSuite) TestCreateDao_ValidationMatrix() {
 			m.Config.KeptDepositDestination = types.FundsDestination_TREASURY
 		}},
 
-		{desc: "stake type not supported yet", mutate: func(m *types.MsgCreateDao) {
-			m.Type = types.DaoType_DAO_TYPE_STAKE
-			m.Members = nil
-			m.Electorate = &types.StakeElectorate{SrIds: []string{"1"}}
-		}, wantErr: types.ErrInvalidDaoType},
 		{desc: "unknown type", mutate: func(m *types.MsgCreateDao) { m.Type = 2 }, wantErr: types.ErrInvalidDaoType},
 	} {
 		suite.Run(tc.desc, func() {
@@ -207,18 +202,6 @@ func (suite *IntegrationTestSuite) TestCreateDao_ValidationMatrix() {
 			suite.Require().Equal(msg.Description, dao.Description)
 		})
 	}
-}
-
-// The stake type check is stateless: ValidateBasic rejects it before any state is read.
-func (suite *IntegrationTestSuite) TestCreateDao_StakeTypeRejectedByValidateBasic() {
-	msg := validCreateDaoMsg()
-	msg.Type = types.DaoType_DAO_TYPE_STAKE
-	msg.Members = nil
-	msg.Electorate = &types.StakeElectorate{DrDenom: "ubze"}
-
-	err := msg.ValidateBasic()
-	suite.Require().ErrorIs(err, types.ErrInvalidDaoType)
-	suite.Require().ErrorContains(err, "stake DAOs not supported yet")
 }
 
 // The period bounds follow the params, not constants.

@@ -25,6 +25,7 @@ type IntegrationTestSuite struct {
 	msgServer types.MsgServer
 	acc       *testutil.MockAccountKeeper
 	bank      *testutil.MockBankKeeper
+	rewards   *testutil.MockRewardsKeeper
 }
 
 func (suite *IntegrationTestSuite) SetupTest() {
@@ -33,8 +34,9 @@ func (suite *IntegrationTestSuite) SetupTest() {
 
 	suite.acc = testutil.NewMockAccountKeeper(mockCtrl)
 	suite.bank = testutil.NewMockBankKeeper(mockCtrl)
+	suite.rewards = testutil.NewMockRewardsKeeper(mockCtrl)
 
-	k, ctx := keepertest.DaoKeeper(t, suite.acc, suite.bank)
+	k, ctx := keepertest.DaoKeeper(t, suite.acc, suite.bank, suite.rewards)
 	suite.ctx = ctx
 	suite.k = &k
 	suite.msgServer = keeper.NewMsgServerImpl(suite.k)
@@ -46,6 +48,6 @@ func TestKeeperSuite(t *testing.T) {
 
 func TestNewKeeper_InvalidAuthorityPanics(t *testing.T) {
 	require.Panics(t, func() {
-		keeper.NewKeeper(nil, nil, nil, "not-an-address", nil, nil)
+		keeper.NewKeeper(nil, nil, nil, "not-an-address", nil, nil, nil)
 	})
 }
