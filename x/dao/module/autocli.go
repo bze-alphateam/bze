@@ -77,6 +77,37 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:        "bzed q dao join-record sr/3 bze1...",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "source"}, {ProtoField: "address"}},
 				},
+				{
+					RpcMethod: "Daos",
+					Use:       "daos",
+					Short:     "Lists every DAO, by id",
+					Example:   "bzed q dao daos --page-limit 20",
+				},
+				{
+					RpcMethod:      "DaosByAdmin",
+					Use:            "daos-by-admin [admin]",
+					Short:          "Lists the DAOs an address is the admin of, by id",
+					Long:           "A self-owned DAO is its own admin. A pending nomination does not list the DAO under the nominee until it is accepted.",
+					Example:        "bzed q dao daos-by-admin bze1...",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "admin"}},
+				},
+				{
+					RpcMethod: "Proposals",
+					Use:       "proposals [dao-id]",
+					Short:     "Lists a DAO's proposals, by id, optionally filtered by status",
+					Long: "Without --statuses every status is listed; with it only the proposals with one of the given statuses (repeat the flag or comma-separate). " +
+						"Statuses are the stored ones: a proposal past its voting end stays voting until it is settled. Cleaned-up proposals are not listed.",
+					Example:        "bzed q dao proposals 1 --statuses voting,execution-failed",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}},
+				},
+				{
+					RpcMethod:      "Ballots",
+					Use:            "ballots [proposal-id]",
+					Short:          "Lists the ballots of a DAO proposal",
+					Long:           "Ballots are ordered by voter key. A cleanup deletes them once the proposal is finished.",
+					Example:        "bzed q dao ballots 1",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "proposal_id"}},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
