@@ -31,6 +31,10 @@ service Msg {
   // nominates a successor, who accepts later. An empty nominee hands the DAO to
   // its own voters at once.
   rpc NominateAdmin (MsgNominateAdmin) returns (MsgNominateAdminResponse);
+
+  // AcceptAdminNomination is the second step of the admin handover: the
+  // pending nominee accepts and becomes the DAO's admin.
+  rpc AcceptAdminNomination (MsgAcceptAdminNomination) returns (MsgAcceptAdminNominationResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -104,3 +108,17 @@ message MsgNominateAdmin {
 
 // MsgNominateAdminResponse is the Msg/NominateAdmin response type.
 message MsgNominateAdminResponse {}
+
+// MsgAcceptAdminNomination is the Msg/AcceptAdminNomination request type.
+message MsgAcceptAdminNomination {
+  option (cosmos.msg.v1.signer) = "nominee";
+  option (amino.name) = "bze/x/dao/MsgAcceptAdminNomination";
+
+  // nominee must be the DAO's pending admin; a DAO accepts through its own
+  // proposal or admin.
+  string nominee = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 dao_id = 2;
+}
+
+// MsgAcceptAdminNominationResponse is the Msg/AcceptAdminNomination response type.
+message MsgAcceptAdminNominationResponse {}
