@@ -20,6 +20,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgSettleProposal{},
 		&MsgCleanupProposal{},
 		&MsgUpdateDaoConfig{},
+		&MsgUpdateMetadata{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

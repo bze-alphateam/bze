@@ -130,3 +130,9 @@ message EventDaoConfigUpdated {
   // proto order.
   repeated string fields = 2;
 }
+
+// EventDaoMetadataUpdated is emitted when a DAO's name and description are
+// replaced.
+message EventDaoMetadataUpdated {
+  uint64 id = 1;
+}

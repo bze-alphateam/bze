@@ -149,6 +149,15 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						`"expedited_period":"86400s","expedite_quorum":"600000000000000000","expedite_threshold":"660000000000000000"}' --from bze1<dao address> --generate-only`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}, {ProtoField: "config"}},
 				},
+				{
+					RpcMethod: "UpdateMetadata",
+					Use:       "update-metadata [dao-id] [name] [description]",
+					Short:     "Replace a DAO's name and description; signed by the DAO account only",
+					Long: "Replace the DAO's name (1 to 64 bytes) and description (up to 2,000 bytes); both are always replaced. " +
+						"Only the DAO account can sign it: build the message with --generate-only and run it through admin-execute or a proposal.",
+					Example:        `bzed tx dao update-metadata 1 "Bee Guild" "The guild's treasury" --from bze1<dao address> --generate-only`,
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}, {ProtoField: "name"}, {ProtoField: "description"}},
+				},
 			},
 		},
 	}
