@@ -83,6 +83,20 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:        `bzed tx dao withdraw-admin-nomination 1 --from admin`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}},
 				},
+				{
+					RpcMethod: "SubmitProposal",
+					Use:       "submit-proposal [dao-id] [title] [msgs...]",
+					Short:     "Submit a DAO proposal; it runs its messages as the DAO if it passes",
+					Long: "Submit a proposal of zero or more messages. Each message is a JSON Any (with \"@type\") or a .json file holding one, " +
+						"and must be signed by the DAO account only. Members (or stakers) of the DAO can submit; anyone can when the DAO has open submission. " +
+						"The DAO's proposal cost is charged and its deposit escrowed; --expedited asks for the shorter voting period when the DAO allows it.",
+					Example:        `bzed tx dao submit-proposal 1 "Fund tooling" msg.json --summary "Pays 1 BZE to the tooling team" --from member`,
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}, {ProtoField: "title"}, {ProtoField: "msgs", Varargs: true}},
+					FlagOptions: map[string]*autocliv1.FlagOptions{
+						"summary":   {Usage: "proposal summary"},
+						"expedited": {Usage: "use the DAO's expedited voting period"},
+					},
+				},
 			},
 		},
 	}

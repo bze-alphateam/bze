@@ -25,6 +25,7 @@ const (
 	Msg_NominateAdmin_FullMethodName           = "/bze.dao.Msg/NominateAdmin"
 	Msg_AcceptAdminNomination_FullMethodName   = "/bze.dao.Msg/AcceptAdminNomination"
 	Msg_WithdrawAdminNomination_FullMethodName = "/bze.dao.Msg/WithdrawAdminNomination"
+	Msg_SubmitProposal_FullMethodName          = "/bze.dao.Msg/SubmitProposal"
 )
 
 // MsgClient is the client API for Msg service.
@@ -50,6 +51,9 @@ type MsgClient interface {
 	// WithdrawAdminNomination lets the current admin cancel a pending handover
 	// before the nominee accepts it.
 	WithdrawAdminNomination(ctx context.Context, in *MsgWithdrawAdminNomination, opts ...grpc.CallOption) (*MsgWithdrawAdminNominationResponse, error)
+	// SubmitProposal opens a proposal of zero or more messages the DAO runs if it
+	// passes. It pins the DAO's config, electorate and quorum denominator.
+	SubmitProposal(ctx context.Context, in *MsgSubmitProposal, opts ...grpc.CallOption) (*MsgSubmitProposalResponse, error)
 }
 
 type msgClient struct {
@@ -114,6 +118,15 @@ func (c *msgClient) WithdrawAdminNomination(ctx context.Context, in *MsgWithdraw
 	return out, nil
 }
 
+func (c *msgClient) SubmitProposal(ctx context.Context, in *MsgSubmitProposal, opts ...grpc.CallOption) (*MsgSubmitProposalResponse, error) {
+	out := new(MsgSubmitProposalResponse)
+	err := c.cc.Invoke(ctx, Msg_SubmitProposal_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -137,6 +150,9 @@ type MsgServer interface {
 	// WithdrawAdminNomination lets the current admin cancel a pending handover
 	// before the nominee accepts it.
 	WithdrawAdminNomination(context.Context, *MsgWithdrawAdminNomination) (*MsgWithdrawAdminNominationResponse, error)
+	// SubmitProposal opens a proposal of zero or more messages the DAO runs if it
+	// passes. It pins the DAO's config, electorate and quorum denominator.
+	SubmitProposal(context.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -161,6 +177,9 @@ func (UnimplementedMsgServer) AcceptAdminNomination(context.Context, *MsgAcceptA
 }
 func (UnimplementedMsgServer) WithdrawAdminNomination(context.Context, *MsgWithdrawAdminNomination) (*MsgWithdrawAdminNominationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawAdminNomination not implemented")
+}
+func (UnimplementedMsgServer) SubmitProposal(context.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubmitProposal not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -283,6 +302,24 @@ func _Msg_WithdrawAdminNomination_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SubmitProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSubmitProposal)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SubmitProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_SubmitProposal_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SubmitProposal(ctx, req.(*MsgSubmitProposal))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -313,6 +350,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WithdrawAdminNomination",
 			Handler:    _Msg_WithdrawAdminNomination_Handler,
+		},
+		{
+			MethodName: "SubmitProposal",
+			Handler:    _Msg_SubmitProposal_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
