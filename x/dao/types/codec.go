@@ -12,6 +12,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgCreateDao{},
 		&MsgAdminExecute{},
 		&MsgNominateAdmin{},
+		&MsgAcceptAdminNomination{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

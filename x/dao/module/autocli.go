@@ -67,6 +67,14 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:        `bzed tx dao nominate-admin 1 bze1... --from admin` + "\n" + `bzed tx dao nominate-admin 1 "" --from admin`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}, {ProtoField: "nominee"}},
 				},
+				{
+					RpcMethod:      "AcceptAdminNomination",
+					Use:            "accept-admin-nomination [dao-id]",
+					Short:          "Accept a DAO's admin nomination and become its admin",
+					Long:           "Second step of the admin handover: the pending nominee signs and becomes the DAO's admin. A DAO nominee accepts through its own proposal or admin.",
+					Example:        `bzed tx dao accept-admin-nomination 1 --from nominee`,
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}},
+				},
 			},
 		},
 	}

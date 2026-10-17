@@ -37,3 +37,12 @@ func TestRegisterInterfaces_RegistersMsgNominateAdmin(t *testing.T) {
 	require.NoError(t, err)
 	require.IsType(t, &types.MsgNominateAdmin{}, msg)
 }
+
+func TestRegisterInterfaces_RegistersMsgAcceptAdminNomination(t *testing.T) {
+	registry := codectypes.NewInterfaceRegistry()
+	types.RegisterInterfaces(registry)
+
+	msg, err := registry.Resolve("/bze.dao.MsgAcceptAdminNomination")
+	require.NoError(t, err)
+	require.IsType(t, &types.MsgAcceptAdminNomination{}, msg)
+}

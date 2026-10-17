@@ -386,3 +386,102 @@ func (suite *IntegrationTestSuite) TestNominateAdmin_SelfOwnedDaoNominates() {
 
 	suite.requireAdminInvariant(daoAddress(1), adminAddr.String())
 }
+
+func (suite *IntegrationTestSuite) accept(nominee sdk.AccAddress, daoId uint64) error {
+	_, err := suite.msgServer.AcceptAdminNomination(suite.ctx, types.NewMsgAcceptAdminNomination(nominee.String(), daoId))
+
+	return err
+}
+
+// D27: the nominee accepts and becomes the admin; the nomination is cleared.
+func (suite *IntegrationTestSuite) TestAcceptAdminNomination_NomineeBecomesAdmin() {
+	suite.createAdminDao()
+	suite.Require().NoError(suite.nominate(adminAddr, 1, successorAddr.String()))
+
+	suite.Require().NoError(suite.accept(successorAddr, 1))
+
+	suite.requireAdminInvariant(successorAddr, "")
+	suite.Require().True(suite.hasEvent("bze.dao.EventAdminChanged"))
+}
+
+// D27: only the pending nominee accepts; the current admin, the DAO account
+// and others are refused.
+func (suite *IntegrationTestSuite) TestAcceptAdminNomination_NonNomineeRejected() {
+	suite.createAdminDao()
+	suite.Require().NoError(suite.nominate(adminAddr, 1, successorAddr.String()))
+
+	for _, signer := range []sdk.AccAddress{adminAddr, daoAddress(1), memberA, attackerAddr} {
+		err := suite.accept(signer, 1)
+		suite.Require().ErrorIs(err, types.ErrNotNominee, signer.String())
+	}
+	suite.requireAdminInvariant(adminAddr, successorAddr.String())
+	suite.Require().False(suite.hasEvent("bze.dao.EventAdminChanged"))
+}
+
+// D27: there is nothing to accept without a pending nomination.
+func (suite *IntegrationTestSuite) TestAcceptAdminNomination_NoPendingRejected() {
+	suite.createAdminDao()
+
+	err := suite.accept(successorAddr, 1)
+
+	suite.Require().ErrorIs(err, types.ErrNoPendingNomination)
+	suite.requireAdminInvariant(adminAddr, "")
+}
+
+// A nomination is accepted once: after the handover nothing is pending.
+func (suite *IntegrationTestSuite) TestAcceptAdminNomination_SecondAcceptRejected() {
+	suite.createAdminDao()
+	suite.Require().NoError(suite.nominate(adminAddr, 1, successorAddr.String()))
+	suite.Require().NoError(suite.accept(successorAddr, 1))
+
+	err := suite.accept(successorAddr, 1)
+
+	suite.Require().ErrorIs(err, types.ErrNoPendingNomination)
+	suite.requireAdminInvariant(successorAddr, "")
+}
+
+func (suite *IntegrationTestSuite) TestAcceptAdminNomination_UnknownDao() {
+	suite.createAdminDao()
+	suite.Require().NoError(suite.nominate(adminAddr, 1, successorAddr.String()))
+
+	err := suite.accept(successorAddr, 2)
+
+	suite.Require().ErrorIs(err, types.ErrDaoNotFound)
+	suite.requireAdminInvariant(adminAddr, successorAddr.String())
+}
+
+// D26: after the handover the former admin's admin-execute is refused and the
+// new admin's runs.
+func (suite *IntegrationTestSuite) TestAcceptAdminNomination_SuperuserPowerMoves() {
+	suite.createAdminDao()
+	suite.Require().NoError(suite.nominate(adminAddr, 1, successorAddr.String()))
+	suite.Require().NoError(suite.accept(successorAddr, 1))
+
+	err := suite.adminExecute(adminAddr, 1, treasurySend(adminAddr, 1))
+	suite.Require().ErrorIs(err, types.ErrNotDaoAdmin)
+
+	suite.Require().NoError(suite.adminExecute(successorAddr, 1, treasurySend(successorAddr, 40)))
+	suite.Require().Equal(ubze(60), suite.ledger.balance(daoAddress(1)))
+	suite.requireAdminInvariant(successorAddr, "")
+}
+
+// Sub-DAO shape: DAO 2 accepts the nomination to administer DAO 1, signing as
+// its own account (called directly, as its proposal would), and then runs
+// messages as DAO 1.
+func (suite *IntegrationTestSuite) TestAcceptAdminNomination_DaoNomineeBecomesParent() {
+	suite.createAdminDao()
+	suite.expectCreation(2)
+	_, err := suite.msgServer.CreateDao(suite.ctx, validCreateDaoMsg())
+	suite.Require().NoError(err)
+	parent := daoAddress(2)
+	suite.Require().NoError(suite.nominate(adminAddr, 1, parent.String()))
+
+	suite.Require().NoError(suite.accept(parent, 1))
+
+	suite.requireAdminInvariant(parent, "")
+	suite.Require().NoError(suite.adminExecute(parent, 1, treasurySend(memberA, 1)))
+	// the parent stays self-owned
+	parentDao, found := suite.k.GetDao(suite.ctx, 2)
+	suite.Require().True(found)
+	suite.Require().Equal(parent.String(), parentDao.Admin)
+}

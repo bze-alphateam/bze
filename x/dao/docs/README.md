@@ -2,7 +2,7 @@
 
 The DAO module lets anyone create an on-chain organisation with its own treasury, run proposals and execute them as the DAO.
 
-> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and nominate a successor, but accepting a nomination, proposals and voting are not there yet. Each feature adds its section to this page as it lands.
+> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, but proposals and voting are not there yet. Each feature adds its section to this page as it lands.
 
 ## Concepts
 - **DAO account**: every DAO gets its own account, derived from its id (`address.Module("dao", uint64-big-endian(id))`). Nobody holds a key for it; it is the DAO's treasury.
@@ -27,6 +27,10 @@ The DAO module lets anyone create an on-chain organisation with its own treasury
   - Only one nomination can be pending at a time.
   - A nominee must be a valid address other than the current admin and the DAO itself. It is stored as the pending admin; the current admin stays in charge until the nominee accepts.
   - An empty nominee hands the DAO to its own voters at once, with no accept step: the DAO becomes self-owned. Its electorate must be able to vote (members for `static-list`; for `stake`, at least one source with something staked). A DAO that is already self-owned is refused.
+- `MsgAcceptAdminNomination`: second step of the handover. Rules:
+  - A nomination must be pending, and the signer (`nominee`) must be the pending admin. A DAO nominee signs through its own proposal or admin, which proves it can act; it then administers the other DAO as its parent.
+  - The nominee becomes the admin and the nomination is cleared. The former admin loses all its powers at once, `MsgAdminExecute` included.
+  - The electorate is not checked: the new admin is external and can fix it.
 - `MsgUpdateParams` **(authority)**: replaces the module parameters. Reserved for the module authority (governance).
 
 Example (CLI):
@@ -51,6 +55,9 @@ bzed tx dao admin-execute 1 \
 bzed tx dao nominate-admin 1 bze1... --from admin
 bzed tx dao nominate-admin 1 "" --from admin
 
+# As the nominee, accept and become the admin of DAO 1
+bzed tx dao accept-admin-nomination 1 --from nominee
+
 # Submit a governance proposal that sets the module parameters (all of them)
 bzed tx dao update-params \
   '{"max_sr_per_dao":"5","max_static_members":"128","max_msgs_per_proposal":"16","max_proposal_bytes":"20000","min_voting_period":"3600s","max_voting_period":"7776000s","dao_creation_fee":{"denom":"ubze","amount":"50000000000"},"dao_creation_fee_destination":"burner","min_electorate_lock_days":5}' \
@@ -62,7 +69,7 @@ bzed tx dao update-params \
 - `bze.dao.EventDaoCreated{id, address, admin, type}`
 - `bze.dao.EventAdminExecuted{id, admin, msg_count}`, after the events of the executed messages
 - `bze.dao.EventAdminNominated{id, admin, nominee}`
-- `bze.dao.EventAdminChanged{id, old_admin, new_admin}`
+- `bze.dao.EventAdminChanged{id, old_admin, new_admin}`, when a nominee accepts or the DAO is handed to its voters
 
 ## Queries
 - `bzed query dao params` – show the module parameters.
