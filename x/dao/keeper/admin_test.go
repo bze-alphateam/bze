@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -613,4 +615,107 @@ func (suite *IntegrationTestSuite) TestUpdateDaoConfig_ThroughAdminExecuteInvali
 	err := suite.adminExecute(adminAddr, 1, types.NewMsgUpdateDaoConfig(daoAddress(1).String(), 1, next))
 	suite.Require().ErrorIs(err, types.ErrInvalidConfig)
 	suite.requireConfig(validConfig())
+}
+
+func (suite *IntegrationTestSuite) updateMetadata(authority sdk.AccAddress, daoId uint64, name, description string) error {
+	_, err := suite.msgServer.UpdateMetadata(suite.ctx, types.NewMsgUpdateMetadata(authority.String(), daoId, name, description))
+	return err
+}
+
+// requireMetadata checks the stored name and description of DAO 1.
+func (suite *IntegrationTestSuite) requireMetadata(name, description string) {
+	dao, found := suite.k.GetDao(suite.ctx, 1)
+	suite.Require().True(found)
+	suite.Require().Equal(name, dao.Name)
+	suite.Require().Equal(description, dao.Description)
+}
+
+// Business Logic §3: metadata changes accept only the DAO account. The admin
+// signing directly and any other address are refused; nothing changes.
+func (suite *IntegrationTestSuite) TestUpdateMetadata_DirectSignersRejected() {
+	suite.createAdminDao()
+
+	for _, signer := range []sdk.AccAddress{adminAddr, memberA, attackerAddr, daoAddress(2)} {
+		suite.Require().ErrorIs(suite.updateMetadata(signer, 1, "Bee Guild", ""), types.ErrUnauthorizedSigner, signer.String())
+	}
+
+	suite.requireMetadata("BZE builders", "funds BZE tooling")
+	suite.Require().False(suite.hasEvent("bze.dao.EventDaoMetadataUpdated"))
+}
+
+func (suite *IntegrationTestSuite) TestUpdateMetadata_UnknownDao() {
+	suite.createAdminDao()
+
+	suite.Require().ErrorIs(suite.updateMetadata(daoAddress(2), 2, "Bee Guild", ""), types.ErrDaoNotFound)
+	suite.Require().ErrorIs(suite.updateMetadata(daoAddress(1), 0, "Bee Guild", ""), types.ErrDaoNotFound)
+}
+
+func (suite *IntegrationTestSuite) TestUpdateMetadata_InvalidAuthority() {
+	suite.createAdminDao()
+
+	_, err := suite.msgServer.UpdateMetadata(suite.ctx, types.NewMsgUpdateMetadata("bad", 1, "Bee Guild", ""))
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidAddress)
+}
+
+// The external admin renames the DAO through MsgAdminExecute, signed as the DAO.
+func (suite *IntegrationTestSuite) TestUpdateMetadata_ThroughAdminExecute() {
+	suite.createAdminDao()
+
+	suite.Require().NoError(suite.adminExecute(adminAddr, 1, types.NewMsgUpdateMetadata(daoAddress(1).String(), 1, "Bee Guild", "pays for hives")))
+
+	suite.requireMetadata("Bee Guild", "pays for hives")
+	attrs := suite.lastEventAttrs(&types.EventDaoMetadataUpdated{})
+	suite.Require().NotNil(attrs)
+	suite.Require().Equal(`"1"`, attrs["id"])
+	suite.Require().True(suite.hasEvent("bze.dao.EventAdminExecuted"))
+}
+
+// A self-owned DAO renames itself through a passed proposal; an empty
+// description clears the old one.
+func (suite *IntegrationTestSuite) TestUpdateMetadata_ThroughProposal() {
+	suite.createStaticDao(noConfigChange)
+	id := suite.passedProposal(types.NewMsgUpdateMetadata(daoAddress(1).String(), 1, "Bee Guild", ""))
+
+	suite.endVoting(id, 0)
+	status, err := suite.settle(id)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
+
+	suite.requireExecuted("")
+	suite.requireMetadata("Bee Guild", "")
+	suite.Require().True(suite.hasEvent("bze.dao.EventDaoMetadataUpdated"))
+}
+
+// Name 1..64 bytes, description 0..2,000 bytes, each bound from both sides. A
+// refused update leaves the stored metadata as it was.
+func (suite *IntegrationTestSuite) TestUpdateMetadata_LengthBounds() {
+	for _, tc := range []struct {
+		desc        string
+		name        string
+		description string
+		wantErr     bool
+	}{
+		{desc: "one byte name", name: "B"},
+		{desc: "64 byte name", name: strings.Repeat("n", types.MaxNameLength)},
+		{desc: "empty name", name: "", wantErr: true},
+		{desc: "65 byte name", name: strings.Repeat("n", types.MaxNameLength+1), wantErr: true},
+		{desc: "65 byte multibyte name", name: strings.Repeat("é", 32) + "n", wantErr: true},
+		{desc: "empty description", name: "B", description: ""},
+		{desc: "2000 byte description", name: "B", description: strings.Repeat("d", types.MaxDescriptionLength)},
+		{desc: "2001 byte description", name: "B", description: strings.Repeat("d", types.MaxDescriptionLength+1), wantErr: true},
+	} {
+		suite.Run(tc.desc, func() {
+			suite.SetupTest()
+			suite.createAdminDao()
+
+			err := suite.adminExecute(adminAddr, 1, types.NewMsgUpdateMetadata(daoAddress(1).String(), 1, tc.name, tc.description))
+			if tc.wantErr {
+				suite.Require().ErrorIs(err, types.ErrInvalidMetadata)
+				suite.requireMetadata("BZE builders", "funds BZE tooling")
+				return
+			}
+			suite.Require().NoError(err)
+			suite.requireMetadata(tc.name, tc.description)
+		})
+	}
 }
