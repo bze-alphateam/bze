@@ -11,6 +11,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	anypb "google.golang.org/protobuf/types/known/anypb"
 	io "io"
 	reflect "reflect"
 	sync "sync"
@@ -2281,6 +2282,968 @@ func (x *fastReflection_MsgCreateDaoResponse) ProtoMethods() *protoiface.Methods
 	}
 }
 
+var _ protoreflect.List = (*_MsgAdminExecute_3_list)(nil)
+
+type _MsgAdminExecute_3_list struct {
+	list *[]*anypb.Any
+}
+
+func (x *_MsgAdminExecute_3_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_MsgAdminExecute_3_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_MsgAdminExecute_3_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_MsgAdminExecute_3_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*anypb.Any)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_MsgAdminExecute_3_list) AppendMutable() protoreflect.Value {
+	v := new(anypb.Any)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgAdminExecute_3_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_MsgAdminExecute_3_list) NewElement() protoreflect.Value {
+	v := new(anypb.Any)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgAdminExecute_3_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_MsgAdminExecute        protoreflect.MessageDescriptor
+	fd_MsgAdminExecute_admin  protoreflect.FieldDescriptor
+	fd_MsgAdminExecute_dao_id protoreflect.FieldDescriptor
+	fd_MsgAdminExecute_msgs   protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_dao_tx_proto_init()
+	md_MsgAdminExecute = File_bze_dao_tx_proto.Messages().ByName("MsgAdminExecute")
+	fd_MsgAdminExecute_admin = md_MsgAdminExecute.Fields().ByName("admin")
+	fd_MsgAdminExecute_dao_id = md_MsgAdminExecute.Fields().ByName("dao_id")
+	fd_MsgAdminExecute_msgs = md_MsgAdminExecute.Fields().ByName("msgs")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgAdminExecute)(nil)
+
+type fastReflection_MsgAdminExecute MsgAdminExecute
+
+func (x *MsgAdminExecute) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgAdminExecute)(x)
+}
+
+func (x *MsgAdminExecute) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_dao_tx_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgAdminExecute_messageType fastReflection_MsgAdminExecute_messageType
+var _ protoreflect.MessageType = fastReflection_MsgAdminExecute_messageType{}
+
+type fastReflection_MsgAdminExecute_messageType struct{}
+
+func (x fastReflection_MsgAdminExecute_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgAdminExecute)(nil)
+}
+func (x fastReflection_MsgAdminExecute_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgAdminExecute)
+}
+func (x fastReflection_MsgAdminExecute_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgAdminExecute
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgAdminExecute) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgAdminExecute
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgAdminExecute) Type() protoreflect.MessageType {
+	return _fastReflection_MsgAdminExecute_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgAdminExecute) New() protoreflect.Message {
+	return new(fastReflection_MsgAdminExecute)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgAdminExecute) Interface() protoreflect.ProtoMessage {
+	return (*MsgAdminExecute)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgAdminExecute) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Admin != "" {
+		value := protoreflect.ValueOfString(x.Admin)
+		if !f(fd_MsgAdminExecute_admin, value) {
+			return
+		}
+	}
+	if x.DaoId != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.DaoId)
+		if !f(fd_MsgAdminExecute_dao_id, value) {
+			return
+		}
+	}
+	if len(x.Msgs) != 0 {
+		value := protoreflect.ValueOfList(&_MsgAdminExecute_3_list{list: &x.Msgs})
+		if !f(fd_MsgAdminExecute_msgs, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgAdminExecute) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.dao.MsgAdminExecute.admin":
+		return x.Admin != ""
+	case "bze.dao.MsgAdminExecute.dao_id":
+		return x.DaoId != uint64(0)
+	case "bze.dao.MsgAdminExecute.msgs":
+		return len(x.Msgs) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgAdminExecute"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgAdminExecute does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAdminExecute) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.dao.MsgAdminExecute.admin":
+		x.Admin = ""
+	case "bze.dao.MsgAdminExecute.dao_id":
+		x.DaoId = uint64(0)
+	case "bze.dao.MsgAdminExecute.msgs":
+		x.Msgs = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgAdminExecute"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgAdminExecute does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgAdminExecute) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.dao.MsgAdminExecute.admin":
+		value := x.Admin
+		return protoreflect.ValueOfString(value)
+	case "bze.dao.MsgAdminExecute.dao_id":
+		value := x.DaoId
+		return protoreflect.ValueOfUint64(value)
+	case "bze.dao.MsgAdminExecute.msgs":
+		if len(x.Msgs) == 0 {
+			return protoreflect.ValueOfList(&_MsgAdminExecute_3_list{})
+		}
+		listValue := &_MsgAdminExecute_3_list{list: &x.Msgs}
+		return protoreflect.ValueOfList(listValue)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgAdminExecute"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgAdminExecute does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAdminExecute) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.dao.MsgAdminExecute.admin":
+		x.Admin = value.Interface().(string)
+	case "bze.dao.MsgAdminExecute.dao_id":
+		x.DaoId = value.Uint()
+	case "bze.dao.MsgAdminExecute.msgs":
+		lv := value.List()
+		clv := lv.(*_MsgAdminExecute_3_list)
+		x.Msgs = *clv.list
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgAdminExecute"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgAdminExecute does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAdminExecute) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.dao.MsgAdminExecute.msgs":
+		if x.Msgs == nil {
+			x.Msgs = []*anypb.Any{}
+		}
+		value := &_MsgAdminExecute_3_list{list: &x.Msgs}
+		return protoreflect.ValueOfList(value)
+	case "bze.dao.MsgAdminExecute.admin":
+		panic(fmt.Errorf("field admin of message bze.dao.MsgAdminExecute is not mutable"))
+	case "bze.dao.MsgAdminExecute.dao_id":
+		panic(fmt.Errorf("field dao_id of message bze.dao.MsgAdminExecute is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgAdminExecute"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgAdminExecute does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgAdminExecute) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.dao.MsgAdminExecute.admin":
+		return protoreflect.ValueOfString("")
+	case "bze.dao.MsgAdminExecute.dao_id":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "bze.dao.MsgAdminExecute.msgs":
+		list := []*anypb.Any{}
+		return protoreflect.ValueOfList(&_MsgAdminExecute_3_list{list: &list})
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgAdminExecute"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgAdminExecute does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgAdminExecute) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.dao.MsgAdminExecute", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgAdminExecute) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAdminExecute) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgAdminExecute) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgAdminExecute) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgAdminExecute)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Admin)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.DaoId != 0 {
+			n += 1 + runtime.Sov(uint64(x.DaoId))
+		}
+		if len(x.Msgs) > 0 {
+			for _, e := range x.Msgs {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgAdminExecute)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Msgs) > 0 {
+			for iNdEx := len(x.Msgs) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Msgs[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x1a
+			}
+		}
+		if x.DaoId != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.DaoId))
+			i--
+			dAtA[i] = 0x10
+		}
+		if len(x.Admin) > 0 {
+			i -= len(x.Admin)
+			copy(dAtA[i:], x.Admin)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgAdminExecute)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgAdminExecute: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgAdminExecute: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Admin = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+				}
+				x.DaoId = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.DaoId |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Msgs", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Msgs = append(x.Msgs, &anypb.Any{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Msgs[len(x.Msgs)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgAdminExecuteResponse protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_bze_dao_tx_proto_init()
+	md_MsgAdminExecuteResponse = File_bze_dao_tx_proto.Messages().ByName("MsgAdminExecuteResponse")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgAdminExecuteResponse)(nil)
+
+type fastReflection_MsgAdminExecuteResponse MsgAdminExecuteResponse
+
+func (x *MsgAdminExecuteResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgAdminExecuteResponse)(x)
+}
+
+func (x *MsgAdminExecuteResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_dao_tx_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgAdminExecuteResponse_messageType fastReflection_MsgAdminExecuteResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgAdminExecuteResponse_messageType{}
+
+type fastReflection_MsgAdminExecuteResponse_messageType struct{}
+
+func (x fastReflection_MsgAdminExecuteResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgAdminExecuteResponse)(nil)
+}
+func (x fastReflection_MsgAdminExecuteResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgAdminExecuteResponse)
+}
+func (x fastReflection_MsgAdminExecuteResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgAdminExecuteResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgAdminExecuteResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgAdminExecuteResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgAdminExecuteResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgAdminExecuteResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgAdminExecuteResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgAdminExecuteResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgAdminExecuteResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgAdminExecuteResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgAdminExecuteResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgAdminExecuteResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgAdminExecuteResponse"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgAdminExecuteResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAdminExecuteResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgAdminExecuteResponse"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgAdminExecuteResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgAdminExecuteResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgAdminExecuteResponse"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgAdminExecuteResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAdminExecuteResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgAdminExecuteResponse"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgAdminExecuteResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAdminExecuteResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgAdminExecuteResponse"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgAdminExecuteResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgAdminExecuteResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgAdminExecuteResponse"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgAdminExecuteResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgAdminExecuteResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.dao.MsgAdminExecuteResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgAdminExecuteResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAdminExecuteResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgAdminExecuteResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgAdminExecuteResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgAdminExecuteResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgAdminExecuteResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgAdminExecuteResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgAdminExecuteResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgAdminExecuteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -2509,6 +3472,87 @@ func (x *MsgCreateDaoResponse) GetAddress() string {
 	return ""
 }
 
+// MsgAdminExecute is the Msg/AdminExecute request type.
+type MsgAdminExecute struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// admin must be the DAO's admin at execution time; a self-owned DAO has none.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	DaoId uint64 `protobuf:"varint,2,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+	// msgs run in order as the DAO; any failure reverts the whole transaction.
+	Msgs []*anypb.Any `protobuf:"bytes,3,rep,name=msgs,proto3" json:"msgs,omitempty"`
+}
+
+func (x *MsgAdminExecute) Reset() {
+	*x = MsgAdminExecute{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_dao_tx_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgAdminExecute) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgAdminExecute) ProtoMessage() {}
+
+// Deprecated: Use MsgAdminExecute.ProtoReflect.Descriptor instead.
+func (*MsgAdminExecute) Descriptor() ([]byte, []int) {
+	return file_bze_dao_tx_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *MsgAdminExecute) GetAdmin() string {
+	if x != nil {
+		return x.Admin
+	}
+	return ""
+}
+
+func (x *MsgAdminExecute) GetDaoId() uint64 {
+	if x != nil {
+		return x.DaoId
+	}
+	return 0
+}
+
+func (x *MsgAdminExecute) GetMsgs() []*anypb.Any {
+	if x != nil {
+		return x.Msgs
+	}
+	return nil
+}
+
+// MsgAdminExecuteResponse is the Msg/AdminExecute response type.
+type MsgAdminExecuteResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *MsgAdminExecuteResponse) Reset() {
+	*x = MsgAdminExecuteResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_dao_tx_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgAdminExecuteResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgAdminExecuteResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgAdminExecuteResponse.ProtoReflect.Descriptor instead.
+func (*MsgAdminExecuteResponse) Descriptor() ([]byte, []int) {
+	return file_bze_dao_tx_proto_rawDescGZIP(), []int{5}
+}
+
 var File_bze_dao_tx_proto protoreflect.FileDescriptor
 
 var file_bze_dao_tx_proto_rawDesc = []byte{
@@ -2519,67 +3563,88 @@ var file_bze_dao_tx_proto_rawDesc = []byte{
 	0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f,
-	0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x62, 0x7a, 0x65, 0x2f, 0x64, 0x61,
-	0x6f, 0x2f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x13,
-	0x62, 0x7a, 0x65, 0x2f, 0x64, 0x61, 0x6f, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x22, 0xab, 0x01, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
-	0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x36, 0x0a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f,
-	0x72, 0x69, 0x74, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
-	0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x12,
-	0x32, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x0f, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
-	0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x06, 0x70, 0x61, 0x72,
-	0x61, 0x6d, 0x73, 0x3a, 0x2c, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72,
-	0x69, 0x74, 0x79, 0x8a, 0xe7, 0xb0, 0x2a, 0x19, 0x62, 0x7a, 0x65, 0x2f, 0x78, 0x2f, 0x64, 0x61,
-	0x6f, 0x2f, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d,
-	0x73, 0x22, 0x19, 0x0a, 0x17, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61,
-	0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xe8, 0x02, 0x0a,
-	0x0c, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x44, 0x61, 0x6f, 0x12, 0x32, 0x0a,
-	0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
-	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f,
-	0x72, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x24, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18,
-	0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x10, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e,
-	0x44, 0x61, 0x6f, 0x54, 0x79, 0x70, 0x65, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x12, 0x0a,
-	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d,
-	0x65, 0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e,
-	0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74,
-	0x69, 0x6f, 0x6e, 0x12, 0x35, 0x0a, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x06, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x44, 0x61,
-	0x6f, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0,
-	0x2a, 0x01, 0x52, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65,
-	0x6d, 0x62, 0x65, 0x72, 0x73, 0x18, 0x07, 0x20, 0x03, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x6d,
-	0x62, 0x65, 0x72, 0x73, 0x12, 0x38, 0x0a, 0x0a, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x61,
-	0x74, 0x65, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64,
-	0x61, 0x6f, 0x2e, 0x53, 0x74, 0x61, 0x6b, 0x65, 0x45, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x61,
-	0x74, 0x65, 0x52, 0x0a, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x61, 0x74, 0x65, 0x3a, 0x27,
-	0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x8a, 0xe7, 0xb0, 0x2a,
-	0x16, 0x62, 0x7a, 0x65, 0x2f, 0x78, 0x2f, 0x64, 0x61, 0x6f, 0x2f, 0x4d, 0x73, 0x67, 0x43, 0x72,
-	0x65, 0x61, 0x74, 0x65, 0x44, 0x61, 0x6f, 0x22, 0x40, 0x0a, 0x14, 0x4d, 0x73, 0x67, 0x43, 0x72,
-	0x65, 0x61, 0x74, 0x65, 0x44, 0x61, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12,
-	0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x32, 0x9b, 0x01, 0x0a, 0x03, 0x4d, 0x73,
-	0x67, 0x12, 0x4a, 0x0a, 0x0c, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d,
-	0x73, 0x12, 0x18, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x55,
-	0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x1a, 0x20, 0x2e, 0x62, 0x7a,
-	0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x41, 0x0a,
-	0x09, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x44, 0x61, 0x6f, 0x12, 0x15, 0x2e, 0x62, 0x7a, 0x65,
-	0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x44, 0x61,
-	0x6f, 0x1a, 0x1d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x43,
-	0x72, 0x65, 0x61, 0x74, 0x65, 0x44, 0x61, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x7d, 0x0a, 0x0b, 0x63, 0x6f, 0x6d, 0x2e, 0x62,
-	0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
-	0x01, 0x5a, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a,
-	0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f,
-	0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x64, 0x61, 0x6f, 0xa2, 0x02, 0x03, 0x42, 0x44,
-	0x58, 0xaa, 0x02, 0x07, 0x42, 0x7a, 0x65, 0x2e, 0x44, 0x61, 0x6f, 0xca, 0x02, 0x07, 0x42, 0x7a,
-	0x65, 0x5c, 0x44, 0x61, 0x6f, 0xe2, 0x02, 0x13, 0x42, 0x7a, 0x65, 0x5c, 0x44, 0x61, 0x6f, 0x5c,
-	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x08, 0x42, 0x7a,
-	0x65, 0x3a, 0x3a, 0x44, 0x61, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
+	0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x61, 0x6e, 0x79, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x62, 0x7a, 0x65, 0x2f, 0x64, 0x61, 0x6f, 0x2f, 0x70, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x13, 0x62, 0x7a, 0x65, 0x2f, 0x64,
+	0x61, 0x6f, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xab,
+	0x01, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61,
+	0x6d, 0x73, 0x12, 0x36, 0x0a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
+	0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x12, 0x32, 0x0a, 0x06, 0x70, 0x61,
+	0x72, 0x61, 0x6d, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x62, 0x7a, 0x65,
+	0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x09, 0xc8, 0xde, 0x1f,
+	0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x3a, 0x2c,
+	0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x8a, 0xe7,
+	0xb0, 0x2a, 0x19, 0x62, 0x7a, 0x65, 0x2f, 0x78, 0x2f, 0x64, 0x61, 0x6f, 0x2f, 0x4d, 0x73, 0x67,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x22, 0x19, 0x0a, 0x17,
+	0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xe8, 0x02, 0x0a, 0x0c, 0x4d, 0x73, 0x67, 0x43,
+	0x72, 0x65, 0x61, 0x74, 0x65, 0x44, 0x61, 0x6f, 0x12, 0x32, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61,
+	0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
+	0x69, 0x6e, 0x67, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x14, 0x0a, 0x05,
+	0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x64, 0x6d,
+	0x69, 0x6e, 0x12, 0x24, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0e,
+	0x32, 0x10, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x44, 0x61, 0x6f, 0x54, 0x79,
+	0x70, 0x65, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x20, 0x0a, 0x0b,
+	0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x35,
+	0x0a, 0x06, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12,
+	0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x44, 0x61, 0x6f, 0x43, 0x6f, 0x6e, 0x66,
+	0x69, 0x67, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x06, 0x63,
+	0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x18, 0x0a, 0x07, 0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73,
+	0x18, 0x07, 0x20, 0x03, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x65, 0x6d, 0x62, 0x65, 0x72, 0x73, 0x12,
+	0x38, 0x0a, 0x0a, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x08, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x53, 0x74,
+	0x61, 0x6b, 0x65, 0x45, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x61, 0x74, 0x65, 0x52, 0x0a, 0x65,
+	0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x61, 0x74, 0x65, 0x3a, 0x27, 0x82, 0xe7, 0xb0, 0x2a, 0x07,
+	0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x8a, 0xe7, 0xb0, 0x2a, 0x16, 0x62, 0x7a, 0x65, 0x2f,
+	0x78, 0x2f, 0x64, 0x61, 0x6f, 0x2f, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x44,
+	0x61, 0x6f, 0x22, 0x40, 0x0a, 0x14, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x44,
+	0x61, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x22, 0xc9, 0x01, 0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x41, 0x64, 0x6d, 0x69,
+	0x6e, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69,
+	0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
+	0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x15, 0x0a, 0x06, 0x64, 0x61, 0x6f, 0x5f,
+	0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x64, 0x61, 0x6f, 0x49, 0x64, 0x12,
+	0x45, 0x0a, 0x04, 0x6d, 0x73, 0x67, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e,
+	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
+	0x41, 0x6e, 0x79, 0x42, 0x1b, 0xca, 0xb4, 0x2d, 0x17, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x73, 0x67,
+	0x52, 0x04, 0x6d, 0x73, 0x67, 0x73, 0x3a, 0x28, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d,
+	0x69, 0x6e, 0x8a, 0xe7, 0xb0, 0x2a, 0x19, 0x62, 0x7a, 0x65, 0x2f, 0x78, 0x2f, 0x64, 0x61, 0x6f,
+	0x2f, 0x4d, 0x73, 0x67, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65,
+	0x22, 0x19, 0x0a, 0x17, 0x4d, 0x73, 0x67, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45, 0x78, 0x65, 0x63,
+	0x75, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0xe7, 0x01, 0x0a, 0x03,
+	0x4d, 0x73, 0x67, 0x12, 0x4a, 0x0a, 0x0c, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x12, 0x18, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73,
+	0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x1a, 0x20, 0x2e,
+	0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x41, 0x0a, 0x09, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x44, 0x61, 0x6f, 0x12, 0x15, 0x2e, 0x62,
+	0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x44, 0x61, 0x6f, 0x1a, 0x1d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73,
+	0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x44, 0x61, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x4a, 0x0a, 0x0c, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45, 0x78, 0x65, 0x63, 0x75,
+	0x74, 0x65, 0x12, 0x18, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67,
+	0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x1a, 0x20, 0x2e, 0x62,
+	0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45,
+	0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05,
+	0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x7d, 0x0a, 0x0b, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65,
+	0x2e, 0x64, 0x61, 0x6f, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a,
+	0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d,
+	0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70,
+	0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x64, 0x61, 0x6f, 0xa2, 0x02, 0x03, 0x42, 0x44, 0x58, 0xaa,
+	0x02, 0x07, 0x42, 0x7a, 0x65, 0x2e, 0x44, 0x61, 0x6f, 0xca, 0x02, 0x07, 0x42, 0x7a, 0x65, 0x5c,
+	0x44, 0x61, 0x6f, 0xe2, 0x02, 0x13, 0x42, 0x7a, 0x65, 0x5c, 0x44, 0x61, 0x6f, 0x5c, 0x47, 0x50,
+	0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x08, 0x42, 0x7a, 0x65, 0x3a,
+	0x3a, 0x44, 0x61, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2594,31 +3659,37 @@ func file_bze_dao_tx_proto_rawDescGZIP() []byte {
 	return file_bze_dao_tx_proto_rawDescData
 }
 
-var file_bze_dao_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_bze_dao_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_bze_dao_tx_proto_goTypes = []interface{}{
 	(*MsgUpdateParams)(nil),         // 0: bze.dao.MsgUpdateParams
 	(*MsgUpdateParamsResponse)(nil), // 1: bze.dao.MsgUpdateParamsResponse
 	(*MsgCreateDao)(nil),            // 2: bze.dao.MsgCreateDao
 	(*MsgCreateDaoResponse)(nil),    // 3: bze.dao.MsgCreateDaoResponse
-	(*Params)(nil),                  // 4: bze.dao.Params
-	(DaoType)(0),                    // 5: bze.dao.DaoType
-	(*DaoConfig)(nil),               // 6: bze.dao.DaoConfig
-	(*StakeElectorate)(nil),         // 7: bze.dao.StakeElectorate
+	(*MsgAdminExecute)(nil),         // 4: bze.dao.MsgAdminExecute
+	(*MsgAdminExecuteResponse)(nil), // 5: bze.dao.MsgAdminExecuteResponse
+	(*Params)(nil),                  // 6: bze.dao.Params
+	(DaoType)(0),                    // 7: bze.dao.DaoType
+	(*DaoConfig)(nil),               // 8: bze.dao.DaoConfig
+	(*StakeElectorate)(nil),         // 9: bze.dao.StakeElectorate
+	(*anypb.Any)(nil),               // 10: google.protobuf.Any
 }
 var file_bze_dao_tx_proto_depIdxs = []int32{
-	4, // 0: bze.dao.MsgUpdateParams.params:type_name -> bze.dao.Params
-	5, // 1: bze.dao.MsgCreateDao.type:type_name -> bze.dao.DaoType
-	6, // 2: bze.dao.MsgCreateDao.config:type_name -> bze.dao.DaoConfig
-	7, // 3: bze.dao.MsgCreateDao.electorate:type_name -> bze.dao.StakeElectorate
-	0, // 4: bze.dao.Msg.UpdateParams:input_type -> bze.dao.MsgUpdateParams
-	2, // 5: bze.dao.Msg.CreateDao:input_type -> bze.dao.MsgCreateDao
-	1, // 6: bze.dao.Msg.UpdateParams:output_type -> bze.dao.MsgUpdateParamsResponse
-	3, // 7: bze.dao.Msg.CreateDao:output_type -> bze.dao.MsgCreateDaoResponse
-	6, // [6:8] is the sub-list for method output_type
-	4, // [4:6] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	6,  // 0: bze.dao.MsgUpdateParams.params:type_name -> bze.dao.Params
+	7,  // 1: bze.dao.MsgCreateDao.type:type_name -> bze.dao.DaoType
+	8,  // 2: bze.dao.MsgCreateDao.config:type_name -> bze.dao.DaoConfig
+	9,  // 3: bze.dao.MsgCreateDao.electorate:type_name -> bze.dao.StakeElectorate
+	10, // 4: bze.dao.MsgAdminExecute.msgs:type_name -> google.protobuf.Any
+	0,  // 5: bze.dao.Msg.UpdateParams:input_type -> bze.dao.MsgUpdateParams
+	2,  // 6: bze.dao.Msg.CreateDao:input_type -> bze.dao.MsgCreateDao
+	4,  // 7: bze.dao.Msg.AdminExecute:input_type -> bze.dao.MsgAdminExecute
+	1,  // 8: bze.dao.Msg.UpdateParams:output_type -> bze.dao.MsgUpdateParamsResponse
+	3,  // 9: bze.dao.Msg.CreateDao:output_type -> bze.dao.MsgCreateDaoResponse
+	5,  // 10: bze.dao.Msg.AdminExecute:output_type -> bze.dao.MsgAdminExecuteResponse
+	8,  // [8:11] is the sub-list for method output_type
+	5,  // [5:8] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_bze_dao_tx_proto_init() }
@@ -2677,6 +3748,30 @@ func file_bze_dao_tx_proto_init() {
 				return nil
 			}
 		}
+		file_bze_dao_tx_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgAdminExecute); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bze_dao_tx_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgAdminExecuteResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -2684,7 +3779,7 @@ func file_bze_dao_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_bze_dao_tx_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

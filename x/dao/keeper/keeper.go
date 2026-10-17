@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -13,7 +14,8 @@ import (
 
 type (
 	Keeper struct {
-		cdc          codec.BinaryCodec
+		// a full codec, not only a binary one: the executor reads message signers through it
+		cdc          codec.Codec
 		storeService store.KVStoreService
 		logger       log.Logger
 
@@ -24,17 +26,21 @@ type (
 		accountKeeper types.AccountKeeper
 		bankKeeper    types.BankKeeper
 		rewardsKeeper types.RewardsKeeper
+
+		// router runs the messages a DAO executes
+		router baseapp.MessageRouter
 	}
 )
 
 func NewKeeper(
-	cdc codec.BinaryCodec,
+	cdc codec.Codec,
 	storeService store.KVStoreService,
 	logger log.Logger,
 	authority string,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	rewardsKeeper types.RewardsKeeper,
+	router baseapp.MessageRouter,
 ) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
@@ -48,6 +54,7 @@ func NewKeeper(
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
 		rewardsKeeper: rewardsKeeper,
+		router:        router,
 	}
 }
 

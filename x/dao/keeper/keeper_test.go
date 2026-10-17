@@ -3,7 +3,9 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -26,6 +28,8 @@ type IntegrationTestSuite struct {
 	acc       *testutil.MockAccountKeeper
 	bank      *testutil.MockBankKeeper
 	rewards   *testutil.MockRewardsKeeper
+	router    *baseapp.MsgServiceRouter
+	ledger    *fakeBank
 }
 
 func (suite *IntegrationTestSuite) SetupTest() {
@@ -36,10 +40,18 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	suite.bank = testutil.NewMockBankKeeper(mockCtrl)
 	suite.rewards = testutil.NewMockRewardsKeeper(mockCtrl)
 
-	k, ctx := keepertest.DaoKeeper(t, suite.acc, suite.bank, suite.rewards)
+	cdc := keepertest.DaoCodec()
+	suite.router = baseapp.NewMsgServiceRouter()
+	suite.router.SetInterfaceRegistry(cdc.InterfaceRegistry())
+
+	k, ctx := keepertest.DaoKeeper(t, cdc, suite.router, suite.acc, suite.bank, suite.rewards)
 	suite.ctx = ctx
 	suite.k = &k
 	suite.msgServer = keeper.NewMsgServerImpl(suite.k)
+
+	suite.ledger = newFakeBank()
+	banktypes.RegisterMsgServer(suite.router, suite.ledger)
+	types.RegisterMsgServer(suite.router, suite.msgServer)
 }
 
 func TestKeeperSuite(t *testing.T) {
@@ -48,6 +60,6 @@ func TestKeeperSuite(t *testing.T) {
 
 func TestNewKeeper_InvalidAuthorityPanics(t *testing.T) {
 	require.Panics(t, func() {
-		keeper.NewKeeper(nil, nil, nil, "not-an-address", nil, nil, nil)
+		keeper.NewKeeper(nil, nil, nil, "not-an-address", nil, nil, nil, nil)
 	})
 }

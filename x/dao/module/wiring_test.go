@@ -43,11 +43,11 @@ func TestRegisterServices_RoutesMsgAndQuery(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
-	k := keeper.NewKeeper(cdc, runtime.NewKVStoreService(storeKey), log.NewNopLogger(), authority, nil, nil, nil)
-	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
-
 	msr := baseapp.NewMsgServiceRouter()
 	msr.SetInterfaceRegistry(registry)
+
+	k := keeper.NewKeeper(cdc, runtime.NewKVStoreService(storeKey), log.NewNopLogger(), authority, nil, nil, nil, msr)
+	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
 	qr := baseapp.NewGRPCQueryRouter()
 	qr.SetInterfaceRegistry(registry)
 	mm := module.NewManager(dao.NewAppModule(cdc, &k, nil, nil))
@@ -77,7 +77,7 @@ func TestAutoCLIOptions(t *testing.T) {
 	require.Equal(t, "params", opts.Query.RpcCommandOptions[0].Use)
 
 	require.Equal(t, "bze.dao.Msg", opts.Tx.Service)
-	require.Len(t, opts.Tx.RpcCommandOptions, 2)
+	require.Len(t, opts.Tx.RpcCommandOptions, 3)
 	updateParams := opts.Tx.RpcCommandOptions[0]
 	require.Equal(t, "UpdateParams", updateParams.RpcMethod)
 	require.Equal(t, "update-params [params]", updateParams.Use)
@@ -92,6 +92,15 @@ func TestAutoCLIOptions(t *testing.T) {
 	require.Equal(t, "type", createDao.PositionalArgs[0].ProtoField)
 	require.Equal(t, "name", createDao.PositionalArgs[1].ProtoField)
 	require.Equal(t, "config", createDao.PositionalArgs[2].ProtoField)
+
+	adminExecute := opts.Tx.RpcCommandOptions[2]
+	require.Equal(t, "AdminExecute", adminExecute.RpcMethod)
+	require.Equal(t, "admin-execute [dao-id] [msgs...]", adminExecute.Use)
+	require.False(t, adminExecute.GovProposal)
+	require.Len(t, adminExecute.PositionalArgs, 2)
+	require.Equal(t, "dao_id", adminExecute.PositionalArgs[0].ProtoField)
+	require.Equal(t, "msgs", adminExecute.PositionalArgs[1].ProtoField)
+	require.True(t, adminExecute.PositionalArgs[1].Varargs)
 }
 
 // autocli reads the create-dao config argument as protojson into the api type

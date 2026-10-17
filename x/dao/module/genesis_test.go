@@ -15,7 +15,7 @@ func TestGenesis_RoundTrip(t *testing.T) {
 		Params: types.DefaultParams(),
 	}
 
-	k, ctx := keepertest.DaoKeeper(t, nil, nil, nil)
+	k, ctx := keepertest.DaoKeeper(t, keepertest.DaoCodec(), nil, nil, nil, nil)
 	dao.InitGenesis(ctx, &k, genesisState)
 	got := dao.ExportGenesis(ctx, &k)
 

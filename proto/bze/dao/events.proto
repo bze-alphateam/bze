@@ -12,3 +12,10 @@ message EventDaoCreated {
   string admin = 3;
   DaoType type = 4;
 }
+
+// EventAdminExecuted is emitted when a DAO's admin runs messages as the DAO.
+message EventAdminExecuted {
+  uint64 id = 1;
+  string admin = 2;
+  uint64 msg_count = 3;
+}

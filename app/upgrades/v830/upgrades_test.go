@@ -131,6 +131,7 @@ func TestHandler_InitialisesDaoModule(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 
 	msr := baseapp.NewMsgServiceRouter()
