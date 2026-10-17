@@ -26,7 +26,8 @@ func TestMsgVote_ValidateBasic(t *testing.T) {
 		{desc: "invalid voter", voter: "bze1nope", proposalId: 1, wantErr: sdkerrors.ErrInvalidAddress},
 		{desc: "empty voter", voter: "", proposalId: 1, wantErr: sdkerrors.ErrInvalidAddress},
 		{desc: "zero proposal id", voter: voter, proposalId: 0, wantErr: types.ErrProposalNotFound},
-		{desc: "unknown option", voter: voter, proposalId: 1, option: types.VoteOption(3), wantErr: types.ErrInvalidVote},
+		{desc: "unset option", voter: voter, proposalId: 1, option: types.VoteOption_VOTE_OPTION_UNSPECIFIED, wantErr: types.ErrInvalidVote},
+		{desc: "unknown option", voter: voter, proposalId: 1, option: types.VoteOption(4), wantErr: types.ErrInvalidVote},
 		{desc: "negative option", voter: voter, proposalId: 1, option: types.VoteOption(-1), wantErr: types.ErrInvalidVote},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
