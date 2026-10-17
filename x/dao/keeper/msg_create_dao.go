@@ -29,7 +29,7 @@ func (k msgServer) CreateDao(goCtx context.Context, msg *types.MsgCreateDao) (*t
 		return nil, err
 	}
 
-	if err := k.validateStakeSources(ctx, msg.Electorate, params); err != nil {
+	if err := k.validateStakeSources(ctx, msg.Electorate, nil, params); err != nil {
 		return nil, err
 	}
 
