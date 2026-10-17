@@ -67,6 +67,9 @@ service Msg {
   // UpdateMetadata replaces a DAO's name and description. Only the DAO account
   // signs it, through a passed proposal or its admin's MsgAdminExecute.
   rpc UpdateMetadata (MsgUpdateMetadata) returns (MsgUpdateMetadataResponse);
+  // UpdateElectorate replaces a stake DAO's reward sources. Only the DAO
+  // account signs it; open proposals keep the electorate they pinned.
+  rpc UpdateElectorate (MsgUpdateElectorate) returns (MsgUpdateElectorateResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -280,3 +283,18 @@ message MsgUpdateMetadata {
 
 // MsgUpdateMetadataResponse is the Msg/UpdateMetadata response type.
 message MsgUpdateMetadataResponse {}
+
+// MsgUpdateElectorate is the Msg/UpdateElectorate request type.
+message MsgUpdateElectorate {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "bze/x/dao/MsgUpdateElectorate";
+
+  // authority must be the DAO's own address, never its admin directly.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 dao_id = 2;
+  // electorate is the whole new source list; an empty one removes every source.
+  StakeElectorate electorate = 3;
+}
+
+// MsgUpdateElectorateResponse is the Msg/UpdateElectorate response type.
+message MsgUpdateElectorateResponse {}

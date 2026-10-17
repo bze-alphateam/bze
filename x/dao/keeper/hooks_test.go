@@ -256,3 +256,49 @@ func (suite *IntegrationTestSuite) TestCleanupProposal_I6_LeavesNoVoteIndex() {
 	_, found := suite.k.GetProposal(suite.ctx, id)
 	suite.Require().False(found)
 }
+
+// D25 end to end: an open proposal keeps its sources pinned after the DAO
+// drops them. Staking reward 5 leaves DAO 1 while P is open; its pin stays at
+// 1 (P's), so a whale joining it gets a join record and no weight on P, and
+// its removal is still vetoed. Once P is cancelled the pin is 0, the veto lifts
+// and joins are no longer recorded.
+func (suite *IntegrationTestSuite) TestRewardHooks_D25_RemovedSourceStaysPinnedForOpenProposals() {
+	suite.stubRewards(defaultRewardsState())
+	s := suite.stubStakes()
+	suite.createAdminStakeDao([]string{"1", "5"}, stakeDenom)
+	s.joinSr("1", memberA, 100)
+	sr5 := types.StakingRewardSource("5")
+	hooks := suite.k.StakingRewardHooks()
+
+	suite.atBlock(10)
+	p, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	suite.Require().Equal(uint64(2), suite.k.GetSourcePins(suite.ctx, sr5))
+
+	suite.Require().NoError(suite.adminExecute(adminAddr, 1, types.NewMsgUpdateElectorate(daoAddress(1).String(), 1, &types.StakeElectorate{SrIds: []string{"1"}, DrDenom: stakeDenom})))
+	suite.requireElectorate([]string{"1"}, stakeDenom)
+	suite.Require().Equal(uint64(1), suite.k.GetSourcePins(suite.ctx, sr5))
+	suite.requirePinInvariant([]uint64{1}, []uint64{p})
+
+	suite.atBlock(11)
+	s.joinSr("5", memberC, 1_000_000)
+	suite.Require().NoError(hooks.AfterStakingRewardJoin(suite.ctx, "5", memberC.String(), math.NewInt(1_000_000), stakeDenom))
+	record, found := suite.k.GetJoinRecord(suite.ctx, sr5, memberC)
+	suite.Require().True(found)
+	suite.Require().Equal(int64(11), record.Height)
+
+	suite.Require().ErrorIs(suite.vote(memberC, p, types.VoteOption_YES), types.ErrNoVotingPower)
+	_, found = suite.k.GetBallot(suite.ctx, p, memberC)
+	suite.Require().False(found)
+	suite.requireTally(p, 0, 0, 0)
+	suite.Require().ErrorIs(hooks.BeforeStakingRewardRemoval(suite.ctx, "5"), types.ErrSourcePinned)
+
+	suite.Require().NoError(suite.cancel(memberA, p))
+	suite.Require().Zero(suite.k.GetSourcePins(suite.ctx, sr5))
+	suite.Require().NoError(hooks.BeforeStakingRewardRemoval(suite.ctx, "5"))
+	suite.requirePinInvariant([]uint64{1}, []uint64{p})
+
+	suite.Require().NoError(hooks.AfterStakingRewardJoin(suite.ctx, "5", memberB.String(), math.NewInt(10), stakeDenom))
+	_, found = suite.k.GetJoinRecord(suite.ctx, sr5, memberB)
+	suite.Require().False(found)
+}

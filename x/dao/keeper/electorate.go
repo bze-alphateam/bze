@@ -54,11 +54,25 @@ func (k Keeper) electorateStake(ctx sdk.Context, electorate *types.StakeElectora
 
 // validateStakeSources checks a stake electorate against state and params: at
 // most max_sr_per_dao staking rewards, every source exists, all sources share
-// one staking denom (D29) and every source's lock reaches the minimum (D28).
-// The stateless rules (unique ids, no members) are in ValidateBasic.
-func (k Keeper) validateStakeSources(ctx sdk.Context, electorate *types.StakeElectorate, params types.Params) error {
+// one staking denom (D29) and every added source's lock reaches the minimum
+// (D28). Sources already in current skip the lock check, so raising the
+// minimum never forces a DAO to drop a source it has. The stateless rules
+// (unique ids, no members) are in ValidateBasic.
+func (k Keeper) validateStakeSources(ctx sdk.Context, electorate, current *types.StakeElectorate, params types.Params) error {
 	if electorate.IsEmpty() {
 		return nil
+	}
+
+	kept := make(map[string]struct{})
+	for _, source := range electorateSources(current) {
+		kept[string(source)] = struct{}{}
+	}
+	checkLock := func(key []byte, source string, lock uint32) error {
+		if _, ok := kept[string(key)]; ok {
+			return nil
+		}
+
+		return validateSourceLock(source, lock, params.MinElectorateLockDays)
 	}
 
 	if uint64(len(electorate.SrIds)) > params.MaxSrPerDao {
@@ -86,7 +100,7 @@ func (k Keeper) validateStakeSources(ctx sdk.Context, electorate *types.StakeEle
 		}
 
 		source := "staking reward " + id
-		if err := validateSourceLock(source, sr.Lock, params.MinElectorateLockDays); err != nil {
+		if err := checkLock(types.StakingRewardSource(id), source, sr.Lock); err != nil {
 			return err
 		}
 
@@ -102,7 +116,7 @@ func (k Keeper) validateStakeSources(ctx sdk.Context, electorate *types.StakeEle
 		}
 
 		source := "denom reward " + electorate.DrDenom
-		if err := validateSourceLock(source, dr.Lock, params.MinElectorateLockDays); err != nil {
+		if err := checkLock(types.DenomRewardSource(electorate.DrDenom), source, dr.Lock); err != nil {
 			return err
 		}
 
