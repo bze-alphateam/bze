@@ -58,6 +58,15 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example: `bzed tx dao admin-execute 1 '{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"bze1<dao>","to_address":"bze1...","amount":[{"denom":"ubze","amount":"1000000"}]}' --from admin`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}, {ProtoField: "msgs", Varargs: true}},
 				},
+				{
+					RpcMethod: "NominateAdmin",
+					Use:       "nominate-admin [dao-id] [nominee]",
+					Short:     "Nominate the next admin of a DAO, or hand it to its voters",
+					Long: "First step of the admin handover: the DAO's current admin nominates a successor, who becomes admin once they accept. " +
+						"Only one nomination can be pending. Pass \"\" as the nominee to make the DAO self-owned at once; its electorate must be able to vote.",
+					Example:        `bzed tx dao nominate-admin 1 bze1... --from admin` + "\n" + `bzed tx dao nominate-admin 1 "" --from admin`,
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}, {ProtoField: "nominee"}},
+				},
 			},
 		},
 	}

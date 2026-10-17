@@ -28,3 +28,12 @@ func TestRegisterInterfaces_RegistersMsgAdminExecute(t *testing.T) {
 	require.NoError(t, err)
 	require.IsType(t, &types.MsgAdminExecute{}, msg)
 }
+
+func TestRegisterInterfaces_RegistersMsgNominateAdmin(t *testing.T) {
+	registry := codectypes.NewInterfaceRegistry()
+	types.RegisterInterfaces(registry)
+
+	msg, err := registry.Resolve("/bze.dao.MsgNominateAdmin")
+	require.NoError(t, err)
+	require.IsType(t, &types.MsgNominateAdmin{}, msg)
+}
