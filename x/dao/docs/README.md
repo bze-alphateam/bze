@@ -2,13 +2,14 @@
 
 The DAO module lets anyone create an on-chain organisation with its own treasury, run proposals and execute them as the DAO.
 
-> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, and proposals can be submitted, but voting and execution are not there yet. Each feature adds its section to this page as it lands.
+> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, and proposals can be submitted and voted on, but settlement and execution are not there yet. Each feature adds its section to this page as it lands.
 
 ## Concepts
 - **DAO account**: every DAO gets its own account, derived from its id (`address.Module("dao", uint64-big-endian(id))`). Nobody holds a key for it; it is the DAO's treasury.
 - **Electorate**: a DAO votes either through a fixed member list (`static-list`, one vote per member) or through the stakers of `x/rewards` programs (`stake`): up to `max_sr_per_dao` staking rewards and/or one Denom Reward, all staking the same denom. The two kinds are never mixed.
 - **Sources and pins**: each staking reward or Denom Reward in a stake electorate is a *source*. The module counts how many DAOs use each source; a staking reward used by any DAO cannot be deleted from `x/rewards` (its removal is vetoed until no DAO uses it).
 - **Join records**: when stake joins a source that a DAO or an open proposal uses, the module records the block height. Stake counts for a proposal only when it joined strictly before the block the proposal was submitted in (or has no record: it joined while nothing used the source). Topping up keeps the record; exiting deletes it.
+- **Ballots**: a voter has one ballot per proposal. Its weight is 1 in a `static-list` DAO; in a `stake` DAO it is the voter's eligible stake, kept as one share per source. When the voter exits a source, that source's share leaves every ballot of theirs on a proposal in voting, and the tally drops with it.
 - **Admin**: optional. Without one the DAO owns itself (its admin is its own address). The admin can be a person or another DAO. An external admin is a superuser: it can run any message as the DAO, including spending the treasury.
 
 ## Messages
@@ -42,6 +43,11 @@ The DAO module lets anyone create an on-chain organisation with its own treasury
   - `expedited` needs `allow_expedite` in the config; voting then lasts `expedited_period` instead of `voting_period`.
   - `proposal_cost` (if set) is paid to the burner (`cost_destination` `BURN`) or the DAO's treasury (`TREASURY`); `proposal_deposit` (if set) is escrowed in the `dao` module account.
   - The proposal pins the DAO's config, its electorate and its total voting power (member count, or the stake of its sources): later DAO changes never move an open vote. Every source it pins counts as used, so a staking reward a proposal votes with cannot be deleted.
+- `MsgVote`: casts or changes the signer's (`voter`) ballot: `YES`, `NO` or `ABSTAIN`. Rules:
+  - The proposal must be in voting, and the block time strictly before its `voting_end`.
+  - Weight: in a `static-list` DAO, 1 if the voter is on the DAO's member list now; in a `stake` DAO, the voter's stake in each source the proposal pinned, counting only stake with no join record or one strictly below the proposal's submit height. Zero weight is refused.
+  - Voting again with another option replaces the ballot at the voter's current weight, so stake added since the last vote counts; the same option twice is refused.
+  - Exiting a staking reward or Denom Reward takes its share out of the voter's ballots on every proposal in voting (`EventBallotReduced`). Rejoining does not bring it back on those proposals.
 - `MsgUpdateParams` **(authority)**: replaces the module parameters. Reserved for the module authority (governance).
 
 Example (CLI):
@@ -76,6 +82,9 @@ bzed tx dao withdraw-admin-nomination 1 --from admin
 # from the DAO address); several messages are several arguments
 bzed tx dao submit-proposal 1 "Fund tooling" msg.json --summary "Pays the tooling team" --from member
 
+# As a member of DAO 1, vote YES on proposal 1; voting again with NO replaces the ballot
+bzed tx dao vote 1 YES --from member
+
 # Submit a governance proposal that sets the module parameters (all of them)
 bzed tx dao update-params \
   '{"max_sr_per_dao":"5","max_static_members":"128","max_open_proposals":"10","max_msgs_per_proposal":"16","max_proposal_bytes":"20000","max_title_len":"140","max_summary_len":"5000","min_voting_period":"3600s","max_voting_period":"7776000s","dao_creation_fee":{"denom":"ubze","amount":"50000000000"},"dao_creation_fee_destination":"burner","min_electorate_lock_days":5}' \
@@ -90,6 +99,8 @@ bzed tx dao update-params \
 - `bze.dao.EventAdminChanged{id, old_admin, new_admin}`, when a nominee accepts or the DAO is handed to its voters
 - `bze.dao.EventAdminNominationWithdrawn{id, nominee}`
 - `bze.dao.EventProposalSubmitted{id, dao_id, proposer, expedited, voting_end, denominator}`
+- `bze.dao.EventVote{proposal_id, voter, option, weight}`, on every vote and revote
+- `bze.dao.EventBallotReduced{proposal_id, voter, source, amount}`, when an exit takes a share out of a ballot
 
 ## Queries
 - `bzed query dao params` – show the module parameters.
