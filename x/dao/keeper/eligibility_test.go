@@ -409,6 +409,10 @@ func (suite *IntegrationTestSuite) TestVote_SharePerSource() {
 	}, ballot.Shares)
 	suite.requireTally(id, 0, 0, 60)
 	suite.requireInvariants(id, memberA)
+	// the event carries the ballot's weight, the sum of the shares
+	attrs := suite.lastVoteEvent()
+	suite.Require().Equal(`"ABSTAIN"`, attrs["option"])
+	suite.Require().Equal(`"60"`, attrs["weight"])
 
 	sr5 := types.StakingRewardSource("5")
 	delete(s.sr["5"], memberA.String())
