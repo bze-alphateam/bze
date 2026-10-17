@@ -100,8 +100,8 @@ func (k msgServer) JoinDenomReward(goCtx context.Context, msg *types.MsgJoinDeno
 		return nil, err
 	}
 
-	participant, found := k.GetDenomRewardParticipant(ctx, dr.StakingDenom, msg.Creator)
-	if found {
+	participant, topUp := k.GetDenomRewardParticipant(ctx, dr.StakingDenom, msg.Creator)
+	if topUp {
 		// existing position: settle every whole-unit prize at the CURRENT amount first (rule 6), then
 		// close every remaining interval to S. settleDenomParticipant leaves the index of a dust prize
 		// (positive pending truncating to zero) untouched so the fraction keeps accruing; but the
@@ -142,6 +142,15 @@ func (k msgServer) JoinDenomReward(goCtx context.Context, msg *types.MsgJoinDeno
 
 	k.SetDenomRewardParticipant(ctx, participant)
 	k.SetDenomReward(ctx, dr)
+
+	if topUp {
+		err = k.afterDenomRewardIncrease(ctx, dr.StakingDenom, msg.Creator, added, amtInt)
+	} else {
+		err = k.afterDenomRewardJoin(ctx, dr.StakingDenom, msg.Creator, added)
+	}
+	if err != nil {
+		return nil, err
+	}
 
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.DenomRewardJoinEvent{
@@ -250,6 +259,10 @@ func (k msgServer) ExitDenomReward(goCtx context.Context, msg *types.MsgExitDeno
 
 	dr.StakedAmount = dr.StakedAmount.Sub(participant.Amount)
 	k.SetDenomReward(ctx, dr)
+
+	if err := k.afterDenomRewardExit(ctx, dr.StakingDenom, participant.Address, participant.Amount); err != nil {
+		return nil, err
+	}
 
 	err := ctx.EventManager().EmitTypedEvent(
 		&types.DenomRewardExitEvent{
