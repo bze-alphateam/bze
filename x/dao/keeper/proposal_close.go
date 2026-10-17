@@ -12,7 +12,7 @@ import (
 
 // leaveVoting undoes what a proposal in voting holds: the pin on each of its
 // sources (I4) and its open marker. Every path that ends VOTING (cancel,
-// settlement, DAO deletion) calls it exactly once per proposal.
+// settlement) calls it exactly once per proposal.
 func (k Keeper) leaveVoting(ctx sdk.Context, proposal types.Proposal) {
 	for _, source := range electorateSources(proposal.PinnedElectorate) {
 		k.unpinSource(ctx, source)
@@ -23,8 +23,8 @@ func (k Keeper) leaveVoting(ctx sdk.Context, proposal types.Proposal) {
 
 // releaseDeposit sends the proposal's escrowed deposit out of the module
 // account: back to the proposer on a refund, otherwise to the
-// kept_deposit_destination of the pinned config. A kept deposit of a DAO that
-// no longer exists is burned. A proposal without a deposit releases nothing.
+// kept_deposit_destination of the pinned config. A proposal without a deposit
+// releases nothing.
 func (k Keeper) releaseDeposit(ctx sdk.Context, proposal types.Proposal, refund bool) error {
 	deposit := proposal.PinnedDeposit
 	if deposit == nil || !deposit.IsPositive() {
@@ -36,12 +36,11 @@ func (k Keeper) releaseDeposit(ctx sdk.Context, proposal types.Proposal, refund 
 		destination sdk.AccAddress
 		err         error
 	)
-	_, daoExists := k.GetDao(ctx, proposal.DaoId)
 	switch {
 	case refund:
 		destination = sdk.MustAccAddressFromBech32(proposal.Proposer)
 		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destination, coins)
-	case proposal.PinnedConfig.KeptDepositDestination == types.FundsDestination_TREASURY && daoExists:
+	case proposal.PinnedConfig.KeptDepositDestination == types.FundsDestination_TREASURY:
 		destination = types.DaoAddress(proposal.DaoId)
 		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destination, coins)
 	default:
