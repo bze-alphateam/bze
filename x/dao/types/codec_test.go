@@ -100,3 +100,12 @@ func TestRegisterInterfaces_RegistersMsgCleanupProposal(t *testing.T) {
 	require.NoError(t, err)
 	require.IsType(t, &types.MsgCleanupProposal{}, msg)
 }
+
+func TestRegisterInterfaces_RegistersMsgUpdateDaoConfig(t *testing.T) {
+	registry := codectypes.NewInterfaceRegistry()
+	types.RegisterInterfaces(registry)
+
+	msg, err := registry.Resolve("/bze.dao.MsgUpdateDaoConfig")
+	require.NoError(t, err)
+	require.IsType(t, &types.MsgUpdateDaoConfig{}, msg)
+}
