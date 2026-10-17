@@ -62,8 +62,15 @@ func (k msgServer) CreateDao(goCtx context.Context, msg *types.MsgCreateDao) (*t
 		return nil, err
 	}
 
-	if existing == nil {
+	switch existing.(type) {
+	case nil:
 		k.accountKeeper.SetAccount(ctx, k.accountKeeper.NewAccountWithAddress(ctx, daoAddr))
+	case *authtypes.BaseAccount:
+		// reused as is
+	default:
+		// e.g. a vesting account sent to the predictable address to block the DAO:
+		// it becomes a plain account, and its coins the DAO's treasury
+		k.accountKeeper.SetAccount(ctx, authtypes.NewBaseAccount(daoAddr, nil, existing.GetAccountNumber(), existing.GetSequence()))
 	}
 
 	k.SetDaoCounter(ctx, daoId)
@@ -82,21 +89,23 @@ func (k msgServer) CreateDao(goCtx context.Context, msg *types.MsgCreateDao) (*t
 	return &types.MsgCreateDaoResponse{Id: dao.Id, Address: dao.Address}, nil
 }
 
-// checkDaoAccount accepts no account or a plain BaseAccount without a public key
-// (e.g. one created by funds sent to the address ahead of the DAO). An account
-// with a public key, or of any other kind, aborts the creation. Derived
+// checkDaoAccount accepts any account without a public key at the DAO address:
+// none, a BaseAccount (e.g. created by funds sent ahead of the DAO) or another
+// kind such as a vesting account, which CreateDao replaces with a BaseAccount so
+// nobody can block the next DAO by creating an account at its address. An
+// account with a public key, or a module account, aborts the creation. Derived
 // addresses have no private key, so this is a safety net, not an expected path.
 func checkDaoAccount(acc sdk.AccountI) error {
 	if acc == nil {
 		return nil
 	}
 
-	if _, ok := acc.(*authtypes.BaseAccount); !ok {
-		return errorsmod.Wrapf(types.ErrDaoAccountExists, "unexpected account type %T at %s", acc, acc.GetAddress())
-	}
-
 	if acc.GetPubKey() != nil {
 		return errorsmod.Wrapf(types.ErrDaoAccountExists, "account %s has a public key", acc.GetAddress())
+	}
+
+	if _, ok := acc.(sdk.ModuleAccountI); ok {
+		return errorsmod.Wrapf(types.ErrDaoAccountExists, "module account at %s", acc.GetAddress())
 	}
 
 	return nil

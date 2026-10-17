@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"go.uber.org/mock/gomock"
 
 	"github.com/bze-alphateam/bze/x/dao/types"
@@ -325,10 +326,54 @@ func (suite *IntegrationTestSuite) TestCreateDao_AccountWithPubKeyAborts() {
 	suite.Require().False(found)
 }
 
-// Any account kind other than a plain BaseAccount at the derived address aborts.
-func (suite *IntegrationTestSuite) TestCreateDao_NonBaseAccountAborts() {
+// A module account at the derived address aborts. It can't appear at a
+// dao-derived address; the check is a safety net.
+func (suite *IntegrationTestSuite) TestCreateDao_ModuleAccountAborts() {
 	addr := daoAddress(1)
 	acc := authtypes.NewModuleAccount(authtypes.NewBaseAccountWithAddress(addr), "squatter")
+	suite.acc.EXPECT().GetAccount(gomock.Any(), addr).Return(acc)
+
+	_, err := suite.msgServer.CreateDao(suite.ctx, validCreateDaoMsg())
+	suite.Require().ErrorIs(err, types.ErrDaoAccountExists)
+	suite.Require().Zero(suite.k.GetDaoCounter(suite.ctx))
+}
+
+// Anyone can create a vesting account at the predictable address of the next
+// DAO. It must not block the creation: the account is replaced with a plain
+// BaseAccount keeping its number and sequence, and its coins stay at the
+// address as the DAO's treasury.
+func (suite *IntegrationTestSuite) TestCreateDao_VestingAccountReplaced() {
+	addr := daoAddress(1)
+	coins := sdk.NewCoins(sdk.NewInt64Coin("ubze", 1))
+	base := authtypes.NewBaseAccount(addr, nil, 42, 3)
+	continuous, err := vestingtypes.NewContinuousVestingAccount(base, coins, 0, 1<<40)
+	suite.Require().NoError(err)
+	locked, err := vestingtypes.NewPermanentLockedAccount(authtypes.NewBaseAccount(addr, nil, 42, 3), coins)
+	suite.Require().NoError(err)
+
+	for name, acc := range map[string]sdk.AccountI{"continuous": continuous, "permanent locked": locked} {
+		suite.Run(name, func() {
+			suite.SetupTest()
+			suite.acc.EXPECT().GetAccount(gomock.Any(), addr).Return(acc)
+			suite.acc.EXPECT().SetAccount(gomock.Any(), authtypes.NewBaseAccount(addr, nil, 42, 3))
+			suite.expectFee(burnerFeeCollector)
+
+			res, err := suite.msgServer.CreateDao(suite.ctx, validCreateDaoMsg())
+			suite.Require().NoError(err)
+			suite.Require().Equal(addr.String(), res.Address)
+			dao, found := suite.k.GetDao(suite.ctx, 1)
+			suite.Require().True(found)
+			suite.Require().Equal(addr.String(), dao.Address)
+			suite.Require().Equal(uint64(1), suite.k.GetDaoCounter(suite.ctx))
+		})
+	}
+}
+
+// A vesting account with a public key still aborts.
+func (suite *IntegrationTestSuite) TestCreateDao_VestingAccountWithPubKeyAborts() {
+	addr := daoAddress(1)
+	base := authtypes.NewBaseAccount(addr, secp256k1.GenPrivKey().PubKey(), 0, 0)
+	acc := &vestingtypes.PermanentLockedAccount{BaseVestingAccount: &vestingtypes.BaseVestingAccount{BaseAccount: base}}
 	suite.acc.EXPECT().GetAccount(gomock.Any(), addr).Return(acc)
 
 	_, err := suite.msgServer.CreateDao(suite.ctx, validCreateDaoMsg())
