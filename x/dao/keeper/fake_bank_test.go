@@ -12,11 +12,13 @@ import (
 const fakeSendEvent = "fake_bank_send"
 
 // fakeBank is an in-memory x/bank Msg service, so the executor's messages run
-// through a real router without a bank keeper. Only MsgSend is served.
+// through a real router without a bank keeper. MsgSend is served; MsgMultiSend
+// always panics, with panicWith when it is set.
 type fakeBank struct {
 	banktypes.UnimplementedMsgServer
 
-	balances map[string]sdk.Coins
+	balances  map[string]sdk.Coins
+	panicWith any
 }
 
 func newFakeBank() *fakeBank {
@@ -42,4 +44,12 @@ func (b *fakeBank) Send(goCtx context.Context, msg *banktypes.MsgSend) (*banktyp
 	sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvent(sdk.NewEvent(fakeSendEvent))
 
 	return &banktypes.MsgSendResponse{}, nil
+}
+
+func (b *fakeBank) MultiSend(context.Context, *banktypes.MsgMultiSend) (*banktypes.MsgMultiSendResponse, error) {
+	if b.panicWith != nil {
+		panic(b.panicWith)
+	}
+
+	panic("multi send exploded")
 }

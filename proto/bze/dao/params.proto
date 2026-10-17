@@ -32,6 +32,9 @@ message Params {
   google.protobuf.Duration min_voting_period = 8 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // max_voting_period is the longest voting (and expedited) period a DAO may configure.
   google.protobuf.Duration max_voting_period = 9 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // execution_window is how long after voting_end a failed execution can be
+  // retried; after it the proposal expires.
+  google.protobuf.Duration execution_window = 10 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // dao_creation_fee is charged to the creator of a DAO; a zero amount makes creation free.
   cosmos.base.v1beta1.Coin dao_creation_fee = 12 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // dao_creation_fee_destination is "burner" or "community_pool".
