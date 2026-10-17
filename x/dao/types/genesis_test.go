@@ -151,7 +151,8 @@ func TestGenesisState_Validate(t *testing.T) {
 		{desc: "duplicate ballot", mutate: func(gs *types.GenesisState) { gs.Ballots = append(gs.Ballots, gs.Ballots[0]) }, wantErr: "duplicate ballot of " + member + " on proposal 3"},
 		{desc: "ballot of an unknown proposal", mutate: func(gs *types.GenesisState) { gs.Ballots[0].ProposalId = 4 }, wantErr: "ballot of " + member + " on unknown proposal 4"},
 		{desc: "invalid voter", mutate: func(gs *types.GenesisState) { gs.Ballots[0].Voter = "bad" }, wantErr: "invalid voter address"},
-		{desc: "unknown option", mutate: func(gs *types.GenesisState) { gs.Ballots[0].Option = 3 }, wantErr: "unknown option 3"},
+		{desc: "unset option", mutate: func(gs *types.GenesisState) { gs.Ballots[0].Option = types.VoteOption_VOTE_OPTION_UNSPECIFIED }, wantErr: "option is not set"},
+		{desc: "unknown option", mutate: func(gs *types.GenesisState) { gs.Ballots[0].Option = 4 }, wantErr: "unknown option 4"},
 		{desc: "negative weight", mutate: func(gs *types.GenesisState) { gs.Ballots[0].Weight = math.NewInt(-1) }, wantErr: "weight must be a non-negative integer"},
 		{desc: "vote-index leftover of a finished proposal", mutate: func(gs *types.GenesisState) {
 			gs.VoteIndex = []types.VoteIndexEntry{{Source: "sr/1", Address: member, ProposalId: 9}}

@@ -148,6 +148,10 @@ func validateGenesisBallot(ballot Ballot, daoType DaoType, pinned *StakeElectora
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid voter address (%s)", err)
 	}
 
+	if ballot.Option == VoteOption_VOTE_OPTION_UNSPECIFIED {
+		return fmt.Errorf("option is not set")
+	}
+
 	if _, ok := VoteOption_name[int32(ballot.Option)]; !ok {
 		return fmt.Errorf("unknown option %d", ballot.Option)
 	}
