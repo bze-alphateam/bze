@@ -9540,6 +9540,980 @@ func (x *fastReflection_MsgSettleProposalResponse) ProtoMethods() *protoiface.Me
 	}
 }
 
+var (
+	md_MsgCleanupProposal             protoreflect.MessageDescriptor
+	fd_MsgCleanupProposal_sender      protoreflect.FieldDescriptor
+	fd_MsgCleanupProposal_proposal_id protoreflect.FieldDescriptor
+	fd_MsgCleanupProposal_limit       protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_dao_tx_proto_init()
+	md_MsgCleanupProposal = File_bze_dao_tx_proto.Messages().ByName("MsgCleanupProposal")
+	fd_MsgCleanupProposal_sender = md_MsgCleanupProposal.Fields().ByName("sender")
+	fd_MsgCleanupProposal_proposal_id = md_MsgCleanupProposal.Fields().ByName("proposal_id")
+	fd_MsgCleanupProposal_limit = md_MsgCleanupProposal.Fields().ByName("limit")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgCleanupProposal)(nil)
+
+type fastReflection_MsgCleanupProposal MsgCleanupProposal
+
+func (x *MsgCleanupProposal) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCleanupProposal)(x)
+}
+
+func (x *MsgCleanupProposal) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_dao_tx_proto_msgTypes[20]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgCleanupProposal_messageType fastReflection_MsgCleanupProposal_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCleanupProposal_messageType{}
+
+type fastReflection_MsgCleanupProposal_messageType struct{}
+
+func (x fastReflection_MsgCleanupProposal_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCleanupProposal)(nil)
+}
+func (x fastReflection_MsgCleanupProposal_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCleanupProposal)
+}
+func (x fastReflection_MsgCleanupProposal_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCleanupProposal
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgCleanupProposal) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCleanupProposal
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgCleanupProposal) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCleanupProposal_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgCleanupProposal) New() protoreflect.Message {
+	return new(fastReflection_MsgCleanupProposal)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgCleanupProposal) Interface() protoreflect.ProtoMessage {
+	return (*MsgCleanupProposal)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgCleanupProposal) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Sender != "" {
+		value := protoreflect.ValueOfString(x.Sender)
+		if !f(fd_MsgCleanupProposal_sender, value) {
+			return
+		}
+	}
+	if x.ProposalId != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ProposalId)
+		if !f(fd_MsgCleanupProposal_proposal_id, value) {
+			return
+		}
+	}
+	if x.Limit != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Limit)
+		if !f(fd_MsgCleanupProposal_limit, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgCleanupProposal) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.dao.MsgCleanupProposal.sender":
+		return x.Sender != ""
+	case "bze.dao.MsgCleanupProposal.proposal_id":
+		return x.ProposalId != uint64(0)
+	case "bze.dao.MsgCleanupProposal.limit":
+		return x.Limit != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgCleanupProposal"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgCleanupProposal does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCleanupProposal) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.dao.MsgCleanupProposal.sender":
+		x.Sender = ""
+	case "bze.dao.MsgCleanupProposal.proposal_id":
+		x.ProposalId = uint64(0)
+	case "bze.dao.MsgCleanupProposal.limit":
+		x.Limit = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgCleanupProposal"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgCleanupProposal does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgCleanupProposal) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.dao.MsgCleanupProposal.sender":
+		value := x.Sender
+		return protoreflect.ValueOfString(value)
+	case "bze.dao.MsgCleanupProposal.proposal_id":
+		value := x.ProposalId
+		return protoreflect.ValueOfUint64(value)
+	case "bze.dao.MsgCleanupProposal.limit":
+		value := x.Limit
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgCleanupProposal"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgCleanupProposal does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCleanupProposal) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.dao.MsgCleanupProposal.sender":
+		x.Sender = value.Interface().(string)
+	case "bze.dao.MsgCleanupProposal.proposal_id":
+		x.ProposalId = value.Uint()
+	case "bze.dao.MsgCleanupProposal.limit":
+		x.Limit = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgCleanupProposal"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgCleanupProposal does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCleanupProposal) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.dao.MsgCleanupProposal.sender":
+		panic(fmt.Errorf("field sender of message bze.dao.MsgCleanupProposal is not mutable"))
+	case "bze.dao.MsgCleanupProposal.proposal_id":
+		panic(fmt.Errorf("field proposal_id of message bze.dao.MsgCleanupProposal is not mutable"))
+	case "bze.dao.MsgCleanupProposal.limit":
+		panic(fmt.Errorf("field limit of message bze.dao.MsgCleanupProposal is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgCleanupProposal"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgCleanupProposal does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgCleanupProposal) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.dao.MsgCleanupProposal.sender":
+		return protoreflect.ValueOfString("")
+	case "bze.dao.MsgCleanupProposal.proposal_id":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "bze.dao.MsgCleanupProposal.limit":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgCleanupProposal"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgCleanupProposal does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgCleanupProposal) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.dao.MsgCleanupProposal", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgCleanupProposal) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCleanupProposal) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgCleanupProposal) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgCleanupProposal) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgCleanupProposal)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Sender)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.ProposalId != 0 {
+			n += 1 + runtime.Sov(uint64(x.ProposalId))
+		}
+		if x.Limit != 0 {
+			n += 1 + runtime.Sov(uint64(x.Limit))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCleanupProposal)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Limit != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Limit))
+			i--
+			dAtA[i] = 0x18
+		}
+		if x.ProposalId != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.ProposalId))
+			i--
+			dAtA[i] = 0x10
+		}
+		if len(x.Sender) > 0 {
+			i -= len(x.Sender)
+			copy(dAtA[i:], x.Sender)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Sender)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCleanupProposal)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCleanupProposal: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCleanupProposal: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Sender", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Sender = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ProposalId", wireType)
+				}
+				x.ProposalId = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.ProposalId |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Limit", wireType)
+				}
+				x.Limit = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Limit |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgCleanupProposalResponse           protoreflect.MessageDescriptor
+	fd_MsgCleanupProposalResponse_processed protoreflect.FieldDescriptor
+	fd_MsgCleanupProposalResponse_completed protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_dao_tx_proto_init()
+	md_MsgCleanupProposalResponse = File_bze_dao_tx_proto.Messages().ByName("MsgCleanupProposalResponse")
+	fd_MsgCleanupProposalResponse_processed = md_MsgCleanupProposalResponse.Fields().ByName("processed")
+	fd_MsgCleanupProposalResponse_completed = md_MsgCleanupProposalResponse.Fields().ByName("completed")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgCleanupProposalResponse)(nil)
+
+type fastReflection_MsgCleanupProposalResponse MsgCleanupProposalResponse
+
+func (x *MsgCleanupProposalResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCleanupProposalResponse)(x)
+}
+
+func (x *MsgCleanupProposalResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_dao_tx_proto_msgTypes[21]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgCleanupProposalResponse_messageType fastReflection_MsgCleanupProposalResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCleanupProposalResponse_messageType{}
+
+type fastReflection_MsgCleanupProposalResponse_messageType struct{}
+
+func (x fastReflection_MsgCleanupProposalResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCleanupProposalResponse)(nil)
+}
+func (x fastReflection_MsgCleanupProposalResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCleanupProposalResponse)
+}
+func (x fastReflection_MsgCleanupProposalResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCleanupProposalResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgCleanupProposalResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCleanupProposalResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgCleanupProposalResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCleanupProposalResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgCleanupProposalResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgCleanupProposalResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgCleanupProposalResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgCleanupProposalResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgCleanupProposalResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Processed != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Processed)
+		if !f(fd_MsgCleanupProposalResponse_processed, value) {
+			return
+		}
+	}
+	if x.Completed != false {
+		value := protoreflect.ValueOfBool(x.Completed)
+		if !f(fd_MsgCleanupProposalResponse_completed, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgCleanupProposalResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.dao.MsgCleanupProposalResponse.processed":
+		return x.Processed != uint64(0)
+	case "bze.dao.MsgCleanupProposalResponse.completed":
+		return x.Completed != false
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgCleanupProposalResponse"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgCleanupProposalResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCleanupProposalResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.dao.MsgCleanupProposalResponse.processed":
+		x.Processed = uint64(0)
+	case "bze.dao.MsgCleanupProposalResponse.completed":
+		x.Completed = false
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgCleanupProposalResponse"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgCleanupProposalResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgCleanupProposalResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.dao.MsgCleanupProposalResponse.processed":
+		value := x.Processed
+		return protoreflect.ValueOfUint64(value)
+	case "bze.dao.MsgCleanupProposalResponse.completed":
+		value := x.Completed
+		return protoreflect.ValueOfBool(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgCleanupProposalResponse"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgCleanupProposalResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCleanupProposalResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.dao.MsgCleanupProposalResponse.processed":
+		x.Processed = value.Uint()
+	case "bze.dao.MsgCleanupProposalResponse.completed":
+		x.Completed = value.Bool()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgCleanupProposalResponse"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgCleanupProposalResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCleanupProposalResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.dao.MsgCleanupProposalResponse.processed":
+		panic(fmt.Errorf("field processed of message bze.dao.MsgCleanupProposalResponse is not mutable"))
+	case "bze.dao.MsgCleanupProposalResponse.completed":
+		panic(fmt.Errorf("field completed of message bze.dao.MsgCleanupProposalResponse is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgCleanupProposalResponse"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgCleanupProposalResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgCleanupProposalResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.dao.MsgCleanupProposalResponse.processed":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "bze.dao.MsgCleanupProposalResponse.completed":
+		return protoreflect.ValueOfBool(false)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.MsgCleanupProposalResponse"))
+		}
+		panic(fmt.Errorf("message bze.dao.MsgCleanupProposalResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgCleanupProposalResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.dao.MsgCleanupProposalResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgCleanupProposalResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCleanupProposalResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgCleanupProposalResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgCleanupProposalResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgCleanupProposalResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Processed != 0 {
+			n += 1 + runtime.Sov(uint64(x.Processed))
+		}
+		if x.Completed {
+			n += 2
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCleanupProposalResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Completed {
+			i--
+			if x.Completed {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
+			}
+			i--
+			dAtA[i] = 0x10
+		}
+		if x.Processed != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Processed))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCleanupProposalResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCleanupProposalResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCleanupProposalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Processed", wireType)
+				}
+				x.Processed = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Processed |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Completed", wireType)
+				}
+				var v int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				x.Completed = bool(v != 0)
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -10422,6 +11396,106 @@ func (x *MsgSettleProposalResponse) GetStatus() ProposalStatus {
 	return ProposalStatus_VOTING
 }
 
+// MsgCleanupProposal is the Msg/CleanupProposal request type.
+type MsgCleanupProposal struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Sender     string `protobuf:"bytes,1,opt,name=sender,proto3" json:"sender,omitempty"`
+	ProposalId uint64 `protobuf:"varint,2,opt,name=proposal_id,json=proposalId,proto3" json:"proposal_id,omitempty"`
+	// limit caps the ballots deleted by this message; 0 or anything above the
+	// cleanup_batch_size param means cleanup_batch_size.
+	Limit uint64 `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
+}
+
+func (x *MsgCleanupProposal) Reset() {
+	*x = MsgCleanupProposal{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_dao_tx_proto_msgTypes[20]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgCleanupProposal) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgCleanupProposal) ProtoMessage() {}
+
+// Deprecated: Use MsgCleanupProposal.ProtoReflect.Descriptor instead.
+func (*MsgCleanupProposal) Descriptor() ([]byte, []int) {
+	return file_bze_dao_tx_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *MsgCleanupProposal) GetSender() string {
+	if x != nil {
+		return x.Sender
+	}
+	return ""
+}
+
+func (x *MsgCleanupProposal) GetProposalId() uint64 {
+	if x != nil {
+		return x.ProposalId
+	}
+	return 0
+}
+
+func (x *MsgCleanupProposal) GetLimit() uint64 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+// MsgCleanupProposalResponse is the Msg/CleanupProposal response type.
+type MsgCleanupProposalResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// processed is the number of ballots deleted.
+	Processed uint64 `protobuf:"varint,1,opt,name=processed,proto3" json:"processed,omitempty"`
+	// completed is true when no ballots remained and the proposal was deleted.
+	Completed bool `protobuf:"varint,2,opt,name=completed,proto3" json:"completed,omitempty"`
+}
+
+func (x *MsgCleanupProposalResponse) Reset() {
+	*x = MsgCleanupProposalResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_dao_tx_proto_msgTypes[21]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgCleanupProposalResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgCleanupProposalResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgCleanupProposalResponse.ProtoReflect.Descriptor instead.
+func (*MsgCleanupProposalResponse) Descriptor() ([]byte, []int) {
+	return file_bze_dao_tx_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *MsgCleanupProposalResponse) GetProcessed() uint64 {
+	if x != nil {
+		return x.Processed
+	}
+	return 0
+}
+
+func (x *MsgCleanupProposalResponse) GetCompleted() bool {
+	if x != nil {
+		return x.Completed
+	}
+	return false
+}
+
 var File_bze_dao_tx_proto protoreflect.FileDescriptor
 
 var file_bze_dao_tx_proto_rawDesc = []byte{
@@ -10588,67 +11662,88 @@ var file_bze_dao_tx_proto_rawDesc = []byte{
 	0x73, 0x65, 0x12, 0x2f, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x0e, 0x32, 0x17, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x50, 0x72, 0x6f,
 	0x70, 0x6f, 0x73, 0x61, 0x6c, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74, 0x61,
-	0x74, 0x75, 0x73, 0x32, 0xb4, 0x06, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x4a, 0x0a, 0x0c, 0x55,
-	0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x18, 0x2e, 0x62, 0x7a,
-	0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x1a, 0x20, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e,
-	0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x41, 0x0a, 0x09, 0x43, 0x72, 0x65, 0x61, 0x74,
-	0x65, 0x44, 0x61, 0x6f, 0x12, 0x15, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d,
-	0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x44, 0x61, 0x6f, 0x1a, 0x1d, 0x2e, 0x62, 0x7a,
-	0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x44,
-	0x61, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4a, 0x0a, 0x0c, 0x41, 0x64,
-	0x6d, 0x69, 0x6e, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x12, 0x18, 0x2e, 0x62, 0x7a, 0x65,
-	0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45, 0x78, 0x65,
-	0x63, 0x75, 0x74, 0x65, 0x1a, 0x20, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d,
-	0x73, 0x67, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4d, 0x0a, 0x0d, 0x4e, 0x6f, 0x6d, 0x69, 0x6e, 0x61,
-	0x74, 0x65, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x19, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61,
-	0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x4e, 0x6f, 0x6d, 0x69, 0x6e, 0x61, 0x74, 0x65, 0x41, 0x64, 0x6d,
-	0x69, 0x6e, 0x1a, 0x21, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67,
-	0x4e, 0x6f, 0x6d, 0x69, 0x6e, 0x61, 0x74, 0x65, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x65, 0x0a, 0x15, 0x41, 0x63, 0x63, 0x65, 0x70, 0x74, 0x41,
-	0x64, 0x6d, 0x69, 0x6e, 0x4e, 0x6f, 0x6d, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x21,
-	0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x63, 0x63, 0x65,
-	0x70, 0x74, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4e, 0x6f, 0x6d, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x1a, 0x29, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x41,
-	0x63, 0x63, 0x65, 0x70, 0x74, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4e, 0x6f, 0x6d, 0x69, 0x6e, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6b, 0x0a, 0x17,
-	0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4e, 0x6f, 0x6d,
-	0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x23, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61,
-	0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x41, 0x64, 0x6d,
-	0x69, 0x6e, 0x4e, 0x6f, 0x6d, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x1a, 0x2b, 0x2e, 0x62,
-	0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72,
-	0x61, 0x77, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4e, 0x6f, 0x6d, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x50, 0x0a, 0x0e, 0x53, 0x75, 0x62,
-	0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x1a, 0x2e, 0x62, 0x7a,
-	0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x50,
-	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a, 0x22, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61,
-	0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f,
-	0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x32, 0x0a, 0x04, 0x56,
-	0x6f, 0x74, 0x65, 0x12, 0x10, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73,
-	0x67, 0x56, 0x6f, 0x74, 0x65, 0x1a, 0x18, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e,
-	0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x50, 0x0a, 0x0e, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61,
-	0x6c, 0x12, 0x1a, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x43,
-	0x61, 0x6e, 0x63, 0x65, 0x6c, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a, 0x22, 0x2e,
-	0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63, 0x65,
-	0x6c, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x50, 0x0a, 0x0e, 0x53, 0x65, 0x74, 0x74, 0x6c, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f,
+	0x74, 0x75, 0x73, 0x22, 0xab, 0x01, 0x0a, 0x12, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x65, 0x61, 0x6e,
+	0x75, 0x70, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x30, 0x0a, 0x06, 0x73, 0x65,
+	0x6e, 0x64, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
+	0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x73, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x12, 0x1f, 0x0a, 0x0b,
+	0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x04, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x49, 0x64, 0x12, 0x14, 0x0a,
+	0x05, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x6c, 0x69,
+	0x6d, 0x69, 0x74, 0x3a, 0x2c, 0x82, 0xe7, 0xb0, 0x2a, 0x06, 0x73, 0x65, 0x6e, 0x64, 0x65, 0x72,
+	0x8a, 0xe7, 0xb0, 0x2a, 0x1c, 0x62, 0x7a, 0x65, 0x2f, 0x78, 0x2f, 0x64, 0x61, 0x6f, 0x2f, 0x4d,
+	0x73, 0x67, 0x43, 0x6c, 0x65, 0x61, 0x6e, 0x75, 0x70, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61,
+	0x6c, 0x22, 0x58, 0x0a, 0x1a, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x65, 0x61, 0x6e, 0x75, 0x70, 0x50,
+	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x1c, 0x0a, 0x09, 0x70, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x65, 0x64, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x04, 0x52, 0x09, 0x70, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x65, 0x64, 0x12, 0x1c, 0x0a,
+	0x09, 0x63, 0x6f, 0x6d, 0x70, 0x6c, 0x65, 0x74, 0x65, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08,
+	0x52, 0x09, 0x63, 0x6f, 0x6d, 0x70, 0x6c, 0x65, 0x74, 0x65, 0x64, 0x32, 0x89, 0x07, 0x0a, 0x03,
+	0x4d, 0x73, 0x67, 0x12, 0x4a, 0x0a, 0x0c, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x12, 0x18, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73,
+	0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x1a, 0x20, 0x2e,
+	0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x41, 0x0a, 0x09, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x44, 0x61, 0x6f, 0x12, 0x15, 0x2e, 0x62,
+	0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x44, 0x61, 0x6f, 0x1a, 0x1d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73,
+	0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x44, 0x61, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x4a, 0x0a, 0x0c, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45, 0x78, 0x65, 0x63, 0x75,
+	0x74, 0x65, 0x12, 0x18, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67,
+	0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x1a, 0x20, 0x2e, 0x62,
+	0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x45,
+	0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4d,
+	0x0a, 0x0d, 0x4e, 0x6f, 0x6d, 0x69, 0x6e, 0x61, 0x74, 0x65, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x12,
+	0x19, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x4e, 0x6f, 0x6d,
+	0x69, 0x6e, 0x61, 0x74, 0x65, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x1a, 0x21, 0x2e, 0x62, 0x7a, 0x65,
+	0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x4e, 0x6f, 0x6d, 0x69, 0x6e, 0x61, 0x74, 0x65,
+	0x41, 0x64, 0x6d, 0x69, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x65, 0x0a,
+	0x15, 0x41, 0x63, 0x63, 0x65, 0x70, 0x74, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4e, 0x6f, 0x6d, 0x69,
+	0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x21, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f,
+	0x2e, 0x4d, 0x73, 0x67, 0x41, 0x63, 0x63, 0x65, 0x70, 0x74, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4e,
+	0x6f, 0x6d, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x1a, 0x29, 0x2e, 0x62, 0x7a, 0x65, 0x2e,
+	0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x63, 0x63, 0x65, 0x70, 0x74, 0x41, 0x64, 0x6d,
+	0x69, 0x6e, 0x4e, 0x6f, 0x6d, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6b, 0x0a, 0x17, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77,
+	0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4e, 0x6f, 0x6d, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12,
+	0x23, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74,
+	0x68, 0x64, 0x72, 0x61, 0x77, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4e, 0x6f, 0x6d, 0x69, 0x6e, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x1a, 0x2b, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d,
+	0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x41, 0x64, 0x6d, 0x69, 0x6e, 0x4e,
+	0x6f, 0x6d, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x50, 0x0a, 0x0e, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f,
 	0x73, 0x61, 0x6c, 0x12, 0x1a, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73,
-	0x67, 0x53, 0x65, 0x74, 0x74, 0x6c, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a,
-	0x22, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x65, 0x74,
-	0x74, 0x6c, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x7d, 0x0a, 0x0b, 0x63, 0x6f,
-	0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
-	0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62,
-	0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x64, 0x61, 0x6f, 0xa2, 0x02,
-	0x03, 0x42, 0x44, 0x58, 0xaa, 0x02, 0x07, 0x42, 0x7a, 0x65, 0x2e, 0x44, 0x61, 0x6f, 0xca, 0x02,
-	0x07, 0x42, 0x7a, 0x65, 0x5c, 0x44, 0x61, 0x6f, 0xe2, 0x02, 0x13, 0x42, 0x7a, 0x65, 0x5c, 0x44,
-	0x61, 0x6f, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02,
-	0x08, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x44, 0x61, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a,
+	0x22, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62,
+	0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x32, 0x0a, 0x04, 0x56, 0x6f, 0x74, 0x65, 0x12, 0x10, 0x2e, 0x62, 0x7a,
+	0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x1a, 0x18, 0x2e,
+	0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x56, 0x6f, 0x74, 0x65, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x50, 0x0a, 0x0e, 0x43, 0x61, 0x6e, 0x63, 0x65,
+	0x6c, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x1a, 0x2e, 0x62, 0x7a, 0x65, 0x2e,
+	0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x50, 0x72, 0x6f,
+	0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a, 0x22, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e,
+	0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61,
+	0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x50, 0x0a, 0x0e, 0x53, 0x65, 0x74,
+	0x74, 0x6c, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x1a, 0x2e, 0x62, 0x7a,
+	0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x65, 0x74, 0x74, 0x6c, 0x65, 0x50,
+	0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a, 0x22, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61,
+	0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x65, 0x74, 0x74, 0x6c, 0x65, 0x50, 0x72, 0x6f, 0x70, 0x6f,
+	0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x53, 0x0a, 0x0f, 0x43,
+	0x6c, 0x65, 0x61, 0x6e, 0x75, 0x70, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12, 0x1b,
+	0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x65, 0x61,
+	0x6e, 0x75, 0x70, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x1a, 0x23, 0x2e, 0x62, 0x7a,
+	0x65, 0x2e, 0x64, 0x61, 0x6f, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x65, 0x61, 0x6e, 0x75, 0x70,
+	0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x7d, 0x0a, 0x0b, 0x63, 0x6f, 0x6d, 0x2e, 0x62,
+	0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a,
+	0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f,
+	0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x64, 0x61, 0x6f, 0xa2, 0x02, 0x03, 0x42, 0x44,
+	0x58, 0xaa, 0x02, 0x07, 0x42, 0x7a, 0x65, 0x2e, 0x44, 0x61, 0x6f, 0xca, 0x02, 0x07, 0x42, 0x7a,
+	0x65, 0x5c, 0x44, 0x61, 0x6f, 0xe2, 0x02, 0x13, 0x42, 0x7a, 0x65, 0x5c, 0x44, 0x61, 0x6f, 0x5c,
+	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x08, 0x42, 0x7a,
+	0x65, 0x3a, 0x3a, 0x44, 0x61, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -10663,7 +11758,7 @@ func file_bze_dao_tx_proto_rawDescGZIP() []byte {
 	return file_bze_dao_tx_proto_rawDescData
 }
 
-var file_bze_dao_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_bze_dao_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_bze_dao_tx_proto_goTypes = []interface{}{
 	(*MsgUpdateParams)(nil),                    // 0: bze.dao.MsgUpdateParams
 	(*MsgUpdateParamsResponse)(nil),            // 1: bze.dao.MsgUpdateParamsResponse
@@ -10685,23 +11780,25 @@ var file_bze_dao_tx_proto_goTypes = []interface{}{
 	(*MsgCancelProposalResponse)(nil),          // 17: bze.dao.MsgCancelProposalResponse
 	(*MsgSettleProposal)(nil),                  // 18: bze.dao.MsgSettleProposal
 	(*MsgSettleProposalResponse)(nil),          // 19: bze.dao.MsgSettleProposalResponse
-	(*Params)(nil),                             // 20: bze.dao.Params
-	(DaoType)(0),                               // 21: bze.dao.DaoType
-	(*DaoConfig)(nil),                          // 22: bze.dao.DaoConfig
-	(*StakeElectorate)(nil),                    // 23: bze.dao.StakeElectorate
-	(*anypb.Any)(nil),                          // 24: google.protobuf.Any
-	(VoteOption)(0),                            // 25: bze.dao.VoteOption
-	(ProposalStatus)(0),                        // 26: bze.dao.ProposalStatus
+	(*MsgCleanupProposal)(nil),                 // 20: bze.dao.MsgCleanupProposal
+	(*MsgCleanupProposalResponse)(nil),         // 21: bze.dao.MsgCleanupProposalResponse
+	(*Params)(nil),                             // 22: bze.dao.Params
+	(DaoType)(0),                               // 23: bze.dao.DaoType
+	(*DaoConfig)(nil),                          // 24: bze.dao.DaoConfig
+	(*StakeElectorate)(nil),                    // 25: bze.dao.StakeElectorate
+	(*anypb.Any)(nil),                          // 26: google.protobuf.Any
+	(VoteOption)(0),                            // 27: bze.dao.VoteOption
+	(ProposalStatus)(0),                        // 28: bze.dao.ProposalStatus
 }
 var file_bze_dao_tx_proto_depIdxs = []int32{
-	20, // 0: bze.dao.MsgUpdateParams.params:type_name -> bze.dao.Params
-	21, // 1: bze.dao.MsgCreateDao.type:type_name -> bze.dao.DaoType
-	22, // 2: bze.dao.MsgCreateDao.config:type_name -> bze.dao.DaoConfig
-	23, // 3: bze.dao.MsgCreateDao.electorate:type_name -> bze.dao.StakeElectorate
-	24, // 4: bze.dao.MsgAdminExecute.msgs:type_name -> google.protobuf.Any
-	24, // 5: bze.dao.MsgSubmitProposal.msgs:type_name -> google.protobuf.Any
-	25, // 6: bze.dao.MsgVote.option:type_name -> bze.dao.VoteOption
-	26, // 7: bze.dao.MsgSettleProposalResponse.status:type_name -> bze.dao.ProposalStatus
+	22, // 0: bze.dao.MsgUpdateParams.params:type_name -> bze.dao.Params
+	23, // 1: bze.dao.MsgCreateDao.type:type_name -> bze.dao.DaoType
+	24, // 2: bze.dao.MsgCreateDao.config:type_name -> bze.dao.DaoConfig
+	25, // 3: bze.dao.MsgCreateDao.electorate:type_name -> bze.dao.StakeElectorate
+	26, // 4: bze.dao.MsgAdminExecute.msgs:type_name -> google.protobuf.Any
+	26, // 5: bze.dao.MsgSubmitProposal.msgs:type_name -> google.protobuf.Any
+	27, // 6: bze.dao.MsgVote.option:type_name -> bze.dao.VoteOption
+	28, // 7: bze.dao.MsgSettleProposalResponse.status:type_name -> bze.dao.ProposalStatus
 	0,  // 8: bze.dao.Msg.UpdateParams:input_type -> bze.dao.MsgUpdateParams
 	2,  // 9: bze.dao.Msg.CreateDao:input_type -> bze.dao.MsgCreateDao
 	4,  // 10: bze.dao.Msg.AdminExecute:input_type -> bze.dao.MsgAdminExecute
@@ -10712,18 +11809,20 @@ var file_bze_dao_tx_proto_depIdxs = []int32{
 	14, // 15: bze.dao.Msg.Vote:input_type -> bze.dao.MsgVote
 	16, // 16: bze.dao.Msg.CancelProposal:input_type -> bze.dao.MsgCancelProposal
 	18, // 17: bze.dao.Msg.SettleProposal:input_type -> bze.dao.MsgSettleProposal
-	1,  // 18: bze.dao.Msg.UpdateParams:output_type -> bze.dao.MsgUpdateParamsResponse
-	3,  // 19: bze.dao.Msg.CreateDao:output_type -> bze.dao.MsgCreateDaoResponse
-	5,  // 20: bze.dao.Msg.AdminExecute:output_type -> bze.dao.MsgAdminExecuteResponse
-	7,  // 21: bze.dao.Msg.NominateAdmin:output_type -> bze.dao.MsgNominateAdminResponse
-	9,  // 22: bze.dao.Msg.AcceptAdminNomination:output_type -> bze.dao.MsgAcceptAdminNominationResponse
-	11, // 23: bze.dao.Msg.WithdrawAdminNomination:output_type -> bze.dao.MsgWithdrawAdminNominationResponse
-	13, // 24: bze.dao.Msg.SubmitProposal:output_type -> bze.dao.MsgSubmitProposalResponse
-	15, // 25: bze.dao.Msg.Vote:output_type -> bze.dao.MsgVoteResponse
-	17, // 26: bze.dao.Msg.CancelProposal:output_type -> bze.dao.MsgCancelProposalResponse
-	19, // 27: bze.dao.Msg.SettleProposal:output_type -> bze.dao.MsgSettleProposalResponse
-	18, // [18:28] is the sub-list for method output_type
-	8,  // [8:18] is the sub-list for method input_type
+	20, // 18: bze.dao.Msg.CleanupProposal:input_type -> bze.dao.MsgCleanupProposal
+	1,  // 19: bze.dao.Msg.UpdateParams:output_type -> bze.dao.MsgUpdateParamsResponse
+	3,  // 20: bze.dao.Msg.CreateDao:output_type -> bze.dao.MsgCreateDaoResponse
+	5,  // 21: bze.dao.Msg.AdminExecute:output_type -> bze.dao.MsgAdminExecuteResponse
+	7,  // 22: bze.dao.Msg.NominateAdmin:output_type -> bze.dao.MsgNominateAdminResponse
+	9,  // 23: bze.dao.Msg.AcceptAdminNomination:output_type -> bze.dao.MsgAcceptAdminNominationResponse
+	11, // 24: bze.dao.Msg.WithdrawAdminNomination:output_type -> bze.dao.MsgWithdrawAdminNominationResponse
+	13, // 25: bze.dao.Msg.SubmitProposal:output_type -> bze.dao.MsgSubmitProposalResponse
+	15, // 26: bze.dao.Msg.Vote:output_type -> bze.dao.MsgVoteResponse
+	17, // 27: bze.dao.Msg.CancelProposal:output_type -> bze.dao.MsgCancelProposalResponse
+	19, // 28: bze.dao.Msg.SettleProposal:output_type -> bze.dao.MsgSettleProposalResponse
+	21, // 29: bze.dao.Msg.CleanupProposal:output_type -> bze.dao.MsgCleanupProposalResponse
+	19, // [19:30] is the sub-list for method output_type
+	8,  // [8:19] is the sub-list for method input_type
 	8,  // [8:8] is the sub-list for extension type_name
 	8,  // [8:8] is the sub-list for extension extendee
 	0,  // [0:8] is the sub-list for field type_name
@@ -10977,6 +12076,30 @@ func file_bze_dao_tx_proto_init() {
 				return nil
 			}
 		}
+		file_bze_dao_tx_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgCleanupProposal); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bze_dao_tx_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgCleanupProposalResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -10984,7 +12107,7 @@ func file_bze_dao_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_bze_dao_tx_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   20,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

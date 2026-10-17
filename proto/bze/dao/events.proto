@@ -114,3 +114,11 @@ message EventProposalExecuted {
   // error is a fixed reason on failure, never the raw error text.
   string error = 3;
 }
+
+// EventProposalCleaned is emitted by every cleanup batch of a finished
+// proposal; completed is true on the batch that deleted the proposal.
+message EventProposalCleaned {
+  uint64 id = 1;
+  uint64 processed = 2;
+  bool completed = 3;
+}
