@@ -490,6 +490,22 @@ func (suite *IntegrationTestSuite) TestSubmitProposal_NoVotingPowerRejected() {
 	suite.Require().ErrorIs(err, types.ErrNoVotingPower)
 }
 
+// lastVoteEvent returns the attributes of the last EventVote emitted.
+func (suite *IntegrationTestSuite) lastVoteEvent() map[string]string {
+	var attrs map[string]string
+	for _, event := range suite.ctx.EventManager().Events() {
+		if event.Type != proto.MessageName(&types.EventVote{}) {
+			continue
+		}
+		attrs = map[string]string{}
+		for _, attr := range event.Attributes {
+			attrs[attr.Key] = attr.Value
+		}
+	}
+
+	return attrs
+}
+
 // A member's vote is stored with weight 1, counted in the tally and announced.
 func (suite *IntegrationTestSuite) TestVote_StaticMemberVotes() {
 	suite.createStaticDao(noConfigChange)
@@ -504,16 +520,7 @@ func (suite *IntegrationTestSuite) TestVote_StaticMemberVotes() {
 	suite.requireTally(id, 0, 1, 0)
 	suite.requireInvariants(id, memberA, memberB)
 
-	var attrs map[string]string
-	for _, event := range suite.ctx.EventManager().Events() {
-		if event.Type != proto.MessageName(&types.EventVote{}) {
-			continue
-		}
-		attrs = map[string]string{}
-		for _, attr := range event.Attributes {
-			attrs[attr.Key] = attr.Value
-		}
-	}
+	attrs := suite.lastVoteEvent()
 	suite.Require().Equal(`"1"`, attrs["proposal_id"])
 	suite.Require().Equal(`"`+memberB.String()+`"`, attrs["voter"])
 	suite.Require().Equal(`"NO"`, attrs["option"])
