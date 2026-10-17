@@ -2,6 +2,9 @@ package keeper_test
 
 import (
 	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/bze-alphateam/bze/x/dao/types"
 )
@@ -105,4 +108,90 @@ func (suite *IntegrationTestSuite) TestRewardHooks_InvalidAddressNeverFails() {
 	suite.Require().NoError(sr.AfterStakingRewardExit(suite.ctx, "1", "bze1nope", math.NewInt(1), stakeDenom))
 	suite.Require().NoError(dr.AfterDenomRewardJoin(suite.ctx, stakeDenom, "bze1nope", math.NewInt(1)))
 	suite.Require().NoError(dr.AfterDenomRewardExit(suite.ctx, stakeDenom, "bze1nope", math.NewInt(1)))
+}
+
+// exitGas returns the gas the staking reward Exit hook of addr consumes.
+func (suite *IntegrationTestSuite) exitGas(addr sdk.AccAddress) uint64 {
+	ctx := suite.ctx.WithGasMeter(storetypes.NewInfiniteGasMeter())
+	suite.Require().NoError(suite.k.StakingRewardHooks().AfterStakingRewardExit(ctx, "1", addr.String(), math.NewInt(30), stakeDenom))
+
+	return ctx.GasMeter().GasConsumed()
+}
+
+// ballotReducedEvents counts the EventBallotReduced events emitted so far.
+func (suite *IntegrationTestSuite) ballotReducedEvents() int {
+	count := 0
+	for _, event := range suite.ctx.EventManager().Events() {
+		if event.Type == proto.MessageName(&types.EventBallotReduced{}) {
+			count++
+		}
+	}
+
+	return count
+}
+
+// D19: the Exit hook's cost depends on the leaving voter's own open ballots
+// only. Other voters' ballots on other proposals leave it unchanged; more
+// ballots of the voter make it grow, one reduction each.
+func (suite *IntegrationTestSuite) TestExitHook_D19_CostBoundedByOwnBallots() {
+	// setup creates three proposals; memberA votes on the first ownVotes of
+	// them, and crowd other stakers vote on the two others
+	setup := func(ownVotes, crowd int) {
+		suite.SetupTest()
+		s := suite.createStakeDao()
+		s.joinSr("1", memberA, 30)
+		for i := 0; i < crowd; i++ {
+			s.joinSr("1", memberAddress(i), 5)
+		}
+		suite.atBlock(10)
+		for p := 0; p < 3; p++ {
+			_, err := suite.submit(memberA, 1, false)
+			suite.Require().NoError(err)
+		}
+		for p := uint64(1); p <= uint64(ownVotes); p++ {
+			suite.Require().NoError(suite.vote(memberA, p, types.VoteOption_YES))
+		}
+		for i := 0; i < crowd; i++ {
+			suite.Require().NoError(suite.vote(memberAddress(i), 2, types.VoteOption_NO))
+			suite.Require().NoError(suite.vote(memberAddress(i), 3, types.VoteOption_YES))
+		}
+	}
+
+	setup(1, 0)
+	quiet := suite.exitGas(memberA)
+	suite.Require().Equal(1, suite.ballotReducedEvents())
+
+	setup(1, 40)
+	crowded := suite.exitGas(memberA)
+	suite.Require().Equal(1, suite.ballotReducedEvents())
+	suite.Require().Equal(quiet, crowded)
+	suite.requireTally(2, 0, 200, 0)
+	suite.requireTally(3, 200, 0, 0)
+
+	setup(3, 0)
+	busy := suite.exitGas(memberA)
+	suite.Require().Equal(3, suite.ballotReducedEvents())
+	suite.Require().Greater(busy, quiet)
+	for p := uint64(1); p <= 3; p++ {
+		suite.requireTally(p, 0, 0, 0)
+		suite.requireInvariants(p, memberA)
+	}
+}
+
+// An Exit of a source the voter's ballot does not count, or of a voter with
+// no ballot, leaves every ballot and tally as it is.
+func (suite *IntegrationTestSuite) TestExitHook_OtherSourceLeavesBallot() {
+	s := suite.createStakeDao()
+	s.joinSr("1", memberA, 30)
+	suite.atBlock(10)
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+
+	suite.Require().NoError(suite.k.DenomRewardHooks().AfterDenomRewardExit(suite.ctx, stakeDenom, memberA.String(), math.NewInt(5)))
+	suite.Require().NoError(suite.k.StakingRewardHooks().AfterStakingRewardExit(suite.ctx, "1", memberB.String(), math.NewInt(5), stakeDenom))
+
+	suite.requireTally(id, 30, 0, 0)
+	suite.Require().True(suite.k.HasVoteIndex(suite.ctx, srSource, memberA, id))
+	suite.Require().Equal(0, suite.ballotReducedEvents())
 }

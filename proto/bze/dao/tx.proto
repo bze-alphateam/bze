@@ -43,6 +43,9 @@ service Msg {
   // SubmitProposal opens a proposal of zero or more messages the DAO runs if it
   // passes. It pins the DAO's config, electorate and quorum denominator.
   rpc SubmitProposal (MsgSubmitProposal) returns (MsgSubmitProposalResponse);
+
+  // Vote casts or changes a ballot on a proposal in voting.
+  rpc Vote (MsgVote) returns (MsgVoteResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -165,3 +168,16 @@ message MsgSubmitProposal {
 message MsgSubmitProposalResponse {
   uint64 proposal_id = 1;
 }
+
+// MsgVote is the Msg/Vote request type.
+message MsgVote {
+  option (cosmos.msg.v1.signer) = "voter";
+  option (amino.name) = "bze/x/dao/MsgVote";
+
+  string voter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 proposal_id = 2;
+  VoteOption option = 3;
+}
+
+// MsgVoteResponse is the Msg/Vote response type.
+message MsgVoteResponse {}

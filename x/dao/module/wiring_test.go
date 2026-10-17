@@ -77,7 +77,7 @@ func TestAutoCLIOptions(t *testing.T) {
 	require.Equal(t, "params", opts.Query.RpcCommandOptions[0].Use)
 
 	require.Equal(t, "bze.dao.Msg", opts.Tx.Service)
-	require.Len(t, opts.Tx.RpcCommandOptions, 7)
+	require.Len(t, opts.Tx.RpcCommandOptions, 8)
 	updateParams := opts.Tx.RpcCommandOptions[0]
 	require.Equal(t, "UpdateParams", updateParams.RpcMethod)
 	require.Equal(t, "update-params [params]", updateParams.Use)
@@ -135,6 +135,14 @@ func TestAutoCLIOptions(t *testing.T) {
 	require.True(t, submitProposal.PositionalArgs[2].Varargs)
 	require.Contains(t, submitProposal.FlagOptions, "summary")
 	require.Contains(t, submitProposal.FlagOptions, "expedited")
+
+	vote := opts.Tx.RpcCommandOptions[7]
+	require.Equal(t, "Vote", vote.RpcMethod)
+	require.Equal(t, "vote [proposal-id] [option]", vote.Use)
+	require.False(t, vote.GovProposal)
+	require.Len(t, vote.PositionalArgs, 2)
+	require.Equal(t, "proposal_id", vote.PositionalArgs[0].ProtoField)
+	require.Equal(t, "option", vote.PositionalArgs[1].ProtoField)
 }
 
 // autocli reads the create-dao config argument as protojson into the api type
