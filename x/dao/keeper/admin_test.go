@@ -485,3 +485,107 @@ func (suite *IntegrationTestSuite) TestAcceptAdminNomination_DaoNomineeBecomesPa
 	suite.Require().True(found)
 	suite.Require().Equal(parent.String(), parentDao.Admin)
 }
+
+func (suite *IntegrationTestSuite) withdrawNomination(authority sdk.AccAddress, daoId uint64) error {
+	_, err := suite.msgServer.WithdrawAdminNomination(suite.ctx, types.NewMsgWithdrawAdminNomination(authority.String(), daoId))
+
+	return err
+}
+
+// D27: after a withdraw the nominee's accept fails and the admin stays in charge.
+func (suite *IntegrationTestSuite) TestWithdrawAdminNomination_NomineeCannotAccept() {
+	suite.createAdminDao()
+	suite.Require().NoError(suite.nominate(adminAddr, 1, successorAddr.String()))
+
+	suite.Require().NoError(suite.withdrawNomination(adminAddr, 1))
+
+	suite.requireAdminInvariant(adminAddr, "")
+	suite.Require().True(suite.hasEvent("bze.dao.EventAdminNominationWithdrawn"))
+	err := suite.accept(successorAddr, 1)
+	suite.Require().ErrorIs(err, types.ErrNoPendingNomination)
+	suite.requireAdminInvariant(adminAddr, "")
+	suite.Require().False(suite.hasEvent("bze.dao.EventAdminChanged"))
+}
+
+// D27: only the current admin withdraws; the nominee, the DAO account, members
+// and others are refused.
+func (suite *IntegrationTestSuite) TestWithdrawAdminNomination_NonAdminRejected() {
+	suite.createAdminDao()
+	suite.Require().NoError(suite.nominate(adminAddr, 1, successorAddr.String()))
+
+	for _, signer := range []sdk.AccAddress{successorAddr, daoAddress(1), memberA, creatorAddr, attackerAddr} {
+		err := suite.withdrawNomination(signer, 1)
+		suite.Require().ErrorIs(err, types.ErrNotDaoAdmin, signer.String())
+	}
+	suite.requireAdminInvariant(adminAddr, successorAddr.String())
+	suite.Require().False(suite.hasEvent("bze.dao.EventAdminNominationWithdrawn"))
+}
+
+// D27: there is nothing to withdraw without a pending nomination, also once
+// it was withdrawn.
+func (suite *IntegrationTestSuite) TestWithdrawAdminNomination_NoPendingRejected() {
+	suite.createAdminDao()
+
+	err := suite.withdrawNomination(adminAddr, 1)
+	suite.Require().ErrorIs(err, types.ErrNoPendingNomination)
+	suite.requireAdminInvariant(adminAddr, "")
+
+	suite.Require().NoError(suite.nominate(adminAddr, 1, successorAddr.String()))
+	suite.Require().NoError(suite.withdrawNomination(adminAddr, 1))
+	err = suite.withdrawNomination(adminAddr, 1)
+	suite.Require().ErrorIs(err, types.ErrNoPendingNomination)
+	suite.requireAdminInvariant(adminAddr, "")
+}
+
+// A nomination that was accepted cannot be withdrawn: the new admin has
+// nothing pending, and the former admin is no longer the admin.
+func (suite *IntegrationTestSuite) TestWithdrawAdminNomination_AfterAcceptRejected() {
+	suite.createAdminDao()
+	suite.Require().NoError(suite.nominate(adminAddr, 1, successorAddr.String()))
+	suite.Require().NoError(suite.accept(successorAddr, 1))
+
+	err := suite.withdrawNomination(adminAddr, 1)
+	suite.Require().ErrorIs(err, types.ErrNotDaoAdmin)
+	err = suite.withdrawNomination(successorAddr, 1)
+	suite.Require().ErrorIs(err, types.ErrNoPendingNomination)
+	suite.requireAdminInvariant(successorAddr, "")
+}
+
+func (suite *IntegrationTestSuite) TestWithdrawAdminNomination_UnknownDao() {
+	suite.createAdminDao()
+	suite.Require().NoError(suite.nominate(adminAddr, 1, successorAddr.String()))
+
+	err := suite.withdrawNomination(adminAddr, 2)
+
+	suite.Require().ErrorIs(err, types.ErrDaoNotFound)
+	suite.requireAdminInvariant(adminAddr, successorAddr.String())
+}
+
+// After a withdraw the admin nominates again, and the new nominee accepts.
+func (suite *IntegrationTestSuite) TestWithdrawAdminNomination_NewNominationAllowed() {
+	suite.createAdminDao()
+	suite.Require().NoError(suite.nominate(adminAddr, 1, attackerAddr.String()))
+	suite.Require().NoError(suite.withdrawNomination(adminAddr, 1))
+
+	suite.Require().NoError(suite.nominate(adminAddr, 1, successorAddr.String()))
+	suite.requireAdminInvariant(adminAddr, successorAddr.String())
+
+	err := suite.accept(attackerAddr, 1)
+	suite.Require().ErrorIs(err, types.ErrNotNominee)
+	suite.Require().NoError(suite.accept(successorAddr, 1))
+	suite.requireAdminInvariant(successorAddr, "")
+}
+
+// A self-owned DAO (signing through a passed proposal, called directly here)
+// withdraws its own nomination.
+func (suite *IntegrationTestSuite) TestWithdrawAdminNomination_SelfOwnedDaoWithdraws() {
+	suite.createAdminDao()
+	suite.Require().NoError(suite.nominate(adminAddr, 1, ""))
+	suite.Require().NoError(suite.nominate(daoAddress(1), 1, adminAddr.String()))
+
+	suite.Require().NoError(suite.withdrawNomination(daoAddress(1), 1))
+
+	suite.requireAdminInvariant(daoAddress(1), "")
+	err := suite.accept(adminAddr, 1)
+	suite.Require().ErrorIs(err, types.ErrNoPendingNomination)
+}

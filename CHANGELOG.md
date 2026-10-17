@@ -36,6 +36,7 @@ derived from it. History older than v8.0.0 lives in the
 * (x/dao) [#160](https://github.com/bze-alphateam/bze/pull/160) `MsgAdminExecute` (`bzed tx dao admin-execute`): the external admin of a DAO runs messages as the DAO, e.g. spends its treasury. Every message must be signed by the DAO account only; a failing message reverts them all; self-owned DAOs are refused. New params `max_msgs_per_proposal` (16) and `max_proposal_bytes` (20,000); event `EventAdminExecuted`.
 * (x/dao) [#161](https://github.com/bze-alphateam/bze/pull/161) `MsgNominateAdmin` (`bzed tx dao nominate-admin`): a DAO's admin nominates its successor (one pending nomination at a time; accepting comes in a later entry), or nominates nobody to hand the DAO to its own voters at once, which needs an electorate able to vote. Events `EventAdminNominated` and `EventAdminChanged`.
 * (x/dao) [#162](https://github.com/bze-alphateam/bze/pull/162) `MsgAcceptAdminNomination` (`bzed tx dao accept-admin-nomination`): the pending nominee accepts and becomes the DAO's admin, completing the two-step handover; the former admin loses its powers at once. A DAO nominee accepts through its own proposal or admin and becomes the parent of the other DAO.
+* (x/dao) [#163](https://github.com/bze-alphateam/bze/pull/163) `MsgWithdrawAdminNomination` (`bzed tx dao withdraw-admin-nomination`): the current admin cancels a pending handover before the nominee accepts it; the admin stays in charge and can nominate again.
 
 ### Improvements
 
