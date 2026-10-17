@@ -55,6 +55,10 @@ service Msg {
   // failed execution within the execution window and expires it afterwards.
   // Anyone can send it.
   rpc SettleProposal (MsgSettleProposal) returns (MsgSettleProposalResponse);
+
+  // CleanupProposal deletes a finished proposal's ballots in batches and, once
+  // none remain, the proposal itself. Anyone can send it.
+  rpc CleanupProposal (MsgCleanupProposal) returns (MsgCleanupProposalResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -216,4 +220,24 @@ message MsgSettleProposal {
 message MsgSettleProposalResponse {
   // status is the proposal's status after the settle.
   ProposalStatus status = 1;
+}
+
+// MsgCleanupProposal is the Msg/CleanupProposal request type.
+message MsgCleanupProposal {
+  option (cosmos.msg.v1.signer) = "sender";
+  option (amino.name) = "bze/x/dao/MsgCleanupProposal";
+
+  string sender = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 proposal_id = 2;
+  // limit caps the ballots deleted by this message; 0 or anything above the
+  // cleanup_batch_size param means cleanup_batch_size.
+  uint64 limit = 3;
+}
+
+// MsgCleanupProposalResponse is the Msg/CleanupProposal response type.
+message MsgCleanupProposalResponse {
+  // processed is the number of ballots deleted.
+  uint64 processed = 1;
+  // completed is true when no ballots remained and the proposal was deleted.
+  bool completed = 2;
 }

@@ -55,3 +55,44 @@ func (k Keeper) votedProposals(ctx context.Context, source []byte, addr sdk.AccA
 
 	return ids
 }
+
+// proposalBallots returns up to limit ballots of the proposal, in key order,
+// starting after the ballot of the voter named by cursor (from the first one
+// when cursor is empty), and whether more ballots follow them.
+func (k Keeper) proposalBallots(ctx context.Context, proposalId uint64, cursor string, limit uint64) (ballots []types.Ballot, more bool, err error) {
+	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.BallotKeyPrefix))
+	start := types.ProposalBallotsPrefix(proposalId)
+	if cursor != "" {
+		voter, err := sdk.AccAddressFromBech32(cursor)
+		if err != nil {
+			return nil, false, err
+		}
+		// the smallest key after the cursor's ballot
+		start = append(types.BallotKey(proposalId, voter), 0)
+	}
+
+	iterator := store.Iterator(start, storetypes.PrefixEndBytes(types.ProposalBallotsPrefix(proposalId)))
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		if uint64(len(ballots)) == limit {
+			return ballots, true, nil
+		}
+
+		var ballot types.Ballot
+		k.cdc.MustUnmarshal(iterator.Value(), &ballot)
+		ballots = append(ballots, ballot)
+	}
+
+	return ballots, false, nil
+}
+
+// removeBallot deletes a ballot and the vote-index entry of each of its shares.
+func (k Keeper) removeBallot(ctx context.Context, ballot types.Ballot) {
+	voter := sdk.MustAccAddressFromBech32(ballot.Voter)
+	for _, share := range ballot.Shares {
+		k.removeVoteIndex(ctx, []byte(share.Source), voter, ballot.ProposalId)
+	}
+
+	k.getPrefixedStore(ctx, types.KeyPrefix(types.BallotKeyPrefix)).Delete(types.BallotKey(ballot.ProposalId, voter))
+}

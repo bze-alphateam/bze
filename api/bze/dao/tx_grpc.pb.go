@@ -29,6 +29,7 @@ const (
 	Msg_Vote_FullMethodName                    = "/bze.dao.Msg/Vote"
 	Msg_CancelProposal_FullMethodName          = "/bze.dao.Msg/CancelProposal"
 	Msg_SettleProposal_FullMethodName          = "/bze.dao.Msg/SettleProposal"
+	Msg_CleanupProposal_FullMethodName         = "/bze.dao.Msg/CleanupProposal"
 )
 
 // MsgClient is the client API for Msg service.
@@ -66,6 +67,9 @@ type MsgClient interface {
 	// failed execution within the execution window and expires it afterwards.
 	// Anyone can send it.
 	SettleProposal(ctx context.Context, in *MsgSettleProposal, opts ...grpc.CallOption) (*MsgSettleProposalResponse, error)
+	// CleanupProposal deletes a finished proposal's ballots in batches and, once
+	// none remain, the proposal itself. Anyone can send it.
+	CleanupProposal(ctx context.Context, in *MsgCleanupProposal, opts ...grpc.CallOption) (*MsgCleanupProposalResponse, error)
 }
 
 type msgClient struct {
@@ -166,6 +170,15 @@ func (c *msgClient) SettleProposal(ctx context.Context, in *MsgSettleProposal, o
 	return out, nil
 }
 
+func (c *msgClient) CleanupProposal(ctx context.Context, in *MsgCleanupProposal, opts ...grpc.CallOption) (*MsgCleanupProposalResponse, error) {
+	out := new(MsgCleanupProposalResponse)
+	err := c.cc.Invoke(ctx, Msg_CleanupProposal_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -201,6 +214,9 @@ type MsgServer interface {
 	// failed execution within the execution window and expires it afterwards.
 	// Anyone can send it.
 	SettleProposal(context.Context, *MsgSettleProposal) (*MsgSettleProposalResponse, error)
+	// CleanupProposal deletes a finished proposal's ballots in batches and, once
+	// none remain, the proposal itself. Anyone can send it.
+	CleanupProposal(context.Context, *MsgCleanupProposal) (*MsgCleanupProposalResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -237,6 +253,9 @@ func (UnimplementedMsgServer) CancelProposal(context.Context, *MsgCancelProposal
 }
 func (UnimplementedMsgServer) SettleProposal(context.Context, *MsgSettleProposal) (*MsgSettleProposalResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SettleProposal not implemented")
+}
+func (UnimplementedMsgServer) CleanupProposal(context.Context, *MsgCleanupProposal) (*MsgCleanupProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CleanupProposal not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -431,6 +450,24 @@ func _Msg_SettleProposal_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CleanupProposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCleanupProposal)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CleanupProposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_CleanupProposal_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CleanupProposal(ctx, req.(*MsgCleanupProposal))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -477,6 +514,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SettleProposal",
 			Handler:    _Msg_SettleProposal_Handler,
+		},
+		{
+			MethodName: "CleanupProposal",
+			Handler:    _Msg_CleanupProposal_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

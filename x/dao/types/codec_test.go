@@ -91,3 +91,12 @@ func TestRegisterInterfaces_RegistersMsgSettleProposal(t *testing.T) {
 	require.NoError(t, err)
 	require.IsType(t, &types.MsgSettleProposal{}, msg)
 }
+
+func TestRegisterInterfaces_RegistersMsgCleanupProposal(t *testing.T) {
+	registry := codectypes.NewInterfaceRegistry()
+	types.RegisterInterfaces(registry)
+
+	msg, err := registry.Resolve("/bze.dao.MsgCleanupProposal")
+	require.NoError(t, err)
+	require.IsType(t, &types.MsgCleanupProposal{}, msg)
+}

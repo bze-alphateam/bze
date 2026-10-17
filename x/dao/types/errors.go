@@ -39,4 +39,5 @@ var (
 	ErrProposalFinished    = sdkerrors.Register(ModuleName, 1128, "the proposal is finished")
 	ErrExecutionPanic      = sdkerrors.Register(ModuleName, 1129, "a dao message panicked")
 	ErrExpediteBarNotMet   = sdkerrors.Register(ModuleName, 1130, "the expedited proposal does not meet the expedite bars yet")
+	ErrProposalNotFinished = sdkerrors.Register(ModuleName, 1131, "the proposal is not finished")
 )

@@ -799,6 +799,249 @@ func (suite *IntegrationTestSuite) TestCancelProposal_EscrowMatchesOpenDeposits(
 	suite.Require().Equal(open, escrow)
 }
 
+var cleanerAddr = sdk.AccAddress("dao_cleaner_________")
+
+func (suite *IntegrationTestSuite) cleanup(proposalId, limit uint64) (*types.MsgCleanupProposalResponse, error) {
+	return suite.msgServer.CleanupProposal(suite.ctx, types.NewMsgCleanupProposal(cleanerAddr.String(), proposalId, limit))
+}
+
+// votedStakeProposal creates stake DAO 1 over SR 1 (and the ubze DR when
+// withDr), has voters addresses stake 1 in each source and vote yes on one
+// proposal, and settles it EXECUTED.
+func (suite *IntegrationTestSuite) votedStakeProposal(voters int, withDr bool) uint64 {
+	state := defaultRewardsState()
+	state.srs["1"] = stakingReward("1", stakeDenom, 5, strconv.Itoa(voters))
+	state.drs[stakeDenom] = denomReward(stakeDenom, 5, int64(voters))
+	suite.stubRewards(state)
+	s := suite.stubStakes()
+	suite.expectCreation(1)
+	drDenom := ""
+	if withDr {
+		drDenom = stakeDenom
+	}
+	_, err := suite.msgServer.CreateDao(suite.ctx, validStakeDaoMsg([]string{"1"}, drDenom))
+	suite.Require().NoError(err)
+	for i := 1; i <= voters; i++ {
+		s.joinSr("1", memberAddress(i), 1)
+		if withDr {
+			s.joinDr(stakeDenom, memberAddress(i), 1)
+		}
+	}
+
+	suite.atBlock(10)
+	id, err := suite.submit(memberAddress(1), 1, false)
+	suite.Require().NoError(err)
+	for i := 1; i <= voters; i++ {
+		suite.Require().NoError(suite.vote(memberAddress(i), id, types.VoteOption_YES))
+	}
+
+	suite.endVoting(id, 0)
+	status, err := suite.settle(id)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
+
+	return id
+}
+
+// requireCleanupBatch runs one cleanup and checks its response and event.
+func (suite *IntegrationTestSuite) requireCleanupBatch(proposalId, limit, processed uint64, completed bool) {
+	suite.ctx = suite.ctx.WithEventManager(sdk.NewEventManager())
+	res, err := suite.cleanup(proposalId, limit)
+	suite.Require().NoError(err)
+	suite.Require().Equal(processed, res.Processed)
+	suite.Require().Equal(completed, res.Completed)
+
+	attrs := suite.lastEventAttrs(&types.EventProposalCleaned{})
+	suite.Require().Equal(`"`+strconv.FormatUint(proposalId, 10)+`"`, attrs["id"])
+	suite.Require().Equal(`"`+strconv.FormatUint(processed, 10)+`"`, attrs["processed"])
+	suite.Require().Equal(strconv.FormatBool(completed), attrs["completed"])
+}
+
+// requireBallots checks which of voters 1..total still have a ballot: exactly
+// those above deleted.
+func (suite *IntegrationTestSuite) requireBallots(proposalId uint64, deleted, total int) {
+	for i := 1; i <= total; i++ {
+		_, found := suite.k.GetBallot(suite.ctx, proposalId, memberAddress(i))
+		suite.Require().Equal(i > deleted, found, "voter %d", i)
+	}
+}
+
+// requireCleanedUp checks that the proposal, its DAO index entry and every
+// ballot of voters 1..total are gone.
+func (suite *IntegrationTestSuite) requireCleanedUp(daoId, proposalId uint64, total int) {
+	_, found := suite.k.GetProposal(suite.ctx, proposalId)
+	suite.Require().False(found)
+	suite.Require().False(suite.k.HasDaoProposalIndex(suite.ctx, daoId, proposalId))
+	suite.requireBallots(proposalId, total, total)
+}
+
+// D19 (cleanup part): 250 ballots with a batch of 100 take three calls, 100,
+// 100 and 50, the last one completing; a user limit above the param is capped.
+// The cursor only moves forward: each call deletes the next range in key order
+// and leaves the rest.
+func (suite *IntegrationTestSuite) TestCleanupProposal_D19_BatchesOf250() {
+	id := suite.votedStakeProposal(250, false)
+	suite.Require().Equal(types.DefaultCleanupBatchSize, suite.k.GetParams(suite.ctx).CleanupBatchSize)
+
+	suite.requireCleanupBatch(id, 1_000, 100, false)
+	suite.requireBallots(id, 100, 250)
+	proposal, found := suite.k.GetProposal(suite.ctx, id)
+	suite.Require().True(found)
+	suite.Require().Equal(memberAddress(100).String(), proposal.CleanupCursor)
+	suite.Require().Equal(types.ProposalStatus_EXECUTED, proposal.Status)
+	suite.Require().True(suite.k.HasDaoProposalIndex(suite.ctx, 1, id))
+
+	suite.requireCleanupBatch(id, 0, 100, false)
+	suite.requireBallots(id, 200, 250)
+	proposal, _ = suite.k.GetProposal(suite.ctx, id)
+	suite.Require().Equal(memberAddress(200).String(), proposal.CleanupCursor)
+
+	suite.requireCleanupBatch(id, 0, 50, true)
+	suite.requireCleanedUp(1, id, 250)
+}
+
+// A limit below the param is used as is; a batch that ends exactly on the
+// last ballot completes in the same call.
+func (suite *IntegrationTestSuite) TestCleanupProposal_UserLimitAndExactEnd() {
+	id := suite.votedStakeProposal(10, false)
+
+	suite.requireCleanupBatch(id, 3, 3, false)
+	suite.requireBallots(id, 3, 10)
+	suite.requireCleanupBatch(id, 7, 7, true)
+	suite.requireCleanedUp(1, id, 10)
+}
+
+// The batch is the param at the time of the call.
+func (suite *IntegrationTestSuite) TestCleanupProposal_ReadsBatchParam() {
+	id := suite.votedStakeProposal(10, false)
+	params := suite.k.GetParams(suite.ctx)
+	params.CleanupBatchSize = 4
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
+
+	suite.requireCleanupBatch(id, 0, 4, false)
+	suite.requireCleanupBatch(id, 100, 4, false)
+	suite.requireCleanupBatch(id, 0, 2, true)
+	suite.requireCleanedUp(1, id, 10)
+}
+
+// Every terminal status can be cleaned up, also with no ballots at all; the
+// DAO's other proposals keep their records.
+func (suite *IntegrationTestSuite) TestCleanupProposal_TerminalStatuses() {
+	for _, tc := range []struct {
+		status types.ProposalStatus
+		finish func(id uint64)
+	}{
+		{types.ProposalStatus_EXECUTED, func(id uint64) {
+			suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+			suite.endVoting(id, 0)
+			_, err := suite.settle(id)
+			suite.Require().NoError(err)
+		}},
+		// nobody voted: rejected with no ballot to delete
+		{types.ProposalStatus_REJECTED, func(id uint64) {
+			suite.endVoting(id, 0)
+			_, err := suite.settle(id)
+			suite.Require().NoError(err)
+		}},
+		{types.ProposalStatus_EXPIRED, func(id uint64) {
+			suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+			suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_YES))
+			params := suite.k.GetParams(suite.ctx)
+			params.ExecutionWindow = 0
+			suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
+			suite.endVoting(id, 0)
+			_, err := suite.settle(id)
+			suite.Require().NoError(err)
+			_, err = suite.settle(id)
+			suite.Require().NoError(err)
+		}},
+		{types.ProposalStatus_CANCELLED, func(id uint64) {
+			suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_YES))
+			suite.Require().NoError(suite.cancel(memberA, id))
+		}},
+	} {
+		suite.Run(tc.status.String(), func() {
+			suite.SetupTest()
+			suite.createStaticDao(noConfigChange)
+			other, err := suite.submit(memberA, 1, false)
+			suite.Require().NoError(err)
+			var msgs []sdk.Msg
+			if tc.status == types.ProposalStatus_EXPIRED {
+				msgs = append(msgs, treasurySend(memberB, 30))
+			}
+			id, err := suite.submit(memberA, 1, false, msgs...)
+			suite.Require().NoError(err)
+			tc.finish(id)
+			proposal, _ := suite.k.GetProposal(suite.ctx, id)
+			suite.Require().Equal(tc.status, proposal.Status)
+
+			res, err := suite.cleanup(id, 0)
+			suite.Require().NoError(err)
+			suite.Require().True(res.Completed)
+			_, found := suite.k.GetProposal(suite.ctx, id)
+			suite.Require().False(found)
+			suite.Require().False(suite.k.HasDaoProposalIndex(suite.ctx, 1, id))
+			for _, voter := range []sdk.AccAddress{memberA, memberB} {
+				_, found := suite.k.GetBallot(suite.ctx, id, voter)
+				suite.Require().False(found)
+			}
+
+			_, found = suite.k.GetProposal(suite.ctx, other)
+			suite.Require().True(found)
+			suite.Require().True(suite.k.HasDaoProposalIndex(suite.ctx, 1, other))
+			suite.Require().True(suite.k.IsOpenProposal(suite.ctx, 1, other))
+		})
+	}
+}
+
+// D20: a proposal in voting, also after its voting end, and a retryable
+// EXECUTION_FAILED one are refused and left untouched; a cleanup after
+// completion finds nothing and changes nothing.
+func (suite *IntegrationTestSuite) TestCleanupProposal_D20_Refusals() {
+	suite.createStaticDao(noConfigChange)
+	id := suite.passedProposal(treasurySend(memberB, 30))
+
+	requireRefused := func(want error, status types.ProposalStatus) {
+		suite.ctx = suite.ctx.WithEventManager(sdk.NewEventManager())
+		_, err := suite.cleanup(id, 0)
+		suite.Require().ErrorIs(err, want)
+		proposal, found := suite.k.GetProposal(suite.ctx, id)
+		suite.Require().True(found)
+		suite.Require().Equal(status, proposal.Status)
+		suite.Require().Empty(proposal.CleanupCursor)
+		_, found = suite.k.GetBallot(suite.ctx, id, memberA)
+		suite.Require().True(found)
+		suite.Require().Nil(suite.lastEventAttrs(&types.EventProposalCleaned{}))
+	}
+
+	requireRefused(types.ErrProposalNotFinished, types.ProposalStatus_VOTING)
+	suite.endVoting(id, 0)
+	requireRefused(types.ErrProposalNotFinished, types.ProposalStatus_VOTING)
+
+	_, err := suite.settle(id)
+	suite.Require().NoError(err)
+	requireRefused(types.ErrProposalNotFinished, types.ProposalStatus_EXECUTION_FAILED)
+
+	suite.ledger.fund(daoAddress(1), ubze(30))
+	_, err = suite.settle(id)
+	suite.Require().NoError(err)
+	res, err := suite.cleanup(id, 0)
+	suite.Require().NoError(err)
+	suite.Require().True(res.Completed)
+	suite.Require().Equal(uint64(2), res.Processed)
+
+	suite.ctx = suite.ctx.WithEventManager(sdk.NewEventManager())
+	_, err = suite.cleanup(id, 0)
+	suite.Require().ErrorIs(err, types.ErrProposalNotFound)
+	suite.Require().Nil(suite.lastEventAttrs(&types.EventProposalCleaned{}))
+	suite.Require().False(suite.k.HasDaoProposalIndex(suite.ctx, 1, id))
+
+	_, err = suite.cleanup(99, 0)
+	suite.Require().ErrorIs(err, types.ErrProposalNotFound)
+	_, err = suite.msgServer.CleanupProposal(suite.ctx, types.NewMsgCleanupProposal("bze1nope", id, 0))
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidAddress)
+}
+
 // A vote whose option is left out decodes to UNSPECIFIED and is rejected, so
 // it can never count as YES; no ballot is stored.
 func (suite *IntegrationTestSuite) TestVote_OmittedOptionRejected() {
