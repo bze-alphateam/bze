@@ -31,6 +31,42 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// ControllerEndReason says why the admin chain walk stopped.
+type ControllerEndReason int32
+
+const (
+	// ACCOUNT: the admin is an account that is not a DAO; it is the controller.
+	ControllerEndReason_ACCOUNT ControllerEndReason = 0
+	// SELF_OWNED: the DAO is its own admin; its voters control it.
+	ControllerEndReason_SELF_OWNED ControllerEndReason = 1
+	// CYCLE: the admin is a DAO already on the path; the controller is that DAO.
+	ControllerEndReason_CYCLE ControllerEndReason = 2
+	// DEPTH_CAP: the path reached the maximum depth; the controller is its last DAO.
+	ControllerEndReason_DEPTH_CAP ControllerEndReason = 3
+)
+
+var ControllerEndReason_name = map[int32]string{
+	0: "ACCOUNT",
+	1: "SELF_OWNED",
+	2: "CYCLE",
+	3: "DEPTH_CAP",
+}
+
+var ControllerEndReason_value = map[string]int32{
+	"ACCOUNT":    0,
+	"SELF_OWNED": 1,
+	"CYCLE":      2,
+	"DEPTH_CAP":  3,
+}
+
+func (x ControllerEndReason) String() string {
+	return proto.EnumName(ControllerEndReason_name, int32(x))
+}
+
+func (ControllerEndReason) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_8e7bfab9ebb3e1b1, []int{0}
+}
+
 // QueryParamsRequest is request type for the Query/Params RPC method.
 type QueryParamsRequest struct {
 }
@@ -295,49 +331,172 @@ func (m *QueryDaoByAddressResponse) GetDao() Dao {
 	return Dao{}
 }
 
+// QueryDaoControllerRequest is request type for the Query/DaoController RPC method.
+type QueryDaoControllerRequest struct {
+	DaoId uint64 `protobuf:"varint,1,opt,name=dao_id,json=daoId,proto3" json:"dao_id,omitempty"`
+}
+
+func (m *QueryDaoControllerRequest) Reset()         { *m = QueryDaoControllerRequest{} }
+func (m *QueryDaoControllerRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryDaoControllerRequest) ProtoMessage()    {}
+func (*QueryDaoControllerRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8e7bfab9ebb3e1b1, []int{6}
+}
+func (m *QueryDaoControllerRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryDaoControllerRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryDaoControllerRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryDaoControllerRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDaoControllerRequest.Merge(m, src)
+}
+func (m *QueryDaoControllerRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryDaoControllerRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDaoControllerRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryDaoControllerRequest proto.InternalMessageInfo
+
+func (m *QueryDaoControllerRequest) GetDaoId() uint64 {
+	if m != nil {
+		return m.DaoId
+	}
+	return 0
+}
+
+// QueryDaoControllerResponse is response type for the Query/DaoController RPC method.
+type QueryDaoControllerResponse struct {
+	// controller is the address at the end of the admin chain.
+	Controller string              `protobuf:"bytes,1,opt,name=controller,proto3" json:"controller,omitempty"`
+	EndReason  ControllerEndReason `protobuf:"varint,2,opt,name=end_reason,json=endReason,proto3,enum=bze.dao.ControllerEndReason" json:"end_reason,omitempty"`
+	// path lists the DAO addresses visited, in order, starting with the queried DAO.
+	Path []string `protobuf:"bytes,3,rep,name=path,proto3" json:"path,omitempty"`
+}
+
+func (m *QueryDaoControllerResponse) Reset()         { *m = QueryDaoControllerResponse{} }
+func (m *QueryDaoControllerResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryDaoControllerResponse) ProtoMessage()    {}
+func (*QueryDaoControllerResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_8e7bfab9ebb3e1b1, []int{7}
+}
+func (m *QueryDaoControllerResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryDaoControllerResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryDaoControllerResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryDaoControllerResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDaoControllerResponse.Merge(m, src)
+}
+func (m *QueryDaoControllerResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryDaoControllerResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDaoControllerResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryDaoControllerResponse proto.InternalMessageInfo
+
+func (m *QueryDaoControllerResponse) GetController() string {
+	if m != nil {
+		return m.Controller
+	}
+	return ""
+}
+
+func (m *QueryDaoControllerResponse) GetEndReason() ControllerEndReason {
+	if m != nil {
+		return m.EndReason
+	}
+	return ControllerEndReason_ACCOUNT
+}
+
+func (m *QueryDaoControllerResponse) GetPath() []string {
+	if m != nil {
+		return m.Path
+	}
+	return nil
+}
+
 func init() {
+	proto.RegisterEnum("bze.dao.ControllerEndReason", ControllerEndReason_name, ControllerEndReason_value)
 	proto.RegisterType((*QueryParamsRequest)(nil), "bze.dao.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "bze.dao.QueryParamsResponse")
 	proto.RegisterType((*QueryDaoRequest)(nil), "bze.dao.QueryDaoRequest")
 	proto.RegisterType((*QueryDaoResponse)(nil), "bze.dao.QueryDaoResponse")
 	proto.RegisterType((*QueryDaoByAddressRequest)(nil), "bze.dao.QueryDaoByAddressRequest")
 	proto.RegisterType((*QueryDaoByAddressResponse)(nil), "bze.dao.QueryDaoByAddressResponse")
+	proto.RegisterType((*QueryDaoControllerRequest)(nil), "bze.dao.QueryDaoControllerRequest")
+	proto.RegisterType((*QueryDaoControllerResponse)(nil), "bze.dao.QueryDaoControllerResponse")
 }
 
 func init() { proto.RegisterFile("bze/dao/query.proto", fileDescriptor_8e7bfab9ebb3e1b1) }
 
 var fileDescriptor_8e7bfab9ebb3e1b1 = []byte{
-	// 477 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0x41, 0x8b, 0xd3, 0x40,
-	0x14, 0xc7, 0x9b, 0xae, 0x76, 0xd9, 0x71, 0xb1, 0x76, 0x5a, 0xb0, 0x8d, 0x4b, 0xb4, 0xf1, 0xb2,
-	0x2b, 0x6c, 0x06, 0xea, 0xd9, 0x83, 0xa1, 0x08, 0x5e, 0x44, 0x2b, 0x5e, 0x44, 0x28, 0x2f, 0x9b,
-	0x21, 0x1b, 0xd8, 0xe6, 0x65, 0x33, 0x53, 0x30, 0xbb, 0x2c, 0x88, 0x9f, 0x40, 0xf0, 0x4b, 0x78,
-	0xf4, 0xe0, 0xdd, 0xeb, 0x1e, 0x17, 0xbd, 0x78, 0x12, 0x69, 0x05, 0xbf, 0x86, 0x64, 0x66, 0x92,
-	0x6d, 0x6d, 0x11, 0xf6, 0x90, 0x30, 0xf3, 0xde, 0xff, 0xfd, 0xfe, 0x33, 0xff, 0x84, 0xb4, 0x83,
-	0x13, 0xce, 0x42, 0x40, 0x76, 0x3c, 0xe5, 0x59, 0xee, 0xa5, 0x19, 0x4a, 0xa4, 0x9b, 0xc1, 0x09,
-	0xf7, 0x42, 0x40, 0xbb, 0x05, 0x93, 0x38, 0x41, 0xa6, 0xde, 0xba, 0x67, 0xf7, 0x0e, 0x50, 0x4c,
-	0x50, 0x8c, 0xd5, 0x8e, 0xe9, 0x8d, 0x69, 0x75, 0x22, 0x8c, 0x50, 0xd7, 0x8b, 0x95, 0xa9, 0xee,
-	0x44, 0x88, 0xd1, 0x11, 0x67, 0x90, 0xc6, 0x0c, 0x92, 0x04, 0x25, 0xc8, 0x18, 0x93, 0x6a, 0xa6,
-	0xf4, 0x4f, 0x21, 0x83, 0x49, 0x59, 0xad, 0x4e, 0x25, 0x24, 0x66, 0x5c, 0x17, 0xdd, 0x0e, 0xa1,
-	0x2f, 0x8a, 0x43, 0x3e, 0x57, 0xca, 0x11, 0x3f, 0x9e, 0x72, 0x21, 0xdd, 0xa7, 0xa4, 0xbd, 0x54,
-	0x15, 0x29, 0x26, 0x82, 0xd3, 0x01, 0x69, 0x68, 0x62, 0xd7, 0xba, 0x67, 0xed, 0xde, 0x18, 0x34,
-	0x3d, 0x73, 0x27, 0x4f, 0x0b, 0xfd, 0xad, 0xf3, 0x9f, 0x77, 0x6b, 0x9f, 0xfe, 0x7c, 0x7e, 0x60,
-	0x8d, 0x8c, 0xd2, 0xed, 0x93, 0xa6, 0x42, 0x0d, 0x01, 0x0d, 0x9d, 0xde, 0x24, 0xf5, 0x38, 0x54,
-	0x88, 0x6b, 0xa3, 0x7a, 0x1c, 0xba, 0x8f, 0xc8, 0xad, 0x4b, 0x89, 0xb1, 0xda, 0x23, 0x1b, 0x21,
-	0xa0, 0xf1, 0xd9, 0xae, 0x7c, 0x86, 0x80, 0x8b, 0x26, 0x85, 0xc6, 0x7d, 0x46, 0xba, 0xe5, 0xb8,
-	0x9f, 0x3f, 0x0e, 0xc3, 0x8c, 0x8b, 0xf2, 0x22, 0x74, 0x40, 0x36, 0x41, 0x57, 0x14, 0x6a, 0xcb,
-	0xef, 0x7e, 0xfb, 0xb2, 0xdf, 0x31, 0x01, 0x1b, 0xed, 0x4b, 0x99, 0xc5, 0x49, 0x34, 0x2a, 0x85,
-	0xee, 0x13, 0xd2, 0x5b, 0xc3, 0xbb, 0xf2, 0xb9, 0x06, 0x5f, 0xeb, 0xe4, 0xba, 0x02, 0xd1, 0x37,
-	0xa4, 0xa1, 0x03, 0xa2, 0x77, 0xaa, 0x89, 0xd5, 0xd4, 0xed, 0x9d, 0xf5, 0x4d, 0xed, 0xec, 0xde,
-	0x7e, 0xff, 0xfd, 0xf7, 0xc7, 0x7a, 0x8b, 0x36, 0xd9, 0xf2, 0xd7, 0xa5, 0xaf, 0xc8, 0xc6, 0x10,
-	0x90, 0x76, 0x97, 0xa7, 0x2f, 0xf3, 0xb6, 0x7b, 0x6b, 0x3a, 0x06, 0xda, 0x53, 0xd0, 0x36, 0x6d,
-	0x55, 0xd0, 0xe2, 0x39, 0x8d, 0xc3, 0x33, 0xfa, 0xce, 0x22, 0xdb, 0x8b, 0x11, 0xd0, 0xfe, 0x0a,
-	0xe6, 0xdf, 0xb8, 0x6d, 0xf7, 0x7f, 0x12, 0x63, 0xb9, 0xa7, 0x2c, 0xef, 0xd3, 0xfe, 0xa2, 0xe5,
-	0x38, 0xc8, 0xc7, 0x26, 0x7f, 0x76, 0x6a, 0x16, 0x67, 0xbe, 0x7f, 0x3e, 0x73, 0xac, 0x8b, 0x99,
-	0x63, 0xfd, 0x9a, 0x39, 0xd6, 0x87, 0xb9, 0x53, 0xbb, 0x98, 0x3b, 0xb5, 0x1f, 0x73, 0xa7, 0xf6,
-	0x7a, 0x37, 0x8a, 0xe5, 0xe1, 0x34, 0xf0, 0x0e, 0x70, 0x52, 0x60, 0xf6, 0xe1, 0x28, 0x3d, 0x04,
-	0xc9, 0x41, 0xed, 0xd8, 0x5b, 0x85, 0x95, 0x79, 0xca, 0x45, 0xd0, 0x50, 0xff, 0xf9, 0xc3, 0xbf,
-	0x01, 0x00, 0x00, 0xff, 0xff, 0xde, 0x7d, 0x60, 0xa1, 0x94, 0x03, 0x00, 0x00,
+	// 660 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x54, 0x4f, 0x4b, 0x1b, 0x4f,
+	0x18, 0xce, 0x26, 0x26, 0x92, 0xd7, 0x7f, 0x71, 0xe2, 0x8f, 0x5f, 0xb2, 0x95, 0x34, 0xae, 0x97,
+	0x28, 0x35, 0x0b, 0xe9, 0xa5, 0x97, 0x1e, 0xdc, 0x24, 0x52, 0x41, 0xd4, 0x46, 0xa5, 0xb4, 0x14,
+	0x96, 0x89, 0x33, 0xac, 0x0b, 0xc9, 0xbe, 0xeb, 0xee, 0x0a, 0x8d, 0x22, 0x14, 0x3f, 0x41, 0xa1,
+	0x5f, 0xa2, 0xc7, 0x1e, 0xfa, 0x11, 0x7a, 0xf0, 0x28, 0xed, 0xa5, 0xa7, 0x52, 0xb4, 0xd0, 0xaf,
+	0x51, 0x32, 0x3b, 0xbb, 0x49, 0x9a, 0x60, 0xe9, 0x21, 0x61, 0xe6, 0x99, 0x67, 0x9e, 0xe7, 0x99,
+	0x97, 0x27, 0x81, 0x7c, 0xfb, 0x9c, 0xeb, 0x8c, 0xa2, 0x7e, 0x7a, 0xc6, 0xbd, 0x5e, 0xd5, 0xf5,
+	0x30, 0x40, 0x32, 0xdd, 0x3e, 0xe7, 0x55, 0x46, 0x51, 0x5d, 0xa4, 0x5d, 0xdb, 0x41, 0x5d, 0x7c,
+	0x87, 0x67, 0x6a, 0xf1, 0x18, 0xfd, 0x2e, 0xfa, 0xa6, 0xd8, 0xe9, 0xe1, 0x46, 0x1e, 0x2d, 0x59,
+	0x68, 0x61, 0x88, 0xf7, 0x57, 0x12, 0x5d, 0xb6, 0x10, 0xad, 0x0e, 0xd7, 0xa9, 0x6b, 0xeb, 0xd4,
+	0x71, 0x30, 0xa0, 0x81, 0x8d, 0x4e, 0x7c, 0x27, 0xf2, 0x77, 0xa9, 0x47, 0xbb, 0x11, 0x1a, 0xa7,
+	0xf2, 0x03, 0xf4, 0x78, 0x08, 0x6a, 0x4b, 0x40, 0x9e, 0xf7, 0x43, 0xee, 0x0b, 0x66, 0x8b, 0x9f,
+	0x9e, 0x71, 0x3f, 0xd0, 0xb6, 0x21, 0x3f, 0x82, 0xfa, 0x2e, 0x3a, 0x3e, 0x27, 0x35, 0xc8, 0x84,
+	0x8a, 0x05, 0xa5, 0xac, 0x54, 0x66, 0x6a, 0x0b, 0x55, 0xf9, 0xa6, 0x6a, 0x48, 0x34, 0xb2, 0xd7,
+	0xdf, 0x1f, 0x26, 0x3e, 0xfc, 0xfa, 0xb8, 0xae, 0xb4, 0x24, 0x53, 0x5b, 0x81, 0x05, 0x21, 0xd5,
+	0xa0, 0x28, 0xd5, 0xc9, 0x3c, 0x24, 0x6d, 0x26, 0x24, 0xa6, 0x5a, 0x49, 0x9b, 0x69, 0x4f, 0x21,
+	0x37, 0xa0, 0x48, 0xab, 0x35, 0x48, 0x31, 0x8a, 0xd2, 0x67, 0x36, 0xf6, 0x69, 0x50, 0x1c, 0x36,
+	0xe9, 0x73, 0xb4, 0x5d, 0x28, 0x44, 0xd7, 0x8d, 0xde, 0x26, 0x63, 0x1e, 0xf7, 0xa3, 0x87, 0x90,
+	0x1a, 0x4c, 0xd3, 0x10, 0x11, 0x52, 0x59, 0xa3, 0xf0, 0xe5, 0xd3, 0xc6, 0x92, 0x1c, 0xb0, 0xe4,
+	0x1e, 0x04, 0x9e, 0xed, 0x58, 0xad, 0x88, 0xa8, 0x6d, 0x41, 0x71, 0x82, 0xde, 0xbf, 0xe7, 0xaa,
+	0x0d, 0x74, 0xea, 0xe8, 0x04, 0x1e, 0x76, 0x3a, 0xdc, 0x8b, 0x82, 0xfd, 0x07, 0x19, 0x46, 0xd1,
+	0x8c, 0xe7, 0x90, 0x66, 0x14, 0xb7, 0x99, 0x76, 0xad, 0x80, 0x3a, 0xe9, 0x92, 0x74, 0x7f, 0x02,
+	0x70, 0x1c, 0xa3, 0x7f, 0x7d, 0xd1, 0x10, 0x97, 0x18, 0x00, 0xdc, 0x61, 0xa6, 0xc7, 0xa9, 0x8f,
+	0x4e, 0x21, 0x59, 0x56, 0x2a, 0xf3, 0xb5, 0xe5, 0x38, 0xfe, 0xc0, 0xaa, 0xe9, 0xb0, 0x96, 0xe0,
+	0x18, 0xe9, 0xf0, 0x29, 0x59, 0x1e, 0x21, 0xe4, 0x11, 0x4c, 0xb9, 0x34, 0x38, 0x29, 0xa4, 0xca,
+	0xa9, 0x7b, 0x7d, 0x05, 0x6b, 0x7d, 0x07, 0xf2, 0x13, 0x64, 0xc9, 0x0c, 0x4c, 0x6f, 0xd6, 0xeb,
+	0x7b, 0x47, 0xbb, 0x87, 0xb9, 0x04, 0x99, 0x07, 0x38, 0x68, 0xee, 0x6c, 0x99, 0x7b, 0x2f, 0x76,
+	0x9b, 0x8d, 0x9c, 0x42, 0xb2, 0x90, 0xae, 0xbf, 0xac, 0xef, 0x34, 0x73, 0x49, 0x32, 0x07, 0xd9,
+	0x46, 0x73, 0xff, 0xf0, 0x99, 0x59, 0xdf, 0xdc, 0xcf, 0xa5, 0x6a, 0x9f, 0x53, 0x90, 0x16, 0x83,
+	0x21, 0xaf, 0x21, 0x13, 0xb6, 0x8d, 0x3c, 0x88, 0xf3, 0x8f, 0x57, 0x58, 0x5d, 0x9e, 0x7c, 0x18,
+	0x0e, 0x52, 0xfb, 0xff, 0xea, 0xeb, 0xcf, 0xf7, 0xc9, 0x45, 0xb2, 0xa0, 0x8f, 0xfe, 0x54, 0xc8,
+	0x11, 0xa4, 0x1a, 0x14, 0x49, 0x61, 0xf4, 0xf6, 0xa0, 0xbc, 0x6a, 0x71, 0xc2, 0x89, 0x14, 0x2d,
+	0x0a, 0xd1, 0x3c, 0x59, 0x8c, 0x45, 0xfb, 0x9f, 0x0b, 0x9b, 0x5d, 0x92, 0xb7, 0x0a, 0xcc, 0x0e,
+	0xf7, 0x89, 0xac, 0x8c, 0xc9, 0xfc, 0xd9, 0x5d, 0x55, 0xbb, 0x8f, 0x22, 0x2d, 0xd7, 0x84, 0xe5,
+	0x2a, 0x59, 0x19, 0xb6, 0x34, 0xdb, 0x3d, 0x53, 0x96, 0x59, 0xbf, 0x90, 0x8b, 0x4b, 0x72, 0xa5,
+	0xc0, 0xdc, 0x48, 0xab, 0xc8, 0xb8, 0xc1, 0x58, 0x4f, 0xd5, 0xd5, 0x7b, 0x39, 0x32, 0x45, 0x45,
+	0xa4, 0xd0, 0x48, 0x79, 0x24, 0xc5, 0xa0, 0x7d, 0xfa, 0x45, 0xd8, 0xf5, 0x4b, 0xc3, 0xb8, 0xbe,
+	0x2d, 0x29, 0x37, 0xb7, 0x25, 0xe5, 0xc7, 0x6d, 0x49, 0x79, 0x77, 0x57, 0x4a, 0xdc, 0xdc, 0x95,
+	0x12, 0xdf, 0xee, 0x4a, 0x89, 0x57, 0x15, 0xcb, 0x0e, 0x4e, 0xce, 0xda, 0xd5, 0x63, 0xec, 0xf6,
+	0x55, 0x36, 0x68, 0xc7, 0x3d, 0xa1, 0x01, 0xa7, 0x62, 0xa7, 0xbf, 0x11, 0xaa, 0x41, 0xcf, 0xe5,
+	0x7e, 0x3b, 0x23, 0xfe, 0xb9, 0x1e, 0xff, 0x0e, 0x00, 0x00, 0xff, 0xff, 0x31, 0x40, 0x0b, 0xd5,
+	0x66, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -358,6 +517,8 @@ type QueryClient interface {
 	Dao(ctx context.Context, in *QueryDaoRequest, opts ...grpc.CallOption) (*QueryDaoResponse, error)
 	// DaoByAddress returns the DAO that owns the given account.
 	DaoByAddress(ctx context.Context, in *QueryDaoByAddressRequest, opts ...grpc.CallOption) (*QueryDaoByAddressResponse, error)
+	// DaoController follows a DAO's admin chain to who ultimately controls it.
+	DaoController(ctx context.Context, in *QueryDaoControllerRequest, opts ...grpc.CallOption) (*QueryDaoControllerResponse, error)
 }
 
 type queryClient struct {
@@ -395,6 +556,15 @@ func (c *queryClient) DaoByAddress(ctx context.Context, in *QueryDaoByAddressReq
 	return out, nil
 }
 
+func (c *queryClient) DaoController(ctx context.Context, in *QueryDaoControllerRequest, opts ...grpc.CallOption) (*QueryDaoControllerResponse, error) {
+	out := new(QueryDaoControllerResponse)
+	err := c.cc.Invoke(ctx, "/bze.dao.Query/DaoController", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Params queries the parameters of the module.
@@ -403,6 +573,8 @@ type QueryServer interface {
 	Dao(context.Context, *QueryDaoRequest) (*QueryDaoResponse, error)
 	// DaoByAddress returns the DAO that owns the given account.
 	DaoByAddress(context.Context, *QueryDaoByAddressRequest) (*QueryDaoByAddressResponse, error)
+	// DaoController follows a DAO's admin chain to who ultimately controls it.
+	DaoController(context.Context, *QueryDaoControllerRequest) (*QueryDaoControllerResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -417,6 +589,9 @@ func (*UnimplementedQueryServer) Dao(ctx context.Context, req *QueryDaoRequest) 
 }
 func (*UnimplementedQueryServer) DaoByAddress(ctx context.Context, req *QueryDaoByAddressRequest) (*QueryDaoByAddressResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DaoByAddress not implemented")
+}
+func (*UnimplementedQueryServer) DaoController(ctx context.Context, req *QueryDaoControllerRequest) (*QueryDaoControllerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DaoController not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -477,6 +652,24 @@ func _Query_DaoByAddress_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_DaoController_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDaoControllerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DaoController(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.dao.Query/DaoController",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DaoController(ctx, req.(*QueryDaoControllerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "bze.dao.Query",
@@ -493,6 +686,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DaoByAddress",
 			Handler:    _Query_DaoByAddress_Handler,
+		},
+		{
+			MethodName: "DaoController",
+			Handler:    _Query_DaoController_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -679,6 +876,78 @@ func (m *QueryDaoByAddressResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryDaoControllerRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryDaoControllerRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryDaoControllerRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.DaoId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.DaoId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryDaoControllerResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryDaoControllerResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryDaoControllerResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Path) > 0 {
+		for iNdEx := len(m.Path) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Path[iNdEx])
+			copy(dAtA[i:], m.Path[iNdEx])
+			i = encodeVarintQuery(dAtA, i, uint64(len(m.Path[iNdEx])))
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if m.EndReason != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.EndReason))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Controller) > 0 {
+		i -= len(m.Controller)
+		copy(dAtA[i:], m.Controller)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Controller)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -754,6 +1023,40 @@ func (m *QueryDaoByAddressResponse) Size() (n int) {
 	_ = l
 	l = m.Dao.Size()
 	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryDaoControllerRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.DaoId != 0 {
+		n += 1 + sovQuery(uint64(m.DaoId))
+	}
+	return n
+}
+
+func (m *QueryDaoControllerResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Controller)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.EndReason != 0 {
+		n += 1 + sovQuery(uint64(m.EndReason))
+	}
+	if len(m.Path) > 0 {
+		for _, s := range m.Path {
+			l = len(s)
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -1191,6 +1494,208 @@ func (m *QueryDaoByAddressResponse) Unmarshal(dAtA []byte) error {
 			if err := m.Dao.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryDaoControllerRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryDaoControllerRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryDaoControllerRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DaoId", wireType)
+			}
+			m.DaoId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DaoId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryDaoControllerResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryDaoControllerResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryDaoControllerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Controller", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Controller = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EndReason", wireType)
+			}
+			m.EndReason = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.EndReason |= ControllerEndReason(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Path", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Path = append(m.Path, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

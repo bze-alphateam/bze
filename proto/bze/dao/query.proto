@@ -26,6 +26,11 @@ service Query {
   rpc DaoByAddress (QueryDaoByAddressRequest) returns (QueryDaoByAddressResponse) {
     option (google.api.http).get = "/bze/dao/dao_by_address/{address}";
   }
+
+  // DaoController follows a DAO's admin chain to who ultimately controls it.
+  rpc DaoController (QueryDaoControllerRequest) returns (QueryDaoControllerResponse) {
+    option (google.api.http).get = "/bze/dao/dao_controller/{dao_id}";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -56,4 +61,30 @@ message QueryDaoByAddressRequest {
 // QueryDaoByAddressResponse is response type for the Query/DaoByAddress RPC method.
 message QueryDaoByAddressResponse {
   Dao dao = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// ControllerEndReason says why the admin chain walk stopped.
+enum ControllerEndReason {
+  // ACCOUNT: the admin is an account that is not a DAO; it is the controller.
+  ACCOUNT = 0;
+  // SELF_OWNED: the DAO is its own admin; its voters control it.
+  SELF_OWNED = 1;
+  // CYCLE: the admin is a DAO already on the path; the controller is that DAO.
+  CYCLE = 2;
+  // DEPTH_CAP: the path reached the maximum depth; the controller is its last DAO.
+  DEPTH_CAP = 3;
+}
+
+// QueryDaoControllerRequest is request type for the Query/DaoController RPC method.
+message QueryDaoControllerRequest {
+  uint64 dao_id = 1;
+}
+
+// QueryDaoControllerResponse is response type for the Query/DaoController RPC method.
+message QueryDaoControllerResponse {
+  // controller is the address at the end of the admin chain.
+  string controller = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  ControllerEndReason end_reason = 2 [(amino.dont_omitempty) = true];
+  // path lists the DAO addresses visited, in order, starting with the queried DAO.
+  repeated string path = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

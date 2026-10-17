@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Query_Params_FullMethodName       = "/bze.dao.Query/Params"
-	Query_Dao_FullMethodName          = "/bze.dao.Query/Dao"
-	Query_DaoByAddress_FullMethodName = "/bze.dao.Query/DaoByAddress"
+	Query_Params_FullMethodName        = "/bze.dao.Query/Params"
+	Query_Dao_FullMethodName           = "/bze.dao.Query/Dao"
+	Query_DaoByAddress_FullMethodName  = "/bze.dao.Query/DaoByAddress"
+	Query_DaoController_FullMethodName = "/bze.dao.Query/DaoController"
 )
 
 // QueryClient is the client API for Query service.
@@ -34,6 +35,8 @@ type QueryClient interface {
 	Dao(ctx context.Context, in *QueryDaoRequest, opts ...grpc.CallOption) (*QueryDaoResponse, error)
 	// DaoByAddress returns the DAO that owns the given account.
 	DaoByAddress(ctx context.Context, in *QueryDaoByAddressRequest, opts ...grpc.CallOption) (*QueryDaoByAddressResponse, error)
+	// DaoController follows a DAO's admin chain to who ultimately controls it.
+	DaoController(ctx context.Context, in *QueryDaoControllerRequest, opts ...grpc.CallOption) (*QueryDaoControllerResponse, error)
 }
 
 type queryClient struct {
@@ -71,6 +74,15 @@ func (c *queryClient) DaoByAddress(ctx context.Context, in *QueryDaoByAddressReq
 	return out, nil
 }
 
+func (c *queryClient) DaoController(ctx context.Context, in *QueryDaoControllerRequest, opts ...grpc.CallOption) (*QueryDaoControllerResponse, error) {
+	out := new(QueryDaoControllerResponse)
+	err := c.cc.Invoke(ctx, Query_DaoController_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -81,6 +93,8 @@ type QueryServer interface {
 	Dao(context.Context, *QueryDaoRequest) (*QueryDaoResponse, error)
 	// DaoByAddress returns the DAO that owns the given account.
 	DaoByAddress(context.Context, *QueryDaoByAddressRequest) (*QueryDaoByAddressResponse, error)
+	// DaoController follows a DAO's admin chain to who ultimately controls it.
+	DaoController(context.Context, *QueryDaoControllerRequest) (*QueryDaoControllerResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -96,6 +110,9 @@ func (UnimplementedQueryServer) Dao(context.Context, *QueryDaoRequest) (*QueryDa
 }
 func (UnimplementedQueryServer) DaoByAddress(context.Context, *QueryDaoByAddressRequest) (*QueryDaoByAddressResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DaoByAddress not implemented")
+}
+func (UnimplementedQueryServer) DaoController(context.Context, *QueryDaoControllerRequest) (*QueryDaoControllerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DaoController not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -164,6 +181,24 @@ func _Query_DaoByAddress_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_DaoController_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDaoControllerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DaoController(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_DaoController_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DaoController(ctx, req.(*QueryDaoControllerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -182,6 +217,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DaoByAddress",
 			Handler:    _Query_DaoByAddress_Handler,
+		},
+		{
+			MethodName: "DaoController",
+			Handler:    _Query_DaoController_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
