@@ -130,6 +130,7 @@ func TestHandler_InitialisesDaoModule(t *testing.T) {
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		nil,
 		nil,
+		nil,
 	)
 
 	msr := baseapp.NewMsgServiceRouter()

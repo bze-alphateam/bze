@@ -14,6 +14,8 @@ message Params {
   option (amino.name) = "bze/x/dao/Params";
   option (gogoproto.equal) = true;
 
+  // max_sr_per_dao caps the staking rewards in a stake DAO's electorate.
+  uint64 max_sr_per_dao = 1;
   // max_static_members caps the member list of a static-list DAO.
   uint64 max_static_members = 2;
   // min_voting_period is the shortest voting (and expedited) period a DAO may configure.
@@ -24,4 +26,7 @@ message Params {
   cosmos.base.v1beta1.Coin dao_creation_fee = 12 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   // dao_creation_fee_destination is "burner" or "community_pool".
   string dao_creation_fee_destination = 13;
+  // min_electorate_lock_days is the shortest unstaking lock (days) a staking
+  // reward or Denom Reward needs to join a stake DAO's electorate.
+  uint32 min_electorate_lock_days = 14;
 }

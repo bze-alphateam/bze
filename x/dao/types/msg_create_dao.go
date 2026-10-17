@@ -8,8 +8,9 @@ import (
 
 var _ sdk.Msg = &MsgCreateDao{}
 
-// ValidateBasic runs the checks that need no state. The member cap and the
-// voting period bounds depend on the params and are checked by the msg server.
+// ValidateBasic runs the checks that need no state. The member and staking
+// reward caps, the voting period bounds and the electorate sources depend on
+// params or state and are checked by the msg server.
 func (msg *MsgCreateDao) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
@@ -33,7 +34,7 @@ func (msg *MsgCreateDao) ValidateBasic() error {
 	case DaoType_DAO_TYPE_STATIC_LIST:
 		return validateStaticElectorate(msg.Members, msg.Electorate)
 	case DaoType_DAO_TYPE_STAKE:
-		return errorsmod.Wrap(ErrInvalidDaoType, "stake DAOs not supported yet")
+		return validateStakeElectorate(msg.Members, msg.Electorate)
 	default:
 		return errorsmod.Wrapf(ErrInvalidDaoType, "unknown dao type %d", msg.Type)
 	}
@@ -63,6 +64,39 @@ func validateStaticElectorate(members []string, electorate *StakeElectorate) err
 			return errorsmod.Wrapf(ErrInvalidMembers, "duplicate member %s", member)
 		}
 		seen[key] = struct{}{}
+	}
+
+	return nil
+}
+
+// validateStakeElectorate requires no member list (D29), unique non-empty
+// staking reward ids (D14) and a valid Denom Reward denom when one is set. The
+// electorate may be empty: a DAO with an external admin can be set up first.
+func validateStakeElectorate(members []string, electorate *StakeElectorate) error {
+	if len(members) > 0 {
+		return errorsmod.Wrap(ErrInvalidElectorate, "a stake dao cannot have a member list")
+	}
+
+	if electorate == nil {
+		return nil
+	}
+
+	seen := make(map[string]struct{}, len(electorate.SrIds))
+	for _, id := range electorate.SrIds {
+		if id == "" {
+			return errorsmod.Wrap(ErrInvalidElectorate, "empty staking reward id")
+		}
+
+		if _, ok := seen[id]; ok {
+			return errorsmod.Wrapf(ErrInvalidElectorate, "duplicate staking reward %s", id)
+		}
+		seen[id] = struct{}{}
+	}
+
+	if electorate.DrDenom != "" {
+		if err := sdk.ValidateDenom(electorate.DrDenom); err != nil {
+			return errorsmod.Wrapf(ErrInvalidElectorate, "invalid denom reward denom %s (%s)", electorate.DrDenom, err)
+		}
 	}
 
 	return nil
