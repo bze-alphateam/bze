@@ -31,7 +31,9 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 
 	voter := sdk.MustAccAddressFromBech32(msg.Voter)
 	previous, revote := k.GetBallot(ctx, proposal.Id, voter)
-	if revote && previous.Option == msg.Option {
+	// a ballot zeroed by a member removal may be cast again with the same
+	// option once the voter is a member again (D21)
+	if revote && previous.Option == msg.Option && previous.Weight.IsPositive() {
 		return nil, errorsmod.Wrapf(types.ErrSameVote, "%s already voted %s on proposal %d", voter, msg.Option, proposal.Id)
 	}
 
