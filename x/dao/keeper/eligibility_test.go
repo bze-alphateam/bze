@@ -426,3 +426,25 @@ func (suite *IntegrationTestSuite) TestVote_SharePerSource() {
 	suite.requireTally(id, 0, 0, 40)
 	suite.requireInvariants(id, memberA)
 }
+
+// I4: cancelling a proposal drops each of its sources' pins by exactly one,
+// back to the DAO's own pin once no proposal is in voting.
+func (suite *IntegrationTestSuite) TestCancelProposal_UnpinsSources() {
+	s := suite.createStakeDao()
+	s.joinSr("1", memberA, 30)
+	suite.atBlock(10)
+	first, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	second, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	suite.Require().Equal(uint64(3), suite.k.GetSourcePins(suite.ctx, srSource))
+	suite.Require().Equal(uint64(3), suite.k.GetSourcePins(suite.ctx, drSource))
+
+	suite.Require().NoError(suite.cancel(memberA, first))
+	suite.Require().Equal(uint64(2), suite.k.GetSourcePins(suite.ctx, srSource))
+	suite.Require().Equal(uint64(2), suite.k.GetSourcePins(suite.ctx, drSource))
+
+	suite.Require().NoError(suite.cancel(memberA, second))
+	suite.Require().Equal(uint64(1), suite.k.GetSourcePins(suite.ctx, srSource))
+	suite.Require().Equal(uint64(1), suite.k.GetSourcePins(suite.ctx, drSource))
+}
