@@ -35,7 +35,8 @@ func (h stakingRewardHooks) AfterStakingRewardIncrease(_ sdk.Context, _, _ strin
 	return nil
 }
 
-// AfterStakingRewardExit forgets the address's join record.
+// AfterStakingRewardExit forgets the address's join record and takes its
+// share out of its open ballots.
 func (h stakingRewardHooks) AfterStakingRewardExit(ctx sdk.Context, rewardId, address string, _ math.Int, _ string) error {
 	h.k.afterSourceExit(ctx, types.StakingRewardSource(rewardId), address)
 	return nil
@@ -72,7 +73,8 @@ func (h denomRewardHooks) AfterDenomRewardIncrease(_ sdk.Context, _, _ string, _
 	return nil
 }
 
-// AfterDenomRewardExit forgets the address's join record.
+// AfterDenomRewardExit forgets the address's join record and takes its share
+// out of its open ballots.
 func (h denomRewardHooks) AfterDenomRewardExit(ctx sdk.Context, stakingDenom, address string, _ math.Int) error {
 	h.k.afterSourceExit(ctx, types.DenomRewardSource(stakingDenom), address)
 	return nil
@@ -96,8 +98,8 @@ func (k Keeper) afterSourceJoin(ctx sdk.Context, source []byte, address string) 
 	k.setJoinRecord(ctx, source, addr, ctx.BlockHeight())
 }
 
-// afterSourceExit deletes the join record, if any. Removing the exited stake
-// from open ballots comes with voting.
+// afterSourceExit deletes the join record, if any, and removes the exited
+// stake from the address's ballots on proposals in voting (D2, D5).
 func (k Keeper) afterSourceExit(ctx sdk.Context, source []byte, address string) {
 	addr, err := sdk.AccAddressFromBech32(address)
 	if err != nil {
@@ -106,4 +108,5 @@ func (k Keeper) afterSourceExit(ctx sdk.Context, source []byte, address string) 
 	}
 
 	k.removeJoinRecord(ctx, source, addr)
+	k.reduceBallots(ctx, source, addr)
 }

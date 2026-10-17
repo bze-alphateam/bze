@@ -26,6 +26,7 @@ const (
 	Msg_AcceptAdminNomination_FullMethodName   = "/bze.dao.Msg/AcceptAdminNomination"
 	Msg_WithdrawAdminNomination_FullMethodName = "/bze.dao.Msg/WithdrawAdminNomination"
 	Msg_SubmitProposal_FullMethodName          = "/bze.dao.Msg/SubmitProposal"
+	Msg_Vote_FullMethodName                    = "/bze.dao.Msg/Vote"
 )
 
 // MsgClient is the client API for Msg service.
@@ -54,6 +55,8 @@ type MsgClient interface {
 	// SubmitProposal opens a proposal of zero or more messages the DAO runs if it
 	// passes. It pins the DAO's config, electorate and quorum denominator.
 	SubmitProposal(ctx context.Context, in *MsgSubmitProposal, opts ...grpc.CallOption) (*MsgSubmitProposalResponse, error)
+	// Vote casts or changes a ballot on a proposal in voting.
+	Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error)
 }
 
 type msgClient struct {
@@ -127,6 +130,15 @@ func (c *msgClient) SubmitProposal(ctx context.Context, in *MsgSubmitProposal, o
 	return out, nil
 }
 
+func (c *msgClient) Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error) {
+	out := new(MsgVoteResponse)
+	err := c.cc.Invoke(ctx, Msg_Vote_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -153,6 +165,8 @@ type MsgServer interface {
 	// SubmitProposal opens a proposal of zero or more messages the DAO runs if it
 	// passes. It pins the DAO's config, electorate and quorum denominator.
 	SubmitProposal(context.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error)
+	// Vote casts or changes a ballot on a proposal in voting.
+	Vote(context.Context, *MsgVote) (*MsgVoteResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -180,6 +194,9 @@ func (UnimplementedMsgServer) WithdrawAdminNomination(context.Context, *MsgWithd
 }
 func (UnimplementedMsgServer) SubmitProposal(context.Context, *MsgSubmitProposal) (*MsgSubmitProposalResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubmitProposal not implemented")
+}
+func (UnimplementedMsgServer) Vote(context.Context, *MsgVote) (*MsgVoteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Vote not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -320,6 +337,24 @@ func _Msg_SubmitProposal_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_Vote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgVote)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).Vote(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_Vote_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).Vote(ctx, req.(*MsgVote))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -354,6 +389,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SubmitProposal",
 			Handler:    _Msg_SubmitProposal_Handler,
+		},
+		{
+			MethodName: "Vote",
+			Handler:    _Msg_Vote_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
