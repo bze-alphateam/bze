@@ -24,6 +24,9 @@ const (
 	Query_DaoByAddress_FullMethodName  = "/bze.dao.Query/DaoByAddress"
 	Query_DaoController_FullMethodName = "/bze.dao.Query/DaoController"
 	Query_Proposal_FullMethodName      = "/bze.dao.Query/Proposal"
+	Query_Ballot_FullMethodName        = "/bze.dao.Query/Ballot"
+	Query_VotingPower_FullMethodName   = "/bze.dao.Query/VotingPower"
+	Query_JoinRecord_FullMethodName    = "/bze.dao.Query/JoinRecord"
 )
 
 // QueryClient is the client API for Query service.
@@ -40,6 +43,14 @@ type QueryClient interface {
 	DaoController(ctx context.Context, in *QueryDaoControllerRequest, opts ...grpc.CallOption) (*QueryDaoControllerResponse, error)
 	// Proposal returns a proposal with its live status at the current block.
 	Proposal(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryProposalResponse, error)
+	// Ballot returns a voter's ballot on a proposal.
+	Ballot(ctx context.Context, in *QueryBallotRequest, opts ...grpc.CallOption) (*QueryBallotResponse, error)
+	// VotingPower returns an address's weight in a DAO now and on each of the
+	// DAO's proposals in voting.
+	VotingPower(ctx context.Context, in *QueryVotingPowerRequest, opts ...grpc.CallOption) (*QueryVotingPowerResponse, error)
+	// JoinRecord returns the height an address joined a pinned source at. The
+	// source is in the query string: it contains a slash.
+	JoinRecord(ctx context.Context, in *QueryJoinRecordRequest, opts ...grpc.CallOption) (*QueryJoinRecordResponse, error)
 }
 
 type queryClient struct {
@@ -95,6 +106,33 @@ func (c *queryClient) Proposal(ctx context.Context, in *QueryProposalRequest, op
 	return out, nil
 }
 
+func (c *queryClient) Ballot(ctx context.Context, in *QueryBallotRequest, opts ...grpc.CallOption) (*QueryBallotResponse, error) {
+	out := new(QueryBallotResponse)
+	err := c.cc.Invoke(ctx, Query_Ballot_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) VotingPower(ctx context.Context, in *QueryVotingPowerRequest, opts ...grpc.CallOption) (*QueryVotingPowerResponse, error) {
+	out := new(QueryVotingPowerResponse)
+	err := c.cc.Invoke(ctx, Query_VotingPower_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) JoinRecord(ctx context.Context, in *QueryJoinRecordRequest, opts ...grpc.CallOption) (*QueryJoinRecordResponse, error) {
+	out := new(QueryJoinRecordResponse)
+	err := c.cc.Invoke(ctx, Query_JoinRecord_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -109,6 +147,14 @@ type QueryServer interface {
 	DaoController(context.Context, *QueryDaoControllerRequest) (*QueryDaoControllerResponse, error)
 	// Proposal returns a proposal with its live status at the current block.
 	Proposal(context.Context, *QueryProposalRequest) (*QueryProposalResponse, error)
+	// Ballot returns a voter's ballot on a proposal.
+	Ballot(context.Context, *QueryBallotRequest) (*QueryBallotResponse, error)
+	// VotingPower returns an address's weight in a DAO now and on each of the
+	// DAO's proposals in voting.
+	VotingPower(context.Context, *QueryVotingPowerRequest) (*QueryVotingPowerResponse, error)
+	// JoinRecord returns the height an address joined a pinned source at. The
+	// source is in the query string: it contains a slash.
+	JoinRecord(context.Context, *QueryJoinRecordRequest) (*QueryJoinRecordResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -130,6 +176,15 @@ func (UnimplementedQueryServer) DaoController(context.Context, *QueryDaoControll
 }
 func (UnimplementedQueryServer) Proposal(context.Context, *QueryProposalRequest) (*QueryProposalResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Proposal not implemented")
+}
+func (UnimplementedQueryServer) Ballot(context.Context, *QueryBallotRequest) (*QueryBallotResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Ballot not implemented")
+}
+func (UnimplementedQueryServer) VotingPower(context.Context, *QueryVotingPowerRequest) (*QueryVotingPowerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VotingPower not implemented")
+}
+func (UnimplementedQueryServer) JoinRecord(context.Context, *QueryJoinRecordRequest) (*QueryJoinRecordResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JoinRecord not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -234,6 +289,60 @@ func _Query_Proposal_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Ballot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryBallotRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Ballot(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Ballot_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Ballot(ctx, req.(*QueryBallotRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_VotingPower_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryVotingPowerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).VotingPower(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_VotingPower_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).VotingPower(ctx, req.(*QueryVotingPowerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_JoinRecord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryJoinRecordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).JoinRecord(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_JoinRecord_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).JoinRecord(ctx, req.(*QueryJoinRecordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -260,6 +369,18 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Proposal",
 			Handler:    _Query_Proposal_Handler,
+		},
+		{
+			MethodName: "Ballot",
+			Handler:    _Query_Ballot_Handler,
+		},
+		{
+			MethodName: "VotingPower",
+			Handler:    _Query_VotingPower_Handler,
+		},
+		{
+			MethodName: "JoinRecord",
+			Handler:    _Query_JoinRecord_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
