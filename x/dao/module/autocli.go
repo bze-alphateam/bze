@@ -159,6 +159,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:        `bzed tx dao update-metadata 1 "Bee Guild" "The guild's treasury" --from bze1<dao address> --generate-only`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}, {ProtoField: "name"}, {ProtoField: "description"}},
 				},
+				{
+					RpcMethod: "UpdateElectorate",
+					Use:       "update-electorate [dao-id] [electorate]",
+					Short:     "Replace a stake DAO's reward sources; signed by the DAO account only",
+					Long: "Replace the stake DAO's whole electorate, as JSON in the create-dao --electorate format. " +
+						"Only the DAO account can sign it: build the message with --generate-only and run it through admin-execute or a proposal. " +
+						"Open proposals keep the electorate they pinned; a self-owned DAO must keep a live electorate.",
+					Example:        `bzed tx dao update-electorate 1 '{"sr_ids":["3","7"],"dr_denom":"ubze"}' --from bze1<dao address> --generate-only`,
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}, {ProtoField: "electorate"}},
+				},
 			},
 		},
 	}

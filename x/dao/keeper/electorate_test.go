@@ -514,3 +514,322 @@ func (suite *IntegrationTestSuite) TestUpdateDaoConfig_EventListsChangedFields()
 		})
 	}
 }
+
+func (suite *IntegrationTestSuite) updateElectorate(authority sdk.AccAddress, daoId uint64, srIds []string, drDenom string) error {
+	msg := types.NewMsgUpdateElectorate(authority.String(), daoId, &types.StakeElectorate{SrIds: srIds, DrDenom: drDenom})
+	_, err := suite.msgServer.UpdateElectorate(suite.ctx, msg)
+	return err
+}
+
+// createAdminStakeDao creates stake DAO 1 with adminAddr as its external admin,
+// voted by the given sources.
+func (suite *IntegrationTestSuite) createAdminStakeDao(srIds []string, drDenom string) {
+	suite.expectCreation(1)
+	msg := validStakeDaoMsg(srIds, drDenom)
+	msg.Admin = adminAddr.String()
+	_, err := suite.msgServer.CreateDao(suite.ctx, msg)
+	suite.Require().NoError(err)
+}
+
+// requireElectorate checks DAO 1's stored sources; no sources is a nil electorate.
+func (suite *IntegrationTestSuite) requireElectorate(srIds []string, drDenom string) {
+	dao, found := suite.k.GetDao(suite.ctx, 1)
+	suite.Require().True(found)
+	if len(srIds) == 0 && drDenom == "" {
+		suite.Require().Nil(dao.Electorate)
+		return
+	}
+
+	suite.Require().Equal(&types.StakeElectorate{SrIds: srIds, DrDenom: drDenom}, dao.Electorate)
+}
+
+// requirePinInvariant checks I4 for every source of defaultRewardsState: its
+// pin count is the number of the given DAOs whose electorate names it plus the
+// number of the given proposals still open that pinned it.
+func (suite *IntegrationTestSuite) requirePinInvariant(daoIds []uint64, proposalIds []uint64) {
+	want := map[string]uint64{}
+	for _, daoId := range daoIds {
+		dao, found := suite.k.GetDao(suite.ctx, daoId)
+		suite.Require().True(found)
+		for _, source := range electorateSourceKeys(dao.Electorate) {
+			want[source]++
+		}
+	}
+
+	for _, proposalId := range proposalIds {
+		proposal, found := suite.k.GetProposal(suite.ctx, proposalId)
+		suite.Require().True(found)
+		if !suite.k.IsOpenProposal(suite.ctx, proposal.DaoId, proposalId) {
+			continue
+		}
+		for _, source := range electorateSourceKeys(proposal.PinnedElectorate) {
+			want[source]++
+		}
+	}
+
+	state := defaultRewardsState()
+	for id := range state.srs {
+		source := types.StakingRewardSource(id)
+		suite.Require().Equal(want[string(source)], suite.k.GetSourcePins(suite.ctx, source), "I4: staking reward %s", id)
+	}
+	for denom := range state.drs {
+		source := types.DenomRewardSource(denom)
+		suite.Require().Equal(want[string(source)], suite.k.GetSourcePins(suite.ctx, source), "I4: denom reward %s", denom)
+	}
+}
+
+func electorateSourceKeys(electorate *types.StakeElectorate) []string {
+	if electorate == nil {
+		return nil
+	}
+
+	keys := make([]string, 0, len(electorate.SrIds)+1)
+	for _, id := range electorate.SrIds {
+		keys = append(keys, string(types.StakingRewardSource(id)))
+	}
+	if electorate.DrDenom != "" {
+		keys = append(keys, string(types.DenomRewardSource(electorate.DrDenom)))
+	}
+
+	return keys
+}
+
+// Business Logic §3: electorate changes accept only the DAO account. The admin
+// signing directly and any other address are refused; nothing changes.
+func (suite *IntegrationTestSuite) TestUpdateElectorate_DirectSignersRejected() {
+	suite.stubRewards(defaultRewardsState())
+	suite.createAdminStakeDao([]string{"1"}, stakeDenom)
+
+	for _, signer := range []sdk.AccAddress{adminAddr, memberA, attackerAddr, daoAddress(2)} {
+		suite.Require().ErrorIs(suite.updateElectorate(signer, 1, []string{"5"}, ""), types.ErrUnauthorizedSigner, signer.String())
+	}
+
+	suite.requireElectorate([]string{"1"}, stakeDenom)
+	suite.requirePinInvariant([]uint64{1}, nil)
+	suite.Require().False(suite.hasEvent("bze.dao.EventDaoElectorateUpdated"))
+}
+
+func (suite *IntegrationTestSuite) TestUpdateElectorate_UnknownDao() {
+	suite.stubRewards(defaultRewardsState())
+	suite.createAdminStakeDao([]string{"1"}, stakeDenom)
+
+	suite.Require().ErrorIs(suite.updateElectorate(daoAddress(2), 2, []string{"5"}, ""), types.ErrDaoNotFound)
+	suite.Require().ErrorIs(suite.updateElectorate(daoAddress(1), 0, []string{"5"}, ""), types.ErrDaoNotFound)
+}
+
+func (suite *IntegrationTestSuite) TestUpdateElectorate_InvalidAuthority() {
+	suite.stubRewards(defaultRewardsState())
+	suite.createAdminStakeDao([]string{"1"}, stakeDenom)
+
+	_, err := suite.msgServer.UpdateElectorate(suite.ctx, types.NewMsgUpdateElectorate("bad", 1, &types.StakeElectorate{SrIds: []string{"5"}}))
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidAddress)
+}
+
+// D29: a static-list DAO has no stake sources to change, even through its admin.
+func (suite *IntegrationTestSuite) TestUpdateElectorate_D29_StaticDaoRejected() {
+	suite.stubRewards(defaultRewardsState())
+	suite.createAdminDao()
+
+	err := suite.adminExecute(adminAddr, 1, types.NewMsgUpdateElectorate(daoAddress(1).String(), 1, &types.StakeElectorate{SrIds: []string{"1"}}))
+	suite.Require().ErrorIs(err, types.ErrInvalidDaoType)
+
+	dao, _ := suite.k.GetDao(suite.ctx, 1)
+	suite.Require().Nil(dao.Electorate)
+	suite.Require().Equal([]string{memberA.String(), memberB.String()}, dao.Members)
+	suite.requirePinInvariant([]uint64{1}, nil)
+}
+
+// The source rules on DAO 1 (external admin, staking reward 1 and the ubze
+// Denom Reward): up to max_sr_per_dao unique existing staking rewards (D14),
+// an existing Denom Reward, one staking denom (D29) and the min lock for every
+// added source (D28). With an external admin the result may be empty or hold
+// no stake (D11). A refused update changes nothing; I4 holds after each case.
+func (suite *IntegrationTestSuite) TestUpdateElectorate_Rules() {
+	for _, tc := range []struct {
+		desc    string
+		srIds   []string
+		drDenom string
+		wantErr string
+	}{
+		{desc: "replace every source", srIds: []string{"5", "6"}, drDenom: ""},
+		{desc: "keep one, add one", srIds: []string{"1", "5"}, drDenom: stakeDenom},
+		{desc: "denom reward only", srIds: nil, drDenom: stakeDenom},
+		{desc: "staking rewards at the cap", srIds: []string{"1", "2", "5"}, drDenom: stakeDenom},
+		{desc: "staking rewards above the cap", srIds: []string{"1", "2", "5", "6"}, wantErr: "at most 3 staking rewards"},
+		{desc: "D14: duplicate staking reward", srIds: []string{"1", "5", "1"}, wantErr: "duplicate staking reward 1"},
+		{desc: "unknown staking reward", srIds: []string{"1", "99"}, wantErr: "staking reward 99 not found"},
+		{desc: "unknown denom reward", srIds: []string{"1"}, drDenom: "unone", wantErr: "denom reward unone not found"},
+		{desc: "D28: added staking reward below the min lock", srIds: []string{"1", "4"}, wantErr: "staking reward 4 has a 4 day lock"},
+		{desc: "D28: added denom reward below the min lock", drDenom: "ulow", wantErr: "denom reward ulow has a 4 day lock"},
+		{desc: "D29: staking reward and denom reward with different denoms", srIds: []string{"1"}, drDenom: otherDenom, wantErr: "all sources must share one staking denom"},
+		{desc: "D29: two staking rewards with different denoms", srIds: []string{"1", "3"}, wantErr: "all sources must share one staking denom"},
+		{desc: "D29: switch to another denom entirely", srIds: []string{"3"}, drDenom: otherDenom},
+		{desc: "D11: external admin empties the electorate", srIds: nil, drDenom: ""},
+		{desc: "D11: external admin keeps sources with nothing staked", srIds: []string{"9"}, drDenom: "uzero"},
+	} {
+		suite.Run(tc.desc, func() {
+			suite.SetupTest()
+			suite.stubRewards(defaultRewardsState())
+			params := types.DefaultParams()
+			params.MaxSrPerDao = 3
+			suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
+			suite.createAdminStakeDao([]string{"1"}, stakeDenom)
+
+			err := suite.updateElectorate(daoAddress(1), 1, tc.srIds, tc.drDenom)
+			if tc.wantErr != "" {
+				suite.Require().ErrorIs(err, types.ErrInvalidElectorate)
+				suite.Require().ErrorContains(err, tc.wantErr)
+				suite.requireElectorate([]string{"1"}, stakeDenom)
+				suite.requirePinInvariant([]uint64{1}, nil)
+				suite.Require().False(suite.hasEvent("bze.dao.EventDaoElectorateUpdated"))
+				return
+			}
+
+			suite.Require().NoError(err)
+			suite.requireElectorate(tc.srIds, tc.drDenom)
+			suite.requirePinInvariant([]uint64{1}, nil)
+			suite.Require().True(suite.hasEvent("bze.dao.EventDaoElectorateUpdated"))
+		})
+	}
+}
+
+// D28: raising min_electorate_lock_days never forces a DAO to drop a source.
+// Staking reward 5 and the ubze Denom Reward (5 day locks) stay valid under a
+// 10 day minimum; adding staking reward 1 (5 days) is refused, adding staking
+// reward 6 (30 days) is accepted.
+func (suite *IntegrationTestSuite) TestUpdateElectorate_D28_RaisedMinLockKeepsOldSources() {
+	suite.stubRewards(defaultRewardsState())
+	suite.createAdminStakeDao([]string{"5"}, stakeDenom)
+	params := types.DefaultParams()
+	params.MinElectorateLockDays = 10
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
+
+	suite.Require().NoError(suite.updateElectorate(daoAddress(1), 1, []string{"5"}, stakeDenom))
+	suite.requireElectorate([]string{"5"}, stakeDenom)
+
+	err := suite.updateElectorate(daoAddress(1), 1, []string{"5", "1"}, stakeDenom)
+	suite.Require().ErrorIs(err, types.ErrInvalidElectorate)
+	suite.Require().ErrorContains(err, "staking reward 1 has a 5 day lock, at least 10 days are required")
+	suite.requireElectorate([]string{"5"}, stakeDenom)
+	suite.requirePinInvariant([]uint64{1}, nil)
+
+	suite.Require().NoError(suite.updateElectorate(daoAddress(1), 1, []string{"5", "6"}, stakeDenom))
+	suite.requireElectorate([]string{"5", "6"}, stakeDenom)
+	suite.requirePinInvariant([]uint64{1}, nil)
+
+	// a source the DAO dropped is new again when it comes back
+	suite.Require().NoError(suite.updateElectorate(daoAddress(1), 1, []string{"6"}, ""))
+	err = suite.updateElectorate(daoAddress(1), 1, []string{"6"}, stakeDenom)
+	suite.Require().ErrorContains(err, "denom reward ubze has a 5 day lock, at least 10 days are required")
+	suite.requirePinInvariant([]uint64{1}, nil)
+}
+
+// Pins count per DAO: DAO 2 dropping staking reward 1 leaves DAO 1's pin.
+func (suite *IntegrationTestSuite) TestUpdateElectorate_PinsCountEveryDao() {
+	suite.stubRewards(defaultRewardsState())
+	suite.createAdminStakeDao([]string{"1"}, stakeDenom)
+	suite.expectCreation(2)
+	msg := validStakeDaoMsg([]string{"1", "2"}, stakeDenom)
+	msg.Admin = adminAddr.String()
+	_, err := suite.msgServer.CreateDao(suite.ctx, msg)
+	suite.Require().NoError(err)
+
+	suite.Require().NoError(suite.updateElectorate(daoAddress(2), 2, []string{"2", "5"}, ""))
+
+	suite.Require().Equal(uint64(1), suite.k.GetSourcePins(suite.ctx, srSource))
+	suite.Require().Equal(uint64(1), suite.k.GetSourcePins(suite.ctx, drSource))
+	suite.requirePinInvariant([]uint64{1, 2}, nil)
+}
+
+// The external admin replaces the sources through MsgAdminExecute, signed as
+// the DAO; the event lists the new sources.
+func (suite *IntegrationTestSuite) TestUpdateElectorate_ThroughAdminExecute() {
+	suite.stubRewards(defaultRewardsState())
+	suite.createAdminStakeDao([]string{"1"}, stakeDenom)
+
+	electorate := &types.StakeElectorate{SrIds: []string{"5", "6"}, DrDenom: stakeDenom}
+	suite.Require().NoError(suite.adminExecute(adminAddr, 1, types.NewMsgUpdateElectorate(daoAddress(1).String(), 1, electorate)))
+
+	suite.requireElectorate([]string{"5", "6"}, stakeDenom)
+	suite.requirePinInvariant([]uint64{1}, nil)
+	attrs := suite.lastEventAttrs(&types.EventDaoElectorateUpdated{})
+	suite.Require().NotNil(attrs)
+	suite.Require().Equal(`"1"`, attrs["id"])
+	suite.Require().Equal(`["5","6"]`, attrs["sr_ids"])
+	suite.Require().Equal(`"ubze"`, attrs["dr_denom"])
+	suite.Require().True(suite.hasEvent("bze.dao.EventAdminExecuted"))
+}
+
+// An emptied electorate emits an event with no sources.
+func (suite *IntegrationTestSuite) TestUpdateElectorate_EmptyEvent() {
+	suite.stubRewards(defaultRewardsState())
+	suite.createAdminStakeDao([]string{"1"}, stakeDenom)
+
+	suite.Require().NoError(suite.updateElectorate(daoAddress(1), 1, nil, ""))
+
+	suite.requireElectorate(nil, "")
+	attrs := suite.lastEventAttrs(&types.EventDaoElectorateUpdated{})
+	suite.Require().NotNil(attrs)
+	suite.Require().Equal(`"1"`, attrs["id"])
+	suite.Require().Equal(`""`, attrs["dr_denom"])
+	suite.requirePinInvariant([]uint64{1}, nil)
+}
+
+// passedStakeProposal submits msgs to the self-owned stake DAO 1 (staking
+// reward 1 + ubze Denom Reward, 150 staked) from memberA, who holds 100 in
+// staking reward 1 and votes yes, then ends the voting period.
+func (suite *IntegrationTestSuite) passedStakeProposal(msgs ...sdk.Msg) uint64 {
+	s := suite.createStakeDao()
+	s.joinSr("1", memberA, 100)
+	suite.atBlock(10)
+	id, err := suite.submit(memberA, 1, false, msgs...)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+	suite.endVoting(id, 0)
+
+	return id
+}
+
+// D11: a self-owned DAO cannot leave itself without voters. Emptying the
+// sources, or keeping only sources with nothing staked, is refused; through a
+// passed proposal the same update ends EXECUTION_FAILED and changes nothing.
+func (suite *IntegrationTestSuite) TestUpdateElectorate_D11_SelfOwnedNeedsLiveElectorate() {
+	suite.Run("direct", func() {
+		suite.SetupTest()
+		suite.createStakeDao()
+
+		suite.Require().ErrorIs(suite.updateElectorate(daoAddress(1), 1, nil, ""), types.ErrElectorateNotLive)
+		suite.Require().ErrorIs(suite.updateElectorate(daoAddress(1), 1, []string{"9"}, "uzero"), types.ErrElectorateNotLive)
+		suite.requireElectorate([]string{"1"}, stakeDenom)
+		suite.requirePinInvariant([]uint64{1}, nil)
+	})
+
+	suite.Run("through a passed proposal", func() {
+		suite.SetupTest()
+		id := suite.passedStakeProposal(types.NewMsgUpdateElectorate(daoAddress(1).String(), 1, &types.StakeElectorate{}))
+
+		status, err := suite.settle(id)
+		suite.Require().NoError(err)
+		suite.Require().Equal(types.ProposalStatus_EXECUTION_FAILED, status)
+		suite.requireExecuted("message failed")
+		suite.requireElectorate([]string{"1"}, stakeDenom)
+		suite.requirePinInvariant([]uint64{1}, []uint64{id})
+	})
+}
+
+// A self-owned DAO replaces its sources through a passed proposal; the
+// proposal's own pins are released when it settles.
+func (suite *IntegrationTestSuite) TestUpdateElectorate_ThroughProposal() {
+	electorate := &types.StakeElectorate{SrIds: []string{"5"}, DrDenom: stakeDenom}
+	id := suite.passedStakeProposal(types.NewMsgUpdateElectorate(daoAddress(1).String(), 1, electorate))
+
+	status, err := suite.settle(id)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
+	suite.requireExecuted("")
+	suite.requireElectorate([]string{"5"}, stakeDenom)
+	suite.Require().Zero(suite.k.GetSourcePins(suite.ctx, srSource))
+	suite.Require().Equal(uint64(1), suite.k.GetSourcePins(suite.ctx, types.StakingRewardSource("5")))
+	suite.Require().Equal(uint64(1), suite.k.GetSourcePins(suite.ctx, drSource))
+	suite.requirePinInvariant([]uint64{1}, []uint64{id})
+}
