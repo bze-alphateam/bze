@@ -17,6 +17,20 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "params",
 					Short:     "Shows the parameters of the module",
 				},
+				{
+					RpcMethod:      "Dao",
+					Use:            "dao [id]",
+					Short:          "Shows a DAO by its id",
+					Example:        "bzed q dao dao 1",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}},
+				},
+				{
+					RpcMethod:      "DaoByAddress",
+					Use:            "dao-by-address [address]",
+					Short:          "Shows the DAO that owns an account",
+					Example:        "bzed q dao dao-by-address bze1...",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{

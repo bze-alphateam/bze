@@ -175,6 +175,11 @@ bzed tx dao update-params \
 
 ## Queries
 - `bzed query dao params` – show the module parameters.
+- `bzed query dao dao [id]` – show a DAO: its address, admin and pending admin, type, metadata, config, and members or stake electorate (REST `GET /bze/dao/dao/{id}`). An unknown id answers `NotFound`.
+- `bzed query dao dao-by-address [address]` – show the DAO that owns an account (REST `GET /bze/dao/dao_by_address/{address}`). An address that is no DAO's account answers `NotFound`, an invalid one `InvalidArgument`.
+
+## Genesis
+The genesis state holds the params, every DAO record, `dao_count` (the last dao id handed out) and `proposal_count` (the last proposal id handed out), so ids keep growing across an export and import. The address and admin indexes and the DAO part of the source pins are rebuilt from the DAO records on import. Validation requires unique ids between 1 and `dao_count`, each DAO at its derived address, a valid admin, a pending admin that is neither the admin nor the DAO, valid metadata and config, and an electorate that fits the type (members only in static-list DAOs, sources only in stake DAOs). The param bounds (periods, member and source caps) are not checked: params can change after a DAO is created, and the DAO keeps its settings.
 
 ## Parameters
 | Parameter | Default | Meaning |
