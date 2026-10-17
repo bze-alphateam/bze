@@ -31,6 +31,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:        "bzed q dao dao-by-address bze1...",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
 				},
+				{
+					RpcMethod: "DaoController",
+					Use:       "dao-controller [dao-id]",
+					Short:     "Shows who ultimately controls a DAO by following its admin chain",
+					Long: "Follows the DAO's admin, and the admin's admin while it is a DAO, and prints where the chain ends: " +
+						"an account (ACCOUNT), a self-owned DAO (SELF_OWNED), a DAO already visited (CYCLE) or the 16th DAO (DEPTH_CAP), " +
+						"with the DAOs visited on the way. Pending nominations are ignored.",
+					Example:        "bzed q dao dao-controller 1",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
