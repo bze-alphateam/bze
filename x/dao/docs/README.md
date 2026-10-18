@@ -143,8 +143,9 @@ bzed tx dao update-metadata 1 "Bee Guild" "Funds BZE tooling" --from bze1<dao ad
 # Replace stake DAO 1's sources the same way
 bzed tx dao update-electorate 1 '{"sr_ids":["3","7"],"dr_denom":"ubze"}' --from bze1<dao address> --generate-only
 
-# Add and remove members of static-list DAO 1 the same way (repeat a flag or comma-separate)
-bzed tx dao update-members 1 --add bze1<new member> --remove bze1<old member> --from bze1<dao address> --generate-only
+# Add and remove members of static-list DAO 1 the same way (repeat a flag for
+# each address; a comma-separated list is not accepted)
+bzed tx dao update-members 1 --add bze1<new member> --add bze1<another> --remove bze1<old member> --from bze1<dao address> --generate-only
 
 # Submit a governance proposal that sets the module parameters (all of them)
 bzed tx dao update-params \
