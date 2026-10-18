@@ -18,3 +18,15 @@ func (p Proposal) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 func (p Proposal) UnpackMsgs() ([]sdk.Msg, error) {
 	return sdktx.GetMsgs(p.Msgs, "dao proposal")
 }
+
+// IsFinished reports whether the status is terminal: nothing can change the
+// proposal any more, so its ballots and record can be cleaned up. VOTING and
+// EXECUTION_FAILED (retryable until it expires) are not.
+func (s ProposalStatus) IsFinished() bool {
+	switch s {
+	case ProposalStatus_REJECTED, ProposalStatus_EXECUTED, ProposalStatus_EXPIRED, ProposalStatus_CANCELLED:
+		return true
+	default:
+		return false
+	}
+}

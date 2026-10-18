@@ -126,6 +126,19 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:        "bzed tx dao settle-proposal 1 --from anyone",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "proposal_id"}},
 				},
+				{
+					RpcMethod: "CleanupProposal",
+					Use:       "cleanup-proposal [proposal-id]",
+					Short:     "Delete a finished DAO proposal's ballots in batches, then the proposal",
+					Long: "Anyone can clean up a REJECTED, EXECUTED, EXPIRED or CANCELLED proposal. Each call deletes up to --limit ballots " +
+						"(0 or anything above the cleanup_batch_size param means cleanup_batch_size); the call that deletes the last one " +
+						"also deletes the proposal. Repeat until the response says completed. Events keep the history.",
+					Example:        "bzed tx dao cleanup-proposal 1 --limit 50 --from anyone",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "proposal_id"}},
+					FlagOptions: map[string]*autocliv1.FlagOptions{
+						"limit": {Usage: "ballots to delete in this call (0 = the cleanup_batch_size param)"},
+					},
+				},
 			},
 		},
 	}

@@ -65,3 +65,9 @@ func (k Keeper) countOpenProposals(ctx context.Context, daoId, limit uint64) uin
 
 	return count
 }
+
+// removeProposal deletes a proposal record and its DAO index entry.
+func (k Keeper) removeProposal(ctx context.Context, proposal types.Proposal) {
+	k.getPrefixedStore(ctx, types.KeyPrefix(types.ProposalKeyPrefix)).Delete(types.ProposalKey(proposal.Id))
+	k.getPrefixedStore(ctx, types.KeyPrefix(types.DaoProposalKeyPrefix)).Delete(types.DaoProposalKey(proposal.DaoId, proposal.Id))
+}
