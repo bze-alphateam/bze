@@ -36,6 +36,8 @@ message GenesisState {
   // pins count the DAOs and the proposals in voting that use each source.
   // Import checks them against the DAOs and proposals (I4).
   repeated PinCount pins = 9 [(gogoproto.nullable) = false];
+  // member_records are the heights members were added to static-list DAOs at.
+  repeated MemberRecord member_records = 10 [(gogoproto.nullable) = false];
 }
 
 // VoteIndexEntry says the address's ballot on the proposal counts a share of

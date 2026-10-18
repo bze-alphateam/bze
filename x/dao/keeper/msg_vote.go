@@ -83,14 +83,20 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 }
 
 // voterWeight is the voter's weight on the proposal: 1 for a member of the
-// DAO's current list, or the voter's stake in the proposal's pinned sources
-// that joined before the proposal was submitted, with one share per source.
+// DAO's current list added before the proposal was submitted, or the voter's
+// stake in the proposal's pinned sources that joined before it was submitted,
+// with one share per source. The DAO itself has no weight on its own
+// proposals.
 func (k Keeper) voterWeight(ctx sdk.Context, dao types.Dao, proposal types.Proposal, voter sdk.AccAddress) (math.Int, []types.BallotShare) {
 	if dao.Type == types.DaoType_DAO_TYPE_STATIC_LIST {
-		if slices.Contains(dao.Members, voter.String()) {
+		if k.isEligibleMember(ctx, dao, voter, proposal.SubmitHeight) {
 			return math.OneInt(), nil
 		}
 
+		return math.ZeroInt(), nil
+	}
+
+	if voter.String() == dao.Address {
 		return math.ZeroInt(), nil
 	}
 

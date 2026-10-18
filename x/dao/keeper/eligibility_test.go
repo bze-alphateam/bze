@@ -31,8 +31,15 @@ func (s stakes) joinDr(denom string, addr sdk.AccAddress, amount int64) {
 }
 
 // stubStakes serves the participants of s (read at call time) to the dao keeper.
+// Called again, it returns the same participation: gomock would answer every
+// call from the first stub anyway.
 func (suite *IntegrationTestSuite) stubStakes() stakes {
+	if suite.stakes != nil {
+		return *suite.stakes
+	}
+
 	s := stakes{sr: map[string]map[string]int64{}, dr: map[string]map[string]int64{}}
+	suite.stakes = &s
 	suite.rewards.EXPECT().GetStakingRewardParticipant(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(
 		func(_ sdk.Context, address, rewardId string) (rewardstypes.StakingRewardParticipant, bool) {
 			amount, ok := s.sr[rewardId][address]
@@ -451,4 +458,50 @@ func (suite *IntegrationTestSuite) TestCancelProposal_UnpinsSources() {
 	suite.Require().NoError(suite.cancel(memberA, second))
 	suite.Require().Equal(uint64(1), suite.k.GetSourcePins(suite.ctx, srSource))
 	suite.Require().Equal(uint64(1), suite.k.GetSourcePins(suite.ctx, drSource))
+}
+
+// A DAO's treasury staked in its own sources never votes on its proposals:
+// the DAO has no weight, now or on a proposal, and its stake is left out of
+// the pinned denominator, so it cannot raise the quorum bar either.
+func (suite *IntegrationTestSuite) TestDaoOwnStake_NoWeightAndOutOfDenominator() {
+	s := suite.createStakeDao()
+	s.joinSr("1", daoAddress(1), 60)
+	s.joinSr("1", memberA, 40)
+	s.joinDr(stakeDenom, memberB, 50)
+	suite.atBlock(10)
+
+	id, err := suite.submit(daoAddress(1), 1, false)
+	suite.Require().NoError(err)
+	proposal, _ := suite.k.GetProposal(suite.ctx, id)
+	suite.Require().Equal(math.NewInt(90), proposal.PinnedDenominator)
+
+	suite.Require().ErrorIs(suite.vote(daoAddress(1), id, types.VoteOption_YES), types.ErrNoVotingPower)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_NO))
+	suite.requireTally(id, 0, 40, 0)
+
+	res, err := suite.k.VotingPower(suite.ctx, &types.QueryVotingPowerRequest{DaoId: 1, Address: daoAddress(1).String()})
+	suite.Require().NoError(err)
+	suite.Require().True(res.Current.IsZero())
+	suite.Require().Len(res.Proposals, 1)
+	suite.Require().True(res.Proposals[0].EligibleWeight.IsZero())
+}
+
+// The DAO's own stake does not make its electorate live: a DAO whose only
+// stake is its treasury cannot be handed to its voters.
+func (suite *IntegrationTestSuite) TestDaoOwnStake_DoesNotMakeElectorateLive() {
+	suite.stubRewards(defaultRewardsState())
+	s := suite.stubStakes()
+	suite.expectCreation(1)
+	msg := validStakeDaoMsg([]string{"5"}, "")
+	msg.Admin = adminAddr.String()
+	_, err := suite.msgServer.CreateDao(suite.ctx, msg)
+	suite.Require().NoError(err)
+
+	// staking reward 5 holds 10, all of it the DAO's
+	s.joinSr("5", daoAddress(1), 10)
+	suite.Require().ErrorIs(suite.nominate(adminAddr, 1, ""), types.ErrElectorateNotLive)
+	suite.requireAdminInvariant(adminAddr, "")
+
+	_, err = suite.submit(daoAddress(1), 1, false)
+	suite.Require().ErrorIs(err, types.ErrNoVotingPower)
 }

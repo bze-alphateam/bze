@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"path"
 	"slices"
-	"strings"
 	"testing"
 	"time"
 
@@ -254,7 +253,7 @@ func (s *daoSuite) queries(t *testing.T) {
 		}
 		got := cliQuery[daoListPage](t, s, "proposals", d.idArg(), "--statuses", "voting")
 		require.Equal(t, []uint64{voting}, propIDs(got.Proposals))
-		// the command's help says the flag may be comma-separated: it may not
+		// a comma-separated list is refused, as the help says: repeat the flag
 		s.cliQueryFails(t, "is not a valid value for enum", "proposals", d.idArg(), "--statuses", "rejected,executed")
 		got = cliQuery[daoListPage](t, s, "proposals", d.idArg(), "--statuses", "rejected", "--statuses", "executed")
 		want := append(append([]uint64{}, rejected...), executed...)
@@ -337,17 +336,13 @@ func (s *daoSuite) cliFacts(t *testing.T) {
 		require.Equal(t, append(addrs(m...), a.FormattedAddress(), b.FormattedAddress()), s.dao(t, d.id).Members)
 	})
 
-	t.Run("ratios are 18-decimal integers on the CLI", func(t *testing.T) {
-		decimal := strings.Replace(defaultCfg().cli(), ratioInt("0.5"), "0.5", 1)
-		require.NotEqual(t, defaultCfg().cli(), decimal)
-		before := s.daos
-		res, err := helpers.ExecTxWith(s.ctx, s.bze, m[0], []helpers.TxOption{helpers.WithGas(daoRefuseGas)},
-			"dao", "create-dao", "static-list", "decimal", decimal, "--members", m[0].FormattedAddress())
-		if err == nil {
-			require.NotZero(t, res.Code, "a decimal ratio must not create a dao")
-		}
-		require.Len(t, s.allDaos(t), int(before), "nothing is stored")
-		t.Logf("a decimal ratio on the CLI: err %v, code %d %s", err, res.Code, res.RawLog)
+	t.Run("ratios are decimals on the CLI", func(t *testing.T) {
+		// "0.5" creates the DAO with a 0.5 quorum
+		d := s.createNamed(t, m[0], "static-list", "decimal", defaultCfg(), "--members", m[0].FormattedAddress())
+		require.Equal(t, "0.500000000000000000", ratio(t, s.dao(t, d.id).Config.MinQuorum).String())
+		// the 18-decimal integer form is now read as a decimal, far above 1
+		raw := mustJSON(defaultCfg().fields(ratioInt))
+		s.refuse(t, m[0], daoCode(1103), "dao", "create-dao", "static-list", "raw", raw, "--members", m[0].FormattedAddress())
 	})
 
 	s.waitVotingEnd(t, pid)

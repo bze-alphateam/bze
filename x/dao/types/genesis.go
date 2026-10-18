@@ -78,6 +78,10 @@ func (gs GenesisState) Validate() error {
 		return err
 	}
 
+	if err := gs.validateMemberRecords(seen); err != nil {
+		return err
+	}
+
 	return gs.validatePins()
 }
 
@@ -292,6 +296,39 @@ func (gs GenesisState) validateJoinRecords() error {
 	return nil
 }
 
+// validateMemberRecords checks the member records: each one names a current
+// member of a static-list DAO, once, at a non-negative height.
+func (gs GenesisState) validateMemberRecords(daos map[uint64]Dao) error {
+	type memberKey struct {
+		daoId   uint64
+		address string
+	}
+
+	seen := make(map[memberKey]struct{}, len(gs.MemberRecords))
+	for _, record := range gs.MemberRecords {
+		key := memberKey{daoId: record.DaoId, address: record.Address}
+		if _, ok := seen[key]; ok {
+			return fmt.Errorf("duplicate member record of %s in dao %d", record.Address, record.DaoId)
+		}
+		seen[key] = struct{}{}
+
+		dao, ok := daos[record.DaoId]
+		if !ok || dao.Type != DaoType_DAO_TYPE_STATIC_LIST {
+			return fmt.Errorf("member record of %s: dao %d is not a static-list dao", record.Address, record.DaoId)
+		}
+
+		if !slices.Contains(dao.Members, record.Address) {
+			return fmt.Errorf("member record of %s: not a member of dao %d", record.Address, record.DaoId)
+		}
+
+		if record.Height < 0 {
+			return fmt.Errorf("member record of %s in dao %d has a negative height", record.Address, record.DaoId)
+		}
+	}
+
+	return nil
+}
+
 // validatePins checks I4: each source's pin count is the number of DAOs whose
 // electorate holds it plus the number of proposals in voting that pinned it.
 func (gs GenesisState) validatePins() error {
@@ -425,6 +462,10 @@ func validateGenesisDao(dao Dao) error {
 
 	switch dao.Type {
 	case DaoType_DAO_TYPE_STATIC_LIST:
+		if slices.Contains(dao.Members, dao.Address) {
+			return errorsmod.Wrap(ErrInvalidMembers, "the dao is a member of itself")
+		}
+
 		return validateStaticElectorate(dao.Members, dao.Electorate)
 	case DaoType_DAO_TYPE_STAKE:
 		return validateStakeElectorate(dao.Members, dao.Electorate)

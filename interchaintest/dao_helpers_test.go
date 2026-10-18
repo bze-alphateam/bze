@@ -27,9 +27,10 @@ import (
 // DAO config
 
 // daoCfg is a DaoConfig. Ratios are written as decimals ("0.5") and
-// converted to the form each path reads: the CLI (autocli, protojson) wants
-// the 18-decimal integer of a LegacyDec, `tx sign` (gogoproto JSON) the
-// decimal.
+// converted to the form each path reads: the create-dao and update-dao-config
+// config argument and `tx sign` (gogoproto JSON) take the decimal, a config
+// nested in a JSON Any message (autocli, protojson) the 18-decimal integer of
+// a LegacyDec.
 type daoCfg struct {
 	quorum, threshold, expQuorum, expThreshold string
 	voting, expedited                          string
@@ -74,9 +75,10 @@ func (c daoCfg) fields(ratio func(string) string) map[string]any {
 	return m
 }
 
-// cli is the config JSON a CLI positional argument (autocli) reads.
+// cli is the config JSON the create-dao and update-dao-config config
+// argument reads: ratios as decimals.
 func (c daoCfg) cli() string {
-	return mustJSON(c.fields(ratioInt))
+	return mustJSON(c.fields(func(r string) string { return r }))
 }
 
 // gogo is the config a message signed with `tx sign` (gogoproto JSON) carries.
@@ -254,6 +256,7 @@ type daoParams struct {
 	DaoCreationFee            sdk.Coin      `json:"dao_creation_fee"`
 	DaoCreationFeeDestination string        `json:"dao_creation_fee_destination"`
 	MinElectorateLockDays     helpers.Int64 `json:"min_electorate_lock_days"`
+	MinExpediteDelay          string        `json:"min_expedite_delay"`
 }
 
 // enumOr reads an enum protojson omitted because it is the zero value.
@@ -820,6 +823,7 @@ var daoErrText = map[uint32]string{
 	1129: "a dao message panicked",
 	1130: "the expedited proposal does not meet the expedite bars yet",
 	1131: "the proposal is not finished",
+	1132: "the expedited proposal cannot settle early yet",
 }
 
 // refuse sends `bzed tx <args>` with a fixed gas limit (no simulation, so the

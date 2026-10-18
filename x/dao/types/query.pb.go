@@ -497,8 +497,8 @@ type QueryProposalResponse struct {
 	// proposal (unix seconds), 0 for any other status.
 	RetryDeadline int64 `protobuf:"varint,3,opt,name=retry_deadline,json=retryDeadline,proto3" json:"retry_deadline,omitempty"`
 	// expedite_settleable: the proposal is expedited, still VOTING before its
-	// voting end, and its tally already meets the expedite bars, so it can be
-	// settled early.
+	// voting end, past the min_expedite_delay after its submission, and its
+	// tally already meets the expedite bars, so it can be settled early.
 	ExpediteSettleable bool `protobuf:"varint,4,opt,name=expedite_settleable,json=expediteSettleable,proto3" json:"expedite_settleable,omitempty"`
 }
 

@@ -32,6 +32,7 @@ var (
 	fd_Params_dao_creation_fee             protoreflect.FieldDescriptor
 	fd_Params_dao_creation_fee_destination protoreflect.FieldDescriptor
 	fd_Params_min_electorate_lock_days     protoreflect.FieldDescriptor
+	fd_Params_min_expedite_delay           protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -51,6 +52,7 @@ func init() {
 	fd_Params_dao_creation_fee = md_Params.Fields().ByName("dao_creation_fee")
 	fd_Params_dao_creation_fee_destination = md_Params.Fields().ByName("dao_creation_fee_destination")
 	fd_Params_min_electorate_lock_days = md_Params.Fields().ByName("min_electorate_lock_days")
+	fd_Params_min_expedite_delay = md_Params.Fields().ByName("min_expedite_delay")
 }
 
 var _ protoreflect.Message = (*fastReflection_Params)(nil)
@@ -202,6 +204,12 @@ func (x *fastReflection_Params) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
+	if x.MinExpediteDelay != nil {
+		value := protoreflect.ValueOfMessage(x.MinExpediteDelay.ProtoReflect())
+		if !f(fd_Params_min_expedite_delay, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -245,6 +253,8 @@ func (x *fastReflection_Params) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.DaoCreationFeeDestination != ""
 	case "bze.dao.Params.min_electorate_lock_days":
 		return x.MinElectorateLockDays != uint32(0)
+	case "bze.dao.Params.min_expedite_delay":
+		return x.MinExpediteDelay != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.Params"))
@@ -289,6 +299,8 @@ func (x *fastReflection_Params) Clear(fd protoreflect.FieldDescriptor) {
 		x.DaoCreationFeeDestination = ""
 	case "bze.dao.Params.min_electorate_lock_days":
 		x.MinElectorateLockDays = uint32(0)
+	case "bze.dao.Params.min_expedite_delay":
+		x.MinExpediteDelay = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.Params"))
@@ -347,6 +359,9 @@ func (x *fastReflection_Params) Get(descriptor protoreflect.FieldDescriptor) pro
 	case "bze.dao.Params.min_electorate_lock_days":
 		value := x.MinElectorateLockDays
 		return protoreflect.ValueOfUint32(value)
+	case "bze.dao.Params.min_expedite_delay":
+		value := x.MinExpediteDelay
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.Params"))
@@ -395,6 +410,8 @@ func (x *fastReflection_Params) Set(fd protoreflect.FieldDescriptor, value proto
 		x.DaoCreationFeeDestination = value.Interface().(string)
 	case "bze.dao.Params.min_electorate_lock_days":
 		x.MinElectorateLockDays = uint32(value.Uint())
+	case "bze.dao.Params.min_expedite_delay":
+		x.MinExpediteDelay = value.Message().Interface().(*durationpb.Duration)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.Params"))
@@ -435,6 +452,11 @@ func (x *fastReflection_Params) Mutable(fd protoreflect.FieldDescriptor) protore
 			x.DaoCreationFee = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.DaoCreationFee.ProtoReflect())
+	case "bze.dao.Params.min_expedite_delay":
+		if x.MinExpediteDelay == nil {
+			x.MinExpediteDelay = new(durationpb.Duration)
+		}
+		return protoreflect.ValueOfMessage(x.MinExpediteDelay.ProtoReflect())
 	case "bze.dao.Params.max_sr_per_dao":
 		panic(fmt.Errorf("field max_sr_per_dao of message bze.dao.Params is not mutable"))
 	case "bze.dao.Params.max_static_members":
@@ -500,6 +522,9 @@ func (x *fastReflection_Params) NewField(fd protoreflect.FieldDescriptor) protor
 		return protoreflect.ValueOfString("")
 	case "bze.dao.Params.min_electorate_lock_days":
 		return protoreflect.ValueOfUint32(uint32(0))
+	case "bze.dao.Params.min_expedite_delay":
+		m := new(durationpb.Duration)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.dao.Params"))
@@ -616,6 +641,10 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if x.MinElectorateLockDays != 0 {
 			n += 1 + runtime.Sov(uint64(x.MinElectorateLockDays))
 		}
+		if x.MinExpediteDelay != nil {
+			l = options.Size(x.MinExpediteDelay)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -644,6 +673,20 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.MinExpediteDelay != nil {
+			encoded, err := options.Marshal(x.MinExpediteDelay)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x7a
 		}
 		if x.MinElectorateLockDays != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.MinElectorateLockDays))
@@ -1149,6 +1192,42 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
+			case 15:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MinExpediteDelay", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.MinExpediteDelay == nil {
+					x.MinExpediteDelay = &durationpb.Duration{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.MinExpediteDelay); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -1234,6 +1313,11 @@ type Params struct {
 	// min_electorate_lock_days is the shortest unstaking lock (days) a staking
 	// reward or Denom Reward needs to join a stake DAO's electorate.
 	MinElectorateLockDays uint32 `protobuf:"varint,14,opt,name=min_electorate_lock_days,json=minElectorateLockDays,proto3" json:"min_electorate_lock_days,omitempty"`
+	// min_expedite_delay is how long after submission an expedited proposal
+	// that meets the expedite bars can settle early, so voters always get time
+	// to react; 0 allows it at once. A proposal at its voting end settles
+	// normally whatever the delay.
+	MinExpediteDelay *durationpb.Duration `protobuf:"bytes,15,opt,name=min_expedite_delay,json=minExpediteDelay,proto3" json:"min_expedite_delay,omitempty"`
 }
 
 func (x *Params) Reset() {
@@ -1354,6 +1438,13 @@ func (x *Params) GetMinElectorateLockDays() uint32 {
 	return 0
 }
 
+func (x *Params) GetMinExpediteDelay() *durationpb.Duration {
+	if x != nil {
+		return x.MinExpediteDelay
+	}
+	return nil
+}
+
 var File_bze_dao_params_proto protoreflect.FileDescriptor
 
 var file_bze_dao_params_proto_rawDesc = []byte{
@@ -1365,7 +1456,7 @@ var file_bze_dao_params_proto_rawDesc = []byte{
 	0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f,
 	0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
 	0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xca, 0x06, 0x0a, 0x06, 0x50, 0x61, 0x72,
+	0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xa2, 0x07, 0x0a, 0x06, 0x50, 0x61, 0x72,
 	0x61, 0x6d, 0x73, 0x12, 0x23, 0x0a, 0x0e, 0x6d, 0x61, 0x78, 0x5f, 0x73, 0x72, 0x5f, 0x70, 0x65,
 	0x72, 0x5f, 0x64, 0x61, 0x6f, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0b, 0x6d, 0x61, 0x78,
 	0x53, 0x72, 0x50, 0x65, 0x72, 0x44, 0x61, 0x6f, 0x12, 0x2c, 0x0a, 0x12, 0x6d, 0x61, 0x78, 0x5f,
@@ -1416,18 +1507,23 @@ var file_bze_dao_params_proto_rawDesc = []byte{
 	0x6e, 0x12, 0x37, 0x0a, 0x18, 0x6d, 0x69, 0x6e, 0x5f, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72,
 	0x61, 0x74, 0x65, 0x5f, 0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x64, 0x61, 0x79, 0x73, 0x18, 0x0e, 0x20,
 	0x01, 0x28, 0x0d, 0x52, 0x15, 0x6d, 0x69, 0x6e, 0x45, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x61,
-	0x74, 0x65, 0x4c, 0x6f, 0x63, 0x6b, 0x44, 0x61, 0x79, 0x73, 0x3a, 0x19, 0xe8, 0xa0, 0x1f, 0x01,
-	0x8a, 0xe7, 0xb0, 0x2a, 0x10, 0x62, 0x7a, 0x65, 0x2f, 0x78, 0x2f, 0x64, 0x61, 0x6f, 0x2f, 0x50,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x81, 0x01, 0x0a, 0x0b, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a,
-	0x65, 0x2e, 0x64, 0x61, 0x6f, 0x42, 0x0b, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
-	0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62,
-	0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x64, 0x61, 0x6f, 0xa2, 0x02,
-	0x03, 0x42, 0x44, 0x58, 0xaa, 0x02, 0x07, 0x42, 0x7a, 0x65, 0x2e, 0x44, 0x61, 0x6f, 0xca, 0x02,
-	0x07, 0x42, 0x7a, 0x65, 0x5c, 0x44, 0x61, 0x6f, 0xe2, 0x02, 0x13, 0x42, 0x7a, 0x65, 0x5c, 0x44,
-	0x61, 0x6f, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02,
-	0x08, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x44, 0x61, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x74, 0x65, 0x4c, 0x6f, 0x63, 0x6b, 0x44, 0x61, 0x79, 0x73, 0x12, 0x56, 0x0a, 0x12, 0x6d, 0x69,
+	0x6e, 0x5f, 0x65, 0x78, 0x70, 0x65, 0x64, 0x69, 0x74, 0x65, 0x5f, 0x64, 0x65, 0x6c, 0x61, 0x79,
+	0x18, 0x0f, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x42, 0x0d, 0xc8, 0xde, 0x1f, 0x00, 0x98, 0xdf, 0x1f, 0x01, 0xa8, 0xe7, 0xb0, 0x2a, 0x01,
+	0x52, 0x10, 0x6d, 0x69, 0x6e, 0x45, 0x78, 0x70, 0x65, 0x64, 0x69, 0x74, 0x65, 0x44, 0x65, 0x6c,
+	0x61, 0x79, 0x3a, 0x19, 0xe8, 0xa0, 0x1f, 0x01, 0x8a, 0xe7, 0xb0, 0x2a, 0x10, 0x62, 0x7a, 0x65,
+	0x2f, 0x78, 0x2f, 0x64, 0x61, 0x6f, 0x2f, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x81, 0x01,
+	0x0a, 0x0b, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x64, 0x61, 0x6f, 0x42, 0x0b, 0x50,
+	0x61, 0x72, 0x61, 0x6d, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x28, 0x67, 0x69,
+	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70,
+	0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62,
+	0x7a, 0x65, 0x2f, 0x64, 0x61, 0x6f, 0xa2, 0x02, 0x03, 0x42, 0x44, 0x58, 0xaa, 0x02, 0x07, 0x42,
+	0x7a, 0x65, 0x2e, 0x44, 0x61, 0x6f, 0xca, 0x02, 0x07, 0x42, 0x7a, 0x65, 0x5c, 0x44, 0x61, 0x6f,
+	0xe2, 0x02, 0x13, 0x42, 0x7a, 0x65, 0x5c, 0x44, 0x61, 0x6f, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x08, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x44, 0x61,
+	0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1453,11 +1549,12 @@ var file_bze_dao_params_proto_depIdxs = []int32{
 	1, // 1: bze.dao.Params.max_voting_period:type_name -> google.protobuf.Duration
 	1, // 2: bze.dao.Params.execution_window:type_name -> google.protobuf.Duration
 	2, // 3: bze.dao.Params.dao_creation_fee:type_name -> cosmos.base.v1beta1.Coin
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	1, // 4: bze.dao.Params.min_expedite_delay:type_name -> google.protobuf.Duration
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_bze_dao_params_proto_init() }

@@ -44,4 +44,9 @@ message Params {
   // min_electorate_lock_days is the shortest unstaking lock (days) a staking
   // reward or Denom Reward needs to join a stake DAO's electorate.
   uint32 min_electorate_lock_days = 14;
+  // min_expedite_delay is how long after submission an expedited proposal
+  // that meets the expedite bars can settle early, so voters always get time
+  // to react; 0 allows it at once. A proposal at its voting end settles
+  // normally whatever the delay.
+  google.protobuf.Duration min_expedite_delay = 15 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

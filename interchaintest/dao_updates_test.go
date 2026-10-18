@@ -160,18 +160,22 @@ func (s *daoSuite) updateMembers(t *testing.T) {
 	require.Equal(t, "1", s.mustBallot(t, otherPid, m[1].FormattedAddress()).Weight, "other daos' ballots are untouched")
 	s.refuse(t, m[1], daoCode(1119), "dao", "vote", daoU64(pid), "yes")
 
-	// re-added, the member votes the same option again
+	// re-added, the member does not vote again on a proposal submitted before
 	s.adminExec(t, admin, d, nil, membersMsg(d, addrs(m[1]), nil))
-	require.Equal(t, "1", s.voteWeight(t, m[1], pid, "yes").String())
-	s.requireTallyOf(t, pid, 2, 1, 0)
+	s.refuse(t, m[1], daoCode(1119), "dao", "vote", daoU64(pid), "yes")
+	require.Equal(t, "0", s.mustBallot(t, pid, m[1].FormattedAddress()).Weight)
+	s.requireTallyOf(t, pid, 1, 1, 0)
 
-	// an added member votes on the open proposal, whose denominator stays pinned
+	// an added member votes only on proposals submitted after them, as stake
+	// that joins does; the open proposal's denominator stays pinned
 	s.adminExec(t, admin, d, nil, membersMsg(d, addrs(m[3]), addrs(m[2])))
-	require.Equal(t, "1", s.voteWeight(t, m[3], pid, "yes").String())
-	p := s.prop(t, pid)
-	s.requireTallyOf(t, pid, 3, 0, 0)
-	require.Equal(t, "3", p.PinnedDenominator)
-	t.Logf("a member added mid-vote voted: yes %s, pinned denominator %s", p.Yes, p.PinnedDenominator)
+	s.refuse(t, m[3], daoCode(1119), "dao", "vote", daoU64(pid), "yes")
+	s.requireTallyOf(t, pid, 1, 0, 0)
+	require.Equal(t, "3", s.prop(t, pid).PinnedDenominator)
+	later := s.submit(t, m[0], d, "after the add", nil)
+	require.Equal(t, "1", s.voteWeight(t, m[3], later, "yes").String())
+	require.Equal(t, "3", s.prop(t, later).PinnedDenominator)
+	s.cancel(t, m[0], later)
 
 	t.Run("bounds", func(t *testing.T) {
 		cur := s.dao(t, d.id).Members
@@ -179,6 +183,7 @@ func (s *daoSuite) updateMembers(t *testing.T) {
 		s.adminRefuse(t, admin, d, daoCode(1104), membersMsg(d, cur[:1], nil))
 		s.adminRefuse(t, admin, d, daoCode(1104), membersMsg(d, nil, addrs(admin)))
 		s.adminRefuse(t, admin, d, daoCode(1104), membersMsg(d, nil, nil))
+		s.adminRefuse(t, admin, d, daoCode(1104), membersMsg(d, []string{d.addr}, nil))
 		s.adminRefuse(t, admin, d, daoCode(1104), membersMsg(d, addrs(admin), addrs(admin)))
 		s.adminRefuse(t, admin, d, daoCode(1104), membersMsg(d, addrs(admin, admin), nil))
 		s.adminRefuse(t, admin, d, daoCode(1104), membersMsg(d, addrs(s.users(t, daoMaxMembers-len(cur)+1, 1)...), nil))
@@ -201,7 +206,7 @@ func (s *daoSuite) updateMembers(t *testing.T) {
 		require.Equal(t, addrs(m[0], m[2], m[3]), s.dao(t, self.id).Members)
 	})
 	s.waitVotingEnd(t, pid)
-	s.settleFirst(t, m[0], pid, "EXECUTED")
+	s.settleFirst(t, m[0], pid, "REJECTED") // 1 yes of the pinned 3 misses the quorum
 	s.waitVotingEnd(t, otherPid)
 	s.settleFirst(t, m[1], otherPid, "EXECUTED") // 1 of 2 meets the quorum
 }

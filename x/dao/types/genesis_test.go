@@ -184,6 +184,27 @@ func TestGenesisState_Validate(t *testing.T) {
 		{desc: "join record with a negative height", mutate: func(gs *types.GenesisState) {
 			gs.JoinRecords = []types.JoinRecord{{Source: "sr/1", Address: member, Height: -1}}
 		}, wantErr: "negative height"},
+		{desc: "dao lists itself as a member", mutate: func(gs *types.GenesisState) {
+			gs.Daos[0].Members = append(gs.Daos[0].Members, gs.Daos[0].Address)
+		}, wantErr: "the dao is a member of itself"},
+		{desc: "member record", mutate: func(gs *types.GenesisState) {
+			gs.MemberRecords = []types.MemberRecord{{DaoId: 1, Address: member, Height: 12}}
+		}},
+		{desc: "duplicate member record", mutate: func(gs *types.GenesisState) {
+			gs.MemberRecords = []types.MemberRecord{{DaoId: 1, Address: member, Height: 12}, {DaoId: 1, Address: member, Height: 13}}
+		}, wantErr: "duplicate member record of " + member + " in dao 1"},
+		{desc: "member record of an unknown dao", mutate: func(gs *types.GenesisState) {
+			gs.MemberRecords = []types.MemberRecord{{DaoId: 3, Address: member, Height: 12}}
+		}, wantErr: "dao 3 is not a static-list dao"},
+		{desc: "member record of a stake dao", mutate: func(gs *types.GenesisState) {
+			gs.MemberRecords = []types.MemberRecord{{DaoId: 2, Address: member, Height: 12}}
+		}, wantErr: "dao 2 is not a static-list dao"},
+		{desc: "member record of a non-member", mutate: func(gs *types.GenesisState) {
+			gs.MemberRecords = []types.MemberRecord{{DaoId: 1, Address: sdk.AccAddress("dao_stranger________").String(), Height: 12}}
+		}, wantErr: "not a member of dao 1"},
+		{desc: "member record with a negative height", mutate: func(gs *types.GenesisState) {
+			gs.MemberRecords = []types.MemberRecord{{DaoId: 1, Address: member, Height: -1}}
+		}, wantErr: "negative height"},
 		{desc: "duplicate pin count", mutate: func(gs *types.GenesisState) { gs.Pins = append(gs.Pins, gs.Pins[0]) }, wantErr: "duplicate pin count of dr/ubze"},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {

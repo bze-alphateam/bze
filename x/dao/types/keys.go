@@ -42,6 +42,9 @@ const (
 	// {source}/{address}/{proposal_id}. The Exit hook finds an address's open
 	// ballots on a source through it.
 	VoteIndexKeyPrefix = "vidx/"
+	// MemberKeyPrefix holds the height a member was added to a static-list
+	// DAO: {dao_id}/{address} -> int64.
+	MemberKeyPrefix = "member/"
 
 	// sourceStakingReward and sourceDenomReward prefix the electorate source keys.
 	sourceStakingReward = "sr/"
@@ -122,6 +125,19 @@ func VoteIndexPrefix(source []byte, addr sdk.AccAddress) []byte {
 // {source}/{address}/{proposal_id}.
 func VoteIndexKey(source []byte, addr sdk.AccAddress, proposalId uint64) []byte {
 	return append(VoteIndexPrefix(source, addr), sdk.Uint64ToBigEndian(proposalId)...)
+}
+
+// MemberKey is the key of a member record inside MemberKeyPrefix:
+// {dao_id}/{address}.
+func MemberKey(daoId uint64, member sdk.AccAddress) []byte {
+	return append(sdk.Uint64ToBigEndian(daoId), address.MustLengthPrefix(member.Bytes())...)
+}
+
+// SplitMemberKey splits a MemberKey into its dao id and address.
+func SplitMemberKey(key []byte) (uint64, sdk.AccAddress) {
+	addrLen := int(key[8])
+
+	return sdk.BigEndianToUint64(key[:8]), key[9 : 9+addrLen]
 }
 
 // DaoKey is the key of a Dao inside DaoKeyPrefix.

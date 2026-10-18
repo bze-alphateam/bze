@@ -158,8 +158,10 @@ func defaultRewardsState() rewardsState {
 	}
 }
 
-// stubRewards serves the given x/rewards state to the dao keeper.
+// stubRewards serves the given x/rewards state to the dao keeper, with no
+// participants until the test adds some through stubStakes.
 func (suite *IntegrationTestSuite) stubRewards(state rewardsState) {
+	suite.stubStakes()
 	suite.rewards.EXPECT().GetStakingReward(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(_ sdk.Context, id string) (rewardstypes.StakingReward, bool) {
 			sr, ok := state.srs[id]

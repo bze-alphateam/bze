@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"slices"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,6 +54,10 @@ func (k msgServer) CreateDao(goCtx context.Context, msg *types.MsgCreateDao) (*t
 	}
 	if !msg.Electorate.IsEmpty() {
 		dao.Electorate = msg.Electorate
+	}
+
+	if slices.Contains(dao.Members, dao.Address) {
+		return nil, errorsmod.Wrapf(types.ErrInvalidMembers, "dao %d cannot be a member of itself", daoId)
 	}
 
 	// a self-owned DAO needs voters from the start; an external admin can set the electorate up later

@@ -95,9 +95,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "Proposals",
 					Use:       "proposals [dao-id]",
 					Short:     "Lists a DAO's proposals, by id, optionally filtered by status",
-					Long: "Without --statuses every status is listed; with it only the proposals with one of the given statuses (repeat the flag or comma-separate). " +
+					Long: "Without --statuses every status is listed; with it only the proposals with one of the given statuses (repeat the flag for several: --statuses voting --statuses execution-failed; a comma-separated list is not accepted). " +
 						"Statuses are the stored ones: a proposal past its voting end stays voting until it is settled. Cleaned-up proposals are not listed.",
-					Example:        "bzed q dao proposals 1 --statuses voting,execution-failed",
+					Example:        "bzed q dao proposals 1 --statuses voting --statuses execution-failed",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}},
 				},
 				{
@@ -128,9 +128,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "create-dao [type] [name] [config]",
 					Short:     "Create a DAO; the creator pays the creation fee",
 					Long: "Create a DAO with its own derived account. type is static-list or stake, " +
-						"config is the DaoConfig as JSON: ratios as 18-decimal integers (500000000000000000 = 0.5), periods as seconds (\"259200s\"). A static-list DAO needs --members; a stake DAO takes --electorate '{\"sr_ids\":[\"3\"],\"dr_denom\":\"ubze\"}'. Without --admin the DAO is self-owned and needs a live electorate.",
-					Example: `bzed tx dao create-dao static-list "My DAO" '{"min_quorum":"500000000000000000","threshold":"500000000000000000","voting_period":"259200s",` +
-						`"expedited_period":"86400s","expedite_quorum":"600000000000000000","expedite_threshold":"660000000000000000"}' ` +
+						"config is the DaoConfig as JSON: ratios as decimals (\"0.5\"), periods as seconds (\"259200s\"). A static-list DAO needs --members; a stake DAO takes --electorate '{\"sr_ids\":[\"3\"],\"dr_denom\":\"ubze\"}'. Without --admin the DAO is self-owned and needs a live electorate.",
+					Example: `bzed tx dao create-dao static-list "My DAO" '{"min_quorum":"0.5","threshold":"0.5","voting_period":"259200s",` +
+						`"expedited_period":"86400s","expedite_quorum":"0.6","expedite_threshold":"0.66"}' ` +
 						`--members bze1...,bze1... --description "..." --from mykey`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "type"}, {ProtoField: "name"}, {ProtoField: "config"}},
 					FlagOptions: map[string]*autocliv1.FlagOptions{
@@ -234,11 +234,11 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "UpdateDaoConfig",
 					Use:       "update-dao-config [dao-id] [config]",
 					Short:     "Replace a DAO's config; signed by the DAO account only",
-					Long: "Replace the DAO's whole config, as JSON in the create-dao format (ratios as 18-decimal integers, periods as seconds). " +
+					Long: "Replace the DAO's whole config, as JSON in the create-dao format (ratios as decimals, periods as seconds). " +
 						"Only the DAO account can sign it: build the message with --generate-only and run it through admin-execute or a proposal. " +
 						"Open proposals keep the config they pinned.",
-					Example: `bzed tx dao update-dao-config 1 '{"min_quorum":"500000000000000000","threshold":"500000000000000000","voting_period":"259200s",` +
-						`"expedited_period":"86400s","expedite_quorum":"600000000000000000","expedite_threshold":"660000000000000000"}' --from bze1<dao address> --generate-only`,
+					Example: `bzed tx dao update-dao-config 1 '{"min_quorum":"0.5","threshold":"0.5","voting_period":"259200s",` +
+						`"expedited_period":"86400s","expedite_quorum":"0.6","expedite_threshold":"0.66"}' --from bze1<dao address> --generate-only`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}, {ProtoField: "config"}},
 				},
 				{
@@ -266,7 +266,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:     "Add and remove members of a static-list DAO; signed by the DAO account only",
 					Long: "Add new members and remove current ones; at least one member must remain. " +
 						"Only the DAO account can sign it: build the message with --generate-only and run it through admin-execute or a proposal. " +
-						"A removed member's votes on open proposals stop counting; added members can vote on them. " +
+						"A removed member's votes on open proposals stop counting; added members vote only on proposals submitted after them. " +
 						"For several addresses, repeat the flag (--add bze1... --add bze1...); a comma-separated list is not accepted.",
 					Example:        `bzed tx dao update-members 1 --add bze1<new member> --add bze1<another> --remove bze1<old member> --from bze1<dao address> --generate-only`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}},

@@ -36,6 +36,9 @@ const (
 	daoCleanupBatch   = 50
 	daoCreationFee    = 1_000_000 // 1 BZE
 	daoMinLockDays    = 1
+	// an expedited proposal settles early only this long after its submission
+	daoExpediteDelay     = "8s"
+	daoExpediteDelaySecs = 8
 
 	// the default DAO config of the cases
 	daoVoting    = "15s"
@@ -138,6 +141,7 @@ func daoGenesis() []cosmos.GenesisKV {
 		cosmos.NewGenesisKV(p+"dao_creation_fee", map[string]string{"denom": chain.Denom, "amount": strconv.Itoa(daoCreationFee)}),
 		cosmos.NewGenesisKV(p+"dao_creation_fee_destination", "burner"),
 		cosmos.NewGenesisKV(p+"min_electorate_lock_days", daoMinLockDays),
+		cosmos.NewGenesisKV(p+"min_expedite_delay", daoExpediteDelay),
 	}
 }
 

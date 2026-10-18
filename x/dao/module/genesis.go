@@ -27,6 +27,7 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 	k.SetAllVoteIndex(ctx, genState.VoteIndex)
 	k.SetAllJoinRecords(ctx, genState.JoinRecords)
 	k.SetAllPins(ctx, genState.Pins)
+	k.SetAllMemberRecords(ctx, genState.MemberRecords)
 
 	// I1: x/bank imports first, so the escrow balance is known here
 	if err := k.CheckDepositEscrow(ctx); err != nil {
@@ -46,6 +47,7 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *types.GenesisState {
 	genesis.VoteIndex = k.GetAllVoteIndex(ctx)
 	genesis.JoinRecords = k.GetAllJoinRecords(ctx)
 	genesis.Pins = k.GetAllPins(ctx)
+	genesis.MemberRecords = k.GetAllMemberRecords(ctx)
 
 	return genesis
 }
