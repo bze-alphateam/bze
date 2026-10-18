@@ -169,6 +169,17 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:        `bzed tx dao update-electorate 1 '{"sr_ids":["3","7"],"dr_denom":"ubze"}' --from bze1<dao address> --generate-only`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}, {ProtoField: "electorate"}},
 				},
+				{
+					RpcMethod: "UpdateMembers",
+					Use:       "update-members [dao-id] --add [address] --remove [address]",
+					Short:     "Add and remove members of a static-list DAO; signed by the DAO account only",
+					Long: "Add new members and remove current ones; at least one member must remain. " +
+						"Only the DAO account can sign it: build the message with --generate-only and run it through admin-execute or a proposal. " +
+						"A removed member's votes on open proposals stop counting; added members can vote on them. " +
+						"For several addresses, repeat the flag (--add bze1... --add bze1...); a comma-separated list is not accepted.",
+					Example:        `bzed tx dao update-members 1 --add bze1<new member> --add bze1<another> --remove bze1<old member> --from bze1<dao address> --generate-only`,
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dao_id"}},
+				},
 			},
 		},
 	}

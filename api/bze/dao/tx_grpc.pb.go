@@ -33,6 +33,7 @@ const (
 	Msg_UpdateDaoConfig_FullMethodName         = "/bze.dao.Msg/UpdateDaoConfig"
 	Msg_UpdateMetadata_FullMethodName          = "/bze.dao.Msg/UpdateMetadata"
 	Msg_UpdateElectorate_FullMethodName        = "/bze.dao.Msg/UpdateElectorate"
+	Msg_UpdateMembers_FullMethodName           = "/bze.dao.Msg/UpdateMembers"
 )
 
 // MsgClient is the client API for Msg service.
@@ -83,6 +84,10 @@ type MsgClient interface {
 	// UpdateElectorate replaces a stake DAO's reward sources. Only the DAO
 	// account signs it; open proposals keep the electorate they pinned.
 	UpdateElectorate(ctx context.Context, in *MsgUpdateElectorate, opts ...grpc.CallOption) (*MsgUpdateElectorateResponse, error)
+	// UpdateMembers adds and removes members of a static-list DAO. Only the DAO
+	// account signs it; a removed member's ballots on open proposals stop
+	// counting.
+	UpdateMembers(ctx context.Context, in *MsgUpdateMembers, opts ...grpc.CallOption) (*MsgUpdateMembersResponse, error)
 }
 
 type msgClient struct {
@@ -219,6 +224,15 @@ func (c *msgClient) UpdateElectorate(ctx context.Context, in *MsgUpdateElectorat
 	return out, nil
 }
 
+func (c *msgClient) UpdateMembers(ctx context.Context, in *MsgUpdateMembers, opts ...grpc.CallOption) (*MsgUpdateMembersResponse, error) {
+	out := new(MsgUpdateMembersResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateMembers_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -267,6 +281,10 @@ type MsgServer interface {
 	// UpdateElectorate replaces a stake DAO's reward sources. Only the DAO
 	// account signs it; open proposals keep the electorate they pinned.
 	UpdateElectorate(context.Context, *MsgUpdateElectorate) (*MsgUpdateElectorateResponse, error)
+	// UpdateMembers adds and removes members of a static-list DAO. Only the DAO
+	// account signs it; a removed member's ballots on open proposals stop
+	// counting.
+	UpdateMembers(context.Context, *MsgUpdateMembers) (*MsgUpdateMembersResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -315,6 +333,9 @@ func (UnimplementedMsgServer) UpdateMetadata(context.Context, *MsgUpdateMetadata
 }
 func (UnimplementedMsgServer) UpdateElectorate(context.Context, *MsgUpdateElectorate) (*MsgUpdateElectorateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateElectorate not implemented")
+}
+func (UnimplementedMsgServer) UpdateMembers(context.Context, *MsgUpdateMembers) (*MsgUpdateMembersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMembers not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -581,6 +602,24 @@ func _Msg_UpdateElectorate_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateMembers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateMembers)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateMembers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateMembers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateMembers(ctx, req.(*MsgUpdateMembers))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -643,6 +682,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateElectorate",
 			Handler:    _Msg_UpdateElectorate_Handler,
+		},
+		{
+			MethodName: "UpdateMembers",
+			Handler:    _Msg_UpdateMembers_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

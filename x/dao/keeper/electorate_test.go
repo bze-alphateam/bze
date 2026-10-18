@@ -833,3 +833,164 @@ func (suite *IntegrationTestSuite) TestUpdateElectorate_ThroughProposal() {
 	suite.Require().Equal(uint64(1), suite.k.GetSourcePins(suite.ctx, drSource))
 	suite.requirePinInvariant([]uint64{1}, []uint64{id})
 }
+
+func (suite *IntegrationTestSuite) updateMembers(authority sdk.AccAddress, daoId uint64, add, remove []sdk.AccAddress) error {
+	_, err := suite.msgServer.UpdateMembers(suite.ctx, types.NewMsgUpdateMembers(authority.String(), daoId, bech32s(add), bech32s(remove)))
+	return err
+}
+
+func bech32s(addrs []sdk.AccAddress) []string {
+	out := make([]string, 0, len(addrs))
+	for _, addr := range addrs {
+		out = append(out, addr.String())
+	}
+
+	return out
+}
+
+// requireMembers checks DAO 1's stored member list, in order.
+func (suite *IntegrationTestSuite) requireMembers(members ...sdk.AccAddress) {
+	dao, found := suite.k.GetDao(suite.ctx, 1)
+	suite.Require().True(found)
+	suite.Require().Equal(bech32s(members), dao.Members)
+}
+
+// Business Logic §3: member changes accept only the DAO account. The admin
+// signing directly, a member and any other address are refused.
+func (suite *IntegrationTestSuite) TestUpdateMembers_DirectSignersRejected() {
+	suite.createAdminDao()
+
+	for _, signer := range []sdk.AccAddress{adminAddr, memberA, attackerAddr, daoAddress(2)} {
+		err := suite.updateMembers(signer, 1, []sdk.AccAddress{memberC}, nil)
+		suite.Require().ErrorIs(err, types.ErrUnauthorizedSigner, signer.String())
+	}
+
+	suite.requireMembers(memberA, memberB)
+	suite.Require().False(suite.hasEvent("bze.dao.EventDaoMembersUpdated"))
+}
+
+func (suite *IntegrationTestSuite) TestUpdateMembers_UnknownDao() {
+	suite.createAdminDao()
+
+	suite.Require().ErrorIs(suite.updateMembers(daoAddress(2), 2, []sdk.AccAddress{memberC}, nil), types.ErrDaoNotFound)
+	suite.Require().ErrorIs(suite.updateMembers(daoAddress(1), 0, []sdk.AccAddress{memberC}, nil), types.ErrDaoNotFound)
+}
+
+func (suite *IntegrationTestSuite) TestUpdateMembers_InvalidRequests() {
+	suite.createAdminDao()
+
+	_, err := suite.msgServer.UpdateMembers(suite.ctx, types.NewMsgUpdateMembers("bad", 1, []string{memberC.String()}, nil))
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidAddress)
+
+	_, err = suite.msgServer.UpdateMembers(suite.ctx, types.NewMsgUpdateMembers(daoAddress(1).String(), 1, nil, nil))
+	suite.Require().ErrorIs(err, types.ErrInvalidMembers)
+	suite.requireMembers(memberA, memberB)
+}
+
+// D29: a stake DAO has no member list, even through its admin.
+func (suite *IntegrationTestSuite) TestUpdateMembers_D29_StakeDaoRejected() {
+	suite.stubRewards(defaultRewardsState())
+	suite.createAdminStakeDao([]string{"1"}, stakeDenom)
+
+	err := suite.adminExecute(adminAddr, 1, types.NewMsgUpdateMembers(daoAddress(1).String(), 1, []string{memberA.String()}, nil))
+	suite.Require().ErrorIs(err, types.ErrInvalidDaoType)
+
+	dao, _ := suite.k.GetDao(suite.ctx, 1)
+	suite.Require().Empty(dao.Members)
+	suite.requireElectorate([]string{"1"}, stakeDenom)
+}
+
+// The member rules on DAO 1 (external admin, members A and B, cap 3): every
+// added address is new, every removed one a member, no address in both lists,
+// and the result holds 1 to max_static_members members. Removed members leave
+// the list in place, added ones are appended. A refused update changes nothing.
+func (suite *IntegrationTestSuite) TestUpdateMembers_Rules() {
+	for _, tc := range []struct {
+		desc    string
+		add     []string
+		remove  []string
+		want    []sdk.AccAddress
+		wantErr string
+	}{
+		{desc: "add one", add: []string{memberC.String()}, want: []sdk.AccAddress{memberA, memberB, memberC}},
+		{desc: "remove one", remove: []string{memberA.String()}, want: []sdk.AccAddress{memberB}},
+		{desc: "add and remove", add: []string{memberC.String()}, remove: []string{memberA.String()}, want: []sdk.AccAddress{memberB, memberC}},
+		{desc: "replace every member", add: []string{memberC.String()}, remove: []string{memberA.String(), memberB.String()}, want: []sdk.AccAddress{memberC}},
+		{desc: "added address stored canonical", add: []string{strings.ToUpper(memberC.String())}, want: []sdk.AccAddress{memberA, memberB, memberC}},
+		{desc: "removed address in another case", remove: []string{strings.ToUpper(memberB.String())}, want: []sdk.AccAddress{memberA}},
+		{desc: "remove every member", remove: []string{memberA.String(), memberB.String()}, wantErr: "needs at least one member"},
+		{desc: "above the cap", add: []string{memberC.String(), attackerAddr.String()}, wantErr: "at most 3 members"},
+		{desc: "add an existing member", add: []string{memberC.String(), memberA.String()}, wantErr: "is already a member"},
+		{desc: "add an existing member in another case", add: []string{strings.ToUpper(memberB.String())}, wantErr: "is already a member"},
+		{desc: "remove a non-member", remove: []string{memberA.String(), memberC.String()}, wantErr: "is not a member"},
+		{desc: "duplicate added address", add: []string{memberC.String(), memberC.String()}, wantErr: "duplicate add address"},
+		{desc: "duplicate removed address", remove: []string{memberA.String(), memberA.String()}, wantErr: "duplicate remove address"},
+		{desc: "address both added and removed", add: []string{memberC.String()}, remove: []string{memberC.String()}, wantErr: "is both added and removed"},
+	} {
+		suite.Run(tc.desc, func() {
+			suite.SetupTest()
+			params := types.DefaultParams()
+			params.MaxStaticMembers = 3
+			suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
+			suite.createAdminDao()
+
+			_, err := suite.msgServer.UpdateMembers(suite.ctx, types.NewMsgUpdateMembers(daoAddress(1).String(), 1, tc.add, tc.remove))
+			if tc.wantErr != "" {
+				suite.Require().ErrorIs(err, types.ErrInvalidMembers)
+				suite.Require().ErrorContains(err, tc.wantErr)
+				suite.requireMembers(memberA, memberB)
+				suite.Require().False(suite.hasEvent("bze.dao.EventDaoMembersUpdated"))
+				return
+			}
+
+			suite.Require().NoError(err)
+			suite.requireMembers(tc.want...)
+			suite.Require().True(suite.hasEvent("bze.dao.EventDaoMembersUpdated"))
+		})
+	}
+}
+
+// The default cap is 128 members.
+func (suite *IntegrationTestSuite) TestUpdateMembers_DefaultMemberCap() {
+	suite.createAdminDao()
+
+	added := make([]sdk.AccAddress, 127)
+	for i := range added {
+		added[i] = memberAddress(i)
+	}
+
+	suite.Require().ErrorIs(suite.updateMembers(daoAddress(1), 1, added, nil), types.ErrInvalidMembers)
+	suite.Require().NoError(suite.updateMembers(daoAddress(1), 1, added[:126], nil))
+
+	dao, _ := suite.k.GetDao(suite.ctx, 1)
+	suite.Require().Len(dao.Members, 128)
+}
+
+// D11: a self-owned DAO cannot remove its last member.
+func (suite *IntegrationTestSuite) TestUpdateMembers_D11_SelfOwnedKeepsAMember() {
+	suite.createStaticDao(noConfigChange)
+
+	err := suite.updateMembers(daoAddress(1), 1, nil, []sdk.AccAddress{memberA, memberB})
+	suite.Require().ErrorIs(err, types.ErrInvalidMembers)
+	suite.requireMembers(memberA, memberB)
+
+	suite.Require().NoError(suite.updateMembers(daoAddress(1), 1, nil, []sdk.AccAddress{memberA}))
+	suite.requireMembers(memberB)
+}
+
+// The external admin changes the members through MsgAdminExecute, signed as
+// the DAO; the event lists the changed addresses.
+func (suite *IntegrationTestSuite) TestUpdateMembers_ThroughAdminExecute() {
+	suite.createAdminDao()
+
+	msg := types.NewMsgUpdateMembers(daoAddress(1).String(), 1, []string{memberC.String()}, []string{memberA.String()})
+	suite.Require().NoError(suite.adminExecute(adminAddr, 1, msg))
+
+	suite.requireMembers(memberB, memberC)
+	attrs := suite.lastEventAttrs(&types.EventDaoMembersUpdated{})
+	suite.Require().NotNil(attrs)
+	suite.Require().Equal(`"1"`, attrs["id"])
+	suite.Require().Equal(`["`+memberC.String()+`"]`, attrs["added"])
+	suite.Require().Equal(`["`+memberA.String()+`"]`, attrs["removed"])
+	suite.Require().True(suite.hasEvent("bze.dao.EventAdminExecuted"))
+}

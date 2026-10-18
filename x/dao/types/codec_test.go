@@ -127,3 +127,12 @@ func TestRegisterInterfaces_RegistersMsgUpdateElectorate(t *testing.T) {
 	require.NoError(t, err)
 	require.IsType(t, &types.MsgUpdateElectorate{}, msg)
 }
+
+func TestRegisterInterfaces_RegistersMsgUpdateMembers(t *testing.T) {
+	registry := codectypes.NewInterfaceRegistry()
+	types.RegisterInterfaces(registry)
+
+	msg, err := registry.Resolve("/bze.dao.MsgUpdateMembers")
+	require.NoError(t, err)
+	require.IsType(t, &types.MsgUpdateMembers{}, msg)
+}

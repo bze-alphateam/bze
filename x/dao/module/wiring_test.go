@@ -77,7 +77,7 @@ func TestAutoCLIOptions(t *testing.T) {
 	require.Equal(t, "params", opts.Query.RpcCommandOptions[0].Use)
 
 	require.Equal(t, "bze.dao.Msg", opts.Tx.Service)
-	require.Len(t, opts.Tx.RpcCommandOptions, 14)
+	require.Len(t, opts.Tx.RpcCommandOptions, 15)
 	updateParams := opts.Tx.RpcCommandOptions[0]
 	require.Equal(t, "UpdateParams", updateParams.RpcMethod)
 	require.Equal(t, "update-params [params]", updateParams.Use)
@@ -190,6 +190,14 @@ func TestAutoCLIOptions(t *testing.T) {
 	require.Len(t, updateElectorate.PositionalArgs, 2)
 	require.Equal(t, "dao_id", updateElectorate.PositionalArgs[0].ProtoField)
 	require.Equal(t, "electorate", updateElectorate.PositionalArgs[1].ProtoField)
+
+	// add and remove are repeated fields, so autocli reads them as --add and --remove flags
+	updateMembers := opts.Tx.RpcCommandOptions[14]
+	require.Equal(t, "UpdateMembers", updateMembers.RpcMethod)
+	require.Equal(t, "update-members [dao-id] --add [address] --remove [address]", updateMembers.Use)
+	require.False(t, updateMembers.GovProposal)
+	require.Len(t, updateMembers.PositionalArgs, 1)
+	require.Equal(t, "dao_id", updateMembers.PositionalArgs[0].ProtoField)
 }
 
 // autocli reads the create-dao config argument as protojson into the api type
