@@ -4,6 +4,7 @@ package bze.dao;
 import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "bze/dao/params.proto";
+import "bze/dao/store.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/dao/types";
 
@@ -14,4 +15,11 @@ message GenesisState {
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
   ];
+  // daos are all the DAO records, by id. The address and admin indexes and
+  // the DAO part of the source pins are rebuilt from them on import.
+  repeated Dao daos = 2 [(gogoproto.nullable) = false];
+  // dao_count is the last dao id handed out; every DAO id is at most it.
+  uint64 dao_count = 3;
+  // proposal_count is the last proposal id handed out.
+  uint64 proposal_count = 4;
 }

@@ -35,6 +35,33 @@ func (k Keeper) HasDaoAdminIndex(ctx context.Context, admin sdk.AccAddress, daoI
 	return k.getPrefixedStore(ctx, types.KeyPrefix(types.DaoAdminKeyPrefix)).Has(types.DaoAdminKey(admin, daoId))
 }
 
+// GetAllDaos returns every DAO, by id.
+func (k Keeper) GetAllDaos(ctx context.Context) []types.Dao {
+	iterator := k.getPrefixedStore(ctx, types.KeyPrefix(types.DaoKeyPrefix)).Iterator(nil, nil)
+	defer iterator.Close()
+
+	var daos []types.Dao
+	for ; iterator.Valid(); iterator.Next() {
+		var dao types.Dao
+		k.cdc.MustUnmarshal(iterator.Value(), &dao)
+		daos = append(daos, dao)
+	}
+
+	return daos
+}
+
+// SetAllDaos imports DAO records (genesis): it stores each one with its address
+// and admin index entries and pins its electorate sources. The DAOs must pass
+// GenesisState.Validate.
+func (k Keeper) SetAllDaos(ctx context.Context, daos []types.Dao) {
+	for _, dao := range daos {
+		k.setNewDao(ctx, dao)
+		for _, source := range electorateSources(dao.Electorate) {
+			k.pinSource(ctx, source)
+		}
+	}
+}
+
 // setNewDao stores a new DAO with its address and admin index entries. The
 // DAO's address and admin must be valid bech32 addresses.
 func (k Keeper) setNewDao(ctx context.Context, dao types.Dao) {
