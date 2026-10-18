@@ -8,11 +8,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/bze-alphateam/bze/interchaintest/chain"
+	"github.com/bze-alphateam/bze/interchaintest/helpers"
 )
 
 // createMsg is a MsgCreateDao for `tx sign` (gogoproto JSON), for the
 // refusals the CLI would catch itself.
-func (s *daoSuite) createMsg(creator ibc.Wallet, typ, name string, cfg map[string]any, members []string, el *daoElectorate) map[string]any {
+func (s *daoSuite) createMsg(creator ibc.Wallet, typ any, name string, cfg map[string]any, members []string, el *daoElectorate) map[string]any {
 	m := daoMsg("MsgCreateDao", map[string]any{
 		"creator": creator.FormattedAddress(),
 		"type":    typ,
@@ -220,7 +221,7 @@ func (s *daoSuite) createDao(t *testing.T) {
 	})
 
 	t.Run("type", func(t *testing.T) {
-		s.refuseMsgs(t, creator, daoCode(1101), s.createMsg(creator, "7", "x", defaultCfg().gogo(), addrs(creator), nil))
+		s.refuseMsgs(t, creator, daoCode(1101), s.createMsg(creator, 7, "x", defaultCfg().gogo(), addrs(creator), nil))
 	})
 
 	t.Run("insufficient funds for the fee stores nothing", func(t *testing.T) {
@@ -279,8 +280,17 @@ func (s *daoSuite) adminExecute(t *testing.T) {
 		s.refuse(t, admin, refusal{codespace: daoModule, code: 1110, watch: watch}, exec(big(), big(), big())...)
 	})
 	t.Run("message without a route", func(t *testing.T) {
+		// a type the chain does not know cannot even be encoded: the client
+		// refuses it before anything is signed or broadcast
 		unknown := map[string]any{"@type": "/bze.dao.MsgDoesNotExist", "authority": d.addr}
-		s.refuseMsgs(t, admin, refusal{codespace: "sdk", code: 2}, daoMsg("MsgAdminExecute", map[string]any{"admin": admin.FormattedAddress(), "dao_id": d.idArg(), "msgs": []any{unknown}}))
+		before := s.allBalances(t, admin.FormattedAddress())
+		_, err := helpers.ExecMsgs(s.ctx, s.bze, admin, []helpers.TxOption{helpers.WithGas(daoRefuseGas)},
+			daoMsg("MsgAdminExecute", map[string]any{"admin": admin.FormattedAddress(), "dao_id": d.idArg(), "msgs": []any{unknown}}))
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "MsgDoesNotExist")
+		_, err = helpers.ExecTxWith(s.ctx, s.bze, admin, []helpers.TxOption{helpers.WithGas(daoRefuseGas)}, exec(unknown)...)
+		require.Error(t, err)
+		require.Equal(t, before.String(), s.allBalances(t, admin.FormattedAddress()).String())
 	})
 	t.Run("unknown dao", func(t *testing.T) {
 		s.refuse(t, admin, daoCode(1108), "dao", "admin-execute", "999999", msgArgs(bankSend(d.addr, r, ubze(1)))[0])

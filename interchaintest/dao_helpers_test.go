@@ -34,7 +34,7 @@ type daoCfg struct {
 	quorum, threshold, expQuorum, expThreshold string
 	voting, expedited                          string
 	allowExpedite, open                        bool
-	cost, deposit                              *sdk.Coin
+	cost, deposit                              *daoCoin
 	policy, costDest, keptDest                 string
 }
 
@@ -66,10 +66,10 @@ func (c daoCfg) fields(ratio func(string) string) map[string]any {
 		"kept_deposit_destination": c.keptDest,
 	}
 	if c.cost != nil {
-		m["proposal_cost"] = map[string]string{"denom": c.cost.Denom, "amount": c.cost.Amount.String()}
+		m["proposal_cost"] = map[string]string{"denom": c.cost.Denom, "amount": c.cost.Amount}
 	}
 	if c.deposit != nil {
-		m["proposal_deposit"] = map[string]string{"denom": c.deposit.Denom, "amount": c.deposit.Amount.String()}
+		m["proposal_deposit"] = map[string]string{"denom": c.deposit.Denom, "amount": c.deposit.Amount}
 	}
 	return m
 }
@@ -84,9 +84,10 @@ func (c daoCfg) gogo() map[string]any {
 	return c.fields(func(r string) string { return sdkmath.LegacyMustNewDecFromStr(r).String() })
 }
 
-func coinPtr(amount int64, denom string) *sdk.Coin {
-	c := sdk.NewInt64Coin(denom, amount)
-	return &c
+// coinPtr is a config coin; it may be invalid (a negative amount, a bad
+// denom), which sdk.Coin can not hold.
+func coinPtr(amount int64, denom string) *daoCoin {
+	return &daoCoin{Denom: denom, Amount: strconv.FormatInt(amount, 10)}
 }
 
 func mustJSON(v any) string {

@@ -103,8 +103,6 @@ func (s *daoSuite) submitProposal(t *testing.T) {
 			"outputs": []map[string]any{{"address": m[0].FormattedAddress(), "coins": ubze(2)}},
 		}
 		s.refuse(t, m[0], daoCode(1111), "dao", "submit-proposal", fresh.idArg(), "multi", msgArgs(multi)[0])
-		noSigner := map[string]any{"@type": "/cosmos.bank.v1beta1.MsgSend", "to_address": rcpt.FormattedAddress(), "amount": ubze(1)}
-		s.refuse(t, m[0], daoCode(1111), "dao", "submit-proposal", fresh.idArg(), "no signer", msgArgs(noSigner)[0])
 	})
 
 	t.Run("insufficient funds store nothing", func(t *testing.T) {

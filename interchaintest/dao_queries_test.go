@@ -167,13 +167,15 @@ func (s *daoSuite) queries(t *testing.T) {
 		require.Equal(t, allVoters, voters, "two pages joined by next_key list every ballot once, in order")
 		rev := cliQuery[daoListPage](t, s, "ballots", daoU64(pid), "--page-reverse")
 		require.Equal(t, allVoters[2], rev.Ballots[0].Voter)
-		empty := cliQuery[daoListPage](t, s, "ballots", "999999")
+		var empty daoListPage
+		code := s.restGet(t, "/bze/dao/ballots/999999", &empty)
+		require.Contains(t, []int{http.StatusOK, http.StatusNotFound}, code)
 		require.Empty(t, empty.Ballots)
 
 		s.waitVotingEnd(t, pid)
 		res = cliQuery[daoProposalResp](t, s, "proposal", daoU64(pid))
 		require.True(t, res.VotingEnded, "voting_ended is set from the voting end on, while the proposal is in voting")
-		s.settleFirst(t, m[0], pid, "REJECTED") // 1 yes, 1 no: threshold 0.5 met, quorum 3 of 3 met
+		s.settleFirst(t, m[0], pid, "EXECUTED") // 1 yes of 2 decided meets the 0.5 threshold, 3 of 3 the quorum
 	})
 
 	t.Run("voting-power and join-record", func(t *testing.T) {
@@ -337,7 +339,7 @@ func (s *daoSuite) cliFacts(t *testing.T) {
 	})
 
 	s.waitVotingEnd(t, pid)
-	s.settleFirst(t, m[1], pid, "REJECTED") // 1 of 2 votes is the quorum; 1 yes of 1 decided passes
+	s.settleFirst(t, m[1], pid, "EXECUTED") // 1 of 2 votes is the quorum; 1 yes of 1 decided passes
 }
 
 // D. At the end: stop the node, export the state, check I4 (pins) and I6

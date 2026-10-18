@@ -41,7 +41,7 @@ const (
 	daoVoting    = "15s"
 	daoExpedited = "6s"
 
-	daoFunderFunds = 1_000_000_000_000 // 1,000,000 BZE: reward fees, DAOs, users
+	daoFunderFunds = 1_500_000_000_000 // 1,500,000 BZE: about 20 reward programs at 25,000 BZE, DAOs, users
 	daoUserFunds   = 200_000_000       // 200 BZE each
 	daoStakeMint   = 1_000_000_000_000 // of each factory denom
 

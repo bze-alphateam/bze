@@ -201,7 +201,7 @@ func (s *daoSuite) updateMembers(t *testing.T) {
 	s.waitVotingEnd(t, pid)
 	s.settleFirst(t, m[0], pid, "EXECUTED")
 	s.waitVotingEnd(t, otherPid)
-	s.settleFirst(t, m[1], otherPid, "REJECTED")
+	s.settleFirst(t, m[1], otherPid, "EXECUTED") // 1 of 2 meets the quorum
 }
 
 // A10. update-electorate: add and remove sources, D11, D14, D25, D28, D29.
