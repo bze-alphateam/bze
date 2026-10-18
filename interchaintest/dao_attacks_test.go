@@ -63,28 +63,33 @@ func (s *daoSuite) multiMessageTxs(t *testing.T) {
 		s.daos = next
 		s.submitted(t, res, daoRef{id: next, addr: daoAddress(next)}, c.FormattedAddress())
 	})
-	t.Run("a whale submits, votes and settles expedited in one tx (accepted residual)", func(t *testing.T) {
+	t.Run("a whale cannot settle expedited in its submit tx, only after the delay", func(t *testing.T) {
 		wsrc := stakeSource{s: s, sr: s.newSR(t, daoSrLock, s.stk, daoSrDuration)}
 		whale, small := s.users(t, 1, daoUserFunds, coins(7_000, s.stk)...)[0], s.users(t, 1, daoUserFunds, coins(3_000, s.stk)...)[0]
 		wsrc.join(t, whale, 7_000)
 		wsrc.join(t, small, 3_000)
 		wcfg := defaultCfg()
 		wcfg.allowExpedite = true
+		wcfg.voting, wcfg.expedited = "40s", "30s"
 		wd := s.createStake(t, whale, wcfg, wsrc.electorate(), "")
 		s.fund(t, wd.addr, ubze(100))
 		next := s.proposals + 1
 		send := bankSend(wd.addr, whale.FormattedAddress(), ubze(100))
-		res := s.runMsgs(t, whale, 2_500_000, []string{wd.addr}, []daoFlow{flow(wd.addr, whale.FormattedAddress(), ubze(100))},
-			submitMsg(whale.FormattedAddress(), wd.id, "instant", []map[string]any{send}, true),
-			voteMsg(whale.FormattedAddress(), next, "YES"),
-			settleMsg(whale.FormattedAddress(), next))
+		submit := submitMsg(whale.FormattedAddress(), wd.id, "instant", []map[string]any{send}, true)
+		s.refuseMsgs(t, whale, refusal{codespace: daoModule, code: 1132, watch: []string{wd.addr}},
+			submit, voteMsg(whale.FormattedAddress(), next, "YES"), settleMsg(whale.FormattedAddress(), next))
+
+		// submitted and voted in one tx, it settles early once the delay is over
+		res := s.runMsgs(t, whale, 2_500_000, []string{wd.addr}, nil, submit, voteMsg(whale.FormattedAddress(), next, "YES"))
 		require.Equal(t, daoU64(next), idOf(s.event(t, res, "EventProposalSubmitted")))
 		s.proposals = next
-		settled := s.event(t, res, "EventProposalSettled")
-		require.Equal(t, []string{"EXECUTED", "true"}, []string{statusOf(settled), settled.Attributes["expedited_early"]})
 		p := s.prop(t, next)
-		require.Equal(t, res.Height, int64(p.SubmitHeight), "submitted and executed in the same block")
-		t.Logf("a 70%% whale passed and executed an expedited proposal in its submit tx, height %d", res.Height)
+		require.Equal(t, res.Height, int64(p.SubmitHeight))
+		s.waitTime(t, int64(p.SubmitTime)+daoExpediteDelaySecs)
+		out := s.settle(t, small, next, "EXECUTED", []string{wd.addr}, []daoFlow{flow(wd.addr, whale.FormattedAddress(), ubze(100))})
+		require.Equal(t, "true", s.event(t, out, "EventProposalSettled").Attributes["expedited_early"])
+		_, now := s.blockTime(t)
+		require.Less(t, now, int64(p.VotingEnd), "settled before the voting end")
 	})
 	s.waitVotingEnd(t, pid)
 	s.settleFirst(t, a, pid, "REJECTED")
@@ -264,33 +269,22 @@ func (s *daoSuite) daoAsVoter(t *testing.T) {
 	s.cancel(t, y[0], pid)
 }
 
-// E6. [ask] Self-referencing electorates: a DAO listed as its own member, a
-// stake DAO's treasury staked in its own source. The suite records what the
-// chain does; whether it is intended is a question for Stefan.
+// E6. Self-referencing electorates: a DAO cannot list its own address as a
+// member, and a stake DAO's treasury staked in its own source never votes on
+// its proposals nor counts in their denominator. Other DAOs as voters are E5.
 func (s *daoSuite) selfReferencing(t *testing.T) {
 	u, z1 := s.user(t), s.user(t)
-	next := s.daos + 1
-	t.Run("own address as a static member", func(t *testing.T) {
-		Z := s.createStatic(t, z1, defaultCfg(), []string{z1.FormattedAddress(), daoAddress(next)}, u.FormattedAddress())
-		require.Equal(t, daoAddress(next), Z.addr)
-		pid := s.submit(t, z1, Z, "the admin votes with the dao's seat", nil)
-		require.Equal(t, "2", s.prop(t, pid).PinnedDenominator, "the dao counts itself in the denominator")
-		s.adminExec(t, u, Z, nil, voteMsg(Z.addr, pid, "YES"))
-		s.vote(t, z1, pid, "no")
-		s.waitVotingEnd(t, pid)
-		p := s.prop(t, pid)
-		status := "REJECTED"
-		if passes(t, p) {
-			status = "EXECUTED"
-		}
-		s.settleFirst(t, u, pid, status)
-		t.Logf("[ask] a dao listed as its own member: the admin cast the dao's vote; yes %s no %s of %s: %s", p.Yes, p.No, p.PinnedDenominator, status)
+	t.Run("own address as a static member is refused", func(t *testing.T) {
+		next := s.daos + 1
+		s.refuse(t, z1, daoCode(1104), "dao", "create-dao", "static-list", "self member", defaultCfg().cli(),
+			"--members", z1.FormattedAddress()+","+daoAddress(next), "--admin", u.FormattedAddress())
+		require.Equal(t, next-1, s.daos, "nothing was created")
 
-		Z2 := s.createStatic(t, z1, defaultCfg(), addrs(z1), u.FormattedAddress())
-		s.adminExec(t, u, Z2, nil, membersMsg(Z2, []string{Z2.addr}, nil))
-		require.Contains(t, s.dao(t, Z2.id).Members, Z2.addr, "update-members accepts the dao's own address")
+		Z := s.createStatic(t, z1, defaultCfg(), addrs(z1), u.FormattedAddress())
+		s.adminRefuse(t, u, Z, daoCode(1104), membersMsg(Z, []string{Z.addr}, nil))
+		require.Equal(t, addrs(z1), s.dao(t, Z.id).Members)
 	})
-	t.Run("treasury stake in its own source", func(t *testing.T) {
+	t.Run("treasury stake in its own source never votes", func(t *testing.T) {
 		sr := s.newSR(t, daoSrLock, s.stk, daoSrDuration)
 		st1 := s.users(t, 1, daoUserFunds, coins(1_000, s.stk)...)[0]
 		s.joinSR(t, st1, sr, 1_000)
@@ -299,18 +293,12 @@ func (s *daoSuite) selfReferencing(t *testing.T) {
 		join := map[string]any{"@type": "/bze.rewards.MsgJoinStaking", "creator": S.addr, "reward_id": sr, "amount": "3000"}
 		s.adminExec(t, u, S, []daoFlow{flow(S.addr, s.rewards, coins(3_000, s.stk))}, join)
 		pid := s.submit(t, st1, S, "treasury stake votes", nil)
-		require.Equal(t, "4000", s.prop(t, pid).PinnedDenominator, "the treasury's stake counts in the denominator")
-		res := s.adminExec(t, u, S, nil, voteMsg(S.addr, pid, "YES"))
-		weight := s.event(t, res, "EventVote").Attributes["weight"]
-		s.vote(t, st1, pid, "no")
+		require.Equal(t, "1000", s.prop(t, pid).PinnedDenominator, "the treasury's stake stays out of the denominator")
+		s.adminRefuse(t, u, S, daoCode(1119), voteMsg(S.addr, pid, "YES"))
+		s.vote(t, st1, pid, "yes")
 		s.waitVotingEnd(t, pid)
-		p := s.prop(t, pid)
-		status := "REJECTED"
-		if passes(t, p) {
-			status = "EXECUTED"
-		}
-		s.settleFirst(t, u, pid, status)
-		t.Logf("[ask] a stake dao's treasury staked in its own source: the admin voted %s with it; yes %s no %s of %s: %s", weight, p.Yes, p.No, p.PinnedDenominator, status)
+		s.requireTallyOf(t, pid, 1_000, 0, 0)
+		s.settleFirst(t, u, pid, "EXECUTED")
 	})
 }
 

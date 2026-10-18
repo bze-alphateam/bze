@@ -110,6 +110,7 @@ func TestGenesis_DaosRoundTrip(t *testing.T) {
 		DaoCount:      3,
 		ProposalCount: 5,
 		Pins:          []types.PinCount{{Source: "dr/ubze", Count: 1}, {Source: "sr/3", Count: 2}, {Source: "sr/7", Count: 1}},
+		MemberRecords: []types.MemberRecord{{DaoId: 1, Address: memberB.String(), Height: 42}},
 	}
 	require.NoError(t, genesisState.Validate())
 
@@ -117,6 +118,10 @@ func TestGenesis_DaosRoundTrip(t *testing.T) {
 	dao.InitGenesis(ctx, &k, genesisState)
 	exported := dao.ExportGenesis(ctx, &k)
 	require.Equal(t, genesisState, *exported)
+
+	record, found := k.GetMemberRecord(ctx, 1, memberB)
+	require.True(t, found)
+	require.Equal(t, int64(42), record.Height)
 
 	fresh, freshCtx := genesisKeeper(t, sdk.NewCoins())
 	dao.InitGenesis(freshCtx, &fresh, *exported)

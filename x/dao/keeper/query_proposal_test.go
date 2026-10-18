@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"time"
+
 	"strconv"
 
 	"google.golang.org/grpc/codes"
@@ -101,6 +103,7 @@ func (suite *IntegrationTestSuite) TestQueryProposal_RetryDeadlineExpired() {
 // tally meets the expedite bars: one yes of two members misses them, two meet
 // them, and from the voting end the flag gives way to voting_ended.
 func (suite *IntegrationTestSuite) TestQueryProposal_ExpediteSettleable() {
+	suite.setExpediteDelay(0)
 	suite.createStaticDao(noConfigChange)
 	expedited, err := suite.submit(memberA, 1, true)
 	suite.Require().NoError(err)
@@ -126,6 +129,24 @@ func (suite *IntegrationTestSuite) TestQueryProposal_ExpediteSettleable() {
 	suite.requireLiveStatus(expedited, false, 0, false)
 }
 
+// The flag follows min_expedite_delay as SettleProposal does: a proposal that
+// meets the bars is not settleable until the delay after its submission.
+func (suite *IntegrationTestSuite) TestQueryProposal_ExpediteSettleableAfterDelay() {
+	suite.setExpediteDelay(time.Hour)
+	suite.createStaticDao(noConfigChange)
+	id, err := suite.submit(memberA, 1, true)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+	suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_YES))
+	suite.requireLiveStatus(id, false, 0, false)
+
+	proposal, _ := suite.k.GetProposal(suite.ctx, id)
+	suite.ctx = suite.ctx.WithBlockTime(time.Unix(proposal.SubmitTime+3599, 0))
+	suite.requireLiveStatus(id, false, 0, false)
+	suite.ctx = suite.ctx.WithBlockTime(time.Unix(proposal.SubmitTime+3600, 0))
+	suite.requireLiveStatus(id, false, 0, true)
+}
+
 // The flag uses the exact expedite bars SettleProposal checks: yes exactly
 // expedite_threshold × D (0.66 × 150 = 99) is settleable, one unit less is not.
 func (suite *IntegrationTestSuite) TestQueryProposal_ExpediteSettleableBoundary() {
@@ -135,6 +156,7 @@ func (suite *IntegrationTestSuite) TestQueryProposal_ExpediteSettleableBoundary(
 	}{{99, true}, {98, false}} {
 		suite.Run(strconv.FormatInt(tc.yes, 10), func() {
 			suite.SetupTest()
+			suite.setExpediteDelay(0)
 			_, s := suite.expediteStakeDao(noConfigChange)
 			s.joinSr("1", memberA, tc.yes)
 			suite.atBlock(10)

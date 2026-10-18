@@ -144,7 +144,8 @@ func (k Keeper) checkProposer(ctx sdk.Context, dao types.Dao, proposer sdk.AccAd
 }
 
 // votingDenominator is the DAO's total voting power, pinned by a new
-// proposal: the member count of a static list, or the stake of the electorate.
+// proposal: the member count of a static list, or the stake of the electorate
+// without the DAO's own.
 func (k Keeper) votingDenominator(ctx sdk.Context, dao types.Dao) math.Int {
 	if dao.Type == types.DaoType_DAO_TYPE_STATIC_LIST {
 		return math.NewInt(int64(len(dao.Members)))
@@ -154,7 +155,7 @@ func (k Keeper) votingDenominator(ctx sdk.Context, dao types.Dao) math.Int {
 		return math.ZeroInt()
 	}
 
-	return k.electorateStake(ctx, dao.Electorate)
+	return k.voterStake(ctx, dao, dao.Electorate)
 }
 
 // validateProposalContent checks the title, summary and messages against the params.

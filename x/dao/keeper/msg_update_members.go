@@ -39,6 +39,10 @@ func (k msgServer) UpdateMembers(goCtx context.Context, msg *types.MsgUpdateMemb
 	removed := canonicalAddresses(msg.Remove)
 
 	for _, addr := range added {
+		if addr == dao.Address {
+			return nil, errorsmod.Wrapf(types.ErrInvalidMembers, "dao %d cannot be a member of itself", dao.Id)
+		}
+
 		if slices.Contains(dao.Members, addr) {
 			return nil, errorsmod.Wrapf(types.ErrInvalidMembers, "%s is already a member of dao %d", addr, dao.Id)
 		}
@@ -65,12 +69,18 @@ func (k msgServer) UpdateMembers(goCtx context.Context, msg *types.MsgUpdateMemb
 	dao.Members = members
 	k.setDao(ctx, dao)
 
-	// removed members stop counting at once (D21); added ones may vote on open
-	// proposals, whose pinned denominator stays as it was
+	// removed members stop counting at once (D21); added ones vote only on
+	// proposals submitted after this block, as stake that joins does (D3)
 	for _, addr := range removed {
-		if err := k.zeroMemberBallots(ctx, dao.Id, sdk.MustAccAddressFromBech32(addr)); err != nil {
+		member := sdk.MustAccAddressFromBech32(addr)
+		k.removeMemberRecord(ctx, dao.Id, member)
+		if err := k.zeroMemberBallots(ctx, dao.Id, member); err != nil {
 			return nil, err
 		}
+	}
+
+	for _, addr := range added {
+		k.setMemberRecord(ctx, dao.Id, sdk.MustAccAddressFromBech32(addr), ctx.BlockHeight())
 	}
 
 	if err := ctx.EventManager().EmitTypedEvent(&types.EventDaoMembersUpdated{

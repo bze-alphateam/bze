@@ -355,8 +355,9 @@ func (s *daoSuite) adminlessDrain(t *testing.T, d daoRef, voters []ibc.Wallet, r
 	s.pass(t, pid, voters[:2], "EXECUTED", flow(d.addr, rcpt, left))
 }
 
-// A8. Expedite (D7): an early settle once both bars are met, 1130 below
-// them, and the regular bars after the voting end.
+// A8. Expedite (D7): an early settle once both bars are met past
+// min_expedite_delay, 1130 below them, and the regular bars after the voting
+// end. A settle within the delay (1132) is E1.
 func (s *daoSuite) expedite(t *testing.T) {
 	m := s.users(t, 5, daoUserFunds)
 	anyone := s.user(t)
@@ -372,6 +373,8 @@ func (s *daoSuite) expedite(t *testing.T) {
 	require.Equal(t, int64(p.SubmitTime)+20, int64(p.VotingEnd), "an expedited proposal uses expedited_period")
 	s.vote(t, m[0], pid, "yes")
 	s.vote(t, m[1], pid, "yes")
+	// past min_expedite_delay, so the bars alone decide (the delay is E1)
+	s.waitTime(t, int64(p.SubmitTime)+daoExpediteDelaySecs)
 	require.False(t, s.proposal(t, pid).ExpediteSettleable)
 	s.refuse(t, anyone, daoCode(1130), "dao", "settle-proposal", daoU64(pid))
 	s.vote(t, m[2], pid, "yes")
@@ -387,6 +390,7 @@ func (s *daoSuite) expedite(t *testing.T) {
 	s.vote(t, m[0], pid, "yes")
 	s.vote(t, m[1], pid, "yes")
 	s.vote(t, m[2], pid, "no")
+	s.waitTime(t, int64(s.prop(t, pid).SubmitTime)+daoExpediteDelaySecs)
 	s.refuse(t, anyone, daoCode(1130), "dao", "settle-proposal", daoU64(pid))
 	s.waitVotingEnd(t, pid)
 	require.False(t, s.proposal(t, pid).ExpediteSettleable, "expedite_settleable is only set before the voting end")

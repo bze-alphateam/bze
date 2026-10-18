@@ -24,6 +24,7 @@ const (
 	DefaultCleanupBatchSize          = uint64(100)
 	DefaultDaoCreationFeeDestination = FeeDestinationBurner
 	DefaultMinElectorateLockDays     = uint32(5)
+	DefaultMinExpediteDelay          = 24 * time.Hour
 )
 
 // DefaultDaoCreationFee is 50,000 BZE.
@@ -45,6 +46,7 @@ func NewParams(
 	daoCreationFee sdk.Coin,
 	daoCreationFeeDestination string,
 	minElectorateLockDays uint32,
+	minExpediteDelay time.Duration,
 ) Params {
 	return Params{
 		MaxSrPerDao:               maxSrPerDao,
@@ -61,6 +63,7 @@ func NewParams(
 		DaoCreationFee:            daoCreationFee,
 		DaoCreationFeeDestination: daoCreationFeeDestination,
 		MinElectorateLockDays:     minElectorateLockDays,
+		MinExpediteDelay:          minExpediteDelay,
 	}
 }
 
@@ -81,6 +84,7 @@ func DefaultParams() Params {
 		DefaultDaoCreationFee,
 		DefaultDaoCreationFeeDestination,
 		DefaultMinElectorateLockDays,
+		DefaultMinExpediteDelay,
 	)
 }
 
@@ -144,6 +148,11 @@ func (p Params) Validate() error {
 	// a zero lock would let stake move between wallets mid-vote (D2)
 	if p.MinElectorateLockDays == 0 {
 		return fmt.Errorf("min_electorate_lock_days must be positive")
+	}
+
+	// a zero delay is valid: expedited proposals then settle as soon as they meet the bars
+	if p.MinExpediteDelay < 0 {
+		return fmt.Errorf("min_expedite_delay must not be negative: %s", p.MinExpediteDelay)
 	}
 
 	return nil

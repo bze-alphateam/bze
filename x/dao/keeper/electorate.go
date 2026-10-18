@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	stdmath "math"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,10 +23,21 @@ func (k Keeper) isLiveElectorate(ctx sdk.Context, dao types.Dao) bool {
 			return false
 		}
 
-		return k.electorateStake(ctx, dao.Electorate).IsPositive()
+		return k.voterStake(ctx, dao, dao.Electorate).IsPositive()
 	default:
 		return false
 	}
+}
+
+// voterStake is the stake that can vote in the DAO: the electorate's stake
+// without the DAO's own. A DAO's treasury staked in its own sources never votes
+// on its proposals, so it stays out of the denominator too.
+func (k Keeper) voterStake(ctx sdk.Context, dao types.Dao, electorate *types.StakeElectorate) math.Int {
+	total := k.electorateStake(ctx, electorate)
+	// no join record reaches the highest height, so all of the DAO's stake counts
+	own, _ := k.eligibleWeight(ctx, electorate, sdk.MustAccAddressFromBech32(dao.Address), stdmath.MaxInt64)
+
+	return total.Sub(own)
 }
 
 // electorateStake sums the staked amount over the electorate's sources.
