@@ -23,6 +23,7 @@ const (
 	Query_Dao_FullMethodName           = "/bze.dao.Query/Dao"
 	Query_DaoByAddress_FullMethodName  = "/bze.dao.Query/DaoByAddress"
 	Query_DaoController_FullMethodName = "/bze.dao.Query/DaoController"
+	Query_Proposal_FullMethodName      = "/bze.dao.Query/Proposal"
 )
 
 // QueryClient is the client API for Query service.
@@ -37,6 +38,8 @@ type QueryClient interface {
 	DaoByAddress(ctx context.Context, in *QueryDaoByAddressRequest, opts ...grpc.CallOption) (*QueryDaoByAddressResponse, error)
 	// DaoController follows a DAO's admin chain to who ultimately controls it.
 	DaoController(ctx context.Context, in *QueryDaoControllerRequest, opts ...grpc.CallOption) (*QueryDaoControllerResponse, error)
+	// Proposal returns a proposal with its live status at the current block.
+	Proposal(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryProposalResponse, error)
 }
 
 type queryClient struct {
@@ -83,6 +86,15 @@ func (c *queryClient) DaoController(ctx context.Context, in *QueryDaoControllerR
 	return out, nil
 }
 
+func (c *queryClient) Proposal(ctx context.Context, in *QueryProposalRequest, opts ...grpc.CallOption) (*QueryProposalResponse, error) {
+	out := new(QueryProposalResponse)
+	err := c.cc.Invoke(ctx, Query_Proposal_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -95,6 +107,8 @@ type QueryServer interface {
 	DaoByAddress(context.Context, *QueryDaoByAddressRequest) (*QueryDaoByAddressResponse, error)
 	// DaoController follows a DAO's admin chain to who ultimately controls it.
 	DaoController(context.Context, *QueryDaoControllerRequest) (*QueryDaoControllerResponse, error)
+	// Proposal returns a proposal with its live status at the current block.
+	Proposal(context.Context, *QueryProposalRequest) (*QueryProposalResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -113,6 +127,9 @@ func (UnimplementedQueryServer) DaoByAddress(context.Context, *QueryDaoByAddress
 }
 func (UnimplementedQueryServer) DaoController(context.Context, *QueryDaoControllerRequest) (*QueryDaoControllerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DaoController not implemented")
+}
+func (UnimplementedQueryServer) Proposal(context.Context, *QueryProposalRequest) (*QueryProposalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Proposal not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -199,6 +216,24 @@ func _Query_DaoController_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Proposal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryProposalRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Proposal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Proposal_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Proposal(ctx, req.(*QueryProposalRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -221,6 +256,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DaoController",
 			Handler:    _Query_DaoController_Handler,
+		},
+		{
+			MethodName: "Proposal",
+			Handler:    _Query_Proposal_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
