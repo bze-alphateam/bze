@@ -1,10 +1,13 @@
 package keeper_test
 
 import (
+	"encoding/json"
 	"strings"
+	"time"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"go.uber.org/mock/gomock"
 
 	"github.com/bze-alphateam/bze/x/dao/types"
@@ -352,4 +355,162 @@ func (suite *IntegrationTestSuite) TestCreateDao_RaisedMinLockKeepsExistingDaos(
 	suite.expectCreation(2)
 	_, err = suite.msgServer.CreateDao(suite.ctx, validStakeDaoMsg([]string{"6"}, ""))
 	suite.Require().NoError(err)
+}
+
+func (suite *IntegrationTestSuite) updateConfig(authority sdk.AccAddress, daoId uint64, config types.DaoConfig) error {
+	_, err := suite.msgServer.UpdateDaoConfig(suite.ctx, types.NewMsgUpdateDaoConfig(authority.String(), daoId, config))
+	return err
+}
+
+// requireConfig checks the stored config of DAO 1.
+func (suite *IntegrationTestSuite) requireConfig(want types.DaoConfig) {
+	dao, found := suite.k.GetDao(suite.ctx, 1)
+	suite.Require().True(found)
+	suite.Require().Equal(want, dao.Config)
+}
+
+// requireConfigEvent checks the fields of the last EventDaoConfigUpdated of DAO 1.
+func (suite *IntegrationTestSuite) requireConfigEvent(fields ...string) {
+	attrs := suite.lastEventAttrs(&types.EventDaoConfigUpdated{})
+	suite.Require().NotNil(attrs)
+	suite.Require().Equal(`"1"`, attrs["id"])
+
+	got := []string{}
+	if raw, ok := attrs["fields"]; ok {
+		suite.Require().NoError(json.Unmarshal([]byte(raw), &got))
+	}
+	if fields == nil {
+		fields = []string{}
+	}
+	suite.Require().Equal(fields, got)
+}
+
+// Business Logic §3: config messages accept only the DAO account. The admin
+// signing directly and any other address are refused; nothing changes.
+func (suite *IntegrationTestSuite) TestUpdateDaoConfig_DirectSignersRejected() {
+	suite.createAdminDao()
+	next := validConfig()
+	next.Threshold = dec("0.6")
+
+	for _, signer := range []sdk.AccAddress{adminAddr, memberA, attackerAddr, daoAddress(2)} {
+		suite.Require().ErrorIs(suite.updateConfig(signer, 1, next), types.ErrUnauthorizedSigner, signer.String())
+	}
+
+	suite.requireConfig(validConfig())
+	suite.Require().False(suite.hasEvent("bze.dao.EventDaoConfigUpdated"))
+}
+
+func (suite *IntegrationTestSuite) TestUpdateDaoConfig_UnknownDao() {
+	suite.createStaticDao(noConfigChange)
+
+	suite.Require().ErrorIs(suite.updateConfig(daoAddress(2), 2, validConfig()), types.ErrDaoNotFound)
+
+	_, err := suite.msgServer.UpdateDaoConfig(suite.ctx, types.NewMsgUpdateDaoConfig(daoAddress(1).String(), 0, validConfig()))
+	suite.Require().ErrorIs(err, types.ErrDaoNotFound)
+}
+
+func (suite *IntegrationTestSuite) TestUpdateDaoConfig_InvalidAuthority() {
+	suite.createStaticDao(noConfigChange)
+
+	_, err := suite.msgServer.UpdateDaoConfig(suite.ctx, types.NewMsgUpdateDaoConfig("bad", 1, validConfig()))
+	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidAddress)
+}
+
+// Every config bound of the create matrix holds here too: a rejected update
+// leaves the stored config as it was, an accepted one replaces it whole.
+func (suite *IntegrationTestSuite) TestUpdateDaoConfig_ValidationMatrix() {
+	for _, tc := range configCases() {
+		suite.Run(tc.desc, func() {
+			suite.SetupTest()
+			suite.createStaticDao(noConfigChange)
+			next := validConfig()
+			tc.mutate(&next)
+
+			err := suite.updateConfig(daoAddress(1), 1, next)
+			if tc.wantErr != nil {
+				suite.Require().ErrorIs(err, tc.wantErr)
+				suite.requireConfig(validConfig())
+				return
+			}
+
+			suite.Require().NoError(err)
+			suite.requireConfig(next)
+		})
+	}
+}
+
+// The period bounds are the current params, as at creation.
+func (suite *IntegrationTestSuite) TestUpdateDaoConfig_PeriodBoundsFollowParams() {
+	suite.createStaticDao(noConfigChange)
+	params := types.DefaultParams()
+	params.MinVotingPeriod = 48 * time.Hour
+	params.MaxVotingPeriod = 96 * time.Hour
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
+
+	// the stored config predates the raised min: only a new one is checked
+	err := suite.updateConfig(daoAddress(1), 1, validConfig())
+	suite.Require().ErrorIs(err, types.ErrInvalidConfig)
+	suite.Require().ErrorContains(err, "expedited_period")
+
+	next := validConfig()
+	next.ExpeditedPeriod = 48 * time.Hour
+	next.VotingPeriod = 96*time.Hour + time.Nanosecond
+	err = suite.updateConfig(daoAddress(1), 1, next)
+	suite.Require().ErrorIs(err, types.ErrInvalidConfig)
+	suite.Require().ErrorContains(err, "voting_period")
+
+	next.VotingPeriod = 96 * time.Hour
+	suite.Require().NoError(suite.updateConfig(daoAddress(1), 1, next))
+	suite.requireConfig(next)
+}
+
+// The event lists exactly the changed fields, by proto name, in proto order.
+func (suite *IntegrationTestSuite) TestUpdateDaoConfig_EventListsChangedFields() {
+	for _, tc := range []struct {
+		desc   string
+		mutate func(c *types.DaoConfig)
+		fields []string
+	}{
+		{desc: "nothing changed", mutate: noConfigChange},
+		{desc: "threshold only", mutate: func(c *types.DaoConfig) { c.Threshold = dec("0.6") }, fields: []string{"threshold"}},
+		{desc: "same value written differently", mutate: func(c *types.DaoConfig) { c.Threshold = dec("0.500000000000000000") }},
+		{desc: "several, set out of order", mutate: func(c *types.DaoConfig) {
+			c.KeptDepositDestination = types.FundsDestination_TREASURY
+			c.OpenSubmission = true
+			c.VotingPeriod = 96 * time.Hour
+			c.MinQuorum = dec("0.3")
+			c.ProposalDeposit = coinPtr(10)
+		}, fields: []string{"min_quorum", "voting_period", "open_submission", "proposal_deposit", "kept_deposit_destination"}},
+		{desc: "every field", mutate: func(c *types.DaoConfig) {
+			*c = types.DaoConfig{
+				MinQuorum:              dec("0.5"),
+				Threshold:              dec("0.6"),
+				VotingPeriod:           48 * time.Hour,
+				AllowExpedite:          false,
+				ExpeditedPeriod:        12 * time.Hour,
+				ExpediteQuorum:         dec("0.7"),
+				ExpediteThreshold:      dec("0.8"),
+				OpenSubmission:         true,
+				ProposalCost:           coinPtr(1),
+				ProposalDeposit:        coinPtr(2),
+				DepositRefundPolicy:    types.DepositRefundPolicy_NEVER,
+				CostDestination:        types.FundsDestination_TREASURY,
+				KeptDepositDestination: types.FundsDestination_TREASURY,
+			}
+		}, fields: []string{
+			"min_quorum", "threshold", "voting_period", "allow_expedite", "expedited_period", "expedite_quorum", "expedite_threshold",
+			"open_submission", "proposal_cost", "proposal_deposit", "deposit_refund_policy", "cost_destination", "kept_deposit_destination",
+		}},
+		{desc: "zero cost set where none was", mutate: func(c *types.DaoConfig) { c.ProposalCost = coinPtr(0) }, fields: []string{"proposal_cost"}},
+	} {
+		suite.Run(tc.desc, func() {
+			suite.SetupTest()
+			suite.createStaticDao(noConfigChange)
+			next := validConfig()
+			tc.mutate(&next)
+
+			suite.Require().NoError(suite.updateConfig(daoAddress(1), 1, next))
+			suite.requireConfigEvent(tc.fields...)
+		})
+	}
 }
