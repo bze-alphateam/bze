@@ -66,7 +66,7 @@ func (s *daoSuite) submitProposal(t *testing.T) {
 		open := cfg
 		open.open = true
 		do := s.createStatic(t, m[0], open, addrs(m...), admin.FormattedAddress())
-		s.submit(t, outsider, do, "an outsider pays the cost and the deposit", nil)
+		s.submit(t, outsider, do, "an outsider pays cost and deposit", nil)
 	})
 
 	t.Run("caps", func(t *testing.T) {

@@ -135,8 +135,10 @@ func (s *daoSuite) updateConfigAndMetadata(t *testing.T) {
 func (s *daoSuite) updateMembers(t *testing.T) {
 	admin := s.user(t)
 	m := s.users(t, 4, daoUserFunds)
-	d := s.createStatic(t, m[0], defaultCfg(), addrs(m[0], m[1], m[2]), admin.FormattedAddress())
-	other := s.createStatic(t, m[1], defaultCfg(), addrs(m[1], m[2]), "")
+	long := defaultCfg()
+	long.voting = "90s"
+	d := s.createStatic(t, m[0], long, addrs(m[0], m[1], m[2]), admin.FormattedAddress())
+	other := s.createStatic(t, m[1], long, addrs(m[1], m[2]), "")
 	pid := s.submit(t, m[0], d, "members vote", nil)
 	otherPid := s.submit(t, m[1], other, "other dao", nil)
 	s.vote(t, m[0], pid, "yes")

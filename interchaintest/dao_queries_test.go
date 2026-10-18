@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -61,8 +62,17 @@ func (s *daoSuite) queries(t *testing.T) {
 		res := cliQuery[struct {
 			Params daoParams `json:"params"`
 		}](t, s, "params")
-		require.Equal(t, mustJSON(s.params), mustJSON(res.Params))
-		require.Equal(t, mustJSON(s.params), mustJSON(s.queryParams(t)))
+		// REST prints durations as Go durations ("10m0s"), the CLI as seconds ("600s")
+		norm := func(p daoParams) string {
+			for _, d := range []*string{&p.MinVotingPeriod, &p.MaxVotingPeriod, &p.ExecutionWindow} {
+				v, err := time.ParseDuration(*d)
+				require.NoError(t, err)
+				*d = v.String()
+			}
+			return mustJSON(p)
+		}
+		require.Equal(t, norm(s.params), norm(res.Params))
+		require.Equal(t, norm(s.params), norm(s.queryParams(t)))
 	})
 
 	d := s.createStatic(t, m[0], defaultCfg(), addrs(m...), admin.FormattedAddress())
@@ -244,7 +254,9 @@ func (s *daoSuite) queries(t *testing.T) {
 		}
 		got := cliQuery[daoListPage](t, s, "proposals", d.idArg(), "--statuses", "voting")
 		require.Equal(t, []uint64{voting}, propIDs(got.Proposals))
-		got = cliQuery[daoListPage](t, s, "proposals", d.idArg(), "--statuses", "rejected,executed")
+		// the command's help says the flag may be comma-separated: it may not
+		s.cliQueryFails(t, "is not a valid value for enum", "proposals", d.idArg(), "--statuses", "rejected,executed")
+		got = cliQuery[daoListPage](t, s, "proposals", d.idArg(), "--statuses", "rejected", "--statuses", "executed")
 		want := append(append([]uint64{}, rejected...), executed...)
 		slices.Sort(want)
 		require.Equal(t, want, propIDs(got.Proposals))

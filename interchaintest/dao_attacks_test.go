@@ -379,7 +379,8 @@ func (s *daoSuite) authzAndFeegrant(t *testing.T) {
 		s.refuseSend(t, grantee, refusal{codespace: "feegrant", watch: []string{gd.addr}}, over, func() (helpers.TxResult, error) {
 			return helpers.ExecTxWith(s.ctx, s.bze, grantee, []helpers.TxOption{helpers.WithGas(10_000_000), helpers.WithFlags("--fee-granter", gd.addr)}, over...)
 		})
-		s.refuse(t, attacker, refusal{codespace: "feegrant", watch: []string{gd.addr}}, "bank", "send", attacker.FormattedAddress(), victim.FormattedAddress(), coinStr(1, chain.Denom),
+		// no allowance at all: the ante returns the SDK's not-found error
+		s.refuse(t, attacker, refusal{codespace: "sdk", reason: "fee-grant not found", watch: []string{gd.addr}}, "bank", "send", attacker.FormattedAddress(), victim.FormattedAddress(), coinStr(1, chain.Denom),
 			"--fee-granter", gd.addr)
 	})
 	s.waitVotingEnd(t, pid)
