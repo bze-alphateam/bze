@@ -2,7 +2,7 @@
 
 The DAO module lets anyone create an on-chain organisation with its own treasury, run proposals and execute them as the DAO.
 
-> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, and proposals can be submitted, voted on, cancelled and settled, which runs the passed ones. Expedited early settlement and the cleanup of finished proposals are not there yet. Each feature adds its section to this page as it lands.
+> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, and proposals can be submitted, voted on, cancelled and settled, which runs the passed ones. Expedited proposals can be settled early. The cleanup of finished proposals is not there yet. Each feature adds its section to this page as it lands.
 
 ## Concepts
 - **DAO account**: every DAO gets its own account, derived from its id (`address.Module("dao", uint64-big-endian(id))`). Nobody holds a key for it; it is the DAO's treasury.
@@ -54,6 +54,7 @@ The DAO module lets anyone create an on-chain organisation with its own treasury
   - The deposit, if any, is refunded to the proposer only when the pinned config's `deposit_refund_policy` is `ALWAYS`. Under `ONLY_PASSED` and `NEVER` it is kept and goes to the pinned `kept_deposit_destination`: the burner (`BURN`) or the DAO's treasury (`TREASURY`). The proposal cost is never refunded.
 - `MsgSettleProposal`: anyone (`sender`) settles a proposal. Three cases, by the proposal's status:
   - **In voting**, from `voting_end` on (earlier is refused): the proposal is decided from its running tally under the pinned config. It passes when `(yes + no + abstain) / denominator ≥ min_quorum` and `yes / (yes + no) ≥ threshold`; a proposal with no yes and no no votes is rejected. Both sides are compared in exact integers, so a tally sitting exactly on a bar passes. The proposal leaves voting (frees its slot and its sources' pins) and the deposit is released: a passed proposal is refunded unless `deposit_refund_policy` is `NEVER`, even when its execution fails; a rejected one only under `ALWAYS`; a kept deposit goes to the pinned `kept_deposit_destination`. A rejected proposal becomes `REJECTED`. A passed one runs its messages as the DAO, all or nothing: `EXECUTED` when every message succeeded, otherwise `EXECUTION_FAILED` with none of their effects kept. A passed proposal with no messages is `EXECUTED`.
+  - **Expedited and in voting**, before `voting_end`: settled early only when the expedite bars are met, both against the full pinned denominator: `(yes + no + abstain) / denominator ≥ expedite_quorum` and `yes / denominator ≥ expedite_threshold`. It then passes exactly as above (leaves voting, deposit released as passed, messages run) and the event has `expedited_early = true`. Otherwise the settle is refused and nothing changes. Since `expedite_threshold ≥ threshold`, a proposal that meets these bars would still pass if every remaining unit of voting power voted no: early settlement only makes the outcome come sooner. A holder who alone meets the bars can settle in the submit block. A regular proposal is refused before its `voting_end`, and from `voting_end` on an expedited one settles under the regular bars.
   - **`EXECUTION_FAILED`**, before `voting_end + execution_window`: the messages run again the same way (the deposit was already released). Success makes it `EXECUTED`; a failure leaves it `EXECUTION_FAILED`.
   - **`EXECUTION_FAILED`**, from `voting_end + execution_window` on: the proposal becomes `EXPIRED` without running. The window is the current param value.
   - Any other status is finished and refused.
@@ -99,7 +100,8 @@ bzed tx dao vote 1 yes --from member
 # As the proposer, cancel proposal 1 while it is in voting
 bzed tx dao cancel-proposal 1 --from member
 
-# After its voting end, settle proposal 1 (anyone can); run it again to retry a failed execution
+# After its voting end, settle proposal 1 (anyone can); run it again to retry a failed execution.
+# An expedited proposal can be settled earlier once it meets the expedite bars.
 bzed tx dao settle-proposal 1 --from anyone
 
 # Submit a governance proposal that sets the module parameters (all of them)
@@ -120,7 +122,7 @@ bzed tx dao update-params \
 - `bze.dao.EventBallotReduced{proposal_id, voter, source, amount}`, when an exit takes a share out of a ballot
 - `bze.dao.EventProposalCancelled{id}`
 - `bze.dao.EventDepositReleased{id, refunded, destination, amount}`, when a deposit leaves escrow (`destination` is the receiving address)
-- `bze.dao.EventProposalSettled{id, status, yes, no, abstain, denominator, expedited_early}`, on every settle, with the status it left the proposal in
+- `bze.dao.EventProposalSettled{id, status, yes, no, abstain, denominator, expedited_early}`, on every settle, with the status it left the proposal in; `expedited_early` is true for a settle before the voting end
 - `bze.dao.EventProposalExecuted{id, success, error}`, after each run of a passed proposal's messages; `error` is a fixed reason (`unauthorized signer`, `message panicked`, `invalid message` or `message failed`), never the raw error
 
 ## Queries

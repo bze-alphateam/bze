@@ -33,8 +33,14 @@ func (suite *IntegrationTestSuite) endVoting(proposalId uint64, offset int64) {
 	suite.ctx = suite.ctx.WithBlockTime(time.Unix(proposal.VotingEnd+offset, 0))
 }
 
-// requireStatus checks the stored status and the last EventProposalSettled.
+// requireStatus checks the stored status and the last EventProposalSettled of
+// a settle at or after the voting end.
 func (suite *IntegrationTestSuite) requireStatus(proposalId uint64, status types.ProposalStatus) {
+	suite.requireSettled(proposalId, status, false)
+}
+
+// requireSettled checks the stored status and the last EventProposalSettled.
+func (suite *IntegrationTestSuite) requireSettled(proposalId uint64, status types.ProposalStatus, expeditedEarly bool) {
 	proposal, found := suite.k.GetProposal(suite.ctx, proposalId)
 	suite.Require().True(found)
 	suite.Require().Equal(status, proposal.Status)
@@ -43,7 +49,7 @@ func (suite *IntegrationTestSuite) requireStatus(proposalId uint64, status types
 	attrs := suite.lastEventAttrs(&types.EventProposalSettled{})
 	suite.Require().Equal(`"`+strconv.FormatUint(proposalId, 10)+`"`, attrs["id"])
 	suite.Require().Equal(`"`+status.String()+`"`, attrs["status"])
-	suite.Require().Equal("false", attrs["expedited_early"])
+	suite.Require().Equal(strconv.FormatBool(expeditedEarly), attrs["expedited_early"])
 }
 
 // requireExecuted checks the last EventProposalExecuted: success, or the fixed reason.
@@ -543,4 +549,220 @@ func (suite *IntegrationTestSuite) TestSettleProposal_D19_GasIndependentOfBallot
 	many := settleGas(10_000, 1)
 	suite.Require().Positive(one)
 	suite.Require().Equal(one, many)
+}
+
+// requireStillVoting checks that a refused settle changed nothing.
+func (suite *IntegrationTestSuite) requireStillVoting(proposalId uint64) {
+	proposal, found := suite.k.GetProposal(suite.ctx, proposalId)
+	suite.Require().True(found)
+	suite.Require().Equal(types.ProposalStatus_VOTING, proposal.Status)
+	suite.Require().True(suite.k.IsOpenProposal(suite.ctx, proposal.DaoId, proposalId))
+	suite.Require().Nil(suite.lastEventAttrs(&types.EventProposalSettled{}))
+}
+
+// An expedited proposal that meets the expedite bars settles before its voting
+// end through the regular pass path: the deposit is refunded as passed, the
+// proposal leaves voting and its messages run as the DAO.
+func (suite *IntegrationTestSuite) TestSettleProposal_ExpeditedEarlyPasses() {
+	suite.createStaticDao(func(c *types.DaoConfig) {
+		c.ProposalDeposit = coinPtr(40)
+		c.DepositRefundPolicy = types.DepositRefundPolicy_ONLY_PASSED
+	})
+	suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), memberA, types.ModuleName, ubze(40))
+	suite.bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, memberA, ubze(40))
+	suite.ledger.fund(daoAddress(1), ubze(100))
+
+	id, err := suite.submit(memberA, 1, true, treasurySend(memberB, 30))
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+	suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_YES))
+
+	suite.endVoting(id, -3600)
+	status, err := suite.settle(id)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
+	suite.requireSettled(id, types.ProposalStatus_EXECUTED, true)
+	suite.requireExecuted("")
+	suite.Require().Equal(ubze(70), suite.ledger.balance(daoAddress(1)))
+	suite.Require().Equal(ubze(30), suite.ledger.balance(memberB))
+	suite.Require().Equal("true", suite.lastEventAttrs(&types.EventDepositReleased{})["refunded"])
+
+	_, err = suite.settle(id)
+	suite.Require().ErrorIs(err, types.ErrProposalFinished)
+}
+
+// An early settle that fails its execution is retried like any other, before
+// the voting end too.
+func (suite *IntegrationTestSuite) TestSettleProposal_ExpeditedEarlyExecutionFailure() {
+	suite.createStaticDao(noConfigChange)
+	id, err := suite.submit(memberA, 1, true, treasurySend(memberB, 30))
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+	suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_YES))
+
+	suite.endVoting(id, -60)
+	status, err := suite.settle(id)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_EXECUTION_FAILED, status)
+	suite.requireSettled(id, types.ProposalStatus_EXECUTION_FAILED, true)
+	suite.requireExecuted("message failed")
+
+	suite.ledger.fund(daoAddress(1), ubze(30))
+	status, err = suite.settle(id)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
+	suite.requireSettled(id, types.ProposalStatus_EXECUTED, false)
+}
+
+// Before the voting end an expedited proposal below the expedite bars is
+// refused and left untouched; a regular proposal is refused even when every
+// member voted yes.
+func (suite *IntegrationTestSuite) TestSettleProposal_EarlyRefusals() {
+	suite.createStaticDao(noConfigChange)
+	expedited, err := suite.submit(memberA, 1, true)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, expedited, types.VoteOption_YES))
+	regular := suite.passedProposal()
+
+	_, err = suite.settle(expedited)
+	suite.Require().ErrorIs(err, types.ErrExpediteBarNotMet)
+	suite.requireStillVoting(expedited)
+	_, err = suite.settle(regular)
+	suite.Require().ErrorIs(err, types.ErrVotingNotEnded)
+	suite.requireStillVoting(regular)
+}
+
+// From its voting end an expedited proposal settles under the regular bars:
+// one yes of two misses the expedite bars but meets the regular ones.
+func (suite *IntegrationTestSuite) TestSettleProposal_ExpeditedAfterVotingEndUsesRegularBars() {
+	suite.createStaticDao(noConfigChange)
+	id, err := suite.submit(memberA, 1, true)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+
+	suite.endVoting(id, -1)
+	_, err = suite.settle(id)
+	suite.Require().ErrorIs(err, types.ErrExpediteBarNotMet)
+
+	suite.endVoting(id, 0)
+	status, err := suite.settle(id)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
+	suite.requireSettled(id, types.ProposalStatus_EXECUTED, false)
+}
+
+// expediteStakeDao creates stake DAO 1 over SR 1 (100 staked) and the ubze DR
+// (50 staked), so proposals pin a denominator of 150; expedite bars 0.6 / 0.66
+// unless mutate changes them.
+func (suite *IntegrationTestSuite) expediteStakeDao(mutate func(c *types.DaoConfig)) (rewardsState, stakes) {
+	state := defaultRewardsState()
+	suite.stubRewards(state)
+	s := suite.stubStakes()
+	suite.expectCreation(1)
+	msg := validStakeDaoMsg([]string{"1"}, stakeDenom)
+	mutate(&msg.Config)
+	_, err := suite.msgServer.CreateDao(suite.ctx, msg)
+	suite.Require().NoError(err)
+
+	return state, s
+}
+
+// Boundary: yes exactly expedite_threshold × D (0.66 × 150 = 99) settles early;
+// one unit less is refused.
+func (suite *IntegrationTestSuite) TestSettleProposal_ExpediteYesBoundary() {
+	for _, tc := range []struct {
+		yes  int64
+		want error
+	}{{99, nil}, {98, types.ErrExpediteBarNotMet}} {
+		suite.Run(strconv.FormatInt(tc.yes, 10), func() {
+			suite.SetupTest()
+			_, s := suite.expediteStakeDao(noConfigChange)
+			s.joinSr("1", memberA, tc.yes)
+			suite.atBlock(10)
+			id, err := suite.submit(memberA, 1, true)
+			suite.Require().NoError(err)
+			suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+
+			_, err = suite.settle(id)
+			if tc.want != nil {
+				suite.Require().ErrorIs(err, tc.want)
+				suite.requireStillVoting(id)
+				return
+			}
+			suite.Require().NoError(err)
+			suite.requireSettled(id, types.ProposalStatus_EXECUTED, true)
+		})
+	}
+}
+
+// The expedite quorum counts every vote against D: 99 yes + 35 abstain is 134
+// of 150, under a 0.9 quorum (135); one more abstaining unit meets it.
+func (suite *IntegrationTestSuite) TestSettleProposal_ExpediteQuorumBar() {
+	_, s := suite.expediteStakeDao(func(c *types.DaoConfig) { c.ExpediteQuorum = dec("0.9") })
+	s.joinSr("1", memberA, 99)
+	s.joinDr(stakeDenom, memberB, 35)
+	s.joinDr(stakeDenom, memberC, 1)
+	suite.atBlock(10)
+	id, err := suite.submit(memberA, 1, true)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+	suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_ABSTAIN))
+
+	_, err = suite.settle(id)
+	suite.Require().ErrorIs(err, types.ErrExpediteBarNotMet)
+	suite.requireStillVoting(id)
+
+	suite.Require().NoError(suite.vote(memberC, id, types.VoteOption_ABSTAIN))
+	_, err = suite.settle(id)
+	suite.Require().NoError(err)
+	suite.requireSettled(id, types.ProposalStatus_EXECUTED, true)
+}
+
+// D3 interplay: the denominator is pinned at submit, so an exit cannot deflate
+// it into the expedite bars. 90 yes against a live total of 90 would pass;
+// against the pinned 150 it does not, and the rejoined stake cannot vote.
+func (suite *IntegrationTestSuite) TestSettleProposal_D3_ExitCannotDeflateExpediteBars() {
+	state, s := suite.expediteStakeDao(noConfigChange)
+	s.joinSr("1", memberA, 60)
+	s.joinSr("1", memberC, 40)
+	s.joinDr(stakeDenom, memberB, 50)
+	suite.atBlock(10)
+	id, err := suite.submit(memberB, 1, true)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_YES))
+	suite.Require().NoError(suite.vote(memberC, id, types.VoteOption_YES))
+
+	suite.atBlock(11)
+	stakeSources[0].exit(suite, s, memberA)
+	state.srs["1"] = stakingReward("1", stakeDenom, 5, "40")
+	_, err = suite.settle(id)
+	suite.Require().ErrorIs(err, types.ErrExpediteBarNotMet)
+
+	suite.atBlock(12)
+	stakeSources[0].join(suite, s, memberA, 60)
+	state.srs["1"] = stakingReward("1", stakeDenom, 5, "100")
+	suite.Require().ErrorIs(suite.vote(memberA, id, types.VoteOption_YES), types.ErrNoVotingPower)
+	_, err = suite.settle(id)
+	suite.Require().ErrorIs(err, types.ErrExpediteBarNotMet)
+
+	proposal, _ := suite.k.GetProposal(suite.ctx, id)
+	suite.Require().Equal(math.NewInt(150), proposal.PinnedDenominator)
+	suite.requireStillVoting(id)
+}
+
+// Documented residual: a whale who alone meets the expedite bars at the submit
+// block can settle in that same block. It gains speed only: the outcome is one
+// full voting could not refuse (D7).
+func (suite *IntegrationTestSuite) TestSettleProposal_WhaleSettlesEarly() {
+	_, s := suite.expediteStakeDao(noConfigChange)
+	s.joinSr("1", memberA, 100)
+	suite.atBlock(10)
+	id, err := suite.submit(memberA, 1, true)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+
+	status, err := suite.settle(id)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
+	suite.requireSettled(id, types.ProposalStatus_EXECUTED, true)
 }
