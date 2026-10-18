@@ -136,3 +136,11 @@ message EventDaoConfigUpdated {
 message EventDaoMetadataUpdated {
   uint64 id = 1;
 }
+
+// EventDaoElectorateUpdated is emitted when a stake DAO's sources are
+// replaced; it lists the new sources.
+message EventDaoElectorateUpdated {
+  uint64 id = 1;
+  repeated string sr_ids = 2;
+  string dr_denom = 3;
+}

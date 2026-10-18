@@ -2,7 +2,7 @@
 
 The DAO module lets anyone create an on-chain organisation with its own treasury, run proposals and execute them as the DAO.
 
-> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, and proposals can be submitted, voted on, cancelled and settled, which runs the passed ones. Expedited proposals can be settled early, finished proposals can be cleaned up, and a DAO can change its own config, name and description. Each feature adds its section to this page as it lands.
+> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, and proposals can be submitted, voted on, cancelled and settled, which runs the passed ones. Expedited proposals can be settled early, finished proposals can be cleaned up, and a DAO can change its own config, name and description, and a stake DAO its reward sources. Each feature adds its section to this page as it lands.
 
 ## Concepts
 - **DAO account**: every DAO gets its own account, derived from its id (`address.Module("dao", uint64-big-endian(id))`). Nobody holds a key for it; it is the DAO's treasury.
@@ -69,6 +69,12 @@ The DAO module lets anyone create an on-chain organisation with its own treasury
   - The new config is validated exactly as in `MsgCreateDao`, with the period bounds of the current params.
   - Open proposals keep the config they pinned at submission and are decided with it; proposals submitted afterwards pin the new one.
 - `MsgUpdateMetadata`: replaces the DAO's `name` (1 to 64 bytes) and `description` (up to 2,000 bytes). Both are always sent; an empty description clears it. The signer rule is the same as for `MsgUpdateDaoConfig`: only the DAO's own address, through a passed proposal or `MsgAdminExecute`.
+- `MsgUpdateElectorate`: replaces a stake DAO's whole `electorate` (its staking rewards and Denom Reward). Rules:
+  - The signer rule is the same as for `MsgUpdateDaoConfig`. A static-list DAO is refused (`ErrInvalidDaoType`).
+  - The new sources follow the `MsgCreateDao` rules: at most `max_sr_per_dao` unique staking rewards, an optional Denom Reward, all existing and all staking the same denom.
+  - Only an added source must have a lock of at least `min_electorate_lock_days`. A source the DAO already has stays valid after the param was raised; one it dropped is new again if it comes back.
+  - A self-owned DAO must keep a live electorate: at least one source, with some stake (`ErrElectorateNotLive`). A DAO with an external admin may empty its sources.
+  - Open proposals keep the electorate and denominator they pinned and are decided with them; each keeps its own pin on its sources, so a dropped source keeps recording joins and cannot be removed from `x/rewards` until those proposals finish.
 - `MsgUpdateParams` **(authority)**: replaces the module parameters. Reserved for the module authority (governance).
 
 Example (CLI):
@@ -128,6 +134,9 @@ bzed tx dao admin-execute 1 '<the MsgUpdateDaoConfig from update.json>' --from a
 # Rename DAO 1 the same way: generate as the DAO, run through admin-execute or a proposal
 bzed tx dao update-metadata 1 "Bee Guild" "Funds BZE tooling" --from bze1<dao address> --generate-only
 
+# Replace stake DAO 1's sources the same way
+bzed tx dao update-electorate 1 '{"sr_ids":["3","7"],"dr_denom":"ubze"}' --from bze1<dao address> --generate-only
+
 # Submit a governance proposal that sets the module parameters (all of them)
 bzed tx dao update-params \
   '{"max_sr_per_dao":"5","max_static_members":"128","max_open_proposals":"10","max_msgs_per_proposal":"16","max_proposal_bytes":"20000","max_title_len":"140","max_summary_len":"5000","min_voting_period":"3600s","max_voting_period":"7776000s","execution_window":"1209600s","cleanup_batch_size":"100","dao_creation_fee":{"denom":"ubze","amount":"50000000000"},"dao_creation_fee_destination":"burner","min_electorate_lock_days":5}' \
@@ -151,6 +160,7 @@ bzed tx dao update-params \
 - `bze.dao.EventProposalCleaned{id, processed, completed}`, on every cleanup batch; `completed` is true on the one that deleted the proposal
 - `bze.dao.EventDaoConfigUpdated{id, fields}`, `fields` are the proto names of the config fields whose value changed, in proto order
 - `bze.dao.EventDaoMetadataUpdated{id}`
+- `bze.dao.EventDaoElectorateUpdated{id, sr_ids, dr_denom}`, with the new sources
 
 ## Queries
 - `bzed query dao params` – show the module parameters.

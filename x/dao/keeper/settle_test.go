@@ -817,3 +817,47 @@ func (suite *IntegrationTestSuite) TestSettleProposal_D9_PinnedConfigDecides() {
 	suite.Require().True(found)
 	suite.Require().Equal(next, proposal.PinnedConfig)
 }
+
+// D9 (electorate): replacing the sources while P is open does not move P. P
+// keeps its pinned sources and its 150 denominator: memberB still votes with
+// the dropped Denom Reward and P passes. A proposal submitted afterwards pins
+// the new sources and their stake.
+func (suite *IntegrationTestSuite) TestSettleProposal_D9_PinnedElectorateDecides() {
+	suite.stubRewards(defaultRewardsState())
+	s := suite.stubStakes()
+	suite.createAdminStakeDao([]string{"1"}, stakeDenom)
+	s.joinSr("1", memberA, 80)
+	s.joinDr(stakeDenom, memberB, 30)
+
+	suite.atBlock(10)
+	p, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, p, types.VoteOption_YES))
+
+	suite.Require().NoError(suite.adminExecute(adminAddr, 1, types.NewMsgUpdateElectorate(daoAddress(1).String(), 1, &types.StakeElectorate{SrIds: []string{"5"}})))
+	suite.requireElectorate([]string{"5"}, "")
+
+	suite.Require().NoError(suite.vote(memberB, p, types.VoteOption_NO))
+	suite.requireTally(p, 80, 30, 0)
+	suite.requireInvariants(p, memberA, memberB)
+	proposal, found := suite.k.GetProposal(suite.ctx, p)
+	suite.Require().True(found)
+	suite.Require().Equal(&types.StakeElectorate{SrIds: []string{"1"}, DrDenom: stakeDenom}, proposal.PinnedElectorate)
+	suite.Require().Equal(math.NewInt(150), proposal.PinnedDenominator)
+	suite.requirePinInvariant([]uint64{1}, []uint64{p})
+
+	suite.endVoting(p, 0)
+	status, err := suite.settle(p)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
+	suite.requirePinInvariant([]uint64{1}, []uint64{p})
+
+	s.joinSr("5", memberA, 10)
+	q, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	proposal, found = suite.k.GetProposal(suite.ctx, q)
+	suite.Require().True(found)
+	suite.Require().Equal(&types.StakeElectorate{SrIds: []string{"5"}}, proposal.PinnedElectorate)
+	suite.Require().Equal(math.NewInt(10), proposal.PinnedDenominator)
+	suite.requirePinInvariant([]uint64{1}, []uint64{p, q})
+}
