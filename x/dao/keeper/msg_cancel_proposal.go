@@ -22,13 +22,17 @@ func (k msgServer) CancelProposal(goCtx context.Context, msg *types.MsgCancelPro
 		return nil, errorsmod.Wrapf(types.ErrProposalNotFound, "proposal %d", msg.ProposalId)
 	}
 
-	// voting_end alone does not close the proposal: until it is settled the
-	// proposer can still cancel it
 	if proposal.Status != types.ProposalStatus_VOTING {
 		return nil, errorsmod.Wrapf(types.ErrVotingClosed, "proposal %d is %s", proposal.Id, proposal.Status)
 	}
 
-	if msg.Proposer != proposal.Proposer {
+	// from voting_end on the outcome is decided: only the settle closes it
+	if ctx.BlockTime().Unix() >= proposal.VotingEnd {
+		return nil, errorsmod.Wrapf(types.ErrVotingClosed, "proposal %d voted until %d", proposal.Id, proposal.VotingEnd)
+	}
+
+	// compared in canonical form, as every handler stores addresses
+	if sdk.MustAccAddressFromBech32(msg.Proposer).String() != proposal.Proposer {
 		return nil, errorsmod.Wrapf(types.ErrNotProposalOwner, "%s did not propose proposal %d", msg.Proposer, proposal.Id)
 	}
 

@@ -179,7 +179,8 @@ func (s *daoSuite) cancelBy(t *testing.T, pid uint64, members map[string]ibc.Wal
 }
 
 // A6. cancel-proposal: the 3 refund policies × 2 kept destinations, a cancel
-// after voting_end, the refusals and the freed slot.
+// with ballots, the refusal from voting_end, the other refusals and the freed
+// slot.
 func (s *daoSuite) cancelProposal(t *testing.T) {
 	m := s.users(t, 2, daoUserFunds)
 	for _, policy := range []string{"ALWAYS", "ONLY_PASSED", "NEVER"} {
@@ -213,13 +214,24 @@ func (s *daoSuite) cancelProposal(t *testing.T) {
 		s.cancel(t, m[0], pid)
 		s.terminal["CANCELLED-0-ballots"] = pid
 	})
-	t.Run("after voting_end, until settled", func(t *testing.T) {
+	t.Run("with ballots, before voting_end", func(t *testing.T) {
+		pid := s.submit(t, m[0], d, "cancel with votes", nil)
+		s.vote(t, m[1], pid, "yes")
+		s.cancel(t, m[0], pid)
+		s.terminal["CANCELLED"] = pid
+	})
+	t.Run("refused from voting_end", func(t *testing.T) {
 		pid := s.submit(t, m[0], d, "late cancel", nil)
 		s.vote(t, m[1], pid, "yes")
 		s.waitVotingEnd(t, pid)
 		require.True(t, s.proposal(t, pid).VotingEnded)
-		s.cancel(t, m[0], pid)
-		s.terminal["CANCELLED"] = pid
+		s.refuse(t, m[0], daoCode(1124), "dao", "cancel-proposal", daoU64(pid))
+		s.requireStatus(t, pid, "VOTING")
+		status := "REJECTED"
+		if passes(t, s.prop(t, pid)) {
+			status = "EXECUTED"
+		}
+		s.settleFirst(t, m[1], pid, status)
 	})
 	t.Run("after settle", func(t *testing.T) {
 		pid := s.submit(t, m[0], d, "settled", nil)

@@ -30,8 +30,11 @@ func (h stakingRewardHooks) AfterStakingRewardJoin(ctx sdk.Context, rewardId, ad
 	return nil
 }
 
-// AfterStakingRewardIncrease is a no-op: a top-up keeps the join height.
-func (h stakingRewardHooks) AfterStakingRewardIncrease(_ sdk.Context, _, _ string, _, _ math.Int, _ string) error {
+// AfterStakingRewardIncrease moves the join height to the top-up's block, as
+// a new join, so stake added during a vote cannot weigh on proposals already
+// open.
+func (h stakingRewardHooks) AfterStakingRewardIncrease(ctx sdk.Context, rewardId, address string, _, _ math.Int, _ string) error {
+	h.k.afterSourceJoin(ctx, types.StakingRewardSource(rewardId), address)
 	return nil
 }
 
@@ -68,8 +71,11 @@ func (h denomRewardHooks) AfterDenomRewardJoin(ctx sdk.Context, stakingDenom, ad
 	return nil
 }
 
-// AfterDenomRewardIncrease is a no-op: a top-up keeps the join height.
-func (h denomRewardHooks) AfterDenomRewardIncrease(_ sdk.Context, _, _ string, _, _ math.Int) error {
+// AfterDenomRewardIncrease moves the join height to the top-up's block, as a
+// new join, so stake added during a vote cannot weigh on proposals already
+// open.
+func (h denomRewardHooks) AfterDenomRewardIncrease(ctx sdk.Context, stakingDenom, address string, _, _ math.Int) error {
+	h.k.afterSourceJoin(ctx, types.DenomRewardSource(stakingDenom), address)
 	return nil
 }
 
@@ -80,8 +86,9 @@ func (h denomRewardHooks) AfterDenomRewardExit(ctx sdk.Context, stakingDenom, ad
 	return nil
 }
 
-// afterSourceJoin writes the join height when a DAO or an open proposal pins
-// the source; stake joining an unused source needs no record. The After*
+// afterSourceJoin writes the join height, after a join or a top-up, when a DAO
+// or an open proposal pins the source; stake joining an unused source needs no
+// record. A ballot already cast keeps its weight until the voter votes again. The After*
 // hooks abort the x/rewards transaction on error, so this never fails: an
 // address x/rewards accepted but this module can't parse is skipped.
 func (k Keeper) afterSourceJoin(ctx sdk.Context, source []byte, address string) {

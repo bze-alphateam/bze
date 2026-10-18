@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -721,15 +722,48 @@ func (suite *IntegrationTestSuite) TestCancelProposal_Refusals() {
 	suite.requireCancelled(id)
 }
 
-// The proposer can still cancel after voting_end, until the proposal is settled.
-func (suite *IntegrationTestSuite) TestCancelProposal_AfterVotingEnd() {
+// From voting_end on the outcome is decided: the proposer can no longer
+// cancel, a proposal the electorate passed is settled and runs. One second
+// before voting_end the cancel is still accepted.
+func (suite *IntegrationTestSuite) TestCancelProposal_RefusedFromVotingEnd() {
 	suite.createStaticDao(noConfigChange)
 	id, err := suite.submit(memberA, 1, false)
 	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+	suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_YES))
 	proposal, _ := suite.k.GetProposal(suite.ctx, id)
 
-	suite.ctx = suite.ctx.WithBlockTime(time.Unix(proposal.VotingEnd+3600, 0))
+	for _, at := range []int64{0, 3600} {
+		suite.ctx = suite.ctx.WithBlockTime(time.Unix(proposal.VotingEnd+at, 0))
+		err = suite.cancel(memberA, id)
+		suite.Require().ErrorIs(err, types.ErrVotingClosed)
+		suite.Require().ErrorContains(err, fmt.Sprintf("voted until %d", proposal.VotingEnd))
+		suite.Require().True(suite.k.IsOpenProposal(suite.ctx, 1, id))
+	}
+
+	status, err := suite.settle(id)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
+
+	suite.SetupTest()
+	suite.createStaticDao(noConfigChange)
+	id, err = suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	proposal, _ = suite.k.GetProposal(suite.ctx, id)
+	suite.ctx = suite.ctx.WithBlockTime(time.Unix(proposal.VotingEnd-1, 0))
 	suite.Require().NoError(suite.cancel(memberA, id))
+	suite.requireCancelled(id)
+}
+
+// The proposer is compared in canonical form: the same address written in
+// upper case bech32 cancels.
+func (suite *IntegrationTestSuite) TestCancelProposal_UpperCaseProposer() {
+	suite.createStaticDao(noConfigChange)
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+
+	_, err = suite.msgServer.CancelProposal(suite.ctx, &types.MsgCancelProposal{Proposer: strings.ToUpper(memberA.String()), ProposalId: id})
+	suite.Require().NoError(err)
 	suite.requireCancelled(id)
 }
 

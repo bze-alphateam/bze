@@ -359,13 +359,20 @@ func (s *daoSuite) stakeCase(t *testing.T, src stakeSource, pinned bool) {
 	_, found = s.joinRecord(t, src.key(), v1.FormattedAddress())
 	require.False(t, found, "an exit forgets the join record")
 
-	// D5 (accepted residual): a top-up mid-vote counts on a revote (D23)
+	// D5: a top-up mid-vote is a new join. The cast ballot keeps its weight,
+	// the topped-up stake has no weight on the open proposal, and the
+	// pinned denominator does not move
 	require.Equal(t, "1000", s.voteWeight(t, v2, pid, "yes").String())
-	src.join(t, v2, 500)
+	top := src.join(t, v2, 500)
+	h, found = s.joinRecord(t, src.key(), v2.FormattedAddress())
+	require.True(t, found, "the top-up is recorded")
+	require.Equal(t, top.Height, h)
+	require.True(t, s.votingPower(t, d.id, v2.FormattedAddress()).eligible(t, pid).IsZero())
 	s.refuse(t, v2, daoCode(1125), "dao", "vote", daoU64(pid), "yes")
-	require.Equal(t, "1500", s.voteWeight(t, v2, pid, "no").String(), "a revote counts the current weight")
-	require.Equal(t, "1500", s.voteWeight(t, v2, pid, "yes").String())
-	s.requireTallyOf(t, pid, 1500, 0, 0)
+	s.refuse(t, v2, daoCode(1119), "dao", "vote", daoU64(pid), "no")
+	require.Equal(t, "1000", s.mustBallot(t, pid, v2.FormattedAddress()).Weight)
+	s.requireTallyOf(t, pid, 1000, 0, 0)
+	require.Equal(t, p.PinnedDenominator, s.prop(t, pid).PinnedDenominator)
 
 	s.waitVotingEnd(t, pid)
 	p = s.prop(t, pid)

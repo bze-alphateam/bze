@@ -904,6 +904,37 @@ func (suite *IntegrationTestSuite) TestSettleProposal_D9_PinnedConfigDecides() {
 	suite.Require().Equal(next, proposal.PinnedConfig)
 }
 
+// D9 (deposit): a config change while P is open does not move P's deposit.
+// P pinned NEVER and the treasury; the new config refunds ALWAYS and burns,
+// yet the rejected P sends its kept deposit to the treasury.
+func (suite *IntegrationTestSuite) TestSettleProposal_D9_PinnedDepositRulesDecide() {
+	suite.createDao(1, func(msg *types.MsgCreateDao) {
+		msg.Admin = adminAddr.String()
+		msg.Config.ProposalDeposit = coinPtr(40)
+		msg.Config.DepositRefundPolicy = types.DepositRefundPolicy_NEVER
+		msg.Config.KeptDepositDestination = types.FundsDestination_TREASURY
+	})
+	suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), memberA, types.ModuleName, ubze(40)).Return(nil)
+	p, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+
+	next := validConfig()
+	next.DepositRefundPolicy = types.DepositRefundPolicy_ALWAYS
+	next.KeptDepositDestination = types.FundsDestination_BURN
+	suite.Require().NoError(suite.adminExecute(adminAddr, 1, types.NewMsgUpdateDaoConfig(daoAddress(1).String(), 1, next)))
+	suite.requireConfig(next)
+
+	suite.endVoting(p, 0)
+	suite.bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, daoAddress(1), ubze(40)).Return(nil)
+	status, err := suite.settle(p)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_REJECTED, status)
+
+	attrs := suite.lastEventAttrs(&types.EventDepositReleased{})
+	suite.Require().Equal("false", attrs["refunded"])
+	suite.Require().Equal(`"`+daoAddress(1).String()+`"`, attrs["destination"])
+}
+
 // D9 (electorate): replacing the sources while P is open does not move P. P
 // keeps its pinned sources and its 150 denominator: memberB still votes with
 // the dropped Denom Reward and P passes. A proposal submitted afterwards pins
