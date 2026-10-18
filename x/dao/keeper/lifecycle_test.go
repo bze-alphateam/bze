@@ -1115,6 +1115,32 @@ func (suite *IntegrationTestSuite) TestUpdateMembers_D21_RemovedMemberStopsCount
 	suite.requireInvariants(second, memberA, memberB)
 }
 
+// A removal zeroes the member's ballots only on its own DAO's proposals: the
+// same address keeps its full ballot in another static DAO it belongs to.
+func (suite *IntegrationTestSuite) TestUpdateMembers_OtherDaoBallotsUntouched() {
+	suite.createAdminDao()
+	suite.createDao(2, func(msg *types.MsgCreateDao) { msg.Admin = adminAddr.String() })
+
+	first, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	other, err := suite.submit(memberA, 2, false)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, first, types.VoteOption_YES))
+	suite.Require().NoError(suite.vote(memberB, first, types.VoteOption_YES))
+	suite.Require().NoError(suite.vote(memberA, other, types.VoteOption_NO))
+	suite.Require().NoError(suite.vote(memberB, other, types.VoteOption_YES))
+
+	remove := types.NewMsgUpdateMembers(daoAddress(1).String(), 1, nil, []string{memberB.String()})
+	suite.Require().NoError(suite.adminExecute(adminAddr, 1, remove))
+
+	suite.requireTally(first, 1, 0, 0)
+	suite.requireBallot(first, memberB, types.VoteOption_YES, 0)
+	suite.requireTally(other, 1, 1, 0)
+	suite.requireBallot(other, memberB, types.VoteOption_YES, 1)
+	suite.requireInvariants(first, memberA, memberB)
+	suite.requireInvariants(other, memberA, memberB)
+}
+
 // An added member votes on a proposal opened before they joined; the pinned
 // denominator stays at the member count of submission.
 func (suite *IntegrationTestSuite) TestUpdateMembers_AddedMemberVotesOnOpenProposal() {

@@ -194,7 +194,7 @@ func TestAutoCLIOptions(t *testing.T) {
 	// add and remove are repeated fields, so autocli reads them as --add and --remove flags
 	updateMembers := opts.Tx.RpcCommandOptions[14]
 	require.Equal(t, "UpdateMembers", updateMembers.RpcMethod)
-	require.Equal(t, "update-members [dao-id] --add [address,...] --remove [address,...]", updateMembers.Use)
+	require.Equal(t, "update-members [dao-id] --add [address] --remove [address]", updateMembers.Use)
 	require.False(t, updateMembers.GovProposal)
 	require.Len(t, updateMembers.PositionalArgs, 1)
 	require.Equal(t, "dao_id", updateMembers.PositionalArgs[0].ProtoField)
