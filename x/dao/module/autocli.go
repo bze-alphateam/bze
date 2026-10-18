@@ -116,6 +116,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:        "bzed tx dao cancel-proposal 1 --from proposer",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "proposal_id"}},
 				},
+				{
+					RpcMethod: "SettleProposal",
+					Use:       "settle-proposal [proposal-id]",
+					Short:     "Settle a DAO proposal after its voting period",
+					Long: "Anyone can settle. The first settle decides the proposal from its tally, releases its deposit and, when it passed, " +
+						"runs its messages as the DAO. A failed execution can be retried with another settle within the execution_window param " +
+						"after the voting end; a settle after the window expires it.",
+					Example:        "bzed tx dao settle-proposal 1 --from anyone",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "proposal_id"}},
+				},
 			},
 		},
 	}

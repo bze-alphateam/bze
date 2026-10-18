@@ -52,7 +52,7 @@ func (k msgServer) AdminExecute(goCtx context.Context, msg *types.MsgAdminExecut
 	}
 
 	// on ctx itself: any failure reverts the whole transaction
-	if err := k.executeAsDao(ctx, dao, msgs); err != nil {
+	if err := k.executeAsDao(ctx, sdk.MustAccAddressFromBech32(dao.Address), msgs); err != nil {
 		return nil, err
 	}
 
