@@ -71,6 +71,10 @@ func TestRegisterServices_RoutesMsgAndQuery(t *testing.T) {
 	require.NotNil(t, qr.Route("/bze.dao.Query/Ballot"))
 	require.NotNil(t, qr.Route("/bze.dao.Query/VotingPower"))
 	require.NotNil(t, qr.Route("/bze.dao.Query/JoinRecord"))
+	require.NotNil(t, qr.Route("/bze.dao.Query/Daos"))
+	require.NotNil(t, qr.Route("/bze.dao.Query/DaosByAdmin"))
+	require.NotNil(t, qr.Route("/bze.dao.Query/Proposals"))
+	require.NotNil(t, qr.Route("/bze.dao.Query/Ballots"))
 }
 
 // The CLI exposes `bzed q dao params` and `bzed tx dao update-params`; the
@@ -79,7 +83,7 @@ func TestAutoCLIOptions(t *testing.T) {
 	opts := dao.AppModule{}.AutoCLIOptions()
 
 	require.Equal(t, "bze.dao.Query", opts.Query.Service)
-	require.Len(t, opts.Query.RpcCommandOptions, 8)
+	require.Len(t, opts.Query.RpcCommandOptions, 12)
 	require.Equal(t, "Params", opts.Query.RpcCommandOptions[0].RpcMethod)
 	require.Equal(t, "params", opts.Query.RpcCommandOptions[0].Use)
 	for i, want := range []struct {
@@ -93,6 +97,10 @@ func TestAutoCLIOptions(t *testing.T) {
 		{"Ballot", "ballot [proposal-id] [voter]", []string{"proposal_id", "voter"}},
 		{"VotingPower", "voting-power [dao-id] [address]", []string{"dao_id", "address"}},
 		{"JoinRecord", "join-record [source] [address]", []string{"source", "address"}},
+		{"Daos", "daos", nil},
+		{"DaosByAdmin", "daos-by-admin [admin]", []string{"admin"}},
+		{"Proposals", "proposals [dao-id]", []string{"dao_id"}},
+		{"Ballots", "ballots [proposal-id]", []string{"proposal_id"}},
 	} {
 		q := opts.Query.RpcCommandOptions[i+1]
 		require.Equal(t, want.method, q.RpcMethod)
