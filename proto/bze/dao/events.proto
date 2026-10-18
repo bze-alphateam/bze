@@ -72,3 +72,20 @@ message EventBallotReduced {
   // amount is the share removed from the ballot and its tally (math.Int).
   string amount = 4;
 }
+
+// EventProposalCancelled is emitted when the proposer cancels a proposal.
+message EventProposalCancelled {
+  uint64 id = 1;
+}
+
+// EventDepositReleased is emitted when a proposal's escrowed deposit leaves
+// the module account: refunded to the proposer, or kept and sent to the burner
+// or the DAO's treasury.
+message EventDepositReleased {
+  uint64 id = 1;
+  bool refunded = 2;
+  // destination is the address the deposit was sent to.
+  string destination = 3;
+  // amount is the released deposit (sdk.Coin).
+  string amount = 4;
+}

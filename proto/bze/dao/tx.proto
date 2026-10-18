@@ -46,6 +46,9 @@ service Msg {
 
   // Vote casts or changes a ballot on a proposal in voting.
   rpc Vote (MsgVote) returns (MsgVoteResponse);
+
+  // CancelProposal lets the proposer withdraw a proposal in voting.
+  rpc CancelProposal (MsgCancelProposal) returns (MsgCancelProposalResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -181,3 +184,15 @@ message MsgVote {
 
 // MsgVoteResponse is the Msg/Vote response type.
 message MsgVoteResponse {}
+
+// MsgCancelProposal is the Msg/CancelProposal request type.
+message MsgCancelProposal {
+  option (cosmos.msg.v1.signer) = "proposer";
+  option (amino.name) = "bze/x/dao/MsgCancelProposal";
+
+  string proposer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 proposal_id = 2;
+}
+
+// MsgCancelProposalResponse is the Msg/CancelProposal response type.
+message MsgCancelProposalResponse {}

@@ -195,3 +195,30 @@ func (suite *IntegrationTestSuite) TestExitHook_OtherSourceLeavesBallot() {
 	suite.Require().True(suite.k.HasVoteIndex(suite.ctx, srSource, memberA, id))
 	suite.Require().Equal(0, suite.ballotReducedEvents())
 }
+
+// I6: an Exit after the proposal left voting only prunes the voter's vote
+// index entry; the cancelled proposal's ballot and tally stay as they were.
+func (suite *IntegrationTestSuite) TestExitHook_I6_PrunesIndexOfFinishedProposal() {
+	s := suite.createStakeDao()
+	s.joinSr("1", memberA, 30)
+	s.joinDr(stakeDenom, memberA, 20)
+	suite.atBlock(10)
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+	suite.Require().True(suite.k.HasVoteIndex(suite.ctx, srSource, memberA, id))
+	suite.Require().True(suite.k.HasVoteIndex(suite.ctx, drSource, memberA, id))
+	ballot, _ := suite.k.GetBallot(suite.ctx, id, memberA)
+
+	suite.Require().NoError(suite.cancel(memberA, id))
+	suite.Require().NoError(suite.k.StakingRewardHooks().AfterStakingRewardExit(suite.ctx, "1", memberA.String(), math.NewInt(30), stakeDenom))
+	suite.Require().NoError(suite.k.DenomRewardHooks().AfterDenomRewardExit(suite.ctx, stakeDenom, memberA.String(), math.NewInt(20)))
+
+	suite.Require().False(suite.k.HasVoteIndex(suite.ctx, srSource, memberA, id))
+	suite.Require().False(suite.k.HasVoteIndex(suite.ctx, drSource, memberA, id))
+	after, found := suite.k.GetBallot(suite.ctx, id, memberA)
+	suite.Require().True(found)
+	suite.Require().Equal(ballot, after)
+	suite.requireTally(id, 50, 0, 0)
+	suite.Require().Equal(0, suite.ballotReducedEvents())
+}

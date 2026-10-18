@@ -107,6 +107,15 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:        "bzed tx dao vote 1 yes --from member",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "proposal_id"}, {ProtoField: "option"}},
 				},
+				{
+					RpcMethod: "CancelProposal",
+					Use:       "cancel-proposal [proposal-id]",
+					Short:     "Cancel your own DAO proposal while it is in voting",
+					Long: "The proposer withdraws a proposal in voting, even after its voting end until it is settled. " +
+						"The deposit is refunded only when the DAO's deposit refund policy is ALWAYS; otherwise it is burned or sent to the DAO's treasury.",
+					Example:        "bzed tx dao cancel-proposal 1 --from proposer",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "proposal_id"}},
+				},
 			},
 		},
 	}

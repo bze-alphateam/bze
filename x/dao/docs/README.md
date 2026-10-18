@@ -2,7 +2,7 @@
 
 The DAO module lets anyone create an on-chain organisation with its own treasury, run proposals and execute them as the DAO.
 
-> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, and proposals can be submitted and voted on, but settlement and execution are not there yet. Each feature adds its section to this page as it lands.
+> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, and proposals can be submitted, voted on and cancelled, but settlement and execution are not there yet. Each feature adds its section to this page as it lands.
 
 ## Concepts
 - **DAO account**: every DAO gets its own account, derived from its id (`address.Module("dao", uint64-big-endian(id))`). Nobody holds a key for it; it is the DAO's treasury.
@@ -48,6 +48,10 @@ The DAO module lets anyone create an on-chain organisation with its own treasury
   - Weight: in a `static-list` DAO, 1 if the voter is on the DAO's member list now; in a `stake` DAO, the voter's stake in each source the proposal pinned, counting only stake with no join record or one strictly below the proposal's submit height. Zero weight is refused.
   - Voting again with another option replaces the ballot at the voter's current weight, so stake added since the last vote counts; the same option twice is refused.
   - Exiting a staking reward or Denom Reward takes its share out of the voter's ballots on every proposal in voting (`EventBallotReduced`). Rejoining does not bring it back on those proposals.
+- `MsgCancelProposal`: the proposer (`proposer`) withdraws their proposal. Rules:
+  - The proposal must be in voting. Cancelling is allowed after `voting_end` too, until the proposal is settled. Only the address that submitted it can cancel (a proposal the DAO submitted is cancelled by the DAO, through a proposal or its admin).
+  - The proposal becomes `CANCELLED`: it takes no more votes, frees its slot under `max_open_proposals` and stops pinning its sources. Its ballots and tally stay as they were.
+  - The deposit, if any, is refunded to the proposer only when the pinned config's `deposit_refund_policy` is `ALWAYS`. Under `ONLY_PASSED` and `NEVER` it is kept and goes to the pinned `kept_deposit_destination`: the burner (`BURN`) or the DAO's treasury (`TREASURY`). The proposal cost is never refunded.
 - `MsgUpdateParams` **(authority)**: replaces the module parameters. Reserved for the module authority (governance).
 
 Example (CLI):
@@ -86,6 +90,9 @@ bzed tx dao submit-proposal 1 "Fund tooling" msg.json --summary "Pays the toolin
 # voting again with no replaces the ballot
 bzed tx dao vote 1 yes --from member
 
+# As the proposer, cancel proposal 1 while it is in voting
+bzed tx dao cancel-proposal 1 --from member
+
 # Submit a governance proposal that sets the module parameters (all of them)
 bzed tx dao update-params \
   '{"max_sr_per_dao":"5","max_static_members":"128","max_open_proposals":"10","max_msgs_per_proposal":"16","max_proposal_bytes":"20000","max_title_len":"140","max_summary_len":"5000","min_voting_period":"3600s","max_voting_period":"7776000s","dao_creation_fee":{"denom":"ubze","amount":"50000000000"},"dao_creation_fee_destination":"burner","min_electorate_lock_days":5}' \
@@ -102,6 +109,8 @@ bzed tx dao update-params \
 - `bze.dao.EventProposalSubmitted{id, dao_id, proposer, expedited, voting_end, denominator}`
 - `bze.dao.EventVote{proposal_id, voter, option, weight}`, on every vote and revote
 - `bze.dao.EventBallotReduced{proposal_id, voter, source, amount}`, when an exit takes a share out of a ballot
+- `bze.dao.EventProposalCancelled{id}`
+- `bze.dao.EventDepositReleased{id, refunded, destination, amount}`, when a deposit leaves escrow (`destination` is the receiving address)
 
 ## Queries
 - `bzed query dao params` – show the module parameters.
