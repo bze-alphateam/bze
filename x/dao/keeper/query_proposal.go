@@ -27,9 +27,10 @@ func (k Keeper) Proposal(goCtx context.Context, req *types.QueryProposalRequest)
 	now := ctx.BlockTime().Unix()
 	voting := proposal.Status == types.ProposalStatus_VOTING
 	res := &types.QueryProposalResponse{
-		Proposal:           proposal,
-		VotingEnded:        voting && now >= proposal.VotingEnd,
-		ExpediteSettleable: voting && proposal.Expedited && now < proposal.VotingEnd && proposal.ExpediteTallyPasses(),
+		Proposal:    proposal,
+		VotingEnded: voting && now >= proposal.VotingEnd,
+		ExpediteSettleable: voting && proposal.Expedited && now < proposal.VotingEnd &&
+			now >= k.earliestExpediteSettle(ctx, proposal) && proposal.ExpediteTallyPasses(),
 	}
 
 	if proposal.Status == types.ProposalStatus_EXECUTION_FAILED {
@@ -37,6 +38,13 @@ func (k Keeper) Proposal(goCtx context.Context, req *types.QueryProposalRequest)
 	}
 
 	return res, nil
+}
+
+// earliestExpediteSettle is the first block time (unix seconds) an expedited
+// proposal can settle early: submit_time plus the current min_expedite_delay
+// param.
+func (k Keeper) earliestExpediteSettle(ctx context.Context, proposal types.Proposal) int64 {
+	return proposal.SubmitTime + int64(k.GetParams(ctx).MinExpediteDelay/time.Second)
 }
 
 // executionDeadline is the end of the window in which a failed execution can

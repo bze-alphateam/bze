@@ -512,3 +512,16 @@ func (suite *IntegrationTestSuite) TestCreateDao_ExplicitAdmin() {
 	suite.Require().True(suite.k.HasDaoAdminIndex(suite.ctx, daoAddress(1), second.Id))
 	suite.Require().False(suite.k.HasDaoAdminIndex(suite.ctx, adminAddr, second.Id))
 }
+
+// A static-list DAO cannot list its own address as a member.
+func (suite *IntegrationTestSuite) TestCreateDao_OwnAddressAsMemberRejected() {
+	msg := validCreateDaoMsg()
+	msg.Members = append(msg.Members, daoAddress(1).String())
+	_, err := suite.msgServer.CreateDao(suite.ctx, msg)
+	suite.Require().ErrorIs(err, types.ErrInvalidMembers)
+	suite.Require().ErrorContains(err, "cannot be a member of itself")
+
+	_, found := suite.k.GetDao(suite.ctx, 1)
+	suite.Require().False(found)
+}
+

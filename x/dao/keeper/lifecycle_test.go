@@ -1059,8 +1059,8 @@ func (suite *IntegrationTestSuite) requireBallot(proposalId uint64, voter sdk.Ac
 
 // D21: removing a member zeroes their ballots on the DAO's proposals in
 // voting, keeping the records; a closed proposal keeps its ballot. Re-added,
-// the member's old ballot stays 0 until they vote again, the same option
-// included, at weight 1. I2 holds throughout.
+// the member's old ballots stay 0: they vote only on proposals submitted after
+// the re-add, as stake that rejoins does. I2 holds throughout.
 func (suite *IntegrationTestSuite) TestUpdateMembers_D21_RemovedMemberStopsCounting() {
 	suite.createAdminDao()
 	closed, err := suite.submit(memberA, 1, false)
@@ -1104,15 +1104,19 @@ func (suite *IntegrationTestSuite) TestUpdateMembers_D21_RemovedMemberStopsCount
 	suite.requireBallot(first, memberB, types.VoteOption_YES, 0)
 	suite.requireTally(first, 1, 0, 0)
 
-	suite.Require().NoError(suite.vote(memberB, first, types.VoteOption_YES))
-	suite.requireBallot(first, memberB, types.VoteOption_YES, 1)
-	suite.requireTally(first, 2, 0, 0)
-	suite.Require().ErrorIs(suite.vote(memberB, first, types.VoteOption_YES), types.ErrSameVote)
-
-	suite.Require().NoError(suite.vote(memberB, second, types.VoteOption_ABSTAIN))
-	suite.requireTally(second, 0, 0, 1)
+	suite.Require().ErrorIs(suite.vote(memberB, first, types.VoteOption_YES), types.ErrNoVotingPower)
+	suite.Require().ErrorIs(suite.vote(memberB, second, types.VoteOption_ABSTAIN), types.ErrNoVotingPower)
+	suite.requireBallot(first, memberB, types.VoteOption_YES, 0)
+	suite.requireTally(first, 1, 0, 0)
+	suite.requireTally(second, 0, 0, 0)
 	suite.requireInvariants(first, memberA, memberB)
 	suite.requireInvariants(second, memberA, memberB)
+
+	suite.atBlock(suite.ctx.BlockHeight() + 1)
+	third, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberB, third, types.VoteOption_YES))
+	suite.requireBallot(third, memberB, types.VoteOption_YES, 1)
 }
 
 // A removal zeroes the member's ballots only on its own DAO's proposals: the
@@ -1141,23 +1145,87 @@ func (suite *IntegrationTestSuite) TestUpdateMembers_OtherDaoBallotsUntouched() 
 	suite.requireInvariants(other, memberA, memberB)
 }
 
-// An added member votes on a proposal opened before they joined; the pinned
-// denominator stays at the member count of submission.
-func (suite *IntegrationTestSuite) TestUpdateMembers_AddedMemberVotesOnOpenProposal() {
+// An added member gets a member record at the block height and votes only on
+// proposals submitted after that block, the rule stake follows through join
+// records: not on a proposal opened before the add, nor on one submitted in
+// the same block. The pinned denominators count the members at submission.
+func (suite *IntegrationTestSuite) TestUpdateMembers_AddedMemberVotesOnLaterProposals() {
 	suite.createAdminDao()
-	id, err := suite.submit(memberA, 1, false)
+	suite.atBlock(10)
+	before, err := suite.submit(memberA, 1, false)
 	suite.Require().NoError(err)
 
+	suite.atBlock(11)
 	add := types.NewMsgUpdateMembers(daoAddress(1).String(), 1, []string{memberC.String()}, nil)
 	suite.Require().NoError(suite.adminExecute(adminAddr, 1, add))
+	record, found := suite.k.GetMemberRecord(suite.ctx, 1, memberC)
+	suite.Require().True(found)
+	suite.Require().Equal(int64(11), record.Height)
+	sameBlock, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
 
-	suite.Require().NoError(suite.vote(memberC, id, types.VoteOption_YES))
-	suite.requireBallot(id, memberC, types.VoteOption_YES, 1)
-	suite.requireTally(id, 1, 0, 0)
-	suite.requireInvariants(id, memberA, memberB, memberC)
+	suite.Require().ErrorIs(suite.vote(memberC, before, types.VoteOption_YES), types.ErrNoVotingPower)
+	suite.Require().ErrorIs(suite.vote(memberC, sameBlock, types.VoteOption_YES), types.ErrNoVotingPower)
+	suite.requireTally(before, 0, 0, 0)
+	suite.requireTally(sameBlock, 0, 0, 0)
 
-	proposal, _ := suite.k.GetProposal(suite.ctx, id)
-	suite.Require().Equal(math.NewInt(2), proposal.PinnedDenominator)
+	suite.atBlock(12)
+	after, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberC, after, types.VoteOption_YES))
+	suite.requireBallot(after, memberC, types.VoteOption_YES, 1)
+	suite.requireInvariants(after, memberA, memberB, memberC)
+
+	for id, want := range map[uint64]int64{before: 2, sameBlock: 3, after: 3} {
+		proposal, _ := suite.k.GetProposal(suite.ctx, id)
+		suite.Require().Equal(math.NewInt(want), proposal.PinnedDenominator)
+	}
+
+	// the voting power query applies the same rule
+	res, err := suite.k.VotingPower(suite.ctx, &types.QueryVotingPowerRequest{DaoId: 1, Address: memberC.String()})
+	suite.Require().NoError(err)
+	suite.Require().Equal(math.OneInt(), res.Current)
+	for _, p := range res.Proposals {
+		want := math.ZeroInt()
+		if p.ProposalId == after {
+			want = math.OneInt()
+		}
+		suite.Require().Equal(want, p.EligibleWeight, "proposal %d", p.ProposalId)
+	}
+}
+
+// Members listed at creation have no member record; a removal deletes the
+// record of a member added later.
+func (suite *IntegrationTestSuite) TestUpdateMembers_MemberRecordLifecycle() {
+	suite.createAdminDao()
+	_, found := suite.k.GetMemberRecord(suite.ctx, 1, memberA)
+	suite.Require().False(found)
+
+	suite.atBlock(5)
+	add := types.NewMsgUpdateMembers(daoAddress(1).String(), 1, []string{memberC.String()}, nil)
+	suite.Require().NoError(suite.adminExecute(adminAddr, 1, add))
+	_, found = suite.k.GetMemberRecord(suite.ctx, 1, memberC)
+	suite.Require().True(found)
+	suite.Require().Len(suite.k.GetAllMemberRecords(suite.ctx), 1)
+
+	remove := types.NewMsgUpdateMembers(daoAddress(1).String(), 1, nil, []string{memberC.String()})
+	suite.Require().NoError(suite.adminExecute(adminAddr, 1, remove))
+	_, found = suite.k.GetMemberRecord(suite.ctx, 1, memberC)
+	suite.Require().False(found)
+	suite.Require().Empty(suite.k.GetAllMemberRecords(suite.ctx))
+}
+
+// A DAO cannot list its own address as a member: not at creation, nor
+// through MsgUpdateMembers. Another DAO stays a valid member.
+func (suite *IntegrationTestSuite) TestUpdateMembers_DaoCannotBeItsOwnMember() {
+	suite.createAdminDao()
+	add := types.NewMsgUpdateMembers(daoAddress(1).String(), 1, []string{daoAddress(1).String()}, nil)
+	suite.Require().ErrorIs(suite.adminExecute(adminAddr, 1, add), types.ErrInvalidMembers)
+	suite.requireMembers(memberA, memberB)
+
+	add = types.NewMsgUpdateMembers(daoAddress(1).String(), 1, []string{daoAddress(2).String()}, nil)
+	suite.Require().NoError(suite.adminExecute(adminAddr, 1, add))
+	suite.requireMembers(memberA, memberB, daoAddress(2))
 }
 
 // A self-owned DAO changes its members through a passed proposal. The

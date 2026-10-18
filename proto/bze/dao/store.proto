@@ -184,3 +184,12 @@ message JoinRecord {
   string address = 2;
   int64 height = 3;
 }
+
+// MemberRecord is the height an address was added to a static-list DAO by
+// MsgUpdateMembers. A member added at or after a proposal's submit height does
+// not vote on it; members listed at creation have no record.
+message MemberRecord {
+  uint64 dao_id = 1;
+  string address = 2;
+  int64 height = 3;
+}

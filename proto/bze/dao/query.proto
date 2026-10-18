@@ -148,8 +148,8 @@ message QueryProposalResponse {
   // proposal (unix seconds), 0 for any other status.
   int64 retry_deadline = 3 [(amino.dont_omitempty) = true];
   // expedite_settleable: the proposal is expedited, still VOTING before its
-  // voting end, and its tally already meets the expedite bars, so it can be
-  // settled early.
+  // voting end, past the min_expedite_delay after its submission, and its
+  // tally already meets the expedite bars, so it can be settled early.
   bool expedite_settleable = 4 [(amino.dont_omitempty) = true];
 }
 

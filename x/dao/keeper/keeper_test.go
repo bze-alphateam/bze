@@ -30,6 +30,8 @@ type IntegrationTestSuite struct {
 	rewards   *testutil.MockRewardsKeeper
 	router    *baseapp.MsgServiceRouter
 	ledger    *fakeBank
+	// stakes is the x/rewards participation served once stubStakes ran
+	stakes *stakes
 }
 
 func (suite *IntegrationTestSuite) SetupTest() {
@@ -39,6 +41,7 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	suite.acc = testutil.NewMockAccountKeeper(mockCtrl)
 	suite.bank = testutil.NewMockBankKeeper(mockCtrl)
 	suite.rewards = testutil.NewMockRewardsKeeper(mockCtrl)
+	suite.stakes = nil
 
 	cdc := keepertest.DaoCodec()
 	suite.router = baseapp.NewMsgServiceRouter()

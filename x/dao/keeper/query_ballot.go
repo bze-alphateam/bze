@@ -80,6 +80,11 @@ func (k Keeper) currentWeight(ctx sdk.Context, dao types.Dao, addr sdk.AccAddres
 		return sdkmath.ZeroInt()
 	}
 
+	// the DAO's own stake never votes on its proposals
+	if addr.String() == dao.Address {
+		return sdkmath.ZeroInt()
+	}
+
 	// no join record reaches the highest height, so all stake counts
 	weight, _ := k.eligibleWeight(ctx, dao.Electorate, addr, math.MaxInt64)
 

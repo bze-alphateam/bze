@@ -564,6 +564,7 @@ func (suite *IntegrationTestSuite) requireStillVoting(proposalId uint64) {
 // end through the regular pass path: the deposit is refunded as passed, the
 // proposal leaves voting and its messages run as the DAO.
 func (suite *IntegrationTestSuite) TestSettleProposal_ExpeditedEarlyPasses() {
+	suite.setExpediteDelay(0)
 	suite.createStaticDao(func(c *types.DaoConfig) {
 		c.ProposalDeposit = coinPtr(40)
 		c.DepositRefundPolicy = types.DepositRefundPolicy_ONLY_PASSED
@@ -594,6 +595,7 @@ func (suite *IntegrationTestSuite) TestSettleProposal_ExpeditedEarlyPasses() {
 // An early settle that fails its execution is retried like any other, before
 // the voting end too.
 func (suite *IntegrationTestSuite) TestSettleProposal_ExpeditedEarlyExecutionFailure() {
+	suite.setExpediteDelay(0)
 	suite.createStaticDao(noConfigChange)
 	id, err := suite.submit(memberA, 1, true, treasurySend(memberB, 30))
 	suite.Require().NoError(err)
@@ -618,6 +620,7 @@ func (suite *IntegrationTestSuite) TestSettleProposal_ExpeditedEarlyExecutionFai
 // refused and left untouched; a regular proposal is refused even when every
 // member voted yes.
 func (suite *IntegrationTestSuite) TestSettleProposal_EarlyRefusals() {
+	suite.setExpediteDelay(0)
 	suite.createStaticDao(noConfigChange)
 	expedited, err := suite.submit(memberA, 1, true)
 	suite.Require().NoError(err)
@@ -635,6 +638,7 @@ func (suite *IntegrationTestSuite) TestSettleProposal_EarlyRefusals() {
 // From its voting end an expedited proposal settles under the regular bars:
 // one yes of two misses the expedite bars but meets the regular ones.
 func (suite *IntegrationTestSuite) TestSettleProposal_ExpeditedAfterVotingEndUsesRegularBars() {
+	suite.setExpediteDelay(0)
 	suite.createStaticDao(noConfigChange)
 	id, err := suite.submit(memberA, 1, true)
 	suite.Require().NoError(err)
@@ -676,6 +680,7 @@ func (suite *IntegrationTestSuite) TestSettleProposal_ExpediteYesBoundary() {
 	}{{99, nil}, {98, types.ErrExpediteBarNotMet}} {
 		suite.Run(strconv.FormatInt(tc.yes, 10), func() {
 			suite.SetupTest()
+			suite.setExpediteDelay(0)
 			_, s := suite.expediteStakeDao(noConfigChange)
 			s.joinSr("1", memberA, tc.yes)
 			suite.atBlock(10)
@@ -698,6 +703,7 @@ func (suite *IntegrationTestSuite) TestSettleProposal_ExpediteYesBoundary() {
 // The expedite quorum counts every vote against D: 99 yes + 35 abstain is 134
 // of 150, under a 0.9 quorum (135); one more abstaining unit meets it.
 func (suite *IntegrationTestSuite) TestSettleProposal_ExpediteQuorumBar() {
+	suite.setExpediteDelay(0)
 	_, s := suite.expediteStakeDao(func(c *types.DaoConfig) { c.ExpediteQuorum = dec("0.9") })
 	s.joinSr("1", memberA, 99)
 	s.joinDr(stakeDenom, memberB, 35)
@@ -722,6 +728,7 @@ func (suite *IntegrationTestSuite) TestSettleProposal_ExpediteQuorumBar() {
 // it into the expedite bars. 90 yes against a live total of 90 would pass;
 // against the pinned 150 it does not, and the rejoined stake cannot vote.
 func (suite *IntegrationTestSuite) TestSettleProposal_D3_ExitCannotDeflateExpediteBars() {
+	suite.setExpediteDelay(0)
 	state, s := suite.expediteStakeDao(noConfigChange)
 	s.joinSr("1", memberA, 60)
 	s.joinSr("1", memberC, 40)
@@ -750,10 +757,18 @@ func (suite *IntegrationTestSuite) TestSettleProposal_D3_ExitCannotDeflateExpedi
 	suite.requireStillVoting(id)
 }
 
-// Documented residual: a whale who alone meets the expedite bars at the submit
-// block can settle in that same block. It gains speed only: the outcome is one
-// full voting could not refuse (D7).
-func (suite *IntegrationTestSuite) TestSettleProposal_WhaleSettlesEarly() {
+// setExpediteDelay sets the min_expedite_delay param.
+func (suite *IntegrationTestSuite) setExpediteDelay(delay time.Duration) {
+	params := suite.k.GetParams(suite.ctx)
+	params.MinExpediteDelay = delay
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
+}
+
+// A whale who alone meets the expedite bars at the submit block cannot settle
+// in that block: every early settle waits min_expedite_delay after submission,
+// so the other voters get time to react. From then on it settles early.
+func (suite *IntegrationTestSuite) TestSettleProposal_WhaleWaitsForExpediteDelay() {
+	suite.setExpediteDelay(time.Hour)
 	_, s := suite.expediteStakeDao(noConfigChange)
 	s.joinSr("1", memberA, 100)
 	suite.atBlock(10)
@@ -761,9 +776,80 @@ func (suite *IntegrationTestSuite) TestSettleProposal_WhaleSettlesEarly() {
 	suite.Require().NoError(err)
 	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
 
+	_, err = suite.settle(id)
+	suite.Require().ErrorIs(err, types.ErrExpediteTooEarly)
+	suite.requireStillVoting(id)
+
+	proposal, _ := suite.k.GetProposal(suite.ctx, id)
+	suite.ctx = suite.ctx.WithBlockTime(time.Unix(proposal.SubmitTime+3599, 0))
+	_, err = suite.settle(id)
+	suite.Require().ErrorIs(err, types.ErrExpediteTooEarly)
+	suite.requireStillVoting(id)
+
+	suite.ctx = suite.ctx.WithBlockTime(time.Unix(proposal.SubmitTime+3600, 0))
 	status, err := suite.settle(id)
 	suite.Require().NoError(err)
 	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
+	suite.requireSettled(id, types.ProposalStatus_EXECUTED, true)
+}
+
+// The delay is checked before the bars: a proposal below the bars is refused
+// as too early while the delay runs, then as below the bars.
+func (suite *IntegrationTestSuite) TestSettleProposal_ExpediteDelayBeforeBars() {
+	suite.setExpediteDelay(time.Hour)
+	suite.createStaticDao(noConfigChange)
+	id, err := suite.submit(memberA, 1, true)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+
+	_, err = suite.settle(id)
+	suite.Require().ErrorIs(err, types.ErrExpediteTooEarly)
+
+	proposal, _ := suite.k.GetProposal(suite.ctx, id)
+	suite.ctx = suite.ctx.WithBlockTime(time.Unix(proposal.SubmitTime+3600, 0))
+	_, err = suite.settle(id)
+	suite.Require().ErrorIs(err, types.ErrExpediteBarNotMet)
+	suite.requireStillVoting(id)
+}
+
+// With the default 24h delay and a 24h expedited period, a proposal never
+// settles early, but at its voting end it settles normally: the delay only
+// bounds early settles.
+func (suite *IntegrationTestSuite) TestSettleProposal_ExpediteDelayNeverBlocksVotingEnd() {
+	suite.Require().Equal(24*time.Hour, suite.k.GetParams(suite.ctx).MinExpediteDelay)
+	suite.createStaticDao(noConfigChange)
+	id, err := suite.submit(memberA, 1, true)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+	suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_YES))
+
+	suite.endVoting(id, -1)
+	_, err = suite.settle(id)
+	suite.Require().ErrorIs(err, types.ErrExpediteTooEarly)
+
+	suite.endVoting(id, 0)
+	status, err := suite.settle(id)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
+	suite.requireSettled(id, types.ProposalStatus_EXECUTED, false)
+}
+
+// The delay is the param at settle time: lowering it lets a waiting proposal
+// settle early at once.
+func (suite *IntegrationTestSuite) TestSettleProposal_ExpediteDelayReadAtSettle() {
+	suite.setExpediteDelay(time.Hour)
+	suite.createStaticDao(noConfigChange)
+	id, err := suite.submit(memberA, 1, true)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+	suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_YES))
+
+	_, err = suite.settle(id)
+	suite.Require().ErrorIs(err, types.ErrExpediteTooEarly)
+
+	suite.setExpediteDelay(0)
+	_, err = suite.settle(id)
+	suite.Require().NoError(err)
 	suite.requireSettled(id, types.ProposalStatus_EXECUTED, true)
 }
 
