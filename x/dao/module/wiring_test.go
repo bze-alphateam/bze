@@ -68,6 +68,9 @@ func TestRegisterServices_RoutesMsgAndQuery(t *testing.T) {
 	require.NotNil(t, qr.Route("/bze.dao.Query/DaoByAddress"))
 	require.NotNil(t, qr.Route("/bze.dao.Query/DaoController"))
 	require.NotNil(t, qr.Route("/bze.dao.Query/Proposal"))
+	require.NotNil(t, qr.Route("/bze.dao.Query/Ballot"))
+	require.NotNil(t, qr.Route("/bze.dao.Query/VotingPower"))
+	require.NotNil(t, qr.Route("/bze.dao.Query/JoinRecord"))
 }
 
 // The CLI exposes `bzed q dao params` and `bzed tx dao update-params`; the
@@ -76,20 +79,28 @@ func TestAutoCLIOptions(t *testing.T) {
 	opts := dao.AppModule{}.AutoCLIOptions()
 
 	require.Equal(t, "bze.dao.Query", opts.Query.Service)
-	require.Len(t, opts.Query.RpcCommandOptions, 5)
+	require.Len(t, opts.Query.RpcCommandOptions, 8)
 	require.Equal(t, "Params", opts.Query.RpcCommandOptions[0].RpcMethod)
 	require.Equal(t, "params", opts.Query.RpcCommandOptions[0].Use)
-	for i, want := range []struct{ method, use, arg string }{
-		{"Dao", "dao [id]", "id"},
-		{"DaoByAddress", "dao-by-address [address]", "address"},
-		{"DaoController", "dao-controller [dao-id]", "dao_id"},
-		{"Proposal", "proposal [proposal-id]", "id"},
+	for i, want := range []struct {
+		method, use string
+		args        []string
+	}{
+		{"Dao", "dao [id]", []string{"id"}},
+		{"DaoByAddress", "dao-by-address [address]", []string{"address"}},
+		{"DaoController", "dao-controller [dao-id]", []string{"dao_id"}},
+		{"Proposal", "proposal [proposal-id]", []string{"id"}},
+		{"Ballot", "ballot [proposal-id] [voter]", []string{"proposal_id", "voter"}},
+		{"VotingPower", "voting-power [dao-id] [address]", []string{"dao_id", "address"}},
+		{"JoinRecord", "join-record [source] [address]", []string{"source", "address"}},
 	} {
 		q := opts.Query.RpcCommandOptions[i+1]
 		require.Equal(t, want.method, q.RpcMethod)
 		require.Equal(t, want.use, q.Use)
-		require.Len(t, q.PositionalArgs, 1)
-		require.Equal(t, want.arg, q.PositionalArgs[0].ProtoField)
+		require.Len(t, q.PositionalArgs, len(want.args))
+		for j, arg := range want.args {
+			require.Equal(t, arg, q.PositionalArgs[j].ProtoField)
+		}
 	}
 
 	require.Equal(t, "bze.dao.Msg", opts.Tx.Service)

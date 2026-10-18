@@ -83,7 +83,7 @@ func (k msgServer) CreateDao(goCtx context.Context, msg *types.MsgCreateDao) (*t
 
 	k.SetDaoCounter(ctx, daoId)
 	k.setNewDao(ctx, dao)
-	for _, source := range electorateSources(dao.Electorate) {
+	for _, source := range dao.Electorate.Sources() {
 		k.pinSource(ctx, source)
 	}
 

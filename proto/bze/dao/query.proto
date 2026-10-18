@@ -36,6 +36,23 @@ service Query {
   rpc Proposal (QueryProposalRequest) returns (QueryProposalResponse) {
     option (google.api.http).get = "/bze/dao/proposal/{id}";
   }
+
+  // Ballot returns a voter's ballot on a proposal.
+  rpc Ballot (QueryBallotRequest) returns (QueryBallotResponse) {
+    option (google.api.http).get = "/bze/dao/ballot/{proposal_id}/{voter}";
+  }
+
+  // VotingPower returns an address's weight in a DAO now and on each of the
+  // DAO's proposals in voting.
+  rpc VotingPower (QueryVotingPowerRequest) returns (QueryVotingPowerResponse) {
+    option (google.api.http).get = "/bze/dao/voting_power/{dao_id}/{address}";
+  }
+
+  // JoinRecord returns the height an address joined a pinned source at. The
+  // source is in the query string: it contains a slash.
+  rpc JoinRecord (QueryJoinRecordRequest) returns (QueryJoinRecordResponse) {
+    option (google.api.http).get = "/bze/dao/join_record";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -113,4 +130,53 @@ message QueryProposalResponse {
   // voting end, and its tally already meets the expedite bars, so it can be
   // settled early.
   bool expedite_settleable = 4 [(amino.dont_omitempty) = true];
+}
+
+// QueryBallotRequest is request type for the Query/Ballot RPC method.
+message QueryBallotRequest {
+  uint64 proposal_id = 1;
+  string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryBallotResponse is response type for the Query/Ballot RPC method.
+message QueryBallotResponse {
+  Ballot ballot = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// QueryVotingPowerRequest is request type for the Query/VotingPower RPC method.
+message QueryVotingPowerRequest {
+  uint64 dao_id = 1;
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// ProposalVotingPower is the weight an address would vote with on one proposal.
+message ProposalVotingPower {
+  uint64 proposal_id = 1;
+  // eligible_weight is 1 or 0 for a static-list DAO; for a stake DAO the
+  // address's stake in the proposal's pinned sources that joined before the
+  // proposal was submitted.
+  string eligible_weight = 2 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  // shares are the per-source parts of the weight (stake DAOs only).
+  repeated BallotShare shares = 3 [(gogoproto.nullable) = false];
+}
+
+// QueryVotingPowerResponse is response type for the Query/VotingPower RPC method.
+message QueryVotingPowerResponse {
+  // current is the address's weight now: 1 or 0 for a static-list DAO, its
+  // stake in the DAO's current sources for a stake DAO, join records ignored.
+  string current = 1 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  // proposals has one entry per proposal of the DAO in voting.
+  repeated ProposalVotingPower proposals = 2 [(gogoproto.nullable) = false];
+}
+
+// QueryJoinRecordRequest is request type for the Query/JoinRecord RPC method.
+message QueryJoinRecordRequest {
+  // source is sr/{reward_id} or dr/{staking_denom}.
+  string source = 1;
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryJoinRecordResponse is response type for the Query/JoinRecord RPC method.
+message QueryJoinRecordResponse {
+  int64 height = 1 [(amino.dont_omitempty) = true];
 }

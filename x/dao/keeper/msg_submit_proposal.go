@@ -103,7 +103,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *types.MsgSubmitPro
 	k.SetProposalCounter(ctx, proposalId)
 	k.setNewProposal(ctx, proposal)
 	// a source a proposal votes with stays pinned until the proposal leaves voting (I4)
-	for _, source := range electorateSources(proposal.PinnedElectorate) {
+	for _, source := range proposal.PinnedElectorate.Sources() {
 		k.pinSource(ctx, source)
 	}
 

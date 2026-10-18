@@ -91,9 +91,8 @@ func (k Keeper) GetAllProposals(ctx context.Context) []types.Proposal {
 }
 
 // SetAllProposals imports proposal records (genesis): it stores each one with
-// its DAO index entry, and a proposal in voting also with its open marker and
-// a pin on each of its sources (I4). The proposals must pass
-// GenesisState.Validate.
+// its DAO index entry, and a proposal in voting also with its open marker. The
+// proposals must pass GenesisState.Validate.
 func (k Keeper) SetAllProposals(ctx context.Context, proposals []types.Proposal) {
 	for _, proposal := range proposals {
 		if proposal.Status != types.ProposalStatus_VOTING {
@@ -103,9 +102,6 @@ func (k Keeper) SetAllProposals(ctx context.Context, proposals []types.Proposal)
 		}
 
 		k.setNewProposal(ctx, proposal)
-		for _, source := range electorateSources(proposal.PinnedElectorate) {
-			k.pinSource(ctx, source)
-		}
 	}
 }
 
@@ -128,7 +124,7 @@ func (k Keeper) CheckDepositEscrow(ctx context.Context) error {
 
 	balance := k.bankKeeper.GetAllBalances(ctx, authtypes.NewModuleAddress(types.ModuleName))
 	if !balance.IsAllGTE(escrowed) {
-		return fmt.Errorf("dao module account holds %s, less than the deposits of the proposals in voting (%s)", balance, escrowed)
+		return fmt.Errorf("I1: dao module account holds %s, less than the deposits of the proposals in voting (%s)", balance, escrowed)
 	}
 
 	return nil

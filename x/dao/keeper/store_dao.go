@@ -51,14 +51,11 @@ func (k Keeper) GetAllDaos(ctx context.Context) []types.Dao {
 }
 
 // SetAllDaos imports DAO records (genesis): it stores each one with its address
-// and admin index entries and pins its electorate sources. The DAOs must pass
-// GenesisState.Validate.
+// and admin index entries. The source pins are imported by SetAllPins. The
+// DAOs must pass GenesisState.Validate.
 func (k Keeper) SetAllDaos(ctx context.Context, daos []types.Dao) {
 	for _, dao := range daos {
 		k.setNewDao(ctx, dao)
-		for _, source := range electorateSources(dao.Electorate) {
-			k.pinSource(ctx, source)
-		}
 	}
 }
 

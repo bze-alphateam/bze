@@ -14,7 +14,7 @@ import (
 // sources (I4) and its open marker. Every path that ends VOTING (cancel,
 // settlement) calls it exactly once per proposal.
 func (k Keeper) leaveVoting(ctx sdk.Context, proposal types.Proposal) {
-	for _, source := range electorateSources(proposal.PinnedElectorate) {
+	for _, source := range proposal.PinnedElectorate.Sources() {
 		k.unpinSource(ctx, source)
 	}
 
