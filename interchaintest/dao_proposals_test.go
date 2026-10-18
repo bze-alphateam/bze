@@ -1,6 +1,8 @@
 package interchaintest_test
 
 import (
+	"time"
+
 	"fmt"
 	"strings"
 	"testing"
@@ -122,7 +124,8 @@ func (s *daoSuite) submitProposal(t *testing.T) {
 		s.refuse(t, admin, daoCode(1119), "dao", "admin-execute", idle.idArg(), msgArgs(submitMsg(idle.addr, idle.id, "no voters", nil, false))[0])
 	})
 
-	// leave nothing open: the proposals of this case are cancelled (ALWAYS refunds)
+	// leave nothing open: the proposals of this case are cancelled (ALWAYS
+	// refunds), or settled once their voting ended
 	for _, ref := range []daoRef{d, dt} {
 		for _, p := range s.daoProposals(t, ref.id, "VOTING") {
 			s.cancelBy(t, uint64(p.ID), map[string]ibc.Wallet{m[0].FormattedAddress(): m[0], m[1].FormattedAddress(): m[1], m[2].FormattedAddress(): m[2]}, admin, dt)
@@ -165,9 +168,12 @@ func (s *daoSuite) voting(t *testing.T) {
 }
 
 // cancelBy cancels a proposal with the wallet of its proposer (a member, or
-// the DAO through its admin).
+// the DAO through its admin); one whose voting ended is settled instead.
 func (s *daoSuite) cancelBy(t *testing.T, pid uint64, members map[string]ibc.Wallet, admin ibc.Wallet, viaDao daoRef) {
 	t.Helper()
+	if s.settledAfterVotingEnd(t, admin, pid) {
+		return
+	}
 	p := s.prop(t, pid)
 	if w, ok := members[p.Proposer]; ok {
 		s.cancel(t, w, pid)
@@ -417,4 +423,34 @@ func (s *daoSuite) expedite(t *testing.T) {
 	s.refuse(t, anyone, daoCode(1127), "dao", "settle-proposal", daoU64(pid))
 	s.waitVotingEnd(t, pid)
 	s.settleFirst(t, anyone, pid, "EXECUTED")
+}
+
+// closeOpen leaves nothing of a test's proposal open: it is cancelled by its
+// proposer, or settled once its voting ended (a cancel is refused from then
+// on).
+func (s *daoSuite) closeOpen(t *testing.T, proposer ibc.Wallet, pid uint64) {
+	t.Helper()
+	if !s.settledAfterVotingEnd(t, proposer, pid) {
+		s.cancel(t, proposer, pid)
+	}
+}
+
+// settledAfterVotingEnd settles the proposal under its tally when its voting
+// ends within a few seconds (a cancel sent now could land after voting_end),
+// waiting for the end first; it reports whether it settled.
+func (s *daoSuite) settledAfterVotingEnd(t *testing.T, sender ibc.Wallet, pid uint64) bool {
+	t.Helper()
+	p := s.prop(t, pid)
+	if time.Until(time.Unix(int64(p.VotingEnd), 0)) > 10*time.Second {
+		return false
+	}
+	s.waitVotingEnd(t, pid)
+	p = s.prop(t, pid)
+	status := "REJECTED"
+	if passes(t, p) {
+		status = "EXECUTED"
+	}
+	s.settleFirst(t, sender, pid, status)
+
+	return true
 }

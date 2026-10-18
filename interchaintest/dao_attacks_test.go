@@ -428,7 +428,7 @@ func (s *daoSuite) denomsAndAmounts(t *testing.T) {
 		s.settleFirst(t, m[0], p, "EXECUTION_FAILED")
 	}
 	require.Equal(t, "10", s.bal(t, dz.addr, chain.Denom).String(), "no failed execution moved anything")
-	s.cancel(t, m[0], pid)
+	s.closeOpen(t, m[0], pid)
 }
 
 // submitOrRefuse submits a proposal whose messages the CLI may refuse to
