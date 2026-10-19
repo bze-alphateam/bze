@@ -99,10 +99,14 @@ func configCases() []configCase {
 		{desc: "unset expedite_threshold", mutate: func(c *types.DaoConfig) { c.ExpediteThreshold = math.LegacyDec{} }, wantErr: types.ErrInvalidConfig},
 		{desc: "zero threshold", mutate: func(c *types.DaoConfig) { c.Threshold = dec("0") }, wantErr: types.ErrInvalidConfig},
 		{desc: "threshold above 1", mutate: func(c *types.DaoConfig) { c.Threshold = dec("1.1") }, wantErr: types.ErrInvalidConfig},
-		{desc: "all ratios at 1", mutate: func(c *types.DaoConfig) {
-			one := math.LegacyOneDec()
-			c.MinQuorum, c.Threshold, c.ExpediteQuorum, c.ExpediteThreshold = one, one, one, one
+		{desc: "quorums at 1, thresholds just under 1", mutate: func(c *types.DaoConfig) {
+			one, almost := math.LegacyOneDec(), dec("0.999999999999999999")
+			c.MinQuorum, c.Threshold, c.ExpediteQuorum, c.ExpediteThreshold = one, almost, one, almost
 		}},
+		{desc: "threshold at 1 can never be exceeded", mutate: func(c *types.DaoConfig) {
+			c.Threshold, c.ExpediteThreshold = math.LegacyOneDec(), math.LegacyOneDec()
+		}, wantErr: types.ErrInvalidConfig},
+		{desc: "expedite_threshold at 1 can never be exceeded", mutate: func(c *types.DaoConfig) { c.ExpediteThreshold = math.LegacyOneDec() }, wantErr: types.ErrInvalidConfig},
 		{desc: "zero expedite_quorum", mutate: func(c *types.DaoConfig) { c.ExpediteQuorum = dec("0") }, wantErr: types.ErrInvalidConfig},
 		{desc: "expedite_quorum above 1", mutate: func(c *types.DaoConfig) { c.ExpediteQuorum = dec("1.5") }, wantErr: types.ErrInvalidConfig},
 		{desc: "expedite_quorum below min_quorum", mutate: func(c *types.DaoConfig) { c.ExpediteQuorum = dec("0.39") }, wantErr: types.ErrInvalidConfig},

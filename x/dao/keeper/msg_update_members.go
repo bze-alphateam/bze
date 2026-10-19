@@ -94,8 +94,8 @@ func (k msgServer) UpdateMembers(goCtx context.Context, msg *types.MsgUpdateMemb
 	return &types.MsgUpdateMembersResponse{}, nil
 }
 
-// zeroMemberBallots takes a removed member's ballots on the DAO's proposals in
-// voting out of their tallies. The ballot stays, at weight 0, so its record of
+// zeroMemberBallots takes a removed member's ballots on the DAO's proposals
+// still being voted on out of their tallies. The ballot stays, at weight 0, so its record of
 // the vote remains. The scan is bounded by max_open_proposals.
 func (k Keeper) zeroMemberBallots(ctx sdk.Context, daoId uint64, member sdk.AccAddress) error {
 	for _, proposalId := range k.openProposalIds(ctx, daoId) {
@@ -104,8 +104,9 @@ func (k Keeper) zeroMemberBallots(ctx sdk.Context, daoId uint64, member sdk.AccA
 			continue
 		}
 
+		// from voting_end on the tally is final, as for exits
 		proposal, found := k.GetProposal(ctx, proposalId)
-		if !found {
+		if !found || proposal.VotingEnded(ctx.BlockTime()) {
 			continue
 		}
 

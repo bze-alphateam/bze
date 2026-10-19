@@ -6978,7 +6978,7 @@ type DaoConfig struct {
 
 	// min_quorum is the share of the electorate that must vote, in (0, 1].
 	MinQuorum string `protobuf:"bytes,1,opt,name=min_quorum,json=minQuorum,proto3" json:"min_quorum,omitempty"`
-	// threshold is the share of yes votes needed to pass, in (0, 1].
+	// threshold is the share of yes votes the outcome must exceed to pass, in (0, 1).
 	Threshold string `protobuf:"bytes,2,opt,name=threshold,proto3" json:"threshold,omitempty"`
 	// voting_period is how long a normal proposal stays open.
 	VotingPeriod *durationpb.Duration `protobuf:"bytes,3,opt,name=voting_period,json=votingPeriod,proto3" json:"voting_period,omitempty"`
@@ -6988,7 +6988,7 @@ type DaoConfig struct {
 	ExpeditedPeriod *durationpb.Duration `protobuf:"bytes,5,opt,name=expedited_period,json=expeditedPeriod,proto3" json:"expedited_period,omitempty"`
 	// expedite_quorum is the quorum of an expedited proposal, at least min_quorum.
 	ExpediteQuorum string `protobuf:"bytes,6,opt,name=expedite_quorum,json=expediteQuorum,proto3" json:"expedite_quorum,omitempty"`
-	// expedite_threshold is the threshold of an expedited proposal, at least threshold;
+	// expedite_threshold is the threshold of an expedited proposal, in (0, 1) and at least threshold;
 	// its base is the full denominator.
 	ExpediteThreshold string `protobuf:"bytes,7,opt,name=expedite_threshold,json=expediteThreshold,proto3" json:"expedite_threshold,omitempty"`
 	// open_submission lets anyone submit proposals; false (default) = members only.

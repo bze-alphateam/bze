@@ -35,19 +35,35 @@ func TestTallyPasses_D17_Boundaries(t *testing.T) {
 	require.True(t, passes(sevenThirteenths, sevenThirteenths, 13, 7, 6, 0))
 	require.False(t, passes(sevenThirteenths, sevenThirteenths, 13, 6, 7, 0), "one below the threshold")
 	require.False(t, passes(sevenThirteenths, half(), 13, 6, 0, 0), "one below the quorum")
-	require.True(t, passes(one, one, 1, 1, 0, 0), "1 of 1")
-	require.False(t, passes(one, one, 1, 0, 1, 0))
-	require.False(t, passes(one, one, 2, 1, 0, 0), "1 of 2 misses a full quorum")
+	require.True(t, passes(one, half(), 1, 1, 0, 0), "1 of 1")
+	require.False(t, passes(one, half(), 1, 0, 1, 0))
+	require.False(t, passes(one, half(), 2, 1, 0, 0), "1 of 2 misses a full quorum")
 
 	for count := int64(1); count <= 50_000; count++ {
-		if !passes(half(), half(), 2*count, count, count, 0) {
-			t.Fatalf("%d yes of %d against 50%% must pass", count, 2*count)
+		if !passes(half(), half(), 2*count+1, count+1, count, 0) {
+			t.Fatalf("%d yes against %d no at 50%% must pass", count+1, count)
+		}
+		if passes(half(), half(), 2*count, count, count, 0) {
+			t.Fatalf("a %d/%d tie at 50%% must not pass", count, count)
 		}
 	}
 }
 
-// The quorum counts every vote, abstentions included, against the denominator;
-// the threshold counts yes against yes + no. Both are met at equality.
+// The threshold is strict, as in x/gov: a tie never passes at 0.5, and yes
+// exactly at the threshold fails while one unit more passes.
+func TestTallyPasses_ThresholdIsStrict(t *testing.T) {
+	require.False(t, passes(half(), half(), 2, 1, 1, 0), "1/1 tie")
+	require.False(t, passes(half(), half(), 100, 50, 50, 0), "50/50 tie")
+	require.True(t, passes(half(), half(), 100, 51, 49, 0), "51/49")
+
+	sixty := math.LegacyMustNewDecFromStr("0.6")
+	require.False(t, passes(half(), sixty, 10, 6, 4, 0), "yes exactly at 60%")
+	require.True(t, passes(half(), sixty, 100, 61, 39, 0), "yes one unit above 60%")
+}
+
+// The quorum counts every vote, abstentions included, against the denominator
+// and is met at equality; the threshold counts yes against yes + no and must
+// be exceeded.
 func TestTallyPasses_QuorumThresholdMatrix(t *testing.T) {
 	quorum, threshold := math.LegacyMustNewDecFromStr("0.4"), math.LegacyMustNewDecFromStr("0.6")
 	for _, tc := range []struct {
@@ -55,10 +71,10 @@ func TestTallyPasses_QuorumThresholdMatrix(t *testing.T) {
 		denominator, yes, no, abstain int64
 		want                          bool
 	}{
-		{"both bars met exactly", 100, 24, 16, 0, true},
-		{"quorum one short", 100, 23, 16, 0, false},
-		{"threshold one short", 100, 23, 17, 0, false},
-		{"abstain fills the quorum", 100, 3, 2, 35, true},
+		{"quorum met exactly, threshold exceeded", 100, 25, 15, 0, true},
+		{"threshold met exactly", 100, 24, 16, 0, false},
+		{"quorum one short", 100, 24, 15, 0, false},
+		{"abstain fills the quorum", 100, 4, 2, 34, true},
 		{"abstain does not move the threshold", 100, 2, 3, 95, false},
 		{"unanimous over quorum", 100, 40, 0, 0, true},
 		{"unanimous under quorum", 100, 39, 0, 0, false},
@@ -74,8 +90,8 @@ func TestTallyPasses_QuorumThresholdMatrix(t *testing.T) {
 func TestTallyPasses_LargeStake(t *testing.T) {
 	big, _ := math.NewIntFromString("1000000000000000000000000000000000000")
 	yes := big.QuoRaw(2)
-	require.True(t, types.TallyPasses(half(), half(), big, yes, yes, math.ZeroInt()))
-	require.False(t, types.TallyPasses(half(), half(), big, yes.SubRaw(1), yes, math.ZeroInt()))
+	require.True(t, types.TallyPasses(half(), half(), big, yes.AddRaw(1), yes.SubRaw(1), math.ZeroInt()))
+	require.False(t, types.TallyPasses(half(), half(), big, yes, yes, math.ZeroInt()))
 }
 
 func expeditePasses(quorum, threshold math.LegacyDec, denominator, yes, no, abstain int64) bool {
@@ -83,7 +99,7 @@ func expeditePasses(quorum, threshold math.LegacyDec, denominator, yes, no, abst
 }
 
 // The expedite yes bar is measured against the full denominator, not yes + no,
-// and both bars are met at equality.
+// and must be exceeded; the quorum is met at equality.
 func TestExpediteTallyPasses_Bars(t *testing.T) {
 	quorum, threshold := math.LegacyMustNewDecFromStr("0.6"), math.LegacyMustNewDecFromStr("0.66")
 	for _, tc := range []struct {
@@ -91,10 +107,10 @@ func TestExpediteTallyPasses_Bars(t *testing.T) {
 		denominator, yes, no, abstain int64
 		want                          bool
 	}{
-		{"yes exactly at the bar", 150, 99, 0, 0, true},
-		{"yes one unit short", 150, 98, 0, 0, false},
-		{"no votes do not lower the yes bar", 150, 98, 52, 0, false},
-		{"no votes do not block a met yes bar", 150, 99, 51, 0, true},
+		{"yes one unit above the bar", 150, 100, 0, 0, true},
+		{"yes exactly at the bar", 150, 99, 0, 0, false},
+		{"no votes do not lower the yes bar", 150, 99, 51, 0, false},
+		{"no votes do not block a met yes bar", 150, 100, 50, 0, true},
 		{"empty denominator", 0, 0, 0, 0, false},
 		{"nobody voted", 150, 0, 0, 0, false},
 	} {
@@ -104,8 +120,8 @@ func TestExpediteTallyPasses_Bars(t *testing.T) {
 	}
 
 	highQuorum := math.LegacyMustNewDecFromStr("0.9")
-	require.False(t, expeditePasses(highQuorum, threshold, 150, 99, 0, 35), "quorum one short")
-	require.True(t, expeditePasses(highQuorum, threshold, 150, 99, 0, 36), "abstain fills the quorum")
+	require.False(t, expeditePasses(highQuorum, threshold, 150, 100, 0, 34), "quorum one short")
+	require.True(t, expeditePasses(highQuorum, threshold, 150, 100, 0, 35), "abstain fills the quorum")
 }
 
 // D7: whenever the expedite bars are met, the regular bars still pass after
@@ -116,7 +132,7 @@ func TestExpediteTallyPasses_D7_NoUnitCanOverturn(t *testing.T) {
 		{"0.4", "0.5", "0.6", "0.66"},
 		{"0.5", "0.5", "0.5", "0.5"},
 		{"0.1", "0.9", "0.1", "0.9"},
-		{"1", "1", "1", "1"},
+		{"1", "0.99", "1", "0.99"},
 	}
 	for _, c := range configs {
 		quorum, threshold := math.LegacyMustNewDecFromStr(c.quorum), math.LegacyMustNewDecFromStr(c.threshold)
@@ -143,6 +159,6 @@ func TestExpediteTallyPasses_D7_NoUnitCanOverturn(t *testing.T) {
 func TestExpediteTallyPasses_LargeStake(t *testing.T) {
 	big, _ := math.NewIntFromString("1000000000000000000000000000000000000")
 	yes := big.QuoRaw(2)
-	require.True(t, types.ExpediteTallyPasses(half(), half(), big, yes, math.ZeroInt(), math.ZeroInt()))
-	require.False(t, types.ExpediteTallyPasses(half(), half(), big, yes.SubRaw(1), math.ZeroInt(), math.ZeroInt()))
+	require.True(t, types.ExpediteTallyPasses(half(), half(), big, yes.AddRaw(1), math.ZeroInt(), math.ZeroInt()))
+	require.False(t, types.ExpediteTallyPasses(half(), half(), big, yes, math.ZeroInt(), math.ZeroInt()))
 }

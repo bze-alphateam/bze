@@ -6,11 +6,13 @@ import (
 	"cosmossdk.io/math"
 )
 
-// TallyPasses decides a proposal from its tally under the given bars, both
-// compared with ≥:
+// TallyPasses decides a proposal from its tally under the given bars:
 //
 //	quorum:  (yes + no + abstain) / denominator ≥ quorum
-//	outcome: yes / (yes + no) ≥ threshold
+//	outcome: yes / (yes + no) > threshold
+//
+// The outcome is strict, as in x/gov, so a tie never passes at a threshold of
+// 0.5: the yes side needs a majority.
 //
 // Each side is cross-multiplied into exact integers (a LegacyDec is an integer
 // count of 10^-18), so no rounding happens and one tally can never be both
@@ -26,14 +28,14 @@ func TallyPasses(quorum, threshold math.LegacyDec, denominator, yes, no, abstain
 		return false
 	}
 
-	return atLeast(decided.Add(abstain), denominator, quorum) && atLeast(yes, decided, threshold)
+	return atLeast(decided.Add(abstain), denominator, quorum) && above(yes, decided, threshold)
 }
 
 // ExpediteTallyPasses decides an expedited proposal before its voting end. Both
-// bars are measured against the full denominator, compared with ≥:
+// bars are measured against the full denominator:
 //
 //	quorum: (yes + no + abstain) / denominator ≥ quorum
-//	yes:    yes / denominator ≥ threshold
+//	yes:    yes / denominator > threshold
 //
 // The expedite threshold is at least the regular one, so a proposal that meets
 // these bars would still pass after its voting end if every remaining unit of
@@ -43,16 +45,26 @@ func ExpediteTallyPasses(quorum, threshold math.LegacyDec, denominator, yes, no,
 		return false
 	}
 
-	return atLeast(yes.Add(no).Add(abstain), denominator, quorum) && atLeast(yes, denominator, threshold)
+	return atLeast(yes.Add(no).Add(abstain), denominator, quorum) && above(yes, denominator, threshold)
 }
 
-// atLeast reports whether part / whole ≥ ratio, as part · 10^18 ≥ ratio · whole
-// in big integers.
+// atLeast reports whether part / whole ≥ ratio.
 func atLeast(part, whole math.Int, ratio math.LegacyDec) bool {
+	return compareRatio(part, whole, ratio) >= 0
+}
+
+// above reports whether part / whole > ratio.
+func above(part, whole math.Int, ratio math.LegacyDec) bool {
+	return compareRatio(part, whole, ratio) > 0
+}
+
+// compareRatio compares part / whole with ratio as part · 10^18 against
+// ratio · whole in big integers.
+func compareRatio(part, whole math.Int, ratio math.LegacyDec) int {
 	left := new(big.Int).Mul(part.BigInt(), math.LegacyOneDec().BigInt())
 	right := new(big.Int).Mul(ratio.BigInt(), whole.BigInt())
 
-	return left.Cmp(right) >= 0
+	return left.Cmp(right)
 }
 
 // RegularTallyPasses decides a proposal at or after its voting end, under the

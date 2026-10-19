@@ -381,14 +381,14 @@ func (s *daoSuite) expedite(t *testing.T) {
 	anyone := s.user(t)
 	cfg := defaultCfg()
 	cfg.allowExpedite = true
-	cfg.voting, cfg.expedited = "30s", "20s"
+	cfg.voting, cfg.expedited = "40s", "30s"
 	cfg.deposit = coinPtr(1_000, chain.Denom)
 	d := s.createStatic(t, m[0], cfg, addrs(m...), "")
 
 	pid := s.submit(t, m[0], d, "fast", nil, "--expedited")
 	p := s.prop(t, pid)
 	require.True(t, p.Expedited)
-	require.Equal(t, int64(p.SubmitTime)+20, int64(p.VotingEnd), "an expedited proposal uses expedited_period")
+	require.Equal(t, int64(p.SubmitTime)+30, int64(p.VotingEnd), "an expedited proposal uses expedited_period")
 	s.vote(t, m[0], pid, "yes")
 	s.vote(t, m[1], pid, "yes")
 	// past min_expedite_delay, so the bars alone decide (the delay is E1)
@@ -396,8 +396,11 @@ func (s *daoSuite) expedite(t *testing.T) {
 	require.False(t, s.proposal(t, pid).ExpediteSettleable)
 	s.refuse(t, anyone, daoCode(1130), "dao", "settle-proposal", daoU64(pid))
 	s.vote(t, m[2], pid, "yes")
+	require.False(t, s.proposal(t, pid).ExpediteSettleable, "3 of 5 is exactly 0.6: the expedite yes bar must be exceeded")
+	s.refuse(t, anyone, daoCode(1130), "dao", "settle-proposal", daoU64(pid))
+	s.vote(t, m[3], pid, "yes")
 	res := s.proposal(t, pid)
-	require.True(t, res.ExpediteSettleable, "3 of 5 meets both expedite bars (0.6)")
+	require.True(t, res.ExpediteSettleable, "4 of 5 clears both expedite bars (quorum ≥ 0.6, yes > 0.6)")
 	_, now := s.blockTime(t)
 	require.Less(t, now, int64(res.Proposal.VotingEnd), "the case must settle before the voting end")
 	out := s.settleFirst(t, anyone, pid, "EXECUTED")

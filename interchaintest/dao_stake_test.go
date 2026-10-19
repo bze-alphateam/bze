@@ -161,7 +161,7 @@ func (k stakeSource) exitMsg(user string) map[string]any {
 	return map[string]any{"@type": "/bze.rewards.MsgExitDenomReward", "creator": user, "denom": k.dr}
 }
 
-// passes is the regular tally rule of x/dao (D17: exact, ≥ on both bars).
+// passes is the regular tally rule of x/dao (D17: exact; quorum ≥, yes / (yes + no) > threshold).
 func passes(t *testing.T, p daoProposal) bool {
 	t.Helper()
 	den, yes, no, abstain := parseInt(p.PinnedDenominator), parseInt(p.Yes), parseInt(p.No), parseInt(p.Abstain)
@@ -171,7 +171,7 @@ func passes(t *testing.T, p daoProposal) bool {
 	}
 	q, th := ratio(t, p.PinnedConfig.MinQuorum), ratio(t, p.PinnedConfig.Threshold)
 	quorum := sdkmath.LegacyNewDecFromInt(decided.Add(abstain)).GTE(q.MulInt(den))
-	threshold := sdkmath.LegacyNewDecFromInt(yes).GTE(th.MulInt(decided))
+	threshold := sdkmath.LegacyNewDecFromInt(yes).GT(th.MulInt(decided))
 	return quorum && threshold
 }
 

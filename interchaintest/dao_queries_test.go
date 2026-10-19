@@ -184,7 +184,7 @@ func (s *daoSuite) queries(t *testing.T) {
 		s.waitVotingEnd(t, pid)
 		res = cliQuery[daoProposalResp](t, s, "proposal", daoU64(pid))
 		require.True(t, res.VotingEnded, "voting_ended is set from the voting end on, while the proposal is in voting")
-		s.settleFirst(t, m[0], pid, "EXECUTED") // 1 yes of 2 decided meets the 0.5 threshold, 3 of 3 the quorum
+		s.settleFirst(t, m[0], pid, "REJECTED") // a 1-1 tie does not exceed the 0.5 threshold; 3 of 3 meet the quorum
 	})
 
 	t.Run("voting-power and join-record", func(t *testing.T) {

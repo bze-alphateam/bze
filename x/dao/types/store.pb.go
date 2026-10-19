@@ -201,7 +201,7 @@ func (ProposalStatus) EnumDescriptor() ([]byte, []int) {
 type DaoConfig struct {
 	// min_quorum is the share of the electorate that must vote, in (0, 1].
 	MinQuorum cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=min_quorum,json=minQuorum,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"min_quorum"`
-	// threshold is the share of yes votes needed to pass, in (0, 1].
+	// threshold is the share of yes votes the outcome must exceed to pass, in (0, 1).
 	Threshold cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=threshold,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"threshold"`
 	// voting_period is how long a normal proposal stays open.
 	VotingPeriod time.Duration `protobuf:"bytes,3,opt,name=voting_period,json=votingPeriod,proto3,stdduration" json:"voting_period"`
@@ -211,7 +211,7 @@ type DaoConfig struct {
 	ExpeditedPeriod time.Duration `protobuf:"bytes,5,opt,name=expedited_period,json=expeditedPeriod,proto3,stdduration" json:"expedited_period"`
 	// expedite_quorum is the quorum of an expedited proposal, at least min_quorum.
 	ExpediteQuorum cosmossdk_io_math.LegacyDec `protobuf:"bytes,6,opt,name=expedite_quorum,json=expediteQuorum,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"expedite_quorum"`
-	// expedite_threshold is the threshold of an expedited proposal, at least threshold;
+	// expedite_threshold is the threshold of an expedited proposal, in (0, 1) and at least threshold;
 	// its base is the full denominator.
 	ExpediteThreshold cosmossdk_io_math.LegacyDec `protobuf:"bytes,7,opt,name=expedite_threshold,json=expediteThreshold,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"expedite_threshold"`
 	// open_submission lets anyone submit proposals; false (default) = members only.

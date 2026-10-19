@@ -1153,6 +1153,37 @@ func (suite *IntegrationTestSuite) TestUpdateMembers_D21_RemovedMemberStopsCount
 	suite.requireBallot(third, memberB, types.VoteOption_YES, 1)
 }
 
+// From voting_end on the tally is final: removing a member who voted does not
+// change a proposal whose voting ended, so the removal cannot turn its outcome
+// before the settle: the no vote stays and the tie is rejected. A proposal still in its voting period loses the ballot.
+func (suite *IntegrationTestSuite) TestUpdateMembers_TallyFrozenAtVotingEnd() {
+	suite.createAdminDao()
+	ended, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	suite.ctx = suite.ctx.WithBlockTime(suite.ctx.BlockTime().Add(time.Hour))
+	open, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	for _, id := range []uint64{ended, open} {
+		suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+		suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_NO))
+	}
+
+	suite.endVoting(ended, 0)
+	remove := types.NewMsgUpdateMembers(daoAddress(1).String(), 1, nil, []string{memberB.String()})
+	suite.Require().NoError(suite.adminExecute(adminAddr, 1, remove))
+
+	suite.requireTally(ended, 1, 1, 0)
+	suite.requireBallot(ended, memberB, types.VoteOption_NO, 1)
+	suite.requireTally(open, 1, 0, 0)
+	suite.requireBallot(open, memberB, types.VoteOption_NO, 0)
+
+	// the tie stands: without the freeze, 1 yes / 0 no would have passed
+
+	status, err := suite.settle(ended)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_REJECTED, status)
+}
+
 // A removal zeroes the member's ballots only on its own DAO's proposals: the
 // same address keeps its full ballot in another static DAO it belongs to.
 func (suite *IntegrationTestSuite) TestUpdateMembers_OtherDaoBallotsUntouched() {

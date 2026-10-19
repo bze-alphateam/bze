@@ -455,6 +455,8 @@ func (s *daoSuite) proposerLeaves(t *testing.T) {
 	m := s.users(t, 3, daoUserFunds)
 	cfg := defaultCfg()
 	cfg.deposit = coinPtr(1_000, chain.Denom)
+	// the removal and the exit must land before voting_end: from then on the tally is final
+	cfg.voting = "40s"
 	d := s.createStatic(t, m[0], cfg, addrs(m...), admin.FormattedAddress())
 	pid := s.submit(t, m[1], d, "the proposer leaves", nil)
 	s.vote(t, m[1], pid, "yes")
