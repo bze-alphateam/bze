@@ -694,8 +694,8 @@ func (s *upgradeSuite) createDenomReward(t *testing.T) {
 //
 // BZE-154 (cosmos-sdk v0.53 + ibc-go v10): the capability and feeibc modules
 // are gone (their version entries stay frozen: x/upgrade never deletes one),
-// ibc-go v10 migrated core (6 -> 8) and transfer (5 -> 6), no other module
-// version moved, and IBC keeps working over the
+// ibc-go v10 migrated core (6 -> 8) and transfer (5 -> 6), BZE-173 migrated
+// rewards (5 -> 6), no other module version moved, and IBC keeps working over the
 // channel opened before the upgrade, including the voucher it minted.
 //
 // BZE-155: the unused x/group and x/nft modules are gone: their stores are
@@ -748,7 +748,8 @@ func (s *upgradeSuite) v830Before(t *testing.T) any {
 func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	b := before.(v830State)
 
-	// module versions: the ibc-go v10 migrations ran, everything else as
+	// module versions: the ibc-go v10 migrations and the rewards v5 -> v6
+	// trading reward countdown reset (BZE-173) ran, everything else as
 	// before. x/upgrade never deletes a version entry, so the removed
 	// capability, feeibc, group and nft modules keep their last versions; their
 	// stores are deleted by the store loader and their CLI is gone (checked below)
@@ -759,9 +760,10 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	}
 	require.Equal(t, int64(8), versions["ibc"], "ibc core migrated 6 -> 8")
 	require.Equal(t, int64(6), versions["transfer"], "transfer migrated 5 -> 6")
+	require.Equal(t, int64(6), versions["rewards"], "rewards migrated 5 -> 6")
 	for name, v := range b.versions {
 		switch name {
-		case "ibc", "transfer":
+		case "ibc", "transfer", "rewards":
 			continue
 		}
 		require.Equal(t, v, versions[name], "%s module version unchanged", name)
