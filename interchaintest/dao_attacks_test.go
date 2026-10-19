@@ -428,7 +428,7 @@ func (s *daoSuite) denomsAndAmounts(t *testing.T) {
 		s.settleFirst(t, m[0], p, "EXECUTION_FAILED")
 	}
 	require.Equal(t, "10", s.bal(t, dz.addr, chain.Denom).String(), "no failed execution moved anything")
-	s.cancel(t, m[0], pid)
+	s.closeOpen(t, m[0], pid)
 }
 
 // submitOrRefuse submits a proposal whose messages the CLI may refuse to
@@ -478,9 +478,10 @@ func (s *daoSuite) proposerLeaves(t *testing.T) {
 	s.settleFirst(t, p2, pid, "EXECUTED") // 1000 of 2000 meets the quorum
 }
 
-// E11. Cancel games: cancelling a losing proposal after voting_end keeps the
-// deposit under ONLY_PASSED, refunds it under ALWAYS; a cancel that frees a
-// slot costs the deposit.
+// E11. Cancel games: from voting_end on the outcome is decided, so the
+// proposer can neither withdraw a passed proposal (vetoing the electorate)
+// nor rescue the deposit of a losing one; both settle under the pinned
+// policy. A cancel that frees a slot costs the deposit.
 func (s *daoSuite) cancelGames(t *testing.T) {
 	m := s.users(t, 3, daoUserFunds)
 	for _, policy := range []string{"ONLY_PASSED", "ALWAYS"} {
@@ -488,12 +489,19 @@ func (s *daoSuite) cancelGames(t *testing.T) {
 			cfg := defaultCfg()
 			cfg.deposit, cfg.policy = coinPtr(1_000, chain.Denom), policy
 			d := s.createStatic(t, m[0], cfg, addrs(m...), "")
-			pid := s.submit(t, m[0], d, "losing", nil)
-			s.vote(t, m[1], pid, "no")
-			s.vote(t, m[2], pid, "no")
-			s.waitVotingEnd(t, pid)
-			res := s.cancel(t, m[0], pid)
-			require.Equal(t, strconv.FormatBool(policy == "ALWAYS"), s.event(t, res, "EventDepositReleased").Attributes["refunded"])
+			losing := s.submit(t, m[0], d, "losing", nil)
+			passed := s.submit(t, m[0], d, "passed", nil)
+			s.vote(t, m[1], losing, "no")
+			s.vote(t, m[2], losing, "no")
+			s.vote(t, m[1], passed, "yes")
+			s.vote(t, m[2], passed, "yes")
+			s.waitVotingEnd(t, passed)
+			for _, pid := range []uint64{losing, passed} {
+				s.refuse(t, m[0], daoCode(1124), "dao", "cancel-proposal", daoU64(pid))
+				s.requireStatus(t, pid, "VOTING")
+			}
+			s.settleFirst(t, m[1], losing, "REJECTED")
+			s.settleFirst(t, m[1], passed, "EXECUTED")
 		})
 	}
 	t.Run("freeing a slot costs the deposit", func(t *testing.T) {

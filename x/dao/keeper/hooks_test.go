@@ -28,7 +28,8 @@ func (suite *IntegrationTestSuite) TestStakingRewardHooks_RemovalVeto() {
 }
 
 // Join records for a staking reward: a join while a DAO uses the source is
-// recorded at the block height, a top-up keeps it, an exit deletes it. A join
+// recorded at the block height, a top-up moves it to its own block, an exit
+// deletes it. A join
 // to a source nobody uses is not recorded.
 func (suite *IntegrationTestSuite) TestStakingRewardHooks_JoinRecordLifecycle() {
 	suite.stubRewards(defaultRewardsState())
@@ -48,7 +49,7 @@ func (suite *IntegrationTestSuite) TestStakingRewardHooks_JoinRecordLifecycle() 
 	suite.ctx = suite.ctx.WithBlockHeight(9)
 	suite.Require().NoError(hooks.AfterStakingRewardIncrease(suite.ctx, "1", memberA.String(), math.NewInt(5), math.NewInt(15), stakeDenom))
 	record, _ = suite.k.GetJoinRecord(suite.ctx, source, memberA)
-	suite.Require().Equal(int64(7), record.Height)
+	suite.Require().Equal(int64(9), record.Height)
 
 	suite.Require().NoError(hooks.AfterStakingRewardExit(suite.ctx, "1", memberA.String(), math.NewInt(15), stakeDenom))
 	_, found = suite.k.GetJoinRecord(suite.ctx, source, memberA)
@@ -56,6 +57,7 @@ func (suite *IntegrationTestSuite) TestStakingRewardHooks_JoinRecordLifecycle() 
 
 	// staking reward 5 is in no electorate
 	suite.Require().NoError(hooks.AfterStakingRewardJoin(suite.ctx, "5", memberA.String(), math.NewInt(10), stakeDenom))
+	suite.Require().NoError(hooks.AfterStakingRewardIncrease(suite.ctx, "5", memberA.String(), math.NewInt(5), math.NewInt(15), stakeDenom))
 	_, found = suite.k.GetJoinRecord(suite.ctx, types.StakingRewardSource("5"), memberA)
 	suite.Require().False(found)
 
@@ -82,7 +84,7 @@ func (suite *IntegrationTestSuite) TestDenomRewardHooks_JoinRecordLifecycle() {
 	suite.ctx = suite.ctx.WithBlockHeight(9)
 	suite.Require().NoError(hooks.AfterDenomRewardIncrease(suite.ctx, stakeDenom, memberB.String(), math.NewInt(5), math.NewInt(15)))
 	record, _ = suite.k.GetJoinRecord(suite.ctx, source, memberB)
-	suite.Require().Equal(int64(7), record.Height)
+	suite.Require().Equal(int64(9), record.Height)
 
 	suite.Require().NoError(hooks.AfterDenomRewardExit(suite.ctx, stakeDenom, memberB.String(), math.NewInt(15)))
 	_, found = suite.k.GetJoinRecord(suite.ctx, source, memberB)
@@ -105,6 +107,8 @@ func (suite *IntegrationTestSuite) TestRewardHooks_InvalidAddressNeverFails() {
 	sr := suite.k.StakingRewardHooks()
 	dr := suite.k.DenomRewardHooks()
 	suite.Require().NoError(sr.AfterStakingRewardJoin(suite.ctx, "1", "bze1nope", math.NewInt(1), stakeDenom))
+	suite.Require().NoError(sr.AfterStakingRewardIncrease(suite.ctx, "1", "bze1nope", math.NewInt(1), math.NewInt(2), stakeDenom))
+	suite.Require().NoError(dr.AfterDenomRewardIncrease(suite.ctx, stakeDenom, "bze1nope", math.NewInt(1), math.NewInt(2)))
 	suite.Require().NoError(sr.AfterStakingRewardExit(suite.ctx, "1", "bze1nope", math.NewInt(1), stakeDenom))
 	suite.Require().NoError(dr.AfterDenomRewardJoin(suite.ctx, stakeDenom, "bze1nope", math.NewInt(1)))
 	suite.Require().NoError(dr.AfterDenomRewardExit(suite.ctx, stakeDenom, "bze1nope", math.NewInt(1)))

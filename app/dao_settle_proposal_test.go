@@ -64,3 +64,56 @@ func TestDaoSettleProposal_SpendsTreasury(t *testing.T) {
 	require.Equal(t, int64(100), bApp.BankKeeper.GetBalance(ctx, proposer, "ubze").Amount.Int64())
 	require.True(t, bApp.BankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(daotypes.ModuleName), "ubze").IsZero())
 }
+
+// A passed proposal whose second message fails, settled through the real
+// wiring: the settle succeeds as EXECUTION_FAILED, the first message's
+// transfer is rolled back by the real bank keeper, and the deposit is still
+// refunded (D13).
+func TestDaoSettleProposal_FailedExecutionRollsBack(t *testing.T) {
+	bApp, ctx, admin, _ := newAdminDaoApp(t)
+	proposer := sdk.AccAddress("dao_proposer________")
+	recipient := sdk.AccAddress("dao_recipient_______")
+	settler := sdk.AccAddress("dao_settler_________")
+
+	config := newAdminDaoConfig()
+	deposit := sdk.NewInt64Coin("ubze", 40)
+	config.ProposalDeposit = &deposit
+	config.DepositRefundPolicy = daotypes.DepositRefundPolicy_ONLY_PASSED
+	_, err := runAsTx(bApp, ctx, &daotypes.MsgCreateDao{
+		Creator: admin.String(),
+		Type:    daotypes.DaoType_DAO_TYPE_STATIC_LIST,
+		Name:    "spenders",
+		Config:  config,
+		Members: []string{proposer.String()},
+	})
+	require.NoError(t, err)
+	treasury := daotypes.DaoAddress(2)
+
+	coins := sdk.NewCoins(sdk.NewInt64Coin("ubze", 100))
+	require.NoError(t, bApp.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins.Add(coins...)))
+	require.NoError(t, bApp.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, proposer, coins))
+	require.NoError(t, bApp.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, treasury, coins))
+
+	submitMsg, err := daotypes.NewMsgSubmitProposal(proposer.String(), 2, "pay", "", []sdk.Msg{
+		banktypes.NewMsgSend(treasury, recipient, sdk.NewCoins(sdk.NewInt64Coin("ubze", 40))),
+		banktypes.NewMsgSend(treasury, recipient, sdk.NewCoins(sdk.NewInt64Coin("ubze", 61))),
+	}, false)
+	require.NoError(t, err)
+	_, err = runAsTx(bApp, ctx, submitMsg)
+	require.NoError(t, err)
+	proposalId := bApp.DaoKeeper.GetProposalCounter(ctx)
+	_, err = runAsTx(bApp, ctx, daotypes.NewMsgVote(proposer.String(), proposalId, daotypes.VoteOption_YES))
+	require.NoError(t, err)
+
+	proposal, _ := bApp.DaoKeeper.GetProposal(ctx, proposalId)
+	ctx = ctx.WithBlockTime(time.Unix(proposal.VotingEnd, 0))
+	_, err = runAsTx(bApp, ctx, daotypes.NewMsgSettleProposal(settler.String(), proposalId))
+	require.NoError(t, err)
+
+	proposal, _ = bApp.DaoKeeper.GetProposal(ctx, proposalId)
+	require.Equal(t, daotypes.ProposalStatus_EXECUTION_FAILED, proposal.Status)
+	require.Equal(t, int64(100), bApp.BankKeeper.GetBalance(ctx, treasury, "ubze").Amount.Int64())
+	require.True(t, bApp.BankKeeper.GetBalance(ctx, recipient, "ubze").IsZero())
+	require.Equal(t, int64(100), bApp.BankKeeper.GetBalance(ctx, proposer, "ubze").Amount.Int64())
+	require.True(t, bApp.BankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(daotypes.ModuleName), "ubze").IsZero())
+}

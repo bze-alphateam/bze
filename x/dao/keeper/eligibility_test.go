@@ -188,13 +188,14 @@ func (suite *IntegrationTestSuite) TestSubmitProposal_OpenStakeDao() {
 	suite.Require().Equal(&types.StakeElectorate{SrIds: []string{"1", "5"}}, proposal.PinnedElectorate)
 }
 
-// stakeSource joins (or leaves, at amount 0) one source of the stake DAO
-// through x/rewards: the participant changes and the matching hook fires.
+// stakeSource joins, tops up or leaves one source of the stake DAO through
+// x/rewards: the participant changes and the matching hook fires.
 type stakeSource struct {
-	name   string
-	source []byte
-	join   func(suite *IntegrationTestSuite, s stakes, addr sdk.AccAddress, amount int64)
-	exit   func(suite *IntegrationTestSuite, s stakes, addr sdk.AccAddress)
+	name     string
+	source   []byte
+	join     func(suite *IntegrationTestSuite, s stakes, addr sdk.AccAddress, amount int64)
+	increase func(suite *IntegrationTestSuite, s stakes, addr sdk.AccAddress, added int64)
+	exit     func(suite *IntegrationTestSuite, s stakes, addr sdk.AccAddress)
 }
 
 var stakeSources = []stakeSource{
@@ -204,6 +205,11 @@ var stakeSources = []stakeSource{
 		join: func(suite *IntegrationTestSuite, s stakes, addr sdk.AccAddress, amount int64) {
 			s.joinSr("1", addr, amount)
 			suite.Require().NoError(suite.k.StakingRewardHooks().AfterStakingRewardJoin(suite.ctx, "1", addr.String(), math.NewInt(amount), stakeDenom))
+		},
+		increase: func(suite *IntegrationTestSuite, s stakes, addr sdk.AccAddress, added int64) {
+			total := s.sr["1"][addr.String()] + added
+			s.joinSr("1", addr, total)
+			suite.Require().NoError(suite.k.StakingRewardHooks().AfterStakingRewardIncrease(suite.ctx, "1", addr.String(), math.NewInt(added), math.NewInt(total), stakeDenom))
 		},
 		exit: func(suite *IntegrationTestSuite, s stakes, addr sdk.AccAddress) {
 			amount := s.sr["1"][addr.String()]
@@ -217,6 +223,11 @@ var stakeSources = []stakeSource{
 		join: func(suite *IntegrationTestSuite, s stakes, addr sdk.AccAddress, amount int64) {
 			s.joinDr(stakeDenom, addr, amount)
 			suite.Require().NoError(suite.k.DenomRewardHooks().AfterDenomRewardJoin(suite.ctx, stakeDenom, addr.String(), math.NewInt(amount)))
+		},
+		increase: func(suite *IntegrationTestSuite, s stakes, addr sdk.AccAddress, added int64) {
+			total := s.dr[stakeDenom][addr.String()] + added
+			s.joinDr(stakeDenom, addr, total)
+			suite.Require().NoError(suite.k.DenomRewardHooks().AfterDenomRewardIncrease(suite.ctx, stakeDenom, addr.String(), math.NewInt(added), math.NewInt(total)))
 		},
 		exit: func(suite *IntegrationTestSuite, s stakes, addr sdk.AccAddress) {
 			amount := s.dr[stakeDenom][addr.String()]
@@ -242,6 +253,7 @@ func (suite *IntegrationTestSuite) TestVote_D2_ExitMoveRejoinCannotDoubleVote() 
 			s := suite.createStakeDao()
 			suite.atBlock(5)
 			src.join(suite, s, memberA, 30)
+			src.join(suite, s, memberB, 10)
 			suite.atBlock(10)
 			// memberB proposes with stake that has no join record
 			s.joinDr(stakeDenom, memberB, 1)
@@ -341,31 +353,73 @@ func (suite *IntegrationTestSuite) TestVote_D4_JoinAfterSubmit() {
 	}
 }
 
-// D5: a top-up during the vote counts once the voter votes again (the
-// accepted residual); the cast ballot is not amplified on its own, and an
-// exit zeroes it.
-func (suite *IntegrationTestSuite) TestVote_D5_IncreaseCountsOnRevote() {
-	s := suite.createStakeDao()
-	s.joinSr("1", memberA, 30)
-	suite.atBlock(10)
-	id, err := suite.submit(memberA, 1, false)
-	suite.Require().NoError(err)
-	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+// D5: a top-up during the vote is a new join for the topped-up source. The
+// cast ballot keeps its weight, a revote finds no eligible stake, an exit
+// still zeroes the ballot, and later proposals count the whole stake.
+func (suite *IntegrationTestSuite) TestVote_D5_TopUpCannotWeighOnOpenProposals() {
+	for _, src := range stakeSources {
+		suite.Run(src.name, func() {
+			suite.SetupTest()
+			s := suite.createStakeDao()
+			suite.atBlock(5)
+			src.join(suite, s, memberA, 30)
+			src.join(suite, s, memberB, 10)
+			suite.atBlock(10)
+			id, err := suite.submit(memberB, 1, false)
+			suite.Require().NoError(err)
+			suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
 
-	suite.atBlock(11)
-	s.joinSr("1", memberA, 50)
-	suite.Require().NoError(suite.k.StakingRewardHooks().AfterStakingRewardIncrease(suite.ctx, "1", memberA.String(), math.NewInt(20), math.NewInt(50), stakeDenom))
-	suite.requireTally(id, 30, 0, 0)
+			suite.atBlock(11)
+			src.increase(suite, s, memberA, 970)
+			record, found := suite.k.GetJoinRecord(suite.ctx, src.source, memberA)
+			suite.Require().True(found)
+			suite.Require().Equal(int64(11), record.Height)
+			suite.requireTally(id, 30, 0, 0)
 
-	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_NO))
-	suite.requireTally(id, 0, 50, 0)
-	suite.requireInvariants(id, memberA)
+			suite.Require().ErrorIs(suite.vote(memberA, id, types.VoteOption_NO), types.ErrNoVotingPower)
+			suite.requireTally(id, 30, 0, 0)
+			suite.requireInvariants(id, memberA)
 
-	stakeSources[0].exit(suite, s, memberA)
-	suite.requireTally(id, 0, 0, 0)
-	ballot, _ := suite.k.GetBallot(suite.ctx, id, memberA)
-	suite.Require().True(ballot.Weight.IsZero())
-	suite.requireInvariants(id, memberA)
+			suite.atBlock(12)
+			later, err := suite.submit(memberB, 1, false)
+			suite.Require().NoError(err)
+			suite.Require().NoError(suite.vote(memberA, later, types.VoteOption_YES))
+			suite.requireTally(later, 1000, 0, 0)
+
+			src.exit(suite, s, memberA)
+			suite.requireTally(id, 0, 0, 0)
+			suite.requireTally(later, 0, 0, 0)
+			suite.requireInvariants(id, memberA)
+			suite.requireInvariants(later, memberA)
+		})
+	}
+}
+
+// The attack D5 closes: a dust stake joined before the submission, topped up
+// after it, never weighs more than the dust on that proposal, so the yes
+// tally cannot outgrow the pinned denominator.
+func (suite *IntegrationTestSuite) TestVote_D5_DustThenTopUpHasNoVote() {
+	for _, src := range stakeSources {
+		suite.Run(src.name, func() {
+			suite.SetupTest()
+			s := suite.createStakeDao()
+			suite.atBlock(5)
+			src.join(suite, s, attackerAddr, 1)
+			src.join(suite, s, memberB, 10)
+			suite.atBlock(10)
+			id, err := suite.submit(memberB, 1, false)
+			suite.Require().NoError(err)
+			proposal, _ := suite.k.GetProposal(suite.ctx, id)
+
+			suite.atBlock(11)
+			src.increase(suite, s, attackerAddr, 1_000_000)
+			suite.Require().ErrorIs(suite.vote(attackerAddr, id, types.VoteOption_YES), types.ErrNoVotingPower)
+			suite.requireTally(id, 0, 0, 0)
+
+			after, _ := suite.k.GetProposal(suite.ctx, id)
+			suite.Require().Equal(proposal.PinnedDenominator, after.PinnedDenominator)
+		})
+	}
 }
 
 // D15: a staker whose every share is ineligible, or who has no stake in the

@@ -1,6 +1,8 @@
 package interchaintest_test
 
 import (
+	"time"
+
 	"fmt"
 	"strings"
 	"testing"
@@ -122,7 +124,8 @@ func (s *daoSuite) submitProposal(t *testing.T) {
 		s.refuse(t, admin, daoCode(1119), "dao", "admin-execute", idle.idArg(), msgArgs(submitMsg(idle.addr, idle.id, "no voters", nil, false))[0])
 	})
 
-	// leave nothing open: the proposals of this case are cancelled (ALWAYS refunds)
+	// leave nothing open: the proposals of this case are cancelled (ALWAYS
+	// refunds), or settled once their voting ended
 	for _, ref := range []daoRef{d, dt} {
 		for _, p := range s.daoProposals(t, ref.id, "VOTING") {
 			s.cancelBy(t, uint64(p.ID), map[string]ibc.Wallet{m[0].FormattedAddress(): m[0], m[1].FormattedAddress(): m[1], m[2].FormattedAddress(): m[2]}, admin, dt)
@@ -165,9 +168,12 @@ func (s *daoSuite) voting(t *testing.T) {
 }
 
 // cancelBy cancels a proposal with the wallet of its proposer (a member, or
-// the DAO through its admin).
+// the DAO through its admin); one whose voting ended is settled instead.
 func (s *daoSuite) cancelBy(t *testing.T, pid uint64, members map[string]ibc.Wallet, admin ibc.Wallet, viaDao daoRef) {
 	t.Helper()
+	if s.settledAfterVotingEnd(t, admin, pid) {
+		return
+	}
 	p := s.prop(t, pid)
 	if w, ok := members[p.Proposer]; ok {
 		s.cancel(t, w, pid)
@@ -179,7 +185,8 @@ func (s *daoSuite) cancelBy(t *testing.T, pid uint64, members map[string]ibc.Wal
 }
 
 // A6. cancel-proposal: the 3 refund policies × 2 kept destinations, a cancel
-// after voting_end, the refusals and the freed slot.
+// with ballots, the refusal from voting_end, the other refusals and the freed
+// slot.
 func (s *daoSuite) cancelProposal(t *testing.T) {
 	m := s.users(t, 2, daoUserFunds)
 	for _, policy := range []string{"ALWAYS", "ONLY_PASSED", "NEVER"} {
@@ -213,13 +220,24 @@ func (s *daoSuite) cancelProposal(t *testing.T) {
 		s.cancel(t, m[0], pid)
 		s.terminal["CANCELLED-0-ballots"] = pid
 	})
-	t.Run("after voting_end, until settled", func(t *testing.T) {
+	t.Run("with ballots, before voting_end", func(t *testing.T) {
+		pid := s.submit(t, m[0], d, "cancel with votes", nil)
+		s.vote(t, m[1], pid, "yes")
+		s.cancel(t, m[0], pid)
+		s.terminal["CANCELLED"] = pid
+	})
+	t.Run("refused from voting_end", func(t *testing.T) {
 		pid := s.submit(t, m[0], d, "late cancel", nil)
 		s.vote(t, m[1], pid, "yes")
 		s.waitVotingEnd(t, pid)
 		require.True(t, s.proposal(t, pid).VotingEnded)
-		s.cancel(t, m[0], pid)
-		s.terminal["CANCELLED"] = pid
+		s.refuse(t, m[0], daoCode(1124), "dao", "cancel-proposal", daoU64(pid))
+		s.requireStatus(t, pid, "VOTING")
+		status := "REJECTED"
+		if passes(t, s.prop(t, pid)) {
+			status = "EXECUTED"
+		}
+		s.settleFirst(t, m[1], pid, status)
 	})
 	t.Run("after settle", func(t *testing.T) {
 		pid := s.submit(t, m[0], d, "settled", nil)
@@ -405,4 +423,34 @@ func (s *daoSuite) expedite(t *testing.T) {
 	s.refuse(t, anyone, daoCode(1127), "dao", "settle-proposal", daoU64(pid))
 	s.waitVotingEnd(t, pid)
 	s.settleFirst(t, anyone, pid, "EXECUTED")
+}
+
+// closeOpen leaves nothing of a test's proposal open: it is cancelled by its
+// proposer, or settled once its voting ended (a cancel is refused from then
+// on).
+func (s *daoSuite) closeOpen(t *testing.T, proposer ibc.Wallet, pid uint64) {
+	t.Helper()
+	if !s.settledAfterVotingEnd(t, proposer, pid) {
+		s.cancel(t, proposer, pid)
+	}
+}
+
+// settledAfterVotingEnd settles the proposal under its tally when its voting
+// ends within a few seconds (a cancel sent now could land after voting_end),
+// waiting for the end first; it reports whether it settled.
+func (s *daoSuite) settledAfterVotingEnd(t *testing.T, sender ibc.Wallet, pid uint64) bool {
+	t.Helper()
+	p := s.prop(t, pid)
+	if time.Until(time.Unix(int64(p.VotingEnd), 0)) > 10*time.Second {
+		return false
+	}
+	s.waitVotingEnd(t, pid)
+	p = s.prop(t, pid)
+	status := "REJECTED"
+	if passes(t, p) {
+		status = "EXECUTED"
+	}
+	s.settleFirst(t, sender, pid, status)
+
+	return true
 }
