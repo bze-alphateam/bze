@@ -147,13 +147,13 @@ func (suite *IntegrationTestSuite) TestQueryProposal_ExpediteSettleableAfterDela
 	suite.requireLiveStatus(id, false, 0, true)
 }
 
-// The flag uses the exact expedite bars SettleProposal checks: yes exactly
-// expedite_threshold × D (0.66 × 150 = 99) is settleable, one unit less is not.
+// The flag uses the exact expedite bars SettleProposal checks: yes above
+// expedite_threshold × D (0.66 × 150 = 99) is settleable, exactly 99 is not.
 func (suite *IntegrationTestSuite) TestQueryProposal_ExpediteSettleableBoundary() {
 	for _, tc := range []struct {
 		yes        int64
 		settleable bool
-	}{{99, true}, {98, false}} {
+	}{{100, true}, {99, false}} {
 		suite.Run(strconv.FormatInt(tc.yes, 10), func() {
 			suite.SetupTest()
 			suite.setExpediteDelay(0)

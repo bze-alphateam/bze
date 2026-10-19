@@ -306,3 +306,33 @@ func (suite *IntegrationTestSuite) TestRewardHooks_D25_RemovedSourceStaysPinnedF
 	_, found = suite.k.GetJoinRecord(suite.ctx, sr5, memberB)
 	suite.Require().False(found)
 }
+
+// From voting_end on the tally is final: a yes voter who exits before the
+// settle no longer turns a passed proposal into a rejected one. The exit only
+// prunes the vote index; the ballot stays and the proposal passes. One second
+// earlier the same exit still takes the share out (see D19).
+func (suite *IntegrationTestSuite) TestExitHook_TallyFrozenAtVotingEnd() {
+	s := suite.createStakeDao()
+	s.joinSr("1", memberA, 70)
+	s.joinDr(stakeDenom, memberB, 20)
+	suite.atBlock(10)
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+	suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_NO))
+	ballot, _ := suite.k.GetBallot(suite.ctx, id, memberA)
+
+	suite.endVoting(id, 0)
+	suite.Require().NoError(suite.k.StakingRewardHooks().AfterStakingRewardExit(suite.ctx, "1", memberA.String(), math.NewInt(70), stakeDenom))
+
+	suite.Require().False(suite.k.HasVoteIndex(suite.ctx, srSource, memberA, id))
+	after, found := suite.k.GetBallot(suite.ctx, id, memberA)
+	suite.Require().True(found)
+	suite.Require().Equal(ballot, after)
+	suite.requireTally(id, 70, 20, 0)
+	suite.Require().Equal(0, suite.ballotReducedEvents())
+
+	status, err := suite.settle(id)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
+}

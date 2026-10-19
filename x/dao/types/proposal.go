@@ -1,6 +1,8 @@
 package types
 
 import (
+	"time"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
@@ -29,4 +31,10 @@ func (s ProposalStatus) IsFinished() bool {
 	default:
 		return false
 	}
+}
+
+// VotingEnded reports whether the block time reached voting_end. From then on
+// nobody votes and the tally is final; only the settle decides the proposal.
+func (p Proposal) VotingEnded(blockTime time.Time) bool {
+	return blockTime.Unix() >= p.VotingEnd
 }

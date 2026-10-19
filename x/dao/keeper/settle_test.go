@@ -671,13 +671,13 @@ func (suite *IntegrationTestSuite) expediteStakeDao(mutate func(c *types.DaoConf
 	return state, s
 }
 
-// Boundary: yes exactly expedite_threshold × D (0.66 × 150 = 99) settles early;
-// one unit less is refused.
+// Boundary: yes must exceed expedite_threshold × D (0.66 × 150 = 99): 100
+// settles early, exactly 99 is refused.
 func (suite *IntegrationTestSuite) TestSettleProposal_ExpediteYesBoundary() {
 	for _, tc := range []struct {
 		yes  int64
 		want error
-	}{{99, nil}, {98, types.ErrExpediteBarNotMet}} {
+	}{{100, nil}, {99, types.ErrExpediteBarNotMet}} {
 		suite.Run(strconv.FormatInt(tc.yes, 10), func() {
 			suite.SetupTest()
 			suite.setExpediteDelay(0)
@@ -700,13 +700,13 @@ func (suite *IntegrationTestSuite) TestSettleProposal_ExpediteYesBoundary() {
 	}
 }
 
-// The expedite quorum counts every vote against D: 99 yes + 35 abstain is 134
+// The expedite quorum counts every vote against D: 100 yes + 34 abstain is 134
 // of 150, under a 0.9 quorum (135); one more abstaining unit meets it.
 func (suite *IntegrationTestSuite) TestSettleProposal_ExpediteQuorumBar() {
 	suite.setExpediteDelay(0)
 	_, s := suite.expediteStakeDao(func(c *types.DaoConfig) { c.ExpediteQuorum = dec("0.9") })
-	s.joinSr("1", memberA, 99)
-	s.joinDr(stakeDenom, memberB, 35)
+	s.joinSr("1", memberA, 100)
+	s.joinDr(stakeDenom, memberB, 34)
 	s.joinDr(stakeDenom, memberC, 1)
 	suite.atBlock(10)
 	id, err := suite.submit(memberA, 1, true)
@@ -878,9 +878,8 @@ func (suite *IntegrationTestSuite) TestSettleProposal_D9_PinnedConfigDecides() {
 	p, err := suite.submit(memberA, 1, false)
 	suite.Require().NoError(err)
 	suite.Require().NoError(suite.vote(memberA, p, types.VoteOption_YES))
-	suite.Require().NoError(suite.vote(memberB, p, types.VoteOption_NO))
 
-	// 1 yes / 1 no: passes at threshold 0.5, fails at 0.66
+	// 1 yes of 2 members: meets the pinned quorum 0.4, misses the new 0.6
 	next := validConfig()
 	next.MinQuorum = dec("0.6")
 	next.Threshold = dec("0.66")

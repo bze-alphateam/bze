@@ -131,6 +131,8 @@ func (s *daoSuite) createDao(t *testing.T) {
 			"quorum above 1":                     func(c *daoCfg) { c.quorum = "1.000000000000000001"; c.expQuorum = "1.000000000000000001" },
 			"zero threshold":                     func(c *daoCfg) { c.threshold = "0" },
 			"threshold above 1":                  func(c *daoCfg) { c.threshold = "1.5"; c.expThreshold = "1.5" },
+			"threshold of 1":                     func(c *daoCfg) { c.threshold = "1"; c.expThreshold = "1" },
+			"expedite threshold of 1":            func(c *daoCfg) { c.expThreshold = "1" },
 			"expedite quorum below quorum":       func(c *daoCfg) { c.expQuorum = "0.4" },
 			"expedite threshold below threshold": func(c *daoCfg) { c.expThreshold = "0.49" },
 			"expedited period above voting":      func(c *daoCfg) { c.expedited = "16s" },
@@ -172,7 +174,7 @@ func (s *daoSuite) createDao(t *testing.T) {
 		t.Run("bounds are inclusive", func(t *testing.T) {
 			cfg := defaultCfg()
 			cfg.voting, cfg.expedited = daoMaxVoting, daoMinVoting
-			cfg.quorum, cfg.threshold, cfg.expQuorum, cfg.expThreshold = "1", "1", "1", "1"
+			cfg.quorum, cfg.threshold, cfg.expQuorum, cfg.expThreshold = "1", "0.999999999999999999", "1", "0.999999999999999999"
 			s.createStatic(t, creator, cfg, addrs(creator), "")
 		})
 	})

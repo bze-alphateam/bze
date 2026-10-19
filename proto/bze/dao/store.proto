@@ -65,7 +65,7 @@ enum ProposalStatus {
 message DaoConfig {
   // min_quorum is the share of the electorate that must vote, in (0, 1].
   string min_quorum = 1 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
-  // threshold is the share of yes votes needed to pass, in (0, 1].
+  // threshold is the share of yes votes the outcome must exceed to pass, in (0, 1).
   string threshold = 2 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
   // voting_period is how long a normal proposal stays open.
   google.protobuf.Duration voting_period = 3 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
@@ -75,7 +75,7 @@ message DaoConfig {
   google.protobuf.Duration expedited_period = 5 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false];
   // expedite_quorum is the quorum of an expedited proposal, at least min_quorum.
   string expedite_quorum = 6 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
-  // expedite_threshold is the threshold of an expedited proposal, at least threshold;
+  // expedite_threshold is the threshold of an expedited proposal, in (0, 1) and at least threshold;
   // its base is the full denominator.
   string expedite_threshold = 7 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
   // open_submission lets anyone submit proposals; false (default) = members only.

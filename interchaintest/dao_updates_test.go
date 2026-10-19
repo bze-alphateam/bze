@@ -55,12 +55,12 @@ func (s *daoSuite) updateConfigAndMetadata(t *testing.T) {
 	t.Run("D9 open proposals keep their pinned config", func(t *testing.T) {
 		old := s.submit(t, m[0], d, "old config", nil)
 		strict := defaultCfg()
-		strict.quorum, strict.threshold, strict.expQuorum, strict.expThreshold = "1", "1", "1", "1"
+		strict.quorum, strict.threshold, strict.expQuorum, strict.expThreshold = "1", "0.99", "1", "0.99"
 		res := s.adminExec(t, admin, d, nil, configMsg(d, strict))
 		var fields []string
 		require.NoError(t, json.Unmarshal([]byte(s.event(t, res, "EventDaoConfigUpdated").Attributes["fields"]), &fields))
 		require.Equal(t, []string{"min_quorum", "threshold", "expedite_quorum", "expedite_threshold"}, fields)
-		require.Equal(t, "1", ratio(t, s.dao(t, d.id).Config.Threshold).TruncateInt().String())
+		require.Equal(t, "0.990000000000000000", ratio(t, s.dao(t, d.id).Config.Threshold).String())
 		require.Equal(t, "0.500000000000000000", ratio(t, s.prop(t, old).PinnedConfig.Threshold).String())
 		next := s.submit(t, m[0], d, "new config", nil)
 		require.Equal(t, s.dao(t, d.id).Config, s.prop(t, next).PinnedConfig)
@@ -78,6 +78,7 @@ func (s *daoSuite) updateConfigAndMetadata(t *testing.T) {
 	t.Run("invalid configs", func(t *testing.T) {
 		for name, mutate := range map[string]func(c *daoCfg){
 			"zero quorum":                   func(c *daoCfg) { c.quorum = "0" },
+			"threshold of 1":                func(c *daoCfg) { c.threshold, c.expThreshold = "1", "1" },
 			"expedite quorum below quorum":  func(c *daoCfg) { c.expQuorum = "0.4" },
 			"expedited period above voting": func(c *daoCfg) { c.expedited = "16s" },
 			"voting period below min":       func(c *daoCfg) { c.voting, c.expedited = "3s", "3s" },

@@ -35,16 +35,17 @@ func ValidateMetadata(name, description string) error {
 // ValidatePeriods.
 func (c DaoConfig) Validate() error {
 	ratios := []struct {
-		name  string
-		value math.LegacyDec
+		name      string
+		value     math.LegacyDec
+		threshold bool
 	}{
-		{"min_quorum", c.MinQuorum},
-		{"threshold", c.Threshold},
-		{"expedite_quorum", c.ExpediteQuorum},
-		{"expedite_threshold", c.ExpediteThreshold},
+		{"min_quorum", c.MinQuorum, false},
+		{"threshold", c.Threshold, true},
+		{"expedite_quorum", c.ExpediteQuorum, false},
+		{"expedite_threshold", c.ExpediteThreshold, true},
 	}
 	for _, r := range ratios {
-		if err := validateRatio(r.name, r.value); err != nil {
+		if err := validateRatio(r.name, r.value, r.threshold); err != nil {
 			return err
 		}
 	}
@@ -159,8 +160,17 @@ func (e *StakeElectorate) Sources() [][]byte {
 	return sources
 }
 
-// validateRatio requires value in (0, 1].
-func validateRatio(name string, value math.LegacyDec) error {
+// validateRatio requires a quorum in (0, 1] and a threshold in (0, 1): a
+// threshold must be strictly exceeded, so 1 could never pass.
+func validateRatio(name string, value math.LegacyDec, threshold bool) error {
+	if threshold {
+		if value.IsNil() || !value.IsPositive() || value.GTE(math.LegacyOneDec()) {
+			return errorsmod.Wrapf(ErrInvalidConfig, "%s must be in (0, 1), got %s", name, value)
+		}
+
+		return nil
+	}
+
 	if value.IsNil() || !value.IsPositive() || value.GT(math.LegacyOneDec()) {
 		return errorsmod.Wrapf(ErrInvalidConfig, "%s must be in (0, 1], got %s", name, value)
 	}

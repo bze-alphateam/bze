@@ -27,7 +27,7 @@ func (k msgServer) CancelProposal(goCtx context.Context, msg *types.MsgCancelPro
 	}
 
 	// from voting_end on the outcome is decided: only the settle closes it
-	if ctx.BlockTime().Unix() >= proposal.VotingEnd {
+	if proposal.VotingEnded(ctx.BlockTime()) {
 		return nil, errorsmod.Wrapf(types.ErrVotingClosed, "proposal %d voted until %d", proposal.Id, proposal.VotingEnd)
 	}
 

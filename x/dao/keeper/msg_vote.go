@@ -25,7 +25,7 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	}
 
 	// voting closes at voting_end itself (D18)
-	if proposal.Status != types.ProposalStatus_VOTING || ctx.BlockTime().Unix() >= proposal.VotingEnd {
+	if proposal.Status != types.ProposalStatus_VOTING || proposal.VotingEnded(ctx.BlockTime()) {
 		return nil, errorsmod.Wrapf(types.ErrVotingClosed, "proposal %d", proposal.Id)
 	}
 
@@ -122,15 +122,17 @@ func addToTally(proposal *types.Proposal, option types.VoteOption, amount math.I
 }
 
 // reduceBallots takes the source's share out of the address's ballots on
-// proposals in voting, after the address left the source. Vote-index entries
-// of proposals that left voting (or are gone) are only deleted (I6). Missing
-// state is skipped: the Exit hooks that call it must not fail.
+// proposals still being voted on, after the address left the source. From
+// voting_end on the tally is final: an exit no longer changes it, so nobody
+// can turn a decided outcome before the settle. Vote-index entries of the
+// other proposals are only deleted (I6). Missing state is skipped: the Exit
+// hooks that call it must not fail.
 func (k Keeper) reduceBallots(ctx sdk.Context, source []byte, addr sdk.AccAddress) {
 	for _, proposalId := range k.votedProposals(ctx, source, addr) {
 		k.removeVoteIndex(ctx, source, addr, proposalId)
 
 		proposal, found := k.GetProposal(ctx, proposalId)
-		if !found || proposal.Status != types.ProposalStatus_VOTING {
+		if !found || proposal.Status != types.ProposalStatus_VOTING || proposal.VotingEnded(ctx.BlockTime()) {
 			continue
 		}
 
