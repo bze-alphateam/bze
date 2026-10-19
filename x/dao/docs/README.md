@@ -2,8 +2,6 @@
 
 The DAO module lets anyone create an on-chain organisation with its own treasury, run proposals and execute them as the DAO.
 
-> **Work in progress.** DAOs can be created, their admin can run messages as the DAO and hand it over to a successor, and proposals can be submitted, voted on, cancelled and settled, which runs the passed ones. Expedited proposals can be settled early, finished proposals can be cleaned up, and a DAO can change its own config, name and description, a stake DAO its reward sources and a static-list DAO its members. Each feature adds its section to this page as it lands.
-
 ## Concepts
 - **DAO account**: every DAO gets its own account, derived from its id (`address.Module("dao", uint64-big-endian(id))`). Nobody holds a key for it; it is the DAO's treasury.
 - **Electorate**: a DAO votes either through a fixed member list (`static-list`, one vote per member) or through the stakers of `x/rewards` programs (`stake`): up to `max_sr_per_dao` staking rewards and/or one Denom Reward, all staking the same denom. The two kinds are never mixed.
