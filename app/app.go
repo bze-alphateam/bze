@@ -75,8 +75,10 @@ import (
 
 	burnermodulekeeper "github.com/bze-alphateam/bze/x/burner/keeper"
 	cointrunkmodulekeeper "github.com/bze-alphateam/bze/x/cointrunk/keeper"
+	daomodulekeeper "github.com/bze-alphateam/bze/x/dao/keeper"
 	epochmodulekeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
 	rewardsmodulekeeper "github.com/bze-alphateam/bze/x/rewards/keeper"
+	rewardsmoduletypes "github.com/bze-alphateam/bze/x/rewards/types"
 	tokenfactorymodulekeeper "github.com/bze-alphateam/bze/x/tokenfactory/keeper"
 	tradebinmodulekeeper "github.com/bze-alphateam/bze/x/tradebin/keeper"
 	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
@@ -141,6 +143,7 @@ type App struct {
 	RewardsKeeper        *rewardsmodulekeeper.Keeper
 	TradebinKeeper       *tradebinmodulekeeper.Keeper
 	TxfeecollectorKeeper *txfeecollectormodulekeeper.Keeper
+	DaoKeeper            *daomodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
@@ -247,6 +250,7 @@ func New(
 		&app.RewardsKeeper,
 		&app.TradebinKeeper,
 		&app.TxfeecollectorKeeper,
+		&app.DaoKeeper,
 		// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	); err != nil {
 		panic(err)
@@ -277,6 +281,7 @@ func New(
 	app.sm.RegisterStoreDecoders()
 	app.setEpochsHooks()
 	app.setTradebinHooks()
+	app.setRewardsHooks()
 	app.setupUpgradeHandlers()
 
 	anteOptions := ante.HandlerOptions{
@@ -460,6 +465,22 @@ func (app *App) setTradebinHooks() {
 		[]tradebintypes.OnMarketOrderFill{
 			app.RewardsKeeper.GetOnOrderFillHook(),
 		},
+	)
+}
+
+// setRewardsHooks registers the modules notified on staking reward and Denom
+// Reward changes. x/dao vetoes the removal of rewards its electorates use and
+// records when stake joins a source its DAOs or proposals vote with.
+func (app *App) setRewardsHooks() {
+	app.RewardsKeeper.SetHooks(
+		rewardsmoduletypes.NewMultiStakingRewardHooks(
+			app.DaoKeeper.StakingRewardHooks(),
+		),
+	)
+	app.RewardsKeeper.SetDenomRewardHooks(
+		rewardsmoduletypes.NewMultiDenomRewardHooks(
+			app.DaoKeeper.DenomRewardHooks(),
+		),
 	)
 }
 

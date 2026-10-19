@@ -2,6 +2,8 @@ package v830
 
 import (
 	storetypes "cosmossdk.io/store/types"
+
+	daotypes "github.com/bze-alphateam/bze/x/dao/types"
 )
 
 const (
@@ -19,11 +21,12 @@ const (
 	nftStoreName = "nft"
 )
 
-// GetStoreUpgrades deletes the stores of the modules ibc-go v10 no longer has
-// and of the unused x/group and x/nft modules.
+// GetStoreUpgrades adds the store of the new x/dao module and deletes the stores
+// of the modules ibc-go v10 no longer has and of the unused x/group and x/nft
+// modules. x/dao has no VersionMap entry yet, so RunMigrations runs its InitGenesis.
 func GetStoreUpgrades() *storetypes.StoreUpgrades {
 	return &storetypes.StoreUpgrades{
-		Added:   []string{},
+		Added:   []string{daotypes.StoreKey},
 		Deleted: []string{capabilityStoreName, ibcFeeStoreName, groupStoreName, nftStoreName},
 	}
 }

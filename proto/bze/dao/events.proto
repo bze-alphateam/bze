@@ -1,0 +1,156 @@
+syntax = "proto3";
+package bze.dao;
+
+import "bze/dao/store.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/dao/types";
+
+// EventDaoCreated is emitted when a DAO is created.
+message EventDaoCreated {
+  uint64 id = 1;
+  string address = 2;
+  string admin = 3;
+  DaoType type = 4;
+}
+
+// EventAdminExecuted is emitted when a DAO's admin runs messages as the DAO.
+message EventAdminExecuted {
+  uint64 id = 1;
+  string admin = 2;
+  uint64 msg_count = 3;
+}
+
+// EventAdminNominated is emitted when a DAO's admin nominates a successor.
+message EventAdminNominated {
+  uint64 id = 1;
+  string admin = 2;
+  string nominee = 3;
+}
+
+// EventAdminChanged is emitted when a DAO's admin changes.
+message EventAdminChanged {
+  uint64 id = 1;
+  string old_admin = 2;
+  string new_admin = 3;
+}
+
+// EventAdminNominationWithdrawn is emitted when a DAO's admin withdraws a
+// pending nomination.
+message EventAdminNominationWithdrawn {
+  uint64 id = 1;
+  string nominee = 2;
+}
+
+// EventProposalSubmitted is emitted when a proposal is submitted.
+message EventProposalSubmitted {
+  uint64 id = 1;
+  uint64 dao_id = 2;
+  string proposer = 3;
+  bool expedited = 4;
+  // voting_end is the block time (unix seconds) voting closes at.
+  int64 voting_end = 5;
+  // denominator is the pinned total voting power (math.Int).
+  string denominator = 6;
+}
+
+// EventVote is emitted when a ballot is cast or changed.
+message EventVote {
+  uint64 proposal_id = 1;
+  string voter = 2;
+  VoteOption option = 3;
+  // weight is the ballot's weight (math.Int).
+  string weight = 4;
+}
+
+// EventBallotReduced is emitted when a voter's weight is taken out of a ballot
+// on a proposal in voting: the voter left an electorate source, or was removed
+// from a static-list DAO.
+message EventBallotReduced {
+  uint64 proposal_id = 1;
+  string voter = 2;
+  // source is sr/{reward_id} or dr/{staking_denom}; empty for a removed
+  // static-list member.
+  string source = 3;
+  // amount is the share removed from the ballot and its tally (math.Int).
+  string amount = 4;
+}
+
+// EventProposalCancelled is emitted when the proposer cancels a proposal.
+message EventProposalCancelled {
+  uint64 id = 1;
+}
+
+// EventDepositReleased is emitted when a proposal's escrowed deposit leaves
+// the module account: refunded to the proposer, or kept and sent to the burner
+// or the DAO's treasury.
+message EventDepositReleased {
+  uint64 id = 1;
+  bool refunded = 2;
+  // destination is the address the deposit was sent to.
+  string destination = 3;
+  // amount is the released deposit (sdk.Coin).
+  string amount = 4;
+}
+
+// EventProposalSettled is emitted by every settle: the first one, which
+// decides the proposal from its running tally, a retry of a failed execution
+// and the expiry of a failed one.
+message EventProposalSettled {
+  uint64 id = 1;
+  ProposalStatus status = 2;
+  // yes, no, abstain and denominator are the decided tally (math.Int).
+  string yes = 3;
+  string no = 4;
+  string abstain = 5;
+  string denominator = 6;
+  // expedited_early is true when an expedited proposal was settled before its
+  // voting end.
+  bool expedited_early = 7;
+}
+
+// EventProposalExecuted is emitted after each run of a passed proposal's
+// messages.
+message EventProposalExecuted {
+  uint64 id = 1;
+  bool success = 2;
+  // error is a fixed reason on failure, never the raw error text.
+  string error = 3;
+}
+
+// EventProposalCleaned is emitted by every cleanup batch of a finished
+// proposal; completed is true on the batch that deleted the proposal.
+message EventProposalCleaned {
+  uint64 id = 1;
+  uint64 processed = 2;
+  bool completed = 3;
+}
+
+// EventDaoConfigUpdated is emitted when a DAO's config is replaced.
+message EventDaoConfigUpdated {
+  uint64 id = 1;
+  // fields are the proto names of the config fields whose value changed, in
+  // proto order.
+  repeated string fields = 2;
+}
+
+// EventDaoMetadataUpdated is emitted when a DAO's name and description are
+// replaced.
+message EventDaoMetadataUpdated {
+  uint64 id = 1;
+}
+
+// EventDaoElectorateUpdated is emitted when a stake DAO's sources are
+// replaced; it lists the new sources.
+message EventDaoElectorateUpdated {
+  uint64 id = 1;
+  repeated string sr_ids = 2;
+  string dr_denom = 3;
+}
+
+// EventDaoMembersUpdated is emitted when members are added to or removed from
+// a static-list DAO.
+message EventDaoMembersUpdated {
+  uint64 id = 1;
+  repeated string added = 2;
+  repeated string removed = 3;
+}

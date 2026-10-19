@@ -1,0 +1,220 @@
+# DAO Module – User Guide
+
+The DAO module lets anyone create an on-chain organisation with its own treasury, run proposals and execute them as the DAO.
+
+## Concepts
+- **DAO account**: every DAO gets its own account, derived from its id (`address.Module("dao", uint64-big-endian(id))`). Nobody holds a key for it; it is the DAO's treasury.
+- **Electorate**: a DAO votes either through a fixed member list (`static-list`, one vote per member) or through the stakers of `x/rewards` programs (`stake`): up to `max_sr_per_dao` staking rewards and/or one Denom Reward, all staking the same denom. The two kinds are never mixed.
+- **Sources and pins**: each staking reward or Denom Reward in a stake electorate is a *source*. The module counts how many DAOs use each source; a staking reward used by any DAO cannot be deleted from `x/rewards` (its removal is vetoed until no DAO uses it).
+- **Join records**: when stake joins a source that a DAO or an open proposal uses, the module records the block height. Stake counts for a proposal only when it joined strictly before the block the proposal was submitted in (or has no record: it joined while nothing used the source). Topping up while the source is used counts as a new join: the record moves to the top-up's block, so the whole stake in that source stops counting on proposals already open (a ballot already cast keeps its weight until the voter votes again) and counts in full on later ones. Vote before you top up. Exiting deletes the record.
+- **Ballots**: a voter has one ballot per proposal. Its weight is 1 in a `static-list` DAO; in a `stake` DAO it is the voter's eligible stake, kept as one share per source. When the voter exits a source, that source's share leaves every ballot of theirs on a proposal still being voted on, and the tally drops with it. From `voting_end` on the tally is final: exits and member removals no longer change it.
+- **Admin**: optional. Without one the DAO owns itself (its admin is its own address). The admin can be a person or another DAO. An external admin is a superuser: it can run any message as the DAO, including spending the treasury.
+
+## Messages
+- `MsgCreateDao`: creates a DAO. Anyone can send it; the creator pays the `dao_creation_fee` (burned or sent to the community pool, per `dao_creation_fee_destination`). Returns the new DAO's id and address. Rules:
+  - `name` 1–64 bytes, `description` up to 2,000 bytes.
+  - `config`: `min_quorum` and `expedite_quorum` in (0, 1], `threshold` and `expedite_threshold` in (0, 1) (a threshold must be exceeded, so 1 could never pass); `expedite_quorum ≥ min_quorum`, `expedite_threshold ≥ threshold`; `voting_period` and `expedited_period` within [`min_voting_period`, `max_voting_period`] and `expedited_period ≤ voting_period`. The expedite fields are checked even when `allow_expedite` is off. `proposal_cost` and `proposal_deposit` are optional coins (amount ≥ 0). A DAO that sets neither makes proposals free: any voter (anyone, with `open_submission`), even with the smallest eligible stake and from many addresses, can keep all `max_open_proposals` slots busy and resubmit as soon as they settle, so the DAO's own proposals find no slot. A `proposal_cost`, or a `proposal_deposit` under `ONLY_PASSED` or `NEVER` (a spam proposal nobody votes for is rejected and its deposit kept), makes that cost money. An admin-less DAO in that state can only change its config through a proposal, so pick the cost before you need it.
+  - `static-list`: 1 to `max_static_members` unique member addresses, never the DAO's own address, no stake electorate.
+  - `stake`: no member list; `electorate.sr_ids` 0 to `max_sr_per_dao` unique existing staking reward ids, `electorate.dr_denom` optionally an existing Denom Reward (by its staking denom). Every source stakes the same denom, and every source's unstaking lock is at least `min_electorate_lock_days` days, so stake can't leave and vote again from another wallet during a vote. The lock rule applies when a source joins a DAO: raising the param later leaves existing DAOs untouched.
+  - A self-owned DAO (no admin, or the DAO's own address as admin) needs a live electorate at creation: members for `static-list`; for `stake`, at least one source with something staked. With another admin, a `stake` DAO can start with no sources or no stake and be set up later.
+- `MsgAdminExecute`: the DAO's external admin runs messages as the DAO. Rules:
+  - The signer must be the DAO's admin when the message runs. A self-owned DAO has no external admin and is refused; it executes through its proposals.
+  - 1 to `max_msgs_per_proposal` messages, at most `max_proposal_bytes` bytes in total (packed size of the messages).
+  - Every signer of every message must be the DAO account, so the admin can spend the treasury but never another address. A message with a second signer, or a nested `MsgAdminExecute`, is refused.
+  - The messages run in order; if one fails, the transaction fails and none of them is applied.
+- `MsgNominateAdmin`: first step of the two-step admin handover. Rules:
+  - The signer (`authority`) must be the DAO's current admin: a person signs directly, a self-owned DAO through a passed proposal, a parent DAO through its own proposal or admin.
+  - Only one nomination can be pending at a time.
+  - A nominee must be a valid address other than the current admin and the DAO itself. It is stored as the pending admin; the current admin stays in charge until the nominee accepts.
+  - An empty nominee hands the DAO to its own voters at once, with no accept step: the DAO becomes self-owned. Its electorate must be able to vote (members for `static-list`; for `stake`, at least one source with something staked). A DAO that is already self-owned is refused.
+- `MsgAcceptAdminNomination`: second step of the handover. Rules:
+  - A nomination must be pending, and the signer (`nominee`) must be the pending admin. A DAO nominee signs through its own proposal or admin, which proves it can act; it then administers the other DAO as its parent.
+  - The nominee becomes the admin and the nomination is cleared. The former admin loses all its powers at once, `MsgAdminExecute` included.
+  - The electorate is not checked: the new admin is external and can fix it.
+- `MsgWithdrawAdminNomination`: cancels a pending handover before the nominee accepts it. Rules:
+  - The signer (`authority`) must be the DAO's current admin, signing as for `MsgNominateAdmin`. The nominee cannot withdraw; it simply does not accept.
+  - A nomination must be pending. It is cleared, the admin stays in charge and can nominate again.
+- `MsgSubmitProposal`: opens a proposal of zero or more messages that the DAO runs if it passes. Returns the proposal id. Rules:
+  - The signer (`proposer`) must be a voter: a member of a `static-list` DAO, or for a `stake` DAO an address with eligible stake in one of its sources now (see join records). With `open_submission` anyone can propose. The DAO account itself can always propose (through a proposal or its admin) and pays from its treasury.
+  - The DAO must have voting power: members, or stake in its sources other than the DAO's own. At most `max_open_proposals` proposals of a DAO can be in voting at once.
+  - `title` 1–`max_title_len` bytes, `summary` up to `max_summary_len` bytes; 0 to `max_msgs_per_proposal` messages, at most `max_proposal_bytes` bytes in total. Every signer of every message must be the DAO account.
+  - `expedited` needs `allow_expedite` in the config; voting then lasts `expedited_period` instead of `voting_period`.
+  - `proposal_cost` (if set) is paid to the burner (`cost_destination` `BURN`) or the DAO's treasury (`TREASURY`); `proposal_deposit` (if set) is escrowed in the `dao` module account.
+  - The proposal pins the DAO's config, its electorate and its total voting power (member count, or the stake of its sources without the DAO's own): later DAO changes never move an open vote. Every source it pins counts as used, so a staking reward a proposal votes with cannot be deleted.
+- `MsgVote`: casts or changes the signer's (`voter`) ballot: `YES`, `NO` or `ABSTAIN` (on the CLI: `yes`, `no` or `abstain`, in lowercase). A vote with no option (`VOTE_OPTION_UNSPECIFIED`, the value an omitted field decodes to) is refused. Rules:
+  - The proposal must be in voting, and the block time strictly before its `voting_end`.
+  - Weight: in a `static-list` DAO, 1 if the voter is on the DAO's member list now and has no member record or one strictly below the proposal's submit height (members listed at creation have none); in a `stake` DAO, the voter's stake in each source the proposal pinned, counting only stake with no join record or one strictly below the proposal's submit height. The DAO itself has no weight on its own proposals: a treasury staked in its own sources never votes, and stays out of the denominator. Zero weight is refused.
+  - Voting again with another option replaces the ballot at the voter's current weight, so stake added since the last vote counts; the same option twice is refused.
+  - Exiting a staking reward or Denom Reward takes its share out of the voter's ballots on every proposal still before its `voting_end` (`EventBallotReduced`). Rejoining does not bring it back on those proposals. From `voting_end` on the tally is final, so an exit before the settle leaves the ballot as it is.
+- `MsgCancelProposal`: the proposer (`proposer`) withdraws their proposal. Rules:
+  - The proposal must be in voting and before its `voting_end`: from then on the outcome is decided and only a settle closes it (refused with `ErrVotingClosed`). Only the address that submitted it can cancel (a proposal the DAO submitted is cancelled by the DAO, through a proposal or its admin).
+  - The proposal becomes `CANCELLED`: it takes no more votes, frees its slot under `max_open_proposals` and stops pinning its sources. Its ballots and tally stay as they were until the proposal is cleaned up.
+  - The deposit, if any, is refunded to the proposer only when the pinned config's `deposit_refund_policy` is `ALWAYS`. Under `ONLY_PASSED` and `NEVER` it is kept and goes to the pinned `kept_deposit_destination`: the burner (`BURN`) or the DAO's treasury (`TREASURY`). The proposal cost is never refunded.
+- `MsgSettleProposal`: anyone (`sender`) settles a proposal. Three cases, by the proposal's status:
+  - **In voting**, from `voting_end` on (earlier is refused): the proposal is decided from its running tally under the pinned config. It passes when `(yes + no + abstain) / denominator ≥ min_quorum` and `yes / (yes + no) > threshold`; a proposal with no yes and no no votes is rejected. Both sides are compared in exact integers: a turnout exactly on the quorum counts, but yes must be strictly above the threshold, so a tie never passes at `0.5` (as in x/gov). The proposal leaves voting (frees its slot and its sources' pins) and the deposit is released: a passed proposal is refunded unless `deposit_refund_policy` is `NEVER`, even when its execution fails; a rejected one only under `ALWAYS`; a kept deposit goes to the pinned `kept_deposit_destination`. A rejected proposal becomes `REJECTED`. A passed one runs its messages as the DAO, all or nothing: `EXECUTED` when every message succeeded, otherwise `EXECUTION_FAILED` with none of their effects kept. A passed proposal with no messages is `EXECUTED`.
+  - **Expedited and in voting**, before `voting_end`: settled early only from `min_expedite_delay` after its submission (earlier is refused with `ErrExpediteTooEarly`, so voters always get time to react), and only when the expedite bars are met, both against the full pinned denominator: `(yes + no + abstain) / denominator ≥ expedite_quorum` and `yes / denominator > expedite_threshold`. It then passes exactly as above (leaves voting, deposit released as passed, messages run) and the event has `expedited_early = true`. Otherwise the settle is refused and nothing changes. Since `expedite_threshold ≥ threshold`, a proposal that meets these bars would still pass if every remaining unit of voting power voted no: early settlement only makes the outcome come sooner. A regular proposal is refused before its `voting_end`, and from `voting_end` on an expedited one settles under the regular bars.
+  - **`EXECUTION_FAILED`**, before `voting_end + execution_window`: the messages run again the same way (the deposit was already released). Success makes it `EXECUTED`; a failure leaves it `EXECUTION_FAILED`. Anyone can retry, and nobody can cancel it: a spend that failed on an empty treasury runs as soon as the funds are there, even after the DAO changed its config, electorate or admin. A DAO that no longer wants it keeps the funds it needs elsewhere until the retry deadline (`retry_deadline` in the proposal query) has passed.
+  - **`EXECUTION_FAILED`**, from `voting_end + execution_window` on: the proposal becomes `EXPIRED` without running. The window is the current param value.
+  - Any other status is finished and refused.
+  - Every message is checked again when it runs: all its signers must be the DAO account. A message that panics counts as a failed execution; running out of gas fails the settle transaction itself, so a settle with too little gas never fails a passed proposal. The other side of that rule: a passed proposal whose messages cannot run within the block gas limit, or whose deposit refund is refused by the bank (a blocked recipient), cannot be settled and stays in voting, holding its slot under `max_open_proposals` and its sources' pins. Keep proposals within the block gas limit before voting yes.
+- `MsgCleanupProposal`: anyone (`sender`) deletes a finished proposal's state, in batches. Rules:
+  - Only `REJECTED`, `EXECUTED`, `EXPIRED` and `CANCELLED` proposals: `VOTING` and `EXECUTION_FAILED` (still retryable, or waiting for the settle that expires it) are refused.
+  - Each call deletes up to `limit` ballots in voter-key order, with the vote-index entry of each of their shares; `0`, or anything above `cleanup_batch_size`, means `cleanup_batch_size`. The proposal stores where the next call resumes (`cleanup_cursor`, the last deleted voter), so no call goes over the deleted range again.
+  - The call that deletes the last ballot (or finds none) also deletes the proposal and its DAO index entry, and answers `completed = true`; the proposal is then not found, by queries and by a further cleanup. Its events are the only history left.
+  - The response is `{processed, completed}`: repeat the call until `completed` is true.
+- `MsgUpdateDaoConfig`: replaces the DAO's whole `config` (every field is sent; there is no partial update). Rules:
+  - The signer (`authority`) must be the DAO's own address: a self-owned DAO changes its config through a passed proposal, a DAO with an external admin also through `MsgAdminExecute`. The admin signing directly, or any other address, is refused.
+  - The new config is validated exactly as in `MsgCreateDao`, with the period bounds of the current params.
+  - Open proposals keep the config they pinned at submission and are decided with it; proposals submitted afterwards pin the new one.
+- `MsgUpdateMetadata`: replaces the DAO's `name` (1 to 64 bytes) and `description` (up to 2,000 bytes). Both are always sent; an empty description clears it. The signer rule is the same as for `MsgUpdateDaoConfig`: only the DAO's own address, through a passed proposal or `MsgAdminExecute`.
+- `MsgUpdateElectorate`: replaces a stake DAO's whole `electorate` (its staking rewards and Denom Reward). Rules:
+  - The signer rule is the same as for `MsgUpdateDaoConfig`. A static-list DAO is refused (`ErrInvalidDaoType`).
+  - The new sources follow the `MsgCreateDao` rules: at most `max_sr_per_dao` unique staking rewards, an optional Denom Reward, all existing and all staking the same denom.
+  - Only an added source must have a lock of at least `min_electorate_lock_days`. A source the DAO already has stays valid after the param was raised; one it dropped is new again if it comes back.
+  - A self-owned DAO must keep a live electorate: at least one source, with some stake (`ErrElectorateNotLive`). A DAO with an external admin may empty its sources.
+  - Open proposals keep the electorate and denominator they pinned and are decided with them; each keeps its own pin on its sources, so a dropped source keeps recording joins and cannot be removed from `x/rewards` until those proposals finish.
+- `MsgUpdateMembers`: adds members to and removes members from a static-list DAO (`add` and `remove` lists, not a full replacement). Rules:
+  - The signer rule is the same as for `MsgUpdateDaoConfig`. A stake DAO is refused (`ErrInvalidDaoType`).
+  - At least one list is non-empty; each holds unique valid addresses (the same address in another case is a duplicate), and no address is in both. Every added address must not be a member yet, nor the DAO's own address; every removed one must be a member.
+  - The result keeps 1 to `max_static_members` members, so a self-owned DAO always keeps a voter. Removed members leave the list in place; added ones are appended.
+  - A removed member's ballots on the DAO's proposals still before their `voting_end` stop counting at once: each ballot's weight is taken out of the tally and set to 0 (`EventBallotReduced` with an empty `source`). The ballot stays, and the member can't vote on those proposals again, even when added back. Proposals whose voting ended, settled or not, keep their ballots: the tally is final from `voting_end` on.
+  - Each added member gets a member record with the block height, and votes only on proposals submitted after that block, as stake that joins a source does. Proposals already in voting keep their pinned denominator. A removal deletes the record.
+- `MsgUpdateParams` **(authority)**: replaces the module parameters. Reserved for the module authority (governance).
+
+Example (CLI):
+```bash
+# Create a static-list DAO. In the JSON config, ratios are decimals and periods are seconds.
+bzed tx dao create-dao static-list "BZE builders" \
+  '{"min_quorum":"0.4","threshold":"0.5","voting_period":"259200s","allow_expedite":true,"expedited_period":"86400s","expedite_quorum":"0.6","expedite_threshold":"0.66"}' \
+  --members bze1...,bze1... --description "Funds BZE tooling" --from mykey
+
+# Create a stake DAO voted by the stakers of staking rewards 3 and 7 and of the ubze Denom Reward
+bzed tx dao create-dao stake "BZE stakers" \
+  '{"min_quorum":"0.4","threshold":"0.5","voting_period":"259200s","expedited_period":"86400s","expedite_quorum":"0.6","expedite_threshold":"0.66"}' \
+  --electorate '{"sr_ids":["3","7"],"dr_denom":"ubze"}' --from mykey
+
+# As the external admin of DAO 1, pay 1 BZE from its treasury
+bzed tx dao admin-execute 1 \
+  '{"@type":"/cosmos.bank.v1beta1.MsgSend","from_address":"bze1<dao address>","to_address":"bze1...","amount":[{"denom":"ubze","amount":"1000000"}]}' \
+  --from admin
+
+# As the admin of DAO 1, nominate a successor, or hand the DAO to its voters
+bzed tx dao nominate-admin 1 bze1... --from admin
+bzed tx dao nominate-admin 1 "" --from admin
+
+# As the nominee, accept and become the admin of DAO 1
+bzed tx dao accept-admin-nomination 1 --from nominee
+
+# As the admin of DAO 1, withdraw the pending nomination before it is accepted
+bzed tx dao withdraw-admin-nomination 1 --from admin
+
+# As a member of DAO 1, propose to pay 1 BZE from its treasury (msg.json holds the MsgSend,
+# from the DAO address); several messages are several arguments
+bzed tx dao submit-proposal 1 "Fund tooling" msg.json --summary "Pays the tooling team" --from member
+
+# As a member of DAO 1, vote yes on proposal 1 (yes, no or abstain, lowercase);
+# voting again with no replaces the ballot
+bzed tx dao vote 1 yes --from member
+
+# As the proposer, cancel proposal 1 while it is in voting
+bzed tx dao cancel-proposal 1 --from member
+
+# After its voting end, settle proposal 1 (anyone can); run it again to retry a failed execution.
+# An expedited proposal can be settled earlier once it meets the expedite bars.
+bzed tx dao settle-proposal 1 --from anyone
+
+# Once proposal 1 is finished, delete its ballots (up to 50 in this call) and, with the last
+# batch, the proposal itself (anyone can); repeat until the response says completed
+bzed tx dao cleanup-proposal 1 --limit 50 --from anyone
+
+# Change DAO 1's config: generate the message as the DAO (it is signed by the DAO account only),
+# then run it through admin-execute (external admin) or a proposal (self-owned DAO)
+bzed tx dao update-dao-config 1 \
+  '{"min_quorum":"0.5","threshold":"0.6","voting_period":"259200s","expedited_period":"86400s","expedite_quorum":"0.6","expedite_threshold":"0.66"}' \
+  --from bze1<dao address> --generate-only > update.json  # the message is body.messages[0]
+bzed tx dao admin-execute 1 '<the MsgUpdateDaoConfig from update.json>' --from admin
+
+# Rename DAO 1 the same way: generate as the DAO, run through admin-execute or a proposal
+bzed tx dao update-metadata 1 "Bee Guild" "Funds BZE tooling" --from bze1<dao address> --generate-only
+
+# Replace stake DAO 1's sources the same way
+bzed tx dao update-electorate 1 '{"sr_ids":["3","7"],"dr_denom":"ubze"}' --from bze1<dao address> --generate-only
+
+# Add and remove members of static-list DAO 1 the same way (repeat a flag for
+# each address; a comma-separated list is not accepted)
+bzed tx dao update-members 1 --add bze1<new member> --add bze1<another> --remove bze1<old member> --from bze1<dao address> --generate-only
+
+# Submit a governance proposal that sets the module parameters (all of them)
+bzed tx dao update-params \
+  '{"max_sr_per_dao":"5","max_static_members":"128","max_open_proposals":"10","max_msgs_per_proposal":"16","max_proposal_bytes":"20000","max_title_len":"140","max_summary_len":"5000","min_voting_period":"3600s","max_voting_period":"7776000s","execution_window":"1209600s","cleanup_batch_size":"100","dao_creation_fee":{"denom":"ubze","amount":"50000000000"},"dao_creation_fee_destination":"burner","min_electorate_lock_days":5,"min_expedite_delay":"86400s"}' \
+  --deposit 1000000ubze --title "Update x/dao params" --summary "..." \
+  --from mykey
+```
+
+## Events
+- `bze.dao.EventDaoCreated{id, address, admin, type}`
+- `bze.dao.EventAdminExecuted{id, admin, msg_count}`, after the events of the executed messages
+- `bze.dao.EventAdminNominated{id, admin, nominee}`
+- `bze.dao.EventAdminChanged{id, old_admin, new_admin}`, when a nominee accepts or the DAO is handed to its voters
+- `bze.dao.EventAdminNominationWithdrawn{id, nominee}`
+- `bze.dao.EventProposalSubmitted{id, dao_id, proposer, expedited, voting_end, denominator}`
+- `bze.dao.EventVote{proposal_id, voter, option, weight}`, on every vote and revote
+- `bze.dao.EventBallotReduced{proposal_id, voter, source, amount}`, when an exit takes a share out of a ballot, or a removed member's ballot is zeroed (`source` empty)
+- `bze.dao.EventProposalCancelled{id}`
+- `bze.dao.EventDepositReleased{id, refunded, destination, amount}`, when a deposit leaves escrow (`destination` is the receiving address)
+- `bze.dao.EventProposalSettled{id, status, yes, no, abstain, denominator, expedited_early}`, on every settle, with the status it left the proposal in; `expedited_early` is true for a settle before the voting end
+- `bze.dao.EventProposalExecuted{id, success, error}`, after each run of a passed proposal's messages; `error` is a fixed reason (`unauthorized signer`, `message panicked`, `invalid message` or `message failed`), never the raw error
+- `bze.dao.EventProposalCleaned{id, processed, completed}`, on every cleanup batch; `completed` is true on the one that deleted the proposal
+- `bze.dao.EventDaoConfigUpdated{id, fields}`, `fields` are the proto names of the config fields whose value changed, in proto order
+- `bze.dao.EventDaoMetadataUpdated{id}`
+- `bze.dao.EventDaoElectorateUpdated{id, sr_ids, dr_denom}`, with the new sources
+- `bze.dao.EventDaoMembersUpdated{id, added, removed}`, with the changed addresses
+
+## Queries
+- `bzed query dao params` – show the module parameters.
+- `bzed query dao dao [id]` – show a DAO: its address, admin and pending admin, type, metadata, config, and members or stake electorate (REST `GET /bze/dao/dao/{id}`). An unknown id answers `NotFound`.
+- `bzed query dao dao-by-address [address]` – show the DAO that owns an account (REST `GET /bze/dao/dao_by_address/{address}`). An address that is no DAO's account answers `NotFound`, an invalid one `InvalidArgument`.
+- `bzed query dao dao-controller [dao-id]` – follow a DAO's admin chain to who ultimately controls it (REST `GET /bze/dao/dao_controller/{dao_id}`). The walk moves from a DAO to its admin while the admin is another DAO, and stops at an account that is not a DAO (`ACCOUNT`, the controller is that account), a self-owned DAO (`SELF_OWNED`, its voters), a DAO already on the path (`CYCLE`, the controller is that DAO) or after 16 DAOs (`DEPTH_CAP`, the controller is the 16th). `path` lists the DAO addresses visited, starting with the queried one. Pending nominations are ignored. An unknown id answers `NotFound`.
+- `bzed query dao proposal [proposal-id]` – a proposal with its live status at the current block (REST `GET /bze/dao/proposal/{id}`): `voting_ended` (it is `VOTING` and the block time reached `voting_end`, so it can be settled), `retry_deadline` (for an `EXECUTION_FAILED` proposal, `voting_end` plus the current `execution_window` in unix seconds: a retry is accepted before it, a settle from then on expires the proposal; 0 for every other status) and `expedite_settleable` (an expedited `VOTING` proposal, before its voting end and from `min_expedite_delay` after its submission, whose tally already meets the expedite bars, so it can be settled early). An unknown id, including a proposal removed by cleanup, answers `NotFound`.
+- `bzed query dao ballot [proposal-id] [voter]` – a voter's ballot (REST `GET /bze/dao/ballot/{proposal_id}/{voter}`): option, weight and, in a stake DAO, the share each source gives the weight. An exit or a member removal before the proposal's `voting_end` lowers the weight of its ballot, down to 0. No ballot answers `NotFound`, an invalid voter `InvalidArgument`.
+- `bzed query dao voting-power [dao-id] [address]` – an address's voting power in a DAO (REST `GET /bze/dao/voting_power/{dao_id}/{address}`). `current` is its weight now: 1 or 0 in a static-list DAO, its stake in the DAO's current sources in a stake DAO, whenever it joined. `proposals` has one entry per proposal of the DAO in `VOTING` with `eligible_weight`, the weight a vote would count now (live membership, or the stake in the proposal's pinned sources that joined before its submit height), and its per-source `shares`. An unknown DAO answers `NotFound`.
+- `bzed query dao join-record [source] [address]` – the height an address joined a source at (REST `GET /bze/dao/join_record?source=…&address=…`; the source goes in the query string because it contains a slash). `source` is `sr/{reward_id}` or `dr/{staking_denom}`. A join is recorded only while a DAO or a proposal in `VOTING` uses the source, and an exit deletes it. No record answers `NotFound`.
+
+The listings below take the standard pagination flags (`--page-limit`, `--page-key`, `--page-offset`, `--page-count-total`, `--page-reverse`; REST `pagination.limit`, `pagination.key`, …) and are ordered by store key, ascending unless reversed.
+- `bzed query dao daos` – every DAO, by id (REST `GET /bze/dao/daos`).
+- `bzed query dao daos-by-admin [admin]` – the DAOs an address is the admin of, by id (REST `GET /bze/dao/daos_by_admin/{admin}`). A self-owned DAO is listed under its own address; a pending nominee lists the DAO only once it accepts, and the former admin then no longer does.
+- `bzed query dao proposals [dao-id]` – a DAO's proposals, by id (REST `GET /bze/dao/proposals/{dao_id}?statuses=…`). Without `--statuses` every status is listed; with it (repeated for several, e.g. `--statuses voting --statuses execution-failed`; a comma-separated list is not accepted) only proposals with one of those statuses, and pages and `--count-total` count only the matches. The status is the stored one: a proposal past its voting end stays `VOTING` until it is settled (`bzed query dao proposal` shows `voting_ended`). Cleaned-up proposals are not listed.
+- `bzed query dao ballots [proposal-id]` – a proposal's ballots, ordered by voter key (REST `GET /bze/dao/ballots/{proposal_id}`). A cleanup deletes them once the proposal is finished.
+
+## Genesis
+The genesis state holds the whole module state: the params, every DAO record, every proposal record (cleaned-up proposals are gone), `dao_count` and `proposal_count` (the last ids handed out, so ids keep growing across an export and import), the ballots, the vote index (`{source, address, proposal_id}` for every counted stake share), the join records, the source pins and the member records. The address and admin indexes are rebuilt from the DAO records, the DAO proposal index and the open markers from the proposal records; everything else is imported as it is.
+
+The import checks the module's invariants and fails, naming the one broken:
+- I1: the `dao` module account holds at least the deposits of the proposals in `VOTING`, the only ones not released yet (x/bank is imported first). A surplus is accepted: before the module existed its address was not blocked, so coins sent to it then must not halt the upgrade or a later import.
+- I2: the `yes`, `no` and `abstain` of each proposal in `VOTING` are the sums of its ballots' weights per option.
+- I3: a static-list ballot weighs 1, or 0 once its voter was removed, and has no shares; a stake ballot weighs the sum of its positive shares, at most one per source the proposal pinned.
+- I4: each source's pin count is the number of DAOs whose electorate holds it plus the number of proposals in `VOTING` that pinned it.
+- I5: DAO and proposal ids (also those named by the vote index) are between 1 and their counter.
+- I6: every share of a ballot on a proposal in `VOTING` has its vote-index entry, and every entry of such a proposal names a share. Entries of a proposal that left voting are leftovers the address's next exit prunes, and are accepted. Join records of a source no longer pinned are accepted too: unpinning keeps them, and an old join height is below the submit height of any later proposal, so it never makes stake ineligible.
+- I7: every DAO has a valid admin, and a pending admin is neither the admin nor the DAO.
+
+Validation also requires each DAO at its derived address, valid metadata and config, an electorate that fits the type (members only in static-list DAOs, never the DAO itself, sources only in stake DAOs), member records only for current members of static-list DAOs, and for proposals an existing DAO, a known status, a valid proposer, non-negative tallies and denominator and a valid deposit. The param bounds (periods, member and source caps) are not checked: params can change after a DAO is created, and the DAO keeps its settings.
+
+## Parameters
+| Parameter | Default | Meaning |
+| --- | --- | --- |
+| `max_sr_per_dao` | 5 | Most staking rewards a stake DAO's electorate can have. |
+| `max_static_members` | 128 | Most members a static-list DAO can have. |
+| `max_open_proposals` | 10 | Most proposals a DAO can have in voting at once. |
+| `max_msgs_per_proposal` | 16 | Most messages a proposal or a `MsgAdminExecute` can carry. |
+| `max_proposal_bytes` | 20,000 | Most bytes those messages can take in total. |
+| `max_title_len` | 140 | Longest proposal title, in bytes. |
+| `max_summary_len` | 5,000 | Longest proposal summary, in bytes (0 allows titles only). |
+| `min_voting_period` | 1h | Shortest voting or expedited period a DAO may configure. |
+| `max_voting_period` | 90 days | Longest voting or expedited period a DAO may configure. |
+| `execution_window` | 14 days | How long after `voting_end` a failed execution can be retried; a settle after it expires the proposal. Zero is allowed (no retries). |
+| `cleanup_batch_size` | 100 | Most ballots one `MsgCleanupProposal` deletes. Must be at least 1. |
+| `dao_creation_fee` | 50,000 BZE (`50000000000ubze`) | Paid by the creator. A zero amount makes creation free. |
+| `dao_creation_fee_destination` | `burner` | `burner` or `community_pool`. |
+| `min_electorate_lock_days` | 5 | Shortest unstaking lock (days) a staking reward or Denom Reward needs to join a stake electorate. Must be at least 1. |
+| `min_expedite_delay` | 24h | How long after submission an expedited proposal that meets the expedite bars can settle early. Zero allows it at once; at its voting end a proposal settles normally whatever the delay. |

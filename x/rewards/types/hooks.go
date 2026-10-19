@@ -73,3 +73,59 @@ func (h MultiStakingRewardHooks) BeforeStakingRewardRemoval(ctx sdk.Context, rew
 
 	return nil
 }
+
+// DenomRewardHooks - event hooks called by the rewards module when a user's
+// Denom Reward participation changes. Same contract as StakingRewardHooks:
+// they run synchronously after the module's own state writes, and a non-nil
+// error aborts the whole transaction. There is no removal hook: Denom Rewards
+// are never deleted.
+type DenomRewardHooks interface {
+	// AfterDenomRewardJoin - the address became a new participant of the Denom Reward.
+	AfterDenomRewardJoin(ctx sdk.Context, stakingDenom, address string, amount math.Int) error
+
+	// AfterDenomRewardIncrease - an existing participant staked more.
+	AfterDenomRewardIncrease(ctx sdk.Context, stakingDenom, address string, amountAdded, newTotal math.Int) error
+
+	// AfterDenomRewardExit - the participant exited, removing their entire stake.
+	AfterDenomRewardExit(ctx sdk.Context, stakingDenom, address string, unstakedAmount math.Int) error
+}
+
+// MultiDenomRewardHooks - combines multiple DenomRewardHooks. Hooks are
+// executed in the order they are provided; the first error stops execution.
+type MultiDenomRewardHooks []DenomRewardHooks
+
+var _ DenomRewardHooks = MultiDenomRewardHooks{}
+
+func NewMultiDenomRewardHooks(hooks ...DenomRewardHooks) MultiDenomRewardHooks {
+	return hooks
+}
+
+func (h MultiDenomRewardHooks) AfterDenomRewardJoin(ctx sdk.Context, stakingDenom, address string, amount math.Int) error {
+	for i := range h {
+		if err := h[i].AfterDenomRewardJoin(ctx, stakingDenom, address, amount); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (h MultiDenomRewardHooks) AfterDenomRewardIncrease(ctx sdk.Context, stakingDenom, address string, amountAdded, newTotal math.Int) error {
+	for i := range h {
+		if err := h[i].AfterDenomRewardIncrease(ctx, stakingDenom, address, amountAdded, newTotal); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (h MultiDenomRewardHooks) AfterDenomRewardExit(ctx sdk.Context, stakingDenom, address string, unstakedAmount math.Int) error {
+	for i := range h {
+		if err := h[i].AfterDenomRewardExit(ctx, stakingDenom, address, unstakedAmount); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

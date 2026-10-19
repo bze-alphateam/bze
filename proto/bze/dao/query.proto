@@ -1,0 +1,255 @@
+syntax = "proto3";
+package bze.dao;
+
+import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "bze/dao/params.proto";
+import "bze/dao/store.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/dao/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Params queries the parameters of the module.
+  rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/bze/dao/params";
+  }
+
+  // Dao returns a DAO by its id.
+  rpc Dao (QueryDaoRequest) returns (QueryDaoResponse) {
+    option (google.api.http).get = "/bze/dao/dao/{id}";
+  }
+
+  // DaoByAddress returns the DAO that owns the given account.
+  rpc DaoByAddress (QueryDaoByAddressRequest) returns (QueryDaoByAddressResponse) {
+    option (google.api.http).get = "/bze/dao/dao_by_address/{address}";
+  }
+
+  // DaoController follows a DAO's admin chain to who ultimately controls it.
+  rpc DaoController (QueryDaoControllerRequest) returns (QueryDaoControllerResponse) {
+    option (google.api.http).get = "/bze/dao/dao_controller/{dao_id}";
+  }
+
+  // Proposal returns a proposal with its live status at the current block.
+  rpc Proposal (QueryProposalRequest) returns (QueryProposalResponse) {
+    option (google.api.http).get = "/bze/dao/proposal/{id}";
+  }
+
+  // Ballot returns a voter's ballot on a proposal.
+  rpc Ballot (QueryBallotRequest) returns (QueryBallotResponse) {
+    option (google.api.http).get = "/bze/dao/ballot/{proposal_id}/{voter}";
+  }
+
+  // VotingPower returns an address's weight in a DAO now and on each of the
+  // DAO's proposals in voting.
+  rpc VotingPower (QueryVotingPowerRequest) returns (QueryVotingPowerResponse) {
+    option (google.api.http).get = "/bze/dao/voting_power/{dao_id}/{address}";
+  }
+
+  // JoinRecord returns the height an address joined a pinned source at. The
+  // source is in the query string: it contains a slash.
+  rpc JoinRecord (QueryJoinRecordRequest) returns (QueryJoinRecordResponse) {
+    option (google.api.http).get = "/bze/dao/join_record";
+  }
+  // Daos lists every DAO, by id.
+  rpc Daos (QueryDaosRequest) returns (QueryDaosResponse) {
+    option (google.api.http).get = "/bze/dao/daos";
+  }
+
+  // DaosByAdmin lists the DAOs an address is the admin of, by id.
+  rpc DaosByAdmin (QueryDaosByAdminRequest) returns (QueryDaosByAdminResponse) {
+    option (google.api.http).get = "/bze/dao/daos_by_admin/{admin}";
+  }
+
+  // Proposals lists a DAO's proposals, by id, optionally only those with one
+  // of the given statuses. Cleaned-up proposals are not listed.
+  rpc Proposals (QueryProposalsRequest) returns (QueryProposalsResponse) {
+    option (google.api.http).get = "/bze/dao/proposals/{dao_id}";
+  }
+
+  // Ballots lists the ballots of a proposal, by voter address bytes.
+  rpc Ballots (QueryBallotsRequest) returns (QueryBallotsResponse) {
+    option (google.api.http).get = "/bze/dao/ballots/{proposal_id}";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// QueryDaoRequest is request type for the Query/Dao RPC method.
+message QueryDaoRequest {
+  uint64 id = 1;
+}
+
+// QueryDaoResponse is response type for the Query/Dao RPC method.
+message QueryDaoResponse {
+  Dao dao = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// QueryDaoByAddressRequest is request type for the Query/DaoByAddress RPC method.
+message QueryDaoByAddressRequest {
+  // address is the DAO's own account (bech32).
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryDaoByAddressResponse is response type for the Query/DaoByAddress RPC method.
+message QueryDaoByAddressResponse {
+  Dao dao = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// ControllerEndReason says why the admin chain walk stopped.
+enum ControllerEndReason {
+  // ACCOUNT: the admin is an account that is not a DAO; it is the controller.
+  ACCOUNT = 0;
+  // SELF_OWNED: the DAO is its own admin; its voters control it.
+  SELF_OWNED = 1;
+  // CYCLE: the admin is a DAO already on the path; the controller is that DAO.
+  CYCLE = 2;
+  // DEPTH_CAP: the path reached the maximum depth; the controller is its last DAO.
+  DEPTH_CAP = 3;
+}
+
+// QueryDaoControllerRequest is request type for the Query/DaoController RPC method.
+message QueryDaoControllerRequest {
+  uint64 dao_id = 1;
+}
+
+// QueryDaoControllerResponse is response type for the Query/DaoController RPC method.
+message QueryDaoControllerResponse {
+  // controller is the address at the end of the admin chain.
+  string controller = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  ControllerEndReason end_reason = 2 [(amino.dont_omitempty) = true];
+  // path lists the DAO addresses visited, in order, starting with the queried DAO.
+  repeated string path = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryProposalRequest is request type for the Query/Proposal RPC method.
+message QueryProposalRequest {
+  uint64 id = 1;
+}
+
+// QueryProposalResponse is response type for the Query/Proposal RPC method.
+// The flags are computed at the current block time.
+message QueryProposalResponse {
+  Proposal proposal = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // voting_ended: the proposal is VOTING and its voting end has passed, so it
+  // can be settled.
+  bool voting_ended = 2 [(amino.dont_omitempty) = true];
+  // retry_deadline is the end of the retry window of an EXECUTION_FAILED
+  // proposal (unix seconds), 0 for any other status.
+  int64 retry_deadline = 3 [(amino.dont_omitempty) = true];
+  // expedite_settleable: the proposal is expedited, still VOTING before its
+  // voting end, past the min_expedite_delay after its submission, and its
+  // tally already meets the expedite bars, so it can be settled early.
+  bool expedite_settleable = 4 [(amino.dont_omitempty) = true];
+}
+
+// QueryBallotRequest is request type for the Query/Ballot RPC method.
+message QueryBallotRequest {
+  uint64 proposal_id = 1;
+  string voter = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryBallotResponse is response type for the Query/Ballot RPC method.
+message QueryBallotResponse {
+  Ballot ballot = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// QueryVotingPowerRequest is request type for the Query/VotingPower RPC method.
+message QueryVotingPowerRequest {
+  uint64 dao_id = 1;
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// ProposalVotingPower is the weight an address would vote with on one proposal.
+message ProposalVotingPower {
+  uint64 proposal_id = 1;
+  // eligible_weight is 1 or 0 for a static-list DAO; for a stake DAO the
+  // address's stake in the proposal's pinned sources that joined before the
+  // proposal was submitted.
+  string eligible_weight = 2 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  // shares are the per-source parts of the weight (stake DAOs only).
+  repeated BallotShare shares = 3 [(gogoproto.nullable) = false];
+}
+
+// QueryVotingPowerResponse is response type for the Query/VotingPower RPC method.
+message QueryVotingPowerResponse {
+  // current is the address's weight now: 1 or 0 for a static-list DAO, its
+  // stake in the DAO's current sources for a stake DAO, join records ignored.
+  string current = 1 [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  // proposals has one entry per proposal of the DAO in voting.
+  repeated ProposalVotingPower proposals = 2 [(gogoproto.nullable) = false];
+}
+
+// QueryJoinRecordRequest is request type for the Query/JoinRecord RPC method.
+message QueryJoinRecordRequest {
+  // source is sr/{reward_id} or dr/{staking_denom}.
+  string source = 1;
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryJoinRecordResponse is response type for the Query/JoinRecord RPC method.
+message QueryJoinRecordResponse {
+  int64 height = 1 [(amino.dont_omitempty) = true];
+}
+
+// QueryDaosRequest is request type for the Query/Daos RPC method.
+message QueryDaosRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryDaosResponse is response type for the Query/Daos RPC method.
+message QueryDaosResponse {
+  repeated Dao daos = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryDaosByAdminRequest is request type for the Query/DaosByAdmin RPC method.
+message QueryDaosByAdminRequest {
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryDaosByAdminResponse is response type for the Query/DaosByAdmin RPC method.
+message QueryDaosByAdminResponse {
+  repeated Dao daos = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryProposalsRequest is request type for the Query/Proposals RPC method.
+message QueryProposalsRequest {
+  uint64 dao_id = 1;
+  // statuses keeps only the proposals with one of these statuses; empty lists
+  // every status. A list, because VOTING is the enum's zero value.
+  repeated ProposalStatus statuses = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+// QueryProposalsResponse is response type for the Query/Proposals RPC method.
+// The statuses are the stored ones: a VOTING proposal past its voting end is
+// listed as VOTING until it is settled.
+message QueryProposalsResponse {
+  repeated Proposal proposals = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryBallotsRequest is request type for the Query/Ballots RPC method.
+message QueryBallotsRequest {
+  uint64 proposal_id = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryBallotsResponse is response type for the Query/Ballots RPC method.
+message QueryBallotsResponse {
+  repeated Ballot ballots = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

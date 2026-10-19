@@ -49,6 +49,7 @@ make e2e-tradingrewards             # trading rewards: create, gov activation, h
 make e2e-burner                     # burner: fund routing, periodic burn and interval, raffles, locked IBC coins (~15 min)
 make e2e-cointrunk                  # cointrunk: domains and publishers by gov, free and paid articles, monthly limit, respect tax
 make e2e-params                     # tradebin, rewards and tokenfactory params by gov: authority, refusals, each param's effect on a real tx
+make e2e-dao                        # x/dao: every message, query, exploit-catalog case (D1–D29) and invariant, with a funds audit per tx (E2E_TIMEOUT=120m)
 make e2e-upgrade                    # chain upgrade from the previous release (see below)
 cd interchaintest && go test -v -run TestSmoke ./...
 ```

@@ -27,6 +27,7 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	burnermodulev1 "github.com/bze-alphateam/bze/api/bze/burner/module"
 	cointrunkmodulev1 "github.com/bze-alphateam/bze/api/bze/cointrunk/module"
+	daomodulev1 "github.com/bze-alphateam/bze/api/bze/dao/module"
 	epochmodulev1 "github.com/bze-alphateam/bze/api/bze/epochs/module"
 	rewardsmodulev1 "github.com/bze-alphateam/bze/api/bze/rewards/module"
 	tokenfactorymodulev1 "github.com/bze-alphateam/bze/api/bze/tokenfactory/module"
@@ -36,6 +37,8 @@ import (
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	_ "github.com/bze-alphateam/bze/x/cointrunk/module" // import for side-effects
 	cointrunkmoduletypes "github.com/bze-alphateam/bze/x/cointrunk/types"
+	_ "github.com/bze-alphateam/bze/x/dao/module" // import for side-effects
+	daomoduletypes "github.com/bze-alphateam/bze/x/dao/types"
 	_ "github.com/bze-alphateam/bze/x/epochs/module" // import for side-effects
 	epochmoduletypes "github.com/bze-alphateam/bze/x/epochs/types"
 	_ "github.com/bze-alphateam/bze/x/rewards/module" // import for side-effects
@@ -106,6 +109,7 @@ var (
 		rewardsmoduletypes.ModuleName,
 		tradebinmoduletypes.ModuleName,
 		txfeecollectormoduletypes.ModuleName,
+		daomoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 
@@ -183,6 +187,7 @@ var (
 		{Account: txfeecollectormoduletypes.ModuleName},
 		{Account: txfeecollectormoduletypes.BurnerFeeCollector},
 		{Account: txfeecollectormoduletypes.CpFeeCollector},
+		{Account: daomoduletypes.ModuleName},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 
@@ -201,6 +206,7 @@ var (
 		txfeecollectormoduletypes.ModuleName,
 		txfeecollectormoduletypes.BurnerFeeCollector,
 		txfeecollectormoduletypes.CpFeeCollector,
+		daomoduletypes.ModuleName,
 		// We allow the following module accounts to receive funds:
 		// govtypes.ModuleName
 	}
@@ -337,6 +343,10 @@ var (
 			{
 				Name:   txfeecollectormoduletypes.ModuleName,
 				Config: appconfig.WrapAny(&txfeecollectormodulev1.Module{}),
+			},
+			{
+				Name:   daomoduletypes.ModuleName,
+				Config: appconfig.WrapAny(&daomodulev1.Module{}),
 			},
 			// this line is used by starport scaffolding # stargate/app/moduleConfig
 		},

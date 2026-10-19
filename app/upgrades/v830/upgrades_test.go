@@ -5,19 +5,26 @@ import (
 	"errors"
 	"testing"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdkruntime "github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/stretchr/testify/require"
 
 	v830 "github.com/bze-alphateam/bze/app/upgrades/v830"
+	"github.com/bze-alphateam/bze/x/dao/keeper"
+	dao "github.com/bze-alphateam/bze/x/dao/module"
+	daotypes "github.com/bze-alphateam/bze/x/dao/types"
 )
 
 const fakeModuleName = "fake"
@@ -98,7 +105,45 @@ func TestHandler_MigrationErrorFailsTheUpgrade(t *testing.T) {
 // or delete a live store.
 func TestGetStoreUpgrades_DeletesRemovedModuleStores(t *testing.T) {
 	upgrades := v830.GetStoreUpgrades()
-	require.Empty(t, upgrades.Added)
 	require.Empty(t, upgrades.Renamed)
 	require.ElementsMatch(t, []string{"capability", "feeibc", "group", "nft"}, upgrades.Deleted)
+}
+
+// The new x/dao module gets its store at the upgrade height, and only it.
+func TestGetStoreUpgrades_AddsDaoStore(t *testing.T) {
+	upgrades := v830.GetStoreUpgrades()
+	require.Equal(t, []string{"dao"}, upgrades.Added)
+	require.NotContains(t, upgrades.Deleted, "dao")
+}
+
+// x/dao has no VersionMap entry before the upgrade, so the handler initialises
+// it from its default genesis and records its consensus version.
+func TestHandler_InitialisesDaoModule(t *testing.T) {
+	registry := codectypes.NewInterfaceRegistry()
+	daotypes.RegisterInterfaces(registry)
+	cdc := codec.NewProtoCodec(registry)
+	storeKey := storetypes.NewKVStoreKey(daotypes.StoreKey)
+	k := keeper.NewKeeper(
+		cdc,
+		sdkruntime.NewKVStoreService(storeKey),
+		log.NewNopLogger(),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+
+	msr := baseapp.NewMsgServiceRouter()
+	msr.SetInterfaceRegistry(registry)
+	mm := module.NewManager(dao.NewAppModule(cdc, &k, nil, nil))
+	cfg := module.NewConfigurator(cdc, msr, baseapp.NewGRPCQueryRouter())
+	require.NoError(t, mm.RegisterServices(cfg))
+
+	ctx := testutil.DefaultContext(storeKey, storetypes.NewTransientStoreKey("v830_t"))
+
+	vm, err := v830.CreateUpgradeHandler(cfg, mm)(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{})
+	require.NoError(t, err)
+	require.Equal(t, uint64(dao.ConsensusVersion), vm[daotypes.ModuleName])
+	require.Equal(t, daotypes.DefaultParams(), k.GetParams(ctx))
 }

@@ -1,0 +1,52 @@
+syntax = "proto3";
+package bze.dao;
+
+import "amino/amino.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/dao/types";
+
+// Params defines the parameters for the module. Each parameter is added by the
+// change that first uses it; field numbers follow the module's final layout.
+message Params {
+  option (amino.name) = "bze/x/dao/Params";
+  option (gogoproto.equal) = true;
+
+  // max_sr_per_dao caps the staking rewards in a stake DAO's electorate.
+  uint64 max_sr_per_dao = 1;
+  // max_static_members caps the member list of a static-list DAO.
+  uint64 max_static_members = 2;
+  // max_open_proposals caps the proposals a DAO can have in voting at once.
+  uint64 max_open_proposals = 3;
+  // max_msgs_per_proposal caps the messages of a proposal or a MsgAdminExecute.
+  uint64 max_msgs_per_proposal = 4;
+  // max_proposal_bytes caps the total marshalled size of those messages.
+  uint64 max_proposal_bytes = 5;
+  // max_title_len is the longest proposal title, in bytes.
+  uint64 max_title_len = 6;
+  // max_summary_len is the longest proposal summary, in bytes.
+  uint64 max_summary_len = 7;
+  // min_voting_period is the shortest voting (and expedited) period a DAO may configure.
+  google.protobuf.Duration min_voting_period = 8 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // max_voting_period is the longest voting (and expedited) period a DAO may configure.
+  google.protobuf.Duration max_voting_period = 9 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // execution_window is how long after voting_end a failed execution can be
+  // retried; after it the proposal expires.
+  google.protobuf.Duration execution_window = 10 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // cleanup_batch_size caps the ballots one MsgCleanupProposal deletes.
+  uint64 cleanup_batch_size = 11;
+  // dao_creation_fee is charged to the creator of a DAO; a zero amount makes creation free.
+  cosmos.base.v1beta1.Coin dao_creation_fee = 12 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  // dao_creation_fee_destination is "burner" or "community_pool".
+  string dao_creation_fee_destination = 13;
+  // min_electorate_lock_days is the shortest unstaking lock (days) a staking
+  // reward or Denom Reward needs to join a stake DAO's electorate.
+  uint32 min_electorate_lock_days = 14;
+  // min_expedite_delay is how long after submission an expedited proposal
+  // that meets the expedite bars can settle early, so voters always get time
+  // to react; 0 allows it at once. A proposal at its voting end settles
+  // normally whatever the delay.
+  google.protobuf.Duration min_expedite_delay = 15 [(gogoproto.stdduration) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}

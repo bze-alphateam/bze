@@ -1,0 +1,57 @@
+syntax = "proto3";
+package bze.dao;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "bze/dao/params.proto";
+import "bze/dao/store.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/dao/types";
+
+// GenesisState defines the dao module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+  // daos are all the DAO records, by id. The address and admin indexes are
+  // rebuilt from them on import.
+  repeated Dao daos = 2 [(gogoproto.nullable) = false];
+  // dao_count is the last dao id handed out; every DAO id is at most it.
+  uint64 dao_count = 3;
+  // proposal_count is the last proposal id handed out.
+  uint64 proposal_count = 4;
+  // proposals are all the proposal records, by id. The open markers and the
+  // DAO proposal index are rebuilt from them on import.
+  repeated Proposal proposals = 5 [(gogoproto.nullable) = false];
+  // ballots are all the ballots, by proposal id and voter.
+  repeated Ballot ballots = 6 [(gogoproto.nullable) = false];
+  // vote_index lists every counted stake share of a ballot. Entries of
+  // proposals that left voting are leftovers the next Exit of the address
+  // prunes.
+  repeated VoteIndexEntry vote_index = 7 [(gogoproto.nullable) = false];
+  // join_records are the heights addresses joined pinned sources at.
+  repeated JoinRecord join_records = 8 [(gogoproto.nullable) = false];
+  // pins count the DAOs and the proposals in voting that use each source.
+  // Import checks them against the DAOs and proposals (I4).
+  repeated PinCount pins = 9 [(gogoproto.nullable) = false];
+  // member_records are the heights members were added to static-list DAOs at.
+  repeated MemberRecord member_records = 10 [(gogoproto.nullable) = false];
+}
+
+// VoteIndexEntry says the address's ballot on the proposal counts a share of
+// the source.
+message VoteIndexEntry {
+  // source is sr/{reward_id} or dr/{staking_denom}.
+  string source = 1;
+  string address = 2;
+  uint64 proposal_id = 3;
+}
+
+// PinCount is how many DAOs and proposals in voting use a source.
+message PinCount {
+  // source is sr/{reward_id} or dr/{staking_denom}.
+  string source = 1;
+  uint64 count = 2;
+}
