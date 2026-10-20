@@ -216,7 +216,11 @@ func setupDao(t *testing.T, ctx context.Context, net chain.Network) *daoSuite {
 	factory := "factory/" + s.funder.FormattedAddress() + "/"
 	s.stk, s.oth, s.prz, s.tok = factory+"stk", factory+"oth", factory+"prz", factory+"tok"
 	for _, d := range []string{s.stk, s.oth, s.prz, s.tok} {
-		s.mustExec(t, s.funder, "tokenfactory", "create-denom", d[len(factory):])
+		sub := d[len(factory):]
+		s.mustExec(t, s.funder, "tokenfactory", "create-denom", sub)
+		// create-denom leaves name, symbol and display blank, which bank's
+		// genesis validation refuses; the export step validates the genesis
+		s.mustExecMsgs(t, s.funder, 200_000, tfMetadataMsg(s.funder.FormattedAddress(), d, d, sub, tfDenomUnit{Denom: d}))
 		s.mustExec(t, s.funder, "tokenfactory", "mint", coinStr(daoStakeMint, d))
 	}
 	return s
