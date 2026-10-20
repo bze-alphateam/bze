@@ -36,11 +36,14 @@ func (suite *IntegrationTestSuite) TestCreateDenom_ValidRequest() {
 	// Mock expectations for CreateDenomAfterValidation
 	suite.bank.EXPECT().GetDenomMetaData(suite.ctx, expectedDenom).Return(banktypes.Metadata{}, false).Times(1)
 	expectedMetadata := banktypes.Metadata{
-		DenomUnits: []*banktypes.DenomUnit{{
-			Denom:    expectedDenom,
-			Exponent: 0,
-		}},
-		Base: expectedDenom,
+		DenomUnits: []*banktypes.DenomUnit{
+			{Denom: expectedDenom, Exponent: 0},
+			{Denom: "TESTTOKEN", Exponent: 6},
+		},
+		Base:    expectedDenom,
+		Display: "TESTTOKEN",
+		Name:    subdenom,
+		Symbol:  "TESTTOKEN",
 	}
 	suite.bank.EXPECT().SetDenomMetaData(suite.ctx, expectedMetadata).Times(1)
 
@@ -59,6 +62,58 @@ func (suite *IntegrationTestSuite) TestCreateDenom_ValidRequest() {
 	authority, err := suite.k.GetDenomAuthority(suite.ctx, expectedDenom)
 	suite.Require().NoError(err)
 	suite.Require().Equal(creator, authority.Admin)
+}
+
+// A new denom gets bank metadata that passes bank's own validation (BZE-215):
+// name = subdenom, symbol = UPPER(subdenom), a 6-decimal display unit named
+// like the symbol, or the base as the only unit and display when the symbol
+// is not a valid coin denom.
+func (suite *IntegrationTestSuite) TestCreateDenom_DefaultMetadataIsValid() {
+	creator := sdk.AccAddress("creator").String()
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, types.Params{CreateDenomFee: sdk.NewInt64Coin("ubze", 0)}))
+
+	tests := []struct {
+		name     string
+		subdenom string
+		symbol   string
+		display  bool // a display unit with 6 decimals besides the base
+	}{
+		{"lowercase", "uvdl", "UVDL", true},
+		{"already uppercase", "GGE", "GGE", true},
+		{"mixed with digits", "2Mars", "2MARS", false},
+		{"digits only", "1000000000", "1000000000", false},
+		{"too short for a coin denom", "ab", "AB", false},
+		{"with a slash", "atom/sikka", "ATOM/SIKKA", true},
+	}
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			denom := "factory/" + creator + "/" + tc.subdenom
+			suite.bank.EXPECT().HasSupply(suite.ctx, tc.subdenom).Return(false).Times(1)
+			suite.bank.EXPECT().GetDenomMetaData(suite.ctx, denom).Return(banktypes.Metadata{}, false).Times(2)
+
+			var stored banktypes.Metadata
+			suite.bank.EXPECT().SetDenomMetaData(suite.ctx, gomock.Any()).Do(func(_ any, md banktypes.Metadata) {
+				stored = md
+			}).Times(1)
+
+			res, err := suite.msgServer.CreateDenom(suite.ctx, &types.MsgCreateDenom{Creator: creator, Subdenom: tc.subdenom})
+			suite.Require().NoError(err)
+			suite.Require().Equal(denom, res.NewDenom)
+
+			suite.Require().NoError(stored.Validate())
+			suite.Require().Equal(denom, stored.Base)
+			suite.Require().Equal(tc.subdenom, stored.Name)
+			suite.Require().Equal(tc.symbol, stored.Symbol)
+			units := []*banktypes.DenomUnit{{Denom: denom, Exponent: 0}}
+			display := denom
+			if tc.display {
+				units = append(units, &banktypes.DenomUnit{Denom: tc.symbol, Exponent: 6})
+				display = tc.symbol
+			}
+			suite.Require().Equal(units, stored.DenomUnits)
+			suite.Require().Equal(display, stored.Display)
+		})
+	}
 }
 
 func (suite *IntegrationTestSuite) TestCreateDenom_ValidationError() {

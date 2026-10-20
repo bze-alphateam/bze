@@ -267,8 +267,8 @@ func (s *tokenFactorySuite) govSetAdmin(t *testing.T) {
 
 // 5. The payer creates the gas denom paying the create fee in ubze: the fee
 // goes from the payer to the tokenfactory module and on to the community-pool
-// collector, and the new denom gets the default bank metadata, one exponent-0
-// unit named after the denom and nothing else.
+// collector, and the new denom gets the default bank metadata built from the
+// subdenom: name "gas", symbol and 6-decimal display unit "GAS".
 func (s *tokenFactorySuite) createFeeAndDefaultMetadata(t *testing.T) {
 	payer := s.payer.FormattedAddress()
 	fee := s.createDenomFee(t)
@@ -287,7 +287,13 @@ func (s *tokenFactorySuite) createFeeAndDefaultMetadata(t *testing.T) {
 	require.Equal(t, "0", s.supplyOf(t, s.gas).String())
 	md, err := s.metadataOf(s.gas)
 	require.NoError(t, err)
-	require.Equal(t, tfMetadata{Base: s.gas, DenomUnits: []tfDenomUnit{{Denom: s.gas}}}, md, "default metadata of a new denom")
+	require.Equal(t, tfMetadata{
+		Base:       s.gas,
+		DenomUnits: []tfDenomUnit{{Denom: s.gas}, {Denom: "GAS", Exponent: 6}},
+		Display:    "GAS",
+		Name:       "gas",
+		Symbol:     "GAS",
+	}, md, "default metadata of a new denom")
 }
 
 // 6. With a tx fee in gas, the create fee is bought with gas: the chain takes
