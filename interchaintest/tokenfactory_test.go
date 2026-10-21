@@ -370,10 +370,10 @@ func (s *tokenFactorySuite) createRefusals(t *testing.T) {
 		{"slash", "a/b", tfRefusal{true, tfSdk, 18, "subdenom should not contain /"}},
 		{"45 characters", strings.Repeat("a", tfMaxSubLen+1), tfRefusal{false, tfCodespace, 1106, "subdenom too long, max length is 44 bytes"}},
 		{"subdenom with supply", chain.Denom, tfRefusal{false, tfUndefined, 1, "can't create subdenoms that are the same as a native denom"}},
-		{"invalid denom character", "tok!", tfRefusal{true, tfSdk, 18, "tok!: must start with a letter, be at least 3 characters long"}},
-		{"digit first", "2mars", tfRefusal{true, tfSdk, 18, "2mars: must start with a letter, be at least 3 characters long"}},
-		{"digits only", "1000000000", tfRefusal{true, tfSdk, 18, "1000000000: must start with a letter, be at least 3 characters long"}},
-		{"two characters", "ab", tfRefusal{true, tfSdk, 18, "ab: must start with a letter, be at least 3 characters long"}},
+		{"invalid denom character", "tok!", tfRefusal{true, tfSdk, 18, "invalid denom: tok!"}},
+		{"digit first", "2mars", tfRefusal{true, tfSdk, 18, "invalid denom: 2mars"}},
+		{"digits only", "1000000000", tfRefusal{true, tfSdk, 18, "invalid denom: 1000000000"}},
+		{"two characters", "ab", tfRefusal{true, tfSdk, 18, "invalid denom: ab"}},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			msg := map[string]any{"@type": "/bze.tokenfactory.MsgCreateDenom", "creator": admin, "subdenom": c.subdenom}

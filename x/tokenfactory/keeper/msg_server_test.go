@@ -124,7 +124,7 @@ func (suite *IntegrationTestSuite) TestCreateDenom_InvalidSubdenomRefused() {
 
 			_, err := suite.msgServer.CreateDenom(suite.ctx, &types.MsgCreateDenom{Creator: creator, Subdenom: subdenom})
 			suite.Require().ErrorIs(err, types.ErrInvalidSubdenom)
-			suite.Require().ErrorContains(err, subdenom+": must start with a letter")
+			suite.Require().ErrorContains(err, "invalid denom: "+subdenom)
 
 			_, err = suite.k.GetDenomAuthority(suite.ctx, "factory/"+creator+"/"+subdenom)
 			suite.Require().Error(err)

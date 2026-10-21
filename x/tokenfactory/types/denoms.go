@@ -23,7 +23,7 @@ const (
 // valid coin denom.
 func ValidateSubdenom(subdenom string) error {
 	if err := sdk.ValidateDenom(subdenom); err != nil {
-		return errors.Wrapf(ErrInvalidSubdenom, "%s: must start with a letter, be at least 3 characters long and use only letters, digits and /:._-", subdenom)
+		return errors.Wrap(ErrInvalidSubdenom, err.Error())
 	}
 
 	return nil
