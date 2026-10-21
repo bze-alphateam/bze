@@ -16,6 +16,19 @@ const (
 	MaxCreatorLength = 59 + MaxHrpLength
 )
 
+// ValidateSubdenom checks that a new subdenom is itself a valid coin denom: it
+// starts with a letter, is at least 3 characters long and uses only
+// [a-zA-Z0-9/:._-]. The default bank metadata of a new denom names its display
+// unit after the upper-cased subdenom, and bank refuses a unit that is not a
+// valid coin denom.
+func ValidateSubdenom(subdenom string) error {
+	if err := sdk.ValidateDenom(subdenom); err != nil {
+		return errors.Wrapf(ErrInvalidSubdenom, "%s: must start with a letter, be at least 3 characters long and use only letters, digits and /:._-", subdenom)
+	}
+
+	return nil
+}
+
 // GetTokenDenom constructs a denom string for tokens created by tokenfactory
 // based on an input creator address and a subdenom
 // The denom constructed is factory/{creator}/{subdenom}
