@@ -146,8 +146,8 @@ func setupTradingRewards(t *testing.T, ctx context.Context, bze *cosmos.CosmosCh
 	s.createFee = s.tradingRewardFee(t)
 
 	factory := "factory/" + s.creator.FormattedAddress() + "/"
-	s.tr, s.prize = factory+"tr", factory+"prize"
-	for _, sub := range []string{"tr", "prize"} {
+	s.tr, s.prize = factory+"trd", factory+"prize"
+	for _, sub := range []string{"trd", "prize"} {
 		s.mustExec(t, s.creator, "tokenfactory", "create-denom", sub)
 		s.mustExec(t, s.creator, "tokenfactory", "mint", coinStr(trMint, factory+sub))
 	}

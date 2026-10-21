@@ -157,8 +157,8 @@ func setupBurner(t *testing.T, ctx context.Context, net chain.IbcNetwork, simdMn
 	require.Equal(t, int64(brLockedWeeks), s.burningWeeks(t), "genesis periodic_burning_weeks")
 
 	factory := "factory/" + s.admin.FormattedAddress() + "/"
-	s.brn, s.rw, s.rl = factory+"brn", factory+"rw", factory+"rl"
-	for _, sub := range []string{"brn", "rw", "rl"} {
+	s.brn, s.rw, s.rl = factory+"brn", factory+"rwd", factory+"rlk"
+	for _, sub := range []string{"brn", "rwd", "rlk"} {
 		s.mustExec(t, s.admin, "tokenfactory", "create-denom", sub)
 		s.mustExec(t, s.admin, "tokenfactory", "mint", coinStr(brMint, factory+sub))
 	}

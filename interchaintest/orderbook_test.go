@@ -119,9 +119,9 @@ func setupOrderBook(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain) 
 	s.params = s.queryParams(t)
 	s.defaults = s.rawParams(t)
 
-	s.ob = "factory/" + s.admin.FormattedAddress() + "/ob"
+	s.ob = "factory/" + s.admin.FormattedAddress() + "/obk"
 	s.market = s.ob + "/" + chain.Denom
-	s.mustExec(t, s.admin, "tokenfactory", "create-denom", "ob")
+	s.mustExec(t, s.admin, "tokenfactory", "create-denom", "obk")
 	s.mustExec(t, s.admin, "tokenfactory", "mint", coinStr(obMint, s.ob))
 	for _, u := range s.users() {
 		s.mustExec(t, s.admin, "bank", "send", s.admin.FormattedAddress(), u.FormattedAddress(), coinStr(obUserBase, s.ob))

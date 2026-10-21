@@ -267,8 +267,8 @@ func (s *tokenFactorySuite) govSetAdmin(t *testing.T) {
 
 // 5. The payer creates the gas denom paying the create fee in ubze: the fee
 // goes from the payer to the tokenfactory module and on to the community-pool
-// collector, and the new denom gets the default bank metadata, one exponent-0
-// unit named after the denom and nothing else.
+// collector, and the new denom gets the default bank metadata built from the
+// subdenom: name "gas", symbol and 6-decimal display unit "GAS".
 func (s *tokenFactorySuite) createFeeAndDefaultMetadata(t *testing.T) {
 	payer := s.payer.FormattedAddress()
 	fee := s.createDenomFee(t)
@@ -287,7 +287,13 @@ func (s *tokenFactorySuite) createFeeAndDefaultMetadata(t *testing.T) {
 	require.Equal(t, "0", s.supplyOf(t, s.gas).String())
 	md, err := s.metadataOf(s.gas)
 	require.NoError(t, err)
-	require.Equal(t, tfMetadata{Base: s.gas, DenomUnits: []tfDenomUnit{{Denom: s.gas}}}, md, "default metadata of a new denom")
+	require.Equal(t, tfMetadata{
+		Base:       s.gas,
+		DenomUnits: []tfDenomUnit{{Denom: s.gas}, {Denom: "GAS", Exponent: 6}},
+		Display:    "GAS",
+		Name:       "gas",
+		Symbol:     "GAS",
+	}, md, "default metadata of a new denom")
 }
 
 // 6. With a tx fee in gas, the create fee is bought with gas: the chain takes
@@ -347,10 +353,11 @@ type tfRefusal struct {
 }
 
 // 7. Refused denom creations charge no create fee and create nothing. The
-// chain checks the subdenom for "_" and "/" (ValidateBasic), its length, that
-// the subdenom itself has no supply, and the full denom's characters; it does
-// not compare the full denom with supplied denoms (only with denoms that have
-// bank metadata, the duplicate case).
+// chain checks the subdenom for "_" and "/" and that it is a valid coin denom
+// itself (ValidateBasic: a letter first, at least 3 characters, no other
+// characters than /:._-), its length and that the subdenom itself has no
+// supply; it does not compare the full denom with supplied denoms (only with
+// denoms that have bank metadata, the duplicate case).
 func (s *tokenFactorySuite) createRefusals(t *testing.T) {
 	admin := s.admin.FormattedAddress()
 	for _, c := range []struct {
@@ -363,7 +370,10 @@ func (s *tokenFactorySuite) createRefusals(t *testing.T) {
 		{"slash", "a/b", tfRefusal{true, tfSdk, 18, "subdenom should not contain /"}},
 		{"45 characters", strings.Repeat("a", tfMaxSubLen+1), tfRefusal{false, tfCodespace, 1106, "subdenom too long, max length is 44 bytes"}},
 		{"subdenom with supply", chain.Denom, tfRefusal{false, tfUndefined, 1, "can't create subdenoms that are the same as a native denom"}},
-		{"invalid denom character", "tok!", tfRefusal{false, tfUndefined, 1, "invalid denom: factory/" + admin + "/tok!"}},
+		{"invalid denom character", "tok!", tfRefusal{true, tfSdk, 18, "invalid denom: tok!"}},
+		{"digit first", "2mars", tfRefusal{true, tfSdk, 18, "invalid denom: 2mars"}},
+		{"digits only", "1000000000", tfRefusal{true, tfSdk, 18, "invalid denom: 1000000000"}},
+		{"two characters", "ab", tfRefusal{true, tfSdk, 18, "invalid denom: ab"}},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			msg := map[string]any{"@type": "/bze.tokenfactory.MsgCreateDenom", "creator": admin, "subdenom": c.subdenom}

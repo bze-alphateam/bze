@@ -123,10 +123,49 @@ func TestMsgCreateDenom_ValidateBasic(t *testing.T) {
 			},
 		},
 		{
-			name: "valid message - single character",
+			name: "subdenom shorter than 3 characters",
 			msg: MsgCreateDenom{
 				Creator:  validCreator,
-				Subdenom: "a",
+				Subdenom: "ab",
+			},
+			err: sdkerrors.ErrInvalidRequest,
+		},
+		{
+			name: "subdenom starts with a digit",
+			msg: MsgCreateDenom{
+				Creator:  validCreator,
+				Subdenom: "2mars",
+			},
+			err: sdkerrors.ErrInvalidRequest,
+		},
+		{
+			name: "subdenom of digits only",
+			msg: MsgCreateDenom{
+				Creator:  validCreator,
+				Subdenom: "1000000000",
+			},
+			err: sdkerrors.ErrInvalidRequest,
+		},
+		{
+			name: "subdenom with a character a coin denom cannot hold",
+			msg: MsgCreateDenom{
+				Creator:  validCreator,
+				Subdenom: "tok!",
+			},
+			err: sdkerrors.ErrInvalidRequest,
+		},
+		{
+			name: "valid message - three characters",
+			msg: MsgCreateDenom{
+				Creator:  validCreator,
+				Subdenom: "abc",
+			},
+		},
+		{
+			name: "valid message - dots",
+			msg: MsgCreateDenom{
+				Creator:  validCreator,
+				Subdenom: "u.token-1",
 			},
 		},
 		{

@@ -511,11 +511,11 @@ func (s *denomRewardsSuite) rejoinAfterUnlock(t *testing.T) {
 func (s *denomRewardsSuite) dustAndFreshJoin(t *testing.T) {
 	creator := s.creator.FormattedAddress()
 	factory := "factory/" + creator + "/"
-	s.stk2, s.pa, s.pb = factory+"stk2", factory+"pa", factory+"pb"
+	s.stk2, s.pa, s.pb = factory+"stk2", factory+"pda", factory+"pdb"
 	for _, d := range []struct {
 		sub    string
 		supply int64
-	}{{"stk2", dr2StkSupply}, {"pa", dr2PaSupply}, {"pb", dr2PbSupply}} {
+	}{{"stk2", dr2StkSupply}, {"pda", dr2PaSupply}, {"pdb", dr2PbSupply}} {
 		s.mustExec(t, s.creator, "tokenfactory", "create-denom", d.sub)
 		s.mustExec(t, s.creator, "tokenfactory", "mint", coinStr(d.supply, factory+d.sub))
 	}
