@@ -3,6 +3,8 @@ package types_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
+
 	"github.com/bze-alphateam/bze/x/tokenfactory/types"
 	"github.com/stretchr/testify/require"
 )
@@ -46,6 +48,40 @@ func TestGenesisState_Validate(t *testing.T) {
 				},
 			},
 			valid: true,
+		},
+		{
+			desc: "valid denom config",
+			genState: &types.GenesisState{
+				Params: types.DefaultParams(),
+				FactoryDenoms: []types.GenesisDenom{{
+					Denom:          "factory/creator/one",
+					DenomAuthority: types.DenomAuthority{Mintable: true},
+					DenomConfig:    &types.DenomConfig{TransferFee: math.LegacyNewDecWithPrec(1, 3), GasSurcharge: math.LegacyOneDec()},
+				}},
+			},
+			valid: true,
+		},
+		{
+			desc: "denom config above the cap",
+			genState: &types.GenesisState{
+				Params: types.DefaultParams(),
+				FactoryDenoms: []types.GenesisDenom{{
+					Denom:       "factory/creator/one",
+					DenomConfig: &types.DenomConfig{TransferFee: math.LegacyNewDecWithPrec(1, 1), GasSurcharge: math.LegacyZeroDec()},
+				}},
+			},
+			valid: false,
+		},
+		{
+			desc: "denom config with a missing rate",
+			genState: &types.GenesisState{
+				Params: types.DefaultParams(),
+				FactoryDenoms: []types.GenesisDenom{{
+					Denom:       "factory/creator/one",
+					DenomConfig: &types.DenomConfig{TransferFee: math.LegacyZeroDec()},
+				}},
+			},
+			valid: false,
 		},
 		{
 			desc: "duplicate branding denom",

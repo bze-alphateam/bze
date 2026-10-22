@@ -33,6 +33,10 @@ service Msg {
   // DisableMinting turns minting off for good on a factory denom.
   // Admin only and irreversible: no message turns it back on.
   rpc DisableMinting   (MsgDisableMinting  ) returns (MsgDisableMintingResponse  );
+
+  // SetDenomConfig replaces the whole configuration of a factory denom.
+  // Admin only. Every field must be sent.
+  rpc SetDenomConfig   (MsgSetDenomConfig  ) returns (MsgSetDenomConfigResponse  );
 }
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
@@ -146,3 +150,33 @@ message MsgDisableMinting {
 }
 
 message MsgDisableMintingResponse {}
+
+// MsgSetDenomConfig replaces the configuration of a factory denom as a whole.
+// Only the denom admin may send it. Both rates must be sent, even when zero.
+message MsgSetDenomConfig {
+  option (cosmos.msg.v1.signer) = "creator";
+  option           (amino.name) = "bze/x/tokenfactory/MsgSetDenomConfig";
+  string creator = 1;
+  string denom   = 2;
+
+  // community_pool receives the token's fee coins. Empty means none.
+  string community_pool = 3 [(amino.dont_omitempty) = true];
+
+  // transfer_fee is a ratio, 0 <= x <= 0.05.
+  string transfer_fee = 4 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+
+  // gas_surcharge is a ratio, 0 <= x <= 2.
+  string gas_surcharge = 5 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+
+message MsgSetDenomConfigResponse {}

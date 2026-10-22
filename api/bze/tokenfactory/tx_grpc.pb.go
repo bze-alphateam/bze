@@ -28,6 +28,7 @@ const (
 	Msg_SetDenomBranding_FullMethodName = "/bze.tokenfactory.Msg/SetDenomBranding"
 	Msg_SetDenomAdmin_FullMethodName    = "/bze.tokenfactory.Msg/SetDenomAdmin"
 	Msg_DisableMinting_FullMethodName   = "/bze.tokenfactory.Msg/DisableMinting"
+	Msg_SetDenomConfig_FullMethodName   = "/bze.tokenfactory.Msg/SetDenomConfig"
 )
 
 // MsgClient is the client API for Msg service.
@@ -49,6 +50,9 @@ type MsgClient interface {
 	// DisableMinting turns minting off for good on a factory denom.
 	// Admin only and irreversible: no message turns it back on.
 	DisableMinting(ctx context.Context, in *MsgDisableMinting, opts ...grpc.CallOption) (*MsgDisableMintingResponse, error)
+	// SetDenomConfig replaces the whole configuration of a factory denom.
+	// Admin only. Every field must be sent.
+	SetDenomConfig(ctx context.Context, in *MsgSetDenomConfig, opts ...grpc.CallOption) (*MsgSetDenomConfigResponse, error)
 }
 
 type msgClient struct {
@@ -140,6 +144,15 @@ func (c *msgClient) DisableMinting(ctx context.Context, in *MsgDisableMinting, o
 	return out, nil
 }
 
+func (c *msgClient) SetDenomConfig(ctx context.Context, in *MsgSetDenomConfig, opts ...grpc.CallOption) (*MsgSetDenomConfigResponse, error) {
+	out := new(MsgSetDenomConfigResponse)
+	err := c.cc.Invoke(ctx, Msg_SetDenomConfig_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -159,6 +172,9 @@ type MsgServer interface {
 	// DisableMinting turns minting off for good on a factory denom.
 	// Admin only and irreversible: no message turns it back on.
 	DisableMinting(context.Context, *MsgDisableMinting) (*MsgDisableMintingResponse, error)
+	// SetDenomConfig replaces the whole configuration of a factory denom.
+	// Admin only. Every field must be sent.
+	SetDenomConfig(context.Context, *MsgSetDenomConfig) (*MsgSetDenomConfigResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -192,6 +208,9 @@ func (UnimplementedMsgServer) SetDenomAdmin(context.Context, *MsgSetDenomAdmin) 
 }
 func (UnimplementedMsgServer) DisableMinting(context.Context, *MsgDisableMinting) (*MsgDisableMintingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DisableMinting not implemented")
+}
+func (UnimplementedMsgServer) SetDenomConfig(context.Context, *MsgSetDenomConfig) (*MsgSetDenomConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetDenomConfig not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -368,6 +387,24 @@ func _Msg_DisableMinting_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SetDenomConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetDenomConfig)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetDenomConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_SetDenomConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetDenomConfig(ctx, req.(*MsgSetDenomConfig))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -410,6 +447,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DisableMinting",
 			Handler:    _Msg_DisableMinting_Handler,
+		},
+		{
+			MethodName: "SetDenomConfig",
+			Handler:    _Msg_SetDenomConfig_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

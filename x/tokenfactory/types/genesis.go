@@ -1,5 +1,7 @@
 package types
 
+import errorsmod "cosmossdk.io/errors"
+
 // this line is used by starport scaffolding # genesis/types/import
 
 // DefaultIndex is the default global index
@@ -18,6 +20,15 @@ func DefaultGenesis() *GenesisState {
 // failure.
 func (gs GenesisState) Validate() error {
 	// this line is used by starport scaffolding # genesis/types/validate
+	for _, genDenom := range gs.FactoryDenoms {
+		if genDenom.DenomConfig == nil {
+			continue
+		}
+		if err := genDenom.DenomConfig.Validate(); err != nil {
+			return errorsmod.Wrapf(err, "denom %s", genDenom.Denom)
+		}
+	}
+
 	seenBrandingDenoms := make(map[string]struct{})
 	for _, record := range gs.DenomBrandings {
 		if record.Denom == "" {

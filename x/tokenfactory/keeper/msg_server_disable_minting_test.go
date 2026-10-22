@@ -155,16 +155,19 @@ func (suite *IntegrationTestSuite) TestChangeAdmin_KeepsMintable() {
 	suite.Require().NoError(suite.mintAs(newAdmin, denom, true))
 }
 
-// Renouncing the admin turns minting off in the same write and emits the event.
+// Renouncing the admin turns minting off in the same write, keeps the denom config and emits the event.
 func (suite *IntegrationTestSuite) TestChangeAdmin_RenounceDisablesMinting() {
 	admin := sdk.AccAddress("admin").String()
+	cp := sdk.AccAddress("community-pool").String()
 	denom := suite.setupMintableDenom(admin)
+	suite.Require().NoError(suite.setDenomConfig(admin, denom, cp, "0.01", "0.5"))
 
 	suite.resetEvents()
 	_, err := suite.msgServer.ChangeAdmin(suite.ctx, types.NewMsgChangeAdmin(admin, denom, ""))
 	suite.Require().NoError(err)
 	suite.requireAdmin(denom, "")
 	suite.requireMintable(denom, false)
+	suite.requireConfig(denom, cp, "0.01", "0.5")
 
 	events := suite.mintingDisabledEvents()
 	suite.Require().Len(events, 1)

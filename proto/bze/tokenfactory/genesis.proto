@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "bze/tokenfactory/params.proto";
 import "bze/tokenfactory/denom_authority.proto";
 import "bze/tokenfactory/denom_branding.proto";
+import "bze/tokenfactory/denom_config.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/tokenfactory/types";
 
@@ -37,4 +38,6 @@ message GenesisDenom {
     (gogoproto.moretags) = "yaml:\"denom_authority\"",
     (gogoproto.nullable) = false
   ];
+  // denom_config is the denom's configuration. Absent means the defaults.
+  DenomConfig denom_config = 3 [ (gogoproto.moretags) = "yaml:\"denom_config\"" ];
 }

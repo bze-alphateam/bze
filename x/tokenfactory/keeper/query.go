@@ -77,3 +77,13 @@ func (k Keeper) AllDenomBranding(goCtx context.Context, req *types.QueryAllDenom
 
 	return &types.QueryAllDenomBrandingResponse{DenomBrandings: records, Pagination: pageRes}, nil
 }
+
+func (k Keeper) DenomConfig(goCtx context.Context, req *types.QueryDenomConfigRequest) (*types.QueryDenomConfigResponse, error) {
+	if req == nil || req.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	return &types.QueryDenomConfigResponse{Config: k.GetDenomConfig(ctx, req.GetDenom())}, nil
+}

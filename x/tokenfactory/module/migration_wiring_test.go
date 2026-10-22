@@ -3,6 +3,7 @@ package tokenfactory_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -78,4 +79,22 @@ func TestDisableMinting_ThroughRouter(t *testing.T) {
 	dAuth, err := k.GetDenomAuthority(ctx, denom)
 	require.NoError(t, err)
 	require.False(t, dAuth.Mintable)
+}
+
+// MsgSetDenomConfig is routable once the module registers its services.
+func TestSetDenomConfig_ThroughRouter(t *testing.T) {
+	k, ctx, msr := registerServices(t)
+	admin := sdk.AccAddress("wiring-admin").String()
+	denom := "factory/" + admin + "/token"
+	require.NoError(t, k.SetDenomAuthority(ctx, denom, types.DenomAuthority{Admin: admin, Mintable: true}))
+
+	msg := types.NewMsgSetDenomConfig(admin, denom, "", math.LegacyMustNewDecFromStr("0.01"), math.LegacyOneDec())
+	handler := msr.Handler(msg)
+	require.NotNil(t, handler, "MsgSetDenomConfig must be routable after RegisterServices")
+	_, err := handler(ctx, msg)
+	require.NoError(t, err)
+
+	transferFee, gasSurcharge := k.GetDenomFeeRates(ctx, denom)
+	require.Equal(t, "0.010000000000000000", transferFee.String())
+	require.Equal(t, "1.000000000000000000", gasSurcharge.String())
 }

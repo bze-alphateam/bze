@@ -30,6 +30,7 @@ func TestRegisterInterfaces_ResolvesEveryMsg(t *testing.T) {
 		&types.MsgSetDenomAdmin{},
 		// v8.3.0: non-mintable factory tokens
 		&types.MsgDisableMinting{},
+		&types.MsgSetDenomConfig{},
 	}
 
 	for _, msg := range msgs {
