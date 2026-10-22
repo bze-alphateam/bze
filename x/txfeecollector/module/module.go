@@ -16,7 +16,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
@@ -248,9 +247,6 @@ type ModuleOutputs struct {
 
 	TxfeecollectorKeeper *keeper.Keeper
 	Module               appmodule.AppModule
-
-	// BankSendRestriction charges the factory tokens' transfer fees. x/bank installs it after every provider ran.
-	BankSendRestriction banktypes.SendRestrictionFn
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -278,7 +274,5 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.DistrKeeper,
 	)
 
-	kp := &k
-
-	return ModuleOutputs{TxfeecollectorKeeper: kp, Module: m, BankSendRestriction: kp.TransferFeeSendRestriction}
+	return ModuleOutputs{TxfeecollectorKeeper: &k, Module: m}
 }

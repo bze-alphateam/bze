@@ -32,20 +32,6 @@ message CommunityPoolFeePaidEvent {
   string amount = 3;
 }
 
-// TransferFeePaidEvent is emitted for every factory-token coin a user account pays as transfer fee, on top of the
-// amount it sends. The fee rate is the transfer fee set in the token's DenomConfig.
-message TransferFeePaidEvent {
-  // payer is the sending account that paid the fee.
-  string payer = 1;
-  // denom is the denomination of the fee.
-  string denom = 2;
-  // amount is the fee amount.
-  string amount = 3;
-  // destination is the module account the fee went to: txfeecollector_cp when the token has a community pool
-  // (forwarded there at EndBlock), txfeecollector_burner when it has none (burned).
-  string destination = 4;
-}
-
 // GasSurchargePaidEvent is emitted for every factory-token coin used to pay the tx fee when the token sets a gas
 // surcharge. The amount is the part of the paid fee moved out of the fee collected for validators.
 message GasSurchargePaidEvent {

@@ -41,16 +41,6 @@ const (
 	ibcMultiHopIn  = 100_000   // 10. those vouchers back to bze over the main channel, per transfer
 	ibcErrAckOut   = 200_000   // 11. ubze bze -> an address simd cannot decode
 
-	// 13. a factory token with a 1% transfer fee: minted, sent out, part of it
-	// back home, and a timed-out transfer refunded
-	ibcFeeMint      = 10_000_000
-	ibcFeeOut       = 1_000_000 // fee 10,000
-	ibcFeeHome      = 400_000
-	ibcFeeTimeout   = 100_000 // fee 1,000
-	ibcFeeRate      = "0.01"
-	ibcFeeOutFee    = 10_000
-	ibcFeeTimeoutFe = 1_000
-
 	// ibcTransferVersion is the plain ICS-20 channel version. ibcFeeVersion is
 	// the version of a channel wrapped by the ICS-29 fee middleware, which
 	// ibc-go v10 removed: bze no longer opens such channels.
@@ -63,7 +53,6 @@ const (
 	ibcUpgradeInitMsg = "/ibc.core.channel.v1.MsgChannelUpgradeInit"
 
 	ibcBlockedEvent = "bze.txfeecollector.BlockedIbcInboundEvent"
-	ibcTransferFeeT = "bze.txfeecollector.TransferFeePaidEvent"
 	// ibcCallbackErrorPrefix is what ibc-go puts on the type and attribute keys
 	// of the events an OnRecvPacket callback emitted when it returns an error
 	// ack: they are rewritten, not dropped (accepted as is in the v8.2.0 review).
@@ -114,7 +103,6 @@ func TestBlockedInboundIbc(t *testing.T) {
 	t.Run("10 blocking is channel-scoped and path-exact", s.channelScope)
 	t.Run("11 outgoing error ack refunds", s.outgoingErrorAck)
 	t.Run("12 channel upgrades are gone", s.channelUpgradeRefused)
-	t.Run("13 factory token transfer fee", s.transferFee)
 }
 
 type ibcSuite struct {
@@ -875,74 +863,4 @@ func newAccount(t *testing.T, prefix string) (string, string) {
 	addr, err := sdk.Bech32ifyAddressBytes(prefix, hd.Secp256k1.Generate()(derived).PubKey().Address())
 	require.NoError(t, err)
 	return mnemonic, addr
-}
-
-// 13. A factory token with a 1% transfer fee and a community pool. The user's
-// transfer out pays the fee on top: the escrow holds exactly the amount sent.
-// The ICS-20 escrow is a plain account in ibc-go v10 and never pays: a voucher
-// coming home and a timeout refund are released in full, with no fee event,
-// and the escrow balance always equals the amount in flight or on simd.
-func (s *ibcSuite) transferFee(t *testing.T) {
-	user := s.bzeUser.FormattedAddress()
-	mustTx := func(args ...string) helpers.TxResult {
-		t.Helper()
-		res, err := helpers.ExecTx(s.ctx, s.bze, s.bzeUser, args...)
-		require.NoError(t, err)
-		require.Zero(t, res.Code, "tx %v failed: %s", args, res.RawLog)
-		return res
-	}
-	denom := "factory/" + user + "/ibf"
-	mustTx("tokenfactory", "create-denom", "ibf")
-	mustTx("tokenfactory", "mint", coinStr(ibcFeeMint, denom))
-	mustTx("tokenfactory", "set-denom-config", denom, s.admin.FormattedAddress(), ibcFeeRate, "0")
-	cpFees, err := helpers.ModuleAddress(s.ctx, s.bze, "txfeecollector_cp")
-	require.NoError(t, err)
-	voucher := helpers.IbcDenom(s.net.SimdChannel, denom)
-
-	// out: amount + fee from the user, the amount into the escrow
-	out, err := helpers.SendIbc(s.ctx, s.bze, s.bzeUser, s.net.BzeChannel, s.simdUser.FormattedAddress(), sdk.NewInt64Coin(denom, ibcFeeOut))
-	require.NoError(t, err)
-	_, err = helpers.WaitForRecv(s.ctx, s.simd, s.net.SimdChannel, out.Sequence)
-	require.NoError(t, err)
-	_, err = helpers.WaitForAck(s.ctx, s.bze, out)
-	require.NoError(t, err)
-	fees := helpers.EventsWith(helpers.TxEvents(out.Tx, ibcTransferFeeT), map[string]string{
-		"payer": user, "denom": denom, "amount": strconv.Itoa(ibcFeeOutFee), "destination": "txfeecollector_cp",
-	})
-	require.Len(t, fees, 1, "the transfer out pays the fee")
-	paid, err := helpers.Transferred(helpers.TxEvents(out.Tx, "transfer"), user, cpFees, denom)
-	require.NoError(t, err)
-	require.Equal(t, sdkmath.NewInt(ibcFeeOutFee), paid, "fee to txfeecollector_cp")
-	require.Equal(t, sdkmath.NewInt(ibcFeeMint-ibcFeeOut-ibcFeeOutFee), s.balance(t, s.bze, s.bzeUser, denom), "user pays amount + fee")
-	require.Equal(t, sdkmath.NewInt(ibcFeeOut), s.balanceOf(t, s.bze, s.main.bzeEscrow, denom), "escrow holds the amount only")
-	require.Equal(t, sdkmath.NewInt(ibcFeeOut), s.balance(t, s.simd, s.simdUser, voucher), "simd gets the full amount")
-
-	// home: released from the escrow in full, nobody pays
-	home, err := helpers.SendIbc(s.ctx, s.simd, s.simdUser, s.net.SimdChannel, user, sdk.NewInt64Coin(voucher, ibcFeeHome))
-	require.NoError(t, err)
-	recv, err := helpers.WaitForRecv(s.ctx, s.bze, s.net.BzeChannel, home.Sequence)
-	require.NoError(t, err)
-	_, err = helpers.WaitForAck(s.ctx, s.simd, home)
-	require.NoError(t, err)
-	require.Empty(t, helpers.TxEvents(recv, ibcTransferFeeT), "the escrow pays no fee")
-	require.Equal(t, sdkmath.NewInt(ibcFeeMint-ibcFeeOut-ibcFeeOutFee+ibcFeeHome), s.balance(t, s.bze, s.bzeUser, denom), "the voucher comes home in full")
-	require.Equal(t, sdkmath.NewInt(ibcFeeOut-ibcFeeHome), s.balanceOf(t, s.bze, s.main.bzeEscrow, denom), "escrow = amount still on simd")
-
-	// timeout: the transfer pays its fee, the refund comes back in full
-	before := s.balance(t, s.bze, s.bzeUser, denom)
-	var timedOut helpers.IbcTransfer
-	s.relayerStopped(t, func() {
-		timedOut, err = helpers.SendIbc(s.ctx, s.bze, s.bzeUser, s.net.BzeChannel, s.simdUser.FormattedAddress(), sdk.NewInt64Coin(denom, ibcFeeTimeout),
-			"--packet-timeout-height", "0-0", "--packet-timeout-timestamp", "1000000000")
-		require.NoError(t, err)
-		require.Len(t, helpers.TxEvents(timedOut.Tx, ibcTransferFeeT), 1, "the timed-out transfer paid its fee when sent")
-		require.Equal(t, sdkmath.NewInt(ibcFeeOut-ibcFeeHome+ibcFeeTimeout), s.balanceOf(t, s.bze, s.main.bzeEscrow, denom), "escrowed while in flight")
-		require.NoError(t, testutil.WaitForBlocks(s.ctx, 3, s.simd))
-	})
-	res, err := helpers.WaitForTimeout(s.ctx, s.bze, timedOut)
-	require.NoError(t, err)
-	require.Empty(t, helpers.TxEvents(res, ibcTransferFeeT), "the refund pays no fee")
-	require.Equal(t, before.SubRaw(ibcFeeTimeoutFe), s.balance(t, s.bze, s.bzeUser, denom), "refunded in full: only the fee is gone")
-	require.Equal(t, sdkmath.NewInt(ibcFeeOut-ibcFeeHome), s.balanceOf(t, s.bze, s.main.bzeEscrow, denom), "escrow = amount still on simd")
-	require.Equal(t, sdkmath.NewInt(ibcFeeOut-ibcFeeHome), s.balance(t, s.simd, s.simdUser, voucher), "nothing minted on simd by the timeout")
 }

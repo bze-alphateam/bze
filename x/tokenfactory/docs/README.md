@@ -68,7 +68,7 @@ Each factory denom has a `DenomConfig`, stored next to its authority record:
 - Every change emits `DenomConfigChangeEvent{denom, community_pool, transfer_fee, gas_surcharge}` with the new values.
 - Genesis exports the configuration on each `GenesisDenom` as `denom_config`, only for tokens that have one.
 
-Tokenfactory only stores and validates these settings and never charges or routes anything itself. The txfeecollector module acts on them: it forwards the token's fee coins to the community pool and charges the transfer fee and gas surcharge (who pays, rounding, examples) — see [Transfer fee and gas surcharge](../../txfeecollector/docs/README.md#transfer-fee-and-gas-surcharge).
+Tokenfactory only stores and validates these settings and never charges or routes anything itself. Other modules act on them: txfeecollector forwards the token's fee coins to the community pool and charges the gas surcharge, and tradebin charges the transfer fee on protocol fees paid in the token — see [Transfer fee and gas surcharge](../../txfeecollector/docs/README.md#transfer-fee-and-gas-surcharge).
 
 ## Locking Supply
 To lock a denom completely (no future minting, burning, or metadata changes), call `MsgChangeAdmin` with an empty `newAdmin`. This is irreversible by the admin: only a governance proposal can assign a new admin afterwards (see below).

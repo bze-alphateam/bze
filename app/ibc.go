@@ -114,9 +114,7 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 	// The txfeecollector inbound filter sits on top of the transfer application: it
 	// answers packets listed in the BlockedIbcInbound param with an error
 	// acknowledgement (see x/txfeecollector/ibcmiddleware). Only received packets are
-	// filtered - sends, acks and timeouts pass straight through. The packet callbacks
-	// skip the factory-token transfer fee: they are the only place escrowed tokens leave
-	// the ICS-20 escrow accounts, which must never pay it.
+	// affected - sends, acks and timeouts pass straight through.
 	transferStack := porttypes.IBCModule(ibctransfer.NewIBCModule(app.TransferKeeper))
 	transferStack = txfeecollectoribc.NewIBCMiddleware(transferStack, app.IBCKeeper.ChannelKeeper, app.TxfeecollectorKeeper)
 

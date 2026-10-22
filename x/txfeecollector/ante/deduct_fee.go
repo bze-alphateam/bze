@@ -129,10 +129,6 @@ func (dfd DeductFeeDecorator) DeductFees(bankKeeper types.BankKeeper, ctx sdk.Co
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
-	// gas never pays the transfer fee. The flag lives on this local context only: the context handed to the next
-	// decorators and to the messages must keep charging it.
-	deductCtx := types.WithSkipTransferFee(ctx)
-
 	nativeFees := sdk.NewCoins()
 	nonNativeFees := sdk.NewCoins()
 	for _, fee := range fees {
@@ -144,21 +140,21 @@ func (dfd DeductFeeDecorator) DeductFees(bankKeeper types.BankKeeper, ctx sdk.Co
 	}
 
 	if len(nativeFees) > 0 {
-		err := bankKeeper.SendCoinsFromAccountToModule(deductCtx, acc.GetAddress(), authtypes.FeeCollectorName, nativeFees)
+		err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), authtypes.FeeCollectorName, nativeFees)
 		if err != nil {
 			return errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 	}
 
 	if len(nonNativeFees) > 0 {
-		err := dfd.bankKeeper.SendCoinsFromAccountToModule(deductCtx, acc.GetAddress(), types.ModuleName, nonNativeFees)
+		err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.ModuleName, nonNativeFees)
 		if err != nil {
 			return errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
 
 		// the gas surcharge of a factory token is part of the fee just paid: move it to the token's fee destination
 		if dfd.txCollectorKeeper != nil {
-			if err := dfd.txCollectorKeeper.ChargeGasSurcharge(deductCtx, acc.GetAddress(), nonNativeFees); err != nil {
+			if err := dfd.txCollectorKeeper.ChargeGasSurcharge(ctx, acc.GetAddress(), nonNativeFees); err != nil {
 				return err
 			}
 		}

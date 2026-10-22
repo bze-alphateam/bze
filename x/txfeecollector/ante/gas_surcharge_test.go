@@ -1,7 +1,6 @@
 package ante_test
 
 import (
-	"context"
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
@@ -27,16 +26,13 @@ func (suite *AnteTestSuite) useDenomConfig() *testutil.MockDenomCommunityPoolPro
 	return provider
 }
 
-func skipFlagSet(ctx context.Context) bool { return types.SkipTransferFee(ctx) }
-
-// expectTokenFeeDeduction sets the mocks for a tx paying fee in denomToken from payer, with the deduction on a context
-// carrying the skip flag.
+// expectTokenFeeDeduction sets the mocks for a tx paying fee in denomToken from payer.
 func (suite *AnteTestSuite) expectTokenFeeDeduction(payer sdk.AccAddress, fee sdk.Coins) {
 	suite.accountMock.EXPECT().GetModuleAddress(authtypes.FeeCollectorName).Return(sdk.AccAddress("feecollector________")).Times(1)
 	suite.accountMock.EXPECT().GetAccount(gomock.Any(), payer).Return(authtypes.NewBaseAccountWithAddress(payer)).Times(1)
 	suite.tradeMock.EXPECT().IsNativeDenom(gomock.Any(), denomToken).Return(false).Times(1)
 	suite.bankMock.EXPECT().
-		SendCoinsFromAccountToModule(gomock.Cond(skipFlagSet), payer, types.ModuleName, fee).
+		SendCoinsFromAccountToModule(gomock.Any(), payer, types.ModuleName, fee).
 		Return(nil).
 		Times(1)
 }
@@ -98,9 +94,8 @@ func (suite *AnteTestSuite) TestGasSurcharge_SpotPriceFailureKeepsFallback() {
 }
 
 // The split runs on the fee actually paid (DeliverTx checks no min gas price): floor(fee × s / (1 + s)) goes to the
-// token's community pool collector, the rest stays with the module as before. The skip flag is set for the deduction
-// only and never reaches the next decorators.
-func (suite *AnteTestSuite) TestGasSurcharge_SplitAndSkipFlagDoesNotLeak() {
+// token's community pool collector, the rest stays with the module as before.
+func (suite *AnteTestSuite) TestGasSurcharge_SplitToCpCollector() {
 	provider := suite.useDenomConfig()
 	decorator := ante.NewDeductFeeDecorator(suite.tradeMock, suite.accountMock, suite.bankMock, suite.feegrantMock, &suite.k)
 	feePayer := sdk.AccAddress("feepayer____________")
@@ -113,16 +108,14 @@ func (suite *AnteTestSuite) TestGasSurcharge_SplitAndSkipFlagDoesNotLeak() {
 	provider.EXPECT().GetDenomCommunityPool(gomock.Any(), denomToken).Return(tokenCp, true).Times(1)
 	// floor(1001 × 0.25 / 1.25) = floor(200.2)
 	suite.bankMock.EXPECT().
-		SendCoinsFromModuleToModule(gomock.Cond(skipFlagSet), types.ModuleName, types.CpFeeCollector, sdk.NewCoins(sdk.NewInt64Coin(denomToken, 200))).
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, types.CpFeeCollector, sdk.NewCoins(sdk.NewInt64Coin(denomToken, 200))).
 		Return(nil).
 		Times(1)
 
 	deliverCtx := suite.ctx.WithValue(ante.FeeDenomKey, denomToken)
-	newCtx, err := decorator.AnteHandle(deliverCtx, &mockFeeTx{fee: fee, gas: 100_000, feePayer: feePayer}, false, suite.mockNext())
+	_, err := decorator.AnteHandle(deliverCtx, &mockFeeTx{fee: fee, gas: 100_000, feePayer: feePayer}, false, suite.mockNext())
 	suite.Require().NoError(err)
 	suite.Require().True(suite.nextCalled)
-	suite.Require().False(types.SkipTransferFee(suite.nextCalledWith), "the skip flag leaked to the next decorator")
-	suite.Require().False(types.SkipTransferFee(newCtx), "the skip flag leaked to the returned context")
 }
 
 // A token without a community pool has its surcharge burned.
@@ -171,7 +164,7 @@ func (suite *AnteTestSuite) TestGasSurcharge_FeeGrant() {
 	suite.Require().True(suite.nextCalled)
 }
 
-// BZE fees are unchanged: no rate read, no split, the deduction still skips the transfer fee locally.
+// BZE fees are unchanged: no rate read, no split.
 func (suite *AnteTestSuite) TestGasSurcharge_NativeFeeUnchanged() {
 	suite.useDenomConfig()
 	decorator := ante.NewDeductFeeDecorator(suite.tradeMock, suite.accountMock, suite.bankMock, suite.feegrantMock, &suite.k)
@@ -182,11 +175,10 @@ func (suite *AnteTestSuite) TestGasSurcharge_NativeFeeUnchanged() {
 	suite.accountMock.EXPECT().GetAccount(gomock.Any(), feePayer).Return(authtypes.NewBaseAccountWithAddress(feePayer)).Times(1)
 	suite.tradeMock.EXPECT().IsNativeDenom(gomock.Any(), denomBze).Return(true).Times(1)
 	suite.bankMock.EXPECT().
-		SendCoinsFromAccountToModule(gomock.Cond(skipFlagSet), feePayer, authtypes.FeeCollectorName, fee).
+		SendCoinsFromAccountToModule(gomock.Any(), feePayer, authtypes.FeeCollectorName, fee).
 		Return(nil).
 		Times(1)
 
-	newCtx, err := decorator.AnteHandle(suite.ctx, &mockFeeTx{fee: fee, gas: 100_000, feePayer: feePayer}, false, suite.mockNext())
+	_, err := decorator.AnteHandle(suite.ctx, &mockFeeTx{fee: fee, gas: 100_000, feePayer: feePayer}, false, suite.mockNext())
 	suite.Require().NoError(err)
-	suite.Require().False(types.SkipTransferFee(newCtx))
 }

@@ -10,14 +10,6 @@
 // Only OnRecvPacket inspects anything. Every other callback delegates to the wrapped
 // application, so outgoing transfers, their acknowledgements and their timeout refunds
 // behave exactly as they did before this middleware existed.
-//
-// The middleware also exempts the ICS-20 escrow accounts from the factory-token transfer
-// fee (BZE-220). In ibc-go v10 they are plain accounts, and every send out of one happens
-// inside a packet callback: OnRecvPacket releases returning tokens, OnAcknowledgementPacket
-// (error ack) and OnTimeoutPacket refund the sender. Those three callbacks hand the
-// application a context carrying types.WithSkipTransferFee, so the x/bank send restriction
-// charges nothing there, in O(1) and whatever the number of channels. Nothing else is sent
-// in them: inbound vouchers are minted and sent by the transfer module account.
 package ibcmiddleware
 
 import (
@@ -67,9 +59,6 @@ func NewIBCMiddleware(app porttypes.IBCModule, ics4 porttypes.ICS4Wrapper, keepe
 // packets this middleware cannot parse as an ICS-20 transfer - reaches the wrapped
 // application untouched.
 func (im IBCMiddleware) OnRecvPacket(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
-	// releasing escrowed tokens never pays the transfer fee
-	ctx = types.WithSkipTransferFee(ctx)
-
 	var data ibctransfertypes.FungibleTokenPacketData
 	if err := ibctransfertypes.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		// not an ICS-20 transfer packet: let the application decide what to do with it
@@ -115,14 +104,12 @@ func (im IBCMiddleware) OnRecvPacket(ctx sdk.Context, channelVersion string, pac
 // OnAcknowledgementPacket passes through: it carries the counterparty's answer to a
 // packet this chain sent, including the refunds of blocked transfers we bounced back.
 func (im IBCMiddleware) OnAcknowledgementPacket(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
-	// an error ack refunds the sender out of the escrow: no transfer fee
-	return im.app.OnAcknowledgementPacket(types.WithSkipTransferFee(ctx), channelVersion, packet, acknowledgement, relayer)
+	return im.app.OnAcknowledgementPacket(ctx, channelVersion, packet, acknowledgement, relayer)
 }
 
 // OnTimeoutPacket passes through so outgoing transfers are refunded as usual.
 func (im IBCMiddleware) OnTimeoutPacket(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress) error {
-	// a timeout refunds the sender out of the escrow: no transfer fee
-	return im.app.OnTimeoutPacket(types.WithSkipTransferFee(ctx), channelVersion, packet, relayer)
+	return im.app.OnTimeoutPacket(ctx, channelVersion, packet, relayer)
 }
 
 func (im IBCMiddleware) OnChanOpenInit(

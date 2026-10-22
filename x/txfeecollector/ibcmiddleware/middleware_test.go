@@ -43,8 +43,6 @@ type recordingApp struct {
 
 	// lastChannelVersion is the channel version the last packet callback received.
 	lastChannelVersion string
-	// lastSkipTransferFee tells whether the last packet callback's context skips the transfer fee.
-	lastSkipTransferFee bool
 }
 
 // The transfer application implements the optional PacketDataUnmarshaler interface,
@@ -63,26 +61,23 @@ type plainApp struct {
 	porttypes.IBCModule
 }
 
-func (a *recordingApp) OnRecvPacket(ctx sdk.Context, channelVersion string, _ channeltypes.Packet, _ sdk.AccAddress) ibcexported.Acknowledgement {
+func (a *recordingApp) OnRecvPacket(_ sdk.Context, channelVersion string, _ channeltypes.Packet, _ sdk.AccAddress) ibcexported.Acknowledgement {
 	a.recvCalls++
 	a.lastChannelVersion = channelVersion
-	a.lastSkipTransferFee = types.SkipTransferFee(ctx)
 
 	return channeltypes.NewResultAcknowledgement([]byte{byte(1)})
 }
 
-func (a *recordingApp) OnAcknowledgementPacket(ctx sdk.Context, channelVersion string, _ channeltypes.Packet, _ []byte, _ sdk.AccAddress) error {
+func (a *recordingApp) OnAcknowledgementPacket(_ sdk.Context, channelVersion string, _ channeltypes.Packet, _ []byte, _ sdk.AccAddress) error {
 	a.ackCalls++
 	a.lastChannelVersion = channelVersion
-	a.lastSkipTransferFee = types.SkipTransferFee(ctx)
 
 	return nil
 }
 
-func (a *recordingApp) OnTimeoutPacket(ctx sdk.Context, channelVersion string, _ channeltypes.Packet, _ sdk.AccAddress) error {
+func (a *recordingApp) OnTimeoutPacket(_ sdk.Context, channelVersion string, _ channeltypes.Packet, _ sdk.AccAddress) error {
 	a.timeoutCalls++
 	a.lastChannelVersion = channelVersion
-	a.lastSkipTransferFee = types.SkipTransferFee(ctx)
 
 	return nil
 }
@@ -228,8 +223,6 @@ func TestOnRecvPacket_ReturningNativeTokensPass(t *testing.T) {
 
 	require.True(t, ack.Success())
 	require.Equal(t, 1, app.recvCalls)
-	require.True(t, app.lastSkipTransferFee, "releasing escrowed tokens pays no transfer fee")
-	require.False(t, types.SkipTransferFee(ctx), "the flag stays on the context handed to the application")
 	require.Empty(t, blockedEvents(ctx))
 }
 
@@ -313,13 +306,10 @@ func TestOutgoingPacketCallbacksPassThrough(t *testing.T) {
 	require.NoError(t, im.OnAcknowledgementPacket(ctx, ibctransfertypes.V1, outgoing, channeltypes.NewResultAcknowledgement([]byte{byte(1)}).Acknowledgement(), sdk.AccAddress{}))
 	require.Equal(t, 1, app.ackCalls)
 	require.Equal(t, ibctransfertypes.V1, app.lastChannelVersion)
-	require.True(t, app.lastSkipTransferFee, "an error-ack refund out of the escrow pays no transfer fee")
 
 	require.NoError(t, im.OnTimeoutPacket(ctx, ibctransfertypes.V1, outgoing, sdk.AccAddress{}))
 	require.Equal(t, 1, app.timeoutCalls)
 	require.Equal(t, ibctransfertypes.V1, app.lastChannelVersion)
-	require.True(t, app.lastSkipTransferFee, "a timeout refund out of the escrow pays no transfer fee")
-	require.False(t, types.SkipTransferFee(ctx), "the flag stays on the context handed to the application")
 
 	require.Empty(t, blockedEvents(ctx))
 }
