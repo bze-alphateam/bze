@@ -4,6 +4,7 @@ package bze.tradebin;
 import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "bze/tradebin/store.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
 
@@ -140,6 +141,16 @@ message DenomHaltedEvent {
 // denoms that were not halted).
 message DenomUnhaltedEvent {
   string denom = 1;
+}
+
+// PoolFeesUpdatedEvent is emitted for every pool a MsgUpdatePools proposal actually changes (not for
+// entries equal to the pool's current values).
+message PoolFeesUpdatedEvent {
+  string pool_id = 1;
+  string old_fee = 2;
+  string new_fee = 3;
+  FeeDestination old_fee_dest = 4 [(gogoproto.nullable) = false];
+  FeeDestination new_fee_dest = 5 [(gogoproto.nullable) = false];
 }
 
 // OrderMessageRefundedEvent is emitted by the EndBlock order book engine when
