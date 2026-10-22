@@ -48,12 +48,6 @@ type DenomCommunityPoolProvider interface {
 	GetDenomFeeRates(ctx sdk.Context, denom string) (transferFee, gasSurcharge math.LegacyDec)
 }
 
-// EscrowAddressChecker tells whether an address is an IBC transfer escrow account. In ibc-go v10 those are plain
-// accounts, not module accounts, so the transfer fee needs this check to never charge them.
-type EscrowAddressChecker interface {
-	IsEscrowAddress(ctx sdk.Context, addr sdk.AccAddress) bool
-}
-
 // ParamSubspace defines the expected Subspace interface for parameters.
 type ParamSubspace interface {
 	Get(context.Context, []byte, interface{})

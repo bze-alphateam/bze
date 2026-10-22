@@ -35,18 +35,20 @@ func (k Keeper) GetDenomFeeRates(ctx sdk.Context, denom string) (transferFee, ga
 //
 // The fee is ceil(amount × transfer fee) for each sent coin whose denom sets one, charged on top of the amount: the
 // sender pays amount + fee and the recipient gets the full amount. Rounding up means a send split into dust still
-// pays (1 unit at 0.1% pays 1). Module accounts and IBC transfer escrow accounts never pay, so only the initial user
-// send of a flow is charged. The fee goes to txfeecollector_cp when the token has a community pool (forwarded there at
-// EndBlock) and to txfeecollector_burner when it has none.
+// pays (1 unit at 0.1% pays 1). Module accounts never pay, so only the initial user send of a flow is charged. The IBC
+// transfer escrow accounts are plain accounts in ibc-go v10: every send out of one happens in a packet callback, where
+// the txfeecollector IBC middleware sets types.WithSkipTransferFee, so they never pay either, with no per-channel
+// lookup. The fee goes to txfeecollector_cp when the token has a community pool (forwarded there at EndBlock) and to
+// txfeecollector_burner when it has none.
 //
-// It charges nothing while the escrow checker or the denom config provider is unset, or when the context carries
+// It charges nothing while the denom config provider is unset, or when the context carries
 // types.WithSkipTransferFee.
 //
 // In a multisend the restriction runs once per output, before x/bank debits the input, so the balance check covers
 // one output plus its fee at a time. When only the total doesn't fit, x/bank's own debit fails the tx afterwards
 // with its generic insufficient funds error; nothing is charged because the tx reverts.
 func (k *Keeper) TransferFeeSendRestriction(goCtx context.Context, from, to sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error) {
-	if types.SkipTransferFee(goCtx) || k.escrowChecker == nil || k.denomCpProvider == nil {
+	if types.SkipTransferFee(goCtx) || k.denomCpProvider == nil {
 		return to, nil
 	}
 
@@ -56,7 +58,7 @@ func (k *Keeper) TransferFeeSendRestriction(goCtx context.Context, from, to sdk.
 		return to, nil
 	}
 
-	if k.isTransferFeeExempt(ctx, from) {
+	if k.isModuleAccount(ctx, from) {
 		return to, nil
 	}
 
@@ -152,14 +154,11 @@ func (k Keeper) transferFees(ctx sdk.Context, amt sdk.Coins) sdk.Coins {
 	return fees
 }
 
-// isTransferFeeExempt reports whether the sender never pays the transfer fee: a module account or an IBC transfer
-// escrow account.
-func (k Keeper) isTransferFeeExempt(ctx sdk.Context, sender sdk.AccAddress) bool {
-	if _, ok := k.accountKeeper.GetAccount(ctx, sender).(sdk.ModuleAccountI); ok {
-		return true
-	}
+// isModuleAccount reports whether the sender is a module account, which never pays the transfer fee.
+func (k Keeper) isModuleAccount(ctx sdk.Context, sender sdk.AccAddress) bool {
+	_, ok := k.accountKeeper.GetAccount(ctx, sender).(sdk.ModuleAccountI)
 
-	return k.escrowChecker.IsEscrowAddress(ctx, sender)
+	return ok
 }
 
 // denomFeeDestination is the module account a denom's transfer fee and gas surcharge go to: the community pool fee

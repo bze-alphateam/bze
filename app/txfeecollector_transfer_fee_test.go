@@ -9,6 +9,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 	"github.com/stretchr/testify/require"
 
@@ -79,27 +80,30 @@ func TestTransferFee_ModuleSendsPayNothing(t *testing.T) {
 	require.Equal(t, math.NewInt(10), moduleBalance(bApp, ctx, txfeecollectortypes.CpFeeCollector, denom))
 }
 
-// An ICS-20 escrow (a plain account in ibc-go v10) never pays: the app's escrow checker recognises it from the
-// channels on the transfer port.
-func TestTransferFee_EscrowSendsPayNothing(t *testing.T) {
+// An ICS-20 escrow (a plain account in ibc-go v10) never pays: escrowed tokens leave it only in the packet
+// callbacks, which the txfeecollector IBC middleware runs with the transfer fee skipped. The refund goes through the
+// app's real transfer route (middleware, transfer module, bank).
+func TestTransferFee_EscrowRefundPaysNothing(t *testing.T) {
 	bApp, ctx, denom, user := newTransferFeeApp(t, true)
-	bApp.IBCKeeper.ChannelKeeper.SetChannel(ctx, ibctransfertypes.PortID, "channel-7", channeltypes.Channel{
-		State:          channeltypes.OPEN,
-		Ordering:       channeltypes.UNORDERED,
-		Counterparty:   channeltypes.NewCounterparty(ibctransfertypes.PortID, "channel-0"),
-		ConnectionHops: []string{"connection-0"},
-		Version:        ibctransfertypes.V1,
-	})
-	escrow := ibctransfertypes.GetEscrowAddress(ibctransfertypes.PortID, "channel-7")
+	channel := "channel-7"
+	escrow := ibctransfertypes.GetEscrowAddress(ibctransfertypes.PortID, channel)
 
 	// the user's send into the escrow pays, as an IBC transfer out does
 	require.NoError(t, bApp.BankKeeper.SendCoins(ctx, user, escrow, sdk.NewCoins(sdk.NewInt64Coin(denom, 1_000))))
+	bApp.TransferKeeper.SetTotalEscrowForDenom(ctx, sdk.NewInt64Coin(denom, 1_000))
 	require.Equal(t, math.NewInt(8_990), bApp.BankKeeper.GetBalance(ctx, user, denom).Amount)
 
-	// the refund or return transfer out of the escrow doesn't
-	require.NoError(t, bApp.BankKeeper.SendCoins(ctx, escrow, user, sdk.NewCoins(sdk.NewInt64Coin(denom, 1_000))))
-	require.Equal(t, math.NewInt(9_990), bApp.BankKeeper.GetBalance(ctx, user, denom).Amount)
-	require.True(t, bApp.BankKeeper.GetBalance(ctx, escrow, denom).Amount.IsZero())
+	// the timeout refund out of the escrow doesn't
+	route, ok := bApp.IBCKeeper.PortKeeper.Route(ibctransfertypes.ModuleName)
+	require.True(t, ok)
+	packet := channeltypes.NewPacket(
+		ibctransfertypes.NewFungibleTokenPacketData(denom, "1000", user.String(), "cosmos1receiver", "").GetBytes(),
+		1, ibctransfertypes.PortID, channel, ibctransfertypes.PortID, "channel-0", clienttypes.NewHeight(1, 1000), 0,
+	)
+	require.NoError(t, route.OnTimeoutPacket(ctx, ibctransfertypes.V1, packet, sdk.AccAddress{}))
+
+	require.Equal(t, math.NewInt(9_990), bApp.BankKeeper.GetBalance(ctx, user, denom).Amount, "refunded in full")
+	require.True(t, bApp.BankKeeper.GetBalance(ctx, escrow, denom).Amount.IsZero(), "the escrow paid no fee")
 	require.Equal(t, math.NewInt(10), moduleBalance(bApp, ctx, txfeecollectortypes.CpFeeCollector, denom))
 }
 

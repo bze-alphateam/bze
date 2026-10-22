@@ -86,10 +86,6 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	// The transfer fee of factory tokens never charges an ICS-20 escrow account: until this checker is set it charges
-	// nothing at all (see x/txfeecollector TransferFeeSendRestriction).
-	app.TxfeecollectorKeeper.SetEscrowAddressChecker(newTransferEscrowChecker(app.IBCKeeper.ChannelKeeper))
-
 	// Create interchain account keepers
 	app.ICAHostKeeper = icahostkeeper.NewKeeper(
 		app.appCodec,
@@ -118,7 +114,9 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 	// The txfeecollector inbound filter sits on top of the transfer application: it
 	// answers packets listed in the BlockedIbcInbound param with an error
 	// acknowledgement (see x/txfeecollector/ibcmiddleware). Only received packets are
-	// affected - sends, acks and timeouts pass straight through.
+	// filtered - sends, acks and timeouts pass straight through. The packet callbacks
+	// skip the factory-token transfer fee: they are the only place escrowed tokens leave
+	// the ICS-20 escrow accounts, which must never pay it.
 	transferStack := porttypes.IBCModule(ibctransfer.NewIBCModule(app.TransferKeeper))
 	transferStack = txfeecollectoribc.NewIBCMiddleware(transferStack, app.IBCKeeper.ChannelKeeper, app.TxfeecollectorKeeper)
 

@@ -13,7 +13,6 @@ import (
 
 	keepertest "github.com/bze-alphateam/bze/testutil/keeper"
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
-	"github.com/bze-alphateam/bze/x/txfeecollector/testutil"
 	"github.com/bze-alphateam/bze/x/txfeecollector/types"
 )
 
@@ -22,16 +21,6 @@ var (
 	feeRecipient = sdk.AccAddress("fee_recipient_______")
 )
 
-// useTransferFee rebuilds the keeper with the denom config provider mock and an escrow checker mock, as the app wires
-// them.
-func (suite *IntegrationTestSuite) useTransferFee() *testutil.MockEscrowAddressChecker {
-	suite.useDenomCpProvider()
-	escrow := testutil.NewMockEscrowAddressChecker(gomock.NewController(suite.T()))
-	suite.k.SetEscrowAddressChecker(escrow)
-
-	return escrow
-}
-
 func (suite *IntegrationTestSuite) expectRates(denom string, transferFee, gasSurcharge string) {
 	suite.cpMock.EXPECT().
 		GetDenomFeeRates(gomock.Any(), denom).
@@ -39,9 +28,8 @@ func (suite *IntegrationTestSuite) expectRates(denom string, transferFee, gasSur
 		Times(1)
 }
 
-func (suite *IntegrationTestSuite) expectUserSender(escrow *testutil.MockEscrowAddressChecker, addr sdk.AccAddress) {
+func (suite *IntegrationTestSuite) expectUserSender(addr sdk.AccAddress) {
 	suite.accountMock.EXPECT().GetAccount(gomock.Any(), addr).Return(authtypes.NewBaseAccountWithAddress(addr)).Times(1)
-	escrow.EXPECT().IsEscrowAddress(gomock.Any(), addr).Return(false).Times(1)
 }
 
 func (suite *IntegrationTestSuite) expectCommunityPool(denom string, has bool) {
@@ -93,12 +81,12 @@ func gasSurchargeEvents(ctx sdk.Context) []types.GasSurchargePaidEvent {
 }
 
 func (suite *IntegrationTestSuite) TestTransferFee_UserSendPaysCeilFeeToCpCollector() {
-	escrow := suite.useTransferFee()
+	suite.useDenomCpProvider()
 	amt := sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 1_050))
 	fee := sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 11)) // ceil(1050 × 1%) = ceil(10.5)
 
 	suite.expectRates(denomTokenA, "0.01", "0")
-	suite.expectUserSender(escrow, feeSender)
+	suite.expectUserSender(feeSender)
 	suite.bankMock.EXPECT().SpendableCoins(gomock.Any(), feeSender).Return(amt.Add(fee...)).Times(1)
 	suite.expectCommunityPool(denomTokenA, true)
 	suite.expectFeeSend(feeSender, types.CpFeeCollector, fee)
@@ -115,12 +103,12 @@ func (suite *IntegrationTestSuite) TestTransferFee_UserSendPaysCeilFeeToCpCollec
 }
 
 func (suite *IntegrationTestSuite) TestTransferFee_DustSendPaysOneUnit() {
-	escrow := suite.useTransferFee()
+	suite.useDenomCpProvider()
 	amt := sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 1))
 	fee := sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 1)) // ceil(1 × 0.1%)
 
 	suite.expectRates(denomTokenA, "0.001", "0")
-	suite.expectUserSender(escrow, feeSender)
+	suite.expectUserSender(feeSender)
 	suite.bankMock.EXPECT().SpendableCoins(gomock.Any(), feeSender).Return(sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 2))).Times(1)
 	suite.expectCommunityPool(denomTokenA, true)
 	suite.expectFeeSend(feeSender, types.CpFeeCollector, fee)
@@ -130,12 +118,12 @@ func (suite *IntegrationTestSuite) TestTransferFee_DustSendPaysOneUnit() {
 }
 
 func (suite *IntegrationTestSuite) TestTransferFee_TokenWithoutCommunityPoolGoesToBurner() {
-	escrow := suite.useTransferFee()
+	suite.useDenomCpProvider()
 	amt := sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 1_000))
 	fee := sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 50))
 
 	suite.expectRates(denomTokenA, "0.05", "0")
-	suite.expectUserSender(escrow, feeSender)
+	suite.expectUserSender(feeSender)
 	suite.bankMock.EXPECT().SpendableCoins(gomock.Any(), feeSender).Return(amt.Add(fee...)).Times(1)
 	suite.expectCommunityPool(denomTokenA, false)
 	suite.expectFeeSend(feeSender, types.BurnerFeeCollector, fee)
@@ -148,7 +136,7 @@ func (suite *IntegrationTestSuite) TestTransferFee_TokenWithoutCommunityPoolGoes
 }
 
 func (suite *IntegrationTestSuite) TestTransferFee_ModuleSenderPaysNothing() {
-	suite.useTransferFee()
+	suite.useDenomCpProvider()
 	amt := sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 1_000))
 
 	suite.expectRates(denomTokenA, "0.01", "0")
@@ -163,22 +151,8 @@ func (suite *IntegrationTestSuite) TestTransferFee_ModuleSenderPaysNothing() {
 	suite.Require().Empty(transferFeeEvents(suite.ctx))
 }
 
-func (suite *IntegrationTestSuite) TestTransferFee_EscrowSenderPaysNothing() {
-	escrow := suite.useTransferFee()
-	amt := sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 1_000))
-
-	suite.expectRates(denomTokenA, "0.01", "0")
-	suite.accountMock.EXPECT().GetAccount(gomock.Any(), feeSender).Return(authtypes.NewBaseAccountWithAddress(feeSender)).Times(1)
-	escrow.EXPECT().IsEscrowAddress(gomock.Any(), feeSender).Return(true).Times(1)
-
-	to, err := suite.k.TransferFeeSendRestriction(suite.ctx, feeSender, feeRecipient, amt)
-	suite.Require().NoError(err)
-	suite.Require().Equal(feeRecipient, to)
-	suite.Require().Empty(transferFeeEvents(suite.ctx))
-}
-
 func (suite *IntegrationTestSuite) TestTransferFee_SkipFlagPaysNothing() {
-	suite.useTransferFee()
+	suite.useDenomCpProvider()
 	// no expectations: any call on a mock would fail the test
 	to, err := suite.k.TransferFeeSendRestriction(types.WithSkipTransferFee(suite.ctx), feeSender, feeRecipient,
 		sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 1_000)))
@@ -187,7 +161,7 @@ func (suite *IntegrationTestSuite) TestTransferFee_SkipFlagPaysNothing() {
 }
 
 func (suite *IntegrationTestSuite) TestTransferFee_NonFactoryDenomsReadNothing() {
-	suite.useTransferFee()
+	suite.useDenomCpProvider()
 	// no expectations: native and IBC coins never reach a store read
 	_, err := suite.k.TransferFeeSendRestriction(suite.ctx, feeSender, feeRecipient,
 		sdk.NewCoins(sdk.NewInt64Coin(denomBze, 1_000), sdk.NewInt64Coin(denomIbc, 1_000)))
@@ -195,7 +169,7 @@ func (suite *IntegrationTestSuite) TestTransferFee_NonFactoryDenomsReadNothing()
 }
 
 func (suite *IntegrationTestSuite) TestTransferFee_ZeroRateChargesNothing() {
-	suite.useTransferFee()
+	suite.useDenomCpProvider()
 	suite.expectRates(denomTokenA, "0", "0.5")
 
 	_, err := suite.k.TransferFeeSendRestriction(suite.ctx, feeSender, feeRecipient, sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 1_000)))
@@ -204,11 +178,11 @@ func (suite *IntegrationTestSuite) TestTransferFee_ZeroRateChargesNothing() {
 }
 
 func (suite *IntegrationTestSuite) TestTransferFee_InsufficientBalanceChargesNothing() {
-	escrow := suite.useTransferFee()
+	suite.useDenomCpProvider()
 	amt := sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 1_000))
 
 	suite.expectRates(denomTokenA, "0.01", "0")
-	suite.expectUserSender(escrow, feeSender)
+	suite.expectUserSender(feeSender)
 	// amount + fee - 1
 	suite.bankMock.EXPECT().SpendableCoins(gomock.Any(), feeSender).Return(sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 1_009))).Times(1)
 
@@ -219,7 +193,7 @@ func (suite *IntegrationTestSuite) TestTransferFee_InsufficientBalanceChargesNot
 }
 
 func (suite *IntegrationTestSuite) TestTransferFee_MultiDenomChargesOnlyFeeBearingCoin() {
-	escrow := suite.useTransferFee()
+	suite.useDenomCpProvider()
 	amt := sdk.NewCoins(
 		sdk.NewInt64Coin(denomBze, 500),
 		sdk.NewInt64Coin(denomTokenA, 2_000),
@@ -229,7 +203,7 @@ func (suite *IntegrationTestSuite) TestTransferFee_MultiDenomChargesOnlyFeeBeari
 
 	suite.expectRates(denomTokenA, "0.0025", "0")
 	suite.expectRates(denomTokenB, "0", "0")
-	suite.expectUserSender(escrow, feeSender)
+	suite.expectUserSender(feeSender)
 	suite.bankMock.EXPECT().SpendableCoins(gomock.Any(), feeSender).Return(amt.Add(fee...)).Times(1)
 	suite.expectCommunityPool(denomTokenA, true)
 	suite.expectFeeSend(feeSender, types.CpFeeCollector, fee)
@@ -239,34 +213,9 @@ func (suite *IntegrationTestSuite) TestTransferFee_MultiDenomChargesOnlyFeeBeari
 	suite.Require().Len(transferFeeEvents(suite.ctx), 1)
 }
 
-func (suite *IntegrationTestSuite) TestTransferFee_NilEscrowCheckerDisablesHook() {
-	suite.useDenomCpProvider()
-	// provider wired, no escrow checker: no call on any mock
-	_, err := suite.k.TransferFeeSendRestriction(suite.ctx, feeSender, feeRecipient, sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 1_000)))
-	suite.Require().NoError(err)
-}
-
 func (suite *IntegrationTestSuite) TestTransferFee_NilProviderChargesNothing() {
-	suite.k.SetEscrowAddressChecker(testutil.NewMockEscrowAddressChecker(gomock.NewController(suite.T())))
+	// no provider wired: no call on any mock
 	_, err := suite.k.TransferFeeSendRestriction(suite.ctx, feeSender, feeRecipient, sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 1_000)))
-	suite.Require().NoError(err)
-}
-
-// The send restriction is read through the keeper pointer: an escrow checker set after the restriction was taken
-// (as the app does once the IBC keepers exist) is the one it uses.
-func (suite *IntegrationTestSuite) TestTransferFee_CheckerSetAfterRestrictionIsUsed() {
-	suite.useDenomCpProvider()
-	kp := &suite.k
-	restriction := kp.TransferFeeSendRestriction
-
-	escrow := testutil.NewMockEscrowAddressChecker(gomock.NewController(suite.T()))
-	kp.SetEscrowAddressChecker(escrow)
-
-	suite.expectRates(denomTokenA, "0.01", "0")
-	suite.accountMock.EXPECT().GetAccount(gomock.Any(), feeSender).Return(authtypes.NewBaseAccountWithAddress(feeSender)).Times(1)
-	escrow.EXPECT().IsEscrowAddress(gomock.Any(), feeSender).Return(true).Times(1)
-
-	_, err := restriction(suite.ctx, feeSender, feeRecipient, sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 1_000)))
 	suite.Require().NoError(err)
 }
 

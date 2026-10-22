@@ -278,7 +278,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.DistrKeeper,
 	)
 
-	// the send restriction reads the keeper through the same pointer the app sets the escrow checker on
 	kp := &k
 
 	return ModuleOutputs{TxfeecollectorKeeper: kp, Module: m, BankSendRestriction: kp.TransferFeeSendRestriction}
