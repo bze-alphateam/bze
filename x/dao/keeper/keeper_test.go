@@ -28,6 +28,7 @@ type IntegrationTestSuite struct {
 	acc       *testutil.MockAccountKeeper
 	bank      *testutil.MockBankKeeper
 	rewards   *testutil.MockRewardsKeeper
+	trade     *testutil.MockTradeKeeper
 	router    *baseapp.MsgServiceRouter
 	ledger    *fakeBank
 	// stakes is the x/rewards participation served once stubStakes ran
@@ -41,13 +42,14 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	suite.acc = testutil.NewMockAccountKeeper(mockCtrl)
 	suite.bank = testutil.NewMockBankKeeper(mockCtrl)
 	suite.rewards = testutil.NewMockRewardsKeeper(mockCtrl)
+	suite.trade = testutil.NewMockTradeKeeper(mockCtrl)
 	suite.stakes = nil
 
 	cdc := keepertest.DaoCodec()
 	suite.router = baseapp.NewMsgServiceRouter()
 	suite.router.SetInterfaceRegistry(cdc.InterfaceRegistry())
 
-	k, ctx := keepertest.DaoKeeper(t, cdc, suite.router, suite.acc, suite.bank, suite.rewards)
+	k, ctx := keepertest.DaoKeeper(t, cdc, suite.router, suite.acc, suite.bank, suite.rewards, suite.trade)
 	suite.ctx = ctx
 	suite.k = &k
 	suite.msgServer = keeper.NewMsgServerImpl(suite.k)
@@ -63,6 +65,6 @@ func TestKeeperSuite(t *testing.T) {
 
 func TestNewKeeper_InvalidAuthorityPanics(t *testing.T) {
 	require.Panics(t, func() {
-		keeper.NewKeeper(nil, nil, nil, "not-an-address", nil, nil, nil, nil)
+		keeper.NewKeeper(nil, nil, nil, "not-an-address", nil, nil, nil, nil, nil)
 	})
 }

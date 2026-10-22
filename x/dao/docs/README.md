@@ -11,7 +11,7 @@ The DAO module lets anyone create an on-chain organisation with its own treasury
 - **Admin**: optional. Without one the DAO owns itself (its admin is its own address). The admin can be a person or another DAO. An external admin is a superuser: it can run any message as the DAO, including spending the treasury.
 
 ## Messages
-- `MsgCreateDao`: creates a DAO. Anyone can send it; the creator pays the `dao_creation_fee` (burned or sent to the community pool, per `dao_creation_fee_destination`). Returns the new DAO's id and address. Rules:
+- `MsgCreateDao`: creates a DAO. Anyone can send it; the creator pays the `dao_creation_fee` (burned or sent to the community pool, per `dao_creation_fee_destination`). Like the other chain fees, it can be paid in the tx fee denom: when the creator pays the tx fee in a token with a deep enough BZE pool, the creation fee is taken in that token and swapped to BZE, otherwise it is taken in BZE. Returns the new DAO's id and address. Rules:
   - `name` 1–64 bytes, `description` up to 2,000 bytes.
   - `config`: `min_quorum` and `expedite_quorum` in (0, 1], `threshold` and `expedite_threshold` in (0, 1) (a threshold must be exceeded, so 1 could never pass); `expedite_quorum ≥ min_quorum`, `expedite_threshold ≥ threshold`; `voting_period` and `expedited_period` within [`min_voting_period`, `max_voting_period`] and `expedited_period ≤ voting_period`. The expedite fields are checked even when `allow_expedite` is off. `proposal_cost` and `proposal_deposit` are optional coins (amount ≥ 0). A DAO that sets neither makes proposals free: any voter (anyone, with `open_submission`), even with the smallest eligible stake and from many addresses, can keep all `max_open_proposals` slots busy and resubmit as soon as they settle, so the DAO's own proposals find no slot. A `proposal_cost`, or a `proposal_deposit` under `ONLY_PASSED` or `NEVER` (a spam proposal nobody votes for is rejected and its deposit kept), makes that cost money. An admin-less DAO in that state can only change its config through a proposal, so pick the cost before you need it.
   - `static-list`: 1 to `max_static_members` unique member addresses, never the DAO's own address, no stake electorate.
@@ -214,7 +214,7 @@ Validation also requires each DAO at its derived address, valid metadata and con
 | `max_voting_period` | 90 days | Longest voting or expedited period a DAO may configure. |
 | `execution_window` | 14 days | How long after `voting_end` a failed execution can be retried; a settle after it expires the proposal. Zero is allowed (no retries). |
 | `cleanup_batch_size` | 100 | Most ballots one `MsgCleanupProposal` deletes. Must be at least 1. |
-| `dao_creation_fee` | 50,000 BZE (`50000000000ubze`) | Paid by the creator. A zero amount makes creation free. |
+| `dao_creation_fee` | 50,000 BZE (`50000000000ubze`) | Paid by the creator, in the tx fee denom when it can be swapped to BZE, otherwise in BZE. A zero amount makes creation free. |
 | `dao_creation_fee_destination` | `burner` | `burner` or `community_pool`. |
 | `min_electorate_lock_days` | 5 | Shortest unstaking lock (days) a staking reward or Denom Reward needs to join a stake electorate. Must be at least 1. |
 | `min_expedite_delay` | 24h | How long after submission an expedited proposal that meets the expedite bars can settle early. Zero allows it at once; at its voting end a proposal settles normally whatever the delay. |

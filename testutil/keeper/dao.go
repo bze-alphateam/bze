@@ -50,7 +50,7 @@ func DaoCodec() codec.Codec {
 
 // DaoKeeper returns an x/dao keeper on an in-memory store. The router may be
 // nil for tests that execute no messages as a DAO.
-func DaoKeeper(t testing.TB, cdc codec.Codec, router baseapp.MessageRouter, acc types.AccountKeeper, bank types.BankKeeper, rewards types.RewardsKeeper) (keeper.Keeper, sdk.Context) {
+func DaoKeeper(t testing.TB, cdc codec.Codec, router baseapp.MessageRouter, acc types.AccountKeeper, bank types.BankKeeper, rewards types.RewardsKeeper, trade types.TradeKeeper) (keeper.Keeper, sdk.Context) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	db := dbm.NewMemDB()
@@ -68,6 +68,7 @@ func DaoKeeper(t testing.TB, cdc codec.Codec, router baseapp.MessageRouter, acc 
 		acc,
 		bank,
 		rewards,
+		trade,
 		router,
 	)
 
