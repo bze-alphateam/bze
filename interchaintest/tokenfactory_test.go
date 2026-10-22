@@ -56,7 +56,8 @@ const (
 // handover and back, then the renounce that freezes the denom for everyone,
 // and the governance proposal that gives the renounced denom a new admin who
 // still cannot mint it. A second admin fixes the supply of its own denom with
-// disable-minting and keeps every other right.
+// disable-minting and keeps every other right, and its new admin sets, reads
+// and resets the denom's configuration.
 // Before the renounce, while the admin is live, a second account creates a
 // denom and a ubze pool for it and pays a create fee through that pool, and
 // the module's refusals are checked one by one. Subtests run in order and
@@ -83,6 +84,7 @@ func TestTokenFactory(t *testing.T) {
 	t.Run("4 renounce freezes the denom", s.renounce)
 	t.Run("12 governance assigns an admin to the renounced denom", s.govSetAdmin)
 	t.Run("13 disable minting fixes the supply, the admin keeps the rest", s.disableMinting)
+	t.Run("14 denom config set, query, reset and refusals", s.denomConfig)
 }
 
 type tokenFactorySuite struct {
@@ -322,6 +324,100 @@ func (s *tokenFactorySuite) disableMinting(t *testing.T) {
 	require.Equal(t, other, admin)
 	require.False(t, s.mintableOf(t, s.fixed), "an admin change keeps minting off")
 	s.requireFixedRefused(t, "minting is disabled", s.other, mintMsg(other, coinStr(1, s.fixed)))
+}
+
+// 14. other, now the admin of fix, configures it. A new denom reads as the
+// defaults. The admin sets a community pool and both rates through the CLI:
+// the event and the query carry them. A non-admin, a blocked community pool,
+// rates above the caps and a missing rate are refused and change nothing.
+// Sending the defaults clears the config and the query returns the defaults.
+func (s *tokenFactorySuite) denomConfig(t *testing.T) {
+	minter, other, cp := s.minter.FormattedAddress(), s.other.FormattedAddress(), s.admin.FormattedAddress()
+	s.requireDenomConfig(t, s.fixed, tfDenomConfig{TransferFee: "0", GasSurcharge: "0"})
+
+	s.requireConfigRefused(t, "unauthorized", s.minter, tfSetDenomConfigMsg(minter, s.fixed, cp, "0.001", "0.5"))
+
+	res := s.mustExec(t, s.other, "tokenfactory", "set-denom-config", s.fixed, cp, "0.001", "0.5")
+	ev := s.requireTxEvent(t, res, "DenomConfigChangeEvent", map[string]string{"denom": s.fixed, "community_pool": cp})
+	require.Equal(t, "0.001000000000000000", ratio(t, ev.Attributes["transfer_fee"]).String())
+	require.Equal(t, "0.500000000000000000", ratio(t, ev.Attributes["gas_surcharge"]).String())
+	s.requireDenomConfig(t, s.fixed, tfDenomConfig{CommunityPool: cp, TransferFee: "0.001", GasSurcharge: "0.5"})
+
+	// the caps are allowed, one step above them is not
+	s.mustExecMsg(t, s.other, tfSetDenomConfigMsg(other, s.fixed, cp, "0.05", "2"))
+	s.requireDenomConfig(t, s.fixed, tfDenomConfig{CommunityPool: cp, TransferFee: "0.05", GasSurcharge: "2"})
+	s.requireConfigRefused(t, "is above the max", s.other, tfSetDenomConfigMsg(other, s.fixed, cp, "0.051", "0"))
+	s.requireConfigRefused(t, "is above the max", s.other, tfSetDenomConfigMsg(other, s.fixed, cp, "0", "2.1"))
+	s.requireConfigRefused(t, "cannot be negative", s.other, tfSetDenomConfigMsg(other, s.fixed, cp, "-0.001", "0"))
+	s.requireConfigRefused(t, "blocked address", s.other, tfSetDenomConfigMsg(other, s.fixed, s.cp, "0.001", "0"))
+	s.requireConfigRefused(t, "invalid community pool address", s.other, tfSetDenomConfigMsg(other, s.fixed, "bze1notanaddress", "0.001", "0"))
+
+	// A rate cannot be left out from the CLI: an empty decimal is refused before
+	// signing. A message without a rate cannot reach the chain from here either:
+	// the Go codec that signs JSON txs encodes an unset rate as 0. The chain's
+	// refusal of a message whose bytes lack a rate (what a JS client sends for
+	// an empty field) is covered by the unit tests.
+	_, err := helpers.ExecTx(s.ctx, s.bze, s.other, "tokenfactory", "set-denom-config", s.fixed, cp, "", "0")
+	require.Error(t, err)
+	s.requireDenomConfig(t, s.fixed, tfDenomConfig{CommunityPool: cp, TransferFee: "0.05", GasSurcharge: "2"})
+
+	// sending the defaults clears the config
+	res = s.mustExec(t, s.other, "tokenfactory", "set-denom-config", s.fixed, "", "0", "0")
+	ev = s.requireTxEvent(t, res, "DenomConfigChangeEvent", map[string]string{"denom": s.fixed})
+	require.Empty(t, ev.Attributes["community_pool"])
+	require.True(t, ratio(t, ev.Attributes["transfer_fee"]).IsZero())
+	s.requireDenomConfig(t, s.fixed, tfDenomConfig{TransferFee: "0", GasSurcharge: "0"})
+}
+
+func tfSetDenomConfigMsg(creator, denom, cp, transferFee, gasSurcharge string) map[string]any {
+	return map[string]any{
+		"@type": "/bze.tokenfactory.MsgSetDenomConfig", "creator": creator, "denom": denom,
+		"community_pool": cp, "transfer_fee": transferFee, "gas_surcharge": gasSurcharge,
+	}
+}
+
+// tfDenomConfig is a denom config with its rates as decimal strings.
+type tfDenomConfig struct {
+	CommunityPool, TransferFee, GasSurcharge string
+}
+
+// denomConfigOf reads the denom's config with its rates normalised, whichever
+// form the query prints them in (decimal or 18-decimal integer).
+func (s *tokenFactorySuite) denomConfigOf(t *testing.T, denom string) tfDenomConfig {
+	t.Helper()
+	res, err := helpers.Query[struct {
+		Config struct {
+			CommunityPool string `json:"community_pool"`
+			TransferFee   string `json:"transfer_fee"`
+			GasSurcharge  string `json:"gas_surcharge"`
+		} `json:"config"`
+	}](s.ctx, s.bze, "tokenfactory", "denom-config", denom)
+	require.NoError(t, err)
+	return tfDenomConfig{
+		CommunityPool: res.Config.CommunityPool,
+		TransferFee:   ratio(t, res.Config.TransferFee).String(),
+		GasSurcharge:  ratio(t, res.Config.GasSurcharge).String(),
+	}
+}
+
+func (s *tokenFactorySuite) requireDenomConfig(t *testing.T, denom string, want tfDenomConfig) {
+	t.Helper()
+	want.TransferFee = sdkmath.LegacyMustNewDecFromStr(want.TransferFee).String()
+	want.GasSurcharge = sdkmath.LegacyMustNewDecFromStr(want.GasSurcharge).String()
+	require.Equal(t, want, s.denomConfigOf(t, denom))
+}
+
+// requireConfigRefused asserts the message is rejected with reason and that
+// the fix denom's config did not change.
+func (s *tokenFactorySuite) requireConfigRefused(t *testing.T, reason string, user ibc.Wallet, msg any) {
+	t.Helper()
+	before := s.denomConfigOf(t, s.fixed)
+	res, err := helpers.ExecMsgs(s.ctx, s.bze, user, nil, msg)
+	why, err := helpers.RejectionReason(res, err)
+	require.NoError(t, err, "msg %v", msg)
+	require.NotZero(t, res.Code)
+	require.Contains(t, why, reason)
+	require.Equal(t, before, s.denomConfigOf(t, s.fixed), "a refused tx must not change the config")
 }
 
 // requireFixedRefused asserts the message on the fix denom is rejected with

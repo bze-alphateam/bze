@@ -706,7 +706,8 @@ func (s *upgradeSuite) createDenomReward(t *testing.T) {
 //
 // BZE-217: tokenfactory migrated 3 -> 4. Every denom that has an admin is
 // mintable and its admin can still mint; a denom renounced before the
-// upgrade is non-mintable.
+// upgrade is non-mintable. Every denom reads the default DenomConfig, and an
+// admin can set one.
 type v830State struct {
 	versions map[string]int64
 	// voucher is the stake voucher bze minted over the main channel before
@@ -846,7 +847,8 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 
 // v830MintableFlags checks the tokenfactory 3 -> 4 migration (BZE-217): every
 // seeded denom and kept keep their admin and are mintable, renounced is not,
-// and kept's admin can still mint it.
+// and kept's admin can still mint it. All of them read the default
+// DenomConfig, and kept's admin can set one.
 func (s *upgradeSuite) v830MintableFlags(t *testing.T, b v830State) {
 	admin := s.admin.FormattedAddress()
 	denoms := []string{s.usd, s.abc, s.stk, s.prz, b.kept}
@@ -865,6 +867,37 @@ func (s *upgradeSuite) v830MintableFlags(t *testing.T, b v830State) {
 	supply := s.supply(t, b.kept)
 	s.exec(t, s.admin, "tokenfactory", "mint", coinStr(upSmokeMint, b.kept))
 	require.Equal(t, supply.AddRaw(upSmokeMint), s.supply(t, b.kept), "the kept denom's admin still mints")
+
+	// DenomConfig has no migration: every existing denom reads as the
+	// defaults, and the kept denom's admin can set one
+	for _, d := range append(denoms, b.renounced) {
+		require.Equal(t, upDenomConfig{TransferFee: "0.000000000000000000", GasSurcharge: "0.000000000000000000"}, s.denomConfig(t, s.plan, d), "%s config", d)
+	}
+	s.exec(t, s.admin, "tokenfactory", "set-denom-config", b.kept, admin, "0.001", "0.5")
+	require.Equal(t, upDenomConfig{CommunityPool: admin, TransferFee: "0.001000000000000000", GasSurcharge: "0.500000000000000000"}, s.denomConfig(t, 0, b.kept))
+}
+
+// upDenomConfig is a denom config with normalised decimal rates.
+type upDenomConfig struct {
+	CommunityPool, TransferFee, GasSurcharge string
+}
+
+// denomConfig reads the denom's config at height (0 = latest), whichever form
+// the query prints the rates in.
+func (s *upgradeSuite) denomConfig(t *testing.T, height int64, denom string) upDenomConfig {
+	t.Helper()
+	res := query[struct {
+		Config struct {
+			CommunityPool string `json:"community_pool"`
+			TransferFee   string `json:"transfer_fee"`
+			GasSurcharge  string `json:"gas_surcharge"`
+		} `json:"config"`
+	}](t, s, height, "tokenfactory", "denom-config", denom)
+	return upDenomConfig{
+		CommunityPool: res.Config.CommunityPool,
+		TransferFee:   ratio(t, res.Config.TransferFee).String(),
+		GasSurcharge:  ratio(t, res.Config.GasSurcharge).String(),
+	}
 }
 
 type upDenomAuthority struct {
