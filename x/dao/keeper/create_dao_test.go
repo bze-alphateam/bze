@@ -68,11 +68,12 @@ func (suite *IntegrationTestSuite) expectNewDaoAccount(id uint64) {
 	suite.acc.EXPECT().SetAccount(gomock.Any(), authtypes.NewBaseAccountWithAddress(addr))
 }
 
-// expectFee expects the default creation fee to be paid to the given module.
+// expectFee expects the default creation fee to be captured through tradebin
+// for the given module. The bank keeper is never used for it.
 func (suite *IntegrationTestSuite) expectFee(destModule string) {
-	suite.bank.EXPECT().
-		SendCoinsFromAccountToModule(gomock.Any(), creatorAddr, destModule, sdk.NewCoins(types.DefaultDaoCreationFee)).
-		Return(nil)
+	suite.trade.EXPECT().
+		CaptureAndSwapUserFee(gomock.Any(), creatorAddr, sdk.NewCoins(types.DefaultDaoCreationFee), destModule).
+		Return(sdk.NewCoins(types.DefaultDaoCreationFee), nil)
 }
 
 // expectCreation expects a successful creation of the DAO with the given id.
@@ -408,6 +409,22 @@ func (suite *IntegrationTestSuite) TestCreateDao_FeeToBurner() {
 	suite.Require().NoError(err)
 }
 
+// A custom fee is captured as set, whatever amount tradebin reports it swapped:
+// the swap result belongs to tradebin and the destination module.
+func (suite *IntegrationTestSuite) TestCreateDao_CustomFeeCaptured() {
+	params := types.DefaultParams()
+	params.DaoCreationFee = sdk.NewInt64Coin("ubze", 1234)
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
+	suite.expectNewDaoAccount(1)
+	suite.trade.EXPECT().
+		CaptureAndSwapUserFee(gomock.Any(), creatorAddr, sdk.NewCoins(sdk.NewInt64Coin("ubze", 1234)), burnerFeeCollector).
+		Return(sdk.NewCoins(sdk.NewInt64Coin("ubze", 1200)), nil)
+
+	res, err := suite.msgServer.CreateDao(suite.ctx, validCreateDaoMsg())
+	suite.Require().NoError(err)
+	suite.Require().Equal(uint64(1), res.Id)
+}
+
 func (suite *IntegrationTestSuite) TestCreateDao_FeeToCommunityPool() {
 	params := types.DefaultParams()
 	params.DaoCreationFeeDestination = types.FeeDestinationCommunityPool
@@ -419,7 +436,7 @@ func (suite *IntegrationTestSuite) TestCreateDao_FeeToCommunityPool() {
 	suite.Require().NoError(err)
 }
 
-// A zero fee is not sent at all: the bank mock fails on any call.
+// A zero fee is not charged at all: the trade and bank mocks fail on any call.
 func (suite *IntegrationTestSuite) TestCreateDao_ZeroFeeSkipsSend() {
 	params := types.DefaultParams()
 	params.DaoCreationFee = sdk.NewInt64Coin("ubze", 0)
@@ -431,16 +448,19 @@ func (suite *IntegrationTestSuite) TestCreateDao_ZeroFeeSkipsSend() {
 	suite.Require().Equal(uint64(1), res.Id)
 }
 
-// A creator who can't pay gets an error and nothing is stored or created.
+// A creator who can pay the fee in neither the tx fee denom nor the fee denom
+// gets the capture error, wrapped, and nothing is stored or created: the
+// account mock fails on any account creation.
 func (suite *IntegrationTestSuite) TestCreateDao_InsufficientFunds() {
 	addr := daoAddress(1)
 	suite.acc.EXPECT().GetAccount(gomock.Any(), addr).Return(nil)
-	suite.bank.EXPECT().
-		SendCoinsFromAccountToModule(gomock.Any(), creatorAddr, burnerFeeCollector, sdk.NewCoins(types.DefaultDaoCreationFee)).
-		Return(sdkerrors.ErrInsufficientFunds)
+	suite.trade.EXPECT().
+		CaptureAndSwapUserFee(gomock.Any(), creatorAddr, sdk.NewCoins(types.DefaultDaoCreationFee), burnerFeeCollector).
+		Return(nil, sdkerrors.ErrInsufficientFunds)
 
 	res, err := suite.msgServer.CreateDao(suite.ctx, validCreateDaoMsg())
 	suite.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
+	suite.Require().ErrorContains(err, "failed to pay the dao creation fee")
 	suite.Require().Nil(res)
 	suite.Require().Zero(suite.k.GetDaoCounter(suite.ctx))
 	_, found := suite.k.GetDao(suite.ctx, 1)
@@ -528,4 +548,3 @@ func (suite *IntegrationTestSuite) TestCreateDao_OwnAddressAsMemberRejected() {
 	_, found := suite.k.GetDao(suite.ctx, 1)
 	suite.Require().False(found)
 }
-

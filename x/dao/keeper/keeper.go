@@ -26,6 +26,7 @@ type (
 		accountKeeper types.AccountKeeper
 		bankKeeper    types.BankKeeper
 		rewardsKeeper types.RewardsKeeper
+		tradeKeeper   types.TradeKeeper
 
 		// router runs the messages a DAO executes
 		router baseapp.MessageRouter
@@ -40,6 +41,7 @@ func NewKeeper(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	rewardsKeeper types.RewardsKeeper,
+	tradeKeeper types.TradeKeeper,
 	router baseapp.MessageRouter,
 ) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
@@ -54,6 +56,7 @@ func NewKeeper(
 		accountKeeper: accountKeeper,
 		bankKeeper:    bankKeeper,
 		rewardsKeeper: rewardsKeeper,
+		tradeKeeper:   tradeKeeper,
 		router:        router,
 	}
 }

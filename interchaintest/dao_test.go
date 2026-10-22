@@ -44,7 +44,9 @@ const (
 	daoVoting    = "15s"
 	daoExpedited = "6s"
 
-	daoFunderFunds = 1_500_000_000_000 // 1,500,000 BZE: about 20 reward programs at 25,000 BZE, DAOs, users
+	// 1,700,000 BZE: about 20 reward programs at 25,000 BZE, DAOs, users, and
+	// the daofee denom with its 150,000 BZE pool (25,000 BZE fees each)
+	daoFunderFunds = 1_700_000_000_000
 	daoUserFunds   = 200_000_000       // 200 BZE each
 	daoStakeMint   = 1_000_000_000_000 // of each factory denom
 
@@ -52,6 +54,20 @@ const (
 	daoSrPrize    = 10
 	daoSrDuration = 1_000 // days of 30 s: they outlive the suite
 	daoSrLock     = 1     // day, the min_electorate_lock_days of the suite
+
+	// the daofee token pays a creation fee (A1): 1 daofee = 1000 ubze in a
+	// 0.2% pool whose ubze side stays above MinNativeLiquidityForModuleSwap
+	// (1e11) after the fee swap, and whose fees stay with the providers
+	daoFeeMint        = 1_000_000_000
+	daoFeePoolToks    = 150_000_000
+	daoFeePoolBze     = 150_000_000_000
+	daoFeePoolFee     = "0.002"
+	daoFeePoolDest    = `{"treasury":"0","burner":"0","providers":"1"}`
+	daoFeePoolGas     = 500_000
+	daoFeeCreatorToks = 100_000 // ~100 BZE worth: the tx fee and the 1 BZE creation fee
+	daoFeeTxFee       = 1_000   // daofee units, swappable
+	// a fee paid in another denom may buy at most this much more than the fee
+	daoFeeTolerancePct = 1
 
 	// daoRefuseGas is the fixed gas limit of txs that must be refused: a fixed
 	// limit skips the simulation, so the tx is included and its code read

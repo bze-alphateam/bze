@@ -85,7 +85,7 @@ func genesisKeeper(t *testing.T, escrow sdk.Coins) (keeper.Keeper, sdk.Context) 
 	bank := testutil.NewMockBankKeeper(gomock.NewController(t))
 	bank.EXPECT().GetAllBalances(gomock.Any(), authtypes.NewModuleAddress(types.ModuleName)).Return(escrow).AnyTimes()
 
-	return keepertest.DaoKeeper(t, keepertest.DaoCodec(), nil, nil, bank, nil)
+	return keepertest.DaoKeeper(t, keepertest.DaoCodec(), nil, nil, bank, nil, nil)
 }
 
 func TestGenesis_DefaultRoundTrip(t *testing.T) {
@@ -372,7 +372,7 @@ func TestGenesis_NoEscrowSkipsBalance(t *testing.T) {
 	genesisState.Proposals[0].PinnedDeposit = nil
 	genesisState.Proposals[1].PinnedDeposit = nil
 
-	k, ctx := keepertest.DaoKeeper(t, keepertest.DaoCodec(), nil, nil, testutil.NewMockBankKeeper(gomock.NewController(t)), nil)
+	k, ctx := keepertest.DaoKeeper(t, keepertest.DaoCodec(), nil, nil, testutil.NewMockBankKeeper(gomock.NewController(t)), nil, nil)
 	dao.InitGenesis(ctx, &k, genesisState)
 	require.Len(t, k.GetAllProposals(ctx), len(genesisState.Proposals))
 }
