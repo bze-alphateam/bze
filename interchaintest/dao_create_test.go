@@ -1,9 +1,12 @@
 package interchaintest_test
 
 import (
+	"strconv"
 	"strings"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/interchaintest/v10/ibc"
 	"github.com/stretchr/testify/require"
 
@@ -233,6 +236,73 @@ func (s *daoSuite) createDao(t *testing.T) {
 		_, _, exists := s.account(t, daoAddress(s.daos+1))
 		require.False(t, exists, "no account is created for a dao that was not")
 	})
+
+	t.Run("fee paid in the tx fee denom by a creator without ubze", s.createDaoFeeInFactoryToken)
+}
+
+// createDaoFeeInFactoryToken: the creation fee goes through tradebin like
+// every chain fee. A creator who pays the tx fee in a factory token with a
+// deep ubze pool, and holds no ubze at all, pays the creation fee in that
+// token too: the chain takes the input that buys the fee from the pool
+// (rounded up), swaps it and sends the whole swap output to the burner
+// collector, at least the fee and at most daoFeeTolerancePct above it.
+func (s *daoSuite) createDaoFeeInFactoryToken(t *testing.T) {
+	denom := "factory/" + s.funder.FormattedAddress() + "/daofee"
+	s.mustExec(t, s.funder, "tokenfactory", "create-denom", "daofee")
+	s.mustExec(t, s.funder, "tokenfactory", "mint", coinStr(daoFeeMint, denom))
+	s.mustExecWith(t, s.funder, []helpers.TxOption{helpers.WithGas(daoFeePoolGas)},
+		"tradebin", "create-liquidity-pool", denom, chain.Denom, daoFeePoolFee, daoFeePoolDest, "false",
+		strconv.Itoa(daoFeePoolToks), strconv.Itoa(daoFeePoolBze))
+	tradebin, err := helpers.ModuleAddress(s.ctx, s.bze, "tradebin")
+	require.NoError(t, err)
+
+	creator := s.users(t, 1, 0, coins(daoFeeCreatorToks, denom)...)[0]
+	addr := creator.FormattedAddress()
+	require.True(t, s.bal(t, addr, chain.Denom).IsZero(), "the creator must hold no ubze")
+	toksBefore := s.bal(t, addr, denom)
+	fee := s.params.DaoCreationFee
+	require.Equal(t, chain.Denom, fee.Denom)
+	escrowBefore := s.allBalances(t, s.escrow)
+
+	next := s.daos + 1
+	txFee := sdk.NewInt64Coin(denom, daoFeeTxFee)
+	res := s.mustExecWith(t, creator, []helpers.TxOption{helpers.WithFees(txFee.String()), helpers.WithGas(daoRefuseGas)},
+		"dao", "create-dao", "static-list", "paid in a token", defaultCfg().cli(), "--members", addr)
+	id := atoiU(t, idOf(s.event(t, res, "EventDaoCreated")))
+	require.Equal(t, next, id, "dao ids are handed out in order and never reused (I5)")
+	s.daos = id
+
+	transferred := func(from, to, denom string) sdkmath.Int {
+		sum := sdkmath.ZeroInt()
+		for _, e := range helpers.TxEvents(res, "transfer") {
+			if e.Attributes["sender"] != from || e.Attributes["recipient"] != to {
+				continue
+			}
+			amt, err := sdk.ParseCoinsNormalized(e.Attributes["amount"])
+			require.NoError(t, err)
+			sum = sum.Add(amt.AmountOf(denom))
+		}
+		return sum
+	}
+	in := transferred(addr, tradebin, denom)
+	out := transferred(tradebin, s.burner, chain.Denom)
+	require.True(t, in.IsPositive(), "the fee's input must go to tradebin for the swap")
+	require.True(t, transferred(addr, s.burner, chain.Denom).IsZero(), "no ubze leaves the creator")
+	require.True(t, out.GTE(fee.Amount), "the burner collector must get at least the creation fee: %s for %s", out, fee)
+	maxOut := fee.Amount.Add(fee.Amount.MulRaw(daoFeeTolerancePct).QuoRaw(100))
+	require.True(t, out.LTE(maxOut), "the swapped creation fee %s must stay within %d%% of the fee %s", out, daoFeeTolerancePct, fee)
+	t.Logf("creation fee %s bought with %s %s; the swap gave %s ubze", fee, in, denom, out)
+
+	paid, err := helpers.TxFee(res, denom)
+	require.NoError(t, err)
+	require.Equal(t, txFee.Amount, paid, "tx fee in the factory token")
+	require.True(t, s.bal(t, addr, chain.Denom).IsZero(), "the creator still holds no ubze")
+	require.Equal(t, toksBefore.Sub(in).Sub(txFee.Amount).String(), s.bal(t, addr, denom).String(),
+		"the creator pays the fee's input and the tx fee in the token")
+	require.Equal(t, escrowBefore.String(), s.allBalances(t, s.escrow).String(), "the fee never passes through the x/dao escrow")
+	d := s.dao(t, id)
+	require.Equal(t, daoAddress(id), d.Address)
+	require.Equal(t, []string{addr}, d.Members)
 }
 
 // A2. admin-execute: the external admin spends the treasury, several
