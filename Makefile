@@ -314,7 +314,7 @@ proto-all:
 # implicitly: build them once with e2e-image / e2e-image-ref, then run suites.
 E2E_TIMEOUT ?= 60m
 
-.PHONY: e2e-image e2e-image-ref e2e e2e-smoke e2e-denomrewards e2e-amm e2e-tokenfactory e2e-halt e2e-ibc e2e-orderbook e2e-tradingrewards e2e-burner e2e-fees e2e-cointrunk e2e-params e2e-dao e2e-upgrade e2e-unit e2e-lint
+.PHONY: e2e-image e2e-image-ref e2e e2e-smoke e2e-denomrewards e2e-amm e2e-tokenfactory e2e-halt e2e-update-pools e2e-ibc e2e-orderbook e2e-tradingrewards e2e-burner e2e-fees e2e-cointrunk e2e-params e2e-dao e2e-upgrade e2e-unit e2e-lint
 
 # Builds the working tree as bze:local.
 e2e-image:
@@ -349,6 +349,10 @@ e2e-tokenfactory:
 # Runs the halted denoms suite (halt and unhalt through gov proposals).
 e2e-halt:
 	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestHaltedDenoms ./...
+
+# Runs the pool fee update suite (MsgUpdatePools through gov proposals).
+e2e-update-pools:
+	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestUpdatePools ./...
 
 # Runs the order-book engine suite.
 e2e-orderbook:
