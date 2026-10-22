@@ -55,11 +55,33 @@ func TestGenesisState_Validate(t *testing.T) {
 				Params: types.DefaultParams(),
 				FactoryDenoms: []types.GenesisDenom{{
 					Denom:          "factory/creator/one",
-					DenomAuthority: types.DenomAuthority{Mintable: true},
+					DenomAuthority: types.DenomAuthority{Admin: "creator", Mintable: true},
 					DenomConfig:    &types.DenomConfig{TransferFee: math.LegacyNewDecWithPrec(1, 3), GasSurcharge: math.LegacyOneDec()},
 				}},
 			},
 			valid: true,
+		},
+		{
+			desc: "renounced denom that is not mintable",
+			genState: &types.GenesisState{
+				Params: types.DefaultParams(),
+				FactoryDenoms: []types.GenesisDenom{{
+					Denom:          "factory/creator/one",
+					DenomAuthority: types.DenomAuthority{Admin: "", Mintable: false},
+				}},
+			},
+			valid: true,
+		},
+		{
+			desc: "renounced denom that is still mintable",
+			genState: &types.GenesisState{
+				Params: types.DefaultParams(),
+				FactoryDenoms: []types.GenesisDenom{{
+					Denom:          "factory/creator/one",
+					DenomAuthority: types.DenomAuthority{Admin: "", Mintable: true},
+				}},
+			},
+			valid: false,
 		},
 		{
 			desc: "denom config above the cap",
