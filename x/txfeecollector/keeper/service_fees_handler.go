@@ -27,11 +27,26 @@ func (k Keeper) ConvertBurnerFeesToNativeDenom(ctx sdk.Context) error {
 	return k.convertFeesAndSend(ctx, types.BurnerFeeCollector, burnermoduletypes.ModuleName, true)
 }
 
-// ConvertCommunityPoolFeesToNativeDenom funds the chain's community pool with the coins held for it, swapped to native
-// denom. Coins whose denom has its own community pool are expected to be forwarded first by
-// RouteCommunityPoolFeesToDenomCommunityPools.
+// ConvertCommunityPoolFeesToNativeDenom funds the chain's community pool with every coin held for it, swapped to native
+// denom. EndBlock runs it when the routing step failed, so the coins it couldn't forward take the old path.
 func (k Keeper) ConvertCommunityPoolFeesToNativeDenom(ctx sdk.Context) error {
-	toSend, skipped, err := k.convertFees(ctx, types.CpFeeCollector)
+	return k.convertCommunityPoolFees(ctx, false)
+}
+
+// ConvertCommunityPoolFeesLeftAfterRouting funds the chain's community pool with the coins held for it, swapped to
+// native denom, except the coins whose denom has its own community pool: those are past the routing bound and wait for
+// a later block's RouteCommunityPoolFeesToDenomCommunityPools. EndBlock runs it when the routing step succeeded.
+func (k Keeper) ConvertCommunityPoolFeesLeftAfterRouting(ctx sdk.Context) error {
+	return k.convertCommunityPoolFees(ctx, true)
+}
+
+func (k Keeper) convertCommunityPoolFees(ctx sdk.Context, skipDenomCommunityPools bool) error {
+	var waiting func(denom string) bool
+	if skipDenomCommunityPools {
+		waiting = func(denom string) bool { return k.hasDenomCommunityPool(ctx, denom) }
+	}
+
+	toSend, skipped, err := k.convertFees(ctx, types.CpFeeCollector, waiting)
 	if err != nil {
 		return err
 	}
@@ -104,9 +119,20 @@ func (k Keeper) RouteCommunityPoolFeesToDenomCommunityPools(ctx sdk.Context) err
 	return nil
 }
 
+// hasDenomCommunityPool reports whether the denom's fees are forwarded to its own community pool.
+func (k Keeper) hasDenomCommunityPool(ctx sdk.Context, denom string) bool {
+	if k.denomCpProvider == nil {
+		return false
+	}
+
+	_, ok := k.denomCpProvider.GetDenomCommunityPool(ctx, denom)
+
+	return ok
+}
+
 // convertFeesAndSend transfers converted fees from one module to another if fees are available and conversion is successful.
 func (k Keeper) convertFeesAndSend(ctx sdk.Context, fromModule, toModule string, sendSkipped bool) error {
-	toSend, skipped, err := k.convertFees(ctx, fromModule)
+	toSend, skipped, err := k.convertFees(ctx, fromModule, nil)
 	if err != nil {
 		return err
 	}
@@ -127,8 +153,8 @@ func (k Keeper) convertFeesAndSend(ctx sdk.Context, fromModule, toModule string,
 // Returns the swappable fees, non-swappable fees, and any error encountered during the process.
 //
 // The coins that have deep enough liquidity but can't be swapped due to the amount being too low remain untouched
-// until they can be swapped.
-func (k Keeper) convertFees(ctx sdk.Context, fromModule string) (toSend, nonSwapable sdk.Coins, err error) {
+// until they can be swapped, and so do the non-native coins waiting reports (nil: none).
+func (k Keeper) convertFees(ctx sdk.Context, fromModule string, waiting func(denom string) bool) (toSend, nonSwapable sdk.Coins, err error) {
 	moduleAddr := k.accountKeeper.GetModuleAddress(fromModule)
 	allCoins := k.bankKeeper.GetAllBalances(ctx, moduleAddr)
 	if allCoins.IsZero() {
@@ -155,6 +181,10 @@ func (k Keeper) convertFees(ctx sdk.Context, fromModule string) (toSend, nonSwap
 		}
 
 		if !c.IsPositive() {
+			continue
+		}
+
+		if waiting != nil && waiting(c.Denom) {
 			continue
 		}
 

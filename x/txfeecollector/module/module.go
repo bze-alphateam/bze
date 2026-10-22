@@ -16,6 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
@@ -186,14 +187,20 @@ func (am AppModule) EndBlock(gotCtx context.Context) error {
 	}
 
 	// forward the coins whose denom has its own community pool before converting the rest for the chain's one
-	err = bzeutils.ApplyFuncIfNoError(ctx, func(c sdk.Context) error {
+	routingErr := bzeutils.ApplyFuncIfNoError(ctx, func(c sdk.Context) error {
 		return am.keeper.RouteCommunityPoolFeesToDenomCommunityPools(c)
 	})
-	if err != nil {
-		am.keeper.Logger().Error("error on txfeecollector module EndBlock when calling RouteCommunityPoolFeesToDenomCommunityPools", "err", err)
+	if routingErr != nil {
+		am.keeper.Logger().Error("error on txfeecollector module EndBlock when calling RouteCommunityPoolFeesToDenomCommunityPools", "err", routingErr)
 	}
 
+	// after a successful routing, the coins of denoms with a community pool still in the collector are past the
+	// routing bound and wait for the next block; after a failed one, every coin takes the old path
 	err = bzeutils.ApplyFuncIfNoError(ctx, func(c sdk.Context) error {
+		if routingErr == nil {
+			return am.keeper.ConvertCommunityPoolFeesLeftAfterRouting(c)
+		}
+
 		return am.keeper.ConvertCommunityPoolFeesToNativeDenom(c)
 	})
 	if err != nil {
@@ -241,6 +248,9 @@ type ModuleOutputs struct {
 
 	TxfeecollectorKeeper *keeper.Keeper
 	Module               appmodule.AppModule
+
+	// BankSendRestriction charges the factory tokens' transfer fees. x/bank installs it after every provider ran.
+	BankSendRestriction banktypes.SendRestrictionFn
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -268,5 +278,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.DistrKeeper,
 	)
 
-	return ModuleOutputs{TxfeecollectorKeeper: &k, Module: m}
+	// the send restriction reads the keeper through the same pointer the app sets the escrow checker on
+	kp := &k
+
+	return ModuleOutputs{TxfeecollectorKeeper: kp, Module: m, BankSendRestriction: kp.TransferFeeSendRestriction}
 }

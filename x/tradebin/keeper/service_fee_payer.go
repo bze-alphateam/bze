@@ -87,40 +87,70 @@ func (k Keeper) CaptureAndSwapUserFee(ctx sdk.Context, payer sdk.AccAddress, fee
 		//if the user has enough balance to pay the required fee in his preferred fee denom, we just remove the native
 		//fee and add the required fee.
 		//capture the amount and swap the fee to the native denom
-
-		//capture the entire amount in tradebin so we can perform the swap
-		_, err = k.payerCoinsToModule(ctx, payer, toCapture, types.ModuleName)
+		captured, captureErr, err := k.captureAndSwapPreferredFee(ctx, payer, toCapture, requiredFeeCoins, &pool, toModule)
 		if err != nil {
 			return nil, err
 		}
-
-		swapOutput, err := k.swapTokens(ctx, requiredFeeCoins, &pool)
-		if err != nil {
-			return nil, err
+		if captureErr == nil {
+			return captured, nil
 		}
 
-		k.Logger().Info("swapped user fee to native denom", "input", requiredFeeCoins.String(), "output", swapOutput.String(), "payer", payer.String())
+		//the balance covered the fee but the capture still failed: a factory token's transfer fee is charged on top
+		//of the captured amount. Nothing was written, so the fee is captured in native denom instead.
+		k.Logger().Debug("capture in preferred denom failed, falling back to native", "required", toCapture.String(), "err", captureErr)
 
-		//we subtract the required fee that we swapped from the entire capture amount and add the swap output
-		capturedAndSwapped := toCapture.Sub(requiredFeeCoins).Add(swapOutput)
-
-		//send swapped coins back to the caller module if the caller is not tradebin module
-		if toModule != types.ModuleName {
-			err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, toModule, capturedAndSwapped)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		//we return to the caller the fee that was provided to this function plus the fee that was swapped to native
-		//denom from preferred denom
-		return capturedAndSwapped, nil
+		return k.payerCoinsToModule(ctx, payer, fee, toModule)
 	}
 
 	//the user can not pay the required fee in his preferred fee denom, so we just try to capture the fee in native denom
 	k.Logger().Debug("insufficient balance for preferred denom, falling back to native", "required", toCapture.String())
 
 	return k.payerCoinsToModule(ctx, payer, fee, toModule)
+}
+
+// captureAndSwapPreferredFee captures toCapture from the payer in tradebin, swaps requiredFeeCoins to native denom
+// through the pool and sends the result to toModule. It runs in a cached context written only on success.
+// A failed capture is returned as captureErr with nothing written, so the caller can fall back to the native fee.
+// Any later failure is returned as err, as before.
+func (k Keeper) captureAndSwapPreferredFee(
+	ctx sdk.Context,
+	payer sdk.AccAddress,
+	toCapture sdk.Coins,
+	requiredFeeCoins sdk.Coin,
+	pool *types.LiquidityPool,
+	toModule string,
+) (captured sdk.Coins, captureErr, err error) {
+	cacheCtx, write := ctx.CacheContext()
+
+	//capture the entire amount in tradebin so we can perform the swap
+	_, captureErr = k.payerCoinsToModule(cacheCtx, payer, toCapture, types.ModuleName)
+	if captureErr != nil {
+		return nil, captureErr, nil
+	}
+
+	swapOutput, err := k.swapTokens(cacheCtx, requiredFeeCoins, pool)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	k.Logger().Info("swapped user fee to native denom", "input", requiredFeeCoins.String(), "output", swapOutput.String(), "payer", payer.String())
+
+	//we subtract the required fee that we swapped from the entire capture amount and add the swap output
+	capturedAndSwapped := toCapture.Sub(requiredFeeCoins).Add(swapOutput)
+
+	//send swapped coins back to the caller module if the caller is not tradebin module
+	if toModule != types.ModuleName {
+		err = k.bankKeeper.SendCoinsFromModuleToModule(cacheCtx, types.ModuleName, toModule, capturedAndSwapped)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	write()
+
+	//we return to the caller the fee that was provided to this function plus the fee that was swapped to native
+	//denom from preferred denom
+	return capturedAndSwapped, nil, nil
 }
 
 func (k Keeper) payerCoinsToModule(ctx sdk.Context, payer sdk.AccAddress, coins sdk.Coins, toModule string) (sdk.Coins, error) {
@@ -237,41 +267,34 @@ func (k Keeper) CaptureAndTryToSwapUserFeesOrSendItAsIs(ctx sdk.Context, payer s
 		_, swapFee := k.calculateSwapInputAndFee(requiredFeeCoins, &pool)
 		if pool.Fee.IsPositive() && !swapFee.IsPositive() {
 			//the swap fee is too low so we capture the fees and instead of native we capture the amount in
-			//his preferred fee denom.
-			return k.payerCoinsToModule(ctx, payer, toCapture, toModule)
+			//his preferred fee denom. A failed capture (a factory token's transfer fee is charged on top of it) falls
+			//back to the native fee: the bank send writes nothing when it fails.
+			captured, captureErr := k.payerCoinsToModule(ctx, payer, toCapture, toModule)
+			if captureErr == nil {
+				return captured, nil
+			}
+
+			k.Logger().Debug("capture in preferred denom failed, falling back to native", "required", toCapture.String(), "err", captureErr)
+
+			return k.payerCoinsToModule(ctx, payer, fee, toModule)
 		}
 
 		//if the user has enough balance to pay the required fee in his preferred fee denom, we just remove the native
 		//fee and add the required fee.
 		//capture the amount and swap the fee to the native denom
-
-		//capture the entire amount in tradebin so we can perform the swap
-		_, err = k.payerCoinsToModule(ctx, payer, toCapture, types.ModuleName)
+		captured, captureErr, err := k.captureAndSwapPreferredFee(ctx, payer, toCapture, requiredFeeCoins, &pool, toModule)
 		if err != nil {
 			return nil, err
 		}
-
-		swapOutput, err := k.swapTokens(ctx, requiredFeeCoins, &pool)
-		if err != nil {
-			return nil, err
+		if captureErr == nil {
+			return captured, nil
 		}
 
-		k.Logger().Info("swapped user fee to native denom", "input", requiredFeeCoins.String(), "output", swapOutput.String(), "payer", payer.String())
+		//the balance covered the fee but the capture still failed: a factory token's transfer fee is charged on top
+		//of the captured amount. Nothing was written, so the fee is captured in native denom instead.
+		k.Logger().Debug("capture in preferred denom failed, falling back to native", "required", toCapture.String(), "err", captureErr)
 
-		//we subtract the required fee that we swapped from the entire capture amount and add the swap output
-		capturedAndSwapped := toCapture.Sub(requiredFeeCoins).Add(swapOutput)
-
-		//send swapped coins back to the caller module if the caller is not tradebin module
-		if toModule != types.ModuleName {
-			err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, toModule, capturedAndSwapped)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		//we return to the caller the fee that was provided to this function plus the fee that was swapped to native
-		//denom from preferred denom
-		return capturedAndSwapped, nil
+		return k.payerCoinsToModule(ctx, payer, fee, toModule)
 	}
 
 	//the user can not pay the required fee in his preferred fee denom, so we just try to capture the fee in native denom

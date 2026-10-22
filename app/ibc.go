@@ -86,6 +86,10 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
+	// The transfer fee of factory tokens never charges an ICS-20 escrow account: until this checker is set it charges
+	// nothing at all (see x/txfeecollector TransferFeeSendRestriction).
+	app.TxfeecollectorKeeper.SetEscrowAddressChecker(newTransferEscrowChecker(app.IBCKeeper.ChannelKeeper))
+
 	// Create interchain account keepers
 	app.ICAHostKeeper = icahostkeeper.NewKeeper(
 		app.appCodec,

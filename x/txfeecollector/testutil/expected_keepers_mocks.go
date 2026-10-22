@@ -13,6 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -372,6 +373,59 @@ func (m *MockDenomCommunityPoolProvider) GetDenomCommunityPool(ctx types.Context
 func (mr *MockDenomCommunityPoolProviderMockRecorder) GetDenomCommunityPool(ctx, denom any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDenomCommunityPool", reflect.TypeOf((*MockDenomCommunityPoolProvider)(nil).GetDenomCommunityPool), ctx, denom)
+}
+
+// GetDenomFeeRates mocks base method.
+func (m *MockDenomCommunityPoolProvider) GetDenomFeeRates(ctx types.Context, denom string) (math.LegacyDec, math.LegacyDec) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDenomFeeRates", ctx, denom)
+	ret0, _ := ret[0].(math.LegacyDec)
+	ret1, _ := ret[1].(math.LegacyDec)
+	return ret0, ret1
+}
+
+// GetDenomFeeRates indicates an expected call of GetDenomFeeRates.
+func (mr *MockDenomCommunityPoolProviderMockRecorder) GetDenomFeeRates(ctx, denom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDenomFeeRates", reflect.TypeOf((*MockDenomCommunityPoolProvider)(nil).GetDenomFeeRates), ctx, denom)
+}
+
+// MockEscrowAddressChecker is a mock of EscrowAddressChecker interface.
+type MockEscrowAddressChecker struct {
+	ctrl     *gomock.Controller
+	recorder *MockEscrowAddressCheckerMockRecorder
+	isgomock struct{}
+}
+
+// MockEscrowAddressCheckerMockRecorder is the mock recorder for MockEscrowAddressChecker.
+type MockEscrowAddressCheckerMockRecorder struct {
+	mock *MockEscrowAddressChecker
+}
+
+// NewMockEscrowAddressChecker creates a new mock instance.
+func NewMockEscrowAddressChecker(ctrl *gomock.Controller) *MockEscrowAddressChecker {
+	mock := &MockEscrowAddressChecker{ctrl: ctrl}
+	mock.recorder = &MockEscrowAddressCheckerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockEscrowAddressChecker) EXPECT() *MockEscrowAddressCheckerMockRecorder {
+	return m.recorder
+}
+
+// IsEscrowAddress mocks base method.
+func (m *MockEscrowAddressChecker) IsEscrowAddress(ctx types.Context, addr types.AccAddress) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsEscrowAddress", ctx, addr)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsEscrowAddress indicates an expected call of IsEscrowAddress.
+func (mr *MockEscrowAddressCheckerMockRecorder) IsEscrowAddress(ctx, addr any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsEscrowAddress", reflect.TypeOf((*MockEscrowAddressChecker)(nil).IsEscrowAddress), ctx, addr)
 }
 
 // MockParamSubspace is a mock of ParamSubspace interface.

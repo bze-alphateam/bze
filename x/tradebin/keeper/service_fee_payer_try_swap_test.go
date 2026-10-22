@@ -254,7 +254,8 @@ func (suite *IntegrationTestSuite) TestTrySwap_AmountTooSmall_CapturesNonNativeA
 }
 
 // TestTrySwap_AmountTooSmall_CaptureError verifies that when the amount is too small to swap
-// and the bank capture fails, the error is propagated.
+// and the bank capture in the preferred denom fails (e.g. a factory token's transfer fee on top of it),
+// the fee is captured in native denom instead.
 func (suite *IntegrationTestSuite) TestTrySwap_AmountTooSmall_CaptureError() {
 	addr1 := sdk.AccAddress("addr1_______________")
 	nativeFee := sdk.NewCoin(denomBze, math.NewInt(1))
@@ -275,15 +276,55 @@ func (suite *IntegrationTestSuite) TestTrySwap_AmountTooSmall_CaptureError() {
 		Times(1).
 		Return(sdk.NewCoins(sdk.NewCoin(denomStake, math.NewInt(50_000_000_000))))
 
-	// Capture fails
+	// Capture in the preferred denom fails
 	suite.bankMock.EXPECT().
 		SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, toCapture).
 		Times(1).
 		Return(fmt.Errorf("insufficient funds"))
 
+	// the native fee is captured instead
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, fee).
+		Times(1).
+		Return(nil)
+
+	captured, err := suite.k.CaptureAndTryToSwapUserFeesOrSendItAsIs(ctx, addr1, fee, types.ModuleName)
+	suite.Require().NoError(err)
+	suite.Require().Equal(fee, captured)
+}
+
+// TestTrySwap_AmountTooSmall_BothCapturesFail verifies the error is returned when neither the preferred
+// nor the native denom can be captured.
+func (suite *IntegrationTestSuite) TestTrySwap_AmountTooSmall_BothCapturesFail() {
+	addr1 := sdk.AccAddress("addr1_______________")
+	nativeFee := sdk.NewCoin(denomBze, math.NewInt(1))
+	fee := sdk.NewCoins(nativeFee)
+
+	pool := trySwapDeepPool()
+	suite.k.SetLiquidityPool(suite.ctx, pool)
+
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
+
+	requiredStake, err := suite.k.CalculateOptimalInputForOutput(pool, nativeFee)
+	suite.Require().Nil(err)
+
+	suite.bankMock.EXPECT().
+		SpendableCoins(gomock.Any(), addr1).
+		Times(1).
+		Return(sdk.NewCoins(sdk.NewCoin(denomStake, math.NewInt(50_000_000_000))))
+
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, sdk.NewCoins(requiredStake)).
+		Times(1).
+		Return(fmt.Errorf("insufficient funds for the transfer fee"))
+
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, fee).
+		Times(1).
+		Return(fmt.Errorf("insufficient funds"))
+
 	_, err = suite.k.CaptureAndTryToSwapUserFeesOrSendItAsIs(ctx, addr1, fee, types.ModuleName)
-	suite.Require().NotNil(err)
-	suite.Require().Contains(err.Error(), "insufficient funds")
+	suite.Require().ErrorContains(err, "insufficient funds")
 }
 
 // TestTrySwap_AmountTooSmall_OriginalFunctionFails verifies that the original CaptureAndSwapUserFee

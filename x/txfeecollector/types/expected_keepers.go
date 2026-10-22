@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -38,10 +39,19 @@ type DistrKeeper interface {
 	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
-// DenomCommunityPoolProvider returns the community pool address a denom's fees are forwarded to,
-// false when the denom has none. Implemented by the tokenfactory keeper.
+// DenomCommunityPoolProvider reads a denom's DenomConfig. Implemented by the tokenfactory keeper.
 type DenomCommunityPoolProvider interface {
+	// GetDenomCommunityPool returns the community pool address a denom's fees are forwarded to, false when the denom
+	// has none.
 	GetDenomCommunityPool(ctx sdk.Context, denom string) (sdk.AccAddress, bool)
+	// GetDenomFeeRates returns the denom's transfer fee and gas surcharge ratios, zeros when none are set.
+	GetDenomFeeRates(ctx sdk.Context, denom string) (transferFee, gasSurcharge math.LegacyDec)
+}
+
+// EscrowAddressChecker tells whether an address is an IBC transfer escrow account. In ibc-go v10 those are plain
+// accounts, not module accounts, so the transfer fee needs this check to never charge them.
+type EscrowAddressChecker interface {
+	IsEscrowAddress(ctx sdk.Context, addr sdk.AccAddress) bool
 }
 
 // ParamSubspace defines the expected Subspace interface for parameters.

@@ -29,6 +29,10 @@ type (
 		// denomCpProvider resolves the community pool a denom's fees are forwarded to. nil means
 		// no denom has one.
 		denomCpProvider types.DenomCommunityPoolProvider
+
+		// escrowChecker recognises the IBC transfer escrow accounts, which never pay the transfer fee. It is set after
+		// the IBC keepers are built (SetEscrowAddressChecker); nil disables the transfer fee.
+		escrowChecker types.EscrowAddressChecker
 	}
 )
 
@@ -58,6 +62,12 @@ func NewKeeper(
 		distrKeeper:     distrKeeper,
 		denomCpProvider: denomCpProvider,
 	}
+}
+
+// SetEscrowAddressChecker sets the checker the transfer fee uses to exempt IBC transfer escrow accounts. Until it is
+// set the transfer fee charges nothing.
+func (k *Keeper) SetEscrowAddressChecker(checker types.EscrowAddressChecker) {
+	k.escrowChecker = checker
 }
 
 // GetAuthority returns the module's authority.
