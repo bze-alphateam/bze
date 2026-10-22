@@ -23,6 +23,7 @@ const (
 	Query_DenomAuthority_FullMethodName   = "/bze.tokenfactory.Query/DenomAuthority"
 	Query_DenomBranding_FullMethodName    = "/bze.tokenfactory.Query/DenomBranding"
 	Query_AllDenomBranding_FullMethodName = "/bze.tokenfactory.Query/AllDenomBranding"
+	Query_DenomConfig_FullMethodName      = "/bze.tokenfactory.Query/DenomConfig"
 )
 
 // QueryClient is the client API for Query service.
@@ -37,6 +38,8 @@ type QueryClient interface {
 	DenomBranding(ctx context.Context, in *QueryDenomBrandingRequest, opts ...grpc.CallOption) (*QueryDenomBrandingResponse, error)
 	// Queries the branding packages of all denoms with pagination
 	AllDenomBranding(ctx context.Context, in *QueryAllDenomBrandingRequest, opts ...grpc.CallOption) (*QueryAllDenomBrandingResponse, error)
+	// Queries the configuration of a denom. Returns the defaults when none is set.
+	DenomConfig(ctx context.Context, in *QueryDenomConfigRequest, opts ...grpc.CallOption) (*QueryDenomConfigResponse, error)
 }
 
 type queryClient struct {
@@ -83,6 +86,15 @@ func (c *queryClient) AllDenomBranding(ctx context.Context, in *QueryAllDenomBra
 	return out, nil
 }
 
+func (c *queryClient) DenomConfig(ctx context.Context, in *QueryDenomConfigRequest, opts ...grpc.CallOption) (*QueryDenomConfigResponse, error) {
+	out := new(QueryDenomConfigResponse)
+	err := c.cc.Invoke(ctx, Query_DenomConfig_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -95,6 +107,8 @@ type QueryServer interface {
 	DenomBranding(context.Context, *QueryDenomBrandingRequest) (*QueryDenomBrandingResponse, error)
 	// Queries the branding packages of all denoms with pagination
 	AllDenomBranding(context.Context, *QueryAllDenomBrandingRequest) (*QueryAllDenomBrandingResponse, error)
+	// Queries the configuration of a denom. Returns the defaults when none is set.
+	DenomConfig(context.Context, *QueryDenomConfigRequest) (*QueryDenomConfigResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -113,6 +127,9 @@ func (UnimplementedQueryServer) DenomBranding(context.Context, *QueryDenomBrandi
 }
 func (UnimplementedQueryServer) AllDenomBranding(context.Context, *QueryAllDenomBrandingRequest) (*QueryAllDenomBrandingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllDenomBranding not implemented")
+}
+func (UnimplementedQueryServer) DenomConfig(context.Context, *QueryDenomConfigRequest) (*QueryDenomConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DenomConfig not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -199,6 +216,24 @@ func _Query_AllDenomBranding_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_DenomConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDenomConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DenomConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_DenomConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DenomConfig(ctx, req.(*QueryDenomConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -221,6 +256,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AllDenomBranding",
 			Handler:    _Query_AllDenomBranding_Handler,
+		},
+		{
+			MethodName: "DenomConfig",
+			Handler:    _Query_DenomConfig_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

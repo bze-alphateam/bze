@@ -34,6 +34,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "all-denom-branding",
 					Short:     "Query the branding packages of all denoms",
 				},
+				{
+					RpcMethod:      "DenomConfig",
+					Use:            "denom-config [denom]",
+					Short:          "Query the configuration of a denom (community pool, transfer fee, gas surcharge)",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
 
 				// this line is used by ignite scaffolding # autocli/query
 			},
@@ -85,6 +91,26 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:            "set-denom-branding [denom]",
 					Short:          "Set or clear the branding package of a denom (omit --branding to clear)",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
+				{
+					RpcMethod:      "DisableMinting",
+					Use:            "disable-minting [denom]",
+					Short:          "Turn minting off for good on a factory denom (admin only, irreversible)",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
+				{
+					RpcMethod: "SetDenomConfig",
+					Use:       "set-denom-config [denom] [community-pool] [transfer-fee] [gas-surcharge]",
+					Short:     "Replace the configuration of a factory denom (admin only)",
+					Long: "Replace the whole configuration of a factory denom. Every argument is required. " +
+						"Pass \"\" as community-pool for none. Rates are decimals: 0.001 is 0.1%. " +
+						"Caps: transfer-fee 0.05, gas-surcharge 2.",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "denom"},
+						{ProtoField: "community_pool"},
+						{ProtoField: "transfer_fee"},
+						{ProtoField: "gas_surcharge"},
+					},
 				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},

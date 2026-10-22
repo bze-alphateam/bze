@@ -5,6 +5,7 @@ package types
 
 import (
 	context "context"
+	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -780,6 +781,199 @@ func (m *MsgSetDenomAdminResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSetDenomAdminResponse proto.InternalMessageInfo
 
+// MsgDisableMinting turns minting off for good on a factory denom. Only the denom admin may send it.
+// The admin keeps every other right (burn, metadata, branding, admin change).
+type MsgDisableMinting struct {
+	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Denom   string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (m *MsgDisableMinting) Reset()         { *m = MsgDisableMinting{} }
+func (m *MsgDisableMinting) String() string { return proto.CompactTextString(m) }
+func (*MsgDisableMinting) ProtoMessage()    {}
+func (*MsgDisableMinting) Descriptor() ([]byte, []int) {
+	return fileDescriptor_20ef92fc8df6211e, []int{16}
+}
+func (m *MsgDisableMinting) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgDisableMinting) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgDisableMinting.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgDisableMinting) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDisableMinting.Merge(m, src)
+}
+func (m *MsgDisableMinting) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgDisableMinting) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDisableMinting.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgDisableMinting proto.InternalMessageInfo
+
+func (m *MsgDisableMinting) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgDisableMinting) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+type MsgDisableMintingResponse struct {
+}
+
+func (m *MsgDisableMintingResponse) Reset()         { *m = MsgDisableMintingResponse{} }
+func (m *MsgDisableMintingResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgDisableMintingResponse) ProtoMessage()    {}
+func (*MsgDisableMintingResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_20ef92fc8df6211e, []int{17}
+}
+func (m *MsgDisableMintingResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgDisableMintingResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgDisableMintingResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgDisableMintingResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDisableMintingResponse.Merge(m, src)
+}
+func (m *MsgDisableMintingResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgDisableMintingResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDisableMintingResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgDisableMintingResponse proto.InternalMessageInfo
+
+// MsgSetDenomConfig replaces the configuration of a factory denom as a whole.
+// Only the denom admin may send it. Both rates must be sent, even when zero.
+type MsgSetDenomConfig struct {
+	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Denom   string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+	// community_pool receives the token's fee coins. Empty means none.
+	CommunityPool string `protobuf:"bytes,3,opt,name=community_pool,json=communityPool,proto3" json:"community_pool,omitempty"`
+	// transfer_fee is a ratio, 0 <= x <= 0.05.
+	TransferFee cosmossdk_io_math.LegacyDec `protobuf:"bytes,4,opt,name=transfer_fee,json=transferFee,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"transfer_fee"`
+	// gas_surcharge is a ratio, 0 <= x <= 2.
+	GasSurcharge cosmossdk_io_math.LegacyDec `protobuf:"bytes,5,opt,name=gas_surcharge,json=gasSurcharge,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"gas_surcharge"`
+}
+
+func (m *MsgSetDenomConfig) Reset()         { *m = MsgSetDenomConfig{} }
+func (m *MsgSetDenomConfig) String() string { return proto.CompactTextString(m) }
+func (*MsgSetDenomConfig) ProtoMessage()    {}
+func (*MsgSetDenomConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor_20ef92fc8df6211e, []int{18}
+}
+func (m *MsgSetDenomConfig) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetDenomConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetDenomConfig.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetDenomConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetDenomConfig.Merge(m, src)
+}
+func (m *MsgSetDenomConfig) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetDenomConfig) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetDenomConfig.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetDenomConfig proto.InternalMessageInfo
+
+func (m *MsgSetDenomConfig) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgSetDenomConfig) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *MsgSetDenomConfig) GetCommunityPool() string {
+	if m != nil {
+		return m.CommunityPool
+	}
+	return ""
+}
+
+type MsgSetDenomConfigResponse struct {
+}
+
+func (m *MsgSetDenomConfigResponse) Reset()         { *m = MsgSetDenomConfigResponse{} }
+func (m *MsgSetDenomConfigResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSetDenomConfigResponse) ProtoMessage()    {}
+func (*MsgSetDenomConfigResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_20ef92fc8df6211e, []int{19}
+}
+func (m *MsgSetDenomConfigResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetDenomConfigResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetDenomConfigResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetDenomConfigResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetDenomConfigResponse.Merge(m, src)
+}
+func (m *MsgSetDenomConfigResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetDenomConfigResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetDenomConfigResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetDenomConfigResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgUpdateParams)(nil), "bze.tokenfactory.MsgUpdateParams")
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "bze.tokenfactory.MsgUpdateParamsResponse")
@@ -797,64 +991,80 @@ func init() {
 	proto.RegisterType((*MsgSetDenomBrandingResponse)(nil), "bze.tokenfactory.MsgSetDenomBrandingResponse")
 	proto.RegisterType((*MsgSetDenomAdmin)(nil), "bze.tokenfactory.MsgSetDenomAdmin")
 	proto.RegisterType((*MsgSetDenomAdminResponse)(nil), "bze.tokenfactory.MsgSetDenomAdminResponse")
+	proto.RegisterType((*MsgDisableMinting)(nil), "bze.tokenfactory.MsgDisableMinting")
+	proto.RegisterType((*MsgDisableMintingResponse)(nil), "bze.tokenfactory.MsgDisableMintingResponse")
+	proto.RegisterType((*MsgSetDenomConfig)(nil), "bze.tokenfactory.MsgSetDenomConfig")
+	proto.RegisterType((*MsgSetDenomConfigResponse)(nil), "bze.tokenfactory.MsgSetDenomConfigResponse")
 }
 
 func init() { proto.RegisterFile("bze/tokenfactory/tx.proto", fileDescriptor_20ef92fc8df6211e) }
 
 var fileDescriptor_20ef92fc8df6211e = []byte{
-	// 823 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xcf, 0x4f, 0xdb, 0x48,
-	0x14, 0x8e, 0x97, 0x05, 0x92, 0x61, 0x77, 0x01, 0x2f, 0x5a, 0x1c, 0x23, 0x02, 0x78, 0xc5, 0x8a,
-	0x4d, 0x45, 0xac, 0xa4, 0x82, 0x4a, 0xe1, 0x44, 0xca, 0xad, 0x8a, 0x54, 0x19, 0xf5, 0xd0, 0xaa,
-	0x52, 0x34, 0x4e, 0x06, 0xc7, 0x02, 0xdb, 0x91, 0x67, 0x02, 0x24, 0xa7, 0xaa, 0xc7, 0x9e, 0xf8,
-	0x33, 0x7a, 0xe4, 0xd0, 0x5b, 0xdb, 0x3b, 0xb7, 0xa2, 0x9e, 0x7a, 0x42, 0x2d, 0x1c, 0xb8, 0xf7,
-	0x2f, 0xa8, 0xe6, 0x87, 0x1d, 0xc7, 0x71, 0x12, 0xa8, 0xd4, 0x0b, 0xf8, 0xcd, 0xfb, 0xf5, 0x7d,
-	0xf3, 0xe6, 0x7d, 0x0a, 0xc8, 0x9a, 0x5d, 0xa4, 0x13, 0xef, 0x10, 0xb9, 0x07, 0xb0, 0x4e, 0x3c,
-	0xbf, 0xa3, 0x93, 0xd3, 0x42, 0xcb, 0xf7, 0x88, 0x27, 0xcf, 0x99, 0x5d, 0x54, 0x88, 0xba, 0xd4,
-	0x79, 0xe8, 0xd8, 0xae, 0xa7, 0xb3, 0xbf, 0x3c, 0x48, 0x5d, 0xac, 0x7b, 0xd8, 0xf1, 0xb0, 0xee,
-	0x60, 0x4b, 0x3f, 0x2e, 0xd2, 0x7f, 0xc2, 0x91, 0xe5, 0x8e, 0x1a, 0xb3, 0x74, 0x6e, 0x08, 0xd7,
-	0x82, 0xe5, 0x59, 0x1e, 0x3f, 0xa7, 0x5f, 0xe2, 0x34, 0x27, 0x2a, 0x99, 0xd0, 0x3d, 0xd4, 0x8f,
-	0x8b, 0x26, 0x22, 0xb0, 0xc8, 0x0c, 0xe1, 0x5f, 0x1e, 0x40, 0xda, 0x82, 0x3e, 0x74, 0x82, 0xa2,
-	0xeb, 0x03, 0xee, 0x06, 0x72, 0x3d, 0xa7, 0x66, 0xfa, 0xd0, 0x6d, 0xd8, 0xae, 0x80, 0xa5, 0x7d,
-	0x94, 0xc0, 0x6c, 0x15, 0x5b, 0xcf, 0x5a, 0x0d, 0x48, 0xd0, 0x53, 0x56, 0x40, 0xde, 0x06, 0x19,
-	0xd8, 0x26, 0x4d, 0xcf, 0xb7, 0x49, 0x47, 0x91, 0x56, 0xa5, 0x8d, 0x4c, 0x45, 0xf9, 0xfc, 0x6e,
-	0x73, 0x41, 0x80, 0xde, 0x6d, 0x34, 0x7c, 0x84, 0xf1, 0x3e, 0xf1, 0x6d, 0xd7, 0x32, 0x7a, 0xa1,
-	0xf2, 0x0e, 0x98, 0xe2, 0x10, 0x94, 0xdf, 0x56, 0xa5, 0x8d, 0x99, 0x92, 0x52, 0x88, 0xdf, 0x58,
-	0x81, 0x77, 0xa8, 0x64, 0x2e, 0xae, 0x56, 0x52, 0x6f, 0x6f, 0xcf, 0xf3, 0x92, 0x21, 0x52, 0xca,
-	0x5b, 0xaf, 0x6f, 0xcf, 0xf3, 0xbd, 0x62, 0x6f, 0x6e, 0xcf, 0xf3, 0x1a, 0xa5, 0x70, 0xda, 0x4f,
-	0x22, 0x86, 0x55, 0xcb, 0x82, 0xc5, 0xd8, 0x91, 0x81, 0x70, 0xcb, 0x73, 0x31, 0xd2, 0xba, 0xe0,
-	0xaf, 0x2a, 0xb6, 0x1e, 0xfb, 0x08, 0x12, 0xb4, 0x47, 0xb9, 0xcb, 0x0a, 0x98, 0xae, 0x53, 0xd3,
-	0xf3, 0x39, 0x2d, 0x23, 0x30, 0x65, 0x15, 0xa4, 0x71, 0xdb, 0x64, 0x37, 0xc4, 0xc0, 0x67, 0x8c,
-	0xd0, 0x2e, 0x97, 0x28, 0xb2, 0x20, 0x92, 0xe2, 0x5a, 0x4b, 0xc6, 0x15, 0xe9, 0xa4, 0x6d, 0x81,
-	0x7f, 0xfa, 0x4f, 0x02, 0x54, 0xf2, 0x12, 0xc8, 0xb8, 0xe8, 0xa4, 0xc6, 0x5b, 0x71, 0x14, 0x69,
-	0x17, 0x9d, 0xf0, 0xb4, 0x03, 0x30, 0x5d, 0xc5, 0x56, 0xd5, 0x76, 0xc9, 0x08, 0xac, 0x0b, 0x60,
-	0xb2, 0xee, 0xd9, 0x2e, 0x16, 0x40, 0xb9, 0x51, 0x7e, 0x10, 0x47, 0xa9, 0x26, 0xa3, 0xa4, 0xc5,
-	0xb5, 0x79, 0x36, 0x74, 0xfa, 0x19, 0xde, 0x16, 0x6f, 0x5d, 0x69, 0xfb, 0xee, 0x2f, 0x6b, 0x4d,
-	0x8b, 0x8b, 0xd6, 0xf4, 0x33, 0x6c, 0x7d, 0x26, 0xf1, 0x49, 0x35, 0xa1, 0x6b, 0xa1, 0xdd, 0x86,
-	0x63, 0x8f, 0x81, 0x10, 0x1d, 0x13, 0x37, 0xe8, 0xfc, 0x5c, 0x74, 0xc2, 0x72, 0x95, 0x89, 0xf0,
-	0x52, 0x99, 0x7d, 0xf7, 0xf9, 0xf5, 0xfa, 0x6b, 0x0a, 0x9f, 0x5f, 0xef, 0x24, 0x04, 0xfb, 0x41,
-	0x02, 0x7f, 0x57, 0xb1, 0xb5, 0x8f, 0x08, 0x1b, 0x59, 0x15, 0x11, 0xd8, 0x80, 0x04, 0x8e, 0x40,
-	0x6c, 0x80, 0xb4, 0x23, 0xa2, 0xc4, 0x62, 0x2c, 0x17, 0xc4, 0x2a, 0xb1, 0x75, 0x16, 0xbb, 0x5d,
-	0x08, 0x4a, 0x55, 0x16, 0xe9, 0x76, 0x7c, 0xbf, 0x5a, 0x99, 0xed, 0x40, 0xe7, 0xa8, 0xac, 0x05,
-	0xc9, 0x9a, 0x11, 0xd6, 0x29, 0x3f, 0x8a, 0x73, 0xfa, 0x2f, 0x99, 0x53, 0x1c, 0xa6, 0xb6, 0x0c,
-	0x96, 0x12, 0x8e, 0x43, 0x76, 0xef, 0xfb, 0xd9, 0x55, 0x84, 0x58, 0xdc, 0x7b, 0x1e, 0x3b, 0x20,
-	0x1d, 0x08, 0x0d, 0x9b, 0xc7, 0x4c, 0x69, 0x65, 0x50, 0x0c, 0xfa, 0x5a, 0x18, 0x61, 0xc2, 0xbd,
-	0xc9, 0x05, 0x25, 0x62, 0xe4, 0xc2, 0xca, 0x01, 0xb9, 0x4f, 0x12, 0x98, 0x8b, 0xf8, 0xf9, 0x4b,
-	0xfb, 0x59, 0xb1, 0x4b, 0xe6, 0xbd, 0xc5, 0xb7, 0x1b, 0xf6, 0x1e, 0xe2, 0x88, 0x6a, 0xbd, 0x27,
-	0xba, 0x3d, 0x28, 0x7e, 0xff, 0x8e, 0xe6, 0xcc, 0x9f, 0xa9, 0x0a, 0x94, 0xf8, 0x59, 0xc0, 0xb6,
-	0xf4, 0x6d, 0x12, 0x4c, 0x54, 0xb1, 0x25, 0xbf, 0x04, 0x7f, 0xf4, 0xa9, 0xfb, 0xda, 0xe0, 0x20,
-	0x62, 0x0a, 0xaa, 0xfe, 0x3f, 0x36, 0x24, 0x94, 0xb3, 0xe7, 0x60, 0x26, 0xaa, 0xb0, 0xab, 0x89,
-	0x99, 0x91, 0x08, 0x75, 0x63, 0x5c, 0x44, 0x58, 0x7a, 0x0f, 0xfc, 0xce, 0x94, 0x30, 0x9b, 0x98,
-	0x41, 0x5d, 0xea, 0xda, 0x50, 0x57, 0xb4, 0x0a, 0x13, 0xb5, 0xe4, 0x2a, 0xd4, 0x35, 0xa4, 0x4a,
-	0x54, 0xa2, 0x18, 0xcd, 0x88, 0x3c, 0x0d, 0xa1, 0xd9, 0x8b, 0x18, 0x46, 0x73, 0x50, 0x50, 0xe4,
-	0x26, 0x98, 0x1b, 0x10, 0x93, 0xf5, 0xc4, 0xec, 0x78, 0x98, 0xba, 0x79, 0xa7, 0xb0, 0xa4, 0x4e,
-	0xe1, 0x62, 0x8f, 0xee, 0x14, 0x84, 0x8d, 0xe9, 0x14, 0xdf, 0x34, 0xb9, 0x06, 0xfe, 0xec, 0xdf,
-	0x32, 0x6d, 0x64, 0x3e, 0xbf, 0xb2, 0xfc, 0xf8, 0x98, 0xa0, 0x81, 0x3a, 0xf9, 0x8a, 0xfe, 0x78,
-	0xa8, 0x3c, 0xb9, 0xb8, 0xce, 0x49, 0x97, 0xd7, 0x39, 0xe9, 0xeb, 0x75, 0x4e, 0x3a, 0xbb, 0xc9,
-	0xa5, 0x2e, 0x6f, 0x72, 0xa9, 0x2f, 0x37, 0xb9, 0xd4, 0x8b, 0xa2, 0x65, 0x93, 0x66, 0xdb, 0x2c,
-	0xd4, 0x3d, 0x47, 0x37, 0xbb, 0x68, 0x13, 0x1e, 0xb5, 0x9a, 0x90, 0x20, 0xc8, 0xac, 0xf8, 0x5e,
-	0x91, 0x4e, 0x0b, 0x61, 0x73, 0x8a, 0xfd, 0x22, 0x7a, 0xf8, 0x23, 0x00, 0x00, 0xff, 0xff, 0x7e,
-	0xb9, 0xb4, 0x12, 0x03, 0x0a, 0x00, 0x00,
+	// 1022 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0x4f, 0x4f, 0x1b, 0x47,
+	0x14, 0x67, 0x93, 0x10, 0xf0, 0xf0, 0x27, 0xb0, 0x45, 0x65, 0xbd, 0x08, 0x03, 0x4b, 0x53, 0x51,
+	0x52, 0x6c, 0x41, 0x05, 0x95, 0x9c, 0x53, 0x1c, 0xab, 0x97, 0xd6, 0x52, 0x64, 0xd4, 0x43, 0xda,
+	0x4a, 0xd6, 0xec, 0x7a, 0xbc, 0x5e, 0xe1, 0x9d, 0xb1, 0x76, 0xc6, 0x21, 0xe6, 0x54, 0xf5, 0xd8,
+	0x53, 0x3e, 0x46, 0x7b, 0xe3, 0x90, 0x5b, 0xdb, 0x7b, 0x6e, 0x8d, 0x72, 0xaa, 0x7a, 0x40, 0x11,
+	0x1c, 0xb8, 0xf7, 0x13, 0x54, 0xf3, 0x67, 0xd7, 0xbb, 0xeb, 0xb5, 0x0d, 0xa9, 0x7a, 0x81, 0x9d,
+	0x79, 0xef, 0xfd, 0xde, 0xef, 0xbd, 0x37, 0xef, 0x3d, 0x83, 0xbc, 0x7d, 0x86, 0x4a, 0x8c, 0x9c,
+	0x20, 0xdc, 0x82, 0x0e, 0x23, 0x41, 0xbf, 0xc4, 0x5e, 0x16, 0xbb, 0x01, 0x61, 0x44, 0x5f, 0xb2,
+	0xcf, 0x50, 0x31, 0x2e, 0x32, 0x97, 0xa1, 0xef, 0x61, 0x52, 0x12, 0x7f, 0xa5, 0x92, 0xb9, 0xea,
+	0x10, 0xea, 0x13, 0x5a, 0xf2, 0xa9, 0x5b, 0x7a, 0xb1, 0xcf, 0xff, 0x29, 0x41, 0x5e, 0x0a, 0x1a,
+	0xe2, 0x54, 0x92, 0x07, 0x25, 0x5a, 0x71, 0x89, 0x4b, 0xe4, 0x3d, 0xff, 0x52, 0xb7, 0x05, 0x85,
+	0x64, 0x43, 0x7c, 0x52, 0x7a, 0xb1, 0x6f, 0x23, 0x06, 0xf7, 0xc5, 0x41, 0xc9, 0xd7, 0x87, 0x98,
+	0x76, 0x61, 0x00, 0xfd, 0x10, 0xf4, 0xe1, 0x90, 0xb8, 0x89, 0x30, 0xf1, 0x1b, 0x76, 0x00, 0x71,
+	0xd3, 0xc3, 0x8a, 0x96, 0xf5, 0x87, 0x06, 0x1e, 0xd4, 0xa8, 0xfb, 0x6d, 0xb7, 0x09, 0x19, 0x7a,
+	0x26, 0x00, 0xf4, 0x23, 0x90, 0x83, 0x3d, 0xd6, 0x26, 0x81, 0xc7, 0xfa, 0x86, 0xb6, 0xa9, 0xed,
+	0xe4, 0x2a, 0xc6, 0xbb, 0xd7, 0x7b, 0x2b, 0x8a, 0xf4, 0x93, 0x66, 0x33, 0x40, 0x94, 0x1e, 0xb3,
+	0xc0, 0xc3, 0x6e, 0x7d, 0xa0, 0xaa, 0x3f, 0x06, 0xf7, 0x25, 0x05, 0xe3, 0xce, 0xa6, 0xb6, 0x33,
+	0x77, 0x60, 0x14, 0xd3, 0x19, 0x2b, 0x4a, 0x0f, 0x95, 0xdc, 0x9b, 0x8b, 0x8d, 0xa9, 0x5f, 0xae,
+	0xcf, 0x77, 0xb5, 0xba, 0x32, 0x29, 0x1f, 0xfe, 0x74, 0x7d, 0xbe, 0x3b, 0x00, 0xfb, 0xf9, 0xfa,
+	0x7c, 0xd7, 0xe2, 0x21, 0xbc, 0x4c, 0x06, 0x91, 0xe2, 0x6a, 0xe5, 0xc1, 0x6a, 0xea, 0xaa, 0x8e,
+	0x68, 0x97, 0x60, 0x8a, 0xac, 0x33, 0xb0, 0x58, 0xa3, 0xee, 0xd3, 0x00, 0x41, 0x86, 0xaa, 0x3c,
+	0x76, 0xdd, 0x00, 0x33, 0x0e, 0x3f, 0x92, 0x40, 0x86, 0x55, 0x0f, 0x8f, 0xba, 0x09, 0x66, 0x69,
+	0xcf, 0x16, 0x19, 0x12, 0xe4, 0x73, 0xf5, 0xe8, 0x5c, 0x3e, 0xe0, 0xcc, 0x42, 0x4d, 0xce, 0x6b,
+	0x2b, 0x9b, 0x57, 0xcc, 0x93, 0x75, 0x08, 0x3e, 0x4e, 0xde, 0x84, 0xac, 0xf4, 0x35, 0x90, 0xc3,
+	0xe8, 0xb4, 0x21, 0x5d, 0x49, 0x16, 0xb3, 0x18, 0x9d, 0x4a, 0xb3, 0x16, 0x98, 0xa9, 0x51, 0xb7,
+	0xe6, 0x61, 0x36, 0x86, 0xeb, 0x0a, 0x98, 0x76, 0x88, 0x87, 0xa9, 0x22, 0x2a, 0x0f, 0xe5, 0x47,
+	0x69, 0x96, 0x66, 0x36, 0x4b, 0x0e, 0x6e, 0x2d, 0x8b, 0xa2, 0xf3, 0xcf, 0x28, 0x5b, 0xd2, 0x75,
+	0xa5, 0x17, 0xe0, 0xff, 0xcd, 0x35, 0x07, 0x57, 0xae, 0xf9, 0x67, 0xe4, 0xfa, 0x95, 0x26, 0x2b,
+	0xd5, 0x86, 0xd8, 0x45, 0x4f, 0x9a, 0xbe, 0x37, 0x81, 0x42, 0xbc, 0x4c, 0xf2, 0xc0, 0xeb, 0x87,
+	0xd1, 0xa9, 0xb0, 0x35, 0xee, 0x46, 0x49, 0x15, 0xe7, 0x9b, 0xd7, 0x6f, 0xe0, 0xdf, 0x32, 0x64,
+	0xfd, 0x06, 0x37, 0x11, 0xd9, 0xdf, 0x35, 0xf0, 0x51, 0x8d, 0xba, 0xc7, 0x88, 0x89, 0x92, 0xd5,
+	0x10, 0x83, 0x4d, 0xc8, 0xe0, 0x18, 0xc6, 0x75, 0x30, 0xeb, 0x2b, 0x2d, 0xd5, 0x18, 0xeb, 0x45,
+	0xd5, 0x4a, 0xa2, 0x9d, 0x55, 0x6f, 0x17, 0x43, 0xa8, 0xca, 0x2a, 0xef, 0x8e, 0x7f, 0x2e, 0x36,
+	0x1e, 0xf4, 0xa1, 0xdf, 0x29, 0x5b, 0xa1, 0xb1, 0x55, 0x8f, 0x70, 0xca, 0x5f, 0xa6, 0x63, 0xfa,
+	0x34, 0x3b, 0xa6, 0x34, 0x4d, 0x6b, 0x1d, 0xac, 0x65, 0x5c, 0x47, 0xd1, 0xfd, 0x96, 0x8c, 0xae,
+	0xa2, 0x86, 0xc5, 0xad, 0xeb, 0xf1, 0x18, 0xcc, 0x86, 0x83, 0x46, 0xd4, 0x63, 0xee, 0x60, 0x63,
+	0x78, 0x18, 0x24, 0x5c, 0xd4, 0x23, 0x83, 0x5b, 0x07, 0x17, 0x42, 0xa4, 0x82, 0x8b, 0x90, 0xc3,
+	0xe0, 0xfe, 0xd4, 0xc0, 0x52, 0x4c, 0x2e, 0x5f, 0xda, 0x87, 0x0e, 0xbb, 0xec, 0xb8, 0x0f, 0x65,
+	0x77, 0xc3, 0xc1, 0x43, 0x1c, 0x83, 0x36, 0x78, 0xa2, 0x47, 0xc3, 0xc3, 0x6f, 0x7b, 0x7c, 0xcc,
+	0xf2, 0x99, 0x9a, 0xc0, 0x48, 0xdf, 0xc5, 0xc6, 0xdf, 0x72, 0x8d, 0xba, 0x55, 0x8f, 0x42, 0xbb,
+	0x83, 0x78, 0xab, 0x7f, 0x40, 0x1d, 0xe5, 0x54, 0x8e, 0x97, 0xe2, 0x93, 0x6c, 0x5a, 0x49, 0x37,
+	0xd6, 0x1a, 0xc8, 0x0f, 0x5d, 0x46, 0xc4, 0xde, 0xdf, 0x11, 0xcc, 0x42, 0xd6, 0x4f, 0x09, 0x6e,
+	0x79, 0xb7, 0x7f, 0x61, 0x9f, 0x83, 0x45, 0x87, 0xf8, 0x7e, 0x0f, 0x7b, 0xac, 0xdf, 0xe8, 0x12,
+	0xd2, 0x51, 0xe9, 0x9e, 0x96, 0x6b, 0x65, 0x21, 0x12, 0x3e, 0x23, 0xa4, 0xa3, 0x3f, 0x07, 0xf3,
+	0x2c, 0x80, 0x98, 0xb6, 0x50, 0xd0, 0x68, 0x21, 0x64, 0xdc, 0x13, 0xba, 0x47, 0xbc, 0xd1, 0xfe,
+	0xbe, 0xd8, 0x58, 0x93, 0xe5, 0xa1, 0xcd, 0x93, 0xa2, 0x47, 0x4a, 0x3e, 0x64, 0xed, 0xe2, 0x37,
+	0xc8, 0x85, 0x4e, 0xbf, 0x8a, 0x9c, 0x77, 0xaf, 0xf7, 0x80, 0xaa, 0x5e, 0x15, 0x39, 0x12, 0x7c,
+	0x2e, 0xc4, 0xfa, 0x0a, 0x21, 0xfd, 0x7b, 0xb0, 0xe0, 0x42, 0xda, 0xa0, 0xbd, 0xc0, 0x69, 0xc3,
+	0xc0, 0x45, 0xc6, 0xf4, 0x7f, 0xc2, 0x9e, 0x77, 0x21, 0x3d, 0x0e, 0xb1, 0x6e, 0x9c, 0xff, 0x64,
+	0x32, 0x55, 0xfe, 0x93, 0x97, 0x61, 0xfe, 0x0f, 0x7e, 0x9d, 0x01, 0x77, 0x6b, 0xd4, 0xd5, 0x7f,
+	0x00, 0xf3, 0x89, 0xb5, 0xbf, 0x35, 0xdc, 0xa1, 0xa9, 0xd5, 0x6a, 0x7e, 0x36, 0x51, 0x25, 0xda,
+	0x73, 0xcf, 0xc1, 0x5c, 0x7c, 0xf5, 0x6e, 0x66, 0x5a, 0xc6, 0x34, 0xcc, 0x9d, 0x49, 0x1a, 0x11,
+	0x74, 0x15, 0xdc, 0x13, 0x2b, 0x32, 0x9f, 0x69, 0xc1, 0x45, 0xe6, 0xd6, 0x48, 0x51, 0x1c, 0x45,
+	0x6c, 0xbb, 0x6c, 0x14, 0x2e, 0x1a, 0x81, 0x12, 0xdf, 0x5d, 0x22, 0xcc, 0xd8, 0xde, 0x1a, 0x11,
+	0xe6, 0x40, 0x63, 0x54, 0x98, 0xc3, 0x9b, 0x46, 0x6f, 0x83, 0xa5, 0xa1, 0x2d, 0xf3, 0x30, 0xd3,
+	0x3a, 0xad, 0x66, 0xee, 0xdd, 0x48, 0x2d, 0xcb, 0x53, 0x34, 0xf1, 0xc7, 0x7b, 0x0a, 0xd5, 0x26,
+	0x78, 0x4a, 0x8f, 0x60, 0xbd, 0x01, 0x16, 0x92, 0xe3, 0xd7, 0x1a, 0x6b, 0x2f, 0x53, 0xb6, 0x3b,
+	0x59, 0x27, 0x72, 0x60, 0x83, 0xc5, 0xd4, 0xc8, 0xdb, 0xce, 0xb4, 0x4e, 0x2a, 0x99, 0x8f, 0x6e,
+	0xa0, 0x14, 0xf7, 0x91, 0x1a, 0x5e, 0xdb, 0x63, 0x19, 0x4a, 0xa5, 0x11, 0x3e, 0xb2, 0x9b, 0xd4,
+	0x9c, 0xfe, 0x91, 0x4f, 0x83, 0xca, 0xd7, 0x6f, 0x2e, 0x0b, 0xda, 0xdb, 0xcb, 0x82, 0xf6, 0xfe,
+	0xb2, 0xa0, 0xbd, 0xba, 0x2a, 0x4c, 0xbd, 0xbd, 0x2a, 0x4c, 0xfd, 0x75, 0x55, 0x98, 0xfa, 0x6e,
+	0xdf, 0xf5, 0x58, 0xbb, 0x67, 0x17, 0x1d, 0xe2, 0x97, 0xec, 0x33, 0xb4, 0x07, 0x3b, 0xdd, 0x36,
+	0x64, 0x08, 0x8a, 0x53, 0x7a, 0x42, 0xb0, 0x7e, 0x17, 0x51, 0xfb, 0xbe, 0xf8, 0xc9, 0xff, 0xc5,
+	0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x33, 0xc8, 0x8b, 0xc1, 0xe4, 0x0c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -881,6 +1091,12 @@ type MsgClient interface {
 	// SetDenomAdmin assigns a new admin to a factory denom.
 	// Governance only (authority = the x/gov module account).
 	SetDenomAdmin(ctx context.Context, in *MsgSetDenomAdmin, opts ...grpc.CallOption) (*MsgSetDenomAdminResponse, error)
+	// DisableMinting turns minting off for good on a factory denom.
+	// Admin only and irreversible: no message turns it back on.
+	DisableMinting(ctx context.Context, in *MsgDisableMinting, opts ...grpc.CallOption) (*MsgDisableMintingResponse, error)
+	// SetDenomConfig replaces the whole configuration of a factory denom.
+	// Admin only. Every field must be sent.
+	SetDenomConfig(ctx context.Context, in *MsgSetDenomConfig, opts ...grpc.CallOption) (*MsgSetDenomConfigResponse, error)
 }
 
 type msgClient struct {
@@ -963,6 +1179,24 @@ func (c *msgClient) SetDenomAdmin(ctx context.Context, in *MsgSetDenomAdmin, opt
 	return out, nil
 }
 
+func (c *msgClient) DisableMinting(ctx context.Context, in *MsgDisableMinting, opts ...grpc.CallOption) (*MsgDisableMintingResponse, error) {
+	out := new(MsgDisableMintingResponse)
+	err := c.cc.Invoke(ctx, "/bze.tokenfactory.Msg/DisableMinting", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) SetDenomConfig(ctx context.Context, in *MsgSetDenomConfig, opts ...grpc.CallOption) (*MsgSetDenomConfigResponse, error) {
+	out := new(MsgSetDenomConfigResponse)
+	err := c.cc.Invoke(ctx, "/bze.tokenfactory.Msg/SetDenomConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// UpdateParams defines a (governance) operation for updating the module
@@ -977,6 +1211,12 @@ type MsgServer interface {
 	// SetDenomAdmin assigns a new admin to a factory denom.
 	// Governance only (authority = the x/gov module account).
 	SetDenomAdmin(context.Context, *MsgSetDenomAdmin) (*MsgSetDenomAdminResponse, error)
+	// DisableMinting turns minting off for good on a factory denom.
+	// Admin only and irreversible: no message turns it back on.
+	DisableMinting(context.Context, *MsgDisableMinting) (*MsgDisableMintingResponse, error)
+	// SetDenomConfig replaces the whole configuration of a factory denom.
+	// Admin only. Every field must be sent.
+	SetDenomConfig(context.Context, *MsgSetDenomConfig) (*MsgSetDenomConfigResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -1006,6 +1246,12 @@ func (*UnimplementedMsgServer) SetDenomBranding(ctx context.Context, req *MsgSet
 }
 func (*UnimplementedMsgServer) SetDenomAdmin(ctx context.Context, req *MsgSetDenomAdmin) (*MsgSetDenomAdminResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetDenomAdmin not implemented")
+}
+func (*UnimplementedMsgServer) DisableMinting(ctx context.Context, req *MsgDisableMinting) (*MsgDisableMintingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DisableMinting not implemented")
+}
+func (*UnimplementedMsgServer) SetDenomConfig(ctx context.Context, req *MsgSetDenomConfig) (*MsgSetDenomConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetDenomConfig not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -1156,6 +1402,42 @@ func _Msg_SetDenomAdmin_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_DisableMinting_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDisableMinting)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).DisableMinting(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.tokenfactory.Msg/DisableMinting",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).DisableMinting(ctx, req.(*MsgDisableMinting))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_SetDenomConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetDenomConfig)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetDenomConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.tokenfactory.Msg/SetDenomConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetDenomConfig(ctx, req.(*MsgSetDenomConfig))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "bze.tokenfactory.Msg",
@@ -1192,6 +1474,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetDenomAdmin",
 			Handler:    _Msg_SetDenomAdmin_Handler,
+		},
+		{
+			MethodName: "DisableMinting",
+			Handler:    _Msg_DisableMinting_Handler,
+		},
+		{
+			MethodName: "SetDenomConfig",
+			Handler:    _Msg_SetDenomConfig_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1717,6 +2007,153 @@ func (m *MsgSetDenomAdminResponse) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgDisableMinting) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgDisableMinting) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgDisableMinting) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgDisableMintingResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgDisableMintingResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgDisableMintingResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetDenomConfig) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetDenomConfig) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetDenomConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.GasSurcharge.Size()
+		i -= size
+		if _, err := m.GasSurcharge.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x2a
+	{
+		size := m.TransferFee.Size()
+		i -= size
+		if _, err := m.TransferFee.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	if len(m.CommunityPool) > 0 {
+		i -= len(m.CommunityPool)
+		copy(dAtA[i:], m.CommunityPool)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.CommunityPool)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetDenomConfigResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetDenomConfigResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetDenomConfigResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1940,6 +2377,66 @@ func (m *MsgSetDenomAdmin) Size() (n int) {
 }
 
 func (m *MsgSetDenomAdminResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgDisableMinting) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgDisableMintingResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgSetDenomConfig) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.CommunityPool)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.TransferFee.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.GasSurcharge.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgSetDenomConfigResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -3377,6 +3874,434 @@ func (m *MsgSetDenomAdminResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgSetDenomAdminResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgDisableMinting) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgDisableMinting: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgDisableMinting: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgDisableMintingResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgDisableMintingResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgDisableMintingResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetDenomConfig) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetDenomConfig: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetDenomConfig: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CommunityPool", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CommunityPool = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TransferFee", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TransferFee.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GasSurcharge", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.GasSurcharge.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetDenomConfigResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetDenomConfigResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetDenomConfigResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

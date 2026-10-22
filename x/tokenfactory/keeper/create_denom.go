@@ -22,7 +22,8 @@ func (k Keeper) CreateDenomAfterValidation(ctx sdk.Context, creatorAddr string, 
 	}
 
 	dAuth := types.DenomAuthority{
-		Admin: creatorAddr,
+		Admin:    creatorAddr,
+		Mintable: true,
 	}
 	err = k.SetDenomAuthority(ctx, denom, dAuth)
 	if err != nil {

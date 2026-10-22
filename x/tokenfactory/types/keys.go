@@ -21,6 +21,7 @@ const KeySeparator = "|"
 
 const (
 	DenomAuthorityMetadataKey = "authoritydenom"
+	DenomConfigKey            = "config"
 	DenomsPrefixKey           = "denoms"
 	CreatorPrefixKey          = "creator"
 	AdminPrefixKey            = "admin"

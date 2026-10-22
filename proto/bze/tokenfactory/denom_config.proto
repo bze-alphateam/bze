@@ -1,0 +1,34 @@
+syntax = "proto3";
+package bze.tokenfactory;
+
+import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/tokenfactory/types";
+
+// DenomConfig is the admin-set configuration of a factory denom. Tokenfactory
+// only stores it; other modules act on it. A missing entry means the defaults:
+// no community pool and zero rates.
+message DenomConfig {
+  option (gogoproto.equal) = true;
+
+  // community_pool receives the token's fee coins. Empty means none.
+  string community_pool = 1 [(amino.dont_omitempty) = true];
+
+  // transfer_fee is the ratio charged on top of user sends, 0 <= x <= 0.05.
+  string transfer_fee = 2 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+
+  // gas_surcharge is the ratio added to gas paid in the token, 0 <= x <= 2.
+  string gas_surcharge = 3 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}

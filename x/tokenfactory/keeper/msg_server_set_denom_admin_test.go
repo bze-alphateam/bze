@@ -42,6 +42,12 @@ func (suite *IntegrationTestSuite) requireAdmin(denom, admin string) {
 	suite.Require().Equal(admin, dAuth.Admin)
 }
 
+func (suite *IntegrationTestSuite) requireMintable(denom string, mintable bool) {
+	dAuth, err := suite.k.GetDenomAuthority(suite.ctx, denom)
+	suite.Require().NoError(err)
+	suite.Require().Equal(mintable, dAuth.Mintable)
+}
+
 // mintAs sends a MsgMint for 1000 coins of denom signed by creator. When expectMint is true the bank
 // calls of a successful mint are expected.
 func (suite *IntegrationTestSuite) mintAs(creator, denom string, expectMint bool) error {
@@ -57,7 +63,8 @@ func (suite *IntegrationTestSuite) mintAs(creator, denom string, expectMint bool
 	return err
 }
 
-// A renounced denom is locked until governance assigns it an admin, who can then mint.
+// A renounced denom is locked until governance assigns it an admin. The new admin gets every right
+// except minting: renouncing turned minting off for good (BZE-217).
 func (suite *IntegrationTestSuite) TestSetDenomAdmin_RenouncedDenom() {
 	creator := sdk.AccAddress("creator").String()
 	newAdmin := sdk.AccAddress("dao-account").String()
@@ -78,7 +85,10 @@ func (suite *IntegrationTestSuite) TestSetDenomAdmin_RenouncedDenom() {
 	suite.Require().Equal(newAdmin, events[0].NewAdmin)
 	suite.Require().Equal(denom, events[0].Denom)
 
-	suite.Require().NoError(suite.mintAs(newAdmin, denom, true))
+	dAuth, err := suite.k.GetDenomAuthority(suite.ctx, denom)
+	suite.Require().NoError(err)
+	suite.Require().False(dAuth.Mintable, "governance never turns minting back on")
+	suite.Require().ErrorIs(suite.mintAs(newAdmin, denom, false), types.ErrMintingDisabled, "the supply stays fixed")
 	suite.Require().ErrorIs(suite.mintAs(creator, denom, false), types.ErrUnauthorized, "the renounced creator stays out")
 }
 
@@ -87,12 +97,13 @@ func (suite *IntegrationTestSuite) TestSetDenomAdmin_OverwritesLiveAdmin() {
 	oldAdmin := sdk.AccAddress("old-admin").String()
 	newAdmin := sdk.AccAddress("new-admin").String()
 	denom := "factory/" + oldAdmin + "/testtoken"
-	suite.Require().NoError(suite.k.SetDenomAuthority(suite.ctx, denom, types.DenomAuthority{Admin: oldAdmin}))
+	suite.Require().NoError(suite.k.SetDenomAuthority(suite.ctx, denom, types.DenomAuthority{Admin: oldAdmin, Mintable: true}))
 
 	suite.resetEvents()
 	_, err := suite.msgServer.SetDenomAdmin(suite.ctx, types.NewMsgSetDenomAdmin(govAuthority(), denom, newAdmin))
 	suite.Require().NoError(err)
 	suite.requireAdmin(denom, newAdmin)
+	suite.requireMintable(denom, true)
 
 	events := suite.adminChangeEvents()
 	suite.Require().Len(events, 1)
