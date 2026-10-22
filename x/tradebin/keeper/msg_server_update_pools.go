@@ -12,8 +12,9 @@ import (
 
 // UpdatePools is the governance message that changes the swap fee and the fee split of existing pools.
 // Only Fee and FeeDest are written: the curve, reserves and LP denom never change (switching the curve
-// would change the invariant). All or nothing: every pool is looked up before anything is written, so
-// an unknown pool refuses the whole batch. Halted pools can be updated, the halt only blocks trading.
+// would change the invariant). All or nothing: an unknown pool fails the message, and gov (like x/dao)
+// runs it in a cache context, so the writes of the earlier entries are discarded with it. Halted pools
+// can be updated, the halt only blocks trading.
 // Idempotent: an entry equal to the pool's current values writes nothing and emits no event.
 func (k msgServer) UpdatePools(goCtx context.Context, msg *types.MsgUpdatePools) (*types.MsgUpdatePoolsResponse, error) {
 	if k.GetAuthority() != msg.Authority {
@@ -25,17 +26,12 @@ func (k msgServer) UpdatePools(goCtx context.Context, msg *types.MsgUpdatePools)
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	pools := make([]types.LiquidityPool, len(msg.Updates))
-	for i, u := range msg.Updates {
+	for _, u := range msg.Updates {
 		pool, found := k.GetLiquidityPool(ctx, u.PoolId)
 		if !found {
 			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "pool %s not found", u.PoolId)
 		}
-		pools[i] = pool
-	}
 
-	for i, u := range msg.Updates {
-		pool := pools[i]
 		oldFeeDest := types.FeeDestination{}
 		if pool.FeeDest != nil {
 			oldFeeDest = *pool.FeeDest

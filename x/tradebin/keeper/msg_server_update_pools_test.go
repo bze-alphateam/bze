@@ -160,7 +160,10 @@ func (suite *IntegrationTestSuite) TestMsgUpdatePools_UnknownPoolRefusesBatch() 
 		{PoolId: "nope_ubze", Fee: math.LegacyMustNewDecFromStr("0.01"), FeeDest: updFeeDest("0.5", "0.25", "0.25")},
 	})
 
-	_, err := suite.msgServer.UpdatePools(suite.ctx, msg)
+	// Executed the way gov executes a proposal message: in a cache context it commits only on success,
+	// so a failing message leaves the earlier entries' writes and events in the dropped cache.
+	cacheCtx, _ := suite.ctx.CacheContext()
+	_, err := suite.msgServer.UpdatePools(cacheCtx, msg)
 	suite.Require().ErrorIs(err, sdkerrors.ErrInvalidRequest)
 	suite.Require().Contains(err.Error(), "nope_ubze")
 
