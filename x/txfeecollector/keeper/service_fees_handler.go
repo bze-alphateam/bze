@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,19 +55,20 @@ func (k Keeper) ConvertCommunityPoolFeesToNativeDenom(ctx sdk.Context) error {
 }
 
 // RouteCommunityPoolFeesToDenomCommunityPools sends each coin held for the community pool to its denom's own
-// community pool, when the denom has one. Every send runs in a cached context: a failed send is logged and leaves the
-// coin in the collector, where the conversion to the chain's community pool handles it as before.
-// It runs apart from ConvertCommunityPoolFeesToNativeDenom so a failed conversion can't roll the forwarded coins back.
-// It never fails and is bounded by the MaxBalanceIterations param; coins over the bound wait for the next block.
-func (k Keeper) RouteCommunityPoolFeesToDenomCommunityPools(ctx sdk.Context) {
+// community pool, when the denom has one. It is bounded by the MaxBalanceIterations param; coins over the bound wait
+// for the next block.
+// A failed send returns the error and the caller is expected to discard everything written (EndBlock runs it through
+// bzeutils.ApplyFuncIfNoError), so the coins stay in the collector for ConvertCommunityPoolFeesToNativeDenom. It runs
+// apart from that conversion so a failed conversion can't roll the forwarded coins back either.
+func (k Keeper) RouteCommunityPoolFeesToDenomCommunityPools(ctx sdk.Context) error {
 	if k.denomCpProvider == nil {
-		return
+		return nil
 	}
 
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.CpFeeCollector)
 	allCoins := k.bankKeeper.GetAllBalances(ctx, moduleAddr)
 	if allCoins.IsZero() {
-		return
+		return nil
 	}
 
 	maxIterations := int(k.GetParams(ctx).MaxBalanceIterations)
@@ -83,13 +86,10 @@ func (k Keeper) RouteCommunityPoolFeesToDenomCommunityPools(ctx sdk.Context) {
 			continue
 		}
 
-		cacheCtx, write := ctx.CacheContext()
-		err := k.bankKeeper.SendCoinsFromModuleToAccount(cacheCtx, types.CpFeeCollector, recipient, sdk.NewCoins(c))
+		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.CpFeeCollector, recipient, sdk.NewCoins(c))
 		if err != nil {
-			k.Logger().Error("failed to send fees to the denom community pool", "denom", c.Denom, "recipient", recipient.String(), "err", err)
-			continue
+			return fmt.Errorf("failed to send %s to the denom community pool %s: %w", c, recipient, err)
 		}
-		write()
 
 		err = ctx.EventManager().EmitTypedEvent(&types.CommunityPoolFeePaidEvent{
 			Denom:     c.Denom,
@@ -97,9 +97,11 @@ func (k Keeper) RouteCommunityPoolFeesToDenomCommunityPools(ctx sdk.Context) {
 			Amount:    c.Amount.String(),
 		})
 		if err != nil {
-			k.Logger().Error("failed to emit community pool fee paid event", "err", err)
+			return err
 		}
 	}
+
+	return nil
 }
 
 // convertFeesAndSend transfers converted fees from one module to another if fees are available and conversion is successful.

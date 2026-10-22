@@ -187,9 +187,7 @@ func (am AppModule) EndBlock(gotCtx context.Context) error {
 
 	// forward the coins whose denom has its own community pool before converting the rest for the chain's one
 	err = bzeutils.ApplyFuncIfNoError(ctx, func(c sdk.Context) error {
-		am.keeper.RouteCommunityPoolFeesToDenomCommunityPools(c)
-
-		return nil
+		return am.keeper.RouteCommunityPoolFeesToDenomCommunityPools(c)
 	})
 	if err != nil {
 		am.keeper.Logger().Error("error on txfeecollector module EndBlock when calling RouteCommunityPoolFeesToDenomCommunityPools", "err", err)

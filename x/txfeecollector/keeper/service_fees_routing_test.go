@@ -47,7 +47,7 @@ func (suite *IntegrationTestSuite) expectCpBalances(balances sdk.Coins) {
 
 func (suite *IntegrationTestSuite) TestRouteCommunityPoolFees_NilProviderDoesNothing() {
 	// no expectations: any call on a mock would fail the test
-	suite.k.RouteCommunityPoolFeesToDenomCommunityPools(suite.ctx)
+	suite.Require().NoError(suite.k.RouteCommunityPoolFeesToDenomCommunityPools(suite.ctx))
 	suite.Require().Empty(paidEvents(suite.ctx))
 }
 
@@ -55,7 +55,7 @@ func (suite *IntegrationTestSuite) TestRouteCommunityPoolFees_NoBalance() {
 	suite.useDenomCpProvider()
 	suite.expectCpBalances(sdk.NewCoins())
 
-	suite.k.RouteCommunityPoolFeesToDenomCommunityPools(suite.ctx)
+	suite.Require().NoError(suite.k.RouteCommunityPoolFeesToDenomCommunityPools(suite.ctx))
 	suite.Require().Empty(paidEvents(suite.ctx))
 }
 
@@ -70,7 +70,7 @@ func (suite *IntegrationTestSuite) TestRouteCommunityPoolFees_CoinWithCpIsSent()
 		Return(nil).
 		Times(1)
 
-	suite.k.RouteCommunityPoolFeesToDenomCommunityPools(suite.ctx)
+	suite.Require().NoError(suite.k.RouteCommunityPoolFeesToDenomCommunityPools(suite.ctx))
 
 	suite.Require().Equal([]types.CommunityPoolFeePaidEvent{{
 		Denom:     denomTokenA,
@@ -104,7 +104,7 @@ func (suite *IntegrationTestSuite) TestRouteCommunityPoolFees_MixedDenoms() {
 		Return(nil).
 		Times(1)
 
-	suite.k.RouteCommunityPoolFeesToDenomCommunityPools(suite.ctx)
+	suite.Require().NoError(suite.k.RouteCommunityPoolFeesToDenomCommunityPools(suite.ctx))
 	suite.Require().Len(paidEvents(suite.ctx), 1)
 
 	// the conversion that follows in the same EndBlock handles what is left as before
@@ -132,30 +132,22 @@ func (suite *IntegrationTestSuite) TestRouteCommunityPoolFees_MixedDenoms() {
 	suite.Require().NoError(suite.k.ConvertCommunityPoolFeesToNativeDenom(suite.ctx))
 }
 
-// A failed send is discarded with everything it wrote, emits nothing and leaves the coin to the conversion.
-func (suite *IntegrationTestSuite) TestRouteCommunityPoolFees_FailedSendLeavesCoin() {
+// A failed send returns the error and emits nothing; the coin is still in the collector (EndBlock discards the
+// routing step), so the conversion takes it as before.
+func (suite *IntegrationTestSuite) TestRouteCommunityPoolFees_FailedSendReturnsError() {
 	suite.useDenomCpProvider()
 	coin := sdk.NewInt64Coin(denomTokenA, 1000)
 	suite.expectCpBalances(sdk.NewCoins(coin))
-	paramsBefore := suite.k.GetParams(suite.ctx)
 
 	suite.cpMock.EXPECT().GetDenomCommunityPool(gomock.Any(), denomTokenA).Return(tokenACp, true).Times(1)
 	suite.bankMock.EXPECT().
 		SendCoinsFromModuleToAccount(gomock.Any(), types.CpFeeCollector, tokenACp, sdk.NewCoins(coin)).
-		DoAndReturn(func(ctx sdk.Context, _ string, _ sdk.AccAddress, _ sdk.Coins) error {
-			// a partial write made before the failure must not reach the block state
-			changed := paramsBefore
-			changed.MaxBalanceIterations = 7
-			suite.Require().NoError(suite.k.SetParams(ctx, changed))
-
-			return errors.New("send failed")
-		}).
+		Return(errors.New("send failed")).
 		Times(1)
 
-	suite.k.RouteCommunityPoolFeesToDenomCommunityPools(suite.ctx)
-
+	err := suite.k.RouteCommunityPoolFeesToDenomCommunityPools(suite.ctx)
+	suite.Require().ErrorContains(err, "send failed")
 	suite.Require().Empty(paidEvents(suite.ctx))
-	suite.Require().Equal(paramsBefore, suite.k.GetParams(suite.ctx))
 
 	// today's path takes the coin: swapped for the chain's community pool
 	suite.expectCpBalances(sdk.NewCoins(coin))
@@ -174,32 +166,22 @@ func (suite *IntegrationTestSuite) TestRouteCommunityPoolFees_FailedSendLeavesCo
 	suite.Require().NoError(suite.k.ConvertCommunityPoolFeesToNativeDenom(suite.ctx))
 }
 
-// A failed send doesn't stop the coins after it.
-func (suite *IntegrationTestSuite) TestRouteCommunityPoolFees_FailedSendDoesNotStopOthers() {
+// The first failed send stops the routing: the coins after it are not looked at.
+func (suite *IntegrationTestSuite) TestRouteCommunityPoolFees_FailedSendStopsRouting() {
 	suite.useDenomCpProvider()
 	tokenA := sdk.NewInt64Coin(denomTokenA, 10)
 	tokenB := sdk.NewInt64Coin(denomTokenB, 20)
-	tokenBCp := sdk.AccAddress("token_b_cp__________")
 	suite.expectCpBalances(sdk.NewCoins(tokenA, tokenB))
 
 	suite.cpMock.EXPECT().GetDenomCommunityPool(gomock.Any(), denomTokenA).Return(tokenACp, true).Times(1)
-	suite.cpMock.EXPECT().GetDenomCommunityPool(gomock.Any(), denomTokenB).Return(tokenBCp, true).Times(1)
 	suite.bankMock.EXPECT().
 		SendCoinsFromModuleToAccount(gomock.Any(), types.CpFeeCollector, tokenACp, sdk.NewCoins(tokenA)).
 		Return(errors.New("send failed")).
 		Times(1)
-	suite.bankMock.EXPECT().
-		SendCoinsFromModuleToAccount(gomock.Any(), types.CpFeeCollector, tokenBCp, sdk.NewCoins(tokenB)).
-		Return(nil).
-		Times(1)
 
-	suite.k.RouteCommunityPoolFeesToDenomCommunityPools(suite.ctx)
-
-	suite.Require().Equal([]types.CommunityPoolFeePaidEvent{{
-		Denom:     denomTokenB,
-		Recipient: tokenBCp.String(),
-		Amount:    "20",
-	}}, paidEvents(suite.ctx))
+	// no expectation for token B: a call would fail the test
+	suite.Require().Error(suite.k.RouteCommunityPoolFeesToDenomCommunityPools(suite.ctx))
+	suite.Require().Empty(paidEvents(suite.ctx))
 }
 
 // The routing looks at no more than MaxBalanceIterations coins per block; a coin over the bound is routed in a later
@@ -219,7 +201,7 @@ func (suite *IntegrationTestSuite) TestRouteCommunityPoolFees_IterationBound() {
 	suite.expectCpBalances(sdk.NewCoins(aaa, aab, tokenA, bze))
 	suite.cpMock.EXPECT().GetDenomCommunityPool(gomock.Any(), "aaa").Return(nil, false).Times(1)
 	suite.cpMock.EXPECT().GetDenomCommunityPool(gomock.Any(), "aab").Return(nil, false).Times(1)
-	suite.k.RouteCommunityPoolFeesToDenomCommunityPools(suite.ctx)
+	suite.Require().NoError(suite.k.RouteCommunityPoolFeesToDenomCommunityPools(suite.ctx))
 	suite.Require().Empty(paidEvents(suite.ctx))
 
 	// block 2: aaa and aab were converted, token A is now within the bound
@@ -230,6 +212,6 @@ func (suite *IntegrationTestSuite) TestRouteCommunityPoolFees_IterationBound() {
 		SendCoinsFromModuleToAccount(gomock.Any(), types.CpFeeCollector, tokenACp, sdk.NewCoins(tokenA)).
 		Return(nil).
 		Times(1)
-	suite.k.RouteCommunityPoolFeesToDenomCommunityPools(suite.ctx)
+	suite.Require().NoError(suite.k.RouteCommunityPoolFeesToDenomCommunityPools(suite.ctx))
 	suite.Require().Len(paidEvents(suite.ctx), 1)
 }

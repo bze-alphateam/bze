@@ -33,7 +33,7 @@ func TestTxfeecollector_RoutesFeesToDenomCommunityPool(t *testing.T) {
 	require.NoError(t, bApp.BankKeeper.MintCoins(ctx, tokenfactorytypes.ModuleName, fees))
 	require.NoError(t, bApp.BankKeeper.SendCoinsFromModuleToModule(ctx, tokenfactorytypes.ModuleName, txfeecollectortypes.CpFeeCollector, fees))
 
-	bApp.TxfeecollectorKeeper.RouteCommunityPoolFeesToDenomCommunityPools(ctx)
+	require.NoError(t, bApp.TxfeecollectorKeeper.RouteCommunityPoolFeesToDenomCommunityPools(ctx))
 
 	require.Equal(t, math.NewInt(1_000), bApp.BankKeeper.GetBalance(ctx, treasury, withCp).Amount)
 	cpCollector := authtypes.NewModuleAddress(txfeecollectortypes.CpFeeCollector)
