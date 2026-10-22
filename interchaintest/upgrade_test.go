@@ -481,7 +481,9 @@ func (s *upgradeSuite) statePreserved(t *testing.T) {
 	require.Equal(t, b.LpSupply, a.LpSupply, "LP supply")
 	require.Equal(t, b.Markets, a.Markets, "markets")
 	require.Equal(t, b.Orders, a.Orders, "resting orders")
-	require.Equal(t, b.Authorities, a.Authorities, "denom admins")
+	// compare the admins only: a handler may add fields to the authority
+	// record (v8.3.0 adds mintable, asserted in its handler checks)
+	require.Equal(t, upAdmins(b.Authorities), upAdmins(a.Authorities), "denom admins")
 	require.Equal(t, b.Metadata, a.Metadata, "denom metadata")
 	require.Equal(t, b.Branding, a.Branding, "denom branding")
 	require.Equal(t, b.Halted, a.Halted, "halted denoms")
@@ -701,11 +703,17 @@ func (s *upgradeSuite) createDenomReward(t *testing.T) {
 // BZE-155: the unused x/group and x/nft modules are gone: their stores are
 // deleted, their version entries frozen, their CLI queries unknown, and the
 // nft module account (left on chain, empty) still refuses funds.
+//
+// BZE-217: tokenfactory migrated 3 -> 4. Every denom that has an admin is
+// mintable and its admin can still mint; a denom renounced before the
+// upgrade is non-mintable.
 type v830State struct {
 	versions map[string]int64
 	// voucher is the stake voucher bze minted over the main channel before
 	// the upgrade
 	voucher string
+	// kept keeps its admin across the upgrade, renounced is renounced before it
+	kept, renounced string
 }
 
 // upV830Deleted are the stores the v8.3.0 store loader deletes: x/capability
@@ -742,6 +750,18 @@ func (s *upgradeSuite) v830Before(t *testing.T) any {
 
 	s.ibc.transferIn(t, chain.SimdDenom, upV830In).requireAccepted(t)
 	st.voucher = helpers.IbcDenom(s.ibc.main.bze, chain.SimdDenom)
+
+	// BZE-217: one denom keeps its admin, one is renounced
+	admin := s.admin.FormattedAddress()
+	st.kept, st.renounced = "factory/"+admin+"/kept", "factory/"+admin+"/gone"
+	s.exec(t, s.admin, "tokenfactory", "create-denom", "kept")
+	s.exec(t, s.admin, "tokenfactory", "create-denom", "gone")
+	s.exec(t, s.admin, "tokenfactory", "mint", coinStr(upSmokeMint, st.renounced))
+	s.execMsg(t, s.admin, map[string]any{
+		"@type": "/bze.tokenfactory.MsgChangeAdmin", "creator": admin, "denom": st.renounced, "newAdmin": "",
+	})
+	require.Equal(t, admin, s.denomAuthority(t, 0, st.kept).Admin)
+	require.Empty(t, s.denomAuthority(t, 0, st.renounced).Admin)
 	return st
 }
 
@@ -761,9 +781,10 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	require.Equal(t, int64(8), versions["ibc"], "ibc core migrated 6 -> 8")
 	require.Equal(t, int64(6), versions["transfer"], "transfer migrated 5 -> 6")
 	require.Equal(t, int64(6), versions["rewards"], "rewards migrated 5 -> 6")
+	require.Equal(t, int64(4), versions["tokenfactory"], "tokenfactory migrated 3 -> 4")
 	for name, v := range b.versions {
 		switch name {
-		case "ibc", "transfer", "rewards":
+		case "ibc", "transfer", "rewards", "tokenfactory":
 			continue
 		}
 		require.Equal(t, v, versions[name], "%s module version unchanged", name)
@@ -819,6 +840,53 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 
 	// the ICA host still answers
 	require.True(t, s.supported(t, "interchain-accounts", "host", "params"), "ICA host params")
+
+	s.v830MintableFlags(t, b)
+}
+
+// v830MintableFlags checks the tokenfactory 3 -> 4 migration (BZE-217): every
+// seeded denom and kept keep their admin and are mintable, renounced is not,
+// and kept's admin can still mint it.
+func (s *upgradeSuite) v830MintableFlags(t *testing.T, b v830State) {
+	admin := s.admin.FormattedAddress()
+	denoms := []string{s.usd, s.abc, s.stk, s.prz, b.kept}
+	if s.features.haltedDenoms {
+		denoms = append(denoms, s.hlt)
+	}
+	for _, d := range denoms {
+		auth := s.denomAuthority(t, s.plan, d)
+		require.Equal(t, admin, auth.Admin, "%s admin", d)
+		require.True(t, auth.Mintable, "%s has an admin, so it is mintable", d)
+	}
+	gone := s.denomAuthority(t, s.plan, b.renounced)
+	require.Empty(t, gone.Admin)
+	require.False(t, gone.Mintable, "a renounced denom is not mintable")
+
+	supply := s.supply(t, b.kept)
+	s.exec(t, s.admin, "tokenfactory", "mint", coinStr(upSmokeMint, b.kept))
+	require.Equal(t, supply.AddRaw(upSmokeMint), s.supply(t, b.kept), "the kept denom's admin still mints")
+}
+
+type upDenomAuthority struct {
+	Admin string `json:"admin"`
+	// the query may omit a false flag, which reads as false
+	Mintable bool `json:"mintable"`
+}
+
+func (s *upgradeSuite) denomAuthority(t *testing.T, height int64, denom string) upDenomAuthority {
+	t.Helper()
+	return query[struct {
+		DenomAuthority upDenomAuthority `json:"denomAuthority"`
+	}](t, s, height, "tokenfactory", "denom-authority", denom).DenomAuthority
+}
+
+// upAdmins maps each denom of an authorities snapshot to its admin.
+func upAdmins(authorities map[string]map[string]any) map[string]any {
+	admins := make(map[string]any, len(authorities))
+	for denom, auth := range authorities {
+		admins[denom] = auth["admin"]
+	}
+	return admins
 }
 
 // upgradeSnapshot is the state that must survive the upgrade, read at one height.

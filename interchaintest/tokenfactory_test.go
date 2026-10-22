@@ -54,7 +54,9 @@ const (
 // TestTokenFactory drives a factory denom through its admin's whole life on a
 // real network: create, mint, burn, metadata, on-chain branding, an admin
 // handover and back, then the renounce that freezes the denom for everyone,
-// and the governance proposal that gives the renounced denom a new admin.
+// and the governance proposal that gives the renounced denom a new admin who
+// still cannot mint it. A second admin fixes the supply of its own denom with
+// disable-minting and keeps every other right.
 // Before the renounce, while the admin is live, a second account creates a
 // denom and a ubze pool for it and pays a create fee through that pool, and
 // the module's refusals are checked one by one. Subtests run in order and
@@ -80,14 +82,17 @@ func TestTokenFactory(t *testing.T) {
 	t.Run("11 queries of unknown denoms", s.unknownDenomQueries)
 	t.Run("4 renounce freezes the denom", s.renounce)
 	t.Run("12 governance assigns an admin to the renounced denom", s.govSetAdmin)
+	t.Run("13 disable minting fixes the supply, the admin keeps the rest", s.disableMinting)
 }
 
 type tokenFactorySuite struct {
 	ctx context.Context
 	bze *cosmos.CosmosChain
 
-	admin, other, payer ibc.Wallet
-	denom               string
+	admin, other, payer, minter ibc.Wallet
+	denom                       string
+	// fixed is minter's denom, whose minting is disabled in step 13
+	fixed string
 	// gas is the payer's denom, gasPool its ubze pool and lpDenom the pool's
 	// LP denom; nope is a factory denom nobody created
 	gas, gasPool, lpDenom, nope string
@@ -99,10 +104,12 @@ func setupTokenFactory(t *testing.T, ctx context.Context, bze *cosmos.CosmosChai
 	s.admin = interchaintest.GetAndFundTestUsers(t, ctx, "tfadmin", sdkmath.NewInt(tfAdminFunds), bze)[0]
 	s.other = interchaintest.GetAndFundTestUsers(t, ctx, "tfother", sdkmath.NewInt(tfUserFunds), bze)[0]
 	s.payer = interchaintest.GetAndFundTestUsers(t, ctx, "tfpayer", sdkmath.NewInt(tfPayerFunds), bze)[0]
+	s.minter = interchaintest.GetAndFundTestUsers(t, ctx, "tfminter", sdkmath.NewInt(tfAdminFunds), bze)[0]
 	require.NoError(t, testutil.WaitForBlocks(ctx, 2, bze))
 	s.denom = "factory/" + s.admin.FormattedAddress() + "/tok"
 	s.nope = "factory/" + s.admin.FormattedAddress() + "/nope"
 	s.gas = "factory/" + s.payer.FormattedAddress() + "/gas"
+	s.fixed = "factory/" + s.minter.FormattedAddress() + "/fix"
 	// pool ids order the denoms: "factory/…" sorts before "ubze"
 	s.gasPool = s.gas + "_" + chain.Denom
 	for name, addr := range map[string]*string{
@@ -126,6 +133,7 @@ func (s *tokenFactorySuite) createAndUse(t *testing.T) {
 	require.Equal(t, ubzeBefore.Sub(fee.Amount).Sub(s.txFee(t, res)).String(), s.balance(t, admin, chain.Denom).String(),
 		"admin must pay exactly the create fee and the tx fee")
 	require.Equal(t, admin, s.authority(t))
+	require.True(t, s.mintableOf(t, s.denom), "a new denom is mintable")
 	require.Equal(t, "0", s.supply(t).String())
 
 	s.mustExec(t, s.admin, "tokenfactory", "mint", coinStr(tfMint, s.denom))
@@ -194,16 +202,19 @@ func (s *tokenFactorySuite) renounce(t *testing.T) {
 	res := s.mustExecMsg(t, s.admin, s.changeAdminMsg(admin, ""))
 	s.requireAdminChange(t, res, admin, "")
 	require.Empty(t, s.authority(t), "a renounced denom has no admin")
+	require.False(t, s.mintableOf(t, s.denom), "renouncing turns minting off")
+	s.requireTxEvent(t, res, "DenomMintingDisabledEvent", map[string]string{"denom": s.denom, "admin": admin})
 
 	for _, pair := range [][2]ibc.Wallet{{s.admin, s.other}, {s.other, s.admin}} {
 		user, addr, peer := pair[0], pair[0].FormattedAddress(), pair[1].FormattedAddress()
 		for name, msg := range map[string]any{
-			"mint":           mintMsg(addr, coinStr(1, s.denom)),
-			"burn":           burnMsg(addr, coinStr(1, s.denom)),
-			"set metadata":   s.metadataMsg(addr, "Renamed"),
-			"set branding":   s.brandingMsg(addr, tfBranding("other")),
-			"clear branding": s.brandingMsg(addr, nil),
-			"change admin":   s.changeAdminMsg(addr, peer),
+			"mint":            mintMsg(addr, coinStr(1, s.denom)),
+			"burn":            burnMsg(addr, coinStr(1, s.denom)),
+			"set metadata":    s.metadataMsg(addr, "Renamed"),
+			"set branding":    s.brandingMsg(addr, tfBranding("other")),
+			"clear branding":  s.brandingMsg(addr, nil),
+			"change admin":    s.changeAdminMsg(addr, peer),
+			"disable minting": tfDisableMintingMsg(addr, s.denom),
 		} {
 			t.Run(user.KeyName()+" "+name, func(t *testing.T) {
 				s.requireRefused(t, "unauthorized", user, msg)
@@ -223,9 +234,10 @@ func (s *tokenFactorySuite) renounce(t *testing.T) {
 }
 
 // 12. A governance proposal with MsgSetDenomAdmin gives the renounced denom
-// to other: the event carries the empty previous admin, other can mint and
-// hand the denom on, the renounced creator stays refused. The same message
-// signed by a plain account is refused.
+// to other: the event carries the empty previous admin, the denom stays
+// non-mintable so other's mint is refused, other can still set the metadata
+// and hand the denom on, the renounced creator stays refused. The same
+// message signed by a plain account is refused.
 func (s *tokenFactorySuite) govSetAdmin(t *testing.T) {
 	admin, other := s.admin.FormattedAddress(), s.other.FormattedAddress()
 	gov, err := helpers.GovAuthority(s.ctx, s.bze)
@@ -255,14 +267,82 @@ func (s *tokenFactorySuite) govSetAdmin(t *testing.T) {
 	require.Empty(t, events[0].Attributes["admin"], "the previous admin of a renounced denom is empty")
 	require.Equal(t, other, events[0].Attributes["new_admin"])
 
+	require.False(t, s.mintableOf(t, s.denom), "governance never turns minting back on")
 	s.requireRefused(t, "unauthorized", s.admin, mintMsg(admin, coinStr(1, s.denom)))
-	before := s.supply(t)
-	s.mustExec(t, s.other, "tokenfactory", "mint", coinStr(tfOtherMint, s.denom))
-	require.Equal(t, before.AddRaw(tfOtherMint).String(), s.supply(t).String())
+	s.requireRefused(t, "minting is disabled", s.other, mintMsg(other, coinStr(tfOtherMint, s.denom)))
+	s.requireRefused(t, "minting is disabled", s.other, tfDisableMintingMsg(other, s.denom))
+	s.mustExecMsg(t, s.other, s.metadataMsg(other, "Adopted"))
+	require.Equal(t, "Adopted", s.metadata(t).Name)
 
 	res := s.mustExec(t, s.other, "tokenfactory", "change-admin", s.denom, admin)
 	s.requireAdminChange(t, res, other, admin)
 	require.Equal(t, admin, s.authority(t))
+}
+
+// 13. minter creates fix and mints it, then disables minting through the CLI
+// command: the flag goes off, the event names the admin, and from then on
+// minting is refused for good while burn, metadata, branding and an admin
+// handover still work. A second disable, and one from another account, are
+// refused and change nothing.
+func (s *tokenFactorySuite) disableMinting(t *testing.T) {
+	minter, other := s.minter.FormattedAddress(), s.other.FormattedAddress()
+	s.mustExec(t, s.minter, "tokenfactory", "create-denom", "fix")
+	require.True(t, s.mintableOf(t, s.fixed), "a new denom is mintable")
+	s.mustExec(t, s.minter, "tokenfactory", "mint", coinStr(tfMint, s.fixed))
+
+	s.requireFixedRefused(t, "unauthorized", s.other, tfDisableMintingMsg(other, s.fixed))
+	require.True(t, s.mintableOf(t, s.fixed), "a refused disable leaves the denom mintable")
+
+	res := s.mustExec(t, s.minter, "tokenfactory", "disable-minting", s.fixed)
+	events := helpers.EventsWith(helpers.TxEvents(res, tfEventPrefix+"DenomMintingDisabledEvent"), map[string]string{"denom": s.fixed, "admin": minter})
+	require.Len(t, events, 1, "one DenomMintingDisabledEvent in tx %s", res.TxHash)
+	require.False(t, s.mintableOf(t, s.fixed))
+	admin, err := s.authorityOf(s.fixed)
+	require.NoError(t, err)
+	require.Equal(t, minter, admin, "disabling minting keeps the admin")
+
+	s.requireFixedRefused(t, "minting is disabled", s.minter, mintMsg(minter, coinStr(1, s.fixed)))
+	s.requireFixedRefused(t, "minting is disabled", s.minter, tfDisableMintingMsg(minter, s.fixed))
+
+	// every other right stays with the admin
+	s.mustExec(t, s.minter, "tokenfactory", "burn", coinStr(tfBurn, s.fixed))
+	require.Equal(t, sdkmath.NewInt(tfMint-tfBurn).String(), s.supplyOf(t, s.fixed).String())
+	s.mustExecMsg(t, s.minter, tfMetadataMsg(minter, s.fixed, "FIX", "Fixed", tfDenomUnit{Denom: s.fixed}, tfDenomUnit{Denom: "FIX", Exponent: 6}))
+	md, err := s.metadataOf(s.fixed)
+	require.NoError(t, err)
+	require.Equal(t, "Fixed", md.Name)
+	s.mustExecMsg(t, s.minter, map[string]any{
+		"@type": "/bze.tokenfactory.MsgSetDenomBranding", "creator": minter, "denom": s.fixed, "branding": tfBranding("inter"),
+	})
+
+	// a new admin inherits a fixed supply
+	s.mustExec(t, s.minter, "tokenfactory", "change-admin", s.fixed, other)
+	admin, err = s.authorityOf(s.fixed)
+	require.NoError(t, err)
+	require.Equal(t, other, admin)
+	require.False(t, s.mintableOf(t, s.fixed), "an admin change keeps minting off")
+	s.requireFixedRefused(t, "minting is disabled", s.other, mintMsg(other, coinStr(1, s.fixed)))
+}
+
+// requireFixedRefused asserts the message on the fix denom is rejected with
+// reason and that its admin, flag and supply did not change.
+func (s *tokenFactorySuite) requireFixedRefused(t *testing.T, reason string, user ibc.Wallet, msg any) {
+	t.Helper()
+	adminBefore, err := s.authorityOf(s.fixed)
+	require.NoError(t, err)
+	mintableBefore, supplyBefore := s.mintableOf(t, s.fixed), s.supplyOf(t, s.fixed)
+
+	res, err := helpers.ExecMsgs(s.ctx, s.bze, user, nil, msg)
+	why, err := helpers.RejectionReason(res, err)
+	require.NoError(t, err, "msg %v", msg)
+	require.NotZero(t, res.Code)
+	require.Contains(t, why, reason)
+
+	adminAfter, err := s.authorityOf(s.fixed)
+	require.NoError(t, err)
+	require.Equal(t, adminBefore, adminAfter, "a refused tx must not change the admin")
+	require.Equal(t, mintableBefore, s.mintableOf(t, s.fixed), "a refused tx must not change the flag")
+	require.Equal(t, supplyBefore.String(), s.supplyOf(t, s.fixed).String(), "a refused tx must not change the supply")
 }
 
 // 5. The payer creates the gas denom paying the create fee in ubze: the fee
@@ -577,6 +657,10 @@ func tfSetDenomAdminMsg(authority, denom, newAdmin string) map[string]any {
 	return map[string]any{"@type": "/bze.tokenfactory.MsgSetDenomAdmin", "authority": authority, "denom": denom, "new_admin": newAdmin}
 }
 
+func tfDisableMintingMsg(creator, denom string) map[string]any {
+	return map[string]any{"@type": "/bze.tokenfactory.MsgDisableMinting", "creator": creator, "denom": denom}
+}
+
 func tfChangeAdminMsg(creator, denom, newAdmin string) map[string]any {
 	return map[string]any{"@type": "/bze.tokenfactory.MsgChangeAdmin", "creator": creator, "denom": denom, "newAdmin": newAdmin}
 }
@@ -698,13 +782,14 @@ func (s *tokenFactorySuite) requireRefused(t *testing.T, reason string, user ibc
 
 type tfDenomState struct {
 	Admin, Supply string
+	Mintable      bool
 	Metadata      metadataInfo
 	Branding      *brandingInfo
 }
 
 func (s *tokenFactorySuite) denomState(t *testing.T) tfDenomState {
 	t.Helper()
-	st := tfDenomState{Admin: s.authority(t), Supply: s.supply(t).String(), Metadata: s.metadata(t)}
+	st := tfDenomState{Admin: s.authority(t), Supply: s.supply(t).String(), Mintable: s.mintableOf(t, s.denom), Metadata: s.metadata(t)}
 	if b, found := s.queryBranding(t); found {
 		st.Branding = b
 	}
@@ -791,6 +876,19 @@ func (s *tokenFactorySuite) supplyOf(t *testing.T, denom string) sdkmath.Int {
 	}](s.ctx, s.bze, "bank", "total-supply-of", denom)
 	require.NoError(t, err)
 	return parseInt(res.Amount.Amount)
+}
+
+// mintableOf reads the mintable flag of denom's authority; the query may omit
+// a false flag, which reads as false.
+func (s *tokenFactorySuite) mintableOf(t *testing.T, denom string) bool {
+	t.Helper()
+	res, err := helpers.Query[struct {
+		DenomAuthority struct {
+			Mintable bool `json:"mintable"`
+		} `json:"denomAuthority"`
+	}](s.ctx, s.bze, "tokenfactory", "denom-authority", denom)
+	require.NoError(t, err)
+	return res.DenomAuthority.Mintable
 }
 
 func (s *tokenFactorySuite) authorityOf(denom string) (string, error) {
