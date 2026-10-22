@@ -29,6 +29,10 @@ service Msg {
   // SetDenomAdmin assigns a new admin to a factory denom.
   // Governance only (authority = the x/gov module account).
   rpc SetDenomAdmin    (MsgSetDenomAdmin   ) returns (MsgSetDenomAdminResponse   );
+
+  // DisableMinting turns minting off for good on a factory denom.
+  // Admin only and irreversible: no message turns it back on.
+  rpc DisableMinting   (MsgDisableMinting  ) returns (MsgDisableMintingResponse  );
 }
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
@@ -131,3 +135,14 @@ message MsgSetDenomAdmin {
 }
 
 message MsgSetDenomAdminResponse {}
+
+// MsgDisableMinting turns minting off for good on a factory denom. Only the denom admin may send it.
+// The admin keeps every other right (burn, metadata, branding, admin change).
+message MsgDisableMinting {
+  option (cosmos.msg.v1.signer) = "creator";
+  option           (amino.name) = "bze/x/tokenfactory/MsgDisableMinting";
+  string creator = 1;
+  string denom   = 2;
+}
+
+message MsgDisableMintingResponse {}

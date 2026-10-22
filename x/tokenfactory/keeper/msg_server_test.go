@@ -62,6 +62,7 @@ func (suite *IntegrationTestSuite) TestCreateDenom_ValidRequest() {
 	authority, err := suite.k.GetDenomAuthority(suite.ctx, expectedDenom)
 	suite.Require().NoError(err)
 	suite.Require().Equal(creator, authority.Admin)
+	suite.Require().True(authority.Mintable, "a new denom is mintable")
 }
 
 // A new denom gets bank metadata that passes bank's own validation (BZE-215):
@@ -195,7 +196,8 @@ func (suite *IntegrationTestSuite) TestMint_ValidRequest() {
 
 	// Set up denom authority
 	denomAuth := types.DenomAuthority{
-		Admin: creator,
+		Admin:    creator,
+		Mintable: true,
 	}
 	err := suite.k.SetDenomAuthority(suite.ctx, denom, denomAuth)
 	suite.Require().NoError(err)
@@ -470,7 +472,7 @@ func (suite *IntegrationTestSuite) TestChangeAdmin_Unauthorized() {
 // ChangeAdmin with NewAdmin="" so the denom enters the locked state.
 // Used by the post-renounce invariant tests.
 func (suite *IntegrationTestSuite) renounceAdmin(creator, denom string) {
-	denomAuth := types.DenomAuthority{Admin: creator}
+	denomAuth := types.DenomAuthority{Admin: creator, Mintable: true}
 	err := suite.k.SetDenomAuthority(suite.ctx, denom, denomAuth)
 	suite.Require().NoError(err)
 
@@ -485,6 +487,7 @@ func (suite *IntegrationTestSuite) renounceAdmin(creator, denom string) {
 	updated, err := suite.k.GetDenomAuthority(suite.ctx, denom)
 	suite.Require().NoError(err)
 	suite.Require().Equal("", updated.Admin)
+	suite.Require().False(updated.Mintable)
 }
 
 // After admin is renounced (set to ""), no caller — including the former

@@ -19,3 +19,7 @@ message DenomBrandingChangeEvent {
   string denom = 1;
 }
 
+message DenomMintingDisabledEvent {
+  string denom = 1;
+  string admin = 2;
+}

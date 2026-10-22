@@ -86,6 +86,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Set or clear the branding package of a denom (omit --branding to clear)",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
 				},
+				{
+					RpcMethod:      "DisableMinting",
+					Use:            "disable-minting [denom]",
+					Short:          "Turn minting off for good on a factory denom (admin only, irreversible)",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},

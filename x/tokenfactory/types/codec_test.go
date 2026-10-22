@@ -28,6 +28,8 @@ func TestRegisterInterfaces_ResolvesEveryMsg(t *testing.T) {
 		&types.MsgSetDenomBranding{},
 		// v8.3.0: governance assigns a denom admin
 		&types.MsgSetDenomAdmin{},
+		// v8.3.0: non-mintable factory tokens
+		&types.MsgDisableMinting{},
 	}
 
 	for _, msg := range msgs {

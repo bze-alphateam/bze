@@ -118,3 +118,40 @@ func TestGenesis_BrandingWithoutAuthorityPanics(t *testing.T) {
 		tokenfactory.InitGenesis(ctx, k, genesisState)
 	})
 }
+
+// The mintable flag travels through genesis export and import, so a non-mintable denom never comes
+// back mintable after a genesis restart (BZE-217).
+func TestGenesis_MintableRoundTrip(t *testing.T) {
+	creator := sample.AccAddress()
+	mintableDenom := "factory/" + creator + "/open"
+	fixedDenom := "factory/" + creator + "/fixed"
+	renouncedDenom := "factory/" + creator + "/renounced"
+
+	genesisState := types.GenesisState{
+		Params: types.DefaultParams(),
+		FactoryDenoms: []types.GenesisDenom{
+			{Denom: fixedDenom, DenomAuthority: types.DenomAuthority{Admin: creator, Mintable: false}},
+			{Denom: mintableDenom, DenomAuthority: types.DenomAuthority{Admin: creator, Mintable: true}},
+			{Denom: renouncedDenom, DenomAuthority: types.DenomAuthority{Admin: "", Mintable: false}},
+		},
+	}
+	require.NoError(t, genesisState.Validate())
+
+	ctrl := gomock.NewController(t)
+	acc := testutil.NewMockAccountKeeper(ctrl)
+	bank := testutil.NewMockBankKeeper(ctrl)
+	bank.EXPECT().GetDenomMetaData(gomock.Any(), gomock.Any()).Return(banktypes.Metadata{}, false).Times(3)
+	bank.EXPECT().SetDenomMetaData(gomock.Any(), gomock.Any()).Times(3)
+
+	k, ctx := keepertest.TokenfactoryKeeper(t, bank, acc, nil)
+	tokenfactory.InitGenesis(ctx, k, genesisState)
+
+	for _, gd := range genesisState.FactoryDenoms {
+		dAuth, err := k.GetDenomAuthority(ctx, gd.Denom)
+		require.NoError(t, err)
+		require.Equal(t, gd.DenomAuthority, dAuth, gd.Denom)
+	}
+
+	got := tokenfactory.ExportGenesis(ctx, k)
+	require.ElementsMatch(t, genesisState.FactoryDenoms, got.FactoryDenoms)
+}
