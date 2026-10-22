@@ -97,7 +97,8 @@ const (
 // MsgFillOrders to the EndBlock engine events, then the swap and deposit
 // directions the first steps leave out, slippage guards, a pool fee share to
 // the community pool, LP denom metadata and the create-pool, swap and
-// create-market refusals. Subtests run in order and share state; the step
+// create-market refusals, and a factory token's pool fee share forwarded to
+// the community pool its admin set. Subtests run in order and share state; the step
 // numbers match the scenario of the suite's design.
 func TestAmm(t *testing.T) {
 	if testing.Short() {
@@ -128,6 +129,7 @@ func TestAmm(t *testing.T) {
 	t.Run("19 a dust pool cannot be traded", s.dustPool)
 	t.Run("20 slippage refusal above uint64", s.slippageAboveUint64)
 	t.Run("21 swap above the balance", s.swapAboveBalance)
+	t.Run("22 treasury share to the token's community pool", s.tokenCommunityPool)
 }
 
 type ammSuite struct {

@@ -19,3 +19,15 @@ message BlockedIbcInboundEvent {
   // receiver is the account on this chain that would have received the tokens.
   string receiver = 5;
 }
+
+// CommunityPoolFeePaidEvent is emitted at EndBlock for every coin the community pool fee collector forwards to the
+// community pool set on the coin's denom (the factory token's DenomConfig), instead of converting it for the chain's
+// community pool.
+message CommunityPoolFeePaidEvent {
+  // denom is the denomination of the forwarded coin.
+  string denom = 1;
+  // recipient is the denom's community pool address.
+  string recipient = 2;
+  // amount is the forwarded amount.
+  string amount = 3;
+}

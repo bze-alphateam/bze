@@ -255,6 +255,20 @@ func (mr *MockBankKeeperMockRecorder) SendCoinsFromAccountToModule(ctx, senderAd
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromAccountToModule", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromAccountToModule), ctx, senderAddr, recipientModule, amt)
 }
 
+// SendCoinsFromModuleToAccount mocks base method.
+func (m *MockBankKeeper) SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr types.AccAddress, amt types.Coins) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SendCoinsFromModuleToAccount", ctx, senderModule, recipientAddr, amt)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SendCoinsFromModuleToAccount indicates an expected call of SendCoinsFromModuleToAccount.
+func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderModule, recipientAddr, amt any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToAccount", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToAccount), ctx, senderModule, recipientAddr, amt)
+}
+
 // SendCoinsFromModuleToModule mocks base method.
 func (m *MockBankKeeper) SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt types.Coins) error {
 	m.ctrl.T.Helper()
@@ -319,6 +333,45 @@ func (m *MockDistrKeeper) FundCommunityPool(ctx context.Context, amount types.Co
 func (mr *MockDistrKeeperMockRecorder) FundCommunityPool(ctx, amount, sender any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FundCommunityPool", reflect.TypeOf((*MockDistrKeeper)(nil).FundCommunityPool), ctx, amount, sender)
+}
+
+// MockDenomCommunityPoolProvider is a mock of DenomCommunityPoolProvider interface.
+type MockDenomCommunityPoolProvider struct {
+	ctrl     *gomock.Controller
+	recorder *MockDenomCommunityPoolProviderMockRecorder
+	isgomock struct{}
+}
+
+// MockDenomCommunityPoolProviderMockRecorder is the mock recorder for MockDenomCommunityPoolProvider.
+type MockDenomCommunityPoolProviderMockRecorder struct {
+	mock *MockDenomCommunityPoolProvider
+}
+
+// NewMockDenomCommunityPoolProvider creates a new mock instance.
+func NewMockDenomCommunityPoolProvider(ctrl *gomock.Controller) *MockDenomCommunityPoolProvider {
+	mock := &MockDenomCommunityPoolProvider{ctrl: ctrl}
+	mock.recorder = &MockDenomCommunityPoolProviderMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockDenomCommunityPoolProvider) EXPECT() *MockDenomCommunityPoolProviderMockRecorder {
+	return m.recorder
+}
+
+// GetDenomCommunityPool mocks base method.
+func (m *MockDenomCommunityPoolProvider) GetDenomCommunityPool(ctx types.Context, denom string) (types.AccAddress, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDenomCommunityPool", ctx, denom)
+	ret0, _ := ret[0].(types.AccAddress)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
+}
+
+// GetDenomCommunityPool indicates an expected call of GetDenomCommunityPool.
+func (mr *MockDenomCommunityPoolProviderMockRecorder) GetDenomCommunityPool(ctx, denom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDenomCommunityPool", reflect.TypeOf((*MockDenomCommunityPoolProvider)(nil).GetDenomCommunityPool), ctx, denom)
 }
 
 // MockParamSubspace is a mock of ParamSubspace interface.

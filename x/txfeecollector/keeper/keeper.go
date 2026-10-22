@@ -25,6 +25,10 @@ type (
 		accountKeeper types.AccountKeeper
 		tradeKeeper   types.TradeKeeper
 		distrKeeper   types.DistrKeeper
+
+		// denomCpProvider resolves the community pool a denom's fees are forwarded to. nil means
+		// no denom has one.
+		denomCpProvider types.DenomCommunityPoolProvider
 	}
 )
 
@@ -37,20 +41,22 @@ func NewKeeper(
 	accountKeeper types.AccountKeeper,
 	tradeKeeper types.TradeKeeper,
 	distrKeeper types.DistrKeeper,
+	denomCpProvider types.DenomCommunityPoolProvider,
 ) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
 	}
 
 	return Keeper{
-		cdc:           cdc,
-		storeService:  storeService,
-		authority:     authority,
-		logger:        logger,
-		bankKeeper:    bankKeeper,
-		accountKeeper: accountKeeper,
-		tradeKeeper:   tradeKeeper,
-		distrKeeper:   distrKeeper,
+		cdc:             cdc,
+		storeService:    storeService,
+		authority:       authority,
+		logger:          logger,
+		bankKeeper:      bankKeeper,
+		accountKeeper:   accountKeeper,
+		tradeKeeper:     tradeKeeper,
+		distrKeeper:     distrKeeper,
+		denomCpProvider: denomCpProvider,
 	}
 }
 

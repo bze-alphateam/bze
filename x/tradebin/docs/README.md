@@ -109,7 +109,7 @@ Partial order fills can leave fractional coin amounts (dust) that are too small 
 ## Fees and Destinations
 - **Create-market fee** (`create_market_fee`): always routed to community pool via `txfeecollector`.
 - **Order fees** (maker/taker): routed based on `maker_fee_destination`/`taker_fee_destination` params — valid destinations are `community_pool` or `burner`.
-- **Pool fees** (`fee` field per pool): split three ways via `fee_destination` — `treasury` % to community pool, `burner` % to burner module, `providers` % to LP holders.
+- **Pool fees** (`fee` field per pool): split three ways via `fee_destination` — `treasury` % to the community pool (the token's own community pool when the coin is a factory token with one set, see the txfeecollector docs; the chain's otherwise), `burner` % to burner module, `providers` % to LP holders.
 - Fees are captured from the sender, swapped to `native_denom` when possible, and forwarded to the destination module.
 - `MsgUpdateParams`, `MsgHaltDenoms` and `MsgUnhaltDenoms` are restricted to the module authority (governance).
 - Queue processing at `EndBlock` is capped by `order_book_per_block_messages`; messages beyond the cap remain queued for later blocks, and the queue counter resets only after the queue is emptied.

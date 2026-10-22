@@ -51,6 +51,7 @@ func TestRunMigrations_TxfeecollectorV2ToV3_ThroughModuleManager(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
 

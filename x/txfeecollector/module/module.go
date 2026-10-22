@@ -185,6 +185,16 @@ func (am AppModule) EndBlock(gotCtx context.Context) error {
 		am.keeper.Logger().Error("error on txfeecollector module EndBlock when calling ConvertBurnerFeesToNativeDenom", "err", err)
 	}
 
+	// forward the coins whose denom has its own community pool before converting the rest for the chain's one
+	err = bzeutils.ApplyFuncIfNoError(ctx, func(c sdk.Context) error {
+		am.keeper.RouteCommunityPoolFeesToDenomCommunityPools(c)
+
+		return nil
+	})
+	if err != nil {
+		am.keeper.Logger().Error("error on txfeecollector module EndBlock when calling RouteCommunityPoolFeesToDenomCommunityPools", "err", err)
+	}
+
 	err = bzeutils.ApplyFuncIfNoError(ctx, func(c sdk.Context) error {
 		return am.keeper.ConvertCommunityPoolFeesToNativeDenom(c)
 	})
@@ -224,6 +234,8 @@ type ModuleInputs struct {
 	BankKeeper    types.BankKeeper
 	TradeKeeper   types.TradeKeeper
 	DistrKeeper   types.DistrKeeper
+
+	DenomCpProvider types.DenomCommunityPoolProvider
 }
 
 type ModuleOutputs struct {
@@ -248,6 +260,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		in.TradeKeeper,
 		in.DistrKeeper,
+		in.DenomCpProvider,
 	)
 	m := NewAppModule(
 		in.Cdc,
