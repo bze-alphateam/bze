@@ -127,8 +127,11 @@ func checkDaoAccount(acc sdk.AccountI) error {
 	return nil
 }
 
-// chargeCreationFee sends the dao_creation_fee from the creator to the burner or
-// the community pool fee collector. A zero fee is not charged.
+// chargeCreationFee charges the dao_creation_fee to the creator and sends it to
+// the burner or the community pool fee collector. Like every chain fee, it goes
+// through tradebin: it is taken in the tx fee denom and swapped to the fee
+// denom when possible, and in the fee denom itself otherwise. A zero fee is not
+// charged.
 func (k Keeper) chargeCreationFee(ctx sdk.Context, creator sdk.AccAddress, params types.Params) error {
 	fee := params.DaoCreationFee
 	if !fee.IsPositive() {
@@ -140,7 +143,7 @@ func (k Keeper) chargeCreationFee(ctx sdk.Context, creator sdk.AccAddress, param
 		destModule = txfeecollectortypes.CpFeeCollector
 	}
 
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, creator, destModule, sdk.NewCoins(fee)); err != nil {
+	if _, err := k.tradeKeeper.CaptureAndSwapUserFee(ctx, creator, sdk.NewCoins(fee), destModule); err != nil {
 		return errorsmod.Wrap(err, "failed to pay the dao creation fee")
 	}
 
