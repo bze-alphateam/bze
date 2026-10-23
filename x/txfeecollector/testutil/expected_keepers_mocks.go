@@ -13,6 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -372,6 +373,21 @@ func (m *MockDenomCommunityPoolProvider) GetDenomCommunityPool(ctx types.Context
 func (mr *MockDenomCommunityPoolProviderMockRecorder) GetDenomCommunityPool(ctx, denom any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDenomCommunityPool", reflect.TypeOf((*MockDenomCommunityPoolProvider)(nil).GetDenomCommunityPool), ctx, denom)
+}
+
+// GetDenomFeeRates mocks base method.
+func (m *MockDenomCommunityPoolProvider) GetDenomFeeRates(ctx types.Context, denom string) (math.LegacyDec, math.LegacyDec) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDenomFeeRates", ctx, denom)
+	ret0, _ := ret[0].(math.LegacyDec)
+	ret1, _ := ret[1].(math.LegacyDec)
+	return ret0, ret1
+}
+
+// GetDenomFeeRates indicates an expected call of GetDenomFeeRates.
+func (mr *MockDenomCommunityPoolProviderMockRecorder) GetDenomFeeRates(ctx, denom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDenomFeeRates", reflect.TypeOf((*MockDenomCommunityPoolProvider)(nil).GetDenomFeeRates), ctx, denom)
 }
 
 // MockParamSubspace is a mock of ParamSubspace interface.

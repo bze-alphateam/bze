@@ -31,3 +31,17 @@ message CommunityPoolFeePaidEvent {
   // amount is the forwarded amount.
   string amount = 3;
 }
+
+// GasSurchargePaidEvent is emitted for every factory-token coin used to pay the tx fee when the token sets a gas
+// surcharge. The amount is the part of the paid fee moved out of the fee collected for validators.
+message GasSurchargePaidEvent {
+  // payer is the account that paid the tx fee (the fee granter when one is set).
+  string payer = 1;
+  // denom is the denomination of the surcharge.
+  string denom = 2;
+  // amount is the surcharge amount.
+  string amount = 3;
+  // destination is the module account the surcharge went to: txfeecollector_cp when the token has a community pool
+  // (forwarded there at EndBlock), txfeecollector_burner when it has none (burned).
+  string destination = 4;
+}

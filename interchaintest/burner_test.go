@@ -497,9 +497,12 @@ func (s *burnerSuite) joinRefusals(t *testing.T) {
 
 // 9. The hook of a raffle's EndAt hour epoch removes the raffle and its
 // winners and burns burner_raffle's whole balance of the denom: the recorded
-// pot and, for the won raffle, the ticket prices that never joined it.
+// pot and, for the won raffle, the ticket prices that never joined it. Both
+// raffles end at the same height when they started in the same hour epoch,
+// so the burns are checked per height once both raffles are done.
 func (s *burnerSuite) raffleExpiry(t *testing.T) {
 	gap := map[string]int64{s.rw: 2 * brWin.ticket, s.rl: 0}
+	expired := map[int64]sdk.Coins{}
 	for _, denom := range []string{s.rw, s.rl} {
 		t.Run(denom[strings.LastIndex(denom, "/")+1:], func(t *testing.T) {
 			height := s.epochStartHeight(t, "hour", s.endAt[denom]+1, brExpiryWait)
@@ -508,9 +511,7 @@ func (s *burnerSuite) raffleExpiry(t *testing.T) {
 			balance := s.addrBalances(t, s.raffleAcc, height-1).AmountOf(denom)
 			require.Equal(t, parseInt(prev.Pot).AddRaw(gap[denom]), balance, "burner_raffle holds the recorded pot and the gap")
 
-			burned := sdk.NewCoins(sdk.NewCoin(denom, balance))
-			s.requireBurned(t, height, s.raffleAcc, burned)
-			s.burns[height] = s.burns[height].Add(burned...)
+			expired[height] = expired[height].Add(sdk.NewCoin(denom, balance))
 			finished := helpers.EventsWith(s.blockTypedEvents(t, height, burnerEventPrefix+"RaffleFinishedEvent"), map[string]string{"denom": denom})
 			require.Len(t, finished, 1, "RaffleFinishedEvent")
 			require.Equal(t, s.supplyAt(t, denom, height-1).Sub(balance), s.supplyAt(t, denom, height), "supply of %s", denom)
@@ -520,6 +521,10 @@ func (s *burnerSuite) raffleExpiry(t *testing.T) {
 			require.Empty(t, s.raffleWinners(t, denom), "winners of %s removed", denom)
 			require.True(t, s.balance(t, s.raffleAcc, denom).IsZero(), "burner_raffle %s balance", denom)
 		})
+	}
+	for height, burned := range expired {
+		s.requireBurned(t, height, s.raffleAcc, burned)
+		s.burns[height] = s.burns[height].Add(burned...)
 	}
 }
 

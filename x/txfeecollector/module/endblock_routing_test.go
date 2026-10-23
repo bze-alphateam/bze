@@ -110,7 +110,7 @@ func TestEndBlock_FailedConversionKeepsRoutedFees(t *testing.T) {
 		bank.EXPECT().GetAllBalances(gomock.Any(), cpAddr).Return(sdk.NewCoins(ibc)).Times(1),
 	)
 	cp.EXPECT().GetDenomCommunityPool(gomock.Any(), token.Denom).Return(tokenCp, true).Times(1)
-	cp.EXPECT().GetDenomCommunityPool(gomock.Any(), ibc.Denom).Return(nil, false).Times(1)
+	cp.EXPECT().GetDenomCommunityPool(gomock.Any(), ibc.Denom).Return(nil, false).Times(2) // routing, then the conversion after a successful routing
 	bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.CpFeeCollector, tokenCp, sdk.NewCoins(token)).Return(nil).Times(1)
 
 	// the conversion of the IBC coin fails

@@ -466,6 +466,10 @@ func (app *App) setTradebinHooks() {
 			app.RewardsKeeper.GetOnOrderFillHook(),
 		},
 	)
+
+	// protocol fees paid in a factory token pay its transfer fee on top. Set here because the tokenfactory keeper
+	// depends on the tradebin keeper.
+	app.TradebinKeeper.SetDenomFeeRatesProvider(app.TokenfactoryKeeper)
 }
 
 // setRewardsHooks registers the modules notified on staking reward and Denom

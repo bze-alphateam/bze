@@ -145,6 +145,7 @@ Partial order fills can leave fractional coin amounts (dust) that are too small 
 - **Order fees** (maker/taker): routed based on `maker_fee_destination`/`taker_fee_destination` params — valid destinations are `community_pool` or `burner`.
 - **Pool fees** (`fee` field per pool): split three ways via `fee_destination` — `treasury` % to the community pool (the token's own community pool when the coin is a factory token with one set, see the txfeecollector docs; the chain's otherwise), `burner` % to burner module, `providers` % to LP holders.
 - Fees are captured from the sender, swapped to `native_denom` when possible, and forwarded to the destination module.
+- **Factory token transfer fee on protocol fees:** when the sender pays a protocol fee (the denom, market, DAO, staking, trading and denom reward creation fees, the denom reward schedule and prize fees, and the order fees) in a factory token whose tokenfactory `DenomConfig` sets a `transfer_fee`, they pay `ceil(fee in the token × transfer_fee)` on top. It goes to `txfeecollector_cp`, forwarded to the token's community pool at EndBlock, or to `txfeecollector_burner` when the token has no community pool. The balance check covers the fee plus the transfer fee; a sender short of it pays the protocol fee in `native_denom` instead, as before. The rate is read from the tokenfactory keeper, which the app sets on this keeper after building it; without it, nothing is charged and a warning is logged.
 - `MsgUpdateParams`, `MsgHaltDenoms`, `MsgUnhaltDenoms` and `MsgUpdatePools` are restricted to the module authority (governance).
 - Queue processing at `EndBlock` is capped by `order_book_per_block_messages`; messages beyond the cap remain queued for later blocks, and the queue counter resets only after the queue is emptied.
 - Module-level swaps/add-liquidity helpers refuse to run unless the native/pair pool holds more than `min_native_liquidity_for_module_swap` in native reserves.
@@ -152,6 +153,7 @@ Partial order fills can leave fractional coin amounts (dust) that are too small 
 ## Version History
 
 ### v8.3.0
+- The factory token transfer fee is charged on protocol fees paid in the token (fee payer service).
 - `MsgUpdatePools` governance message: changes the swap fee and fee split of existing pools (all or nothing, halted pools included, idempotent), `PoolFeesUpdatedEvent` per changed pool.
 - Order book engine outcome events: `OrderMessageRefundedEvent`, `OrderCancelSkippedEvent` and `OrderMessageFailedEvent`, so every processed queue message leaves an event with its `message_id`.
 

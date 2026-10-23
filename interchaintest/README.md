@@ -45,8 +45,9 @@ make e2e-halt                       # halted denoms: gov halt/unhalt, refused tr
 make e2e-update-pools               # pool fee update: gov MsgUpdatePools, swap with the new fee, unknown pool refused (~4 min)
 make e2e-ibc                        # blocked inbound IBC: bze <-> simd through Hermes (~12 min)
 make e2e-fees                       # fee destinations, minimum gas prices, ante refusals, fee grants, txfeecollector params
+make e2e-transferfee                # factory-token transfer fee on protocol fees and gas surcharge: routing, burn, fee grants, fallback, rate changes
 make e2e-orderbook                  # order-book engine: fills, remainders, dust, cancels, refusals, queue limits
-make e2e-tradingrewards             # trading rewards: create, gov activation, hooks, leaderboard, payout, cleanup (~20 min)
+make e2e-tradingrewards             # trading rewards: create, gov activation, hooks, leaderboard, payout, cleanup, pending expiry (~25 min)
 make e2e-burner                     # burner: fund routing, periodic burn and interval, raffles, locked IBC coins (~15 min)
 make e2e-cointrunk                  # cointrunk: domains and publishers by gov, free and paid articles, monthly limit, respect tax
 make e2e-params                     # tradebin, rewards and tokenfactory params by gov: authority, refusals, each param's effect on a real tx
@@ -136,7 +137,7 @@ and older.
 | Validators | 1 (suites can ask for more) |
 | Block time | about 1 s (`timeout_commit = 1s`) |
 | Gas price | `0.01ubze` |
-| Epochs | `day` 30 s, `hour` 5 s, `week` 210 s |
+| Epochs | `day` 30 s, `hour` 5 s, `week` 210 s (a suite overrides them with `chain.Epochs`) |
 | Gov voting period | 20 s (expedited 10 s) |
 | Gov min deposit | 1 BZE (expedited 2 BZE) |
 | Denom rewards lock | 1 day, i.e. 24 `hour` epochs, about 2 minutes |
@@ -175,10 +176,14 @@ start-up.
 
 ## Known gaps
 
-- Trading rewards: the 30-day expiry of a pending reward, which burns its
-  escrow, takes 720 `hour` epochs (about an hour) and is covered by unit tests
-  only. The trading reward candidates (every trader's running total) have no
-  query, so the suite sees them only through the leaderboard.
+- Trading rewards: the trading reward candidates (every trader's running
+  total) have no query, so the suite sees them only through the leaderboard.
+  The 30-day expiry of a pending reward (720 `hour` epochs, fixed in code) runs
+  in `TestTradingRewardExpiry` on its own network with 2 s `hour` epochs
+  (`chain.Epochs`, about 25 minutes). An epoch can't be shorter than a block:
+  one that falls behind the block time is "catching up", and the rewards
+  module refuses txs until it has caught up. The batching of expiries (100
+  per block) is unit-tested only.
 - Burner: raffles run with `duration` 1 (24 `hour` epochs); the cap of 200
   raffle tickets executing per block and the batching of periodic burns (100
   denoms per block) and raffle cleanups (50 per block) are unit-tested only.

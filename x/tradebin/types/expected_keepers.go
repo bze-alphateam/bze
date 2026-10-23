@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 
+	"cosmossdk.io/math"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,4 +34,12 @@ type BankKeeper interface {
 type ParamSubspace interface {
 	Get(context.Context, []byte, interface{})
 	Set(context.Context, []byte, interface{})
+}
+
+// DenomFeeRatesProvider reads a factory denom's DenomConfig. Implemented by the tokenfactory keeper.
+type DenomFeeRatesProvider interface {
+	// GetDenomCommunityPool returns the denom's community pool address, false when it has none.
+	GetDenomCommunityPool(ctx sdk.Context, denom string) (sdk.AccAddress, bool)
+	// GetDenomFeeRates returns the denom's transfer fee and gas surcharge ratios, zeros when none are set.
+	GetDenomFeeRates(ctx sdk.Context, denom string) (transferFee, gasSurcharge math.LegacyDec)
 }
