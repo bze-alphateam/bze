@@ -42,6 +42,7 @@ func TxfeecollectorKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
@@ -60,6 +61,7 @@ func TxfeecollectorKeeperWithMocks(
 	accountKeeper types.AccountKeeper,
 	tradeKeeper types.TradeKeeper,
 	distrKeeper types.DistrKeeper,
+	denomCpProvider types.DenomCommunityPoolProvider,
 ) (keeper.Keeper, sdk.Context) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
@@ -81,6 +83,7 @@ func TxfeecollectorKeeperWithMocks(
 		accountKeeper,
 		tradeKeeper,
 		distrKeeper,
+		denomCpProvider,
 	)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())

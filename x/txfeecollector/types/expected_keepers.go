@@ -28,6 +28,7 @@ type FeegrantKeeper interface {
 type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	// Methods imported from bank should be defined here
@@ -35,6 +36,12 @@ type BankKeeper interface {
 
 type DistrKeeper interface {
 	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
+}
+
+// DenomCommunityPoolProvider returns the community pool address a denom's fees are forwarded to,
+// false when the denom has none. Implemented by the tokenfactory keeper.
+type DenomCommunityPoolProvider interface {
+	GetDenomCommunityPool(ctx sdk.Context, denom string) (sdk.AccAddress, bool)
 }
 
 // ParamSubspace defines the expected Subspace interface for parameters.

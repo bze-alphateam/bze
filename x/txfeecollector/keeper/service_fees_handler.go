@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,16 +27,17 @@ func (k Keeper) ConvertBurnerFeesToNativeDenom(ctx sdk.Context) error {
 	return k.convertFeesAndSend(ctx, types.BurnerFeeCollector, burnermoduletypes.ModuleName, true)
 }
 
+// ConvertCommunityPoolFeesToNativeDenom funds the chain's community pool with the coins held for it, swapped to native
+// denom. Coins whose denom has its own community pool are expected to be forwarded first by
+// RouteCommunityPoolFeesToDenomCommunityPools.
 func (k Keeper) ConvertCommunityPoolFeesToNativeDenom(ctx sdk.Context) error {
 	toSend, skipped, err := k.convertFees(ctx, types.CpFeeCollector)
 	if err != nil {
 		return err
 	}
 
-	//TODO: non native coins should be sent to the token's community pool (NOT BZE Community Pool) when they are available.
-	// For now we just send them to burner module if they can't be swapped to native denom.
+	// coins without a denom community pool that can't be swapped to native denom go to the burner module
 	if skipped.Len() > 0 {
-		//if some coins were skipped because we couldn't convert them, send them to the buner module
 		err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.CpFeeCollector, burnermoduletypes.ModuleName, skipped)
 		if err != nil {
 			return err
@@ -49,6 +52,56 @@ func (k Keeper) ConvertCommunityPoolFeesToNativeDenom(ctx sdk.Context) error {
 	err = k.distrKeeper.FundCommunityPool(ctx, toSend, moduleAddr)
 
 	return err
+}
+
+// RouteCommunityPoolFeesToDenomCommunityPools sends each coin held for the community pool to its denom's own
+// community pool, when the denom has one. It is bounded by the MaxBalanceIterations param; coins over the bound wait
+// for the next block.
+// A failed send returns the error and the caller is expected to discard everything written (EndBlock runs it through
+// bzeutils.ApplyFuncIfNoError), so the coins stay in the collector for ConvertCommunityPoolFeesToNativeDenom. It runs
+// apart from that conversion so a failed conversion can't roll the forwarded coins back either.
+func (k Keeper) RouteCommunityPoolFeesToDenomCommunityPools(ctx sdk.Context) error {
+	if k.denomCpProvider == nil {
+		return nil
+	}
+
+	moduleAddr := k.accountKeeper.GetModuleAddress(types.CpFeeCollector)
+	allCoins := k.bankKeeper.GetAllBalances(ctx, moduleAddr)
+	if allCoins.IsZero() {
+		return nil
+	}
+
+	maxIterations := int(k.GetParams(ctx).MaxBalanceIterations)
+	for i, c := range allCoins {
+		if i >= maxIterations {
+			break
+		}
+
+		if !c.IsPositive() {
+			continue
+		}
+
+		recipient, ok := k.denomCpProvider.GetDenomCommunityPool(ctx, c.Denom)
+		if !ok {
+			continue
+		}
+
+		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.CpFeeCollector, recipient, sdk.NewCoins(c))
+		if err != nil {
+			return fmt.Errorf("failed to send %s to the denom community pool %s: %w", c, recipient, err)
+		}
+
+		err = ctx.EventManager().EmitTypedEvent(&types.CommunityPoolFeePaidEvent{
+			Denom:     c.Denom,
+			Recipient: recipient.String(),
+			Amount:    c.Amount.String(),
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // convertFeesAndSend transfers converted fees from one module to another if fees are available and conversion is successful.
