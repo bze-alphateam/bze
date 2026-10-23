@@ -32,6 +32,7 @@ const (
 	xfPoolDest   = `{"treasury":"0","burner":"0","providers":"1"}`
 	xfRate       = "0.01"
 	xfSurcharge  = "0.5"
+	xfMinNative  = "0.01" // the genesis ValidatorMinGasFee, in ubze
 
 	xfSendGas = 200_000
 	xfTxGas   = 500_000
@@ -154,30 +155,48 @@ func (s *transferFeeSuite) noTransferFee(t *testing.T) {
 	require.Equal(t, before.SubRaw(1_000_000), s.balance(t, u1, s.tok), "only the order amount is locked")
 }
 
-// 2. tok pays gas at 0.015 tok (0.01 converted × 1.5): 2,999 tok is refused
-// at 200,000 gas, 3,000 is accepted. The whole fee goes to the
-// txfeecollector, then floor(3000 × 0.5 / 1.5) = 1000 moves to
-// txfeecollector_cp. Gas pays no transfer fee.
+// 2. tok pays gas at the converted price × 1.5 (0.01 ubze over the pool's
+// spot price, about 0.015 tok; step 1's swap moved the price, so the minimum
+// is read from the reserves): one unit less than the minimum is refused at
+// 200,000 gas, the minimum is accepted. The whole fee goes to the
+// txfeecollector, then floor(fee × 0.5 / 1.5) moves to txfeecollector_cp.
+// Gas pays no transfer fee.
 func (s *transferFeeSuite) gasSurcharge(t *testing.T) {
 	u1 := s.u1.FormattedAddress()
 	send := func(fee int64) (helpers.TxResult, error) {
 		return helpers.ExecTxWith(s.ctx, s.bze, s.u1, []helpers.TxOption{helpers.WithFees(coinStr(fee, s.tok)), helpers.WithGas(xfSendGas)},
 			"bank", "send", u1, s.u2.FormattedAddress(), coinStr(1, chain.Denom))
 	}
-	res, err := send(2_999)
+	required := s.minGasFee(t, s.tokPool, xfSendGas).Int64()
+	res, err := send(required - 1)
 	reason, err := helpers.RejectionReason(res, err)
 	require.NoError(t, err)
 	require.Contains(t, reason, "insufficient fees")
-	require.Contains(t, reason, coinStr(3_000, s.tok))
+	require.Contains(t, reason, coinStr(required, s.tok))
 
 	before := s.balance(t, u1, s.tok)
-	res, err = send(3_000)
+	res, err = send(required)
 	require.NoError(t, err)
 	require.Zero(t, res.Code, res.RawLog)
-	require.Equal(t, before.SubRaw(3_000), s.balance(t, u1, s.tok), "only the tx fee")
+	require.Equal(t, before.SubRaw(required), s.balance(t, u1, s.tok), "only the tx fee")
 	s.requireNoTransferFee(t, res, u1, s.tok)
-	require.Equal(t, sdkmath.NewInt(3_000), s.transferred(t, res.Events, u1, s.txFees, s.tok))
-	s.requireSurcharge(t, res, u1, s.tok, 1_000, xfCpDest)
+	require.Equal(t, sdkmath.NewInt(required), s.transferred(t, res.Events, u1, s.txFees, s.tok))
+	s.requireSurcharge(t, res, u1, s.tok, required/3, xfCpDest)
+}
+
+// minGasFee is the minimum fee in the pool's non-native denom for gas:
+// ceil(0.01 / spot × (1 + surcharge) × gas), with spot = ubze reserve / token
+// reserve, as the ante computes it.
+func (s *transferFeeSuite) minGasFee(t *testing.T, poolID string, gas int64) sdkmath.Int {
+	t.Helper()
+	pool := s.pool(t, poolID)
+	native, other := pool.reserveQuote(), pool.reserveBase()
+	if pool.Base == chain.Denom {
+		native, other = other, native
+	}
+	spot := sdkmath.LegacyNewDecFromInt(native).Quo(sdkmath.LegacyNewDecFromInt(other))
+	price := sdkmath.LegacyMustNewDecFromStr(xfMinNative).Quo(spot).Mul(sdkmath.LegacyOneDec().Add(sdkmath.LegacyMustNewDecFromStr(xfSurcharge)))
+	return price.MulInt64(gas).Ceil().RoundInt()
 }
 
 // 3. A fee grant pays the full fee, surcharge included, from the granter.
