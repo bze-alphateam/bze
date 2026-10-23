@@ -64,6 +64,8 @@ Each factory denom has a `DenomConfig`, stored next to its authority record:
 - Rates are decimal ratios, like staking and DEX rates: `0.001` is 0.1%. The caps (`MaxTransferFee`, `MaxGasSurcharge`) are chain constants; changing them needs an upgrade.
 - Only the current admin may send it, a user or a DAO. The admin can raise or lower both rates and change or clear the community pool at any time. After a renounce nobody can change it: the token keeps its configuration as it was.
 - A community pool the bank module blocks (module accounts such as the fee collector or the x/dao module) is refused with `ErrInvalidDenomConfig`. A DAO treasury is a plain account and is accepted.
+- Rates can be set without a community pool. The transfer fee and gas surcharge are then still charged, and the coins are burned.
+- Rate changes, increases included, apply from the next block. The caps are the holders' protection.
 - Sending the defaults deletes the stored entry. A token without an entry, and any non-factory denom, reads as the defaults; the query never returns "not found".
 - Every change emits `DenomConfigChangeEvent{denom, community_pool, transfer_fee, gas_surcharge}` with the new values.
 - Genesis exports the configuration on each `GenesisDenom` as `denom_config`, only for tokens that have one.

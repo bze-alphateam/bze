@@ -94,7 +94,7 @@ func (suite *IntegrationTestSuite) TestGenesis_LiveStateRoundTrip() {
 
 	bank := testutil.NewMockBankKeeper(gomock.NewController(suite.T()))
 	bank.EXPECT().GetAllBalances(gomock.Any(), authtypes.NewModuleAddress(types.ModuleName)).Return(ubze(40)).AnyTimes()
-	fresh, freshCtx := keepertest.DaoKeeper(suite.T(), cdc, nil, nil, bank, nil)
+	fresh, freshCtx := keepertest.DaoKeeper(suite.T(), cdc, nil, nil, bank, nil, nil)
 	dao.InitGenesis(freshCtx, &fresh, decoded)
 
 	suite.Require().Equal(exportedJSON, cdc.MustMarshalJSON(dao.ExportGenesis(freshCtx, &fresh)))
@@ -129,7 +129,7 @@ func (suite *IntegrationTestSuite) TestGenesis_JoinRecordOfUnpinnedSource() {
 	suite.Require().Equal([]types.JoinRecord{{Source: string(srSource), Address: memberC.String(), Height: 5}}, exported.JoinRecords)
 	suite.Require().NoError(exported.Validate())
 
-	fresh, freshCtx := keepertest.DaoKeeper(suite.T(), keepertest.DaoCodec(), nil, nil, testutil.NewMockBankKeeper(gomock.NewController(suite.T())), nil)
+	fresh, freshCtx := keepertest.DaoKeeper(suite.T(), keepertest.DaoCodec(), nil, nil, testutil.NewMockBankKeeper(gomock.NewController(suite.T())), nil, nil)
 	dao.InitGenesis(freshCtx, &fresh, *exported)
 	suite.Require().Equal(exported, dao.ExportGenesis(freshCtx, &fresh))
 }

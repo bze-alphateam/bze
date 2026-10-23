@@ -8,6 +8,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "bze/tradebin/v2/params.proto";
+import "bze/tradebin/store.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/tradebin/types";
 
@@ -31,6 +32,8 @@ service Msg {
   rpc HaltDenoms          (MsgHaltDenoms         ) returns (MsgHaltDenomsResponse         );
   // UnhaltDenoms lifts the halt on denoms. Governance only.
   rpc UnhaltDenoms        (MsgUnhaltDenoms       ) returns (MsgUnhaltDenomsResponse       );
+  // UpdatePools changes the swap fee and the fee split of existing liquidity pools. Governance only.
+  rpc UpdatePools         (MsgUpdatePools        ) returns (MsgUpdatePoolsResponse        );
 }
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
@@ -203,3 +206,28 @@ message MsgUnhaltDenoms {
 }
 
 message MsgUnhaltDenomsResponse {}
+
+// MsgUpdatePools is the governance message that changes the swap fee and the fee split of existing
+// liquidity pools. Only fee and fee_dest change; the curve, reserves and LP denom never do. All or
+// nothing: an unknown pool refuses the whole batch. An entry equal to the pool's current values is a
+// no-op. Halted pools can be updated.
+message MsgUpdatePools {
+  option (cosmos.msg.v1.signer) =                     "authority";
+  option           (amino.name) = "bze/x/tradebin/MsgUpdatePools";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // pools to update: at least 1, at most 100, no duplicate pool_id.
+  repeated PoolUpdate updates = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// PoolUpdate is the new fee and fee split of one pool. Both follow the pool creation rules: the fee is
+// between 0.001 and 0.05, the fee split shares are non-negative and add up to 1.
+message PoolUpdate {
+  string pool_id = 1;
+  string fee = 2 [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec", (gogoproto.nullable) = false];
+  FeeDestination fee_dest = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+message MsgUpdatePoolsResponse {}

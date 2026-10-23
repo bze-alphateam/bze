@@ -141,8 +141,11 @@ func (suite *IntegrationTestSuite) TestSetDenomConfig_NonAdmin() {
 
 func (suite *IntegrationTestSuite) TestSetDenomConfig_UnknownDenom() {
 	admin := sdk.AccAddress("admin").String()
-	err := suite.setDenomConfig(admin, "factory/"+admin+"/never", "", "0.01", "0")
-	suite.Require().Error(err)
+	denom := "factory/" + admin + "/never"
+	err := suite.setDenomConfig(admin, denom, "", "0.01", "0")
+	suite.Require().ErrorContains(err, "denom authority not found for denom "+denom)
+	suite.requireConfig(denom, "", "0", "0")
+	suite.Require().Empty(suite.denomConfigEvents())
 }
 
 // After a renounce nobody can change the config, and the renounce leaves it as it was.
