@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"errors"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"go.uber.org/mock/gomock"
@@ -247,4 +249,47 @@ func (suite *IntegrationTestSuite) TestTrySwap_TransferFeeOnTooSmallPath() {
 	captured, err := suite.k.CaptureAndTryToSwapUserFeesOrSendItAsIs(ctx, transferFeePayer, sdk.NewCoins(nativeFee), types.ModuleName)
 	suite.Require().NoError(err)
 	suite.Require().Equal(sdk.NewCoins(required), captured)
+}
+
+// A failed transfer fee send returns its error before anything is captured or swapped (the bank mock fails on the
+// capture call, which is not expected).
+func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_FailedTransferFeeSendCapturesNothing() {
+	provider := suite.useDenomFeeRates()
+	nativeFee := sdk.NewInt64Coin(denomBze, 100_000_000)
+	ctx, required := suite.requiredTokenFee(nativeFee)
+	transferFee := ceilFee(required, "0.01")
+	sendErr := errors.New("transfer fee send refused")
+
+	expectTransferFeeRate(provider, "0.01")
+	provider.EXPECT().GetDenomCommunityPool(gomock.Any(), denomFactoryToken).Return(tokenCommunityPool, true).Times(1)
+	suite.expectSpendable(sdk.NewCoins(required.Add(transferFee)))
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(gomock.Any(), transferFeePayer, txfeecollectormoduletypes.CpFeeCollector, sdk.NewCoins(transferFee)).
+		Return(sendErr).
+		Times(1)
+
+	captured, err := suite.k.CaptureAndSwapUserFee(ctx, transferFeePayer, sdk.NewCoins(nativeFee), types.ModuleName)
+	suite.Require().ErrorIs(err, sendErr)
+	suite.Require().Nil(captured)
+}
+
+// The order fee path stops on a failed transfer fee send too.
+func (suite *IntegrationTestSuite) TestTrySwap_FailedTransferFeeSendCapturesNothing() {
+	provider := suite.useDenomFeeRates()
+	nativeFee := sdk.NewInt64Coin(denomBze, 100_000_000)
+	ctx, required := suite.requiredTokenFee(nativeFee)
+	transferFee := ceilFee(required, "0.01")
+	sendErr := errors.New("transfer fee send refused")
+
+	expectTransferFeeRate(provider, "0.01")
+	provider.EXPECT().GetDenomCommunityPool(gomock.Any(), denomFactoryToken).Return(nil, false).Times(1)
+	suite.expectSpendable(sdk.NewCoins(required.Add(transferFee)))
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(gomock.Any(), transferFeePayer, txfeecollectormoduletypes.BurnerFeeCollector, sdk.NewCoins(transferFee)).
+		Return(sendErr).
+		Times(1)
+
+	captured, err := suite.k.CaptureAndTryToSwapUserFeesOrSendItAsIs(ctx, transferFeePayer, sdk.NewCoins(nativeFee), types.ModuleName)
+	suite.Require().ErrorIs(err, sendErr)
+	suite.Require().Nil(captured)
 }
