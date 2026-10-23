@@ -35,7 +35,7 @@ A factory token's admin can set two rates in its `DenomConfig` (`MsgSetDenomConf
 **Where the fees go.** When the token has a community pool, both fees go to `txfeecollector_cp`, and the [routing](#community-pool-fees) forwards them to the token's community pool at EndBlock (one `CommunityPoolFeePaidEvent` per forwarded coin). When it has none, they go to `txfeecollector_burner` and are burned (swapped to ubze and burned, or burned as is when unswappable).
 
 ### Transfer fee
-For now the transfer fee is charged only on **protocol fees paid in the token**, by x/tradebin's fee payer (see the [tradebin docs](../../tradebin/docs/README.md#fees-and-destinations)): denom, market and staking reward creation fees, and the order fees. The payer pays `ceil(fee in the token × transfer_fee)` on top; a payer short of it pays the protocol fee in ubze instead. Plain sends between accounts, IBC transfers and every other module flow are not charged.
+For now the transfer fee is charged only on **protocol fees paid in the token**, by x/tradebin's fee payer (see the [tradebin docs](../../tradebin/docs/README.md#fees-and-destinations)): the denom, market, DAO, staking, trading and denom reward creation fees, the denom reward schedule and prize fees, and the order fees. The payer pays `ceil(fee in the token × transfer_fee)` on top; a payer short of it pays the protocol fee in ubze instead. Plain sends between accounts, IBC transfers and every other module flow are not charged.
 
 ### Gas surcharge
 Charged when the token **pays the tx fee**. Gas never pays the transfer fee, and protocol fees never pay the surcharge.

@@ -334,17 +334,21 @@ func (s *transferFeeSuite) tinyGasFee(t *testing.T) {
 }
 
 // 10. Every other protocol fee captured through tradebin's fee payer pays
-// the transfer fee when the tx fee is in tok: create market, the staking,
-// trading and denom reward creation fees, and a denom reward schedule, which
-// captures two fees (the new prize denom's and the schedule's), each paying
-// its own transfer fee. The admin deepens the tok pool first so the default
-// fees (25,000 BZE each) don't take it below the fee payer's minimum ubze
-// liquidity.
+// the transfer fee when the tx fee is in tok: create market, the DAO
+// creation fee, the staking, trading and denom reward creation fees, and a
+// denom reward schedule, which captures two fees (the new prize denom's and
+// the schedule's), each paying its own transfer fee. The admin deepens the
+// tok pool first so the default fees (25,000 to 50,000 BZE each) don't take
+// it below the fee payer's minimum ubze liquidity.
 func (s *transferFeeSuite) otherProtocolFees(t *testing.T) {
 	admin, u1 := s.admin.FormattedAddress(), s.u1.FormattedAddress()
 	s.mustExec(t, s.admin, "tokenfactory", "mint", coinStr(xfDeepTok+xfMoreUserTok, s.tok))
 	s.mustExec(t, s.admin, "tradebin", "add-liquidity", s.tokPool, strconv.Itoa(xfDeepTok), strconv.Itoa(xfDeepTok), "1")
 	s.mustExec(t, s.admin, "bank", "send", admin, u1, coinStr(xfMoreUserTok, s.tok))
+	// this network keeps the default dao params: voting periods of 1h to 90 days;
+	// protobuf durations are written in seconds
+	daoCfg := defaultCfg()
+	daoCfg.voting, daoCfg.expedited = "259200s", "86400s" // 72h and 24h
 
 	for _, c := range []struct {
 		name string
@@ -352,6 +356,7 @@ func (s *transferFeeSuite) otherProtocolFees(t *testing.T) {
 		fees int // protocol fees the tx captures
 	}{
 		{"create market", []string{"tradebin", "create-market", s.brn, s.tok}, 1},
+		{"create dao", []string{"dao", "create-dao", "static-list", "fee payers", daoCfg.cli(), "--members", u1}, 1},
 		{"create staking reward", []string{"rewards", "create-staking-reward", "1000", chain.Denom, s.tok, "1", "0", "0"}, 1},
 		{"create trading reward", []string{"rewards", "create-trading-reward", "1000", chain.Denom, "1", s.tokPool, "1"}, 1},
 		{"create denom reward", []string{"rewards", "create-denom-reward", s.tok}, 1},

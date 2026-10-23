@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/bze-alphateam/bze/app"
+	daotypes "github.com/bze-alphateam/bze/x/dao/types"
 	epochstypes "github.com/bze-alphateam/bze/x/epochs/types"
 	rewardstypes "github.com/bze-alphateam/bze/x/rewards/types"
 	tokenfactorytypes "github.com/bze-alphateam/bze/x/tokenfactory/types"
@@ -134,6 +135,18 @@ func TestProtocolFeesInFactoryTokenPayTransferFee(t *testing.T) {
 				params.CreateMarketFee = feeParam
 				require.NoError(t, bApp.TradebinKeeper.SetParams(ctx, params))
 				return &tradebintypes.MsgCreateMarket{Creator: payer.String(), Base: token, Quote: pool.Quote}
+			},
+		},
+		{
+			name: "create dao",
+			setup: func(t *testing.T, bApp *app.App, ctx sdk.Context, token string, pool tradebintypes.LiquidityPool, payer sdk.AccAddress) sdk.Msg {
+				params := bApp.DaoKeeper.GetParams(ctx)
+				params.DaoCreationFee = feeParam
+				require.NoError(t, bApp.DaoKeeper.SetParams(ctx, params))
+				return &daotypes.MsgCreateDao{
+					Creator: payer.String(), Admin: payer.String(), Type: daotypes.DaoType_DAO_TYPE_STATIC_LIST,
+					Name: "fee payers", Config: newAdminDaoConfig(), Members: []string{payer.String()},
+				}
 			},
 		},
 		{
