@@ -101,10 +101,49 @@ func (suite *IntegrationTestSuite) TestGasSurcharge_NothingWithoutRateOrForTinyF
 	suite.expectRates(denomTokenA, "0.05", "0")
 	suite.expectRates(denomTokenB, "0", "0.5")
 
-	// tokenA has no surcharge, 1 tokenB rounds down to 0, ubze never reaches the provider
+	// tokenA has no surcharge, a 1 tokenB fee stays whole with the validators, ubze never reaches the provider
 	fees := sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 1_000), sdk.NewInt64Coin(denomTokenB, 1), sdk.NewInt64Coin(denomBze, 1_000))
 	suite.Require().NoError(suite.k.ChargeGasSurcharge(suite.ctx, feeSender, fees))
 	suite.Require().Empty(gasSurchargeEvents(suite.ctx))
+}
+
+// A split that floors to 0 takes the smallest unit when the fee is above 1: 2 tokenA at 50% (floor(0.66)) and
+// 3 tokenB at 10% (floor(0.27)) each send 1.
+func (suite *IntegrationTestSuite) TestGasSurcharge_SplitFlooredToZeroTakesOneUnit() {
+	suite.useDenomCpProvider()
+	suite.expectRates(denomTokenA, "0", "0.5")
+	suite.expectRates(denomTokenB, "0", "0.1")
+	suite.expectCommunityPool(denomTokenA, true)
+	suite.expectCommunityPool(denomTokenB, false)
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, types.CpFeeCollector, sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 1))).
+		Return(nil).
+		Times(1)
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, types.BurnerFeeCollector, sdk.NewCoins(sdk.NewInt64Coin(denomTokenB, 1))).
+		Return(nil).
+		Times(1)
+
+	fees := sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 2), sdk.NewInt64Coin(denomTokenB, 3))
+	suite.Require().NoError(suite.k.ChargeGasSurcharge(suite.ctx, feeSender, fees))
+	events := gasSurchargeEvents(suite.ctx)
+	suite.Require().Len(events, 2)
+	for _, e := range events {
+		suite.Require().Equal("1", e.Amount, "surcharge of %s", e.Denom)
+	}
+}
+
+// At the top rate a fee of 2 floors to 1 (floor(2 × 2 / 3)), so the minimum changes nothing and the validators keep 1.
+func (suite *IntegrationTestSuite) TestGasSurcharge_SmallFeeAtMaxRateKeepsOneForValidators() {
+	suite.useDenomCpProvider()
+	suite.expectRates(denomTokenA, "0", "2")
+	suite.expectCommunityPool(denomTokenA, true)
+	suite.bankMock.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, types.CpFeeCollector, sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 1))).
+		Return(nil).
+		Times(1)
+
+	suite.Require().NoError(suite.k.ChargeGasSurcharge(suite.ctx, feeSender, sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 2))))
 }
 
 func (suite *IntegrationTestSuite) TestGasSurcharge_NilProviderDoesNothing() {

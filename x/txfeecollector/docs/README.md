@@ -41,7 +41,7 @@ For now the transfer fee is charged only on **protocol fees paid in the token**,
 Charged when the token **pays the tx fee**. Gas never pays the transfer fee, and protocol fees never pay the surcharge.
 
 - **Minimum gas price** (CheckTx only): the token's price, converted from the ubze minimum gas price through its ubze pool, is multiplied by `1 + gas_surcharge` before the comparison with the validator's own price. A spot-price failure keeps the ubze fallback as before.
-- **Split:** the whole fee goes to the `txfeecollector` module as before, then `floor(fee × s / (1 + s))` moves on to the token's destination; the rest is converted for the validators. The split runs on the fee actually paid: DeliverTx doesn't check the minimum gas price, so a validator that includes a cheaper tx gives the community pool the same share of a smaller fee.
+- **Split:** the whole fee goes to the `txfeecollector` module as before, then `floor(fee × s / (1 + s))` moves on to the token's destination, and at least 1 unit when the fee is above 1 (a fee of 1 stays whole with the validators, who always keep at least 1); the rest is converted for the validators. The split runs on the fee actually paid: DeliverTx doesn't check the minimum gas price, so a validator that includes a cheaper tx gives the community pool the same share of a smaller fee.
 - Fee grants are charged the full declared fee, surcharge included; the granter pays it. The surcharge stays charged when the tx fails, like the rest of the fee.
 - Every charged coin emits `GasSurchargePaidEvent{payer, denom, amount, destination}`.
 

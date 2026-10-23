@@ -28,8 +28,9 @@ func (k Keeper) GetDenomFeeRates(ctx sdk.Context, denom string) (transferFee, ga
 }
 
 // ChargeGasSurcharge moves the gas surcharge out of the tx fee the payer just paid to this module. For each fee coin
-// whose denom sets a surcharge s, floor(amount × s / (1 + s)) goes from this module to the denom's fee destination;
-// the rest stays here to be converted for the validators as before. The split runs on the fee actually paid.
+// whose denom sets a surcharge s, floor(amount × s / (1 + s)) goes from this module to the denom's fee destination,
+// and at least 1 when the amount is above 1; the rest stays here to be converted for the validators as before. The
+// split runs on the fee actually paid.
 func (k Keeper) ChargeGasSurcharge(ctx sdk.Context, payer sdk.AccAddress, fees sdk.Coins) error {
 	if k.denomCpProvider == nil {
 		return nil
@@ -44,7 +45,12 @@ func (k Keeper) ChargeGasSurcharge(ctx sdk.Context, payer sdk.AccAddress, fees s
 		// truncated division keeps the floor exact: amount × s is exact at 18 decimals
 		surcharge := fee.Amount.ToLegacyDec().Mul(surchargeRate).QuoTruncate(math.LegacyOneDec().Add(surchargeRate)).TruncateInt()
 		if !surcharge.IsPositive() {
-			continue
+			// a split that floors to 0 still takes the smallest unit; the validators keep at least 1, since
+			// amount × s / (1 + s) < amount makes the floor at most amount - 1
+			if !fee.Amount.GT(math.OneInt()) {
+				continue
+			}
+			surcharge = math.OneInt()
 		}
 
 		destination := k.denomFeeDestination(ctx, fee.Denom)

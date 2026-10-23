@@ -34,6 +34,12 @@ const (
 	xfSurcharge  = "0.5"
 	xfMinNative  = "0.01" // the genesis ValidatorMinGasFee, in ubze
 
+	// big is worth 100,000 ubze a unit (its pool holds xfBigPoolBze against
+	// xfBigPoolBig), so a 200,000 gas send needs a fee of 1 big:
+	// ceil(0.01 / 100,000 × 1.5 × 200,000) = ceil(0.03)
+	xfBigPoolBig = 2_000_000
+	xfBigPoolBze = 200_000_000_000
+
 	xfSendGas = 200_000
 	xfTxGas   = 500_000
 
@@ -65,6 +71,7 @@ func TestTransferFees(t *testing.T) {
 	t.Run("6 order fee paid in the token", s.orderFee)
 	t.Run("7 too little token falls back to ubze", s.fallback)
 	t.Run("8 rates change at once", s.rateChanges)
+	t.Run("9 a tiny gas fee still splits one unit", s.tinyGasFee)
 }
 
 type transferFeeSuite struct {
@@ -283,6 +290,43 @@ func (s *transferFeeSuite) rateChanges(t *testing.T) {
 }
 
 // setConfig sets a token's DenomConfig as its admin.
+// 9. A gas fee whose split floors to 0 still sends one unit to the token's
+// destination when it is above 1; a fee of 1 stays whole with the validators.
+// big, worth 100,000 ubze a unit with a 50% surcharge, needs a fee of 1 for a
+// send: a fee of 1 splits nothing, a fee of 2 (floor(2 × 0.5 / 1.5) = 0)
+// splits 1.
+func (s *transferFeeSuite) tinyGasFee(t *testing.T) {
+	admin, u1 := s.admin.FormattedAddress(), s.u1.FormattedAddress()
+	big := "factory/" + admin + "/big"
+	s.mustExecWith(t, s.admin, []helpers.TxOption{helpers.WithGas(xfTxGas)}, "tokenfactory", "create-denom", "big")
+	s.mustExec(t, s.admin, "tokenfactory", "mint", coinStr(2*xfBigPoolBig, big))
+	s.mustExecWith(t, s.admin, []helpers.TxOption{helpers.WithGas(xfTxGas)},
+		"tradebin", "create-liquidity-pool", big, chain.Denom, ammPoolFee, xfPoolDest, "false",
+		strconv.Itoa(xfBigPoolBig), strconv.Itoa(xfBigPoolBze))
+	s.mustExec(t, s.admin, "bank", "send", admin, u1, coinStr(100, big))
+	s.setConfig(t, big, s.cp, xfRate, xfSurcharge)
+	require.Equal(t, sdkmath.OneInt(), s.minGasFee(t, big+"_"+chain.Denom, xfSendGas), "the minimum fee of a send is 1 big")
+
+	send := func(fee int64) helpers.TxResult {
+		t.Helper()
+		before := s.balance(t, u1, big)
+		res, err := helpers.ExecTxWith(s.ctx, s.bze, s.u1, []helpers.TxOption{helpers.WithFees(coinStr(fee, big)), helpers.WithGas(xfSendGas)},
+			"bank", "send", u1, s.u2.FormattedAddress(), coinStr(1, chain.Denom))
+		require.NoError(t, err)
+		require.Zero(t, res.Code, res.RawLog)
+		require.Equal(t, before.SubRaw(fee), s.balance(t, u1, big), "only the tx fee")
+		require.Equal(t, sdkmath.NewInt(fee), s.transferred(t, res.Events, u1, s.txFees, big), "the fee to the txfeecollector")
+		return res
+	}
+
+	res := send(1)
+	require.Empty(t, helpers.TxEvents(res, xfGasSurchargeT), "a fee of 1 is not split")
+	require.True(t, s.transferred(t, res.Events, s.txFees, s.cpFees, big).IsZero(), "nothing to txfeecollector_cp")
+
+	res = send(2)
+	s.requireSurcharge(t, res, u1, big, 1, xfCpDest)
+}
+
 func (s *transferFeeSuite) setConfig(t *testing.T, denom, cp, transferFee, gasSurcharge string) {
 	t.Helper()
 	s.mustExec(t, s.admin, "tokenfactory", "set-denom-config", denom, cp, transferFee, gasSurcharge)
