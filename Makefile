@@ -354,9 +354,10 @@ e2e-halt:
 e2e-orderbook:
 	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestOrderBook ./...
 
-# Runs the trading rewards suite (waits a week of hour epochs, ~20 min).
+# Runs the trading rewards suites (in parallel): the main one waits a week of
+# hour epochs (~20 min), the pending expiry one 720 hour epochs of 2 s (~25 min).
 e2e-tradingrewards:
-	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestTradingRewards ./...
+	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run 'TestTradingRewards|TestTradingRewardExpiry' ./...
 
 # Runs the burner suite (bze <-> simd through Hermes; waits three week ticks, ~15 min).
 e2e-burner:
