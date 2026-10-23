@@ -77,6 +77,40 @@ A market or pool is halted iff its base **or** quote is halted. Both sides of a 
 3. The message is idempotent: a denom that is already halted is left as is, so a batch proposal never fails because one of its entries was halted by an earlier proposal. Listing the native denom fails the whole proposal and halts nothing.
 4. Reverting is a `/bze.tradebin.MsgUnhaltDenoms` proposal with the same `denoms`. Un-halting a denom that is not halted is a no-op.
 
+## Changing a Pool's Fees
+Pools are unique per pair (the pool ID is the sorted `base_quote`), so a pool's swap fee and fee split can't be changed by opening a second pool. Governance changes them instead, with a `MsgUpdatePools` proposal. Liquidity never moves.
+
+- **What changes**: only `fee` and `fee_dest`. The curve (`stable`), the reserves, the LP denom, the creator and the LP shares stay as they are. The new values follow the pool creation rules: the fee is from 0.001 (0.1%) to 0.05 (5%), the three `fee_dest` shares (`treasury`, `burner`, `providers`) are non-negative and add up to exactly 1.
+- **When**: at once. The next swap charges the new fee and splits it with the new destinations. No migration, and LP share accounting doesn't change.
+- **All or nothing**: 1 to 100 pools per message, no pool twice. If any listed pool doesn't exist, the proposal fails at execution and no pool changes.
+- **Halted pools** can be updated: the halt only blocks trading.
+- **Idempotent**: an entry equal to the pool's current values is accepted and writes nothing. Every pool that does change emits `PoolFeesUpdatedEvent` with `pool_id`, `old_fee`, `new_fee`, `old_fee_dest` and `new_fee_dest`.
+- There is no fast path for the pool creator or a token admin: every change, decreases included, goes through governance.
+
+Example proposal (`bzed tx gov submit-proposal proposal.json --from <key>`; the fee and the shares are decimals given as strings):
+```json
+{
+  "messages": [
+    {
+      "@type": "/bze.tradebin.MsgUpdatePools",
+      "authority": "bze10d07y265gmmuvt4z0w9aw880jnsr700j8xlwyy",
+      "updates": [
+        {
+          "pool_id": "<base>_<quote>",
+          "fee": "0.003",
+          "fee_dest": { "treasury": "0.25", "burner": "0.25", "providers": "0.5" }
+        }
+      ]
+    }
+  ],
+  "metadata": "<ipfs or url>",
+  "deposit": "<amount>ubze",
+  "title": "Lower the fee of the <pair> pool",
+  "summary": "<why>"
+}
+```
+Query the pool with `bzed query tradebin liquidity-pool <id>` before and after the vote.
+
 ## Order Book Engine Events
 `MsgCreateOrder`, `MsgFillOrders` and `MsgCancelOrder` only queue messages: the transaction emits `OrderCreateMessageEvent` / `OrderCancelMessageEvent` with the queue `message_id`, and the EndBlock engine executes the message in the same block or, past `order_book_per_block_messages`, a later one. Every message the engine removes from the queue emits at least one of the events below with the same `message_id`:
 
@@ -112,7 +146,7 @@ Partial order fills can leave fractional coin amounts (dust) that are too small 
 - **Pool fees** (`fee` field per pool): split three ways via `fee_destination` — `treasury` % to the community pool (the token's own community pool when the coin is a factory token with one set, see the txfeecollector docs; the chain's otherwise), `burner` % to burner module, `providers` % to LP holders.
 - Fees are captured from the sender, swapped to `native_denom` when possible, and forwarded to the destination module.
 - **Factory token transfer fee on protocol fees:** when the sender pays a protocol fee (denom, market and staking reward creation fees, and the order fees) in a factory token whose tokenfactory `DenomConfig` sets a `transfer_fee`, they pay `ceil(fee in the token × transfer_fee)` on top. It goes to `txfeecollector_cp`, forwarded to the token's community pool at EndBlock, or to `txfeecollector_burner` when the token has no community pool. The balance check covers the fee plus the transfer fee; a sender short of it pays the protocol fee in `native_denom` instead, as before. The rate is read from the tokenfactory keeper, which the app sets on this keeper after building it; without it, nothing is charged and a warning is logged.
-- `MsgUpdateParams`, `MsgHaltDenoms` and `MsgUnhaltDenoms` are restricted to the module authority (governance).
+- `MsgUpdateParams`, `MsgHaltDenoms`, `MsgUnhaltDenoms` and `MsgUpdatePools` are restricted to the module authority (governance).
 - Queue processing at `EndBlock` is capped by `order_book_per_block_messages`; messages beyond the cap remain queued for later blocks, and the queue counter resets only after the queue is emptied.
 - Module-level swaps/add-liquidity helpers refuse to run unless the native/pair pool holds more than `min_native_liquidity_for_module_swap` in native reserves.
 
@@ -120,6 +154,7 @@ Partial order fills can leave fractional coin amounts (dust) that are too small 
 
 ### v8.3.0
 - The factory token transfer fee is charged on protocol fees paid in the token (fee payer service).
+- `MsgUpdatePools` governance message: changes the swap fee and fee split of existing pools (all or nothing, halted pools included, idempotent), `PoolFeesUpdatedEvent` per changed pool.
 - Order book engine outcome events: `OrderMessageRefundedEvent`, `OrderCancelSkippedEvent` and `OrderMessageFailedEvent`, so every processed queue message leaves an event with its `message_id`.
 
 ### v8.2.0

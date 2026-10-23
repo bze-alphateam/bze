@@ -30,6 +30,7 @@ const (
 	Msg_MultiSwap_FullMethodName           = "/bze.tradebin.Msg/MultiSwap"
 	Msg_HaltDenoms_FullMethodName          = "/bze.tradebin.Msg/HaltDenoms"
 	Msg_UnhaltDenoms_FullMethodName        = "/bze.tradebin.Msg/UnhaltDenoms"
+	Msg_UpdatePools_FullMethodName         = "/bze.tradebin.Msg/UpdatePools"
 )
 
 // MsgClient is the client API for Msg service.
@@ -51,6 +52,8 @@ type MsgClient interface {
 	HaltDenoms(ctx context.Context, in *MsgHaltDenoms, opts ...grpc.CallOption) (*MsgHaltDenomsResponse, error)
 	// UnhaltDenoms lifts the halt on denoms. Governance only.
 	UnhaltDenoms(ctx context.Context, in *MsgUnhaltDenoms, opts ...grpc.CallOption) (*MsgUnhaltDenomsResponse, error)
+	// UpdatePools changes the swap fee and the fee split of existing liquidity pools. Governance only.
+	UpdatePools(ctx context.Context, in *MsgUpdatePools, opts ...grpc.CallOption) (*MsgUpdatePoolsResponse, error)
 }
 
 type msgClient struct {
@@ -160,6 +163,15 @@ func (c *msgClient) UnhaltDenoms(ctx context.Context, in *MsgUnhaltDenoms, opts 
 	return out, nil
 }
 
+func (c *msgClient) UpdatePools(ctx context.Context, in *MsgUpdatePools, opts ...grpc.CallOption) (*MsgUpdatePoolsResponse, error) {
+	out := new(MsgUpdatePoolsResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdatePools_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -179,6 +191,8 @@ type MsgServer interface {
 	HaltDenoms(context.Context, *MsgHaltDenoms) (*MsgHaltDenomsResponse, error)
 	// UnhaltDenoms lifts the halt on denoms. Governance only.
 	UnhaltDenoms(context.Context, *MsgUnhaltDenoms) (*MsgUnhaltDenomsResponse, error)
+	// UpdatePools changes the swap fee and the fee split of existing liquidity pools. Governance only.
+	UpdatePools(context.Context, *MsgUpdatePools) (*MsgUpdatePoolsResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -218,6 +232,9 @@ func (UnimplementedMsgServer) HaltDenoms(context.Context, *MsgHaltDenoms) (*MsgH
 }
 func (UnimplementedMsgServer) UnhaltDenoms(context.Context, *MsgUnhaltDenoms) (*MsgUnhaltDenomsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnhaltDenoms not implemented")
+}
+func (UnimplementedMsgServer) UpdatePools(context.Context, *MsgUpdatePools) (*MsgUpdatePoolsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdatePools not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -430,6 +447,24 @@ func _Msg_UnhaltDenoms_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdatePools_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdatePools)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdatePools(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdatePools_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdatePools(ctx, req.(*MsgUpdatePools))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -480,6 +515,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnhaltDenoms",
 			Handler:    _Msg_UnhaltDenoms_Handler,
+		},
+		{
+			MethodName: "UpdatePools",
+			Handler:    _Msg_UpdatePools_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -46,7 +46,7 @@ func TestRegisterServices_RoutesMsgAndQuery(t *testing.T) {
 	msr := baseapp.NewMsgServiceRouter()
 	msr.SetInterfaceRegistry(registry)
 
-	k := keeper.NewKeeper(cdc, runtime.NewKVStoreService(storeKey), log.NewNopLogger(), authority, nil, nil, nil, msr)
+	k := keeper.NewKeeper(cdc, runtime.NewKVStoreService(storeKey), log.NewNopLogger(), authority, nil, nil, nil, nil, msr)
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
 	qr := baseapp.NewGRPCQueryRouter()
 	qr.SetInterfaceRegistry(registry)

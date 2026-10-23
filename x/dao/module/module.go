@@ -169,6 +169,7 @@ type ModuleInputs struct {
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
 	RewardsKeeper types.RewardsKeeper
+	TradeKeeper   types.TradeKeeper
 
 	// MsgServiceRouter runs the messages a DAO executes, as in x/gov.
 	MsgServiceRouter baseapp.MessageRouter
@@ -195,6 +196,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 		in.RewardsKeeper,
+		in.TradeKeeper,
 		in.MsgServiceRouter,
 	)
 
