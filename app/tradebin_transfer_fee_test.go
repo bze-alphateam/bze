@@ -2,6 +2,7 @@ package app_test
 
 import (
 	"testing"
+	"time"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,6 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/bze-alphateam/bze/app"
+	epochstypes "github.com/bze-alphateam/bze/x/epochs/types"
+	rewardstypes "github.com/bze-alphateam/bze/x/rewards/types"
 	tokenfactorytypes "github.com/bze-alphateam/bze/x/tokenfactory/types"
 	tradebinkeeper "github.com/bze-alphateam/bze/x/tradebin/keeper"
 	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
@@ -108,4 +111,111 @@ func TestTokenfactory_CreateDenomFeeInFactoryTokenPaysTransferFee(t *testing.T) 
 	require.NoError(t, err)
 
 	requireTransferFeePaid(t, bApp, ctx, creator, required)
+}
+
+// Every protocol fee captured through tradebin's fee payer pays the transfer fee when it is paid in the token: each
+// message goes through its real handler on the app router, with its fee param set to the same native amount and the
+// prize (when there is one) paid in the native denom, so the payer's token balance moves by the fee and the transfer
+// fee only.
+func TestProtocolFeesInFactoryTokenPayTransferFee(t *testing.T) {
+	const prize = 1_000
+	feeParam := sdk.NewInt64Coin("ubze", 100_000_000)
+	zero := sdk.NewInt64Coin("ubze", 0)
+
+	for _, c := range []struct {
+		name string
+		// setup sets the fee params and any state the message needs, and returns the message
+		setup func(t *testing.T, bApp *app.App, ctx sdk.Context, token string, pool tradebintypes.LiquidityPool, payer sdk.AccAddress) sdk.Msg
+	}{
+		{
+			name: "create market",
+			setup: func(t *testing.T, bApp *app.App, ctx sdk.Context, token string, pool tradebintypes.LiquidityPool, payer sdk.AccAddress) sdk.Msg {
+				params := bApp.TradebinKeeper.GetParams(ctx)
+				params.CreateMarketFee = feeParam
+				require.NoError(t, bApp.TradebinKeeper.SetParams(ctx, params))
+				return &tradebintypes.MsgCreateMarket{Creator: payer.String(), Base: token, Quote: pool.Quote}
+			},
+		},
+		{
+			name: "create staking reward",
+			setup: func(t *testing.T, bApp *app.App, ctx sdk.Context, token string, pool tradebintypes.LiquidityPool, payer sdk.AccAddress) sdk.Msg {
+				setRewardFees(t, bApp, ctx, func(p *rewardstypes.Params) { p.CreateStakingRewardFee = feeParam })
+				return &rewardstypes.MsgCreateStakingReward{
+					Creator: payer.String(), PrizeAmount: "1000", PrizeDenom: pool.Quote, StakingDenom: token,
+					Duration: "1", MinStake: "0", Lock: "0",
+				}
+			},
+		},
+		{
+			name: "create trading reward",
+			setup: func(t *testing.T, bApp *app.App, ctx sdk.Context, token string, pool tradebintypes.LiquidityPool, payer sdk.AccAddress) sdk.Msg {
+				setRewardFees(t, bApp, ctx, func(p *rewardstypes.Params) { p.CreateTradingRewardFee = feeParam })
+				return &rewardstypes.MsgCreateTradingReward{
+					Creator: payer.String(), PrizeAmount: "1000", PrizeDenom: pool.Quote, Duration: "1", MarketId: pool.Id, Slots: "1",
+				}
+			},
+		},
+		{
+			name: "create denom reward",
+			setup: func(t *testing.T, bApp *app.App, ctx sdk.Context, token string, pool tradebintypes.LiquidityPool, payer sdk.AccAddress) sdk.Msg {
+				setRewardFees(t, bApp, ctx, func(p *rewardstypes.Params) { p.CreateDenomRewardFee = feeParam })
+				return &rewardstypes.MsgCreateDenomReward{Creator: payer.String(), Denom: token}
+			},
+		},
+		{
+			name: "denom reward schedule fee",
+			setup: func(t *testing.T, bApp *app.App, ctx sdk.Context, token string, pool tradebintypes.LiquidityPool, payer sdk.AccAddress) sdk.Msg {
+				setRewardFees(t, bApp, ctx, func(p *rewardstypes.Params) {
+					p.AddDenomRewardScheduleFee = feeParam
+					p.CreateDenomRewardPrizeFee = zero
+				})
+				bApp.RewardsKeeper.SetDenomReward(ctx, rewardstypes.DenomReward{StakingDenom: token, StakedAmount: math.ZeroInt()})
+				return &rewardstypes.MsgCreateDenomRewardSchedule{
+					Creator: payer.String(), Denom: token, PrizeDenom: pool.Quote, DailyAmount: math.NewInt(prize), Duration: "1",
+				}
+			},
+		},
+		{
+			name: "denom reward prize fee",
+			setup: func(t *testing.T, bApp *app.App, ctx sdk.Context, token string, pool tradebintypes.LiquidityPool, payer sdk.AccAddress) sdk.Msg {
+				setRewardFees(t, bApp, ctx, func(p *rewardstypes.Params) {
+					p.AddDenomRewardScheduleFee = zero
+					p.CreateDenomRewardPrizeFee = feeParam
+				})
+				bApp.RewardsKeeper.SetDenomReward(ctx, rewardstypes.DenomReward{StakingDenom: token, StakedAmount: math.ZeroInt()})
+				return &rewardstypes.MsgCreateDenomRewardSchedule{
+					Creator: payer.String(), Denom: token, PrizeDenom: pool.Quote, DailyAmount: math.NewInt(prize), Duration: "1",
+				}
+			},
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			bApp, ctx, token, pool := transferFeeToken(t)
+			for _, id := range []string{"hour", "day"} {
+				require.NoError(t, bApp.EpochKeeper.AddEpochInfo(ctx, epochstypes.EpochInfo{Identifier: id, Duration: time.Hour}))
+			}
+			payer := sdk.AccAddress("protocol_fee_payer__")
+			msg := c.setup(t, bApp, ctx, token, pool, payer)
+
+			prizeCoins := sdk.NewCoins(sdk.NewInt64Coin(pool.Quote, prize))
+			require.NoError(t, bApp.BankKeeper.MintCoins(ctx, tokenfactorytypes.ModuleName, prizeCoins))
+			require.NoError(t, bApp.BankKeeper.SendCoinsFromModuleToAccount(ctx, tokenfactorytypes.ModuleName, payer, prizeCoins))
+			required := fundTokenPayer(t, bApp, ctx, pool, feeParam, payer)
+
+			handler := bApp.MsgServiceRouter().Handler(msg)
+			require.NotNil(t, handler)
+			_, err := handler(ctx.WithValue(tradebinkeeper.CtxFeeDenomKey, token), msg)
+			require.NoError(t, err)
+
+			requireTransferFeePaid(t, bApp, ctx, payer, required)
+		})
+	}
+}
+
+// setRewardFees starts from the default rewards params (the test app runs no InitChain) and applies edit.
+func setRewardFees(t *testing.T, bApp *app.App, ctx sdk.Context, edit func(*rewardstypes.Params)) {
+	t.Helper()
+	params := rewardstypes.DefaultParams()
+	edit(&params)
+	require.NoError(t, bApp.RewardsKeeper.SetParams(ctx, params))
 }

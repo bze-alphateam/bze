@@ -40,6 +40,10 @@ const (
 	xfBigPoolBig = 2_000_000
 	xfBigPoolBze = 200_000_000_000
 
+	// step 10: the admin deepens the tok pool and sends u1 more tok
+	xfDeepTok     = 1_000_000_000_000
+	xfMoreUserTok = 500_000_000_000
+
 	xfSendGas = 200_000
 	xfTxGas   = 500_000
 
@@ -72,6 +76,8 @@ func TestTransferFees(t *testing.T) {
 	t.Run("7 too little token falls back to ubze", s.fallback)
 	t.Run("8 rates change at once", s.rateChanges)
 	t.Run("9 a tiny gas fee still splits one unit", s.tinyGasFee)
+	t.Run("10 every protocol fee paid in the token", s.otherProtocolFees)
+	t.Run("11 surcharge changes apply at once", s.surchargeChanges)
 }
 
 type transferFeeSuite struct {
@@ -174,7 +180,7 @@ func (s *transferFeeSuite) gasSurcharge(t *testing.T) {
 		return helpers.ExecTxWith(s.ctx, s.bze, s.u1, []helpers.TxOption{helpers.WithFees(coinStr(fee, s.tok)), helpers.WithGas(xfSendGas)},
 			"bank", "send", u1, s.u2.FormattedAddress(), coinStr(1, chain.Denom))
 	}
-	required := s.minGasFee(t, s.tokPool, xfSendGas).Int64()
+	required := s.minGasFee(t, s.tokPool, xfSendGas, xfSurcharge).Int64()
 	res, err := send(required - 1)
 	reason, err := helpers.RejectionReason(res, err)
 	require.NoError(t, err)
@@ -194,7 +200,7 @@ func (s *transferFeeSuite) gasSurcharge(t *testing.T) {
 // minGasFee is the minimum fee in the pool's non-native denom for gas:
 // ceil(0.01 / spot × (1 + surcharge) × gas), with spot = ubze reserve / token
 // reserve, as the ante computes it.
-func (s *transferFeeSuite) minGasFee(t *testing.T, poolID string, gas int64) sdkmath.Int {
+func (s *transferFeeSuite) minGasFee(t *testing.T, poolID string, gas int64, surcharge string) sdkmath.Int {
 	t.Helper()
 	pool := s.pool(t, poolID)
 	native, other := pool.reserveQuote(), pool.reserveBase()
@@ -202,7 +208,7 @@ func (s *transferFeeSuite) minGasFee(t *testing.T, poolID string, gas int64) sdk
 		native, other = other, native
 	}
 	spot := sdkmath.LegacyNewDecFromInt(native).Quo(sdkmath.LegacyNewDecFromInt(other))
-	price := sdkmath.LegacyMustNewDecFromStr(xfMinNative).Quo(spot).Mul(sdkmath.LegacyOneDec().Add(sdkmath.LegacyMustNewDecFromStr(xfSurcharge)))
+	price := sdkmath.LegacyMustNewDecFromStr(xfMinNative).Quo(spot).Mul(sdkmath.LegacyOneDec().Add(sdkmath.LegacyMustNewDecFromStr(surcharge)))
 	return price.MulInt64(gas).Ceil().RoundInt()
 }
 
@@ -305,7 +311,7 @@ func (s *transferFeeSuite) tinyGasFee(t *testing.T) {
 		strconv.Itoa(xfBigPoolBig), strconv.Itoa(xfBigPoolBze))
 	s.mustExec(t, s.admin, "bank", "send", admin, u1, coinStr(100, big))
 	s.setConfig(t, big, s.cp, xfRate, xfSurcharge)
-	require.Equal(t, sdkmath.OneInt(), s.minGasFee(t, big+"_"+chain.Denom, xfSendGas), "the minimum fee of a send is 1 big")
+	require.Equal(t, sdkmath.OneInt(), s.minGasFee(t, big+"_"+chain.Denom, xfSendGas, xfSurcharge), "the minimum fee of a send is 1 big")
 
 	send := func(fee int64) helpers.TxResult {
 		t.Helper()
@@ -325,6 +331,87 @@ func (s *transferFeeSuite) tinyGasFee(t *testing.T) {
 
 	res = send(2)
 	s.requireSurcharge(t, res, u1, big, 1, xfCpDest)
+}
+
+// 10. Every other protocol fee captured through tradebin's fee payer pays
+// the transfer fee when the tx fee is in tok: create market, the staking,
+// trading and denom reward creation fees, and a denom reward schedule, which
+// captures two fees (the new prize denom's and the schedule's), each paying
+// its own transfer fee. The admin deepens the tok pool first so the default
+// fees (25,000 BZE each) don't take it below the fee payer's minimum ubze
+// liquidity.
+func (s *transferFeeSuite) otherProtocolFees(t *testing.T) {
+	admin, u1 := s.admin.FormattedAddress(), s.u1.FormattedAddress()
+	s.mustExec(t, s.admin, "tokenfactory", "mint", coinStr(xfDeepTok+xfMoreUserTok, s.tok))
+	s.mustExec(t, s.admin, "tradebin", "add-liquidity", s.tokPool, strconv.Itoa(xfDeepTok), strconv.Itoa(xfDeepTok), "1")
+	s.mustExec(t, s.admin, "bank", "send", admin, u1, coinStr(xfMoreUserTok, s.tok))
+
+	for _, c := range []struct {
+		name string
+		args []string
+		fees int // protocol fees the tx captures
+	}{
+		{"create market", []string{"tradebin", "create-market", s.brn, s.tok}, 1},
+		{"create staking reward", []string{"rewards", "create-staking-reward", "1000", chain.Denom, s.tok, "1", "0", "0"}, 1},
+		{"create trading reward", []string{"rewards", "create-trading-reward", "1000", chain.Denom, "1", s.tokPool, "1"}, 1},
+		{"create denom reward", []string{"rewards", "create-denom-reward", s.tok}, 1},
+		{"denom reward schedule: prize and schedule fees", []string{"rewards", "create-denom-reward-schedule", s.tok, chain.Denom, "1000", "1"}, 2},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			res := s.mustExecWith(t, s.u1, []helpers.TxOption{helpers.WithFees(coinStr(20_000, s.tok)), helpers.WithGas(xfTxGas)}, c.args...)
+			captures := s.captures(t, res, u1)
+			require.Len(t, captures, c.fees, "fees captured in tok")
+			var want int64
+			for _, captured := range captures {
+				want += expectedFee(captured, xfRate)
+			}
+			s.requireTransferFee(t, res, u1, s.tok, want, xfCpDest)
+		})
+	}
+}
+
+// 11. A surcharge change applies to the next tx: for each rate the minimum
+// gas price in tok is the converted price × (1 + s), one unit less is
+// refused, and the minimum is split floor(fee × s / (1 + s)).
+func (s *transferFeeSuite) surchargeChanges(t *testing.T) {
+	u1 := s.u1.FormattedAddress()
+	for _, surcharge := range []string{"2", "0.1", xfSurcharge} {
+		t.Run(surcharge, func(t *testing.T) {
+			s.setConfig(t, s.tok, s.cp, xfRate, surcharge)
+			required := s.minGasFee(t, s.tokPool, xfSendGas, surcharge).Int64()
+			send := func(fee int64) (helpers.TxResult, error) {
+				return helpers.ExecTxWith(s.ctx, s.bze, s.u1, []helpers.TxOption{helpers.WithFees(coinStr(fee, s.tok)), helpers.WithGas(xfSendGas)},
+					"bank", "send", u1, s.u2.FormattedAddress(), coinStr(1, chain.Denom))
+			}
+			res, err := send(required - 1)
+			reason, err := helpers.RejectionReason(res, err)
+			require.NoError(t, err)
+			require.Contains(t, reason, "insufficient fees")
+			require.Contains(t, reason, coinStr(required, s.tok))
+
+			res, err = send(required)
+			require.NoError(t, err)
+			require.Zero(t, res.Code, res.RawLog)
+			rate := sdkmath.LegacyMustNewDecFromStr(surcharge)
+			split := sdkmath.LegacyNewDec(required).Mul(rate).QuoTruncate(sdkmath.LegacyOneDec().Add(rate)).TruncateInt().Int64()
+			s.requireSurcharge(t, res, u1, s.tok, split, xfCpDest)
+		})
+	}
+}
+
+// captures lists the tok amounts the payer sent to tradebin in the tx, one
+// per protocol fee captured.
+func (s *transferFeeSuite) captures(t *testing.T, res helpers.TxResult, payer string) []sdkmath.Int {
+	t.Helper()
+	var out []sdkmath.Int
+	for _, e := range helpers.EventsWith(helpers.TxEvents(res, "transfer"), map[string]string{"sender": payer, "recipient": s.tradebin}) {
+		coins, err := sdk.ParseCoinsNormalized(e.Attributes["amount"])
+		require.NoError(t, err)
+		if amt := coins.AmountOf(s.tok); amt.IsPositive() {
+			out = append(out, amt)
+		}
+	}
+	return out
 }
 
 func (s *transferFeeSuite) setConfig(t *testing.T, denom, cp, transferFee, gasSurcharge string) {
