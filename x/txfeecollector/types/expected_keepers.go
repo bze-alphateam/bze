@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -38,10 +39,13 @@ type DistrKeeper interface {
 	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
-// DenomCommunityPoolProvider returns the community pool address a denom's fees are forwarded to,
-// false when the denom has none. Implemented by the tokenfactory keeper.
+// DenomCommunityPoolProvider reads a denom's DenomConfig. Implemented by the tokenfactory keeper.
 type DenomCommunityPoolProvider interface {
+	// GetDenomCommunityPool returns the community pool address a denom's fees are forwarded to, false when the denom
+	// has none.
 	GetDenomCommunityPool(ctx sdk.Context, denom string) (sdk.AccAddress, bool)
+	// GetDenomFeeRates returns the denom's transfer fee and gas surcharge ratios, zeros when none are set.
+	GetDenomFeeRates(ctx sdk.Context, denom string) (transferFee, gasSurcharge math.LegacyDec)
 }
 
 // ParamSubspace defines the expected Subspace interface for parameters.

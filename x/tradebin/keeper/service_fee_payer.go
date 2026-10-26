@@ -83,7 +83,14 @@ func (k Keeper) CaptureAndSwapUserFee(ctx sdk.Context, payer sdk.AccAddress, fee
 
 	payerBalances := k.bankKeeper.SpendableCoins(ctx, payer)
 	toCapture := fee.Sub(nativeFee).Add(requiredFeeCoins)
-	if payerBalances.IsAllGTE(toCapture) {
+	//a factory token can charge a transfer fee on top of the protocol fee paid in it: the balance must cover both
+	transferFee := k.preferredDenomTransferFee(ctx, requiredFeeCoins)
+	if payerBalances.IsAllGTE(toCapture.Add(transferFee...)) {
+		err = k.payDenomTransferFee(ctx, payer, transferFee)
+		if err != nil {
+			return nil, err
+		}
+
 		//if the user has enough balance to pay the required fee in his preferred fee denom, we just remove the native
 		//fee and add the required fee.
 		//capture the amount and swap the fee to the native denom
@@ -231,7 +238,14 @@ func (k Keeper) CaptureAndTryToSwapUserFeesOrSendItAsIs(ctx sdk.Context, payer s
 
 	payerBalances := k.bankKeeper.SpendableCoins(ctx, payer)
 	toCapture := fee.Sub(nativeFee).Add(requiredFeeCoins)
-	if payerBalances.IsAllGTE(toCapture) {
+	//a factory token can charge a transfer fee on top of the protocol fee paid in it: the balance must cover both
+	transferFee := k.preferredDenomTransferFee(ctx, requiredFeeCoins)
+	if payerBalances.IsAllGTE(toCapture.Add(transferFee...)) {
+		err = k.payDenomTransferFee(ctx, payer, transferFee)
+		if err != nil {
+			return nil, err
+		}
+
 		//first we have to check if the swap would fail due to amount too low.
 		//we do this by checking if the swap process can capture the fee.
 		_, swapFee := k.calculateSwapInputAndFee(requiredFeeCoins, &pool)
