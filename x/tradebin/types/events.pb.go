@@ -903,7 +903,7 @@ type OrderMessageRefundedEvent struct {
 	// the coin actually sent back (coin string); empty when it rounded to zero
 	// and only dust was stored
 	Refund string `protobuf:"bytes,6,opt,name=refund,proto3" json:"refund,omitempty"`
-	// no_match | unfilled_remainder | below_min_amount | upgrade
+	// no_match | unfilled_remainder | below_min_amount | max_fills_reached | upgrade
 	Reason string `protobuf:"bytes,7,opt,name=reason,proto3" json:"reason,omitempty"`
 }
 

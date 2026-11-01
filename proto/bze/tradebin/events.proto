@@ -155,6 +155,6 @@ message OrderMessageRefundedEvent {
   // the coin actually sent back (coin string); empty when it rounded to zero
   // and only dust was stored
   string refund = 6;
-  // no_match | unfilled_remainder | below_min_amount | upgrade
+  // no_match | unfilled_remainder | below_min_amount | max_fills_reached | upgrade
   string reason = 7;
 }
