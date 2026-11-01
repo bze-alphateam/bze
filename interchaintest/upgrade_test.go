@@ -148,6 +148,10 @@ type upgradeCheck struct {
 	// removedParams are the tradebin params the candidate no longer has; step
 	// 4 compares every other param of the previous release
 	removedParams []string
+	// renamedParams are the tradebin params the candidate carries under a new
+	// name (old name -> new name, same proto field); step 4 expects the value
+	// unchanged under the new name
+	renamedParams map[string]string
 	// ibc links the network to simd over IBC, for a handler that touches IBC
 	ibc bool
 }
@@ -166,6 +170,7 @@ var upgradeChecks = map[string]upgradeCheck{
 	"v8.3.0": {
 		before: (*upgradeSuite).v830Before, after: (*upgradeSuite).v830After, moves: (*upgradeSuite).v830Moves, ibc: true,
 		removedParams: []string{"orderBookQueueMessageScanExtraGas"},
+		renamedParams: map[string]string{"orderBookPerBlockMessages": "maxFillsPerOrder"},
 	},
 }
 
@@ -495,10 +500,16 @@ func (s *upgradeSuite) statePreserved(t *testing.T) {
 	require.Equal(t, b.Branding, a.Branding, "denom branding")
 	require.Equal(t, b.Halted, a.Halted, "halted denoms")
 	// a handler may add tradebin params, but never changes the ones before it
-	// (a release may remove one: upgradeCheck.removedParams)
+	// (a release may remove one: upgradeCheck.removedParams, or rename one:
+	// upgradeCheck.renamedParams)
 	for name, raw := range b.TradebinParams {
 		if slices.Contains(s.check.removedParams, name) {
 			require.NotContains(t, a.TradebinParams, name, "tradebin param %s removed", name)
+			continue
+		}
+		if renamed, ok := s.check.renamedParams[name]; ok {
+			require.NotContains(t, a.TradebinParams, name, "tradebin param %s renamed to %s", name, renamed)
+			require.JSONEq(t, string(raw), string(a.TradebinParams[renamed]), "tradebin param %s, was %s", renamed, name)
 			continue
 		}
 		require.JSONEq(t, string(raw), string(a.TradebinParams[name]), "tradebin param %s", name)
@@ -748,7 +759,7 @@ const (
 type v830Queue struct {
 	creates  []string        // the backlog's queue message ids, in queue order
 	cancelID string          // the resting order the queued cancel targets
-	perBlock json.RawMessage // orderBookPerBlockMessages before the suite lowered it
+	perBlock json.RawMessage // orderBookPerBlockMessages before the suite lowered it, restored as maxFillsPerOrder
 }
 
 // upV830Deleted are the stores the v8.3.0 store loader deletes: x/capability
@@ -861,8 +872,10 @@ func (s *upgradeSuite) v830Moves(t *testing.T, before any) []upgradeMove {
 // v830QueueRefunded checks the tradebin 4 -> 5 migration (BZE-247): every
 // order still queued at the plan height is refunded once, with reason
 // upgrade, in queue order; nothing is executed or cancelled; the cancel's
-// order still rests and no queue key is left in the store. The per-block
-// param is restored afterwards.
+// order still rests and no queue key is left in the store. Param field 11 is
+// read as maxFillsPerOrder and keeps the lowered value (the migration sets
+// the default only over a 0); the value before the suite lowered it is
+// restored afterwards under the new name.
 func (s *upgradeSuite) v830QueueRefunded(t *testing.T, q v830Queue) {
 	admin := s.admin.FormattedAddress()
 	queued := s.v830Queued(t, q)
@@ -898,7 +911,8 @@ func (s *upgradeSuite) v830QueueRefunded(t *testing.T, q v830Queue) {
 	require.NoError(t, err)
 	require.Zero(t, keys, "no queue key left after the migration")
 
-	s.setTradebinParam(t, "orderBookPerBlockMessages", q.perBlock)
+	require.JSONEq(t, `"1"`, string(s.params(t, s.plan, "tradebin")["maxFillsPerOrder"]), "field 11 kept its stored value")
+	s.setTradebinParam(t, "maxFillsPerOrder", q.perBlock)
 }
 
 // setTradebinParam passes a tradebin MsgUpdateParams that changes one param.
