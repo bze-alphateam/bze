@@ -115,9 +115,8 @@ func recordingHook(calls *[]string) types.OnMarketOrderFill {
 // order since v8.0.0: appBuilder.Build (RegisterServices) constructs the msg server first, and only
 // afterwards does app.setTradebinHooks() register the order-fill hooks. A msg server holding a
 // by-value keeper copy froze the empty hook slice at registration time, so AMM swaps never invoked
-// the hooks (the orderbook path was unaffected: EndBlock builds its ProcessingEngine from the keeper
-// pointer every block). With the pointer shared, a swap dispatched through the real msg service
-// router fires the hook registered later, with the pool id and the base amount traded.
+// the hooks. With the pointer shared, a swap dispatched through the real msg service router fires the
+// hook registered later, with the pool id and the base amount traded.
 func TestOnOrderFillHooks_RegisteredAfterRegisterServices_FireOnAmmSwap(t *testing.T) {
 	f := newWiringFixture(t)
 
@@ -149,8 +148,9 @@ func TestOnOrderFillHooks_RegisteredBeforeRegisterServices_FireOnAmmSwap(t *test
 }
 
 // The mechanism, isolated: the msg server must read the hooks from the keeper it was built with,
-// not from a snapshot. NewMsgServerImpl(f.k) is the expression RegisterServices uses; EndBlock's
-// ProcessingEngine reads the same pointer. Both views must agree after a later SetOnOrderFillHooks.
+// not from a snapshot. NewMsgServerImpl(f.k) is the expression RegisterServices uses, and the order
+// book engine the msg server builds for every order reads the same pointer. Both views must agree after
+// a later SetOnOrderFillHooks.
 func TestOnOrderFillHooks_MsgServerSharesTheKeeper(t *testing.T) {
 	f := newWiringFixture(t)
 	srv := keeper.NewMsgServerImpl(f.k) // built before hooks exist, as in RegisterServices
@@ -164,4 +164,55 @@ func TestOnOrderFillHooks_MsgServerSharesTheKeeper(t *testing.T) {
 	require.True(t, ok)
 	require.Len(t, f.k.GetOnOrderFillHooks(), 1)
 	require.Len(t, view.GetOnOrderFillHooks(), 1, "the msg server must see hooks registered after it was built")
+}
+
+// TestOnOrderFillHooks_RegisteredAfterRegisterServices_FireOnOrderBookFill: with the app's wiring order
+// (RegisterServices first, hooks afterwards), an order book fill dispatched through the real msg
+// service router fires the hook inside that same message, with the market id, the base amount executed
+// and the taker. A maker order that only rests on the book fires nothing.
+func TestOnOrderFillHooks_RegisteredAfterRegisterServices_FireOnOrderBookFill(t *testing.T) {
+	f := newWiringFixture(t)
+	msr := f.registerServices(t)
+
+	var calls []string
+	f.k.SetOnOrderFillHooks([]types.OnMarketOrderFill{recordingHook(&calls)})
+
+	mkt := types.Market{Base: "stake", Quote: "ubze", Creator: sdk.AccAddress("hooks-wiring-creator").String()}
+	f.k.SetMarket(f.ctx, mkt)
+	marketId := types.CreateMarketId(mkt.Base, mkt.Quote)
+	maker := sdk.AccAddress("hooks-wiring-maker__")
+	taker := sdk.AccAddress("hooks-wiring-taker__")
+
+	f.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), types.ModuleName, gomock.Any()).Return(nil).AnyTimes()
+	f.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	f.bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, maker, sdk.NewCoins(sdk.NewInt64Coin("ubze", 2000))).Return(nil).Times(1)
+	f.bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, taker, sdk.NewCoins(sdk.NewInt64Coin("stake", 1000))).Return(nil).Times(1)
+
+	makerMsg := &types.MsgCreateOrder{Creator: maker.String(), MarketId: marketId, OrderType: types.OrderTypeSell, Amount: "1000", Price: "2"}
+	handler := f.router(t, msr, makerMsg)
+	_, err := handler(f.ctx, makerMsg)
+	require.NoError(t, err)
+	require.Len(t, f.k.GetAllOrder(f.ctx), 1, "the maker order rests on the book")
+	require.Empty(t, calls, "a resting order fills nothing")
+
+	takerMsg := &types.MsgFillOrders{
+		Creator:   taker.String(),
+		MarketId:  marketId,
+		OrderType: types.OrderTypeSell,
+		Orders:    []*types.FillOrderItem{{Amount: "1000", Price: "2"}},
+	}
+	handler = f.router(t, msr, takerMsg)
+	_, err = handler(f.ctx, takerMsg)
+	require.NoError(t, err)
+
+	require.Equal(t, []string{marketId + " 1000 " + taker.String()}, calls, "the hook fires inside the taker message")
+	require.Empty(t, f.k.GetAllOrder(f.ctx), "the fill executed in the message")
+}
+
+func (f wiringFixture) router(t *testing.T, msr *baseapp.MsgServiceRouter, msg sdk.Msg) baseapp.MsgServiceHandler {
+	t.Helper()
+	handler := msr.Handler(msg)
+	require.NotNil(t, handler, "%T must be routable after RegisterServices", msg)
+
+	return handler
 }

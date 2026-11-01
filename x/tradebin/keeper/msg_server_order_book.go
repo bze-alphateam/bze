@@ -87,25 +87,9 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 		return nil, types.ErrDenomHalted.Wrapf("market %s is halted", msg.MarketId)
 	}
 
-	// Apply dynamic gas cost based on queue size to prevent spam attacks
-	// Formula: max(queue_size - window, 0) * queueExtraGas
-	// This makes it progressively more expensive to submit orders when the queue is full
+	//a new owner joining a crowded price level pays extra gas, before any fee or escrow
 	params := k.GetParams(ctx)
-	queueCounter := k.GetQueueMessageCounter(ctx)
-	if queueCounter > params.OrderBookExtraGasWindow {
-		// The queue surcharge is extraGas = (queueCounter - window) * queueExtraGas with defaults window=100 and queueExtraGas=25,000. Baseline per trade is 100,000 gas. So for n trades in the block:
-		//
-		//  - First 100 trades: each 100,000 → 10,000,000 gas.
-		//  - For the next m = n-100 trades: each costs 100,000 + (i*25,000) for i=1..m.
-		//    Total = 10,000,000 + 100,000*m + 25,000 * m(m+1)/2
-		//    = 10,000,000 + 112,500*m + 12,500*m^2.
-		//
-		//  Solving 12,500*m^2 + 112,500*m + 10,000,000 ≤ 1,000,000,000 gives m ≈ 276. (m=277 pushes the block slightly over the 1,000,000,000 limit - the limit at the time of this writing.),
-		//
-		//  So with those assumptions, the block can fit about 376 trades (100 before the surcharge kicks in, plus ~276 more with increasing gas).
-		extraGas := (queueCounter - params.OrderBookExtraGasWindow) * params.OrderBookQueueExtraGas
-		ctx.GasMeter().ConsumeGas(extraGas, "queue spam protection")
-	}
+	k.consumePriceLevelGas(ctx, msg, params)
 
 	accAddr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
@@ -137,22 +121,25 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 	if err != nil {
 		return nil, err
 	}
-
-	qm := types.QueueMessage{
-		MarketId:    msg.MarketId,
-		OrderType:   msg.OrderType,
-		MessageType: msg.OrderType,
-		Amount:      msg.Amount,
-		Price:       msg.Price,
-		Owner:       msg.Creator,
-	}
-
-	qm = k.SetQueueMessage(ctx, qm)
+	// the escrow dust is stored before the engine runs: the engine may update the same user's dust
 	k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
 
-	err = k.emitOrderCreateMessageEvent(ctx, &qm)
+	engine, err := k.orderBookEngine(params.MaxFillsPerOrder)
 	if err != nil {
-		k.Logger().Error(err.Error())
+		return nil, err
+	}
+
+	order := types.Order{
+		MarketId:  msg.MarketId,
+		OrderType: msg.OrderType,
+		Amount:    msg.Amount,
+		Price:     msg.Price,
+		Owner:     msg.Creator,
+	}
+
+	err = engine.PlaceOrder(ctx, order)
+	if err != nil {
+		return nil, err
 	}
 
 	return &types.MsgCreateOrderResponse{}, nil
@@ -174,25 +161,14 @@ func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder)
 		return nil, types.ErrUnauthorizedOrder
 	}
 
-	if k.HasPendingCancel(ctx, msg.MarketId, msg.OrderType, msg.OrderId) {
-		return nil, fmt.Errorf("cancel already pending for order %s", msg.OrderId)
-	}
-
-	k.SetPendingCancel(ctx, msg.MarketId, msg.OrderType, msg.OrderId)
-
-	qm := types.QueueMessage{
-		MarketId:    msg.MarketId,
-		MessageType: types.MessageTypeCancel,
-		OrderId:     msg.OrderId,
-		OrderType:   msg.OrderType,
-		Owner:       msg.Creator,
-	}
-
-	qm = k.SetQueueMessage(ctx, qm)
-
-	err := k.emitOrderCancelMessageEvent(ctx, &order, qm.MessageId)
+	engine, err := k.orderBookEngine(k.GetParams(ctx).MaxFillsPerOrder)
 	if err != nil {
-		k.Logger().Error(err.Error())
+		return nil, err
+	}
+
+	err = engine.CancelOrder(ctx, order)
+	if err != nil {
+		return nil, err
 	}
 
 	return &types.MsgCancelOrderResponse{}, nil
@@ -217,6 +193,11 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 	}
 
 	params := k.GetParams(ctx)
+	engine, err := k.orderBookEngine(params.MaxFillsPerOrder)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx.GasMeter().ConsumeGas(params.FillOrdersExtraGas, "fill_orders")
 	totalCoins := sdk.NewCoins()
 	for key, fo := range msg.Orders {
@@ -251,24 +232,27 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 		if err != nil {
 			return nil, err
 		}
-		//messages of type "buy" are added on queue as messageType = "fill_buy"
-		//messages of type "sell" are added on queue as messageType = "fill_sell"
-		//orderType is the opposite of the orders we want to fill: if we fill "buy" it means we "sell", and vice versa.
-		qm := types.QueueMessage{
-			MarketId:    msg.MarketId,
-			OrderType:   ocReq.OrderType, // already inversed when ocReq was built a few lines above
-			MessageType: types.OrderTypeToMessageTypeFill(msg.OrderType),
-			Amount:      fo.Amount,
-			Price:       fo.Price,
-			Owner:       msg.Creator,
-		}
 
-		qm = k.SetQueueMessage(ctx, qm)
+		//capture user funds for this entry before executing it: settlement pays out of the module account
+		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAddr, types.ModuleName, sdk.NewCoins(orderCoins.Coin))
+		if err != nil {
+			return nil, err
+		}
+		// the escrow dust is stored before the engine runs: the engine may update the same user's dust
 		k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
 
-		err = k.emitOrderCreateMessageEvent(ctx, &qm)
+		//orderType is the opposite of the orders we want to fill: if we fill "buy" it means we "sell", and vice versa.
+		order := types.Order{
+			MarketId:  msg.MarketId,
+			OrderType: ocReq.OrderType, // already inversed when ocReq was built a few lines above
+			Amount:    fo.Amount,
+			Price:     fo.Price,
+			Owner:     msg.Creator,
+		}
+
+		err = engine.FillOrder(ctx, order)
 		if err != nil {
-			k.Logger().Error(err.Error())
+			return nil, err
 		}
 
 		totalCoins = totalCoins.Add(orderCoins.Coin)
@@ -281,13 +265,8 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 		return nil, types.ErrInvalidOrdersToFill
 	}
 
+	//the taker fee is captured once per message, after every entry was executed
 	_, err = k.captureTradingFees(ctx, accAddr, true)
-	if err != nil {
-		return nil, err
-	}
-
-	//capture user funds for this order
-	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, accAddr, types.ModuleName, totalCoins)
 	if err != nil {
 		return nil, err
 	}
@@ -324,31 +303,6 @@ func (k msgServer) emitMarketCreatedEvent(ctx sdk.Context, market *types.Market)
 			Creator: market.Creator,
 			Base:    market.Base,
 			Quote:   market.Quote,
-		},
-	)
-}
-
-func (k msgServer) emitOrderCancelMessageEvent(ctx sdk.Context, order *types.Order, messageId string) error {
-	return ctx.EventManager().EmitTypedEvent(
-		&types.OrderCancelMessageEvent{
-			Creator:   order.Owner,
-			MarketId:  order.MarketId,
-			OrderId:   order.Id,
-			OrderType: order.OrderType,
-			MessageId: messageId,
-		},
-	)
-}
-
-func (k msgServer) emitOrderCreateMessageEvent(ctx sdk.Context, qm *types.QueueMessage) error {
-	return ctx.EventManager().EmitTypedEvent(
-		&types.OrderCreateMessageEvent{
-			Creator:   qm.Owner,
-			MarketId:  qm.MarketId,
-			OrderType: qm.OrderType,
-			Amount:    qm.Amount,
-			Price:     qm.Price,
-			MessageId: qm.MessageId,
 		},
 	)
 }
@@ -404,12 +358,8 @@ func (k msgServer) captureTradingFees(ctx sdk.Context, sender sdk.AccAddress, is
 // A price is valid if:
 //   - if order type is "buy":
 //   - price is lower than the first "sell" order found
-//     AND
-//   - price is lower than ALL queue messages of type "sell"
 //   - if order type is "sell":
 //   - price is higher than the first "buy" order found
-//     AND
-//   - price is higher than ALL queue messages of type "buy"
 //
 // TODO: implement a proper price "oracle" for bid and ask. We could store them on each market
 func (k msgServer) checkPrice(ctx sdk.Context, msg *types.MsgCreateOrder) error {
@@ -417,11 +367,6 @@ func (k msgServer) checkPrice(ctx sdk.Context, msg *types.MsgCreateOrder) error 
 	if err != nil {
 		//should never happen! Message should be validated before this function is called
 		return fmt.Errorf("could not parse current price: %s", msg.Price)
-	}
-
-	err = k.checkPriceInQueueMessages(ctx, msg, &currentPrice)
-	if err != nil {
-		return err
 	}
 
 	err = k.checkPriceInOrderBook(ctx, msg, &currentPrice)
@@ -481,52 +426,7 @@ func (k Keeper) checkPriceInOrderBook(ctx sdk.Context, msg *types.MsgCreateOrder
 	return nil
 }
 
-func (k Keeper) checkPriceInQueueMessages(ctx sdk.Context, msg *types.MsgCreateOrder, currentPrice *math.LegacyDec) error {
-	oppositeType := types.TheOtherOrderType(msg.OrderType)
-	// Use market-filtered lookup to get only messages for this market
-	// This is O(M) where M is messages for this market, instead of O(N) for all messages
-	queueMessages := k.GetQueueMessagesByMarket(ctx, msg.MarketId)
-	params := k.GetParams(ctx)
-	msgsPrice := math.LegacyZeroDec()
-	for _, queueMessage := range queueMessages {
-		// Consume extra gas for each queue message scan
-		ctx.GasMeter().ConsumeGas(params.OrderBookQueueMessageScanExtraGas, "queue_message_scan")
-
-		// Filter by message type (only check opposite type orders)
-		if queueMessage.MessageType != oppositeType {
-			continue
-		}
-
-		p, err := math.LegacyNewDecFromStr(queueMessage.Price)
-		if err != nil {
-			k.Logger().With("func", "checkPrice").Error(fmt.Sprintf("could not parse message price: %s", err.Error()))
-			continue
-		}
-
-		if msgsPrice.IsZero() {
-			msgsPrice = p
-			continue
-		}
-
-		if oppositeType == types.OrderTypeBuy && p.GT(msgsPrice) {
-			//save the biggest price for "buy" type
-			msgsPrice = p
-		} else if oppositeType == types.OrderTypeSell && p.LT(msgsPrice) {
-			//save the lowest price for "sell" type
-			msgsPrice = p
-		}
-	}
-
-	//if we found opposite type messages
-	if msgsPrice.IsPositive() {
-		if oppositeType == types.OrderTypeBuy && currentPrice.LT(msgsPrice) {
-
-			return fmt.Errorf("price is outdated. Better price is available: %s", msgsPrice.String())
-		} else if oppositeType == types.OrderTypeSell && currentPrice.GT(msgsPrice) {
-
-			return fmt.Errorf("price is outdated. Better price is available: %s", msgsPrice.String())
-		}
-	}
-
-	return nil
+// orderBookEngine builds the matching engine the order book message servers execute orders with.
+func (k msgServer) orderBookEngine(maxFills uint64) (*ProcessingEngine, error) {
+	return NewProcessingEngine(k.Keeper, k.bankKeeper, maxFills, k.Logger().With("processor", "order_book_processor"))
 }

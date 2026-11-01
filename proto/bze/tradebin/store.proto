@@ -12,18 +12,6 @@ message Market {
   string creator = 3;
 }
 
-message QueueMessage {
-  string message_id = 1;
-  string market_id = 2;
-  string message_type = 3;
-  string amount = 4;
-  string price = 5;
-  int64 created_at = 6;
-  string order_id = 7;
-  string order_type = 8;
-  string owner = 9;
-}
-
 message Order {
   string id = 1;
   string market_id = 2;
@@ -45,6 +33,8 @@ message AggregatedOrder {
   string order_type = 2;
   string amount = 3;
   string price = 4;
+  // number of distinct owners resting at the price level (one per owner-price index entry)
+  uint64 owners = 5;
 }
 
 message HistoryOrder {

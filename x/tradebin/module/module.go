@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	ConsensusVersion = 4
+	ConsensusVersion = 5
 )
 
 var (
@@ -40,7 +40,6 @@ var (
 
 	_ appmodule.AppModule       = (*AppModule)(nil)
 	_ appmodule.HasBeginBlocker = (*AppModule)(nil)
-	_ appmodule.HasEndBlocker   = (*AppModule)(nil)
 )
 
 // ----------------------------------------------------------------------------
@@ -131,7 +130,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
-	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
+	m := keeper.NewMigrator(am.keeper, am.legacySubspace, am.bankKeeper)
 
 	if err := cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3: %v", types.ModuleName, err))
@@ -139,6 +138,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 
 	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err))
+	}
+
+	if err := cfg.RegisterMigration(types.ModuleName, 4, m.Migrate4to5); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 4 to 5: %v", types.ModuleName, err))
 	}
 }
 
@@ -168,22 +171,6 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 // BeginBlock contains the logic that is automatically triggered at the beginning of each block.
 // The begin block implementation is optional.
 func (am AppModule) BeginBlock(_ context.Context) error {
-	return nil
-}
-
-// EndBlock contains the logic that is automatically triggered at the end of each block.
-// The end block implementation is optional.
-func (am AppModule) EndBlock(goCtx context.Context) error {
-	engine, err := keeper.NewProcessingEngine(am.keeper, am.bankKeeper, am.keeper.Logger().With("processor", "order_book_processor"))
-	if err != nil {
-		am.keeper.Logger().Error(fmt.Sprintf("could not get processing engine: %v", err))
-
-		return nil
-	}
-
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	engine.ProcessQueueMessages(ctx)
-
 	return nil
 }
 

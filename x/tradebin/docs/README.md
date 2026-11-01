@@ -4,9 +4,11 @@ TradeBin provides orderbook trading and AMM liquidity pools.
 
 ## Markets and Orders
 - **Create a market** (`MsgCreateMarket`): define `base` and `quote` denoms; charges `create_market_fee` which is swapped to `native_denom` if needed and sent to the community-pool collector.
-- **Place an order** (`MsgCreateOrder`): submit `order_type` (`buy`/`sell`), `amount` (base), `price`, and `market_id`. Maker vs. taker fee is chosen by whether the order immediately crosses existing opposite liquidity. If the queue depth passes `order_book_extra_gas_window`, extra gas is consumed per `order_book_queue_extra_gas`; validating prices also spends `order_book_queue_message_scan_extra_gas` per queued message.
-- **Cancel an order** (`MsgCancelOrder`): remove your open order by `order_id` and `order_type`.
-- **Fill orders** (`MsgFillOrders`): batch-fill existing orders at specific price/amount levels, typically run by keepers/relayers; always pays the taker fee and consumes `fill_orders_extra_gas` once on entry and again per order enqueued.
+- **Place an order** (`MsgCreateOrder`): submit `order_type` (`buy`/`sell`), `amount` (base), `price`, and `market_id`. Maker vs. taker fee is chosen by whether the order immediately crosses existing opposite liquidity. The order executes inside the transaction: it is matched against the resting orders at exactly its price (oldest first), and what is left rests on the book as a new order when the opposite side at that price was emptied and the remainder is at least the minimum amount; otherwise the remainder is refunded in the same transaction. One order examines at most `max_fills_per_order` resting orders, filled or skipped (default 500); if more orders are left at its price, the remainder is refunded and a new order continues with them. Placing at a price where you already have an order (same market, side and price) adds to it: the new order is matched first, then what is left is added to your resting order, which keeps its id and its place in the queue (no new order is created). A remainder that would be refunded for a new order (below the minimum amount, or opposite orders left at the price) is refunded the same way and your resting order is untouched. Each placement still pays its own maker or taker fee.
+- **Cancel an order** (`MsgCancelOrder`): remove your open order by `order_id` and `order_type`. The remaining amount is refunded in the same transaction.
+- **Fill orders** (`MsgFillOrders`): fill existing orders at specific price/amount levels in one message. Each entry is an immediate-or-cancel order executed in the transaction: what it cannot fill is refunded, it never rests. The message always pays the taker fee once (after its entries ran) and consumes `fill_orders_extra_gas` once on entry and again per entry.
+- **Order ids**: every order gets an id when it is processed, including a taker filled in full that never rests. Fills, refunds and the resting remainder of an order carry that id in their events (`order_id`).
+- **Gas**: the matching work (every maker filled, its settlement, history and events) is metered by the transaction's gas, like any other store access. A transaction that runs out of gas, or fails for any other reason, is reverted whole: nothing is filled, escrowed or charged but the gas. Wallets simulate to estimate it; a taker crossing many resting orders uses more gas than one filling a single order. Crowded price levels cost more gas for new makers: placing an order at a price level of your side where more than `price_level_owners_window` other owners already rest (default 500), and where you have no order yet, adds `price_level_extra_gas` (default 25,000) for each owner above that number. Topping up your own order costs nothing extra, and no order is ever refused. The extra gas is consumed before the fee and the escrow, so a placement that runs out of gas costs only the gas.
 
 Example:
 ```bash
@@ -44,8 +46,8 @@ Governance can halt a denom on the DEX with a `MsgHaltDenoms` proposal, and lift
 
 While a denom is halted:
 - **Refused** (with `ErrDenomHalted`, before any fee or funds move): creating a market or pool with it, placing an order (`MsgCreateOrder`) or filling orders (`MsgFillOrders`) on a market whose base or quote is halted, adding liquidity to a pool that holds it, and any `MsgMultiSwap` whose route touches it — even as an intermediate hop. Paying tx fees in the denom is refused by the ante handler.
-- **Already queued**: order book messages accepted before the halt took effect (a block or a few earlier) execute normally in `EndBlock` — matched, saved as resting orders, or refunded exactly as today. The queue is only the asynchronous execution stage of messages the chain has already accepted (validated, fee captured, funds escrowed), and no new message can enter it once the halt is in effect, so the backlog drains within a few blocks and the market is then frozen except for cancels and liquidity removals.
-- **Still working**: `MsgCancelOrder` (refund through the queue as always), `MsgRemoveLiquidity`, bank sends, IBC transfers, staking and rewards that merely hold the denom, `MsgFundBurner`. Resting orders and pool reserves are left exactly as they are — nothing is swept or force-cancelled.
+- Orders execute in their own transaction, so from the block a halt takes effect the market is frozen except for cancels and liquidity removals.
+- **Still working**: `MsgCancelOrder` (refunded in its transaction as always), `MsgRemoveLiquidity`, bank sends, IBC transfers, staking and rewards that merely hold the denom, `MsgFundBurner`. Resting orders and pool reserves are left exactly as they are — nothing is swept or force-cancelled.
 - **Never swapped, by anyone**: user routes, module swaps (fee conversion, burner add-liquidity) and fee swaps all refuse the denom. Coins of a halted denom that other modules hold as fee dust are treated like any non-swappable IBC denom and end up locked in the burner black hole; tx-fee dust in that denom is distributed to stakers in kind.
 
 A market or pool is halted iff its base **or** quote is halted. Both sides of a book are frozen: every fill has one party receiving the halted denom, so there is no "exit-only" direction on an order book. Un-halting lets resting orders resume matching and pools resume swapping — nothing else to do.
@@ -112,18 +114,17 @@ Example proposal (`bzed tx gov submit-proposal proposal.json --from <key>`; the 
 Query the pool with `bzed query tradebin liquidity-pool <id>` before and after the vote.
 
 ## Order Book Engine Events
-`MsgCreateOrder`, `MsgFillOrders` and `MsgCancelOrder` only queue messages: the transaction emits `OrderCreateMessageEvent` / `OrderCancelMessageEvent` with the queue `message_id`, and the EndBlock engine executes the message in the same block or, past `order_book_per_block_messages`, a later one. Every message the engine removes from the queue emits at least one of the events below with the same `message_id`:
+`MsgCreateOrder`, `MsgFillOrders` and `MsgCancelOrder` execute in the transaction, so their outcome events are in the transaction result (not in the block's `finalize_block_events`). Every order the engine processes emits at least one of the events below, carrying the order's id in `order_id`:
 
 | Event | When |
 | --- | --- |
-| `OrderExecutedEvent` | once per resting order a create or fill message matched |
-| `OrderSavedEvent` | a create message (or its remainder) rests on the book as a new order |
-| `OrderMessageRefundedEvent` | the unexecuted part of a message is returned. `reason`: `no_match` (fill, nothing at its price), `unfilled_remainder` (fill, partly matched), `below_min_amount` (create, the remainder was not placed: below the minimum amount, or opposite orders were left at the price). `amount` is the base amount returned, `refund` the coin sent (empty when it rounded to zero and only dust was stored) |
-| `OrderCanceledEvent` | a cancel removed its order and refunded it |
-| `OrderCancelSkippedEvent` | a cancel found no order (filled or cancelled meanwhile), `reason` `order_not_found` |
-| `OrderMessageFailedEvent` | processing the message failed: its writes are discarded, it stays queued and is retried next block, and this event is emitted again for every block it fails. `reason` is always `processing_error` |
+| `OrderExecutedEvent` | once per resting (maker) order a create or fill order matched. `id` is the maker order, `order_id` the taker order |
+| `OrderSavedEvent` | a create order (or its remainder) rests on the book. `id` and `order_id` are the same |
+| `OrderAmendedEvent` | a create order (or its remainder) was added to the order its owner already rests at the same market, side and price, instead of being saved. `id` is the resting order, which is also the id the create order's other events carry; `added_amount` is the base amount added and `amount` the order's amount after it |
+| `OrderMessageRefundedEvent` | the unexecuted part of an order is returned. `reason`: `no_match` (fill, nothing at its price), `unfilled_remainder` (fill, partly matched), `below_min_amount` (create, the remainder was not placed: below the minimum amount, or opposite orders were left at the price), `max_fills_reached` (create or fill, the order examined `max_fills_per_order` resting orders, filled or skipped, and more rest at its price), `upgrade` (a message still queued at the v8.3.0 upgrade, refunded by the module migration; its `order_id` is the old queue message id). `amount` is the base amount returned, `refund` the coin sent (empty when it rounded to zero and only dust was stored) |
+| `OrderCanceledEvent` | a cancel removed its order and refunded it. `id` and `order_id` are the cancelled order |
 
-So per message type: a create ends with executed, saved and/or refunded events; a fill with executed and/or refunded events; a cancel with a canceled or a skipped event.
+So per message: a create ends with executed, saved (or amended) and/or refunded events; each fill entry with executed and/or refunded events; a cancel with a canceled event. A cancel of an order that does not exist (filled or cancelled meanwhile) is refused with `order not found` and the transaction reverts.
 
 ## User Dust
 Partial order fills can leave fractional coin amounts (dust) that are too small to settle. The module tracks dust per user address, and it accumulates across trades.
@@ -133,7 +134,7 @@ Partial order fills can leave fractional coin amounts (dust) that are too small 
 - `bzed query tradebin market <id>` / `markets` – market listings.
 - `bzed query tradebin asset-markets <asset>` – all markets where an asset is base or quote.
 - `bzed query tradebin user-market-orders <address> --market <id>` – paginated user orders in a market.
-- `bzed query tradebin market-aggregated-orders <market> <buy|sell>` – aggregated order book at price levels.
+- `bzed query tradebin market-aggregated-orders <market> <buy|sell>` – aggregated order book at price levels, with the number of distinct owners resting at each (`owners`).
 - `bzed query tradebin market-history <market>` – execution history for a market.
 - `bzed query tradebin market-order <market> <buy|sell> <order-id>` – single order details.
 - `bzed query tradebin all-user-dust <address>` – fractional dust from partial fills.
@@ -147,15 +148,18 @@ Partial order fills can leave fractional coin amounts (dust) that are too small 
 - Fees are captured from the sender, swapped to `native_denom` when possible, and forwarded to the destination module.
 - **Factory token transfer fee on protocol fees:** when the sender pays a protocol fee (the denom, market, DAO, staking, trading and denom reward creation fees, the denom reward schedule and prize fees, and the order fees) in a factory token whose tokenfactory `DenomConfig` sets a `transfer_fee`, they pay `ceil(fee in the token × transfer_fee)` on top. It goes to `txfeecollector_cp`, forwarded to the token's community pool at EndBlock, or to `txfeecollector_burner` when the token has no community pool. The balance check covers the fee plus the transfer fee; a sender short of it pays the protocol fee in `native_denom` instead, as before. The rate is read from the tokenfactory keeper, which the app sets on this keeper after building it; without it, nothing is charged and a warning is logged.
 - `MsgUpdateParams`, `MsgHaltDenoms`, `MsgUnhaltDenoms` and `MsgUpdatePools` are restricted to the module authority (governance).
-- Queue processing at `EndBlock` is capped by `order_book_per_block_messages`; messages beyond the cap remain queued for later blocks, and the queue counter resets only after the queue is emptied.
 - Module-level swaps/add-liquidity helpers refuse to run unless the native/pair pool holds more than `min_native_liquidity_for_module_swap` in native reserves.
 
 ## Version History
 
 ### v8.3.0
+- Order book orders execute inside their transaction, metered by its gas: the EndBlock queue, its counter, the pending-cancel marker, the queue gas surcharge, the queue price scan and the `order_book_queue_message_scan_extra_gas` param are removed. Every order gets an id before matching, and `order_id` replaces `message_id` in the order events; `OrderCreateMessageEvent`, `OrderCancelMessageEvent`, `OrderCancelSkippedEvent` and `OrderMessageFailedEvent` are removed. The upgrade refunds every message still queued (reason `upgrade`).
+- One order examines at most `max_fills_per_order` resting orders, filled or skipped (param field 11, renamed from `order_book_per_block_messages`, default 500); the remainder is refunded with reason `max_fills_reached`.
+- One owner has at most one order per market, side and price: a new order at a price where its owner already rests one is added to that order (same id, same place in the queue, `OrderAmendedEvent`). Orders placed before v8.3.0 stay as they are; new orders at their price are added to the earliest of them.
+- Each price level counts its distinct owners (`owners` on the aggregated order book). A new owner joining a level of more than `price_level_owners_window` owners pays `price_level_extra_gas` per owner above it. The params `order_book_extra_gas_window` and `order_book_queue_extra_gas` are renamed `price_level_owners_window` (set to 500 by the upgrade) and `price_level_extra_gas` (value kept).
 - The factory token transfer fee is charged on protocol fees paid in the token (fee payer service).
 - `MsgUpdatePools` governance message: changes the swap fee and fee split of existing pools (all or nothing, halted pools included, idempotent), `PoolFeesUpdatedEvent` per changed pool.
-- Order book engine outcome events: `OrderMessageRefundedEvent`, `OrderCancelSkippedEvent` and `OrderMessageFailedEvent`, so every processed queue message leaves an event with its `message_id`.
+- Order book engine outcome events: `OrderMessageRefundedEvent` (kept), `OrderCancelSkippedEvent` and `OrderMessageFailedEvent` (removed again with the queue, see above).
 
 ### v8.2.0
 - Governance-halted denoms: `MsgHaltDenoms` / `MsgUnhaltDenoms` (authority only, idempotent), the `halted-denoms` and `denom-halted` queries, `ErrDenomHalted` on every new-position message touching a halted market or pool, the no-swap invariant at `swapTokens`, and halted denoms refused as tx fee denoms. Cancel and remove-liquidity untouched. Nothing is halted at the upgrade.

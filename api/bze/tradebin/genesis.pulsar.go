@@ -66,57 +66,6 @@ func (x *_GenesisState_2_list) IsValid() bool {
 	return x.list != nil
 }
 
-var _ protoreflect.List = (*_GenesisState_3_list)(nil)
-
-type _GenesisState_3_list struct {
-	list *[]*QueueMessage
-}
-
-func (x *_GenesisState_3_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_GenesisState_3_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_GenesisState_3_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*QueueMessage)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_GenesisState_3_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*QueueMessage)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_GenesisState_3_list) AppendMutable() protoreflect.Value {
-	v := new(QueueMessage)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_GenesisState_3_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_GenesisState_3_list) NewElement() protoreflect.Value {
-	v := new(QueueMessage)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_GenesisState_3_list) IsValid() bool {
-	return x.list != nil
-}
-
 var _ protoreflect.List = (*_GenesisState_4_list)(nil)
 
 type _GenesisState_4_list struct {
@@ -422,7 +371,6 @@ var (
 	md_GenesisState                       protoreflect.MessageDescriptor
 	fd_GenesisState_params                protoreflect.FieldDescriptor
 	fd_GenesisState_market_list           protoreflect.FieldDescriptor
-	fd_GenesisState_queue_message_list    protoreflect.FieldDescriptor
 	fd_GenesisState_order_list            protoreflect.FieldDescriptor
 	fd_GenesisState_aggregated_order_list protoreflect.FieldDescriptor
 	fd_GenesisState_history_order_list    protoreflect.FieldDescriptor
@@ -437,7 +385,6 @@ func init() {
 	md_GenesisState = File_bze_tradebin_genesis_proto.Messages().ByName("GenesisState")
 	fd_GenesisState_params = md_GenesisState.Fields().ByName("params")
 	fd_GenesisState_market_list = md_GenesisState.Fields().ByName("market_list")
-	fd_GenesisState_queue_message_list = md_GenesisState.Fields().ByName("queue_message_list")
 	fd_GenesisState_order_list = md_GenesisState.Fields().ByName("order_list")
 	fd_GenesisState_aggregated_order_list = md_GenesisState.Fields().ByName("aggregated_order_list")
 	fd_GenesisState_history_order_list = md_GenesisState.Fields().ByName("history_order_list")
@@ -524,12 +471,6 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
-	if len(x.QueueMessageList) != 0 {
-		value := protoreflect.ValueOfList(&_GenesisState_3_list{list: &x.QueueMessageList})
-		if !f(fd_GenesisState_queue_message_list, value) {
-			return
-		}
-	}
 	if len(x.OrderList) != 0 {
 		value := protoreflect.ValueOfList(&_GenesisState_4_list{list: &x.OrderList})
 		if !f(fd_GenesisState_order_list, value) {
@@ -591,8 +532,6 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 		return x.Params != nil
 	case "bze.tradebin.GenesisState.market_list":
 		return len(x.MarketList) != 0
-	case "bze.tradebin.GenesisState.queue_message_list":
-		return len(x.QueueMessageList) != 0
 	case "bze.tradebin.GenesisState.order_list":
 		return len(x.OrderList) != 0
 	case "bze.tradebin.GenesisState.aggregated_order_list":
@@ -627,8 +566,6 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 		x.Params = nil
 	case "bze.tradebin.GenesisState.market_list":
 		x.MarketList = nil
-	case "bze.tradebin.GenesisState.queue_message_list":
-		x.QueueMessageList = nil
 	case "bze.tradebin.GenesisState.order_list":
 		x.OrderList = nil
 	case "bze.tradebin.GenesisState.aggregated_order_list":
@@ -667,12 +604,6 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 			return protoreflect.ValueOfList(&_GenesisState_2_list{})
 		}
 		listValue := &_GenesisState_2_list{list: &x.MarketList}
-		return protoreflect.ValueOfList(listValue)
-	case "bze.tradebin.GenesisState.queue_message_list":
-		if len(x.QueueMessageList) == 0 {
-			return protoreflect.ValueOfList(&_GenesisState_3_list{})
-		}
-		listValue := &_GenesisState_3_list{list: &x.QueueMessageList}
 		return protoreflect.ValueOfList(listValue)
 	case "bze.tradebin.GenesisState.order_list":
 		if len(x.OrderList) == 0 {
@@ -739,10 +670,6 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 		lv := value.List()
 		clv := lv.(*_GenesisState_2_list)
 		x.MarketList = *clv.list
-	case "bze.tradebin.GenesisState.queue_message_list":
-		lv := value.List()
-		clv := lv.(*_GenesisState_3_list)
-		x.QueueMessageList = *clv.list
 	case "bze.tradebin.GenesisState.order_list":
 		lv := value.List()
 		clv := lv.(*_GenesisState_4_list)
@@ -799,12 +726,6 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 			x.MarketList = []*Market{}
 		}
 		value := &_GenesisState_2_list{list: &x.MarketList}
-		return protoreflect.ValueOfList(value)
-	case "bze.tradebin.GenesisState.queue_message_list":
-		if x.QueueMessageList == nil {
-			x.QueueMessageList = []*QueueMessage{}
-		}
-		value := &_GenesisState_3_list{list: &x.QueueMessageList}
 		return protoreflect.ValueOfList(value)
 	case "bze.tradebin.GenesisState.order_list":
 		if x.OrderList == nil {
@@ -863,9 +784,6 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	case "bze.tradebin.GenesisState.market_list":
 		list := []*Market{}
 		return protoreflect.ValueOfList(&_GenesisState_2_list{list: &list})
-	case "bze.tradebin.GenesisState.queue_message_list":
-		list := []*QueueMessage{}
-		return protoreflect.ValueOfList(&_GenesisState_3_list{list: &list})
 	case "bze.tradebin.GenesisState.order_list":
 		list := []*Order{}
 		return protoreflect.ValueOfList(&_GenesisState_4_list{list: &list})
@@ -961,12 +879,6 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		}
 		if len(x.MarketList) > 0 {
 			for _, e := range x.MarketList {
-				l = options.Size(e)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
-		if len(x.QueueMessageList) > 0 {
-			for _, e := range x.QueueMessageList {
 				l = options.Size(e)
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
@@ -1133,22 +1045,6 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				dAtA[i] = 0x22
 			}
 		}
-		if len(x.QueueMessageList) > 0 {
-			for iNdEx := len(x.QueueMessageList) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.QueueMessageList[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-				i--
-				dAtA[i] = 0x1a
-			}
-		}
 		if len(x.MarketList) > 0 {
 			for iNdEx := len(x.MarketList) - 1; iNdEx >= 0; iNdEx-- {
 				encoded, err := options.Marshal(x.MarketList[iNdEx])
@@ -1295,40 +1191,6 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				}
 				x.MarketList = append(x.MarketList, &Market{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.MarketList[len(x.MarketList)-1]); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 3:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueueMessageList", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.QueueMessageList = append(x.QueueMessageList, &QueueMessage{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.QueueMessageList[len(x.QueueMessageList)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -1610,7 +1472,6 @@ type GenesisState struct {
 	// params defines all the parameters of the module.
 	Params              *v2.Params         `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
 	MarketList          []*Market          `protobuf:"bytes,2,rep,name=market_list,json=marketList,proto3" json:"market_list,omitempty"`
-	QueueMessageList    []*QueueMessage    `protobuf:"bytes,3,rep,name=queue_message_list,json=queueMessageList,proto3" json:"queue_message_list,omitempty"`
 	OrderList           []*Order           `protobuf:"bytes,4,rep,name=order_list,json=orderList,proto3" json:"order_list,omitempty"`
 	AggregatedOrderList []*AggregatedOrder `protobuf:"bytes,5,rep,name=aggregated_order_list,json=aggregatedOrderList,proto3" json:"aggregated_order_list,omitempty"`
 	HistoryOrderList    []*HistoryOrder    `protobuf:"bytes,6,rep,name=history_order_list,json=historyOrderList,proto3" json:"history_order_list,omitempty"`
@@ -1651,13 +1512,6 @@ func (x *GenesisState) GetParams() *v2.Params {
 func (x *GenesisState) GetMarketList() []*Market {
 	if x != nil {
 		return x.MarketList
-	}
-	return nil
-}
-
-func (x *GenesisState) GetQueueMessageList() []*QueueMessage {
-	if x != nil {
-		return x.QueueMessageList
 	}
 	return nil
 }
@@ -1722,7 +1576,7 @@ var file_bze_tradebin_genesis_proto_rawDesc = []byte{
 	0x6f, 0x74, 0x6f, 0x1a, 0x1c, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69,
 	0x6e, 0x2f, 0x76, 0x32, 0x2f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x1a, 0x18, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x2f,
-	0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x91, 0x07, 0x0a, 0x0c,
+	0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xa7, 0x06, 0x0a, 0x0c,
 	0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x3a, 0x0a, 0x06,
 	0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x17, 0x2e, 0x62,
 	0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x2e, 0x76, 0x32, 0x2e, 0x50,
@@ -1732,14 +1586,7 @@ var file_bze_tradebin_genesis_proto_rawDesc = []byte{
 	0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x2e, 0x4d, 0x61, 0x72,
 	0x6b, 0x65, 0x74, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xea, 0xde, 0x1f, 0x15, 0x6d, 0x61, 0x72,
 	0x6b, 0x65, 0x74, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70,
-	0x74, 0x79, 0x52, 0x0a, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x6e,
-	0x0a, 0x12, 0x71, 0x75, 0x65, 0x75, 0x65, 0x5f, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x5f,
-	0x6c, 0x69, 0x73, 0x74, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x62, 0x7a, 0x65,
-	0x2e, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x2e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x4d,
-	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x42, 0x24, 0xc8, 0xde, 0x1f, 0x00, 0xea, 0xde, 0x1f, 0x1c,
-	0x71, 0x75, 0x65, 0x75, 0x65, 0x5f, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x5f, 0x6c, 0x69,
-	0x73, 0x74, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x10, 0x71, 0x75,
-	0x65, 0x75, 0x65, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x50,
+	0x74, 0x79, 0x52, 0x0a, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x50,
 	0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x04, 0x20, 0x03,
 	0x28, 0x0b, 0x32, 0x13, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69,
 	0x6e, 0x2e, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x42, 0x1c, 0xc8, 0xde, 0x1f, 0x00, 0xea, 0xde, 0x1f,
@@ -1779,18 +1626,18 @@ var file_bze_tradebin_genesis_proto_rawDesc = []byte{
 	0x0d, 0x68, 0x61, 0x6c, 0x74, 0x65, 0x64, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x18, 0x0a,
 	0x20, 0x03, 0x28, 0x09, 0x42, 0x1b, 0xea, 0xde, 0x1f, 0x17, 0x68, 0x61, 0x6c, 0x74, 0x65, 0x64,
 	0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74,
-	0x79, 0x52, 0x0c, 0x68, 0x61, 0x6c, 0x74, 0x65, 0x64, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x42,
-	0xa0, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64,
-	0x65, 0x62, 0x69, 0x6e, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
-	0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62,
-	0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x72, 0x61, 0x64, 0x65,
-	0x62, 0x69, 0x6e, 0xa2, 0x02, 0x03, 0x42, 0x54, 0x58, 0xaa, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x2e,
-	0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xca, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x5c, 0x54,
-	0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xe2, 0x02, 0x18, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72,
-	0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0xea, 0x02, 0x0d, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62,
-	0x69, 0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x79, 0x52, 0x0c, 0x68, 0x61, 0x6c, 0x74, 0x65, 0x64, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x73, 0x4a,
+	0x04, 0x08, 0x03, 0x10, 0x04, 0x42, 0xa0, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a,
+	0x65, 0x2e, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65,
+	0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68,
+	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61,
+	0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65,
+	0x2f, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xa2, 0x02, 0x03, 0x42, 0x54, 0x58, 0xaa,
+	0x02, 0x0c, 0x42, 0x7a, 0x65, 0x2e, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xca, 0x02,
+	0x0c, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xe2, 0x02, 0x18,
+	0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x5c, 0x47, 0x50, 0x42,
+	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x42, 0x7a, 0x65, 0x3a, 0x3a,
+	0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1810,27 +1657,25 @@ var file_bze_tradebin_genesis_proto_goTypes = []interface{}{
 	(*GenesisState)(nil),    // 0: bze.tradebin.GenesisState
 	(*v2.Params)(nil),       // 1: bze.tradebin.v2.Params
 	(*Market)(nil),          // 2: bze.tradebin.Market
-	(*QueueMessage)(nil),    // 3: bze.tradebin.QueueMessage
-	(*Order)(nil),           // 4: bze.tradebin.Order
-	(*AggregatedOrder)(nil), // 5: bze.tradebin.AggregatedOrder
-	(*HistoryOrder)(nil),    // 6: bze.tradebin.HistoryOrder
-	(*UserDust)(nil),        // 7: bze.tradebin.UserDust
-	(*LiquidityPool)(nil),   // 8: bze.tradebin.LiquidityPool
+	(*Order)(nil),           // 3: bze.tradebin.Order
+	(*AggregatedOrder)(nil), // 4: bze.tradebin.AggregatedOrder
+	(*HistoryOrder)(nil),    // 5: bze.tradebin.HistoryOrder
+	(*UserDust)(nil),        // 6: bze.tradebin.UserDust
+	(*LiquidityPool)(nil),   // 7: bze.tradebin.LiquidityPool
 }
 var file_bze_tradebin_genesis_proto_depIdxs = []int32{
 	1, // 0: bze.tradebin.GenesisState.params:type_name -> bze.tradebin.v2.Params
 	2, // 1: bze.tradebin.GenesisState.market_list:type_name -> bze.tradebin.Market
-	3, // 2: bze.tradebin.GenesisState.queue_message_list:type_name -> bze.tradebin.QueueMessage
-	4, // 3: bze.tradebin.GenesisState.order_list:type_name -> bze.tradebin.Order
-	5, // 4: bze.tradebin.GenesisState.aggregated_order_list:type_name -> bze.tradebin.AggregatedOrder
-	6, // 5: bze.tradebin.GenesisState.history_order_list:type_name -> bze.tradebin.HistoryOrder
-	7, // 6: bze.tradebin.GenesisState.all_users_dust:type_name -> bze.tradebin.UserDust
-	8, // 7: bze.tradebin.GenesisState.liquidity_pools:type_name -> bze.tradebin.LiquidityPool
-	8, // [8:8] is the sub-list for method output_type
-	8, // [8:8] is the sub-list for method input_type
-	8, // [8:8] is the sub-list for extension type_name
-	8, // [8:8] is the sub-list for extension extendee
-	0, // [0:8] is the sub-list for field type_name
+	3, // 2: bze.tradebin.GenesisState.order_list:type_name -> bze.tradebin.Order
+	4, // 3: bze.tradebin.GenesisState.aggregated_order_list:type_name -> bze.tradebin.AggregatedOrder
+	5, // 4: bze.tradebin.GenesisState.history_order_list:type_name -> bze.tradebin.HistoryOrder
+	6, // 5: bze.tradebin.GenesisState.all_users_dust:type_name -> bze.tradebin.UserDust
+	7, // 6: bze.tradebin.GenesisState.liquidity_pools:type_name -> bze.tradebin.LiquidityPool
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_bze_tradebin_genesis_proto_init() }

@@ -217,6 +217,8 @@ func (s *paramsSuite) invalidParams(t *testing.T) {
 		{"tradebin taker fee to the validators", tb(func(p *paTradebin) { p.TakerFeeDestination = "validators" }), "invalid TakerFeeDestination: invalid fee destination: validators"},
 		{"tradebin empty native denom", tb(func(p *paTradebin) { p.NativeDenom = "" }), "native denom cannot be an empty string"},
 		{"tradebin zero min native liquidity", tb(func(p *paTradebin) { p.MinNativeLiquidityForModuleSwap = sdkmath.ZeroInt() }), "min native liquidity for module swap must be positive"},
+		{"tradebin zero price level owners window", tb(func(p *paTradebin) { p.PriceLevelOwnersWindow = 0 }), "price level owners window must be at least 1"},
+		{"tradebin zero price level extra gas", tb(func(p *paTradebin) { p.PriceLevelExtraGas = 0 }), "price level extra gas must be at least 1"},
 		{"rewards negative staking reward fee", rw(func(p *paRewards) { p.CreateStakingRewardFee = negative(chain.Denom) }), "invalid CreateStakingRewardFee"},
 		{"rewards negative trading reward fee", rw(func(p *paRewards) { p.CreateTradingRewardFee = negative(chain.Denom) }), "invalid createTradingRewardFee"},
 		{"rewards invalid denom reward fee denom", rw(func(p *paRewards) { p.CreateDenomRewardFee = sdk.Coin{Denom: "1bad", Amount: sdkmath.NewInt(1)} }), "invalid fee coin"},
@@ -456,7 +458,7 @@ func (s *paramsSuite) backAtGenesis(t *testing.T) {
 func (s *paramsSuite) requireTrade(t *testing.T) {
 	t.Helper()
 	s.requireOrder(t, s.maker, "sell", sdk.NewInt64Coin(s.tok, paOrderAmount), s.tb.MarketMakerFee, s.tb.MakerFeeDestination, sdk.NewCoins())
-	// the buy fills in the EndBlock of its own block: the taker already holds the tok
+	// the buy fills in its own tx: the taker already holds the tok
 	s.requireOrder(t, s.taker, "buy", sdk.NewCoin(chain.Denom, mulPrice(paOrderAmount, paOrderPrice)), s.tb.MarketTakerFee, s.tb.TakerFeeDestination,
 		coins(paOrderAmount, s.tok))
 	s.requireBookEmpty(t)
@@ -650,29 +652,27 @@ type paTradebin struct {
 	CreateMarketFee, MarketMakerFee, MarketTakerFee sdk.Coin
 	MakerFeeDestination, TakerFeeDestination        string
 	NativeDenom                                     string
-	OrderBookExtraGasWindow, OrderBookQueueExtraGas uint64
+	PriceLevelOwnersWindow, PriceLevelExtraGas      uint64
 	FillOrdersExtraGas                              uint64
 	MinNativeLiquidityForModuleSwap                 sdkmath.Int
-	OrderBookPerBlockMessages                       uint64
-	OrderBookQueueMessageScanExtraGas               uint64
+	MaxFillsPerOrder                                uint64
 }
 
 func (paTradebin) module() string { return "tradebin" }
 
 func (p paTradebin) msgParams() map[string]any {
 	return map[string]any{
-		"createMarketFee":                   coinJSON(p.CreateMarketFee),
-		"marketMakerFee":                    coinJSON(p.MarketMakerFee),
-		"marketTakerFee":                    coinJSON(p.MarketTakerFee),
-		"makerFeeDestination":               p.MakerFeeDestination,
-		"takerFeeDestination":               p.TakerFeeDestination,
-		"native_denom":                      p.NativeDenom,
-		"orderBookExtraGasWindow":           u64(p.OrderBookExtraGasWindow),
-		"orderBookQueueExtraGas":            u64(p.OrderBookQueueExtraGas),
-		"fillOrdersExtraGas":                u64(p.FillOrdersExtraGas),
-		"minNativeLiquidityForModuleSwap":   p.MinNativeLiquidityForModuleSwap.String(),
-		"orderBookPerBlockMessages":         u64(p.OrderBookPerBlockMessages),
-		"orderBookQueueMessageScanExtraGas": u64(p.OrderBookQueueMessageScanExtraGas),
+		"createMarketFee":                 coinJSON(p.CreateMarketFee),
+		"marketMakerFee":                  coinJSON(p.MarketMakerFee),
+		"marketTakerFee":                  coinJSON(p.MarketTakerFee),
+		"makerFeeDestination":             p.MakerFeeDestination,
+		"takerFeeDestination":             p.TakerFeeDestination,
+		"native_denom":                    p.NativeDenom,
+		"priceLevelOwnersWindow":          u64(p.PriceLevelOwnersWindow),
+		"priceLevelExtraGas":              u64(p.PriceLevelExtraGas),
+		"fillOrdersExtraGas":              u64(p.FillOrdersExtraGas),
+		"minNativeLiquidityForModuleSwap": p.MinNativeLiquidityForModuleSwap.String(),
+		"maxFillsPerOrder":                u64(p.MaxFillsPerOrder),
 	}
 }
 
@@ -744,36 +744,34 @@ func (s *paramsSuite) moduleParams(t *testing.T, module string, known ...string)
 func (s *paramsSuite) queryTradebin(t *testing.T) paTradebin {
 	t.Helper()
 	var p struct {
-		CreateMarketFee                   paCoin        `json:"createmarketfee"`
-		MarketMakerFee                    paCoin        `json:"marketmakerfee"`
-		MarketTakerFee                    paCoin        `json:"markettakerfee"`
-		MakerFeeDestination               string        `json:"makerfeedestination"`
-		TakerFeeDestination               string        `json:"takerfeedestination"`
-		NativeDenom                       string        `json:"nativedenom"`
-		OrderBookExtraGasWindow           helpers.Int64 `json:"orderbookextragaswindow"`
-		OrderBookQueueExtraGas            helpers.Int64 `json:"orderbookqueueextragas"`
-		FillOrdersExtraGas                helpers.Int64 `json:"fillordersextragas"`
-		MinNativeLiquidityForModuleSwap   string        `json:"minnativeliquidityformoduleswap"`
-		OrderBookPerBlockMessages         helpers.Int64 `json:"orderbookperblockmessages"`
-		OrderBookQueueMessageScanExtraGas helpers.Int64 `json:"orderbookqueuemessagescanextragas"`
+		CreateMarketFee                 paCoin        `json:"createmarketfee"`
+		MarketMakerFee                  paCoin        `json:"marketmakerfee"`
+		MarketTakerFee                  paCoin        `json:"markettakerfee"`
+		MakerFeeDestination             string        `json:"makerfeedestination"`
+		TakerFeeDestination             string        `json:"takerfeedestination"`
+		NativeDenom                     string        `json:"nativedenom"`
+		PriceLevelOwnersWindow          helpers.Int64 `json:"pricelevelownerswindow"`
+		PriceLevelExtraGas              helpers.Int64 `json:"pricelevelextragas"`
+		FillOrdersExtraGas              helpers.Int64 `json:"fillordersextragas"`
+		MinNativeLiquidityForModuleSwap string        `json:"minnativeliquidityformoduleswap"`
+		MaxFillsPerOrder                helpers.Int64 `json:"maxfillsperorder"`
 	}
 	raw := s.moduleParams(t, "tradebin", "createmarketfee", "marketmakerfee", "markettakerfee", "makerfeedestination", "takerfeedestination",
-		"nativedenom", "orderbookextragaswindow", "orderbookqueueextragas", "fillordersextragas", "minnativeliquidityformoduleswap",
-		"orderbookperblockmessages", "orderbookqueuemessagescanextragas")
+		"nativedenom", "pricelevelownerswindow", "pricelevelextragas", "fillordersextragas", "minnativeliquidityformoduleswap",
+		"maxfillsperorder")
 	require.NoError(t, json.Unmarshal(raw, &p), "%s", raw)
 	return paTradebin{
-		CreateMarketFee:                   p.CreateMarketFee.coin(),
-		MarketMakerFee:                    p.MarketMakerFee.coin(),
-		MarketTakerFee:                    p.MarketTakerFee.coin(),
-		MakerFeeDestination:               p.MakerFeeDestination,
-		TakerFeeDestination:               p.TakerFeeDestination,
-		NativeDenom:                       p.NativeDenom,
-		OrderBookExtraGasWindow:           uint64(p.OrderBookExtraGasWindow),
-		OrderBookQueueExtraGas:            uint64(p.OrderBookQueueExtraGas),
-		FillOrdersExtraGas:                uint64(p.FillOrdersExtraGas),
-		MinNativeLiquidityForModuleSwap:   parseInt(p.MinNativeLiquidityForModuleSwap),
-		OrderBookPerBlockMessages:         uint64(p.OrderBookPerBlockMessages),
-		OrderBookQueueMessageScanExtraGas: uint64(p.OrderBookQueueMessageScanExtraGas),
+		CreateMarketFee:                 p.CreateMarketFee.coin(),
+		MarketMakerFee:                  p.MarketMakerFee.coin(),
+		MarketTakerFee:                  p.MarketTakerFee.coin(),
+		MakerFeeDestination:             p.MakerFeeDestination,
+		TakerFeeDestination:             p.TakerFeeDestination,
+		NativeDenom:                     p.NativeDenom,
+		PriceLevelOwnersWindow:          uint64(p.PriceLevelOwnersWindow),
+		PriceLevelExtraGas:              uint64(p.PriceLevelExtraGas),
+		FillOrdersExtraGas:              uint64(p.FillOrdersExtraGas),
+		MinNativeLiquidityForModuleSwap: parseInt(p.MinNativeLiquidityForModuleSwap),
+		MaxFillsPerOrder:                uint64(p.MaxFillsPerOrder),
 	}
 }
 

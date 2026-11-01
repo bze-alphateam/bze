@@ -15,34 +15,32 @@ const (
 )
 
 var (
-	DefaultCreateMarketFee                   = sdk.NewInt64Coin(DefaultNativeDenom, 25000000000)
-	DefaultMarketMakerFee                    = sdk.NewInt64Coin(DefaultNativeDenom, 1000)
-	DefaultMarketTakerFee                    = sdk.NewInt64Coin(DefaultNativeDenom, 100000)
-	DefaultMakerFeeDestination               = FeeDestinationBurnerModule
-	DefaultTakerFeeDestination               = FeeDestinationBurnerModule
-	DefaultOrderBookExtraGasWindow           = uint64(100)
-	DefaultOrderBookQueueExtraGas            = uint64(25000)
-	DefaultFillOrdersExtraGas                = uint64(5000)
-	DefaultOrderBookQueueMessageScanExtraGas = uint64(5000)
-	DefaultMinNativeLiquidityForModuleSwap   = math.NewInt(100000000000)
-	DefaultOrderBookPerBlockMessages         = uint64(500)
+	DefaultCreateMarketFee                 = sdk.NewInt64Coin(DefaultNativeDenom, 25000000000)
+	DefaultMarketMakerFee                  = sdk.NewInt64Coin(DefaultNativeDenom, 1000)
+	DefaultMarketTakerFee                  = sdk.NewInt64Coin(DefaultNativeDenom, 100000)
+	DefaultMakerFeeDestination             = FeeDestinationBurnerModule
+	DefaultTakerFeeDestination             = FeeDestinationBurnerModule
+	DefaultPriceLevelOwnersWindow          = uint64(500)
+	DefaultPriceLevelExtraGas              = uint64(25000)
+	DefaultFillOrdersExtraGas              = uint64(5000)
+	DefaultMinNativeLiquidityForModuleSwap = math.NewInt(100000000000)
+	DefaultMaxFillsPerOrder                = uint64(500)
 )
 
 // DefaultParams returns a default set of v2 parameters
 func DefaultParams() Params {
 	return Params{
-		CreateMarketFee:                   DefaultCreateMarketFee,
-		MarketMakerFee:                    DefaultMarketMakerFee,
-		MarketTakerFee:                    DefaultMarketTakerFee,
-		MakerFeeDestination:               DefaultMakerFeeDestination,
-		TakerFeeDestination:               DefaultTakerFeeDestination,
-		NativeDenom:                       DefaultNativeDenom,
-		OrderBookExtraGasWindow:           DefaultOrderBookExtraGasWindow,
-		OrderBookQueueExtraGas:            DefaultOrderBookQueueExtraGas,
-		FillOrdersExtraGas:                DefaultFillOrdersExtraGas,
-		OrderBookQueueMessageScanExtraGas: DefaultOrderBookQueueMessageScanExtraGas,
-		MinNativeLiquidityForModuleSwap:   DefaultMinNativeLiquidityForModuleSwap,
-		OrderBookPerBlockMessages:         DefaultOrderBookPerBlockMessages,
+		CreateMarketFee:                 DefaultCreateMarketFee,
+		MarketMakerFee:                  DefaultMarketMakerFee,
+		MarketTakerFee:                  DefaultMarketTakerFee,
+		MakerFeeDestination:             DefaultMakerFeeDestination,
+		TakerFeeDestination:             DefaultTakerFeeDestination,
+		NativeDenom:                     DefaultNativeDenom,
+		PriceLevelOwnersWindow:          DefaultPriceLevelOwnersWindow,
+		PriceLevelExtraGas:              DefaultPriceLevelExtraGas,
+		FillOrdersExtraGas:              DefaultFillOrdersExtraGas,
+		MinNativeLiquidityForModuleSwap: DefaultMinNativeLiquidityForModuleSwap,
+		MaxFillsPerOrder:                DefaultMaxFillsPerOrder,
 	}
 }
 
@@ -76,8 +74,16 @@ func (p Params) Validate() error {
 		return fmt.Errorf("min native liquidity for module swap must be positive")
 	}
 
-	if p.OrderBookPerBlockMessages < 1 {
-		return fmt.Errorf("order book per block messages must be at least 1")
+	if p.PriceLevelOwnersWindow < 1 {
+		return fmt.Errorf("price level owners window must be at least 1")
+	}
+
+	if p.PriceLevelExtraGas < 1 {
+		return fmt.Errorf("price level extra gas must be at least 1")
+	}
+
+	if p.MaxFillsPerOrder < 1 {
+		return fmt.Errorf("max fills per order must be at least 1")
 	}
 
 	return nil
