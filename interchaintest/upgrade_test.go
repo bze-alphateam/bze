@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -143,7 +144,10 @@ type upgradeCheck struct {
 	after  func(s *upgradeSuite, t *testing.T, before any)
 	// moves are the balances the handler moves between s.accounts (by name),
 	// the only balance changes step 4 accepts besides a block's own
-	moves func(s *upgradeSuite, before any) []upgradeMove
+	moves func(s *upgradeSuite, t *testing.T, before any) []upgradeMove
+	// removedParams are the tradebin params the candidate no longer has; step
+	// 4 compares every other param of the previous release
+	removedParams []string
 	// ibc links the network to simd over IBC, for a handler that touches IBC
 	ibc bool
 }
@@ -159,7 +163,10 @@ type upgradeMove struct {
 // its own, the way app/upgrades keeps only the current handler.
 var upgradeChecks = map[string]upgradeCheck{
 	// v8.3.0 runs linked to simd to prove IBC across the ibc-go v10 move
-	"v8.3.0": {before: (*upgradeSuite).v830Before, after: (*upgradeSuite).v830After, ibc: true},
+	"v8.3.0": {
+		before: (*upgradeSuite).v830Before, after: (*upgradeSuite).v830After, moves: (*upgradeSuite).v830Moves, ibc: true,
+		removedParams: []string{"orderBookQueueMessageScanExtraGas"},
+	},
 }
 
 // upgradeFeatures are the features of the previous release the seed uses.
@@ -463,7 +470,7 @@ func (s *upgradeSuite) statePreserved(t *testing.T) {
 		for name, coins := range b.Balances {
 			moved[name] = coins
 		}
-		for _, m := range s.check.moves(s, s.handlerBefore) {
+		for _, m := range s.check.moves(s, t, s.handlerBefore) {
 			moved[m.from] = moved[m.from].Sub(m.coin)
 			moved[m.to] = moved[m.to].Add(m.coin)
 			t.Logf("the handler moves %s from %s to %s", m.coin, m.from, m.to)
@@ -488,7 +495,12 @@ func (s *upgradeSuite) statePreserved(t *testing.T) {
 	require.Equal(t, b.Branding, a.Branding, "denom branding")
 	require.Equal(t, b.Halted, a.Halted, "halted denoms")
 	// a handler may add tradebin params, but never changes the ones before it
+	// (a release may remove one: upgradeCheck.removedParams)
 	for name, raw := range b.TradebinParams {
+		if slices.Contains(s.check.removedParams, name) {
+			require.NotContains(t, a.TradebinParams, name, "tradebin param %s removed", name)
+			continue
+		}
 		require.JSONEq(t, string(raw), string(a.TradebinParams[name]), "tradebin param %s", name)
 	}
 
@@ -562,8 +574,7 @@ func (s *upgradeSuite) smoke(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.Zero(t, res.Code, res.RawLog)
-		executed, err := helpers.BlockEvents(s.ctx, s.bze, res.Height, tradebinEventPrefix+"OrderExecutedEvent")
-		require.NoError(t, err)
+		executed := helpers.TxEvents(res, tradebinEventPrefix+"OrderExecutedEvent")
 		require.Len(t, helpers.EventsWith(executed, map[string]string{"market_id": s.market, "maker": bob, "taker": carol}), 1,
 			"bob's sell order executes against carol")
 		require.Equal(t, abcBefore.AddRaw(upOrderAmount), s.balance(t, carol, s.abc))
@@ -715,6 +726,29 @@ type v830State struct {
 	voucher string
 	// kept keeps its admin across the upgrade, renounced is renounced before it
 	kept, renounced string
+	// queue is the order book queue left at the upgrade height (BZE-247)
+	queue v830Queue
+}
+
+// The v8.2.0 order book queue at the upgrade height (BZE-247): with
+// orderBookPerBlockMessages lowered to 1, admin queues upV830Backlog sell
+// orders and, behind them, the cancel of a resting sell in one tx. The queue
+// drains one message per block, slower than the upgrade proposal passes, so
+// the tail of the backlog and the cancel are still queued when the chain
+// halts. The v8.3.0 migration refunds every queued order once and executes
+// none of them; the cancel refunds nothing and its order still rests.
+const (
+	upV830Backlog       = 80
+	upV830BacklogAmount = 10   // abc each
+	upV830BacklogPrice  = "15" // usd per abc, above every other sell: nothing fills them
+	upV830CancelPrice   = "16"
+	upV830BacklogGas    = 60_000_000
+)
+
+type v830Queue struct {
+	creates  []string        // the backlog's queue message ids, in queue order
+	cancelID string          // the resting order the queued cancel targets
+	perBlock json.RawMessage // orderBookPerBlockMessages before the suite lowered it
 }
 
 // upV830Deleted are the stores the v8.3.0 store loader deletes: x/capability
@@ -763,15 +797,131 @@ func (s *upgradeSuite) v830Before(t *testing.T) any {
 	})
 	require.Equal(t, admin, s.denomAuthority(t, 0, st.kept).Admin)
 	require.Empty(t, s.denomAuthority(t, 0, st.renounced).Admin)
+
+	// last: the queue must still hold messages when the plan height is reached
+	st.queue = s.v830QueueBacklog(t)
 	return st
+}
+
+// v830QueueBacklog builds the queue the v8.3.0 migration refunds (see
+// upV830Backlog).
+func (s *upgradeSuite) v830QueueBacklog(t *testing.T) v830Queue {
+	admin := s.admin.FormattedAddress()
+	var q v830Queue
+	s.exec(t, s.admin, "tradebin", "create-order", "sell", strconv.Itoa(upV830BacklogAmount), upV830CancelPrice, s.market)
+	require.NoError(t, testutil.WaitForBlocks(s.ctx, 1, s.bze))
+	orders := s.userOrders(t, 0, s.admin)
+	require.Len(t, orders, 1, "admin's sell to cancel rests")
+	q.cancelID = orders[0].ID
+
+	q.perBlock = s.params(t, 0, "tradebin")["orderBookPerBlockMessages"]
+	require.NotEmpty(t, q.perBlock)
+	s.setTradebinParam(t, "orderBookPerBlockMessages", json.RawMessage(`"1"`))
+
+	msgs := make([]any, 0, upV830Backlog+1)
+	for range upV830Backlog {
+		msgs = append(msgs, map[string]any{
+			"@type": "/bze.tradebin.MsgCreateOrder", "creator": admin, "order_type": "sell",
+			"amount": strconv.Itoa(upV830BacklogAmount), "price": upV830BacklogPrice, "market_id": s.market,
+		})
+	}
+	msgs = append(msgs, map[string]any{
+		"@type": "/bze.tradebin.MsgCancelOrder", "creator": admin, "market_id": s.market, "order_id": q.cancelID, "order_type": "sell",
+	})
+	res, err := helpers.ExecMsgs(s.ctx, s.bze, s.admin, []helpers.TxOption{helpers.WithGas(upV830BacklogGas)}, msgs...)
+	require.NoError(t, err)
+	require.Zero(t, res.Code, res.RawLog)
+	for _, e := range helpers.TxEvents(res, tradebinEventPrefix+"OrderCreateMessageEvent") {
+		q.creates = append(q.creates, e.Attributes["message_id"])
+	}
+	require.Len(t, q.creates, upV830Backlog, "one queued message per order")
+	s.requireEvent(t, res, tradebinEventPrefix+"OrderCancelMessageEvent", map[string]string{"orderId": q.cancelID})
+	t.Logf("queued %d orders and a cancel at height %d", upV830Backlog, res.Height)
+	return q
+}
+
+// v830Queued is the number of backlog orders still queued at the plan height:
+// the others rest on the book at plan - 1, next to the cancel's target.
+func (s *upgradeSuite) v830Queued(t *testing.T, q v830Queue) int {
+	t.Helper()
+	resting := len(s.userOrders(t, s.plan-1, s.admin)) - 1
+	queued := upV830Backlog - resting
+	require.Positive(t, queued, "the backlog drained before the plan height (%d orders rest): raise upV830Backlog", resting)
+	require.Less(t, queued, upV830Backlog, "no backlog order executed before the plan height")
+	return queued
+}
+
+// v830Moves: the migration sends the abc of every queued order from the
+// tradebin module back to admin.
+func (s *upgradeSuite) v830Moves(t *testing.T, before any) []upgradeMove {
+	queued := s.v830Queued(t, before.(v830State).queue)
+	return []upgradeMove{{from: "tradebin module", to: "admin", coin: sdk.NewInt64Coin(s.abc, int64(queued*upV830BacklogAmount))}}
+}
+
+// v830QueueRefunded checks the tradebin 4 -> 5 migration (BZE-247): every
+// order still queued at the plan height is refunded once, with reason
+// upgrade, in queue order; nothing is executed or cancelled; the cancel's
+// order still rests and no queue key is left in the store. The per-block
+// param is restored afterwards.
+func (s *upgradeSuite) v830QueueRefunded(t *testing.T, q v830Queue) {
+	admin := s.admin.FormattedAddress()
+	queued := s.v830Queued(t, q)
+
+	refunds, err := helpers.BlockEvents(s.ctx, s.bze, s.plan, tradebinEventPrefix+"OrderMessageRefundedEvent")
+	require.NoError(t, err)
+	require.Len(t, refunds, queued, "one refund per queued order, none for the cancel")
+	amount := strconv.Itoa(upV830BacklogAmount)
+	for i, e := range refunds {
+		a := e.Attributes
+		require.Equal(t,
+			[]string{q.creates[upV830Backlog-queued+i], s.market, "sell", admin, amount, amount + s.abc, "upgrade"},
+			[]string{a["order_id"], a["market_id"], a["order_type"], a["owner"], a["amount"], a["refund"], a["reason"]},
+			"refund %d", i)
+	}
+	for _, typ := range []string{"OrderSavedEvent", "OrderExecutedEvent", "OrderCanceledEvent"} {
+		events, err := helpers.BlockEvents(s.ctx, s.bze, s.plan, tradebinEventPrefix+typ)
+		require.NoError(t, err)
+		require.Empty(t, events, "no %s at the plan height: the migration executes nothing", typ)
+	}
+
+	var ids []string
+	for _, o := range s.userOrders(t, s.plan, s.admin) {
+		ids = append(ids, o.ID)
+	}
+	require.Contains(t, ids, q.cancelID, "the queued cancel's order still rests")
+	require.Len(t, ids, upV830Backlog-queued+1, "the backlog orders saved before the upgrade still rest")
+
+	keys, err := helpers.StorePrefixKeys(s.ctx, s.bze, "tradebin", []byte("Qm/"), s.plan-1)
+	require.NoError(t, err)
+	require.Positive(t, keys, "queue keys at plan - 1")
+	keys, err = helpers.StorePrefixKeys(s.ctx, s.bze, "tradebin", []byte("Qm/"), s.plan)
+	require.NoError(t, err)
+	require.Zero(t, keys, "no queue key left after the migration")
+
+	s.setTradebinParam(t, "orderBookPerBlockMessages", q.perBlock)
+}
+
+// setTradebinParam passes a tradebin MsgUpdateParams that changes one param.
+func (s *upgradeSuite) setTradebinParam(t *testing.T, name string, value json.RawMessage) {
+	t.Helper()
+	params := s.params(t, 0, "tradebin")
+	require.Contains(t, params, name, "tradebin param %s", name)
+	params[name] = value
+	_, err := helpers.SubmitAndPassProposalWith(s.ctx, s.bze, s.admin, s.txOpts(), helpers.Proposal{
+		Messages: []any{map[string]any{"@type": "/bze.tradebin.MsgUpdateParams", "authority": s.gov, "params": params}},
+		Title:    "Set tradebin " + name,
+		Summary:  "e2e: tradebin " + name,
+	})
+	require.NoError(t, err)
+	require.JSONEq(t, string(value), string(s.params(t, 0, "tradebin")[name]), "tradebin %s", name)
 }
 
 func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	b := before.(v830State)
 
-	// module versions: the ibc-go v10 migrations and the rewards v5 -> v6
-	// trading reward countdown reset (BZE-173) ran, everything else as
-	// before. x/upgrade never deletes a version entry, so the removed
+	// module versions: the ibc-go v10 migrations, the rewards v5 -> v6
+	// trading reward countdown reset (BZE-173) and the tradebin v4 -> v5
+	// order book queue removal (BZE-247) ran, everything else as before. x/upgrade never deletes a version entry, so the removed
 	// capability, feeibc, group and nft modules keep their last versions; their
 	// stores are deleted by the store loader and their CLI is gone (checked below)
 	versions := s.moduleVersions(t, s.plan)
@@ -783,9 +933,10 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	require.Equal(t, int64(6), versions["transfer"], "transfer migrated 5 -> 6")
 	require.Equal(t, int64(6), versions["rewards"], "rewards migrated 5 -> 6")
 	require.Equal(t, int64(4), versions["tokenfactory"], "tokenfactory migrated 3 -> 4")
+	require.Equal(t, int64(5), versions["tradebin"], "tradebin migrated 4 -> 5")
 	for name, v := range b.versions {
 		switch name {
-		case "ibc", "transfer", "rewards", "tokenfactory":
+		case "ibc", "transfer", "rewards", "tokenfactory", "tradebin":
 			continue
 		}
 		require.Equal(t, v, versions[name], "%s module version unchanged", name)
@@ -843,6 +994,7 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	require.True(t, s.supported(t, "interchain-accounts", "host", "params"), "ICA host params")
 
 	s.v830MintableFlags(t, b)
+	s.v830QueueRefunded(t, b.queue)
 }
 
 // v830MintableFlags checks the tokenfactory 3 -> 4 migration (BZE-217): every

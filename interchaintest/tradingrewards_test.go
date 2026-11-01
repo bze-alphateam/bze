@@ -292,9 +292,9 @@ func (s *tradingRewardsSuite) activate(t *testing.T) {
 // (the swap output when buying tr, the input when selling it) and never the
 // market's reward A: a reward counts trades on its own market id only.
 func (s *tradingRewardsSuite) hooks(t *testing.T) {
-	height := s.trade(t, s.t3, "buy", 500)
-	s.expireAtA = s.hourAt(t, height) + trDuration*24
-	s.requireStarted(t, s.rewardEvents(t, height, "TradingRewardStartEvent"), s.rewardA, s.expireAtA)
+	res := s.trade(t, s.t3, "buy", 500)
+	s.expireAtA = s.hourAt(t, res.Height) + trDuration*24
+	s.requireStarted(t, helpers.TxEvents(res, drEventPrefix+"TradingRewardStartEvent"), s.rewardA, s.expireAtA)
 	s.requireLeaderboard(t, s.rewardA, trPlace{s.t3, 500})
 	// the next entry must be created in a later second than t3's
 	require.NoError(t, testutil.WaitForBlocks(s.ctx, 2, s.bze))
@@ -454,13 +454,13 @@ func (s *tradingRewardsSuite) fewerTraders(t *testing.T) {
 	s.activatedDF = s.hourAt(t, s.activationHeight(t, s.rewardD, s.rewardF))
 
 	before := s.balance(t, s.t1.FormattedAddress(), s.prize)
-	height := s.trade(t, s.t1, "buy", trFewerBuy)
-	expireAt := s.hourAt(t, height) + trDuration*24
-	s.requireStarted(t, s.rewardEvents(t, height, "TradingRewardStartEvent"), s.rewardD, expireAt)
+	res := s.trade(t, s.t1, "buy", trFewerBuy)
+	expireAt := s.hourAt(t, res.Height) + trDuration*24
+	s.requireStarted(t, helpers.TxEvents(res, drEventPrefix+"TradingRewardStartEvent"), s.rewardD, expireAt)
 	s.requireLeaderboard(t, s.rewardD, trPlace{s.t1, trFewerBuy})
 
 	s.epochEndHeight(t, expireAt, trPayoutWait)
-	height = s.epochStartHeight(t, expireAt+1)
+	height := s.epochStartHeight(t, expireAt+1)
 	unfilled := coinStr(trRewardD.prize*(trRewardD.slots-1), s.prize)
 	events := helpers.EventsWith(s.rewardEvents(t, height, "TradingRewardDistributionEvent"), map[string]string{
 		"reward_id":    s.rewardD,
@@ -554,8 +554,8 @@ func (s *tradingRewardsSuite) createReward(t *testing.T, spec trSpec, market str
 
 // trade sends a taker order against the maker's resting order at the price
 // for its side, asserts the execution and the taker's balances and returns
-// the height of the block that executed it.
-func (s *tradingRewardsSuite) trade(t *testing.T, u ibc.Wallet, typ string, amount int64) int64 {
+// the tx, which executed it (with the order-book hook) in the tx itself.
+func (s *tradingRewardsSuite) trade(t *testing.T, u ibc.Wallet, typ string, amount int64) helpers.TxResult {
 	t.Helper()
 	price := trSellPrice
 	if typ == "sell" {
@@ -566,7 +566,7 @@ func (s *tradingRewardsSuite) trade(t *testing.T, u ibc.Wallet, typ string, amou
 
 	res := s.mustExec(t, u, "tradebin", "create-order", typ, amt, price, s.trMarket)
 
-	executed := helpers.EventsWith(filterType(s.blockEvents(t, res.Height), tradebinEventPrefix+"OrderExecutedEvent"), map[string]string{
+	executed := helpers.EventsWith(helpers.TxEvents(res, tradebinEventPrefix+"OrderExecutedEvent"), map[string]string{
 		"market_id": s.trMarket, "taker": u.FormattedAddress(), "maker": s.maker.FormattedAddress(), "amount": amt, "price": price,
 	})
 	require.Len(t, executed, 1, "%s %s %s@%s executes against the maker", u.KeyName(), typ, amt, price)
@@ -578,7 +578,7 @@ func (s *tradingRewardsSuite) trade(t *testing.T, u ibc.Wallet, typ string, amou
 		want = before.Add(sdk.NewCoin(chain.Denom, quote)).Sub(sdk.NewInt64Coin(s.tr, amount), sdk.NewCoin(chain.Denom, fee))
 	}
 	require.Equal(t, want, s.balances(t, u, chain.Denom, s.tr), "balances of %s", u.KeyName())
-	return res.Height
+	return res
 }
 
 // swap swaps in on the tr/ubze pool with the exact output, asserts the
