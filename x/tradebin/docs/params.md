@@ -7,18 +7,15 @@
 - **`taker_fee_destination`** (`community_pool` | `burner`, default `burner`): Module that receives taker fees.
 - **`native_denom`** (`string`, default `ubze`): Base denom used when swapping collected fees or module balances; must exist in bank supply.
 - **Gas controls:**
-  - `order_book_extra_gas_window` (`uint64`, default `100`): Queue size allowed before surcharging order submissions.
-  - `order_book_queue_extra_gas` (`uint64`, default `25000`): Extra gas charged in `MsgCreateOrder` for each queued message beyond the window.
-  - `fill_orders_extra_gas` (`uint64`, default `5000`): Gas charged once when `MsgFillOrders` starts and again for each order it enqueues to the queue.
-  - `order_book_queue_message_scan_extra_gas` (`uint64`, default `5000`): Gas charged per queued message scanned while validating a new order’s price.
-  - `order_book_per_block_messages` (`uint64`, default `500`): Max queue messages processed in a block; processing stops at this limit and resumes next block. The queue counter resets only when the queue becomes empty.
+  - `fill_orders_extra_gas` (`uint64`, default `5000`): Gas charged once when `MsgFillOrders` starts and again for each entry, scaled by its index.
+  - `order_book_extra_gas_window` (`uint64`, default `100`), `order_book_queue_extra_gas` (`uint64`, default `25000`) and `order_book_per_block_messages` (`uint64`, default `500`): kept in the params (fields 7, 8 and 11) but unused since orders execute inside their transaction; v8.3.0 gives them a new meaning in later changes.
+  - Field 12 (`order_book_queue_message_scan_extra_gas`) was removed in v8.3.0 and is reserved.
 - **`min_native_liquidity_for_module_swap`** (`Int`, default `100000000000`): Minimum native reserves required in a native/pair pool before module-driven swaps or add-liquidity helpers execute.
 
 ### How They’re Used
 - `MsgCreateMarket` charges `create_market_fee` and forwards it to the community-pool fee collector after optional swap to `native_denom`.
-- `MsgCreateOrder` decides maker vs. taker by whether the price crosses existing opposite liquidity; it charges the corresponding fee, applies queue-surcharge gas when the global queue counter is above `order_book_extra_gas_window`, and spends scan gas per queued message while checking prices.
-- `MsgFillOrders` always uses the taker fee path and consumes `fill_orders_extra_gas` both at entry and per order it enqueues.
-- Queue processing at `EndBlock` respects `order_book_per_block_messages`; remaining messages stay queued for later blocks.
+- `MsgCreateOrder` decides maker vs. taker by whether the price crosses existing opposite liquidity and charges the corresponding fee. The matching it does in the transaction is metered by the transaction's gas; no param adds gas to it.
+- `MsgFillOrders` always uses the taker fee path and consumes `fill_orders_extra_gas` at entry and per entry.
 - Module-level swaps/add-liquidity helpers refuse to run unless the relevant native/pair pool holds more than `min_native_liquidity_for_module_swap` in native reserves.
 
 ### Updating
@@ -26,6 +23,9 @@
 - Halting a denom on the DEX is **not** a parameter. Halted denoms have their own store (one key per denom), edited by the `MsgHaltDenoms` / `MsgUnhaltDenoms` governance messages, so a halt proposal carries nothing but the denoms and the parameter set is untouched. See the halted denoms section in [README.md](README.md#halted-denoms).
 
 ## Version History
+
+### v8.3.0
+- Removed `order_book_queue_message_scan_extra_gas` (field 12, reserved): orders execute inside their transaction, there is no queue to scan. The params JSON no longer has the field.
 
 ### v8.1.0
 - Fee fields (`create_market_fee`, `market_maker_fee`, `market_taker_fee`) changed from string to `sdk.Coin` for type safety

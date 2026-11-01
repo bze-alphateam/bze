@@ -18,12 +18,6 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 		k.SetMarket(ctx, elem)
 	}
 
-	var qmCounter uint64
-	for _, elem := range genState.QueueMessageList {
-		qmCounter++
-		k.SetQueueMessage(ctx, elem)
-	}
-
 	for _, elem := range genState.OrderList {
 		if _, err := math.LegacyNewDecFromStr(elem.Price); err != nil {
 			panic(fmt.Sprintf("invalid order price %q for order %s: %s", elem.Price, elem.Id, err))
@@ -47,7 +41,6 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 	if err := k.SetParams(ctx, genState.Params); err != nil {
 		panic(err)
 	}
-	k.SetQueueMessageCounter(ctx, qmCounter)
 	k.SetOrderCounter(ctx, uint64(genState.OrderCounter))
 
 	for _, elem := range genState.LiquidityPools {
@@ -64,7 +57,6 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 	genesis.Params = k.GetParams(ctx)
 	genesis.MarketList = k.GetAllMarket(ctx)
-	genesis.QueueMessageList = k.GetAllQueueMessage(ctx)
 
 	genesis.OrderList = k.GetAllOrder(ctx)
 	genesis.AggregatedOrderList = k.GetAllAggregatedOrder(ctx)

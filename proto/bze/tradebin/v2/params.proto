@@ -33,5 +33,6 @@ message Params {
     (gogoproto.moretags) = "yaml:\"min_native_liquidity_for_module_swap\""
   ];
   uint64 orderBookPerBlockMessages = 11 [(gogoproto.moretags) = "yaml:\"order_book_per_block_messages\""];
-  uint64 orderBookQueueMessageScanExtraGas = 12 [(gogoproto.moretags) = "yaml:\"order_book_queue_message_scan_extra_gas\""];
+  // 12 was orderBookQueueMessageScanExtraGas (removed in v8.3.0)
+  reserved 12;
 }

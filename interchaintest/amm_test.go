@@ -93,8 +93,8 @@ const (
 // liquidity, single and multi-hop swaps with exact outputs, a tx fee paid in a
 // factory token and swapped to ubze in the txfeecollector EndBlock, the taker
 // fee charged in that token and burned, --gas auto with --gas-prices in ubze
-// and in a factory token, the message_id that links the order events of a
-// MsgFillOrders to the EndBlock engine events, then the swap and deposit
+// and in a factory token, the order_id that links the order events of a
+// MsgFillOrders entry in its tx, then the swap and deposit
 // directions the first steps leave out, slippage guards, a pool fee share to
 // the community pool, LP denom metadata and the create-pool, swap and
 // create-market refusals, and a factory token's pool fee share forwarded to
@@ -116,7 +116,7 @@ func TestAmm(t *testing.T) {
 	t.Run("6 tx fee in a non-native denom", s.txFeeInUsd)
 	t.Run("7 taker fee in the fee denom", s.takerFeeInUsd)
 	t.Run("8 gas auto with gas prices", s.gasAuto)
-	t.Run("9 fill orders and message ids", s.fillOrders)
+	t.Run("9 fill orders and order ids", s.fillOrders)
 	t.Run("10 swap base to quote", s.swapBaseToQuote)
 	t.Run("11 add liquidity with excess base", s.addExcessBase)
 	t.Run("12 pool with base and quote reversed", s.reversedPool)
@@ -477,10 +477,9 @@ func (s *ammSuite) gasAuto(t *testing.T) {
 	}
 }
 
-// 9. One MsgFillOrders filling three sell orders queues three messages, each
-// with its own message_id; the EndBlock executes them and every
-// OrderExecutedEvent carries the id of the message it executed. A cancel
-// carries its message id from the tx to the EndBlock cancel too.
+// 9. One MsgFillOrders filling three sell orders executes three buy orders in
+// its tx, each with its own order id: every OrderExecutedEvent carries the id
+// of the taker order it executed. A cancel executes in its tx too.
 func (s *ammSuite) fillOrders(t *testing.T) {
 	prices := []int64{2, 3, 4}
 	makerBefore := s.balances(t, s.maker, chain.Denom, s.usd, s.abc)
@@ -507,27 +506,20 @@ func (s *ammSuite) fillOrders(t *testing.T) {
 	require.NoError(t, err)
 	require.Zero(t, res.Code, res.RawLog)
 
-	// filling sell orders queues buy messages, one per order, with distinct ids
-	created := helpers.TxEvents(res, tradebinEventPrefix+"OrderCreateMessageEvent")
-	require.Len(t, created, len(prices))
-	ids := map[string]string{} // price → message id
-	for _, e := range created {
-		assert.Equal(t, "buy", e.Attributes["order_type"])
-		assert.Equal(t, s.market, e.Attributes["market_id"])
-		require.Len(t, e.Attributes["message_id"], 24, "message_id is 24 zero-filled digits")
-		ids[e.Attributes["price"]] = e.Attributes["message_id"]
-	}
-	require.Len(t, ids, len(prices), "one message per price")
-	require.Len(t, uniq(ids), len(prices), "message ids are distinct")
-
-	executed := helpers.EventsWith(s.blockEvents(t, res.Height), map[string]string{"market_id": s.market, "taker": s.taker.FormattedAddress()})
-	executed = filterType(executed, tradebinEventPrefix+"OrderExecutedEvent")
+	// filling sell orders executes buy orders, one per entry, with distinct ids
+	executed := helpers.EventsWith(helpers.TxEvents(res, tradebinEventPrefix+"OrderExecutedEvent"), map[string]string{"market_id": s.market, "taker": s.taker.FormattedAddress()})
 	require.Len(t, executed, len(prices), "one execution per filled order")
+	ids := map[string]string{} // price → taker order id
 	for _, e := range executed {
-		assert.Equal(t, ids[e.Attributes["price"]], e.Attributes["message_id"], "execution at %s carries its message id", e.Attributes["price"])
+		require.Len(t, e.Attributes["order_id"], 24, "order_id is 24 zero-filled digits")
+		ids[e.Attributes["price"]] = e.Attributes["order_id"]
+		assert.Equal(t, "sell", e.Attributes["order_type"], "the maker side")
 		assert.Equal(t, sdkmath.NewInt(ammOrderAmount).String(), e.Attributes["amount"])
 		assert.Equal(t, s.maker.FormattedAddress(), e.Attributes["maker"])
 	}
+	require.Len(t, ids, len(prices), "one execution per price")
+	require.Len(t, uniq(ids), len(prices), "order ids are distinct")
+	require.Empty(t, helpers.TxEvents(res, tradebinEventPrefix+"OrderSavedEvent"), "a fill never rests")
 
 	takerFee := s.params.MarketTakerFee.Amount.Add(s.txFee(t, res))
 	wantTaker := takerBefore.Add(sdk.NewInt64Coin(s.abc, ammOrderAmount*int64(len(prices)))).Sub(sdk.NewCoin(s.usd, cost), sdk.NewCoin(chain.Denom, takerFee))
@@ -538,25 +530,20 @@ func (s *ammSuite) fillOrders(t *testing.T) {
 	s.createAndCancel(t)
 }
 
-// createAndCancel places a sell order nobody fills and cancels it: the
-// cancel's message id goes from the tx event to the EndBlock event.
+// createAndCancel places a sell order nobody fills and cancels it: both
+// execute in their own tx.
 func (s *ammSuite) createAndCancel(t *testing.T) {
 	before := s.balance(t, s.maker.FormattedAddress(), s.abc)
 	res := s.mustExec(t, s.maker, "tradebin", "create-order", "sell", sdkmath.NewInt(ammOrderAmount).String(), "10", s.market)
-	createID := s.requireTxEvent(t, res, "OrderCreateMessageEvent", map[string]string{"market_id": s.market, "price": "10"}).Attributes["message_id"]
-	saved := helpers.EventsWith(filterType(s.blockEvents(t, res.Height), tradebinEventPrefix+"OrderSavedEvent"), map[string]string{"message_id": createID})
-	require.Len(t, saved, 1, "the order is saved by the EndBlock that processed message %s", createID)
-	orderID := saved[0].Attributes["id"]
+	saved := s.requireTxEvent(t, res, "OrderSavedEvent", map[string]string{"market_id": s.market, "price": "10"})
+	orderID := saved.Attributes["id"]
+	require.Len(t, orderID, 24)
+	assert.Equal(t, orderID, saved.Attributes["order_id"], "a resting order keeps the id it was placed with")
 	require.Equal(t, before.SubRaw(ammOrderAmount), s.balance(t, s.maker.FormattedAddress(), s.abc), "order amount locked")
 
 	res = s.mustExec(t, s.maker, "tradebin", "cancel-order", s.market, orderID, "sell")
-	cancelID := s.requireTxEvent(t, res, "OrderCancelMessageEvent", map[string]string{"orderId": orderID}).Attributes["message_id"]
-	// ids are unique only while queued: the counter restarts once the queue
-	// empties, so the cancel may reuse the create's id
-	require.Len(t, cancelID, 24)
-	canceled := helpers.EventsWith(filterType(s.blockEvents(t, res.Height), tradebinEventPrefix+"OrderCanceledEvent"), map[string]string{"id": orderID})
-	require.Len(t, canceled, 1)
-	assert.Equal(t, cancelID, canceled[0].Attributes["message_id"])
+	canceled := s.requireTxEvent(t, res, "OrderCanceledEvent", map[string]string{"id": orderID})
+	assert.Equal(t, orderID, canceled.Attributes["order_id"])
 	require.Equal(t, before, s.balance(t, s.maker.FormattedAddress(), s.abc), "cancel refunds the order amount")
 }
 

@@ -11,18 +11,17 @@ import (
 
 func validV2Params() v2types.Params {
 	return v2types.Params{
-		CreateMarketFee:                   sdk.NewInt64Coin(denomBze, 1000),
-		MarketMakerFee:                    sdk.NewInt64Coin(denomBze, 100),
-		MarketTakerFee:                    sdk.NewInt64Coin(denomBze, 200),
-		MakerFeeDestination:               v2types.FeeDestinationCommunityPool,
-		TakerFeeDestination:               v2types.FeeDestinationBurnerModule,
-		NativeDenom:                       denomBze,
-		OrderBookExtraGasWindow:           100,
-		OrderBookQueueExtraGas:            25000,
-		FillOrdersExtraGas:                5000,
-		MinNativeLiquidityForModuleSwap:   math.NewInt(100000000000),
-		OrderBookPerBlockMessages:         500,
-		OrderBookQueueMessageScanExtraGas: 5000,
+		CreateMarketFee:                 sdk.NewInt64Coin(denomBze, 1000),
+		MarketMakerFee:                  sdk.NewInt64Coin(denomBze, 100),
+		MarketTakerFee:                  sdk.NewInt64Coin(denomBze, 200),
+		MakerFeeDestination:             v2types.FeeDestinationCommunityPool,
+		TakerFeeDestination:             v2types.FeeDestinationBurnerModule,
+		NativeDenom:                     denomBze,
+		OrderBookExtraGasWindow:         100,
+		OrderBookQueueExtraGas:          25000,
+		FillOrdersExtraGas:              5000,
+		MinNativeLiquidityForModuleSwap: math.NewInt(100000000000),
+		OrderBookPerBlockMessages:       500,
 	}
 }
 

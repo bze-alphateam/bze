@@ -563,922 +563,6 @@ func (x *fastReflection_Market) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_QueueMessage              protoreflect.MessageDescriptor
-	fd_QueueMessage_message_id   protoreflect.FieldDescriptor
-	fd_QueueMessage_market_id    protoreflect.FieldDescriptor
-	fd_QueueMessage_message_type protoreflect.FieldDescriptor
-	fd_QueueMessage_amount       protoreflect.FieldDescriptor
-	fd_QueueMessage_price        protoreflect.FieldDescriptor
-	fd_QueueMessage_created_at   protoreflect.FieldDescriptor
-	fd_QueueMessage_order_id     protoreflect.FieldDescriptor
-	fd_QueueMessage_order_type   protoreflect.FieldDescriptor
-	fd_QueueMessage_owner        protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_bze_tradebin_store_proto_init()
-	md_QueueMessage = File_bze_tradebin_store_proto.Messages().ByName("QueueMessage")
-	fd_QueueMessage_message_id = md_QueueMessage.Fields().ByName("message_id")
-	fd_QueueMessage_market_id = md_QueueMessage.Fields().ByName("market_id")
-	fd_QueueMessage_message_type = md_QueueMessage.Fields().ByName("message_type")
-	fd_QueueMessage_amount = md_QueueMessage.Fields().ByName("amount")
-	fd_QueueMessage_price = md_QueueMessage.Fields().ByName("price")
-	fd_QueueMessage_created_at = md_QueueMessage.Fields().ByName("created_at")
-	fd_QueueMessage_order_id = md_QueueMessage.Fields().ByName("order_id")
-	fd_QueueMessage_order_type = md_QueueMessage.Fields().ByName("order_type")
-	fd_QueueMessage_owner = md_QueueMessage.Fields().ByName("owner")
-}
-
-var _ protoreflect.Message = (*fastReflection_QueueMessage)(nil)
-
-type fastReflection_QueueMessage QueueMessage
-
-func (x *QueueMessage) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueueMessage)(x)
-}
-
-func (x *QueueMessage) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_store_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_QueueMessage_messageType fastReflection_QueueMessage_messageType
-var _ protoreflect.MessageType = fastReflection_QueueMessage_messageType{}
-
-type fastReflection_QueueMessage_messageType struct{}
-
-func (x fastReflection_QueueMessage_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueueMessage)(nil)
-}
-func (x fastReflection_QueueMessage_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueueMessage)
-}
-func (x fastReflection_QueueMessage_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueueMessage
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_QueueMessage) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueueMessage
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueueMessage) Type() protoreflect.MessageType {
-	return _fastReflection_QueueMessage_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueueMessage) New() protoreflect.Message {
-	return new(fastReflection_QueueMessage)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueueMessage) Interface() protoreflect.ProtoMessage {
-	return (*QueueMessage)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_QueueMessage) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.MessageId != "" {
-		value := protoreflect.ValueOfString(x.MessageId)
-		if !f(fd_QueueMessage_message_id, value) {
-			return
-		}
-	}
-	if x.MarketId != "" {
-		value := protoreflect.ValueOfString(x.MarketId)
-		if !f(fd_QueueMessage_market_id, value) {
-			return
-		}
-	}
-	if x.MessageType != "" {
-		value := protoreflect.ValueOfString(x.MessageType)
-		if !f(fd_QueueMessage_message_type, value) {
-			return
-		}
-	}
-	if x.Amount != "" {
-		value := protoreflect.ValueOfString(x.Amount)
-		if !f(fd_QueueMessage_amount, value) {
-			return
-		}
-	}
-	if x.Price != "" {
-		value := protoreflect.ValueOfString(x.Price)
-		if !f(fd_QueueMessage_price, value) {
-			return
-		}
-	}
-	if x.CreatedAt != int64(0) {
-		value := protoreflect.ValueOfInt64(x.CreatedAt)
-		if !f(fd_QueueMessage_created_at, value) {
-			return
-		}
-	}
-	if x.OrderId != "" {
-		value := protoreflect.ValueOfString(x.OrderId)
-		if !f(fd_QueueMessage_order_id, value) {
-			return
-		}
-	}
-	if x.OrderType != "" {
-		value := protoreflect.ValueOfString(x.OrderType)
-		if !f(fd_QueueMessage_order_type, value) {
-			return
-		}
-	}
-	if x.Owner != "" {
-		value := protoreflect.ValueOfString(x.Owner)
-		if !f(fd_QueueMessage_owner, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueueMessage) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "bze.tradebin.QueueMessage.message_id":
-		return x.MessageId != ""
-	case "bze.tradebin.QueueMessage.market_id":
-		return x.MarketId != ""
-	case "bze.tradebin.QueueMessage.message_type":
-		return x.MessageType != ""
-	case "bze.tradebin.QueueMessage.amount":
-		return x.Amount != ""
-	case "bze.tradebin.QueueMessage.price":
-		return x.Price != ""
-	case "bze.tradebin.QueueMessage.created_at":
-		return x.CreatedAt != int64(0)
-	case "bze.tradebin.QueueMessage.order_id":
-		return x.OrderId != ""
-	case "bze.tradebin.QueueMessage.order_type":
-		return x.OrderType != ""
-	case "bze.tradebin.QueueMessage.owner":
-		return x.Owner != ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.QueueMessage"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.QueueMessage does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueueMessage) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "bze.tradebin.QueueMessage.message_id":
-		x.MessageId = ""
-	case "bze.tradebin.QueueMessage.market_id":
-		x.MarketId = ""
-	case "bze.tradebin.QueueMessage.message_type":
-		x.MessageType = ""
-	case "bze.tradebin.QueueMessage.amount":
-		x.Amount = ""
-	case "bze.tradebin.QueueMessage.price":
-		x.Price = ""
-	case "bze.tradebin.QueueMessage.created_at":
-		x.CreatedAt = int64(0)
-	case "bze.tradebin.QueueMessage.order_id":
-		x.OrderId = ""
-	case "bze.tradebin.QueueMessage.order_type":
-		x.OrderType = ""
-	case "bze.tradebin.QueueMessage.owner":
-		x.Owner = ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.QueueMessage"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.QueueMessage does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueueMessage) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "bze.tradebin.QueueMessage.message_id":
-		value := x.MessageId
-		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.QueueMessage.market_id":
-		value := x.MarketId
-		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.QueueMessage.message_type":
-		value := x.MessageType
-		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.QueueMessage.amount":
-		value := x.Amount
-		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.QueueMessage.price":
-		value := x.Price
-		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.QueueMessage.created_at":
-		value := x.CreatedAt
-		return protoreflect.ValueOfInt64(value)
-	case "bze.tradebin.QueueMessage.order_id":
-		value := x.OrderId
-		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.QueueMessage.order_type":
-		value := x.OrderType
-		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.QueueMessage.owner":
-		value := x.Owner
-		return protoreflect.ValueOfString(value)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.QueueMessage"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.QueueMessage does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueueMessage) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "bze.tradebin.QueueMessage.message_id":
-		x.MessageId = value.Interface().(string)
-	case "bze.tradebin.QueueMessage.market_id":
-		x.MarketId = value.Interface().(string)
-	case "bze.tradebin.QueueMessage.message_type":
-		x.MessageType = value.Interface().(string)
-	case "bze.tradebin.QueueMessage.amount":
-		x.Amount = value.Interface().(string)
-	case "bze.tradebin.QueueMessage.price":
-		x.Price = value.Interface().(string)
-	case "bze.tradebin.QueueMessage.created_at":
-		x.CreatedAt = value.Int()
-	case "bze.tradebin.QueueMessage.order_id":
-		x.OrderId = value.Interface().(string)
-	case "bze.tradebin.QueueMessage.order_type":
-		x.OrderType = value.Interface().(string)
-	case "bze.tradebin.QueueMessage.owner":
-		x.Owner = value.Interface().(string)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.QueueMessage"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.QueueMessage does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueueMessage) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "bze.tradebin.QueueMessage.message_id":
-		panic(fmt.Errorf("field message_id of message bze.tradebin.QueueMessage is not mutable"))
-	case "bze.tradebin.QueueMessage.market_id":
-		panic(fmt.Errorf("field market_id of message bze.tradebin.QueueMessage is not mutable"))
-	case "bze.tradebin.QueueMessage.message_type":
-		panic(fmt.Errorf("field message_type of message bze.tradebin.QueueMessage is not mutable"))
-	case "bze.tradebin.QueueMessage.amount":
-		panic(fmt.Errorf("field amount of message bze.tradebin.QueueMessage is not mutable"))
-	case "bze.tradebin.QueueMessage.price":
-		panic(fmt.Errorf("field price of message bze.tradebin.QueueMessage is not mutable"))
-	case "bze.tradebin.QueueMessage.created_at":
-		panic(fmt.Errorf("field created_at of message bze.tradebin.QueueMessage is not mutable"))
-	case "bze.tradebin.QueueMessage.order_id":
-		panic(fmt.Errorf("field order_id of message bze.tradebin.QueueMessage is not mutable"))
-	case "bze.tradebin.QueueMessage.order_type":
-		panic(fmt.Errorf("field order_type of message bze.tradebin.QueueMessage is not mutable"))
-	case "bze.tradebin.QueueMessage.owner":
-		panic(fmt.Errorf("field owner of message bze.tradebin.QueueMessage is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.QueueMessage"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.QueueMessage does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueueMessage) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "bze.tradebin.QueueMessage.message_id":
-		return protoreflect.ValueOfString("")
-	case "bze.tradebin.QueueMessage.market_id":
-		return protoreflect.ValueOfString("")
-	case "bze.tradebin.QueueMessage.message_type":
-		return protoreflect.ValueOfString("")
-	case "bze.tradebin.QueueMessage.amount":
-		return protoreflect.ValueOfString("")
-	case "bze.tradebin.QueueMessage.price":
-		return protoreflect.ValueOfString("")
-	case "bze.tradebin.QueueMessage.created_at":
-		return protoreflect.ValueOfInt64(int64(0))
-	case "bze.tradebin.QueueMessage.order_id":
-		return protoreflect.ValueOfString("")
-	case "bze.tradebin.QueueMessage.order_type":
-		return protoreflect.ValueOfString("")
-	case "bze.tradebin.QueueMessage.owner":
-		return protoreflect.ValueOfString("")
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.QueueMessage"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.QueueMessage does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueueMessage) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in bze.tradebin.QueueMessage", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueueMessage) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueueMessage) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_QueueMessage) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_QueueMessage) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueueMessage)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		l = len(x.MessageId)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.MarketId)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.MessageType)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.Amount)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.Price)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.CreatedAt != 0 {
-			n += 1 + runtime.Sov(uint64(x.CreatedAt))
-		}
-		l = len(x.OrderId)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.OrderType)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.Owner)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueueMessage)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.Owner) > 0 {
-			i -= len(x.Owner)
-			copy(dAtA[i:], x.Owner)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Owner)))
-			i--
-			dAtA[i] = 0x4a
-		}
-		if len(x.OrderType) > 0 {
-			i -= len(x.OrderType)
-			copy(dAtA[i:], x.OrderType)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OrderType)))
-			i--
-			dAtA[i] = 0x42
-		}
-		if len(x.OrderId) > 0 {
-			i -= len(x.OrderId)
-			copy(dAtA[i:], x.OrderId)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OrderId)))
-			i--
-			dAtA[i] = 0x3a
-		}
-		if x.CreatedAt != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.CreatedAt))
-			i--
-			dAtA[i] = 0x30
-		}
-		if len(x.Price) > 0 {
-			i -= len(x.Price)
-			copy(dAtA[i:], x.Price)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Price)))
-			i--
-			dAtA[i] = 0x2a
-		}
-		if len(x.Amount) > 0 {
-			i -= len(x.Amount)
-			copy(dAtA[i:], x.Amount)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Amount)))
-			i--
-			dAtA[i] = 0x22
-		}
-		if len(x.MessageType) > 0 {
-			i -= len(x.MessageType)
-			copy(dAtA[i:], x.MessageType)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MessageType)))
-			i--
-			dAtA[i] = 0x1a
-		}
-		if len(x.MarketId) > 0 {
-			i -= len(x.MarketId)
-			copy(dAtA[i:], x.MarketId)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MarketId)))
-			i--
-			dAtA[i] = 0x12
-		}
-		if len(x.MessageId) > 0 {
-			i -= len(x.MessageId)
-			copy(dAtA[i:], x.MessageId)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MessageId)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueueMessage)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueueMessage: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueueMessage: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MessageId", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.MessageId = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 2:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.MarketId = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 3:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MessageType", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.MessageType = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 4:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Amount = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 5:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Price", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Price = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 6:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CreatedAt", wireType)
-				}
-				x.CreatedAt = 0
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					x.CreatedAt |= int64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-			case 7:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OrderId", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.OrderId = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 8:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OrderType", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.OrderType = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 9:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Owner = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
 	md_Order            protoreflect.MessageDescriptor
 	fd_Order_id         protoreflect.FieldDescriptor
 	fd_Order_market_id  protoreflect.FieldDescriptor
@@ -1510,7 +594,7 @@ func (x *Order) ProtoReflect() protoreflect.Message {
 }
 
 func (x *Order) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_store_proto_msgTypes[2]
+	mi := &file_bze_tradebin_store_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2290,7 +1374,7 @@ func (x *OrderReference) ProtoReflect() protoreflect.Message {
 }
 
 func (x *OrderReference) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_store_proto_msgTypes[3]
+	mi := &file_bze_tradebin_store_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2840,7 +1924,7 @@ func (x *AggregatedOrder) ProtoReflect() protoreflect.Message {
 }
 
 func (x *AggregatedOrder) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_store_proto_msgTypes[4]
+	mi := &file_bze_tradebin_store_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3458,7 +2542,7 @@ func (x *HistoryOrder) ProtoReflect() protoreflect.Message {
 }
 
 func (x *HistoryOrder) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_store_proto_msgTypes[5]
+	mi := &file_bze_tradebin_store_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4238,7 +3322,7 @@ func (x *UserDust) ProtoReflect() protoreflect.Message {
 }
 
 func (x *UserDust) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_store_proto_msgTypes[6]
+	mi := &file_bze_tradebin_store_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4800,7 +3884,7 @@ func (x *LiquidityPool) ProtoReflect() protoreflect.Message {
 }
 
 func (x *LiquidityPool) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_store_proto_msgTypes[7]
+	mi := &file_bze_tradebin_store_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5787,7 +4871,7 @@ func (x *FeeDestination) ProtoReflect() protoreflect.Message {
 }
 
 func (x *FeeDestination) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_store_proto_msgTypes[8]
+	mi := &file_bze_tradebin_store_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6375,105 +5459,6 @@ func (x *Market) GetCreator() string {
 	return ""
 }
 
-type QueueMessage struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	MessageId   string `protobuf:"bytes,1,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
-	MarketId    string `protobuf:"bytes,2,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
-	MessageType string `protobuf:"bytes,3,opt,name=message_type,json=messageType,proto3" json:"message_type,omitempty"`
-	Amount      string `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
-	Price       string `protobuf:"bytes,5,opt,name=price,proto3" json:"price,omitempty"`
-	CreatedAt   int64  `protobuf:"varint,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	OrderId     string `protobuf:"bytes,7,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
-	OrderType   string `protobuf:"bytes,8,opt,name=order_type,json=orderType,proto3" json:"order_type,omitempty"`
-	Owner       string `protobuf:"bytes,9,opt,name=owner,proto3" json:"owner,omitempty"`
-}
-
-func (x *QueueMessage) Reset() {
-	*x = QueueMessage{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_store_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *QueueMessage) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*QueueMessage) ProtoMessage() {}
-
-// Deprecated: Use QueueMessage.ProtoReflect.Descriptor instead.
-func (*QueueMessage) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_store_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *QueueMessage) GetMessageId() string {
-	if x != nil {
-		return x.MessageId
-	}
-	return ""
-}
-
-func (x *QueueMessage) GetMarketId() string {
-	if x != nil {
-		return x.MarketId
-	}
-	return ""
-}
-
-func (x *QueueMessage) GetMessageType() string {
-	if x != nil {
-		return x.MessageType
-	}
-	return ""
-}
-
-func (x *QueueMessage) GetAmount() string {
-	if x != nil {
-		return x.Amount
-	}
-	return ""
-}
-
-func (x *QueueMessage) GetPrice() string {
-	if x != nil {
-		return x.Price
-	}
-	return ""
-}
-
-func (x *QueueMessage) GetCreatedAt() int64 {
-	if x != nil {
-		return x.CreatedAt
-	}
-	return 0
-}
-
-func (x *QueueMessage) GetOrderId() string {
-	if x != nil {
-		return x.OrderId
-	}
-	return ""
-}
-
-func (x *QueueMessage) GetOrderType() string {
-	if x != nil {
-		return x.OrderType
-	}
-	return ""
-}
-
-func (x *QueueMessage) GetOwner() string {
-	if x != nil {
-		return x.Owner
-	}
-	return ""
-}
-
 type Order struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -6491,7 +5476,7 @@ type Order struct {
 func (x *Order) Reset() {
 	*x = Order{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_store_proto_msgTypes[2]
+		mi := &file_bze_tradebin_store_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6505,7 +5490,7 @@ func (*Order) ProtoMessage() {}
 
 // Deprecated: Use Order.ProtoReflect.Descriptor instead.
 func (*Order) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_store_proto_rawDescGZIP(), []int{2}
+	return file_bze_tradebin_store_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Order) GetId() string {
@@ -6570,7 +5555,7 @@ type OrderReference struct {
 func (x *OrderReference) Reset() {
 	*x = OrderReference{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_store_proto_msgTypes[3]
+		mi := &file_bze_tradebin_store_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6584,7 +5569,7 @@ func (*OrderReference) ProtoMessage() {}
 
 // Deprecated: Use OrderReference.ProtoReflect.Descriptor instead.
 func (*OrderReference) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_store_proto_rawDescGZIP(), []int{3}
+	return file_bze_tradebin_store_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *OrderReference) GetId() string {
@@ -6622,7 +5607,7 @@ type AggregatedOrder struct {
 func (x *AggregatedOrder) Reset() {
 	*x = AggregatedOrder{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_store_proto_msgTypes[4]
+		mi := &file_bze_tradebin_store_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6636,7 +5621,7 @@ func (*AggregatedOrder) ProtoMessage() {}
 
 // Deprecated: Use AggregatedOrder.ProtoReflect.Descriptor instead.
 func (*AggregatedOrder) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_store_proto_rawDescGZIP(), []int{4}
+	return file_bze_tradebin_store_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *AggregatedOrder) GetMarketId() string {
@@ -6684,7 +5669,7 @@ type HistoryOrder struct {
 func (x *HistoryOrder) Reset() {
 	*x = HistoryOrder{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_store_proto_msgTypes[5]
+		mi := &file_bze_tradebin_store_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6698,7 +5683,7 @@ func (*HistoryOrder) ProtoMessage() {}
 
 // Deprecated: Use HistoryOrder.ProtoReflect.Descriptor instead.
 func (*HistoryOrder) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_store_proto_rawDescGZIP(), []int{5}
+	return file_bze_tradebin_store_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *HistoryOrder) GetMarketId() string {
@@ -6763,7 +5748,7 @@ type UserDust struct {
 func (x *UserDust) Reset() {
 	*x = UserDust{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_store_proto_msgTypes[6]
+		mi := &file_bze_tradebin_store_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6777,7 +5762,7 @@ func (*UserDust) ProtoMessage() {}
 
 // Deprecated: Use UserDust.ProtoReflect.Descriptor instead.
 func (*UserDust) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_store_proto_rawDescGZIP(), []int{6}
+	return file_bze_tradebin_store_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *UserDust) GetOwner() string {
@@ -6821,7 +5806,7 @@ type LiquidityPool struct {
 func (x *LiquidityPool) Reset() {
 	*x = LiquidityPool{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_store_proto_msgTypes[7]
+		mi := &file_bze_tradebin_store_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6835,7 +5820,7 @@ func (*LiquidityPool) ProtoMessage() {}
 
 // Deprecated: Use LiquidityPool.ProtoReflect.Descriptor instead.
 func (*LiquidityPool) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_store_proto_rawDescGZIP(), []int{7}
+	return file_bze_tradebin_store_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *LiquidityPool) GetId() string {
@@ -6921,7 +5906,7 @@ type FeeDestination struct {
 func (x *FeeDestination) Reset() {
 	*x = FeeDestination{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_store_proto_msgTypes[8]
+		mi := &file_bze_tradebin_store_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6935,7 +5920,7 @@ func (*FeeDestination) ProtoMessage() {}
 
 // Deprecated: Use FeeDestination.ProtoReflect.Descriptor instead.
 func (*FeeDestination) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_store_proto_rawDescGZIP(), []int{8}
+	return file_bze_tradebin_store_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *FeeDestination) GetTreasury() string {
@@ -6972,115 +5957,98 @@ var file_bze_tradebin_store_proto_rawDesc = []byte{
 	0x14, 0x0a, 0x05, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
 	0x71, 0x75, 0x6f, 0x74, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72,
 	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x22,
-	0x8a, 0x02, 0x0a, 0x0c, 0x51, 0x75, 0x65, 0x75, 0x65, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65,
-	0x12, 0x1d, 0x0a, 0x0a, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x49, 0x64, 0x12,
-	0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x49, 0x64, 0x12, 0x21, 0x0a, 0x0c,
-	0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x0b, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x54, 0x79, 0x70, 0x65, 0x12,
-	0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65,
-	0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x12, 0x1d, 0x0a,
-	0x0a, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x5f, 0x61, 0x74, 0x18, 0x06, 0x20, 0x01, 0x28,
-	0x03, 0x52, 0x09, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x12, 0x19, 0x0a, 0x08,
-	0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07,
-	0x6f, 0x72, 0x64, 0x65, 0x72, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72,
-	0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x08, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f, 0x72, 0x64,
-	0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18,
-	0x09, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x22, 0xb6, 0x01, 0x0a,
-	0x05, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74,
-	0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b, 0x65,
-	0x74, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70,
-	0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x54, 0x79,
-	0x70, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x72,
-	0x69, 0x63, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65,
-	0x12, 0x1d, 0x0a, 0x0a, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x5f, 0x61, 0x74, 0x18, 0x06,
-	0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x12,
-	0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
-	0x6f, 0x77, 0x6e, 0x65, 0x72, 0x22, 0x5c, 0x0a, 0x0e, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x52, 0x65,
-	0x66, 0x65, 0x72, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x72, 0x6b, 0x65,
-	0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b,
-	0x65, 0x74, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x74, 0x79,
-	0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x54,
-	0x79, 0x70, 0x65, 0x22, 0x7b, 0x0a, 0x0f, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65,
-	0x64, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74,
-	0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b, 0x65,
-	0x74, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70,
-	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x54, 0x79,
-	0x70, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x72,
-	0x69, 0x63, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65,
-	0x22, 0xc5, 0x01, 0x0a, 0x0c, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x79, 0x4f, 0x72, 0x64, 0x65,
-	0x72, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x49, 0x64, 0x12, 0x1d,
-	0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x09, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x12, 0x16, 0x0a,
-	0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61,
-	0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x18, 0x04,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x65,
-	0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x64, 0x5f, 0x61, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03,
-	0x52, 0x0a, 0x65, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x64, 0x41, 0x74, 0x12, 0x14, 0x0a, 0x05,
-	0x6d, 0x61, 0x6b, 0x65, 0x72, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6d, 0x61, 0x6b,
-	0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x61, 0x6b, 0x65, 0x72, 0x18, 0x07, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x05, 0x74, 0x61, 0x6b, 0x65, 0x72, 0x22, 0x4e, 0x0a, 0x08, 0x55, 0x73, 0x65, 0x72,
-	0x44, 0x75, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d,
-	0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75,
-	0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x03, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0x8c, 0x03, 0x0a, 0x0d, 0x4c, 0x69, 0x71,
-	0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x62, 0x61,
-	0x73, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x62, 0x61, 0x73, 0x65, 0x12, 0x14,
-	0x0a, 0x05, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x71,
-	0x75, 0x6f, 0x74, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x6c, 0x70, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d,
-	0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6c, 0x70, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12,
-	0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x35, 0x0a, 0x03, 0x66, 0x65, 0x65,
-	0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x42, 0x23, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74,
-	0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63, 0x52, 0x03, 0x66, 0x65, 0x65,
-	0x12, 0x37, 0x0a, 0x08, 0x66, 0x65, 0x65, 0x5f, 0x64, 0x65, 0x73, 0x74, 0x18, 0x07, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69,
-	0x6e, 0x2e, 0x46, 0x65, 0x65, 0x44, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-	0x52, 0x07, 0x66, 0x65, 0x65, 0x44, 0x65, 0x73, 0x74, 0x12, 0x40, 0x0a, 0x0c, 0x72, 0x65, 0x73,
-	0x65, 0x72, 0x76, 0x65, 0x5f, 0x62, 0x61, 0x73, 0x65, 0x18, 0x08, 0x20, 0x01, 0x28, 0x09, 0x42,
-	0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73,
-	0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x0b,
-	0x72, 0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x42, 0x61, 0x73, 0x65, 0x12, 0x42, 0x0a, 0x0d, 0x72,
-	0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x5f, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x18, 0x09, 0x20, 0x01,
+	0xb6, 0x01, 0x0a, 0x05, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x72,
+	0x6b, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61,
+	0x72, 0x6b, 0x65, 0x74, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f,
+	0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f, 0x72, 0x64, 0x65,
+	0x72, 0x54, 0x79, 0x70, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x14, 0x0a,
+	0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x70, 0x72,
+	0x69, 0x63, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x5f, 0x61,
+	0x74, 0x18, 0x06, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64,
+	0x41, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x07, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x22, 0x5c, 0x0a, 0x0e, 0x4f, 0x72, 0x64, 0x65,
+	0x72, 0x52, 0x65, 0x66, 0x65, 0x72, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61,
+	0x72, 0x6b, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d,
+	0x61, 0x72, 0x6b, 0x65, 0x74, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72,
+	0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f, 0x72, 0x64,
+	0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x22, 0x7b, 0x0a, 0x0f, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67,
+	0x61, 0x74, 0x65, 0x64, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x72,
+	0x6b, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61,
+	0x72, 0x6b, 0x65, 0x74, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f,
+	0x74, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f, 0x72, 0x64, 0x65,
+	0x72, 0x54, 0x79, 0x70, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x14, 0x0a,
+	0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x70, 0x72,
+	0x69, 0x63, 0x65, 0x22, 0xc5, 0x01, 0x0a, 0x0c, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x79, 0x4f,
+	0x72, 0x64, 0x65, 0x72, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x5f, 0x69,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x49,
+	0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65,
+	0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x72, 0x69, 0x63,
+	0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x12, 0x1f,
+	0x0a, 0x0b, 0x65, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x64, 0x5f, 0x61, 0x74, 0x18, 0x05, 0x20,
+	0x01, 0x28, 0x03, 0x52, 0x0a, 0x65, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x64, 0x41, 0x74, 0x12,
+	0x14, 0x0a, 0x05, 0x6d, 0x61, 0x6b, 0x65, 0x72, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
+	0x6d, 0x61, 0x6b, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x61, 0x6b, 0x65, 0x72, 0x18, 0x07,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x61, 0x6b, 0x65, 0x72, 0x22, 0x4e, 0x0a, 0x08, 0x55,
+	0x73, 0x65, 0x72, 0x44, 0x75, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x16, 0x0a,
+	0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61,
+	0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0x8c, 0x03, 0x0a, 0x0d,
+	0x4c, 0x69, 0x71, 0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x50, 0x6f, 0x6f, 0x6c, 0x12, 0x0e, 0x0a,
+	0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x12, 0x0a,
+	0x04, 0x62, 0x61, 0x73, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x62, 0x61, 0x73,
+	0x65, 0x12, 0x14, 0x0a, 0x05, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x05, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x6c, 0x70, 0x5f, 0x64, 0x65,
+	0x6e, 0x6f, 0x6d, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6c, 0x70, 0x44, 0x65, 0x6e,
+	0x6f, 0x6d, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x05, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x35, 0x0a, 0x03,
+	0x66, 0x65, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x42, 0x23, 0xc8, 0xde, 0x1f, 0x00, 0xda,
+	0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f,
+	0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63, 0x52, 0x03,
+	0x66, 0x65, 0x65, 0x12, 0x37, 0x0a, 0x08, 0x66, 0x65, 0x65, 0x5f, 0x64, 0x65, 0x73, 0x74, 0x18,
+	0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64,
+	0x65, 0x62, 0x69, 0x6e, 0x2e, 0x46, 0x65, 0x65, 0x44, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x52, 0x07, 0x66, 0x65, 0x65, 0x44, 0x65, 0x73, 0x74, 0x12, 0x40, 0x0a, 0x0c,
+	0x72, 0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x5f, 0x62, 0x61, 0x73, 0x65, 0x18, 0x08, 0x20, 0x01,
 	0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e,
-	0x74, 0x52, 0x0c, 0x72, 0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x51, 0x75, 0x6f, 0x74, 0x65, 0x12,
-	0x16, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x62, 0x6c, 0x65, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x08, 0x52,
-	0x06, 0x73, 0x74, 0x61, 0x62, 0x6c, 0x65, 0x22, 0xd1, 0x01, 0x0a, 0x0e, 0x46, 0x65, 0x65, 0x44,
-	0x65, 0x73, 0x74, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x3f, 0x0a, 0x08, 0x74, 0x72,
-	0x65, 0x61, 0x73, 0x75, 0x72, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x23, 0xc8, 0xde,
-	0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e,
-	0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65,
-	0x63, 0x52, 0x08, 0x74, 0x72, 0x65, 0x61, 0x73, 0x75, 0x72, 0x79, 0x12, 0x3b, 0x0a, 0x06, 0x62,
-	0x75, 0x72, 0x6e, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x23, 0xc8, 0xde, 0x1f,
-	0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
-	0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63,
-	0x52, 0x06, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x72, 0x12, 0x41, 0x0a, 0x09, 0x70, 0x72, 0x6f, 0x76,
-	0x69, 0x64, 0x65, 0x72, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x23, 0xc8, 0xde, 0x1f,
-	0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
-	0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63,
-	0x52, 0x09, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x73, 0x42, 0x9e, 0x01, 0x0a, 0x10,
-	0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e,
-	0x42, 0x0a, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2d,
-	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61,
-	0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69,
-	0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xa2, 0x02, 0x03,
-	0x42, 0x54, 0x58, 0xaa, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x2e, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62,
-	0x69, 0x6e, 0xca, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69,
-	0x6e, 0xe2, 0x02, 0x18, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e,
-	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x42,
-	0x7a, 0x65, 0x3a, 0x3a, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x74, 0x52, 0x0b, 0x72, 0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x42, 0x61, 0x73, 0x65, 0x12, 0x42,
+	0x0a, 0x0d, 0x72, 0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x5f, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x18,
+	0x09, 0x20, 0x01, 0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68,
+	0x2e, 0x49, 0x6e, 0x74, 0x52, 0x0c, 0x72, 0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x51, 0x75, 0x6f,
+	0x74, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x62, 0x6c, 0x65, 0x18, 0x0a, 0x20, 0x01,
+	0x28, 0x08, 0x52, 0x06, 0x73, 0x74, 0x61, 0x62, 0x6c, 0x65, 0x22, 0xd1, 0x01, 0x0a, 0x0e, 0x46,
+	0x65, 0x65, 0x44, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x3f, 0x0a,
+	0x08, 0x74, 0x72, 0x65, 0x61, 0x73, 0x75, 0x72, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x23, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73,
+	0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63,
+	0x79, 0x44, 0x65, 0x63, 0x52, 0x08, 0x74, 0x72, 0x65, 0x61, 0x73, 0x75, 0x72, 0x79, 0x12, 0x3b,
+	0x0a, 0x06, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x23,
+	0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64,
+	0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79,
+	0x44, 0x65, 0x63, 0x52, 0x06, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x72, 0x12, 0x41, 0x0a, 0x09, 0x70,
+	0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x23,
+	0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64,
+	0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79,
+	0x44, 0x65, 0x63, 0x52, 0x09, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x73, 0x42, 0x9e,
+	0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64, 0x65,
+	0x62, 0x69, 0x6e, 0x42, 0x0a, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a,
+	0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f,
+	0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e,
+	0xa2, 0x02, 0x03, 0x42, 0x54, 0x58, 0xaa, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x2e, 0x54, 0x72, 0x61,
+	0x64, 0x65, 0x62, 0x69, 0x6e, 0xca, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72, 0x61, 0x64,
+	0x65, 0x62, 0x69, 0x6e, 0xe2, 0x02, 0x18, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72, 0x61, 0x64, 0x65,
+	0x62, 0x69, 0x6e, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
+	0x02, 0x0d, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -7095,20 +6063,19 @@ func file_bze_tradebin_store_proto_rawDescGZIP() []byte {
 	return file_bze_tradebin_store_proto_rawDescData
 }
 
-var file_bze_tradebin_store_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_bze_tradebin_store_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_bze_tradebin_store_proto_goTypes = []interface{}{
 	(*Market)(nil),          // 0: bze.tradebin.Market
-	(*QueueMessage)(nil),    // 1: bze.tradebin.QueueMessage
-	(*Order)(nil),           // 2: bze.tradebin.Order
-	(*OrderReference)(nil),  // 3: bze.tradebin.OrderReference
-	(*AggregatedOrder)(nil), // 4: bze.tradebin.AggregatedOrder
-	(*HistoryOrder)(nil),    // 5: bze.tradebin.HistoryOrder
-	(*UserDust)(nil),        // 6: bze.tradebin.UserDust
-	(*LiquidityPool)(nil),   // 7: bze.tradebin.LiquidityPool
-	(*FeeDestination)(nil),  // 8: bze.tradebin.FeeDestination
+	(*Order)(nil),           // 1: bze.tradebin.Order
+	(*OrderReference)(nil),  // 2: bze.tradebin.OrderReference
+	(*AggregatedOrder)(nil), // 3: bze.tradebin.AggregatedOrder
+	(*HistoryOrder)(nil),    // 4: bze.tradebin.HistoryOrder
+	(*UserDust)(nil),        // 5: bze.tradebin.UserDust
+	(*LiquidityPool)(nil),   // 6: bze.tradebin.LiquidityPool
+	(*FeeDestination)(nil),  // 7: bze.tradebin.FeeDestination
 }
 var file_bze_tradebin_store_proto_depIdxs = []int32{
-	8, // 0: bze.tradebin.LiquidityPool.fee_dest:type_name -> bze.tradebin.FeeDestination
+	7, // 0: bze.tradebin.LiquidityPool.fee_dest:type_name -> bze.tradebin.FeeDestination
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -7135,18 +6102,6 @@ func file_bze_tradebin_store_proto_init() {
 			}
 		}
 		file_bze_tradebin_store_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueueMessage); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_bze_tradebin_store_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Order); i {
 			case 0:
 				return &v.state
@@ -7158,7 +6113,7 @@ func file_bze_tradebin_store_proto_init() {
 				return nil
 			}
 		}
-		file_bze_tradebin_store_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+		file_bze_tradebin_store_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*OrderReference); i {
 			case 0:
 				return &v.state
@@ -7170,7 +6125,7 @@ func file_bze_tradebin_store_proto_init() {
 				return nil
 			}
 		}
-		file_bze_tradebin_store_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+		file_bze_tradebin_store_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*AggregatedOrder); i {
 			case 0:
 				return &v.state
@@ -7182,7 +6137,7 @@ func file_bze_tradebin_store_proto_init() {
 				return nil
 			}
 		}
-		file_bze_tradebin_store_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+		file_bze_tradebin_store_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*HistoryOrder); i {
 			case 0:
 				return &v.state
@@ -7194,7 +6149,7 @@ func file_bze_tradebin_store_proto_init() {
 				return nil
 			}
 		}
-		file_bze_tradebin_store_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+		file_bze_tradebin_store_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UserDust); i {
 			case 0:
 				return &v.state
@@ -7206,7 +6161,7 @@ func file_bze_tradebin_store_proto_init() {
 				return nil
 			}
 		}
-		file_bze_tradebin_store_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+		file_bze_tradebin_store_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*LiquidityPool); i {
 			case 0:
 				return &v.state
@@ -7218,7 +6173,7 @@ func file_bze_tradebin_store_proto_init() {
 				return nil
 			}
 		}
-		file_bze_tradebin_store_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+		file_bze_tradebin_store_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*FeeDestination); i {
 			case 0:
 				return &v.state
@@ -7237,7 +6192,7 @@ func file_bze_tradebin_store_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_bze_tradebin_store_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

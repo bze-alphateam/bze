@@ -2,9 +2,8 @@ package interchaintest_test
 
 import (
 	"context"
-	"encoding/json"
+	"slices"
 	"strconv"
-	"strings"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -19,8 +18,9 @@ import (
 	"github.com/bze-alphateam/bze/interchaintest/helpers"
 )
 
-// The order book matches a message only against resting orders at exactly its
-// price, in the EndBlock of the block that included the tx. Amounts are in ob
+// The order book matches an order only against resting orders at exactly its
+// price, inside the tx that carries it: every outcome is read from the tx
+// result, with no block wait. Amounts are in ob
 // (the base), prices in ubze per ob. Every price below has a minimum order
 // amount of 2 (2 × ⌈1/price⌉) except 2.35's dust step and the 0.333 refusal.
 const (
@@ -29,14 +29,8 @@ const (
 	obMint       = 100_000_000
 	obUserBase   = 10_000_000 // ob sent to each maker and the taker
 
-	obTxGas    = 500_000
-	obFillGas  = 1_000_000
-	obBatchGas = 2_000_000 // a tx carrying five orders
-
-	// the step 16 per-block cap and the step 17 queue window
-	obPerBlockCap = 3
-	obQueueWindow = 2
-	obBatchOrders = 5
+	obTxGas   = 500_000
+	obFillGas = 1_000_000
 
 	obCodespace = "tradebin"
 )
@@ -45,11 +39,10 @@ const (
 // ob/ubze: resting orders, partial fills, FIFO at one price, remainders saved
 // or refunded, the minimum kept on a resting order, dust at a fractional
 // price, MsgFillOrders on buy orders with its refunds, cancels and their
-// refusals, a fill and a cancel of the same order in one block, crossed-book
-// and placement refusals, a self-trade, the per-block message cap and the
-// queue spam surcharge (both set through governance). Every step asserts the
-// exact balances of both makers and the taker, the trading fees on their way
-// to the burner, the engine events and the order book; the suite ends with
+// refusals, a cancel followed by a fill at its price in one tx, crossed-book
+// and placement refusals and a self-trade. Every step asserts the exact
+// balances of both makers and the taker, the trading fees on their way to the
+// burner, the engine events of the tx and the order book; the suite ends with
 // the tradebin module holding exactly the resting orders plus the stored dust.
 // Subtests run in order and share state.
 func TestOrderBook(t *testing.T) {
@@ -72,12 +65,10 @@ func TestOrderBook(t *testing.T) {
 	t.Run("9 fill orders refunds", s.fillRefunds)
 	t.Run("10 cancel orders", s.cancelOrders)
 	t.Run("11 cancel refusals", s.cancelRefusals)
-	t.Run("12 fill before a queued cancel", s.fillBeforeCancel)
+	t.Run("12 cancel takes effect in its tx", s.cancelInTx)
 	t.Run("13 crossed book refusals", s.crossedBook)
 	t.Run("14 placement refusals", s.placementRefusals)
 	t.Run("15 self-trade", s.selfTrade)
-	t.Run("16 per-block message cap", s.perBlockCap)
-	t.Run("17 queue spam surcharge", s.queueSurcharge)
 	t.Run("18 module holds the book and the dust", s.conservation)
 }
 
@@ -90,10 +81,9 @@ type orderBookSuite struct {
 	gov                          string
 	baseline                     sdk.Coins // tradebin module balances once the market exists
 
-	maker1Buy  string                     // step 1: maker1's buy at 2, partially filled until step 10
-	filledSell string                     // step 3: maker1's sell at 3, filled whole
-	maker2Sell string                     // step 6: maker2's sell at 4 that keeps the minimum
-	defaults   map[string]json.RawMessage // tradebin params before the suite changed any
+	maker1Buy  string // step 1: maker1's buy at 2, partially filled until step 10
+	filledSell string // step 3: maker1's sell at 3, filled whole
+	maker2Sell string // step 6: maker2's sell at 4 that keeps the minimum
 }
 
 func setupOrderBook(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain) *orderBookSuite {
@@ -117,7 +107,6 @@ func setupOrderBook(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain) 
 		require.NoError(t, err)
 	}
 	s.params = s.queryParams(t)
-	s.defaults = s.rawParams(t)
 
 	s.ob = "factory/" + s.admin.FormattedAddress() + "/obk"
 	s.market = s.ob + "/" + chain.Denom
@@ -154,12 +143,12 @@ func (s *orderBookSuite) createMarket(t *testing.T) {
 // locked and the maker fee goes to the burner.
 func (s *orderBookSuite) restingBuy(t *testing.T) {
 	want := s.snapshot(t)
-	res, msgID := s.place(t, s.maker1, "buy", 1000, "2")
+	res, orderID := s.place(t, s.maker1, "buy", 1000, "2")
 	s.requireFees(t, res, s.maker1, s.makerFee(), sdk.NewInt64Coin(chain.Denom, 2000))
 	want.paid(t, s, s.maker1, res, s.makerFee())
 	want.move(s.maker1, chain.Denom, -2000)
 
-	s.maker1Buy = s.requireSaved(t, res.Height, msgID, s.maker1, "buy", "1000", "2")
+	s.maker1Buy = s.requireSaved(t, res, orderID, s.maker1, "buy", "1000", "2")
 	s.requireBalances(t, want)
 	s.requireBook(t, obBook{Buy: map[string]string{"2": "1000"}})
 	s.requireOrders(t, s.maker1, obOrder{ID: s.maker1Buy, OrderType: "buy", Amount: "1000", Price: "2", Owner: s.maker1.FormattedAddress()})
@@ -170,12 +159,12 @@ func (s *orderBookSuite) restingBuy(t *testing.T) {
 // written. Selling at a price with a resting buy is taking: the taker fee.
 func (s *orderBookSuite) partialFill(t *testing.T) {
 	want, history := s.snapshot(t), s.history(t)
-	res, msgID := s.place(t, s.taker, "sell", 400, "2")
+	res, orderID := s.place(t, s.taker, "sell", 400, "2")
 	s.requireFees(t, res, s.taker, s.takerFee(), sdk.NewInt64Coin(s.ob, 400))
 	want.paid(t, s, s.taker, res, s.takerFee())
 
-	s.requireExecuted(t, res.Height, msgID, s.taker, obExec{s.maker1Buy, s.maker1, "buy", "400", "2"})
-	s.requireNotSaved(t, res.Height, msgID)
+	s.requireExecuted(t, res, orderID, s.taker, obExec{s.maker1Buy, s.maker1, "buy", "400", "2"})
+	s.requireNotSaved(t, res, orderID)
 	want.move(s.taker, s.ob, -400)
 	want.move(s.taker, chain.Denom, 800)
 	want.move(s.maker1, s.ob, 400)
@@ -190,21 +179,21 @@ func (s *orderBookSuite) partialFill(t *testing.T) {
 // one and a half orders fills maker1's whole and half of maker2's.
 func (s *orderBookSuite) fifo(t *testing.T) {
 	want, history := s.snapshot(t), s.history(t)
-	res1, msg1 := s.place(t, s.maker1, "sell", 100, "3")
+	res1, order1 := s.place(t, s.maker1, "sell", 100, "3")
 	s.requireFees(t, res1, s.maker1, s.makerFee(), sdk.NewInt64Coin(s.ob, 100))
-	s.filledSell = s.requireSaved(t, res1.Height, msg1, s.maker1, "sell", "100", "3")
-	res2, msg2 := s.place(t, s.maker2, "sell", 100, "3")
+	s.filledSell = s.requireSaved(t, res1, order1, s.maker1, "sell", "100", "3")
+	res2, order2 := s.place(t, s.maker2, "sell", 100, "3")
 	s.requireFees(t, res2, s.maker2, s.makerFee(), sdk.NewInt64Coin(s.ob, 100))
-	maker2Sell := s.requireSaved(t, res2.Height, msg2, s.maker2, "sell", "100", "3")
+	maker2Sell := s.requireSaved(t, res2, order2, s.maker2, "sell", "100", "3")
 	want.paid(t, s, s.maker1, res1, s.makerFee())
 	want.paid(t, s, s.maker2, res2, s.makerFee())
 	want.move(s.maker1, s.ob, -100)
 	want.move(s.maker2, s.ob, -100)
 
-	res, msgID := s.place(t, s.taker, "buy", 150, "3")
+	res, orderID := s.place(t, s.taker, "buy", 150, "3")
 	s.requireFees(t, res, s.taker, s.takerFee(), sdk.NewInt64Coin(chain.Denom, 450))
 	want.paid(t, s, s.taker, res, s.takerFee())
-	s.requireExecuted(t, res.Height, msgID, s.taker,
+	s.requireExecuted(t, res, orderID, s.taker,
 		obExec{s.filledSell, s.maker1, "sell", "100", "3"},
 		obExec{maker2Sell, s.maker2, "sell", "50", "3"},
 	)
@@ -229,12 +218,12 @@ func (s *orderBookSuite) fifo(t *testing.T) {
 func (s *orderBookSuite) remainderSaved(t *testing.T) {
 	want := s.snapshot(t)
 	maker2Sell := s.userOrders(t, s.maker2)[0].ID
-	res, msgID := s.place(t, s.taker, "buy", 200, "3")
+	res, orderID := s.place(t, s.taker, "buy", 200, "3")
 	s.requireFees(t, res, s.taker, s.takerFee(), sdk.NewInt64Coin(chain.Denom, 600))
 	want.paid(t, s, s.taker, res, s.takerFee())
 
-	s.requireExecuted(t, res.Height, msgID, s.taker, obExec{maker2Sell, s.maker2, "sell", "50", "3"})
-	saved := s.requireSaved(t, res.Height, msgID, s.taker, "buy", "150", "3")
+	s.requireExecuted(t, res, orderID, s.taker, obExec{maker2Sell, s.maker2, "sell", "50", "3"})
+	saved := s.requireSaved(t, res, orderID, s.taker, "buy", "150", "3")
 	want.move(s.taker, chain.Denom, -600)
 	want.move(s.taker, s.ob, 50)
 	want.move(s.maker2, chain.Denom, 150)
@@ -250,14 +239,14 @@ func (s *orderBookSuite) remainderSaved(t *testing.T) {
 func (s *orderBookSuite) remainderRefunded(t *testing.T) {
 	want := s.snapshot(t)
 	takerBuy := s.userOrders(t, s.taker)[0].ID
-	res, msgID := s.place(t, s.maker1, "sell", 151, "3")
+	res, orderID := s.place(t, s.maker1, "sell", 151, "3")
 	s.requireFees(t, res, s.maker1, s.takerFee(), sdk.NewInt64Coin(s.ob, 151))
 	want.paid(t, s, s.maker1, res, s.takerFee())
 
-	s.requireExecuted(t, res.Height, msgID, s.maker1, obExec{takerBuy, s.taker, "buy", "150", "3"})
-	s.requireNotSaved(t, res.Height, msgID)
-	require.Equal(t, sdkmath.OneInt(), s.transferred(t, s.blockEvents(t, res.Height), s.tradebin, s.maker1.FormattedAddress(), s.ob), "1 ob refunded")
-	s.requireRefunded(t, res.Height, msgID, s.maker1, "sell", "1", "1"+s.ob, "below_min_amount")
+	s.requireExecuted(t, res, orderID, s.maker1, obExec{takerBuy, s.taker, "buy", "150", "3"})
+	s.requireNotSaved(t, res, orderID)
+	require.Equal(t, sdkmath.OneInt(), s.transferred(t, res.Events, s.tradebin, s.maker1.FormattedAddress(), s.ob), "1 ob refunded")
+	s.requireRefunded(t, res, orderID, s.maker1, "sell", "1", "1"+s.ob, "below_min_amount")
 	want.move(s.maker1, s.ob, -150)
 	want.move(s.maker1, chain.Denom, 450)
 	want.move(s.taker, s.ob, 150)
@@ -271,19 +260,19 @@ func (s *orderBookSuite) remainderRefunded(t *testing.T) {
 // to the minimum: the order keeps 2, and the buyer's leftover 1 is refunded.
 func (s *orderBookSuite) keepsMinimum(t *testing.T) {
 	want := s.snapshot(t)
-	res1, msg1 := s.place(t, s.maker2, "sell", 600, "4")
+	res1, order1 := s.place(t, s.maker2, "sell", 600, "4")
 	s.requireFees(t, res1, s.maker2, s.makerFee(), sdk.NewInt64Coin(s.ob, 600))
-	s.maker2Sell = s.requireSaved(t, res1.Height, msg1, s.maker2, "sell", "600", "4")
+	s.maker2Sell = s.requireSaved(t, res1, order1, s.maker2, "sell", "600", "4")
 	want.paid(t, s, s.maker2, res1, s.makerFee())
 	want.move(s.maker2, s.ob, -600)
 
-	res, msgID := s.place(t, s.taker, "buy", 599, "4")
+	res, orderID := s.place(t, s.taker, "buy", 599, "4")
 	s.requireFees(t, res, s.taker, s.takerFee(), sdk.NewInt64Coin(chain.Denom, 599*4))
 	want.paid(t, s, s.taker, res, s.takerFee())
-	s.requireExecuted(t, res.Height, msgID, s.taker, obExec{s.maker2Sell, s.maker2, "sell", "598", "4"})
-	s.requireNotSaved(t, res.Height, msgID)
-	require.Equal(t, sdkmath.NewInt(4), s.transferred(t, s.blockEvents(t, res.Height), s.tradebin, s.taker.FormattedAddress(), chain.Denom), "1 ob × 4 refunded")
-	s.requireRefunded(t, res.Height, msgID, s.taker, "buy", "1", "4"+chain.Denom, "below_min_amount")
+	s.requireExecuted(t, res, orderID, s.taker, obExec{s.maker2Sell, s.maker2, "sell", "598", "4"})
+	s.requireNotSaved(t, res, orderID)
+	require.Equal(t, sdkmath.NewInt(4), s.transferred(t, res.Events, s.tradebin, s.taker.FormattedAddress(), chain.Denom), "1 ob × 4 refunded")
+	s.requireRefunded(t, res, orderID, s.taker, "buy", "1", "4"+chain.Denom, "below_min_amount")
 	want.move(s.taker, chain.Denom, -598*4)
 	want.move(s.taker, s.ob, 598)
 	want.move(s.maker2, chain.Denom, 598*4)
@@ -310,26 +299,25 @@ func (s *orderBookSuite) dust(t *testing.T) {
 		{23, obDust("")},
 		{24, obDust("0.5")},
 	} {
-		res, msgID := s.place(t, s.maker2, "buy", 10, "2.35")
+		res, orderID := s.place(t, s.maker2, "buy", 10, "2.35")
 		s.requireFees(t, res, s.maker2, s.makerFee(), sdk.NewInt64Coin(chain.Denom, c.paid))
 		want.paid(t, s, s.maker2, res, s.makerFee())
 		want.move(s.maker2, chain.Denom, -c.paid)
-		buys = append(buys, s.requireSaved(t, res.Height, msgID, s.maker2, "buy", "10", "2.35"))
+		buys = append(buys, s.requireSaved(t, res, orderID, s.maker2, "buy", "10", "2.35"))
 		require.Equal(t, c.dust, s.userDust(t, s.maker2), "maker2 dust after paying %d", c.paid)
 	}
 	s.requireBook(t, obBook{Buy: map[string]string{"2.35": "30", "2": "600"}, Sell: map[string]string{"4": "2"}})
 
-	res, msgID := s.place(t, s.taker, "sell", 30, "2.35")
+	res, orderID := s.place(t, s.taker, "sell", 30, "2.35")
 	s.requireFees(t, res, s.taker, s.takerFee(), sdk.NewInt64Coin(s.ob, 30))
 	want.paid(t, s, s.taker, res, s.takerFee())
-	s.requireExecuted(t, res.Height, msgID, s.taker,
+	s.requireExecuted(t, res, orderID, s.taker,
 		obExec{buys[0], s.maker2, "buy", "10", "2.35"},
 		obExec{buys[1], s.maker2, "buy", "10", "2.35"},
 		obExec{buys[2], s.maker2, "buy", "10", "2.35"},
 	)
 	// 23 (dust 0.5), 23 + 1 (dust 1 paid out), 23 (dust 0.5)
-	block := filterType(s.blockEvents(t, res.Height), "transfer")
-	got := helpers.EventsWith(block, map[string]string{"sender": s.tradebin, "recipient": s.taker.FormattedAddress()})
+	got := helpers.EventsWith(filterType(res.Events, "transfer"), map[string]string{"sender": s.tradebin, "recipient": s.taker.FormattedAddress()})
 	amounts := make([]string, 0, len(got))
 	for _, e := range got {
 		amounts = append(amounts, e.Attributes["amount"])
@@ -346,16 +334,16 @@ func (s *orderBookSuite) dust(t *testing.T) {
 }
 
 // 8. MsgFillOrders on buy orders sells ob at two prices in one message: one
-// queue message per price, one taker fee for the whole message.
+// order (and order id) per price, one taker fee for the whole message.
 func (s *orderBookSuite) fillBuyOrders(t *testing.T) {
 	want, history := s.snapshot(t), s.history(t)
 	var buy18 string
 	for _, price := range []string{"1.8", "1.5"} {
-		res, msgID := s.place(t, s.maker1, "buy", 100, price)
+		res, orderID := s.place(t, s.maker1, "buy", 100, price)
 		s.requireFees(t, res, s.maker1, s.makerFee(), sdk.NewCoin(chain.Denom, mulPrice(100, price)))
 		want.paid(t, s, s.maker1, res, s.makerFee())
 		want.move(s.maker1, chain.Denom, -mulPrice(100, price).Int64())
-		id := s.requireSaved(t, res.Height, msgID, s.maker1, "buy", "100", price)
+		id := s.requireSaved(t, res, orderID, s.maker1, "buy", "100", price)
 		if price == "1.8" {
 			buy18 = id
 		}
@@ -364,9 +352,9 @@ func (s *orderBookSuite) fillBuyOrders(t *testing.T) {
 	res := s.mustExecMsgs(t, s.taker, obFillGas, s.fillMsg(s.taker, "buy", obItem{"2", "100"}, obItem{"1.8", "100"}))
 	s.requireFees(t, res, s.taker, s.takerFee(), sdk.NewInt64Coin(s.ob, 200))
 	want.paid(t, s, s.taker, res, s.takerFee())
-	ids := s.queuedMessages(t, res, s.taker, "sell", "2", "1.8")
-	s.requireExecuted(t, res.Height, ids[0], s.taker, obExec{s.maker1Buy, s.maker1, "buy", "100", "2"})
-	s.requireExecuted(t, res.Height, ids[1], s.taker, obExec{buy18, s.maker1, "buy", "100", "1.8"})
+	ids := s.fillIDs(t, res, 2)
+	s.requireExecuted(t, res, ids[0], s.taker, obExec{s.maker1Buy, s.maker1, "buy", "100", "2"})
+	s.requireExecuted(t, res, ids[1], s.taker, obExec{buy18, s.maker1, "buy", "100", "1.8"})
 	want.move(s.taker, s.ob, -200)
 	want.move(s.taker, chain.Denom, 200+180)
 	want.move(s.maker1, s.ob, 200)
@@ -381,7 +369,7 @@ func (s *orderBookSuite) fillBuyOrders(t *testing.T) {
 
 // 9. MsgFillOrders refunds what it can not fill: a price with nothing resting
 // is refunded whole, a level smaller than the item refunds the rest, an item
-// below the minimum is skipped (never queued nor charged). A message whose
+// below the minimum is skipped (no order id, nothing charged). A message whose
 // items are all skipped is refused.
 func (s *orderBookSuite) fillRefunds(t *testing.T) {
 	want := s.snapshot(t)
@@ -397,12 +385,12 @@ func (s *orderBookSuite) fillRefunds(t *testing.T) {
 	res := s.mustExecMsgs(t, s.taker, obFillGas, s.fillMsg(s.taker, "buy", obItem{"1.7", "50"}, obItem{"1.5", "150"}, obItem{"1.2", "1"}))
 	s.requireFees(t, res, s.taker, s.takerFee(), sdk.NewInt64Coin(s.ob, 200))
 	want.paid(t, s, s.taker, res, s.takerFee())
-	ids := s.queuedMessages(t, res, s.taker, "sell", "1.7", "1.5")
-	s.requireExecuted(t, res.Height, ids[0], s.taker)
-	s.requireExecuted(t, res.Height, ids[1], s.taker, obExec{buy15ID, s.maker1, "buy", "100", "1.5"})
-	require.Equal(t, sdkmath.NewInt(50+50), s.transferred(t, s.blockEvents(t, res.Height), s.tradebin, s.taker.FormattedAddress(), s.ob), "50 ob refunded at 1.7, 50 at 1.5")
-	s.requireRefunded(t, res.Height, ids[0], s.taker, "sell", "50", "50"+s.ob, "no_match")
-	s.requireRefunded(t, res.Height, ids[1], s.taker, "sell", "50", "50"+s.ob, "unfilled_remainder")
+	ids := s.fillIDs(t, res, 2)
+	s.requireExecuted(t, res, ids[0], s.taker)
+	s.requireExecuted(t, res, ids[1], s.taker, obExec{buy15ID, s.maker1, "buy", "100", "1.5"})
+	require.Equal(t, sdkmath.NewInt(50+50), s.transferred(t, res.Events, s.tradebin, s.taker.FormattedAddress(), s.ob), "50 ob refunded at 1.7, 50 at 1.5")
+	s.requireRefunded(t, res, ids[0], s.taker, "sell", "50", "50"+s.ob, "no_match")
+	s.requireRefunded(t, res, ids[1], s.taker, "sell", "50", "50"+s.ob, "unfilled_remainder")
 	want.move(s.taker, s.ob, -100)
 	want.move(s.taker, chain.Denom, 150)
 	want.move(s.maker1, s.ob, 100)
@@ -430,16 +418,16 @@ func (s *orderBookSuite) cancelOrders(t *testing.T) {
 	s.requireOrders(t, s.maker1)
 
 	require.Empty(t, s.userDust(t, s.maker1))
-	res, msgID := s.place(t, s.maker1, "buy", 10, "2.35")
+	res, orderID := s.place(t, s.maker1, "buy", 10, "2.35")
 	s.requireFees(t, res, s.maker1, s.makerFee(), sdk.NewInt64Coin(chain.Denom, 24))
-	id := s.requireSaved(t, res.Height, msgID, s.maker1, "buy", "10", "2.35")
+	id := s.requireSaved(t, res, orderID, s.maker1, "buy", "10", "2.35")
 	require.Equal(t, obDust("0.5"), s.userDust(t, s.maker1))
 	want.paid(t, s, s.maker1, res, s.makerFee())
 	want.move(s.maker1, chain.Denom, -24)
 
 	res = s.mustExec(t, s.maker1, "tradebin", "cancel-order", s.market, id, "buy")
 	s.requireCanceled(t, res, s.maker1, id, "buy", "10", "2.35")
-	require.Equal(t, sdkmath.NewInt(24), s.transferred(t, s.blockEvents(t, res.Height), s.tradebin, s.maker1.FormattedAddress(), chain.Denom), "23 refunded + 1 of dust")
+	require.Equal(t, sdkmath.NewInt(24), s.transferred(t, res.Events, s.tradebin, s.maker1.FormattedAddress(), chain.Denom), "23 refunded + 1 of dust")
 	want.paid(t, s, s.maker1, res, sdkmath.ZeroInt())
 	want.move(s.maker1, chain.Denom, 24)
 	require.Empty(t, s.userDust(t, s.maker1), "dust settled")
@@ -448,8 +436,9 @@ func (s *orderBookSuite) cancelOrders(t *testing.T) {
 }
 
 // 11. Only the owner cancels an order, only a resting order can be
-// cancelled, and a second cancel of an order with one already queued is
-// refused (here both in one tx: nothing is queued, the order stays).
+// cancelled, and a second cancel of the same order in one tx finds it gone:
+// the tx is refused and reverted, so the first cancel is undone and the order
+// stays.
 func (s *orderBookSuite) cancelRefusals(t *testing.T) {
 	for _, c := range []struct {
 		name   string
@@ -476,7 +465,7 @@ func (s *orderBookSuite) cancelRefusals(t *testing.T) {
 		want, book := s.snapshot(t), s.book(t)
 		cancel := s.cancelMsg(s.maker2, "sell", s.maker2Sell)
 		res, err := helpers.ExecMsgs(s.ctx, s.bze, s.maker2, []helpers.TxOption{helpers.WithGas(obTxGas)}, cancel, cancel)
-		s.requireRefused(t, res, err, 0, "cancel already pending for order "+s.maker2Sell)
+		s.requireRefused(t, res, err, 4008, "order not found")
 		want.paid(t, s, s.maker2, res, sdkmath.ZeroInt())
 		s.requireBalances(t, want)
 		require.Equal(t, book, s.book(t), "order book changed")
@@ -484,31 +473,27 @@ func (s *orderBookSuite) cancelRefusals(t *testing.T) {
 	})
 }
 
-// 12. maker2 fills its own resting sell and cancels it in one tx. The fill is
-// queued first, so the engine executes it and the cancel finds nothing: no
-// OrderCanceledEvent but an OrderCancelSkippedEvent, no refund, the ob locked
-// by the order comes back through the fill.
-func (s *orderBookSuite) fillBeforeCancel(t *testing.T) {
+// 12. maker2 cancels its resting sell and, in the same tx, fills sell orders
+// at its price. The cancel executes first and takes effect at once: the order
+// leaves the book and its ob comes back, so the fill finds nothing and its
+// ubze is refunded whole (no_match).
+func (s *orderBookSuite) cancelInTx(t *testing.T) {
 	want := s.snapshot(t)
 	res := s.mustExecMsgs(t, s.maker2, obFillGas,
-		s.fillMsg(s.maker2, "sell", obItem{"4", "2"}),
 		s.cancelMsg(s.maker2, "sell", s.maker2Sell),
+		s.fillMsg(s.maker2, "sell", obItem{"4", "2"}),
 	)
 	s.requireFees(t, res, s.maker2, s.takerFee(), sdk.NewInt64Coin(chain.Denom, 8))
 	want.paid(t, s, s.maker2, res, s.takerFee())
-	fill := s.queuedMessages(t, res, s.maker2, "buy", "4")[0]
-	cancel := s.requireTxEvent(t, res, "OrderCancelMessageEvent", map[string]string{"orderId": s.maker2Sell}).Attributes["message_id"]
-	require.Greater(t, cancel, fill, "the cancel is queued after the fill")
+	s.requireCanceled(t, res, s.maker2, s.maker2Sell, "sell", "2", "4")
+	fill := s.fillIDs(t, res, 1)[0]
+	require.Greater(t, fill, s.maker2Sell, "the fill gets a new order id")
 
-	s.requireExecuted(t, res.Height, fill, s.maker2, obExec{s.maker2Sell, s.maker2, "sell", "2", "4"})
-	canceled, err := helpers.BlockEvents(s.ctx, s.bze, res.Height, tradebinEventPrefix+"OrderCanceledEvent")
-	require.NoError(t, err)
-	require.Empty(t, canceled, "the cancel found no order")
-	skipped := s.engineEvents(t, res.Height, "OrderCancelSkippedEvent", map[string]string{"message_id": cancel})
-	require.Len(t, skipped, 1, "the skipped cancel is reported")
-	e := skipped[0].Attributes
-	require.Equal(t, []string{s.market, "sell", s.maker2Sell, s.maker2.FormattedAddress(), "order_not_found"},
-		[]string{e["market_id"], e["order_type"], e["order_id"], e["owner"], e["reason"]})
+	s.requireExecuted(t, res, fill, s.maker2)
+	s.requireNotSaved(t, res, fill)
+	s.requireRefunded(t, res, fill, s.maker2, "buy", "2", "8"+chain.Denom, "no_match")
+	require.Equal(t, sdkmath.NewInt(2), s.transferred(t, res.Events, s.tradebin, s.maker2.FormattedAddress(), s.ob), "the cancelled order's ob")
+	require.Equal(t, sdkmath.NewInt(8), s.transferred(t, res.Events, s.tradebin, s.maker2.FormattedAddress(), chain.Denom), "the fill's ubze")
 	want.move(s.maker2, s.ob, 2)
 
 	s.requireBalances(t, want)
@@ -517,17 +502,18 @@ func (s *orderBookSuite) fillBeforeCancel(t *testing.T) {
 }
 
 // 13. A buy above the best resting sell, a sell below the best resting buy,
-// and a sell below a buy still queued in the same block are refused.
+// and a sell below a buy placed earlier in the same tx are refused (the
+// refusal reverts the whole tx, the buy included).
 func (s *orderBookSuite) crossedBook(t *testing.T) {
 	want := s.snapshot(t)
-	res, msgID := s.place(t, s.maker1, "sell", 100, "6")
+	res, orderID := s.place(t, s.maker1, "sell", 100, "6")
 	s.requireFees(t, res, s.maker1, s.makerFee(), sdk.NewInt64Coin(s.ob, 100))
-	s.requireSaved(t, res.Height, msgID, s.maker1, "sell", "100", "6")
+	s.requireSaved(t, res, orderID, s.maker1, "sell", "100", "6")
 	want.paid(t, s, s.maker1, res, s.makerFee())
 	want.move(s.maker1, s.ob, -100)
-	res, msgID = s.place(t, s.maker2, "buy", 100, "1")
+	res, orderID = s.place(t, s.maker2, "buy", 100, "1")
 	s.requireFees(t, res, s.maker2, s.makerFee(), sdk.NewInt64Coin(chain.Denom, 100))
-	s.requireSaved(t, res.Height, msgID, s.maker2, "buy", "100", "1")
+	s.requireSaved(t, res, orderID, s.maker2, "buy", "100", "1")
 	want.paid(t, s, s.maker2, res, s.makerFee())
 	want.move(s.maker2, chain.Denom, -100)
 	s.requireBalances(t, want)
@@ -540,7 +526,7 @@ func (s *orderBookSuite) crossedBook(t *testing.T) {
 	}{
 		{"buy above the best sell", []any{s.orderMsg(s.taker, "buy", 10, "7")}, "buying price is invalid. A better price is available: 6.000000000000000000"},
 		{"sell below the best buy", []any{s.orderMsg(s.taker, "sell", 10, "0.9")}, "selling price is invalid. A better price is available: 1.000000000000000000"},
-		{"sell below a queued buy", []any{s.orderMsg(s.taker, "buy", 10, "5"), s.orderMsg(s.taker, "sell", 10, "4.5")}, "price is outdated. Better price is available: 5.000000000000000000"},
+		{"sell below a buy placed earlier in the tx", []any{s.orderMsg(s.taker, "buy", 10, "5"), s.orderMsg(s.taker, "sell", 10, "4.5")}, "selling price is invalid. A better price is available: 5.000000000000000000"},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			want, book := s.snapshot(t), s.book(t)
@@ -553,8 +539,8 @@ func (s *orderBookSuite) crossedBook(t *testing.T) {
 	}
 }
 
-// 14. Orders the msg server or ValidateBasic refuse: nothing is locked or
-// queued, a refusal in the msg server costs the tx fee only, one in
+// 14. Orders the msg server or ValidateBasic refuse: nothing is locked, a
+// refusal in the msg server costs the tx fee only, one in
 // ValidateBasic (CheckTx) costs nothing.
 func (s *orderBookSuite) placementRefusals(t *testing.T) {
 	order := func(typ string, amount int64, price, market string) map[string]any {
@@ -597,91 +583,19 @@ func (s *orderBookSuite) placementRefusals(t *testing.T) {
 // taker fee and the tx fees spent.
 func (s *orderBookSuite) selfTrade(t *testing.T) {
 	want, history := s.snapshot(t), s.history(t)
-	res1, msg1 := s.place(t, s.maker1, "sell", 50, "5")
+	res1, order1 := s.place(t, s.maker1, "sell", 50, "5")
 	s.requireFees(t, res1, s.maker1, s.makerFee(), sdk.NewInt64Coin(s.ob, 50))
-	sell := s.requireSaved(t, res1.Height, msg1, s.maker1, "sell", "50", "5")
-	res2, msg2 := s.place(t, s.maker1, "buy", 50, "5")
+	sell := s.requireSaved(t, res1, order1, s.maker1, "sell", "50", "5")
+	res2, order2 := s.place(t, s.maker1, "buy", 50, "5")
 	s.requireFees(t, res2, s.maker1, s.takerFee(), sdk.NewInt64Coin(chain.Denom, 250))
-	s.requireExecuted(t, res2.Height, msg2, s.maker1, obExec{sell, s.maker1, "sell", "50", "5"})
-	s.requireNotSaved(t, res2.Height, msg2)
+	s.requireExecuted(t, res2, order2, s.maker1, obExec{sell, s.maker1, "sell", "50", "5"})
+	s.requireNotSaved(t, res2, order2)
 
 	want.paid(t, s, s.maker1, res1, s.makerFee())
 	want.paid(t, s, s.maker1, res2, s.takerFee())
 	s.requireBalances(t, want)
 	s.requireBook(t, obBook{Buy: map[string]string{"1": "100"}, Sell: map[string]string{"6": "100"}})
 	s.requireNewHistory(t, history, obHistory{"sell", "50", "5", s.maker1.FormattedAddress(), s.maker1.FormattedAddress()})
-}
-
-// 16. With orderBookPerBlockMessages lowered to 3 by governance, five orders
-// queued in one block are saved three in that block's EndBlock and the other
-// two, in order, in the next one.
-func (s *orderBookSuite) perBlockCap(t *testing.T) {
-	s.updateParams(t, "Order book cap", map[string]uint64{"orderBookPerBlockMessages": obPerBlockCap})
-
-	want := s.snapshot(t)
-	prices := []string{"10", "11", "12", "13", "14"}
-	res := s.mustExecMsgs(t, s.maker1, obBatchGas, s.batch(s.maker1, prices)...)
-	s.requireFees(t, res, s.maker1, s.makerFee().MulRaw(obBatchOrders), sdk.NewInt64Coin(s.ob, 10*obBatchOrders))
-	want.paid(t, s, s.maker1, res, s.makerFee().MulRaw(obBatchOrders))
-	want.move(s.maker1, s.ob, -10*obBatchOrders)
-	ids := s.queuedMessages(t, res, s.maker1, "sell", prices...)
-
-	require.NoError(t, testutil.WaitForBlocks(s.ctx, 2, s.bze))
-	require.Equal(t, ids[:obPerBlockCap], s.savedIDs(t, res.Height), "the first three in the tx's block")
-	require.Equal(t, ids[obPerBlockCap:], s.savedIDs(t, res.Height+1), "the other two in the next block")
-	s.requireBalances(t, want)
-	s.requireBook(t, obBook{
-		Buy:  map[string]string{"1": "100"},
-		Sell: map[string]string{"6": "100", "10": "10", "11": "10", "12": "10", "13": "10", "14": "10"},
-	})
-}
-
-// 17. Every order placed while more than orderBookExtraGasWindow messages are
-// queued costs (queued − window) × orderBookQueueExtraGas extra gas. The same
-// five-order tx runs with the default window (no surcharge) and again with
-// the window lowered to 2 by governance: the 4th and 5th orders see 3 and 4
-// queued messages, so the second tx uses exactly 75,000 gas more. The params
-// are restored afterwards.
-func (s *orderBookSuite) queueSurcharge(t *testing.T) {
-	window := s.paramUint(t, "orderBookExtraGasWindow")
-	extra := s.paramUint(t, "orderBookQueueExtraGas")
-	require.Greater(t, window, uint64(obBatchOrders), "the default window must not surcharge five orders")
-
-	prices := []string{"20", "21", "22", "23", "24"}
-	run := func() helpers.TxResult {
-		want := s.snapshot(t)
-		res := s.mustExecMsgs(t, s.maker2, obBatchGas, s.batch(s.maker2, prices)...)
-		s.requireFees(t, res, s.maker2, s.makerFee().MulRaw(obBatchOrders), sdk.NewInt64Coin(s.ob, 10*obBatchOrders))
-		want.paid(t, s, s.maker2, res, s.makerFee().MulRaw(obBatchOrders))
-		want.move(s.maker2, s.ob, -10*obBatchOrders)
-		require.NoError(t, testutil.WaitForBlocks(s.ctx, 2, s.bze))
-		s.requireBalances(t, want)
-		return res
-	}
-
-	base := run()
-	s.updateParams(t, "Order book queue window", map[string]uint64{"orderBookExtraGasWindow": obQueueWindow})
-	surcharged := run()
-
-	var want uint64
-	for queued := uint64(0); queued < obBatchOrders; queued++ {
-		if queued > obQueueWindow {
-			want += (queued - obQueueWindow) * extra
-		}
-	}
-	require.Equal(t, uint64(75_000), want, "the scenario's surcharge")
-	require.Equal(t, int64(want), surcharged.GasUsed-base.GasUsed, "gas used %d without and %d with the surcharge", base.GasUsed, surcharged.GasUsed)
-
-	s.updateParams(t, "Order book defaults", map[string]uint64{
-		"orderBookPerBlockMessages": s.originalUint(t, "orderBookPerBlockMessages"),
-		"orderBookExtraGasWindow":   window,
-	})
-	require.Equal(t, s.defaults, s.rawParams(t), "params restored")
-	s.requireBook(t, obBook{
-		Buy: map[string]string{"1": "100"},
-		Sell: map[string]string{"6": "100", "10": "10", "11": "10", "12": "10", "13": "10", "14": "10",
-			"20": "20", "21": "20", "22": "20", "23": "20", "24": "20"},
-	})
 }
 
 // 18. The tradebin module holds, on top of what it held before the market
@@ -806,7 +720,7 @@ func (s *orderBookSuite) takerFee() sdkmath.Int { return s.params.MarketTakerFee
 
 // requireFees asserts the tx moved the trading fee and the order funds from
 // the user to the tradebin module, the fee on to the burner fee collector,
-// and the EndBlock the fee to the burner.
+// and the burner fee collector's EndBlock the fee to the burner.
 func (s *orderBookSuite) requireFees(t *testing.T, res helpers.TxResult, u ibc.Wallet, fee sdkmath.Int, locked sdk.Coin) {
 	t.Helper()
 	user := u.FormattedAddress()
@@ -817,107 +731,109 @@ func (s *orderBookSuite) requireFees(t *testing.T, res helpers.TxResult, u ibc.W
 	require.Equal(t, fee, s.transferred(t, s.blockEvents(t, res.Height), s.burnerFees, s.burner, chain.Denom), "trading fee to the burner in EndBlock")
 }
 
-// place sends a create-order and returns the tx and its queue message id.
+// place sends a create-order and returns the tx and the order id the engine
+// gave the order (every order gets one, resting or not).
 func (s *orderBookSuite) place(t *testing.T, u ibc.Wallet, typ string, amount int64, price string) (helpers.TxResult, string) {
 	t.Helper()
 	amt := strconv.FormatInt(amount, 10)
 	res := s.mustExec(t, u, "tradebin", "create-order", typ, amt, price, s.market)
-	ev := s.requireTxEvent(t, res, "OrderCreateMessageEvent", map[string]string{
-		"creator": u.FormattedAddress(), "market_id": s.market, "order_type": typ, "amount": amt, "price": price,
-	})
-	return res, ev.Attributes["message_id"]
+	return res, s.fillIDs(t, res, 1)[0]
 }
 
-// queuedMessages returns the message ids of the OrderCreateMessageEvents of a
-// tx, one per price, in the order of prices.
-func (s *orderBookSuite) queuedMessages(t *testing.T, res helpers.TxResult, u ibc.Wallet, typ string, prices ...string) []string {
+// obOutcomeEvents are the engine events that carry the id of the order being
+// executed in their order_id attribute.
+var obOutcomeEvents = []string{
+	tradebinEventPrefix + "OrderExecutedEvent",
+	tradebinEventPrefix + "OrderSavedEvent",
+	tradebinEventPrefix + "OrderMessageRefundedEvent",
+}
+
+// fillIDs returns the order ids of the orders a tx executed (one per order,
+// one per MsgFillOrders entry), in the order the engine processed them.
+func (s *orderBookSuite) fillIDs(t *testing.T, res helpers.TxResult, want int) []string {
 	t.Helper()
-	events := helpers.TxEvents(res, tradebinEventPrefix+"OrderCreateMessageEvent")
-	require.Len(t, events, len(prices), "one queued message per price: %+v", events)
-	ids := make([]string, 0, len(prices))
-	for i, e := range events {
-		require.Equal(t, prices[i], e.Attributes["price"])
-		require.Equal(t, typ, e.Attributes["order_type"])
-		require.Equal(t, u.FormattedAddress(), e.Attributes["creator"])
-		ids = append(ids, e.Attributes["message_id"])
+	var ids []string
+	seen := map[string]bool{}
+	for _, e := range res.Events {
+		if !slices.Contains(obOutcomeEvents, e.Type) {
+			continue
+		}
+		id := e.Attributes["order_id"]
+		require.NotEmpty(t, id, "%s without order_id", e.Type)
+		if !seen[id] {
+			seen[id] = true
+			ids = append(ids, id)
+		}
 	}
+	require.Len(t, ids, want, "orders executed by tx %s", res.TxHash)
 	return ids
 }
 
-func (s *orderBookSuite) engineEvents(t *testing.T, height int64, name string, attrs map[string]string) []helpers.Event {
+func (s *orderBookSuite) engineEvents(t *testing.T, res helpers.TxResult, name string, attrs map[string]string) []helpers.Event {
 	t.Helper()
-	events, err := helpers.BlockEvents(s.ctx, s.bze, height, tradebinEventPrefix+name)
-	require.NoError(t, err)
-	return helpers.EventsWith(events, attrs)
+	return helpers.EventsWith(helpers.TxEvents(res, tradebinEventPrefix+name), attrs)
 }
 
-// requireSaved asserts the EndBlock saved the message as one resting order
-// and returns its id.
-func (s *orderBookSuite) requireSaved(t *testing.T, height int64, msgID string, owner ibc.Wallet, typ, amount, price string) string {
+// requireSaved asserts the tx saved the order as one resting order under its
+// own id and returns it.
+func (s *orderBookSuite) requireSaved(t *testing.T, res helpers.TxResult, orderID string, owner ibc.Wallet, typ, amount, price string) string {
 	t.Helper()
-	saved := s.engineEvents(t, height, "OrderSavedEvent", map[string]string{"message_id": msgID})
-	require.Len(t, saved, 1, "message %s saved once at height %d", msgID, height)
+	saved := s.engineEvents(t, res, "OrderSavedEvent", map[string]string{"order_id": orderID})
+	require.Len(t, saved, 1, "order %s saved once in tx %s", orderID, res.TxHash)
 	e := saved[0]
-	require.Equal(t, map[string]string{"market_id": s.market, "owner": owner.FormattedAddress(), "order_type": typ, "amount": amount, "price": price},
-		map[string]string{"market_id": e.Attributes["market_id"], "owner": e.Attributes["owner"], "order_type": e.Attributes["order_type"], "amount": e.Attributes["amount"], "price": e.Attributes["price"]})
-	order, found := s.marketOrder(t, typ, e.Attributes["id"])
-	require.True(t, found, "saved order %s is on the book", e.Attributes["id"])
+	require.Equal(t, map[string]string{"id": orderID, "market_id": s.market, "owner": owner.FormattedAddress(), "order_type": typ, "amount": amount, "price": price},
+		map[string]string{"id": e.Attributes["id"], "market_id": e.Attributes["market_id"], "owner": e.Attributes["owner"], "order_type": e.Attributes["order_type"], "amount": e.Attributes["amount"], "price": e.Attributes["price"]})
+	order, found := s.marketOrder(t, typ, orderID)
+	require.True(t, found, "saved order %s is on the book", orderID)
 	require.Equal(t, amount, order.Amount)
-	return e.Attributes["id"]
+	return orderID
 }
 
-// requireRefunded asserts the one OrderMessageRefundedEvent of a queue
-// message: the unexecuted base amount, the coin sent back and the reason.
-func (s *orderBookSuite) requireRefunded(t *testing.T, height int64, msgID string, owner ibc.Wallet, typ, amount, refund, reason string) {
+// requireRefunded asserts the one OrderMessageRefundedEvent of an order: the
+// unexecuted base amount, the coin sent back and the reason.
+func (s *orderBookSuite) requireRefunded(t *testing.T, res helpers.TxResult, orderID string, owner ibc.Wallet, typ, amount, refund, reason string) {
 	t.Helper()
-	got := s.engineEvents(t, height, "OrderMessageRefundedEvent", map[string]string{"message_id": msgID})
-	require.Len(t, got, 1, "refunds of message %s at height %d", msgID, height)
+	got := s.engineEvents(t, res, "OrderMessageRefundedEvent", map[string]string{"order_id": orderID})
+	require.Len(t, got, 1, "refunds of order %s in tx %s", orderID, res.TxHash)
 	e := got[0].Attributes
 	require.Equal(t,
 		[]string{s.market, typ, owner.FormattedAddress(), amount, refund, reason},
 		[]string{e["market_id"], e["order_type"], e["owner"], e["amount"], e["refund"], e["reason"]},
-		"refund of message %s", msgID)
+		"refund of order %s", orderID)
 }
 
-func (s *orderBookSuite) requireNotSaved(t *testing.T, height int64, msgID string) {
+func (s *orderBookSuite) requireNotSaved(t *testing.T, res helpers.TxResult, orderID string) {
 	t.Helper()
-	require.Empty(t, s.engineEvents(t, height, "OrderSavedEvent", map[string]string{"message_id": msgID}), "message %s saved", msgID)
+	require.Empty(t, s.engineEvents(t, res, "OrderSavedEvent", map[string]string{"order_id": orderID}), "order %s saved", orderID)
+	_, found := s.marketOrder(t, "buy", orderID)
+	require.False(t, found, "order %s rests as a buy", orderID)
+	_, found = s.marketOrder(t, "sell", orderID)
+	require.False(t, found, "order %s rests as a sell", orderID)
 }
 
-// savedIDs returns the message ids of the orders saved at a height, in order.
-func (s *orderBookSuite) savedIDs(t *testing.T, height int64) []string {
+// requireExecuted asserts the OrderExecutedEvents of one taker order, in the
+// order the engine filled them.
+func (s *orderBookSuite) requireExecuted(t *testing.T, res helpers.TxResult, orderID string, taker ibc.Wallet, want ...obExec) {
 	t.Helper()
-	var ids []string
-	for _, e := range s.engineEvents(t, height, "OrderSavedEvent", map[string]string{"market_id": s.market}) {
-		ids = append(ids, e.Attributes["message_id"])
-	}
-	return ids
-}
-
-// requireExecuted asserts the OrderExecutedEvents of one queue message, in
-// the order the engine filled them.
-func (s *orderBookSuite) requireExecuted(t *testing.T, height int64, msgID string, taker ibc.Wallet, want ...obExec) {
-	t.Helper()
-	got := s.engineEvents(t, height, "OrderExecutedEvent", map[string]string{"message_id": msgID})
-	require.Len(t, got, len(want), "executions of message %s: %+v", msgID, got)
+	got := s.engineEvents(t, res, "OrderExecutedEvent", map[string]string{"order_id": orderID})
+	require.Len(t, got, len(want), "executions of order %s: %+v", orderID, got)
 	for i, w := range want {
 		e := got[i].Attributes
 		require.Equal(t,
 			[]string{w.ID, s.market, w.OrderType, w.Amount, w.Price, w.Maker.FormattedAddress(), taker.FormattedAddress()},
 			[]string{e["id"], e["market_id"], e["order_type"], e["amount"], e["price"], e["maker"], e["taker"]},
-			"execution %d of message %s", i, msgID)
+			"execution %d of order %s", i, orderID)
 	}
 }
 
-// requireCanceled asserts the cancel's message id reaches the EndBlock
-// OrderCanceledEvent and the order left the book.
+// requireCanceled asserts the tx's OrderCanceledEvent of the order (its own
+// id in order_id) and that the order left the book.
 func (s *orderBookSuite) requireCanceled(t *testing.T, res helpers.TxResult, owner ibc.Wallet, id, typ, amount, price string) {
 	t.Helper()
-	msgID := s.requireTxEvent(t, res, "OrderCancelMessageEvent", map[string]string{"orderId": id}).Attributes["message_id"]
-	canceled := s.engineEvents(t, res.Height, "OrderCanceledEvent", map[string]string{"id": id})
+	canceled := s.engineEvents(t, res, "OrderCanceledEvent", map[string]string{"id": id})
 	require.Len(t, canceled, 1)
 	e := canceled[0].Attributes
-	require.Equal(t, []string{msgID, owner.FormattedAddress(), typ, amount, price}, []string{e["message_id"], e["owner"], e["order_type"], e["amount"], e["price"]})
+	require.Equal(t, []string{id, owner.FormattedAddress(), typ, amount, price}, []string{e["order_id"], e["owner"], e["order_type"], e["amount"], e["price"]})
 	_, found := s.marketOrder(t, typ, id)
 	require.False(t, found, "cancelled order %s left the book", id)
 }
@@ -982,14 +898,6 @@ func (s *orderBookSuite) fillMsg(u ibc.Wallet, typ string, items ...obItem) map[
 }
 
 // batch is one 10 ob sell order per price.
-func (s *orderBookSuite) batch(u ibc.Wallet, prices []string) []any {
-	msgs := make([]any, 0, len(prices))
-	for _, p := range prices {
-		msgs = append(msgs, s.orderMsg(u, "sell", 10, p))
-	}
-	return msgs
-}
-
 func (s *orderBookSuite) aggregates(t *testing.T, typ string) map[string]string {
 	t.Helper()
 	res, err := helpers.Query[struct {
@@ -1124,64 +1032,6 @@ func (s *orderBookSuite) moduleBalances(t *testing.T) sdk.Coins {
 		out = out.Add(sdk.NewCoin(d, s.balance(t, s.tradebin, d)))
 	}
 	return out
-}
-
-// rawParams returns the tradebin params as the query prints them; a
-// MsgUpdateParams carries them back with some fields replaced.
-func (s *orderBookSuite) rawParams(t *testing.T) map[string]json.RawMessage {
-	t.Helper()
-	res, err := helpers.Query[struct {
-		Params map[string]json.RawMessage `json:"params"`
-	}](s.ctx, s.bze, "tradebin", "params")
-	require.NoError(t, err)
-	require.NotEmpty(t, res.Params)
-	return res.Params
-}
-
-func uintParam(t *testing.T, params map[string]json.RawMessage, name string) uint64 {
-	t.Helper()
-	raw, ok := params[name]
-	require.True(t, ok, "param %s missing: %v", name, params)
-	v, err := strconv.ParseUint(strings.Trim(string(raw), `"`), 10, 64)
-	require.NoError(t, err, "param %s = %s", name, raw)
-	return v
-}
-
-func (s *orderBookSuite) paramUint(t *testing.T, name string) uint64 {
-	t.Helper()
-	return uintParam(t, s.rawParams(t), name)
-}
-
-func (s *orderBookSuite) originalUint(t *testing.T, name string) uint64 {
-	t.Helper()
-	return uintParam(t, s.defaults, name)
-}
-
-// updateParams passes a tradebin MsgUpdateParams carrying the current params
-// with the given uint64 fields replaced, and checks only those changed.
-func (s *orderBookSuite) updateParams(t *testing.T, title string, set map[string]uint64) {
-	t.Helper()
-	params := s.rawParams(t)
-	want := make(map[string]json.RawMessage, len(params))
-	for k, v := range params {
-		want[k] = v
-	}
-	for k, v := range set {
-		_, ok := params[k]
-		require.True(t, ok, "unknown tradebin param %s", k)
-		want[k] = json.RawMessage(strconv.Quote(strconv.FormatUint(v, 10)))
-	}
-	_, err := helpers.SubmitAndPassProposal(s.ctx, s.bze, s.admin, helpers.Proposal{
-		Messages: []any{map[string]any{
-			"@type":     "/bze.tradebin.MsgUpdateParams",
-			"authority": s.gov,
-			"params":    want,
-		}},
-		Title:   title,
-		Summary: "e2e: " + title,
-	})
-	require.NoError(t, err)
-	require.Equal(t, want, s.rawParams(t), "params after %q", title)
 }
 
 // mulPrice is amount × price for a price that makes it whole.

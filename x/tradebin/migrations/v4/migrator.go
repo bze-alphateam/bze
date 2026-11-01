@@ -56,18 +56,17 @@ func migrateParams(store prefix.Store, cdc codec.BinaryCodec) error {
 	}
 
 	newParams := v2types.Params{
-		CreateMarketFee:                   createMarketFee,
-		MarketMakerFee:                    marketMakerFee,
-		MarketTakerFee:                    marketTakerFee,
-		MakerFeeDestination:               oldParams.MakerFeeDestination,
-		TakerFeeDestination:               oldParams.TakerFeeDestination,
-		NativeDenom:                       oldParams.NativeDenom,
-		OrderBookExtraGasWindow:           v2types.DefaultOrderBookExtraGasWindow,
-		OrderBookQueueExtraGas:            v2types.DefaultOrderBookQueueExtraGas,
-		FillOrdersExtraGas:                v2types.DefaultFillOrdersExtraGas,
-		OrderBookQueueMessageScanExtraGas: v2types.DefaultOrderBookQueueMessageScanExtraGas,
-		MinNativeLiquidityForModuleSwap:   v2types.DefaultMinNativeLiquidityForModuleSwap,
-		OrderBookPerBlockMessages:         v2types.DefaultOrderBookPerBlockMessages,
+		CreateMarketFee:                 createMarketFee,
+		MarketMakerFee:                  marketMakerFee,
+		MarketTakerFee:                  marketTakerFee,
+		MakerFeeDestination:             oldParams.MakerFeeDestination,
+		TakerFeeDestination:             oldParams.TakerFeeDestination,
+		NativeDenom:                     oldParams.NativeDenom,
+		OrderBookExtraGasWindow:         v2types.DefaultOrderBookExtraGasWindow,
+		OrderBookQueueExtraGas:          v2types.DefaultOrderBookQueueExtraGas,
+		FillOrdersExtraGas:              v2types.DefaultFillOrdersExtraGas,
+		MinNativeLiquidityForModuleSwap: v2types.DefaultMinNativeLiquidityForModuleSwap,
+		OrderBookPerBlockMessages:       v2types.DefaultOrderBookPerBlockMessages,
 	}
 
 	if err := newParams.Validate(); err != nil {
