@@ -34,7 +34,8 @@ func (suite *IntegrationTestSuite) requireNoOwnerPriceOrder(owner sdk.AccAddress
 
 // seedRestingOrder writes a resting order and its aggregate straight to the store. It is used for a
 // book where both sides rest at one price, which the engine never produces on its own: an order that
-// stops while the opposite side still rests at its price is refunded, not rested.
+// stops while the opposite side still rests at its price is refunded, not rested. The level must be
+// empty: the aggregate gets the order's amount and its owner.
 func (suite *IntegrationTestSuite) seedRestingOrder(order types.Order) {
 	suite.k.SaveOrder(suite.ctx, order)
 	suite.k.SetAggregatedOrder(suite.ctx, types.AggregatedOrder{
@@ -42,6 +43,7 @@ func (suite *IntegrationTestSuite) seedRestingOrder(order types.Order) {
 		OrderType: order.OrderType,
 		Amount:    order.Amount,
 		Price:     order.Price,
+		Owners:    1,
 	})
 }
 

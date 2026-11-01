@@ -37,3 +37,11 @@ func TestMigrateOwnerPriceIndex_NoOrders(t *testing.T) {
 
 	v5.MigrateOwnerPriceIndex(mt.ctx, k)
 }
+
+func TestMigratePriceLevelOwners_RecountsTheOwners(t *testing.T) {
+	mt := setup(t)
+	k := tbtestutil.NewMockV5PriceLevelOwnersKeeper(gomock.NewController(t))
+	k.EXPECT().RecountPriceLevelOwners(gomock.Any()).Times(1)
+
+	v5.MigratePriceLevelOwners(mt.ctx, k)
+}

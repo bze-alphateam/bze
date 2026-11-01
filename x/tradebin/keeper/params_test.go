@@ -14,8 +14,8 @@ func (suite *IntegrationTestSuite) TestParams_GetAndSet() {
 		MakerFeeDestination:             v2types.FeeDestinationCommunityPool,
 		TakerFeeDestination:             v2types.FeeDestinationBurnerModule,
 		NativeDenom:                     denomBze,
-		OrderBookExtraGasWindow:         200,
-		OrderBookQueueExtraGas:          30000,
+		PriceLevelOwnersWindow:          200,
+		PriceLevelExtraGas:              30000,
 		FillOrdersExtraGas:              6000,
 		MinNativeLiquidityForModuleSwap: math.NewInt(60000000000),
 		MaxFillsPerOrder:                750,
@@ -32,8 +32,8 @@ func (suite *IntegrationTestSuite) TestParams_GetAndSet() {
 	suite.Require().Equal(params.MarketTakerFee, retrievedParams.MarketTakerFee)
 	suite.Require().Equal(params.MakerFeeDestination, retrievedParams.MakerFeeDestination)
 	suite.Require().Equal(params.TakerFeeDestination, retrievedParams.TakerFeeDestination)
-	suite.Require().Equal(params.OrderBookExtraGasWindow, retrievedParams.OrderBookExtraGasWindow)
-	suite.Require().Equal(params.OrderBookQueueExtraGas, retrievedParams.OrderBookQueueExtraGas)
+	suite.Require().Equal(params.PriceLevelOwnersWindow, retrievedParams.PriceLevelOwnersWindow)
+	suite.Require().Equal(params.PriceLevelExtraGas, retrievedParams.PriceLevelExtraGas)
 	suite.Require().Equal(params.FillOrdersExtraGas, retrievedParams.FillOrdersExtraGas)
 	suite.Require().Equal(params.MinNativeLiquidityForModuleSwap, retrievedParams.MinNativeLiquidityForModuleSwap)
 	suite.Require().Equal(params.MaxFillsPerOrder, retrievedParams.MaxFillsPerOrder)
@@ -47,8 +47,8 @@ func (suite *IntegrationTestSuite) TestParams_GetDefault() {
 	suite.Require().Equal(v2types.DefaultMarketTakerFee, retrievedParams.MarketTakerFee)
 	suite.Require().Equal(v2types.DefaultMakerFeeDestination, retrievedParams.MakerFeeDestination)
 	suite.Require().Equal(v2types.DefaultTakerFeeDestination, retrievedParams.TakerFeeDestination)
-	suite.Require().Equal(v2types.DefaultOrderBookExtraGasWindow, retrievedParams.OrderBookExtraGasWindow)
-	suite.Require().Equal(v2types.DefaultOrderBookQueueExtraGas, retrievedParams.OrderBookQueueExtraGas)
+	suite.Require().Equal(v2types.DefaultPriceLevelOwnersWindow, retrievedParams.PriceLevelOwnersWindow)
+	suite.Require().Equal(v2types.DefaultPriceLevelExtraGas, retrievedParams.PriceLevelExtraGas)
 	suite.Require().Equal(v2types.DefaultFillOrdersExtraGas, retrievedParams.FillOrdersExtraGas)
 	suite.Require().EqualValues(v2types.DefaultMinNativeLiquidityForModuleSwap, retrievedParams.MinNativeLiquidityForModuleSwap)
 	suite.Require().Equal(v2types.DefaultMaxFillsPerOrder, retrievedParams.MaxFillsPerOrder)
@@ -59,8 +59,8 @@ func (suite *IntegrationTestSuite) TestParams_SetMultipleTimes() {
 	params1.CreateMarketFee = sdk.NewInt64Coin(denomBze, 500)
 	params1.MarketMakerFee = sdk.NewInt64Coin(denomBze, 50)
 	params1.MarketTakerFee = sdk.NewInt64Coin(denomBze, 100)
-	params1.OrderBookExtraGasWindow = 150
-	params1.OrderBookQueueExtraGas = 20000
+	params1.PriceLevelOwnersWindow = 150
+	params1.PriceLevelExtraGas = 20000
 	params1.FillOrdersExtraGas = 4000
 	params1.MinNativeLiquidityForModuleSwap = math.NewInt(40000000000)
 
@@ -70,8 +70,8 @@ func (suite *IntegrationTestSuite) TestParams_SetMultipleTimes() {
 	params2.MarketTakerFee = sdk.NewInt64Coin(denomBze, 400)
 	params2.MakerFeeDestination = v2types.FeeDestinationBurnerModule
 	params2.TakerFeeDestination = v2types.FeeDestinationCommunityPool
-	params2.OrderBookExtraGasWindow = 250
-	params2.OrderBookQueueExtraGas = 35000
+	params2.PriceLevelOwnersWindow = 250
+	params2.PriceLevelExtraGas = 35000
 	params2.FillOrdersExtraGas = 7000
 	params2.MinNativeLiquidityForModuleSwap = math.NewInt(70000000000)
 
@@ -93,8 +93,8 @@ func (suite *IntegrationTestSuite) TestParams_SetMultipleTimes() {
 	suite.Require().Equal(params2.MarketTakerFee, retrieved2.MarketTakerFee)
 	suite.Require().Equal(params2.MakerFeeDestination, retrieved2.MakerFeeDestination)
 	suite.Require().Equal(params2.TakerFeeDestination, retrieved2.TakerFeeDestination)
-	suite.Require().Equal(params2.OrderBookExtraGasWindow, retrieved2.OrderBookExtraGasWindow)
-	suite.Require().Equal(params2.OrderBookQueueExtraGas, retrieved2.OrderBookQueueExtraGas)
+	suite.Require().Equal(params2.PriceLevelOwnersWindow, retrieved2.PriceLevelOwnersWindow)
+	suite.Require().Equal(params2.PriceLevelExtraGas, retrieved2.PriceLevelExtraGas)
 	suite.Require().Equal(params2.FillOrdersExtraGas, retrieved2.FillOrdersExtraGas)
 	suite.Require().Equal(params2.MinNativeLiquidityForModuleSwap, retrieved2.MinNativeLiquidityForModuleSwap)
 }
@@ -215,8 +215,8 @@ func (suite *IntegrationTestSuite) TestParams_Persistence() {
 	params.CreateMarketFee = sdk.NewInt64Coin(denomBze, 800)
 	params.MarketMakerFee = sdk.NewInt64Coin(denomBze, 80)
 	params.MarketTakerFee = sdk.NewInt64Coin(denomBze, 160)
-	params.OrderBookExtraGasWindow = 120
-	params.OrderBookQueueExtraGas = 28000
+	params.PriceLevelOwnersWindow = 120
+	params.PriceLevelExtraGas = 28000
 	params.FillOrdersExtraGas = 5500
 	params.MinNativeLiquidityForModuleSwap = math.NewInt(55000000000)
 
@@ -230,33 +230,33 @@ func (suite *IntegrationTestSuite) TestParams_Persistence() {
 		suite.Require().Equal(params.MarketTakerFee, retrievedParams.MarketTakerFee)
 		suite.Require().Equal(params.MakerFeeDestination, retrievedParams.MakerFeeDestination)
 		suite.Require().Equal(params.TakerFeeDestination, retrievedParams.TakerFeeDestination)
-		suite.Require().Equal(params.OrderBookExtraGasWindow, retrievedParams.OrderBookExtraGasWindow)
-		suite.Require().Equal(params.OrderBookQueueExtraGas, retrievedParams.OrderBookQueueExtraGas)
+		suite.Require().Equal(params.PriceLevelOwnersWindow, retrievedParams.PriceLevelOwnersWindow)
+		suite.Require().Equal(params.PriceLevelExtraGas, retrievedParams.PriceLevelExtraGas)
 		suite.Require().Equal(params.FillOrdersExtraGas, retrievedParams.FillOrdersExtraGas)
 		suite.Require().Equal(params.MinNativeLiquidityForModuleSwap, retrievedParams.MinNativeLiquidityForModuleSwap)
 	}
 }
 
-func (suite *IntegrationTestSuite) TestParams_OrderBookExtraGasWindow() {
+func (suite *IntegrationTestSuite) TestParams_PriceLevelOwnersWindow() {
 	params := v2types.DefaultParams()
-	params.OrderBookExtraGasWindow = 150
+	params.PriceLevelOwnersWindow = 150
 
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
 	retrievedParams := suite.k.GetParams(suite.ctx)
-	suite.Require().Equal(uint64(150), retrievedParams.OrderBookExtraGasWindow)
+	suite.Require().Equal(uint64(150), retrievedParams.PriceLevelOwnersWindow)
 }
 
-func (suite *IntegrationTestSuite) TestParams_OrderBookQueueExtraGas() {
+func (suite *IntegrationTestSuite) TestParams_PriceLevelExtraGas() {
 	params := v2types.DefaultParams()
-	params.OrderBookQueueExtraGas = 30000
+	params.PriceLevelExtraGas = 30000
 
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
 	retrievedParams := suite.k.GetParams(suite.ctx)
-	suite.Require().Equal(uint64(30000), retrievedParams.OrderBookQueueExtraGas)
+	suite.Require().Equal(uint64(30000), retrievedParams.PriceLevelExtraGas)
 }
 
 func (suite *IntegrationTestSuite) TestParams_FillOrdersExtraGas() {
@@ -300,8 +300,8 @@ func (suite *IntegrationTestSuite) TestParams_GetDefault_AllFields() {
 	suite.Require().Equal(v2types.DefaultMarketTakerFee, retrievedParams.MarketTakerFee)
 	suite.Require().Equal(v2types.DefaultMakerFeeDestination, retrievedParams.MakerFeeDestination)
 	suite.Require().Equal(v2types.DefaultTakerFeeDestination, retrievedParams.TakerFeeDestination)
-	suite.Require().Equal(v2types.DefaultOrderBookExtraGasWindow, retrievedParams.OrderBookExtraGasWindow)
-	suite.Require().Equal(v2types.DefaultOrderBookQueueExtraGas, retrievedParams.OrderBookQueueExtraGas)
+	suite.Require().Equal(v2types.DefaultPriceLevelOwnersWindow, retrievedParams.PriceLevelOwnersWindow)
+	suite.Require().Equal(v2types.DefaultPriceLevelExtraGas, retrievedParams.PriceLevelExtraGas)
 	suite.Require().Equal(v2types.DefaultFillOrdersExtraGas, retrievedParams.FillOrdersExtraGas)
 	suite.Require().EqualValues(v2types.DefaultMinNativeLiquidityForModuleSwap, retrievedParams.MinNativeLiquidityForModuleSwap)
 	suite.Require().Equal(v2types.DefaultMaxFillsPerOrder, retrievedParams.MaxFillsPerOrder)

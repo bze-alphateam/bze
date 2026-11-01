@@ -150,8 +150,14 @@ type upgradeCheck struct {
 	removedParams []string
 	// renamedParams are the tradebin params the candidate carries under a new
 	// name (old name -> new name, same proto field); step 4 expects the value
-	// unchanged under the new name
+	// unchanged under the new name, unless setParams has it
 	renamedParams map[string]string
+	// setParams are the tradebin params (new name -> JSON value) the
+	// migration sets whatever the previous release stored
+	setParams map[string]string
+	// addedOrderFields are the fields the candidate adds to the entries of the
+	// order book queries; step 4 compares the entries without them
+	addedOrderFields []string
 	// ibc links the network to simd over IBC, for a handler that touches IBC
 	ibc bool
 }
@@ -170,7 +176,13 @@ var upgradeChecks = map[string]upgradeCheck{
 	"v8.3.0": {
 		before: (*upgradeSuite).v830Before, after: (*upgradeSuite).v830After, moves: (*upgradeSuite).v830Moves, ibc: true,
 		removedParams: []string{"orderBookQueueMessageScanExtraGas"},
-		renamedParams: map[string]string{"orderBookPerBlockMessages": "maxFillsPerOrder"},
+		renamedParams: map[string]string{
+			"orderBookPerBlockMessages": "maxFillsPerOrder",
+			"orderBookExtraGasWindow":   "priceLevelOwnersWindow",
+			"orderBookQueueExtraGas":    "priceLevelExtraGas",
+		},
+		setParams:        map[string]string{"priceLevelOwnersWindow": `"500"`},
+		addedOrderFields: []string{"owners"},
 	},
 }
 
@@ -492,7 +504,7 @@ func (s *upgradeSuite) statePreserved(t *testing.T) {
 	require.Equal(t, b.Pools, a.Pools, "pools: reserves and LP denoms")
 	require.Equal(t, b.LpSupply, a.LpSupply, "LP supply")
 	require.Equal(t, b.Markets, a.Markets, "markets")
-	require.Equal(t, b.Orders, a.Orders, "resting orders")
+	require.Equal(t, b.Orders, withoutFields(a.Orders, s.check.addedOrderFields), "resting orders")
 	// compare the admins only: a handler may add fields to the authority
 	// record (v8.3.0 adds mintable, asserted in its handler checks)
 	require.Equal(t, upAdmins(b.Authorities), upAdmins(a.Authorities), "denom admins")
@@ -509,6 +521,10 @@ func (s *upgradeSuite) statePreserved(t *testing.T) {
 		}
 		if renamed, ok := s.check.renamedParams[name]; ok {
 			require.NotContains(t, a.TradebinParams, name, "tradebin param %s renamed to %s", name, renamed)
+			if set, ok := s.check.setParams[renamed]; ok {
+				t.Logf("tradebin param %s (was %s): %s -> %s", renamed, name, raw, set)
+				raw = json.RawMessage(set)
+			}
 			require.JSONEq(t, string(raw), string(a.TradebinParams[renamed]), "tradebin param %s, was %s", renamed, name)
 			continue
 		}
@@ -951,6 +967,75 @@ func (s *upgradeSuite) v830OwnerPriceIndex(t *testing.T, q v830Queue) {
 	require.Len(t, s.userOrders(t, 0, s.admin), len(backlog)+1, "the other backlog orders still rest apart")
 }
 
+// v830PriceLevelOwners checks that the tradebin 4 -> 5 migration wrote the
+// distinct-owner count of every price level (BZE-250): no aggregate counts
+// owners at plan - 1, and at the plan height every one counts the distinct
+// owners resting at its price, admin's several backlog orders at one price
+// once.
+func (s *upgradeSuite) v830PriceLevelOwners(t *testing.T) {
+	type level struct{ typ, price string }
+	resting := map[level][]string{}
+	for _, u := range []ibc.Wallet{s.admin, s.alice, s.bob, s.carol} {
+		for _, ref := range s.userOrders(t, s.plan, u) {
+			order := query[struct {
+				Order struct {
+					Price string `json:"price"`
+					Owner string `json:"owner"`
+				} `json:"order"`
+			}](t, s, s.plan, "tradebin", "market-order", s.market, ref.OrderType, ref.ID).Order
+			l := level{ref.OrderType, sdkmath.LegacyMustNewDecFromStr(order.Price).String()}
+			if !slices.Contains(resting[l], order.Owner) {
+				resting[l] = append(resting[l], order.Owner)
+			}
+		}
+	}
+
+	levels := 0
+	for _, typ := range []string{"buy", "sell"} {
+		for _, agg := range s.rawList(t, s.plan-1, "list", "tradebin", "market-aggregated-orders", s.market, typ) {
+			require.Contains(t, []any{nil, "0"}, agg["owners"], "no owner count before the migration")
+		}
+		for _, agg := range s.rawList(t, s.plan, "list", "tradebin", "market-aggregated-orders", s.market, typ) {
+			price, _ := agg["price"].(string)
+			l := level{typ, sdkmath.LegacyMustNewDecFromStr(price).String()}
+			require.NotEmpty(t, resting[l], "orders resting at the %s level %s", typ, price)
+			owners, _ := agg["owners"].(string)
+			require.Equal(t, strconv.Itoa(len(resting[l])), owners, "distinct owners at the %s level %s", typ, price)
+			levels++
+		}
+	}
+	require.Positive(t, levels, "aggregated levels at the plan height")
+	backlog, err := sdkmath.LegacyNewDecFromStr(upV830BacklogPrice)
+	require.NoError(t, err)
+	require.Equal(t, []string{s.admin.FormattedAddress()}, resting[level{"sell", backlog.String()}], "admin alone at the backlog price")
+}
+
+// withoutFields returns the order book lists without the given fields.
+func withoutFields(lists map[string][]map[string]any, fields []string) map[string][]map[string]any {
+	if len(fields) == 0 {
+		return lists
+	}
+	out := make(map[string][]map[string]any, len(lists))
+	for name, list := range lists {
+		if list == nil {
+			out[name] = nil
+			continue
+		}
+		stripped := make([]map[string]any, 0, len(list))
+		for _, entry := range list {
+			e := make(map[string]any, len(entry))
+			for k, v := range entry {
+				if !slices.Contains(fields, k) {
+					e[k] = v
+				}
+			}
+			stripped = append(stripped, e)
+		}
+		out[name] = stripped
+	}
+	return out
+}
+
 // setTradebinParam passes a tradebin MsgUpdateParams that changes one param.
 func (s *upgradeSuite) setTradebinParam(t *testing.T, name string, value json.RawMessage) {
 	t.Helper()
@@ -1045,6 +1130,7 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 
 	s.v830MintableFlags(t, b)
 	s.v830QueueRefunded(t, b.queue)
+	s.v830PriceLevelOwners(t)
 	s.v830OwnerPriceIndex(t, b.queue)
 }
 

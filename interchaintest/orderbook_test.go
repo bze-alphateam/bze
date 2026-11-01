@@ -47,6 +47,16 @@ const (
 	// package's TestTradebin_TakerGasPerFill) plus the ante handler; filling
 	// all obDeepMakers would take about 620k
 	obDeepTakerGas = 550_000
+
+	// step 18: crowded price level
+	obCrowdWindow   = 2
+	obCrowdExtraGas = 1_000_000
+	obCrowdMakers   = 5
+	obCrowdAmount   = 10
+	obCrowdPrice    = "4.5" // between the resting buy at 1 and sell at 5.5
+	obCrowdTxGas    = 2_500_000
+	obCrowdShortGas = 1_500_000 // below the 2,000,000 the fifth owner pays
+	obCrowdGasSlack = 100_000   // the gas of two placements differs by a few store reads
 	// timeout_commit is 1s: a block takes about that long
 	obMaxBlockTime = 5 * time.Second
 )
@@ -56,7 +66,8 @@ const (
 // or refunded, the minimum kept on a resting order, dust at a fractional
 // price, MsgFillOrders on buy orders with its refunds, cancels and their
 // refusals, a cancel followed by a fill at its price in one tx, crossed-book
-// and placement refusals, a self-trade and a top-up of a resting order. Every step asserts the exact
+// and placement refusals, a self-trade, a top-up of a resting order and the
+// extra gas of new owners at a crowded price level. Every step asserts the exact
 // balances of both makers and the taker, the trading fees on their way to the
 // burner, the engine events of the tx and the order book; the suite ends with
 // the tradebin module holding exactly the resting orders plus the stored dust.
@@ -87,7 +98,8 @@ func TestOrderBook(t *testing.T) {
 	t.Run("15 self-trade", s.selfTrade)
 	t.Run("16 deep price level, bounded taker gas", s.deepLevel)
 	t.Run("17 top-up keeps the id and the place", s.topUp)
-	t.Run("18 module holds the book and the dust", s.conservation)
+	t.Run("18 crowded price level costs new owners more gas", s.crowdedLevel)
+	t.Run("19 module holds the book and the dust", s.conservation)
 }
 
 type orderBookSuite struct {
@@ -753,7 +765,76 @@ func (s *orderBookSuite) topUp(t *testing.T) {
 	)
 }
 
-// 18. The tradebin module holds, on top of what it held before the market
+// 18. With priceLevelOwnersWindow 2 and priceLevelExtraGas 1,000,000, five
+// distinct makers join one price level. The first three pay no extra gas;
+// the fourth joins a level of three owners and pays (3 - 2) × 1,000,000 more
+// gas than the third. The first maker tops up its order without the extra
+// gas. The fifth maker would pay 2,000,000 extra and sends its tx with less
+// gas: the tx runs out of gas and leaves no order and no escrow. The
+// aggregated level counts its owners. The orders are cancelled at the end,
+// the level goes away and the params are restored.
+func (s *orderBookSuite) crowdedLevel(t *testing.T) {
+	window, extraGas := s.tradebinParam(t, "priceLevelOwnersWindow"), s.tradebinParam(t, "priceLevelExtraGas")
+	s.setTradebinParam(t, "priceLevelOwnersWindow", `"`+strconv.Itoa(obCrowdWindow)+`"`)
+	defer s.setTradebinParam(t, "priceLevelOwnersWindow", string(window))
+	s.setTradebinParam(t, "priceLevelExtraGas", `"`+strconv.Itoa(obCrowdExtraGas)+`"`)
+	defer s.setTradebinParam(t, "priceLevelExtraGas", string(extraGas))
+
+	bookBefore := s.book(t)
+	makers := interchaintest.GetAndFundTestUsers(t, s.ctx, "ob-crowd", sdkmath.NewInt(obDeepFunds), slices.Repeat([]ibc.Chain{s.bze}, obCrowdMakers)...)
+	require.NoError(t, testutil.WaitForBlocks(s.ctx, 2, s.bze))
+	for _, m := range makers {
+		s.mustExec(t, s.admin, "bank", "send", s.admin.FormattedAddress(), m.FormattedAddress(), coinStr(2*obCrowdAmount, s.ob))
+	}
+
+	ids := make([]string, obCrowdMakers-1)
+	gas := make([]int64, obCrowdMakers-1)
+	for i, m := range makers[:obCrowdMakers-1] {
+		res := s.mustExecMsgs(t, m, obCrowdTxGas, s.orderMsg(m, "sell", obCrowdAmount, obCrowdPrice))
+		ids[i] = s.requireSaved(t, res, s.fillIDs(t, res, 1)[0], m, "sell", strconv.Itoa(obCrowdAmount), obCrowdPrice)
+		gas[i] = res.GasUsed
+		t.Logf("maker %d joins a level of %d owners: %d gas", i+1, i, res.GasUsed)
+		require.Equal(t, uint64(i+1), s.levelOwners(t, "sell", obCrowdPrice), "owners after maker %d", i+1)
+	}
+	// up to the window owners at the level, a new owner pays no extra gas
+	require.InDelta(t, gas[0], gas[1], obCrowdGasSlack)
+	require.InDelta(t, gas[1], gas[2], obCrowdGasSlack)
+	// the fourth joins three owners: one owner past the window
+	require.InDelta(t, gas[2]+obCrowdExtraGas, gas[3], obCrowdGasSlack, "the fourth owner pays the extra gas")
+
+	// the first maker adds to its order: no new owner, no extra gas
+	res := s.mustExecMsgs(t, makers[0], obCrowdTxGas, s.orderMsg(makers[0], "sell", obCrowdAmount, obCrowdPrice))
+	require.Equal(t, ids[0], s.fillIDs(t, res, 1)[0], "the top-up takes the resting order's id")
+	s.requireAmended(t, res, ids[0], makers[0], "sell", obCrowdPrice, strconv.Itoa(obCrowdAmount), strconv.Itoa(2*obCrowdAmount))
+	t.Logf("maker 1 tops up at a level of 4 owners: %d gas", res.GasUsed)
+	require.Less(t, res.GasUsed, gas[2]+obCrowdGasSlack, "a top-up pays no extra gas")
+	require.Equal(t, uint64(obCrowdMakers-1), s.levelOwners(t, "sell", obCrowdPrice))
+
+	// the fifth would pay 2,000,000 extra gas: with less gas its tx fails and
+	// leaves nothing behind
+	last := makers[obCrowdMakers-1]
+	book := s.book(t)
+	res, err := helpers.ExecMsgs(s.ctx, s.bze, last, []helpers.TxOption{helpers.WithGas(obCrowdShortGas)}, s.orderMsg(last, "sell", obCrowdAmount, obCrowdPrice))
+	require.NoError(t, err)
+	require.Equal(t, "sdk", res.Codespace, res.RawLog)
+	require.EqualValues(t, 11, res.Code, res.RawLog)
+	require.Contains(t, res.RawLog, "out of gas")
+	s.requireOrders(t, last)
+	require.Equal(t, sdkmath.NewInt(2*obCrowdAmount), s.balance(t, last.FormattedAddress(), s.ob), "nothing escrowed")
+	require.Equal(t, book, s.book(t), "order book changed")
+	require.Equal(t, uint64(obCrowdMakers-1), s.levelOwners(t, "sell", obCrowdPrice))
+
+	// every owner leaving takes one off the count, the last one the level
+	for i, m := range makers[:obCrowdMakers-1] {
+		s.mustExecMsgs(t, m, obTxGas, s.cancelMsg(m, "sell", ids[i]))
+		if i < obCrowdMakers-2 {
+			require.Equal(t, uint64(obCrowdMakers-2-i), s.levelOwners(t, "sell", obCrowdPrice))
+		}
+	}
+	require.Equal(t, bookBefore, s.book(t))
+}
+
+// 19. The tradebin module holds, on top of what it held before the market
 // existed, exactly the ob of the resting sells and the ubze of the resting
 // buys (amount × price) plus the dust it stores for users. The aggregated
 // levels match the users' orders.
@@ -1145,6 +1226,26 @@ func (s *orderBookSuite) aggregates(t *testing.T, typ string) map[string]string 
 		out[l.Price] = l.Amount
 	}
 	return out
+}
+
+// levelOwners returns the distinct owners MarketAggregatedOrders reports at
+// one price of a side.
+func (s *orderBookSuite) levelOwners(t *testing.T, typ, price string) uint64 {
+	t.Helper()
+	res, err := helpers.Query[struct {
+		List []struct {
+			Price  string        `json:"price"`
+			Owners helpers.Int64 `json:"owners"`
+		} `json:"list"`
+	}](s.ctx, s.bze, "tradebin", "market-aggregated-orders", s.market, typ)
+	require.NoError(t, err)
+	for _, l := range res.List {
+		if l.Price == price {
+			return uint64(l.Owners)
+		}
+	}
+	require.Failf(t, "price level not found", "%s %s", typ, price)
+	return 0
 }
 
 func (s *orderBookSuite) book(t *testing.T) obBook {

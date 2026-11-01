@@ -79,6 +79,7 @@ func (suite *IntegrationTestSuite) TestEngine_PlaceOrder_CorruptOwnSideAggregate
 		pk.EXPECT().AssignOrderId(gomock.Any(), order).Return(placed).Times(1),
 		pk.EXPECT().GetAggregatedOrder(gomock.Any(), getMarketId(), types.OrderTypeSell, "1").Return(types.AggregatedOrder{}, false).Times(1),
 		pk.EXPECT().GetOrder(gomock.Any(), getMarketId(), types.OrderTypeBuy, placed.Id).Return(types.Order{}, false).Times(1),
+		pk.EXPECT().GetOwnerPriceOrder(gomock.Any(), maker.String(), getMarketId(), types.OrderTypeBuy, "1").Return(types.OrderReference{}, false).Times(1),
 		pk.EXPECT().SaveOrder(gomock.Any(), placed).Return(placed).Times(1),
 		pk.EXPECT().GetAggregatedOrder(gomock.Any(), getMarketId(), types.OrderTypeBuy, "1").
 			Return(types.AggregatedOrder{MarketId: getMarketId(), OrderType: types.OrderTypeBuy, Price: "1", Amount: "not-a-number"}, true).Times(1),
@@ -130,6 +131,7 @@ func (suite *IntegrationTestSuite) TestEngine_CancelOrder_CorruptAggregateReturn
 	refund := sdk.NewInt64Coin(market.Quote, 100)
 
 	gomock.InOrder(
+		pk.EXPECT().GetOwnerPriceOrder(gomock.Any(), owner.String(), getMarketId(), types.OrderTypeBuy, "1").Return(types.OrderReference{Id: order.Id, MarketId: getMarketId(), OrderType: types.OrderTypeBuy}, true).Times(1),
 		pk.EXPECT().RemoveOrder(gomock.Any(), order).Times(1),
 		pk.EXPECT().GetMarketById(gomock.Any(), getMarketId()).Return(market, true).Times(1),
 		pk.EXPECT().GetOrderCoinsWithDust(gomock.Any(), gomock.Any()).Return(types.OrderCoins{Coin: refund, Dust: math.LegacyZeroDec()}, nil).Times(1),
@@ -151,6 +153,7 @@ func (suite *IntegrationTestSuite) TestEngine_CancelOrder_CorruptOrderAmountRetu
 	order := withId(limitOrder(types.OrderTypeBuy, "not-a-number", "1", owner), orderId(0))
 
 	gomock.InOrder(
+		pk.EXPECT().GetOwnerPriceOrder(gomock.Any(), owner.String(), getMarketId(), types.OrderTypeBuy, "1").Return(types.OrderReference{Id: order.Id, MarketId: getMarketId(), OrderType: types.OrderTypeBuy}, true).Times(1),
 		pk.EXPECT().RemoveOrder(gomock.Any(), order).Times(1),
 		pk.EXPECT().GetMarketById(gomock.Any(), getMarketId()).Return(market, true).Times(1),
 	)
@@ -187,6 +190,7 @@ func (suite *IntegrationTestSuite) TestEngine_CancelOrder_RefundBankErrorReturns
 	refund := sdk.NewInt64Coin(market.Quote, 100)
 
 	gomock.InOrder(
+		pk.EXPECT().GetOwnerPriceOrder(gomock.Any(), owner.String(), getMarketId(), types.OrderTypeBuy, "1").Return(types.OrderReference{Id: order.Id, MarketId: getMarketId(), OrderType: types.OrderTypeBuy}, true).Times(1),
 		pk.EXPECT().RemoveOrder(gomock.Any(), order).Times(1),
 		pk.EXPECT().GetMarketById(gomock.Any(), getMarketId()).Return(market, true).Times(1),
 		pk.EXPECT().GetOrderCoinsWithDust(gomock.Any(), gomock.Any()).Return(types.OrderCoins{Coin: refund, Dust: math.LegacyZeroDec()}, nil).Times(1),
