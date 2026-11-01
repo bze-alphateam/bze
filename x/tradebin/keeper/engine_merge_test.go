@@ -302,3 +302,54 @@ func (suite *IntegrationTestSuite) TestEngineMerge_IndexedOrderMissingReturnsErr
 	suite.Require().ErrorContains(err, "not found")
 	suite.requireNoEngineEvents()
 }
+
+// While an owner rests an order at a price, the opposite side at that price is empty, so a top-up
+// never matches and is always merged whole. Checked after every way an opposite order can stop at
+// that price: a partial fill of the resting order, the fill cap, and a resting order skipped because
+// filling it would leave it below the minimum amount.
+func (suite *IntegrationTestSuite) TestEngineMerge_TopUpNeverMatches() {
+	const price = "0.2" // min amount 10
+	owner := sdk.AccAddress("addr1_______________")
+	other := sdk.AccAddress("addr2_______________")
+	seller := sdk.AccAddress("addr3_______________")
+
+	for _, tc := range []struct {
+		name     string
+		maxFills uint64
+		resting  []types.Order
+		sell     string
+		reason   string
+	}{
+		{"a smaller sell partly fills the resting order", 10, []types.Order{limitOrder(types.OrderTypeBuy, "50", price, owner)}, "20", ""},
+		{"the fill cap stops the sell", 1, []types.Order{limitOrder(types.OrderTypeBuy, "50", price, other), limitOrder(types.OrderTypeBuy, "50", price, owner)}, "80", types.RefundReasonMaxFillsReached},
+		{"the sell skips the resting order", 10, []types.Order{limitOrder(types.OrderTypeBuy, "19", price, owner)}, "15", types.RefundReasonBelowMinAmount},
+	} {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			suite.k.SetMarket(suite.ctx, market)
+			suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+			engine := suite.newEngineWithMaxFills(tc.maxFills)
+			suite.placeOrders(engine, tc.resting...)
+
+			suite.resetEvents()
+			suite.placeOrders(engine, limitOrder(types.OrderTypeSell, tc.sell, price, seller))
+			refunds := refundedEvents(suite.tradebinTypedEvents())
+			if tc.reason == "" {
+				suite.Require().Empty(refunds)
+			} else {
+				suite.Require().Len(refunds, 1)
+				suite.Require().Equal(tc.reason, refunds[0].Reason)
+			}
+			_, found := suite.k.GetAggregatedOrder(suite.ctx, getMarketId(), types.OrderTypeSell, price)
+			suite.Require().False(found, "the sell does not rest at the price of the resting buys")
+
+			suite.resetEvents()
+			suite.placeOrders(engine, limitOrder(types.OrderTypeBuy, "10", price, owner))
+			events := suite.tradebinTypedEvents()
+			suite.Require().Len(events, 1, "the top-up only amends: %v", events)
+			amended := amendedEvents(events)
+			suite.Require().Len(amended, 1)
+			suite.Require().Equal("10", amended[0].AddedAmount)
+		})
+	}
+}
