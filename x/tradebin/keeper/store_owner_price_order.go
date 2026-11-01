@@ -84,3 +84,31 @@ func isLowerOrderId(id, other string) bool {
 
 	return id < other
 }
+
+// RecountPriceLevelOwners sets the distinct-owner count of every aggregate to the number of
+// owner-price index entries at its market, side and price (BZE-250): the resting orders of the level
+// the index points at. Genesis init and the v5 migration call it after the index is built; from then
+// on the engine keeps the count in step with the index.
+//
+// The aggregates are read first and each one is written after its price level iterator is closed.
+func (k Keeper) RecountPriceLevelOwners(ctx sdk.Context) {
+	for _, agg := range k.GetAllAggregatedOrder(ctx) {
+		owners := uint64(0)
+		k.IteratePriceOrders(ctx, agg.MarketId, agg.OrderType, agg.Price, func(ref types.OrderReference) bool {
+			order, found := k.GetOrder(ctx, ref.MarketId, ref.OrderType, ref.Id)
+			if !found {
+				return false
+			}
+
+			entry, indexed := k.GetOwnerPriceOrder(ctx, order.Owner, order.MarketId, order.OrderType, order.Price)
+			if indexed && entry.Id == order.Id {
+				owners++
+			}
+
+			return false
+		})
+
+		agg.Owners = owners
+		k.SetAggregatedOrder(ctx, agg)
+	}
+}

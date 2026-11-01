@@ -87,6 +87,10 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 		return nil, types.ErrDenomHalted.Wrapf("market %s is halted", msg.MarketId)
 	}
 
+	//a new owner joining a crowded price level pays extra gas, before any fee or escrow
+	params := k.GetParams(ctx)
+	k.consumePriceLevelGas(ctx, msg, params)
+
 	accAddr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return nil, err
@@ -120,7 +124,7 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 	// the escrow dust is stored before the engine runs: the engine may update the same user's dust
 	k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
 
-	engine, err := k.orderBookEngine(k.GetParams(ctx).MaxFillsPerOrder)
+	engine, err := k.orderBookEngine(params.MaxFillsPerOrder)
 	if err != nil {
 		return nil, err
 	}

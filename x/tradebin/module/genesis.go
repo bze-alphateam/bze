@@ -28,6 +28,8 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 	for _, elem := range genState.AggregatedOrderList {
 		k.SetAggregatedOrder(ctx, elem)
 	}
+	// the owner counts follow the owner-price index SaveOrder rebuilt above
+	k.RecountPriceLevelOwners(ctx)
 
 	for key, elem := range genState.HistoryOrderList {
 		k.SetHistoryOrder(ctx, elem, strconv.Itoa(key))

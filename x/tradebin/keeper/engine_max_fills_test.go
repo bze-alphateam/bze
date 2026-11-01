@@ -390,7 +390,7 @@ func (suite *IntegrationTestSuite) TestEngine_MaxFills_NoWritesWhileIterating() 
 	pk.EXPECT().AssignOrderId(gomock.Any(), order).Return(placed).Times(1)
 	pk.EXPECT().GetMarketById(gomock.Any(), getMarketId()).Return(market, true).AnyTimes()
 	pk.EXPECT().GetAggregatedOrder(gomock.Any(), getMarketId(), types.OrderTypeSell, "1").
-		Return(types.AggregatedOrder{MarketId: getMarketId(), OrderType: types.OrderTypeSell, Price: "1", Amount: "30"}, true).Times(1)
+		Return(types.AggregatedOrder{MarketId: getMarketId(), OrderType: types.OrderTypeSell, Price: "1", Amount: "30", Owners: 3}, true).Times(1)
 	pk.EXPECT().IteratePriceOrders(gomock.Any(), getMarketId(), types.OrderTypeSell, "1", gomock.Any()).
 		DoAndReturn(func(ctx sdk.Context, marketId, orderType, price string, fn func(types.OrderReference) bool) {
 			iterating = true
@@ -411,6 +411,13 @@ func (suite *IntegrationTestSuite) TestEngine_MaxFills_NoWritesWhileIterating() 
 			noWrite("SendCoinsFromModuleToAccount")
 			return nil
 		}).Times(4)
+	// the owner-price index is read at settlement, before each write
+	pk.EXPECT().GetOwnerPriceOrder(gomock.Any(), full.Owner, getMarketId(), types.OrderTypeSell, "1").
+		DoAndReturn(func(sdk.Context, string, string, string, string) (types.OrderReference, bool) {
+			noWrite("GetOwnerPriceOrder")
+			return refOf(full), true
+		}).Times(1)
+	pk.EXPECT().GetOwnerPriceOrder(gomock.Any(), partial.Owner, getMarketId(), types.OrderTypeSell, "1").Return(refOf(partial), true).Times(1)
 	pk.EXPECT().RemoveOrder(gomock.Any(), withAmount(full, "0")).Do(func(sdk.Context, types.Order) { noWrite("RemoveOrder") }).Times(1)
 	pk.EXPECT().SaveOrder(gomock.Any(), withAmount(partial, "5")).DoAndReturn(func(_ sdk.Context, o types.Order) types.Order {
 		noWrite("SaveOrder")
@@ -418,7 +425,7 @@ func (suite *IntegrationTestSuite) TestEngine_MaxFills_NoWritesWhileIterating() 
 	}).Times(1)
 	pk.EXPECT().SetHistoryOrder(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(sdk.Context, types.HistoryOrder, string) { noWrite("SetHistoryOrder") }).Times(2)
 	pk.EXPECT().GetOnOrderFillHooks().Return(nil).Times(2)
-	pk.EXPECT().SetAggregatedOrder(gomock.Any(), types.AggregatedOrder{MarketId: getMarketId(), OrderType: types.OrderTypeSell, Price: "1", Amount: "15"}).
+	pk.EXPECT().SetAggregatedOrder(gomock.Any(), types.AggregatedOrder{MarketId: getMarketId(), OrderType: types.OrderTypeSell, Price: "1", Amount: "15", Owners: 2}).
 		Do(func(sdk.Context, types.AggregatedOrder) { noWrite("SetAggregatedOrder") }).Times(1)
 
 	suite.Require().NoError(engine.FillOrder(suite.ctx, order))

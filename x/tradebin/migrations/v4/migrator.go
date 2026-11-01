@@ -56,14 +56,16 @@ func migrateParams(store prefix.Store, cdc codec.BinaryCodec) error {
 	}
 
 	newParams := v2types.Params{
-		CreateMarketFee:                 createMarketFee,
-		MarketMakerFee:                  marketMakerFee,
-		MarketTakerFee:                  marketTakerFee,
-		MakerFeeDestination:             oldParams.MakerFeeDestination,
-		TakerFeeDestination:             oldParams.TakerFeeDestination,
-		NativeDenom:                     oldParams.NativeDenom,
-		OrderBookExtraGasWindow:         v2types.DefaultOrderBookExtraGasWindow,
-		OrderBookQueueExtraGas:          v2types.DefaultOrderBookQueueExtraGas,
+		CreateMarketFee:     createMarketFee,
+		MarketMakerFee:      marketMakerFee,
+		MarketTakerFee:      marketTakerFee,
+		MakerFeeDestination: oldParams.MakerFeeDestination,
+		TakerFeeDestination: oldParams.TakerFeeDestination,
+		NativeDenom:         oldParams.NativeDenom,
+		// fields 7 and 8 held the queue surcharge (window 100, 25,000 gas) at consensus version 4;
+		// the v5 migration gives them their price-level meaning
+		PriceLevelOwnersWindow:          100,
+		PriceLevelExtraGas:              25000,
 		FillOrdersExtraGas:              v2types.DefaultFillOrdersExtraGas,
 		MinNativeLiquidityForModuleSwap: v2types.DefaultMinNativeLiquidityForModuleSwap,
 		MaxFillsPerOrder:                v2types.DefaultMaxFillsPerOrder,

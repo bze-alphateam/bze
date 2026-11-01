@@ -17,8 +17,8 @@ func validV2Params() v2types.Params {
 		MakerFeeDestination:             v2types.FeeDestinationCommunityPool,
 		TakerFeeDestination:             v2types.FeeDestinationBurnerModule,
 		NativeDenom:                     denomBze,
-		OrderBookExtraGasWindow:         100,
-		OrderBookQueueExtraGas:          25000,
+		PriceLevelOwnersWindow:          100,
+		PriceLevelExtraGas:              25000,
 		FillOrdersExtraGas:              5000,
 		MinNativeLiquidityForModuleSwap: math.NewInt(100000000000),
 		MaxFillsPerOrder:                500,
@@ -236,6 +236,33 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_InvalidMaxFillsPerOrder()
 	suite.Require().Error(err)
 	suite.Require().Nil(response)
 	suite.Require().Contains(err.Error(), "max fills per order must be at least 1")
+}
+
+func (suite *IntegrationTestSuite) TestMsgUpdateParams_InvalidPriceLevelParams() {
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	for _, tc := range []struct {
+		name   string
+		mutate func(p *v2types.Params)
+		err    string
+	}{
+		{name: "window 0", mutate: func(p *v2types.Params) { p.PriceLevelOwnersWindow = 0 }, err: "price level owners window must be at least 1"},
+		{name: "extra gas 0", mutate: func(p *v2types.Params) { p.PriceLevelExtraGas = 0 }, err: "price level extra gas must be at least 1"},
+	} {
+		params := validV2Params()
+		tc.mutate(&params)
+
+		response, err := suite.msgServer.UpdateParams(suite.ctx, &types.MsgUpdateParams{Authority: authority, Params: params})
+		suite.Require().ErrorContains(err, tc.err, tc.name)
+		suite.Require().Nil(response)
+	}
+
+	// 1 is the lowest valid value of both
+	suite.bankMock.EXPECT().HasSupply(suite.ctx, denomBze).Return(true).Times(1)
+	params := validV2Params()
+	params.PriceLevelOwnersWindow = 1
+	params.PriceLevelExtraGas = 1
+	_, err := suite.msgServer.UpdateParams(suite.ctx, &types.MsgUpdateParams{Authority: authority, Params: params})
+	suite.Require().NoError(err)
 }
 
 func (suite *IntegrationTestSuite) TestMsgUpdateParams_MultipleUpdates() {

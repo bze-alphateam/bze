@@ -117,6 +117,7 @@ func (pe *ProcessingEngine) cancelOrder(ctx sdk.Context, order types.Order) erro
 	)
 	logger.Info("cancelling order")
 
+	ownerLeaves := pe.removesOwnerPriceEntry(ctx, order)
 	pe.k.RemoveOrder(ctx, order)
 
 	market, _ := pe.k.GetMarketById(ctx, order.MarketId)
@@ -156,7 +157,7 @@ func (pe *ProcessingEngine) cancelOrder(ctx sdk.Context, order types.Order) erro
 		logger.Info("will not send funds to order owner because the amount is too low but will save dust", "orderCoins", orderCoins)
 	}
 
-	err = pe.removeOrderFromAggregate(ctx, &order)
+	err = pe.removeOrderFromAggregate(ctx, &order, ownerLeaves)
 	if err != nil {
 		return err
 	}
@@ -350,7 +351,9 @@ func (pe *ProcessingEngine) saveOrder(ctx sdk.Context, message types.Order, amou
 	return &order
 }
 
-func (pe *ProcessingEngine) removeOrderFromAggregate(ctx sdk.Context, order *types.Order) error {
+// removeOrderFromAggregate takes the order amount off its price level, and its owner when ownerLeaves
+// (the removal deleted the owner's index entry at the level).
+func (pe *ProcessingEngine) removeOrderFromAggregate(ctx sdk.Context, order *types.Order, ownerLeaves bool) error {
 	agg, found := pe.k.GetAggregatedOrder(ctx, order.MarketId, order.OrderType, order.Price)
 	if !found {
 		return nil
@@ -370,17 +373,28 @@ func (pe *ProcessingEngine) removeOrderFromAggregate(ctx sdk.Context, order *typ
 
 	aggAmountInt = aggAmountInt.Sub(orderAmountInt)
 
+	if ownerLeaves {
+		if err := removeOwner(&agg); err != nil {
+			return err
+		}
+	}
+
 	if aggAmountInt.GT(math.ZeroInt()) {
 		agg.Amount = aggAmountInt.String()
 		pe.k.SetAggregatedOrder(ctx, agg)
 	} else {
+		if err := checkEmptyLevelOwners(&agg); err != nil {
+			return err
+		}
 		pe.k.RemoveAggregatedOrder(ctx, agg)
 	}
 
 	return nil
 }
 
-func (pe *ProcessingEngine) addOrderToAggregate(ctx sdk.Context, order *types.Order) error {
+// addOrderToAggregate adds the order amount to its price level, and its owner when newOwner (saving the
+// order created the owner's index entry at the level).
+func (pe *ProcessingEngine) addOrderToAggregate(ctx sdk.Context, order *types.Order, newOwner bool) error {
 	agg, found := pe.k.GetAggregatedOrder(ctx, order.MarketId, order.OrderType, order.Price)
 	if !found {
 		agg = types.AggregatedOrder{
@@ -404,6 +418,9 @@ func (pe *ProcessingEngine) addOrderToAggregate(ctx sdk.Context, order *types.Or
 	}
 
 	agg.Amount = aggAmountInt.Add(orderAmountInt).String()
+	if newOwner {
+		agg.Owners++
+	}
 
 	pe.k.SetAggregatedOrder(ctx, agg)
 
@@ -616,9 +633,18 @@ func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.Aggr
 
 		if fill.remaining.GT(zeroInt) {
 			pe.logger.Debug("order partially filled")
+			// a partly filled order of an owner without an index entry at the level gets one
+			if pe.createsOwnerPriceEntry(ctx, orderToFill) {
+				agg.Owners++
+			}
 			pe.k.SaveOrder(ctx, orderToFill)
 		} else {
 			pe.logger.Debug("order fully filled")
+			if pe.removesOwnerPriceEntry(ctx, orderToFill) {
+				if err := removeOwner(agg); err != nil {
+					return nil, false, err
+				}
+			}
 			pe.k.RemoveOrder(ctx, orderToFill)
 		}
 
@@ -635,6 +661,9 @@ func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.Aggr
 		pe.k.SetAggregatedOrder(ctx, *agg)
 		pe.logger.Info("aggregated order updated")
 	} else {
+		if err := checkEmptyLevelOwners(agg); err != nil {
+			return nil, false, err
+		}
 		pe.k.RemoveAggregatedOrder(ctx, *agg)
 		pe.logger.Info("aggregated order removed")
 	}

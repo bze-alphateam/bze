@@ -33,6 +33,8 @@ message AggregatedOrder {
   string order_type = 2;
   string amount = 3;
   string price = 4;
+  // number of distinct owners resting at the price level (one per owner-price index entry)
+  uint64 owners = 5;
 }
 
 message HistoryOrder {

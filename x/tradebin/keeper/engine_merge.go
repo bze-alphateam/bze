@@ -27,14 +27,16 @@ func (pe *ProcessingEngine) assignPlaceOrderId(ctx sdk.Context, order types.Orde
 // restOrder rests the amount of the message on the book. When the message carries the id of an order
 // that rests already (its owner's order at that price), the amount is added to that order, which keeps
 // its id, creation time and place in the book. Otherwise the message is saved as a new order.
-// Either way the amount is added to the aggregate of the price level.
+// Either way the amount is added to the aggregate of the price level, and the owner is counted there
+// when the order created its owner-price index entry.
 func (pe *ProcessingEngine) restOrder(ctx sdk.Context, message types.Order) error {
 	existing, found := pe.k.GetOrder(ctx, message.MarketId, message.OrderType, message.Id)
 	if !found {
+		newOwner := pe.createsOwnerPriceEntry(ctx, message)
 		order := pe.saveOrder(ctx, message, message.Amount)
 		pe.logger.Info("order saved on the book", "order", *order)
 
-		return pe.addOrderToAggregate(ctx, order)
+		return pe.addOrderToAggregate(ctx, order, newOwner)
 	}
 
 	existingAmount, ok := math.NewIntFromString(existing.Amount)
@@ -48,11 +50,13 @@ func (pe *ProcessingEngine) restOrder(ctx sdk.Context, message types.Order) erro
 	}
 
 	existing.Amount = existingAmount.Add(addedAmount).String()
+	// the message carries the id the owner's index entry points at: no new owner at the level
+	newOwner := pe.createsOwnerPriceEntry(ctx, existing)
 	pe.k.SaveOrder(ctx, existing)
 	pe.emitOrderAmendedEvent(ctx, &existing, addedAmount)
 	pe.logger.Info("order amount added to the resting order", "order", existing)
 
-	return pe.addOrderToAggregate(ctx, &message)
+	return pe.addOrderToAggregate(ctx, &message, newOwner)
 }
 
 func (pe *ProcessingEngine) emitOrderAmendedEvent(ctx sdk.Context, order *types.Order, addedAmount math.Int) {
