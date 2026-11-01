@@ -8,18 +8,17 @@ import (
 
 func (suite *IntegrationTestSuite) TestParams_GetAndSet() {
 	params := v2types.Params{
-		CreateMarketFee:                   sdk.NewInt64Coin(denomBze, 1000),
-		MarketMakerFee:                    sdk.NewInt64Coin(denomBze, 100),
-		MarketTakerFee:                    sdk.NewInt64Coin(denomBze, 200),
-		MakerFeeDestination:               v2types.FeeDestinationCommunityPool,
-		TakerFeeDestination:               v2types.FeeDestinationBurnerModule,
-		NativeDenom:                       denomBze,
-		OrderBookExtraGasWindow:           200,
-		OrderBookQueueExtraGas:            30000,
-		FillOrdersExtraGas:                6000,
-		OrderBookQueueMessageScanExtraGas: 5500,
-		MinNativeLiquidityForModuleSwap:   math.NewInt(60000000000),
-		OrderBookPerBlockMessages:         750,
+		CreateMarketFee:                 sdk.NewInt64Coin(denomBze, 1000),
+		MarketMakerFee:                  sdk.NewInt64Coin(denomBze, 100),
+		MarketTakerFee:                  sdk.NewInt64Coin(denomBze, 200),
+		MakerFeeDestination:             v2types.FeeDestinationCommunityPool,
+		TakerFeeDestination:             v2types.FeeDestinationBurnerModule,
+		NativeDenom:                     denomBze,
+		OrderBookExtraGasWindow:         200,
+		OrderBookQueueExtraGas:          30000,
+		FillOrdersExtraGas:              6000,
+		MinNativeLiquidityForModuleSwap: math.NewInt(60000000000),
+		OrderBookPerBlockMessages:       750,
 	}
 
 	// Test SetParams
@@ -36,7 +35,6 @@ func (suite *IntegrationTestSuite) TestParams_GetAndSet() {
 	suite.Require().Equal(params.OrderBookExtraGasWindow, retrievedParams.OrderBookExtraGasWindow)
 	suite.Require().Equal(params.OrderBookQueueExtraGas, retrievedParams.OrderBookQueueExtraGas)
 	suite.Require().Equal(params.FillOrdersExtraGas, retrievedParams.FillOrdersExtraGas)
-	suite.Require().Equal(params.OrderBookQueueMessageScanExtraGas, retrievedParams.OrderBookQueueMessageScanExtraGas)
 	suite.Require().Equal(params.MinNativeLiquidityForModuleSwap, retrievedParams.MinNativeLiquidityForModuleSwap)
 	suite.Require().Equal(params.OrderBookPerBlockMessages, retrievedParams.OrderBookPerBlockMessages)
 }
@@ -52,7 +50,6 @@ func (suite *IntegrationTestSuite) TestParams_GetDefault() {
 	suite.Require().Equal(v2types.DefaultOrderBookExtraGasWindow, retrievedParams.OrderBookExtraGasWindow)
 	suite.Require().Equal(v2types.DefaultOrderBookQueueExtraGas, retrievedParams.OrderBookQueueExtraGas)
 	suite.Require().Equal(v2types.DefaultFillOrdersExtraGas, retrievedParams.FillOrdersExtraGas)
-	suite.Require().Equal(v2types.DefaultOrderBookQueueMessageScanExtraGas, retrievedParams.OrderBookQueueMessageScanExtraGas)
 	suite.Require().EqualValues(v2types.DefaultMinNativeLiquidityForModuleSwap, retrievedParams.MinNativeLiquidityForModuleSwap)
 	suite.Require().Equal(v2types.DefaultOrderBookPerBlockMessages, retrievedParams.OrderBookPerBlockMessages)
 }
@@ -295,17 +292,6 @@ func (suite *IntegrationTestSuite) TestParams_OrderBookPerBlockMessages() {
 	suite.Require().Equal(uint64(1000), retrievedParams.OrderBookPerBlockMessages)
 }
 
-func (suite *IntegrationTestSuite) TestParams_OrderBookQueueMessageScanExtraGas() {
-	params := v2types.DefaultParams()
-	params.OrderBookQueueMessageScanExtraGas = 7500
-
-	err := suite.k.SetParams(suite.ctx, params)
-	suite.Require().NoError(err)
-
-	retrievedParams := suite.k.GetParams(suite.ctx)
-	suite.Require().Equal(uint64(7500), retrievedParams.OrderBookQueueMessageScanExtraGas)
-}
-
 func (suite *IntegrationTestSuite) TestParams_GetDefault_AllFields() {
 	retrievedParams := suite.k.GetParams(suite.ctx)
 
@@ -317,7 +303,6 @@ func (suite *IntegrationTestSuite) TestParams_GetDefault_AllFields() {
 	suite.Require().Equal(v2types.DefaultOrderBookExtraGasWindow, retrievedParams.OrderBookExtraGasWindow)
 	suite.Require().Equal(v2types.DefaultOrderBookQueueExtraGas, retrievedParams.OrderBookQueueExtraGas)
 	suite.Require().Equal(v2types.DefaultFillOrdersExtraGas, retrievedParams.FillOrdersExtraGas)
-	suite.Require().Equal(v2types.DefaultOrderBookQueueMessageScanExtraGas, retrievedParams.OrderBookQueueMessageScanExtraGas)
 	suite.Require().EqualValues(v2types.DefaultMinNativeLiquidityForModuleSwap, retrievedParams.MinNativeLiquidityForModuleSwap)
 	suite.Require().Equal(v2types.DefaultOrderBookPerBlockMessages, retrievedParams.OrderBookPerBlockMessages)
 }

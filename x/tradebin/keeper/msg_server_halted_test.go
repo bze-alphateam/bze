@@ -112,7 +112,9 @@ func (suite *IntegrationTestSuite) TestMsgHalted_CreateOrder_Rejected() {
 					Price:     "2",
 				})
 				suite.Require().ErrorIs(err, types.ErrDenomHalted)
-				suite.Require().Empty(suite.k.GetAllQueueMessage(suite.ctx))
+				suite.Require().Empty(suite.k.GetAllOrder(suite.ctx))
+				suite.Require().Empty(suite.k.GetAllAggregatedOrder(suite.ctx))
+				suite.Require().Zero(suite.k.GetOrderCounter(suite.ctx))
 			})
 		}
 	}
@@ -132,7 +134,8 @@ func (suite *IntegrationTestSuite) TestMsgHalted_FillOrders_Rejected() {
 				Orders:    []*types.FillOrderItem{{Price: "2", Amount: "1000000"}},
 			})
 			suite.Require().ErrorIs(err, types.ErrDenomHalted)
-			suite.Require().Empty(suite.k.GetAllQueueMessage(suite.ctx))
+			suite.Require().Empty(suite.k.GetAllOrder(suite.ctx))
+			suite.Require().Zero(suite.k.GetOrderCounter(suite.ctx))
 		})
 	}
 }
@@ -219,7 +222,10 @@ func (suite *IntegrationTestSuite) TestMsgHalted_UnrelatedMarketAndPool_Unaffect
 		Creator: addr1.String(), MarketId: getMarketId(), OrderType: types.OrderTypeBuy, Amount: "1000000", Price: "2",
 	})
 	suite.Require().NoError(err)
-	suite.Require().Len(suite.k.GetAllQueueMessage(suite.ctx), 1)
+	orders := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().Len(orders, 1)
+	suite.Require().Equal("1000000", orders[0].Amount)
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, "2", "1000000")
 
 	// swap on the unrelated pool
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, gomock.Any()).Return(nil).AnyTimes()
@@ -238,32 +244,50 @@ func (suite *IntegrationTestSuite) TestMsgHalted_UnrelatedMarketAndPool_Unaffect
 	suite.Require().True(stored.ReserveQuote.GT(native.ReserveQuote), "the swap executed")
 }
 
-// Exits keep working: cancelling an order on a halted market queues the cancel as always.
-func (suite *IntegrationTestSuite) TestMsgHalted_CancelOrder_QueuesNormally() {
+// Exits keep working: cancelling an order on a halted market refunds it in the transaction as always.
+func (suite *IntegrationTestSuite) TestMsgHalted_CancelOrder_RefundsNormallyInTx() {
 	m := haltedQuoteMarket()
 	suite.k.SetMarket(suite.ctx, m)
-	order := suite.k.NewOrder(suite.ctx, types.Order{
+	owner := getTestAccount()
+	suite.Require().NoError(suite.newEngine().PlaceOrder(suite.ctx, types.Order{
 		MarketId:  marketIdOf(m),
 		OrderType: types.OrderTypeBuy,
 		Amount:    "1000000",
 		Price:     "2",
-		Owner:     getTestAddress(),
-	})
+		Owner:     owner.String(),
+	}))
+	orders := suite.k.GetAllOrder(suite.ctx)
+	suite.Require().Len(orders, 1)
+	order := orders[0]
 	suite.setHaltedDenoms(denomHalted)
 
+	// a buy escrowed amount * price of the quote, the halted denom
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, owner,
+		sdk.NewCoins(sdk.NewInt64Coin(m.Quote, 2_000_000)),
+	).Return(nil).Times(1)
+
+	suite.resetEvents()
 	_, err := suite.msgServer.CancelOrder(suite.ctx, &types.MsgCancelOrder{
-		Creator:   getTestAddress(),
+		Creator:   owner.String(),
 		MarketId:  marketIdOf(m),
 		OrderId:   order.Id,
 		OrderType: order.OrderType,
 	})
 	suite.Require().NoError(err)
 
-	qm := suite.k.GetAllQueueMessage(suite.ctx)
-	suite.Require().Len(qm, 1)
-	suite.Require().Equal(types.MessageTypeCancel, qm[0].MessageType)
-	suite.Require().Equal(order.Id, qm[0].OrderId)
-	suite.Require().True(suite.k.HasPendingCancel(suite.ctx, marketIdOf(m), order.OrderType, order.Id))
+	_, found := suite.k.GetOrder(suite.ctx, marketIdOf(m), order.OrderType, order.Id)
+	suite.Require().False(found)
+	_, found = suite.k.GetAggregatedOrder(suite.ctx, marketIdOf(m), order.OrderType, order.Price)
+	suite.Require().False(found)
+
+	var canceled []*types.OrderCanceledEvent
+	for _, ev := range suite.tradebinTypedEvents() {
+		if e, ok := ev.(*types.OrderCanceledEvent); ok {
+			canceled = append(canceled, e)
+		}
+	}
+	suite.Require().Len(canceled, 1)
+	suite.Require().Equal(order.Id, canceled[0].OrderId)
 }
 
 // Exits keep working: removing liquidity from a halted pool pays out both reserves as always.

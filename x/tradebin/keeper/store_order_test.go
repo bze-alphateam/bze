@@ -1,10 +1,12 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
-	"github.com/bze-alphateam/bze/x/tradebin/types"
 	"time"
+
+	"cosmossdk.io/math"
+	"github.com/bze-alphateam/bze/x/tradebin/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func getRandomOrder(amt int64) types.Order {
@@ -57,7 +59,12 @@ func (suite *IntegrationTestSuite) getPriceOrderRef(order types.Order) (types.Or
 	return ordRef, found
 }
 
-func (suite *IntegrationTestSuite) TestStore_NewOrder() {
+// newOrder gives the order an id and saves it on the book the way the engine rests a maker order
+func (suite *IntegrationTestSuite) newOrder(ctx sdk.Context, order types.Order) types.Order {
+	return suite.k.SaveOrder(ctx, suite.k.AssignOrderId(ctx, order))
+}
+
+func (suite *IntegrationTestSuite) TestStore_AssignOrderIdAndSaveOrder() {
 	cases := map[string]struct {
 		MarketId  string
 		OrderType string
@@ -81,7 +88,8 @@ func (suite *IntegrationTestSuite) TestStore_NewOrder() {
 		},
 	}
 
-	for _, c := range cases {
+	blockTime := time.Unix(1_700_000_000, 0)
+	for name, c := range cases {
 		order := types.Order{
 			MarketId:  c.MarketId,
 			OrderType: c.OrderType,
@@ -89,28 +97,45 @@ func (suite *IntegrationTestSuite) TestStore_NewOrder() {
 			Price:     c.Price,
 			Owner:     c.Owner,
 		}
+		ctx := suite.ctx.WithBlockTime(blockTime)
+
+		// AssignOrderId: id from the counter, created at from the block time, counter + 1, nothing stored
 		beforeCounter := suite.k.GetOrderCounter(suite.ctx)
-		savedOrder := suite.k.NewOrder(suite.ctx.WithBlockTime(time.Now()), order)
+		withId := suite.k.AssignOrderId(ctx, order)
 		afterCounter := suite.k.GetOrderCounter(suite.ctx)
-		suite.Require().Equal(beforeCounter, afterCounter-1)
-		suite.Require().Equal(order.MarketId, savedOrder.MarketId)
-		suite.Require().Equal(order.OrderType, savedOrder.OrderType)
-		suite.Require().Equal(order.Amount, savedOrder.Amount)
-		suite.Require().Equal(order.Price, savedOrder.Price)
-		suite.Require().Equal(order.Owner, savedOrder.Owner)
-		suite.Require().NotEmpty(savedOrder.Id)
-		suite.Require().Greater(savedOrder.CreatedAt, int64(0))
+		suite.Require().Equal(beforeCounter+1, afterCounter, name)
+		suite.Require().Equal(fmt.Sprintf("%024d", beforeCounter), withId.Id, name)
+		suite.Require().Equal(blockTime.Unix(), withId.CreatedAt, name)
+		suite.Require().Equal(order.MarketId, withId.MarketId, name)
+		suite.Require().Equal(order.OrderType, withId.OrderType, name)
+		suite.Require().Equal(order.Amount, withId.Amount, name)
+		suite.Require().Equal(order.Price, withId.Price, name)
+		suite.Require().Equal(order.Owner, withId.Owner, name)
+		_, found := suite.k.GetOrder(suite.ctx, withId.MarketId, withId.OrderType, withId.Id)
+		suite.Require().False(found, name)
+		_, ok := suite.getPriceOrderRef(withId)
+		suite.Require().False(ok, name)
+		_, ok = suite.getUserOrderRef(withId)
+		suite.Require().False(ok, name)
+
+		// SaveOrder: stores the order and its references, leaves the counter alone
+		savedOrder := suite.k.SaveOrder(ctx, withId)
+		suite.Require().Equal(withId, savedOrder, name)
+		suite.Require().Equal(afterCounter, suite.k.GetOrderCounter(suite.ctx), name)
+		stored, found := suite.k.GetOrder(suite.ctx, withId.MarketId, withId.OrderType, withId.Id)
+		suite.Require().True(found, name)
+		suite.Require().Equal(withId, stored, name)
 
 		//check order reference is present in price index
 		ordRef, ok := suite.getPriceOrderRef(savedOrder)
-		suite.Require().True(ok)
+		suite.Require().True(ok, name)
 		suite.Require().Equal(savedOrder.Id, ordRef.Id)
 		suite.Require().Equal(savedOrder.MarketId, ordRef.MarketId)
 		suite.Require().Equal(savedOrder.OrderType, ordRef.OrderType)
 
 		//check order reference is present in user index
 		ordRef2, ok := suite.getUserOrderRef(savedOrder)
-		suite.Require().True(ok)
+		suite.Require().True(ok, name)
 		suite.Require().Equal(ordRef, ordRef2)
 	}
 }
@@ -128,7 +153,7 @@ func (suite *IntegrationTestSuite) TestStore_GetAllOrders() {
 	addedOrders := 7
 	randCol := getRandomOrderCollection(addedOrders)
 	for _, ord := range randCol {
-		suite.k.NewOrder(suite.ctx, ord)
+		suite.newOrder(suite.ctx, ord)
 	}
 
 	res := suite.k.GetAllOrder(suite.ctx)
@@ -137,7 +162,7 @@ func (suite *IntegrationTestSuite) TestStore_GetAllOrders() {
 
 func (suite *IntegrationTestSuite) TestStore_RemoveOrder() {
 	order := getRandomOrder(int64(2))
-	savedOrder := suite.k.NewOrder(suite.ctx, order)
+	savedOrder := suite.newOrder(suite.ctx, order)
 	suite.Require().NotEmpty(savedOrder.Id)
 	suite.k.RemoveOrder(suite.ctx, savedOrder)
 
@@ -156,7 +181,7 @@ func (suite *IntegrationTestSuite) TestStore_GetAllPriceOrder() {
 	addedOrders := 7
 	randCol := getRandomOrderCollection(addedOrders)
 	for _, ord := range randCol {
-		suite.k.NewOrder(suite.ctx, ord)
+		suite.newOrder(suite.ctx, ord)
 	}
 
 	res := suite.k.GetAllPriceOrder(suite.ctx)
