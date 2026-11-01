@@ -2,7 +2,6 @@ package interchaintest_test
 
 import (
 	"context"
-	"encoding/json"
 	"slices"
 	"strconv"
 	"testing"
@@ -1033,45 +1032,6 @@ func (s *orderBookSuite) moduleBalances(t *testing.T) sdk.Coins {
 		out = out.Add(sdk.NewCoin(d, s.balance(t, s.tradebin, d)))
 	}
 	return out
-}
-
-// rawParams returns the tradebin params as the query prints them; a
-// MsgUpdateParams carries them back with some fields replaced.
-func (s *orderBookSuite) rawParams(t *testing.T) map[string]json.RawMessage {
-	t.Helper()
-	res, err := helpers.Query[struct {
-		Params map[string]json.RawMessage `json:"params"`
-	}](s.ctx, s.bze, "tradebin", "params")
-	require.NoError(t, err)
-	require.NotEmpty(t, res.Params)
-	return res.Params
-}
-
-// updateParams passes a tradebin MsgUpdateParams carrying the current params
-// with the given uint64 fields replaced, and checks only those changed.
-func (s *orderBookSuite) updateParams(t *testing.T, title string, set map[string]uint64) {
-	t.Helper()
-	params := s.rawParams(t)
-	want := make(map[string]json.RawMessage, len(params))
-	for k, v := range params {
-		want[k] = v
-	}
-	for k, v := range set {
-		_, ok := params[k]
-		require.True(t, ok, "unknown tradebin param %s", k)
-		want[k] = json.RawMessage(strconv.Quote(strconv.FormatUint(v, 10)))
-	}
-	_, err := helpers.SubmitAndPassProposal(s.ctx, s.bze, s.admin, helpers.Proposal{
-		Messages: []any{map[string]any{
-			"@type":     "/bze.tradebin.MsgUpdateParams",
-			"authority": s.gov,
-			"params":    want,
-		}},
-		Title:   title,
-		Summary: "e2e: " + title,
-	})
-	require.NoError(t, err)
-	require.Equal(t, want, s.rawParams(t), "params after %q", title)
 }
 
 // mulPrice is amount × price for a price that makes it whole.
