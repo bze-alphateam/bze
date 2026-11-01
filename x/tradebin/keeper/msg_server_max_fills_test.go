@@ -20,7 +20,7 @@ func (suite *IntegrationTestSuite) setMaxFillsPerOrder(maxFills uint64) {
 	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
 }
 
-// MsgCreateOrder fills at most the maxFillsPerOrder param of resting orders.
+// MsgCreateOrder examines at most the maxFillsPerOrder param of resting orders (filled or skipped).
 func (suite *IntegrationTestSuite) TestMsgCreateOrder_MaxFillsPerOrderParam() {
 	suite.k.SetMarket(suite.ctx, market)
 	suite.setMaxFillsPerOrder(2)
