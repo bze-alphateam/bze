@@ -653,7 +653,7 @@ type paTradebin struct {
 	OrderBookExtraGasWindow, OrderBookQueueExtraGas uint64
 	FillOrdersExtraGas                              uint64
 	MinNativeLiquidityForModuleSwap                 sdkmath.Int
-	OrderBookPerBlockMessages                       uint64
+	MaxFillsPerOrder                                uint64
 }
 
 func (paTradebin) module() string { return "tradebin" }
@@ -670,7 +670,7 @@ func (p paTradebin) msgParams() map[string]any {
 		"orderBookQueueExtraGas":          u64(p.OrderBookQueueExtraGas),
 		"fillOrdersExtraGas":              u64(p.FillOrdersExtraGas),
 		"minNativeLiquidityForModuleSwap": p.MinNativeLiquidityForModuleSwap.String(),
-		"orderBookPerBlockMessages":       u64(p.OrderBookPerBlockMessages),
+		"maxFillsPerOrder":                u64(p.MaxFillsPerOrder),
 	}
 }
 
@@ -752,11 +752,11 @@ func (s *paramsSuite) queryTradebin(t *testing.T) paTradebin {
 		OrderBookQueueExtraGas          helpers.Int64 `json:"orderbookqueueextragas"`
 		FillOrdersExtraGas              helpers.Int64 `json:"fillordersextragas"`
 		MinNativeLiquidityForModuleSwap string        `json:"minnativeliquidityformoduleswap"`
-		OrderBookPerBlockMessages       helpers.Int64 `json:"orderbookperblockmessages"`
+		MaxFillsPerOrder                helpers.Int64 `json:"maxfillsperorder"`
 	}
 	raw := s.moduleParams(t, "tradebin", "createmarketfee", "marketmakerfee", "markettakerfee", "makerfeedestination", "takerfeedestination",
 		"nativedenom", "orderbookextragaswindow", "orderbookqueueextragas", "fillordersextragas", "minnativeliquidityformoduleswap",
-		"orderbookperblockmessages")
+		"maxfillsperorder")
 	require.NoError(t, json.Unmarshal(raw, &p), "%s", raw)
 	return paTradebin{
 		CreateMarketFee:                 p.CreateMarketFee.coin(),
@@ -769,7 +769,7 @@ func (s *paramsSuite) queryTradebin(t *testing.T) paTradebin {
 		OrderBookQueueExtraGas:          uint64(p.OrderBookQueueExtraGas),
 		FillOrdersExtraGas:              uint64(p.FillOrdersExtraGas),
 		MinNativeLiquidityForModuleSwap: parseInt(p.MinNativeLiquidityForModuleSwap),
-		OrderBookPerBlockMessages:       uint64(p.OrderBookPerBlockMessages),
+		MaxFillsPerOrder:                uint64(p.MaxFillsPerOrder),
 	}
 }
 

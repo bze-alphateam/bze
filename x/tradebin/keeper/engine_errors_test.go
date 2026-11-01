@@ -8,6 +8,7 @@ import (
 	"github.com/bze-alphateam/bze/x/tradebin/keeper"
 	"github.com/bze-alphateam/bze/x/tradebin/testutil"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
+	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"go.uber.org/mock/gomock"
 )
@@ -19,10 +20,21 @@ func (suite *IntegrationTestSuite) mockedEngine() (*keeper.ProcessingEngine, *te
 	ctrl := gomock.NewController(suite.T())
 	pk := testutil.NewMockProcessingKeeper(ctrl)
 	bank := testutil.NewMockEngineBankKeeper(ctrl)
-	engine, err := keeper.NewProcessingEngine(pk, bank, log.NewNopLogger())
+	engine, err := keeper.NewProcessingEngine(pk, bank, v2types.DefaultMaxFillsPerOrder, log.NewNopLogger())
 	suite.Require().NoError(err)
 
 	return engine, pk, bank
+}
+
+// iterateRefs makes a mocked IteratePriceOrders walk the given references in order
+func iterateRefs(refs ...types.OrderReference) func(sdk.Context, string, string, string, func(types.OrderReference) bool) {
+	return func(_ sdk.Context, _, _, _ string, fn func(types.OrderReference) bool) {
+		for _, ref := range refs {
+			if fn(ref) {
+				return
+			}
+		}
+	}
 }
 
 func withId(order types.Order, id string) types.Order {
@@ -97,7 +109,7 @@ func (suite *IntegrationTestSuite) TestEngine_FillOrder_CorruptMakerOrderAmountR
 		pk.EXPECT().GetMarketById(gomock.Any(), getMarketId()).Return(market, true).Times(1),
 		pk.EXPECT().GetAggregatedOrder(gomock.Any(), getMarketId(), types.OrderTypeSell, "1").
 			Return(types.AggregatedOrder{MarketId: getMarketId(), OrderType: types.OrderTypeSell, Price: "1", Amount: "100"}, true).Times(1),
-		pk.EXPECT().GetPriceOrderByPrice(gomock.Any(), getMarketId(), types.OrderTypeSell, "1").Return([]types.OrderReference{ref}).Times(1),
+		pk.EXPECT().IteratePriceOrders(gomock.Any(), getMarketId(), types.OrderTypeSell, "1", gomock.Any()).DoAndReturn(iterateRefs(ref)).Times(1),
 		pk.EXPECT().GetOrder(gomock.Any(), getMarketId(), types.OrderTypeSell, orderId(0)).Return(corruptMaker, true).Times(1),
 	)
 

@@ -18,7 +18,7 @@ func (suite *IntegrationTestSuite) TestParams_GetAndSet() {
 		OrderBookQueueExtraGas:          30000,
 		FillOrdersExtraGas:              6000,
 		MinNativeLiquidityForModuleSwap: math.NewInt(60000000000),
-		OrderBookPerBlockMessages:       750,
+		MaxFillsPerOrder:                750,
 	}
 
 	// Test SetParams
@@ -36,7 +36,7 @@ func (suite *IntegrationTestSuite) TestParams_GetAndSet() {
 	suite.Require().Equal(params.OrderBookQueueExtraGas, retrievedParams.OrderBookQueueExtraGas)
 	suite.Require().Equal(params.FillOrdersExtraGas, retrievedParams.FillOrdersExtraGas)
 	suite.Require().Equal(params.MinNativeLiquidityForModuleSwap, retrievedParams.MinNativeLiquidityForModuleSwap)
-	suite.Require().Equal(params.OrderBookPerBlockMessages, retrievedParams.OrderBookPerBlockMessages)
+	suite.Require().Equal(params.MaxFillsPerOrder, retrievedParams.MaxFillsPerOrder)
 }
 
 func (suite *IntegrationTestSuite) TestParams_GetDefault() {
@@ -51,7 +51,7 @@ func (suite *IntegrationTestSuite) TestParams_GetDefault() {
 	suite.Require().Equal(v2types.DefaultOrderBookQueueExtraGas, retrievedParams.OrderBookQueueExtraGas)
 	suite.Require().Equal(v2types.DefaultFillOrdersExtraGas, retrievedParams.FillOrdersExtraGas)
 	suite.Require().EqualValues(v2types.DefaultMinNativeLiquidityForModuleSwap, retrievedParams.MinNativeLiquidityForModuleSwap)
-	suite.Require().Equal(v2types.DefaultOrderBookPerBlockMessages, retrievedParams.OrderBookPerBlockMessages)
+	suite.Require().Equal(v2types.DefaultMaxFillsPerOrder, retrievedParams.MaxFillsPerOrder)
 }
 
 func (suite *IntegrationTestSuite) TestParams_SetMultipleTimes() {
@@ -281,15 +281,15 @@ func (suite *IntegrationTestSuite) TestParams_MinNativeLiquidityForModuleSwap() 
 	suite.Require().Equal("75000000000", retrievedParams.MinNativeLiquidityForModuleSwap.String())
 }
 
-func (suite *IntegrationTestSuite) TestParams_OrderBookPerBlockMessages() {
+func (suite *IntegrationTestSuite) TestParams_MaxFillsPerOrder() {
 	params := v2types.DefaultParams()
-	params.OrderBookPerBlockMessages = 1000
+	params.MaxFillsPerOrder = 1000
 
 	err := suite.k.SetParams(suite.ctx, params)
 	suite.Require().NoError(err)
 
 	retrievedParams := suite.k.GetParams(suite.ctx)
-	suite.Require().Equal(uint64(1000), retrievedParams.OrderBookPerBlockMessages)
+	suite.Require().Equal(uint64(1000), retrievedParams.MaxFillsPerOrder)
 }
 
 func (suite *IntegrationTestSuite) TestParams_GetDefault_AllFields() {
@@ -304,5 +304,5 @@ func (suite *IntegrationTestSuite) TestParams_GetDefault_AllFields() {
 	suite.Require().Equal(v2types.DefaultOrderBookQueueExtraGas, retrievedParams.OrderBookQueueExtraGas)
 	suite.Require().Equal(v2types.DefaultFillOrdersExtraGas, retrievedParams.FillOrdersExtraGas)
 	suite.Require().EqualValues(v2types.DefaultMinNativeLiquidityForModuleSwap, retrievedParams.MinNativeLiquidityForModuleSwap)
-	suite.Require().Equal(v2types.DefaultOrderBookPerBlockMessages, retrievedParams.OrderBookPerBlockMessages)
+	suite.Require().Equal(v2types.DefaultMaxFillsPerOrder, retrievedParams.MaxFillsPerOrder)
 }

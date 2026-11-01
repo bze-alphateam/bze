@@ -2,9 +2,11 @@ package interchaintest_test
 
 import (
 	"context"
+	"encoding/json"
 	"slices"
 	"strconv"
 	"testing"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,6 +35,20 @@ const (
 	obFillGas = 1_000_000
 
 	obCodespace = "tradebin"
+
+	// step 16: deep price level
+	obDeepMakers   = 10
+	obDeepMaxFills = 5
+	obDeepAmount   = 2   // ob per maker order, the minimum at obDeepPrice
+	obDeepPrice    = "3" // between the resting buy at 1 and sell at 6
+	obDeepFunds    = 1_000_000_000
+	// one taker filling obDeepMaxFills orders: about 102k message gas for the
+	// first fill and 46k for each next one (real bank, measured by the app
+	// package's TestTradebin_TakerGasPerFill) plus the ante handler; filling
+	// all obDeepMakers would take about 620k
+	obDeepTakerGas = 550_000
+	// timeout_commit is 1s: a block takes about that long
+	obMaxBlockTime = 5 * time.Second
 )
 
 // TestOrderBook runs the tradebin order-book engine end to end on one market,
@@ -69,6 +85,7 @@ func TestOrderBook(t *testing.T) {
 	t.Run("13 crossed book refusals", s.crossedBook)
 	t.Run("14 placement refusals", s.placementRefusals)
 	t.Run("15 self-trade", s.selfTrade)
+	t.Run("16 deep price level, bounded taker gas", s.deepLevel)
 	t.Run("18 module holds the book and the dust", s.conservation)
 }
 
@@ -598,6 +615,84 @@ func (s *orderBookSuite) selfTrade(t *testing.T) {
 	s.requireNewHistory(t, history, obHistory{"sell", "50", "5", s.maker1.FormattedAddress(), s.maker1.FormattedAddress()})
 }
 
+// 16. A price level of small orders from many distinct owners. With
+// maxFillsPerOrder at obDeepMaxFills, one taker crossing the whole level fills
+// the first obDeepMaxFills orders in FIFO order in its tx, for a bounded gas,
+// and gets the rest of its amount back with reason max_fills_reached; the
+// next taker fills the rest. Blocks keep their pace.
+func (s *orderBookSuite) deepLevel(t *testing.T) {
+	maxFills := s.tradebinParam(t, "maxFillsPerOrder")
+	s.setTradebinParam(t, "maxFillsPerOrder", `"`+strconv.Itoa(obDeepMaxFills)+`"`)
+	defer s.setTradebinParam(t, "maxFillsPerOrder", string(maxFills))
+
+	makers := interchaintest.GetAndFundTestUsers(t, s.ctx, "ob-deep", sdkmath.NewInt(obDeepFunds), slices.Repeat([]ibc.Chain{s.bze}, obDeepMakers)...)
+	require.NoError(t, testutil.WaitForBlocks(s.ctx, 2, s.bze))
+	ids := make([]string, len(makers))
+	for i, m := range makers {
+		s.mustExec(t, s.admin, "bank", "send", s.admin.FormattedAddress(), m.FormattedAddress(), coinStr(obDeepAmount, s.ob))
+		res, id := s.place(t, m, "sell", obDeepAmount, obDeepPrice)
+		ids[i] = s.requireSaved(t, res, id, m, "sell", strconv.Itoa(obDeepAmount), obDeepPrice)
+	}
+	s.requireBook(t, obBook{Buy: map[string]string{"1": "100"}, Sell: map[string]string{obDeepPrice: strconv.Itoa(obDeepMakers * obDeepAmount), "6": "100"}})
+	execs := func(from, to int) []obExec {
+		var want []obExec
+		for i := from; i < to; i++ {
+			want = append(want, obExec{ids[i], makers[i], "sell", strconv.Itoa(obDeepAmount), obDeepPrice})
+		}
+		return want
+	}
+	makersPaid := func(res helpers.TxResult, from, to int) {
+		for i, m := range makers {
+			want := sdkmath.ZeroInt()
+			if i >= from && i < to {
+				want = mulPrice(obDeepAmount, obDeepPrice)
+			}
+			require.Equal(t, want, s.transferred(t, res.Events, s.tradebin, m.FormattedAddress(), chain.Denom), "maker %d paid", i)
+		}
+	}
+	filled := int64(obDeepMaxFills * obDeepAmount)
+
+	// the whole level in one order: obDeepMaxFills fills, the rest refunded
+	want := s.snapshot(t)
+	whole := int64(obDeepMakers * obDeepAmount)
+	res1 := s.mustExecMsgs(t, s.taker, obFillGas, s.orderMsg(s.taker, "buy", whole, obDeepPrice))
+	t.Logf("taker gas for %d fills: %d", obDeepMaxFills, res1.GasUsed)
+	require.Less(t, res1.GasUsed, int64(obDeepTakerGas), "taker gas is bounded by maxFillsPerOrder")
+	id1 := s.fillIDs(t, res1, 1)[0]
+	s.requireExecuted(t, res1, id1, s.taker, execs(0, obDeepMaxFills)...)
+	rest := whole - filled
+	s.requireRefunded(t, res1, id1, s.taker, "buy", strconv.FormatInt(rest, 10), mulPrice(rest, obDeepPrice).String()+chain.Denom, "max_fills_reached")
+	s.requireNotSaved(t, res1, id1)
+	makersPaid(res1, 0, obDeepMaxFills)
+	want.paid(t, s, s.taker, res1, s.takerFee())
+	want.move(s.taker, chain.Denom, -mulPrice(filled, obDeepPrice).Int64())
+	want.move(s.taker, s.ob, filled)
+	s.requireBalances(t, want)
+	s.requireBook(t, obBook{Buy: map[string]string{"1": "100"}, Sell: map[string]string{obDeepPrice: strconv.FormatInt(rest, 10), "6": "100"}})
+
+	// the next order fills the remaining orders and empties the level
+	res2 := s.mustExecMsgs(t, s.taker, obFillGas, s.orderMsg(s.taker, "buy", rest, obDeepPrice))
+	t.Logf("taker gas for the next %d fills: %d", obDeepMakers-obDeepMaxFills, res2.GasUsed)
+	require.Less(t, res2.GasUsed, int64(obDeepTakerGas), "taker gas is bounded by maxFillsPerOrder")
+	id2 := s.fillIDs(t, res2, 1)[0]
+	s.requireExecuted(t, res2, id2, s.taker, execs(obDeepMaxFills, obDeepMakers)...)
+	require.Empty(t, s.engineEvents(t, res2, "OrderMessageRefundedEvent", map[string]string{"order_id": id2}))
+	s.requireNotSaved(t, res2, id2)
+	makersPaid(res2, obDeepMaxFills, obDeepMakers)
+	want.paid(t, s, s.taker, res2, s.takerFee())
+	want.move(s.taker, chain.Denom, -mulPrice(rest, obDeepPrice).Int64())
+	want.move(s.taker, s.ob, rest)
+	s.requireBalances(t, want)
+	s.requireBook(t, obBook{Buy: map[string]string{"1": "100"}, Sell: map[string]string{"6": "100"}})
+
+	// the blocks carrying the takers and the blocks after them come at the usual pace
+	require.NoError(t, testutil.WaitForBlocks(s.ctx, 1, s.bze))
+	for _, h := range []int64{res1.Height, res1.Height + 1, res2.Height, res2.Height + 1} {
+		gap := s.blockTime(t, h).Sub(s.blockTime(t, h-1))
+		require.Less(t, gap, obMaxBlockTime, "block %d came %s after the previous one", h, gap)
+	}
+}
+
 // 18. The tradebin module holds, on top of what it held before the market
 // existed, exactly the ob of the resting sells and the ubze of the resting
 // buys (amount × price) plus the dust it stores for users. The aggregated
@@ -643,6 +738,57 @@ func (s *orderBookSuite) conservation(t *testing.T) {
 }
 
 // --- order book helpers ---
+
+// tradebinParam returns one tradebin param as the query prints it.
+func (s *orderBookSuite) tradebinParam(t *testing.T, name string) json.RawMessage {
+	t.Helper()
+	res, err := helpers.Query[struct {
+		Params map[string]json.RawMessage `json:"params"`
+	}](s.ctx, s.bze, "tradebin", "params")
+	require.NoError(t, err)
+	require.Contains(t, res.Params, name, "tradebin param %s", name)
+	return res.Params[name]
+}
+
+// setTradebinParam passes a tradebin MsgUpdateParams that changes one param
+// (value is its JSON).
+func (s *orderBookSuite) setTradebinParam(t *testing.T, name, value string) {
+	t.Helper()
+	res, err := helpers.Query[struct {
+		Params map[string]json.RawMessage `json:"params"`
+	}](s.ctx, s.bze, "tradebin", "params")
+	require.NoError(t, err)
+	params := res.Params
+	params[name] = json.RawMessage(value)
+	_, err = helpers.SubmitAndPassProposal(s.ctx, s.bze, s.admin, helpers.Proposal{
+		Messages: []any{map[string]any{"@type": "/bze.tradebin.MsgUpdateParams", "authority": s.gov, "params": params}},
+		Title:    "Set tradebin " + name,
+		Summary:  "e2e: tradebin " + name,
+	})
+	require.NoError(t, err)
+	require.JSONEq(t, value, string(s.tradebinParam(t, name)), "tradebin %s", name)
+}
+
+// blockTime reads the header time of the block at height.
+func (s *orderBookSuite) blockTime(t *testing.T, height int64) time.Time {
+	t.Helper()
+	res, err := helpers.Query[struct {
+		Header struct {
+			Time time.Time `json:"time"`
+		} `json:"header"`
+		Block struct {
+			Header struct {
+				Time time.Time `json:"time"`
+			} `json:"header"`
+		} `json:"block"`
+	}](s.ctx, s.bze, "block", "--type=height", strconv.FormatInt(height, 10))
+	require.NoError(t, err)
+	if !res.Header.Time.IsZero() {
+		return res.Header.Time
+	}
+	require.False(t, res.Block.Header.Time.IsZero(), "no header time for block %d", height)
+	return res.Block.Header.Time
+}
 
 type obBook struct {
 	Buy, Sell map[string]string // price → amount, nil when the side is empty

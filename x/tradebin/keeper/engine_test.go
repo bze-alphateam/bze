@@ -4,13 +4,20 @@ import (
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/tradebin/keeper"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
+	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"go.uber.org/mock/gomock"
 )
 
-// newEngine builds the order book engine on the suite keeper and the suite bank mock
+// newEngine builds the order book engine on the suite keeper and the suite bank mock with the default
+// max fills per order
 func (suite *IntegrationTestSuite) newEngine() *keeper.ProcessingEngine {
-	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, suite.k.Logger())
+	return suite.newEngineWithMaxFills(v2types.DefaultMaxFillsPerOrder)
+}
+
+// newEngineWithMaxFills builds the order book engine on the suite keeper and the suite bank mock
+func (suite *IntegrationTestSuite) newEngineWithMaxFills(maxFills uint64) *keeper.ProcessingEngine {
+	engine, err := keeper.NewProcessingEngine(suite.k, suite.bankMock, maxFills, suite.k.Logger())
 	suite.Require().NoError(err)
 
 	return engine

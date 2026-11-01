@@ -15,7 +15,7 @@ import (
 // ProcessingKeeper is the state the order book engine reads and writes.
 type ProcessingKeeper interface {
 	//orders
-	GetPriceOrderByPrice(ctx sdk.Context, marketId, orderType, price string) (list []types.OrderReference)
+	IteratePriceOrders(ctx sdk.Context, marketId, orderType, price string, fn func(ref types.OrderReference) (stop bool))
 
 	GetOrder(ctx sdk.Context, marketId, orderType, orderId string) (order types.Order, found bool)
 	RemoveOrder(ctx sdk.Context, order types.Order)
@@ -51,24 +51,34 @@ type ProcessingEngine struct {
 	k    ProcessingKeeper
 	bank BankKeeper
 
+	// maxFills is the maximum number of resting orders one order examines (filled or skipped)
+	maxFills uint64
+
 	logger log.Logger
 }
 
-func NewProcessingEngine(k ProcessingKeeper, bank BankKeeper, logger log.Logger) (*ProcessingEngine, error) {
+func NewProcessingEngine(k ProcessingKeeper, bank BankKeeper, maxFills uint64, logger log.Logger) (*ProcessingEngine, error) {
 	if k == nil || bank == nil || logger == nil {
 		return nil, fmt.Errorf("invalid dependencies provided to ProcessingEngine")
 	}
 
+	if maxFills < 1 {
+		return nil, fmt.Errorf("max fills per order must be at least 1")
+	}
+
 	return &ProcessingEngine{
-		k:      k,
-		bank:   bank,
-		logger: logger,
+		k:        k,
+		bank:     bank,
+		maxFills: maxFills,
+		logger:   logger,
 	}, nil
 }
 
 // PlaceOrder executes a limit order: it is matched against the opposite side at its price and the
 // remainder rests on the book as a new maker order when the opposite side at that price was emptied
 // and the remainder is at least the minimum amount, otherwise the remainder is refunded.
+// At most maxFills resting orders are examined (filled or skipped); when that stops the matching the
+// remainder is refunded.
 // The order coins must already be escrowed in the module account. The order gets its id here,
 // before matching.
 func (pe *ProcessingEngine) PlaceOrder(ctx sdk.Context, order types.Order) error {
@@ -79,6 +89,7 @@ func (pe *ProcessingEngine) PlaceOrder(ctx sdk.Context, order types.Order) error
 
 // FillOrder executes an immediate-or-cancel order: it is matched against the opposite side at its
 // price and whatever is not executed is refunded. It never rests on the book.
+// At most maxFills resting orders are examined (filled or skipped).
 // The order coins must already be escrowed in the module account. The order gets its id here,
 // before matching.
 func (pe *ProcessingEngine) FillOrder(ctx sdk.Context, order types.Order) error {
@@ -179,7 +190,7 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.Order) error
 	minAmount, _ := CalculateMinAmount(message.Price)
 	msgOwnerAddr, _ := sdk.AccAddressFromBech32(message.Owner)
 
-	remaining, err := pe.fillAggregatedOrder(ctx, &agg, &message, msgAmountInt, &market)
+	remaining, maxFillsReached, err := pe.fillAggregatedOrder(ctx, &agg, &message, msgAmountInt, &market)
 	if err != nil {
 		return fmt.Errorf("could not fill aggregated order: %v", err)
 	}
@@ -187,6 +198,13 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.Order) error
 	if remaining.Equal(zeroInt) {
 		logger.Info("message was completely filled")
 		return nil
+	}
+
+	// orders are still resting at this price: the remainder can not rest on the other side
+	if maxFillsReached {
+		logger.Info("max fills reached, returning the remainder")
+
+		return pe.refundMessageFunds(ctx, &message, *remaining, &market, msgOwnerAddr, types.RefundReasonMaxFillsReached)
 	}
 
 	aggAmountInt, ok := math.NewIntFromString(agg.Amount)
@@ -504,7 +522,7 @@ func (pe *ProcessingEngine) fillOrder(ctx sdk.Context, message types.Order) erro
 		return pe.refundMessageFunds(ctx, &message, msgAmountInt, &market, msgOwnerAddr, types.RefundReasonNoMatch)
 	}
 
-	remainingAmount, err := pe.fillAggregatedOrder(ctx, &agg, &message, msgAmountInt, &market)
+	remainingAmount, maxFillsReached, err := pe.fillAggregatedOrder(ctx, &agg, &message, msgAmountInt, &market)
 	if err != nil {
 		return err
 	}
@@ -515,8 +533,12 @@ func (pe *ProcessingEngine) fillOrder(ctx sdk.Context, message types.Order) erro
 	}
 
 	//we haven't filled the entire message amount so we have to refund the msg owner's coins
+	reason := types.RefundReasonUnfilledRemainder
+	if maxFillsReached {
+		reason = types.RefundReasonMaxFillsReached
+	}
 
-	return pe.refundMessageFunds(ctx, &message, *remainingAmount, &market, msgOwnerAddr, types.RefundReasonUnfilledRemainder)
+	return pe.refundMessageFunds(ctx, &message, *remainingAmount, &market, msgOwnerAddr, reason)
 }
 
 // refundMessageFunds returns refundAmount (base denom) of the taker order to its owner and emits an
@@ -551,65 +573,44 @@ func (pe *ProcessingEngine) refundMessageFunds(ctx sdk.Context, message *types.O
 	return nil
 }
 
-func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.AggregatedOrder, message *types.Order, msgAmountInt math.Int, market *types.Market) (*math.Int, error) {
+// fillAggregatedOrder fills the resting orders of agg's price level in FIFO order with the message amount
+// and returns the amount left. It stops when the amount is spent, when it drops below the minimum
+// amount or when maxFills resting orders were examined (filled or skipped); maxFillsReached is true
+// only in the last case, when resting orders are left at that price.
+//
+// The level is read first and the fills are settled after the iterator is closed: nothing is written
+// to the store while it is open.
+func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.AggregatedOrder, message *types.Order, msgAmountInt math.Int, market *types.Market) (_ *math.Int, maxFillsReached bool, _ error) {
 	msgOwnerAddr, _ := sdk.AccAddressFromBech32(message.Owner)
 	zeroInt := math.ZeroInt()
 	aggAmountInt, ok := math.NewIntFromString(agg.Amount)
 	if !ok {
-		return nil, fmt.Errorf("could not convert agg amount")
+		return nil, false, fmt.Errorf("could not convert agg amount")
 	}
 
-	oppositeOrderRefs := pe.k.GetPriceOrderByPrice(ctx, message.MarketId, types.TheOtherOrderType(message.OrderType), message.Price)
-	pe.logger.Info("found orders to fill", "number_of_orders", len(oppositeOrderRefs))
 	minAmount, err := CalculateMinAmount(message.Price)
 	if err != nil {
-		return nil, fmt.Errorf("could not calculate min amount: %v", err)
+		return nil, false, fmt.Errorf("could not calculate min amount: %v", err)
 	}
 
-	for _, orderRef := range oppositeOrderRefs {
-		//stop when all message amount was spent
-		if !msgAmountInt.IsPositive() {
-			pe.logger.Debug("msg amount is not positive anymore. exiting oppositeOrderRefs iteration")
-			break
-		}
+	fills, err := pe.matchPriceLevel(ctx, message, &msgAmountInt, &aggAmountInt, minAmount)
+	if err != nil {
+		return nil, false, err
+	}
+	maxFillsReached = fills.maxFillsReached
+	pe.logger.Info("found orders to fill", "number_of_orders", len(fills.fills))
 
-		// msgAmountInt changes after each iteration. In case it goes too low to be executed we can stop trying.
-		// The caller of this function will refund the msg owner's coins.
-		if msgAmountInt.LT(minAmount) {
-			pe.logger.Debug("msg amount is too low. exiting oppositeOrderRefs iteration", "amount", msgAmountInt.String(), "minAmount", minAmount.String())
-			break
-		}
-
-		orderToFill, _ := pe.k.GetOrder(ctx, orderRef.MarketId, orderRef.OrderType, orderRef.Id)
-		pe.logger.Debug("preparing to fill message with order", "orderToFill", orderToFill)
-		orderAmountInt, ok := math.NewIntFromString(orderToFill.Amount)
-		if !ok {
-
-			return nil, fmt.Errorf("could not convert order to fill amount")
-		}
-
-		//find how much to send to the found order's owner
-		amountToExecute := pe.getExecutedAmount(msgAmountInt, orderAmountInt, minAmount)
-		if amountToExecute.IsZero() {
-			continue
-		}
-
-		msgAmountInt = msgAmountInt.Sub(amountToExecute)
-		message.Amount = msgAmountInt.String()
-
-		orderAmountInt = orderAmountInt.Sub(amountToExecute)
-		orderToFill.Amount = orderAmountInt.String()
-
-		aggAmountInt = aggAmountInt.Sub(amountToExecute)
-		agg.Amount = aggAmountInt.String()
+	for _, fill := range fills.fills {
+		orderToFill := fill.order
+		amountToExecute := fill.amount
 
 		err := pe.fundUsersAccounts(ctx, &orderToFill, market, amountToExecute, msgOwnerAddr)
 		if err != nil {
 
-			return nil, err
+			return nil, false, err
 		}
 
-		if orderAmountInt.GT(zeroInt) {
+		if fill.remaining.GT(zeroInt) {
 			pe.logger.Debug("order partially filled")
 			pe.k.SaveOrder(ctx, orderToFill)
 		} else {
@@ -621,6 +622,11 @@ func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.Aggr
 		pe.emitOrderExecutedEvent(ctx, &orderToFill, amountToExecute.String(), message.Owner, message.Id)
 	}
 
+	if len(fills.fills) > 0 {
+		message.Amount = msgAmountInt.String()
+		agg.Amount = aggAmountInt.String()
+	}
+
 	if aggAmountInt.GT(zeroInt) {
 		pe.k.SetAggregatedOrder(ctx, *agg)
 		pe.logger.Info("aggregated order updated")
@@ -629,5 +635,5 @@ func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.Aggr
 		pe.logger.Info("aggregated order removed")
 	}
 
-	return &msgAmountInt, nil
+	return &msgAmountInt, maxFillsReached, nil
 }

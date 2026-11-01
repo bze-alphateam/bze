@@ -24,7 +24,7 @@ var (
 	DefaultOrderBookQueueExtraGas          = uint64(25000)
 	DefaultFillOrdersExtraGas              = uint64(5000)
 	DefaultMinNativeLiquidityForModuleSwap = math.NewInt(100000000000)
-	DefaultOrderBookPerBlockMessages       = uint64(500)
+	DefaultMaxFillsPerOrder                = uint64(500)
 )
 
 // DefaultParams returns a default set of v2 parameters
@@ -40,7 +40,7 @@ func DefaultParams() Params {
 		OrderBookQueueExtraGas:          DefaultOrderBookQueueExtraGas,
 		FillOrdersExtraGas:              DefaultFillOrdersExtraGas,
 		MinNativeLiquidityForModuleSwap: DefaultMinNativeLiquidityForModuleSwap,
-		OrderBookPerBlockMessages:       DefaultOrderBookPerBlockMessages,
+		MaxFillsPerOrder:                DefaultMaxFillsPerOrder,
 	}
 }
 
@@ -74,8 +74,8 @@ func (p Params) Validate() error {
 		return fmt.Errorf("min native liquidity for module swap must be positive")
 	}
 
-	if p.OrderBookPerBlockMessages < 1 {
-		return fmt.Errorf("order book per block messages must be at least 1")
+	if p.MaxFillsPerOrder < 1 {
+		return fmt.Errorf("max fills per order must be at least 1")
 	}
 
 	return nil
