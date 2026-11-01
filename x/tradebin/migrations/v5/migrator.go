@@ -1,6 +1,7 @@
 package v5
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -46,20 +47,16 @@ func Migrate(ctx sdk.Context, store storetypes.KVStore, k OrderKeeper, bank Bank
 	return nil
 }
 
-// refundQueueMessages refunds every queued message in store order and returns their keys.
+// refundQueueMessages refunds every queued message in store order and returns their keys. The
+// messages are read first and refunded after their iterator is closed: a refund writes to the store
+// (user dust) and sends coins.
 func refundQueueMessages(ctx sdk.Context, store storetypes.KVStore, k OrderKeeper, bank BankKeeper) ([][]byte, error) {
-	iterator := storetypes.KVStorePrefixIterator(store, []byte(QueueMessagePrefix))
-	defer iterator.Close()
+	keys, messages, err := readQueueMessages(store)
+	if err != nil {
+		return nil, err
+	}
 
-	var keys [][]byte
-	for ; iterator.Valid(); iterator.Next() {
-		keys = append(keys, iterator.Key())
-
-		qm, err := decodeQueueMessage(iterator.Value())
-		if err != nil {
-			return nil, fmt.Errorf("queue message %q: %w", iterator.Key(), err)
-		}
-
+	for _, qm := range messages {
 		if qm.MessageType == messageTypeCancel {
 			continue
 		}
@@ -71,6 +68,27 @@ func refundQueueMessages(ctx sdk.Context, store storetypes.KVStore, k OrderKeepe
 	}
 
 	return keys, nil
+}
+
+// readQueueMessages decodes every queued message in store order and returns them with their keys.
+func readQueueMessages(store storetypes.KVStore) ([][]byte, []queueMessage, error) {
+	iterator := storetypes.KVStorePrefixIterator(store, []byte(QueueMessagePrefix))
+	defer iterator.Close()
+
+	var keys [][]byte
+	var messages []queueMessage
+	for ; iterator.Valid(); iterator.Next() {
+		key := bytes.Clone(iterator.Key())
+		qm, err := decodeQueueMessage(iterator.Value())
+		if err != nil {
+			return nil, nil, fmt.Errorf("queue message %q: %w", key, err)
+		}
+
+		keys = append(keys, key)
+		messages = append(messages, qm)
+	}
+
+	return keys, messages, nil
 }
 
 // refundQueueMessage returns the coins escrowed for the message to its owner. Fill messages were
@@ -131,7 +149,7 @@ func prefixKeys(store storetypes.KVStore, prefix []byte) [][]byte {
 
 	var keys [][]byte
 	for ; iterator.Valid(); iterator.Next() {
-		keys = append(keys, iterator.Key())
+		keys = append(keys, bytes.Clone(iterator.Key()))
 	}
 
 	return keys
