@@ -50,12 +50,18 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 
 // Migrate4to5 migrates the x/tradebin module state from consensus version 4 to
 // version 5. Orders execute inside their transaction from version 5: every message
-// still queued is refunded to its owner and the queue store is removed.
+// still queued is refunded to its owner and the queue store is removed. Param field 11
+// becomes maxFillsPerOrder and is set to its default if it is 0.
 func (m Migrator) Migrate4to5(ctx sdk.Context) error {
 	adapter := runtime.KVStoreAdapter(m.keeper.storeService.OpenKVStore(ctx))
 	store := prefix.NewStore(adapter, []byte{})
 
 	m.keeper.Logger().Info("migrating x/tradebin state from consensus version 4 to version 5")
 
-	return v5.Migrate(ctx, store, m.keeper, m.bank)
+	err := v5.Migrate(ctx, store, m.keeper, m.bank)
+	if err != nil {
+		return err
+	}
+
+	return v5.MigrateParams(ctx, m.keeper)
 }

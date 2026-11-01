@@ -135,7 +135,10 @@ func (k Keeper) RemovePriceOrder(ctx sdk.Context, marketId, orderType, price, or
 	store.Delete(key)
 }
 
-func (k Keeper) GetPriceOrderByPrice(ctx sdk.Context, marketId, orderType, price string) (list []types.OrderReference) {
+// IteratePriceOrders calls fn for every order reference resting at the given market, side and price,
+// in key order (order ids are zero-filled, so that is FIFO), until fn returns true.
+// fn must not write to the store: the iterator stays open while it runs.
+func (k Keeper) IteratePriceOrders(ctx sdk.Context, marketId, orderType, price string, fn func(ref types.OrderReference) (stop bool)) {
 	store := k.getPriceOrderStore(ctx)
 	iterator := storetypes.KVStorePrefixIterator(store, types.PriceOrderPrefixKey(marketId, orderType, price))
 
@@ -144,10 +147,10 @@ func (k Keeper) GetPriceOrderByPrice(ctx sdk.Context, marketId, orderType, price
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.OrderReference
 		k.cdc.MustUnmarshal(iterator.Value(), &val)
-		list = append(list, val)
+		if fn(val) {
+			return
+		}
 	}
-
-	return
 }
 
 func (k Keeper) GetAllUserOrder(ctx sdk.Context) (list []types.OrderReference) {

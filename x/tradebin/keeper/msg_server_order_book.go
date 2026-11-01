@@ -120,7 +120,7 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 	// the escrow dust is stored before the engine runs: the engine may update the same user's dust
 	k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
 
-	engine, err := k.orderBookEngine()
+	engine, err := k.orderBookEngine(k.GetParams(ctx).MaxFillsPerOrder)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +157,7 @@ func (k msgServer) CancelOrder(goCtx context.Context, msg *types.MsgCancelOrder)
 		return nil, types.ErrUnauthorizedOrder
 	}
 
-	engine, err := k.orderBookEngine()
+	engine, err := k.orderBookEngine(k.GetParams(ctx).MaxFillsPerOrder)
 	if err != nil {
 		return nil, err
 	}
@@ -188,12 +188,12 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 		return nil, types.ErrDenomHalted.Wrapf("market %s is halted", msg.MarketId)
 	}
 
-	engine, err := k.orderBookEngine()
+	params := k.GetParams(ctx)
+	engine, err := k.orderBookEngine(params.MaxFillsPerOrder)
 	if err != nil {
 		return nil, err
 	}
 
-	params := k.GetParams(ctx)
 	ctx.GasMeter().ConsumeGas(params.FillOrdersExtraGas, "fill_orders")
 	totalCoins := sdk.NewCoins()
 	for key, fo := range msg.Orders {
@@ -423,6 +423,6 @@ func (k Keeper) checkPriceInOrderBook(ctx sdk.Context, msg *types.MsgCreateOrder
 }
 
 // orderBookEngine builds the matching engine the order book message servers execute orders with.
-func (k msgServer) orderBookEngine() (*ProcessingEngine, error) {
-	return NewProcessingEngine(k.Keeper, k.bankKeeper, k.Logger().With("processor", "order_book_processor"))
+func (k msgServer) orderBookEngine(maxFills uint64) (*ProcessingEngine, error) {
+	return NewProcessingEngine(k.Keeper, k.bankKeeper, maxFills, k.Logger().With("processor", "order_book_processor"))
 }

@@ -10,6 +10,9 @@ const (
 	// RefundReasonBelowMinAmount : a limit order was partly matched and its remainder was not placed
 	// on the book, the remainder is returned
 	RefundReasonBelowMinAmount = "below_min_amount"
+	// RefundReasonMaxFillsReached : the order filled the maximum number of resting orders one order may
+	// fill while orders were still resting at its price, the remainder is returned
+	RefundReasonMaxFillsReached = "max_fills_reached"
 	// RefundReasonUpgrade : a message still queued at the v8.3.0 upgrade was returned to its owner by
 	// the module migration instead of being executed
 	RefundReasonUpgrade = "upgrade"

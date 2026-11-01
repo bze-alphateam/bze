@@ -132,18 +132,16 @@ func (mr *MockProcessingKeeperMockRecorder) GetOrderCoinsWithDust(ctx, orderCoin
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderCoinsWithDust", reflect.TypeOf((*MockProcessingKeeper)(nil).GetOrderCoinsWithDust), ctx, orderCoinsArgs)
 }
 
-// GetPriceOrderByPrice mocks base method.
-func (m *MockProcessingKeeper) GetPriceOrderByPrice(ctx types0.Context, marketId, orderType, price string) []types.OrderReference {
+// IteratePriceOrders mocks base method.
+func (m *MockProcessingKeeper) IteratePriceOrders(ctx types0.Context, marketId, orderType, price string, fn func(types.OrderReference) bool) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPriceOrderByPrice", ctx, marketId, orderType, price)
-	ret0, _ := ret[0].([]types.OrderReference)
-	return ret0
+	m.ctrl.Call(m, "IteratePriceOrders", ctx, marketId, orderType, price, fn)
 }
 
-// GetPriceOrderByPrice indicates an expected call of GetPriceOrderByPrice.
-func (mr *MockProcessingKeeperMockRecorder) GetPriceOrderByPrice(ctx, marketId, orderType, price any) *gomock.Call {
+// IteratePriceOrders indicates an expected call of IteratePriceOrders.
+func (mr *MockProcessingKeeperMockRecorder) IteratePriceOrders(ctx, marketId, orderType, price, fn any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPriceOrderByPrice", reflect.TypeOf((*MockProcessingKeeper)(nil).GetPriceOrderByPrice), ctx, marketId, orderType, price)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IteratePriceOrders", reflect.TypeOf((*MockProcessingKeeper)(nil).IteratePriceOrders), ctx, marketId, orderType, price, fn)
 }
 
 // Logger mocks base method.

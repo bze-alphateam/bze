@@ -66,7 +66,7 @@ func migrateParams(store prefix.Store, cdc codec.BinaryCodec) error {
 		OrderBookQueueExtraGas:          v2types.DefaultOrderBookQueueExtraGas,
 		FillOrdersExtraGas:              v2types.DefaultFillOrdersExtraGas,
 		MinNativeLiquidityForModuleSwap: v2types.DefaultMinNativeLiquidityForModuleSwap,
-		OrderBookPerBlockMessages:       v2types.DefaultOrderBookPerBlockMessages,
+		MaxFillsPerOrder:                v2types.DefaultMaxFillsPerOrder,
 	}
 
 	if err := newParams.Validate(); err != nil {
