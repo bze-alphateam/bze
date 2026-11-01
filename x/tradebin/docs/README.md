@@ -8,7 +8,7 @@ TradeBin provides orderbook trading and AMM liquidity pools.
 - **Cancel an order** (`MsgCancelOrder`): remove your open order by `order_id` and `order_type`. The remaining amount is refunded in the same transaction.
 - **Fill orders** (`MsgFillOrders`): fill existing orders at specific price/amount levels in one message. Each entry is an immediate-or-cancel order executed in the transaction: what it cannot fill is refunded, it never rests. The message always pays the taker fee once (after its entries ran) and consumes `fill_orders_extra_gas` once on entry and again per entry.
 - **Order ids**: every order gets an id when it is processed, including a taker filled in full that never rests. Fills, refunds and the resting remainder of an order carry that id in their events (`order_id`).
-- **Gas**: the matching work (every maker filled, its settlement, history and events) is metered by the transaction's gas, like any other store access. A transaction that runs out of gas, or fails for any other reason, is reverted whole: nothing is filled, escrowed or charged but the gas. Wallets simulate to estimate it; a taker crossing many resting orders uses more gas than one filling a single order.
+- **Gas**: the matching work (every maker filled, its settlement, history and events) is metered by the transaction's gas, like any other store access. A transaction that runs out of gas, or fails for any other reason, is reverted whole: nothing is filled, escrowed or charged but the gas. Wallets simulate to estimate it; a taker crossing many resting orders uses more gas than one filling a single order. Crowded price levels cost more gas for new makers: placing an order at a price level of your side where more than `price_level_owners_window` other owners already rest (default 500), and where you have no order yet, adds `price_level_extra_gas` (default 25,000) for each owner above that number. Topping up your own order costs nothing extra, and no order is ever refused. The extra gas is consumed before the fee and the escrow, so a placement that runs out of gas costs only the gas.
 
 Example:
 ```bash
@@ -134,7 +134,7 @@ Partial order fills can leave fractional coin amounts (dust) that are too small 
 - `bzed query tradebin market <id>` / `markets` – market listings.
 - `bzed query tradebin asset-markets <asset>` – all markets where an asset is base or quote.
 - `bzed query tradebin user-market-orders <address> --market <id>` – paginated user orders in a market.
-- `bzed query tradebin market-aggregated-orders <market> <buy|sell>` – aggregated order book at price levels.
+- `bzed query tradebin market-aggregated-orders <market> <buy|sell>` – aggregated order book at price levels, with the number of distinct owners resting at each (`owners`).
 - `bzed query tradebin market-history <market>` – execution history for a market.
 - `bzed query tradebin market-order <market> <buy|sell> <order-id>` – single order details.
 - `bzed query tradebin all-user-dust <address>` – fractional dust from partial fills.
@@ -156,6 +156,7 @@ Partial order fills can leave fractional coin amounts (dust) that are too small 
 - Order book orders execute inside their transaction, metered by its gas: the EndBlock queue, its counter, the pending-cancel marker, the queue gas surcharge, the queue price scan and the `order_book_queue_message_scan_extra_gas` param are removed. Every order gets an id before matching, and `order_id` replaces `message_id` in the order events; `OrderCreateMessageEvent`, `OrderCancelMessageEvent`, `OrderCancelSkippedEvent` and `OrderMessageFailedEvent` are removed. The upgrade refunds every message still queued (reason `upgrade`).
 - One order examines at most `max_fills_per_order` resting orders, filled or skipped (param field 11, renamed from `order_book_per_block_messages`, default 500); the remainder is refunded with reason `max_fills_reached`.
 - One owner has at most one order per market, side and price: a new order at a price where its owner already rests one is added to that order (same id, same place in the queue, `OrderAmendedEvent`). Orders placed before v8.3.0 stay as they are; new orders at their price are added to the earliest of them.
+- Each price level counts its distinct owners (`owners` on the aggregated order book). A new owner joining a level of more than `price_level_owners_window` owners pays `price_level_extra_gas` per owner above it. The params `order_book_extra_gas_window` and `order_book_queue_extra_gas` are renamed `price_level_owners_window` (set to 500 by the upgrade) and `price_level_extra_gas` (value kept).
 - The factory token transfer fee is charged on protocol fees paid in the token (fee payer service).
 - `MsgUpdatePools` governance message: changes the swap fee and fee split of existing pools (all or nothing, halted pools included, idempotent), `PoolFeesUpdatedEvent` per changed pool.
 - Order book engine outcome events: `OrderMessageRefundedEvent` (kept), `OrderCancelSkippedEvent` and `OrderMessageFailedEvent` (removed again with the queue, see above).
