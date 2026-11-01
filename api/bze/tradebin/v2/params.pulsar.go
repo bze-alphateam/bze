@@ -1085,7 +1085,7 @@ type Params struct {
 	OrderBookQueueExtraGas          uint64        `protobuf:"varint,8,opt,name=orderBookQueueExtraGas,proto3" json:"orderBookQueueExtraGas,omitempty"`
 	FillOrdersExtraGas              uint64        `protobuf:"varint,9,opt,name=fillOrdersExtraGas,proto3" json:"fillOrdersExtraGas,omitempty"`
 	MinNativeLiquidityForModuleSwap string        `protobuf:"bytes,10,opt,name=minNativeLiquidityForModuleSwap,proto3" json:"minNativeLiquidityForModuleSwap,omitempty"`
-	// maximum number of resting orders one order fills; the remainder is refunded
+	// maximum number of resting orders one order examines (filled or skipped); the remainder is refunded
 	MaxFillsPerOrder uint64 `protobuf:"varint,11,opt,name=maxFillsPerOrder,proto3" json:"maxFillsPerOrder,omitempty"`
 }
 

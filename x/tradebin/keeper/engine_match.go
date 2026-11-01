@@ -26,12 +26,13 @@ type priceLevelMatch struct {
 // the fills after the iterator is closed. msgAmount and aggAmount are reduced by every fill.
 //
 // It stops, in this order of priority, when the message amount is spent, when it is below minAmount
-// or when maxFills orders were filled. maxFillsReached is set only when the last condition stopped it
-// while another resting order was still there. Orders the message can not fill are skipped and do not
-// count as fills.
+// or when maxFills resting orders were examined. Every examined order counts, filled or skipped (an
+// order the message can not fill is skipped and the walk goes on to the next one). maxFillsReached is
+// set only when the last condition stopped it while another resting order was still there.
 func (pe *ProcessingEngine) matchPriceLevel(ctx sdk.Context, message *types.Order, msgAmount, aggAmount *math.Int, minAmount math.Int) (priceLevelMatch, error) {
 	var res priceLevelMatch
 	var err error
+	examined := uint64(0)
 
 	pe.k.IteratePriceOrders(ctx, message.MarketId, types.TheOtherOrderType(message.OrderType), message.Price, func(orderRef types.OrderReference) bool {
 		//stop when all message amount was spent
@@ -47,11 +48,12 @@ func (pe *ProcessingEngine) matchPriceLevel(ctx sdk.Context, message *types.Orde
 			return true
 		}
 
-		if uint64(len(res.fills)) >= pe.maxFills {
+		if examined >= pe.maxFills {
 			pe.logger.Debug("max fills reached. exiting oppositeOrderRefs iteration", "max_fills", pe.maxFills)
 			res.maxFillsReached = true
 			return true
 		}
+		examined++
 
 		orderToFill, _ := pe.k.GetOrder(ctx, orderRef.MarketId, orderRef.OrderType, orderRef.Id)
 		pe.logger.Debug("preparing to fill message with order", "orderToFill", orderToFill)

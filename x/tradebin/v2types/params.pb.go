@@ -38,7 +38,7 @@ type Params struct {
 	OrderBookQueueExtraGas          uint64                `protobuf:"varint,8,opt,name=orderBookQueueExtraGas,proto3" json:"orderBookQueueExtraGas,omitempty" yaml:"order_book_queue_extra_gas"`
 	FillOrdersExtraGas              uint64                `protobuf:"varint,9,opt,name=fillOrdersExtraGas,proto3" json:"fillOrdersExtraGas,omitempty" yaml:"fill_orders_extra_gas"`
 	MinNativeLiquidityForModuleSwap cosmossdk_io_math.Int `protobuf:"bytes,10,opt,name=minNativeLiquidityForModuleSwap,proto3,customtype=cosmossdk.io/math.Int" json:"minNativeLiquidityForModuleSwap" yaml:"min_native_liquidity_for_module_swap"`
-	// maximum number of resting orders one order fills; the remainder is refunded
+	// maximum number of resting orders one order examines (filled or skipped); the remainder is refunded
 	MaxFillsPerOrder uint64 `protobuf:"varint,11,opt,name=maxFillsPerOrder,proto3" json:"maxFillsPerOrder,omitempty" yaml:"max_fills_per_order"`
 }
 

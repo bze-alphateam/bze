@@ -32,7 +32,7 @@ message Params {
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"min_native_liquidity_for_module_swap\""
   ];
-  // maximum number of resting orders one order fills; the remainder is refunded
+  // maximum number of resting orders one order examines (filled or skipped); the remainder is refunded
   uint64 maxFillsPerOrder = 11 [(gogoproto.moretags) = "yaml:\"max_fills_per_order\""];
   // 12 was orderBookQueueMessageScanExtraGas (removed in v8.3.0)
   reserved 12;

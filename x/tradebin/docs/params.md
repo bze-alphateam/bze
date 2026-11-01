@@ -8,7 +8,7 @@
 - **`native_denom`** (`string`, default `ubze`): Base denom used when swapping collected fees or module balances; must exist in bank supply.
 - **Gas controls:**
   - `fill_orders_extra_gas` (`uint64`, default `5000`): Gas charged once when `MsgFillOrders` starts and again for each entry, scaled by its index.
-  - `max_fills_per_order` (`uint64`, default `500`, JSON `maxFillsPerOrder`, field 11): the most resting orders one order fills: one `MsgCreateOrder`, or one entry of `MsgFillOrders`. When the order reaches it while orders it could still fill rest at its price, it stops and its remainder is refunded with reason `max_fills_reached`; the next order continues with the next resting order. It bounds the matching work, and so the gas, of one order. Must be at least 1. Before v8.3.0 field 11 was `order_book_per_block_messages`; the upgrade keeps its stored value (the default was 500 in both) and sets the default only over a 0.
+  - `max_fills_per_order` (`uint64`, default `500`, JSON `maxFillsPerOrder`, field 11): the most resting orders one order examines, filled or skipped (an order it can not fill without leaving less than the minimum on either side is skipped): one `MsgCreateOrder`, or one entry of `MsgFillOrders`. When the order has examined that many while more orders rest at its price, it stops and its remainder is refunded with reason `max_fills_reached`; the next order continues with the next resting order. It bounds the matching work, and so the gas, of one order. Must be at least 1. Before v8.3.0 field 11 was `order_book_per_block_messages`; the upgrade keeps its stored value (the default was 500 in both) and sets the default only over a 0.
   - `order_book_extra_gas_window` (`uint64`, default `100`) and `order_book_queue_extra_gas` (`uint64`, default `25000`): kept in the params (fields 7 and 8) but unused since orders execute inside their transaction; v8.3.0 gives them a new meaning in later changes.
   - Field 12 (`order_book_queue_message_scan_extra_gas`) was removed in v8.3.0 and is reserved.
 - **`min_native_liquidity_for_module_swap`** (`Int`, default `100000000000`): Minimum native reserves required in a native/pair pool before module-driven swaps or add-liquidity helpers execute.
@@ -17,7 +17,7 @@
 - `MsgCreateMarket` charges `create_market_fee` and forwards it to the community-pool fee collector after optional swap to `native_denom`.
 - `MsgCreateOrder` decides maker vs. taker by whether the price crosses existing opposite liquidity and charges the corresponding fee. The matching it does in the transaction is metered by the transaction's gas; no param adds gas to it.
 - `MsgFillOrders` always uses the taker fee path and consumes `fill_orders_extra_gas` at entry and per entry.
-- `MsgCreateOrder` and each `MsgFillOrders` entry fill at most `max_fills_per_order` resting orders.
+- `MsgCreateOrder` and each `MsgFillOrders` entry examine at most `max_fills_per_order` resting orders (filled or skipped).
 - Module-level swaps/add-liquidity helpers refuse to run unless the relevant native/pair pool holds more than `min_native_liquidity_for_module_swap` in native reserves.
 
 ### Updating

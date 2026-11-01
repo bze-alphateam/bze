@@ -51,7 +51,7 @@ type ProcessingEngine struct {
 	k    ProcessingKeeper
 	bank BankKeeper
 
-	// maxFills is the maximum number of resting orders one order fills
+	// maxFills is the maximum number of resting orders one order examines (filled or skipped)
 	maxFills uint64
 
 	logger log.Logger
@@ -77,7 +77,8 @@ func NewProcessingEngine(k ProcessingKeeper, bank BankKeeper, maxFills uint64, l
 // PlaceOrder executes a limit order: it is matched against the opposite side at its price and the
 // remainder rests on the book as a new maker order when the opposite side at that price was emptied
 // and the remainder is at least the minimum amount, otherwise the remainder is refunded.
-// At most maxFills resting orders are filled; when that stops the matching the remainder is refunded.
+// At most maxFills resting orders are examined (filled or skipped); when that stops the matching the
+// remainder is refunded.
 // The order coins must already be escrowed in the module account. The order gets its id here,
 // before matching.
 func (pe *ProcessingEngine) PlaceOrder(ctx sdk.Context, order types.Order) error {
@@ -88,7 +89,7 @@ func (pe *ProcessingEngine) PlaceOrder(ctx sdk.Context, order types.Order) error
 
 // FillOrder executes an immediate-or-cancel order: it is matched against the opposite side at its
 // price and whatever is not executed is refunded. It never rests on the book.
-// At most maxFills resting orders are filled.
+// At most maxFills resting orders are examined (filled or skipped).
 // The order coins must already be escrowed in the module account. The order gets its id here,
 // before matching.
 func (pe *ProcessingEngine) FillOrder(ctx sdk.Context, order types.Order) error {
@@ -574,8 +575,8 @@ func (pe *ProcessingEngine) refundMessageFunds(ctx sdk.Context, message *types.O
 
 // fillAggregatedOrder fills the resting orders of agg's price level in FIFO order with the message amount
 // and returns the amount left. It stops when the amount is spent, when it drops below the minimum
-// amount or when maxFills orders were filled; maxFillsReached is true only in the last case, when
-// orders that could still be filled are left at that price.
+// amount or when maxFills resting orders were examined (filled or skipped); maxFillsReached is true
+// only in the last case, when resting orders are left at that price.
 //
 // The level is read first and the fills are settled after the iterator is closed: nothing is written
 // to the store while it is open.

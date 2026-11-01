@@ -268,8 +268,83 @@ func (suite *IntegrationTestSuite) TestEngine_MaxFills_BelowMinAmountTakesPriori
 	suite.Require().Equal("1", refunds[0].Amount)
 }
 
-// A resting order the taker can not fill is skipped and does not count as a fill.
-func (suite *IntegrationTestSuite) TestEngine_MaxFills_SkippedOrdersAreNotCounted() {
+// Skipped orders count against the cap: a level of maxFills+2 orders the taker can not fill (at price 1
+// the min amount is 2, a taker of 2 can not fill an order of 3 without leaving 1) stops at the cap with
+// no fill, the remainder is refunded and does not rest, the level is untouched.
+func (suite *IntegrationTestSuite) TestEngine_MaxFills_SkippedOrdersCountAgainstTheCap() {
+	suite.k.SetMarket(suite.ctx, market)
+	const maxFills = 3
+	makers := suite.restSells(maxFills+2, "3", "1")
+	taker := sdk.AccAddress("addr2_______________")
+
+	// only the refund: 2 base back as 2 quote
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, taker, sdk.NewCoins(sdk.NewInt64Coin(market.Quote, 2))).Return(nil).Times(1)
+
+	suite.resetEvents()
+	suite.Require().NoError(suite.newEngineWithMaxFills(maxFills).PlaceOrder(suite.ctx, limitOrder(types.OrderTypeBuy, "2", "1", taker)))
+
+	events := suite.tradebinTypedEvents()
+	suite.Require().Empty(executedEvents(events))
+	suite.Require().Empty(savedEvents(events))
+	refunds := refundedEvents(events)
+	suite.Require().Len(refunds, 1)
+	suite.Require().Equal(types.RefundReasonMaxFillsReached, refunds[0].Reason)
+	suite.Require().Equal("2", refunds[0].Amount)
+	for _, m := range makers {
+		suite.requireResting(m)
+	}
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, "1", "15")
+	_, found := suite.k.GetAggregatedOrder(suite.ctx, getMarketId(), types.OrderTypeBuy, "1")
+	suite.Require().False(found)
+	suite.Require().Empty(suite.k.GetAllHistoryOrder(suite.ctx))
+}
+
+// Fills and skips together reach the cap: fewer fills than the cap, the remainder is still refunded
+// with max_fills_reached and the order after the cap is untouched even though it could be filled.
+func (suite *IntegrationTestSuite) TestEngine_MaxFills_FillsAndSkipsReachTheCap() {
+	suite.k.SetMarket(suite.ctx, market)
+	const maxFills = 3
+	engine := suite.newEngine()
+	amounts := []string{"10", "3", "3", "10"}
+	for i, a := range amounts {
+		suite.placeOrders(engine, limitOrder(types.OrderTypeSell, a, "1", makerAddr(i)))
+	}
+	var book []types.Order
+	suite.k.IteratePriceOrders(suite.ctx, getMarketId(), types.OrderTypeSell, "1", func(ref types.OrderReference) bool {
+		o, _ := suite.k.GetOrder(suite.ctx, ref.MarketId, ref.OrderType, ref.Id)
+		book = append(book, o)
+		return false
+	})
+	suite.Require().Len(book, len(amounts))
+	resting := func(i int) types.Order { return book[i] }
+	taker := sdk.AccAddress("addr2_______________")
+
+	// the first order is filled (10), the taker has 2 left and can not fill the two orders of 3; the
+	// last order of 10 is past the cap
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, makerAddr(0), sdk.NewCoins(sdk.NewInt64Coin(market.Quote, 10))).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, taker, sdk.NewCoins(sdk.NewInt64Coin(market.Base, 10))).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, taker, sdk.NewCoins(sdk.NewInt64Coin(market.Quote, 2))).Return(nil).Times(1)
+
+	suite.resetEvents()
+	suite.Require().NoError(suite.newEngineWithMaxFills(maxFills).FillOrder(suite.ctx, limitOrder(types.OrderTypeBuy, "12", "1", taker)))
+
+	events := suite.tradebinTypedEvents()
+	executed := executedEvents(events)
+	suite.Require().Len(executed, 1)
+	suite.Require().Equal(makerAddr(0).String(), executed[0].Maker)
+	refunds := refundedEvents(events)
+	suite.Require().Len(refunds, 1)
+	suite.Require().Equal(types.RefundReasonMaxFillsReached, refunds[0].Reason)
+	suite.Require().Equal("2", refunds[0].Amount)
+	suite.requireGone(resting(0))
+	for i := 1; i < len(amounts); i++ {
+		suite.requireResting(resting(i))
+	}
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, "1", "16")
+}
+
+// Below the cap a skipped order does not stop the walk: the next order the taker can fill is filled.
+func (suite *IntegrationTestSuite) TestEngine_MaxFills_SkipBelowTheCapStillFillsTheNextOrder() {
 	suite.k.SetMarket(suite.ctx, market)
 	taker := sdk.AccAddress("addr2_______________")
 	// a taker of 2 can not fill an order of 3 at price 1 (it would leave 1, below the min amount of 2)
@@ -280,7 +355,7 @@ func (suite *IntegrationTestSuite) TestEngine_MaxFills_SkippedOrdersAreNotCounte
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, taker, sdk.NewCoins(sdk.NewInt64Coin(market.Base, 2))).Return(nil).Times(1)
 
 	suite.resetEvents()
-	suite.Require().NoError(suite.newEngineWithMaxFills(1).PlaceOrder(suite.ctx, limitOrder(types.OrderTypeBuy, "2", "1", taker)))
+	suite.Require().NoError(suite.newEngineWithMaxFills(2).PlaceOrder(suite.ctx, limitOrder(types.OrderTypeBuy, "2", "1", taker)))
 
 	events := suite.tradebinTypedEvents()
 	executed := executedEvents(events)
