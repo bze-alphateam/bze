@@ -17,18 +17,28 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/bze-alphateam/bze/app"
+	epochstypes "github.com/bze-alphateam/bze/x/epochs/types"
+	rewardstypes "github.com/bze-alphateam/bze/x/rewards/types"
 	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
 	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 )
 
-const fillGasBase = "ufillgas"
+const (
+	fillGasBase = "ufillgas"
+
+	// the largest leaderboard a trading reward can have (MsgCreateTradingReward refuses more slots)
+	maxTradingRewardSlots = 10
+)
 
 // takerGasForFills builds the real app, rests fills sell orders of 2 units at price 1, each from a
 // distinct owner, and returns the gas of one MsgCreateOrder that fills all of them. The message runs
 // through the real message router with the real bank keeper: taker fee, escrow, both settlement sends
-// per fill, store writes, history, events and the order fill hooks (no trading reward on the market).
+// per fill, store writes, history, events and the order fill hooks. With withReward the market has an
+// active trading reward with the maximum slots and a leaderboard already full of traders who out-trade
+// the taker, so every fill updates the taker's candidate, appends the taker to a full leaderboard,
+// sorts it, trims it and writes it back (the hook is keyed by the taker, once per fill).
 // The ante handler (signatures, tx size, fee deduction) is not included.
-func takerGasForFills(t *testing.T, fills int) uint64 {
+func takerGasForFills(t *testing.T, fills int, withReward bool) uint64 {
 	t.Helper()
 
 	appOptions := make(simtestutil.AppOptionsMap, 0)
@@ -54,6 +64,11 @@ func takerGasForFills(t *testing.T, fills int) uint64 {
 		require.NoError(t, err)
 	}
 
+	var rewardId string
+	if withReward {
+		rewardId = activeTradingRewardWithFullLeaderboard(t, bApp, ctx, marketId, fund, deliver)
+	}
+
 	for i := 0; i < fills; i++ {
 		maker := sdk.AccAddress(fmt.Sprintf("maker%015d", i))
 		fund(maker, sdk.NewCoins(sdk.NewInt64Coin(market.Base, 2), params.MarketMakerFee))
@@ -71,7 +86,86 @@ func takerGasForFills(t *testing.T, fills int) uint64 {
 	require.Empty(t, bApp.TradebinKeeper.GetAllOrder(ctx))
 	require.Equal(t, sdk.NewInt64Coin(market.Base, int64(2*fills)), bApp.BankKeeper.GetBalance(ctx, taker, market.Base))
 
+	if withReward {
+		// the hook ran for every fill: the taker's candidate holds the whole traded amount, while the
+		// leaderboard stayed full of the bigger traders and the taker was trimmed out on every fill
+		candidate, found := bApp.RewardsKeeper.GetTradingRewardCandidate(ctx, rewardId, taker.String())
+		require.True(t, found)
+		require.Equal(t, fmt.Sprintf("%d", 2*fills), candidate.Amount)
+		leaderboard, found := bApp.RewardsKeeper.GetTradingRewardLeaderboard(ctx, rewardId)
+		require.True(t, found)
+		require.Len(t, leaderboard.List, maxTradingRewardSlots)
+		for _, entry := range leaderboard.List {
+			require.NotEqual(t, taker.String(), entry.Address)
+		}
+	}
+
 	return gasCtx.GasMeter().GasConsumed()
+}
+
+// activeTradingRewardWithFullLeaderboard creates and activates a trading reward on marketId with the
+// maximum slots, then fills its leaderboard with maxTradingRewardSlots distinct traders, each buying far
+// more than any measured taker. It returns the reward id.
+func activeTradingRewardWithFullLeaderboard(
+	t *testing.T,
+	bApp *app.App,
+	ctx sdk.Context,
+	marketId string,
+	fund func(sdk.AccAddress, sdk.Coins),
+	deliver func(sdk.Context, sdk.Msg),
+) string {
+	t.Helper()
+
+	// trading reward expirations are counted in epochs
+	for _, epoch := range epochstypes.DefaultGenesis().Epochs {
+		require.NoError(t, bApp.EpochKeeper.AddEpochInfo(ctx, epoch))
+	}
+
+	rewardsParams := rewardstypes.DefaultParams()
+	rewardsParams.CreateTradingRewardFee = sdk.NewInt64Coin(rewardsParams.CreateTradingRewardFee.Denom, 0)
+	require.NoError(t, bApp.RewardsKeeper.SetParams(ctx, rewardsParams))
+	tradebinParams := bApp.TradebinKeeper.GetParams(ctx)
+
+	creator := sdk.AccAddress("reward_creator______")
+	fund(creator, sdk.NewCoins(sdk.NewInt64Coin(tradebinParams.NativeDenom, 1_000*maxTradingRewardSlots)))
+	createMsg := func(slots int) *rewardstypes.MsgCreateTradingReward {
+		return &rewardstypes.MsgCreateTradingReward{
+			Creator:     creator.String(),
+			PrizeAmount: "1000",
+			PrizeDenom:  tradebinParams.NativeDenom,
+			Duration:    "30",
+			MarketId:    marketId,
+			Slots:       fmt.Sprintf("%d", slots),
+		}
+	}
+
+	// maxTradingRewardSlots really is the ceiling
+	tooMany := createMsg(maxTradingRewardSlots + 1)
+	_, err := bApp.MsgServiceRouter().Handler(tooMany)(ctx, tooMany)
+	require.ErrorIs(t, err, rewardstypes.ErrInvalidSlots)
+
+	create := createMsg(maxTradingRewardSlots)
+	res, err := bApp.MsgServiceRouter().Handler(create)(ctx, create)
+	require.NoError(t, err)
+	var created rewardstypes.MsgCreateTradingRewardResponse
+	require.NoError(t, created.Unmarshal(res.MsgResponses[0].Value))
+	deliver(ctx, &rewardstypes.MsgActivateTradingReward{Creator: bApp.RewardsKeeper.GetAuthority(), RewardId: created.RewardId})
+
+	for i := 0; i < maxTradingRewardSlots; i++ {
+		amount := int64(1_000_000 + i)
+		seller := sdk.AccAddress(fmt.Sprintf("leader_maker%08d", i))
+		fund(seller, sdk.NewCoins(sdk.NewInt64Coin(fillGasBase, amount), tradebinParams.MarketMakerFee))
+		deliver(ctx, &tradebintypes.MsgCreateOrder{Creator: seller.String(), MarketId: marketId, OrderType: tradebintypes.OrderTypeSell, Amount: fmt.Sprintf("%d", amount), Price: "1"})
+		leader := sdk.AccAddress(fmt.Sprintf("leader%014d", i))
+		fund(leader, sdk.NewCoins(sdk.NewInt64Coin(tradebinParams.NativeDenom, amount).Add(tradebinParams.MarketTakerFee)))
+		deliver(ctx, &tradebintypes.MsgCreateOrder{Creator: leader.String(), MarketId: marketId, OrderType: tradebintypes.OrderTypeBuy, Amount: fmt.Sprintf("%d", amount), Price: "1"})
+	}
+
+	leaderboard, found := bApp.RewardsKeeper.GetTradingRewardLeaderboard(ctx, created.RewardId)
+	require.True(t, found)
+	require.Len(t, leaderboard.List, maxTradingRewardSlots)
+
+	return created.RewardId
 }
 
 // TestTradebin_TakerGasPerFill logs the message gas of a taker filling 1, 10, 100 and 500 resting orders
@@ -79,10 +173,25 @@ func takerGasForFills(t *testing.T, fills int) uint64 {
 func TestTradebin_TakerGasPerFill(t *testing.T) {
 	gas := map[int]uint64{}
 	for _, fills := range []int{1, 10, 100, 500} {
-		gas[fills] = takerGasForFills(t, fills)
+		gas[fills] = takerGasForFills(t, fills, false)
 		t.Logf("gas consumed by one MsgCreateOrder filling %d resting orders: %d", fills, gas[fills])
 	}
 	t.Logf("marginal gas per fill (1 -> 500 fills): %d", (gas[500]-gas[1])/499)
+
+	// well below 10% of the 1,000,000,000 block gas limit
+	require.Less(t, gas[100], uint64(100_000_000))
+	require.Less(t, gas[500], uint64(100_000_000))
+}
+
+// TestTradebin_TakerGasPerFillWithTradingReward logs the same message gas on a market with an active
+// trading reward at the maximum slots and a full leaderboard: the worst case of the order fill hook.
+func TestTradebin_TakerGasPerFillWithTradingReward(t *testing.T) {
+	gas := map[int]uint64{}
+	for _, fills := range []int{1, 10, 100, 500} {
+		gas[fills] = takerGasForFills(t, fills, true)
+		t.Logf("gas consumed by one MsgCreateOrder filling %d resting orders with an active trading reward: %d", fills, gas[fills])
+	}
+	t.Logf("marginal gas per fill with an active trading reward (1 -> 500 fills): %d", (gas[500]-gas[1])/499)
 
 	// well below 10% of the 1,000,000,000 block gas limit
 	require.Less(t, gas[100], uint64(100_000_000))
