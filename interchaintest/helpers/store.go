@@ -29,16 +29,19 @@ func StoreQuery(ctx context.Context, chain *cosmos.CosmosChain, store string, he
 	return res.Response, nil
 }
 
-// StorePrefixKeys counts the keys under prefix in the KV store named store, at
-// height (0 = latest), through the store's raw subspace query. It answers
-// whether a module still holds any state under a prefix.
-func StorePrefixKeys(ctx context.Context, chain *cosmos.CosmosChain, store string, prefix []byte, height int64) (int, error) {
+// StorePrefixKeys counts the keys under prefix in the KV store named store,
+// through the store's raw subspace query. It answers whether a module still
+// holds any state under a prefix. The subspace query always reads the latest
+// state: the IAVL store ignores the requested height for it (only the /key
+// query reads a past version), so a count before a change must be taken
+// before the change happens.
+func StorePrefixKeys(ctx context.Context, chain *cosmos.CosmosChain, store string, prefix []byte) (int, error) {
 	addr := chain.GetHostRPCAddress()
 	client, err := rpchttp.New(addr, "/websocket")
 	if err != nil {
 		return 0, fmt.Errorf("rpc client %s: %w", addr, err)
 	}
-	res, err := client.ABCIQueryWithOptions(ctx, "/store/"+store+"/subspace", prefix, rpcclient.ABCIQueryOptions{Height: height})
+	res, err := client.ABCIQuery(ctx, "/store/"+store+"/subspace", prefix)
 	if err != nil {
 		return 0, fmt.Errorf("abci subspace query store %s: %w", store, err)
 	}

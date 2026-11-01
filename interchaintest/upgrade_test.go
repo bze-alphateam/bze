@@ -776,6 +776,9 @@ type v830Queue struct {
 	creates  []string        // the backlog's queue message ids, in queue order
 	cancelID string          // the resting order the queued cancel targets
 	perBlock json.RawMessage // orderBookPerBlockMessages before the suite lowered it, restored as maxFillsPerOrder
+	// queueKeys and ownerPriceKeys count the Qm/ and Tb/op/ keys once the
+	// backlog is queued, on v8.2.0 (a subspace query reads only the latest state)
+	queueKeys, ownerPriceKeys int
 }
 
 // upV830Deleted are the stores the v8.3.0 store loader deletes: x/capability
@@ -864,6 +867,13 @@ func (s *upgradeSuite) v830QueueBacklog(t *testing.T) v830Queue {
 	require.Len(t, q.creates, upV830Backlog, "one queued message per order")
 	s.requireEvent(t, res, tradebinEventPrefix+"OrderCancelMessageEvent", map[string]string{"orderId": q.cancelID})
 	t.Logf("queued %d orders and a cancel at height %d", upV830Backlog, res.Height)
+
+	q.queueKeys, err = helpers.StorePrefixKeys(s.ctx, s.bze, "tradebin", []byte("Qm/"))
+	require.NoError(t, err)
+	require.Positive(t, q.queueKeys, "queue keys on v8.2.0")
+	q.ownerPriceKeys, err = helpers.StorePrefixKeys(s.ctx, s.bze, "tradebin", []byte("Tb/op/"))
+	require.NoError(t, err)
+	require.Zero(t, q.ownerPriceKeys, "no owner-price index on v8.2.0")
 	return q
 }
 
@@ -920,10 +930,9 @@ func (s *upgradeSuite) v830QueueRefunded(t *testing.T, q v830Queue) {
 	require.Contains(t, ids, q.cancelID, "the queued cancel's order still rests")
 	require.Len(t, ids, upV830Backlog-queued+1, "the backlog orders saved before the upgrade still rest")
 
-	keys, err := helpers.StorePrefixKeys(s.ctx, s.bze, "tradebin", []byte("Qm/"), s.plan-1)
-	require.NoError(t, err)
-	require.Positive(t, keys, "queue keys at plan - 1")
-	keys, err = helpers.StorePrefixKeys(s.ctx, s.bze, "tradebin", []byte("Qm/"), s.plan)
+	// the count on v8.2.0 was taken with the backlog (v830QueueBacklog)
+	require.Positive(t, q.queueKeys, "queue keys before the upgrade")
+	keys, err := helpers.StorePrefixKeys(s.ctx, s.bze, "tradebin", []byte("Qm/"))
 	require.NoError(t, err)
 	require.Zero(t, keys, "no queue key left after the migration")
 
@@ -932,16 +941,15 @@ func (s *upgradeSuite) v830QueueRefunded(t *testing.T, q v830Queue) {
 }
 
 // v830OwnerPriceIndex checks that the tradebin 4 -> 5 migration builds the
-// owner-price index (BZE-249): there is no Tb/op/ key at plan - 1 and there
-// are some at the plan height. The backlog orders still resting are several
+// owner-price index (BZE-249): there was no Tb/op/ key on v8.2.0 and there
+// are some after the upgrade. The backlog orders still resting are several
 // orders of admin at one price (placed before v8.3.0): they stay separate and
 // the index points at the lowest id of them, so admin's next sell at that
 // price is added to that order (OrderAmendedEvent, same id, no new order).
 func (s *upgradeSuite) v830OwnerPriceIndex(t *testing.T, q v830Queue) {
-	keys, err := helpers.StorePrefixKeys(s.ctx, s.bze, "tradebin", []byte("Tb/op/"), s.plan-1)
-	require.NoError(t, err)
-	require.Zero(t, keys, "no owner-price index before the migration")
-	keys, err = helpers.StorePrefixKeys(s.ctx, s.bze, "tradebin", []byte("Tb/op/"), s.plan)
+	// the count on v8.2.0 was taken with the backlog (v830QueueBacklog)
+	require.Zero(t, q.ownerPriceKeys, "no owner-price index before the migration")
+	keys, err := helpers.StorePrefixKeys(s.ctx, s.bze, "tradebin", []byte("Tb/op/"))
 	require.NoError(t, err)
 	require.GreaterOrEqual(t, keys, 2, "owner-price index of admin's sells at %s and %s", upV830BacklogPrice, upV830CancelPrice)
 
