@@ -915,6 +915,42 @@ func (s *upgradeSuite) v830QueueRefunded(t *testing.T, q v830Queue) {
 	s.setTradebinParam(t, "maxFillsPerOrder", q.perBlock)
 }
 
+// v830OwnerPriceIndex checks that the tradebin 4 -> 5 migration builds the
+// owner-price index (BZE-249): there is no Tb/op/ key at plan - 1 and there
+// are some at the plan height. The backlog orders still resting are several
+// orders of admin at one price (placed before v8.3.0): they stay separate and
+// the index points at the lowest id of them, so admin's next sell at that
+// price is added to that order (OrderAmendedEvent, same id, no new order).
+func (s *upgradeSuite) v830OwnerPriceIndex(t *testing.T, q v830Queue) {
+	keys, err := helpers.StorePrefixKeys(s.ctx, s.bze, "tradebin", []byte("Tb/op/"), s.plan-1)
+	require.NoError(t, err)
+	require.Zero(t, keys, "no owner-price index before the migration")
+	keys, err = helpers.StorePrefixKeys(s.ctx, s.bze, "tradebin", []byte("Tb/op/"), s.plan)
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, keys, 2, "owner-price index of admin's sells at %s and %s", upV830BacklogPrice, upV830CancelPrice)
+
+	var backlog []string
+	for _, o := range s.userOrders(t, s.plan, s.admin) {
+		if o.ID != q.cancelID {
+			backlog = append(backlog, o.ID)
+		}
+	}
+	require.Greater(t, len(backlog), 1, "several backlog orders of admin rest at one price")
+	lowest := slices.Min(backlog)
+
+	amount := strconv.Itoa(upV830BacklogAmount)
+	res := s.exec(t, s.admin, "tradebin", "create-order", "sell", amount, upV830BacklogPrice, s.market)
+	amended := helpers.TxEvents(res, tradebinEventPrefix+"OrderAmendedEvent")
+	require.Len(t, amended, 1, "the sell is added to a resting order")
+	a := amended[0].Attributes
+	require.Equal(t,
+		[]string{lowest, s.market, "sell", upV830BacklogPrice, s.admin.FormattedAddress(), amount, strconv.Itoa(2 * upV830BacklogAmount)},
+		[]string{a["id"], a["market_id"], a["order_type"], a["price"], a["owner"], a["added_amount"], a["amount"]},
+		"the sell is added to the lowest backlog id")
+	require.Empty(t, helpers.TxEvents(res, tradebinEventPrefix+"OrderSavedEvent"), "no new order")
+	require.Len(t, s.userOrders(t, 0, s.admin), len(backlog)+1, "the other backlog orders still rest apart")
+}
+
 // setTradebinParam passes a tradebin MsgUpdateParams that changes one param.
 func (s *upgradeSuite) setTradebinParam(t *testing.T, name string, value json.RawMessage) {
 	t.Helper()
@@ -1009,6 +1045,7 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 
 	s.v830MintableFlags(t, b)
 	s.v830QueueRefunded(t, b.queue)
+	s.v830OwnerPriceIndex(t, b.queue)
 }
 
 // v830MintableFlags checks the tokenfactory 3 -> 4 migration (BZE-217): every

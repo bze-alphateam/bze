@@ -3040,6 +3040,810 @@ func (x *fastReflection_OrderSavedEvent) ProtoMethods() *protoiface.Methods {
 }
 
 var (
+	md_OrderAmendedEvent              protoreflect.MessageDescriptor
+	fd_OrderAmendedEvent_id           protoreflect.FieldDescriptor
+	fd_OrderAmendedEvent_market_id    protoreflect.FieldDescriptor
+	fd_OrderAmendedEvent_order_type   protoreflect.FieldDescriptor
+	fd_OrderAmendedEvent_price        protoreflect.FieldDescriptor
+	fd_OrderAmendedEvent_owner        protoreflect.FieldDescriptor
+	fd_OrderAmendedEvent_added_amount protoreflect.FieldDescriptor
+	fd_OrderAmendedEvent_amount       protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_tradebin_events_proto_init()
+	md_OrderAmendedEvent = File_bze_tradebin_events_proto.Messages().ByName("OrderAmendedEvent")
+	fd_OrderAmendedEvent_id = md_OrderAmendedEvent.Fields().ByName("id")
+	fd_OrderAmendedEvent_market_id = md_OrderAmendedEvent.Fields().ByName("market_id")
+	fd_OrderAmendedEvent_order_type = md_OrderAmendedEvent.Fields().ByName("order_type")
+	fd_OrderAmendedEvent_price = md_OrderAmendedEvent.Fields().ByName("price")
+	fd_OrderAmendedEvent_owner = md_OrderAmendedEvent.Fields().ByName("owner")
+	fd_OrderAmendedEvent_added_amount = md_OrderAmendedEvent.Fields().ByName("added_amount")
+	fd_OrderAmendedEvent_amount = md_OrderAmendedEvent.Fields().ByName("amount")
+}
+
+var _ protoreflect.Message = (*fastReflection_OrderAmendedEvent)(nil)
+
+type fastReflection_OrderAmendedEvent OrderAmendedEvent
+
+func (x *OrderAmendedEvent) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_OrderAmendedEvent)(x)
+}
+
+func (x *OrderAmendedEvent) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_tradebin_events_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_OrderAmendedEvent_messageType fastReflection_OrderAmendedEvent_messageType
+var _ protoreflect.MessageType = fastReflection_OrderAmendedEvent_messageType{}
+
+type fastReflection_OrderAmendedEvent_messageType struct{}
+
+func (x fastReflection_OrderAmendedEvent_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_OrderAmendedEvent)(nil)
+}
+func (x fastReflection_OrderAmendedEvent_messageType) New() protoreflect.Message {
+	return new(fastReflection_OrderAmendedEvent)
+}
+func (x fastReflection_OrderAmendedEvent_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_OrderAmendedEvent
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_OrderAmendedEvent) Descriptor() protoreflect.MessageDescriptor {
+	return md_OrderAmendedEvent
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_OrderAmendedEvent) Type() protoreflect.MessageType {
+	return _fastReflection_OrderAmendedEvent_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_OrderAmendedEvent) New() protoreflect.Message {
+	return new(fastReflection_OrderAmendedEvent)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_OrderAmendedEvent) Interface() protoreflect.ProtoMessage {
+	return (*OrderAmendedEvent)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_OrderAmendedEvent) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Id != "" {
+		value := protoreflect.ValueOfString(x.Id)
+		if !f(fd_OrderAmendedEvent_id, value) {
+			return
+		}
+	}
+	if x.MarketId != "" {
+		value := protoreflect.ValueOfString(x.MarketId)
+		if !f(fd_OrderAmendedEvent_market_id, value) {
+			return
+		}
+	}
+	if x.OrderType != "" {
+		value := protoreflect.ValueOfString(x.OrderType)
+		if !f(fd_OrderAmendedEvent_order_type, value) {
+			return
+		}
+	}
+	if x.Price != "" {
+		value := protoreflect.ValueOfString(x.Price)
+		if !f(fd_OrderAmendedEvent_price, value) {
+			return
+		}
+	}
+	if x.Owner != "" {
+		value := protoreflect.ValueOfString(x.Owner)
+		if !f(fd_OrderAmendedEvent_owner, value) {
+			return
+		}
+	}
+	if x.AddedAmount != "" {
+		value := protoreflect.ValueOfString(x.AddedAmount)
+		if !f(fd_OrderAmendedEvent_added_amount, value) {
+			return
+		}
+	}
+	if x.Amount != "" {
+		value := protoreflect.ValueOfString(x.Amount)
+		if !f(fd_OrderAmendedEvent_amount, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_OrderAmendedEvent) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.tradebin.OrderAmendedEvent.id":
+		return x.Id != ""
+	case "bze.tradebin.OrderAmendedEvent.market_id":
+		return x.MarketId != ""
+	case "bze.tradebin.OrderAmendedEvent.order_type":
+		return x.OrderType != ""
+	case "bze.tradebin.OrderAmendedEvent.price":
+		return x.Price != ""
+	case "bze.tradebin.OrderAmendedEvent.owner":
+		return x.Owner != ""
+	case "bze.tradebin.OrderAmendedEvent.added_amount":
+		return x.AddedAmount != ""
+	case "bze.tradebin.OrderAmendedEvent.amount":
+		return x.Amount != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderAmendedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderAmendedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OrderAmendedEvent) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.tradebin.OrderAmendedEvent.id":
+		x.Id = ""
+	case "bze.tradebin.OrderAmendedEvent.market_id":
+		x.MarketId = ""
+	case "bze.tradebin.OrderAmendedEvent.order_type":
+		x.OrderType = ""
+	case "bze.tradebin.OrderAmendedEvent.price":
+		x.Price = ""
+	case "bze.tradebin.OrderAmendedEvent.owner":
+		x.Owner = ""
+	case "bze.tradebin.OrderAmendedEvent.added_amount":
+		x.AddedAmount = ""
+	case "bze.tradebin.OrderAmendedEvent.amount":
+		x.Amount = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderAmendedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderAmendedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_OrderAmendedEvent) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.tradebin.OrderAmendedEvent.id":
+		value := x.Id
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderAmendedEvent.market_id":
+		value := x.MarketId
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderAmendedEvent.order_type":
+		value := x.OrderType
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderAmendedEvent.price":
+		value := x.Price
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderAmendedEvent.owner":
+		value := x.Owner
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderAmendedEvent.added_amount":
+		value := x.AddedAmount
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderAmendedEvent.amount":
+		value := x.Amount
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderAmendedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderAmendedEvent does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OrderAmendedEvent) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.tradebin.OrderAmendedEvent.id":
+		x.Id = value.Interface().(string)
+	case "bze.tradebin.OrderAmendedEvent.market_id":
+		x.MarketId = value.Interface().(string)
+	case "bze.tradebin.OrderAmendedEvent.order_type":
+		x.OrderType = value.Interface().(string)
+	case "bze.tradebin.OrderAmendedEvent.price":
+		x.Price = value.Interface().(string)
+	case "bze.tradebin.OrderAmendedEvent.owner":
+		x.Owner = value.Interface().(string)
+	case "bze.tradebin.OrderAmendedEvent.added_amount":
+		x.AddedAmount = value.Interface().(string)
+	case "bze.tradebin.OrderAmendedEvent.amount":
+		x.Amount = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderAmendedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderAmendedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OrderAmendedEvent) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tradebin.OrderAmendedEvent.id":
+		panic(fmt.Errorf("field id of message bze.tradebin.OrderAmendedEvent is not mutable"))
+	case "bze.tradebin.OrderAmendedEvent.market_id":
+		panic(fmt.Errorf("field market_id of message bze.tradebin.OrderAmendedEvent is not mutable"))
+	case "bze.tradebin.OrderAmendedEvent.order_type":
+		panic(fmt.Errorf("field order_type of message bze.tradebin.OrderAmendedEvent is not mutable"))
+	case "bze.tradebin.OrderAmendedEvent.price":
+		panic(fmt.Errorf("field price of message bze.tradebin.OrderAmendedEvent is not mutable"))
+	case "bze.tradebin.OrderAmendedEvent.owner":
+		panic(fmt.Errorf("field owner of message bze.tradebin.OrderAmendedEvent is not mutable"))
+	case "bze.tradebin.OrderAmendedEvent.added_amount":
+		panic(fmt.Errorf("field added_amount of message bze.tradebin.OrderAmendedEvent is not mutable"))
+	case "bze.tradebin.OrderAmendedEvent.amount":
+		panic(fmt.Errorf("field amount of message bze.tradebin.OrderAmendedEvent is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderAmendedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderAmendedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_OrderAmendedEvent) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tradebin.OrderAmendedEvent.id":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderAmendedEvent.market_id":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderAmendedEvent.order_type":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderAmendedEvent.price":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderAmendedEvent.owner":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderAmendedEvent.added_amount":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderAmendedEvent.amount":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderAmendedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderAmendedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_OrderAmendedEvent) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.tradebin.OrderAmendedEvent", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_OrderAmendedEvent) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OrderAmendedEvent) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_OrderAmendedEvent) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_OrderAmendedEvent) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*OrderAmendedEvent)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Id)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.MarketId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.OrderType)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Price)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Owner)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.AddedAmount)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Amount)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*OrderAmendedEvent)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Amount) > 0 {
+			i -= len(x.Amount)
+			copy(dAtA[i:], x.Amount)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Amount)))
+			i--
+			dAtA[i] = 0x3a
+		}
+		if len(x.AddedAmount) > 0 {
+			i -= len(x.AddedAmount)
+			copy(dAtA[i:], x.AddedAmount)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.AddedAmount)))
+			i--
+			dAtA[i] = 0x32
+		}
+		if len(x.Owner) > 0 {
+			i -= len(x.Owner)
+			copy(dAtA[i:], x.Owner)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Owner)))
+			i--
+			dAtA[i] = 0x2a
+		}
+		if len(x.Price) > 0 {
+			i -= len(x.Price)
+			copy(dAtA[i:], x.Price)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Price)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if len(x.OrderType) > 0 {
+			i -= len(x.OrderType)
+			copy(dAtA[i:], x.OrderType)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OrderType)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.MarketId) > 0 {
+			i -= len(x.MarketId)
+			copy(dAtA[i:], x.MarketId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MarketId)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Id) > 0 {
+			i -= len(x.Id)
+			copy(dAtA[i:], x.Id)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Id)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*OrderAmendedEvent)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: OrderAmendedEvent: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: OrderAmendedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Id = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.MarketId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OrderType", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.OrderType = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Price", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Price = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Owner = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AddedAmount", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.AddedAmount = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 7:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Amount = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
 	md_PoolCreatedEvent          protoreflect.MessageDescriptor
 	fd_PoolCreatedEvent_creator  protoreflect.FieldDescriptor
 	fd_PoolCreatedEvent_base     protoreflect.FieldDescriptor
@@ -3065,7 +3869,7 @@ func (x *PoolCreatedEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *PoolCreatedEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[4]
+	mi := &file_bze_tradebin_events_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3679,7 +4483,7 @@ func (x *LiquidityAddedEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *LiquidityAddedEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[5]
+	mi := &file_bze_tradebin_events_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4353,7 +5157,7 @@ func (x *LiquidityRemovedEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *LiquidityRemovedEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[6]
+	mi := &file_bze_tradebin_events_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4965,7 +5769,7 @@ func (x *SwapEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *SwapEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[7]
+	mi := &file_bze_tradebin_events_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5601,7 +6405,7 @@ func (x *DenomHaltedEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *DenomHaltedEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[8]
+	mi := &file_bze_tradebin_events_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6021,7 +6825,7 @@ func (x *DenomUnhaltedEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *DenomUnhaltedEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[9]
+	mi := &file_bze_tradebin_events_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6449,7 +7253,7 @@ func (x *PoolFeesUpdatedEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *PoolFeesUpdatedEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[10]
+	mi := &file_bze_tradebin_events_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7159,7 +7963,7 @@ func (x *OrderMessageRefundedEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *OrderMessageRefundedEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[11]
+	mi := &file_bze_tradebin_events_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8256,6 +9060,93 @@ func (x *OrderSavedEvent) GetOrderId() string {
 	return ""
 }
 
+// OrderAmendedEvent is emitted when the remainder of an order is added to the order its owner already
+// rests at the same market, side and price: the resting order keeps its id and place in the book.
+type OrderAmendedEvent struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id        string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	MarketId  string `protobuf:"bytes,2,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	OrderType string `protobuf:"bytes,3,opt,name=order_type,json=orderType,proto3" json:"order_type,omitempty"`
+	Price     string `protobuf:"bytes,4,opt,name=price,proto3" json:"price,omitempty"`
+	Owner     string `protobuf:"bytes,5,opt,name=owner,proto3" json:"owner,omitempty"`
+	// amount added to the resting order
+	AddedAmount string `protobuf:"bytes,6,opt,name=added_amount,json=addedAmount,proto3" json:"added_amount,omitempty"`
+	// amount of the resting order after the addition
+	Amount string `protobuf:"bytes,7,opt,name=amount,proto3" json:"amount,omitempty"`
+}
+
+func (x *OrderAmendedEvent) Reset() {
+	*x = OrderAmendedEvent{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_tradebin_events_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *OrderAmendedEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OrderAmendedEvent) ProtoMessage() {}
+
+// Deprecated: Use OrderAmendedEvent.ProtoReflect.Descriptor instead.
+func (*OrderAmendedEvent) Descriptor() ([]byte, []int) {
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *OrderAmendedEvent) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *OrderAmendedEvent) GetMarketId() string {
+	if x != nil {
+		return x.MarketId
+	}
+	return ""
+}
+
+func (x *OrderAmendedEvent) GetOrderType() string {
+	if x != nil {
+		return x.OrderType
+	}
+	return ""
+}
+
+func (x *OrderAmendedEvent) GetPrice() string {
+	if x != nil {
+		return x.Price
+	}
+	return ""
+}
+
+func (x *OrderAmendedEvent) GetOwner() string {
+	if x != nil {
+		return x.Owner
+	}
+	return ""
+}
+
+func (x *OrderAmendedEvent) GetAddedAmount() string {
+	if x != nil {
+		return x.AddedAmount
+	}
+	return ""
+}
+
+func (x *OrderAmendedEvent) GetAmount() string {
+	if x != nil {
+		return x.Amount
+	}
+	return ""
+}
+
 type PoolCreatedEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -8272,7 +9163,7 @@ type PoolCreatedEvent struct {
 func (x *PoolCreatedEvent) Reset() {
 	*x = PoolCreatedEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[4]
+		mi := &file_bze_tradebin_events_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8286,7 +9177,7 @@ func (*PoolCreatedEvent) ProtoMessage() {}
 
 // Deprecated: Use PoolCreatedEvent.ProtoReflect.Descriptor instead.
 func (*PoolCreatedEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{4}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *PoolCreatedEvent) GetCreator() string {
@@ -8332,7 +9223,7 @@ type LiquidityAddedEvent struct {
 func (x *LiquidityAddedEvent) Reset() {
 	*x = LiquidityAddedEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[5]
+		mi := &file_bze_tradebin_events_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8346,7 +9237,7 @@ func (*LiquidityAddedEvent) ProtoMessage() {}
 
 // Deprecated: Use LiquidityAddedEvent.ProtoReflect.Descriptor instead.
 func (*LiquidityAddedEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{5}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *LiquidityAddedEvent) GetCreator() string {
@@ -8398,7 +9289,7 @@ type LiquidityRemovedEvent struct {
 func (x *LiquidityRemovedEvent) Reset() {
 	*x = LiquidityRemovedEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[6]
+		mi := &file_bze_tradebin_events_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8412,7 +9303,7 @@ func (*LiquidityRemovedEvent) ProtoMessage() {}
 
 // Deprecated: Use LiquidityRemovedEvent.ProtoReflect.Descriptor instead.
 func (*LiquidityRemovedEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{6}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *LiquidityRemovedEvent) GetCreator() string {
@@ -8457,7 +9348,7 @@ type SwapEvent struct {
 func (x *SwapEvent) Reset() {
 	*x = SwapEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[7]
+		mi := &file_bze_tradebin_events_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8471,7 +9362,7 @@ func (*SwapEvent) ProtoMessage() {}
 
 // Deprecated: Use SwapEvent.ProtoReflect.Descriptor instead.
 func (*SwapEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{7}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *SwapEvent) GetCreator() string {
@@ -8515,7 +9406,7 @@ type DenomHaltedEvent struct {
 func (x *DenomHaltedEvent) Reset() {
 	*x = DenomHaltedEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[8]
+		mi := &file_bze_tradebin_events_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8529,7 +9420,7 @@ func (*DenomHaltedEvent) ProtoMessage() {}
 
 // Deprecated: Use DenomHaltedEvent.ProtoReflect.Descriptor instead.
 func (*DenomHaltedEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{8}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *DenomHaltedEvent) GetDenom() string {
@@ -8552,7 +9443,7 @@ type DenomUnhaltedEvent struct {
 func (x *DenomUnhaltedEvent) Reset() {
 	*x = DenomUnhaltedEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[9]
+		mi := &file_bze_tradebin_events_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8566,7 +9457,7 @@ func (*DenomUnhaltedEvent) ProtoMessage() {}
 
 // Deprecated: Use DenomUnhaltedEvent.ProtoReflect.Descriptor instead.
 func (*DenomUnhaltedEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{9}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *DenomUnhaltedEvent) GetDenom() string {
@@ -8593,7 +9484,7 @@ type PoolFeesUpdatedEvent struct {
 func (x *PoolFeesUpdatedEvent) Reset() {
 	*x = PoolFeesUpdatedEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[10]
+		mi := &file_bze_tradebin_events_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8607,7 +9498,7 @@ func (*PoolFeesUpdatedEvent) ProtoMessage() {}
 
 // Deprecated: Use PoolFeesUpdatedEvent.ProtoReflect.Descriptor instead.
 func (*PoolFeesUpdatedEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{10}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *PoolFeesUpdatedEvent) GetPoolId() string {
@@ -8672,7 +9563,7 @@ type OrderMessageRefundedEvent struct {
 func (x *OrderMessageRefundedEvent) Reset() {
 	*x = OrderMessageRefundedEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[11]
+		mi := &file_bze_tradebin_events_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8686,7 +9577,7 @@ func (*OrderMessageRefundedEvent) ProtoMessage() {}
 
 // Deprecated: Use OrderMessageRefundedEvent.ProtoReflect.Descriptor instead.
 func (*OrderMessageRefundedEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{11}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *OrderMessageRefundedEvent) GetOrderId() string {
@@ -8793,102 +9684,114 @@ var file_bze_tradebin_events_proto_rawDesc = []byte{
 	0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f,
 	0x77, 0x6e, 0x65, 0x72, 0x12, 0x19, 0x0a, 0x08, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x69, 0x64,
 	0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x49, 0x64, 0x22,
-	0x71, 0x0a, 0x10, 0x50, 0x6f, 0x6f, 0x6c, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x45, 0x76,
+	0xc6, 0x01, 0x0a, 0x11, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x41, 0x6d, 0x65, 0x6e, 0x64, 0x65, 0x64,
+	0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x5f,
+	0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74,
+	0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x54, 0x79, 0x70,
+	0x65, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72,
+	0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x21, 0x0a,
+	0x0c, 0x61, 0x64, 0x64, 0x65, 0x64, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x06, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x0b, 0x61, 0x64, 0x64, 0x65, 0x64, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74,
+	0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x71, 0x0a, 0x10, 0x50, 0x6f, 0x6f, 0x6c,
+	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x18, 0x0a, 0x07,
+	0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63,
+	0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x62, 0x61, 0x73, 0x65, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x62, 0x61, 0x73, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x71, 0x75,
+	0x6f, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x71, 0x75, 0x6f, 0x74, 0x65,
+	0x12, 0x19, 0x0a, 0x08, 0x6c, 0x70, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x04, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x07, 0x6c, 0x70, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0x8b, 0x02, 0x0a, 0x13,
+	0x4c, 0x69, 0x71, 0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x41, 0x64, 0x64, 0x65, 0x64, 0x45, 0x76,
 	0x65, 0x6e, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x12, 0x0a,
-	0x04, 0x62, 0x61, 0x73, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x62, 0x61, 0x73,
-	0x65, 0x12, 0x14, 0x0a, 0x05, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x05, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x6c, 0x70, 0x5f, 0x64, 0x65,
-	0x6e, 0x6f, 0x6d, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6c, 0x70, 0x44, 0x65, 0x6e,
-	0x6f, 0x6d, 0x22, 0x8b, 0x02, 0x0a, 0x13, 0x4c, 0x69, 0x71, 0x75, 0x69, 0x64, 0x69, 0x74, 0x79,
-	0x41, 0x64, 0x64, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72,
-	0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65,
-	0x61, 0x74, 0x6f, 0x72, 0x12, 0x3d, 0x0a, 0x0a, 0x62, 0x61, 0x73, 0x65, 0x41, 0x6d, 0x6f, 0x75,
-	0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde,
-	0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d,
-	0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x0a, 0x62, 0x61, 0x73, 0x65, 0x41, 0x6d, 0x6f,
-	0x75, 0x6e, 0x74, 0x12, 0x3f, 0x0a, 0x0b, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x41, 0x6d, 0x6f, 0x75,
-	0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde,
-	0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d,
-	0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x0b, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x41, 0x6d,
-	0x6f, 0x75, 0x6e, 0x74, 0x12, 0x41, 0x0a, 0x0c, 0x6d, 0x69, 0x6e, 0x74, 0x65, 0x64, 0x41, 0x6d,
-	0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00,
-	0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f,
-	0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x0c, 0x6d, 0x69, 0x6e, 0x74, 0x65,
-	0x64, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x17, 0x0a, 0x07, 0x70, 0x6f, 0x6f, 0x6c, 0x5f,
-	0x69, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x70, 0x6f, 0x6f, 0x6c, 0x49, 0x64,
-	0x22, 0xca, 0x01, 0x0a, 0x15, 0x4c, 0x69, 0x71, 0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x52, 0x65,
-	0x6d, 0x6f, 0x76, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72,
-	0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65,
-	0x61, 0x74, 0x6f, 0x72, 0x12, 0x3d, 0x0a, 0x0a, 0x62, 0x61, 0x73, 0x65, 0x41, 0x6d, 0x6f, 0x75,
-	0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde,
-	0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d,
-	0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x0a, 0x62, 0x61, 0x73, 0x65, 0x41, 0x6d, 0x6f,
-	0x75, 0x6e, 0x74, 0x12, 0x3f, 0x0a, 0x0b, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x41, 0x6d, 0x6f, 0x75,
-	0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde,
-	0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d,
-	0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x0b, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x41, 0x6d,
-	0x6f, 0x75, 0x6e, 0x74, 0x12, 0x17, 0x0a, 0x07, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x69, 0x64, 0x18,
-	0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x70, 0x6f, 0x6f, 0x6c, 0x49, 0x64, 0x22, 0xde, 0x01,
-	0x0a, 0x09, 0x53, 0x77, 0x61, 0x70, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x63,
-	0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72,
-	0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x4c, 0x0a, 0x02, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x21, 0xc8, 0xde,
-	0x1f, 0x00, 0xea, 0xde, 0x1f, 0x0c, 0x69, 0x6e, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70,
-	0x74, 0x79, 0xf2, 0xde, 0x1f, 0x09, 0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x69, 0x6e, 0x22, 0x52,
-	0x02, 0x69, 0x6e, 0x12, 0x50, 0x0a, 0x03, 0x6f, 0x75, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x23, 0xc8, 0xde, 0x1f,
-	0x00, 0xea, 0xde, 0x1f, 0x0d, 0x6f, 0x75, 0x74, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70,
-	0x74, 0x79, 0xf2, 0xde, 0x1f, 0x0a, 0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x6f, 0x75, 0x74, 0x22,
-	0x52, 0x03, 0x6f, 0x75, 0x74, 0x12, 0x17, 0x0a, 0x07, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x69, 0x64,
-	0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x70, 0x6f, 0x6f, 0x6c, 0x49, 0x64, 0x22, 0x28,
-	0x0a, 0x10, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x48, 0x61, 0x6c, 0x74, 0x65, 0x64, 0x45, 0x76, 0x65,
-	0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0x2a, 0x0a, 0x12, 0x44, 0x65, 0x6e, 0x6f,
-	0x6d, 0x55, 0x6e, 0x68, 0x61, 0x6c, 0x74, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x14,
-	0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64,
-	0x65, 0x6e, 0x6f, 0x6d, 0x22, 0xed, 0x01, 0x0a, 0x14, 0x50, 0x6f, 0x6f, 0x6c, 0x46, 0x65, 0x65,
-	0x73, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x17, 0x0a,
-	0x07, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
-	0x70, 0x6f, 0x6f, 0x6c, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x6f, 0x6c, 0x64, 0x5f, 0x66, 0x65,
-	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x6f, 0x6c, 0x64, 0x46, 0x65, 0x65, 0x12,
-	0x17, 0x0a, 0x07, 0x6e, 0x65, 0x77, 0x5f, 0x66, 0x65, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x06, 0x6e, 0x65, 0x77, 0x46, 0x65, 0x65, 0x12, 0x44, 0x0a, 0x0c, 0x6f, 0x6c, 0x64, 0x5f,
-	0x66, 0x65, 0x65, 0x5f, 0x64, 0x65, 0x73, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c,
-	0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x2e, 0x46, 0x65,
-	0x65, 0x44, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x04, 0xc8, 0xde,
-	0x1f, 0x00, 0x52, 0x0a, 0x6f, 0x6c, 0x64, 0x46, 0x65, 0x65, 0x44, 0x65, 0x73, 0x74, 0x12, 0x44,
-	0x0a, 0x0c, 0x6e, 0x65, 0x77, 0x5f, 0x66, 0x65, 0x65, 0x5f, 0x64, 0x65, 0x73, 0x74, 0x18, 0x05,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64, 0x65,
-	0x62, 0x69, 0x6e, 0x2e, 0x46, 0x65, 0x65, 0x44, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0a, 0x6e, 0x65, 0x77, 0x46, 0x65, 0x65,
-	0x44, 0x65, 0x73, 0x74, 0x22, 0xd0, 0x01, 0x0a, 0x19, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x4d, 0x65,
-	0x73, 0x73, 0x61, 0x67, 0x65, 0x52, 0x65, 0x66, 0x75, 0x6e, 0x64, 0x65, 0x64, 0x45, 0x76, 0x65,
-	0x6e, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x49, 0x64, 0x12, 0x1b, 0x0a,
-	0x09, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72,
-	0x64, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09,
-	0x6f, 0x72, 0x64, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e,
-	0x65, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12,
-	0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x66, 0x75, 0x6e,
-	0x64, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x66, 0x75, 0x6e, 0x64, 0x12,
-	0x16, 0x0a, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x42, 0x9f, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e,
-	0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x42, 0x0b, 0x45, 0x76,
-	0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68,
-	0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a,
-	0x65, 0x2f, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xa2, 0x02, 0x03, 0x42, 0x54, 0x58,
-	0xaa, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x2e, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xca,
-	0x02, 0x0c, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xe2, 0x02,
-	0x18, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x5c, 0x47, 0x50,
-	0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x42, 0x7a, 0x65, 0x3a,
-	0x3a, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x3d, 0x0a,
+	0x0a, 0x62, 0x61, 0x73, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74,
+	0x52, 0x0a, 0x62, 0x61, 0x73, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x3f, 0x0a, 0x0b,
+	0x71, 0x75, 0x6f, 0x74, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74,
+	0x52, 0x0b, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x41, 0x0a,
+	0x0c, 0x6d, 0x69, 0x6e, 0x74, 0x65, 0x64, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04, 0x20,
+	0x01, 0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49,
+	0x6e, 0x74, 0x52, 0x0c, 0x6d, 0x69, 0x6e, 0x74, 0x65, 0x64, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74,
+	0x12, 0x17, 0x0a, 0x07, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x06, 0x70, 0x6f, 0x6f, 0x6c, 0x49, 0x64, 0x22, 0xca, 0x01, 0x0a, 0x15, 0x4c, 0x69,
+	0x71, 0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x64, 0x45, 0x76,
+	0x65, 0x6e, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x3d, 0x0a,
+	0x0a, 0x62, 0x61, 0x73, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74,
+	0x52, 0x0a, 0x62, 0x61, 0x73, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x3f, 0x0a, 0x0b,
+	0x71, 0x75, 0x6f, 0x74, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74,
+	0x52, 0x0b, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x17, 0x0a,
+	0x07, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
+	0x70, 0x6f, 0x6f, 0x6c, 0x49, 0x64, 0x22, 0xde, 0x01, 0x0a, 0x09, 0x53, 0x77, 0x61, 0x70, 0x45,
+	0x76, 0x65, 0x6e, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x4c,
+	0x0a, 0x02, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x21, 0xc8, 0xde, 0x1f, 0x00, 0xea, 0xde, 0x1f, 0x0c, 0x69,
+	0x6e, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74, 0x79, 0xf2, 0xde, 0x1f, 0x09, 0x79,
+	0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x69, 0x6e, 0x22, 0x52, 0x02, 0x69, 0x6e, 0x12, 0x50, 0x0a, 0x03,
+	0x6f, 0x75, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x43, 0x6f, 0x69, 0x6e, 0x42, 0x23, 0xc8, 0xde, 0x1f, 0x00, 0xea, 0xde, 0x1f, 0x0d, 0x6f, 0x75,
+	0x74, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74, 0x79, 0xf2, 0xde, 0x1f, 0x0a, 0x79,
+	0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x6f, 0x75, 0x74, 0x22, 0x52, 0x03, 0x6f, 0x75, 0x74, 0x12, 0x17,
+	0x0a, 0x07, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x06, 0x70, 0x6f, 0x6f, 0x6c, 0x49, 0x64, 0x22, 0x28, 0x0a, 0x10, 0x44, 0x65, 0x6e, 0x6f, 0x6d,
+	0x48, 0x61, 0x6c, 0x74, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x64,
+	0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f,
+	0x6d, 0x22, 0x2a, 0x0a, 0x12, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x55, 0x6e, 0x68, 0x61, 0x6c, 0x74,
+	0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0xed, 0x01,
+	0x0a, 0x14, 0x50, 0x6f, 0x6f, 0x6c, 0x46, 0x65, 0x65, 0x73, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
+	0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x17, 0x0a, 0x07, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x69,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x70, 0x6f, 0x6f, 0x6c, 0x49, 0x64, 0x12,
+	0x17, 0x0a, 0x07, 0x6f, 0x6c, 0x64, 0x5f, 0x66, 0x65, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x06, 0x6f, 0x6c, 0x64, 0x46, 0x65, 0x65, 0x12, 0x17, 0x0a, 0x07, 0x6e, 0x65, 0x77, 0x5f,
+	0x66, 0x65, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x6e, 0x65, 0x77, 0x46, 0x65,
+	0x65, 0x12, 0x44, 0x0a, 0x0c, 0x6f, 0x6c, 0x64, 0x5f, 0x66, 0x65, 0x65, 0x5f, 0x64, 0x65, 0x73,
+	0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72,
+	0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x2e, 0x46, 0x65, 0x65, 0x44, 0x65, 0x73, 0x74, 0x69, 0x6e,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0a, 0x6f, 0x6c, 0x64,
+	0x46, 0x65, 0x65, 0x44, 0x65, 0x73, 0x74, 0x12, 0x44, 0x0a, 0x0c, 0x6e, 0x65, 0x77, 0x5f, 0x66,
+	0x65, 0x65, 0x5f, 0x64, 0x65, 0x73, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e,
+	0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x2e, 0x46, 0x65, 0x65,
+	0x44, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f,
+	0x00, 0x52, 0x0a, 0x6e, 0x65, 0x77, 0x46, 0x65, 0x65, 0x44, 0x65, 0x73, 0x74, 0x22, 0xd0, 0x01,
+	0x0a, 0x19, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x52, 0x65,
+	0x66, 0x75, 0x6e, 0x64, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x6f,
+	0x72, 0x64, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6f,
+	0x72, 0x64, 0x65, 0x72, 0x49, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74,
+	0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b, 0x65,
+	0x74, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70,
+	0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x54, 0x79,
+	0x70, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75,
+	0x6e, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74,
+	0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x66, 0x75, 0x6e, 0x64, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x06, 0x72, 0x65, 0x66, 0x75, 0x6e, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x61, 0x73,
+	0x6f, 0x6e, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e,
+	0x42, 0x9f, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61,
+	0x64, 0x65, 0x62, 0x69, 0x6e, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62,
+	0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x72, 0x61, 0x64, 0x65,
+	0x62, 0x69, 0x6e, 0xa2, 0x02, 0x03, 0x42, 0x54, 0x58, 0xaa, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x2e,
+	0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xca, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x5c, 0x54,
+	0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xe2, 0x02, 0x18, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72,
+	0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
+	0x74, 0x61, 0xea, 0x02, 0x0d, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62,
+	0x69, 0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -8903,28 +9806,29 @@ func file_bze_tradebin_events_proto_rawDescGZIP() []byte {
 	return file_bze_tradebin_events_proto_rawDescData
 }
 
-var file_bze_tradebin_events_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_bze_tradebin_events_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_bze_tradebin_events_proto_goTypes = []interface{}{
 	(*MarketCreatedEvent)(nil),        // 0: bze.tradebin.MarketCreatedEvent
 	(*OrderExecutedEvent)(nil),        // 1: bze.tradebin.OrderExecutedEvent
 	(*OrderCanceledEvent)(nil),        // 2: bze.tradebin.OrderCanceledEvent
 	(*OrderSavedEvent)(nil),           // 3: bze.tradebin.OrderSavedEvent
-	(*PoolCreatedEvent)(nil),          // 4: bze.tradebin.PoolCreatedEvent
-	(*LiquidityAddedEvent)(nil),       // 5: bze.tradebin.LiquidityAddedEvent
-	(*LiquidityRemovedEvent)(nil),     // 6: bze.tradebin.LiquidityRemovedEvent
-	(*SwapEvent)(nil),                 // 7: bze.tradebin.SwapEvent
-	(*DenomHaltedEvent)(nil),          // 8: bze.tradebin.DenomHaltedEvent
-	(*DenomUnhaltedEvent)(nil),        // 9: bze.tradebin.DenomUnhaltedEvent
-	(*PoolFeesUpdatedEvent)(nil),      // 10: bze.tradebin.PoolFeesUpdatedEvent
-	(*OrderMessageRefundedEvent)(nil), // 11: bze.tradebin.OrderMessageRefundedEvent
-	(*v1beta1.Coin)(nil),              // 12: cosmos.base.v1beta1.Coin
-	(*FeeDestination)(nil),            // 13: bze.tradebin.FeeDestination
+	(*OrderAmendedEvent)(nil),         // 4: bze.tradebin.OrderAmendedEvent
+	(*PoolCreatedEvent)(nil),          // 5: bze.tradebin.PoolCreatedEvent
+	(*LiquidityAddedEvent)(nil),       // 6: bze.tradebin.LiquidityAddedEvent
+	(*LiquidityRemovedEvent)(nil),     // 7: bze.tradebin.LiquidityRemovedEvent
+	(*SwapEvent)(nil),                 // 8: bze.tradebin.SwapEvent
+	(*DenomHaltedEvent)(nil),          // 9: bze.tradebin.DenomHaltedEvent
+	(*DenomUnhaltedEvent)(nil),        // 10: bze.tradebin.DenomUnhaltedEvent
+	(*PoolFeesUpdatedEvent)(nil),      // 11: bze.tradebin.PoolFeesUpdatedEvent
+	(*OrderMessageRefundedEvent)(nil), // 12: bze.tradebin.OrderMessageRefundedEvent
+	(*v1beta1.Coin)(nil),              // 13: cosmos.base.v1beta1.Coin
+	(*FeeDestination)(nil),            // 14: bze.tradebin.FeeDestination
 }
 var file_bze_tradebin_events_proto_depIdxs = []int32{
-	12, // 0: bze.tradebin.SwapEvent.in:type_name -> cosmos.base.v1beta1.Coin
-	12, // 1: bze.tradebin.SwapEvent.out:type_name -> cosmos.base.v1beta1.Coin
-	13, // 2: bze.tradebin.PoolFeesUpdatedEvent.old_fee_dest:type_name -> bze.tradebin.FeeDestination
-	13, // 3: bze.tradebin.PoolFeesUpdatedEvent.new_fee_dest:type_name -> bze.tradebin.FeeDestination
+	13, // 0: bze.tradebin.SwapEvent.in:type_name -> cosmos.base.v1beta1.Coin
+	13, // 1: bze.tradebin.SwapEvent.out:type_name -> cosmos.base.v1beta1.Coin
+	14, // 2: bze.tradebin.PoolFeesUpdatedEvent.old_fee_dest:type_name -> bze.tradebin.FeeDestination
+	14, // 3: bze.tradebin.PoolFeesUpdatedEvent.new_fee_dest:type_name -> bze.tradebin.FeeDestination
 	4,  // [4:4] is the sub-list for method output_type
 	4,  // [4:4] is the sub-list for method input_type
 	4,  // [4:4] is the sub-list for extension type_name
@@ -8988,7 +9892,7 @@ func file_bze_tradebin_events_proto_init() {
 			}
 		}
 		file_bze_tradebin_events_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PoolCreatedEvent); i {
+			switch v := v.(*OrderAmendedEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9000,7 +9904,7 @@ func file_bze_tradebin_events_proto_init() {
 			}
 		}
 		file_bze_tradebin_events_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*LiquidityAddedEvent); i {
+			switch v := v.(*PoolCreatedEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9012,7 +9916,7 @@ func file_bze_tradebin_events_proto_init() {
 			}
 		}
 		file_bze_tradebin_events_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*LiquidityRemovedEvent); i {
+			switch v := v.(*LiquidityAddedEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9024,7 +9928,7 @@ func file_bze_tradebin_events_proto_init() {
 			}
 		}
 		file_bze_tradebin_events_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SwapEvent); i {
+			switch v := v.(*LiquidityRemovedEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9036,7 +9940,7 @@ func file_bze_tradebin_events_proto_init() {
 			}
 		}
 		file_bze_tradebin_events_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DenomHaltedEvent); i {
+			switch v := v.(*SwapEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9048,7 +9952,7 @@ func file_bze_tradebin_events_proto_init() {
 			}
 		}
 		file_bze_tradebin_events_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DenomUnhaltedEvent); i {
+			switch v := v.(*DenomHaltedEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9060,7 +9964,7 @@ func file_bze_tradebin_events_proto_init() {
 			}
 		}
 		file_bze_tradebin_events_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PoolFeesUpdatedEvent); i {
+			switch v := v.(*DenomUnhaltedEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9072,6 +9976,18 @@ func file_bze_tradebin_events_proto_init() {
 			}
 		}
 		file_bze_tradebin_events_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PoolFeesUpdatedEvent); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bze_tradebin_events_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*OrderMessageRefundedEvent); i {
 			case 0:
 				return &v.state
@@ -9090,7 +10006,7 @@ func file_bze_tradebin_events_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_bze_tradebin_events_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

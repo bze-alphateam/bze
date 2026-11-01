@@ -23,6 +23,14 @@ import (
 )
 
 func TradebinKeeper(t testing.TB, bank types.BankKeeper, acc types.AccountKeeper) (keeper.Keeper, sdk.Context) {
+	k, ctx, _ := TradebinKeeperWithStoreKey(t, bank, acc)
+
+	return k, ctx
+}
+
+// TradebinKeeperWithStoreKey is TradebinKeeper that also returns the module store key, for tests that
+// set up raw store state (e.g. the state a migration starts from).
+func TradebinKeeperWithStoreKey(t testing.TB, bank types.BankKeeper, acc types.AccountKeeper) (keeper.Keeper, sdk.Context, *storetypes.KVStoreKey) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	db := dbm.NewMemDB()
@@ -50,5 +58,5 @@ func TradebinKeeper(t testing.TB, bank types.BankKeeper, acc types.AccountKeeper
 		panic(err)
 	}
 
-	return k, ctx
+	return k, ctx, storeKey
 }

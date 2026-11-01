@@ -132,6 +132,21 @@ func (mr *MockProcessingKeeperMockRecorder) GetOrderCoinsWithDust(ctx, orderCoin
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderCoinsWithDust", reflect.TypeOf((*MockProcessingKeeper)(nil).GetOrderCoinsWithDust), ctx, orderCoinsArgs)
 }
 
+// GetOwnerPriceOrder mocks base method.
+func (m *MockProcessingKeeper) GetOwnerPriceOrder(ctx types0.Context, owner, marketId, orderType, price string) (types.OrderReference, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOwnerPriceOrder", ctx, owner, marketId, orderType, price)
+	ret0, _ := ret[0].(types.OrderReference)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
+}
+
+// GetOwnerPriceOrder indicates an expected call of GetOwnerPriceOrder.
+func (mr *MockProcessingKeeperMockRecorder) GetOwnerPriceOrder(ctx, owner, marketId, orderType, price any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOwnerPriceOrder", reflect.TypeOf((*MockProcessingKeeper)(nil).GetOwnerPriceOrder), ctx, owner, marketId, orderType, price)
+}
+
 // IteratePriceOrders mocks base method.
 func (m *MockProcessingKeeper) IteratePriceOrders(ctx types0.Context, marketId, orderType, price string, fn func(types.OrderReference) bool) {
 	m.ctrl.T.Helper()

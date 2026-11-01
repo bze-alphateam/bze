@@ -54,6 +54,7 @@ func (suite *IntegrationTestSuite) TestEngine_PlaceOrder_CorruptOppositeAggregat
 	placed := withId(order, orderId(0))
 
 	gomock.InOrder(
+		pk.EXPECT().GetOwnerPriceOrder(gomock.Any(), taker.String(), getMarketId(), types.OrderTypeBuy, "1").Return(types.OrderReference{}, false).Times(1),
 		pk.EXPECT().AssignOrderId(gomock.Any(), order).Return(placed).Times(1),
 		pk.EXPECT().GetAggregatedOrder(gomock.Any(), getMarketId(), types.OrderTypeSell, "1").
 			Return(types.AggregatedOrder{MarketId: getMarketId(), OrderType: types.OrderTypeSell, Price: "1", Amount: "not-a-number"}, true).Times(1),
@@ -74,8 +75,10 @@ func (suite *IntegrationTestSuite) TestEngine_PlaceOrder_CorruptOwnSideAggregate
 	placed := withId(order, orderId(0))
 
 	gomock.InOrder(
+		pk.EXPECT().GetOwnerPriceOrder(gomock.Any(), maker.String(), getMarketId(), types.OrderTypeBuy, "1").Return(types.OrderReference{}, false).Times(1),
 		pk.EXPECT().AssignOrderId(gomock.Any(), order).Return(placed).Times(1),
 		pk.EXPECT().GetAggregatedOrder(gomock.Any(), getMarketId(), types.OrderTypeSell, "1").Return(types.AggregatedOrder{}, false).Times(1),
+		pk.EXPECT().GetOrder(gomock.Any(), getMarketId(), types.OrderTypeBuy, placed.Id).Return(types.Order{}, false).Times(1),
 		pk.EXPECT().SaveOrder(gomock.Any(), placed).Return(placed).Times(1),
 		pk.EXPECT().GetAggregatedOrder(gomock.Any(), getMarketId(), types.OrderTypeBuy, "1").
 			Return(types.AggregatedOrder{MarketId: getMarketId(), OrderType: types.OrderTypeBuy, Price: "1", Amount: "not-a-number"}, true).Times(1),
@@ -90,6 +93,7 @@ func (suite *IntegrationTestSuite) TestEngine_PlaceOrder_CorruptOrderAmountRetur
 	taker := sdk.AccAddress("addr2_______________")
 	order := limitOrder(types.OrderTypeBuy, "not-a-number", "1", taker)
 
+	pk.EXPECT().GetOwnerPriceOrder(gomock.Any(), taker.String(), getMarketId(), types.OrderTypeBuy, "1").Return(types.OrderReference{}, false).Times(1)
 	pk.EXPECT().AssignOrderId(gomock.Any(), order).Return(withId(order, orderId(0))).Times(1)
 
 	err := engine.PlaceOrder(suite.ctx, order)

@@ -269,17 +269,20 @@ func (suite *IntegrationTestSuite) TestEventsOrderId_FullyFilledTakerGetsId() {
 	engine, err := keeper.NewProcessingEngine(recorder, suite.bankMock, v2types.DefaultMaxFillsPerOrder, suite.k.Logger())
 	suite.Require().NoError(err)
 
+	// two makers: orders of one owner at one price merge
 	makerAddr := sdk.AccAddress("addr1_______________")
+	secondMakerAddr := sdk.AccAddress("addr3_______________")
 	takerAddr := sdk.AccAddress("addr2_______________")
 	price := "1"
 	amt, err := keeper.CalculateMinAmount(price)
 	suite.Require().NoError(err)
 
 	suite.Require().NoError(engine.PlaceOrder(suite.ctx, limitOrder(types.OrderTypeSell, amt.String(), price, makerAddr)))
-	suite.Require().NoError(engine.PlaceOrder(suite.ctx, limitOrder(types.OrderTypeSell, amt.String(), price, makerAddr)))
+	suite.Require().NoError(engine.PlaceOrder(suite.ctx, limitOrder(types.OrderTypeSell, amt.String(), price, secondMakerAddr)))
 	suite.Require().Equal(uint64(2), suite.k.GetOrderCounter(suite.ctx))
 
-	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, makerAddr, sdk.NewCoins(sdk.NewCoin(market.Quote, amt))).Return(nil).Times(2)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, makerAddr, sdk.NewCoins(sdk.NewCoin(market.Quote, amt))).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, secondMakerAddr, sdk.NewCoins(sdk.NewCoin(market.Quote, amt))).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, takerAddr, sdk.NewCoins(sdk.NewCoin(market.Base, amt))).Return(nil).Times(2)
 
 	// first taker with PlaceOrder, second with FillOrder: each takes the next id

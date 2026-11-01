@@ -94,6 +94,7 @@ func (k Keeper) SaveOrder(ctx sdk.Context, order types.Order) types.Order {
 
 	k.SetPriceOrder(ctx, orderRef, order.Price)
 	k.SetUserOrder(ctx, orderRef, order.Owner)
+	k.IndexOwnerPriceOrder(ctx, order)
 
 	return order
 }
@@ -105,6 +106,7 @@ func (k Keeper) RemoveOrder(ctx sdk.Context, order types.Order) {
 
 	k.RemovePriceOrder(ctx, order.MarketId, order.OrderType, order.Price, order.Id)
 	k.RemoveUserOrder(ctx, order.Owner, order.MarketId, order.OrderType, order.Id)
+	k.unindexOwnerPriceOrder(ctx, order)
 }
 
 func (k Keeper) GetAllPriceOrder(ctx sdk.Context) (list []types.OrderReference) {
