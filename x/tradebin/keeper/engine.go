@@ -7,29 +7,19 @@ import (
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/bzeutils"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
-	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"cosmossdk.io/log"
 )
 
+// ProcessingKeeper is the state the order book engine reads and writes.
 type ProcessingKeeper interface {
-	//queue messages
-	IterateAllQueueMessages(ctx sdk.Context, msgHandler func(ctx sdk.Context, message types.QueueMessage) bool)
-	RemoveQueueMessage(ctx sdk.Context, marketId, messageId string)
-	ResetQueueMessageCounter(ctx sdk.Context)
-	HasQueueMessages(ctx sdk.Context) bool
-	RemovePendingCancel(ctx sdk.Context, marketId, orderType, orderId string)
-
-	//params
-	GetParams(ctx context.Context) v2types.Params
-
 	//orders
 	GetPriceOrderByPrice(ctx sdk.Context, marketId, orderType, price string) (list []types.OrderReference)
 
 	GetOrder(ctx sdk.Context, marketId, orderType, orderId string) (order types.Order, found bool)
 	RemoveOrder(ctx sdk.Context, order types.Order)
-	NewOrder(ctx sdk.Context, order types.Order) types.Order
+	AssignOrderId(ctx sdk.Context, order types.Order) types.Order
 	SaveOrder(ctx sdk.Context, order types.Order) types.Order
 
 	GetAggregatedOrder(ctx sdk.Context, marketId, orderType, price string) (order types.AggregatedOrder, found bool)
@@ -54,14 +44,10 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 }
 
-type queueMessageRef struct {
-	marketId  string
-	messageId string
-}
-
+// ProcessingEngine is the order book matching engine. The message servers call its verbs inside the
+// transaction, so all the work it does is metered by the transaction's gas meter and an error reverts
+// the whole transaction.
 type ProcessingEngine struct {
-	msgsToDelete []queueMessageRef
-
 	k    ProcessingKeeper
 	bank BankKeeper
 
@@ -80,110 +66,40 @@ func NewProcessingEngine(k ProcessingKeeper, bank BankKeeper, logger log.Logger)
 	}, nil
 }
 
-func (pe *ProcessingEngine) ProcessQueueMessages(ctx sdk.Context) {
-	logger := pe.logger.With(
-		"method", "ProcessQueueMessages",
-	)
+// PlaceOrder executes a limit order: it is matched against the opposite side at its price and the
+// remainder rests on the book as a new maker order when the opposite side at that price was emptied
+// and the remainder is at least the minimum amount, otherwise the remainder is refunded.
+// The order coins must already be escrowed in the module account. The order gets its id here,
+// before matching.
+func (pe *ProcessingEngine) PlaceOrder(ctx sdk.Context, order types.Order) error {
+	order = pe.k.AssignOrderId(ctx, order)
 
-	// Get params and set max messages per block
-	params := pe.k.GetParams(ctx)
-	maxPerBlock := params.OrderBookPerBlockMessages
-	processedCount := uint64(0)
-
-	messageHandler := pe.getMessageHandler()
-
-	// Wrapper function that checks the counter before processing
-	pe.k.IterateAllQueueMessages(ctx, func(ctx sdk.Context, message types.QueueMessage) bool {
-		// Check if we've reached the max messages per block limit
-		if processedCount >= maxPerBlock {
-			logger.Info("reached max messages per block limit, stopping iteration", "processed", processedCount, "limit", maxPerBlock)
-			return false
-		}
-
-		// Process the message
-		shouldContinue := messageHandler(ctx, message)
-		processedCount++
-
-		return shouldContinue
-	})
-
-	if len(pe.msgsToDelete) == 0 {
-		logger.Info("no queue message to delete")
-		return
-	}
-
-	logger.Info("preparing to delete processed queue messages", "number_of_messages", len(pe.msgsToDelete))
-	for _, msgRef := range pe.msgsToDelete {
-		pe.k.RemoveQueueMessage(ctx, msgRef.marketId, msgRef.messageId)
-	}
-
-	// Only reset counter if queue is empty
-	if !pe.k.HasQueueMessages(ctx) {
-		pe.k.ResetQueueMessageCounter(ctx)
-		logger.Info("queue message counter reset")
-	} else {
-		logger.Info("queue still has messages, counter not reset")
-	}
+	return pe.addOrder(ctx, order)
 }
 
-func (pe *ProcessingEngine) getMessageHandler() func(ctx sdk.Context, message types.QueueMessage) bool {
-	return func(ctx sdk.Context, message types.QueueMessage) bool {
-		var wrappingFn func(ctx sdk.Context) error
+// FillOrder executes an immediate-or-cancel order: it is matched against the opposite side at its
+// price and whatever is not executed is refunded. It never rests on the book.
+// The order coins must already be escrowed in the module account. The order gets its id here,
+// before matching.
+func (pe *ProcessingEngine) FillOrder(ctx sdk.Context, order types.Order) error {
+	order = pe.k.AssignOrderId(ctx, order)
 
-		switch message.MessageType {
-		case types.MessageTypeFillBuy:
-			fallthrough
-		case types.MessageTypeFillSell:
-			wrappingFn = func(ctx sdk.Context) error {
-				return pe.fillOrder(ctx, message)
-			}
-		case types.MessageTypeCancel:
-			wrappingFn = func(ctx sdk.Context) error {
-				return pe.cancelOrder(ctx, message)
-			}
-		default:
-			wrappingFn = func(ctx sdk.Context) error {
-				return pe.addOrder(ctx, message)
-			}
-		}
-
-		err := bzeutils.ApplyFuncIfNoError(ctx, wrappingFn)
-		if err != nil {
-			//leave the message on queue until we discover what the issue was.
-			pe.logger.Error("error on handling queue message", "message", message)
-			//let the iteration continue, we don't want to block the entire processing engine.
-			//the message will be processed again on the next block.
-			//the cache context's events were discarded with its writes, so the failure is emitted on the
-			//outer context.
-			pe.emitOrderMessageFailedEvent(ctx, &message)
-
-			return true
-		}
-
-		pe.msgsToDelete = append(pe.msgsToDelete, queueMessageRef{
-			marketId:  message.MarketId,
-			messageId: message.MessageId,
-		})
-		return true
-	}
+	return pe.fillOrder(ctx, order)
 }
 
-func (pe *ProcessingEngine) cancelOrder(ctx sdk.Context, message types.QueueMessage) error {
+// CancelOrder removes a resting order from the book and refunds its remaining amount to its owner.
+// The caller loads the order and checks its ownership.
+func (pe *ProcessingEngine) CancelOrder(ctx sdk.Context, order types.Order) error {
+	return pe.cancelOrder(ctx, order)
+}
+
+func (pe *ProcessingEngine) cancelOrder(ctx sdk.Context, order types.Order) error {
 	logger := pe.logger.With(
-		"message", message,
+		"order", order,
 		"func", "cancelOrder",
 	)
 	logger.Info("cancelling order")
 
-	pe.k.RemovePendingCancel(ctx, message.MarketId, message.OrderType, message.OrderId)
-
-	order, found := pe.k.GetOrder(ctx, message.MarketId, message.OrderType, message.OrderId)
-	if !found {
-		logger.Error("could not find order")
-		pe.emitOrderCancelSkippedEvent(ctx, &message)
-
-		return nil
-	}
 	pe.k.RemoveOrder(ctx, order)
 
 	market, _ := pe.k.GetMarketById(ctx, order.MarketId)
@@ -223,17 +139,20 @@ func (pe *ProcessingEngine) cancelOrder(ctx sdk.Context, message types.QueueMess
 		logger.Info("will not send funds to order owner because the amount is too low but will save dust", "orderCoins", orderCoins)
 	}
 
-	pe.removeOrderFromAggregate(ctx, &order)
+	err = pe.removeOrderFromAggregate(ctx, &order)
+	if err != nil {
+		return err
+	}
 	pe.k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
-	pe.emitOrderCanceledEvent(ctx, &order, message.MessageId)
+	pe.emitOrderCanceledEvent(ctx, &order, order.Id)
 	logger.Info("order cancelled")
 
 	return nil
 }
 
-func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage) error {
+func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.Order) error {
 	logger := pe.logger.With(
-		"message", message,
+		"order", message,
 		"func", "addOrder",
 	)
 	logger.Info("adding new order on market")
@@ -242,7 +161,7 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 	msgAmountInt, ok := math.NewIntFromString(message.Amount)
 	if !ok {
 
-		return fmt.Errorf("could not convert queue message amount")
+		return fmt.Errorf("could not convert order amount")
 	}
 
 	//find opposite orders if they exist
@@ -250,10 +169,9 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 	//no pending orders to fill. save the order and finish
 	if !found {
 		order := pe.saveOrder(ctx, message, message.Amount)
-		pe.addOrderToAggregate(ctx, order)
 		logger.Info("no orders to fill. saving as new order", "order", *order)
 
-		return nil
+		return pe.addOrderToAggregate(ctx, order)
 	}
 
 	//should always exist
@@ -279,10 +197,9 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.QueueMessage
 	//if min amount condition is met and all orders were filled we can proceed to place the order
 	if remaining.GTE(minAmount) && aggAmountInt.IsZero() {
 		order := pe.saveOrder(ctx, message, message.Amount)
-		pe.addOrderToAggregate(ctx, order)
 
-		logger.Info("message has been saved as order", "order", *order)
-		return nil
+		logger.Info("order remainder has been saved on the book", "order", *order)
+		return pe.addOrderToAggregate(ctx, order)
 	}
 
 	logger.Info("message remaining amount is too low, returning dust")
@@ -355,7 +272,7 @@ func (pe *ProcessingEngine) fundUsersAccounts(ctx sdk.Context, order *types.Orde
 	return nil
 }
 
-func (pe *ProcessingEngine) addHistoryOrder(ctx sdk.Context, order *types.Order, amount math.Int, message *types.QueueMessage) {
+func (pe *ProcessingEngine) addHistoryOrder(ctx sdk.Context, order *types.Order, amount math.Int, message *types.Order) {
 	history := types.HistoryOrder{
 		MarketId:   order.MarketId,
 		OrderType:  order.OrderType,
@@ -366,8 +283,8 @@ func (pe *ProcessingEngine) addHistoryOrder(ctx sdk.Context, order *types.Order,
 		Taker:      message.Owner,
 	}
 
-	// Index format: {messageId}{orderId}
-	index := fmt.Sprintf("%s%s", message.MessageId, order.Id)
+	// Index format: {takerOrderId}{makerOrderId}
+	index := fmt.Sprintf("%s%s", message.Id, order.Id)
 	pe.k.SetHistoryOrder(ctx, history, index)
 }
 
@@ -400,40 +317,33 @@ func (pe *ProcessingEngine) getExecutedAmount(messageAmount, orderAmount, minAmo
 	return math.ZeroInt()
 }
 
-func (pe *ProcessingEngine) saveOrder(ctx sdk.Context, message types.QueueMessage, amount string) *types.Order {
-	order := types.Order{
-		MarketId:  message.MarketId,
-		OrderType: message.OrderType,
-		Amount:    amount,
-		Price:     message.Price,
-		Owner:     message.Owner,
-	}
+func (pe *ProcessingEngine) saveOrder(ctx sdk.Context, message types.Order, amount string) *types.Order {
+	order := message
+	order.Amount = amount
 
-	order = pe.k.NewOrder(ctx, order)
+	order = pe.k.SaveOrder(ctx, order)
 
-	pe.emitOrderSavedEvent(ctx, &order, message.MessageId)
+	pe.emitOrderSavedEvent(ctx, &order, message.Id)
 
 	return &order
 }
 
-func (pe *ProcessingEngine) removeOrderFromAggregate(ctx sdk.Context, order *types.Order) {
+func (pe *ProcessingEngine) removeOrderFromAggregate(ctx sdk.Context, order *types.Order) error {
 	agg, found := pe.k.GetAggregatedOrder(ctx, order.MarketId, order.OrderType, order.Price)
 	if !found {
-		return
+		return nil
 	}
 
 	aggAmountInt, ok := math.NewIntFromString(agg.Amount)
 	if !ok {
 		//should never happen
-		pe.logger.Error("could not convert agg amount", "method", "removeOrderFromAggregate")
-		return
+		return fmt.Errorf("could not convert agg amount")
 	}
 
 	orderAmountInt, ok := math.NewIntFromString(order.Amount)
 	if !ok {
 		//should never happen
-		pe.logger.Error("could not convert order amount", "method", "removeOrderFromAggregate")
-		return
+		return fmt.Errorf("could not convert order amount")
 	}
 
 	aggAmountInt = aggAmountInt.Sub(orderAmountInt)
@@ -444,9 +354,11 @@ func (pe *ProcessingEngine) removeOrderFromAggregate(ctx sdk.Context, order *typ
 	} else {
 		pe.k.RemoveAggregatedOrder(ctx, agg)
 	}
+
+	return nil
 }
 
-func (pe *ProcessingEngine) addOrderToAggregate(ctx sdk.Context, order *types.Order) {
+func (pe *ProcessingEngine) addOrderToAggregate(ctx sdk.Context, order *types.Order) error {
 	agg, found := pe.k.GetAggregatedOrder(ctx, order.MarketId, order.OrderType, order.Price)
 	if !found {
 		agg = types.AggregatedOrder{
@@ -460,23 +372,23 @@ func (pe *ProcessingEngine) addOrderToAggregate(ctx sdk.Context, order *types.Or
 	aggAmountInt, ok := math.NewIntFromString(agg.Amount)
 	if !ok {
 		//should never happen
-		pe.logger.Error("could not convert agg amount", "method", "addOrderToAggregate")
-		return
+		return fmt.Errorf("could not convert agg amount")
 	}
 
 	orderAmountInt, ok := math.NewIntFromString(order.Amount)
 	if !ok {
 		//should never happen
-		pe.logger.Error("could not convert order amount", "method", "addOrderToAggregate")
-		return
+		return fmt.Errorf("could not convert order amount")
 	}
 
 	agg.Amount = aggAmountInt.Add(orderAmountInt).String()
 
 	pe.k.SetAggregatedOrder(ctx, agg)
+
+	return nil
 }
 
-func (pe *ProcessingEngine) emitOrderExecutedEvent(ctx sdk.Context, order *types.Order, amount, userAddress, messageId string) {
+func (pe *ProcessingEngine) emitOrderExecutedEvent(ctx sdk.Context, order *types.Order, amount, userAddress, takerOrderId string) {
 	err := ctx.EventManager().EmitTypedEvent(
 		&types.OrderExecutedEvent{
 			Id:        order.Id,
@@ -486,7 +398,7 @@ func (pe *ProcessingEngine) emitOrderExecutedEvent(ctx sdk.Context, order *types
 			Price:     order.Price,
 			Taker:     userAddress,
 			Maker:     order.Owner,
-			MessageId: messageId,
+			OrderId:   takerOrderId,
 		},
 	)
 
@@ -509,7 +421,7 @@ func (pe *ProcessingEngine) emitOrderExecutedEvent(ctx sdk.Context, order *types
 	}
 }
 
-func (pe *ProcessingEngine) emitOrderCanceledEvent(ctx sdk.Context, order *types.Order, messageId string) {
+func (pe *ProcessingEngine) emitOrderCanceledEvent(ctx sdk.Context, order *types.Order, orderId string) {
 	err := ctx.EventManager().EmitTypedEvent(
 		&types.OrderCanceledEvent{
 			Id:        order.Id,
@@ -518,7 +430,7 @@ func (pe *ProcessingEngine) emitOrderCanceledEvent(ctx sdk.Context, order *types
 			Amount:    order.Amount,
 			Price:     order.Price,
 			Owner:     order.Owner,
-			MessageId: messageId,
+			OrderId:   orderId,
 		},
 	)
 
@@ -527,7 +439,7 @@ func (pe *ProcessingEngine) emitOrderCanceledEvent(ctx sdk.Context, order *types
 	}
 }
 
-func (pe *ProcessingEngine) emitOrderSavedEvent(ctx sdk.Context, order *types.Order, messageId string) {
+func (pe *ProcessingEngine) emitOrderSavedEvent(ctx sdk.Context, order *types.Order, orderId string) {
 	err := ctx.EventManager().EmitTypedEvent(
 		&types.OrderSavedEvent{
 			Id:        order.Id,
@@ -536,7 +448,7 @@ func (pe *ProcessingEngine) emitOrderSavedEvent(ctx sdk.Context, order *types.Or
 			Amount:    order.Amount,
 			Price:     order.Price,
 			Owner:     order.Owner,
-			MessageId: messageId,
+			OrderId:   orderId,
 		},
 	)
 
@@ -545,7 +457,7 @@ func (pe *ProcessingEngine) emitOrderSavedEvent(ctx sdk.Context, order *types.Or
 	}
 }
 
-func (pe *ProcessingEngine) emitOrderMessageRefundedEvent(ctx sdk.Context, message *types.QueueMessage, amount math.Int, refund sdk.Coin, reason string) {
+func (pe *ProcessingEngine) emitOrderMessageRefundedEvent(ctx sdk.Context, message *types.Order, amount math.Int, refund sdk.Coin, reason string) {
 	refundStr := ""
 	if refund.IsPositive() {
 		refundStr = refund.String()
@@ -553,7 +465,7 @@ func (pe *ProcessingEngine) emitOrderMessageRefundedEvent(ctx sdk.Context, messa
 
 	err := ctx.EventManager().EmitTypedEvent(
 		&types.OrderMessageRefundedEvent{
-			MessageId: message.MessageId,
+			OrderId:   message.Id,
 			MarketId:  message.MarketId,
 			OrderType: message.OrderType,
 			Owner:     message.Owner,
@@ -568,42 +480,9 @@ func (pe *ProcessingEngine) emitOrderMessageRefundedEvent(ctx sdk.Context, messa
 	}
 }
 
-func (pe *ProcessingEngine) emitOrderCancelSkippedEvent(ctx sdk.Context, message *types.QueueMessage) {
-	err := ctx.EventManager().EmitTypedEvent(
-		&types.OrderCancelSkippedEvent{
-			MessageId: message.MessageId,
-			MarketId:  message.MarketId,
-			OrderType: message.OrderType,
-			OrderId:   message.OrderId,
-			Owner:     message.Owner,
-			Reason:    types.CancelSkippedReasonOrderNotFound,
-		},
-	)
-
-	if err != nil {
-		pe.logger.Error(err.Error())
-	}
-}
-
-func (pe *ProcessingEngine) emitOrderMessageFailedEvent(ctx sdk.Context, message *types.QueueMessage) {
-	err := ctx.EventManager().EmitTypedEvent(
-		&types.OrderMessageFailedEvent{
-			MessageId:   message.MessageId,
-			MarketId:    message.MarketId,
-			MessageType: message.MessageType,
-			Owner:       message.Owner,
-			Reason:      types.MessageFailedReasonProcessingError,
-		},
-	)
-
-	if err != nil {
-		pe.logger.Error(err.Error())
-	}
-}
-
-func (pe *ProcessingEngine) fillOrder(ctx sdk.Context, message types.QueueMessage) error {
+func (pe *ProcessingEngine) fillOrder(ctx sdk.Context, message types.Order) error {
 	logger := pe.logger.With(
-		"message", message,
+		"order", message,
 		"func", "fillOrder",
 	)
 	logger.Info("filling order on market")
@@ -611,7 +490,7 @@ func (pe *ProcessingEngine) fillOrder(ctx sdk.Context, message types.QueueMessag
 	msgAmountInt, ok := math.NewIntFromString(message.Amount)
 	if !ok {
 
-		return fmt.Errorf("could not convert queue message amount")
+		return fmt.Errorf("could not convert order amount")
 	}
 
 	//should always exist
@@ -640,9 +519,9 @@ func (pe *ProcessingEngine) fillOrder(ctx sdk.Context, message types.QueueMessag
 	return pe.refundMessageFunds(ctx, &message, *remainingAmount, &market, msgOwnerAddr, types.RefundReasonUnfilledRemainder)
 }
 
-// refundMessageFunds returns refundAmount (base denom) of the message to its owner and emits an
+// refundMessageFunds returns refundAmount (base denom) of the taker order to its owner and emits an
 // OrderMessageRefundedEvent with the given reason in the same context as the bank send.
-func (pe *ProcessingEngine) refundMessageFunds(ctx sdk.Context, message *types.QueueMessage, refundAmount math.Int, market *types.Market, msgOwnerAddr sdk.AccAddress, reason string) error {
+func (pe *ProcessingEngine) refundMessageFunds(ctx sdk.Context, message *types.Order, refundAmount math.Int, market *types.Market, msgOwnerAddr sdk.AccAddress, reason string) error {
 	coinReq := types.OrderCoinsArguments{
 		OrderType:    message.OrderType,
 		OrderPrice:   message.Price,
@@ -672,7 +551,7 @@ func (pe *ProcessingEngine) refundMessageFunds(ctx sdk.Context, message *types.Q
 	return nil
 }
 
-func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.AggregatedOrder, message *types.QueueMessage, msgAmountInt math.Int, market *types.Market) (*math.Int, error) {
+func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.AggregatedOrder, message *types.Order, msgAmountInt math.Int, market *types.Market) (*math.Int, error) {
 	msgOwnerAddr, _ := sdk.AccAddressFromBech32(message.Owner)
 	zeroInt := math.ZeroInt()
 	aggAmountInt, ok := math.NewIntFromString(agg.Amount)
@@ -739,7 +618,7 @@ func (pe *ProcessingEngine) fillAggregatedOrder(ctx sdk.Context, agg *types.Aggr
 		}
 
 		pe.addHistoryOrder(ctx, &orderToFill, amountToExecute, message)
-		pe.emitOrderExecutedEvent(ctx, &orderToFill, amountToExecute.String(), message.Owner, message.MessageId)
+		pe.emitOrderExecutedEvent(ctx, &orderToFill, amountToExecute.String(), message.Owner, message.Id)
 	}
 
 	if aggAmountInt.GT(zeroInt) {

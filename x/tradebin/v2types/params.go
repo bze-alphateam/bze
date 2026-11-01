@@ -15,34 +15,32 @@ const (
 )
 
 var (
-	DefaultCreateMarketFee                   = sdk.NewInt64Coin(DefaultNativeDenom, 25000000000)
-	DefaultMarketMakerFee                    = sdk.NewInt64Coin(DefaultNativeDenom, 1000)
-	DefaultMarketTakerFee                    = sdk.NewInt64Coin(DefaultNativeDenom, 100000)
-	DefaultMakerFeeDestination               = FeeDestinationBurnerModule
-	DefaultTakerFeeDestination               = FeeDestinationBurnerModule
-	DefaultOrderBookExtraGasWindow           = uint64(100)
-	DefaultOrderBookQueueExtraGas            = uint64(25000)
-	DefaultFillOrdersExtraGas                = uint64(5000)
-	DefaultOrderBookQueueMessageScanExtraGas = uint64(5000)
-	DefaultMinNativeLiquidityForModuleSwap   = math.NewInt(100000000000)
-	DefaultOrderBookPerBlockMessages         = uint64(500)
+	DefaultCreateMarketFee                 = sdk.NewInt64Coin(DefaultNativeDenom, 25000000000)
+	DefaultMarketMakerFee                  = sdk.NewInt64Coin(DefaultNativeDenom, 1000)
+	DefaultMarketTakerFee                  = sdk.NewInt64Coin(DefaultNativeDenom, 100000)
+	DefaultMakerFeeDestination             = FeeDestinationBurnerModule
+	DefaultTakerFeeDestination             = FeeDestinationBurnerModule
+	DefaultOrderBookExtraGasWindow         = uint64(100)
+	DefaultOrderBookQueueExtraGas          = uint64(25000)
+	DefaultFillOrdersExtraGas              = uint64(5000)
+	DefaultMinNativeLiquidityForModuleSwap = math.NewInt(100000000000)
+	DefaultOrderBookPerBlockMessages       = uint64(500)
 )
 
 // DefaultParams returns a default set of v2 parameters
 func DefaultParams() Params {
 	return Params{
-		CreateMarketFee:                   DefaultCreateMarketFee,
-		MarketMakerFee:                    DefaultMarketMakerFee,
-		MarketTakerFee:                    DefaultMarketTakerFee,
-		MakerFeeDestination:               DefaultMakerFeeDestination,
-		TakerFeeDestination:               DefaultTakerFeeDestination,
-		NativeDenom:                       DefaultNativeDenom,
-		OrderBookExtraGasWindow:           DefaultOrderBookExtraGasWindow,
-		OrderBookQueueExtraGas:            DefaultOrderBookQueueExtraGas,
-		FillOrdersExtraGas:                DefaultFillOrdersExtraGas,
-		OrderBookQueueMessageScanExtraGas: DefaultOrderBookQueueMessageScanExtraGas,
-		MinNativeLiquidityForModuleSwap:   DefaultMinNativeLiquidityForModuleSwap,
-		OrderBookPerBlockMessages:         DefaultOrderBookPerBlockMessages,
+		CreateMarketFee:                 DefaultCreateMarketFee,
+		MarketMakerFee:                  DefaultMarketMakerFee,
+		MarketTakerFee:                  DefaultMarketTakerFee,
+		MakerFeeDestination:             DefaultMakerFeeDestination,
+		TakerFeeDestination:             DefaultTakerFeeDestination,
+		NativeDenom:                     DefaultNativeDenom,
+		OrderBookExtraGasWindow:         DefaultOrderBookExtraGasWindow,
+		OrderBookQueueExtraGas:          DefaultOrderBookQueueExtraGas,
+		FillOrdersExtraGas:              DefaultFillOrdersExtraGas,
+		MinNativeLiquidityForModuleSwap: DefaultMinNativeLiquidityForModuleSwap,
+		OrderBookPerBlockMessages:       DefaultOrderBookPerBlockMessages,
 	}
 }
 

@@ -10,10 +10,6 @@ import (
 const (
 	OrderTypeBuy  = "buy"
 	OrderTypeSell = "sell"
-
-	MessageTypeCancel   = "cancel"
-	MessageTypeFillBuy  = "fill_buy"
-	MessageTypeFillSell = "fill_sell"
 )
 
 var minPrice = math.LegacyNewDecWithPrec(1, 10)

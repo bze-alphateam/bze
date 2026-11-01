@@ -68,14 +68,14 @@ func (k Keeper) GetOrder(ctx sdk.Context, marketId, orderType, orderId string) (
 	return order, true
 }
 
-func (k Keeper) NewOrder(ctx sdk.Context, order types.Order) types.Order {
+// AssignOrderId gives the order a new id from the order counter and sets its creation time, without
+// saving it. Every order the engine processes gets an id, even one that never rests on the book.
+func (k Keeper) AssignOrderId(ctx sdk.Context, order types.Order) types.Order {
 	defer k.incrementOrderCounter(ctx)
 
 	counter := k.GetOrderCounter(ctx)
 	order.Id = k.largeZeroFillId(counter)
 	order.CreatedAt = ctx.BlockHeader().Time.Unix()
-
-	k.SaveOrder(ctx, order)
 
 	return order
 }
