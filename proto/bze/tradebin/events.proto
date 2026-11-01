@@ -49,6 +49,20 @@ message OrderSavedEvent {
   string order_id = 7;
 }
 
+// OrderAmendedEvent is emitted when the remainder of an order is added to the order its owner already
+// rests at the same market, side and price: the resting order keeps its id and place in the book.
+message OrderAmendedEvent {
+  string id = 1;
+  string market_id = 2;
+  string order_type = 3;
+  string price = 4;
+  string owner = 5;
+  // amount added to the resting order
+  string added_amount = 6;
+  // amount of the resting order after the addition
+  string amount = 7;
+}
+
 message PoolCreatedEvent {
   string creator = 1;
   string base = 2;

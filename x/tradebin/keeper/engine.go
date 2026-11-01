@@ -18,6 +18,7 @@ type ProcessingKeeper interface {
 	IteratePriceOrders(ctx sdk.Context, marketId, orderType, price string, fn func(ref types.OrderReference) (stop bool))
 
 	GetOrder(ctx sdk.Context, marketId, orderType, orderId string) (order types.Order, found bool)
+	GetOwnerPriceOrder(ctx sdk.Context, owner, marketId, orderType, price string) (ref types.OrderReference, found bool)
 	RemoveOrder(ctx sdk.Context, order types.Order)
 	AssignOrderId(ctx sdk.Context, order types.Order) types.Order
 	SaveOrder(ctx sdk.Context, order types.Order) types.Order
@@ -75,14 +76,19 @@ func NewProcessingEngine(k ProcessingKeeper, bank BankKeeper, maxFills uint64, l
 }
 
 // PlaceOrder executes a limit order: it is matched against the opposite side at its price and the
-// remainder rests on the book as a new maker order when the opposite side at that price was emptied
+// remainder rests on the book as a maker order when the opposite side at that price was emptied
 // and the remainder is at least the minimum amount, otherwise the remainder is refunded.
 // At most maxFills resting orders are examined (filled or skipped); when that stops the matching the
 // remainder is refunded.
-// The order coins must already be escrowed in the module account. The order gets its id here,
-// before matching.
+// When the owner already rests an order at the same market, side and price, the order takes that
+// order's id and a resting remainder is added to it (see restOrder). Otherwise the order gets a new
+// id here, before matching.
+// The order coins must already be escrowed in the module account.
 func (pe *ProcessingEngine) PlaceOrder(ctx sdk.Context, order types.Order) error {
-	order = pe.k.AssignOrderId(ctx, order)
+	order, err := pe.assignPlaceOrderId(ctx, order)
+	if err != nil {
+		return err
+	}
 
 	return pe.addOrder(ctx, order)
 }
@@ -179,10 +185,9 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.Order) error
 	agg, found := pe.k.GetAggregatedOrder(ctx, message.MarketId, types.TheOtherOrderType(message.OrderType), message.Price)
 	//no pending orders to fill. save the order and finish
 	if !found {
-		order := pe.saveOrder(ctx, message, message.Amount)
-		logger.Info("no orders to fill. saving as new order", "order", *order)
+		logger.Info("no orders to fill. resting the order")
 
-		return pe.addOrderToAggregate(ctx, order)
+		return pe.restOrder(ctx, message)
 	}
 
 	//should always exist
@@ -214,10 +219,9 @@ func (pe *ProcessingEngine) addOrder(ctx sdk.Context, message types.Order) error
 
 	//if min amount condition is met and all orders were filled we can proceed to place the order
 	if remaining.GTE(minAmount) && aggAmountInt.IsZero() {
-		order := pe.saveOrder(ctx, message, message.Amount)
+		logger.Info("resting the order remainder on the book")
 
-		logger.Info("order remainder has been saved on the book", "order", *order)
-		return pe.addOrderToAggregate(ctx, order)
+		return pe.restOrder(ctx, message)
 	}
 
 	logger.Info("message remaining amount is too low, returning dust")

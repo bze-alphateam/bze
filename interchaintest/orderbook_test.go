@@ -56,7 +56,7 @@ const (
 // or refunded, the minimum kept on a resting order, dust at a fractional
 // price, MsgFillOrders on buy orders with its refunds, cancels and their
 // refusals, a cancel followed by a fill at its price in one tx, crossed-book
-// and placement refusals and a self-trade. Every step asserts the exact
+// and placement refusals, a self-trade and a top-up of a resting order. Every step asserts the exact
 // balances of both makers and the taker, the trading fees on their way to the
 // burner, the engine events of the tx and the order book; the suite ends with
 // the tradebin module holding exactly the resting orders plus the stored dust.
@@ -86,6 +86,7 @@ func TestOrderBook(t *testing.T) {
 	t.Run("14 placement refusals", s.placementRefusals)
 	t.Run("15 self-trade", s.selfTrade)
 	t.Run("16 deep price level, bounded taker gas", s.deepLevel)
+	t.Run("17 top-up keeps the id and the place", s.topUp)
 	t.Run("18 module holds the book and the dust", s.conservation)
 }
 
@@ -302,13 +303,15 @@ func (s *orderBookSuite) keepsMinimum(t *testing.T) {
 // 7. At 2.35, 10 ob cost 23.5 ubze. A payer without dust pays 24 and keeps
 // 0.5 as stored dust; the next payment takes the 0.5 from it and pays 23. A
 // receiver gets 23 and stores 0.5; once its dust reaches 1 it gets 24.
+// maker2's three buys at one price are one order: the first is saved, the
+// next two are added to it; each still pays its own maker fee and escrow.
 func (s *orderBookSuite) dust(t *testing.T) {
 	want := s.snapshot(t)
 	require.Empty(t, s.userDust(t, s.maker2))
 	require.Empty(t, s.userDust(t, s.taker))
 
-	buys := make([]string, 0, 3)
-	for _, c := range []struct {
+	var buy string
+	for i, c := range []struct {
 		paid int64
 		dust map[string]string
 	}{
@@ -320,34 +323,38 @@ func (s *orderBookSuite) dust(t *testing.T) {
 		s.requireFees(t, res, s.maker2, s.makerFee(), sdk.NewInt64Coin(chain.Denom, c.paid))
 		want.paid(t, s, s.maker2, res, s.makerFee())
 		want.move(s.maker2, chain.Denom, -c.paid)
-		buys = append(buys, s.requireSaved(t, res, orderID, s.maker2, "buy", "10", "2.35"))
+		if i == 0 {
+			buy = s.requireSaved(t, res, orderID, s.maker2, "buy", "10", "2.35")
+		} else {
+			require.Equal(t, buy, orderID, "a buy at the same price takes the resting order's id")
+			s.requireAmended(t, res, buy, s.maker2, "buy", "2.35", "10", strconv.Itoa(10*(i+1)))
+		}
 		require.Equal(t, c.dust, s.userDust(t, s.maker2), "maker2 dust after paying %d", c.paid)
 	}
 	s.requireBook(t, obBook{Buy: map[string]string{"2.35": "30", "2": "600"}, Sell: map[string]string{"4": "2"}})
-
-	res, orderID := s.place(t, s.taker, "sell", 30, "2.35")
-	s.requireFees(t, res, s.taker, s.takerFee(), sdk.NewInt64Coin(s.ob, 30))
-	want.paid(t, s, s.taker, res, s.takerFee())
-	s.requireExecuted(t, res, orderID, s.taker,
-		obExec{buys[0], s.maker2, "buy", "10", "2.35"},
-		obExec{buys[1], s.maker2, "buy", "10", "2.35"},
-		obExec{buys[2], s.maker2, "buy", "10", "2.35"},
+	s.requireOrders(t, s.maker2,
+		obOrder{ID: buy, OrderType: "buy", Amount: "30", Price: "2.35", Owner: s.maker2.FormattedAddress()},
+		obOrder{ID: s.maker2Sell, OrderType: "sell", Amount: "2", Price: "4", Owner: s.maker2.FormattedAddress()},
 	)
+
 	// 23 (dust 0.5), 23 + 1 (dust 1 paid out), 23 (dust 0.5)
-	got := helpers.EventsWith(filterType(res.Events, "transfer"), map[string]string{"sender": s.tradebin, "recipient": s.taker.FormattedAddress()})
-	amounts := make([]string, 0, len(got))
-	for _, e := range got {
-		amounts = append(amounts, e.Attributes["amount"])
+	for _, received := range []int64{23, 24, 23} {
+		res, orderID := s.place(t, s.taker, "sell", 10, "2.35")
+		s.requireFees(t, res, s.taker, s.takerFee(), sdk.NewInt64Coin(s.ob, 10))
+		want.paid(t, s, s.taker, res, s.takerFee())
+		s.requireExecuted(t, res, orderID, s.taker, obExec{buy, s.maker2, "buy", "10", "2.35"})
+		s.requireNotSaved(t, res, orderID)
+		require.Equal(t, sdkmath.NewInt(received), s.transferred(t, res.Events, s.tradebin, s.taker.FormattedAddress(), chain.Denom), "taker receipt")
+		want.move(s.taker, s.ob, -10)
+		want.move(s.taker, chain.Denom, received)
+		want.move(s.maker2, s.ob, 10)
 	}
-	require.Equal(t, []string{"23" + chain.Denom, "24" + chain.Denom, "23" + chain.Denom}, amounts, "taker receipts")
-	want.move(s.taker, s.ob, -30)
-	want.move(s.taker, chain.Denom, 70)
-	want.move(s.maker2, s.ob, 30)
 
 	s.requireBalances(t, want)
 	require.Equal(t, obDust("0.5"), s.userDust(t, s.taker), "taker dust")
 	require.Equal(t, obDust("0.5"), s.userDust(t, s.maker2), "maker2 dust")
 	s.requireBook(t, obBook{Buy: map[string]string{"2": "600"}, Sell: map[string]string{"4": "2"}})
+	s.requireOrders(t, s.maker2, obOrder{ID: s.maker2Sell, OrderType: "sell", Amount: "2", Price: "4", Owner: s.maker2.FormattedAddress()})
 }
 
 // 8. MsgFillOrders on buy orders sells ob at two prices in one message: one
@@ -693,6 +700,59 @@ func (s *orderBookSuite) deepLevel(t *testing.T) {
 	}
 }
 
+// 17. maker1 and maker2 rest a sell each at one price, then maker1 adds to
+// its sell at that price: maker1's order grows under its id, keeps its place
+// ahead of maker2's and the tx emits an OrderAmendedEvent instead of saving a
+// new order. A taker for maker1's grown order plus 2 (the minimum) fills
+// maker1's whole first, then 2 of maker2's.
+func (s *orderBookSuite) topUp(t *testing.T) {
+	const price = "5.5"
+	want, history := s.snapshot(t), s.history(t)
+	res1, first := s.place(t, s.maker1, "sell", 10, price)
+	s.requireSaved(t, res1, first, s.maker1, "sell", "10", price)
+	res2, second := s.place(t, s.maker2, "sell", 10, price)
+	s.requireSaved(t, res2, second, s.maker2, "sell", "10", price)
+	res3, topUp := s.place(t, s.maker1, "sell", 6, price)
+	s.requireFees(t, res3, s.maker1, s.makerFee(), sdk.NewInt64Coin(s.ob, 6))
+	require.Equal(t, first, topUp, "the top-up takes the resting order's id")
+	s.requireAmended(t, res3, first, s.maker1, "sell", price, "6", "16")
+	require.Empty(t, s.engineEvents(t, res3, "OrderSavedEvent", nil), "the top-up saves no order")
+	for _, r := range []struct {
+		u   ibc.Wallet
+		res helpers.TxResult
+		ob  int64
+	}{{s.maker1, res1, 10}, {s.maker2, res2, 10}, {s.maker1, res3, 6}} {
+		want.paid(t, s, r.u, r.res, s.makerFee())
+		want.move(r.u, s.ob, -r.ob)
+	}
+	s.requireBalances(t, want)
+	s.requireBook(t, obBook{Buy: map[string]string{"1": "100"}, Sell: map[string]string{price: "26", "6": "100"}})
+	maker1Orders := s.userOrders(t, s.maker1)
+	require.Contains(t, maker1Orders, obOrder{ID: first, OrderType: "sell", Amount: "16", Price: price, Owner: s.maker1.FormattedAddress()})
+
+	res, orderID := s.place(t, s.taker, "buy", 18, price)
+	s.requireFees(t, res, s.taker, s.takerFee(), sdk.NewCoin(chain.Denom, mulPrice(18, price)))
+	want.paid(t, s, s.taker, res, s.takerFee())
+	s.requireExecuted(t, res, orderID, s.taker,
+		obExec{first, s.maker1, "sell", "16", price},
+		obExec{second, s.maker2, "sell", "2", price},
+	)
+	s.requireNotSaved(t, res, orderID)
+	want.move(s.taker, chain.Denom, -mulPrice(18, price).Int64())
+	want.move(s.taker, s.ob, 18)
+	want.move(s.maker1, chain.Denom, mulPrice(16, price).Int64())
+	want.move(s.maker2, chain.Denom, mulPrice(2, price).Int64())
+
+	s.requireBalances(t, want)
+	s.requireBook(t, obBook{Buy: map[string]string{"1": "100"}, Sell: map[string]string{price: "8", "6": "100"}})
+	_, found := s.marketOrder(t, "sell", first)
+	require.False(t, found, "maker1's grown sell is filled whole")
+	s.requireNewHistory(t, history,
+		obHistory{"sell", "16", price, s.maker1.FormattedAddress(), s.taker.FormattedAddress()},
+		obHistory{"sell", "2", price, s.maker2.FormattedAddress(), s.taker.FormattedAddress()},
+	)
+}
+
 // 18. The tradebin module holds, on top of what it held before the market
 // existed, exactly the ob of the resting sells and the ubze of the resting
 // buys (amount × price) plus the dust it stores for users. The aggregated
@@ -894,6 +954,10 @@ var obOutcomeEvents = []string{
 	tradebinEventPrefix + "OrderMessageRefundedEvent",
 }
 
+// obAmendedEvent carries the id of the order being executed (the resting
+// order it was added to) in its id attribute.
+const obAmendedEvent = tradebinEventPrefix + "OrderAmendedEvent"
+
 // fillIDs returns the order ids of the orders a tx executed (one per order,
 // one per MsgFillOrders entry), in the order the engine processed them.
 func (s *orderBookSuite) fillIDs(t *testing.T, res helpers.TxResult, want int) []string {
@@ -901,10 +965,13 @@ func (s *orderBookSuite) fillIDs(t *testing.T, res helpers.TxResult, want int) [
 	var ids []string
 	seen := map[string]bool{}
 	for _, e := range res.Events {
-		if !slices.Contains(obOutcomeEvents, e.Type) {
+		key := "order_id"
+		if e.Type == obAmendedEvent {
+			key = "id"
+		} else if !slices.Contains(obOutcomeEvents, e.Type) {
 			continue
 		}
-		id := e.Attributes["order_id"]
+		id := e.Attributes[key]
 		require.NotEmpty(t, id, "%s without order_id", e.Type)
 		if !seen[id] {
 			seen[id] = true
@@ -933,6 +1000,23 @@ func (s *orderBookSuite) requireSaved(t *testing.T, res helpers.TxResult, orderI
 	require.True(t, found, "saved order %s is on the book", orderID)
 	require.Equal(t, amount, order.Amount)
 	return orderID
+}
+
+// requireAmended asserts the tx added amount to the owner's resting order id
+// (one OrderAmendedEvent, total the order's amount after it) and that the
+// order rests with that amount.
+func (s *orderBookSuite) requireAmended(t *testing.T, res helpers.TxResult, id string, owner ibc.Wallet, typ, price, added, total string) {
+	t.Helper()
+	got := s.engineEvents(t, res, "OrderAmendedEvent", map[string]string{"id": id})
+	require.Len(t, got, 1, "order %s amended once in tx %s", id, res.TxHash)
+	e := got[0].Attributes
+	require.Equal(t,
+		[]string{s.market, typ, price, owner.FormattedAddress(), added, total},
+		[]string{e["market_id"], e["order_type"], e["price"], e["owner"], e["added_amount"], e["amount"]},
+		"amendment of order %s", id)
+	order, found := s.marketOrder(t, typ, id)
+	require.True(t, found, "amended order %s is on the book", id)
+	require.Equal(t, total, order.Amount)
 }
 
 // requireRefunded asserts the one OrderMessageRefundedEvent of an order: the

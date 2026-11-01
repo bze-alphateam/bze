@@ -141,7 +141,8 @@ func (suite *IntegrationTestSuite) TestEngine_CancelOrder() {
 	})
 	suite.Require().NotNil(allUserOrders)
 	suite.Require().Nil(err)
-	suite.Require().Len(allUserOrders.List, 6)
+	//the three orders of each side at one price merged into one order
+	suite.Require().Len(allUserOrders.List, 2)
 
 	//check aggregate total amount is equal tot total amounts of the orders we placed
 	suite.checkAggregatedOrder(mBuy.MarketId, mBuy.OrderType, mBuy.Price, totalBuyAmount.String())
@@ -169,6 +170,8 @@ func (suite *IntegrationTestSuite) TestEngine_CancelOrder() {
 		cancelCount++
 
 		_, ok = suite.k.GetOrder(suite.ctx, or.MarketId, or.OrderType, or.Id)
+		suite.Require().False(ok)
+		_, ok = suite.k.GetOwnerPriceOrder(suite.ctx, addr1.String(), or.MarketId, or.OrderType, toCancelOrder.Price)
 		suite.Require().False(ok)
 		aggAfter, ok := suite.k.GetAggregatedOrder(suite.ctx, toCancelOrder.MarketId, toCancelOrder.OrderType, toCancelOrder.Price)
 		if aggBeforeInt.Equal(canceledAmount) {
@@ -210,7 +213,15 @@ func (suite *IntegrationTestSuite) TestEngine_OrderMatching() {
 	engine := suite.newEngine()
 
 	//create accounts
-	makerAddr := sdk.AccAddress("addr1_______________")
+	// one maker per resting order: orders of one owner at one price merge
+	orderCounter := int64(10)
+	makers := make([]sdk.AccAddress, orderCounter)
+	anyMakerAddrs := make([]any, orderCounter)
+	for i := range makers {
+		makers[i] = makerAddr(i)
+		anyMakerAddrs[i] = makers[i]
+	}
+	anyMaker := gomock.AnyOf(anyMakerAddrs...)
 	takerAddr := sdk.AccAddress("addr2_______________")
 
 	sellPriceStr := "1"
@@ -221,11 +232,10 @@ func (suite *IntegrationTestSuite) TestEngine_OrderMatching() {
 	buyAmt, err := keeper.CalculateMinAmount(buyPriceStr)
 	suite.Require().NoError(err)
 	buyAmt = buyAmt.MulRaw(5)
-	orderCounter := int64(10)
 	for i := int64(0); i < orderCounter; i++ {
 		suite.placeOrders(engine,
-			limitOrder(types.OrderTypeSell, sellAmt.String(), sellPriceStr, makerAddr),
-			limitOrder(types.OrderTypeBuy, buyAmt.String(), buyPriceStr, makerAddr),
+			limitOrder(types.OrderTypeSell, sellAmt.String(), sellPriceStr, makers[i]),
+			limitOrder(types.OrderTypeBuy, buyAmt.String(), buyPriceStr, makers[i]),
 		)
 	}
 
@@ -248,7 +258,7 @@ func (suite *IntegrationTestSuite) TestEngine_OrderMatching() {
 	tradedStakeCoins := takerCoins
 
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, takerAddr, sdk.NewCoins(takerCoins)).Return(nil).Times(1)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, makerAddr, sdk.NewCoins(makerCoins)).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, anyMaker, sdk.NewCoins(makerCoins)).Return(nil).Times(1)
 	suite.placeOrders(engine, qmBuy)
 
 	//check all orders are still there since none of them have been filled
@@ -267,7 +277,7 @@ func (suite *IntegrationTestSuite) TestEngine_OrderMatching() {
 	suite.Require().Nil(err)
 
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, takerAddr, sdk.NewCoins(takerCoins)).Return(nil).Times(1)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, makerAddr, sdk.NewCoins(makerCoins)).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, anyMaker, sdk.NewCoins(makerCoins)).Return(nil).Times(1)
 	suite.placeOrders(engine, qmBuy)
 
 	//check all orders are still there since none of them were filled
@@ -286,7 +296,7 @@ func (suite *IntegrationTestSuite) TestEngine_OrderMatching() {
 	suite.Require().Nil(err)
 
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, takerAddr, gomock.Any()).Return(nil).Times(3)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, makerAddr, gomock.Any()).Return(nil).Times(3)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, anyMaker, gomock.Any()).Return(nil).Times(3)
 	suite.placeOrders(engine, qmBuy)
 
 	//check the correct amount of suborders removed
@@ -305,7 +315,7 @@ func (suite *IntegrationTestSuite) TestEngine_OrderMatching() {
 	suite.Require().Nil(err)
 
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, takerAddr, gomock.Any()).Return(nil).Times(8)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, makerAddr, gomock.Any()).Return(nil).Times(8)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, anyMaker, gomock.Any()).Return(nil).Times(8)
 	suite.placeOrders(engine, qmBuy)
 
 	//check the correct amount of suborders removed
@@ -348,7 +358,7 @@ func (suite *IntegrationTestSuite) TestEngine_OrderMatching() {
 	suite.Require().Nil(err)
 
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, takerAddr, sdk.NewCoins(takerCoins)).Return(nil).Times(10)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, makerAddr, sdk.NewCoins(makerCoins)).Return(nil).Times(10)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, anyMaker, sdk.NewCoins(makerCoins)).Return(nil).Times(10)
 	suite.placeOrders(engine, qmSell)
 
 	//check the correct amount of orders removed: the small buy at 1 and the sell remainder at 2 rest
@@ -365,7 +375,14 @@ func (suite *IntegrationTestSuite) TestEngine_OrderMatching_WithDust() {
 	engine := suite.newEngine()
 
 	//create accounts
-	makerAddr := sdk.AccAddress("addr1_______________")
+	// one maker per resting order: orders of one owner at one price merge
+	orderCounter := int64(10)
+	makers := make([]sdk.AccAddress, orderCounter)
+	anyMakerAddrs := make([]any, orderCounter)
+	for i := range makers {
+		makers[i] = makerAddr(i)
+		anyMakerAddrs[i] = makers[i]
+	}
 	takerAddr := sdk.AccAddress("addr2_______________")
 
 	sellPriceStr := "0.7612"
@@ -376,11 +393,10 @@ func (suite *IntegrationTestSuite) TestEngine_OrderMatching_WithDust() {
 	buyAmt, err := keeper.CalculateMinAmount(buyPriceStr)
 	suite.Require().NoError(err)
 	buyAmt = buyAmt.MulRaw(6)
-	orderCounter := int64(10)
 	for i := int64(0); i < orderCounter; i++ {
 		suite.placeOrders(engine,
-			limitOrder(types.OrderTypeSell, sellAmt.String(), sellPriceStr, makerAddr),
-			limitOrder(types.OrderTypeBuy, buyAmt.String(), buyPriceStr, makerAddr),
+			limitOrder(types.OrderTypeSell, sellAmt.String(), sellPriceStr, makers[i]),
+			limitOrder(types.OrderTypeBuy, buyAmt.String(), buyPriceStr, makers[i]),
 		)
 	}
 
@@ -391,7 +407,7 @@ func (suite *IntegrationTestSuite) TestEngine_OrderMatching_WithDust() {
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt.MulRaw(orderCounter).String())
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, sellPriceStr, sellAmt.MulRaw(orderCounter).String())
 
-	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, gomock.AnyOf(makerAddr, takerAddr), gomock.Any()).AnyTimes()
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, gomock.AnyOf(append(anyMakerAddrs, takerAddr)...), gomock.Any()).AnyTimes()
 	//1. fill 50% of an order -> check its amount is updated -> check the maker gets his coins ->
 	//check module balances updated -> check the taker balances are updated -> check aggregated is updated
 	qmAmountInt := sellAmt.QuoRaw(2)
@@ -402,10 +418,10 @@ func (suite *IntegrationTestSuite) TestEngine_OrderMatching_WithDust() {
 	suite.Require().Equal(len(allOrders), int(orderCounter*2))
 
 	//check maker dust
-	makerDust, ok := suite.k.GetUserDust(suite.ctx, makerAddr.String(), market.Quote)
+	makerDust, ok := suite.k.GetUserDust(suite.ctx, makers[0].String(), market.Quote)
 	suite.Require().True(ok)
 	suite.Require().Equal(makerDust.Denom, market.Quote)
-	suite.Require().Equal(makerDust.Owner, makerAddr.String())
+	suite.Require().Equal(makerDust.Owner, makers[0].String())
 	suite.Require().Equal(makerDust.Amount, "0.612000000000000000")
 
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, buyPriceStr, buyAmt.MulRaw(orderCounter).String())
@@ -478,7 +494,9 @@ func (suite *IntegrationTestSuite) TestEngine_FillAggregatedOrder_ContinuePastUn
 	suite.k.SetMarket(suite.ctx, market)
 	engine := suite.newEngine()
 
+	// distinct makers: orders of one owner at one price merge
 	makerAddr := sdk.AccAddress("addr1_______________")
+	largeMakerAddr := sdk.AccAddress("addr3_______________")
 	takerAddr := sdk.AccAddress("addr2_______________")
 
 	price := "1"
@@ -496,7 +514,7 @@ func (suite *IntegrationTestSuite) TestEngine_FillAggregatedOrder_ContinuePastUn
 	// place the sell orders in the order book
 	suite.placeOrders(engine,
 		limitOrder(types.OrderTypeSell, smallSellAmount.String(), price, makerAddr),
-		limitOrder(types.OrderTypeSell, largeSellAmount.String(), price, makerAddr),
+		limitOrder(types.OrderTypeSell, largeSellAmount.String(), price, largeMakerAddr),
 	)
 
 	allOrders := suite.k.GetAllOrder(suite.ctx)
@@ -511,7 +529,7 @@ func (suite *IntegrationTestSuite) TestEngine_FillAggregatedOrder_ContinuePastUn
 	buyAmount := minAmount // 2
 
 	// Expect exactly 1 fill: maker gets quote coins, taker gets base coins
-	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, makerAddr, sdk.NewCoins(sdk.NewCoin(market.Quote, buyAmount))).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, largeMakerAddr, sdk.NewCoins(sdk.NewCoin(market.Quote, buyAmount))).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, takerAddr, sdk.NewCoins(sdk.NewCoin(market.Base, buyAmount))).Return(nil).Times(1)
 
 	suite.placeOrders(engine, limitOrder(types.OrderTypeBuy, buyAmount.String(), price, takerAddr))
@@ -543,7 +561,8 @@ func (suite *IntegrationTestSuite) TestEngine_FillAggregatedOrder_EarlyExitMsgBe
 	suite.k.SetMarket(suite.ctx, market)
 	engine := suite.newEngine()
 
-	makerAddr := sdk.AccAddress("addr1_______________")
+	// distinct makers: orders of one owner at one price merge
+	makerAddrs := []sdk.AccAddress{sdk.AccAddress("addr1_______________"), sdk.AccAddress("addr3_______________")}
 	takerAddr := sdk.AccAddress("addr2_______________")
 
 	price := "1"
@@ -553,7 +572,7 @@ func (suite *IntegrationTestSuite) TestEngine_FillAggregatedOrder_EarlyExitMsgBe
 	// Create two sell orders at the same price, each with amount = minAmount (fully fillable)
 	sellAmount := minAmount // 2
 	for i := 0; i < 2; i++ {
-		suite.placeOrders(engine, limitOrder(types.OrderTypeSell, sellAmount.String(), price, makerAddr))
+		suite.placeOrders(engine, limitOrder(types.OrderTypeSell, sellAmount.String(), price, makerAddrs[i]))
 	}
 
 	allOrders := suite.k.GetAllOrder(suite.ctx)
@@ -569,7 +588,7 @@ func (suite *IntegrationTestSuite) TestEngine_FillAggregatedOrder_EarlyExitMsgBe
 	buyAmount := minAmount.AddRaw(1) // 3
 
 	// Expect 1 fill (2 bank calls) + 1 refund (1 bank call to taker)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, makerAddr, sdk.NewCoins(sdk.NewCoin(market.Quote, sellAmount))).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, makerAddrs[0], sdk.NewCoins(sdk.NewCoin(market.Quote, sellAmount))).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, takerAddr, sdk.NewCoins(sdk.NewCoin(market.Base, sellAmount))).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, takerAddr, sdk.NewCoins(sdk.NewInt64Coin(market.Quote, 1))).Return(nil).Times(1)
 
@@ -597,7 +616,10 @@ func (suite *IntegrationTestSuite) TestEngine_FillAggregatedOrder_ContinueThenEa
 	suite.k.SetMarket(suite.ctx, market)
 	engine := suite.newEngine()
 
+	// distinct makers: orders of one owner at one price merge
 	makerAddr := sdk.AccAddress("addr1_______________")
+	partialMakerAddr := sdk.AccAddress("addr3_______________")
+	largeMakerAddr := sdk.AccAddress("addr4_______________")
 	takerAddr := sdk.AccAddress("addr2_______________")
 
 	// Use price "0.1" for a larger minAmount, giving more room for the test scenario
@@ -621,8 +643,8 @@ func (suite *IntegrationTestSuite) TestEngine_FillAggregatedOrder_ContinueThenEa
 
 	suite.placeOrders(engine,
 		limitOrder(types.OrderTypeSell, unfillableAmount.String(), price, makerAddr),
-		limitOrder(types.OrderTypeSell, partialFillAmount.String(), price, makerAddr),
-		limitOrder(types.OrderTypeSell, largeAmount.String(), price, makerAddr),
+		limitOrder(types.OrderTypeSell, partialFillAmount.String(), price, partialMakerAddr),
+		limitOrder(types.OrderTypeSell, largeAmount.String(), price, largeMakerAddr),
 	)
 
 	allOrders := suite.k.GetAllOrder(suite.ctx)
@@ -642,7 +664,7 @@ func (suite *IntegrationTestSuite) TestEngine_FillAggregatedOrder_ContinueThenEa
 	executedAmount := minAmount      // 20 (what is filled from order 2)
 
 	// 1 fill (maker + taker), the refund of 0.5 quote is below one unit
-	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, makerAddr, sdk.NewCoins(sdk.NewInt64Coin(market.Quote, 2))).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, partialMakerAddr, sdk.NewCoins(sdk.NewInt64Coin(market.Quote, 2))).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, takerAddr, sdk.NewCoins(sdk.NewCoin(market.Base, executedAmount))).Return(nil).Times(1)
 
 	suite.placeOrders(engine, limitOrder(types.OrderTypeBuy, buyAmount.String(), price, takerAddr))
