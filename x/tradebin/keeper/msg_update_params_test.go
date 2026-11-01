@@ -21,7 +21,7 @@ func validV2Params() v2types.Params {
 		OrderBookQueueExtraGas:          25000,
 		FillOrdersExtraGas:              5000,
 		MinNativeLiquidityForModuleSwap: math.NewInt(100000000000),
-		OrderBookPerBlockMessages:       500,
+		MaxFillsPerOrder:                500,
 	}
 }
 
@@ -50,7 +50,7 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_ValidAuthority() {
 	suite.Require().Equal(params.TakerFeeDestination, retrievedParams.TakerFeeDestination)
 	suite.Require().Equal(params.NativeDenom, retrievedParams.NativeDenom)
 	suite.Require().Equal(params.MinNativeLiquidityForModuleSwap, retrievedParams.MinNativeLiquidityForModuleSwap)
-	suite.Require().Equal(params.OrderBookPerBlockMessages, retrievedParams.OrderBookPerBlockMessages)
+	suite.Require().Equal(params.MaxFillsPerOrder, retrievedParams.MaxFillsPerOrder)
 }
 
 func (suite *IntegrationTestSuite) TestMsgUpdateParams_InvalidAuthority() {
@@ -222,10 +222,10 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_InvalidMinNativeLiquidity
 	suite.Require().Contains(err.Error(), "min native liquidity for module swap must be positive")
 }
 
-func (suite *IntegrationTestSuite) TestMsgUpdateParams_InvalidOrderBookPerBlockMessages() {
+func (suite *IntegrationTestSuite) TestMsgUpdateParams_InvalidMaxFillsPerOrder() {
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 	params := validV2Params()
-	params.OrderBookPerBlockMessages = 0
+	params.MaxFillsPerOrder = 0
 
 	msg := &types.MsgUpdateParams{
 		Authority: authority,
@@ -235,7 +235,7 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_InvalidOrderBookPerBlockM
 	response, err := suite.msgServer.UpdateParams(suite.ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Nil(response)
-	suite.Require().Contains(err.Error(), "order book per block messages must be at least 1")
+	suite.Require().Contains(err.Error(), "max fills per order must be at least 1")
 }
 
 func (suite *IntegrationTestSuite) TestMsgUpdateParams_MultipleUpdates() {

@@ -44,17 +44,16 @@ func (suite *IntegrationTestSuite) getUserOrderRef(order types.Order) (types.Ord
 }
 
 func (suite *IntegrationTestSuite) getPriceOrderRef(order types.Order) (types.OrderReference, bool) {
-	prices := suite.k.GetPriceOrderByPrice(suite.ctx, order.MarketId, order.OrderType, order.Price)
-
 	found := false
 	var ordRef types.OrderReference
-	for _, ref := range prices {
+	suite.k.IteratePriceOrders(suite.ctx, order.MarketId, order.OrderType, order.Price, func(ref types.OrderReference) bool {
 		if ref.Id == order.Id {
 			ordRef = ref
 			found = true
-			break
 		}
-	}
+
+		return found
+	})
 
 	return ordRef, found
 }
@@ -214,4 +213,47 @@ func (suite *IntegrationTestSuite) TestStore_AggregatedOrder() {
 
 	_, ok = suite.k.GetAggregatedOrder(suite.ctx, agg.MarketId, agg.OrderType, agg.Price)
 	suite.Require().False(ok)
+}
+
+func (suite *IntegrationTestSuite) TestStore_IteratePriceOrders() {
+	owner := sdk.AccAddress("addr1_______________").String()
+	order := func(orderType, price string) types.Order {
+		return types.Order{MarketId: getMarketId(), OrderType: orderType, Amount: "10", Price: price, Owner: owner}
+	}
+
+	// interleaved with orders at other prices and on the other side, which must not be visited
+	var want []string
+	for i := 0; i < 4; i++ {
+		want = append(want, suite.newOrder(suite.ctx, order(types.OrderTypeSell, "1")).Id)
+		suite.newOrder(suite.ctx, order(types.OrderTypeSell, "10"))
+		suite.newOrder(suite.ctx, order(types.OrderTypeSell, "0.1"))
+		suite.newOrder(suite.ctx, order(types.OrderTypeBuy, "1"))
+	}
+
+	var got []string
+	suite.k.IteratePriceOrders(suite.ctx, getMarketId(), types.OrderTypeSell, "1", func(ref types.OrderReference) bool {
+		suite.Require().Equal(getMarketId(), ref.MarketId)
+		suite.Require().Equal(types.OrderTypeSell, ref.OrderType)
+		got = append(got, ref.Id)
+
+		return false
+	})
+	// key order is id order
+	suite.Require().Equal(want, got)
+
+	// stops as soon as fn returns true
+	got = nil
+	suite.k.IteratePriceOrders(suite.ctx, getMarketId(), types.OrderTypeSell, "1", func(ref types.OrderReference) bool {
+		got = append(got, ref.Id)
+
+		return len(got) == 2
+	})
+	suite.Require().Equal(want[:2], got)
+
+	// an empty level calls nothing
+	suite.k.IteratePriceOrders(suite.ctx, getMarketId(), types.OrderTypeSell, "2", func(ref types.OrderReference) bool {
+		suite.Fail("unexpected order reference", ref.Id)
+
+		return true
+	})
 }

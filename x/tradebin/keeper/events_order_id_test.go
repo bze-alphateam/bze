@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/x/tradebin/keeper"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
+	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -198,7 +199,7 @@ func (suite *IntegrationTestSuite) TestEventsOrderId_FillOrdersEntriesGetOwnIds(
 func (suite *IntegrationTestSuite) TestEventsOrderId_EngineFillAndSaveRemainder() {
 	suite.k.SetMarket(suite.ctx, market)
 	recorder := &historyRecordingKeeper{Keeper: suite.k}
-	engine, err := keeper.NewProcessingEngine(recorder, suite.bankMock, suite.k.Logger())
+	engine, err := keeper.NewProcessingEngine(recorder, suite.bankMock, v2types.DefaultMaxFillsPerOrder, suite.k.Logger())
 	suite.Require().NoError(err)
 
 	makerAddr := sdk.AccAddress("addr1_______________")
@@ -265,7 +266,7 @@ func (suite *IntegrationTestSuite) TestEventsOrderId_EngineFillAndSaveRemainder(
 func (suite *IntegrationTestSuite) TestEventsOrderId_FullyFilledTakerGetsId() {
 	suite.k.SetMarket(suite.ctx, market)
 	recorder := &historyRecordingKeeper{Keeper: suite.k}
-	engine, err := keeper.NewProcessingEngine(recorder, suite.bankMock, suite.k.Logger())
+	engine, err := keeper.NewProcessingEngine(recorder, suite.bankMock, v2types.DefaultMaxFillsPerOrder, suite.k.Logger())
 	suite.Require().NoError(err)
 
 	makerAddr := sdk.AccAddress("addr1_______________")
