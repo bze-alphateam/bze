@@ -13,8 +13,8 @@ import (
 const (
 	rateLimitWindowHours = 24
 
-	// UsdcNobleDenom is USDC from Noble (USDC.n) on BZE, reachable over channel-3 only.
-	UsdcNobleDenom = "ibc/6490A7EAB61059BFC1CDDEB05917DD70BDF3A611654162A1A47DB930D40D8AF4"
+	// usdcNobleDenom is USDC from Noble (USDC.n) on BZE, reachable over channel-3 only.
+	usdcNobleDenom = "ibc/6490A7EAB61059BFC1CDDEB05917DD70BDF3A611654162A1A47DB930D40D8AF4"
 )
 
 // RateLimitKeeper is the part of the ratelimit keeper the upgrade needs. The keeper
@@ -48,9 +48,10 @@ func InitialRateLimits() []ratelimittypes.MsgAddRateLimit {
 		limits = append(limits, newRateLimit("ubze", channel, 2, 2))
 	}
 
-	// USDC.n: no inbound (mirrors the blocked_ibc_inbound filter), exits open.
-	// MaxPercentRecv 0 refuses any positive net inflow.
-	limits = append(limits, newRateLimit(UsdcNobleDenom, "channel-3", 100, 0))
+	// USDC.n: exits open, inbound capped at 0% of supply. The limit is on NET flow,
+	// so inbound is refused except up to what already left in the same window; the
+	// blocked_ibc_inbound filter still refuses all inbound.
+	limits = append(limits, newRateLimit(usdcNobleDenom, "channel-3", 100, 0))
 
 	return limits
 }

@@ -57,7 +57,7 @@ func TestInitialRateLimits_Policy(t *testing.T) {
 
 	var usdc []ratelimittypes.MsgAddRateLimit
 	for _, l := range limits {
-		if l.Denom == v830.UsdcNobleDenom {
+		if l.Denom == "ibc/6490A7EAB61059BFC1CDDEB05917DD70BDF3A611654162A1A47DB930D40D8AF4" {
 			usdc = append(usdc, l)
 		}
 	}
