@@ -62,6 +62,7 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	ratelimittypes "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/types"
 	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
@@ -90,6 +91,7 @@ var (
 		govtypes.ModuleName,
 		minttypes.ModuleName,
 		ibcexported.ModuleName,
+		ratelimittypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		authz.ModuleName,
@@ -128,6 +130,7 @@ var (
 		genutiltypes.ModuleName,
 		// ibc modules
 		ibcexported.ModuleName,
+		ratelimittypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		// chain modules
@@ -149,6 +152,7 @@ var (
 		genutiltypes.ModuleName,
 		// ibc modules
 		ibcexported.ModuleName,
+		ratelimittypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		// chain modules

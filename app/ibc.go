@@ -12,6 +12,9 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	ratelimit "github.com/cosmos/ibc-apps/modules/rate-limiting/v10"
+	ratelimitkeeper "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/keeper"
+	ratelimittypes "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/types"
 	icamodule "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts"
 	icacontroller "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/keeper"
@@ -41,6 +44,7 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 	if err := app.RegisterStores(
 		storetypes.NewKVStoreKey(ibcexported.StoreKey),
 		storetypes.NewKVStoreKey(ibctransfertypes.StoreKey),
+		storetypes.NewKVStoreKey(ratelimittypes.StoreKey),
 		storetypes.NewKVStoreKey(icahosttypes.StoreKey),
 		storetypes.NewKVStoreKey(icacontrollertypes.StoreKey),
 		storetypes.NewTransientStoreKey(paramstypes.TStoreKey),
@@ -53,6 +57,8 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 	keyTable.RegisterParamSet(&ibcconnectiontypes.Params{})
 	app.ParamsKeeper.Subspace(ibcexported.ModuleName).WithKeyTable(keyTable)
 	app.ParamsKeeper.Subspace(ibctransfertypes.ModuleName).WithKeyTable(ibctransfertypes.ParamKeyTable())
+	// the rate-limiting module's Params message is empty, so its subspace has no key table
+	app.ParamsKeeper.Subspace(ratelimittypes.ModuleName)
 	app.ParamsKeeper.Subspace(icacontrollertypes.SubModuleName).WithKeyTable(icacontrollertypes.ParamKeyTable())
 	app.ParamsKeeper.Subspace(icahosttypes.SubModuleName).WithKeyTable(icahosttypes.ParamKeyTable())
 
@@ -72,13 +78,27 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 	govRouter := govv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler)
 
-	// Create IBC transfer keeper. Outgoing packets go straight to the channel keeper:
-	// there is no middleware on the send path.
+	// Create the rate-limiting keeper (cosmos/ibc-apps, used unmodified). It checks the
+	// quotas of outgoing packets in its SendPacket and forwards them to the channel keeper.
+	// Its only authority is the gov module account.
+	app.RatelimitKeeper = *ratelimitkeeper.NewKeeper(
+		app.appCodec,
+		runtime.NewKVStoreService(app.GetKey(ratelimittypes.StoreKey)),
+		app.GetSubspace(ratelimittypes.ModuleName),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		app.BankKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.ClientKeeper,
+		app.IBCKeeper.ChannelKeeper, // ICS4Wrapper
+	)
+
+	// Create IBC transfer keeper. Outgoing transfer packets go through the rate-limiting
+	// keeper (its ICS-4 wrapper) on their way to the channel keeper.
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
 		app.appCodec,
 		runtime.NewKVStoreService(app.GetKey(ibctransfertypes.StoreKey)),
 		app.GetSubspace(ibctransfertypes.ModuleName),
-		app.IBCKeeper.ChannelKeeper,
+		app.RatelimitKeeper,
 		app.IBCKeeper.ChannelKeeper,
 		app.MsgServiceRouter(),
 		app.AccountKeeper,
@@ -110,13 +130,18 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 	)
 	app.GovKeeper.SetLegacyRouter(govRouter)
 
-	// Create the transfer stack.
+	// Create the transfer stack, from IBC core inward: rate-limiting middleware ->
+	// txfeecollector inbound filter -> transfer application.
 	// The txfeecollector inbound filter sits on top of the transfer application: it
 	// answers packets listed in the BlockedIbcInbound param with an error
 	// acknowledgement (see x/txfeecollector/ibcmiddleware). Only received packets are
 	// affected - sends, acks and timeouts pass straight through.
+	// The rate-limiting middleware sits outside the filter: it counts a received packet
+	// as inflow, and when the filter (or the quota) answers with an error acknowledgement
+	// it undoes that inflow, so a refused packet never consumes quota.
 	transferStack := porttypes.IBCModule(ibctransfer.NewIBCModule(app.TransferKeeper))
 	transferStack = txfeecollectoribc.NewIBCMiddleware(transferStack, app.IBCKeeper.ChannelKeeper, app.TxfeecollectorKeeper)
+	transferStack = ratelimit.NewIBCMiddleware(app.RatelimitKeeper, transferStack)
 
 	icaControllerIBCModule := icacontroller.NewIBCMiddleware(app.ICAControllerKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
@@ -150,6 +175,7 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 	if err := app.RegisterModules(
 		ibc.NewAppModule(app.IBCKeeper),
 		ibctransfer.NewAppModule(app.TransferKeeper),
+		ratelimit.NewAppModule(app.appCodec, app.RatelimitKeeper),
 		icamodule.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper),
 		ibctm.NewAppModule(tmLightClientModule),
 		solomachine.NewAppModule(smLightClientModule),
@@ -167,6 +193,7 @@ func RegisterIBC(registry cdctypes.InterfaceRegistry) map[string]appmodule.AppMo
 	modules := map[string]appmodule.AppModule{
 		ibcexported.ModuleName:      ibc.AppModule{},
 		ibctransfertypes.ModuleName: ibctransfer.AppModule{},
+		ratelimittypes.ModuleName:   ratelimit.AppModule{},
 		icatypes.ModuleName:         icamodule.AppModule{},
 		ibctm.ModuleName:            ibctm.AppModule{},
 		solomachine.ModuleName:      solomachine.AppModule{},
