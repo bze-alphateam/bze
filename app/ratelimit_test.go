@@ -191,7 +191,7 @@ func TestRateLimit_UpgradeHandlerInitialisesModule(t *testing.T) {
 	vm := bApp.ModuleManager.GetVersionMap()
 	delete(vm, ratelimittypes.ModuleName)
 
-	newVM, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.RatelimitKeeper)(
+	newVM, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.GuardianKeeper, bApp.RatelimitKeeper)(
 		ctx, upgradetypes.Plan{Name: v830.UpgradeName}, vm,
 	)
 	require.NoError(t, err)
@@ -223,7 +223,7 @@ func TestRateLimit_UpgradeHandlerSkipsInitialLimitsWithoutChannels(t *testing.T)
 	vm := bApp.ModuleManager.GetVersionMap()
 	delete(vm, ratelimittypes.ModuleName)
 
-	_, err = v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.RatelimitKeeper)(
+	_, err = v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.GuardianKeeper, bApp.RatelimitKeeper)(
 		ctx, upgradetypes.Plan{Name: v830.UpgradeName}, vm,
 	)
 	require.NoError(t, err)

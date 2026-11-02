@@ -1,0 +1,17 @@
+syntax = "proto3";
+package bze.guardian.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "bze/guardian/v1/params.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/guardian/types";
+
+// GenesisState defines the guardian module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
