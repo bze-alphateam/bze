@@ -55,8 +55,9 @@ const (
 	rlReasonQuota       = "rate_limit_exceeded"
 	rlReasonBlacklisted = "blacklisted_denom"
 
-	rlGuardianUnauthorizedCode = 1101
-	rlGuardianQuotaRaiseCode   = 1103
+	rlGuardianUnauthorizedCode   = 1101
+	rlGuardianQuotaRaiseCode     = 1103
+	rlGuardianAlreadyBlockedCode = 1106
 )
 
 // TestRateLimitIbc proves IBC rate limiting in the real transfer stack: bze,
@@ -139,14 +140,14 @@ func newRateLimitSuite(t *testing.T, ctx context.Context, net chain.IbcNetwork, 
 }
 
 // waitOutWindowReset waits until after 00:00 UTC when the test would start in
-// the 45 minutes before it: the module resets a 24 h window when the hour
+// the 15 minutes before it: the module resets a 24 h window when the hour
 // epoch number is a multiple of 24, i.e. at 00:00 UTC, and the suite takes
-// about 30 minutes.
+// about 8 minutes.
 func waitOutWindowReset(t *testing.T) {
 	t.Helper()
 	now := time.Now().UTC()
 	midnight := now.Truncate(24 * time.Hour).Add(24 * time.Hour)
-	if midnight.Sub(now) > 45*time.Minute {
+	if midnight.Sub(now) > 15*time.Minute {
 		return
 	}
 	wait := midnight.Sub(now) + time.Minute
@@ -567,7 +568,8 @@ func (r *rateLimitSuite) guardianBlocks(t *testing.T) {
 
 	// blocking twice is refused
 	res = r.tx(t, r.guardian, "guardian", "block-denom", voucher)
-	require.NotZero(t, res.Code, "already blocked")
+	require.EqualValues(t, rlGuardianAlreadyBlockedCode, res.Code, res.RawLog)
+	require.Equal(t, "guardian", res.Codespace, res.RawLog)
 
 	// governance unblocks
 	_, err = helpers.SubmitAndPassProposal(r.ctx, r.bze, r.admin, helpers.Proposal{
