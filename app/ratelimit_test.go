@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cometbft/cometbft/crypto/tmhash"
+
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -19,7 +21,11 @@ import (
 	ratelimit "github.com/cosmos/ibc-apps/modules/rate-limiting/v10"
 	ratelimittypes "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v10/modules/core/03-connection/types"
 	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
+	commitmenttypes "github.com/cosmos/ibc-go/v10/modules/core/23-commitment/types"
+	ibctm "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
 	"github.com/stretchr/testify/require"
 
 	"github.com/bze-alphateam/bze/app"
@@ -29,6 +35,7 @@ import (
 const (
 	rlChannel = "channel-0"
 	rlDenom   = "ubze"
+	rlClient  = "07-tendermint-0"
 )
 
 // newRateLimitApp builds the real app with an open transfer channel and some
@@ -55,6 +62,30 @@ func newRateLimitApp(t *testing.T) (*app.App, sdk.Context) {
 		ConnectionHops: []string{"connection-0"},
 		Version:        ibctransfertypes.V1,
 	})
+	bApp.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, ibctransfertypes.PortID, rlChannel, 1)
+	bApp.IBCKeeper.ConnectionKeeper.SetConnection(ctx, "connection-0", connectiontypes.ConnectionEnd{
+		ClientId: rlClient,
+		State:    connectiontypes.OPEN,
+		Counterparty: connectiontypes.Counterparty{
+			ClientId:     "07-tendermint-7",
+			ConnectionId: "connection-7",
+			Prefix:       commitmenttypes.NewMerklePrefix([]byte("ibc")),
+		},
+		Versions: connectiontypes.GetCompatibleVersions(),
+	})
+
+	// no InitChain here: the client params (allowed client types) must be set by hand
+	bApp.IBCKeeper.ClientKeeper.SetParams(ctx, clienttypes.DefaultParams())
+
+	// an active tendermint client of the counterparty, so the channel keeper accepts sends
+	height := clienttypes.NewHeight(1, 100)
+	bApp.IBCKeeper.ClientKeeper.SetClientState(ctx, rlClient, ibctm.NewClientState(
+		"counterparty-1", ibctm.DefaultTrustLevel, 14*24*time.Hour, 21*24*time.Hour, 10*time.Second,
+		height, commitmenttypes.GetSDKSpecs(), []string{"upgrade", "upgradedIBCState"},
+	))
+	bApp.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, rlClient, height, ibctm.NewConsensusState(
+		ctx.BlockTime(), commitmenttypes.NewMerkleRoot(tmhash.Sum([]byte("root"))), tmhash.Sum([]byte("vals")),
+	))
 
 	return bApp, ctx
 }
@@ -174,4 +205,54 @@ func TestRateLimit_UpgradeHandlerInitialisesModule(t *testing.T) {
 	require.Empty(t, bApp.RatelimitKeeper.GetAllRateLimits(ctx))
 	require.Empty(t, bApp.RatelimitKeeper.GetAllBlacklistedDenoms(ctx))
 	require.Empty(t, bApp.RatelimitKeeper.GetAllWhitelistedAddressPairs(ctx))
+}
+
+func newTransfer(sender sdk.AccAddress) *ibctransfertypes.MsgTransfer {
+	return &ibctransfertypes.MsgTransfer{
+		SourcePort:       ibctransfertypes.PortID,
+		SourceChannel:    rlChannel,
+		Token:            sdk.NewInt64Coin(rlDenom, 100),
+		Sender:           sender.String(),
+		Receiver:         "cosmos1receiver",
+		TimeoutTimestamp: uint64(time.Date(2026, 11, 3, 0, 0, 0, 0, time.UTC).UnixNano()),
+	}
+}
+
+func fundSender(t *testing.T, bApp *app.App, ctx sdk.Context) sdk.AccAddress {
+	t.Helper()
+	sender := sdk.AccAddress("rl_transfer_sender__")
+	coins := sdk.NewCoins(sdk.NewInt64Coin(rlDenom, 1_000))
+	require.NoError(t, bApp.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins))
+	require.NoError(t, bApp.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sender, coins))
+	bApp.TransferKeeper.SetParams(ctx, ibctransfertypes.DefaultParams())
+	return sender
+}
+
+// The transfer keeper sends through the rate-limiting keeper: a 0% send quota
+// refuses the transfer. Fails if the transfer keeper went straight to the channel keeper.
+func TestRateLimit_TransferRefusedByZeroSendQuota(t *testing.T) {
+	bApp, ctx := newRateLimitApp(t)
+	sender := fundSender(t, bApp, ctx)
+	require.NoError(t, handle(bApp, ctx, &ratelimittypes.MsgAddRateLimit{
+		Authority:         govAuthority(),
+		Denom:             rlDenom,
+		ChannelOrClientId: rlChannel,
+		MaxPercentSend:    sdkmath.NewInt(0),
+		MaxPercentRecv:    sdkmath.NewInt(100),
+		DurationHours:     24,
+	}))
+
+	_, err := bApp.TransferKeeper.Transfer(ctx, newTransfer(sender))
+	require.ErrorIs(t, err, ratelimittypes.ErrQuotaExceeded)
+}
+
+// With no rate limit stored the same transfer reaches the channel keeper.
+func TestRateLimit_TransferPassesWithoutRateLimit(t *testing.T) {
+	bApp, ctx := newRateLimitApp(t)
+	sender := fundSender(t, bApp, ctx)
+
+	res, err := bApp.TransferKeeper.Transfer(ctx, newTransfer(sender))
+	require.NoError(t, err)
+	require.Equal(t, uint64(1), res.Sequence)
+	require.NotEmpty(t, bApp.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, ibctransfertypes.PortID, rlChannel, 1))
 }
