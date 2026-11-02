@@ -109,11 +109,13 @@ func TestGetStoreUpgrades_DeletesRemovedModuleStores(t *testing.T) {
 	require.ElementsMatch(t, []string{"capability", "feeibc", "group", "nft"}, upgrades.Deleted)
 }
 
-// The new x/dao module gets its store at the upgrade height, and only it.
-func TestGetStoreUpgrades_AddsDaoStore(t *testing.T) {
+// The new x/dao and ratelimit modules get their stores at the upgrade height,
+// and only them.
+func TestGetStoreUpgrades_AddsDaoAndRatelimitStores(t *testing.T) {
 	upgrades := v830.GetStoreUpgrades()
-	require.Equal(t, []string{"dao"}, upgrades.Added)
+	require.ElementsMatch(t, []string{"dao", "ratelimit"}, upgrades.Added)
 	require.NotContains(t, upgrades.Deleted, "dao")
+	require.NotContains(t, upgrades.Deleted, "ratelimit")
 }
 
 // x/dao has no VersionMap entry before the upgrade, so the handler initialises
