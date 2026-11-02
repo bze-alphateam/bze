@@ -1122,6 +1122,8 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	require.Equal(t, chain.TransferPort, denom.Trace[0].PortID)
 	require.Equal(t, s.ibc.main.bze, denom.Trace[0].ChannelID)
 
+	s.v830RateLimits(t)
+
 	// IBC keeps working on the same channel: stake arrives, vouchers leave
 	s.ibc.transferIn(t, chain.SimdDenom, upV830In).requireAccepted(t)
 	vouchers := s.ibc.balance(t, s.bze, s.ibc.bzeUser, b.voucher)
@@ -1140,6 +1142,40 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	s.v830QueueRefunded(t, b.queue)
 	s.v830PriceLevelOwners(t)
 	s.v830OwnerPriceIndex(t, b.queue)
+}
+
+// upV830Guardian is the guardian the v8.3.0 handler sets (the project lead's
+// address, hard-coded because the e2e module does not import the chain).
+const upV830Guardian = "bze1jx4x3kn8mlz2s03zdpf2a38x9gl66llvjqdd55"
+
+// v830RateLimits checks the IBC rate limiting the v8.3.0 handler sets up
+// (BZE-256): the guardian is the mainnet constant, and of the initial
+// rate limits only the ones whose path exists on this network were added.
+// The network has one channel, channel-0, which carries ubze: it gets
+// the 2% / 2% quota in a 24 h window with an empty flow; every other row of
+// the handler's list (other channels, USDC.n) is skipped and logged, not
+// added, and the upgrade went on. No blocked denoms.
+func (s *upgradeSuite) v830RateLimits(t *testing.T) {
+	guardian, err := helpers.QueryGuardian(s.ctx, s.bze)
+	require.NoError(t, err)
+	require.Equal(t, upV830Guardian, guardian, "the guardian is the mainnet constant")
+
+	limits, err := helpers.QueryRateLimits(s.ctx, s.bze)
+	require.NoError(t, err)
+	require.Len(t, limits, 1, "only the path that exists on this network was added: %+v", limits)
+	rl := limits[0]
+	require.Equal(t, chain.Denom, rl.Path.Denom)
+	require.Equal(t, "channel-0", rl.Path.ChannelOrClientID)
+	require.Equal(t, s.ibc.main.bze, rl.Path.ChannelOrClientID, "channel-0 is the channel of the network")
+	require.Equal(t, sdkmath.NewInt(2), rl.Quota.MaxPercentSend)
+	require.Equal(t, sdkmath.NewInt(2), rl.Quota.MaxPercentRecv)
+	require.EqualValues(t, 24, rl.Quota.DurationHours)
+	require.True(t, rl.FlowIs(sdkmath.ZeroInt(), sdkmath.ZeroInt()), "empty flow")
+	require.True(t, rl.Flow.ChannelValue.IsPositive(), "channel value is the ubze supply")
+
+	blocked, err := helpers.QueryBlockedDenoms(s.ctx, s.bze)
+	require.NoError(t, err)
+	require.Empty(t, blocked)
 }
 
 // v830MintableFlags checks the tokenfactory 3 -> 4 migration (BZE-217): every
