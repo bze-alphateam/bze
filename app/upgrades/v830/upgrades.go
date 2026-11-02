@@ -14,6 +14,7 @@ func CreateUpgradeHandler(
 	cfg module.Configurator,
 	mm *module.Manager,
 	guardianKeeper GuardianKeeper,
+	rateLimitKeeper RateLimitKeeper,
 ) upgradetypes.UpgradeHandler {
 
 	return func(c context.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -30,6 +31,10 @@ func CreateUpgradeHandler(
 		}
 
 		if err := setGuardian(ctx, guardianKeeper); err != nil {
+			return nil, err
+		}
+
+		if err := addInitialRateLimits(ctx, rateLimitKeeper); err != nil {
 			return nil, err
 		}
 

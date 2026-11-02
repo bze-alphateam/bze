@@ -21,8 +21,10 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	v830 "github.com/bze-alphateam/bze/app/upgrades/v830"
+	v830testutil "github.com/bze-alphateam/bze/app/upgrades/v830/testutil"
 	"github.com/bze-alphateam/bze/x/dao/keeper"
 	dao "github.com/bze-alphateam/bze/x/dao/module"
 	daotypes "github.com/bze-alphateam/bze/x/dao/types"
@@ -30,6 +32,14 @@ import (
 )
 
 const fakeModuleName = "fake"
+
+// acceptingRateLimits is a ratelimit keeper that accepts every initial rate limit.
+func acceptingRateLimits(t *testing.T) *v830testutil.MockRateLimitKeeper {
+	t.Helper()
+	k := v830testutil.NewMockRateLimitKeeper(gomock.NewController(t))
+	k.EXPECT().AddRateLimit(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	return k
+}
 
 // fakeModule is a module at consensus version 2 that registers a 1->2 migration,
 // standing in for the SDK modules whose migrations the handler must run.
@@ -84,7 +94,7 @@ func setup(t *testing.T, migrationErr error) (upgradetypes.UpgradeHandler, conte
 
 	ctx := testutil.DefaultContext(storetypes.NewKVStoreKey("v830"), storetypes.NewTransientStoreKey("v830_t"))
 
-	return v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}), ctx, &migrated
+	return v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, acceptingRateLimits(t)), ctx, &migrated
 }
 
 func TestUpgradeName(t *testing.T) {
@@ -162,7 +172,7 @@ func TestHandler_InitialisesDaoModule(t *testing.T) {
 
 	ctx := testutil.DefaultContext(storeKey, storetypes.NewTransientStoreKey("v830_t"))
 
-	vm, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{})(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{})
+	vm, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, acceptingRateLimits(t))(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{})
 	require.NoError(t, err)
 	require.Equal(t, uint64(dao.ConsensusVersion), vm[daotypes.ModuleName])
 	require.Equal(t, daotypes.DefaultParams(), k.GetParams(ctx))
@@ -173,7 +183,7 @@ func TestHandler_SetsTheGuardian(t *testing.T) {
 	cfg, mm, ctx := guardianSetup(t)
 	guardian := &fakeGuardian{}
 
-	_, err := v830.CreateUpgradeHandler(cfg, mm, guardian)(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 2})
+	_, err := v830.CreateUpgradeHandler(cfg, mm, guardian, acceptingRateLimits(t))(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 2})
 	require.NoError(t, err)
 	require.Equal(t, 1, guardian.calls)
 	require.Equal(t, guardiantypes.NewParams(v830.GuardianAddress), guardian.params)
@@ -182,7 +192,7 @@ func TestHandler_SetsTheGuardian(t *testing.T) {
 func TestHandler_GuardianErrorFailsTheUpgrade(t *testing.T) {
 	cfg, mm, ctx := guardianSetup(t)
 
-	_, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{err: errors.New("no store")})(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 2})
+	_, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{err: errors.New("no store")}, acceptingRateLimits(t))(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 2})
 	require.ErrorContains(t, err, "no store")
 }
 
@@ -194,7 +204,7 @@ func TestHandler_MigrationErrorLeavesTheGuardianUnset(t *testing.T) {
 	require.NoError(t, mm.RegisterServices(cfg))
 	guardian := &fakeGuardian{}
 
-	_, err := v830.CreateUpgradeHandler(cfg, mm, guardian)(testutil.DefaultContext(storetypes.NewKVStoreKey("v830"), storetypes.NewTransientStoreKey("v830_t")), upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 1})
+	_, err := v830.CreateUpgradeHandler(cfg, mm, guardian, acceptingRateLimits(t))(testutil.DefaultContext(storetypes.NewKVStoreKey("v830"), storetypes.NewTransientStoreKey("v830_t")), upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 1})
 	require.Error(t, err)
 	require.Zero(t, guardian.calls)
 }

@@ -341,6 +341,7 @@ func (app *App) setupUpgradeHandlers() {
 			app.Configurator(),
 			app.ModuleManager,
 			app.GuardianKeeper,
+			app.RatelimitKeeper,
 		),
 	)
 
