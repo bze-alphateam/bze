@@ -80,9 +80,9 @@ func NewProcessingEngine(k ProcessingKeeper, bank BankKeeper, maxFills uint64, l
 // and the remainder is at least the minimum amount, otherwise the remainder is refunded.
 // At most maxFills resting orders are examined (filled or skipped); when that stops the matching the
 // remainder is refunded.
-// When the owner already rests an order at the same market, side and price, the order takes that
-// order's id and a resting remainder is added to it (see restOrder). Otherwise the order gets a new
-// id here, before matching.
+// The order gets a new id here, before matching. When the owner already rests an order at the same
+// market, side and price, a resting remainder is merged with that order under the new id, at the back
+// of the price level (see restOrder).
 // The order coins must already be escrowed in the module account.
 func (pe *ProcessingEngine) PlaceOrder(ctx sdk.Context, order types.Order) error {
 	order, err := pe.assignPlaceOrderId(ctx, order)

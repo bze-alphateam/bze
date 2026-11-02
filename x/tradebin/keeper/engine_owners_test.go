@@ -83,21 +83,22 @@ func (suite *IntegrationTestSuite) TestEngineOwners_PlaceMergeFillCancel() {
 	suite.placeOrders(engine, limitOrder(types.OrderTypeSell, "10", "1", b), limitOrder(types.OrderTypeSell, "10", "1", c))
 	suite.requireOwners(types.OrderTypeSell, "1", 3)
 
-	// a's top-up merges into its resting order
+	// a's top-up merges into its resting order under a new id (3), behind b and c
 	suite.placeOrders(engine, limitOrder(types.OrderTypeSell, "5", "1.0", a))
 	suite.Require().Len(suite.k.GetAllOrder(suite.ctx), 3)
+	suite.requireOwnerPriceOrder(a, types.OrderTypeSell, "1", orderId(3))
 	suite.requireOwners(types.OrderTypeSell, "1", 3)
 
-	// a (15, first in line) is partly filled, then filled in full
+	// b (10, first in line) is partly filled, then filled in full
 	suite.fillOrder(types.OrderTypeBuy, "6", "1", taker)
 	suite.requireOwners(types.OrderTypeSell, "1", 3)
-	suite.fillOrder(types.OrderTypeBuy, "9", "1", taker)
+	suite.fillOrder(types.OrderTypeBuy, "4", "1", taker)
 	suite.requireOwners(types.OrderTypeSell, "1", 2)
-	suite.requireNoOwnerPriceOrder(a, types.OrderTypeSell, "1")
+	suite.requireNoOwnerPriceOrder(b, types.OrderTypeSell, "1")
 
 	suite.cancelOrder(orderId(2))
 	suite.requireOwners(types.OrderTypeSell, "1", 1)
-	suite.cancelOrder(orderId(1))
+	suite.cancelOrder(orderId(3))
 	suite.requireOwners(types.OrderTypeSell, "1", 0)
 }
 
@@ -201,6 +202,54 @@ func (suite *IntegrationTestSuite) TestEngineOwners_PartlyFilledUnindexedDuplica
 	suite.requireOwners(types.OrderTypeSell, "1", 1)
 
 	suite.fillOrder(types.OrderTypeBuy, "5", "1", taker)
+	suite.requireOwners(types.OrderTypeSell, "1", 0)
+}
+
+// A top-up of an owner with a pre-upgrade duplicate replaces only the indexed order (BZE-267): x's
+// order 5 is merged under a new id at the back of the level, x's duplicate 7 is untouched, and the count
+// still follows the index entries (x counted once, the accepted legacy undercount).
+func (suite *IntegrationTestSuite) TestEngineOwners_PreUpgradeDuplicateTopUpReplacesIndexedOrder() {
+	x, y := suite.seedDuplicates()
+
+	suite.resetEvents()
+	suite.placeOrders(suite.newEngine(), limitOrder(types.OrderTypeSell, "4", "1", x))
+
+	_, found := suite.k.GetOrder(suite.ctx, getMarketId(), types.OrderTypeSell, orderId(5))
+	suite.Require().False(found, "the indexed order is replaced")
+	merged, found := suite.k.GetOrder(suite.ctx, getMarketId(), types.OrderTypeSell, orderId(10))
+	suite.Require().True(found)
+	suite.Require().Equal("14", merged.Amount)
+	suite.Require().Equal(x.String(), merged.Owner)
+	duplicate, found := suite.k.GetOrder(suite.ctx, getMarketId(), types.OrderTypeSell, orderId(7))
+	suite.Require().True(found, "the other duplicate still rests")
+	suite.Require().Equal(withId(limitOrder(types.OrderTypeSell, "10", "1", x), orderId(7)), duplicate)
+
+	suite.requireOwnerPriceOrder(x, types.OrderTypeSell, "1", orderId(10))
+	suite.requireOwnerPriceOrder(y, types.OrderTypeSell, "1", orderId(6))
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, "1", "34")
+	suite.requireOwners(types.OrderTypeSell, "1", 2)
+
+	var queue []string
+	suite.k.IteratePriceOrders(suite.ctx, getMarketId(), types.OrderTypeSell, "1", func(ref types.OrderReference) bool {
+		queue = append(queue, ref.Id)
+
+		return false
+	})
+	suite.Require().Equal([]string{orderId(6), orderId(7), orderId(10)}, queue)
+
+	amended := amendedEvents(suite.tradebinTypedEvents())
+	suite.Require().Len(amended, 1)
+	suite.Require().Equal(orderId(10), amended[0].Id)
+	suite.Require().Equal(orderId(5), amended[0].PreviousId)
+
+	// the level drains in FIFO order: y, the duplicate (not indexed, the count stays), then the merged order
+	suite.allowBank()
+	taker := sdk.AccAddress("addr2_______________")
+	suite.fillOrder(types.OrderTypeBuy, "10", "1", taker)
+	suite.requireOwners(types.OrderTypeSell, "1", 1)
+	suite.fillOrder(types.OrderTypeBuy, "10", "1", taker)
+	suite.requireOwners(types.OrderTypeSell, "1", 1)
+	suite.cancelOrder(orderId(10))
 	suite.requireOwners(types.OrderTypeSell, "1", 0)
 }
 

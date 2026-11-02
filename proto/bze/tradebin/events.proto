@@ -50,8 +50,10 @@ message OrderSavedEvent {
 }
 
 // OrderAmendedEvent is emitted when the remainder of an order is added to the order its owner already
-// rests at the same market, side and price: the resting order keeps its id and place in the book.
+// rests at the same market, side and price. The merged order is saved under a new id at the back of
+// its price level (BZE-267) and the resting order's id (previous_id) is removed.
 message OrderAmendedEvent {
+  // id of the merged order: the id the create order got, which its other events carry too
   string id = 1;
   string market_id = 2;
   string order_type = 3;
@@ -61,6 +63,8 @@ message OrderAmendedEvent {
   string added_amount = 6;
   // amount of the resting order after the addition
   string amount = 7;
+  // id the order rested under before the addition, which no longer exists
+  string previous_id = 8;
 }
 
 message PoolCreatedEvent {

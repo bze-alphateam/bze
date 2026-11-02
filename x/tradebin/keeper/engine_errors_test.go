@@ -78,8 +78,7 @@ func (suite *IntegrationTestSuite) TestEngine_PlaceOrder_CorruptOwnSideAggregate
 		pk.EXPECT().GetOwnerPriceOrder(gomock.Any(), maker.String(), getMarketId(), types.OrderTypeBuy, "1").Return(types.OrderReference{}, false).Times(1),
 		pk.EXPECT().AssignOrderId(gomock.Any(), order).Return(placed).Times(1),
 		pk.EXPECT().GetAggregatedOrder(gomock.Any(), getMarketId(), types.OrderTypeSell, "1").Return(types.AggregatedOrder{}, false).Times(1),
-		pk.EXPECT().GetOrder(gomock.Any(), getMarketId(), types.OrderTypeBuy, placed.Id).Return(types.Order{}, false).Times(1),
-		pk.EXPECT().GetOwnerPriceOrder(gomock.Any(), maker.String(), getMarketId(), types.OrderTypeBuy, "1").Return(types.OrderReference{}, false).Times(1),
+		pk.EXPECT().GetOwnerPriceOrder(gomock.Any(), maker.String(), getMarketId(), types.OrderTypeBuy, "1").Return(types.OrderReference{}, false).Times(2),
 		pk.EXPECT().SaveOrder(gomock.Any(), placed).Return(placed).Times(1),
 		pk.EXPECT().GetAggregatedOrder(gomock.Any(), getMarketId(), types.OrderTypeBuy, "1").
 			Return(types.AggregatedOrder{MarketId: getMarketId(), OrderType: types.OrderTypeBuy, Price: "1", Amount: "not-a-number"}, true).Times(1),

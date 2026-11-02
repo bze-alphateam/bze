@@ -945,7 +945,9 @@ func (s *upgradeSuite) v830QueueRefunded(t *testing.T, q v830Queue) {
 // are some after the upgrade. The backlog orders still resting are several
 // orders of admin at one price (placed before v8.3.0): they stay separate and
 // the index points at the lowest id of them, so admin's next sell at that
-// price is added to that order (OrderAmendedEvent, same id, no new order).
+// price is merged with that order (OrderAmendedEvent, no new order): the
+// merged order rests under the sell's new id and the lowest id is gone
+// (BZE-267), the other backlog orders are untouched.
 func (s *upgradeSuite) v830OwnerPriceIndex(t *testing.T, q v830Queue) {
 	// the count on v8.2.0 was taken with the backlog (v830QueueBacklog)
 	require.Zero(t, q.ownerPriceKeys, "no owner-price index before the migration")
@@ -969,10 +971,25 @@ func (s *upgradeSuite) v830OwnerPriceIndex(t *testing.T, q v830Queue) {
 	a := amended[0].Attributes
 	require.Equal(t,
 		[]string{lowest, s.market, "sell", upV830BacklogPrice, s.admin.FormattedAddress(), amount, strconv.Itoa(2 * upV830BacklogAmount)},
-		[]string{a["id"], a["market_id"], a["order_type"], a["price"], a["owner"], a["added_amount"], a["amount"]},
-		"the sell is added to the lowest backlog id")
+		[]string{a["previous_id"], a["market_id"], a["order_type"], a["price"], a["owner"], a["added_amount"], a["amount"]},
+		"the sell is merged with the lowest backlog id")
+	merged := a["id"]
+	require.NotContains(t, backlog, merged, "the merged order rests under a new id")
+	require.NotEqual(t, q.cancelID, merged, "the merged order rests under a new id")
 	require.Empty(t, helpers.TxEvents(res, tradebinEventPrefix+"OrderSavedEvent"), "no new order")
-	require.Len(t, s.userOrders(t, 0, s.admin), len(backlog)+1, "the other backlog orders still rest apart")
+
+	var after []string
+	for _, o := range s.userOrders(t, 0, s.admin) {
+		after = append(after, o.ID)
+	}
+	require.Len(t, after, len(backlog)+1, "the other backlog orders still rest apart")
+	require.NotContains(t, after, lowest, "the lowest backlog id is replaced")
+	require.Contains(t, after, merged)
+	for _, id := range backlog {
+		if id != lowest {
+			require.Contains(t, after, id, "backlog order %s untouched", id)
+		}
+	}
 }
 
 // v830PriceLevelOwners checks that the tradebin 4 -> 5 migration wrote the
