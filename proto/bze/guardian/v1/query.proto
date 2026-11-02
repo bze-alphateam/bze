@@ -1,0 +1,40 @@
+syntax = "proto3";
+package bze.guardian.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "bze/guardian/v1/params.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/guardian/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Params queries the parameters of the module.
+  rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/bze/guardian/v1/params";
+  }
+
+  // BlockedDenoms lists the denoms on the rate limit module's blacklist.
+  rpc BlockedDenoms (QueryBlockedDenomsRequest) returns (QueryBlockedDenomsResponse) {
+    option (google.api.http).get = "/bze/guardian/v1/blocked_denoms";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// QueryBlockedDenomsRequest is request type for the Query/BlockedDenoms RPC method.
+message QueryBlockedDenomsRequest {}
+
+// QueryBlockedDenomsResponse is response type for the Query/BlockedDenoms RPC method.
+message QueryBlockedDenomsResponse {
+  // denoms are the blacklisted denoms, every transfer of them is refused.
+  repeated string denoms = 1;
+}

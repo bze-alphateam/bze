@@ -67,6 +67,7 @@ import (
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/staking" // import for side-effects
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	ratelimitkeeper "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/keeper"
 	_ "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts" // import for side-effects
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/keeper"
 	icahostkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/keeper"
@@ -77,6 +78,7 @@ import (
 	cointrunkmodulekeeper "github.com/bze-alphateam/bze/x/cointrunk/keeper"
 	daomodulekeeper "github.com/bze-alphateam/bze/x/dao/keeper"
 	epochmodulekeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
+	guardianmodulekeeper "github.com/bze-alphateam/bze/x/guardian/keeper"
 	rewardsmodulekeeper "github.com/bze-alphateam/bze/x/rewards/keeper"
 	rewardsmoduletypes "github.com/bze-alphateam/bze/x/rewards/types"
 	tokenfactorymodulekeeper "github.com/bze-alphateam/bze/x/tokenfactory/keeper"
@@ -135,6 +137,7 @@ type App struct {
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICAHostKeeper       icahostkeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
+	RatelimitKeeper     ratelimitkeeper.Keeper
 
 	BurnerKeeper         burnermodulekeeper.Keeper
 	EpochKeeper          *epochmodulekeeper.Keeper
@@ -144,6 +147,7 @@ type App struct {
 	TradebinKeeper       *tradebinmodulekeeper.Keeper
 	TxfeecollectorKeeper *txfeecollectormodulekeeper.Keeper
 	DaoKeeper            *daomodulekeeper.Keeper
+	GuardianKeeper       *guardianmodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
@@ -251,6 +255,7 @@ func New(
 		&app.TradebinKeeper,
 		&app.TxfeecollectorKeeper,
 		&app.DaoKeeper,
+		&app.GuardianKeeper,
 		// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	); err != nil {
 		panic(err)
@@ -335,6 +340,8 @@ func (app *App) setupUpgradeHandlers() {
 		v830.CreateUpgradeHandler(
 			app.Configurator(),
 			app.ModuleManager,
+			app.GuardianKeeper,
+			app.RatelimitKeeper,
 		),
 	)
 

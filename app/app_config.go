@@ -29,6 +29,7 @@ import (
 	cointrunkmodulev1 "github.com/bze-alphateam/bze/api/bze/cointrunk/module"
 	daomodulev1 "github.com/bze-alphateam/bze/api/bze/dao/module"
 	epochmodulev1 "github.com/bze-alphateam/bze/api/bze/epochs/module"
+	guardianmodulev1 "github.com/bze-alphateam/bze/api/bze/guardian/module"
 	rewardsmodulev1 "github.com/bze-alphateam/bze/api/bze/rewards/module"
 	tokenfactorymodulev1 "github.com/bze-alphateam/bze/api/bze/tokenfactory/module"
 	tradebinmodulev1 "github.com/bze-alphateam/bze/api/bze/tradebin/module"
@@ -41,6 +42,8 @@ import (
 	daomoduletypes "github.com/bze-alphateam/bze/x/dao/types"
 	_ "github.com/bze-alphateam/bze/x/epochs/module" // import for side-effects
 	epochmoduletypes "github.com/bze-alphateam/bze/x/epochs/types"
+	_ "github.com/bze-alphateam/bze/x/guardian/module" // import for side-effects
+	guardianmoduletypes "github.com/bze-alphateam/bze/x/guardian/types"
 	_ "github.com/bze-alphateam/bze/x/rewards/module" // import for side-effects
 	rewardsmoduletypes "github.com/bze-alphateam/bze/x/rewards/types"
 	_ "github.com/bze-alphateam/bze/x/tokenfactory/module" // import for side-effects
@@ -62,6 +65,7 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	ratelimittypes "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/types"
 	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
@@ -90,6 +94,7 @@ var (
 		govtypes.ModuleName,
 		minttypes.ModuleName,
 		ibcexported.ModuleName,
+		ratelimittypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		authz.ModuleName,
@@ -110,6 +115,7 @@ var (
 		tradebinmoduletypes.ModuleName,
 		txfeecollectormoduletypes.ModuleName,
 		daomoduletypes.ModuleName,
+		guardianmoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 
@@ -128,6 +134,7 @@ var (
 		genutiltypes.ModuleName,
 		// ibc modules
 		ibcexported.ModuleName,
+		ratelimittypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		// chain modules
@@ -149,6 +156,7 @@ var (
 		genutiltypes.ModuleName,
 		// ibc modules
 		ibcexported.ModuleName,
+		ratelimittypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		// chain modules
@@ -347,6 +355,10 @@ var (
 			{
 				Name:   daomoduletypes.ModuleName,
 				Config: appconfig.WrapAny(&daomodulev1.Module{}),
+			},
+			{
+				Name:   guardianmoduletypes.ModuleName,
+				Config: appconfig.WrapAny(&guardianmodulev1.Module{}),
 			},
 			// this line is used by starport scaffolding # stargate/app/moduleConfig
 		},
