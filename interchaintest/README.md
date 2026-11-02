@@ -44,6 +44,7 @@ make e2e-tokenfactory               # staking rewards + tokenfactory admin and b
 make e2e-halt                       # halted denoms: gov halt/unhalt, refused trading, exits (~5 min)
 make e2e-update-pools               # pool fee update: gov MsgUpdatePools, swap with the new fee, unknown pool refused (~4 min)
 make e2e-ibc                        # blocked inbound IBC: bze <-> simd through Hermes (~12 min)
+make e2e-ratelimit                  # IBC rate limiting: quotas refused and refunded both ways, net flow, timeout undo, guardian tighten and block, gov loosen and unblock (~8 min)
 make e2e-fees                       # fee destinations, minimum gas prices, ante refusals, fee grants, txfeecollector params
 make e2e-transferfee                # factory-token transfer fee on protocol fees and gas surcharge: routing, burn, fee grants, fallback, rate changes
 make e2e-orderbook                  # order-book engine: fills, remainders, dust, cancels, refusals, queue limits
