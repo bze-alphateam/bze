@@ -29,6 +29,7 @@ import (
 	cointrunkmodulev1 "github.com/bze-alphateam/bze/api/bze/cointrunk/module"
 	daomodulev1 "github.com/bze-alphateam/bze/api/bze/dao/module"
 	epochmodulev1 "github.com/bze-alphateam/bze/api/bze/epochs/module"
+	guardianmodulev1 "github.com/bze-alphateam/bze/api/bze/guardian/module"
 	rewardsmodulev1 "github.com/bze-alphateam/bze/api/bze/rewards/module"
 	tokenfactorymodulev1 "github.com/bze-alphateam/bze/api/bze/tokenfactory/module"
 	tradebinmodulev1 "github.com/bze-alphateam/bze/api/bze/tradebin/module"
@@ -41,6 +42,8 @@ import (
 	daomoduletypes "github.com/bze-alphateam/bze/x/dao/types"
 	_ "github.com/bze-alphateam/bze/x/epochs/module" // import for side-effects
 	epochmoduletypes "github.com/bze-alphateam/bze/x/epochs/types"
+	_ "github.com/bze-alphateam/bze/x/guardian/module" // import for side-effects
+	guardianmoduletypes "github.com/bze-alphateam/bze/x/guardian/types"
 	_ "github.com/bze-alphateam/bze/x/rewards/module" // import for side-effects
 	rewardsmoduletypes "github.com/bze-alphateam/bze/x/rewards/types"
 	_ "github.com/bze-alphateam/bze/x/tokenfactory/module" // import for side-effects
@@ -112,6 +115,7 @@ var (
 		tradebinmoduletypes.ModuleName,
 		txfeecollectormoduletypes.ModuleName,
 		daomoduletypes.ModuleName,
+		guardianmoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 
@@ -351,6 +355,10 @@ var (
 			{
 				Name:   daomoduletypes.ModuleName,
 				Config: appconfig.WrapAny(&daomodulev1.Module{}),
+			},
+			{
+				Name:   guardianmoduletypes.ModuleName,
+				Config: appconfig.WrapAny(&guardianmodulev1.Module{}),
 			},
 			// this line is used by starport scaffolding # stargate/app/moduleConfig
 		},

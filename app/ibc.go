@@ -92,6 +92,10 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 		app.IBCKeeper.ChannelKeeper, // ICS4Wrapper
 	)
 
+	// x/guardian lowers the quotas through the rate-limiting keeper. It is built by
+	// depinject before this keeper exists, so the keeper is handed over here.
+	app.GuardianKeeper.SetRateLimitKeeper(app.RatelimitKeeper)
+
 	// Create IBC transfer keeper. Outgoing transfer packets go through the rate-limiting
 	// keeper (its ICS-4 wrapper) on their way to the channel keeper.
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(

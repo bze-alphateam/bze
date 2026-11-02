@@ -15,6 +15,7 @@ import (
 	sdkruntime "github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -25,6 +26,7 @@ import (
 	"github.com/bze-alphateam/bze/x/dao/keeper"
 	dao "github.com/bze-alphateam/bze/x/dao/module"
 	daotypes "github.com/bze-alphateam/bze/x/dao/types"
+	guardiantypes "github.com/bze-alphateam/bze/x/guardian/types"
 )
 
 const fakeModuleName = "fake"
@@ -54,6 +56,20 @@ func (m fakeModule) RegisterServices(cfg module.Configurator) {
 	}
 }
 
+// fakeGuardian records the params the handler stores.
+type fakeGuardian struct {
+	params guardiantypes.Params
+	calls  int
+	err    error
+}
+
+func (f *fakeGuardian) SetParams(_ context.Context, params guardiantypes.Params) error {
+	f.calls++
+	f.params = params
+
+	return f.err
+}
+
 func setup(t *testing.T, migrationErr error) (upgradetypes.UpgradeHandler, context.Context, *int) {
 	t.Helper()
 
@@ -68,7 +84,7 @@ func setup(t *testing.T, migrationErr error) (upgradetypes.UpgradeHandler, conte
 
 	ctx := testutil.DefaultContext(storetypes.NewKVStoreKey("v830"), storetypes.NewTransientStoreKey("v830_t"))
 
-	return v830.CreateUpgradeHandler(cfg, mm), ctx, &migrated
+	return v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}), ctx, &migrated
 }
 
 func TestUpgradeName(t *testing.T) {
@@ -109,11 +125,12 @@ func TestGetStoreUpgrades_DeletesRemovedModuleStores(t *testing.T) {
 	require.ElementsMatch(t, []string{"capability", "feeibc", "group", "nft"}, upgrades.Deleted)
 }
 
-// The new x/dao and ratelimit modules get their stores at the upgrade height,
-// and only them.
-func TestGetStoreUpgrades_AddsDaoAndRatelimitStores(t *testing.T) {
+// The new x/dao, ratelimit and x/guardian modules get their stores at the
+// upgrade height, and only them.
+func TestGetStoreUpgrades_AddsDaoRatelimitAndGuardianStores(t *testing.T) {
 	upgrades := v830.GetStoreUpgrades()
-	require.ElementsMatch(t, []string{"dao", "ratelimit"}, upgrades.Added)
+	require.ElementsMatch(t, []string{"dao", "ratelimit", "guardian"}, upgrades.Added)
+	require.NotContains(t, upgrades.Deleted, "guardian")
 	require.NotContains(t, upgrades.Deleted, "dao")
 	require.NotContains(t, upgrades.Deleted, "ratelimit")
 }
@@ -145,8 +162,58 @@ func TestHandler_InitialisesDaoModule(t *testing.T) {
 
 	ctx := testutil.DefaultContext(storeKey, storetypes.NewTransientStoreKey("v830_t"))
 
-	vm, err := v830.CreateUpgradeHandler(cfg, mm)(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{})
+	vm, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{})(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{})
 	require.NoError(t, err)
 	require.Equal(t, uint64(dao.ConsensusVersion), vm[daotypes.ModuleName])
 	require.Equal(t, daotypes.DefaultParams(), k.GetParams(ctx))
+}
+
+// The handler stores the configured guardian after the migrations ran.
+func TestHandler_SetsTheGuardian(t *testing.T) {
+	cfg, mm, ctx := guardianSetup(t)
+	guardian := &fakeGuardian{}
+
+	_, err := v830.CreateUpgradeHandler(cfg, mm, guardian)(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 2})
+	require.NoError(t, err)
+	require.Equal(t, 1, guardian.calls)
+	require.Equal(t, guardiantypes.NewParams(v830.GuardianAddress), guardian.params)
+}
+
+func TestHandler_GuardianErrorFailsTheUpgrade(t *testing.T) {
+	cfg, mm, ctx := guardianSetup(t)
+
+	_, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{err: errors.New("no store")})(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 2})
+	require.ErrorContains(t, err, "no store")
+}
+
+// A failed migration stops the upgrade before the guardian is stored.
+func TestHandler_MigrationErrorLeavesTheGuardianUnset(t *testing.T) {
+	migrated := 0
+	mm := module.NewManager(fakeModule{migrationErr: errors.New("boom"), migrated: &migrated})
+	cfg := module.NewConfigurator(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()), baseapp.NewMsgServiceRouter(), baseapp.NewGRPCQueryRouter())
+	require.NoError(t, mm.RegisterServices(cfg))
+	guardian := &fakeGuardian{}
+
+	_, err := v830.CreateUpgradeHandler(cfg, mm, guardian)(testutil.DefaultContext(storetypes.NewKVStoreKey("v830"), storetypes.NewTransientStoreKey("v830_t")), upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 1})
+	require.Error(t, err)
+	require.Zero(t, guardian.calls)
+}
+
+// The constant is a 20-byte account address with the chain's prefix.
+func TestGuardianAddress_IsABZEAccountAddress(t *testing.T) {
+	hrp, bz, err := bech32.DecodeAndConvert(v830.GuardianAddress)
+	require.NoError(t, err)
+	require.Equal(t, "bze", hrp)
+	require.Len(t, bz, 20)
+}
+
+func guardianSetup(t *testing.T) (module.Configurator, *module.Manager, context.Context) {
+	t.Helper()
+
+	migrated := 0
+	mm := module.NewManager(fakeModule{migrated: &migrated})
+	cfg := module.NewConfigurator(codec.NewProtoCodec(codectypes.NewInterfaceRegistry()), baseapp.NewMsgServiceRouter(), baseapp.NewGRPCQueryRouter())
+	require.NoError(t, mm.RegisterServices(cfg))
+
+	return cfg, mm, testutil.DefaultContext(storetypes.NewKVStoreKey("v830"), storetypes.NewTransientStoreKey("v830_t"))
 }

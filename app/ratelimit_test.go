@@ -161,7 +161,7 @@ func TestRateLimit_UpgradeHandlerInitialisesModule(t *testing.T) {
 	vm := bApp.ModuleManager.GetVersionMap()
 	delete(vm, ratelimittypes.ModuleName)
 
-	newVM, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager)(
+	newVM, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.GuardianKeeper)(
 		ctx, upgradetypes.Plan{Name: v830.UpgradeName}, vm,
 	)
 	require.NoError(t, err)

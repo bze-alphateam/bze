@@ -1,0 +1,15 @@
+syntax = "proto3";
+package bze.guardian.v1;
+
+option go_package = "github.com/bze-alphateam/bze/x/guardian/types";
+
+// TightenRateLimitEvent is emitted when a rate limit quota is lowered.
+message TightenRateLimitEvent {
+  string signer = 1;
+  string denom = 2;
+  string channel_id = 3;
+  string old_send = 4;
+  string old_recv = 5;
+  string new_send = 6;
+  string new_recv = 7;
+}
