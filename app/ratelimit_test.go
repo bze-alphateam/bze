@@ -19,6 +19,7 @@ import (
 	ratelimit "github.com/cosmos/ibc-apps/modules/rate-limiting/v10"
 	ratelimittypes "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 	"github.com/stretchr/testify/require"
 
@@ -43,6 +44,9 @@ func newRateLimitApp(t *testing.T) (*app.App, sdk.Context) {
 	ctx := bApp.NewUncachedContext(false, cmtproto.Header{Time: time.Date(2026, 11, 2, 13, 30, 0, 0, time.UTC)})
 
 	require.NoError(t, bApp.BankKeeper.SetParams(ctx, banktypes.DefaultParams()))
+	// A rate limit for an unknown channel falls back to the client status lookup,
+	// which needs the client params a running chain has from genesis.
+	bApp.IBCKeeper.ClientKeeper.SetParams(ctx, clienttypes.DefaultParams())
 	supply := sdk.NewCoins(sdk.NewInt64Coin(rlDenom, 1_000_000))
 	require.NoError(t, bApp.BankKeeper.MintCoins(ctx, minttypes.ModuleName, supply))
 	bApp.IBCKeeper.ChannelKeeper.SetChannel(ctx, ibctransfertypes.PortID, rlChannel, channeltypes.Channel{
@@ -187,6 +191,7 @@ func TestRateLimit_UpgradeHandlerSkipsInitialLimitsWithoutChannels(t *testing.T)
 	bApp, err := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, appOptions)
 	require.NoError(t, err)
 	ctx := bApp.NewUncachedContext(false, cmtproto.Header{Time: time.Date(2026, 11, 2, 13, 30, 0, 0, time.UTC)})
+	bApp.IBCKeeper.ClientKeeper.SetParams(ctx, clienttypes.DefaultParams())
 
 	vm := bApp.ModuleManager.GetVersionMap()
 	delete(vm, ratelimittypes.ModuleName)
