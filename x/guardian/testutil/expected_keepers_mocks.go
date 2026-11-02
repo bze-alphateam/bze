@@ -41,6 +41,32 @@ func (m *MockRateLimitKeeper) EXPECT() *MockRateLimitKeeperMockRecorder {
 	return m.recorder
 }
 
+// AddDenomToBlacklist mocks base method.
+func (m *MockRateLimitKeeper) AddDenomToBlacklist(ctx types.Context, denom string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "AddDenomToBlacklist", ctx, denom)
+}
+
+// AddDenomToBlacklist indicates an expected call of AddDenomToBlacklist.
+func (mr *MockRateLimitKeeperMockRecorder) AddDenomToBlacklist(ctx, denom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDenomToBlacklist", reflect.TypeOf((*MockRateLimitKeeper)(nil).AddDenomToBlacklist), ctx, denom)
+}
+
+// GetAllBlacklistedDenoms mocks base method.
+func (m *MockRateLimitKeeper) GetAllBlacklistedDenoms(ctx types.Context) []string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllBlacklistedDenoms", ctx)
+	ret0, _ := ret[0].([]string)
+	return ret0
+}
+
+// GetAllBlacklistedDenoms indicates an expected call of GetAllBlacklistedDenoms.
+func (mr *MockRateLimitKeeperMockRecorder) GetAllBlacklistedDenoms(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBlacklistedDenoms", reflect.TypeOf((*MockRateLimitKeeper)(nil).GetAllBlacklistedDenoms), ctx)
+}
+
 // GetRateLimit mocks base method.
 func (m *MockRateLimitKeeper) GetRateLimit(ctx types.Context, denom, channelId string) (types0.RateLimit, bool) {
 	m.ctrl.T.Helper()
@@ -54,6 +80,32 @@ func (m *MockRateLimitKeeper) GetRateLimit(ctx types.Context, denom, channelId s
 func (mr *MockRateLimitKeeperMockRecorder) GetRateLimit(ctx, denom, channelId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRateLimit", reflect.TypeOf((*MockRateLimitKeeper)(nil).GetRateLimit), ctx, denom, channelId)
+}
+
+// IsDenomBlacklisted mocks base method.
+func (m *MockRateLimitKeeper) IsDenomBlacklisted(ctx types.Context, denom string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsDenomBlacklisted", ctx, denom)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsDenomBlacklisted indicates an expected call of IsDenomBlacklisted.
+func (mr *MockRateLimitKeeperMockRecorder) IsDenomBlacklisted(ctx, denom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsDenomBlacklisted", reflect.TypeOf((*MockRateLimitKeeper)(nil).IsDenomBlacklisted), ctx, denom)
+}
+
+// RemoveDenomFromBlacklist mocks base method.
+func (m *MockRateLimitKeeper) RemoveDenomFromBlacklist(ctx types.Context, denom string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RemoveDenomFromBlacklist", ctx, denom)
+}
+
+// RemoveDenomFromBlacklist indicates an expected call of RemoveDenomFromBlacklist.
+func (mr *MockRateLimitKeeperMockRecorder) RemoveDenomFromBlacklist(ctx, denom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveDenomFromBlacklist", reflect.TypeOf((*MockRateLimitKeeper)(nil).RemoveDenomFromBlacklist), ctx, denom)
 }
 
 // SetRateLimit mocks base method.

@@ -13,3 +13,15 @@ message TightenRateLimitEvent {
   string new_send = 6;
   string new_recv = 7;
 }
+
+// DenomBlockedEvent is emitted when a denom is put on the blacklist.
+message DenomBlockedEvent {
+  string signer = 1;
+  string denom = 2;
+}
+
+// DenomUnblockedEvent is emitted when a denom is taken off the blacklist.
+message DenomUnblockedEvent {
+  string authority = 1;
+  string denom = 2;
+}

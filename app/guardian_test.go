@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/math"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ratelimitkeeper "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/keeper"
 	ratelimittypes "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/types"
 	"github.com/stretchr/testify/require"
 
@@ -113,4 +114,60 @@ func TestGuardian_GovernanceTightensAndOnlyGovernanceUpdatesParams(t *testing.T)
 
 	require.NoError(t, handle(a, ctx, &guardiantypes.MsgUpdateParams{Authority: govAuthority(), Params: guardiantypes.DefaultParams()}))
 	require.Empty(t, a.GuardianKeeper.GetParams(ctx).Guardian)
+}
+
+// The guardian blocks a denom through the real message router: the ratelimit
+// module's blacklist holds it, its query returns it, and both directions of the
+// module's flow check refuse it on any channel, with or without a rate limit.
+// Only governance lifts the block.
+func TestGuardian_BlockDenomStopsBothDirectionsAndOnlyGovernanceUnblocks(t *testing.T) {
+	a, ctx := newRateLimitApp(t)
+	require.NoError(t, a.GuardianKeeper.SetParams(ctx, guardiantypes.NewParams(guardianSigner)))
+	const denom = "ibc/6490A7EAB61059BFC1CDDEB05917DD70BDF3A611654162A1A47DB930D40D8AF4"
+
+	require.False(t, a.RatelimitKeeper.IsDenomBlacklisted(ctx, denom))
+	require.NoError(t, handle(a, ctx, &guardiantypes.MsgBlockDenom{Signer: guardianSigner, Denom: denom}))
+	require.True(t, a.RatelimitKeeper.IsDenomBlacklisted(ctx, denom))
+
+	res, err := a.RatelimitKeeper.AllBlacklistedDenoms(ctx, &ratelimittypes.QueryAllBlacklistedDenomsRequest{})
+	require.NoError(t, err)
+	require.Equal(t, []string{denom}, res.Denoms)
+
+	guardianRes, err := a.GuardianKeeper.BlockedDenoms(ctx, &guardiantypes.QueryBlockedDenomsRequest{})
+	require.NoError(t, err)
+	require.Equal(t, []string{denom}, guardianRes.Denoms)
+
+	for _, direction := range []ratelimittypes.PacketDirection{ratelimittypes.PACKET_SEND, ratelimittypes.PACKET_RECV} {
+		_, err := a.RatelimitKeeper.CheckRateLimitAndUpdateFlow(ctx, direction, ratelimitkeeper.RateLimitedPacketInfo{
+			ChannelID: rlChannel, Denom: denom, Amount: math.NewInt(1),
+		})
+		require.ErrorIs(t, err, ratelimittypes.ErrDenomIsBlacklisted)
+	}
+
+	require.ErrorIs(t, handle(a, ctx, &guardiantypes.MsgBlockDenom{Signer: govAuthority(), Denom: denom}), guardiantypes.ErrAlreadyBlocked)
+
+	// the guardian cannot unblock, in any spelling of the message
+	require.ErrorIs(t, handle(a, ctx, &guardiantypes.MsgUnblockDenom{Authority: guardianSigner, Denom: denom}), guardiantypes.ErrUnauthorized)
+	require.True(t, a.RatelimitKeeper.IsDenomBlacklisted(ctx, denom))
+
+	require.NoError(t, handle(a, ctx, &guardiantypes.MsgUnblockDenom{Authority: govAuthority(), Denom: denom}))
+	require.False(t, a.RatelimitKeeper.IsDenomBlacklisted(ctx, denom))
+	res, err = a.RatelimitKeeper.AllBlacklistedDenoms(ctx, &ratelimittypes.QueryAllBlacklistedDenomsRequest{})
+	require.NoError(t, err)
+	require.Empty(t, res.Denoms)
+
+	require.ErrorIs(t, handle(a, ctx, &guardiantypes.MsgUnblockDenom{Authority: govAuthority(), Denom: denom}), guardiantypes.ErrNotBlocked)
+}
+
+// Blocking leaves the denom's rate limit exactly as it was.
+func TestGuardian_BlockDenomLeavesTheRateLimitUntouched(t *testing.T) {
+	a, ctx := addLimit(t, 10, 20)
+	before, found := a.RatelimitKeeper.GetRateLimit(ctx, rlDenom, rlChannel)
+	require.True(t, found)
+
+	require.NoError(t, handle(a, ctx, &guardiantypes.MsgBlockDenom{Signer: guardianSigner, Denom: rlDenom}))
+
+	after, found := a.RatelimitKeeper.GetRateLimit(ctx, rlDenom, rlChannel)
+	require.True(t, found)
+	require.Equal(t, before, after)
 }

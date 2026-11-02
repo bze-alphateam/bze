@@ -20,6 +20,13 @@ service Msg {
   // TightenRateLimit lowers the send and receive quotas of an existing IBC
   // rate limit. It can never raise a quota, change the window or add a limit.
   rpc TightenRateLimit (MsgTightenRateLimit) returns (MsgTightenRateLimitResponse);
+
+  // BlockDenom puts a denom on the rate limit module's blacklist: every ICS-20
+  // transfer of the denom is refused, in both directions, on every channel.
+  rpc BlockDenom (MsgBlockDenom) returns (MsgBlockDenomResponse);
+
+  // UnblockDenom takes a denom off the blacklist. Governance only.
+  rpc UnblockDenom (MsgUnblockDenom) returns (MsgUnblockDenomResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -67,3 +74,33 @@ message MsgTightenRateLimit {
 // MsgTightenRateLimitResponse defines the response structure for executing a
 // MsgTightenRateLimit message.
 message MsgTightenRateLimitResponse {}
+
+// MsgBlockDenom is the Msg/BlockDenom request type.
+message MsgBlockDenom {
+  option (cosmos.msg.v1.signer) = "signer";
+  option (amino.name) = "bze/x/guardian/MsgBlockDenom";
+
+  // signer is the guardian or the governance authority.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // denom to block, as it appears on BZE.
+  string denom = 2;
+}
+
+// MsgBlockDenomResponse defines the response structure for executing a
+// MsgBlockDenom message.
+message MsgBlockDenomResponse {}
+
+// MsgUnblockDenom is the Msg/UnblockDenom request type.
+message MsgUnblockDenom {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "bze/x/guardian/MsgUnblockDenom";
+
+  // authority is the governance module account, the guardian cannot unblock.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // denom to unblock, as it appears on BZE.
+  string denom = 2;
+}
+
+// MsgUnblockDenomResponse defines the response structure for executing a
+// MsgUnblockDenom message.
+message MsgUnblockDenomResponse {}
