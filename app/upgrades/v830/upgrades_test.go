@@ -20,14 +20,24 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	v830 "github.com/bze-alphateam/bze/app/upgrades/v830"
+	v830testutil "github.com/bze-alphateam/bze/app/upgrades/v830/testutil"
 	"github.com/bze-alphateam/bze/x/dao/keeper"
 	dao "github.com/bze-alphateam/bze/x/dao/module"
 	daotypes "github.com/bze-alphateam/bze/x/dao/types"
 )
 
 const fakeModuleName = "fake"
+
+// acceptingRateLimits is a ratelimit keeper that accepts every initial rate limit.
+func acceptingRateLimits(t *testing.T) *v830testutil.MockRateLimitKeeper {
+	t.Helper()
+	k := v830testutil.NewMockRateLimitKeeper(gomock.NewController(t))
+	k.EXPECT().AddRateLimit(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	return k
+}
 
 // fakeModule is a module at consensus version 2 that registers a 1->2 migration,
 // standing in for the SDK modules whose migrations the handler must run.
@@ -68,7 +78,7 @@ func setup(t *testing.T, migrationErr error) (upgradetypes.UpgradeHandler, conte
 
 	ctx := testutil.DefaultContext(storetypes.NewKVStoreKey("v830"), storetypes.NewTransientStoreKey("v830_t"))
 
-	return v830.CreateUpgradeHandler(cfg, mm), ctx, &migrated
+	return v830.CreateUpgradeHandler(cfg, mm, acceptingRateLimits(t)), ctx, &migrated
 }
 
 func TestUpgradeName(t *testing.T) {
@@ -145,7 +155,7 @@ func TestHandler_InitialisesDaoModule(t *testing.T) {
 
 	ctx := testutil.DefaultContext(storeKey, storetypes.NewTransientStoreKey("v830_t"))
 
-	vm, err := v830.CreateUpgradeHandler(cfg, mm)(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{})
+	vm, err := v830.CreateUpgradeHandler(cfg, mm, acceptingRateLimits(t))(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{})
 	require.NoError(t, err)
 	require.Equal(t, uint64(dao.ConsensusVersion), vm[daotypes.ModuleName])
 	require.Equal(t, daotypes.DefaultParams(), k.GetParams(ctx))
