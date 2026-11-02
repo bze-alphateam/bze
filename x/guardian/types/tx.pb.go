@@ -232,51 +232,247 @@ func (m *MsgTightenRateLimitResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgTightenRateLimitResponse proto.InternalMessageInfo
 
+// MsgBlockDenom is the Msg/BlockDenom request type.
+type MsgBlockDenom struct {
+	// signer is the guardian or the governance authority.
+	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+	// denom to block, as it appears on BZE.
+	Denom string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (m *MsgBlockDenom) Reset()         { *m = MsgBlockDenom{} }
+func (m *MsgBlockDenom) String() string { return proto.CompactTextString(m) }
+func (*MsgBlockDenom) ProtoMessage()    {}
+func (*MsgBlockDenom) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a229f9b0940ab408, []int{4}
+}
+func (m *MsgBlockDenom) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBlockDenom) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBlockDenom.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBlockDenom) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBlockDenom.Merge(m, src)
+}
+func (m *MsgBlockDenom) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBlockDenom) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBlockDenom.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBlockDenom proto.InternalMessageInfo
+
+func (m *MsgBlockDenom) GetSigner() string {
+	if m != nil {
+		return m.Signer
+	}
+	return ""
+}
+
+func (m *MsgBlockDenom) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+// MsgBlockDenomResponse defines the response structure for executing a
+// MsgBlockDenom message.
+type MsgBlockDenomResponse struct {
+}
+
+func (m *MsgBlockDenomResponse) Reset()         { *m = MsgBlockDenomResponse{} }
+func (m *MsgBlockDenomResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgBlockDenomResponse) ProtoMessage()    {}
+func (*MsgBlockDenomResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a229f9b0940ab408, []int{5}
+}
+func (m *MsgBlockDenomResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBlockDenomResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBlockDenomResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBlockDenomResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBlockDenomResponse.Merge(m, src)
+}
+func (m *MsgBlockDenomResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBlockDenomResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBlockDenomResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBlockDenomResponse proto.InternalMessageInfo
+
+// MsgUnblockDenom is the Msg/UnblockDenom request type.
+type MsgUnblockDenom struct {
+	// authority is the governance module account, the guardian cannot unblock.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// denom to unblock, as it appears on BZE.
+	Denom string `protobuf:"bytes,2,opt,name=denom,proto3" json:"denom,omitempty"`
+}
+
+func (m *MsgUnblockDenom) Reset()         { *m = MsgUnblockDenom{} }
+func (m *MsgUnblockDenom) String() string { return proto.CompactTextString(m) }
+func (*MsgUnblockDenom) ProtoMessage()    {}
+func (*MsgUnblockDenom) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a229f9b0940ab408, []int{6}
+}
+func (m *MsgUnblockDenom) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUnblockDenom) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUnblockDenom.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUnblockDenom) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUnblockDenom.Merge(m, src)
+}
+func (m *MsgUnblockDenom) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUnblockDenom) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUnblockDenom.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUnblockDenom proto.InternalMessageInfo
+
+func (m *MsgUnblockDenom) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUnblockDenom) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+// MsgUnblockDenomResponse defines the response structure for executing a
+// MsgUnblockDenom message.
+type MsgUnblockDenomResponse struct {
+}
+
+func (m *MsgUnblockDenomResponse) Reset()         { *m = MsgUnblockDenomResponse{} }
+func (m *MsgUnblockDenomResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUnblockDenomResponse) ProtoMessage()    {}
+func (*MsgUnblockDenomResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a229f9b0940ab408, []int{7}
+}
+func (m *MsgUnblockDenomResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUnblockDenomResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUnblockDenomResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUnblockDenomResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUnblockDenomResponse.Merge(m, src)
+}
+func (m *MsgUnblockDenomResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUnblockDenomResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUnblockDenomResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUnblockDenomResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgUpdateParams)(nil), "bze.guardian.v1.MsgUpdateParams")
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "bze.guardian.v1.MsgUpdateParamsResponse")
 	proto.RegisterType((*MsgTightenRateLimit)(nil), "bze.guardian.v1.MsgTightenRateLimit")
 	proto.RegisterType((*MsgTightenRateLimitResponse)(nil), "bze.guardian.v1.MsgTightenRateLimitResponse")
+	proto.RegisterType((*MsgBlockDenom)(nil), "bze.guardian.v1.MsgBlockDenom")
+	proto.RegisterType((*MsgBlockDenomResponse)(nil), "bze.guardian.v1.MsgBlockDenomResponse")
+	proto.RegisterType((*MsgUnblockDenom)(nil), "bze.guardian.v1.MsgUnblockDenom")
+	proto.RegisterType((*MsgUnblockDenomResponse)(nil), "bze.guardian.v1.MsgUnblockDenomResponse")
 }
 
 func init() { proto.RegisterFile("bze/guardian/v1/tx.proto", fileDescriptor_a229f9b0940ab408) }
 
 var fileDescriptor_a229f9b0940ab408 = []byte{
-	// 537 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x53, 0x31, 0x6f, 0xd3, 0x40,
-	0x14, 0x8e, 0x5b, 0x12, 0x29, 0x07, 0xa2, 0xc5, 0x04, 0xc5, 0x0d, 0xd4, 0x8d, 0x22, 0x86, 0x28,
-	0x10, 0x9b, 0x04, 0x89, 0x21, 0x1b, 0x59, 0x50, 0x24, 0x22, 0x55, 0x2e, 0x5d, 0xba, 0x44, 0x67,
-	0xfb, 0x38, 0x9f, 0xe8, 0xdd, 0x59, 0xbe, 0x4b, 0x94, 0x66, 0x42, 0x8c, 0x4c, 0xfc, 0x0c, 0xc6,
-	0x0c, 0x1d, 0xf8, 0x09, 0x1d, 0xa3, 0x4e, 0x88, 0x21, 0x42, 0xc9, 0x90, 0xbf, 0x81, 0x6c, 0x5f,
-	0x14, 0x70, 0x2a, 0x15, 0xa9, 0x4b, 0x94, 0xf7, 0xbe, 0xef, 0xbd, 0xef, 0xbd, 0xef, 0x9e, 0x81,
-	0xe1, 0x4e, 0x90, 0x8d, 0x87, 0x30, 0xf2, 0x09, 0x64, 0xf6, 0xa8, 0x65, 0xcb, 0xb1, 0x15, 0x46,
-	0x5c, 0x72, 0x7d, 0xcf, 0x9d, 0x20, 0x6b, 0x8d, 0x58, 0xa3, 0x56, 0xe5, 0x11, 0xa4, 0x84, 0x71,
-	0x3b, 0xf9, 0x4d, 0x39, 0x95, 0xb2, 0xc7, 0x05, 0xe5, 0xc2, 0xa6, 0x02, 0xc7, 0xb5, 0x54, 0x60,
-	0x05, 0x1c, 0xa4, 0xc0, 0x20, 0x89, 0xec, 0x34, 0x50, 0x50, 0x09, 0x73, 0xcc, 0xd3, 0x7c, 0xfc,
-	0x4f, 0x65, 0x9f, 0x65, 0xe7, 0x08, 0x61, 0x04, 0xa9, 0xaa, 0xa9, 0xfd, 0xd0, 0xc0, 0x5e, 0x5f,
-	0xe0, 0xd3, 0xd0, 0x87, 0x12, 0x1d, 0x27, 0x88, 0xfe, 0x06, 0x14, 0xe1, 0x50, 0x06, 0x3c, 0x22,
-	0xf2, 0xc2, 0xd0, 0xaa, 0x5a, 0xbd, 0xd8, 0x35, 0xae, 0x2f, 0x9b, 0x25, 0x25, 0xf6, 0xd6, 0xf7,
-	0x23, 0x24, 0xc4, 0x89, 0x8c, 0x08, 0xc3, 0xce, 0x86, 0xaa, 0x77, 0x40, 0x21, 0xed, 0x6d, 0xec,
-	0x54, 0xb5, 0xfa, 0xfd, 0x76, 0xd9, 0xca, 0x2c, 0x6a, 0xa5, 0x02, 0xdd, 0xe2, 0xd5, 0xfc, 0x28,
-	0xf7, 0x7d, 0x35, 0x6d, 0x68, 0x8e, 0xaa, 0xe8, 0xb4, 0xbe, 0xac, 0xa6, 0x8d, 0x4d, 0xaf, 0xaf,
-	0xab, 0x69, 0xc3, 0x8c, 0x07, 0x1f, 0x6f, 0x46, 0xcf, 0x8c, 0x59, 0x3b, 0x00, 0xe5, 0x4c, 0xca,
-	0x41, 0x22, 0xe4, 0x4c, 0xa0, 0xda, 0x7c, 0x07, 0x3c, 0xee, 0x0b, 0xfc, 0x81, 0xe0, 0x40, 0x22,
-	0xe6, 0x40, 0x89, 0xde, 0x13, 0x4a, 0xa4, 0xfe, 0x0a, 0x14, 0x04, 0xc1, 0x0c, 0x45, 0xb7, 0xae,
-	0xa5, 0x78, 0x7a, 0x09, 0xe4, 0x7d, 0xc4, 0x38, 0x4d, 0x56, 0x2a, 0x3a, 0x69, 0xa0, 0x1f, 0x02,
-	0xe0, 0x05, 0x90, 0x31, 0x74, 0x3e, 0x20, 0xbe, 0xb1, 0x9b, 0x40, 0x45, 0x95, 0xe9, 0xf9, 0xfa,
-	0x29, 0xd8, 0xa7, 0x70, 0x3c, 0x08, 0x51, 0xe4, 0x21, 0x26, 0x07, 0x02, 0x31, 0xdf, 0xb8, 0x97,
-	0x08, 0xbe, 0x88, 0x37, 0xff, 0x35, 0x3f, 0x7a, 0x92, 0x8a, 0x0a, 0xff, 0x93, 0x45, 0xb8, 0x4d,
-	0xa1, 0x0c, 0xac, 0x1e, 0x93, 0xd7, 0x97, 0x4d, 0xa0, 0xa6, 0xe9, 0x31, 0xe9, 0x3c, 0xa4, 0x70,
-	0x7c, 0x9c, 0xf6, 0x38, 0x41, 0x6c, 0xab, 0x6d, 0x84, 0xbc, 0x91, 0x91, 0xbf, 0x53, 0x5b, 0x07,
-	0x79, 0xa3, 0x4e, 0x3b, 0xb6, 0x5e, 0xed, 0x1b, 0xfb, 0x5e, 0xdb, 0xf6, 0x3d, 0x6b, 0x64, 0xed,
-	0x10, 0x3c, 0xbd, 0x21, 0xbd, 0xf6, 0xbf, 0x3d, 0xd3, 0xc0, 0x6e, 0x5f, 0x60, 0xfd, 0x0c, 0x3c,
-	0xf8, 0xe7, 0xb2, 0xaa, 0x5b, 0x17, 0x91, 0x79, 0xc1, 0x4a, 0xfd, 0x36, 0xc6, 0x5a, 0x43, 0xff,
-	0x08, 0xf6, 0xb7, 0xde, 0xf7, 0xf9, 0x4d, 0xd5, 0x59, 0x56, 0xe5, 0xe5, 0xff, 0xb0, 0xd6, 0x3a,
-	0x95, 0xfc, 0xe7, 0xf8, 0x50, 0xbb, 0xef, 0xae, 0x16, 0xa6, 0x36, 0x5b, 0x98, 0xda, 0xef, 0x85,
-	0xa9, 0x7d, 0x5b, 0x9a, 0xb9, 0xd9, 0xd2, 0xcc, 0xfd, 0x5c, 0x9a, 0xb9, 0xb3, 0x26, 0x26, 0x32,
-	0x18, 0xba, 0x96, 0xc7, 0xa9, 0xed, 0x4e, 0x50, 0x13, 0x9e, 0x87, 0x01, 0x94, 0x08, 0x26, 0xd1,
-	0xdf, 0x46, 0xca, 0x8b, 0x10, 0x09, 0xb7, 0x90, 0x7c, 0x78, 0xaf, 0xff, 0x04, 0x00, 0x00, 0xff,
-	0xff, 0x88, 0x26, 0x44, 0xe1, 0x20, 0x04, 0x00, 0x00,
+	// 631 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0x3d, 0x4f, 0xdb, 0x5c,
+	0x14, 0x8e, 0xe1, 0x05, 0x29, 0xf7, 0x6d, 0x0b, 0x75, 0x41, 0x31, 0x2e, 0x18, 0x64, 0x55, 0x15,
+	0xa2, 0xc4, 0x2e, 0x54, 0xea, 0x90, 0xad, 0x51, 0xa5, 0x0a, 0xa9, 0x91, 0x90, 0x81, 0x85, 0x25,
+	0xba, 0xb6, 0x6f, 0xaf, 0x2d, 0xf0, 0xbd, 0x96, 0xef, 0x4d, 0x14, 0x32, 0x55, 0x48, 0x5d, 0x3a,
+	0x55, 0xfd, 0x15, 0x1d, 0x33, 0x30, 0xf4, 0x27, 0x30, 0x22, 0xa6, 0xaa, 0x43, 0x54, 0x25, 0x43,
+	0xfe, 0x46, 0xe5, 0x8f, 0xc4, 0xc6, 0x71, 0x0b, 0x6a, 0xbb, 0x44, 0x39, 0xe7, 0x39, 0x1f, 0xcf,
+	0x79, 0x7c, 0xce, 0x05, 0x92, 0xd9, 0x45, 0x3a, 0x6e, 0xc1, 0xc0, 0x76, 0x21, 0xd1, 0xdb, 0x3b,
+	0x3a, 0xef, 0x68, 0x7e, 0x40, 0x39, 0x15, 0x17, 0xcc, 0x2e, 0xd2, 0xc6, 0x88, 0xd6, 0xde, 0x91,
+	0x1f, 0x42, 0xcf, 0x25, 0x54, 0x8f, 0x7e, 0xe3, 0x18, 0xb9, 0x62, 0x51, 0xe6, 0x51, 0xa6, 0x7b,
+	0x0c, 0x87, 0xb9, 0x1e, 0xc3, 0x09, 0xb0, 0x12, 0x03, 0xcd, 0xc8, 0xd2, 0x63, 0x23, 0x81, 0x96,
+	0x30, 0xc5, 0x34, 0xf6, 0x87, 0xff, 0x12, 0xef, 0x6a, 0x9e, 0x87, 0x0f, 0x03, 0xe8, 0x25, 0x39,
+	0xea, 0x57, 0x01, 0x2c, 0x34, 0x18, 0x3e, 0xf2, 0x6d, 0xc8, 0xd1, 0x7e, 0x84, 0x88, 0x2f, 0x41,
+	0x19, 0xb6, 0xb8, 0x43, 0x03, 0x97, 0x9f, 0x49, 0xc2, 0x86, 0xb0, 0x59, 0xae, 0x4b, 0xd7, 0x17,
+	0xd5, 0xa5, 0xa4, 0xd9, 0x2b, 0xdb, 0x0e, 0x10, 0x63, 0x07, 0x3c, 0x70, 0x09, 0x36, 0xd2, 0x50,
+	0xb1, 0x06, 0xe6, 0xe3, 0xda, 0xd2, 0xcc, 0x86, 0xb0, 0xf9, 0xff, 0x6e, 0x45, 0xcb, 0x0d, 0xaa,
+	0xc5, 0x0d, 0xea, 0xe5, 0xcb, 0xfe, 0x7a, 0xe9, 0xcb, 0xa8, 0xb7, 0x25, 0x18, 0x49, 0x46, 0x6d,
+	0xe7, 0x7c, 0xd4, 0xdb, 0x4a, 0x6b, 0x7d, 0x1c, 0xf5, 0xb6, 0x94, 0x90, 0x78, 0x27, 0xa5, 0x9e,
+	0xa3, 0xa9, 0xae, 0x80, 0x4a, 0xce, 0x65, 0x20, 0xe6, 0x53, 0xc2, 0x90, 0xda, 0x9f, 0x01, 0x8f,
+	0x1a, 0x0c, 0x1f, 0xba, 0xd8, 0xe1, 0x88, 0x18, 0x90, 0xa3, 0xb7, 0xae, 0xe7, 0x72, 0xf1, 0x39,
+	0x98, 0x67, 0x2e, 0x26, 0x28, 0xb8, 0x75, 0xac, 0x24, 0x4e, 0x5c, 0x02, 0x73, 0x36, 0x22, 0xd4,
+	0x8b, 0x46, 0x2a, 0x1b, 0xb1, 0x21, 0xae, 0x01, 0x60, 0x39, 0x90, 0x10, 0x74, 0xda, 0x74, 0x6d,
+	0x69, 0x36, 0x82, 0xca, 0x89, 0x67, 0xcf, 0x16, 0x8f, 0xc0, 0xa2, 0x07, 0x3b, 0x4d, 0x1f, 0x05,
+	0x16, 0x22, 0xbc, 0xc9, 0x10, 0xb1, 0xa5, 0xff, 0xa2, 0x86, 0xcf, 0xc2, 0xc9, 0xbf, 0xf7, 0xd7,
+	0x97, 0xe3, 0xa6, 0xcc, 0x3e, 0xd1, 0x5c, 0xaa, 0x7b, 0x90, 0x3b, 0xda, 0x1e, 0xe1, 0xd7, 0x17,
+	0x55, 0x90, 0xb0, 0xd9, 0x23, 0xdc, 0x78, 0xe0, 0xc1, 0xce, 0x7e, 0x5c, 0xe3, 0x00, 0x91, 0xa9,
+	0xb2, 0x01, 0xb2, 0xda, 0xd2, 0xdc, 0x5f, 0x95, 0x35, 0x90, 0xd5, 0xae, 0xed, 0x86, 0xd2, 0x27,
+	0xf3, 0x86, 0xba, 0xab, 0xd3, 0xba, 0xe7, 0x85, 0x54, 0xd7, 0xc0, 0xe3, 0x02, 0xf7, 0x44, 0xff,
+	0x0f, 0x02, 0xb8, 0xdf, 0x60, 0xb8, 0x7e, 0x4a, 0xad, 0x93, 0xd7, 0x91, 0x62, 0xff, 0x48, 0xf9,
+	0xda, 0x76, 0x8e, 0xec, 0xea, 0x34, 0xd9, 0xb4, 0xab, 0x5a, 0x01, 0xcb, 0x37, 0x1c, 0x13, 0x82,
+	0x9f, 0x93, 0xb5, 0x27, 0x66, 0x4a, 0xf1, 0x4f, 0xd7, 0xbe, 0x98, 0xe8, 0x1d, 0x17, 0x3a, 0x43,
+	0x60, 0xbc, 0xd0, 0x19, 0xd7, 0x98, 0xef, 0xee, 0xf9, 0x2c, 0x98, 0x6d, 0x30, 0x2c, 0x1e, 0x83,
+	0x7b, 0x37, 0x4e, 0x75, 0x63, 0xea, 0xc4, 0x72, 0x27, 0x21, 0x6f, 0xde, 0x16, 0x31, 0xee, 0x21,
+	0xbe, 0x03, 0x8b, 0x53, 0x07, 0xf3, 0xa4, 0x28, 0x3b, 0x1f, 0x25, 0x6f, 0xdf, 0x25, 0x6a, 0xd2,
+	0xe7, 0x10, 0x80, 0xcc, 0x62, 0x28, 0x45, 0xb9, 0x29, 0x2e, 0x3f, 0xfd, 0x3d, 0x3e, 0xa9, 0x1a,
+	0x2a, 0x93, 0xfd, 0x9a, 0xc5, 0xca, 0x64, 0x22, 0x7e, 0xa1, 0x4c, 0x81, 0xfa, 0xf2, 0xdc, 0xfb,
+	0xf0, 0xad, 0xaa, 0xbf, 0xb9, 0x1c, 0x28, 0xc2, 0xd5, 0x40, 0x11, 0x7e, 0x0c, 0x14, 0xe1, 0xd3,
+	0x50, 0x29, 0x5d, 0x0d, 0x95, 0xd2, 0xb7, 0xa1, 0x52, 0x3a, 0xae, 0x62, 0x97, 0x3b, 0x2d, 0x53,
+	0xb3, 0xa8, 0xa7, 0x9b, 0x5d, 0x54, 0x85, 0xa7, 0xbe, 0x03, 0x39, 0x82, 0x91, 0x95, 0xfd, 0xe4,
+	0xfc, 0xcc, 0x47, 0xcc, 0x9c, 0x8f, 0xde, 0xde, 0x17, 0x3f, 0x03, 0x00, 0x00, 0xff, 0xff, 0x3a,
+	0x3c, 0x04, 0x4a, 0x23, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -297,6 +493,11 @@ type MsgClient interface {
 	// TightenRateLimit lowers the send and receive quotas of an existing IBC
 	// rate limit. It can never raise a quota, change the window or add a limit.
 	TightenRateLimit(ctx context.Context, in *MsgTightenRateLimit, opts ...grpc.CallOption) (*MsgTightenRateLimitResponse, error)
+	// BlockDenom puts a denom on the rate limit module's blacklist: every ICS-20
+	// transfer of the denom is refused, in both directions, on every channel.
+	BlockDenom(ctx context.Context, in *MsgBlockDenom, opts ...grpc.CallOption) (*MsgBlockDenomResponse, error)
+	// UnblockDenom takes a denom off the blacklist. Governance only.
+	UnblockDenom(ctx context.Context, in *MsgUnblockDenom, opts ...grpc.CallOption) (*MsgUnblockDenomResponse, error)
 }
 
 type msgClient struct {
@@ -325,6 +526,24 @@ func (c *msgClient) TightenRateLimit(ctx context.Context, in *MsgTightenRateLimi
 	return out, nil
 }
 
+func (c *msgClient) BlockDenom(ctx context.Context, in *MsgBlockDenom, opts ...grpc.CallOption) (*MsgBlockDenomResponse, error) {
+	out := new(MsgBlockDenomResponse)
+	err := c.cc.Invoke(ctx, "/bze.guardian.v1.Msg/BlockDenom", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UnblockDenom(ctx context.Context, in *MsgUnblockDenom, opts ...grpc.CallOption) (*MsgUnblockDenomResponse, error) {
+	out := new(MsgUnblockDenomResponse)
+	err := c.cc.Invoke(ctx, "/bze.guardian.v1.Msg/UnblockDenom", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// UpdateParams defines a (governance) operation for updating the module
@@ -333,6 +552,11 @@ type MsgServer interface {
 	// TightenRateLimit lowers the send and receive quotas of an existing IBC
 	// rate limit. It can never raise a quota, change the window or add a limit.
 	TightenRateLimit(context.Context, *MsgTightenRateLimit) (*MsgTightenRateLimitResponse, error)
+	// BlockDenom puts a denom on the rate limit module's blacklist: every ICS-20
+	// transfer of the denom is refused, in both directions, on every channel.
+	BlockDenom(context.Context, *MsgBlockDenom) (*MsgBlockDenomResponse, error)
+	// UnblockDenom takes a denom off the blacklist. Governance only.
+	UnblockDenom(context.Context, *MsgUnblockDenom) (*MsgUnblockDenomResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -344,6 +568,12 @@ func (*UnimplementedMsgServer) UpdateParams(ctx context.Context, req *MsgUpdateP
 }
 func (*UnimplementedMsgServer) TightenRateLimit(ctx context.Context, req *MsgTightenRateLimit) (*MsgTightenRateLimitResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TightenRateLimit not implemented")
+}
+func (*UnimplementedMsgServer) BlockDenom(ctx context.Context, req *MsgBlockDenom) (*MsgBlockDenomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BlockDenom not implemented")
+}
+func (*UnimplementedMsgServer) UnblockDenom(ctx context.Context, req *MsgUnblockDenom) (*MsgUnblockDenomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnblockDenom not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -386,6 +616,42 @@ func _Msg_TightenRateLimit_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_BlockDenom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgBlockDenom)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).BlockDenom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.guardian.v1.Msg/BlockDenom",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).BlockDenom(ctx, req.(*MsgBlockDenom))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UnblockDenom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUnblockDenom)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UnblockDenom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.guardian.v1.Msg/UnblockDenom",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UnblockDenom(ctx, req.(*MsgUnblockDenom))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "bze.guardian.v1.Msg",
@@ -398,6 +664,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TightenRateLimit",
 			Handler:    _Msg_TightenRateLimit_Handler,
+		},
+		{
+			MethodName: "BlockDenom",
+			Handler:    _Msg_BlockDenom_Handler,
+		},
+		{
+			MethodName: "UnblockDenom",
+			Handler:    _Msg_UnblockDenom_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -554,6 +828,126 @@ func (m *MsgTightenRateLimitResponse) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgBlockDenom) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBlockDenom) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBlockDenom) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Signer)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgBlockDenomResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBlockDenomResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBlockDenomResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUnblockDenom) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUnblockDenom) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUnblockDenom) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUnblockDenomResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUnblockDenomResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUnblockDenomResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -615,6 +1009,58 @@ func (m *MsgTightenRateLimit) Size() (n int) {
 }
 
 func (m *MsgTightenRateLimitResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgBlockDenom) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Signer)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgBlockDenomResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUnblockDenom) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUnblockDenomResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1035,6 +1481,334 @@ func (m *MsgTightenRateLimitResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgTightenRateLimitResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBlockDenom) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBlockDenom: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBlockDenom: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBlockDenomResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBlockDenomResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBlockDenomResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUnblockDenom) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUnblockDenom: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUnblockDenom: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUnblockDenomResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUnblockDenomResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUnblockDenomResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

@@ -10,6 +10,8 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgUpdateParams{},
 		&MsgTightenRateLimit{},
+		&MsgBlockDenom{},
+		&MsgUnblockDenom{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

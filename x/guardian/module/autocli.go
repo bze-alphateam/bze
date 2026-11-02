@@ -17,6 +17,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "params",
 					Short:     "Shows the parameters of the module",
 				},
+				{
+					RpcMethod: "BlockedDenoms",
+					Use:       "blocked-denoms",
+					Short:     "Lists the denoms whose IBC transfers are blocked",
+					Long:      "Lists the denoms on the rate limit module's blacklist. Every IBC transfer of these denoms is refused, in both directions, on every channel.",
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
@@ -40,6 +46,23 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						"A quota can never be raised, the window is unchanged and the flow already counted in the window is kept. 0 stops the direction.",
 					Example:        "bzed tx guardian tighten-rate-limit ubze channel-0 1 0 --from guardian",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}, {ProtoField: "channel_id"}, {ProtoField: "max_percent_send"}, {ProtoField: "max_percent_recv"}},
+				},
+				{
+					RpcMethod: "BlockDenom",
+					Use:       "block-denom [denom]",
+					Short:     "Stop every IBC transfer of a denom, on every channel",
+					Long: "Puts the denom on the rate limit blacklist: every ICS-20 transfer of it is refused in both directions on every channel, " +
+						"whether or not it has a rate limit. Signed by the guardian or the governance authority; only a governance proposal can lift it.",
+					Example:        "bzed tx guardian block-denom ibc/ABC... --from guardian",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+				},
+				{
+					RpcMethod:      "UnblockDenom",
+					Use:            "unblock-denom [denom]",
+					Short:          "Submit a governance proposal to lift the IBC block of a denom",
+					Example:        `bzed tx guardian unblock-denom ibc/ABC... --deposit 1000000ubze --title "..." --summary "..." --from mykey`,
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
+					GovProposal:    true, // authority gated: wrapped in a x/gov proposal, authority filled with the gov address
 				},
 			},
 		},

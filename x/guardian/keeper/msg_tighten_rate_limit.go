@@ -67,13 +67,34 @@ func (k msgServer) TightenRateLimit(goCtx context.Context, msg *types.MsgTighten
 
 // authorize accepts the guardian and the module authority.
 func (k Keeper) authorize(ctx sdk.Context, signer string) error {
-	if signer == k.authority {
+	if k.isAuthority(signer) {
 		return nil
 	}
 
-	if guardian := k.GetParams(ctx).Guardian; guardian != "" && signer == guardian {
+	if guardian := k.GetParams(ctx).Guardian; guardian != "" && sameAddress(signer, guardian) {
 		return nil
 	}
 
 	return errorsmod.Wrapf(types.ErrUnauthorized, "%s", signer)
+}
+
+// isAuthority reports whether the address is the module authority.
+func (k Keeper) isAuthority(address string) bool {
+	return sameAddress(address, k.authority)
+}
+
+// sameAddress compares the account bytes behind two bech32 strings, not the
+// strings. An address that does not decode is never equal to anything.
+func sameAddress(a, b string) bool {
+	left, err := sdk.AccAddressFromBech32(a)
+	if err != nil {
+		return false
+	}
+
+	right, err := sdk.AccAddressFromBech32(b)
+	if err != nil {
+		return false
+	}
+
+	return left.Equals(right)
 }

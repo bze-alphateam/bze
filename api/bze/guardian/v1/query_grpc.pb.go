@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Query_Params_FullMethodName = "/bze.guardian.v1.Query/Params"
+	Query_Params_FullMethodName        = "/bze.guardian.v1.Query/Params"
+	Query_BlockedDenoms_FullMethodName = "/bze.guardian.v1.Query/BlockedDenoms"
 )
 
 // QueryClient is the client API for Query service.
@@ -28,6 +29,8 @@ const (
 type QueryClient interface {
 	// Params queries the parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// BlockedDenoms lists the denoms on the rate limit module's blacklist.
+	BlockedDenoms(ctx context.Context, in *QueryBlockedDenomsRequest, opts ...grpc.CallOption) (*QueryBlockedDenomsResponse, error)
 }
 
 type queryClient struct {
@@ -47,12 +50,23 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) BlockedDenoms(ctx context.Context, in *QueryBlockedDenomsRequest, opts ...grpc.CallOption) (*QueryBlockedDenomsResponse, error) {
+	out := new(QueryBlockedDenomsResponse)
+	err := c.cc.Invoke(ctx, Query_BlockedDenoms_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
 type QueryServer interface {
 	// Params queries the parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// BlockedDenoms lists the denoms on the rate limit module's blacklist.
+	BlockedDenoms(context.Context, *QueryBlockedDenomsRequest) (*QueryBlockedDenomsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -62,6 +76,9 @@ type UnimplementedQueryServer struct {
 
 func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (UnimplementedQueryServer) BlockedDenoms(context.Context, *QueryBlockedDenomsRequest) (*QueryBlockedDenomsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BlockedDenoms not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -94,6 +111,24 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_BlockedDenoms_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryBlockedDenomsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).BlockedDenoms(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_BlockedDenoms_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).BlockedDenoms(ctx, req.(*QueryBlockedDenomsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -104,6 +139,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "BlockedDenoms",
+			Handler:    _Query_BlockedDenoms_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

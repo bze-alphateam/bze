@@ -21,6 +21,8 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	Msg_UpdateParams_FullMethodName     = "/bze.guardian.v1.Msg/UpdateParams"
 	Msg_TightenRateLimit_FullMethodName = "/bze.guardian.v1.Msg/TightenRateLimit"
+	Msg_BlockDenom_FullMethodName       = "/bze.guardian.v1.Msg/BlockDenom"
+	Msg_UnblockDenom_FullMethodName     = "/bze.guardian.v1.Msg/UnblockDenom"
 )
 
 // MsgClient is the client API for Msg service.
@@ -33,6 +35,11 @@ type MsgClient interface {
 	// TightenRateLimit lowers the send and receive quotas of an existing IBC
 	// rate limit. It can never raise a quota, change the window or add a limit.
 	TightenRateLimit(ctx context.Context, in *MsgTightenRateLimit, opts ...grpc.CallOption) (*MsgTightenRateLimitResponse, error)
+	// BlockDenom puts a denom on the rate limit module's blacklist: every ICS-20
+	// transfer of the denom is refused, in both directions, on every channel.
+	BlockDenom(ctx context.Context, in *MsgBlockDenom, opts ...grpc.CallOption) (*MsgBlockDenomResponse, error)
+	// UnblockDenom takes a denom off the blacklist. Governance only.
+	UnblockDenom(ctx context.Context, in *MsgUnblockDenom, opts ...grpc.CallOption) (*MsgUnblockDenomResponse, error)
 }
 
 type msgClient struct {
@@ -61,6 +68,24 @@ func (c *msgClient) TightenRateLimit(ctx context.Context, in *MsgTightenRateLimi
 	return out, nil
 }
 
+func (c *msgClient) BlockDenom(ctx context.Context, in *MsgBlockDenom, opts ...grpc.CallOption) (*MsgBlockDenomResponse, error) {
+	out := new(MsgBlockDenomResponse)
+	err := c.cc.Invoke(ctx, Msg_BlockDenom_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UnblockDenom(ctx context.Context, in *MsgUnblockDenom, opts ...grpc.CallOption) (*MsgUnblockDenomResponse, error) {
+	out := new(MsgUnblockDenomResponse)
+	err := c.cc.Invoke(ctx, Msg_UnblockDenom_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -71,6 +96,11 @@ type MsgServer interface {
 	// TightenRateLimit lowers the send and receive quotas of an existing IBC
 	// rate limit. It can never raise a quota, change the window or add a limit.
 	TightenRateLimit(context.Context, *MsgTightenRateLimit) (*MsgTightenRateLimitResponse, error)
+	// BlockDenom puts a denom on the rate limit module's blacklist: every ICS-20
+	// transfer of the denom is refused, in both directions, on every channel.
+	BlockDenom(context.Context, *MsgBlockDenom) (*MsgBlockDenomResponse, error)
+	// UnblockDenom takes a denom off the blacklist. Governance only.
+	UnblockDenom(context.Context, *MsgUnblockDenom) (*MsgUnblockDenomResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -83,6 +113,12 @@ func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*
 }
 func (UnimplementedMsgServer) TightenRateLimit(context.Context, *MsgTightenRateLimit) (*MsgTightenRateLimitResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TightenRateLimit not implemented")
+}
+func (UnimplementedMsgServer) BlockDenom(context.Context, *MsgBlockDenom) (*MsgBlockDenomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BlockDenom not implemented")
+}
+func (UnimplementedMsgServer) UnblockDenom(context.Context, *MsgUnblockDenom) (*MsgUnblockDenomResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnblockDenom not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -133,6 +169,42 @@ func _Msg_TightenRateLimit_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_BlockDenom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgBlockDenom)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).BlockDenom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_BlockDenom_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).BlockDenom(ctx, req.(*MsgBlockDenom))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UnblockDenom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUnblockDenom)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UnblockDenom(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UnblockDenom_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UnblockDenom(ctx, req.(*MsgUnblockDenom))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -147,6 +219,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TightenRateLimit",
 			Handler:    _Msg_TightenRateLimit_Handler,
+		},
+		{
+			MethodName: "BlockDenom",
+			Handler:    _Msg_BlockDenom_Handler,
+		},
+		{
+			MethodName: "UnblockDenom",
+			Handler:    _Msg_UnblockDenom_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
