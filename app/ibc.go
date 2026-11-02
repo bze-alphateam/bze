@@ -140,9 +140,11 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 	// answers packets listed in the BlockedIbcInbound param with an error
 	// acknowledgement (see x/txfeecollector/ibcmiddleware). Only received packets are
 	// affected - sends, acks and timeouts pass straight through.
-	// The rate-limiting middleware sits outside the filter: it counts a received packet
-	// as inflow, and when the filter (or the quota) answers with an error acknowledgement
-	// it undoes that inflow, so a refused packet never consumes quota.
+	// The rate-limiting middleware sits outside the filter: when the filter (or the
+	// quota) answers with an error acknowledgement, the middleware only drops its
+	// pending-packet marker. The inflow it counted is discarded because IBC core
+	// commits the receive state changes only for a nil or successful acknowledgement,
+	// so a refused packet never consumes quota.
 	transferStack := porttypes.IBCModule(ibctransfer.NewIBCModule(app.TransferKeeper))
 	transferStack = txfeecollectoribc.NewIBCMiddleware(transferStack, app.IBCKeeper.ChannelKeeper, app.TxfeecollectorKeeper)
 	transferStack = ratelimit.NewIBCMiddleware(app.RatelimitKeeper, transferStack)
