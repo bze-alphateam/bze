@@ -184,15 +184,14 @@ func TestRateLimit_AddForUnknownDenomIsRefused(t *testing.T) {
 }
 
 // The ratelimit module has no VersionMap entry before the upgrade: the handler
-// initialises it from its default genesis (hour epoch from the block time, no
-// rate limits, empty blacklist and whitelist).
+// initialises it from its default genesis (hour epoch from the block time, empty blacklist and whitelist).
 func TestRateLimit_UpgradeHandlerInitialisesModule(t *testing.T) {
 	bApp, ctx := newRateLimitApp(t)
 
 	vm := bApp.ModuleManager.GetVersionMap()
 	delete(vm, ratelimittypes.ModuleName)
 
-	newVM, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.GuardianKeeper)(
+	newVM, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.GuardianKeeper, bApp.RatelimitKeeper)(
 		ctx, upgradetypes.Plan{Name: v830.UpgradeName}, vm,
 	)
 	require.NoError(t, err)
@@ -202,9 +201,33 @@ func TestRateLimit_UpgradeHandlerInitialisesModule(t *testing.T) {
 	require.Equal(t, uint64(13), epoch.EpochNumber)
 	require.Equal(t, time.Date(2026, 11, 2, 13, 0, 0, 0, time.UTC), epoch.EpochStartTime)
 	require.Equal(t, time.Hour, epoch.Duration)
-	require.Empty(t, bApp.RatelimitKeeper.GetAllRateLimits(ctx))
+	// The fixture has channel-0 and ubze supply: that is the one initial limit that applies.
+	limits := bApp.RatelimitKeeper.GetAllRateLimits(ctx)
+	require.Len(t, limits, 1)
+	require.Equal(t, rlDenom, limits[0].Path.Denom)
+	require.Equal(t, rlChannel, limits[0].Path.ChannelOrClientId)
 	require.Empty(t, bApp.RatelimitKeeper.GetAllBlacklistedDenoms(ctx))
 	require.Empty(t, bApp.RatelimitKeeper.GetAllWhitelistedAddressPairs(ctx))
+}
+
+// On a fresh app no transfer channel or IBC supply exists, so every initial rate
+// limit is skipped and the upgrade still completes.
+func TestRateLimit_UpgradeHandlerSkipsInitialLimitsWithoutChannels(t *testing.T) {
+	appOptions := make(simtestutil.AppOptionsMap, 0)
+	appOptions[flags.FlagHome] = t.TempDir()
+	bApp, err := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, appOptions)
+	require.NoError(t, err)
+	ctx := bApp.NewUncachedContext(false, cmtproto.Header{Time: time.Date(2026, 11, 2, 13, 30, 0, 0, time.UTC)})
+	bApp.IBCKeeper.ClientKeeper.SetParams(ctx, clienttypes.DefaultParams())
+
+	vm := bApp.ModuleManager.GetVersionMap()
+	delete(vm, ratelimittypes.ModuleName)
+
+	_, err = v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.GuardianKeeper, bApp.RatelimitKeeper)(
+		ctx, upgradetypes.Plan{Name: v830.UpgradeName}, vm,
+	)
+	require.NoError(t, err)
+	require.Empty(t, bApp.RatelimitKeeper.GetAllRateLimits(ctx))
 }
 
 func newTransfer(sender sdk.AccAddress) *ibctransfertypes.MsgTransfer {
