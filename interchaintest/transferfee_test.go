@@ -100,11 +100,10 @@ func setupTransferFees(t *testing.T, ctx context.Context, bze *cosmos.CosmosChai
 	require.NoError(t, testutil.WaitForBlocks(ctx, 2, bze))
 
 	for name, addr := range map[string]*string{
-		"tradebin":              &s.tradebin,
-		"burner":                &s.burner,
-		"txfeecollector":        &s.txFees,
-		"txfeecollector_burner": &s.burnerFees,
-		"txfeecollector_cp":     &s.cpFees,
+		"tradebin":          &s.tradebin,
+		"burner":            &s.burner,
+		"txfeecollector":    &s.txFees,
+		"txfeecollector_cp": &s.cpFees,
 	} {
 		var err error
 		*addr, err = helpers.ModuleAddress(ctx, bze, name)
@@ -246,8 +245,7 @@ func (s *transferFeeSuite) protocolFee(t *testing.T) {
 }
 
 // 5. brn has rates but no community pool: the transfer fee on a protocol fee
-// paid in brn, and the gas surcharge, go straight to the burner module, and
-// nothing to txfeecollector_burner.
+// paid in brn, and the gas surcharge, go straight to the burner module.
 func (s *transferFeeSuite) noCommunityPool(t *testing.T) {
 	u1 := s.u1.FormattedAddress()
 	res := s.mustExecWith(t, s.u1, []helpers.TxOption{helpers.WithFees(coinStr(20_000, s.brn)), helpers.WithGas(xfTxGas)}, "tokenfactory", "create-denom", "paidbrn")
@@ -256,8 +254,6 @@ func (s *transferFeeSuite) noCommunityPool(t *testing.T) {
 	s.requireTransferFee(t, res, u1, s.brn, expectedFee(captured, xfRate), xfBurnerDest)
 	s.requireSurcharge(t, res, u1, s.brn, 20_000/3, xfBurnerDest) // floor(20000 × 0.5 / 1.5)
 	require.True(t, s.balance(t, s.cpFees, s.brn).IsZero())
-	require.True(t, s.transferred(t, res.Events, u1, s.burnerFees, s.brn).IsZero(), "no transfer fee to txfeecollector_burner")
-	require.True(t, s.transferred(t, res.Events, s.txFees, s.burnerFees, s.brn).IsZero(), "no surcharge to txfeecollector_burner")
 }
 
 // 6. The order fee of a buy order paid with the tx fee in tok pays the
@@ -439,13 +435,11 @@ func (s *transferFeeSuite) requireTransferFee(t *testing.T, res helpers.TxResult
 	require.Equal(t, sdkmath.NewInt(amount), s.transferred(t, res.Events, payer, to, denom), "transfer fee in tx %s", res.TxHash)
 }
 
-// requireNoTransferFee asserts the payer sent nothing to either destination,
-// nor to txfeecollector_burner.
+// requireNoTransferFee asserts the payer sent nothing to either destination.
 func (s *transferFeeSuite) requireNoTransferFee(t *testing.T, res helpers.TxResult, payer, denom string) {
 	t.Helper()
 	require.True(t, s.transferred(t, res.Events, payer, s.cpFees, denom).IsZero(), "no transfer fee to txfeecollector_cp")
 	require.True(t, s.transferred(t, res.Events, payer, s.burner, denom).IsZero(), "no transfer fee to the burner")
-	require.True(t, s.transferred(t, res.Events, payer, s.burnerFees, denom).IsZero(), "no transfer fee to txfeecollector_burner")
 }
 
 // expectedFee is ceil(captured × rate), the transfer fee on a protocol fee

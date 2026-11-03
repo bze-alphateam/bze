@@ -147,16 +147,15 @@ func setupFees(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain) *fees
 	require.NoError(t, testutil.WaitForBlocks(ctx, 2, bze))
 
 	for name, addr := range map[string]*string{
-		"tradebin":              &s.tradebin,
-		"burner":                &s.burner,
-		"burner_black_hole":     &s.blackHole,
-		"fee_collector":         &s.feeCollector,
-		"txfeecollector":        &s.txFees,
-		"txfeecollector_burner": &s.burnerFees,
-		"txfeecollector_cp":     &s.cpFees,
-		"distribution":          &s.distr,
-		"mint":                  &s.mintAcc,
-		"tokenfactory":          &s.tfAcc,
+		"tradebin":          &s.tradebin,
+		"burner":            &s.burner,
+		"burner_black_hole": &s.blackHole,
+		"fee_collector":     &s.feeCollector,
+		"txfeecollector":    &s.txFees,
+		"txfeecollector_cp": &s.cpFees,
+		"distribution":      &s.distr,
+		"mint":              &s.mintAcc,
+		"tokenfactory":      &s.tfAcc,
 	} {
 		var err error
 		*addr, err = helpers.ModuleAddress(ctx, bze, name)
@@ -307,15 +306,13 @@ func (s *feesSuite) communityPoolNonNative(t *testing.T) {
 // 4. A taker paying its tx fee in gld pays the 0.1 BZE taker fee in gld too.
 // The gld that buys the taker fee is about 101 units, whose swap fee rounds
 // to zero, so the chain captures it as-is and sends it straight to the
-// burner, which burns the factory token as it is: nothing goes through the
-// burner fee collector and nothing is swapped for it. The taker's tx fee
-// (1000 gld) is swapped by the txfeecollector in EndBlock.
+// burner, which burns the factory token as it is: nothing is swapped for it.
+// The taker's tx fee (1000 gld) is swapped by the txfeecollector in EndBlock.
 func (s *feesSuite) burnerLeg(t *testing.T) {
 	s.tokMarket = s.tok + "/" + chain.Denom
 	s.mustExec(t, s.admin, "tokenfactory", "mint", coinStr(feMint, s.tok))
 	s.mustExecWith(t, s.admin, []helpers.TxOption{helpers.WithGas(feTxGas)}, "tradebin", "create-market", s.tok, chain.Denom)
 	s.mustExec(t, s.admin, "tradebin", "create-order", "sell", strconv.Itoa(feMakerSell), feOrderPrice, s.tokMarket)
-	require.True(t, s.addrBalances(t, s.burnerFees, 0).IsZero(), "burner fee collector empty")
 	require.True(t, s.addrBalances(t, s.txFees, 0).IsZero(), "txfeecollector empty")
 
 	pool := s.pool(t, s.gldPool)
@@ -326,7 +323,6 @@ func (s *feesSuite) burnerLeg(t *testing.T) {
 	res := s.mustExecWith(t, s.taker, []helpers.TxOption{helpers.WithFees(coinStr(feGldTxFee, s.gld)), helpers.WithGas(feTxGas)},
 		"tradebin", "create-order", "buy", strconv.Itoa(feTakerBuy), feOrderPrice, s.tokMarket)
 	require.Equal(t, sdk.NewCoins(sdk.NewCoin(s.gld, req)), s.transfers(t, res.Events, s.tradebin, s.burner), "taker fee captured as-is in gld, straight to the burner")
-	require.True(t, s.transfers(t, res.Events, s.tradebin, s.burnerFees).IsZero(), "nothing to the burner fee collector")
 
 	cost := sdkmath.NewInt(feTakerBuy) // price 1
 	want := before.Add(sdk.NewInt64Coin(s.tok, feTakerBuy)).Sub(sdk.NewCoin(s.gld, req.AddRaw(feGldTxFee)), sdk.NewCoin(chain.Denom, cost))
@@ -337,8 +333,6 @@ func (s *feesSuite) burnerLeg(t *testing.T) {
 	txq := s.quote(sdkmath.NewInt(feGldTxFee), pool.reserveBase(), pool.reserveQuote())
 	s.requireSwap(t, block, s.txFees, s.gldPool, sdk.NewInt64Coin(s.gld, feGldTxFee), sdk.NewCoin(chain.Denom, txq.out))
 	require.Equal(t, sdk.NewCoins(sdk.NewCoin(chain.Denom, txq.out)), s.transfers(t, block, s.txFees, s.feeCollector), "swapped tx fee to the fee collector")
-	require.Empty(t, s.swapsBy(block, s.burnerFees), "no swap by the burner fee collector")
-	require.True(t, s.addrBalances(t, s.burnerFees, res.Height).IsZero(), "burner fee collector stays empty")
 	after := s.pool(t, s.gldPool)
 	require.Equal(t, pool.reserveBase().AddRaw(feGldTxFee), after.reserveBase(), "gld reserve")
 	require.Equal(t, pool.reserveQuote().Sub(txq.out), after.reserveQuote(), "ubze reserve")

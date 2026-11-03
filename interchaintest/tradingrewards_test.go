@@ -133,11 +133,10 @@ func setupTradingRewards(t *testing.T, ctx context.Context, bze *cosmos.CosmosCh
 	s.gov, err = helpers.GovAuthority(ctx, bze)
 	require.NoError(t, err)
 	for name, addr := range map[string]*string{
-		"tradebin":              &s.tradebin,
-		"burner":                &s.burner,
-		"txfeecollector_burner": &s.burnerFees,
-		"txfeecollector_cp":     &s.cpFees,
-		"rewards":               &s.rewards,
+		"tradebin":          &s.tradebin,
+		"burner":            &s.burner,
+		"txfeecollector_cp": &s.cpFees,
+		"rewards":           &s.rewards,
 	} {
 		*addr, err = helpers.ModuleAddress(ctx, bze, name)
 		require.NoError(t, err)

@@ -76,13 +76,12 @@ func setupUpdatePools(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain
 	s.gov, err = helpers.GovAuthority(ctx, bze)
 	require.NoError(t, err)
 	for name, addr := range map[string]*string{
-		"tradebin":              &s.tradebin,
-		"burner":                &s.burner,
-		"burner_black_hole":     &s.blackHole,
-		"txfeecollector":        &s.txFees,
-		"txfeecollector_burner": &s.burnerFees,
-		"txfeecollector_cp":     &s.cpFees,
-		"distribution":          &s.distribution,
+		"tradebin":          &s.tradebin,
+		"burner":            &s.burner,
+		"burner_black_hole": &s.blackHole,
+		"txfeecollector":    &s.txFees,
+		"txfeecollector_cp": &s.cpFees,
+		"distribution":      &s.distribution,
 	} {
 		*addr, err = helpers.ModuleAddress(ctx, bze, name)
 		require.NoError(t, err)

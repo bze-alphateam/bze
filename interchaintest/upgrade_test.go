@@ -790,6 +790,10 @@ var upV830Deleted = []string{"capability", "feeibc", "group", "nft"}
 // deletes one, so they keep their v8.2.0 values.
 var upV830Frozen = map[string]int64{"capability": 1, "feeibc": 2, "group": 2, "nft": 1}
 
+// upV830BurnerFees is the s.accounts name of txfeecollector_burner, removed in
+// v8.3.0: the handler sweeps whatever it holds to the burner module.
+const upV830BurnerFees = "txfeecollector_burner"
+
 const (
 	upV830In  = 300_000 // stake simd -> bze over the main channel, before and after
 	upV830Out = 100_000 // stake vouchers bze -> simd after the upgrade
@@ -807,6 +811,12 @@ func (s *upgradeSuite) v830Before(t *testing.T) any {
 	require.True(t, s.supported(t, "group", "groups"), "x/group answers before the upgrade")
 	require.True(t, s.supported(t, "nft", "classes"), "x/nft answers before the upgrade")
 	s.requireAccountBlocked(t, "nft")
+	// the removed burner fee collector joins the snapshots: its balance at
+	// the plan height moves to the burner (v830Moves)
+	s.requireAccountBlocked(t, upV830BurnerFees)
+	burnerFees, err := helpers.ModuleAddress(s.ctx, s.bze, upV830BurnerFees)
+	require.NoError(t, err)
+	s.accounts[upV830BurnerFees] = burnerFees
 	for _, store := range upV830Deleted {
 		res, err := helpers.StoreQuery(s.ctx, s.bze, store, 0)
 		require.NoError(t, err)
@@ -889,10 +899,19 @@ func (s *upgradeSuite) v830Queued(t *testing.T, q v830Queue) int {
 }
 
 // v830Moves: the migration sends the abc of every queued order from the
-// tradebin module back to admin.
+// tradebin module back to admin, and the handler sweeps every coin left at
+// txfeecollector_burner to the burner module. v8.2.0's EndBlock empties the
+// collector of what it can swap, so the sweep may move nothing here; the app
+// tests seed every denom kind.
 func (s *upgradeSuite) v830Moves(t *testing.T, before any) []upgradeMove {
 	queued := s.v830Queued(t, before.(v830State).queue)
-	return []upgradeMove{{from: "tradebin module", to: "admin", coin: sdk.NewInt64Coin(s.abc, int64(queued*upV830BacklogAmount))}}
+	moves := []upgradeMove{{from: "tradebin module", to: "admin", coin: sdk.NewInt64Coin(s.abc, int64(queued*upV830BacklogAmount))}}
+	left := s.before.Balances[upV830BurnerFees]
+	t.Logf("%s holds %s at the plan height - 1", upV830BurnerFees, left)
+	for _, c := range left {
+		moves = append(moves, upgradeMove{from: upV830BurnerFees, to: "burner module", coin: c})
+	}
+	return moves
 }
 
 // v830QueueRefunded checks the tradebin 4 -> 5 migration (BZE-247): every
@@ -1159,6 +1178,10 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	s.v830QueueRefunded(t, b.queue)
 	s.v830PriceLevelOwners(t)
 	s.v830OwnerPriceIndex(t, b.queue)
+
+	// the sweep left txfeecollector_burner empty (step 4 checked the moves),
+	// and nothing sends there any more
+	require.True(t, s.balances(t, 0, s.accounts[upV830BurnerFees]).IsZero(), "%s stays empty", upV830BurnerFees)
 }
 
 // upV830Guardian is the guardian the v8.3.0 handler sets (the project lead's
