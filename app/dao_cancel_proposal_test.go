@@ -10,7 +10,6 @@ import (
 
 	burnertypes "github.com/bze-alphateam/bze/x/burner/types"
 	daotypes "github.com/bze-alphateam/bze/x/dao/types"
-	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 )
 
 // Cancelling a proposal moves its escrowed deposit out of the dao module
@@ -67,7 +66,6 @@ func TestDaoCancelProposal_ReleasesDeposit(t *testing.T) {
 			require.True(t, bApp.BankKeeper.GetBalance(ctx, daoModule, "ubze").IsZero())
 			require.Equal(t, tc.proposer, bApp.BankKeeper.GetBalance(ctx, proposer, "ubze").Amount.Int64())
 			require.Equal(t, tc.burner, bApp.BankKeeper.GetBalance(ctx, burner, "ubze").Amount.Int64())
-			require.True(t, bApp.BankKeeper.GetAllBalances(ctx, authtypes.NewModuleAddress(txfeecollectortypes.BurnerFeeCollector)).IsZero())
 		})
 	}
 }

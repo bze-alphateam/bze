@@ -193,7 +193,6 @@ var (
 		{Account: tokenfactorymoduletypes.ModuleName, Permissions: []string{authtypes.Burner, authtypes.Minter}},
 		{Account: tradebinmoduletypes.ModuleName, Permissions: []string{authtypes.Burner, authtypes.Minter}},
 		{Account: txfeecollectormoduletypes.ModuleName},
-		{Account: txfeecollectormoduletypes.BurnerFeeCollector},
 		{Account: txfeecollectormoduletypes.CpFeeCollector},
 		{Account: daomoduletypes.ModuleName},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
@@ -212,7 +211,8 @@ var (
 		removedNftModuleName,
 		removedFeeIbcModuleName,
 		txfeecollectormoduletypes.ModuleName,
-		txfeecollectormoduletypes.BurnerFeeCollector,
+		// txfeecollector_burner, removed in v8.3.0, is not kept blocked like nft and
+		// feeibc: the upgrade sweeps it to the burner and nothing sends there any more
 		txfeecollectormoduletypes.CpFeeCollector,
 		daomoduletypes.ModuleName,
 		// We allow the following module accounts to receive funds:

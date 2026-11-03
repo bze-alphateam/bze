@@ -10,8 +10,7 @@ const (
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_txfeecollector"
 
-	BurnerFeeCollector = "txfeecollector_burner"
-	CpFeeCollector     = "txfeecollector_cp"
+	CpFeeCollector = "txfeecollector_cp"
 )
 
 var (

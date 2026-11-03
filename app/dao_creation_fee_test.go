@@ -19,7 +19,6 @@ import (
 	"github.com/bze-alphateam/bze/app"
 	burnertypes "github.com/bze-alphateam/bze/x/burner/types"
 	daotypes "github.com/bze-alphateam/bze/x/dao/types"
-	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 )
 
 // newDaoFeeApp builds the real app with the default x/dao params, so creating
@@ -67,7 +66,6 @@ func TestDaoCreationFee_CapturedThroughTradebin(t *testing.T) {
 
 	require.True(t, bApp.BankKeeper.GetAllBalances(ctx, creator).IsZero())
 	require.Equal(t, burnerBefore.Add(fee...), bApp.BankKeeper.GetAllBalances(ctx, burner))
-	require.True(t, bApp.BankKeeper.GetAllBalances(ctx, authtypes.NewModuleAddress(txfeecollectortypes.BurnerFeeCollector)).IsZero())
 	_, found := bApp.DaoKeeper.GetDao(ctx, 1)
 	require.True(t, found)
 }
