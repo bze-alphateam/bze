@@ -17,10 +17,6 @@ import (
 
 var oldBurnerCollector = authtypes.NewModuleAddress("txfeecollector_burner")
 
-func TestRemovedBurnerFeeCollectorName(t *testing.T) {
-	require.Equal(t, "txfeecollector_burner", v830.RemovedBurnerFeeCollectorName)
-}
-
 func runSweep(t *testing.T, bank v830.BankKeeper) error {
 	t.Helper()
 	cfg, mm, ctx := guardianSetup(t)

@@ -22,6 +22,8 @@ func TestUpgrade_SweepsBurnerFeeCollectorToBurner(t *testing.T) {
 	bApp, ctx := newRateLimitApp(t)
 	old := authtypes.NewModuleAddress("txfeecollector_burner")
 	burner := authtypes.NewModuleAddress(burnertypes.ModuleName)
+	// on mainnet the address holds the old ModuleAccount, which stays in auth state
+	bApp.AccountKeeper.SetAccount(ctx, bApp.AccountKeeper.NewAccount(ctx, authtypes.NewEmptyModuleAccount("txfeecollector_burner")))
 
 	left := sdk.NewCoins(
 		sdk.NewInt64Coin("ubze", 1_234),
