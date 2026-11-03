@@ -6,8 +6,8 @@ TxFeeCollector standardizes fees by converting module balances to the native den
 - **Fee conversion:** Swaps non-native fees held by:
   - the main fee collector,
   - the community pool fee collector,
-  into the native denom via the trade module when possible. Skipped coins (non-swappable) can be forwarded to burner.
-- **Token community pools:** Before converting `txfeecollector_cp`, the module forwards every coin there whose denom has a community pool address (set by the factory token's admin in its `DenomConfig`, `MsgSetDenomConfig` in x/tokenfactory) to that address, once per block. Each forwarded coin emits a `CommunityPoolFeePaidEvent` (denom, recipient, amount). See [Community pool fees](#community-pool-fees).
+  into the native denom via the trade module when possible. See [Collector rules](#collector-rules).
+- **Token community pools:** In its EndBlock pass over `txfeecollector_cp`, the module forwards every coin there whose denom has a community pool address (set by the factory token's admin in its `DenomConfig`, `MsgSetDenomConfig` in x/tokenfactory) to that address. Each forwarded coin emits a `CommunityPoolFeePaidEvent` (denom, recipient, amount). See [Community pool fees](#community-pool-fees).
 - **Token gas surcharges:** Charges the gas surcharge a factory token's admin sets in its `DenomConfig`, into `txfeecollector_cp` (or straight to the `burner` module when the token has no community pool). See [Transfer fee and gas surcharge](#transfer-fee-and-gas-surcharge).
 - **Minimum gas price:** Ante handler enforces a per-validator minimum gas price, with cross-denom support using spot prices from the trade module.
 - **Inbound IBC filter:** Refuses incoming ICS-20 transfers listed in the `blocked_ibc_inbound` param with an error acknowledgement, so the sending chain refunds the sender and no voucher is minted here. Exits are untouched — sends, acknowledgements, timeout refunds and the channel lifecycle all behave as if the filter were not there. Every refusal emits a `BlockedIbcInboundEvent` typed event (channel, denom, amount, sender, receiver) so relayers and indexers can see what was bounced.
@@ -20,10 +20,26 @@ The module registers two dedicated accounts:
 
 At EndBlock, collected fees are converted to native denom and distributed to their respective destinations.
 
+## Collector rules
+`txfeecollector` (gas fees paid in non-native coins, for the validators):
+- ubze → the validators (the SDK fee collector).
+- swappable (`CanSwapForNativeDenom`: a deep enough ubze pool, a swap fee that doesn't round to 0 when the pool charges one, and a swap output of at least 1 ubze) → swapped to ubze → the validators.
+- a deep pool but not swappable now (too small, or the pool fee rounds to 0) → kept in the collector until enough builds up to swap it. This is common for gas fees in tokens worth more than 1 ubze per unit, so they are never burned.
+- no pool or a shallow one → forwarded as-is to the SDK fee collector, so the validators receive the token.
+
+`txfeecollector_cp` (the community pool collector); every coin reaches a community pool:
+- a denom with its own community pool → a bank send to that address (see [Community pool fees](#community-pool-fees)).
+- ubze → the chain's community pool.
+- swappable → swapped to ubze → the chain's community pool.
+- anything else (too small, the pool fee rounds to 0, no pool or a shallow one) → kept in the collector until it becomes swappable. Nothing goes to the burner from this collector, except LP shares: they can never be swapped, so they go to the `burner` module, which locks them.
+
+### Bounded passes and the cursor
+Each collector has a cursor in the module store: the last denom its pass looked at. Each EndBlock pass reads at most `max_balance_iterations` balances of the collector straight from the bank store, starting strictly after the cursor, in denom order, and moves the cursor to the last one. Every coin read counts towards the bound, whether it is swapped, sent, kept or skipped. A page shorter than the bound reached the end of the balances: the cursor is cleared and the next pass starts from the first denom. A cursor whose denom has left the collector still works, the read starts after it; one past the last denom gives an empty page, and the same pass reads again from the first denom. So coins kept to wait can never starve the coins after them: every denom is looked at within `balances / max_balance_iterations + 1` blocks. A failed pass moves no cursor. The cursor is derived state: it has no genesis field and an absent cursor means "start from the first denom".
+
 ## Community pool fees
-`txfeecollector_cp` receives the `treasury` share of AMM pool fees (in the coin being sold), the tradebin create fees (already swapped to ubze), the DAO creation fee when it is set to go there, and order book fees too small to swap. Each EndBlock it is emptied in two steps, each committed on its own:
-1. **Routing:** every coin whose denom has a community pool in its tokenfactory `DenomConfig` is sent to that address. The routing is by denom only, whoever sent the coin. The step looks at no more than `max_balance_iterations` coins per block; coins past the bound wait for a later block. If any send fails, the error is logged and the whole step is discarded, sends already made in it included, so that block every coin stays for step 2. It never fails the EndBlock, and a failed conversion in step 2 does not roll it back.
-2. **Conversion:** what is left (ubze, IBC coins, factory tokens without a community pool, and every coin of a block whose routing failed) is swapped to ubze and funds the chain's community pool through x/distribution, exactly as before. Coins that cannot be swapped go to the burner. After a successful routing, a coin whose denom has a community pool is never converted: it is past the routing bound and waits for a later block's routing.
+`txfeecollector_cp` receives the `treasury` share of AMM pool fees (in the coin being sold), the tradebin create fees (already swapped to ubze), the DAO creation fee when it is set to go there, and order book fees too small to swap. Each EndBlock one pass over a page of its balances (see [Bounded passes and the cursor](#bounded-passes-and-the-cursor)) decides per coin, following the [collector rules](#collector-rules): every coin whose denom has a community pool in its tokenfactory `DenomConfig` is sent to that address (by denom only, whoever sent the coin), the rest funds the chain's community pool through x/distribution, swapped to ubze, or waits.
+
+The pass is committed as one unit. If any send to a denom's community pool fails, the error is logged and the whole pass is discarded, sends already made in it and the cursor move included. Such a send can only fail on a blocked recipient (refused by `MsgSetDenomConfig`) or a missing balance (impossible, the collector sends what it holds), so a failure is a bug: the coins stay in `txfeecollector_cp`, they are never rerouted, swapped or burned, and they wait for the fix in an upgrade. A failed swap discards the pass the same way. It never fails the EndBlock.
 
 So a factory token's community pool earns the treasury share of the pool fees paid in that token, that is on sells of the token; a buy pays its share in the other coin. Only factory tokens can have a community pool; ubze and IBC coins always fund the chain's community pool.
 
@@ -64,9 +80,11 @@ Adjust flags to your governance CLI; the message fields are just `validator_min_
 ## Version History
 
 ### v8.3.0
-- Coins in `txfeecollector_cp` whose factory denom has a community pool address (x/tokenfactory `DenomConfig`) are forwarded to it in EndBlock, before the conversion for the chain's community pool
+- Coins in `txfeecollector_cp` whose factory denom has a community pool address (x/tokenfactory `DenomConfig`) are forwarded to it in EndBlock, in the same pass that converts the rest for the chain's community pool
 - Added the `CommunityPoolFeePaidEvent` typed event (`proto/bze/txfeecollector/events.proto`), one per forwarded coin
-- No store change and no migration; ConsensusVersion stays 3
+- Collector passes are bounded and cursor-based (see [Bounded passes and the cursor](#bounded-passes-and-the-cursor)): each reads at most `max_balance_iterations` balances after its cursor straight from the bank store instead of loading the whole account, so coins kept to wait can't starve the ones after them
+- `txfeecollector_cp` is handled in one pass: a denom with a community pool is sent there, the rest funds the chain's community pool, swapped to ubze, or waits until it can be swapped. Only LP shares go to the burner. A failed send leaves every coin in place instead of falling back to swapping or burning coins owed to a token's community pool
+- Two new store keys hold the collector cursors (`collector_cursor/<module>`); no migration, no genesis field; ConsensusVersion stays 3
 - Factory tokens' gas surcharge (ante handler) is charged into `txfeecollector_cp`, or straight to the `burner` module for tokens without a community pool
 - Burn-bound fees (the token transfer fee and gas surcharge, the order book fees, the DAO creation fee, proposal costs and kept deposits) go straight to the `burner` module instead of `txfeecollector_burner`: factory tokens are burned as is instead of being sold for ubze first
 - Added the `GasSurchargePaidEvent` typed event

@@ -13,7 +13,8 @@ import (
 )
 
 // The app wires the tokenfactory keeper as txfeecollector's denom community pool provider: a factory token's fee coins
-// held for the community pool reach the address set in its DenomConfig, the other coins stay for the conversion.
+// held for the community pool reach the address set in its DenomConfig; a coin without one and without a pool can't be
+// swapped, so it stays in the collector.
 func TestTxfeecollector_RoutesFeesToDenomCommunityPool(t *testing.T) {
 	bApp, ctx, admin, treasury := newAdminDaoApp(t)
 	require.NoError(t, bApp.TxfeecollectorKeeper.SetParams(ctx, txfeecollectortypes.DefaultParams()))
@@ -33,7 +34,7 @@ func TestTxfeecollector_RoutesFeesToDenomCommunityPool(t *testing.T) {
 	require.NoError(t, bApp.BankKeeper.MintCoins(ctx, tokenfactorytypes.ModuleName, fees))
 	require.NoError(t, bApp.BankKeeper.SendCoinsFromModuleToModule(ctx, tokenfactorytypes.ModuleName, txfeecollectortypes.CpFeeCollector, fees))
 
-	require.NoError(t, bApp.TxfeecollectorKeeper.RouteCommunityPoolFeesToDenomCommunityPools(ctx))
+	require.NoError(t, bApp.TxfeecollectorKeeper.ConvertCommunityPoolFees(ctx))
 
 	require.Equal(t, math.NewInt(1_000), bApp.BankKeeper.GetBalance(ctx, treasury, withCp).Amount)
 	cpCollector := authtypes.NewModuleAddress(txfeecollectortypes.CpFeeCollector)

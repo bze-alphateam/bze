@@ -228,18 +228,19 @@ func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
 	return m.recorder
 }
 
-// GetAllBalances mocks base method.
-func (m *MockBankKeeper) GetAllBalances(ctx context.Context, addr types.AccAddress) types.Coins {
+// GetBalancesPage mocks base method.
+func (m *MockBankKeeper) GetBalancesPage(ctx context.Context, addr types.AccAddress, afterDenom string, limit int) (types.Coins, string) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllBalances", ctx, addr)
+	ret := m.ctrl.Call(m, "GetBalancesPage", ctx, addr, afterDenom, limit)
 	ret0, _ := ret[0].(types.Coins)
-	return ret0
+	ret1, _ := ret[1].(string)
+	return ret0, ret1
 }
 
-// GetAllBalances indicates an expected call of GetAllBalances.
-func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr any) *gomock.Call {
+// GetBalancesPage indicates an expected call of GetBalancesPage.
+func (mr *MockBankKeeperMockRecorder) GetBalancesPage(ctx, addr, afterDenom, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBalances", reflect.TypeOf((*MockBankKeeper)(nil).GetAllBalances), ctx, addr)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBalancesPage", reflect.TypeOf((*MockBankKeeper)(nil).GetBalancesPage), ctx, addr, afterDenom, limit)
 }
 
 // SendCoinsFromAccountToModule mocks base method.

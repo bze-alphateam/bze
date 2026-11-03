@@ -87,6 +87,7 @@ import (
 
 	_ "github.com/bze-alphateam/bze/client/docs/statik"
 	txfeecollectormodulekeeper "github.com/bze-alphateam/bze/x/txfeecollector/keeper"
+	txfeecollectormoduletypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
@@ -146,8 +147,10 @@ type App struct {
 	RewardsKeeper        *rewardsmodulekeeper.Keeper
 	TradebinKeeper       *tradebinmodulekeeper.Keeper
 	TxfeecollectorKeeper *txfeecollectormodulekeeper.Keeper
-	DaoKeeper            *daomodulekeeper.Keeper
-	GuardianKeeper       *guardianmodulekeeper.Keeper
+	// txfeecollectorBankKeeper is the bank keeper the txfeecollector module and its ante decorators use
+	txfeecollectorBankKeeper txfeecollectormoduletypes.BankKeeper
+	DaoKeeper                *daomodulekeeper.Keeper
+	GuardianKeeper           *guardianmodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
@@ -209,6 +212,8 @@ func New(
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
 			AppConfig(),
+			// the txfeecollector module's bank keeper: the SDK one plus a bounded balances page read
+			depinject.Provide(ProvideTxfeecollectorBankKeeper),
 			depinject.Supply(
 				appOpts, // supply app options
 				logger,  // supply logger
@@ -254,6 +259,7 @@ func New(
 		&app.RewardsKeeper,
 		&app.TradebinKeeper,
 		&app.TxfeecollectorKeeper,
+		&app.txfeecollectorBankKeeper,
 		&app.DaoKeeper,
 		&app.GuardianKeeper,
 		// this line is used by starport scaffolding # stargate/app/keeperDefinition
@@ -299,7 +305,7 @@ func New(
 
 	customAnte := AnteHandlerOptions{
 		TradeKeeper:       app.TradebinKeeper,
-		BankKeeper:        app.BankKeeper,
+		BankKeeper:        app.txfeecollectorBankKeeper,
 		TxCollectorKeeper: app.TxfeecollectorKeeper,
 	}
 

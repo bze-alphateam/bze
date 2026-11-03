@@ -27,9 +27,9 @@ const (
 // CommunityPoolFeePaidEvent: the treasury share of an abc sell plus anything
 // in abc waiting there. A buy pays its treasury share in ubze, which funds
 // the chain's community pool as before; the account gets nothing. Once the
-// config is back to the defaults, an abc sell's share takes today's path
-// again: the pool's ubze side is below min_native_liquidity_for_module_swap,
-// so the txfeecollector cannot swap it and sends it to the burner.
+// config is back to the defaults, an abc sell's share takes the chain's
+// path: the pool's ubze side is below min_native_liquidity_for_module_swap,
+// so the txfeecollector cannot swap it and keeps it, never burned.
 func (s *ammSuite) tokenCommunityPool(t *testing.T) {
 	cp := interchaintest.GetAndFundTestUsers(t, s.ctx, "amm-token-cp", sdkmath.NewInt(ammTokenCpFunds), s.bze)[0].FormattedAddress()
 	s.mustExec(t, s.lp, "tokenfactory", "set-denom-config", s.abc, cp, "0", "0")
@@ -63,7 +63,7 @@ func (s *ammSuite) tokenCommunityPool(t *testing.T) {
 	require.Equal(t, cpBefore.Add(forwarded), s.balance(t, cp, s.abc), "the token's community pool gets nothing on a buy")
 	require.True(t, s.balance(t, cp, chain.Denom).Equal(sdkmath.NewInt(ammTokenCpFunds)), "nor any ubze")
 
-	// 3. config back to the defaults: today's path again
+	// 3. config back to the defaults: the chain's path
 	s.mustExec(t, s.lp, "tokenfactory", "set-denom-config", s.abc, "", "0", "0")
 	pool = s.pool(t, s.cpPool)
 	require.True(t, pool.reserveQuote().LTE(s.minNativeLiquidity(t)), "test setup: the pool is too shallow for a module swap")
@@ -72,7 +72,8 @@ func (s *ammSuite) tokenCommunityPool(t *testing.T) {
 	require.Equal(t, q.treasury, s.transferred(t, res.Events, s.tradebin, s.cpFees, s.abc), "treasury share to txfeecollector_cp")
 	block = s.blockEvents(t, res.Height)
 	require.True(t, s.transferred(t, block, s.cpFees, cp, s.abc).IsZero(), "nothing forwarded once the address is cleared")
-	require.Equal(t, q.treasury, s.transferred(t, block, s.cpFees, s.burner, s.abc), "unswappable abc share to the burner")
+	require.True(t, s.transferred(t, block, s.cpFees, s.burner, s.abc).IsZero(), "the unswappable abc share is not burned")
+	require.Equal(t, q.treasury, s.balance(t, s.cpFees, s.abc), "it waits in txfeecollector_cp")
 	s.requireCommunityPoolPaid(t, res.Height, nil)
 	require.Equal(t, cpBefore.Add(forwarded), s.balance(t, cp, s.abc), "community pool balance unchanged")
 }
