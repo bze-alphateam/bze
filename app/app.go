@@ -212,8 +212,8 @@ func New(
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
 			AppConfig(),
-			// the txfeecollector module's bank keeper: the SDK one plus a bounded balances page read
-			depinject.Provide(ProvideTxfeecollectorBankKeeper),
+			// the txfeecollector and burner modules' bank keepers: the SDK one plus a bounded balances page read
+			depinject.Provide(ProvideTxfeecollectorBankKeeper, ProvideBurnerBankKeeper),
 			depinject.Supply(
 				appOpts, // supply app options
 				logger,  // supply logger

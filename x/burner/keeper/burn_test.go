@@ -68,7 +68,7 @@ func (suite *IntegrationTestSuite) TestProcessQueue_EmptyBalance() {
 	}
 
 	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
-	suite.bank.EXPECT().GetAllBalances(gomock.Any(), addr).Return(sdk.NewCoins()).Times(1)
+	suite.bank.EXPECT().GetBalancesPage(gomock.Any(), addr, "", types.MaxDenomsBurnPerBlock+1).Return(sdk.NewCoins(), "").Times(1)
 
 	err := suite.k.ProcessPeriodicBurnQueue(suite.ctx)
 	suite.Require().NoError(err)
@@ -93,7 +93,7 @@ func (suite *IntegrationTestSuite) TestProcessQueue_SingleBatch() {
 	)
 
 	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
-	suite.bank.EXPECT().GetAllBalances(gomock.Any(), addr).Return(coins).Times(1)
+	suite.bank.EXPECT().GetBalancesPage(gomock.Any(), addr, "", types.MaxDenomsBurnPerBlock+1).Return(coins, "").Times(1)
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ubze").Return(true).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "utoken").Return(true).Times(1)
 	suite.bank.EXPECT().BurnCoins(gomock.Any(), types.ModuleName, coins).Return(nil).Times(1)
@@ -106,39 +106,79 @@ func (suite *IntegrationTestSuite) TestProcessQueue_SingleBatch() {
 	suite.Require().False(found)
 }
 
-func (suite *IntegrationTestSuite) TestProcessQueue_MultipleBatches() {
-	suite.k.EnqueuePeriodicBurn(suite.ctx)
-
-	addr := sdk.AccAddress("moduleacc")
+// burnerModuleAcc makes the mocked account keeper return the burner module account at addr once.
+func (suite *IntegrationTestSuite) burnerModuleAcc(addr sdk.AccAddress) {
 	moduleAcc := authtypes.ModuleAccount{
 		BaseAccount: &authtypes.BaseAccount{Address: addr.String()},
 		Name:        types.ModuleName,
 	}
-
-	// Create more coins than MaxDenomsBurnPerBlock
-	var allCoins sdk.Coins
-	for i := 0; i < types.MaxDenomsBurnPerBlock+5; i++ {
-		allCoins = allCoins.Add(sdk.NewInt64Coin(fmt.Sprintf("denom%03d", i), 100))
-	}
-
-	firstBatch := allCoins[:types.MaxDenomsBurnPerBlock]
-
 	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
-	suite.bank.EXPECT().GetAllBalances(gomock.Any(), addr).Return(allCoins).Times(1)
+}
 
-	// Mock for each denom in first batch
-	for _, c := range firstBatch {
+// nativeCoins returns count native coins with distinct denoms, sorted, starting at index from.
+func nativeCoins(from, count int) sdk.Coins {
+	var coins sdk.Coins
+	for i := from; i < from+count; i++ {
+		coins = coins.Add(sdk.NewInt64Coin(fmt.Sprintf("denom%03d", i), 100))
+	}
+	return coins
+}
+
+// expectNativeBurn expects every coin to be checked as native and the whole batch burned at once.
+func (suite *IntegrationTestSuite) expectNativeBurn(batch sdk.Coins) {
+	for _, c := range batch {
 		suite.trade.EXPECT().IsNativeDenom(gomock.Any(), c.Denom).Return(true).Times(1)
 	}
-	suite.bank.EXPECT().BurnCoins(gomock.Any(), types.ModuleName, firstBatch).Return(nil).Times(1)
+	suite.bank.EXPECT().BurnCoins(gomock.Any(), types.ModuleName, batch).Return(nil).Times(1)
+}
 
-	err := suite.k.ProcessPeriodicBurnQueue(suite.ctx)
-	suite.Require().NoError(err)
+// A full page (one balance more than a batch) burns only the first MaxDenomsBurnPerBlock coins and keeps the queue
+// pending; the next block reads from the start again and finishes the account.
+func (suite *IntegrationTestSuite) TestProcessQueue_MultipleBatches() {
+	suite.k.EnqueuePeriodicBurn(suite.ctx)
+	addr := sdk.AccAddress("moduleacc")
 
-	// Queue should still be pending since we had more coins than one batch
+	// the bounded read can never return more than its limit
+	page := nativeCoins(0, types.MaxDenomsBurnPerBlock+1)
+	suite.burnerModuleAcc(addr)
+	suite.bank.EXPECT().GetBalancesPage(gomock.Any(), addr, "", types.MaxDenomsBurnPerBlock+1).
+		Return(page, page[len(page)-1].Denom).Times(1)
+	suite.expectNativeBurn(page[:types.MaxDenomsBurnPerBlock])
+
+	suite.Require().NoError(suite.k.ProcessPeriodicBurnQueue(suite.ctx))
+
 	queue, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
-	suite.Require().True(found)
+	suite.Require().True(found, "more balances follow the batch")
 	suite.Require().True(queue.Pending)
+
+	// next block: the burned coins left the account, the rest fits in one batch
+	rest := nativeCoins(types.MaxDenomsBurnPerBlock, 5)
+	suite.burnerModuleAcc(addr)
+	suite.bank.EXPECT().GetBalancesPage(gomock.Any(), addr, "", types.MaxDenomsBurnPerBlock+1).
+		Return(rest, rest[len(rest)-1].Denom).Times(1)
+	suite.expectNativeBurn(rest)
+
+	suite.Require().NoError(suite.k.ProcessPeriodicBurnQueue(suite.ctx))
+
+	_, found = suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().False(found, "the last batch removes the queue")
+}
+
+// Exactly MaxDenomsBurnPerBlock balances are one last batch: all of them are burned and the queue is removed.
+func (suite *IntegrationTestSuite) TestProcessQueue_ExactlyOneBatch() {
+	suite.k.EnqueuePeriodicBurn(suite.ctx)
+	addr := sdk.AccAddress("moduleacc")
+
+	page := nativeCoins(0, types.MaxDenomsBurnPerBlock)
+	suite.burnerModuleAcc(addr)
+	suite.bank.EXPECT().GetBalancesPage(gomock.Any(), addr, "", types.MaxDenomsBurnPerBlock+1).
+		Return(page, page[len(page)-1].Denom).Times(1)
+	suite.expectNativeBurn(page)
+
+	suite.Require().NoError(suite.k.ProcessPeriodicBurnQueue(suite.ctx))
+
+	_, found := suite.k.GetPeriodicBurnQueue(suite.ctx)
+	suite.Require().False(found)
 }
 
 func (suite *IntegrationTestSuite) TestProcessQueue_BurnErrorRetries() {
@@ -153,7 +193,7 @@ func (suite *IntegrationTestSuite) TestProcessQueue_BurnErrorRetries() {
 	coins := sdk.NewCoins(sdk.NewInt64Coin("ubze", 1000))
 
 	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
-	suite.bank.EXPECT().GetAllBalances(gomock.Any(), addr).Return(coins).Times(1)
+	suite.bank.EXPECT().GetBalancesPage(gomock.Any(), addr, "", types.MaxDenomsBurnPerBlock+1).Return(coins, "").Times(1)
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ubze").Return(true).Times(1)
 	suite.bank.EXPECT().BurnCoins(gomock.Any(), types.ModuleName, coins).Return(errors.New("burn failed")).Times(1)
 
@@ -184,7 +224,7 @@ func (suite *IntegrationTestSuite) TestProcessQueue_MixedCoinTypes() {
 	refundedCoins := sdk.NewCoins()
 
 	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
-	suite.bank.EXPECT().GetAllBalances(gomock.Any(), addr).Return(coins).Times(1)
+	suite.bank.EXPECT().GetBalancesPage(gomock.Any(), addr, "", types.MaxDenomsBurnPerBlock+1).Return(coins, "").Times(1)
 
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ubze").Return(true).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ulp_token1").Return(false).Times(1)

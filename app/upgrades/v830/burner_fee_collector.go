@@ -10,7 +10,7 @@ import (
 )
 
 // removedBurnerFeeCollectorName is the module account name of txfeecollector_burner, removed in v8.3.0: burn-bound
-// fees go straight to the burner module. Its ModuleAccount stays in auth state, unused and no longer blocked.
+// fees go straight to the burner module. Its ModuleAccount stays in auth state, unused; the address stays blocked.
 const removedBurnerFeeCollectorName = "txfeecollector_burner"
 
 // BankKeeper is the part of the bank keeper the handler uses.

@@ -30,17 +30,19 @@ func (k Keeper) ProcessPeriodicBurnQueue(ctx sdk.Context) error {
 	logger := k.Logger().With("method", "ProcessPeriodicBurnQueue")
 
 	moduleAcc := k.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
-	allCoins := k.bankKeeper.GetAllBalances(ctx, moduleAcc.GetAddress())
-	if allCoins.IsZero() {
+	// Read one balance more than a batch, from the start of the account: burned, locked and pooled coins leave it, so
+	// the next block starts over without a cursor, and the extra balance only tells whether another batch follows.
+	page, _ := k.bankKeeper.GetBalancesPage(ctx, moduleAcc.GetAddress(), "", types.MaxDenomsBurnPerBlock+1)
+	if page.IsZero() {
 		k.RemovePeriodicBurnQueue(ctx)
 		return nil
 	}
 
 	// Take at most MaxDenomsBurnPerBlock coins to process
-	batch := allCoins
+	batch := page
 	isLastBatch := true
-	if len(allCoins) > types.MaxDenomsBurnPerBlock {
-		batch = allCoins[:types.MaxDenomsBurnPerBlock]
+	if len(page) > types.MaxDenomsBurnPerBlock {
+		batch = page[:types.MaxDenomsBurnPerBlock]
 		isLastBatch = false
 	}
 
