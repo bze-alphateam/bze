@@ -31,7 +31,10 @@ type BankKeeper interface {
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
-	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	// GetBalancesPage returns at most limit balances of addr, the ones whose denom sorts strictly after afterDenom
+	// (all of them from the first when afterDenom is empty), in the bank store's denom order, and the denom of the last
+	// one ("" when none). It reads the store with a bounded iterator, never the whole account.
+	GetBalancesPage(ctx context.Context, addr sdk.AccAddress, afterDenom string, limit int) (sdk.Coins, string)
 	// Methods imported from bank should be defined here
 }
 

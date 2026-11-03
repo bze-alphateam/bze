@@ -1,6 +1,7 @@
 package txfeecollector_test
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"testing"
@@ -21,7 +22,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/txfeecollector/keeper"
 	txfeecollector "github.com/bze-alphateam/bze/x/txfeecollector/module"
 	"github.com/bze-alphateam/bze/x/txfeecollector/testutil"
@@ -44,6 +44,13 @@ var (
 // newEndBlockModule builds the module on a real store with mocked keepers; the fee collector is empty.
 func newEndBlockModule(t *testing.T) (txfeecollector.AppModule, keeper.Keeper, sdk.Context, endBlockMocks) {
 	t.Helper()
+
+	return newEndBlockModuleWithLogger(t, log.NewNopLogger())
+}
+
+// newEndBlockModuleWithLogger is newEndBlockModule with the keeper logging to logger.
+func newEndBlockModuleWithLogger(t *testing.T, logger log.Logger) (txfeecollector.AppModule, keeper.Keeper, sdk.Context, endBlockMocks) {
+	t.Helper()
 	ctrl := gomock.NewController(t)
 	bank := testutil.NewMockBankKeeper(ctrl)
 	account := testutil.NewMockAccountKeeper(ctrl)
@@ -61,7 +68,7 @@ func newEndBlockModule(t *testing.T) (txfeecollector.AppModule, keeper.Keeper, s
 	k := keeper.NewKeeper(
 		cdc,
 		runtime.NewKVStoreService(storeKey),
-		log.NewNopLogger(),
+		logger,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		bank,
 		account,
@@ -75,7 +82,7 @@ func newEndBlockModule(t *testing.T) (txfeecollector.AppModule, keeper.Keeper, s
 
 	account.EXPECT().GetModuleAddress(types.ModuleName).Return(feeAddr).AnyTimes()
 	account.EXPECT().GetModuleAddress(types.CpFeeCollector).Return(cpAddr).AnyTimes()
-	bank.EXPECT().GetAllBalances(gomock.Any(), feeAddr).Return(sdk.NewCoins()).Times(1)
+	bank.EXPECT().GetBalancesPage(gomock.Any(), feeAddr, "", gomock.Any()).Return(nil, "").AnyTimes()
 
 	return am, k, ctx, endBlockMocks{bank: bank, account: account, trade: trade, distr: distr, cp: cp}
 }
@@ -91,54 +98,32 @@ func paidEventCount(ctx sdk.Context) int {
 	return n
 }
 
-// TestEndBlock_FailedConversionKeepsRoutedFees proves the routing to denom community pools commits apart from the
-// community pool conversion: EndBlock discards a conversion that fails, and with it everything it wrote, so a routing
-// step inside it would be rolled back every block a coin of another denom fails to swap.
-func TestEndBlock_FailedConversionKeepsRoutedFees(t *testing.T) {
-	am, _, ctx, m := newEndBlockModule(t)
-	bank, cp, trade := m.bank, m.cp, m.trade
-	token := sdk.NewInt64Coin("factory/bze1creator/token", 100)
-	ibc := sdk.NewInt64Coin("ibc/ABC", 50)
-	tokenCp := sdk.AccAddress("token_cp____________")
-
-	// routing sees both coins and forwards the token
-	gomock.InOrder(
-		bank.EXPECT().GetAllBalances(gomock.Any(), cpAddr).Return(sdk.NewCoins(token, ibc)).Times(1),
-		bank.EXPECT().GetAllBalances(gomock.Any(), cpAddr).Return(sdk.NewCoins(ibc)).Times(1),
-	)
-	cp.EXPECT().GetDenomCommunityPool(gomock.Any(), token.Denom).Return(tokenCp, true).Times(1)
-	cp.EXPECT().GetDenomCommunityPool(gomock.Any(), ibc.Denom).Return(nil, false).Times(2) // routing, then the conversion after a successful routing
-	bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.CpFeeCollector, tokenCp, sdk.NewCoins(token)).Return(nil).Times(1)
-
-	// the conversion of the IBC coin fails
-	trade.EXPECT().IsNativeDenom(gomock.Any(), ibc.Denom).Return(false).Times(1)
-	trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibc).Return(true).Times(1)
-	trade.EXPECT().ModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(ibc)).
-		Return(sdk.Coin{}, errors.New("swap failed")).Times(1)
-
-	require.NoError(t, am.EndBlock(ctx))
-	require.Equal(t, 1, paidEventCount(ctx), "the routed coin's event reaches the block although the conversion failed")
-}
-
-// TestEndBlock_FailedSendDiscardsRouting proves a failed send discards the whole routing step, the sends made before
-// it included, and leaves every coin to the conversion in the same EndBlock.
-func TestEndBlock_FailedSendDiscardsRouting(t *testing.T) {
-	am, k, ctx, m := newEndBlockModule(t)
-	bank, cp, trade := m.bank, m.cp, m.trade
+// TestEndBlock_FailedSendLeavesCoinsInPlace proves a failed send to a denom's community pool discards the whole CP
+// pass and logs the error: no event, no write and no cursor move reach the block, so every coin stays in
+// txfeecollector_cp, nothing swapped or burned. The next block's pass reads the same page again.
+func TestEndBlock_FailedSendLeavesCoinsInPlace(t *testing.T) {
+	var logs bytes.Buffer
+	am, k, ctx, m := newEndBlockModuleWithLogger(t, log.NewLogger(&logs, log.ColorOption(false)))
+	bank, cp, trade, distr := m.bank, m.cp, m.trade, m.distr
 	tokenA := sdk.NewInt64Coin("factory/bze1creator/tokena", 100)
 	tokenB := sdk.NewInt64Coin("factory/bze1creator/tokenb", 200)
+	ibc := sdk.NewInt64Coin("ibc/AAA", 300)
 	cpA := sdk.AccAddress("token_a_cp__________")
 	cpB := sdk.AccAddress("token_b_cp__________")
-	paramsBefore := k.GetParams(ctx)
+	params := k.GetParams(ctx)
+	params.MaxBalanceIterations = 3 // a full page: a kept pass would move the cursor to ibc/AAA
+	require.NoError(t, k.SetParams(ctx, params))
+	page := sdk.NewCoins(tokenA, tokenB, ibc)
 
-	// routing and then the conversion both see the two coins
-	bank.EXPECT().GetAllBalances(gomock.Any(), cpAddr).Return(sdk.NewCoins(tokenA, tokenB)).Times(2)
-	cp.EXPECT().GetDenomCommunityPool(gomock.Any(), tokenA.Denom).Return(cpA, true).Times(1)
-	cp.EXPECT().GetDenomCommunityPool(gomock.Any(), tokenB.Denom).Return(cpB, true).Times(1)
+	// block 1: token A is sent, token B's send fails, the IBC coin is never looked at
+	bank.EXPECT().GetBalancesPage(gomock.Any(), cpAddr, "", 3).Return(page, ibc.Denom).Times(2)
+	trade.EXPECT().IsNativeDenom(gomock.Any(), gomock.Any()).Return(false).Times(2 + 3)
+	cp.EXPECT().GetDenomCommunityPool(gomock.Any(), tokenA.Denom).Return(cpA, true).Times(2)
+	cp.EXPECT().GetDenomCommunityPool(gomock.Any(), tokenB.Denom).Return(cpB, true).Times(2)
 	bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.CpFeeCollector, cpA, sdk.NewCoins(tokenA)).
 		DoAndReturn(func(c context.Context, _ string, _ sdk.AccAddress, _ sdk.Coins) error {
 			// stands in for the bank writes of the successful send: they must not reach the block state
-			changed := paramsBefore
+			changed := params
 			changed.MaxBalanceIterations = 7
 			require.NoError(t, k.SetParams(sdk.UnwrapSDKContext(c), changed))
 
@@ -147,14 +132,45 @@ func TestEndBlock_FailedSendDiscardsRouting(t *testing.T) {
 	bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.CpFeeCollector, cpB, sdk.NewCoins(tokenB)).
 		Return(errors.New("send failed")).Times(1)
 
-	// the conversion takes both: neither can be swapped, so both go to the burner as before
+	// no swap, burner send or funding expectation for block 1: a call would fail the test
+	require.NoError(t, am.EndBlock(ctx))
+	require.Zero(t, paidEventCount(ctx), "no event of the discarded pass reaches the block")
+	require.Equal(t, params, k.GetParams(ctx), "nothing the discarded pass wrote reaches the block state")
+	require.Contains(t, logs.String(), "ConvertCommunityPoolFees", "the failure is logged")
+	require.Contains(t, logs.String(), "send failed")
+
+	// block 2: the cursor didn't move, so the same page is read from the first denom; the sends work now
+	bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.CpFeeCollector, cpA, sdk.NewCoins(tokenA)).Return(nil).Times(1)
+	bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.CpFeeCollector, cpB, sdk.NewCoins(tokenB)).Return(nil).Times(1)
+	cp.EXPECT().GetDenomCommunityPool(gomock.Any(), ibc.Denom).Return(nil, false).Times(1)
+	trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibc).Return(true).Times(1)
+	trade.EXPECT().ModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(ibc)).
+		Return(sdk.NewInt64Coin("ubze", 30), nil).Times(1)
+	distr.EXPECT().FundCommunityPool(gomock.Any(), sdk.NewCoins(sdk.NewInt64Coin("ubze", 30)), cpAddr).Return(nil).Times(1)
+
+	ctx = ctx.WithEventManager(sdk.NewEventManager())
+	require.NoError(t, am.EndBlock(ctx))
+	require.Equal(t, 2, paidEventCount(ctx))
+}
+
+// TestEndBlock_FailedSwapDiscardsCpPass proves the CP pass is one unit: a failed swap discards the community pool
+// sends made earlier in the same pass too, and the coins wait for the next block.
+func TestEndBlock_FailedSwapDiscardsCpPass(t *testing.T) {
+	am, _, ctx, m := newEndBlockModule(t)
+	bank, cp, trade := m.bank, m.cp, m.trade
+	token := sdk.NewInt64Coin("factory/bze1creator/token", 100)
+	ibc := sdk.NewInt64Coin("ibc/ABC", 50)
+	tokenCp := sdk.AccAddress("token_cp____________")
+
+	bank.EXPECT().GetBalancesPage(gomock.Any(), cpAddr, "", gomock.Any()).Return(sdk.NewCoins(token, ibc), ibc.Denom).Times(1)
 	trade.EXPECT().IsNativeDenom(gomock.Any(), gomock.Any()).Return(false).Times(2)
-	trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), gomock.Any()).Return(false).Times(2)
-	trade.EXPECT().HasDeepLiquidityWithNativeDenom(gomock.Any(), gomock.Any()).Return(false).Times(2)
-	bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.CpFeeCollector, burnermoduletypes.ModuleName, sdk.NewCoins(tokenA, tokenB)).
-		Return(nil).Times(1)
+	cp.EXPECT().GetDenomCommunityPool(gomock.Any(), token.Denom).Return(tokenCp, true).Times(1)
+	cp.EXPECT().GetDenomCommunityPool(gomock.Any(), ibc.Denom).Return(nil, false).Times(1)
+	bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.CpFeeCollector, tokenCp, sdk.NewCoins(token)).Return(nil).Times(1)
+	trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibc).Return(true).Times(1)
+	trade.EXPECT().ModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(ibc)).
+		Return(sdk.Coin{}, errors.New("swap failed")).Times(1)
 
 	require.NoError(t, am.EndBlock(ctx))
-	require.Zero(t, paidEventCount(ctx), "no event of the discarded routing reaches the block")
-	require.Equal(t, paramsBefore, k.GetParams(ctx), "nothing the discarded routing wrote reaches the block state")
+	require.Zero(t, paidEventCount(ctx), "the discarded send's event doesn't reach the block")
 }

@@ -178,25 +178,13 @@ func (am AppModule) EndBlock(gotCtx context.Context) error {
 		am.keeper.Logger().Error("error on txfeecollector module EndBlock when calling ConvertCollectedFeesToNativeDenom", "err", err)
 	}
 
-	// forward the coins whose denom has its own community pool before converting the rest for the chain's one
-	routingErr := bzeutils.ApplyFuncIfNoError(ctx, func(c sdk.Context) error {
-		return am.keeper.RouteCommunityPoolFeesToDenomCommunityPools(c)
-	})
-	if routingErr != nil {
-		am.keeper.Logger().Error("error on txfeecollector module EndBlock when calling RouteCommunityPoolFeesToDenomCommunityPools", "err", routingErr)
-	}
-
-	// after a successful routing, the coins of denoms with a community pool still in the collector are past the
-	// routing bound and wait for the next block; after a failed one, every coin takes the old path
+	// the community pool collector's pass: denom community pools, the chain's community pool, LP shares to the burner;
+	// a failed send to a denom's community pool discards the whole pass and the coins stay in the collector
 	err = bzeutils.ApplyFuncIfNoError(ctx, func(c sdk.Context) error {
-		if routingErr == nil {
-			return am.keeper.ConvertCommunityPoolFeesLeftAfterRouting(c)
-		}
-
-		return am.keeper.ConvertCommunityPoolFeesToNativeDenom(c)
+		return am.keeper.ConvertCommunityPoolFees(c)
 	})
 	if err != nil {
-		am.keeper.Logger().Error("error on txfeecollector module EndBlock when calling ConvertCommunityPoolFeesToNativeDenom", "err", err)
+		am.keeper.Logger().Error("error on txfeecollector module EndBlock when calling ConvertCommunityPoolFees", "err", err)
 	}
 
 	return nil
