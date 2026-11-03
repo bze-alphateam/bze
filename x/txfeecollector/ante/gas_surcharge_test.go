@@ -9,6 +9,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	keepertest "github.com/bze-alphateam/bze/testutil/keeper"
+	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/txfeecollector/ante"
 	"github.com/bze-alphateam/bze/x/txfeecollector/testutil"
 	"github.com/bze-alphateam/bze/x/txfeecollector/types"
@@ -131,7 +132,7 @@ func (suite *AnteTestSuite) TestGasSurcharge_NoCommunityPoolGoesToBurner() {
 		Times(1)
 	provider.EXPECT().GetDenomCommunityPool(gomock.Any(), denomToken).Return(nil, false).Times(1)
 	suite.bankMock.EXPECT().
-		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, types.BurnerFeeCollector, sdk.NewCoins(sdk.NewInt64Coin(denomToken, 2_000))).
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, burnermoduletypes.ModuleName, sdk.NewCoins(sdk.NewInt64Coin(denomToken, 2_000))).
 		Return(nil).
 		Times(1)
 

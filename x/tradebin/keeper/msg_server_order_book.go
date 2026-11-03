@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	txfeecollectormoduletypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
@@ -343,7 +344,7 @@ func (k msgServer) captureTradingFees(ctx sdk.Context, sender sdk.AccAddress, is
 
 	destModule := txfeecollectormoduletypes.CpFeeCollector
 	if destination == v2types.FeeDestinationBurnerModule {
-		destModule = txfeecollectormoduletypes.BurnerFeeCollector
+		destModule = burnermoduletypes.ModuleName
 	}
 
 	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, destModule, captured)

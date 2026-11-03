@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
+	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 
 	"github.com/bze-alphateam/bze/x/dao/types"
 )
@@ -44,8 +44,8 @@ func (k Keeper) releaseDeposit(ctx sdk.Context, proposal types.Proposal, refund 
 		destination = types.DaoAddress(proposal.DaoId)
 		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, destination, coins)
 	default:
-		destination = authtypes.NewModuleAddress(txfeecollectortypes.BurnerFeeCollector)
-		err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, txfeecollectortypes.BurnerFeeCollector, coins)
+		destination = authtypes.NewModuleAddress(burnermoduletypes.ModuleName)
+		err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, burnermoduletypes.ModuleName, coins)
 	}
 
 	if err != nil {

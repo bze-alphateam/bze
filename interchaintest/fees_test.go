@@ -306,10 +306,10 @@ func (s *feesSuite) communityPoolNonNative(t *testing.T) {
 
 // 4. A taker paying its tx fee in gld pays the 0.1 BZE taker fee in gld too.
 // The gld that buys the taker fee is about 101 units, whose swap fee rounds
-// to zero, so the chain captures it as-is for the burner fee collector, which
-// keeps it until enough accumulated to swap (500 units): the fifth taker's
-// EndBlock swaps all of it and the burner gets the ubze. Each taker's tx fee
-// (1000 gld) is swapped by the txfeecollector first, in the same EndBlock.
+// to zero, so the chain captures it as-is and sends it straight to the
+// burner, which burns the factory token as it is: nothing goes through the
+// burner fee collector and nothing is swapped for it. The taker's tx fee
+// (1000 gld) is swapped by the txfeecollector in EndBlock.
 func (s *feesSuite) burnerLeg(t *testing.T) {
 	s.tokMarket = s.tok + "/" + chain.Denom
 	s.mustExec(t, s.admin, "tokenfactory", "mint", coinStr(feMint, s.tok))
@@ -318,47 +318,30 @@ func (s *feesSuite) burnerLeg(t *testing.T) {
 	require.True(t, s.addrBalances(t, s.burnerFees, 0).IsZero(), "burner fee collector empty")
 	require.True(t, s.addrBalances(t, s.txFees, 0).IsZero(), "txfeecollector empty")
 
-	takerFee := s.params.MarketTakerFee
-	acc := sdkmath.ZeroInt()
-	for round := 1; ; round++ {
-		require.LessOrEqual(t, round, 10, "the burner fee collector never reached a swappable amount")
-		pool := s.pool(t, s.gldPool)
-		req := s.inputFor(takerFee.Amount, pool.reserveBase(), pool.reserveQuote())
-		require.True(t, s.swapFee(req).IsZero(), "the taker fee in gld (%s) is too small to swap", req)
-		before := s.addrBalances(t, s.taker.FormattedAddress(), 0)
+	pool := s.pool(t, s.gldPool)
+	req := s.inputFor(s.params.MarketTakerFee.Amount, pool.reserveBase(), pool.reserveQuote())
+	require.True(t, s.swapFee(req).IsZero(), "the taker fee in gld (%s) is too small to swap", req)
+	before := s.addrBalances(t, s.taker.FormattedAddress(), 0)
 
-		res := s.mustExecWith(t, s.taker, []helpers.TxOption{helpers.WithFees(coinStr(feGldTxFee, s.gld)), helpers.WithGas(feTxGas)},
-			"tradebin", "create-order", "buy", strconv.Itoa(feTakerBuy), feOrderPrice, s.tokMarket)
-		require.Equal(t, sdk.NewCoins(sdk.NewCoin(s.gld, req)), s.transfers(t, res.Events, s.tradebin, s.burnerFees), "round %d: taker fee captured as-is in gld", round)
-		acc = acc.Add(req)
+	res := s.mustExecWith(t, s.taker, []helpers.TxOption{helpers.WithFees(coinStr(feGldTxFee, s.gld)), helpers.WithGas(feTxGas)},
+		"tradebin", "create-order", "buy", strconv.Itoa(feTakerBuy), feOrderPrice, s.tokMarket)
+	require.Equal(t, sdk.NewCoins(sdk.NewCoin(s.gld, req)), s.transfers(t, res.Events, s.tradebin, s.burner), "taker fee captured as-is in gld, straight to the burner")
+	require.True(t, s.transfers(t, res.Events, s.tradebin, s.burnerFees).IsZero(), "nothing to the burner fee collector")
 
-		cost := sdkmath.NewInt(feTakerBuy) // price 1
-		want := before.Add(sdk.NewInt64Coin(s.tok, feTakerBuy)).Sub(sdk.NewCoin(s.gld, req.AddRaw(feGldTxFee)), sdk.NewCoin(chain.Denom, cost))
-		require.Equal(t, want, s.addrBalances(t, s.taker.FormattedAddress(), 0), "round %d: taker pays no ubze fee", round)
+	cost := sdkmath.NewInt(feTakerBuy) // price 1
+	want := before.Add(sdk.NewInt64Coin(s.tok, feTakerBuy)).Sub(sdk.NewCoin(s.gld, req.AddRaw(feGldTxFee)), sdk.NewCoin(chain.Denom, cost))
+	require.Equal(t, want, s.addrBalances(t, s.taker.FormattedAddress(), 0), "taker pays no ubze fee")
 
-		// EndBlock: the txfeecollector swaps the tx fee first
-		block := s.blockEvents(t, res.Height)
-		txq := s.quote(sdkmath.NewInt(feGldTxFee), pool.reserveBase(), pool.reserveQuote())
-		s.requireSwap(t, block, s.txFees, s.gldPool, sdk.NewInt64Coin(s.gld, feGldTxFee), sdk.NewCoin(chain.Denom, txq.out))
-		require.Equal(t, sdk.NewCoins(sdk.NewCoin(chain.Denom, txq.out)), s.transfers(t, block, s.txFees, s.feeCollector), "round %d: swapped tx fee to the fee collector", round)
-		gldR, bzeR := pool.reserveBase().AddRaw(feGldTxFee), pool.reserveQuote().Sub(txq.out)
-
-		if s.swapFee(acc).IsZero() {
-			require.Equal(t, sdk.NewCoins(sdk.NewCoin(s.gld, acc)), s.addrBalances(t, s.burnerFees, res.Height), "round %d: the gld waits in the burner fee collector", round)
-			require.Empty(t, s.swapsBy(block, s.burnerFees), "round %d: no swap by the burner fee collector", round)
-			continue
-		}
-
-		bq := s.quote(acc, gldR, bzeR)
-		s.requireSwap(t, block, s.burnerFees, s.gldPool, sdk.NewCoin(s.gld, acc), sdk.NewCoin(chain.Denom, bq.out))
-		require.Equal(t, sdk.NewCoins(sdk.NewCoin(chain.Denom, bq.out)), s.transfers(t, block, s.burnerFees, s.burner), "swapped taker fees to the burner")
-		require.True(t, s.addrBalances(t, s.burnerFees, res.Height).IsZero(), "burner fee collector emptied")
-		after := s.pool(t, s.gldPool)
-		require.Equal(t, gldR.Add(acc), after.reserveBase(), "gld reserve")
-		require.Equal(t, bzeR.Sub(bq.out), after.reserveQuote(), "ubze reserve")
-		t.Logf("swapped %s gld of taker fees after %d rounds", acc, round)
-		return
-	}
+	// EndBlock: the txfeecollector swaps the tx fee; the gld taker fee is never swapped
+	block := s.blockEvents(t, res.Height)
+	txq := s.quote(sdkmath.NewInt(feGldTxFee), pool.reserveBase(), pool.reserveQuote())
+	s.requireSwap(t, block, s.txFees, s.gldPool, sdk.NewInt64Coin(s.gld, feGldTxFee), sdk.NewCoin(chain.Denom, txq.out))
+	require.Equal(t, sdk.NewCoins(sdk.NewCoin(chain.Denom, txq.out)), s.transfers(t, block, s.txFees, s.feeCollector), "swapped tx fee to the fee collector")
+	require.Empty(t, s.swapsBy(block, s.burnerFees), "no swap by the burner fee collector")
+	require.True(t, s.addrBalances(t, s.burnerFees, res.Height).IsZero(), "burner fee collector stays empty")
+	after := s.pool(t, s.gldPool)
+	require.Equal(t, pool.reserveBase().AddRaw(feGldTxFee), after.reserveBase(), "gld reserve")
+	require.Equal(t, pool.reserveQuote().Sub(txq.out), after.reserveQuote(), "ubze reserve")
 }
 
 // 5. A gld tx fee too small to swap stays in the txfeecollector (gld has

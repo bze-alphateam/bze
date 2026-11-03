@@ -209,7 +209,7 @@ func (suite *IntegrationTestSuite) TestSubmitProposal_NonMemberNeedsOpenSubmissi
 	suite.Require().ErrorIs(err, types.ErrNotProposer)
 	suite.requireNothingStored()
 
-	suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), attackerAddr, burnerFeeCollector, ubze(7)).Return(nil)
+	suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), attackerAddr, burnerModule, ubze(7)).Return(nil)
 	id, err := suite.submit(attackerAddr, 2, false)
 	suite.Require().NoError(err)
 
@@ -337,7 +337,7 @@ func (suite *IntegrationTestSuite) TestSubmitProposal_CostToBurner() {
 		c.CostDestination = types.FundsDestination_BURN
 	})
 
-	suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), memberA, burnerFeeCollector, ubze(25)).Return(nil)
+	suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), memberA, burnerModule, ubze(25)).Return(nil)
 	_, err := suite.submit(memberA, 1, false)
 	suite.Require().NoError(err)
 }
@@ -376,7 +376,7 @@ func (suite *IntegrationTestSuite) TestSubmitProposal_DepositEscrowed() {
 	})
 
 	gomock.InOrder(
-		suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), memberA, burnerFeeCollector, ubze(25)).Return(nil),
+		suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), memberA, burnerModule, ubze(25)).Return(nil),
 		suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), memberA, types.ModuleName, ubze(40)).Return(nil),
 	)
 	id, err := suite.submit(memberA, 1, false)
@@ -393,13 +393,13 @@ func (suite *IntegrationTestSuite) TestSubmitProposal_InsufficientFundsStoresNot
 		c.ProposalDeposit = coinPtr(40)
 	})
 
-	suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), memberA, burnerFeeCollector, ubze(25)).Return(sdkerrors.ErrInsufficientFunds)
+	suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), memberA, burnerModule, ubze(25)).Return(sdkerrors.ErrInsufficientFunds)
 	_, err := suite.submit(memberA, 1, false)
 	suite.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
 	suite.Require().ErrorContains(err, "proposal cost")
 	suite.requireNothingStored()
 
-	suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), memberA, burnerFeeCollector, ubze(25)).Return(nil)
+	suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), memberA, burnerModule, ubze(25)).Return(nil)
 	suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), memberA, types.ModuleName, ubze(40)).Return(sdkerrors.ErrInsufficientFunds)
 	_, err = suite.submit(memberA, 1, false)
 	suite.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
@@ -632,7 +632,7 @@ func (suite *IntegrationTestSuite) requireCancelled(proposalId uint64) {
 // NEVER keep it and send it to the pinned kept_deposit_destination, the burner
 // or the DAO's treasury.
 func (suite *IntegrationTestSuite) TestCancelProposal_DepositMatrix() {
-	burner := authtypes.NewModuleAddress(burnerFeeCollector)
+	burner := authtypes.NewModuleAddress(burnerModule)
 	for _, tc := range []struct {
 		policy      types.DepositRefundPolicy
 		destination types.FundsDestination
@@ -658,7 +658,7 @@ func (suite *IntegrationTestSuite) TestCancelProposal_DepositMatrix() {
 			suite.Require().NoError(err)
 
 			if tc.to.Equals(burner) {
-				suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, burnerFeeCollector, ubze(40)).Return(nil)
+				suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, burnerModule, ubze(40)).Return(nil)
 			} else {
 				suite.bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, tc.to, ubze(40)).Return(nil)
 			}

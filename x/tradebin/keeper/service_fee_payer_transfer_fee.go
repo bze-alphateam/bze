@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	txfeecollectormoduletypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 )
 
@@ -30,10 +31,10 @@ func (k Keeper) preferredDenomTransferFee(ctx sdk.Context, paid sdk.Coin) sdk.Co
 }
 
 // payDenomTransferFee sends the transfer fee from the payer to txfeecollector_cp when the token has a community pool
-// (forwarded there at EndBlock) and to txfeecollector_burner when it has none.
+// (forwarded there at EndBlock) and to the burner module when it has none.
 func (k Keeper) payDenomTransferFee(ctx sdk.Context, payer sdk.AccAddress, transferFee sdk.Coins) error {
 	for _, c := range transferFee {
-		destination := txfeecollectormoduletypes.BurnerFeeCollector
+		destination := burnermoduletypes.ModuleName
 		if _, ok := k.denomFeeRates.GetDenomCommunityPool(ctx, c.Denom); ok {
 			destination = txfeecollectormoduletypes.CpFeeCollector
 		}

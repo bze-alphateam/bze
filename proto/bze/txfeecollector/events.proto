@@ -42,6 +42,6 @@ message GasSurchargePaidEvent {
   // amount is the surcharge amount.
   string amount = 3;
   // destination is the module account the surcharge went to: txfeecollector_cp when the token has a community pool
-  // (forwarded there at EndBlock), txfeecollector_burner when it has none (burned).
+  // (forwarded there at EndBlock), burner when it has none (the burner module burns it).
   string destination = 4;
 }

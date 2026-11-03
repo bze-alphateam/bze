@@ -1026,16 +1026,17 @@ func (s *orderBookSuite) makerFee() sdkmath.Int { return s.params.MarketMakerFee
 func (s *orderBookSuite) takerFee() sdkmath.Int { return s.params.MarketTakerFee.Amount }
 
 // requireFees asserts the tx moved the trading fee and the order funds from
-// the user to the tradebin module, the fee on to the burner fee collector,
-// and the burner fee collector's EndBlock the fee to the burner.
+// the user to the tradebin module and the fee straight on to the burner,
+// with nothing through the burner fee collector.
 func (s *orderBookSuite) requireFees(t *testing.T, res helpers.TxResult, u ibc.Wallet, fee sdkmath.Int, locked sdk.Coin) {
 	t.Helper()
 	user := u.FormattedAddress()
 	toModule := sdk.NewCoins(sdk.NewCoin(chain.Denom, fee)).Add(locked)
 	require.Equal(t, toModule.AmountOf(chain.Denom), s.transferred(t, res.Events, user, s.tradebin, chain.Denom), "ubze to the tradebin module")
 	require.Equal(t, toModule.AmountOf(s.ob), s.transferred(t, res.Events, user, s.tradebin, s.ob), "ob to the tradebin module")
-	require.Equal(t, fee, s.transferred(t, res.Events, s.tradebin, s.burnerFees, chain.Denom), "trading fee to the burner fee collector")
-	require.Equal(t, fee, s.transferred(t, s.blockEvents(t, res.Height), s.burnerFees, s.burner, chain.Denom), "trading fee to the burner in EndBlock")
+	require.Equal(t, fee, s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "trading fee to the burner")
+	require.True(t, s.transferred(t, res.Events, s.tradebin, s.burnerFees, chain.Denom).IsZero(), "nothing to the burner fee collector")
+	require.True(t, s.transferred(t, s.blockEvents(t, res.Height), s.burnerFees, s.burner, chain.Denom).IsZero(), "nothing from the burner fee collector in EndBlock")
 }
 
 // place sends a create-order and returns the tx and the order id the engine

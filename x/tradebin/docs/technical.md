@@ -16,7 +16,7 @@
 - `MsgFillOrders` charges `fill_orders_extra_gas` once on entry and `fill_orders_extra_gas × index` per entry, skips entries below the minimum amount, and for each other entry builds the inverse-side order, escrows that entry's coins (settlement pays out of the module account), stores its dust and calls `FillOrder`. The taker fee is captured once, after every entry ran; a message whose entries were all skipped is refused with `ErrInvalidOrdersToFill`.
 - `MsgCancelOrder` loads the order (`ErrOrderNotFound`), checks its owner (`ErrUnauthorizedOrder`) and calls `CancelOrder`.
 - Messages of one block execute in tx order, so per market the book sees them in the same order the old queue (`{market}/{id}` keys) did. The module has no EndBlock.
-- Maker/taker fees use params: maker fees are routed via `maker_fee_destination`, taker fees via `taker_fee_destination` (community-pool collector or burner fee collector). Create-market fees always go to the community-pool collector after optional swap to native.
+- Maker/taker fees use params: maker fees are routed via `maker_fee_destination`, taker fees via `taker_fee_destination` (community-pool collector or the burner module). Create-market fees always go to the community-pool collector after optional swap to native.
 - Halted markets (keeper helpers in `service_halt.go`): `MsgCreateOrder` and `MsgFillOrders` return `ErrDenomHalted` right after loading the market, before fee capture or escrow. The engine itself has no halt gate: it only runs for orders the message servers accepted.
 
 ## Liquidity Pools

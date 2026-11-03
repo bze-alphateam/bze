@@ -288,7 +288,7 @@ func (s *daoSuite) createDaoFeeInFactoryToken(t *testing.T) {
 	out := transferred(tradebin, s.burner, chain.Denom)
 	require.True(t, in.IsPositive(), "the fee's input must go to tradebin for the swap")
 	require.True(t, transferred(addr, s.burner, chain.Denom).IsZero(), "no ubze leaves the creator")
-	require.True(t, out.GTE(fee.Amount), "the burner collector must get at least the creation fee: %s for %s", out, fee)
+	require.True(t, out.GTE(fee.Amount), "the burner must get at least the creation fee: %s for %s", out, fee)
 	maxOut := fee.Amount.Add(fee.Amount.MulRaw(daoFeeTolerancePct).QuoRaw(100))
 	require.True(t, out.LTE(maxOut), "the swapped creation fee %s must stay within %d%% of the fee %s", out, daoFeeTolerancePct, fee)
 	t.Logf("creation fee %s bought with %s %s; the swap gave %s ubze", fee, in, denom, out)

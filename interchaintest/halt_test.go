@@ -363,7 +363,7 @@ func (s *haltSuite) otherPairs(t *testing.T) {
 		require.Equal(t, pool.reserveBase().Sub(q.out), after.reserveBase(), "usd reserve")
 		want := before.Add(sdk.NewCoin(s.usd, q.out)).Sub(sdk.NewCoin(chain.Denom, in.Add(s.params.MarketTakerFee.Amount).Add(s.txFee(t, res))))
 		require.Equal(t, want, s.balances(t, s.taker, chain.Denom, s.usd), "taker balances")
-		require.Equal(t, q.burned, s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "swap fee to the burner")
+		require.Equal(t, s.burnedWithTakerFee(q.burned), s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "swap fee and taker fee to the burner")
 		s.requireTakerFeeBurned(t, res)
 	})
 
@@ -607,7 +607,7 @@ func (s *haltSuite) minNativeLiquidity(t *testing.T) sdkmath.Int {
 
 // restSell places u's sell order of amount base at price on market, asserts
 // its tx saved it, u paid the order amount, the maker fee (on to the
-// burner fee collector) and the tx fee, and returns the order id.
+// burner) and the tx fee, and returns the order id.
 func (s *haltSuite) restSell(t *testing.T, u ibc.Wallet, market, base string, amount int64, price string) string {
 	t.Helper()
 	amt := strconv.FormatInt(amount, 10)
@@ -617,7 +617,8 @@ func (s *haltSuite) restSell(t *testing.T, u ibc.Wallet, market, base string, am
 	require.Equal(t, []string{e["id"], market, u.FormattedAddress(), "sell", amt, price}, []string{e["order_id"], e["market_id"], e["owner"], e["order_type"], e["amount"], e["price"]})
 
 	fee := s.params.MarketMakerFee.Amount
-	require.Equal(t, fee, s.transferred(t, res.Events, s.tradebin, s.burnerFees, chain.Denom), "maker fee to the burner fee collector")
+	require.Equal(t, fee, s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "maker fee to the burner")
+	require.True(t, s.transferred(t, res.Events, s.tradebin, s.burnerFees, chain.Denom).IsZero(), "nothing to the burner fee collector")
 	want := before.Sub(sdk.NewInt64Coin(base, amount), sdk.NewCoin(chain.Denom, fee.Add(s.txFee(t, res))))
 	require.Equal(t, want, s.balances(t, u, chain.Denom, base), "order amount, maker fee and tx fee paid")
 	return e["id"]
@@ -637,9 +638,9 @@ func (s *haltSuite) fillSell(t *testing.T, maker ibc.Wallet, market, base, order
 	res := s.mustExec(t, s.taker, "tradebin", "create-order", "buy", amt, price, market)
 	fee := s.params.MarketTakerFee.Amount
 	require.Equal(t, fee.Add(cost), s.transferred(t, res.Events, s.taker.FormattedAddress(), s.tradebin, chain.Denom), "taker fee and order cost to the tradebin module")
-	require.Equal(t, fee, s.transferred(t, res.Events, s.tradebin, s.burnerFees, chain.Denom), "taker fee to the burner fee collector")
-	block := s.blockEvents(t, res.Height)
-	require.Equal(t, fee, s.transferred(t, block, s.burnerFees, s.burner, chain.Denom), "taker fee to the burner in EndBlock")
+	require.Equal(t, fee, s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "taker fee to the burner")
+	require.True(t, s.transferred(t, res.Events, s.tradebin, s.burnerFees, chain.Denom).IsZero(), "nothing to the burner fee collector")
+	require.True(t, s.transferred(t, s.blockEvents(t, res.Height), s.burnerFees, s.burner, chain.Denom).IsZero(), "nothing from the burner fee collector in EndBlock")
 
 	executed := helpers.TxEvents(res, tradebinEventPrefix+"OrderExecutedEvent")
 	require.Len(t, executed, 1, "executions in tx %s: %+v", res.TxHash, executed)

@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -86,14 +85,14 @@ func (suite *IntegrationTestSuite) TestGasSurcharge_TokenWithoutCommunityPoolGoe
 	suite.expectRates(denomTokenA, "0", "1")
 	suite.expectCommunityPool(denomTokenA, false)
 	suite.bankMock.EXPECT().
-		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, types.BurnerFeeCollector, sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 500))).
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, burnermoduletypes.ModuleName, sdk.NewCoins(sdk.NewInt64Coin(denomTokenA, 500))).
 		Return(nil).
 		Times(1)
 
 	suite.Require().NoError(suite.k.ChargeGasSurcharge(suite.ctx, feeSender, fees))
 	events := gasSurchargeEvents(suite.ctx)
 	suite.Require().Len(events, 1)
-	suite.Require().Equal(types.BurnerFeeCollector, events[0].Destination)
+	suite.Require().Equal(burnermoduletypes.ModuleName, events[0].Destination)
 }
 
 func (suite *IntegrationTestSuite) TestGasSurcharge_NothingWithoutRateOrForTinyFee() {
@@ -120,7 +119,7 @@ func (suite *IntegrationTestSuite) TestGasSurcharge_SplitFlooredToZeroTakesOneUn
 		Return(nil).
 		Times(1)
 	suite.bankMock.EXPECT().
-		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, types.BurnerFeeCollector, sdk.NewCoins(sdk.NewInt64Coin(denomTokenB, 1))).
+		SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, burnermoduletypes.ModuleName, sdk.NewCoins(sdk.NewInt64Coin(denomTokenB, 1))).
 		Return(nil).
 		Times(1)
 

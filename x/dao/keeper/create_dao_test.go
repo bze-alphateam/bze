@@ -13,12 +13,13 @@ import (
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"go.uber.org/mock/gomock"
 
+	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/dao/types"
 )
 
 const (
-	burnerFeeCollector = "txfeecollector_burner"
-	cpFeeCollector     = "txfeecollector_cp"
+	burnerModule   = burnermoduletypes.ModuleName
+	cpFeeCollector = "txfeecollector_cp"
 )
 
 var (
@@ -79,7 +80,7 @@ func (suite *IntegrationTestSuite) expectFee(destModule string) {
 // expectCreation expects a successful creation of the DAO with the given id.
 func (suite *IntegrationTestSuite) expectCreation(id uint64) {
 	suite.expectNewDaoAccount(id)
-	suite.expectFee(burnerFeeCollector)
+	suite.expectFee(burnerModule)
 }
 
 type configCase struct {
@@ -362,7 +363,7 @@ func (suite *IntegrationTestSuite) TestCreateDao_VestingAccountReplaced() {
 			suite.SetupTest()
 			suite.acc.EXPECT().GetAccount(gomock.Any(), addr).Return(acc)
 			suite.acc.EXPECT().SetAccount(gomock.Any(), authtypes.NewBaseAccount(addr, nil, 42, 3))
-			suite.expectFee(burnerFeeCollector)
+			suite.expectFee(burnerModule)
 
 			res, err := suite.msgServer.CreateDao(suite.ctx, validCreateDaoMsg())
 			suite.Require().NoError(err)
@@ -392,7 +393,7 @@ func (suite *IntegrationTestSuite) TestCreateDao_VestingAccountWithPubKeyAborts(
 func (suite *IntegrationTestSuite) TestCreateDao_AccountWithoutPubKeyReused() {
 	addr := daoAddress(1)
 	suite.acc.EXPECT().GetAccount(gomock.Any(), addr).Return(authtypes.NewBaseAccountWithAddress(addr))
-	suite.expectFee(burnerFeeCollector)
+	suite.expectFee(burnerModule)
 
 	res, err := suite.msgServer.CreateDao(suite.ctx, validCreateDaoMsg())
 	suite.Require().NoError(err)
@@ -403,7 +404,7 @@ func (suite *IntegrationTestSuite) TestCreateDao_AccountWithoutPubKeyReused() {
 
 func (suite *IntegrationTestSuite) TestCreateDao_FeeToBurner() {
 	suite.expectNewDaoAccount(1)
-	suite.expectFee(burnerFeeCollector)
+	suite.expectFee(burnerModule)
 
 	_, err := suite.msgServer.CreateDao(suite.ctx, validCreateDaoMsg())
 	suite.Require().NoError(err)
@@ -417,7 +418,7 @@ func (suite *IntegrationTestSuite) TestCreateDao_CustomFeeCaptured() {
 	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
 	suite.expectNewDaoAccount(1)
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(gomock.Any(), creatorAddr, sdk.NewCoins(sdk.NewInt64Coin("ubze", 1234)), burnerFeeCollector).
+		CaptureAndSwapUserFee(gomock.Any(), creatorAddr, sdk.NewCoins(sdk.NewInt64Coin("ubze", 1234)), burnerModule).
 		Return(sdk.NewCoins(sdk.NewInt64Coin("ubze", 1200)), nil)
 
 	res, err := suite.msgServer.CreateDao(suite.ctx, validCreateDaoMsg())
@@ -455,7 +456,7 @@ func (suite *IntegrationTestSuite) TestCreateDao_InsufficientFunds() {
 	addr := daoAddress(1)
 	suite.acc.EXPECT().GetAccount(gomock.Any(), addr).Return(nil)
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(gomock.Any(), creatorAddr, sdk.NewCoins(types.DefaultDaoCreationFee), burnerFeeCollector).
+		CaptureAndSwapUserFee(gomock.Any(), creatorAddr, sdk.NewCoins(types.DefaultDaoCreationFee), burnerModule).
 		Return(nil, sdkerrors.ErrInsufficientFunds)
 
 	res, err := suite.msgServer.CreateDao(suite.ctx, validCreateDaoMsg())

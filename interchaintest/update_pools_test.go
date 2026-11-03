@@ -198,7 +198,7 @@ func (s *updatePoolsSuite) swapAfterUpdate(t *testing.T) {
 
 	s.requireSwap(t, res.Events, s.trader.FormattedAddress(), s.poolID, sdk.NewCoin(chain.Denom, in), sdk.NewCoin(s.upd, q.out))
 	require.Equal(t, q.treasury, s.transferred(t, res.Events, s.tradebin, s.cpFees, chain.Denom), "treasury share to txfeecollector_cp")
-	require.Equal(t, q.burned, s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "burner share to the burner")
+	require.Equal(t, s.burnedWithTakerFee(q.burned), s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "burner share and taker fee to the burner")
 	s.requireTakerFeeBurned(t, res)
 
 	after := s.pool(t, s.poolID)
