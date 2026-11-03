@@ -41,6 +41,14 @@ func acceptingRateLimits(t *testing.T) *v830testutil.MockRateLimitKeeper {
 	return k
 }
 
+// emptyBank is a bank keeper with nothing left at the removed txfeecollector_burner address: the sweep sends nothing.
+func emptyBank(t *testing.T) *v830testutil.MockBankKeeper {
+	t.Helper()
+	k := v830testutil.NewMockBankKeeper(gomock.NewController(t))
+	k.EXPECT().GetAllBalances(gomock.Any(), gomock.Any()).Return(sdk.NewCoins()).AnyTimes()
+	return k
+}
+
 // fakeModule is a module at consensus version 2 that registers a 1->2 migration,
 // standing in for the SDK modules whose migrations the handler must run.
 type fakeModule struct {
@@ -94,7 +102,7 @@ func setup(t *testing.T, migrationErr error) (upgradetypes.UpgradeHandler, conte
 
 	ctx := testutil.DefaultContext(storetypes.NewKVStoreKey("v830"), storetypes.NewTransientStoreKey("v830_t"))
 
-	return v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, acceptingRateLimits(t)), ctx, &migrated
+	return v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, acceptingRateLimits(t), emptyBank(t)), ctx, &migrated
 }
 
 func TestUpgradeName(t *testing.T) {
@@ -172,7 +180,7 @@ func TestHandler_InitialisesDaoModule(t *testing.T) {
 
 	ctx := testutil.DefaultContext(storeKey, storetypes.NewTransientStoreKey("v830_t"))
 
-	vm, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, acceptingRateLimits(t))(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{})
+	vm, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, acceptingRateLimits(t), emptyBank(t))(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{})
 	require.NoError(t, err)
 	require.Equal(t, uint64(dao.ConsensusVersion), vm[daotypes.ModuleName])
 	require.Equal(t, daotypes.DefaultParams(), k.GetParams(ctx))
@@ -183,7 +191,7 @@ func TestHandler_SetsTheGuardian(t *testing.T) {
 	cfg, mm, ctx := guardianSetup(t)
 	guardian := &fakeGuardian{}
 
-	_, err := v830.CreateUpgradeHandler(cfg, mm, guardian, acceptingRateLimits(t))(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 2})
+	_, err := v830.CreateUpgradeHandler(cfg, mm, guardian, acceptingRateLimits(t), emptyBank(t))(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 2})
 	require.NoError(t, err)
 	require.Equal(t, 1, guardian.calls)
 	require.Equal(t, guardiantypes.NewParams(v830.GuardianAddress), guardian.params)
@@ -192,7 +200,7 @@ func TestHandler_SetsTheGuardian(t *testing.T) {
 func TestHandler_GuardianErrorFailsTheUpgrade(t *testing.T) {
 	cfg, mm, ctx := guardianSetup(t)
 
-	_, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{err: errors.New("no store")}, acceptingRateLimits(t))(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 2})
+	_, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{err: errors.New("no store")}, acceptingRateLimits(t), emptyBank(t))(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 2})
 	require.ErrorContains(t, err, "no store")
 }
 
@@ -204,7 +212,7 @@ func TestHandler_MigrationErrorLeavesTheGuardianUnset(t *testing.T) {
 	require.NoError(t, mm.RegisterServices(cfg))
 	guardian := &fakeGuardian{}
 
-	_, err := v830.CreateUpgradeHandler(cfg, mm, guardian, acceptingRateLimits(t))(testutil.DefaultContext(storetypes.NewKVStoreKey("v830"), storetypes.NewTransientStoreKey("v830_t")), upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 1})
+	_, err := v830.CreateUpgradeHandler(cfg, mm, guardian, acceptingRateLimits(t), emptyBank(t))(testutil.DefaultContext(storetypes.NewKVStoreKey("v830"), storetypes.NewTransientStoreKey("v830_t")), upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 1})
 	require.Error(t, err)
 	require.Zero(t, guardian.calls)
 }
