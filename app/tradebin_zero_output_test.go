@@ -118,6 +118,7 @@ func TestTxfeecollector_ZeroOutputCoinDoesNotBlockConversion(t *testing.T) {
 
 	cpCollector := authtypes.NewModuleAddress(txfeecollectortypes.CpFeeCollector)
 	require.True(t, bApp.BankKeeper.GetBalance(ctx, cpCollector, healthyFeeDenom).IsZero(), "the healthy coin was swapped")
+	require.Equal(t, dust, bApp.BankKeeper.GetBalance(ctx, cpCollector, zeroOutputDenom), "the zero-output coin stays in the collector")
 
 	poolAfter, err := bApp.DistrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
