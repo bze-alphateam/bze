@@ -93,7 +93,8 @@ func (k Keeper) GetDenomSpotPriceInNativeCoin(ctx sdk.Context, denom string) (sd
 	return sdk.NewDecCoinFromDec(nativeDenom, spotPrice), nil
 }
 
-// CanSwapForNativeDenom determines if a given coin can be swapped for the native denomination in an existing liquidity pool.
+// CanSwapForNativeDenom reports whether a module swap of this coin for the native denomination would succeed:
+// ModuleSwapForNativeDenom with this single coin swaps it to at least one unit of native denom.
 // A halted denom can never be swapped.
 func (k Keeper) CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool {
 	params := k.GetParams(ctx)
@@ -122,7 +123,8 @@ func (k Keeper) CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool {
 		return false
 	}
 
-	return true
+	//check the swap outputs at least one unit of native denom
+	return k.expectedSwapOutputAmount(coin, &pool).IsPositive()
 }
 
 // ModuleSwapForNativeDenom swaps a specified set of coins from a module account to the native denomination if liquidity exists.
