@@ -299,7 +299,7 @@ func (s *ammSuite) singleSwap(t *testing.T) {
 	want := before.Add(sdk.NewCoin(s.usd, q.out)).Sub(sdk.NewCoin(chain.Denom, in.Add(s.params.MarketTakerFee.Amount).Add(s.txFee(t, res))))
 	require.Equal(t, want, s.balances(t, s.trader, chain.Denom, s.usd), "trader balances")
 
-	require.Equal(t, q.burned, s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "swap fee to the burner")
+	require.Equal(t, s.burnedWithTakerFee(q.burned), s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "swap fee and taker fee to the burner")
 	s.requireTakerFeeBurned(t, res)
 }
 
@@ -338,7 +338,7 @@ func (s *ammSuite) multiHopSwap(t *testing.T) {
 	want := before.Add(sdk.NewCoin(s.abc, hop2.out)).Sub(sdk.NewCoin(chain.Denom, in.Add(s.params.MarketTakerFee.Amount).Add(s.txFee(t, res))))
 	require.Equal(t, want, s.balances(t, s.trader, chain.Denom, s.usd, s.abc), "trader balances")
 
-	require.Equal(t, hop1.burned, s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "hop 1 fee to the burner")
+	require.Equal(t, s.burnedWithTakerFee(hop1.burned), s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "hop 1 fee and taker fee to the burner")
 	require.Equal(t, hop2.burned, s.transferred(t, res.Events, s.tradebin, s.burner, s.usd), "hop 2 fee to the burner")
 	s.requireTakerFeeBurned(t, res)
 }
@@ -409,8 +409,8 @@ func (s *ammSuite) txFeeInUsd(t *testing.T) {
 
 // 7. A taker paying its tx fee in usd also pays the 0.1 BZE taker fee in
 // usd: the chain takes the usd that buys exactly the taker fee from the
-// usd/ubze pool, swaps it and sends the ubze to the burner fee collector,
-// which hands it to the burner in EndBlock. The tx fee is swapped after it.
+// usd/ubze pool, swaps it and sends the ubze straight to the burner. The tx
+// fee is swapped in EndBlock.
 func (s *ammSuite) takerFeeInUsd(t *testing.T) {
 	s.mustExecWith(t, s.lp, []helpers.TxOption{helpers.WithGas(ammTxGas)}, "tradebin", "create-market", s.abc, s.usd)
 	const price = 5
@@ -434,14 +434,15 @@ func (s *ammSuite) takerFeeInUsd(t *testing.T) {
 	require.Equal(t, want, s.balances(t, s.taker, chain.Denom, s.usd, s.abc), "taker balances (no ubze spent)")
 	require.Equal(t, makerUsd.Add(cost), s.balance(t, s.maker.FormattedAddress(), s.usd), "maker paid in usd")
 
-	require.Equal(t, feeSwap.out, s.transferred(t, res.Events, s.tradebin, s.burnerFees, chain.Denom), "swapped taker fee to the burner fee collector")
+	require.Equal(t, feeSwap.out, s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "swapped taker fee to the burner")
+	require.True(t, s.transferred(t, res.Events, s.tradebin, s.burnerFees, chain.Denom).IsZero(), "nothing to the burner fee collector")
 	require.Equal(t, feeSwap.burned, s.transferred(t, res.Events, s.tradebin, s.burner, s.usd), "fee-swap pool fee to the burner")
 
 	block := s.blockEvents(t, res.Height)
-	require.Equal(t, feeSwap.out, s.transferred(t, block, s.burnerFees, s.burner, chain.Denom), "burner fee collector to the burner")
+	require.True(t, s.transferred(t, block, s.burnerFees, s.burner, chain.Denom).IsZero(), "nothing from the burner fee collector in EndBlock")
 	s.requireSwap(t, block, s.txFees, s.usdPool, sdk.NewCoin(s.usd, txFee), sdk.NewCoin(chain.Denom, txSwap.out))
 	require.Equal(t, txSwap.out, s.transferred(t, block, s.txFees, s.feeCollector, chain.Denom), "swapped tx fee to the fee collector")
-	require.True(t, s.balance(t, s.burnerFees, chain.Denom).IsZero(), "burner fee collector keeps ubze after EndBlock")
+	require.True(t, s.balance(t, s.burnerFees, chain.Denom).IsZero(), "burner fee collector holds no ubze after EndBlock")
 
 	after := s.pool(t, s.usdPool)
 	require.Equal(t, pool.reserveBase().Add(feeSwap.inReserveAdd).Add(txSwap.inReserveAdd), after.reserveBase(), "usd reserve")
@@ -734,7 +735,7 @@ func (s *ammSuite) treasuryShare(t *testing.T) {
 
 	s.requireSwap(t, res.Events, s.trader.FormattedAddress(), s.cpPool, sdk.NewCoin(chain.Denom, in), sdk.NewCoin(s.abc, q.out))
 	require.Equal(t, q.treasury, s.transferred(t, res.Events, s.tradebin, s.cpFees, chain.Denom), "treasury share to txfeecollector_cp")
-	require.Equal(t, q.burned, s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "burner share to the burner")
+	require.Equal(t, s.burnedWithTakerFee(q.burned), s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "burner share and taker fee to the burner")
 	s.requireTakerFeeBurned(t, res)
 
 	after := s.pool(t, s.cpPool)
@@ -1204,13 +1205,22 @@ func (s *ammSuite) requireSwap(t *testing.T, events []helpers.Event, creator, po
 	assert.Equal(t, out, eventCoin(t, swaps[0], "out"), "swap output on %s", poolID)
 }
 
-// requireTakerFeeBurned asserts the taker fee, paid in ubze, went to the
-// burner fee collector in the tx and from there to the burner in EndBlock.
+// requireTakerFeeBurned asserts the taker fee, paid in ubze, went straight to
+// the burner module in a transfer of its own, and nothing went through the
+// burner fee collector.
 func (s *ammSuite) requireTakerFeeBurned(t *testing.T, res helpers.TxResult) {
 	t.Helper()
-	fee := s.params.MarketTakerFee.Amount
-	require.Equal(t, fee, s.transferred(t, res.Events, s.tradebin, s.burnerFees, chain.Denom), "taker fee to the burner fee collector")
-	require.Equal(t, fee, s.transferred(t, s.blockEvents(t, res.Height), s.burnerFees, s.burner, chain.Denom), "taker fee to the burner in EndBlock")
+	fee := sdk.NewCoin(chain.Denom, s.params.MarketTakerFee.Amount)
+	sends := helpers.EventsWith(filterType(res.Events, "transfer"), map[string]string{"sender": s.tradebin, "recipient": s.burner, "amount": fee.String()})
+	require.NotEmpty(t, sends, "taker fee to the burner")
+	require.True(t, s.transferred(t, res.Events, s.tradebin, s.burnerFees, chain.Denom).IsZero(), "nothing to the burner fee collector")
+	require.True(t, s.transferred(t, s.blockEvents(t, res.Height), s.burnerFees, s.burner, chain.Denom).IsZero(), "nothing from the burner fee collector in EndBlock")
+}
+
+// burnedWithTakerFee is what tradebin sends the burner in ubze in a swap tx:
+// the pool's burner share and the taker fee.
+func (s *ammSuite) burnedWithTakerFee(burned sdkmath.Int) sdkmath.Int {
+	return burned.Add(s.params.MarketTakerFee.Amount)
 }
 
 func eventCoin(t *testing.T, e helpers.Event, key string) sdk.Coin {

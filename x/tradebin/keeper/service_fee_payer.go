@@ -168,8 +168,8 @@ func (k Keeper) getCtxDenom(ctx sdk.Context) string {
 // USD, the amount in USD we're supposed to capture for 0.001 BZE is like 0.000050 USD. Which is too low to be traded
 // due to swap fees. The resulted swap fee would be lower than 1uusd (smallest unit), but the fee is valid. So the
 // blockchain decides to accept the 0.00005 USD as-is. The caller is responsible for routing the captured coins to the
-// appropriate fee collector (e.g. BurnerFeeCollector or CpFeeCollector) where txfeecollector's EndBlock accumulates
-// small amounts and swaps them once they reach a swappable amount.
+// appropriate module (e.g. the burner module or CpFeeCollector). txfeecollector's EndBlock accumulates small amounts
+// in CpFeeCollector and swaps them once they reach a swappable amount; the burner burns what it receives.
 func (k Keeper) CaptureAndTryToSwapUserFeesOrSendItAsIs(ctx sdk.Context, payer sdk.AccAddress, fee sdk.Coins, toModule string) (coins sdk.Coins, err error) {
 	if !fee.IsAllPositive() {
 		return nil, fmt.Errorf("can not capture user fees that are not all positive")

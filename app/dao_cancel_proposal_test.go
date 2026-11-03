@@ -8,13 +8,14 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/require"
 
+	burnertypes "github.com/bze-alphateam/bze/x/burner/types"
 	daotypes "github.com/bze-alphateam/bze/x/dao/types"
 	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 )
 
 // Cancelling a proposal moves its escrowed deposit out of the dao module
 // account with the real bank keeper: back to the proposer under ALWAYS, to
-// the burner when the deposit is kept.
+// the burner module when the deposit is kept.
 func TestDaoCancelProposal_ReleasesDeposit(t *testing.T) {
 	for _, tc := range []struct {
 		desc     string
@@ -62,10 +63,11 @@ func TestDaoCancelProposal_ReleasesDeposit(t *testing.T) {
 
 			proposal, _ := bApp.DaoKeeper.GetProposal(ctx, proposalId)
 			require.Equal(t, daotypes.ProposalStatus_CANCELLED, proposal.Status)
-			burner := authtypes.NewModuleAddress(txfeecollectortypes.BurnerFeeCollector)
+			burner := authtypes.NewModuleAddress(burnertypes.ModuleName)
 			require.True(t, bApp.BankKeeper.GetBalance(ctx, daoModule, "ubze").IsZero())
 			require.Equal(t, tc.proposer, bApp.BankKeeper.GetBalance(ctx, proposer, "ubze").Amount.Int64())
 			require.Equal(t, tc.burner, bApp.BankKeeper.GetBalance(ctx, burner, "ubze").Amount.Int64())
+			require.True(t, bApp.BankKeeper.GetAllBalances(ctx, authtypes.NewModuleAddress(txfeecollectortypes.BurnerFeeCollector)).IsZero())
 		})
 	}
 }

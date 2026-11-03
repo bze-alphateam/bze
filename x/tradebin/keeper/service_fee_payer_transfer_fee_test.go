@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"go.uber.org/mock/gomock"
 
+	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/tradebin/keeper"
 	"github.com/bze-alphateam/bze/x/tradebin/testutil"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
@@ -101,7 +102,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_TransferFeeToCommun
 	suite.Require().Equal(denomBze, captured[0].Denom)
 }
 
-// A token without a community pool has its transfer fee sent to txfeecollector_burner.
+// A token without a community pool has its transfer fee sent straight to the burner module.
 func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_TransferFeeWithoutCommunityPoolToBurner() {
 	provider := suite.useDenomFeeRates()
 	nativeFee := sdk.NewInt64Coin(denomBze, 100_000_000)
@@ -112,7 +113,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_TransferFeeWithoutC
 	provider.EXPECT().GetDenomCommunityPool(gomock.Any(), denomFactoryToken).Return(nil, false).Times(1)
 	suite.expectSpendable(sdk.NewCoins(required.Add(transferFee)))
 	suite.bankMock.EXPECT().
-		SendCoinsFromAccountToModule(gomock.Any(), transferFeePayer, txfeecollectormoduletypes.BurnerFeeCollector, sdk.NewCoins(transferFee)).
+		SendCoinsFromAccountToModule(gomock.Any(), transferFeePayer, burnermoduletypes.ModuleName, sdk.NewCoins(transferFee)).
 		Return(nil).
 		Times(1)
 	suite.bankMock.EXPECT().
@@ -285,7 +286,7 @@ func (suite *IntegrationTestSuite) TestTrySwap_FailedTransferFeeSendCapturesNoth
 	provider.EXPECT().GetDenomCommunityPool(gomock.Any(), denomFactoryToken).Return(nil, false).Times(1)
 	suite.expectSpendable(sdk.NewCoins(required.Add(transferFee)))
 	suite.bankMock.EXPECT().
-		SendCoinsFromAccountToModule(gomock.Any(), transferFeePayer, txfeecollectormoduletypes.BurnerFeeCollector, sdk.NewCoins(transferFee)).
+		SendCoinsFromAccountToModule(gomock.Any(), transferFeePayer, burnermoduletypes.ModuleName, sdk.NewCoins(transferFee)).
 		Return(sendErr).
 		Times(1)
 

@@ -2008,7 +2008,7 @@ type GasSurchargePaidEvent struct {
 	// amount is the surcharge amount.
 	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 	// destination is the module account the surcharge went to: txfeecollector_cp when the token has a community pool
-	// (forwarded there at EndBlock), txfeecollector_burner when it has none (burned).
+	// (forwarded there at EndBlock), burner when it has none (the burner module burns it).
 	Destination string `protobuf:"bytes,4,opt,name=destination,proto3" json:"destination,omitempty"`
 }
 

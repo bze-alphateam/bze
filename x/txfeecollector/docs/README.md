@@ -9,7 +9,7 @@ TxFeeCollector standardizes fees by converting module balances to the native den
   - the community pool fee collector,
   into the native denom via the trade module when possible. Skipped coins (non-swappable) can be forwarded to burner.
 - **Token community pools:** Before converting `txfeecollector_cp`, the module forwards every coin there whose denom has a community pool address (set by the factory token's admin in its `DenomConfig`, `MsgSetDenomConfig` in x/tokenfactory) to that address, once per block. Each forwarded coin emits a `CommunityPoolFeePaidEvent` (denom, recipient, amount). See [Community pool fees](#community-pool-fees).
-- **Token gas surcharges:** Charges the gas surcharge a factory token's admin sets in its `DenomConfig`, into `txfeecollector_cp` (or `txfeecollector_burner` when the token has no community pool). See [Transfer fee and gas surcharge](#transfer-fee-and-gas-surcharge).
+- **Token gas surcharges:** Charges the gas surcharge a factory token's admin sets in its `DenomConfig`, into `txfeecollector_cp` (or straight to the `burner` module when the token has no community pool). See [Transfer fee and gas surcharge](#transfer-fee-and-gas-surcharge).
 - **Minimum gas price:** Ante handler enforces a per-validator minimum gas price, with cross-denom support using spot prices from the trade module.
 - **Inbound IBC filter:** Refuses incoming ICS-20 transfers listed in the `blocked_ibc_inbound` param with an error acknowledgement, so the sending chain refunds the sender and no voucher is minted here. Exits are untouched — sends, acknowledgements, timeout refunds and the channel lifecycle all behave as if the filter were not there. Every refusal emits a `BlockedIbcInboundEvent` typed event (channel, denom, amount, sender, receiver) so relayers and indexers can see what was bounced.
 - **Governance:** Parameters can be updated via `MsgUpdateParams` (authority only).
@@ -17,7 +17,7 @@ TxFeeCollector standardizes fees by converting module balances to the native den
 ## Module Accounts
 The module registers three dedicated accounts:
 - **`txfeecollector`** – holds non-native fee tokens awaiting conversion to native denom.
-- **`txfeecollector_burner`** – holds fees designated for the burner module.
+- **`txfeecollector_burner`** – held fees designated for the burner module. Since v8.3.0 every burn-bound fee goes straight to the `burner` module, so this account receives nothing new.
 - **`txfeecollector_cp`** – holds fees designated for the community pool via the distribution module.
 
 At EndBlock, collected fees are converted to native denom and distributed to their respective destinations.
@@ -32,7 +32,7 @@ So a factory token's community pool earns the treasury share of the pool fees pa
 ## Transfer fee and gas surcharge
 A factory token's admin can set two rates in its `DenomConfig` (`MsgSetDenomConfig` in x/tokenfactory, see its [Token configuration](../../tokenfactory/docs/README.md#token-configuration)): a **transfer fee** (0 to 5%) and a **gas surcharge** (0 to 200%). ubze, IBC coins, LP shares and factory tokens without rates are never charged and cost no extra store read. A rate change, increase included, applies from the next tx: the caps are the holders' protection.
 
-**Where the fees go.** When the token has a community pool, both fees go to `txfeecollector_cp`, and the [routing](#community-pool-fees) forwards them to the token's community pool at EndBlock (one `CommunityPoolFeePaidEvent` per forwarded coin). When it has none, they go to `txfeecollector_burner` and are burned (swapped to ubze and burned, or burned as is when unswappable).
+**Where the fees go.** When the token has a community pool, both fees go to `txfeecollector_cp`, and the [routing](#community-pool-fees) forwards them to the token's community pool at EndBlock (one `CommunityPoolFeePaidEvent` per forwarded coin). When it has none, they go straight to the `burner` module, which burns the factory token as is.
 
 ### Transfer fee
 For now the transfer fee is charged only on **protocol fees paid in the token**, by x/tradebin's fee payer (see the [tradebin docs](../../tradebin/docs/README.md#fees-and-destinations)): the denom, market, DAO, staking, trading and denom reward creation fees, the denom reward schedule and prize fees, and the order fees. The payer pays `ceil(fee in the token × transfer_fee)` on top; a payer short of it pays the protocol fee in ubze instead. Plain sends between accounts, IBC transfers and every other module flow are not charged.
@@ -69,7 +69,8 @@ Adjust flags to your governance CLI; the message fields are just `validator_min_
 - Coins in `txfeecollector_cp` whose factory denom has a community pool address (x/tokenfactory `DenomConfig`) are forwarded to it in EndBlock, before the conversion for the chain's community pool
 - Added the `CommunityPoolFeePaidEvent` typed event (`proto/bze/txfeecollector/events.proto`), one per forwarded coin
 - No store change and no migration; ConsensusVersion stays 3
-- Factory tokens' gas surcharge (ante handler) is charged into `txfeecollector_cp`, or `txfeecollector_burner` for tokens without a community pool
+- Factory tokens' gas surcharge (ante handler) is charged into `txfeecollector_cp`, or straight to the `burner` module for tokens without a community pool
+- Burn-bound fees (the token transfer fee and gas surcharge, the order book fees, the DAO creation fee, proposal costs and kept deposits) go straight to the `burner` module instead of `txfeecollector_burner`: factory tokens are burned as is instead of being sold for ubze first
 - Added the `GasSurchargePaidEvent` typed event
 
 ### v8.2.0

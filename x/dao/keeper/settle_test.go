@@ -198,7 +198,7 @@ func (suite *IntegrationTestSuite) TestSettleProposal_DepositMatrix() {
 		failed
 		rejected
 	)
-	burner := authtypes.NewModuleAddress(burnerFeeCollector)
+	burner := authtypes.NewModuleAddress(burnerModule)
 	for _, tc := range []struct {
 		desc     string
 		policy   types.DepositRefundPolicy
@@ -235,7 +235,7 @@ func (suite *IntegrationTestSuite) TestSettleProposal_DepositMatrix() {
 			if tc.refunded {
 				suite.bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, memberA, ubze(40)).DoAndReturn(release)
 			} else {
-				suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, burnerFeeCollector, ubze(40)).DoAndReturn(release)
+				suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, burnerModule, ubze(40)).DoAndReturn(release)
 			}
 
 			// the treasury is empty, so the spend fails

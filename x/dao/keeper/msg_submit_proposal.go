@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
+	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 
 	"github.com/bze-alphateam/bze/x/dao/types"
 )
@@ -201,7 +201,7 @@ func (k Keeper) chargeProposalCost(ctx sdk.Context, proposer, daoAddr sdk.AccAdd
 
 		err = k.bankKeeper.SendCoins(ctx, proposer, daoAddr, sdk.NewCoins(*cost))
 	default:
-		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, proposer, txfeecollectortypes.BurnerFeeCollector, sdk.NewCoins(*cost))
+		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, proposer, burnermoduletypes.ModuleName, sdk.NewCoins(*cost))
 	}
 
 	if err != nil {

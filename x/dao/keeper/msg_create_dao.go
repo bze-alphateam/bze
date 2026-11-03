@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
+	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 
 	"github.com/bze-alphateam/bze/x/dao/types"
@@ -138,7 +139,7 @@ func (k Keeper) chargeCreationFee(ctx sdk.Context, creator sdk.AccAddress, param
 		return nil
 	}
 
-	destModule := txfeecollectortypes.BurnerFeeCollector
+	destModule := burnermoduletypes.ModuleName
 	if params.DaoCreationFeeDestination == types.FeeDestinationCommunityPool {
 		destModule = txfeecollectortypes.CpFeeCollector
 	}

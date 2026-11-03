@@ -198,11 +198,11 @@ func setupDao(t *testing.T, ctx context.Context, net chain.Network) *daoSuite {
 	require.NoError(t, testutil.WaitForBlocks(ctx, 2, bze))
 
 	for name, addr := range map[string]*string{
-		daoModule:               &s.escrow,
-		"txfeecollector_burner": &s.burner,
-		"txfeecollector_cp":     &s.cp,
-		"fee_collector":         &s.feeCollector,
-		"rewards":               &s.rewards,
+		daoModule:           &s.escrow,
+		"burner":            &s.burner,
+		"txfeecollector_cp": &s.cp,
+		"fee_collector":     &s.feeCollector,
+		"rewards":           &s.rewards,
 	} {
 		var err error
 		*addr, err = helpers.ModuleAddress(ctx, bze, name)

@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/txfeecollector/types"
 )
 
@@ -74,11 +75,11 @@ func (k Keeper) ChargeGasSurcharge(ctx sdk.Context, payer sdk.AccAddress, fees s
 }
 
 // denomFeeDestination is the module account a denom's gas surcharge goes to: the community pool fee
-// collector when the denom has a community pool, the burner fee collector when it has none.
+// collector when the denom has a community pool, the burner module when it has none.
 func (k Keeper) denomFeeDestination(ctx sdk.Context, denom string) string {
 	if _, ok := k.denomCpProvider.GetDenomCommunityPool(ctx, denom); ok {
 		return types.CpFeeCollector
 	}
 
-	return types.BurnerFeeCollector
+	return burnermoduletypes.ModuleName
 }
