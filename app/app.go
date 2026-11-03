@@ -185,6 +185,8 @@ func AppConfig() depinject.Config {
 		appConfig,
 		// Alternatively, load the app config from a YAML file.
 		// appconfig.LoadYAML(AppConfigYAML),
+		// the txfeecollector and burner modules' bank keepers: the SDK one plus a bounded balances page read
+		depinject.Provide(ProvideTxfeecollectorBankKeeper, ProvideBurnerBankKeeper),
 		depinject.Supply(
 			// supply custom module basics
 			map[string]module.AppModuleBasic{
@@ -212,8 +214,6 @@ func New(
 		// merge the AppConfig and other configuration in one config
 		appConfig = depinject.Configs(
 			AppConfig(),
-			// the txfeecollector and burner modules' bank keepers: the SDK one plus a bounded balances page read
-			depinject.Provide(ProvideTxfeecollectorBankKeeper, ProvideBurnerBankKeeper),
 			depinject.Supply(
 				appOpts, // supply app options
 				logger,  // supply logger
