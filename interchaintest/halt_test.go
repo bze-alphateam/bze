@@ -118,10 +118,9 @@ func setupHalt(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain) *halt
 	s.gov, err = helpers.GovAuthority(ctx, bze)
 	require.NoError(t, err)
 	for name, addr := range map[string]*string{
-		"tradebin":              &s.tradebin,
-		"txfeecollector":        &s.txFees,
-		"burner":                &s.burner,
-		"txfeecollector_burner": &s.burnerFees,
+		"tradebin":       &s.tradebin,
+		"txfeecollector": &s.txFees,
+		"burner":         &s.burner,
 	} {
 		*addr, err = helpers.ModuleAddress(ctx, bze, name)
 		require.NoError(t, err)
@@ -618,7 +617,6 @@ func (s *haltSuite) restSell(t *testing.T, u ibc.Wallet, market, base string, am
 
 	fee := s.params.MarketMakerFee.Amount
 	require.Equal(t, fee, s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "maker fee to the burner")
-	require.True(t, s.transferred(t, res.Events, s.tradebin, s.burnerFees, chain.Denom).IsZero(), "nothing to the burner fee collector")
 	want := before.Sub(sdk.NewInt64Coin(base, amount), sdk.NewCoin(chain.Denom, fee.Add(s.txFee(t, res))))
 	require.Equal(t, want, s.balances(t, u, chain.Denom, base), "order amount, maker fee and tx fee paid")
 	return e["id"]
@@ -639,8 +637,6 @@ func (s *haltSuite) fillSell(t *testing.T, maker ibc.Wallet, market, base, order
 	fee := s.params.MarketTakerFee.Amount
 	require.Equal(t, fee.Add(cost), s.transferred(t, res.Events, s.taker.FormattedAddress(), s.tradebin, chain.Denom), "taker fee and order cost to the tradebin module")
 	require.Equal(t, fee, s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "taker fee to the burner")
-	require.True(t, s.transferred(t, res.Events, s.tradebin, s.burnerFees, chain.Denom).IsZero(), "nothing to the burner fee collector")
-	require.True(t, s.transferred(t, s.blockEvents(t, res.Height), s.burnerFees, s.burner, chain.Denom).IsZero(), "nothing from the burner fee collector in EndBlock")
 
 	executed := helpers.TxEvents(res, tradebinEventPrefix+"OrderExecutedEvent")
 	require.Len(t, executed, 1, "executions in tx %s: %+v", res.TxHash, executed)

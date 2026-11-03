@@ -125,12 +125,11 @@ func setupParams(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain) *pa
 	require.NoError(t, testutil.WaitForBlocks(ctx, 2, bze))
 
 	for name, addr := range map[string]*string{
-		"tradebin":              &s.tradebin,
-		"txfeecollector_burner": &s.burnerFees,
-		"txfeecollector_cp":     &s.cpFees,
-		"distribution":          &s.distr,
-		"rewards":               &s.rewardsAcc,
-		"tokenfactory":          &s.tfAcc,
+		"tradebin":          &s.tradebin,
+		"txfeecollector_cp": &s.cpFees,
+		"distribution":      &s.distr,
+		"rewards":           &s.rewardsAcc,
+		"tokenfactory":      &s.tfAcc,
 	} {
 		var err error
 		*addr, err = helpers.ModuleAddress(ctx, bze, name)
@@ -472,10 +471,9 @@ func (s *paramsSuite) requireOrder(t *testing.T, u ibc.Wallet, typ string, locke
 	res := s.mustExec(t, u, "tradebin", "create-order", typ, strconv.Itoa(paOrderAmount), paOrderPrice, s.market)
 
 	require.Equal(t, fees.Add(locked).String(), s.transfers(t, res.Events, addr, s.tradebin).String(), "%s: order funds and fee to the tradebin module", typ)
-	toCp, toBurner := s.transfers(t, res.Events, s.tradebin, s.cpFees), s.transfers(t, res.Events, s.tradebin, s.burnerFees)
+	toCp := s.transfers(t, res.Events, s.tradebin, s.cpFees)
 	require.Equal(t, "community_pool", dest, "the suite only moves the fees to the community pool")
 	require.Equal(t, fees.String(), toCp.String(), "%s: fee to the community-pool fee collector", typ)
-	require.Empty(t, toBurner, "%s: nothing to the burner fee collector", typ)
 	require.Equal(t, fees.String(), s.transfers(t, s.blockEvents(t, res.Height), s.cpFees, s.distr).String(), "%s: fee to the community pool in EndBlock", typ)
 	require.Equal(t, before.Add(filled...).Sub(fees.Add(locked, sdk.NewCoin(chain.Denom, s.txFee(t, res)))...), s.addrBalances(t, addr, 0), "%s: balances", typ)
 }

@@ -37,12 +37,11 @@ type endBlockMocks struct {
 }
 
 var (
-	feeAddr    = sdk.AccAddress("txfeecollector______")
-	burnerAddr = sdk.AccAddress("txfeecollector_burnr")
-	cpAddr     = sdk.AccAddress("txfeecollector_cp___")
+	feeAddr = sdk.AccAddress("txfeecollector______")
+	cpAddr  = sdk.AccAddress("txfeecollector_cp___")
 )
 
-// newEndBlockModule builds the module on a real store with mocked keepers; the fee and burner collectors are empty.
+// newEndBlockModule builds the module on a real store with mocked keepers; the fee collector is empty.
 func newEndBlockModule(t *testing.T) (txfeecollector.AppModule, keeper.Keeper, sdk.Context, endBlockMocks) {
 	t.Helper()
 	ctrl := gomock.NewController(t)
@@ -75,10 +74,8 @@ func newEndBlockModule(t *testing.T) (txfeecollector.AppModule, keeper.Keeper, s
 	am := txfeecollector.NewAppModule(cdc, k, account, bank, distr)
 
 	account.EXPECT().GetModuleAddress(types.ModuleName).Return(feeAddr).AnyTimes()
-	account.EXPECT().GetModuleAddress(types.BurnerFeeCollector).Return(burnerAddr).AnyTimes()
 	account.EXPECT().GetModuleAddress(types.CpFeeCollector).Return(cpAddr).AnyTimes()
 	bank.EXPECT().GetAllBalances(gomock.Any(), feeAddr).Return(sdk.NewCoins()).Times(1)
-	bank.EXPECT().GetAllBalances(gomock.Any(), burnerAddr).Return(sdk.NewCoins()).Times(1)
 
 	return am, k, ctx, endBlockMocks{bank: bank, account: account, trade: trade, distr: distr, cp: cp}
 }

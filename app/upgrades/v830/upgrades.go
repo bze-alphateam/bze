@@ -15,6 +15,7 @@ func CreateUpgradeHandler(
 	mm *module.Manager,
 	guardianKeeper GuardianKeeper,
 	rateLimitKeeper RateLimitKeeper,
+	bankKeeper BankKeeper,
 ) upgradetypes.UpgradeHandler {
 
 	return func(c context.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -35,6 +36,10 @@ func CreateUpgradeHandler(
 		}
 
 		if err := addInitialRateLimits(ctx, rateLimitKeeper); err != nil {
+			return nil, err
+		}
+
+		if err := sweepBurnerFeeCollector(ctx, bankKeeper); err != nil {
 			return nil, err
 		}
 

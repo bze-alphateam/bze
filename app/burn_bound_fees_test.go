@@ -16,7 +16,7 @@ import (
 )
 
 // A factory token without a community pool has its transfer fee and its gas surcharge sent straight to the burner
-// module, as the token itself (the burner burns it as is), and nothing reaches txfeecollector_burner.
+// module, as the token itself (the burner burns it as is).
 func TestBurnBoundFees_TokenWithoutCommunityPoolGoStraightToBurner(t *testing.T) {
 	bApp, ctx, token, pool := transferFeeToken(t)
 	require.NoError(t, bApp.TokenfactoryKeeper.SetDenomConfig(ctx, token, tokenfactorytypes.DenomConfig{
@@ -25,7 +25,6 @@ func TestBurnBoundFees_TokenWithoutCommunityPoolGoStraightToBurner(t *testing.T)
 	}))
 
 	burner := authtypes.NewModuleAddress(burnertypes.ModuleName)
-	oldCollector := authtypes.NewModuleAddress(txfeecollectortypes.BurnerFeeCollector)
 	burnerBefore := bApp.BankKeeper.GetBalance(ctx, burner, token).Amount
 
 	// transfer fee on a protocol fee paid in the token
@@ -46,5 +45,4 @@ func TestBurnBoundFees_TokenWithoutCommunityPoolGoStraightToBurner(t *testing.T)
 	require.Equal(t, burnerBefore.Add(transferFee).AddRaw(5_000), bApp.BankKeeper.GetBalance(ctx, burner, token).Amount, "the gas surcharge reaches the burner module")
 	require.Equal(t, int64(5_000), bApp.BankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(txfeecollectortypes.ModuleName), token).Amount.Int64())
 
-	require.True(t, bApp.BankKeeper.GetAllBalances(ctx, oldCollector).IsZero(), "nothing reaches txfeecollector_burner")
 }

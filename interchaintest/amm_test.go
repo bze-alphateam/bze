@@ -146,7 +146,7 @@ type ammSuite struct {
 	rev, revPool, cpPool string
 
 	// module account addresses
-	tradebin, burner, blackHole, feeCollector, txFees, burnerFees, cpFees, distribution string
+	tradebin, burner, blackHole, feeCollector, txFees, cpFees, distribution string
 }
 
 func setupAmm(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain) *ammSuite {
@@ -183,14 +183,13 @@ func setupAmm(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain) *ammSu
 	s.cpPool = s.abc + "_" + chain.Denom
 
 	for name, addr := range map[string]*string{
-		"tradebin":              &s.tradebin,
-		"burner":                &s.burner,
-		"burner_black_hole":     &s.blackHole,
-		"fee_collector":         &s.feeCollector,
-		"txfeecollector":        &s.txFees,
-		"txfeecollector_burner": &s.burnerFees,
-		"txfeecollector_cp":     &s.cpFees,
-		"distribution":          &s.distribution,
+		"tradebin":          &s.tradebin,
+		"burner":            &s.burner,
+		"burner_black_hole": &s.blackHole,
+		"fee_collector":     &s.feeCollector,
+		"txfeecollector":    &s.txFees,
+		"txfeecollector_cp": &s.cpFees,
+		"distribution":      &s.distribution,
 	} {
 		var err error
 		*addr, err = helpers.ModuleAddress(ctx, bze, name)
@@ -435,14 +434,11 @@ func (s *ammSuite) takerFeeInUsd(t *testing.T) {
 	require.Equal(t, makerUsd.Add(cost), s.balance(t, s.maker.FormattedAddress(), s.usd), "maker paid in usd")
 
 	require.Equal(t, feeSwap.out, s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "swapped taker fee to the burner")
-	require.True(t, s.transferred(t, res.Events, s.tradebin, s.burnerFees, chain.Denom).IsZero(), "nothing to the burner fee collector")
 	require.Equal(t, feeSwap.burned, s.transferred(t, res.Events, s.tradebin, s.burner, s.usd), "fee-swap pool fee to the burner")
 
 	block := s.blockEvents(t, res.Height)
-	require.True(t, s.transferred(t, block, s.burnerFees, s.burner, chain.Denom).IsZero(), "nothing from the burner fee collector in EndBlock")
 	s.requireSwap(t, block, s.txFees, s.usdPool, sdk.NewCoin(s.usd, txFee), sdk.NewCoin(chain.Denom, txSwap.out))
 	require.Equal(t, txSwap.out, s.transferred(t, block, s.txFees, s.feeCollector, chain.Denom), "swapped tx fee to the fee collector")
-	require.True(t, s.balance(t, s.burnerFees, chain.Denom).IsZero(), "burner fee collector holds no ubze after EndBlock")
 
 	after := s.pool(t, s.usdPool)
 	require.Equal(t, pool.reserveBase().Add(feeSwap.inReserveAdd).Add(txSwap.inReserveAdd), after.reserveBase(), "usd reserve")
@@ -1206,15 +1202,12 @@ func (s *ammSuite) requireSwap(t *testing.T, events []helpers.Event, creator, po
 }
 
 // requireTakerFeeBurned asserts the taker fee, paid in ubze, went straight to
-// the burner module in a transfer of its own, and nothing went through the
-// burner fee collector.
+// the burner module in a transfer of its own.
 func (s *ammSuite) requireTakerFeeBurned(t *testing.T, res helpers.TxResult) {
 	t.Helper()
 	fee := sdk.NewCoin(chain.Denom, s.params.MarketTakerFee.Amount)
 	sends := helpers.EventsWith(filterType(res.Events, "transfer"), map[string]string{"sender": s.tradebin, "recipient": s.burner, "amount": fee.String()})
 	require.NotEmpty(t, sends, "taker fee to the burner")
-	require.True(t, s.transferred(t, res.Events, s.tradebin, s.burnerFees, chain.Denom).IsZero(), "nothing to the burner fee collector")
-	require.True(t, s.transferred(t, s.blockEvents(t, res.Height), s.burnerFees, s.burner, chain.Denom).IsZero(), "nothing from the burner fee collector in EndBlock")
 }
 
 // burnedWithTakerFee is what tradebin sends the burner in ubze in a swap tx:

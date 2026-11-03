@@ -5,7 +5,6 @@ TxFeeCollector standardizes fees by converting module balances to the native den
 ## What It Does
 - **Fee conversion:** Swaps non-native fees held by:
   - the main fee collector,
-  - the burner module,
   - the community pool fee collector,
   into the native denom via the trade module when possible. Skipped coins (non-swappable) can be forwarded to burner.
 - **Token community pools:** Before converting `txfeecollector_cp`, the module forwards every coin there whose denom has a community pool address (set by the factory token's admin in its `DenomConfig`, `MsgSetDenomConfig` in x/tokenfactory) to that address, once per block. Each forwarded coin emits a `CommunityPoolFeePaidEvent` (denom, recipient, amount). See [Community pool fees](#community-pool-fees).
@@ -15,9 +14,8 @@ TxFeeCollector standardizes fees by converting module balances to the native den
 - **Governance:** Parameters can be updated via `MsgUpdateParams` (authority only).
 
 ## Module Accounts
-The module registers three dedicated accounts:
+The module registers two dedicated accounts:
 - **`txfeecollector`** – holds non-native fee tokens awaiting conversion to native denom.
-- **`txfeecollector_burner`** – held fees designated for the burner module. Since v8.3.0 every burn-bound fee goes straight to the `burner` module, so this account receives nothing new.
 - **`txfeecollector_cp`** – holds fees designated for the community pool via the distribution module.
 
 At EndBlock, collected fees are converted to native denom and distributed to their respective destinations.
@@ -72,6 +70,7 @@ Adjust flags to your governance CLI; the message fields are just `validator_min_
 - Factory tokens' gas surcharge (ante handler) is charged into `txfeecollector_cp`, or straight to the `burner` module for tokens without a community pool
 - Burn-bound fees (the token transfer fee and gas surcharge, the order book fees, the DAO creation fee, proposal costs and kept deposits) go straight to the `burner` module instead of `txfeecollector_burner`: factory tokens are burned as is instead of being sold for ubze first
 - Added the `GasSurchargePaidEvent` typed event
+- Removed the `txfeecollector_burner` module account and its EndBlock conversion. The upgrade handler sends whatever the address still holds to the `burner` module. The old account stays in auth state and its address is no longer blocked: coins sent there by mistake stay there
 
 ### v8.2.0
 - Added the inbound IBC transfer filter (`ibcmiddleware`), wrapping the transfer application inside the ICS-29 fee middleware, driven by the new `blocked_ibc_inbound` parameter

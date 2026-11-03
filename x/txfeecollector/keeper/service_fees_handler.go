@@ -23,10 +23,6 @@ func (k Keeper) ConvertCollectedFeesToNativeDenom(ctx sdk.Context) error {
 	return k.convertFeesAndSend(ctx, types.ModuleName, authtypes.FeeCollectorName, true)
 }
 
-func (k Keeper) ConvertBurnerFeesToNativeDenom(ctx sdk.Context) error {
-	return k.convertFeesAndSend(ctx, types.BurnerFeeCollector, burnermoduletypes.ModuleName, true)
-}
-
 // ConvertCommunityPoolFeesToNativeDenom funds the chain's community pool with every coin held for it, swapped to native
 // denom. EndBlock runs it when the routing step failed, so the coins it couldn't forward take the old path.
 func (k Keeper) ConvertCommunityPoolFeesToNativeDenom(ctx sdk.Context) error {
