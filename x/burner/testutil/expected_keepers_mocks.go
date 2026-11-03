@@ -146,20 +146,6 @@ func (mr *MockBankKeeperMockRecorder) BurnCoins(ctx, moduleName, amounts any) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BurnCoins", reflect.TypeOf((*MockBankKeeper)(nil).BurnCoins), ctx, moduleName, amounts)
 }
 
-// GetAllBalances mocks base method.
-func (m *MockBankKeeper) GetAllBalances(ctx context.Context, addr types.AccAddress) types.Coins {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllBalances", ctx, addr)
-	ret0, _ := ret[0].(types.Coins)
-	return ret0
-}
-
-// GetAllBalances indicates an expected call of GetAllBalances.
-func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBalances", reflect.TypeOf((*MockBankKeeper)(nil).GetAllBalances), ctx, addr)
-}
-
 // GetBalance mocks base method.
 func (m *MockBankKeeper) GetBalance(ctx context.Context, addr types.AccAddress, denom string) types.Coin {
 	m.ctrl.T.Helper()
@@ -172,6 +158,21 @@ func (m *MockBankKeeper) GetBalance(ctx context.Context, addr types.AccAddress, 
 func (mr *MockBankKeeperMockRecorder) GetBalance(ctx, addr, denom any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBalance", reflect.TypeOf((*MockBankKeeper)(nil).GetBalance), ctx, addr, denom)
+}
+
+// GetBalancesPage mocks base method.
+func (m *MockBankKeeper) GetBalancesPage(ctx context.Context, addr types.AccAddress, afterDenom string, limit int) (types.Coins, string) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBalancesPage", ctx, addr, afterDenom, limit)
+	ret0, _ := ret[0].(types.Coins)
+	ret1, _ := ret[1].(string)
+	return ret0, ret1
+}
+
+// GetBalancesPage indicates an expected call of GetBalancesPage.
+func (mr *MockBankKeeperMockRecorder) GetBalancesPage(ctx, addr, afterDenom, limit any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBalancesPage", reflect.TypeOf((*MockBankKeeper)(nil).GetBalancesPage), ctx, addr, afterDenom, limit)
 }
 
 // HasSupply mocks base method.

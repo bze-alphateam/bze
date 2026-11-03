@@ -131,7 +131,7 @@ func (suite *IntegrationTestSuite) TestHooks_PeriodicBurnHook_EnqueueAndProcess(
 	)
 
 	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
-	suite.bank.EXPECT().GetAllBalances(gomock.Any(), addr).Return(allCoins).Times(1)
+	suite.bank.EXPECT().GetBalancesPage(gomock.Any(), addr, "", types.MaxDenomsBurnPerBlock+1).Return(allCoins, "").Times(1)
 
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ubze").Return(true).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "utoken").Return(true).Times(1)
@@ -165,7 +165,7 @@ func (suite *IntegrationTestSuite) TestHooks_PeriodicBurnHook_EmptyBalance() {
 	}
 
 	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
-	suite.bank.EXPECT().GetAllBalances(gomock.Any(), addr).Return(sdk.NewCoins()).Times(1)
+	suite.bank.EXPECT().GetBalancesPage(gomock.Any(), addr, "", types.MaxDenomsBurnPerBlock+1).Return(sdk.NewCoins(), "").Times(1)
 
 	err = suite.k.ProcessPeriodicBurnQueue(suite.ctx)
 	suite.Require().NoError(err)
@@ -202,7 +202,7 @@ func (suite *IntegrationTestSuite) TestHooks_PeriodicBurnHook_OnlyIBCTokens() {
 	refundedCoins := sdk.NewCoins()
 
 	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
-	suite.bank.EXPECT().GetAllBalances(gomock.Any(), addr).Return(ibcOnlyCoins).Times(1)
+	suite.bank.EXPECT().GetBalancesPage(gomock.Any(), addr, "", types.MaxDenomsBurnPerBlock+1).Return(ibcOnlyCoins, "").Times(1)
 
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/ABC123").Return(false).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/DEF456").Return(false).Times(1)

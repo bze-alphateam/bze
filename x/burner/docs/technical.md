@@ -35,6 +35,9 @@ This file captures implementation details for integrators and operators. For use
 - The module expects the epoch module to provide `"week"` and `"hour"` identifiers to drive hooks; misconfiguration will disable scheduled burns/cleanup.
 
 ## Version History
+### v8.3.0
+- `ProcessPeriodicBurnQueue()` reads at most 101 balances of the burner account per block (bounded `GetBalancesPage` instead of `GetAllBalances`); it burns the first 100 and keeps the queue pending only when the 101st exists
+
 
 ### v8.1.0
 - Periodic burning moved from synchronous epoch hook to queued EndBlock processing: `EnqueuePeriodicBurn()` queues the work, `ProcessPeriodicBurnQueue()` processes up to 100 denoms per block
