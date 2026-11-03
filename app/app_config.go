@@ -78,6 +78,9 @@ const (
 	removedNftModuleName = "nft"
 	// removedFeeIbcModuleName is the module name of the ICS-29 fee middleware (ibcfeetypes.ModuleName).
 	removedFeeIbcModuleName = "feeibc"
+	// removedBurnerFeeCollectorName is the module name of txfeecollector_burner, retired in v8.3.0 (burn-bound fees go
+	// straight to the burner module).
+	removedBurnerFeeCollectorName = "txfeecollector_burner"
 )
 
 var (
@@ -211,8 +214,10 @@ var (
 		removedNftModuleName,
 		removedFeeIbcModuleName,
 		txfeecollectormoduletypes.ModuleName,
-		// txfeecollector_burner, removed in v8.3.0, is not kept blocked like nft and
-		// feeibc: the upgrade sweeps it to the burner and nothing sends there any more
+		// txfeecollector_burner is retired in v8.3.0 and kept blocked like nft and
+		// feeibc. The upgrade still sweeps it to the burner: blocking only stops
+		// plain sends to it, never sends out of it
+		removedBurnerFeeCollectorName,
 		txfeecollectormoduletypes.CpFeeCollector,
 		daomoduletypes.ModuleName,
 		// We allow the following module accounts to receive funds:

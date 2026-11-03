@@ -1180,7 +1180,8 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	s.v830OwnerPriceIndex(t, b.queue)
 
 	// the sweep left txfeecollector_burner empty (step 4 checked the moves),
-	// and nothing sends there any more
+	// and its retired address still refuses funds
+	s.requireAccountBlocked(t, upV830BurnerFees)
 	require.True(t, s.balances(t, 0, s.accounts[upV830BurnerFees]).IsZero(), "%s stays empty", upV830BurnerFees)
 }
 

@@ -5,7 +5,10 @@ import (
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/require"
 
@@ -32,7 +35,8 @@ func TestUpgrade_SweepsBurnerFeeCollectorToBurner(t *testing.T) {
 		sdk.NewInt64Coin(tradebintypes.GetLpDenom("factory/bze1creator/token_ubze"), 89),
 	)
 	require.NoError(t, bApp.BankKeeper.MintCoins(ctx, minttypes.ModuleName, left))
-	require.NoError(t, bApp.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, old, left))
+	// pre-upgrade state: the address now stays blocked, so seed it with a plain send (no blocked-recipient check)
+	require.NoError(t, bApp.BankKeeper.SendCoins(ctx, authtypes.NewModuleAddress(minttypes.ModuleName), old, left))
 	burnerBefore := bApp.BankKeeper.GetAllBalances(ctx, burner)
 	supplyBefore := supplyOf(bApp, ctx, left)
 
@@ -46,11 +50,13 @@ func TestUpgrade_SweepsBurnerFeeCollectorToBurner(t *testing.T) {
 	require.Equal(t, supplyBefore.String(), supplyOf(bApp, ctx, left).String(), "nothing minted or burned")
 }
 
-// The app no longer registers txfeecollector_burner: no module account permission and no blocked address.
+// The app no longer registers txfeecollector_burner as a module account (no permission), but its retired address
+// stays blocked so nothing sent there is stranded.
 func TestAppWiring_NoBurnerFeeCollector(t *testing.T) {
 	bApp, _ := newRateLimitApp(t)
 	require.NotContains(t, app.GetMaccPerms(), "txfeecollector_burner")
-	require.NotContains(t, app.BlockedAddresses(), "txfeecollector_burner")
+	require.True(t, app.BlockedAddresses()["txfeecollector_burner"], "the retired address stays blocked")
+	require.True(t, bApp.BankKeeper.BlockedAddr(authtypes.NewModuleAddress("txfeecollector_burner")), "the bank keeper blocks it")
 	require.Nil(t, bApp.AccountKeeper.GetModuleAddress("txfeecollector_burner"))
 	// the collectors that stay are still registered
 	require.Contains(t, app.GetMaccPerms(), "txfeecollector")
@@ -63,4 +69,24 @@ func supplyOf(bApp *app.App, ctx sdk.Context, coins sdk.Coins) sdk.Coins {
 		supply = supply.Add(bApp.BankKeeper.GetSupply(ctx, c.Denom))
 	}
 	return supply
+}
+
+// After the upgrade a plain bank send to the retired txfeecollector_burner address is rejected by the real bank msg
+// server, and nothing moves.
+func TestBankSend_RetiredBurnerFeeCollectorRejected(t *testing.T) {
+	bApp, ctx := newRateLimitApp(t)
+	old := authtypes.NewModuleAddress("txfeecollector_burner")
+	sender := sdk.AccAddress("sender______________")
+	coins := sdk.NewCoins(sdk.NewInt64Coin("ubze", 1_000))
+	require.NoError(t, bApp.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins))
+	require.NoError(t, bApp.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sender, coins))
+
+	baseKeeper, ok := bApp.BankKeeper.(bankkeeper.BaseKeeper)
+	require.True(t, ok)
+	_, err := bankkeeper.NewMsgServerImpl(baseKeeper).Send(ctx, banktypes.NewMsgSend(sender, old, coins))
+	require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+	require.ErrorContains(t, err, "is not allowed to receive funds")
+
+	require.True(t, bApp.BankKeeper.GetAllBalances(ctx, old).IsZero(), "nothing reached the retired address")
+	require.Equal(t, coins.String(), bApp.BankKeeper.GetAllBalances(ctx, sender).String(), "the sender keeps the coins")
 }
