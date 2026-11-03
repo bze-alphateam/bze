@@ -134,7 +134,7 @@ Partial order fills can leave fractional coin amounts (dust) that are too small 
 - `bzed query tradebin market <id>` / `markets` – market listings.
 - `bzed query tradebin asset-markets <asset>` – all markets where an asset is base or quote.
 - `bzed query tradebin user-market-orders <address> --market <id>` – paginated user orders in a market.
-- `bzed query tradebin market-aggregated-orders <market> <buy|sell>` – aggregated order book at price levels, with the number of distinct owners resting at each (`owners`). At a price where one owner rests several orders placed before v8.3.0, `owners` can count fewer owners than rest there, even 0 on a level that still holds orders, once the earliest of those orders was cancelled or filled; the crowded-level gas there is lower accordingly.
+- `bzed query tradebin market-aggregated-orders <market> <buy|sell>` – aggregated order book at price levels, with the number of distinct owners resting at each (`owners`). At a price where one owner rests several orders placed before v8.3.0, `owners` can count fewer owners than rest there, even 0 on a level that still holds orders, once the earliest of those orders was cancelled or filled in full; the crowded-level gas there is lower accordingly.
 - `bzed query tradebin market-history <market>` – execution history for a market.
 - `bzed query tradebin market-order <market> <buy|sell> <order-id>` – single order details.
 - `bzed query tradebin all-user-dust <address>` – fractional dust from partial fills.
