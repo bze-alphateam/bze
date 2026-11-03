@@ -66,7 +66,8 @@ const (
 // or refunded, the minimum kept on a resting order, dust at a fractional
 // price, MsgFillOrders on buy orders with its refunds, cancels and their
 // refusals, a cancel followed by a fill at its price in one tx, crossed-book
-// and placement refusals, a self-trade, a top-up of a resting order and the
+// and placement refusals, a self-trade, a top-up of a resting order (to the
+// back of its price level, under a new id) and the
 // extra gas of new owners at a crowded price level. Every step asserts the exact
 // balances of both makers and the taker, the trading fees on their way to the
 // burner, the engine events of the tx and the order book; the suite ends with
@@ -97,7 +98,7 @@ func TestOrderBook(t *testing.T) {
 	t.Run("14 placement refusals", s.placementRefusals)
 	t.Run("15 self-trade", s.selfTrade)
 	t.Run("16 deep price level, bounded taker gas", s.deepLevel)
-	t.Run("17 top-up keeps the id and the place", s.topUp)
+	t.Run("17 top-up moves to the back under a new id", s.topUp)
 	t.Run("18 crowded price level costs new owners more gas", s.crowdedLevel)
 	t.Run("19 module holds the book and the dust", s.conservation)
 }
@@ -316,7 +317,8 @@ func (s *orderBookSuite) keepsMinimum(t *testing.T) {
 // 0.5 as stored dust; the next payment takes the 0.5 from it and pays 23. A
 // receiver gets 23 and stores 0.5; once its dust reaches 1 it gets 24.
 // maker2's three buys at one price are one order: the first is saved, the
-// next two are added to it; each still pays its own maker fee and escrow.
+// next two are added to it, each time under the new buy's id; each still pays
+// its own maker fee and escrow.
 func (s *orderBookSuite) dust(t *testing.T) {
 	want := s.snapshot(t)
 	require.Empty(t, s.userDust(t, s.maker2))
@@ -338,8 +340,9 @@ func (s *orderBookSuite) dust(t *testing.T) {
 		if i == 0 {
 			buy = s.requireSaved(t, res, orderID, s.maker2, "buy", "10", "2.35")
 		} else {
-			require.Equal(t, buy, orderID, "a buy at the same price takes the resting order's id")
-			s.requireAmended(t, res, buy, s.maker2, "buy", "2.35", "10", strconv.Itoa(10*(i+1)))
+			require.NotEqual(t, buy, orderID, "a buy at the same price gets a new id")
+			s.requireAmended(t, res, orderID, buy, s.maker2, "buy", "2.35", "10", strconv.Itoa(10*(i+1)))
+			buy = orderID
 		}
 		require.Equal(t, c.dust, s.userDust(t, s.maker2), "maker2 dust after paying %d", c.paid)
 	}
@@ -713,10 +716,11 @@ func (s *orderBookSuite) deepLevel(t *testing.T) {
 }
 
 // 17. maker1 and maker2 rest a sell each at one price, then maker1 adds to
-// its sell at that price: maker1's order grows under its id, keeps its place
-// ahead of maker2's and the tx emits an OrderAmendedEvent instead of saving a
-// new order. A taker for maker1's grown order plus 2 (the minimum) fills
-// maker1's whole first, then 2 of maker2's.
+// its sell at that price (BZE-267): maker1's order grows under the new id of
+// the top-up and goes behind maker2's, the old id is gone (a cancel by it is
+// refused as not found) and the tx emits an OrderAmendedEvent with the old id
+// as previous_id instead of saving a new order. A taker for 18 then fills
+// maker2's whole sell first and 8 of maker1's grown one.
 func (s *orderBookSuite) topUp(t *testing.T) {
 	const price = "5.5"
 	want, history := s.snapshot(t), s.history(t)
@@ -726,8 +730,8 @@ func (s *orderBookSuite) topUp(t *testing.T) {
 	s.requireSaved(t, res2, second, s.maker2, "sell", "10", price)
 	res3, topUp := s.place(t, s.maker1, "sell", 6, price)
 	s.requireFees(t, res3, s.maker1, s.makerFee(), sdk.NewInt64Coin(s.ob, 6))
-	require.Equal(t, first, topUp, "the top-up takes the resting order's id")
-	s.requireAmended(t, res3, first, s.maker1, "sell", price, "6", "16")
+	require.NotEqual(t, first, topUp, "the top-up gets a new id")
+	s.requireAmended(t, res3, topUp, first, s.maker1, "sell", price, "6", "16")
 	require.Empty(t, s.engineEvents(t, res3, "OrderSavedEvent", nil), "the top-up saves no order")
 	for _, r := range []struct {
 		u   ibc.Wallet
@@ -740,28 +744,42 @@ func (s *orderBookSuite) topUp(t *testing.T) {
 	s.requireBalances(t, want)
 	s.requireBook(t, obBook{Buy: map[string]string{"1": "100"}, Sell: map[string]string{price: "26", "6": "100"}})
 	maker1Orders := s.userOrders(t, s.maker1)
-	require.Contains(t, maker1Orders, obOrder{ID: first, OrderType: "sell", Amount: "16", Price: price, Owner: s.maker1.FormattedAddress()})
+	require.Contains(t, maker1Orders, obOrder{ID: topUp, OrderType: "sell", Amount: "16", Price: price, Owner: s.maker1.FormattedAddress()})
+	for _, o := range maker1Orders {
+		require.NotEqual(t, first, o.ID, "maker1's old id is gone")
+	}
+
+	// a cancel by the old id is refused and changes nothing
+	book := s.book(t)
+	res, err := helpers.ExecTxWith(s.ctx, s.bze, s.maker1, []helpers.TxOption{helpers.WithGas(obTxGas)}, "tradebin", "cancel-order", s.market, first, "sell")
+	s.requireRefused(t, res, err, 4008, "order not found")
+	want.paid(t, s, s.maker1, res, sdkmath.ZeroInt())
+	s.requireBalances(t, want)
+	require.Equal(t, book, s.book(t), "order book changed")
 
 	res, orderID := s.place(t, s.taker, "buy", 18, price)
 	s.requireFees(t, res, s.taker, s.takerFee(), sdk.NewCoin(chain.Denom, mulPrice(18, price)))
 	want.paid(t, s, s.taker, res, s.takerFee())
 	s.requireExecuted(t, res, orderID, s.taker,
-		obExec{first, s.maker1, "sell", "16", price},
-		obExec{second, s.maker2, "sell", "2", price},
+		obExec{second, s.maker2, "sell", "10", price},
+		obExec{topUp, s.maker1, "sell", "8", price},
 	)
 	s.requireNotSaved(t, res, orderID)
 	want.move(s.taker, chain.Denom, -mulPrice(18, price).Int64())
 	want.move(s.taker, s.ob, 18)
-	want.move(s.maker1, chain.Denom, mulPrice(16, price).Int64())
-	want.move(s.maker2, chain.Denom, mulPrice(2, price).Int64())
+	want.move(s.maker2, chain.Denom, mulPrice(10, price).Int64())
+	want.move(s.maker1, chain.Denom, mulPrice(8, price).Int64())
 
 	s.requireBalances(t, want)
 	s.requireBook(t, obBook{Buy: map[string]string{"1": "100"}, Sell: map[string]string{price: "8", "6": "100"}})
-	_, found := s.marketOrder(t, "sell", first)
-	require.False(t, found, "maker1's grown sell is filled whole")
+	_, found := s.marketOrder(t, "sell", second)
+	require.False(t, found, "maker2's sell, ahead of the top-up, is filled whole")
+	grown, found := s.marketOrder(t, "sell", topUp)
+	require.True(t, found, "maker1's grown sell still rests")
+	require.Equal(t, "8", grown.Amount)
 	s.requireNewHistory(t, history,
-		obHistory{"sell", "16", price, s.maker1.FormattedAddress(), s.taker.FormattedAddress()},
-		obHistory{"sell", "2", price, s.maker2.FormattedAddress(), s.taker.FormattedAddress()},
+		obHistory{"sell", "10", price, s.maker2.FormattedAddress(), s.taker.FormattedAddress()},
+		obHistory{"sell", "8", price, s.maker1.FormattedAddress(), s.taker.FormattedAddress()},
 	)
 }
 
@@ -802,10 +820,12 @@ func (s *orderBookSuite) crowdedLevel(t *testing.T) {
 	// the fourth joins three owners: one owner past the window
 	require.InDelta(t, gas[2]+obCrowdExtraGas, gas[3], obCrowdGasSlack, "the fourth owner pays the extra gas")
 
-	// the first maker adds to its order: no new owner, no extra gas
+	// the first maker adds to its order: no new owner, no extra gas; the
+	// merged order rests under the top-up's new id
 	res := s.mustExecMsgs(t, makers[0], obCrowdTxGas, s.orderMsg(makers[0], "sell", obCrowdAmount, obCrowdPrice))
-	require.Equal(t, ids[0], s.fillIDs(t, res, 1)[0], "the top-up takes the resting order's id")
-	s.requireAmended(t, res, ids[0], makers[0], "sell", obCrowdPrice, strconv.Itoa(obCrowdAmount), strconv.Itoa(2*obCrowdAmount))
+	topUp := s.fillIDs(t, res, 1)[0]
+	s.requireAmended(t, res, topUp, ids[0], makers[0], "sell", obCrowdPrice, strconv.Itoa(obCrowdAmount), strconv.Itoa(2*obCrowdAmount))
+	ids[0] = topUp
 	t.Logf("maker 1 tops up at a level of 4 owners: %d gas", res.GasUsed)
 	require.Less(t, res.GasUsed, gas[2]+obCrowdGasSlack, "a top-up pays no extra gas")
 	require.Equal(t, uint64(obCrowdMakers-1), s.levelOwners(t, "sell", obCrowdPrice))
@@ -1035,8 +1055,8 @@ var obOutcomeEvents = []string{
 	tradebinEventPrefix + "OrderMessageRefundedEvent",
 }
 
-// obAmendedEvent carries the id of the order being executed (the resting
-// order it was added to) in its id attribute.
+// obAmendedEvent carries the id of the order being executed (the new id the
+// merged order rests under) in its id attribute.
 const obAmendedEvent = tradebinEventPrefix + "OrderAmendedEvent"
 
 // fillIDs returns the order ids of the orders a tx executed (one per order,
@@ -1083,21 +1103,24 @@ func (s *orderBookSuite) requireSaved(t *testing.T, res helpers.TxResult, orderI
 	return orderID
 }
 
-// requireAmended asserts the tx added amount to the owner's resting order id
-// (one OrderAmendedEvent, total the order's amount after it) and that the
-// order rests with that amount.
-func (s *orderBookSuite) requireAmended(t *testing.T, res helpers.TxResult, id string, owner ibc.Wallet, typ, price, added, total string) {
+// requireAmended asserts the tx merged amount into the owner's resting order
+// previousID under the new id (one OrderAmendedEvent, total the order's amount
+// after it), that the order rests under id with that amount and that
+// previousID is gone.
+func (s *orderBookSuite) requireAmended(t *testing.T, res helpers.TxResult, id, previousID string, owner ibc.Wallet, typ, price, added, total string) {
 	t.Helper()
 	got := s.engineEvents(t, res, "OrderAmendedEvent", map[string]string{"id": id})
 	require.Len(t, got, 1, "order %s amended once in tx %s", id, res.TxHash)
 	e := got[0].Attributes
 	require.Equal(t,
-		[]string{s.market, typ, price, owner.FormattedAddress(), added, total},
-		[]string{e["market_id"], e["order_type"], e["price"], e["owner"], e["added_amount"], e["amount"]},
+		[]string{s.market, typ, price, owner.FormattedAddress(), added, total, previousID},
+		[]string{e["market_id"], e["order_type"], e["price"], e["owner"], e["added_amount"], e["amount"], e["previous_id"]},
 		"amendment of order %s", id)
 	order, found := s.marketOrder(t, typ, id)
 	require.True(t, found, "amended order %s is on the book", id)
 	require.Equal(t, total, order.Amount)
+	_, found = s.marketOrder(t, typ, previousID)
+	require.False(t, found, "order %s replaced by %s is gone", previousID, id)
 }
 
 // requireRefunded asserts the one OrderMessageRefundedEvent of an order: the

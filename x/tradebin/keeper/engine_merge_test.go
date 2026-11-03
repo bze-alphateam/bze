@@ -62,27 +62,40 @@ func (suite *IntegrationTestSuite) TestEngineMerge_SameOwnerSamePriceAddsToResti
 	suite.resetEvents()
 	suite.placeOrders(engine, limitOrder(types.OrderTypeSell, "6", "1.000000000000000000", owner))
 
-	// no new id, the resting order grew and kept its creation time
-	suite.Require().Equal(uint64(1), suite.k.GetOrderCounter(suite.ctx))
+	// one order: the merged amount under the new id and creation time of the top-up
+	suite.Require().Equal(uint64(2), suite.k.GetOrderCounter(suite.ctx))
 	orders := suite.k.GetAllOrder(suite.ctx)
 	suite.Require().Len(orders, 1)
-	suite.Require().Equal(orderId(0), orders[0].Id)
+	suite.Require().Equal(orderId(1), orders[0].Id)
 	suite.Require().Equal("16", orders[0].Amount)
 	suite.Require().Equal("1", orders[0].Price)
-	suite.Require().Equal(placedAt.Unix(), orders[0].CreatedAt)
+	suite.Require().Equal(placedAt.Add(time.Hour).Unix(), orders[0].CreatedAt)
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, "1", "16")
-	suite.requireOwnerPriceOrder(owner, types.OrderTypeSell, "1", orderId(0))
+	suite.requireOwnerPriceOrder(owner, types.OrderTypeSell, "1", orderId(1))
+	suite.requireOwners(types.OrderTypeSell, "1", 1)
+
+	// no bank call (the mock fails on any): the coins of the resting order stay escrowed in the module,
+	// the aggregate grew by the top-up only
+
+	// every reference to the old id is gone
+	_, found := suite.k.GetOrder(suite.ctx, getMarketId(), types.OrderTypeSell, orderId(0))
+	suite.Require().False(found)
+	ref := types.OrderReference{Id: orderId(1), MarketId: getMarketId(), OrderType: types.OrderTypeSell}
+	suite.Require().Equal([]types.OrderReference{ref}, suite.k.GetAllPriceOrder(suite.ctx))
+	suite.Require().Equal([]types.OrderReference{ref}, suite.k.GetAllUserOrder(suite.ctx))
+	suite.Require().Equal([]types.OrderReference{ref}, suite.k.GetAllOwnerPriceOrder(suite.ctx))
 
 	events := suite.tradebinTypedEvents()
 	suite.Require().Empty(savedEvents(events))
 	suite.Require().Equal([]*types.OrderAmendedEvent{{
-		Id:          orderId(0),
+		Id:          orderId(1),
 		MarketId:    getMarketId(),
 		OrderType:   types.OrderTypeSell,
 		Price:       "1",
 		Owner:       owner.String(),
 		AddedAmount: "6",
 		Amount:      "16",
+		PreviousId:  orderId(0),
 	}}, amendedEvents(events))
 }
 
@@ -124,7 +137,7 @@ func (suite *IntegrationTestSuite) TestEngineMerge_OtherOwnerPriceOrSideGetsNewO
 	suite.requireNoOwnerPriceOrder(owner, types.OrderTypeBuy, "1")
 }
 
-// The top-up is matched first, under the id of the resting order, and its remainder is merged.
+// The top-up is matched first, under its own new id, and its remainder is merged under that id.
 func (suite *IntegrationTestSuite) TestEngineMerge_TopUpMatchesFirstThenMerges() {
 	suite.k.SetMarket(suite.ctx, market)
 	engine := suite.newEngine()
@@ -141,10 +154,10 @@ func (suite *IntegrationTestSuite) TestEngineMerge_TopUpMatchesFirstThenMerges()
 	suite.resetEvents()
 	suite.placeOrders(engine, limitOrder(types.OrderTypeBuy, "7", "1", owner))
 
-	suite.Require().Equal(uint64(1), suite.k.GetOrderCounter(suite.ctx))
+	suite.Require().Equal(uint64(2), suite.k.GetOrderCounter(suite.ctx))
 	orders := suite.k.GetAllOrder(suite.ctx)
 	suite.Require().Len(orders, 1)
-	suite.Require().Equal(orderId(0), orders[0].Id)
+	suite.Require().Equal(orderId(1), orders[0].Id)
 	suite.Require().Equal("13", orders[0].Amount)
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, "1", "13")
 	_, found := suite.k.GetAggregatedOrder(suite.ctx, getMarketId(), types.OrderTypeSell, "1")
@@ -154,17 +167,19 @@ func (suite *IntegrationTestSuite) TestEngineMerge_TopUpMatchesFirstThenMerges()
 	executed := executedEvents(events)
 	suite.Require().Len(executed, 1)
 	suite.Require().Equal(sell.Id, executed[0].Id)
-	suite.Require().Equal(orderId(0), executed[0].OrderId)
+	suite.Require().Equal(orderId(1), executed[0].OrderId)
 	suite.Require().Equal("4", executed[0].Amount)
 	amended := amendedEvents(events)
 	suite.Require().Len(amended, 1)
+	suite.Require().Equal(orderId(1), amended[0].Id)
+	suite.Require().Equal(orderId(0), amended[0].PreviousId)
 	suite.Require().Equal("3", amended[0].AddedAmount)
 	suite.Require().Equal("13", amended[0].Amount)
 	suite.Require().Empty(savedEvents(events))
 }
 
-// A top-up whose remainder is below the minimum amount is refunded like a fresh order, and the resting
-// order is untouched.
+// A top-up whose remainder is below the minimum amount is refunded like a fresh order, under its own
+// new id, and the resting order is untouched: it keeps its id and place.
 func (suite *IntegrationTestSuite) TestEngineMerge_TopUpRemainderBelowMinIsRefunded() {
 	suite.k.SetMarket(suite.ctx, market)
 	engine := suite.newEngine()
@@ -187,12 +202,13 @@ func (suite *IntegrationTestSuite) TestEngineMerge_TopUpRemainderBelowMinIsRefun
 	suite.Require().Equal("10", resting.Amount)
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, "1", "10")
 	suite.requireOwnerPriceOrder(owner, types.OrderTypeBuy, "1", orderId(0))
+	suite.Require().Equal(uint64(2), suite.k.GetOrderCounter(suite.ctx))
 
 	events := suite.tradebinTypedEvents()
 	suite.Require().Empty(amendedEvents(events))
 	refunds := refundedEvents(events)
 	suite.Require().Len(refunds, 1)
-	suite.Require().Equal(orderId(0), refunds[0].OrderId)
+	suite.Require().Equal(orderId(1), refunds[0].OrderId)
 	suite.Require().Equal(types.RefundReasonBelowMinAmount, refunds[0].Reason)
 	suite.Require().Equal("1", refunds[0].Amount)
 }
@@ -206,7 +222,7 @@ func (suite *IntegrationTestSuite) TestEngineMerge_CancelRefundsTheWholeMergedOr
 		limitOrder(types.OrderTypeSell, "10", "1", owner),
 		limitOrder(types.OrderTypeSell, "6", "1", owner),
 	)
-	merged, found := suite.k.GetOrder(suite.ctx, getMarketId(), types.OrderTypeSell, orderId(0))
+	merged, found := suite.k.GetOrder(suite.ctx, getMarketId(), types.OrderTypeSell, orderId(1))
 	suite.Require().True(found)
 
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, owner, sdk.NewCoins(sdk.NewInt64Coin(market.Base, 16))).Return(nil).Times(1)
@@ -234,7 +250,7 @@ func (suite *IntegrationTestSuite) TestEngineMerge_FillThatEmptiesTheMergedOrder
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, owner, sdk.NewCoins(sdk.NewInt64Coin(market.Quote, 5))).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, taker, sdk.NewCoins(sdk.NewInt64Coin(market.Base, 5))).Return(nil).Times(1)
 	suite.Require().NoError(engine.FillOrder(suite.ctx, limitOrder(types.OrderTypeBuy, "5", "1", taker)))
-	suite.requireOwnerPriceOrder(owner, types.OrderTypeSell, "1", orderId(0))
+	suite.requireOwnerPriceOrder(owner, types.OrderTypeSell, "1", orderId(1))
 
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, owner, sdk.NewCoins(sdk.NewInt64Coin(market.Quote, 11))).Return(nil).Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, taker, sdk.NewCoins(sdk.NewInt64Coin(market.Base, 11))).Return(nil).Times(1)
@@ -252,8 +268,9 @@ func (suite *IntegrationTestSuite) TestEngineMerge_FillThatEmptiesTheMergedOrder
 	suite.requireOwnerPriceOrder(owner, types.OrderTypeSell, "1", orderId(counter))
 }
 
-// A top-up keeps the place of the resting order in the book: it is filled before later makers.
-func (suite *IntegrationTestSuite) TestEngineMerge_TopUpKeepsFifoPosition() {
+// A top-up moves the whole merged order to the back of its price level (BZE-267): a maker who rested
+// at that price before the top-up is filled first, then the merged order.
+func (suite *IntegrationTestSuite) TestEngineMerge_TopUpGoesToTheBackOfTheLevel() {
 	suite.k.SetMarket(suite.ctx, market)
 	engine := suite.newEngine()
 	first := sdk.AccAddress("addr1_______________")
@@ -265,26 +282,63 @@ func (suite *IntegrationTestSuite) TestEngineMerge_TopUpKeepsFifoPosition() {
 		limitOrder(types.OrderTypeSell, "10", "1", second),
 		limitOrder(types.OrderTypeSell, "5", "1", first),
 	)
+	suite.requireOwnerPriceOrder(first, types.OrderTypeSell, "1", orderId(2))
+	suite.requireOwners(types.OrderTypeSell, "1", 2)
 
-	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, first, sdk.NewCoins(sdk.NewInt64Coin(market.Quote, 15))).Return(nil).Times(1)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, second, sdk.NewCoins(sdk.NewInt64Coin(market.Quote, 5))).Return(nil).Times(1)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, taker, sdk.NewCoins(sdk.NewInt64Coin(market.Base, 15))).Return(nil).Times(1)
-	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, taker, sdk.NewCoins(sdk.NewInt64Coin(market.Base, 5))).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, second, sdk.NewCoins(sdk.NewInt64Coin(market.Quote, 10))).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, first, sdk.NewCoins(sdk.NewInt64Coin(market.Quote, 10))).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, taker, sdk.NewCoins(sdk.NewInt64Coin(market.Base, 10))).Return(nil).Times(2)
 
 	suite.resetEvents()
 	suite.Require().NoError(engine.FillOrder(suite.ctx, limitOrder(types.OrderTypeBuy, "20", "1", taker)))
 
 	executed := executedEvents(suite.tradebinTypedEvents())
 	suite.Require().Len(executed, 2)
-	suite.Require().Equal(orderId(0), executed[0].Id)
-	suite.Require().Equal("15", executed[0].Amount)
-	suite.Require().Equal(orderId(1), executed[1].Id)
-	suite.Require().Equal("5", executed[1].Amount)
+	suite.Require().Equal(orderId(1), executed[0].Id)
+	suite.Require().Equal(second.String(), executed[0].Maker)
+	suite.Require().Equal("10", executed[0].Amount)
+	suite.Require().Equal(orderId(2), executed[1].Id)
+	suite.Require().Equal(first.String(), executed[1].Maker)
+	suite.Require().Equal("10", executed[1].Amount)
 
-	rest, found := suite.k.GetOrder(suite.ctx, getMarketId(), types.OrderTypeSell, orderId(1))
+	rest, found := suite.k.GetOrder(suite.ctx, getMarketId(), types.OrderTypeSell, orderId(2))
 	suite.Require().True(found)
 	suite.Require().Equal("5", rest.Amount)
+	suite.Require().Len(suite.k.GetAllOrder(suite.ctx), 1)
 	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, "1", "5")
+	suite.requireOwners(types.OrderTypeSell, "1", 1)
+}
+
+// The merged order is cancelled by its new id; a cancel by the id it rested under before the top-up is
+// refused as not found and refunds nothing.
+func (suite *IntegrationTestSuite) TestEngineMerge_CancelByPreviousIdNotFound() {
+	suite.k.SetMarket(suite.ctx, market)
+	owner := sdk.AccAddress("addr1_______________")
+	suite.placeOrders(suite.newEngine(),
+		limitOrder(types.OrderTypeBuy, "10", "1", owner),
+		limitOrder(types.OrderTypeBuy, "6", "1", owner),
+	)
+
+	cancel := func(id string) error {
+		_, err := suite.msgServer.CancelOrder(suite.ctx, &types.MsgCancelOrder{
+			Creator:   owner.String(),
+			MarketId:  getMarketId(),
+			OrderId:   id,
+			OrderType: types.OrderTypeBuy,
+		})
+
+		return err
+	}
+
+	// no bank call is expected: a refused cancel refunds nothing
+	suite.Require().ErrorIs(cancel(orderId(0)), types.ErrOrderNotFound)
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, "1", "16")
+
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, owner, sdk.NewCoins(sdk.NewInt64Coin(market.Quote, 16))).Return(nil).Times(1)
+	suite.Require().NoError(cancel(orderId(1)))
+	suite.Require().Empty(suite.k.GetAllOrder(suite.ctx))
+	suite.requireOwners(types.OrderTypeBuy, "1", 0)
+	suite.requireNoOwnerPriceOrder(owner, types.OrderTypeBuy, "1")
 }
 
 // An owner-price entry that points at a missing order is refused.
@@ -302,6 +356,29 @@ func (suite *IntegrationTestSuite) TestEngineMerge_IndexedOrderMissingReturnsErr
 	suite.resetEvents()
 	err := engine.PlaceOrder(suite.ctx, order)
 	suite.Require().ErrorContains(err, "not found")
+	suite.requireNoEngineEvents()
+}
+
+// An owner-price entry that points at a missing order when the remainder rests is refused too, and
+// nothing is written.
+func (suite *IntegrationTestSuite) TestEngineMerge_IndexedOrderMissingAtRestReturnsError() {
+	engine, pk, _ := suite.mockedEngine()
+	owner := sdk.AccAddress("addr1_______________")
+	order := limitOrder(types.OrderTypeBuy, "100", "1", owner)
+	placed := withId(order, orderId(4))
+	ref := types.OrderReference{Id: orderId(3), MarketId: getMarketId(), OrderType: types.OrderTypeBuy}
+
+	gomock.InOrder(
+		pk.EXPECT().GetOwnerPriceOrder(gomock.Any(), owner.String(), getMarketId(), types.OrderTypeBuy, "1").Return(types.OrderReference{}, false).Times(1),
+		pk.EXPECT().AssignOrderId(gomock.Any(), order).Return(placed).Times(1),
+		pk.EXPECT().GetAggregatedOrder(gomock.Any(), getMarketId(), types.OrderTypeSell, "1").Return(types.AggregatedOrder{}, false).Times(1),
+		pk.EXPECT().GetOwnerPriceOrder(gomock.Any(), owner.String(), getMarketId(), types.OrderTypeBuy, "1").Return(ref, true).Times(1),
+		pk.EXPECT().GetOrder(gomock.Any(), getMarketId(), types.OrderTypeBuy, orderId(3)).Return(types.Order{}, false).Times(1),
+	)
+
+	suite.resetEvents()
+	err := engine.PlaceOrder(suite.ctx, order)
+	suite.Require().ErrorContains(err, "order "+orderId(3)+" of the owner-price index not found")
 	suite.requireNoEngineEvents()
 }
 
