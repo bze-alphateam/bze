@@ -144,12 +144,11 @@ func setupBurner(t *testing.T, ctx context.Context, net chain.IbcNetwork, simdMn
 	s.gov, err = helpers.GovAuthority(ctx, bze)
 	require.NoError(t, err)
 	for name, addr := range map[string]*string{
-		"tradebin":              &s.tradebin,
-		"burner":                &s.burner,
-		"burner_black_hole":     &s.blackHole,
-		"burner_raffle":         &s.raffleAcc,
-		"txfeecollector_burner": &s.burnerFees,
-		"txfeecollector_cp":     &s.cpFees,
+		"tradebin":          &s.tradebin,
+		"burner":            &s.burner,
+		"burner_black_hole": &s.blackHole,
+		"burner_raffle":     &s.raffleAcc,
+		"txfeecollector_cp": &s.cpFees,
 	} {
 		*addr, err = helpers.ModuleAddress(ctx, bze, name)
 		require.NoError(t, err)
@@ -288,7 +287,7 @@ func (s *burnerSuite) periodicBurn(t *testing.T) {
 	require.Equal(t, before.reserveQuote().Sub(returned.AmountOf(chain.Denom)), after.reserveQuote(), "ubze reserve")
 
 	// left in the burner: tradebin's returns and the fees moved in after the burn
-	want := returned.Add(s.transfers(t, events, s.burnerFees, s.burner)...).Add(s.transfers(t, events, s.cpFees, s.burner)...)
+	want := returned.Add(s.transfers(t, events, s.cpFees, s.burner)...)
 	require.Equal(t, want, s.addrBalances(t, s.burner, height), "burner after the burn")
 }
 
@@ -320,7 +319,7 @@ func (s *burnerSuite) interval(t *testing.T) {
 		s.requireCoinsBurnedEvent(t, height, burnable)
 		s.burns[height] = burnable
 		require.Equal(t, sdk.NewCoins(sdk.NewCoin(s.stakeLp, prev.AmountOf(s.stakeLp))), s.transfers(t, events, s.burner, s.blackHole), "LP shares locked")
-		want := s.transfers(t, events, s.burnerFees, s.burner).Add(s.transfers(t, events, s.cpFees, s.burner)...)
+		want := s.transfers(t, events, s.cpFees, s.burner)
 		require.Equal(t, want, s.addrBalances(t, s.burner, height), "burner after the pass")
 	}
 	require.Equal(t, 1, burned, "one of two consecutive ticks burns")
