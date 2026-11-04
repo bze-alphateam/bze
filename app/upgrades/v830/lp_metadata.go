@@ -41,7 +41,7 @@ func backfillLpMetadata(ctx sdk.Context, tradebin TradebinKeeper, bank MetadataK
 			md.Name = tradebintypes.LpDenomName(pool.GetId())
 		}
 		if md.Symbol == "" {
-			md.Symbol = tradebintypes.LpDenomSymbol
+			md.Symbol = tradebintypes.LpDenomSymbol(pool.GetId())
 		}
 		if md.Description == "" {
 			md.Description = tradebintypes.LpDenomDescription(pool.GetId())

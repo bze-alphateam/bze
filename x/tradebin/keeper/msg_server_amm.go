@@ -370,7 +370,7 @@ func (k msgServer) createLpDenom(ctx sdk.Context, lp *types.LiquidityPool) {
 		Base:        lp.GetLpDenom(),
 		Display:     k.getPoolScaledDenom(lp.GetId()),
 		Name:        types.LpDenomName(lp.GetId()),
-		Symbol:      types.LpDenomSymbol,
+		Symbol:      types.LpDenomSymbol(lp.GetId()),
 		Description: types.LpDenomDescription(lp.GetId()),
 	}
 

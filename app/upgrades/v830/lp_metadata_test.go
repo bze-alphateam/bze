@@ -2,6 +2,9 @@ package v830_test
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"strings"
 	"testing"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -94,7 +97,7 @@ func TestHandler_BackfillsBlankLpMetadata(t *testing.T) {
 		got := store.byDenom[pool.LpDenom]
 		require.NoError(t, got.Validate())
 		require.Equal(t, "LP share of pool "+pool.Id, got.Name)
-		require.Equal(t, "LP", got.Symbol)
+		require.Equal(t, wantLpSymbol(pool.Id), got.Symbol)
 		require.Equal(t, tradebintypes.LpDenomDescription(pool.Id), got.Description)
 	}
 	for _, before := range []banktypes.Metadata{legacy, hashed} {
@@ -104,6 +107,8 @@ func TestHandler_BackfillsBlankLpMetadata(t *testing.T) {
 		require.Equal(t, before.Display, got.Display)
 	}
 	require.Equal(t, fine, store.byDenom[fine.Base])
+	// each pool's shares get their own symbol
+	require.NotEqual(t, store.byDenom[legacy.Base].Symbol, store.byDenom[hashed.Base].Symbol)
 }
 
 // Only the blank fields are filled: a stored name or description is kept.
@@ -118,7 +123,7 @@ func TestHandler_LpBackfillKeepsSetFields(t *testing.T) {
 	require.NoError(t, got.Validate())
 	require.Equal(t, "Custom name", got.Name)
 	require.Equal(t, "Custom description", got.Description)
-	require.Equal(t, "LP", got.Symbol)
+	require.Equal(t, wantLpSymbol(legacyPoolId), got.Symbol)
 }
 
 // A pool whose LP denom has no metadata gets none invented, and metadata that would still be invalid after the fill
@@ -138,4 +143,10 @@ func TestHandler_LpBackfillSkipsMissingAndInvalidMetadata(t *testing.T) {
 	require.Equal(t, broken, store.byDenom[broken.Base])
 	_, found := store.byDenom[tradebintypes.GetLpDenom(hashPoolId)]
 	require.False(t, found)
+}
+
+// wantLpSymbol is the expected LP share symbol, derived here independently of the code under test.
+func wantLpSymbol(poolId string) string {
+	sum := sha256.Sum256([]byte(poolId))
+	return "LP-" + strings.ToUpper(hex.EncodeToString(sum[:]))[:6]
 }

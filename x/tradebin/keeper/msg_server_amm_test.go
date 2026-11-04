@@ -3,6 +3,8 @@ package keeper_test
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"testing"
@@ -372,7 +374,7 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_Success() {
 		Base:        lpDenom,
 		Display:     lpScaledDenom,
 		Name:        "LP share of pool abc_def",
-		Symbol:      "LP",
+		Symbol:      "LP-FA16E9", // first 6 hex chars of sha256("abc_def")
 		Description: "Liquidity provider share of the abc_def pool on the BZE DEX",
 	}
 	// the bank module refuses metadata with a blank name or symbol: exported genesis would fail validation
@@ -458,6 +460,8 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_TwoIbcDenoms()
 	// the stored LP metadata must pass the bank module's own validation, which genesis validation runs
 	suite.Require().Equal(stored.GetLpDenom(), lpMetadata.Base)
 	suite.Require().NoError(lpMetadata.Validate())
+	sum := sha256.Sum256([]byte(stored.GetId()))
+	suite.Require().Equal("LP-"+strings.ToUpper(hex.EncodeToString(sum[:]))[:6], lpMetadata.Symbol)
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_InvalidCreator() {

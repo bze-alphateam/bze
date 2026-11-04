@@ -1,6 +1,9 @@
 package app_test
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"strings"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -48,7 +51,7 @@ func TestLpMetadata_NewPoolExportsValidBankGenesis(t *testing.T) {
 	require.True(t, found)
 	require.NoError(t, md.Validate())
 	require.Equal(t, "LP share of pool "+pools[0].GetId(), md.Name)
-	require.Equal(t, "LP", md.Symbol)
+	require.Equal(t, wantLpSymbol(pools[0].GetId()), md.Symbol)
 	requireBankGenesisValid(t, bApp, ctx)
 }
 
@@ -90,11 +93,17 @@ func TestLpMetadata_UpgradeBackfillsBlankEntries(t *testing.T) {
 		require.True(t, found)
 		require.NoError(t, got.Validate(), id)
 		require.Equal(t, "LP share of pool "+id, got.Name)
-		require.Equal(t, "LP", got.Symbol)
+		require.Equal(t, wantLpSymbol(id), got.Symbol)
 		require.Equal(t, before.DenomUnits, got.DenomUnits)
 		require.Equal(t, before.Display, got.Display)
 	}
 	got, _ := bApp.BankKeeper.GetDenomMetaData(ctx, fine.Base)
 	require.Equal(t, fine, got)
 	requireBankGenesisValid(t, bApp, ctx)
+}
+
+// wantLpSymbol is the expected LP share symbol, derived here independently of the code under test.
+func wantLpSymbol(poolId string) string {
+	sum := sha256.Sum256([]byte(poolId))
+	return "LP-" + strings.ToUpper(hex.EncodeToString(sum[:]))[:6]
 }
