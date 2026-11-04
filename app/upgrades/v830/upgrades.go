@@ -16,6 +16,8 @@ func CreateUpgradeHandler(
 	guardianKeeper GuardianKeeper,
 	rateLimitKeeper RateLimitKeeper,
 	bankKeeper BankKeeper,
+	tradebinKeeper TradebinKeeper,
+	metadataKeeper MetadataKeeper,
 ) upgradetypes.UpgradeHandler {
 
 	return func(c context.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -42,6 +44,8 @@ func CreateUpgradeHandler(
 		if err := sweepBurnerFeeCollector(ctx, bankKeeper); err != nil {
 			return nil, err
 		}
+
+		backfillLpMetadata(ctx, tradebinKeeper, metadataKeeper)
 
 		return newVM, nil
 	}
