@@ -2,6 +2,7 @@
 package keeper_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -368,9 +369,14 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_Success() {
 				Exponent: 6,
 			},
 		},
-		Base:    lpDenom,
-		Display: lpScaledDenom,
+		Base:        lpDenom,
+		Display:     lpScaledDenom,
+		Name:        "LP share of pool abc_def",
+		Symbol:      "LP",
+		Description: "Liquidity provider share of the abc_def pool on the BZE DEX",
 	}
+	// the bank module refuses metadata with a blank name or symbol: exported genesis would fail validation
+	suite.Require().NoError(denomMetaData.Validate())
 
 	createMarketFeeCoin := sdk.NewCoins(suite.k.CreateMarketFee(suite.ctx))
 
@@ -430,7 +436,10 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_TwoIbcDenoms()
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), ibcQuote).Return(true).AnyTimes()
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	suite.bankMock.EXPECT().SetDenomMetaData(gomock.Any(), gomock.Any()).AnyTimes()
+	var lpMetadata banktypes.Metadata
+	suite.bankMock.EXPECT().SetDenomMetaData(gomock.Any(), gomock.Any()).Do(func(_ context.Context, md banktypes.Metadata) {
+		lpMetadata = md
+	}).Times(1)
 	suite.bankMock.EXPECT().MintCoins(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	res, err := suite.msgServer.CreateLiquidityPool(suite.ctx, msg)
@@ -446,6 +455,9 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_TwoIbcDenoms()
 	suite.Require().NoError(sdk.ValidateDenom(stored.GetLpDenom()), "LP denom must be a valid SDK denom")
 	suite.Require().LessOrEqual(len(stored.GetLpDenom()), 128, "LP denom must not exceed the SDK 128-char limit")
 	suite.Require().Equal(stored.GetLpDenom(), res.GetLpDenom(), "response must carry the pool's LP denom")
+	// the stored LP metadata must pass the bank module's own validation, which genesis validation runs
+	suite.Require().Equal(stored.GetLpDenom(), lpMetadata.Base)
+	suite.Require().NoError(lpMetadata.Validate())
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_InvalidCreator() {

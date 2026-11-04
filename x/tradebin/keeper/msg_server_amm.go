@@ -367,8 +367,11 @@ func (k msgServer) createLpDenom(ctx sdk.Context, lp *types.LiquidityPool) {
 				Exponent: sharesScaleExponent,
 			},
 		},
-		Base:    lp.GetLpDenom(),
-		Display: k.getPoolScaledDenom(lp.GetId()),
+		Base:        lp.GetLpDenom(),
+		Display:     k.getPoolScaledDenom(lp.GetId()),
+		Name:        types.LpDenomName(lp.GetId()),
+		Symbol:      types.LpDenomSymbol,
+		Description: types.LpDenomDescription(lp.GetId()),
 	}
 
 	k.bankKeeper.SetDenomMetaData(ctx, denomMetaData)

@@ -37,3 +37,17 @@ func GetLpDenom(poolId string) string {
 func GetLpScaledDenom(poolId string) string {
 	return fmt.Sprintf("%s/%s", lpDenomNamespace, LpDenomHash(poolId))
 }
+
+// LpDenomSymbol is the bank metadata symbol of every LP share denom.
+const LpDenomSymbol = "LP"
+
+// LpDenomName returns the bank metadata name of a pool's LP share denom. The bank
+// module rejects metadata with a blank name or symbol, so both are always set.
+func LpDenomName(poolId string) string {
+	return fmt.Sprintf("LP share of pool %s", poolId)
+}
+
+// LpDenomDescription returns the bank metadata description of a pool's LP share denom.
+func LpDenomDescription(poolId string) string {
+	return fmt.Sprintf("Liquidity provider share of the %s pool on the BZE DEX", poolId)
+}
