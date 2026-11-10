@@ -40,7 +40,7 @@ func TestUpgrade_SweepsBurnerFeeCollectorToBurner(t *testing.T) {
 	burnerBefore := bApp.BankKeeper.GetAllBalances(ctx, burner)
 	supplyBefore := supplyOf(bApp, ctx, left)
 
-	_, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.GuardianKeeper, bApp.RatelimitKeeper, bApp.BankKeeper, bApp.TradebinKeeper, bApp.BankKeeper, bApp.RewardsKeeper)(
+	_, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.GuardianKeeper, bApp.RatelimitKeeper, bApp.BankKeeper, bApp.TradebinKeeper, bApp.BankKeeper, bApp.RewardsKeeper, ibcStoreService(bApp))(
 		ctx, upgradetypes.Plan{Name: v830.UpgradeName}, bApp.ModuleManager.GetVersionMap(),
 	)
 	require.NoError(t, err)

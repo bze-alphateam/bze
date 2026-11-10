@@ -20,7 +20,7 @@ var oldBurnerCollector = authtypes.NewModuleAddress("txfeecollector_burner")
 func runSweep(t *testing.T, bank v830.BankKeeper) error {
 	t.Helper()
 	cfg, mm, ctx := guardianSetup(t)
-	_, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, acceptingRateLimits(t), bank, noPools{}, nil, &fakeStakingRewards{})(
+	_, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, acceptingRateLimits(t), bank, noPools{}, nil, &fakeStakingRewards{}, emptyIBCStore())(
 		ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 2},
 	)
 	return err
@@ -70,7 +70,7 @@ func TestHandler_RateLimitErrorSkipsTheSweep(t *testing.T) {
 	bank := v830testutil.NewMockBankKeeper(gomock.NewController(t))
 	bank.EXPECT().GetAllBalances(gomock.Any(), gomock.Any()).Times(0)
 
-	_, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, rl, bank, noPools{}, nil, &fakeStakingRewards{})(
+	_, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, rl, bank, noPools{}, nil, &fakeStakingRewards{}, emptyIBCStore())(
 		ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 2},
 	)
 	require.ErrorIs(t, err, boom)
