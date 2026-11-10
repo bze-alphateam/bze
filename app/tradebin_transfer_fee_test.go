@@ -87,7 +87,7 @@ func TestTradebin_ProtocolFeeInFactoryTokenPaysTransferFee(t *testing.T) {
 	payer := sdk.AccAddress("protocol_fee_payer__")
 	required := fundTokenPayer(t, bApp, ctx, pool, nativeFee, payer)
 
-	feeCtx := ctx.WithValue(tradebinkeeper.CtxFeeDenomKey, token)
+	feeCtx := ctx.WithValue(tradebinkeeper.CtxFeeDenomKey, token).WithValue(tradebinkeeper.CtxFeePayerKey, payer)
 	captured, err := bApp.TradebinKeeper.CaptureAndSwapUserFee(feeCtx, payer, sdk.NewCoins(nativeFee), tradebintypes.ModuleName)
 	require.NoError(t, err)
 	require.Equal(t, pool.Quote, captured[0].Denom)
@@ -108,7 +108,7 @@ func TestTokenfactory_CreateDenomFeeInFactoryTokenPaysTransferFee(t *testing.T) 
 	msg := &tokenfactorytypes.MsgCreateDenom{Creator: creator.String(), Subdenom: "paidintoken"}
 	handler := bApp.MsgServiceRouter().Handler(msg)
 	require.NotNil(t, handler)
-	_, err := handler(ctx.WithValue(tradebinkeeper.CtxFeeDenomKey, token), msg)
+	_, err := handler(ctx.WithValue(tradebinkeeper.CtxFeeDenomKey, token).WithValue(tradebinkeeper.CtxFeePayerKey, creator), msg)
 	require.NoError(t, err)
 
 	requireTransferFeePaid(t, bApp, ctx, creator, required)
@@ -217,7 +217,7 @@ func TestProtocolFeesInFactoryTokenPayTransferFee(t *testing.T) {
 
 			handler := bApp.MsgServiceRouter().Handler(msg)
 			require.NotNil(t, handler)
-			_, err := handler(ctx.WithValue(tradebinkeeper.CtxFeeDenomKey, token), msg)
+			_, err := handler(ctx.WithValue(tradebinkeeper.CtxFeeDenomKey, token).WithValue(tradebinkeeper.CtxFeePayerKey, payer), msg)
 			require.NoError(t, err)
 
 			requireTransferFeePaid(t, bApp, ctx, payer, required)
