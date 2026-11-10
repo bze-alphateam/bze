@@ -4,9 +4,10 @@
 # Build it with scripts/e2e/build-image.sh (or `make e2e-image`), which passes
 # VERSION and COMMIT from git so `bzed version` reports the tag.
 
-ARG GO_VERSION=1.26
-
-FROM golang:${GO_VERSION}-bookworm AS builder
+# Base images are pinned by tag and multi-arch index digest so every build uses
+# the same Go toolchain and Debian packages. Bump both together with the `go`
+# line in go.mod.
+FROM golang:1.26.10-bookworm@sha256:5de7c99eb78ca5e515a4c340235d0955ec5964a5071c492c15503d7c267da473 AS builder
 
 ARG VERSION=unknown
 ARG COMMIT=unknown
@@ -28,7 +29,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
                 -w -s" \
       -o /out/bzed ./cmd/bzed
 
-FROM debian:bookworm-slim
+FROM debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates jq \
