@@ -7,14 +7,13 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-// These tests pin how a raffle stored before canonical amount validation is read today, for the join
-// and the end block.
+// Covers raffles stored before input validation.
 
 const (
-	storedRaffleDenom       = "utoken"
-	storedTicketPrice       = "0100"
-	storedPot               = "01000"
-	storedTicketPriceReadAs = int64(64)
+	storedRaffleDenom   = "utoken"
+	storedTicketPrice   = "0100"
+	storedPot           = "01000"
+	expectedTicketPrice = int64(64)
 )
 
 func (suite *IntegrationTestSuite) TestJoinRaffle_StoredTicketPriceNonCanonical() {
@@ -44,12 +43,12 @@ func (suite *IntegrationTestSuite) TestJoinRaffle_StoredTicketPriceNonCanonical(
 
 	_, err := suite.msgServer.JoinRaffle(suite.ctx, &types.MsgJoinRaffle{Creator: creator.String(), Denom: storedRaffleDenom, Tickets: 2})
 	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin(storedRaffleDenom, 2*storedTicketPriceReadAs)), captured,
-		"stored ticket price is read as stored before canonical validation")
+	suite.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin(storedRaffleDenom, 2*expectedTicketPrice)), captured,
+		"stored ticket price")
 	suite.Require().Len(suite.k.GetAllRaffleParticipants(suite.ctx), 2)
 }
 
-func (suite *IntegrationTestSuite) storedNonCanonicalRaffleParticipant(chances uint64) sdk.AccAddress {
+func (suite *IntegrationTestSuite) storedRaffleParticipant(chances uint64) sdk.AccAddress {
 	participant := sdk.AccAddress("participant")
 	suite.k.SetRaffle(suite.ctx, types.Raffle{
 		Denom:       storedRaffleDenom,
@@ -70,7 +69,7 @@ func (suite *IntegrationTestSuite) storedNonCanonicalRaffleParticipant(chances u
 }
 
 func (suite *IntegrationTestSuite) TestWithdrawLucky_StoredPotNonCanonical_Winner() {
-	participant := suite.storedNonCanonicalRaffleParticipant(1_000_000)
+	participant := suite.storedRaffleParticipant(1_000_000)
 
 	var won sdk.Coins
 	suite.bank.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.RaffleModuleName, participant, gomock.Any()).
@@ -82,7 +81,7 @@ func (suite *IntegrationTestSuite) TestWithdrawLucky_StoredPotNonCanonical_Winne
 	suite.k.WithdrawLuckyRaffleParticipants(suite.ctx, 10)
 
 	suite.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin(storedRaffleDenom, 256)), won,
-		"stored pot is read as stored before canonical validation")
+		"stored pot")
 	raffle, found := suite.k.GetRaffle(suite.ctx, storedRaffleDenom)
 	suite.Require().True(found)
 	suite.Require().Equal("256", raffle.Pot)
@@ -90,12 +89,12 @@ func (suite *IntegrationTestSuite) TestWithdrawLucky_StoredPotNonCanonical_Winne
 }
 
 func (suite *IntegrationTestSuite) TestWithdrawLucky_StoredPotNonCanonical_Loser() {
-	suite.storedNonCanonicalRaffleParticipant(0)
+	suite.storedRaffleParticipant(0)
 
 	suite.k.WithdrawLuckyRaffleParticipants(suite.ctx, 10)
 
 	raffle, found := suite.k.GetRaffle(suite.ctx, storedRaffleDenom)
 	suite.Require().True(found)
-	suite.Require().Equal("576", raffle.Pot, "stored pot and ticket price are read as stored before canonical validation")
+	suite.Require().Equal("576", raffle.Pot, "stored pot and ticket price")
 	suite.Require().Equal(storedTicketPrice, raffle.TicketPrice, "the ticket price is kept as stored")
 }

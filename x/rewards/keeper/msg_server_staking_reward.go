@@ -3,15 +3,17 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"github.com/bze-alphateam/bze/bzeutils"
 	"strconv"
+
+	"github.com/bze-alphateam/bze/bzeutils"
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"github.com/bze-alphateam/bze/x/rewards/types"
-	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/bze-alphateam/bze/x/rewards/types"
+	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 )
 
 func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCreateStakingReward) (*types.MsgCreateStakingRewardResponse, error) {

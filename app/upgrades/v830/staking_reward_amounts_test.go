@@ -1,8 +1,9 @@
 package v830_test
 
 import (
-	"github.com/bze-alphateam/bze/bzeutils"
 	"testing"
+
+	"github.com/bze-alphateam/bze/bzeutils"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

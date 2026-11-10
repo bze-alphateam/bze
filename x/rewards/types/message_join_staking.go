@@ -2,9 +2,10 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
-	"github.com/bze-alphateam/bze/bzeutils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/bze-alphateam/bze/bzeutils"
 )
 
 var _ sdk.Msg = &MsgJoinStaking{}

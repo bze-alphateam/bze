@@ -1,13 +1,15 @@
 package types_test
 
 import (
-	"github.com/bze-alphateam/bze/bzeutils"
 	"math/big"
 	"testing"
 
+	"github.com/bze-alphateam/bze/bzeutils"
+
+	"github.com/stretchr/testify/require"
+
 	"github.com/bze-alphateam/bze/testutil/sample"
 	"github.com/bze-alphateam/bze/x/rewards/types"
-	"github.com/stretchr/testify/require"
 )
 
 // Amounts must be canonical base-10 integers.

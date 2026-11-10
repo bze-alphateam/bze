@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Pins the duration bounds of ValidateBasic: 1 to HundredYearsInDays days, parsed as a 32-bit integer
+// like the message server.
 func TestCreateDenomRewardSchedule_DurationBounds(t *testing.T) {
 	msg := func(duration string) *types.MsgCreateDenomRewardSchedule {
 		return types.NewMsgCreateDenomRewardSchedule(sample.AccAddress(), "ubze", "ubze", math.NewInt(100), duration)

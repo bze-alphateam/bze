@@ -57,7 +57,6 @@ func (pe *ProcessingEngine) matchPriceLevel(ctx sdk.Context, message *types.Orde
 
 		orderToFill, _ := pe.k.GetOrder(ctx, orderRef.MarketId, orderRef.OrderType, orderRef.Id)
 		pe.logger.Debug("preparing to fill message with order", "orderToFill", orderToFill)
-		// stored amounts may predate canonical validation; keep this parse as is
 		orderAmountInt, ok := math.NewIntFromString(orderToFill.Amount)
 		if !ok {
 			err = fmt.Errorf("could not convert order to fill amount")

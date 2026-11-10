@@ -2,8 +2,9 @@ package v830
 
 import (
 	"cosmossdk.io/math"
-	"github.com/bze-alphateam/bze/bzeutils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/bze-alphateam/bze/bzeutils"
 
 	rewardstypes "github.com/bze-alphateam/bze/x/rewards/types"
 )

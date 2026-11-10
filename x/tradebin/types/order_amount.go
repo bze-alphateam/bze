@@ -3,6 +3,7 @@ package types
 import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
+
 	"github.com/bze-alphateam/bze/bzeutils"
 )
 

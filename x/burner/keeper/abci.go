@@ -31,7 +31,6 @@ func (k Keeper) WithdrawLuckyRaffleParticipants(ctx sdk.Context, height int64) {
 			continue
 		}
 
-		// stored amounts may predate canonical validation; keep this parse as is
 		potInt, ok := math.NewIntFromString(raffle.GetPot())
 		if !ok {
 			logger.Error("could not parse pot to sdk int", err)
@@ -84,7 +83,6 @@ func (k Keeper) WithdrawLuckyRaffleParticipants(ctx sdk.Context, height int64) {
 			logger.With("address", creatorAddr.String(), "denom", raffle.Denom).Info("user lost raffle")
 
 			//add ticket price to pot
-			// stored amounts may predate canonical validation; keep this parse as is
 			ticketPrice, ok := math.NewIntFromString(raffle.TicketPrice)
 			if !ok {
 				logger.Error("could not parse ticket price to sdk int")

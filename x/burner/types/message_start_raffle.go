@@ -3,9 +3,10 @@ package types
 import (
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"github.com/bze-alphateam/bze/bzeutils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/bze-alphateam/bze/bzeutils"
 )
 
 const (

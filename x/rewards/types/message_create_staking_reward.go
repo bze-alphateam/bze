@@ -1,9 +1,10 @@
 package types
 
 import (
-	"github.com/bze-alphateam/bze/bzeutils"
 	stdmath "math"
 	"strconv"
+
+	"github.com/bze-alphateam/bze/bzeutils"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"

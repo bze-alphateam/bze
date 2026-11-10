@@ -121,7 +121,6 @@ func (pe *ProcessingEngine) cancelOrder(ctx sdk.Context, order types.Order) erro
 	pe.k.RemoveOrder(ctx, order)
 
 	market, _ := pe.k.GetMarketById(ctx, order.MarketId)
-	// stored amounts may predate canonical validation; keep this parse as is
 	orderAmountInt, ok := math.NewIntFromString(order.Amount)
 	if !ok {
 
@@ -366,7 +365,6 @@ func (pe *ProcessingEngine) removeOrderFromAggregate(ctx sdk.Context, order *typ
 		return fmt.Errorf("could not convert agg amount")
 	}
 
-	// stored amounts may predate canonical validation; keep this parse as is
 	orderAmountInt, ok := math.NewIntFromString(order.Amount)
 	if !ok {
 		//should never happen
@@ -413,7 +411,6 @@ func (pe *ProcessingEngine) addOrderToAggregate(ctx sdk.Context, order *types.Or
 		return fmt.Errorf("could not convert agg amount")
 	}
 
-	// stored amounts may predate canonical validation; keep this parse as is
 	orderAmountInt, ok := math.NewIntFromString(order.Amount)
 	if !ok {
 		//should never happen
