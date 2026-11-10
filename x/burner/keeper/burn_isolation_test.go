@@ -201,3 +201,26 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_FailingItemIsol
 	suite.Require().Len(burned, 1)
 	suite.Require().Equal(sdk.NewCoins(workingPot).String(), burned[0].Burned)
 }
+
+// A swap check that panics counts as not exchangeable: the coin is locked and the rest of the batch is handled.
+func (suite *IntegrationTestSuite) TestBurnAnyCoins_PanickingSwapCheckLocksCoin() {
+	fromModule := "test_module"
+	ibc := sdk.NewInt64Coin("ibc/AAA", 1000)
+	native := sdk.NewInt64Coin("ubze", 10)
+
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), ibc.Denom).Return(false).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), native.Denom).Return(true).Times(1)
+	suite.trade.EXPECT().
+		CanSwapForNativeDenom(gomock.Any(), ibc).
+		DoAndReturn(func(_ sdk.Context, _ sdk.Coin) bool {
+			panic("integer overflow")
+		}).
+		Times(1)
+	locked := suite.expectLock(fromModule, sdk.NewCoins(ibc))
+	suite.bank.EXPECT().BurnCoins(gomock.Any(), fromModule, sdk.NewCoins(native)).Return(nil).Times(1)
+
+	burned, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, sdk.NewCoins(ibc, native))
+	suite.Require().NoError(err)
+	suite.Require().Equal(sdk.NewCoins(native), burned)
+	suite.Require().True(*locked)
+}
