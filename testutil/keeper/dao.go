@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/feegrant"
 	"cosmossdk.io/x/tx/signing"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -17,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -27,8 +29,8 @@ import (
 	"github.com/bze-alphateam/bze/x/dao/types"
 )
 
-// DaoCodec returns a codec that knows the x/dao messages and the bank and
-// distribution messages the executor tests run as a DAO.
+// DaoCodec returns a codec that knows the x/dao messages and the bank,
+// distribution, authz and feegrant messages the executor tests run as a DAO.
 func DaoCodec() codec.Codec {
 	cfg := sdk.GetConfig()
 	registry, err := codectypes.NewInterfaceRegistryWithOptions(codectypes.InterfaceRegistryOptions{
@@ -44,6 +46,8 @@ func DaoCodec() codec.Codec {
 	types.RegisterInterfaces(registry)
 	banktypes.RegisterInterfaces(registry)
 	distrtypes.RegisterInterfaces(registry)
+	authz.RegisterInterfaces(registry)
+	feegrant.RegisterInterfaces(registry)
 
 	return codec.NewProtoCodec(registry)
 }

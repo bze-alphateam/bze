@@ -71,6 +71,17 @@ func (k Keeper) Proposals(goCtx context.Context, req *types.QueryProposalsReques
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
+	// known statuses only, each once: at most one entry per ProposalStatus value
+	var statuses []types.ProposalStatus
+	for _, s := range req.Statuses {
+		if _, known := types.ProposalStatus_name[int32(s)]; !known {
+			return nil, status.Errorf(codes.InvalidArgument, "unknown proposal status %d", s)
+		}
+		if !slices.Contains(statuses, s) {
+			statuses = append(statuses, s)
+		}
+	}
+
 	// the index keys below the dao are the proposal ids
 	var proposals []types.Proposal
 	index := k.getPrefixedStore(goCtx, append(types.KeyPrefix(types.DaoProposalKeyPrefix), types.DaoProposalsPrefix(req.DaoId)...))
@@ -80,7 +91,7 @@ func (k Keeper) Proposals(goCtx context.Context, req *types.QueryProposalsReques
 			return false, status.Errorf(codes.Internal, "proposal index names missing proposal %d", sdk.BigEndianToUint64(key))
 		}
 
-		if len(req.Statuses) > 0 && !slices.Contains(req.Statuses, proposal.Status) {
+		if len(statuses) > 0 && !slices.Contains(statuses, proposal.Status) {
 			return false, nil
 		}
 
