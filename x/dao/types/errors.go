@@ -41,4 +41,6 @@ var (
 	ErrExpediteBarNotMet   = sdkerrors.Register(ModuleName, 1130, "the expedited proposal does not meet the expedite bars yet")
 	ErrProposalNotFinished = sdkerrors.Register(ModuleName, 1131, "the proposal is not finished")
 	ErrExpediteTooEarly    = sdkerrors.Register(ModuleName, 1132, "the expedited proposal cannot settle early yet")
+	ErrMsgNotAllowed       = sdkerrors.Register(ModuleName, 1133, "the message is not allowed in this dao execution")
+	ErrExecutionTooDeep    = sdkerrors.Register(ModuleName, 1134, "dao executions are nested too deep")
 )

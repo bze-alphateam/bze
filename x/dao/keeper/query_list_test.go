@@ -235,3 +235,41 @@ func (suite *IntegrationTestSuite) TestQueryBallots() {
 	_, err = suite.k.Ballots(suite.ctx, nil)
 	suite.Require().Equal(codes.InvalidArgument, status.Code(err))
 }
+
+// The statuses filter takes known ProposalStatus values only; repeats are
+// collapsed and match as the single value does.
+func (suite *IntegrationTestSuite) TestQueryProposals_StatusFilterBounds() {
+	suite.createStaticDao(noConfigChange)
+	cancelled, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	voting, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.cancel(memberA, cancelled))
+
+	for _, statuses := range [][]types.ProposalStatus{
+		{types.ProposalStatus(6)},
+		{types.ProposalStatus(99)},
+		{types.ProposalStatus(-1)},
+		{types.ProposalStatus_VOTING, types.ProposalStatus(6)},
+	} {
+		_, err := suite.k.Proposals(suite.ctx, &types.QueryProposalsRequest{DaoId: 1, Statuses: statuses})
+		suite.Require().Equal(codes.InvalidArgument, status.Code(err), "%v", statuses)
+	}
+
+	repeated := make([]types.ProposalStatus, 0, 1000)
+	for range 500 {
+		repeated = append(repeated, types.ProposalStatus_VOTING, types.ProposalStatus_CANCELLED)
+	}
+	suite.Require().Equal([]uint64{cancelled, voting}, proposalIds(suite.proposals(1, repeated, nil).Proposals))
+
+	votingTwice := []types.ProposalStatus{types.ProposalStatus_VOTING, types.ProposalStatus_VOTING}
+	res := suite.proposals(1, votingTwice, &query.PageRequest{CountTotal: true})
+	suite.Require().Equal([]uint64{voting}, proposalIds(res.Proposals))
+	suite.Require().Equal(uint64(1), res.Pagination.Total)
+
+	all := []types.ProposalStatus{
+		types.ProposalStatus_VOTING, types.ProposalStatus_REJECTED, types.ProposalStatus_EXECUTED,
+		types.ProposalStatus_EXECUTION_FAILED, types.ProposalStatus_EXPIRED, types.ProposalStatus_CANCELLED,
+	}
+	suite.Require().Equal([]uint64{cancelled, voting}, proposalIds(suite.proposals(1, all, nil).Proposals))
+}

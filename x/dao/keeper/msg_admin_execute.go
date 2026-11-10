@@ -51,6 +51,13 @@ func (k msgServer) AdminExecute(goCtx context.Context, msg *types.MsgAdminExecut
 		return nil, errorsmod.Wrap(types.ErrInvalidMsgs, err.Error())
 	}
 
+	// grants signed by the DAO would outlive the admin, so only proposals give them
+	for i, m := range msgs {
+		if err := refuseAdminGrants(m); err != nil {
+			return nil, errorsmod.Wrapf(err, "message %d", i)
+		}
+	}
+
 	// on ctx itself: any failure reverts the whole transaction
 	if err := k.executeAsDao(ctx, sdk.MustAccAddressFromBech32(dao.Address), msgs); err != nil {
 		return nil, err

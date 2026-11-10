@@ -16,6 +16,8 @@ const (
 	executionErrPanic   = "message panicked"
 	executionErrRouting = "invalid message"
 	executionErrFailed  = "message failed"
+	executionErrRefused = "message not allowed"
+	executionErrDepth   = "execution nested too deep"
 )
 
 func (k msgServer) SettleProposal(goCtx context.Context, msg *types.MsgSettleProposal) (*types.MsgSettleProposalResponse, error) {
@@ -146,6 +148,10 @@ func (k msgServer) runMsgs(ctx sdk.Context, proposal types.Proposal) string {
 
 func executionReason(err error) string {
 	switch {
+	case errorsmod.IsOf(err, types.ErrExecutionTooDeep):
+		return executionErrDepth
+	case errorsmod.IsOf(err, types.ErrMsgNotAllowed):
+		return executionErrRefused
 	case errorsmod.IsOf(err, types.ErrUnauthorizedSigner):
 		return executionErrSigner
 	case errorsmod.IsOf(err, types.ErrExecutionPanic):
