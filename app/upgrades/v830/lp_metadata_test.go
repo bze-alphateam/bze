@@ -57,7 +57,7 @@ func lpMetadata(base, display string) banktypes.Metadata {
 func runLpBackfill(t *testing.T, pools v830.TradebinKeeper, md v830.MetadataKeeper) {
 	t.Helper()
 	cfg, mm, ctx := guardianSetup(t)
-	_, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, acceptingRateLimits(t), emptyBank(t), pools, md, &fakeStakingRewards{})(
+	_, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, acceptingRateLimits(t), emptyBank(t), pools, md, &fakeStakingRewards{}, noTraces{}, nil)(
 		ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 2},
 	)
 	require.NoError(t, err)
