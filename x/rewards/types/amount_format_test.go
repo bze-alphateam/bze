@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/bze-alphateam/bze/testutil/sample"
@@ -68,4 +69,19 @@ func TestAmountFormat_CanonicalAmountsAccepted(t *testing.T) {
 		require.NoError(t, types.NewMsgJoinStaking(sample.AccAddress(), "1", amount).ValidateBasic(), amount)
 		require.NoError(t, types.NewMsgCreateTradingReward(sample.AccAddress(), amount, "ubze", "5", "market", "1").ValidateBasic(), amount)
 	}
+}
+
+// The largest canonical 256-bit value is accepted; one beyond it is refused.
+func TestAmountFormat_BitLengthBoundary(t *testing.T) {
+	maxAmount := new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)).String()
+	tooLarge := new(big.Int).Lsh(big.NewInt(1), 256).String()
+
+	amt, err := types.ParseCanonicalAmount(maxAmount)
+	require.NoError(t, err)
+	require.Equal(t, maxAmount, amt.String())
+	require.NoError(t, types.NewMsgDistributeStakingRewards(sample.AccAddress(), "1", maxAmount).ValidateBasic())
+
+	_, err = types.ParseCanonicalAmount(tooLarge)
+	require.Error(t, err)
+	require.ErrorIs(t, types.NewMsgDistributeStakingRewards(sample.AccAddress(), "1", tooLarge).ValidateBasic(), types.ErrInvalidAmount)
 }

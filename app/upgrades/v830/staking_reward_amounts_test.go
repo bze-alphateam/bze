@@ -68,20 +68,20 @@ func stakingReward(id, prizeAmount string) rewardstypes.StakingReward {
 	}
 }
 
-// Stored prize amounts that are not canonical base-10 integers are rewritten to the integer the module read from
-// them (math.NewIntFromString); canonical amounts are not rewritten; every other field stays as stored.
+// Stored prize amounts that are not canonical base-10 integers are rewritten to canonical form; canonical amounts
+// are not rewritten; every other field stays as stored.
 func TestHandler_NormalisesStakingRewardPrizeAmounts(t *testing.T) {
 	cases := map[string]string{
-		"canonical":    "1000",
-		"leading-zero": "0100",
-		"hex":          "0x10",
-		"octal-prefix": "0o10",
-		"binary":       "0b10",
-		"underscore":   "1_000",
-		"plus":         "+10",
+		"canonical":  "1000",
+		"padded":     "0100",
+		"prefixed-x": "0x10",
+		"prefixed-o": "0o10",
+		"prefixed-b": "0b10",
+		"underscore": "1_000",
+		"plus":       "+10",
 	}
 	var rewards []rewardstypes.StakingReward
-	for _, id := range []string{"canonical", "leading-zero", "hex", "octal-prefix", "binary", "underscore", "plus"} {
+	for _, id := range []string{"canonical", "padded", "prefixed-x", "prefixed-o", "prefixed-b", "underscore", "plus"} {
 		rewards = append(rewards, stakingReward(id, cases[id]))
 	}
 	store := newFakeStakingRewards(rewards...)
@@ -89,13 +89,13 @@ func TestHandler_NormalisesStakingRewardPrizeAmounts(t *testing.T) {
 	runStakingRewardNormalisation(t, store)
 
 	want := map[string]string{
-		"canonical":    "1000",
-		"leading-zero": "64",
-		"hex":          "16",
-		"octal-prefix": "8",
-		"binary":       "2",
-		"underscore":   "1000",
-		"plus":         "10",
+		"canonical":  "1000",
+		"padded":     "64",
+		"prefixed-x": "16",
+		"prefixed-o": "8",
+		"prefixed-b": "2",
+		"underscore": "1000",
+		"plus":       "10",
 	}
 	for id, amount := range want {
 		got := store.byId[id]

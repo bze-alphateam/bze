@@ -9,8 +9,8 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-// Amounts must be canonical base-10 integers: whatever is taken from the payer for a staking reward
-// has to match what is later credited to the reward's stakers.
+// Amounts must be canonical base-10 integers: the staking reward message servers refuse any other form and
+// move no coins.
 
 const amountFormatDenom = "ubze"
 
@@ -22,8 +22,8 @@ func (suite *IntegrationTestSuite) setZeroCreationFees() {
 	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
 }
 
-// expectCapture records every coin amount moved from an account into the module.
-func (suite *IntegrationTestSuite) expectCapture(captured *math.Int) {
+// expectSends records every coin amount sent from an account into the module.
+func (suite *IntegrationTestSuite) expectSends(sent *math.Int) {
 	suite.bank.EXPECT().
 		SpendableCoins(gomock.Any(), gomock.Any()).
 		Return(sdk.NewCoins(sdk.NewCoin(amountFormatDenom, math.NewInt(1_000_000_000)))).
@@ -31,42 +31,33 @@ func (suite *IntegrationTestSuite) expectCapture(captured *math.Int) {
 	suite.bank.EXPECT().
 		SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), types.ModuleName, gomock.Any()).
 		DoAndReturn(func(_ context.Context, _ sdk.AccAddress, _ string, amt sdk.Coins) error {
-			*captured = captured.Add(amt.AmountOf(amountFormatDenom))
+			*sent = sent.Add(amt.AmountOf(amountFormatDenom))
 			return nil
 		}).
 		AnyTimes()
 }
 
-// creditedPerPayout runs one daily distribution for the given reward (with a total stake of 1, so the
-// accumulator delta equals the amount credited) and returns the credited amount.
-func (suite *IntegrationTestSuite) creditedPerPayout(rewardId string) math.LegacyDec {
-	sr, found := suite.k.GetStakingReward(suite.ctx, rewardId)
-	suite.Require().True(found)
-	sr.StakedAmount = "1"
-	sr.DistributedStake = "0"
-	sr.Payouts = 0
-	suite.k.SetStakingReward(suite.ctx, sr)
-
-	suite.k.EnqueueStakingRewardsDistribution(suite.ctx)
-	suite.k.ProcessStakingRewardsDistributionQueue(suite.ctx)
-
-	after, found := suite.k.GetStakingReward(suite.ctx, rewardId)
-	suite.Require().True(found)
-	credited, err := math.LegacyNewDecFromStr(after.DistributedStake)
-	suite.Require().NoError(err)
-
-	return credited
+func amountFormatReward(id, prizeAmount string) types.StakingReward {
+	return types.StakingReward{
+		RewardId:         id,
+		PrizeAmount:      prizeAmount,
+		PrizeDenom:       amountFormatDenom,
+		StakingDenom:     amountFormatDenom,
+		Duration:         5,
+		StakedAmount:     "1",
+		DistributedStake: "0",
+	}
 }
 
-func (suite *IntegrationTestSuite) TestStakingRewardAmountFormat_CreateLeadingZeroPrize() {
+func (suite *IntegrationTestSuite) TestStakingRewardAmountFormat_CreateNonCanonicalAmount() {
 	suite.setZeroCreationFees()
 	creator := sdk.AccAddress("creator")
-	captured := math.ZeroInt()
+	sent := math.ZeroInt()
 	suite.bank.EXPECT().HasSupply(gomock.Any(), amountFormatDenom).Return(true).AnyTimes()
-	suite.expectCapture(&captured)
+	suite.expectSends(&sent)
 
-	const duration = 5
-	res, err := suite.msgServer.CreateStakingReward(suite.ctx, &types.MsgCreateStakingReward{
+	counter := suite.k.GetStakingRewardsCounter(suite.ctx)
+	_, err := suite.msgServer.CreateStakingReward(suite.ctx, &types.MsgCreateStakingReward{
 		Creator:      creator.String(),
 		PrizeAmount:  "0100",
 		PrizeDenom:   amountFormatDenom,
@@ -75,116 +66,65 @@ func (suite *IntegrationTestSuite) TestStakingRewardAmountFormat_CreateLeadingZe
 		MinStake:     "0",
 		Lock:         "0",
 	})
-	if err != nil {
-		suite.Require().ErrorIs(err, types.ErrInvalidAmount)
-		suite.Require().True(captured.IsZero(), "nothing may be captured when the request is refused")
-		return
-	}
-
-	credited := suite.creditedPerPayout(res.RewardId)
-	suite.Require().Equal(
-		math.LegacyNewDecFromInt(captured).String(),
-		credited.MulInt64(duration).String(),
-		"captured from creator (left) must equal credited per payout x duration (right)",
-	)
+	suite.Require().ErrorIs(err, types.ErrInvalidAmount, "amounts must be canonical base-10 integers")
+	suite.Require().True(sent.IsZero(), "no coins may move when the request is refused")
+	suite.Require().Equal(counter, suite.k.GetStakingRewardsCounter(suite.ctx), "no reward may be created")
 }
 
-func (suite *IntegrationTestSuite) TestStakingRewardAmountFormat_DistributeLeadingZeroAmount() {
+func (suite *IntegrationTestSuite) TestStakingRewardAmountFormat_DistributeNonCanonicalAmount() {
 	creator := sdk.AccAddress("creator")
-	captured := math.ZeroInt()
-	suite.expectCapture(&captured)
-
-	suite.k.SetStakingReward(suite.ctx, types.StakingReward{
-		RewardId:         "format-distribute",
-		PrizeAmount:      "1000",
-		PrizeDenom:       amountFormatDenom,
-		StakingDenom:     amountFormatDenom,
-		Duration:         5,
-		StakedAmount:     "1",
-		DistributedStake: "0",
-	})
+	sent := math.ZeroInt()
+	suite.expectSends(&sent)
+	suite.k.SetStakingReward(suite.ctx, amountFormatReward("format-distribute", "1000"))
 
 	_, err := suite.msgServer.DistributeStakingRewards(suite.ctx, &types.MsgDistributeStakingRewards{
 		Creator:  creator.String(),
 		RewardId: "format-distribute",
 		Amount:   "0100",
 	})
-	if err != nil {
-		suite.Require().ErrorIs(err, types.ErrInvalidAmount)
-		suite.Require().True(captured.IsZero(), "nothing may be captured when the request is refused")
-		return
-	}
+	suite.Require().ErrorIs(err, types.ErrInvalidAmount, "amounts must be canonical base-10 integers")
+	suite.Require().True(sent.IsZero(), "no coins may move when the request is refused")
 
 	after, found := suite.k.GetStakingReward(suite.ctx, "format-distribute")
 	suite.Require().True(found)
-	credited, err := math.LegacyNewDecFromStr(after.DistributedStake)
-	suite.Require().NoError(err)
-	suite.Require().Equal(
-		math.LegacyNewDecFromInt(captured).String(),
-		credited.String(),
-		"captured from distributor (left) must equal credited to stakers (right)",
-	)
+	suite.Require().Equal("0", after.DistributedStake, "the reward must be left as it was")
 }
 
-func (suite *IntegrationTestSuite) TestStakingRewardAmountFormat_DistributeRejectsNonDecimal() {
+func (suite *IntegrationTestSuite) TestStakingRewardAmountFormat_DistributeNonCanonicalForms() {
 	creator := sdk.AccAddress("creator")
-	suite.k.SetStakingReward(suite.ctx, types.StakingReward{
-		RewardId:         "format-distribute-nondecimal",
-		PrizeAmount:      "1000",
-		PrizeDenom:       amountFormatDenom,
-		StakingDenom:     amountFormatDenom,
-		Duration:         5,
-		StakedAmount:     "1",
-		DistributedStake: "0",
-	})
-
-	captured := math.ZeroInt()
-	suite.expectCapture(&captured)
+	suite.k.SetStakingReward(suite.ctx, amountFormatReward("format-distribute-forms", "1000"))
+	sent := math.ZeroInt()
+	suite.expectSends(&sent)
 
 	for _, amount := range []string{"0x10", "0o10", "0b10", "1_0", "+10"} {
 		suite.Run(amount, func() {
-			captured = math.ZeroInt()
+			sent = math.ZeroInt()
 			_, err := suite.msgServer.DistributeStakingRewards(suite.ctx, &types.MsgDistributeStakingRewards{
 				Creator:  creator.String(),
-				RewardId: "format-distribute-nondecimal",
+				RewardId: "format-distribute-forms",
 				Amount:   amount,
 			})
 			suite.Require().Error(err, "amount %q must be refused", amount)
-			suite.Require().True(captured.IsZero(), "amount %q: nothing may be captured", amount)
+			suite.Require().True(sent.IsZero(), "amount %q: no coins may move", amount)
 		})
 	}
 }
 
-func (suite *IntegrationTestSuite) TestStakingRewardAmountFormat_UpdateStoredLeadingZeroPrize() {
+func (suite *IntegrationTestSuite) TestStakingRewardAmountFormat_UpdateStoredNonCanonicalAmount() {
 	creator := sdk.AccAddress("creator")
-	captured := math.ZeroInt()
-	suite.expectCapture(&captured)
+	sent := math.ZeroInt()
+	suite.expectSends(&sent)
+	suite.k.SetStakingReward(suite.ctx, amountFormatReward("format-update", "0100"))
 
-	suite.k.SetStakingReward(suite.ctx, types.StakingReward{
-		RewardId:         "format-update",
-		PrizeAmount:      "0100",
-		PrizeDenom:       amountFormatDenom,
-		StakingDenom:     amountFormatDenom,
-		Duration:         5,
-		StakedAmount:     "1",
-		DistributedStake: "0",
-	})
-
-	const extraDays = 3
 	_, err := suite.msgServer.UpdateStakingReward(suite.ctx, &types.MsgUpdateStakingReward{
 		Creator:  creator.String(),
 		RewardId: "format-update",
 		Duration: "3",
 	})
-	if err != nil {
-		suite.Require().True(captured.IsZero(), "nothing may be captured when the request is refused")
-		return
-	}
+	suite.Require().Error(err, "amounts must be canonical base-10 integers")
+	suite.Require().True(sent.IsZero(), "no coins may move when the request is refused")
 
-	credited := suite.creditedPerPayout("format-update")
-	suite.Require().Equal(
-		math.LegacyNewDecFromInt(captured).String(),
-		credited.MulInt64(extraDays).String(),
-		"captured for the extension (left) must equal credited per payout x extra days (right)",
-	)
+	after, found := suite.k.GetStakingReward(suite.ctx, "format-update")
+	suite.Require().True(found)
+	suite.Require().Equal(uint32(5), after.Duration, "the reward must be left as it was")
 }
