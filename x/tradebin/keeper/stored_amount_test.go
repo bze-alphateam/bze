@@ -7,10 +7,9 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-// Orders saved before canonical amount validation may hold an amount in a non-canonical form, such as
-// "0100". These tests pin how such a stored order is read today: every reader parses the stored string
-// with math.NewIntFromString, so "0100" counts as 64 for the refund, the fills, the aggregate and a
-// merge. The state is built through the engine, the same way the message servers stored it.
+// These tests pin how an order stored before canonical amount validation is read today, for the
+// refund, the fills, the aggregate and a merge. The state is built through the engine, the same way
+// the message servers stored it.
 
 const (
 	storedAmountNonCanonical = "0100"

@@ -7,15 +7,13 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-// Raffles saved before canonical amount validation may hold the pot or the ticket price in a
-// non-canonical form, such as "0100". These tests pin how such a stored raffle is read today: the join
-// and the end block parse the stored strings with math.NewIntFromString, so a ticket price of "0100"
-// counts as 64 and a pot of "01000" counts as 512.
+// These tests pin how a raffle stored before canonical amount validation is read today, for the join
+// and the end block.
 
 const (
 	storedRaffleDenom       = "utoken"
-	storedTicketPrice       = "0100"  // read as 64
-	storedPot               = "01000" // read as 512
+	storedTicketPrice       = "0100"
+	storedPot               = "01000"
 	storedTicketPriceReadAs = int64(64)
 )
 
@@ -83,7 +81,6 @@ func (suite *IntegrationTestSuite) TestWithdrawLucky_StoredPotNonCanonical_Winne
 
 	suite.k.WithdrawLuckyRaffleParticipants(suite.ctx, 10)
 
-	// 512 * 0.5
 	suite.Require().Equal(sdk.NewCoins(sdk.NewInt64Coin(storedRaffleDenom, 256)), won,
 		"stored pot is read as stored before canonical validation")
 	raffle, found := suite.k.GetRaffle(suite.ctx, storedRaffleDenom)
@@ -97,7 +94,6 @@ func (suite *IntegrationTestSuite) TestWithdrawLucky_StoredPotNonCanonical_Loser
 
 	suite.k.WithdrawLuckyRaffleParticipants(suite.ctx, 10)
 
-	// 512 + 64
 	raffle, found := suite.k.GetRaffle(suite.ctx, storedRaffleDenom)
 	suite.Require().True(found)
 	suite.Require().Equal("576", raffle.Pot, "stored pot and ticket price are read as stored before canonical validation")
