@@ -188,7 +188,8 @@ func (suite *IntegrationTestSuite) TestConvertCommunityPoolFees_SwapError() {
 		Return(sdk.Coin{}, sdkerrors.ErrInvalidCoins).
 		Times(1)
 
-	suite.Require().ErrorIs(suite.k.ConvertCommunityPoolFees(suite.ctx), sdkerrors.ErrInvalidCoins)
+	// the coin stays in the collector and the pass succeeds: no funding expectation, a call would fail the test
+	suite.Require().NoError(suite.k.ConvertCommunityPoolFees(suite.ctx))
 }
 
 func (suite *IntegrationTestSuite) TestConvertCommunityPoolFees_BurnerSendError() {
