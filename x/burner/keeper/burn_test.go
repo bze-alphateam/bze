@@ -250,11 +250,11 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_OnlyNativeCoins() {
 	)
 
 	// Mock native denom checks
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ubze").Return(true).Times(1)
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "uother").Return(true).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ubze").Return(true).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "uother").Return(true).Times(1)
 
 	// Mock burn operation
-	suite.bank.EXPECT().BurnCoins(suite.ctx, fromModule, coins).Return(nil).Times(1)
+	suite.bank.EXPECT().BurnCoins(gomock.Any(), fromModule, coins).Return(nil).Times(1)
 
 	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
@@ -268,11 +268,11 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_OnlyFactoryTokens()
 	)
 
 	// Mock native denom checks (should return false for factory tokens)
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "factory/creator/token1").Return(false).Times(1)
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "factory/creator/token2").Return(false).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "factory/creator/token1").Return(false).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "factory/creator/token2").Return(false).Times(1)
 
 	// Mock burn operation
-	suite.bank.EXPECT().BurnCoins(suite.ctx, fromModule, coins).Return(nil).Times(1)
+	suite.bank.EXPECT().BurnCoins(gomock.Any(), fromModule, coins).Return(nil).Times(1)
 
 	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
@@ -286,11 +286,11 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_OnlyLPTokens() {
 	)
 
 	// Mock native denom checks
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ulp_token1").Return(false).Times(1)
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ulp_token2").Return(false).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ulp_token1").Return(false).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ulp_token2").Return(false).Times(1)
 
 	// Mock send to black hole module
-	suite.bank.EXPECT().SendCoinsFromModuleToModule(suite.ctx, fromModule, types.BlackHoleModuleName, coins).Return(nil).Times(1)
+	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), fromModule, types.BlackHoleModuleName, coins).Return(nil).Times(1)
 
 	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
@@ -310,15 +310,16 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_OnlyIBCCoins() {
 	refundedCoins := sdk.NewCoins() // No refunds in this case
 
 	// Mock native denom checks
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/ABC123").Return(false).Times(1)
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/DEF456").Return(false).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/ABC123").Return(false).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/DEF456").Return(false).Times(1)
 
 	// Mock swap capability checks
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, coins[0]).Return(true).Times(1)
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, coins[1]).Return(true).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), coins[0]).Return(true).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), coins[1]).Return(true).Times(1)
 
-	// Mock add liquidity operation - now uses ModuleAddLiquidityWithNativeDenom instead of swap
-	suite.trade.EXPECT().ModuleAddLiquidityWithNativeDenom(suite.ctx, fromModule, coins).Return(addedCoins, refundedCoins, nil).Times(1)
+	// Mock add liquidity operation - each coin is added on its own
+	suite.trade.EXPECT().ModuleAddLiquidityWithNativeDenom(gomock.Any(), fromModule, sdk.NewCoins(coins[0])).Return(sdk.NewCoins(addedCoins[0]), refundedCoins, nil).Times(1)
+	suite.trade.EXPECT().ModuleAddLiquidityWithNativeDenom(gomock.Any(), fromModule, sdk.NewCoins(coins[1])).Return(sdk.NewCoins(addedCoins[1]), refundedCoins, nil).Times(1)
 
 	// No burn operation expected - IBC coins are added to liquidity, LP tokens are locked
 
@@ -340,22 +341,22 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_MixedCoins() {
 	lockableCoins := sdk.NewCoins(lpCoin)
 
 	// Mock native denom checks
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ubze").Return(true).Times(1)
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "factory/creator/token").Return(false).Times(1)
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ulp_token1").Return(false).Times(1)
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/ABC123").Return(false).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ubze").Return(true).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "factory/creator/token").Return(false).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ulp_token1").Return(false).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/ABC123").Return(false).Times(1)
 
 	// Mock swap capability check for IBC coin
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, ibcCoin).Return(true).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibcCoin).Return(true).Times(1)
 
 	// Mock add liquidity operation
-	suite.trade.EXPECT().ModuleAddLiquidityWithNativeDenom(suite.ctx, fromModule, sdk.NewCoins(ibcCoin)).Return(addedCoins, refundedCoins, nil).Times(1)
+	suite.trade.EXPECT().ModuleAddLiquidityWithNativeDenom(gomock.Any(), fromModule, sdk.NewCoins(ibcCoin)).Return(addedCoins, refundedCoins, nil).Times(1)
 
 	// Mock send LP tokens to black hole
-	suite.bank.EXPECT().SendCoinsFromModuleToModule(suite.ctx, fromModule, types.BlackHoleModuleName, lockableCoins).Return(nil).Times(1)
+	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), fromModule, types.BlackHoleModuleName, lockableCoins).Return(nil).Times(1)
 
 	// Mock burn operation (only native and factory tokens)
-	suite.bank.EXPECT().BurnCoins(suite.ctx, fromModule, expectedBurnCoins).Return(nil).Times(1)
+	suite.bank.EXPECT().BurnCoins(gomock.Any(), fromModule, expectedBurnCoins).Return(nil).Times(1)
 
 	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
@@ -380,10 +381,10 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_ZeroAmountCoins() {
 	)
 
 	// Only the positive coin should be processed
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "uother").Return(true).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "uother").Return(true).Times(1)
 
 	expectedBurnCoins := sdk.NewCoins(sdk.NewInt64Coin("uother", 1000))
-	suite.bank.EXPECT().BurnCoins(suite.ctx, fromModule, expectedBurnCoins).Return(nil).Times(1)
+	suite.bank.EXPECT().BurnCoins(gomock.Any(), fromModule, expectedBurnCoins).Return(nil).Times(1)
 
 	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
@@ -395,13 +396,16 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_AddLiquidityError()
 	addLiquidityError := errors.New("add liquidity failed")
 
 	// Mock native denom check
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/ABC123").Return(false).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/ABC123").Return(false).Times(1)
 
 	// Mock swap capability check
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, coins[0]).Return(true).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), coins[0]).Return(true).Times(1)
 
 	// Mock add liquidity operation failure - the function continues even on error
-	suite.trade.EXPECT().ModuleAddLiquidityWithNativeDenom(suite.ctx, fromModule, coins).Return(nil, nil, addLiquidityError).Times(1)
+	suite.trade.EXPECT().ModuleAddLiquidityWithNativeDenom(gomock.Any(), fromModule, coins).Return(nil, nil, addLiquidityError).Times(1)
+
+	// the coin that could not be added is locked
+	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), fromModule, types.BlackHoleModuleName, coins).Return(nil).Times(1)
 
 	// Should not error - the function logs the error and continues
 	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
@@ -414,10 +418,10 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_SendToBlackHoleErro
 	sendError := errors.New("send failed")
 
 	// Mock native denom check
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ulp_token1").Return(false).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ulp_token1").Return(false).Times(1)
 
 	// Mock send to black hole failure
-	suite.bank.EXPECT().SendCoinsFromModuleToModule(suite.ctx, fromModule, types.BlackHoleModuleName, coins).Return(sendError).Times(1)
+	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), fromModule, types.BlackHoleModuleName, coins).Return(sendError).Times(1)
 
 	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().Error(err)
@@ -430,10 +434,10 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_BurnError() {
 	burnError := errors.New("burn failed")
 
 	// Mock native denom check
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ubze").Return(true).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ubze").Return(true).Times(1)
 
 	// Mock burn operation failure
-	suite.bank.EXPECT().BurnCoins(suite.ctx, fromModule, coins).Return(burnError).Times(1)
+	suite.bank.EXPECT().BurnCoins(gomock.Any(), fromModule, coins).Return(burnError).Times(1)
 
 	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().Error(err)
@@ -445,13 +449,13 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_UnknownDenomLocked(
 	coins := sdk.NewCoins(sdk.NewInt64Coin("unknown/denom", 1000))
 
 	// Mock native denom check
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "unknown/denom").Return(false).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "unknown/denom").Return(false).Times(1)
 
 	// Mock swap capability check (returns false)
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, coins[0]).Return(false).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), coins[0]).Return(false).Times(1)
 
 	// Unknown denoms that are not swappable are now locked (sent to black hole)
-	suite.bank.EXPECT().SendCoinsFromModuleToModule(suite.ctx, fromModule, types.BlackHoleModuleName, coins).Return(nil).Times(1)
+	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), fromModule, types.BlackHoleModuleName, coins).Return(nil).Times(1)
 
 	burned, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
@@ -465,13 +469,13 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_IBCNotSwappable() {
 	coins := sdk.NewCoins(ibcCoin)
 
 	// Mock native denom check
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/NONSWAPPABLE").Return(false).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/NONSWAPPABLE").Return(false).Times(1)
 
 	// Mock swap capability check (returns false)
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, ibcCoin).Return(false).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibcCoin).Return(false).Times(1)
 
 	// IBC coins that cannot be swapped are now locked (sent to black hole)
-	suite.bank.EXPECT().SendCoinsFromModuleToModule(suite.ctx, fromModule, types.BlackHoleModuleName, coins).Return(nil).Times(1)
+	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), fromModule, types.BlackHoleModuleName, coins).Return(nil).Times(1)
 
 	burned, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
@@ -576,10 +580,10 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_SingleRaffle() 
 
 	currentPot := sdk.NewInt64Coin(denom, 1000)
 
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(&raffleAcc).Times(1)
-	suite.bank.EXPECT().GetBalance(suite.ctx, addr, denom).Return(currentPot).Times(1)
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, denom).Return(true).Times(1)
-	suite.bank.EXPECT().BurnCoins(suite.ctx, types.RaffleModuleName, sdk.NewCoins(currentPot)).Return(nil).Times(1)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.RaffleModuleName).Return(&raffleAcc).Times(1)
+	suite.bank.EXPECT().GetBalance(gomock.Any(), addr, denom).Return(currentPot).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), denom).Return(true).Times(1)
+	suite.bank.EXPECT().BurnCoins(gomock.Any(), types.RaffleModuleName, sdk.NewCoins(currentPot)).Return(nil).Times(1)
 
 	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
 	suite.Require().NoError(err)
@@ -619,7 +623,7 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_MultipleBatches
 	suite.k.EnqueueRaffleCleanup(suite.ctx, epochNumber)
 
 	// Mock for each raffle in the batch - module account not found to simplify
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(types.MaxRafflesCleanupPerBlock)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.RaffleModuleName).Return(nil).Times(types.MaxRafflesCleanupPerBlock)
 
 	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
 	suite.Require().NoError(err)
@@ -651,7 +655,7 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_MultipleEpochs(
 	suite.k.EnqueueRaffleCleanup(suite.ctx, epoch2)
 
 	// Process first epoch
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(1)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.RaffleModuleName).Return(nil).Times(1)
 
 	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
 	suite.Require().NoError(err)
@@ -663,7 +667,7 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_MultipleEpochs(
 	suite.Require().Equal(epoch2, queue.PendingEpochs[0])
 
 	// Process second epoch
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(1)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.RaffleModuleName).Return(nil).Times(1)
 
 	err = suite.k.ProcessRaffleCleanupQueue(suite.ctx)
 	suite.Require().NoError(err)
@@ -688,10 +692,10 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_BurnError() {
 	}
 	currentPot := sdk.NewInt64Coin(denom, 1000)
 
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(&raffleAcc).Times(1)
-	suite.bank.EXPECT().GetBalance(suite.ctx, addr, denom).Return(currentPot).Times(1)
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, denom).Return(true).Times(1)
-	suite.bank.EXPECT().BurnCoins(suite.ctx, types.RaffleModuleName, sdk.NewCoins(currentPot)).Return(errors.New("burn failed")).Times(1)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.RaffleModuleName).Return(&raffleAcc).Times(1)
+	suite.bank.EXPECT().GetBalance(gomock.Any(), addr, denom).Return(currentPot).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), denom).Return(true).Times(1)
+	suite.bank.EXPECT().BurnCoins(gomock.Any(), types.RaffleModuleName, sdk.NewCoins(currentPot)).Return(errors.New("burn failed")).Times(1)
 
 	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
 	suite.Require().NoError(err) // Processing continues despite burn error
@@ -717,7 +721,7 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_ModuleAccountNo
 	suite.k.EnqueueRaffleCleanup(suite.ctx, epochNumber)
 
 	// Mock module account not found
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(1)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.RaffleModuleName).Return(nil).Times(1)
 
 	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
 	suite.Require().NoError(err) // Processing continues
@@ -745,8 +749,8 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_NoCoinsToBurn()
 	}
 	emptyCoin := sdk.NewInt64Coin(denom, 0)
 
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(&raffleAcc).Times(1)
-	suite.bank.EXPECT().GetBalance(suite.ctx, addr, denom).Return(emptyCoin).Times(1)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.RaffleModuleName).Return(&raffleAcc).Times(1)
+	suite.bank.EXPECT().GetBalance(gomock.Any(), addr, denom).Return(emptyCoin).Times(1)
 
 	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
 	suite.Require().NoError(err)
@@ -779,7 +783,7 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_ExactBatchBound
 	suite.k.EnqueueRaffleCleanup(suite.ctx, epochNumber)
 
 	// First call: processes exactly MaxRafflesCleanupPerBlock raffles
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(types.MaxRafflesCleanupPerBlock)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.RaffleModuleName).Return(nil).Times(types.MaxRafflesCleanupPerBlock)
 
 	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
 	suite.Require().NoError(err)
@@ -822,7 +826,7 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_FullDrainAcross
 	suite.k.EnqueueRaffleCleanup(suite.ctx, epochNumber)
 
 	// Block 1: processes MaxRafflesCleanupPerBlock raffles
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(types.MaxRafflesCleanupPerBlock)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.RaffleModuleName).Return(nil).Times(types.MaxRafflesCleanupPerBlock)
 	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
 	suite.Require().NoError(err)
 
@@ -834,7 +838,7 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_FullDrainAcross
 	suite.Require().Len(queue.PendingEpochs, 1)
 
 	// Block 2: processes another MaxRafflesCleanupPerBlock raffles
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(types.MaxRafflesCleanupPerBlock)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.RaffleModuleName).Return(nil).Times(types.MaxRafflesCleanupPerBlock)
 	err = suite.k.ProcessRaffleCleanupQueue(suite.ctx)
 	suite.Require().NoError(err)
 
@@ -847,7 +851,7 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_FullDrainAcross
 
 	// Block 3: processes remaining half-batch (< MaxRafflesCleanupPerBlock), epoch is popped
 	lastBatch := numRaffles - types.MaxRafflesCleanupPerBlock*2
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(lastBatch)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.RaffleModuleName).Return(nil).Times(lastBatch)
 	err = suite.k.ProcessRaffleCleanupQueue(suite.ctx)
 	suite.Require().NoError(err)
 
@@ -880,7 +884,7 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_NewEpochEnqueue
 	suite.k.EnqueueRaffleCleanup(suite.ctx, epoch1)
 
 	// Block 1: process first batch of epoch1
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(types.MaxRafflesCleanupPerBlock)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.RaffleModuleName).Return(nil).Times(types.MaxRafflesCleanupPerBlock)
 	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
 	suite.Require().NoError(err)
 
@@ -902,7 +906,7 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_NewEpochEnqueue
 	suite.Require().Equal(epoch2, queue.PendingEpochs[1])
 
 	// Block 2: continues draining epoch1 (remaining 3 raffles < batch size, epoch1 popped)
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(3)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.RaffleModuleName).Return(nil).Times(3)
 	err = suite.k.ProcessRaffleCleanupQueue(suite.ctx)
 	suite.Require().NoError(err)
 
@@ -916,7 +920,7 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_NewEpochEnqueue
 	suite.Require().Len(remaining, 0)
 
 	// Block 3: processes epoch2
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(nil).Times(1)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.RaffleModuleName).Return(nil).Times(1)
 	err = suite.k.ProcessRaffleCleanupQueue(suite.ctx)
 	suite.Require().NoError(err)
 
@@ -943,10 +947,10 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_FactoryToken() 
 	}
 	currentPot := sdk.NewInt64Coin(denom, 1000)
 
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(&raffleAcc).Times(1)
-	suite.bank.EXPECT().GetBalance(suite.ctx, addr, denom).Return(currentPot).Times(1)
-	suite.trade.EXPECT().IsNativeDenom(suite.ctx, denom).Return(false).Times(1)
-	suite.bank.EXPECT().BurnCoins(suite.ctx, types.RaffleModuleName, sdk.NewCoins(currentPot)).Return(nil).Times(1)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.RaffleModuleName).Return(&raffleAcc).Times(1)
+	suite.bank.EXPECT().GetBalance(gomock.Any(), addr, denom).Return(currentPot).Times(1)
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), denom).Return(false).Times(1)
+	suite.bank.EXPECT().BurnCoins(gomock.Any(), types.RaffleModuleName, sdk.NewCoins(currentPot)).Return(nil).Times(1)
 
 	err := suite.k.ProcessRaffleCleanupQueue(suite.ctx)
 	suite.Require().NoError(err)

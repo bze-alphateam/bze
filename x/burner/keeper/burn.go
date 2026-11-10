@@ -1,6 +1,10 @@
 package keeper
 
 import (
+	"fmt"
+
+	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/bzeutils"
 	"github.com/bze-alphateam/bze/x/burner/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,6 +25,9 @@ func (k Keeper) EnqueuePeriodicBurn(ctx sdk.Context) {
 }
 
 // ProcessPeriodicBurnQueue processes the periodic burn queue if active, burning coins in batches and emitting events.
+// There is no cursor: every block re-reads the burner's balances from the start, so every coin of a batch must leave
+// the account. BurnAnyCoins guarantees it for exchangeable coins: one that can't be added as liquidity (an error, a
+// refund or a panic) is locked instead of being retried at the front of the account forever.
 func (k Keeper) ProcessPeriodicBurnQueue(ctx sdk.Context) error {
 	queue, found := k.GetPeriodicBurnQueue(ctx)
 	if !found || !queue.Pending {
@@ -115,46 +122,16 @@ func (k Keeper) ProcessRaffleCleanupQueue(ctx sdk.Context) error {
 
 	for _, item := range batch {
 		itemLogger := logger.With("epoch", epoch, "denom", item.Denom)
-		k.RemoveRaffleDeleteHook(ctx, item)
-		k.RemoveRaffle(ctx, item.Denom)
-		winners := k.GetRaffleWinners(ctx, item.Denom)
-		for _, w := range winners {
-			k.RemoveRaffleWinner(ctx, w)
-		}
+		// each raffle is cleaned up in its own cached context: one that fails (e.g. a panic on an oversized pot)
+		// doesn't discard the others or keep the epoch in the queue
+		err := bzeutils.ApplyFuncIfNoError(ctx, func(cached sdk.Context) error {
+			k.cleanupRaffle(cached, itemLogger, item)
 
-		raffleAcc := k.accountKeeper.GetModuleAccount(ctx, types.RaffleModuleName)
-		if raffleAcc == nil {
-			itemLogger.Error("could not find module account")
-			continue
-		}
-
-		currentPot := k.bankKeeper.GetBalance(ctx, raffleAcc.GetAddress(), item.Denom)
-		if !currentPot.IsPositive() {
-			itemLogger.Info("no coins to burn for this raffle that we delete")
-			continue
-		}
-
-		burned, err := k.BurnAnyCoins(ctx, types.RaffleModuleName, sdk.NewCoins(currentPot))
+			return nil
+		})
 		if err != nil {
-			itemLogger.Error("failed to burn raffle remaining coins", "error", err)
-			continue
-		}
-
-		if burned.IsZero() {
-			itemLogger.Info("no raffle coins to burn")
-			continue
-		}
-
-		err = k.SaveBurnedCoins(ctx, burned)
-		if err != nil {
-			itemLogger.Error("failed to save burned coins", "error", err)
-		}
-
-		itemLogger.Debug("burned raffle coins", "burned_current_pot", burned)
-
-		err = ctx.EventManager().EmitTypedEvent(&types.RaffleFinishedEvent{Denom: item.Denom})
-		if err != nil {
-			itemLogger.Error("failed to emit raffle finished event", "error", err)
+			itemLogger.Error("raffle cleanup failed, removing the raffle and locking its pot", "error", err)
+			k.cleanupFailedRaffle(ctx, itemLogger, item)
 		}
 	}
 
@@ -171,23 +148,97 @@ func (k Keeper) ProcessRaffleCleanupQueue(ctx sdk.Context) error {
 	return nil
 }
 
+// cleanupRaffle removes a finished raffle (its delete hook, the raffle and its winners) and burns what is left in its
+// pot. A pot that can't be burned or exchanged is locked by BurnAnyCoins; a burn that returns an error leaves the pot in
+// the raffle module.
+func (k Keeper) cleanupRaffle(ctx sdk.Context, itemLogger log.Logger, item types.RaffleDeleteHook) {
+	k.removeRaffleData(ctx, item)
+
+	raffleAcc := k.accountKeeper.GetModuleAccount(ctx, types.RaffleModuleName)
+	if raffleAcc == nil {
+		itemLogger.Error("could not find module account")
+		return
+	}
+
+	currentPot := k.bankKeeper.GetBalance(ctx, raffleAcc.GetAddress(), item.Denom)
+	if !currentPot.IsPositive() {
+		itemLogger.Info("no coins to burn for this raffle that we delete")
+		return
+	}
+
+	burned, err := k.BurnAnyCoins(ctx, types.RaffleModuleName, sdk.NewCoins(currentPot))
+	if err != nil {
+		itemLogger.Error("failed to burn raffle remaining coins", "error", err)
+		return
+	}
+
+	if burned.IsZero() {
+		itemLogger.Info("no raffle coins to burn")
+		return
+	}
+
+	err = k.SaveBurnedCoins(ctx, burned)
+	if err != nil {
+		itemLogger.Error("failed to save burned coins", "error", err)
+	}
+
+	itemLogger.Debug("burned raffle coins", "burned_current_pot", burned)
+
+	err = ctx.EventManager().EmitTypedEvent(&types.RaffleFinishedEvent{Denom: item.Denom})
+	if err != nil {
+		itemLogger.Error("failed to emit raffle finished event", "error", err)
+	}
+}
+
+// cleanupFailedRaffle is the fallback when cleanupRaffle failed and its writes were discarded: it removes the raffle's
+// delete hook, the raffle and its winners, so the item is not retried forever and the epoch completes, then locks the
+// pot in the black hole module (in its own cached context; on failure the pot stays in the raffle module).
+func (k Keeper) cleanupFailedRaffle(ctx sdk.Context, itemLogger log.Logger, item types.RaffleDeleteHook) {
+	k.removeRaffleData(ctx, item)
+
+	err := bzeutils.ApplyFuncIfNoError(ctx, func(cached sdk.Context) error {
+		raffleAcc := k.accountKeeper.GetModuleAccount(cached, types.RaffleModuleName)
+		if raffleAcc == nil {
+			return fmt.Errorf("could not find module account %s", types.RaffleModuleName)
+		}
+
+		pot := k.bankKeeper.GetBalance(cached, raffleAcc.GetAddress(), item.Denom)
+		if !pot.IsPositive() {
+			return nil
+		}
+
+		return k.bankKeeper.SendCoinsFromModuleToModule(cached, types.RaffleModuleName, types.BlackHoleModuleName, sdk.NewCoins(pot))
+	})
+	if err != nil {
+		itemLogger.Error("could not lock the pot of the failed raffle", "error", err)
+	}
+}
+
+// removeRaffleData removes the raffle's delete hook, the raffle and its winners.
+func (k Keeper) removeRaffleData(ctx sdk.Context, item types.RaffleDeleteHook) {
+	k.RemoveRaffleDeleteHook(ctx, item)
+	k.RemoveRaffle(ctx, item.Denom)
+	winners := k.GetRaffleWinners(ctx, item.Denom)
+	for _, w := range winners {
+		k.RemoveRaffleWinner(ctx, w)
+	}
+}
+
 // BurnAnyCoins attempts to burn, lock, or exchange specified coins from a module account.
 // It directly burns native and token factory denominations, locks LP tokens, and exchanges IBC tokens for native ones.
+// An exchangeable coin is added as liquidity on its own (see addLiquidityWithNative); whatever of it is not added is
+// locked like a non-exchangeable coin, so it never stays in fromModule to be retried every block.
 // It returns the coins that were successfully burned.
 func (k Keeper) BurnAnyCoins(ctx sdk.Context, fromModule string, coins sdk.Coins) (sdk.Coins, error) {
 	logger := k.Logger().With("method", "BurnAnyCoins", "fromModule", fromModule)
 	logger.Debug("iterating through provided coins")
 
 	burnable, exchangeable, lockable := k.filterCoinsToBurn(ctx, coins)
-	if len(exchangeable) > 0 {
-		logger.Debug("there are coins that can be added to liquidity with native denom")
-
-		//use exchangeable coins to add liquidity with native denom
-		added, refunded, err := k.tradeKeeper.ModuleAddLiquidityWithNativeDenom(ctx, fromModule, exchangeable)
-		if err != nil {
-			logger.Error("error on module add liquidity with native", "error", err)
-		} else {
-			logger.Debug("added liquidity with native denom", "added", added.String(), "refunded", refunded.String())
+	for _, c := range exchangeable {
+		//use exchangeable coins to add liquidity with native denom, one coin at a time; what can't be added is locked
+		notAdded := k.addLiquidityWithNative(ctx, fromModule, c)
+		if notAdded.IsPositive() {
+			lockable = lockable.Add(notAdded)
 		}
 	}
 
@@ -237,7 +288,7 @@ func (k Keeper) filterCoinsToBurn(ctx sdk.Context, toBurn sdk.Coins) (burnable, 
 		//it must be an IBC token
 
 		//not native, not LP share, not token factory -> it should be an IBC denom
-		if k.tradeKeeper.CanSwapForNativeDenom(ctx, c) {
+		if k.canExchange(ctx, c) {
 			logger.Debug("coin is IBC token, can be exchanged to native coin for burning", "coin", c.String())
 			exchangeable = exchangeable.Add(c)
 			continue
@@ -248,4 +299,47 @@ func (k Keeper) filterCoinsToBurn(ctx sdk.Context, toBurn sdk.Coins) (burnable, 
 	}
 
 	return burnable, exchangeable, lockable
+}
+
+// canExchange reports whether the coin can be swapped for native denom. A check that panics (e.g. on an oversized
+// amount) counts as not exchangeable, so the coin is locked instead of failing the whole batch.
+func (k Keeper) canExchange(ctx sdk.Context, c sdk.Coin) bool {
+	can := false
+	err := bzeutils.ApplyFuncIfNoError(ctx, func(cached sdk.Context) error {
+		can = k.tradeKeeper.CanSwapForNativeDenom(cached, c)
+
+		return nil
+	})
+
+	return err == nil && can
+}
+
+// addLiquidityWithNative adds one exchangeable coin as liquidity with native denom, in its own cached context, and
+// returns the part of it that is still in fromModule afterwards:
+//   - add-liquidity fails (an error, or a panic such as an arithmetic overflow): its writes are discarded and the
+//     whole coin is returned;
+//   - add-liquidity refunds the coin (it could not be added): the refunded amount is returned.
+//
+// Other refunds (LP shares, native leftovers) stay in fromModule as before.
+func (k Keeper) addLiquidityWithNative(ctx sdk.Context, fromModule string, c sdk.Coin) sdk.Coin {
+	logger := k.Logger().With("method", "addLiquidityWithNative", "fromModule", fromModule, "coin", c.String())
+
+	notAdded := sdk.NewCoin(c.Denom, math.ZeroInt())
+	err := bzeutils.ApplyFuncIfNoError(ctx, func(cached sdk.Context) error {
+		added, refunded, err := k.tradeKeeper.ModuleAddLiquidityWithNativeDenom(cached, fromModule, sdk.NewCoins(c))
+		if err != nil {
+			return err
+		}
+		logger.Debug("added liquidity with native denom", "added", added.String(), "refunded", refunded.String())
+		notAdded = sdk.NewCoin(c.Denom, refunded.AmountOf(c.Denom))
+
+		return nil
+	})
+	if err != nil {
+		logger.Error("error on module add liquidity with native, locking the coin", "error", err)
+
+		return c
+	}
+
+	return notAdded
 }

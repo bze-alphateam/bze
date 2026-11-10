@@ -206,7 +206,7 @@ func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_WithHashedLPTokens()
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ubze").Return(true).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ulp/0A1B2C3D4E5F").Return(false).Times(1)
 	// even with a deep enough LP/ubze pool the LP shares must be locked, never swapped
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, gomock.Any()).Return(true).AnyTimes()
+	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), gomock.Any()).Return(true).AnyTimes()
 
 	suite.bank.EXPECT().
 		SendCoinsFromAccountToModule(suite.ctx, creatorAddr, types.BlackHoleModuleName, lockableCoin).
@@ -240,7 +240,7 @@ func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_OnlyUnprocessableCoi
 
 	// Mock trade keeper for filtering - coin cannot be swapped but is now lockable
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/INVALID").Return(false).Times(1)
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, gomock.Any()).Return(false).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), gomock.Any()).Return(false).Times(1)
 
 	// Non-swappable IBC coins are now lockable (sent to black hole)
 	suite.bank.EXPECT().
@@ -276,7 +276,7 @@ func (suite *IntegrationTestSuite) TestMsgServer_FundBurner_WithExchangeableIBC(
 	// Mock trade keeper for filtering
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ibc/ABC123").Return(false).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(suite.ctx, "ubze").Return(true).Times(1)
-	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, gomock.Any()).Return(true).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), gomock.Any()).Return(true).Times(1)
 
 	// Mock bank keeper - both coins go to burner module
 	suite.bank.EXPECT().

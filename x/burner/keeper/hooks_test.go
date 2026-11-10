@@ -208,7 +208,8 @@ func (suite *IntegrationTestSuite) TestHooks_PeriodicBurnHook_OnlyIBCTokens() {
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/DEF456").Return(false).Times(1)
 	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibcOnlyCoins[0]).Return(true).Times(1)
 	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibcOnlyCoins[1]).Return(true).Times(1)
-	suite.trade.EXPECT().ModuleAddLiquidityWithNativeDenom(gomock.Any(), types.ModuleName, ibcOnlyCoins).Return(addedCoins, refundedCoins, nil).Times(1)
+	suite.trade.EXPECT().ModuleAddLiquidityWithNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(ibcOnlyCoins[0])).Return(sdk.NewCoins(addedCoins[0]), refundedCoins, nil).Times(1)
+	suite.trade.EXPECT().ModuleAddLiquidityWithNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(ibcOnlyCoins[1])).Return(sdk.NewCoins(addedCoins[1]), refundedCoins, nil).Times(1)
 
 	err = suite.k.ProcessPeriodicBurnQueue(suite.ctx)
 	suite.Require().NoError(err)

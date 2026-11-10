@@ -153,9 +153,9 @@ func TestEndBlock_FailedSendLeavesCoinsInPlace(t *testing.T) {
 	require.Equal(t, 2, paidEventCount(ctx))
 }
 
-// TestEndBlock_FailedSwapDiscardsCpPass proves the CP pass is one unit: a failed swap discards the community pool
-// sends made earlier in the same pass too, and the coins wait for the next block.
-func TestEndBlock_FailedSwapDiscardsCpPass(t *testing.T) {
+// TestEndBlock_FailedSwapKeepsOnlyThatCoin proves a failed swap in the CP pass only fails that coin: it waits in the
+// collector for the next pass, while the community pool sends made in the same pass are kept.
+func TestEndBlock_FailedSwapKeepsOnlyThatCoin(t *testing.T) {
 	am, _, ctx, m := newEndBlockModule(t)
 	bank, cp, trade := m.bank, m.cp, m.trade
 	token := sdk.NewInt64Coin("factory/bze1creator/token", 100)
@@ -171,6 +171,7 @@ func TestEndBlock_FailedSwapDiscardsCpPass(t *testing.T) {
 	trade.EXPECT().ModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(ibc)).
 		Return(sdk.Coin{}, errors.New("swap failed")).Times(1)
 
+	// no funding expectation: nothing was swapped, a call would fail the test
 	require.NoError(t, am.EndBlock(ctx))
-	require.Zero(t, paidEventCount(ctx), "the discarded send's event doesn't reach the block")
+	require.Equal(t, 1, paidEventCount(ctx), "the community pool send is kept")
 }

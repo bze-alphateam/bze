@@ -140,7 +140,7 @@ func (suite *IntegrationTestSuite) TestWithdrawLucky_WinnerSuccess() {
 	// Prize = 100000 * 0.1 = 10000
 	wonCoin := sdk.NewCoin(denom, math.NewInt(10000))
 	suite.bank.EXPECT().SendCoinsFromModuleToAccount(
-		suite.ctx, types.RaffleModuleName, creatorAddr, sdk.NewCoins(wonCoin),
+		gomock.Any(), types.RaffleModuleName, creatorAddr, sdk.NewCoins(wonCoin),
 	).Return(nil).Times(1)
 
 	suite.k.WithdrawLuckyRaffleParticipants(suite.ctx, 10)
@@ -225,7 +225,7 @@ func (suite *IntegrationTestSuite) TestWithdrawLucky_SendCoinsError() {
 
 	wonCoin := sdk.NewCoin(denom, math.NewInt(10000))
 	suite.bank.EXPECT().SendCoinsFromModuleToAccount(
-		suite.ctx, types.RaffleModuleName, creatorAddr, sdk.NewCoins(wonCoin),
+		gomock.Any(), types.RaffleModuleName, creatorAddr, sdk.NewCoins(wonCoin),
 	).Return(errors.New("send failed")).Times(1)
 
 	suite.k.WithdrawLuckyRaffleParticipants(suite.ctx, 10)
@@ -341,7 +341,7 @@ func (suite *IntegrationTestSuite) TestWithdrawLucky_WinnerInvalidTotalWon() {
 
 	wonCoin := sdk.NewCoin(denom, math.NewInt(10000))
 	suite.bank.EXPECT().SendCoinsFromModuleToAccount(
-		suite.ctx, types.RaffleModuleName, creatorAddr, sdk.NewCoins(wonCoin),
+		gomock.Any(), types.RaffleModuleName, creatorAddr, sdk.NewCoins(wonCoin),
 	).Return(nil).Times(1)
 
 	// Should not panic - just logs error and continues
@@ -387,7 +387,7 @@ func (suite *IntegrationTestSuite) TestWithdrawLucky_SmallPot_PrizeTruncatesToZe
 	// Prize truncates to 0, so SendCoinsFromModuleToAccount is called with 0 amount coin
 	wonCoin := sdk.NewCoin(denom, math.ZeroInt())
 	suite.bank.EXPECT().SendCoinsFromModuleToAccount(
-		suite.ctx, types.RaffleModuleName, gomock.Any(), sdk.NewCoins(wonCoin),
+		gomock.Any(), types.RaffleModuleName, gomock.Any(), sdk.NewCoins(wonCoin),
 	).Return(nil).Times(1)
 
 	suite.k.WithdrawLuckyRaffleParticipants(suite.ctx, 10)
