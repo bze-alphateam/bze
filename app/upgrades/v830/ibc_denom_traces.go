@@ -129,6 +129,7 @@ func migratesAsIs(dt denomTrace) bool {
 // convertDenomTrace returns the valid Denom with the trace's full path and store key and the most hops,
 // taken from the stored path. A trace with an empty path is a native denom and has no conversion.
 func convertDenomTrace(dt denomTrace) (transfertypes.Denom, bool) {
+	// Belt and braces: a trace with an empty path already migrates as is unless its base is unparsable.
 	if dt.path == "" {
 		return transfertypes.Denom{}, false
 	}
@@ -150,6 +151,7 @@ func convertDenomTrace(dt denomTrace) (transfertypes.Denom, bool) {
 		folded = append(folded, dt.base)
 
 		denom := transfertypes.NewDenom(strings.Join(folded, "/"), hops[:n]...)
+		// The path and IBC denom checks hold by construction; they stay as defence in depth.
 		if denom.Validate() == nil && denom.Path() == dt.fullPath() && denom.IBCDenom() == dt.ibcDenom() &&
 			bytes.Equal(denom.Hash(), dt.key) {
 			return denom, true
@@ -188,6 +190,7 @@ func decodeDenomTrace(bz []byte) (path, base string, err error) {
 		}
 		bz = bz[m:]
 	}
+	// Belt and braces: an empty record has no denom to convert.
 	if path == "" && base == "" {
 		return "", "", errors.New("empty denom trace")
 	}

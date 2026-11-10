@@ -295,6 +295,7 @@ func TestHandler_DenomTraces_DeletesTracesWithoutAValidDenom(t *testing.T) {
 			bz:   v8Trace{path: "transfer/channel-7"}.encode(),
 		},
 		{
+			// Safe to delete: a native denom is its own bank denom and needs no trace entry.
 			name: "empty path with a short client-shaped segment",
 			key:  v8Trace{base: "ab/foo-1/x"}.hash(),
 			bz:   v8Trace{base: "ab/foo-1/x"}.encode(),
