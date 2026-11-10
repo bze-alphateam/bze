@@ -14,7 +14,8 @@ import (
 //   - native denom: funds the chain's community pool
 //   - a denom with its own community pool: sent to that address, with a CommunityPoolFeePaidEvent
 //   - LP shares: can never be swapped, sent to the burner module (which locks them)
-//   - swappable for native denom: swapped, the result funds the chain's community pool
+//   - swappable for native denom: swapped on its own (see swapToNative), the result funds the chain's community pool;
+//     a coin whose swap fails stays in the collector and the rest of the page is still handled
 //   - anything else (too small to swap, no pool or a shallow one): kept in the collector until it can be swapped
 //
 // A failed send to a denom's community pool returns the error and the caller is expected to discard everything the
@@ -29,7 +30,6 @@ func (k Keeper) ConvertCommunityPoolFees(ctx sdk.Context) error {
 	}
 
 	toFund := sdk.NewCoins()
-	toSwap := sdk.NewCoins()
 	toBurn := sdk.NewCoins()
 	for _, c := range page {
 		if !c.IsPositive() {
@@ -53,18 +53,16 @@ func (k Keeper) ConvertCommunityPoolFees(ctx sdk.Context) error {
 			continue
 		}
 
-		if k.tradeKeeper.CanSwapForNativeDenom(ctx, c) {
-			toSwap = toSwap.Add(c)
+		// a coin that fails to swap only fails itself: it waits in the collector like one that can't be swapped yet
+		swapped, swappable, err := k.swapToNative(ctx, types.CpFeeCollector, c)
+		if err != nil {
+			k.Logger().Error("failed to swap community pool fee coin, keeping it", "coin", c.String(), "error", err)
+			continue
+		}
+		if swappable {
+			toFund = toFund.Add(swapped)
 		}
 		// otherwise it waits in the collector until it can be swapped
-	}
-
-	if !toSwap.IsZero() {
-		swapped, err := k.tradeKeeper.ModuleSwapForNativeDenom(ctx, types.CpFeeCollector, toSwap)
-		if err != nil {
-			return err
-		}
-		toFund = toFund.Add(swapped)
 	}
 
 	if !toBurn.IsZero() {

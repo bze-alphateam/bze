@@ -28,14 +28,14 @@ func (suite *IntegrationTestSuite) TestJoinRaffle_StoredTicketPriceNonCanonical(
 	})
 
 	moduleAcc := &authtypes.ModuleAccount{BaseAccount: &authtypes.BaseAccount{Address: sdk.AccAddress("raffle_module").String()}}
-	suite.bank.EXPECT().HasSupply(suite.ctx, storedRaffleDenom).Return(true).Times(1)
-	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, gomock.Any()).Return(int64(100), nil).Times(1)
-	suite.bank.EXPECT().SpendableCoins(suite.ctx, creator).Return(sdk.NewCoins(sdk.NewInt64Coin(storedRaffleDenom, 1000))).Times(1)
-	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.RaffleModuleName).Return(moduleAcc).Times(1)
-	suite.bank.EXPECT().GetBalance(suite.ctx, moduleAcc.GetAddress(), storedRaffleDenom).Return(sdk.NewInt64Coin(storedRaffleDenom, 512)).Times(1)
+	suite.bank.EXPECT().HasSupply(gomock.Any(), storedRaffleDenom).Return(true).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(gomock.Any(), gomock.Any()).Return(int64(100), nil).Times(1)
+	suite.bank.EXPECT().SpendableCoins(gomock.Any(), creator).Return(sdk.NewCoins(sdk.NewInt64Coin(storedRaffleDenom, 1000))).Times(1)
+	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.RaffleModuleName).Return(moduleAcc).Times(1)
+	suite.bank.EXPECT().GetBalance(gomock.Any(), moduleAcc.GetAddress(), storedRaffleDenom).Return(sdk.NewInt64Coin(storedRaffleDenom, 512)).Times(1)
 
 	var captured sdk.Coins
-	suite.bank.EXPECT().SendCoinsFromAccountToModule(suite.ctx, creator, types.RaffleModuleName, gomock.Any()).
+	suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), creator, types.RaffleModuleName, gomock.Any()).
 		DoAndReturn(func(_ sdk.Context, _ sdk.AccAddress, _ string, coins sdk.Coins) error {
 			captured = coins
 			return nil
@@ -72,7 +72,7 @@ func (suite *IntegrationTestSuite) TestWithdrawLucky_StoredPotNonCanonical_Winne
 	participant := suite.storedRaffleParticipant(1_000_000)
 
 	var won sdk.Coins
-	suite.bank.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.RaffleModuleName, participant, gomock.Any()).
+	suite.bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.RaffleModuleName, participant, gomock.Any()).
 		DoAndReturn(func(_ sdk.Context, _ string, _ sdk.AccAddress, coins sdk.Coins) error {
 			won = coins
 			return nil
