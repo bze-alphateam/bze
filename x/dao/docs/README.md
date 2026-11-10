@@ -21,7 +21,7 @@ The DAO module lets anyone create an on-chain organisation with its own treasury
   - The signer must be the DAO's admin when the message runs. A self-owned DAO has no external admin and is refused; it executes through its proposals.
   - 1 to `max_msgs_per_proposal` messages, at most `max_proposal_bytes` bytes in total (packed size of the messages).
   - Every signer of every message must be the DAO account, so the admin can spend the treasury but never another address. A message with a second signer, or a nested `MsgAdminExecute`, is refused.
-  - The admin cannot grant as the DAO: `authz.MsgGrant` and `feegrant.MsgGrantAllowance` are refused (`ErrMsgNotAllowed`), so nothing it signed as the DAO outlives its handover. `authz.MsgExec` is refused too, since it runs a message signed by its own grantee without any grant. A DAO that wants to grant does it through a proposal its voters pass.
+  - The admin cannot grant as the DAO: `authz.MsgGrant` and `feegrant.MsgGrantAllowance` are refused (`ErrMsgNotAllowed`), so no authz grant or fee allowance it signed as the DAO outlives its handover. `authz.MsgExec` is refused too, since it runs a message signed by its own grantee without any grant. A DAO that wants to grant does it through a proposal its voters pass.
   - The messages run in order; if one fails, the transaction fails and none of them is applied.
 - `MsgNominateAdmin`: first step of the two-step admin handover. Rules:
   - The signer (`authority`) must be the DAO's current admin: a person signs directly, a self-owned DAO through a passed proposal, a parent DAO through its own proposal or admin.
