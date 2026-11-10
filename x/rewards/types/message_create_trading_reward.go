@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -32,9 +31,10 @@ func NewMsgCreateTradingReward(creator string, prizeAmount string, prizeDenom st
 func (msg *MsgCreateTradingReward) ToTradingReward() (TradingReward, error) {
 	tr := TradingReward{}
 
-	amtInt, ok := math.NewIntFromString(msg.PrizeAmount)
-	if !ok {
-		return tr, errorsmod.Wrapf(ErrInvalidAmount, "could not convert order amount")
+	// amounts must be canonical base-10 integers
+	amtInt, err := ParseCanonicalInt(msg.PrizeAmount)
+	if err != nil {
+		return tr, errorsmod.Wrapf(ErrInvalidAmount, "could not convert order amount: %s", err)
 	}
 	if !amtInt.IsPositive() {
 		return tr, errorsmod.Wrapf(ErrInvalidAmount, "amount should be greater than 0")

@@ -387,14 +387,16 @@ func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 
-	amtInt, ok := math.NewIntFromString(msg.Amount)
-	if !ok {
-		return nil, errors.Wrapf(types.ErrInvalidAmount, "could not convert order amount")
+	// amounts must be canonical base-10 integers
+	amtInt, err := types.ParseCanonicalInt(msg.Amount)
+	if err != nil {
+		return nil, errors.Wrapf(types.ErrInvalidAmount, "could not convert order amount: %s", err)
 	}
 
 	if !amtInt.IsPositive() {
 		return nil, errors.Wrapf(types.ErrInvalidAmount, "amount should be greater than 0")
 	}
+	amount := amtInt.String()
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	stakingReward, isFound := k.GetStakingReward(ctx, msg.RewardId)
@@ -402,7 +404,7 @@ func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *types.Ms
 		return nil, errors.Wrap(sdkerrors.ErrKeyNotFound, "staking reward not found")
 	}
 
-	toCapture, err := k.getAmountToCapture(stakingReward.PrizeDenom, msg.Amount, 1)
+	toCapture, err := k.getAmountToCapture(stakingReward.PrizeDenom, amount, 1)
 	if err != nil {
 		return nil, errors.Wrap(types.ErrInvalidAmount, "could not create capture amount")
 	}
@@ -412,7 +414,7 @@ func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *types.Ms
 		return nil, sdkerrors.ErrInsufficientFunds
 	}
 
-	err = k.distributeStakingRewards(&stakingReward, msg.Amount)
+	err = k.distributeStakingRewards(&stakingReward, amount)
 	if err != nil {
 		return nil, err
 	}
@@ -427,7 +429,7 @@ func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *types.Ms
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.StakingRewardDistributionEvent{
 			RewardId: stakingReward.RewardId,
-			Amount:   msg.Amount,
+			Amount:   amount,
 		},
 	)
 

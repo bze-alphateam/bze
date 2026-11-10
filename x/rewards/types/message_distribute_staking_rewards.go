@@ -2,7 +2,6 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -23,9 +22,10 @@ func (msg *MsgDistributeStakingRewards) ValidateBasic() error {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	amtInt, ok := math.NewIntFromString(msg.Amount)
-	if !ok {
-		return errorsmod.Wrapf(ErrInvalidAmount, "could not convert amount")
+	// amounts must be canonical base-10 integers
+	amtInt, err := ParseCanonicalInt(msg.Amount)
+	if err != nil {
+		return errorsmod.Wrapf(ErrInvalidAmount, "could not convert amount: %s", err)
 	}
 
 	if !amtInt.IsPositive() {

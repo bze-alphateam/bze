@@ -135,14 +135,12 @@ func (k Keeper) distributeStakingRewards(sr *types.StakingReward, rewardAmount s
 		return fmt.Errorf("no stakers found")
 	}
 
-	reward, err := math.LegacyNewDecFromStr(rewardAmount)
+	// amounts must be canonical base-10 integers, so the value credited here is the one captured
+	rewardInt, err := types.ParseCanonicalAmount(rewardAmount)
 	if err != nil {
 		return fmt.Errorf("could not transform reward amount to int: %w", err)
 	}
-
-	if !reward.IsPositive() {
-		return fmt.Errorf("reward amount should be positive")
-	}
+	reward := math.LegacyNewDecFromInt(rewardInt)
 
 	sFloat, err := math.LegacyNewDecFromStr(sr.DistributedStake)
 	if err != nil {
