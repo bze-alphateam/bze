@@ -14,10 +14,10 @@ type RewardsKeeper interface {
 }
 
 // normaliseStakingRewardAmounts rewrites every stored staking reward prize amount that is not a canonical base-10
-// integer. From v8.3.0 the rewards module accepts amounts only in canonical form, so each stored value is rewritten
-// to the integer the module read from it when the reward was funded (math.NewIntFromString). A value that cannot be
-// read as an integer at all is logged and left as it is.
+// integer to canonical form. From v8.3.0 the rewards module accepts amounts only in that form. A value that is not an
+// integer at all is logged and left as it is.
 func normaliseStakingRewardAmounts(ctx sdk.Context, rewards RewardsKeeper) {
+	rewritten, skipped := 0, 0
 	for _, sr := range rewards.GetAllStakingReward(ctx) {
 		if _, err := rewardstypes.ParseCanonicalInt(sr.PrizeAmount); err == nil {
 			continue
@@ -26,6 +26,7 @@ func normaliseStakingRewardAmounts(ctx sdk.Context, rewards RewardsKeeper) {
 		amt, ok := math.NewIntFromString(sr.PrizeAmount)
 		if !ok {
 			ctx.Logger().Error("staking reward prize amount is not an integer, skipped", "reward_id", sr.RewardId, "prize_amount", sr.PrizeAmount)
+			skipped++
 			continue
 		}
 
@@ -33,5 +34,8 @@ func normaliseStakingRewardAmounts(ctx sdk.Context, rewards RewardsKeeper) {
 		sr.PrizeAmount = amt.String()
 		rewards.SetStakingReward(ctx, sr)
 		ctx.Logger().Info("normalised staking reward prize amount", "reward_id", sr.RewardId, "from", previous, "to", sr.PrizeAmount)
+		rewritten++
 	}
+
+	ctx.Logger().Info("staking reward prize amounts normalised", "rewritten", rewritten, "skipped", skipped)
 }

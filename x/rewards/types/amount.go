@@ -10,8 +10,7 @@ import (
 // only, an optional leading "-" for negative values, no "+" sign, no base prefix, no separators and no
 // leading zeros ("0" itself is fine). Callers check the sign they need.
 //
-// Amounts handled by this module are stored and re-read as strings, so only the form produced by
-// math.Int.String() is accepted: every later parse of the same string then yields the same value.
+// Amounts must be canonical base-10 integers: only the form produced by math.Int.String() is accepted.
 func ParseCanonicalInt(s string) (math.Int, error) {
 	amt, ok := math.NewIntFromString(s)
 	if !ok {
