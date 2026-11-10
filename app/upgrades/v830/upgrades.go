@@ -3,6 +3,7 @@ package v830
 import (
 	"context"
 
+	corestore "cosmossdk.io/core/store"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -19,10 +20,14 @@ func CreateUpgradeHandler(
 	tradebinKeeper TradebinKeeper,
 	metadataKeeper MetadataKeeper,
 	rewardsKeeper RewardsKeeper,
+	transferStore corestore.KVStoreService,
+	transferKeeper TransferKeeper,
 ) upgradetypes.UpgradeHandler {
 
 	return func(c context.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		ctx := sdk.UnwrapSDKContext(c)
+
+		sanitizeDenomTraces(ctx, transferStore, transferKeeper)
 
 		// RunMigrations triggers module-level migrations based on ConsensusVersion
 		// changes: the ibc-go v10 module migrations. The cosmos-sdk v0.50 -> v0.53
