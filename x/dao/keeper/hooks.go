@@ -108,13 +108,7 @@ func (k Keeper) afterSourceJoin(ctx sdk.Context, source []byte, address string) 
 // afterSourceExit deletes the join record, if any, and removes the exited
 // stake from the address's ballots on proposals in voting (D2, D5).
 //
-// x/rewards reports every address in its standard (lowercase) bech32
-// spelling. Any other spelling of an address (bech32 also decodes the
-// all-uppercase form to the same account) is ignored: the exit of such a
-// position must not erase the join record or the ballots of the account's
-// standard position. Joins and top-ups are not filtered the same way: writing
-// a join record only ever makes stake ineligible for proposals already open,
-// so recording it for the decoded account is the safe direction.
+// Notifications for addresses not in their standard form are ignored.
 func (k Keeper) afterSourceExit(ctx sdk.Context, source []byte, address string) {
 	addr, err := sdk.AccAddressFromBech32(address)
 	if err != nil {

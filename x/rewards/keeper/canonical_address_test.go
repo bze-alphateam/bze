@@ -322,3 +322,37 @@ func (suite *IntegrationTestSuite) TestCanonicalAddress_QueriesAcceptUppercase()
 	suite.Require().Len(listRes.List, 1)
 	suite.Require().Equal(lower, listRes.List[0].Address)
 }
+
+// The trading reward creation event carries the creator's lowercase address, whichever spelling
+// the message used.
+func (suite *IntegrationTestSuite) TestCanonicalAddress_TradingReward_CreateEventUsesLowercase() {
+	acc := sdk.AccAddress("canonical-tr-creator")
+	lower := acc.String()
+	upper := strings.ToUpper(lower)
+
+	// a zero creation fee: only the prize budget is captured
+	params := suite.k.GetParams(suite.ctx)
+	params.CreateTradingRewardFee = sdk.NewCoin("ubze", math.ZeroInt())
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
+
+	budget := sdk.NewCoins(sdk.NewInt64Coin("ubze", 5000))
+	suite.bank.EXPECT().HasSupply(suite.ctx, "ubze").Return(true).Times(1)
+	suite.trade.EXPECT().MarketExists(suite.ctx, "market-1").Return(true).Times(1)
+	suite.bank.EXPECT().SpendableCoins(suite.ctx, acc).Return(budget).Times(1)
+	suite.bank.EXPECT().SendCoinsFromAccountToModule(suite.ctx, acc, types.ModuleName, budget).Return(nil).Times(1)
+	suite.epoch.EXPECT().SafeGetEpochCountByIdentifier(suite.ctx, "hour").Return(int64(100), nil).Times(1)
+
+	_, err := suite.msgServer.CreateTradingReward(suite.ctx, &types.MsgCreateTradingReward{
+		Creator:     upper,
+		PrizeAmount: "1000",
+		PrizeDenom:  "ubze",
+		Duration:    "30",
+		MarketId:    "market-1",
+		Slots:       "5",
+	})
+	suite.Require().NoError(err)
+
+	e, ok := suite.findTypedEvent(proto.MessageName(&types.TradingRewardCreateEvent{}))
+	suite.Require().True(ok)
+	suite.requireEventAttr(e, "creator", lower)
+}
