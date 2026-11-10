@@ -21,7 +21,7 @@ func (k Keeper) CaptureAndSwapUserFee(ctx sdk.Context, payer sdk.AccAddress, fee
 	}
 
 	nativeDenom := k.getNativeDenom(ctx)
-	ctxDenom := k.getCtxDenom(ctx)
+	ctxDenom := k.getPayerCtxDenom(ctx, payer)
 	k.Logger().Debug("capturing user fee", "payer", payer.String(), "fee", fee.String(), "preferred_denom", ctxDenom)
 
 	if ctxDenom == "" || nativeDenom == ctxDenom {
@@ -176,7 +176,7 @@ func (k Keeper) CaptureAndTryToSwapUserFeesOrSendItAsIs(ctx sdk.Context, payer s
 	}
 
 	nativeDenom := k.getNativeDenom(ctx)
-	ctxDenom := k.getCtxDenom(ctx)
+	ctxDenom := k.getPayerCtxDenom(ctx, payer)
 	k.Logger().Debug("capturing user fee", "payer", payer.String(), "fee", fee.String(), "preferred_denom", ctxDenom)
 
 	if ctxDenom == "" || nativeDenom == ctxDenom {

@@ -9,6 +9,8 @@ import (
 
 const (
 	FeeDenomKey = "fee_denom"
+	// FeePayerKey holds the account paying the tx fee: the only account FeeDenomKey speaks for.
+	FeePayerKey = "fee_payer"
 )
 
 // ValidateTxFeeDenomsDecorator will check if denominations used for tx fees are allowed and returns an error otherwise
@@ -33,7 +35,7 @@ func (vbd ValidateTxFeeDenomsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 	// in the correct denomination.
 	if ctx.IsReCheckTx() {
 		if !feeTx.GetFee().Empty() {
-			ctx = ctx.WithValue(FeeDenomKey, feeTx.GetFee()[0].Denom)
+			ctx = withFeeDenom(ctx, feeTx, feeTx.GetFee()[0].Denom)
 		}
 		return next(ctx, tx, simulate)
 	}
@@ -85,7 +87,12 @@ func (vbd ValidateTxFeeDenomsDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, s
 		}
 	}
 
-	ctx = ctx.WithValue(FeeDenomKey, c.Denom)
+	ctx = withFeeDenom(ctx, feeTx, c.Denom)
 
 	return next(ctx, tx, simulate)
+}
+
+// withFeeDenom stores the tx fee denom together with the account that chose it.
+func withFeeDenom(ctx sdk.Context, feeTx sdk.FeeTx, denom string) sdk.Context {
+	return ctx.WithValue(FeeDenomKey, denom).WithValue(FeePayerKey, sdk.AccAddress(feeTx.FeePayer()))
 }
