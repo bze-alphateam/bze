@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -38,14 +37,15 @@ func NewMsgCreateStakingReward(creator string, prizeAmount string, prizeDenom st
 func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 	sr := StakingReward{}
 
-	amtInt, ok := math.NewIntFromString(msg.PrizeAmount)
-	if !ok {
-		return sr, errorsmod.Wrapf(ErrInvalidAmount, "could not convert order amount")
+	// amounts must be canonical base-10 integers
+	amtInt, err := ParseCanonicalInt(msg.PrizeAmount)
+	if err != nil {
+		return sr, errorsmod.Wrapf(ErrInvalidAmount, "could not convert order amount: %s", err)
 	}
 	if !amtInt.IsPositive() {
 		return sr, errorsmod.Wrapf(ErrInvalidAmount, "amount should be greater than 0")
 	}
-	sr.PrizeAmount = msg.PrizeAmount
+	sr.PrizeAmount = amtInt.String()
 
 	if msg.PrizeDenom == "" {
 		return sr, ErrInvalidPrizeDenom
@@ -57,8 +57,11 @@ func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 	}
 	sr.StakingDenom = msg.StakingDenom
 
-	minStake, ok := math.NewIntFromString(msg.MinStake)
-	if !ok || minStake.IsNegative() {
+	minStake, err := ParseCanonicalInt(msg.MinStake)
+	if err != nil {
+		return sr, errorsmod.Wrapf(ErrInvalidMinStake, "%s", err)
+	}
+	if minStake.IsNegative() {
 		return sr, ErrInvalidMinStake
 	}
 	// min_stake is stored and emitted as a uint64

@@ -165,9 +165,10 @@ func (k Keeper) smallZeroFillId(id uint64) string {
 }
 
 func (k Keeper) getAmountToCapture(denom, amount string, multiplier int64) (sdk.Coins, error) {
-	amtInt, ok := math.NewIntFromString(amount)
-	if !ok {
-		return nil, fmt.Errorf("could not convert povided amount to int: %s", amount)
+	// amounts must be canonical base-10 integers
+	amtInt, err := types.ParseCanonicalAmount(amount)
+	if err != nil {
+		return nil, fmt.Errorf("could not convert provided amount to int: %w", err)
 	}
 
 	toCapture := sdk.NewCoin(denom, amtInt)

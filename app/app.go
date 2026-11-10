@@ -351,6 +351,7 @@ func (app *App) setupUpgradeHandlers() {
 			app.BankKeeper,
 			app.TradebinKeeper,
 			app.BankKeeper,
+			app.RewardsKeeper,
 		),
 	)
 

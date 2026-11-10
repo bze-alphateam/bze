@@ -18,6 +18,7 @@ func CreateUpgradeHandler(
 	bankKeeper BankKeeper,
 	tradebinKeeper TradebinKeeper,
 	metadataKeeper MetadataKeeper,
+	rewardsKeeper RewardsKeeper,
 ) upgradetypes.UpgradeHandler {
 
 	return func(c context.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -46,6 +47,8 @@ func CreateUpgradeHandler(
 		}
 
 		backfillLpMetadata(ctx, tradebinKeeper, metadataKeeper)
+
+		normaliseStakingRewardAmounts(ctx, rewardsKeeper)
 
 		return newVM, nil
 	}
