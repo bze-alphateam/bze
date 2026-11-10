@@ -176,7 +176,7 @@ func (suite *IntegrationTestSuite) TestServiceHalt_FeePayer_PreferredHaltedDenom
 
 	addr1 := sdk.AccAddress("addr1_______________")
 	fee := sdk.NewCoins(sdk.NewCoin(denomBze, math.NewInt(100_000_000)))
-	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake).WithValue(keeper.CtxFeePayerKey, addr1)
 
 	// the native fee is captured directly, once per entry point; no SpendableCoins lookup, no swap
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, fee).Return(nil).Times(2)

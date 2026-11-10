@@ -61,7 +61,7 @@ func (suite *IntegrationTestSuite) requiredTokenFee(nativeFee sdk.Coin) (sdk.Con
 	required, err := suite.k.CalculateOptimalInputForOutput(pool, nativeFee)
 	suite.Require().NoError(err)
 
-	return suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomFactoryToken), required
+	return suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomFactoryToken).WithValue(keeper.CtxFeePayerKey, transferFeePayer), required
 }
 
 // ceilFee is ceil(amount × rate) of the factory token.
@@ -196,7 +196,7 @@ func (suite *IntegrationTestSuite) TestCaptureAndSwapUserFee_NonFactoryDenomRead
 		Times(1)
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
-	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake).WithValue(keeper.CtxFeePayerKey, transferFeePayer)
 	_, err = suite.k.CaptureAndSwapUserFee(ctx, transferFeePayer, sdk.NewCoins(nativeFee), types.ModuleName)
 	suite.Require().NoError(err)
 }
