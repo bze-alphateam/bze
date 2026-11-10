@@ -1,6 +1,7 @@
 package types
 
 import (
+	"github.com/bze-alphateam/bze/bzeutils"
 	stdmath "math"
 	"strconv"
 
@@ -38,7 +39,7 @@ func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 	sr := StakingReward{}
 
 	// amounts must be canonical base-10 integers
-	amtInt, err := ParseCanonicalInt(msg.PrizeAmount)
+	amtInt, err := bzeutils.ParseCanonicalInt(msg.PrizeAmount)
 	if err != nil {
 		return sr, errorsmod.Wrapf(ErrInvalidAmount, "could not convert order amount: %s", err)
 	}
@@ -57,7 +58,7 @@ func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 	}
 	sr.StakingDenom = msg.StakingDenom
 
-	minStake, err := ParseCanonicalInt(msg.MinStake)
+	minStake, err := bzeutils.ParseCanonicalInt(msg.MinStake)
 	if err != nil {
 		return sr, errorsmod.Wrapf(ErrInvalidMinStake, "%s", err)
 	}

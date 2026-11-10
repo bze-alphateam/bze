@@ -2,6 +2,7 @@ package v830
 
 import (
 	"cosmossdk.io/math"
+	"github.com/bze-alphateam/bze/bzeutils"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	rewardstypes "github.com/bze-alphateam/bze/x/rewards/types"
@@ -19,7 +20,7 @@ type RewardsKeeper interface {
 func normaliseStakingRewardAmounts(ctx sdk.Context, rewards RewardsKeeper) {
 	rewritten, skipped := 0, 0
 	for _, sr := range rewards.GetAllStakingReward(ctx) {
-		if _, err := rewardstypes.ParseCanonicalInt(sr.PrizeAmount); err == nil {
+		if _, err := bzeutils.ParseCanonicalInt(sr.PrizeAmount); err == nil {
 			continue
 		}
 

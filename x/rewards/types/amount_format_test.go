@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"github.com/bze-alphateam/bze/bzeutils"
 	"math/big"
 	"testing"
 
@@ -76,12 +77,12 @@ func TestAmountFormat_BitLengthBoundary(t *testing.T) {
 	maxAmount := new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)).String()
 	tooLarge := new(big.Int).Lsh(big.NewInt(1), 256).String()
 
-	amt, err := types.ParseCanonicalAmount(maxAmount)
+	amt, err := bzeutils.ParseCanonicalAmount(maxAmount)
 	require.NoError(t, err)
 	require.Equal(t, maxAmount, amt.String())
 	require.NoError(t, types.NewMsgDistributeStakingRewards(sample.AccAddress(), "1", maxAmount).ValidateBasic())
 
-	_, err = types.ParseCanonicalAmount(tooLarge)
+	_, err = bzeutils.ParseCanonicalAmount(tooLarge)
 	require.Error(t, err)
 	require.ErrorIs(t, types.NewMsgDistributeStakingRewards(sample.AccAddress(), "1", tooLarge).ValidateBasic(), types.ErrInvalidAmount)
 }

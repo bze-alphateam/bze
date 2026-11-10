@@ -1,6 +1,7 @@
 package v830_test
 
 import (
+	"github.com/bze-alphateam/bze/bzeutils"
 	"testing"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -104,7 +105,7 @@ func TestHandler_NormalisesStakingRewardPrizeAmounts(t *testing.T) {
 		expected := stakingReward(id, amount)
 		require.Equal(t, expected, got, "%s: only the prize amount may change", id)
 
-		_, err := rewardstypes.ParseCanonicalAmount(got.PrizeAmount)
+		_, err := bzeutils.ParseCanonicalAmount(got.PrizeAmount)
 		require.NoError(t, err, id)
 	}
 	require.NotContains(t, store.written, "canonical", "a canonical amount is not rewritten")

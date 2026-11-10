@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"github.com/bze-alphateam/bze/bzeutils"
 	"strconv"
 
 	"cosmossdk.io/errors"
@@ -388,7 +389,7 @@ func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *types.Ms
 	}
 
 	// amounts must be canonical base-10 integers
-	amtInt, err := types.ParseCanonicalInt(msg.Amount)
+	amtInt, err := bzeutils.ParseCanonicalInt(msg.Amount)
 	if err != nil {
 		return nil, errors.Wrapf(types.ErrInvalidAmount, "could not convert order amount: %s", err)
 	}

@@ -17,7 +17,7 @@ func ParseCanonicalInt(s string) (math.Int, error) {
 	}
 
 	if i.String() != s {
-		return math.Int{}, fmt.Errorf("%q must be a canonical base-10 integer", s)
+		return math.Int{}, fmt.Errorf("amount %q must be a canonical base-10 integer", s)
 	}
 
 	return i, nil
@@ -31,7 +31,7 @@ func ParseCanonicalAmount(s string) (math.Int, error) {
 	}
 
 	if !amt.IsPositive() {
-		return math.Int{}, fmt.Errorf("amount %q should be greater than 0", s)
+		return math.Int{}, fmt.Errorf("amount should be greater than 0")
 	}
 
 	return amt, nil
