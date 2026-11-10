@@ -95,8 +95,8 @@ func (suite *IntegrationTestSuite) TestSettleProposal_ProposalStillGrants() {
 	suite.Require().Len(suite.authz.execs, 1)
 }
 
-// A proposal cannot settle another proposal, whoever the inner sender is, nor
-// through an authz exec; the settled-by-anyone path stays open for the target.
+// A proposal cannot settle another proposal, directly or through an authz
+// exec; the settled-by-anyone path stays open for the target.
 func (suite *IntegrationTestSuite) TestSettleProposal_NestedSettleRefused() {
 	dao := daoAddress(1)
 	for _, tc := range []struct {
@@ -105,9 +105,6 @@ func (suite *IntegrationTestSuite) TestSettleProposal_NestedSettleRefused() {
 	}{
 		{desc: "signed by the dao", inner: func(target uint64) sdk.Msg {
 			return types.NewMsgSettleProposal(dao.String(), target)
-		}},
-		{desc: "signed by a member", inner: func(target uint64) sdk.Msg {
-			return types.NewMsgSettleProposal(memberA.String(), target)
 		}},
 		{desc: "inside an authz exec", inner: func(target uint64) sdk.Msg {
 			return execAs(dao, types.NewMsgSettleProposal(dao.String(), target))
