@@ -396,3 +396,43 @@ func TestHandler_EmptyIBCStore(t *testing.T) {
 	require.NoError(t, err)
 	require.Empty(t, f.snapshot())
 }
+
+// A channel end that does not decode fails the upgrade before anything is written.
+func TestHandler_UndecodableChannelFailsTheUpgrade(t *testing.T) {
+	f := newIBCFixture(t)
+	f.setChannel("channel-1", channelv10.FLUSHING, "ics20-1", 1)
+	f.setUpgrade("channel-1")
+	// A length-delimited field that claims more bytes than follow.
+	require.NoError(t, f.kv().Set(host.ChannelKey(transferPort, "channel-0"), []byte{0x2a, 0x05}))
+	before := f.snapshot()
+
+	_, err := f.upgrade(8)
+	require.ErrorContains(t, err, "decode channel transfer/channel-0")
+	require.Equal(t, before, f.snapshot())
+}
+
+// A key under the channel end prefix that is not a channel path fails the upgrade before anything is written.
+func TestHandler_UnparsableChannelKeyFailsTheUpgrade(t *testing.T) {
+	f := newIBCFixture(t)
+	f.setChannel("channel-1", channelv10.FLUSHING, "ics20-1", 1)
+	f.setUpgrade("channel-1")
+	bz, err := (&channelv10.Channel{State: channelv10.OPEN}).Marshal()
+	require.NoError(t, err)
+	require.NoError(t, f.kv().Set([]byte(host.KeyChannelEndPrefix+"/not-a-channel-path"), bz))
+	before := f.snapshot()
+
+	_, err = f.upgrade(8)
+	require.ErrorContains(t, err, "parse channel key")
+	require.Equal(t, before, f.snapshot())
+}
+
+// An error receipt that does not decode fails the upgrade.
+func TestHandler_UndecodableErrorReceiptFailsTheUpgrade(t *testing.T) {
+	f := newIBCFixture(t)
+	f.setChannel("channel-0", channelv10.FLUSHING, "ics20-1", 1)
+	f.setUpgrade("channel-0")
+	require.NoError(t, f.kv().Set(channelv10.ChannelUpgradeErrorKey(transferPort, "channel-0"), []byte{0x12, 0x05}))
+
+	_, err := f.upgrade(8)
+	require.ErrorContains(t, err, "decode error receipt transfer/channel-0")
+}

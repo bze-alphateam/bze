@@ -12,7 +12,8 @@ import (
 )
 
 // channelUpgradeRestoredMessage is the message of the error receipt written for every channel whose
-// unfinished channel upgrade is restored to OPEN.
+// unfinished channel upgrade is restored to OPEN. A counterparty cancelling its side proves the
+// receipt as stored, so any text works: the cancellation checks only the receipt sequence.
 const channelUpgradeRestoredMessage = "channel upgrade cancelled by the v8.3.0 software upgrade"
 
 // legacyChannel is a channel end read in the ibc-go v8 encoding, with the key it is stored under.
