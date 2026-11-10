@@ -8,8 +8,8 @@ import (
 // ProcessTradingRewardCandidatePurgeQueue removes the candidates of expired trading rewards, at most
 // types.MaxTradingRewardCandidateRemovalsPerBlock rows per block across all queued rewards. Each call
 // starts over at the beginning of the reward's candidates: the rows removed earlier are gone, so no
-// cursor is needed. A queued reward can't get new rows, because candidates are only written for the
-// reward its market currently points to, and that link is removed when the reward is paid.
+// cursor is needed. A queued reward can't get new rows: candidates are only written for an active
+// reward, and the active record is deleted in the same step that queues the reward.
 func (k Keeper) ProcessTradingRewardCandidatePurgeQueue(ctx sdk.Context) {
 	budget := types.MaxTradingRewardCandidateRemovalsPerBlock
 

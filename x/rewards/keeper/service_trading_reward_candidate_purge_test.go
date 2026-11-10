@@ -165,6 +165,20 @@ func (suite *IntegrationTestSuite) TestCandidatePurge_LeavesOtherRewardsUntouche
 	suite.Require().Empty(suite.k.GetAllTradingRewardCandidatePurge(suite.ctx))
 }
 
+func (suite *IntegrationTestSuite) TestCandidatePurge_FillAfterExpiryAddsNoRow() {
+	const rewardId = "000000000001"
+	marketId := "market-" + rewardId
+	suite.seedPaidTradingReward(rewardId, 3)
+	// the worst case: the market still points to the reward
+	suite.k.SetMarketIdRewardId(suite.ctx, types.MarketIdTradingRewardId{RewardId: rewardId, MarketId: marketId})
+
+	suite.runTradingRewardExpiry()
+	suite.k.GetOnOrderFillHook()(suite.ctx, marketId, "10", "bze1latetrader")
+
+	suite.Require().Equal(3, suite.candidateCount(rewardId))
+	suite.Require().Equal([]string{rewardId}, suite.k.GetAllTradingRewardCandidatePurge(suite.ctx))
+}
+
 func (suite *IntegrationTestSuite) TestCandidatePurge_EmptyQueueIsNoOp() {
 	suite.seedTradingRewardCandidates("000000000001", 2)
 
