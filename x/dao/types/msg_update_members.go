@@ -30,17 +30,18 @@ func (msg *MsgUpdateMembers) ValidateBasic() error {
 		return errorsmod.Wrap(ErrInvalidMembers, "nothing to add or remove")
 	}
 
-	added, err := uniqueAddresses("add", msg.Add)
+	_, added, err := uniqueAddresses("add", msg.Add)
 	if err != nil {
 		return err
 	}
 
-	removed, err := uniqueAddresses("remove", msg.Remove)
+	removed, _, err := uniqueAddresses("remove", msg.Remove)
 	if err != nil {
 		return err
 	}
 
-	for addr := range removed {
+	// walk the list, not the set, so the first overlap in Remove is reported
+	for _, addr := range removed {
 		if _, ok := added[addr]; ok {
 			return errorsmod.Wrapf(ErrInvalidMembers, "%s is both added and removed", addr)
 		}
@@ -49,22 +50,25 @@ func (msg *MsgUpdateMembers) ValidateBasic() error {
 	return nil
 }
 
-// uniqueAddresses returns the canonical form of each address, rejecting invalid
-// ones and duplicates (an address written in another case is a duplicate).
-func uniqueAddresses(list string, addrs []string) (map[string]struct{}, error) {
+// uniqueAddresses returns the canonical form of each address, in input order
+// and as a set, rejecting invalid ones and duplicates (an address written in
+// another case is a duplicate).
+func uniqueAddresses(list string, addrs []string) ([]string, map[string]struct{}, error) {
+	keys := make([]string, 0, len(addrs))
 	seen := make(map[string]struct{}, len(addrs))
 	for _, a := range addrs {
 		addr, err := sdk.AccAddressFromBech32(a)
 		if err != nil {
-			return nil, errorsmod.Wrapf(ErrInvalidMembers, "invalid %s address %s (%s)", list, a, err)
+			return nil, nil, errorsmod.Wrapf(ErrInvalidMembers, "invalid %s address %s (%s)", list, a, err)
 		}
 
 		key := addr.String()
 		if _, ok := seen[key]; ok {
-			return nil, errorsmod.Wrapf(ErrInvalidMembers, "duplicate %s address %s", list, a)
+			return nil, nil, errorsmod.Wrapf(ErrInvalidMembers, "duplicate %s address %s", list, a)
 		}
 		seen[key] = struct{}{}
+		keys = append(keys, key)
 	}
 
-	return seen, nil
+	return keys, seen, nil
 }
