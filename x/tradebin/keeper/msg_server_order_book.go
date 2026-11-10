@@ -70,9 +70,9 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 		return nil, types.ErrInvalidOrderPrice.Wrapf("could not calculate minimum amount: %v", err)
 	}
 
-	amtInt, ok := math.NewIntFromString(msg.Amount)
-	if !ok {
-		return nil, types.ErrInvalidOrderAmount.Wrapf("amount could not be converted to Int")
+	amtInt, err := types.ParseOrderAmount(msg.Amount)
+	if err != nil {
+		return nil, err
 	}
 	if minAmt.GT(amtInt) {
 		return nil, types.ErrInvalidOrderAmount.Wrapf("amount should be bigger than: %s", minAmt.String())
@@ -133,7 +133,7 @@ func (k msgServer) CreateOrder(goCtx context.Context, msg *types.MsgCreateOrder)
 	order := types.Order{
 		MarketId:  msg.MarketId,
 		OrderType: msg.OrderType,
-		Amount:    msg.Amount,
+		Amount:    amtInt.String(),
 		Price:     msg.Price,
 		Owner:     msg.Creator,
 	}
@@ -207,9 +207,9 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 			return nil, types.ErrInvalidOrdersToFill.Wrapf("could not calculate minimum amount: %v", err)
 		}
 
-		amtInt, ok := math.NewIntFromString(fo.Amount)
-		if !ok {
-			return nil, types.ErrInvalidOrderAmount.Wrapf("amount could not be converted to Int")
+		amtInt, err := types.ParseOrderAmount(fo.Amount)
+		if err != nil {
+			return nil, err
 		}
 		if minAmt.GT(amtInt) {
 			ctx.Logger().Debug("order amount is smaller than minimum", "order_to_fill", fo)
@@ -246,7 +246,7 @@ func (k msgServer) FillOrders(goCtx context.Context, msg *types.MsgFillOrders) (
 		order := types.Order{
 			MarketId:  msg.MarketId,
 			OrderType: ocReq.OrderType, // already inversed when ocReq was built a few lines above
-			Amount:    fo.Amount,
+			Amount:    amtInt.String(),
 			Price:     fo.Price,
 			Owner:     msg.Creator,
 		}

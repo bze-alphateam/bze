@@ -131,6 +131,7 @@ func (k msgServer) JoinRaffle(goCtx context.Context, msg *types.MsgJoinRaffle) (
 	}
 
 	//get ticket price to enter the raffle
+	// stored amounts may predate canonical validation; keep this parse as is
 	ticketPriceInt, ok := math.NewIntFromString(raffle.TicketPrice)
 	if !ok {
 		//should never happen

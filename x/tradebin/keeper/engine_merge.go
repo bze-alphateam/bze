@@ -55,6 +55,7 @@ func (pe *ProcessingEngine) restOrder(ctx sdk.Context, message types.Order) erro
 // the owner stays counted at the level once and the count is not touched. The coins of the existing
 // order stay escrowed in the module, the aggregate grows by the message amount only.
 func (pe *ProcessingEngine) replaceRestingOrder(ctx sdk.Context, existing, message types.Order) error {
+	// stored amounts may predate canonical validation; keep this parse as is
 	existingAmount, ok := math.NewIntFromString(existing.Amount)
 	if !ok {
 		return fmt.Errorf("could not convert order amount")

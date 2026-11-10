@@ -47,7 +47,7 @@ func (msg *MsgCreateDenomRewardSchedule) ValidateBasic() error {
 		return errorsmod.Wrap(ErrInvalidAmount, "daily_amount should be greater than 0")
 	}
 
-	durationInt, err := strconv.Atoi(msg.Duration)
+	durationInt, err := strconv.ParseInt(msg.Duration, 10, 32)
 	if err != nil {
 		return errorsmod.Wrapf(ErrInvalidDuration, "could not convert duration to int: %s", err.Error())
 	}
