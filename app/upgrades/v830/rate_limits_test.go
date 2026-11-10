@@ -76,7 +76,7 @@ func runHandler(t *testing.T, keeper v830.RateLimitKeeper) error {
 		baseapp.NewGRPCQueryRouter(),
 	)
 	ctx := testutil.DefaultContext(storetypes.NewKVStoreKey("v830"), storetypes.NewTransientStoreKey("v830_t"))
-	_, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, keeper, emptyBank(t), noPools{}, nil, &fakeStakingRewards{}, emptyIBCStore())(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{})
+	_, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, keeper, emptyBank(t), noPools{}, nil, &fakeStakingRewards{}, noTraces{}, nil, emptyIBCStore())(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{})
 	return err
 }
 

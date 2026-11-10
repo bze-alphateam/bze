@@ -46,3 +46,51 @@ func TestMsgUpdateMembers_ValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+// An address in both lists is reported in the order of Remove, so the error
+// text is the same on every run.
+func TestMsgUpdateMembers_ValidateBasic_AddedAndRemovedErrorIsDeterministic(t *testing.T) {
+	authority := sdk.AccAddress("dao_authority_______").String()
+	a := sdk.AccAddress("dao_member_a________").String()
+	b := sdk.AccAddress("dao_member_b________").String()
+	c := sdk.AccAddress("dao_member_c________").String()
+	d := sdk.AccAddress("dao_member_d________").String()
+	e := sdk.AccAddress("dao_member_e________").String()
+
+	for _, tc := range []struct {
+		desc   string
+		add    []string
+		remove []string
+		want   string
+	}{
+		{
+			desc:   "first overlap in remove order",
+			add:    []string{a, b, c, d},
+			remove: []string{e, c, a, d, b},
+			want:   c,
+		},
+		{
+			desc:   "remove order differs from add order",
+			add:    []string{d, c, b, a},
+			remove: []string{b, d, a, c},
+			want:   b,
+		},
+		{
+			desc:   "reported in canonical form",
+			add:    []string{a, b, c},
+			remove: []string{strings.ToUpper(c), strings.ToUpper(a), strings.ToUpper(b)},
+			want:   c,
+		},
+	} {
+		t.Run(tc.desc, func(t *testing.T) {
+			msg := types.NewMsgUpdateMembers(authority, 1, tc.add, tc.remove)
+			expected := tc.want + " is both added and removed: " + types.ErrInvalidMembers.Error()
+
+			for i := 0; i < 200; i++ {
+				err := msg.ValidateBasic()
+				require.ErrorIs(t, err, types.ErrInvalidMembers)
+				require.Equal(t, expected, err.Error(), "run %d", i)
+			}
+		})
+	}
+}

@@ -72,6 +72,7 @@ import (
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/keeper"
 	icahostkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/keeper"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 
@@ -353,6 +354,8 @@ func (app *App) setupUpgradeHandlers() {
 			app.TradebinKeeper,
 			app.BankKeeper,
 			app.RewardsKeeper,
+			runtime.NewKVStoreService(app.GetKey(ibctransfertypes.StoreKey)),
+			app.TransferKeeper,
 			runtime.NewKVStoreService(app.GetKey(ibcexported.StoreKey)),
 		),
 	)

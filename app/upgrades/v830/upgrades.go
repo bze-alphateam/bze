@@ -20,11 +20,15 @@ func CreateUpgradeHandler(
 	tradebinKeeper TradebinKeeper,
 	metadataKeeper MetadataKeeper,
 	rewardsKeeper RewardsKeeper,
+	transferStore corestore.KVStoreService,
+	transferKeeper TransferKeeper,
 	ibcStore corestore.KVStoreService,
 ) upgradetypes.UpgradeHandler {
 
 	return func(c context.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		ctx := sdk.UnwrapSDKContext(c)
+
+		sanitizeDenomTraces(ctx, transferStore, transferKeeper)
 
 		// The IBC store migration accepts no channel with an unfinished channel upgrade.
 		if err := restoreUnfinishedChannelUpgrades(ctx, ibcStore); err != nil {

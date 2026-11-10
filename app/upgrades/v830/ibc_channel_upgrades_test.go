@@ -112,7 +112,7 @@ func newIBCFixture(t *testing.T) *ibcFixture {
 		t:       t,
 		ctx:     ctx,
 		store:   store,
-		handler: v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, acceptingRateLimits(t), emptyBank(t), noPools{}, nil, &fakeStakingRewards{}, store),
+		handler: v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, acceptingRateLimits(t), emptyBank(t), noPools{}, nil, &fakeStakingRewards{}, noTraces{}, nil, store),
 	}
 }
 

@@ -49,7 +49,7 @@ func (f *fakeStakingRewards) SetStakingReward(_ sdk.Context, sr rewardstypes.Sta
 func runStakingRewardNormalisation(t *testing.T, rewards v830.RewardsKeeper) {
 	t.Helper()
 	cfg, mm, ctx := guardianSetup(t)
-	_, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, acceptingRateLimits(t), emptyBank(t), noPools{}, nil, rewards, emptyIBCStore())(
+	_, err := v830.CreateUpgradeHandler(cfg, mm, &fakeGuardian{}, acceptingRateLimits(t), emptyBank(t), noPools{}, nil, rewards, noTraces{}, nil, emptyIBCStore())(
 		ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 2},
 	)
 	require.NoError(t, err)
