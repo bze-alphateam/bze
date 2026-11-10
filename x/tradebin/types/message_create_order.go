@@ -40,12 +40,8 @@ func (msg *MsgCreateOrder) ValidateBasic() error {
 		return errorsmod.Wrapf(ErrInvalidOrderType, "invalid order type")
 	}
 
-	amtInt, ok := math.NewIntFromString(msg.Amount)
-	if !ok {
-		return errorsmod.Wrapf(ErrInvalidOrderAmount, "could not convert order amount")
-	}
-	if !amtInt.IsPositive() {
-		return errorsmod.Wrapf(ErrInvalidOrderAmount, "invalid order amount")
+	if _, err = ParseOrderAmount(msg.Amount); err != nil {
+		return err
 	}
 
 	priceDec, err := math.LegacyNewDecFromStr(msg.Price)

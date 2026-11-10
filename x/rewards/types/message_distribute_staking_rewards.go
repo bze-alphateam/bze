@@ -4,6 +4,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/bze-alphateam/bze/bzeutils"
 )
 
 var _ sdk.Msg = &MsgDistributeStakingRewards{}
@@ -23,7 +25,7 @@ func (msg *MsgDistributeStakingRewards) ValidateBasic() error {
 	}
 
 	// amounts must be canonical base-10 integers
-	amtInt, err := ParseCanonicalInt(msg.Amount)
+	amtInt, err := bzeutils.ParseCanonicalInt(msg.Amount)
 	if err != nil {
 		return errorsmod.Wrapf(ErrInvalidAmount, "could not convert amount: %s", err)
 	}

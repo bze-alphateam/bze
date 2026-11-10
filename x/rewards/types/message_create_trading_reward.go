@@ -3,6 +3,8 @@ package types
 import (
 	"strconv"
 
+	"github.com/bze-alphateam/bze/bzeutils"
+
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -32,7 +34,7 @@ func (msg *MsgCreateTradingReward) ToTradingReward() (TradingReward, error) {
 	tr := TradingReward{}
 
 	// amounts must be canonical base-10 integers
-	amtInt, err := ParseCanonicalInt(msg.PrizeAmount)
+	amtInt, err := bzeutils.ParseCanonicalInt(msg.PrizeAmount)
 	if err != nil {
 		return tr, errorsmod.Wrapf(ErrInvalidAmount, "could not convert order amount: %s", err)
 	}

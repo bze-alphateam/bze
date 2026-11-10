@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/bze-alphateam/bze/bzeutils"
+
 	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"github.com/bze-alphateam/bze/x/rewards/types"
-	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/bze-alphateam/bze/x/rewards/types"
+	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 )
 
 func (k msgServer) CreateStakingReward(goCtx context.Context, msg *types.MsgCreateStakingReward) (*types.MsgCreateStakingRewardResponse, error) {
@@ -388,7 +391,7 @@ func (k msgServer) DistributeStakingRewards(goCtx context.Context, msg *types.Ms
 	}
 
 	// amounts must be canonical base-10 integers
-	amtInt, err := types.ParseCanonicalInt(msg.Amount)
+	amtInt, err := bzeutils.ParseCanonicalInt(msg.Amount)
 	if err != nil {
 		return nil, errors.Wrapf(types.ErrInvalidAmount, "could not convert order amount: %s", err)
 	}

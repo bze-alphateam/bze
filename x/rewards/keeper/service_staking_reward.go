@@ -136,7 +136,7 @@ func (k Keeper) distributeStakingRewards(sr *types.StakingReward, rewardAmount s
 	}
 
 	// amounts must be canonical base-10 integers
-	rewardInt, err := types.ParseCanonicalAmount(rewardAmount)
+	rewardInt, err := bzeutils.ParseCanonicalAmount(rewardAmount)
 	if err != nil {
 		return fmt.Errorf("could not transform reward amount to int: %w", err)
 	}

@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/bze-alphateam/bze/bzeutils"
+
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -166,7 +168,7 @@ func (k Keeper) smallZeroFillId(id uint64) string {
 
 func (k Keeper) getAmountToCapture(denom, amount string, multiplier int64) (sdk.Coins, error) {
 	// amounts must be canonical base-10 integers
-	amtInt, err := types.ParseCanonicalAmount(amount)
+	amtInt, err := bzeutils.ParseCanonicalAmount(amount)
 	if err != nil {
 		return nil, fmt.Errorf("could not convert provided amount to int: %w", err)
 	}
