@@ -83,7 +83,7 @@ func TestLpMetadata_UpgradeBackfillsBlankEntries(t *testing.T) {
 	}
 	require.ErrorContains(t, bApp.BankKeeper.ExportGenesis(ctx).Validate(), "name field cannot be blank")
 
-	_, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.GuardianKeeper, bApp.RatelimitKeeper, bApp.BankKeeper, bApp.TradebinKeeper, bApp.BankKeeper)(
+	_, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.GuardianKeeper, bApp.RatelimitKeeper, bApp.BankKeeper, bApp.TradebinKeeper, bApp.BankKeeper, bApp.RewardsKeeper)(
 		ctx, upgradetypes.Plan{Name: v830.UpgradeName}, bApp.ModuleManager.GetVersionMap(),
 	)
 	require.NoError(t, err)
