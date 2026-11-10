@@ -19,6 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/encoding/protowire"
 
@@ -178,7 +179,8 @@ func runTraceUpgrade(t *testing.T, bApp *app.App, ctx sdk.Context, vm map[string
 
 	handler := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.GuardianKeeper,
 		bApp.RatelimitKeeper, bApp.BankKeeper, bApp.TradebinKeeper, bApp.BankKeeper, bApp.RewardsKeeper,
-		runtime.NewKVStoreService(bApp.GetKey(transfertypes.StoreKey)), bApp.TransferKeeper)
+		runtime.NewKVStoreService(bApp.GetKey(transfertypes.StoreKey)), bApp.TransferKeeper,
+		runtime.NewKVStoreService(bApp.GetKey(ibcexported.StoreKey)))
 
 	var (
 		newVM map[string]uint64
