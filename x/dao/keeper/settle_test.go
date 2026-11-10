@@ -323,8 +323,9 @@ func (suite *IntegrationTestSuite) TestSettleProposal_D1_SignerCheckedAtExecutio
 	suite.Require().Equal(ubze(10), suite.ledger.balance(daoAddress(1)))
 }
 
-// D8: a proposal that settles itself finds itself EXECUTED and fails cleanly;
-// the outer settle ends EXECUTION_FAILED with one deposit release.
+// D8: a proposal that settles itself fails cleanly, as any settle inside a DAO
+// execution is refused; the outer settle ends EXECUTION_FAILED with one deposit
+// release.
 func (suite *IntegrationTestSuite) TestSettleProposal_D8_SelfSettle() {
 	suite.createStaticDao(func(c *types.DaoConfig) { c.ProposalDeposit = coinPtr(40) })
 	suite.bank.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), memberA, types.ModuleName, ubze(40)).Return(nil)
@@ -337,7 +338,7 @@ func (suite *IntegrationTestSuite) TestSettleProposal_D8_SelfSettle() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(types.ProposalStatus_EXECUTION_FAILED, status)
 	suite.requireStatus(id, types.ProposalStatus_EXECUTION_FAILED)
-	suite.requireExecuted("message failed")
+	suite.requireExecuted("message not allowed")
 }
 
 // A failed execution is retried by any later settle within the window: it stays

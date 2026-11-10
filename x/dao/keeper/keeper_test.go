@@ -3,8 +3,10 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -31,6 +33,8 @@ type IntegrationTestSuite struct {
 	trade     *testutil.MockTradeKeeper
 	router    *baseapp.MsgServiceRouter
 	ledger    *fakeBank
+	authz     *fakeAuthz
+	feegrant  *fakeFeegrant
 	// stakes is the x/rewards participation served once stubStakes ran
 	stakes *stakes
 }
@@ -56,6 +60,10 @@ func (suite *IntegrationTestSuite) SetupTest() {
 
 	suite.ledger = newFakeBank()
 	banktypes.RegisterMsgServer(suite.router, suite.ledger)
+	suite.authz = &fakeAuthz{}
+	authz.RegisterMsgServer(suite.router, suite.authz)
+	suite.feegrant = &fakeFeegrant{}
+	feegrant.RegisterMsgServer(suite.router, suite.feegrant)
 	types.RegisterMsgServer(suite.router, suite.msgServer)
 }
 
