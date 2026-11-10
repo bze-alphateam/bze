@@ -149,7 +149,8 @@ func (k Keeper) distributeTradingRewards(ctx sdk.Context, epochNumber int64) {
 			k.RemoveActiveTradingRewardExpiration(ctx, exp.ExpireAt, exp.RewardId)
 			k.RemoveActiveTradingReward(ctx, exp.RewardId)
 			k.RemoveTradingRewardLeaderboard(ctx, exp.RewardId)
-			k.cleanupTradingRewardCandidates(ctx, exp.RewardId)
+			//a reward can have one candidate per trader: they are removed in bounded batches at the end of the blocks
+			k.EnqueueTradingRewardCandidatePurge(ctx, exp.RewardId)
 
 			continue
 		}
@@ -257,12 +258,5 @@ func (k Keeper) startTradingRewardCountdown(ctx sdk.Context, tr types.TradingRew
 	)
 	if err != nil {
 		k.Logger().Error(err.Error())
-	}
-}
-
-func (k Keeper) cleanupTradingRewardCandidates(ctx sdk.Context, rewardId string) {
-	toRemove := k.GetTradingRewardCandidateByRewardId(ctx, rewardId)
-	for _, trc := range toRemove {
-		k.RemoveTradingRewardCandidate(ctx, trc.RewardId, trc.Address)
 	}
 }
