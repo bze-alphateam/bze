@@ -135,7 +135,7 @@ func (k Keeper) distributeStakingRewards(sr *types.StakingReward, rewardAmount s
 		return fmt.Errorf("no stakers found")
 	}
 
-	// amounts must be canonical base-10 integers, so the value credited here is the one captured
+	// amounts must be canonical base-10 integers
 	rewardInt, err := types.ParseCanonicalAmount(rewardAmount)
 	if err != nil {
 		return fmt.Errorf("could not transform reward amount to int: %w", err)
