@@ -24,7 +24,7 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 		return nil, sdkerrors.ErrInvalidRequest
 	}
 
-	acc, err := sdk.AccAddressFromBech32(msg.Creator)
+	acc, creator, err := canonicalAddress(msg.Creator)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 			Duration:    tradingReward.Duration,
 			MarketId:    tradingReward.MarketId,
 			Slots:       tradingReward.Slots,
-			Creator:     msg.Creator,
+			Creator:     creator,
 		},
 	)
 

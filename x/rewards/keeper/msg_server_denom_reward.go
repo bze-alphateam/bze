@@ -79,7 +79,7 @@ func (k msgServer) JoinDenomReward(goCtx context.Context, msg *types.MsgJoinDeno
 		return nil, sdkerrors.ErrInvalidRequest
 	}
 
-	acc, err := sdk.AccAddressFromBech32(msg.Creator)
+	acc, creator, err := canonicalAddress(msg.Creator)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func (k msgServer) JoinDenomReward(goCtx context.Context, msg *types.MsgJoinDeno
 		return nil, err
 	}
 
-	participant, topUp := k.GetDenomRewardParticipant(ctx, dr.StakingDenom, msg.Creator)
+	participant, topUp := k.GetDenomRewardParticipant(ctx, dr.StakingDenom, creator)
 	if topUp {
 		// existing position: settle every whole-unit prize at the CURRENT amount first (rule 6), then
 		// close every remaining interval to S. settleDenomParticipant leaves the index of a dust prize
@@ -112,16 +112,16 @@ func (k msgServer) JoinDenomReward(goCtx context.Context, msg *types.MsgJoinDeno
 		if _, err = k.settleDenomParticipant(ctx, dr, participant); err != nil {
 			return nil, err
 		}
-		k.stampParticipantIndexes(ctx, msg.Creator, dr.StakingDenom)
+		k.stampParticipantIndexes(ctx, creator, dr.StakingDenom)
 	} else {
 		// fresh position: create it at amount 0 and stamp an index for every existing accumulator, so
 		// the newcomer accrues only from now on and never inherits the pool's history (rule 10 / I3).
 		participant = types.DenomRewardParticipant{
-			Address:      msg.Creator,
+			Address:      creator,
 			StakingDenom: dr.StakingDenom,
 			Amount:       math.ZeroInt(),
 		}
-		k.stampParticipantIndexes(ctx, msg.Creator, dr.StakingDenom)
+		k.stampParticipantIndexes(ctx, creator, dr.StakingDenom)
 	}
 
 	added := toCapture.AmountOf(dr.StakingDenom)
@@ -144,9 +144,9 @@ func (k msgServer) JoinDenomReward(goCtx context.Context, msg *types.MsgJoinDeno
 	k.SetDenomReward(ctx, dr)
 
 	if topUp {
-		err = k.afterDenomRewardIncrease(ctx, dr.StakingDenom, msg.Creator, added, amtInt)
+		err = k.afterDenomRewardIncrease(ctx, dr.StakingDenom, creator, added, amtInt)
 	} else {
-		err = k.afterDenomRewardJoin(ctx, dr.StakingDenom, msg.Creator, added)
+		err = k.afterDenomRewardJoin(ctx, dr.StakingDenom, creator, added)
 	}
 	if err != nil {
 		return nil, err
@@ -155,7 +155,7 @@ func (k msgServer) JoinDenomReward(goCtx context.Context, msg *types.MsgJoinDeno
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.DenomRewardJoinEvent{
 			Denom:   dr.StakingDenom,
-			Address: msg.Creator,
+			Address: creator,
 			Amount:  added.String(),
 		},
 	)
@@ -176,13 +176,18 @@ func (k msgServer) ClaimDenomRewards(goCtx context.Context, msg *types.MsgClaimD
 		return nil, sdkerrors.ErrInvalidRequest
 	}
 
+	_, creator, err := canonicalAddress(msg.Creator)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	dr, found := k.GetDenomReward(ctx, msg.Denom)
 	if !found {
 		return nil, types.ErrDenomRewardNotFound
 	}
 
-	participant, found := k.GetDenomRewardParticipant(ctx, dr.StakingDenom, msg.Creator)
+	participant, found := k.GetDenomRewardParticipant(ctx, dr.StakingDenom, creator)
 	if !found {
 		return nil, errors.Wrapf(types.ErrDenomRewardNotFound, "you are not a participant in this denom reward")
 	}
@@ -199,7 +204,7 @@ func (k msgServer) ClaimDenomRewards(goCtx context.Context, msg *types.MsgClaimD
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.DenomRewardClaimEvent{
 			Denom:   dr.StakingDenom,
-			Address: msg.Creator,
+			Address: creator,
 			Amounts: paid.String(),
 		},
 	)
@@ -229,12 +234,17 @@ func (k msgServer) ExitDenomReward(goCtx context.Context, msg *types.MsgExitDeno
 	params := k.GetParams(ctx)
 	ctx.GasMeter().ConsumeGas(params.ExtraGasForDenomExit, "denom_exit_extra_gas")
 
+	_, creator, err := canonicalAddress(msg.Creator)
+	if err != nil {
+		return nil, err
+	}
+
 	dr, found := k.GetDenomReward(ctx, msg.Denom)
 	if !found {
 		return nil, types.ErrDenomRewardNotFound
 	}
 
-	participant, found := k.GetDenomRewardParticipant(ctx, dr.StakingDenom, msg.Creator)
+	participant, found := k.GetDenomRewardParticipant(ctx, dr.StakingDenom, creator)
 	if !found {
 		return nil, errors.Wrapf(types.ErrDenomRewardNotFound, "you are not a participant in this denom reward")
 	}
@@ -264,10 +274,10 @@ func (k msgServer) ExitDenomReward(goCtx context.Context, msg *types.MsgExitDeno
 		return nil, err
 	}
 
-	err := ctx.EventManager().EmitTypedEvent(
+	err = ctx.EventManager().EmitTypedEvent(
 		&types.DenomRewardExitEvent{
 			Denom:   dr.StakingDenom,
-			Address: msg.Creator,
+			Address: creator,
 			Amount:  participant.Amount.String(),
 		},
 	)

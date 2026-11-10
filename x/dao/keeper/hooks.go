@@ -107,10 +107,17 @@ func (k Keeper) afterSourceJoin(ctx sdk.Context, source []byte, address string) 
 
 // afterSourceExit deletes the join record, if any, and removes the exited
 // stake from the address's ballots on proposals in voting (D2, D5).
+//
+// Notifications for addresses not in their standard form are ignored.
 func (k Keeper) afterSourceExit(ctx sdk.Context, source []byte, address string) {
 	addr, err := sdk.AccAddressFromBech32(address)
 	if err != nil {
 		k.Logger().Error("dao exit hook: invalid address", "address", address, "error", err)
+		return
+	}
+
+	if addr.String() != address {
+		k.Logger().Error("dao exit hook: address is not in its standard form", "address", address)
 		return
 	}
 
