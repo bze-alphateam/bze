@@ -93,6 +93,12 @@ func (k Keeper) GetOnOrderFillHook() func(ctx sdk.Context, marketId, amountTrade
 		}
 		logger = logger.With("reward", reward)
 
+		//key the candidate by the standard spelling of the trader's address, so that one account
+		//always maps to one candidate and one leaderboard entry
+		if _, canonical, err := canonicalAddress(userAddress); err == nil {
+			userAddress = canonical
+		}
+
 		candidate, found := k.GetTradingRewardCandidate(ctx, reward.RewardId, userAddress)
 		if !found {
 			logger.Debug("candidate not found. creating a new one")

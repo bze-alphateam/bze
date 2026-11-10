@@ -155,7 +155,7 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 	if msg == nil {
 		return nil, sdkerrors.ErrInvalidRequest
 	}
-	acc, err := sdk.AccAddressFromBech32(msg.Creator)
+	acc, creator, err := canonicalAddress(msg.Creator)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 		return nil, err
 	}
 
-	participant, found := k.GetStakingRewardParticipant(ctx, msg.Creator, msg.RewardId)
+	participant, found := k.GetStakingRewardParticipant(ctx, creator, msg.RewardId)
 	if found {
 		_, err = k.claimPending(ctx, stakingReward, &participant)
 		if err != nil {
@@ -192,7 +192,7 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 		}
 	} else {
 		participant = types.StakingRewardParticipant{
-			Address:  msg.Creator,
+			Address:  creator,
 			RewardId: msg.RewardId,
 			Amount:   "0",
 		}
@@ -225,9 +225,9 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 	//notify hooks after all state writes; an error aborts the whole tx
 	addedAmount := toCapture.AmountOf(stakingReward.StakingDenom)
 	if found {
-		err = k.afterStakingRewardIncrease(ctx, stakingReward.RewardId, msg.Creator, addedAmount, amtInt, stakingReward.StakingDenom)
+		err = k.afterStakingRewardIncrease(ctx, stakingReward.RewardId, creator, addedAmount, amtInt, stakingReward.StakingDenom)
 	} else {
-		err = k.afterStakingRewardJoin(ctx, stakingReward.RewardId, msg.Creator, addedAmount, stakingReward.StakingDenom)
+		err = k.afterStakingRewardJoin(ctx, stakingReward.RewardId, creator, addedAmount, stakingReward.StakingDenom)
 	}
 	if err != nil {
 		return nil, err
@@ -236,7 +236,7 @@ func (k msgServer) JoinStaking(goCtx context.Context, msg *types.MsgJoinStaking)
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.StakingRewardJoinEvent{
 			RewardId: stakingReward.RewardId,
-			Address:  msg.Creator,
+			Address:  creator,
 			Amount:   toCapture.AmountOf(stakingReward.StakingDenom).String(),
 		},
 	)
@@ -257,12 +257,17 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 	params := k.GetParams(ctx)
 	ctx.GasMeter().ConsumeGas(params.ExtraGasForExitStake, "exit_stake_extra_gas")
 
+	_, creator, err := canonicalAddress(msg.Creator)
+	if err != nil {
+		return nil, err
+	}
+
 	stakingReward, found := k.GetStakingReward(ctx, msg.RewardId)
 	if !found {
 		return nil, errors.Wrapf(types.ErrInvalidRewardId, "reward with provided id not found")
 	}
 
-	participation, found := k.GetStakingRewardParticipant(ctx, msg.Creator, msg.RewardId)
+	participation, found := k.GetStakingRewardParticipant(ctx, creator, msg.RewardId)
 	if !found {
 		return nil, errors.Wrapf(types.ErrInvalidRewardId, "you are not a participant in this staking reward")
 	}
@@ -320,7 +325,7 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 	//notify hooks after all state writes; an error aborts the whole tx.
 	//the reward's denom and amount are passed from the local copy because the
 	//StakingReward record may have been removed above when the reward finished
-	err = k.afterStakingRewardExit(ctx, stakingReward.RewardId, msg.Creator, partCoins.AmountOf(stakingReward.StakingDenom), stakingReward.StakingDenom)
+	err = k.afterStakingRewardExit(ctx, stakingReward.RewardId, creator, partCoins.AmountOf(stakingReward.StakingDenom), stakingReward.StakingDenom)
 	if err != nil {
 		return nil, err
 	}
@@ -328,7 +333,7 @@ func (k msgServer) ExitStaking(goCtx context.Context, msg *types.MsgExitStaking)
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.StakingRewardExitEvent{
 			RewardId: stakingReward.RewardId,
-			Address:  msg.Creator,
+			Address:  creator,
 		},
 	)
 
@@ -343,13 +348,18 @@ func (k msgServer) ClaimStakingRewards(goCtx context.Context, msg *types.MsgClai
 	if msg == nil {
 		return nil, sdkerrors.ErrInvalidRequest
 	}
+	_, creator, err := canonicalAddress(msg.Creator)
+	if err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	stakingReward, found := k.GetStakingReward(ctx, msg.RewardId)
 	if !found {
 		return nil, errors.Wrapf(types.ErrInvalidRewardId, "reward with provided id not found")
 	}
 
-	participant, found := k.GetStakingRewardParticipant(ctx, msg.Creator, msg.RewardId)
+	participant, found := k.GetStakingRewardParticipant(ctx, creator, msg.RewardId)
 	if !found {
 		return nil, errors.Wrapf(types.ErrInvalidRewardId, "you are not a participant in this staking reward")
 	}
@@ -368,7 +378,7 @@ func (k msgServer) ClaimStakingRewards(goCtx context.Context, msg *types.MsgClai
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.StakingRewardClaimEvent{
 			RewardId: stakingReward.RewardId,
-			Address:  msg.Creator,
+			Address:  creator,
 			Amount:   paid.Amount.String(),
 		},
 	)

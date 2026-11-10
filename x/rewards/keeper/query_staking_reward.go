@@ -61,7 +61,7 @@ func (k Keeper) StakingRewardParticipant(goCtx context.Context, req *types.Query
 	var list []types.StakingRewardParticipant
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	stakingRewardParticipantStore := k.getPrefixedStore(ctx, types.StakingRewardParticipantPrefix(req.Address))
+	stakingRewardParticipantStore := k.getPrefixedStore(ctx, types.StakingRewardParticipantPrefix(queryAddress(req.Address)))
 
 	pageRes, err := query.Paginate(stakingRewardParticipantStore, req.Pagination, func(key []byte, value []byte) error {
 		var stakingRewardParticipant types.StakingRewardParticipant
