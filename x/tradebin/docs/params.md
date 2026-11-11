@@ -11,6 +11,10 @@
   - `max_fills_per_order` (`uint64`, default `500`, JSON `maxFillsPerOrder`, field 11): the most resting orders one order examines, filled or skipped (a resting order it can not fill without leaving that order below the minimum amount is skipped): one `MsgCreateOrder`, or one entry of `MsgFillOrders`. When the order has examined that many while more orders rest at its price, it stops and its remainder is refunded with reason `max_fills_reached`; the next order continues with the next resting order. It bounds the matching work, and so the gas, of one order. Must be at least 1. Before v8.3.0 field 11 was `order_book_per_block_messages`; the upgrade keeps its stored value (the default was 500 in both) and sets the default only over a 0.
   - `price_level_owners_window` (`uint64`, default `500`, JSON `priceLevelOwnersWindow`, field 7) and `price_level_extra_gas` (`uint64`, default `25000`, JSON `priceLevelExtraGas`, field 8): crowded price levels cost more gas for new makers. A `MsgCreateOrder` whose creator has no order at its market, side and price, at a level that already counts more than `price_level_owners_window` distinct owners, consumes `(owners − price_level_owners_window) × price_level_extra_gas` extra gas, before any fee or escrow. Topping up an order the creator already rests at that price costs nothing extra; no order is refused. Both must be at least 1. With the defaults, the 502nd owner to join a level pays 25,000 extra gas, the 1,001st 12,500,000 and the 2,001st 37,500,000. The owner count can be lower than the owners actually resting (even 0) at a level holding several pre-v8.3.0 orders of one owner, so the surcharge there is lower than these numbers. Before v8.3.0 fields 7 and 8 were `order_book_extra_gas_window` and `order_book_queue_extra_gas`, a surcharge on the depth of the order queue; the upgrade sets the window to 500 (it counted queued messages, default 100) and keeps the stored extra gas.
   - Field 12 (`order_book_queue_message_scan_extra_gas`) was removed in v8.3.0 and is reserved.
+- **Pool price average:**
+  - `pool_price_half_life_blocks` (`uint64`, default `20`, field 13): half life, in blocks, of the moving average of each pool's price. Must be between 1 and 100000.
+  - `fee_max_price_drift` (`Dec`, default `0.10`, field 14): largest relative distance between a pool's price and its average accepted for the fees users pay. Must be greater than 0 and less than 1.
+  - `module_max_price_drift` (`Dec`, default `0.03`, field 15): the same limit for operations the modules run on their own. Must be greater than 0 and less than 1.
 - **`min_native_liquidity_for_module_swap`** (`Int`, default `100000000000`): Minimum native reserves required in a native/pair pool before module-driven swaps or add-liquidity helpers execute.
 
 ### How They’re Used
@@ -27,6 +31,7 @@
 ## Version History
 
 ### v8.3.0
+- Added `pool_price_half_life_blocks` (field 13, default 20), `fee_max_price_drift` (field 14, default 0.10) and `module_max_price_drift` (field 15, default 0.03). The upgrade sets them to their defaults.
 - Removed `order_book_queue_message_scan_extra_gas` (field 12, reserved): orders execute inside their transaction, there is no queue to scan. The params JSON no longer has the field.
 - `order_book_per_block_messages` (field 11) renamed `max_fills_per_order`, stored value kept.
 - `order_book_extra_gas_window` (field 7) renamed `price_level_owners_window`, set to 500 by the upgrade; `order_book_queue_extra_gas` (field 8) renamed `price_level_extra_gas`, stored value kept.

@@ -30,6 +30,7 @@ const (
 	Query_AllUserDust_FullMethodName            = "/bze.tradebin.Query/AllUserDust"
 	Query_AllLiquidityPools_FullMethodName      = "/bze.tradebin.Query/AllLiquidityPools"
 	Query_LiquidityPool_FullMethodName          = "/bze.tradebin.Query/LiquidityPool"
+	Query_PoolPriceAverage_FullMethodName       = "/bze.tradebin.Query/PoolPriceAverage"
 	Query_HaltedDenoms_FullMethodName           = "/bze.tradebin.Query/HaltedDenoms"
 	Query_DenomHalted_FullMethodName            = "/bze.tradebin.Query/DenomHalted"
 )
@@ -60,6 +61,9 @@ type QueryClient interface {
 	AllLiquidityPools(ctx context.Context, in *QueryAllLiquidityPoolsRequest, opts ...grpc.CallOption) (*QueryAllLiquidityPoolsResponse, error)
 	// Queries a list of LiquidityPool items.
 	LiquidityPool(ctx context.Context, in *QueryLiquidityPoolRequest, opts ...grpc.CallOption) (*QueryLiquidityPoolResponse, error)
+	// Queries the moving average of a pool's price. Over REST the pool id is passed as the `pool_id` query
+	// parameter (pool ids contain "/", so it cannot be a path segment).
+	PoolPriceAverage(ctx context.Context, in *QueryPoolPriceAverageRequest, opts ...grpc.CallOption) (*QueryPoolPriceAverageResponse, error)
 	// Queries the denoms governance halted on the DEX, paginated, in store (byte) order.
 	HaltedDenoms(ctx context.Context, in *QueryHaltedDenomsRequest, opts ...grpc.CallOption) (*QueryHaltedDenomsResponse, error)
 	// Queries whether one denom is halted. Over REST the denom is passed as the `denom` query
@@ -174,6 +178,15 @@ func (c *queryClient) LiquidityPool(ctx context.Context, in *QueryLiquidityPoolR
 	return out, nil
 }
 
+func (c *queryClient) PoolPriceAverage(ctx context.Context, in *QueryPoolPriceAverageRequest, opts ...grpc.CallOption) (*QueryPoolPriceAverageResponse, error) {
+	out := new(QueryPoolPriceAverageResponse)
+	err := c.cc.Invoke(ctx, Query_PoolPriceAverage_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) HaltedDenoms(ctx context.Context, in *QueryHaltedDenomsRequest, opts ...grpc.CallOption) (*QueryHaltedDenomsResponse, error) {
 	out := new(QueryHaltedDenomsResponse)
 	err := c.cc.Invoke(ctx, Query_HaltedDenoms_FullMethodName, in, out, opts...)
@@ -218,6 +231,9 @@ type QueryServer interface {
 	AllLiquidityPools(context.Context, *QueryAllLiquidityPoolsRequest) (*QueryAllLiquidityPoolsResponse, error)
 	// Queries a list of LiquidityPool items.
 	LiquidityPool(context.Context, *QueryLiquidityPoolRequest) (*QueryLiquidityPoolResponse, error)
+	// Queries the moving average of a pool's price. Over REST the pool id is passed as the `pool_id` query
+	// parameter (pool ids contain "/", so it cannot be a path segment).
+	PoolPriceAverage(context.Context, *QueryPoolPriceAverageRequest) (*QueryPoolPriceAverageResponse, error)
 	// Queries the denoms governance halted on the DEX, paginated, in store (byte) order.
 	HaltedDenoms(context.Context, *QueryHaltedDenomsRequest) (*QueryHaltedDenomsResponse, error)
 	// Queries whether one denom is halted. Over REST the denom is passed as the `denom` query
@@ -262,6 +278,9 @@ func (UnimplementedQueryServer) AllLiquidityPools(context.Context, *QueryAllLiqu
 }
 func (UnimplementedQueryServer) LiquidityPool(context.Context, *QueryLiquidityPoolRequest) (*QueryLiquidityPoolResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LiquidityPool not implemented")
+}
+func (UnimplementedQueryServer) PoolPriceAverage(context.Context, *QueryPoolPriceAverageRequest) (*QueryPoolPriceAverageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PoolPriceAverage not implemented")
 }
 func (UnimplementedQueryServer) HaltedDenoms(context.Context, *QueryHaltedDenomsRequest) (*QueryHaltedDenomsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HaltedDenoms not implemented")
@@ -480,6 +499,24 @@ func _Query_LiquidityPool_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_PoolPriceAverage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPoolPriceAverageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).PoolPriceAverage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_PoolPriceAverage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).PoolPriceAverage(ctx, req.(*QueryPoolPriceAverageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_HaltedDenoms_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryHaltedDenomsRequest)
 	if err := dec(in); err != nil {
@@ -566,6 +603,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LiquidityPool",
 			Handler:    _Query_LiquidityPool_Handler,
+		},
+		{
+			MethodName: "PoolPriceAverage",
+			Handler:    _Query_PoolPriceAverage_Handler,
 		},
 		{
 			MethodName: "HaltedDenoms",

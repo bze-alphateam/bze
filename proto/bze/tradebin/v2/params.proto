@@ -38,4 +38,18 @@ message Params {
   uint64 maxFillsPerOrder = 11 [(gogoproto.moretags) = "yaml:\"max_fills_per_order\""];
   // 12 was orderBookQueueMessageScanExtraGas (removed in v8.3.0)
   reserved 12;
+  // half-life, in blocks, of the moving average of each pool's price
+  uint64 poolPriceHalfLifeBlocks = 13 [(gogoproto.moretags) = "yaml:\"pool_price_half_life_blocks\""];
+  // largest relative distance between a pool's price and its moving average accepted for the fees users pay
+  string feeMaxPriceDrift = 14 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"fee_max_price_drift\""
+  ];
+  // largest relative distance between a pool's price and its moving average accepted for module operations
+  string moduleMaxPriceDrift = 15 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"module_max_price_drift\""
+  ];
 }

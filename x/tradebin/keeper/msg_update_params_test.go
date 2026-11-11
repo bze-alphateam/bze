@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"go.uber.org/mock/gomock"
 )
 
 func validV2Params() v2types.Params {
@@ -22,6 +23,9 @@ func validV2Params() v2types.Params {
 		FillOrdersExtraGas:              5000,
 		MinNativeLiquidityForModuleSwap: math.NewInt(100000000000),
 		MaxFillsPerOrder:                500,
+		PoolPriceHalfLifeBlocks:         20,
+		FeeMaxPriceDrift:                math.LegacyNewDecWithPrec(10, 2),
+		ModuleMaxPriceDrift:             math.LegacyNewDecWithPrec(3, 2),
 	}
 }
 
@@ -329,4 +333,32 @@ func (suite *IntegrationTestSuite) TestMsgUpdateParams_DifferentDestinations() {
 	retrievedParams := suite.k.GetParams(suite.ctx)
 	suite.Require().Equal(v2types.FeeDestinationBurnerModule, retrievedParams.MakerFeeDestination)
 	suite.Require().Equal(v2types.FeeDestinationCommunityPool, retrievedParams.TakerFeeDestination)
+}
+
+func (suite *IntegrationTestSuite) TestMsgUpdateParams_PoolPriceParams() {
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	params := validV2Params()
+	params.PoolPriceHalfLifeBlocks = 50
+	params.FeeMaxPriceDrift = math.LegacyNewDecWithPrec(15, 2)
+	params.ModuleMaxPriceDrift = math.LegacyNewDecWithPrec(2, 2)
+
+	suite.bankMock.EXPECT().HasSupply(suite.ctx, gomock.Any()).Return(true).AnyTimes()
+	_, err := suite.msgServer.UpdateParams(suite.ctx, &types.MsgUpdateParams{Authority: authority, Params: params})
+	suite.Require().NoError(err)
+	got := suite.k.GetParams(suite.ctx)
+	suite.Require().Equal(uint64(50), got.PoolPriceHalfLifeBlocks)
+	suite.Require().Equal(params.FeeMaxPriceDrift, got.FeeMaxPriceDrift)
+	suite.Require().Equal(params.ModuleMaxPriceDrift, got.ModuleMaxPriceDrift)
+
+	for _, mutate := range []func(p *v2types.Params){
+		func(p *v2types.Params) { p.PoolPriceHalfLifeBlocks = 0 },
+		func(p *v2types.Params) { p.FeeMaxPriceDrift = math.LegacyOneDec() },
+		func(p *v2types.Params) { p.ModuleMaxPriceDrift = math.LegacyZeroDec() },
+	} {
+		bad := validV2Params()
+		mutate(&bad)
+		_, err = suite.msgServer.UpdateParams(suite.ctx, &types.MsgUpdateParams{Authority: authority, Params: bad})
+		suite.Require().Error(err)
+	}
+	suite.Require().Equal(got, suite.k.GetParams(suite.ctx))
 }

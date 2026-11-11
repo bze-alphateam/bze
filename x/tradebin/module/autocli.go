@@ -81,6 +81,13 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 
 				{
+					RpcMethod:      "PoolPriceAverage",
+					Use:            "pool-price-average [pool-id]",
+					Short:          "Query the moving average of a pool's price",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "pool_id"}},
+				},
+
+				{
 					RpcMethod:      "HaltedDenoms",
 					Use:            "halted-denoms",
 					Short:          "Query the denoms governance halted on the DEX (paginated)",
