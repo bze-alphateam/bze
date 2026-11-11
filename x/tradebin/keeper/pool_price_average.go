@@ -99,7 +99,8 @@ func (k Keeper) observePoolPrice(ctx sdk.Context, pool types.LiquidityPool) {
 }
 
 // GetPoolPriceAverage returns the moving average of a pool's price, brought up to the current block. It does
-// not write: the next save of the pool stores the same value.
+// not write. When the stored pool has a price, the next save of the pool stores the same value; when it has
+// none, the next save restarts the average from the pool being saved while this view returns the stored record.
 func (k Keeper) GetPoolPriceAverage(ctx sdk.Context, poolId string) (avg math.LegacyDec, found bool) {
 	record, found := k.GetPoolPriceAverageRecord(ctx, poolId)
 	if !found {
