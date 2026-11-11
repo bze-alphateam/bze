@@ -13,6 +13,10 @@ import (
 // refuses every transfer of a blacklisted denom, sent or received, on every
 // channel, whether or not a rate limit exists for it. Existing rate limits are
 // not touched.
+//
+// The blacklist is matched on the exact denom string, so only a denom with a
+// supply on chain is accepted: any other spelling (a lowercase IBC hash, a base
+// name, a trace path) or an unknown denom would block nothing.
 func (k msgServer) BlockDenom(goCtx context.Context, msg *types.MsgBlockDenom) (*types.MsgBlockDenomResponse, error) {
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
@@ -25,6 +29,10 @@ func (k msgServer) BlockDenom(goCtx context.Context, msg *types.MsgBlockDenom) (
 
 	if k.rateLimitKeeper == nil {
 		return nil, types.ErrRateLimitKeeperNotSet
+	}
+
+	if !k.bankKeeper.HasSupply(ctx, msg.Denom) {
+		return nil, errorsmod.Wrapf(types.ErrDenomNotFound, "denom %s has no supply; use the exact on-chain denom (e.g. ibc/<uppercase hash>)", msg.Denom)
 	}
 
 	if k.rateLimitKeeper.IsDenomBlacklisted(ctx, msg.Denom) {

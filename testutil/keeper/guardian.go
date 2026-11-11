@@ -30,8 +30,9 @@ func GuardianCodec() codec.Codec {
 }
 
 // GuardianKeeper returns an x/guardian keeper on an in-memory store, with the
-// default params and no rate-limiting keeper wired.
-func GuardianKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
+// default params, the given bank keeper (nil when the test never blocks a
+// denom) and no rate-limiting keeper wired.
+func GuardianKeeper(t testing.TB, bankKeeper types.BankKeeper) (keeper.Keeper, sdk.Context) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	db := dbm.NewMemDB()
@@ -44,6 +45,7 @@ func GuardianKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 		runtime.NewKVStoreService(storeKey),
 		log.NewNopLogger(),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		bankKeeper,
 	)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())

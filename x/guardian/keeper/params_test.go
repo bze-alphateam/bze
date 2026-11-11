@@ -14,7 +14,7 @@ import (
 func newBareKeeper(t *testing.T) (keeper.Keeper, sdk.Context) {
 	t.Helper()
 
-	return keepertest.GuardianKeeper(t)
+	return keepertest.GuardianKeeper(t, nil)
 }
 
 func TestParams_DefaultHasNoGuardian(t *testing.T) {
