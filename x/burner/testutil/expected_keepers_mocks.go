@@ -297,20 +297,20 @@ func (mr *MockTradeKeeperMockRecorder) IsNativeDenom(ctx, denom any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsNativeDenom", reflect.TypeOf((*MockTradeKeeper)(nil).IsNativeDenom), ctx, denom)
 }
 
-// ModuleAddLiquidityWithNativeDenom mocks base method.
-func (m *MockTradeKeeper) ModuleAddLiquidityWithNativeDenom(ctx types.Context, fromModule string, coins types.Coins) (types.Coins, types.Coins, error) {
+// SafeModuleAddLiquidityWithNativeDenom mocks base method.
+func (m *MockTradeKeeper) SafeModuleAddLiquidityWithNativeDenom(ctx types.Context, fromModule string, coins types.Coins) (types.Coins, types.Coins, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ModuleAddLiquidityWithNativeDenom", ctx, fromModule, coins)
+	ret := m.ctrl.Call(m, "SafeModuleAddLiquidityWithNativeDenom", ctx, fromModule, coins)
 	ret0, _ := ret[0].(types.Coins)
 	ret1, _ := ret[1].(types.Coins)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-// ModuleAddLiquidityWithNativeDenom indicates an expected call of ModuleAddLiquidityWithNativeDenom.
-func (mr *MockTradeKeeperMockRecorder) ModuleAddLiquidityWithNativeDenom(ctx, fromModule, coins any) *gomock.Call {
+// SafeModuleAddLiquidityWithNativeDenom indicates an expected call of SafeModuleAddLiquidityWithNativeDenom.
+func (mr *MockTradeKeeperMockRecorder) SafeModuleAddLiquidityWithNativeDenom(ctx, fromModule, coins any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModuleAddLiquidityWithNativeDenom", reflect.TypeOf((*MockTradeKeeper)(nil).ModuleAddLiquidityWithNativeDenom), ctx, fromModule, coins)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SafeModuleAddLiquidityWithNativeDenom", reflect.TypeOf((*MockTradeKeeper)(nil).SafeModuleAddLiquidityWithNativeDenom), ctx, fromModule, coins)
 }
 
 // MockParamSubspace is a mock of ParamSubspace interface.

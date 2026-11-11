@@ -326,7 +326,7 @@ func (k Keeper) addLiquidityWithNative(ctx sdk.Context, fromModule string, c sdk
 
 	notAdded := sdk.NewCoin(c.Denom, math.ZeroInt())
 	err := bzeutils.ApplyFuncIfNoError(ctx, func(cached sdk.Context) error {
-		added, refunded, err := k.tradeKeeper.ModuleAddLiquidityWithNativeDenom(cached, fromModule, sdk.NewCoins(c))
+		added, refunded, err := k.tradeKeeper.SafeModuleAddLiquidityWithNativeDenom(cached, fromModule, sdk.NewCoins(c))
 		if err != nil {
 			return err
 		}

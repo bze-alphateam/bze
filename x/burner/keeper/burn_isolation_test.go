@@ -48,12 +48,12 @@ func (suite *IntegrationTestSuite) TestProcessQueue_FailingExchangeableCoinIsLoc
 	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), failing).Return(true).Times(1)
 	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), working).Return(true).Times(1)
 	suite.trade.EXPECT().
-		ModuleAddLiquidityWithNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(failing)).
+		SafeModuleAddLiquidityWithNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(failing)).
 		DoAndReturn(panicOnAddLiquidity).
 		Times(1)
 	added := false
 	suite.trade.EXPECT().
-		ModuleAddLiquidityWithNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(working)).
+		SafeModuleAddLiquidityWithNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(working)).
 		DoAndReturn(func(_ sdk.Context, _ string, c sdk.Coins) (sdk.Coins, sdk.Coins, error) {
 			added = true
 			return c, nil, nil
@@ -83,7 +83,7 @@ func (suite *IntegrationTestSuite) TestBurnAnyCoins_RefundedExchangeableCoinIsLo
 	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibc).Return(true).Times(1)
 	refunded := sdk.NewCoins(ibc, sdk.NewInt64Coin("ubze", 5), sdk.NewInt64Coin("ulp_1", 3))
 	suite.trade.EXPECT().
-		ModuleAddLiquidityWithNativeDenom(gomock.Any(), fromModule, sdk.NewCoins(ibc)).
+		SafeModuleAddLiquidityWithNativeDenom(gomock.Any(), fromModule, sdk.NewCoins(ibc)).
 		Return(nil, refunded, nil).
 		Times(1)
 	locked := suite.expectLock(fromModule, sdk.NewCoins(ibc))
@@ -102,7 +102,7 @@ func (suite *IntegrationTestSuite) TestBurnAnyCoins_AddLiquidityErrorLocksCoin()
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), ibc.Denom).Return(false).Times(1)
 	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibc).Return(true).Times(1)
 	suite.trade.EXPECT().
-		ModuleAddLiquidityWithNativeDenom(gomock.Any(), fromModule, sdk.NewCoins(ibc)).
+		SafeModuleAddLiquidityWithNativeDenom(gomock.Any(), fromModule, sdk.NewCoins(ibc)).
 		Return(nil, nil, errors.New("add liquidity failed")).
 		Times(1)
 	locked := suite.expectLock(fromModule, sdk.NewCoins(ibc))
@@ -157,7 +157,7 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_OversizedPotDoe
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), gomock.Any()).Return(false).AnyTimes()
 	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), bigPot).Return(true).AnyTimes()
 	suite.trade.EXPECT().
-		ModuleAddLiquidityWithNativeDenom(gomock.Any(), types.RaffleModuleName, sdk.NewCoins(bigPot)).
+		SafeModuleAddLiquidityWithNativeDenom(gomock.Any(), types.RaffleModuleName, sdk.NewCoins(bigPot)).
 		DoAndReturn(panicOnAddLiquidity).
 		AnyTimes()
 	locked := suite.expectLock(types.RaffleModuleName, sdk.NewCoins(bigPot))

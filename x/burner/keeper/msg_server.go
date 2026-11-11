@@ -94,7 +94,7 @@ func (k msgServer) MoveIbcLockedCoins(goCtx context.Context, msg *types.MsgMoveI
 		return nil, errors.Wrap(types.ErrInvalidRequest, "cannot move the locked coins due to liquidity availability")
 	}
 
-	added, refunded, err := k.tradeKeeper.ModuleAddLiquidityWithNativeDenom(ctx, types.BlackHoleModuleName, sdk.NewCoins(denomLockedBalance))
+	added, refunded, err := k.tradeKeeper.SafeModuleAddLiquidityWithNativeDenom(ctx, types.BlackHoleModuleName, sdk.NewCoins(denomLockedBalance))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to move locked coins to liquidity pair")
 	}
@@ -104,7 +104,7 @@ func (k msgServer) MoveIbcLockedCoins(goCtx context.Context, msg *types.MsgMoveI
 	}
 
 	// Send the refunded amount of native denom to the burner module
-	// Explanation: the ModuleAddLiquidityWithNativeDenom method is swapping part of the coins provided
+	// Explanation: the SafeModuleAddLiquidityWithNativeDenom method is swapping part of the coins provided
 	// (denomLockedBalance) to native denom.
 	// Then using the provided denom + native denom resulted after swap it adds liquidity to their LP.
 	// Some amount might be left, and it's refunded to the caller module (in this case BlackHoleModuleName)

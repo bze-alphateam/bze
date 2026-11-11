@@ -31,7 +31,7 @@ type BankKeeper interface {
 // captured through it, so it can be paid in the tx fee denom like the other
 // chain fees.
 type TradeKeeper interface {
-	CaptureAndSwapUserFee(ctx sdk.Context, payer sdk.AccAddress, fee sdk.Coins, toModule string) (coins sdk.Coins, err error)
+	SafeCaptureAndSwapUserFee(ctx sdk.Context, payer sdk.AccAddress, fee sdk.Coins, toModule string) (coins sdk.Coins, err error)
 }
 
 // RewardsKeeper defines the expected rewards keeper. Stake DAOs vote with the

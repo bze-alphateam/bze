@@ -30,7 +30,7 @@ func (suite *IntegrationTestSuite) TestCreateDenom_ValidRequest() {
 
 	// Mock expectations for charging fee
 	expectedFee := sdk.NewCoins(sdk.NewInt64Coin("ubze", 1000))
-	suite.trade.EXPECT().CaptureAndSwapUserFee(suite.ctx, creatorAddr, expectedFee, types.ModuleName).Return(expectedFee, nil).Times(1)
+	suite.trade.EXPECT().SafeCaptureAndSwapUserFee(suite.ctx, creatorAddr, expectedFee, types.ModuleName).Return(expectedFee, nil).Times(1)
 	suite.bank.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, gomock.Any(), expectedFee).Return(nil).Times(1)
 
 	// Mock expectations for CreateDenomAfterValidation
@@ -196,7 +196,7 @@ func (suite *IntegrationTestSuite) TestCreateDenom_ChargingError() {
 	// Mock charging error
 	expectedFee := sdk.NewCoins(sdk.NewInt64Coin("ubze", 1000))
 	chargingError := errors.New("insufficient funds")
-	suite.trade.EXPECT().CaptureAndSwapUserFee(suite.ctx, creatorAddr, expectedFee, types.ModuleName).Return(nil, chargingError).Times(1)
+	suite.trade.EXPECT().SafeCaptureAndSwapUserFee(suite.ctx, creatorAddr, expectedFee, types.ModuleName).Return(nil, chargingError).Times(1)
 
 	msg := &types.MsgCreateDenom{
 		Creator:  creator,
@@ -208,6 +208,10 @@ func (suite *IntegrationTestSuite) TestCreateDenom_ChargingError() {
 	suite.Require().Error(err)
 	suite.Require().Nil(res)
 	suite.Require().Equal(chargingError, err)
+
+	// nothing was written
+	_, authErr := suite.k.GetDenomAuthority(suite.ctx, expectedDenom)
+	suite.Require().Error(authErr)
 }
 
 func (suite *IntegrationTestSuite) TestMint_ValidRequest() {

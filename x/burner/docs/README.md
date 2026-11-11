@@ -99,6 +99,7 @@ The module registers a dedicated account named `burner_black_hole`. This account
 - Queued periodic burning: burns now processed at EndBlock in bounded batches (up to 100 denoms/block) instead of synchronously in epoch hooks
 - Queued raffle cleanup: expired raffles processed at EndBlock in bounded batches (up to 50/block) instead of synchronously in epoch hooks
 - IBC token burn strategy changed from `ModuleSwapForNativeDenom` to `ModuleAddLiquidityWithNativeDenom`
+- The burner calls `SafeModuleAddLiquidityWithNativeDenom`: when the coin's pool price is away from its moving average the coin is locked in the black hole (periodic burn) or `MsgMoveIbcLockedCoins` fails, and it can be sent again later
 - `MsgFundBurner` now classifies coins before sending: lockable (LP) to black hole, burnable/exchangeable to burner module
 - Added `MsgMoveIbcLockedCoins` (permissionless) to move locked IBC coins from the black-hole account into liquidity pools paired with native BZE
 - Raffle participation rate-limited to 200 participants per block height

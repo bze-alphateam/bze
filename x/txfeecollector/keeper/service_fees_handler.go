@@ -117,7 +117,7 @@ func (k Keeper) swapToNative(ctx sdk.Context, fromModule string, c sdk.Coin) (sw
 			return nil
 		}
 
-		res, swapErr := k.tradeKeeper.ModuleSwapForNativeDenom(cached, fromModule, sdk.NewCoins(c))
+		res, swapErr := k.tradeKeeper.SafeModuleSwapForNativeDenom(cached, fromModule, sdk.NewCoins(c))
 		if swapErr != nil {
 			return swapErr
 		}

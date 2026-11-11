@@ -144,7 +144,7 @@ func TestEndBlock_FailedSendLeavesCoinsInPlace(t *testing.T) {
 	bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.CpFeeCollector, cpB, sdk.NewCoins(tokenB)).Return(nil).Times(1)
 	cp.EXPECT().GetDenomCommunityPool(gomock.Any(), ibc.Denom).Return(nil, false).Times(1)
 	trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibc).Return(true).Times(1)
-	trade.EXPECT().ModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(ibc)).
+	trade.EXPECT().SafeModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(ibc)).
 		Return(sdk.NewInt64Coin("ubze", 30), nil).Times(1)
 	distr.EXPECT().FundCommunityPool(gomock.Any(), sdk.NewCoins(sdk.NewInt64Coin("ubze", 30)), cpAddr).Return(nil).Times(1)
 
@@ -168,7 +168,7 @@ func TestEndBlock_FailedSwapKeepsOnlyThatCoin(t *testing.T) {
 	cp.EXPECT().GetDenomCommunityPool(gomock.Any(), ibc.Denom).Return(nil, false).Times(1)
 	bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.CpFeeCollector, tokenCp, sdk.NewCoins(token)).Return(nil).Times(1)
 	trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibc).Return(true).Times(1)
-	trade.EXPECT().ModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(ibc)).
+	trade.EXPECT().SafeModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(ibc)).
 		Return(sdk.Coin{}, errors.New("swap failed")).Times(1)
 
 	// no funding expectation: nothing was swapped, a call would fail the test

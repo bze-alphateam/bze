@@ -40,5 +40,5 @@ type ParamSubspace interface {
 }
 
 type TradingKeeper interface {
-	CaptureAndSwapUserFee(ctx sdk.Context, payer sdk.AccAddress, fee sdk.Coins, toModule string) (coins sdk.Coins, err error)
+	SafeCaptureAndSwapUserFee(ctx sdk.Context, payer sdk.AccAddress, fee sdk.Coins, toModule string) (coins sdk.Coins, err error)
 }

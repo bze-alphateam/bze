@@ -51,7 +51,7 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 
 	// Mock fee capture and swap
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(
+		SafeCaptureAndSwapUserFee(
 			suite.ctx,
 			creator,
 			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100))),
@@ -997,4 +997,42 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_ExitStaking_EpochC
 	suite.Require().Error(err)
 	suite.Require().Nil(response)
 	suite.Require().Contains(err.Error(), "catching up")
+}
+
+// When the trade keeper refuses the creation fee (e.g. the payer has no native coins left after a pool price drift),
+// the message fails and no staking reward is stored.
+func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewardFeeError() {
+	creator := sdk.AccAddress("creator")
+	params := types.Params{
+		CreateStakingRewardFee: sdk.NewCoin("ubze", math.NewInt(100)),
+		CreateTradingRewardFee: sdk.NewCoin("ubze", math.NewInt(200)),
+	}
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
+
+	suite.bank.EXPECT().HasSupply(suite.ctx, "ubze").Return(true).Times(2)
+	suite.bank.EXPECT().SpendableCoins(suite.ctx, creator).Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(10000)))).Times(1)
+	suite.bank.EXPECT().
+		SendCoinsFromAccountToModule(suite.ctx, creator, types.ModuleName, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(5000)))).
+		Return(nil).
+		Times(1)
+	suite.trade.EXPECT().
+		SafeCaptureAndSwapUserFee(suite.ctx, creator, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(100))), types.ModuleName).
+		Return(nil, sdkerrors.ErrInsufficientFunds).
+		Times(1)
+
+	msg := &types.MsgCreateStakingReward{
+		Creator:      creator.String(),
+		PrizeAmount:  "1000",
+		PrizeDenom:   "ubze",
+		StakingDenom: "ubze",
+		Duration:     "5",
+		MinStake:     "100",
+		Lock:         "7",
+	}
+
+	counter := suite.k.GetStakingRewardsCounter(suite.ctx)
+	response, err := suite.msgServer.CreateStakingReward(suite.ctx, msg)
+	suite.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
+	suite.Require().Nil(response)
+	suite.Require().Equal(counter, suite.k.GetStakingRewardsCounter(suite.ctx))
 }

@@ -99,19 +99,19 @@ func (mr *MockTradeKeeperMockRecorder) IsNativeDenom(ctx, denom any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsNativeDenom", reflect.TypeOf((*MockTradeKeeper)(nil).IsNativeDenom), ctx, denom)
 }
 
-// ModuleSwapForNativeDenom mocks base method.
-func (m *MockTradeKeeper) ModuleSwapForNativeDenom(ctx types.Context, toModule string, coins types.Coins) (types.Coin, error) {
+// SafeModuleSwapForNativeDenom mocks base method.
+func (m *MockTradeKeeper) SafeModuleSwapForNativeDenom(ctx types.Context, toModule string, coins types.Coins) (types.Coin, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ModuleSwapForNativeDenom", ctx, toModule, coins)
+	ret := m.ctrl.Call(m, "SafeModuleSwapForNativeDenom", ctx, toModule, coins)
 	ret0, _ := ret[0].(types.Coin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ModuleSwapForNativeDenom indicates an expected call of ModuleSwapForNativeDenom.
-func (mr *MockTradeKeeperMockRecorder) ModuleSwapForNativeDenom(ctx, toModule, coins any) *gomock.Call {
+// SafeModuleSwapForNativeDenom indicates an expected call of SafeModuleSwapForNativeDenom.
+func (mr *MockTradeKeeperMockRecorder) SafeModuleSwapForNativeDenom(ctx, toModule, coins any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModuleSwapForNativeDenom", reflect.TypeOf((*MockTradeKeeper)(nil).ModuleSwapForNativeDenom), ctx, toModule, coins)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SafeModuleSwapForNativeDenom", reflect.TypeOf((*MockTradeKeeper)(nil).SafeModuleSwapForNativeDenom), ctx, toModule, coins)
 }
 
 // MockAccountKeeper is a mock of AccountKeeper interface.

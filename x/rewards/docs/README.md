@@ -74,7 +74,7 @@ When a staking reward has a lock period and you exit:
 ### v8.1.0
 - All reward operations moved from synchronous epoch hooks to bounded queue-based processing at EndBlock (up to 100 items/block): unlock participants, staking reward distribution, and trading reward expiration
 - Added `ExtraGasForExitStake` parameter (default 1,000,000 gas) consumed when exiting a stake
-- Removed `DistrKeeper` dependency — creation fees now routed to `txfeecollector` module via `CaptureAndSwapUserFee` instead of `FundCommunityPool`
+- Removed `DistrKeeper` dependency — creation fees now routed to `txfeecollector` module via `SafeCaptureAndSwapUserFee` instead of `FundCommunityPool`
 - Expired pending trading rewards now send uncaptured tokens to the burner module instead of community pool
 - Leaderboard sorting fix: old code compared the same value for both items; fixed to properly compare `a.Amount` vs `b.Amount`
 - Trading hook now validates `tradedAmount.IsPositive()` before processing

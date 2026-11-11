@@ -144,7 +144,7 @@ func (k Keeper) chargeCreationFee(ctx sdk.Context, creator sdk.AccAddress, param
 		destModule = txfeecollectortypes.CpFeeCollector
 	}
 
-	if _, err := k.tradeKeeper.CaptureAndSwapUserFee(ctx, creator, sdk.NewCoins(fee), destModule); err != nil {
+	if _, err := k.tradeKeeper.SafeCaptureAndSwapUserFee(ctx, creator, sdk.NewCoins(fee), destModule); err != nil {
 		return errorsmod.Wrap(err, "failed to pay the dao creation fee")
 	}
 

@@ -142,6 +142,7 @@ Three tradebin functions trade a protocol amount at the live price of a pool: `C
 - A pool is drifted when `|price − average| / average` is above the limit. Exactly at the limit is allowed. A pool without an average record, or without a price, counts as drifted.
 - `SafeCaptureAndSwapUserFee` uses `fee_max_price_drift`. When the preferred fee denom's pool drifted, the fee is charged in the native denom instead (the payer fails with the usual error if there is not enough of it). Without a preferred denom, with the native denom as preferred, or without a pool, it behaves like the original.
 - `SafeModuleSwapForNativeDenom` and `SafeModuleAddLiquidityWithNativeDenom` use `module_max_price_drift`. If the pool of any non-native coin drifted they return `ErrPoolPriceDrift` (code 4018) before moving any coin.
+- Callers: dao, rewards, tokenfactory and tradebin (market and pool creation fee) use `SafeCaptureAndSwapUserFee`; txfeecollector uses `SafeModuleSwapForNativeDenom` (a refused coin stays in the collector and is retried at the next EndBlock); the burner uses `SafeModuleAddLiquidityWithNativeDenom`. Those modules' expected-keeper interfaces no longer list the unchecked functions.
 - Maker/taker fees (`CaptureAndTryToSwapUserFeesOrSendItAsIs`) have no safe variant: the amounts are tiny and a check would slow order placement.
 
 ## User Dust

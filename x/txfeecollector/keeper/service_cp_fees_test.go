@@ -110,7 +110,7 @@ func (suite *IntegrationTestSuite) TestConvertCommunityPoolFees_EveryRule() {
 	suite.tradeMock.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibc).Return(true).Times(1)
 	suite.tradeMock.EXPECT().CanSwapForNativeDenom(gomock.Any(), tokenB).Return(false).Times(1)
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(ibc)).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(ibc)).
 		Return(sdk.NewInt64Coin(denomBze, 70), nil).
 		Times(1)
 	suite.bankMock.EXPECT().
@@ -147,7 +147,7 @@ func (suite *IntegrationTestSuite) TestConvertCommunityPoolFees_NilProvider() {
 	suite.tradeMock.EXPECT().IsNativeDenom(gomock.Any(), denomTokenA).Return(false).Times(1)
 	suite.tradeMock.EXPECT().CanSwapForNativeDenom(gomock.Any(), coin).Return(true).Times(1)
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(coin)).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(coin)).
 		Return(sdk.NewInt64Coin(denomBze, 90), nil).
 		Times(1)
 	suite.distrMock.EXPECT().
@@ -184,7 +184,7 @@ func (suite *IntegrationTestSuite) TestConvertCommunityPoolFees_SwapError() {
 	suite.tradeMock.EXPECT().IsNativeDenom(gomock.Any(), denomStake).Return(false).Times(1)
 	suite.tradeMock.EXPECT().CanSwapForNativeDenom(gomock.Any(), coin).Return(true).Times(1)
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(coin)).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(coin)).
 		Return(sdk.Coin{}, sdkerrors.ErrInvalidCoins).
 		Times(1)
 

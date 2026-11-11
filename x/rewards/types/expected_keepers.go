@@ -27,7 +27,7 @@ type BankKeeper interface {
 
 type TradingKeeper interface {
 	MarketExists(ctx sdk.Context, marketId string) bool
-	CaptureAndSwapUserFee(ctx sdk.Context, payer sdk.AccAddress, fee sdk.Coins, toModule string) (coins sdk.Coins, err error)
+	SafeCaptureAndSwapUserFee(ctx sdk.Context, payer sdk.AccAddress, fee sdk.Coins, toModule string) (coins sdk.Coins, err error)
 }
 
 type EpochKeeper interface {

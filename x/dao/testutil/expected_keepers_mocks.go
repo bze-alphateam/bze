@@ -214,19 +214,19 @@ func (m *MockTradeKeeper) EXPECT() *MockTradeKeeperMockRecorder {
 	return m.recorder
 }
 
-// CaptureAndSwapUserFee mocks base method.
-func (m *MockTradeKeeper) CaptureAndSwapUserFee(ctx types0.Context, payer types0.AccAddress, fee types0.Coins, toModule string) (types0.Coins, error) {
+// SafeCaptureAndSwapUserFee mocks base method.
+func (m *MockTradeKeeper) SafeCaptureAndSwapUserFee(ctx types0.Context, payer types0.AccAddress, fee types0.Coins, toModule string) (types0.Coins, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CaptureAndSwapUserFee", ctx, payer, fee, toModule)
+	ret := m.ctrl.Call(m, "SafeCaptureAndSwapUserFee", ctx, payer, fee, toModule)
 	ret0, _ := ret[0].(types0.Coins)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CaptureAndSwapUserFee indicates an expected call of CaptureAndSwapUserFee.
-func (mr *MockTradeKeeperMockRecorder) CaptureAndSwapUserFee(ctx, payer, fee, toModule any) *gomock.Call {
+// SafeCaptureAndSwapUserFee indicates an expected call of SafeCaptureAndSwapUserFee.
+func (mr *MockTradeKeeperMockRecorder) SafeCaptureAndSwapUserFee(ctx, payer, fee, toModule any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CaptureAndSwapUserFee", reflect.TypeOf((*MockTradeKeeper)(nil).CaptureAndSwapUserFee), ctx, payer, fee, toModule)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SafeCaptureAndSwapUserFee", reflect.TypeOf((*MockTradeKeeper)(nil).SafeCaptureAndSwapUserFee), ctx, payer, fee, toModule)
 }
 
 // MockRewardsKeeper is a mock of RewardsKeeper interface.

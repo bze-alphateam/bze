@@ -46,7 +46,7 @@ func (suite *IntegrationTestSuite) TestConvertCollectedFeesToNativeDenom_OnlyNat
 		Times(1)
 
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins()).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins()).
 		Return(sdk.NewCoin(denomBze, math.ZeroInt()), nil).
 		Times(1)
 
@@ -99,11 +99,11 @@ func (suite *IntegrationTestSuite) TestConvertCollectedFeesToNativeDenom_SwapSuc
 
 	// each coin is swapped on its own
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(balances[0])).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(balances[0])).
 		Return(sdk.NewInt64Coin(denomBze, 1000), nil).
 		Times(1)
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(balances[1])).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(balances[1])).
 		Return(sdk.NewInt64Coin(denomBze, 500), nil).
 		Times(1)
 
@@ -148,7 +148,7 @@ func (suite *IntegrationTestSuite) TestConvertCollectedFeesToNativeDenom_MixedCo
 		Times(1)
 
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(swappableCoin)).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(swappableCoin)).
 		Return(swappedAmount, nil).
 		Times(1)
 
@@ -191,7 +191,7 @@ func (suite *IntegrationTestSuite) TestConvertCollectedFeesToNativeDenom_OnlyUns
 		Times(1)
 
 	// sendSkipped=true: unswappable coins are sent to fee collector directly
-	// toSwap is empty so ModuleSwapForNativeDenom is NOT called
+	// toSwap is empty so SafeModuleSwapForNativeDenom is NOT called
 	suite.bankMock.EXPECT().
 		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, authtypes.FeeCollectorName, balances).
 		Return(nil).
@@ -232,7 +232,7 @@ func (suite *IntegrationTestSuite) TestConvertCollectedFeesToNativeDenom_ZeroAmo
 		Times(1)
 
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(positiveCoin)).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(positiveCoin)).
 		Return(swappedAmount, nil).
 		Times(1)
 
@@ -270,7 +270,7 @@ func (suite *IntegrationTestSuite) TestConvertCollectedFeesToNativeDenom_SwapRet
 		Times(1)
 
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, balances).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, balances).
 		Return(sdk.NewCoin(denomBze, math.ZeroInt()), nil).
 		Times(1)
 
@@ -303,7 +303,7 @@ func (suite *IntegrationTestSuite) TestConvertCollectedFeesToNativeDenom_SwapErr
 		Times(1)
 
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, balances).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, balances).
 		Return(sdk.Coin{}, sdkerrors.ErrInvalidCoins).
 		Times(1)
 
@@ -338,7 +338,7 @@ func (suite *IntegrationTestSuite) TestConvertCollectedFeesToNativeDenom_SendCoi
 		Times(1)
 
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, balances).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, balances).
 		Return(swappedAmount, nil).
 		Times(1)
 
@@ -421,7 +421,7 @@ func (suite *IntegrationTestSuite) TestConvertCollectedFeesToNativeDenom_MaxIter
 
 	swappedAmount := sdk.NewInt64Coin(denomBze, 900)
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(otherCoin)).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(otherCoin)).
 		Return(swappedAmount, nil).
 		Times(1)
 
@@ -477,7 +477,7 @@ func (suite *IntegrationTestSuite) TestConvertCollectedFeesToNativeDenom_MixedNa
 		Times(1)
 
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(swappableCoin)).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(swappableCoin)).
 		Return(swappedAmount, nil).
 		Times(1)
 

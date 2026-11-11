@@ -30,7 +30,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_CreateDenomReward_Fe
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ubze").Return(true).Times(1)
 	suite.richBalance(creator)
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(suite.ctx, creator, fee, types.ModuleName).
+		SafeCaptureAndSwapUserFee(suite.ctx, creator, fee, types.ModuleName).
 		Return(nil, errMockFailure).Times(1)
 
 	_, err := suite.msgServer.CreateDenomReward(suite.ctx, types.NewMsgCreateDenomReward(creator.String(), "ubze"))
@@ -46,7 +46,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_CreateDenomReward_Fe
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ubze").Return(true).Times(1)
 	suite.richBalance(creator)
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(suite.ctx, creator, fee, types.ModuleName).
+		SafeCaptureAndSwapUserFee(suite.ctx, creator, fee, types.ModuleName).
 		Return(fee, nil).Times(1)
 	suite.bank.EXPECT().
 		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, fee).
@@ -105,7 +105,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_NewPrize_FeeCapture
 	suite.bank.EXPECT().HasSupply(suite.ctx, "uprize").Return(true).Times(1)
 	suite.richBalance(sender)
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(suite.ctx, sender, drPrizeFee, types.ModuleName).
+		SafeCaptureAndSwapUserFee(suite.ctx, sender, drPrizeFee, types.ModuleName).
 		Return(nil, errMockFailure).Times(1)
 
 	_, err := suite.msgServer.DistributeDenomRewards(suite.ctx, types.NewMsgDistributeDenomRewards(sender.String(), "ubze", "uprize", math.NewInt(50)))
@@ -122,7 +122,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrDistribute_NewPrize_FeeForward
 	suite.bank.EXPECT().HasSupply(suite.ctx, "uprize").Return(true).Times(1)
 	suite.richBalance(sender)
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(suite.ctx, sender, drPrizeFee, types.ModuleName).
+		SafeCaptureAndSwapUserFee(suite.ctx, sender, drPrizeFee, types.ModuleName).
 		Return(drPrizeFee, nil).Times(1)
 	suite.bank.EXPECT().
 		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, drPrizeFee).
@@ -144,7 +144,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_ScheduleFeeCap
 	suite.bank.EXPECT().HasSupply(suite.ctx, "uprize").Return(true).Times(1)
 	suite.richBalance(funder)
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(suite.ctx, funder, drScheduleFee, types.ModuleName).
+		SafeCaptureAndSwapUserFee(suite.ctx, funder, drScheduleFee, types.ModuleName).
 		Return(nil, errMockFailure).Times(1)
 
 	_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(funder.String(), "ubze", "uprize", math.NewInt(100), "5"))
@@ -161,7 +161,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_ScheduleFeeFor
 	suite.bank.EXPECT().HasSupply(suite.ctx, "uprize").Return(true).Times(1)
 	suite.richBalance(funder)
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(suite.ctx, funder, drScheduleFee, types.ModuleName).
+		SafeCaptureAndSwapUserFee(suite.ctx, funder, drScheduleFee, types.ModuleName).
 		Return(drScheduleFee, nil).Times(1)
 	suite.bank.EXPECT().
 		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, drScheduleFee).
