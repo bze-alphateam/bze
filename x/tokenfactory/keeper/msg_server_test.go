@@ -208,6 +208,10 @@ func (suite *IntegrationTestSuite) TestCreateDenom_ChargingError() {
 	suite.Require().Error(err)
 	suite.Require().Nil(res)
 	suite.Require().Equal(chargingError, err)
+
+	// nothing was written
+	_, authErr := suite.k.GetDenomAuthority(suite.ctx, expectedDenom)
+	suite.Require().Error(authErr)
 }
 
 func (suite *IntegrationTestSuite) TestMint_ValidRequest() {
