@@ -79,6 +79,12 @@ service Query {
     option (google.api.http).get = "/bze/tradebin/liquidity_pool";
   }
 
+  // Queries the moving average of a pool's price. Over REST the pool id is passed as the `pool_id` query
+  // parameter (pool ids contain "/", so it cannot be a path segment).
+  rpc PoolPriceAverage (QueryPoolPriceAverageRequest) returns (QueryPoolPriceAverageResponse) {
+    option (google.api.http).get = "/bze/tradebin/pool_price_average";
+  }
+
   // Queries the denoms governance halted on the DEX, paginated, in store (byte) order.
   rpc HaltedDenoms (QueryHaltedDenomsRequest) returns (QueryHaltedDenomsResponse) {
     option (google.api.http).get = "/bze/tradebin/halted_denoms";
@@ -193,6 +199,18 @@ message QueryLiquidityPoolRequest {
 
 message QueryLiquidityPoolResponse {
   LiquidityPool pool = 1;
+}
+
+message QueryPoolPriceAverageRequest {
+  string pool_id = 1;
+}
+
+message QueryPoolPriceAverageResponse {
+  string avg_price = 1 [
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
+  int64 last_height = 2;
 }
 
 message QueryHaltedDenomsRequest {

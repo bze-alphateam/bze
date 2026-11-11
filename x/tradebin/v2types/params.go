@@ -25,7 +25,13 @@ var (
 	DefaultFillOrdersExtraGas              = uint64(5000)
 	DefaultMinNativeLiquidityForModuleSwap = math.NewInt(100000000000)
 	DefaultMaxFillsPerOrder                = uint64(500)
+	DefaultPoolPriceHalfLifeBlocks         = uint64(20)
+	DefaultFeeMaxPriceDrift                = math.LegacyNewDecWithPrec(10, 2)
+	DefaultModuleMaxPriceDrift             = math.LegacyNewDecWithPrec(3, 2)
 )
+
+// MaxPoolPriceHalfLifeBlocks is the largest accepted half-life of the pool price average.
+const MaxPoolPriceHalfLifeBlocks = uint64(100000)
 
 // DefaultParams returns a default set of v2 parameters
 func DefaultParams() Params {
@@ -41,6 +47,9 @@ func DefaultParams() Params {
 		FillOrdersExtraGas:              DefaultFillOrdersExtraGas,
 		MinNativeLiquidityForModuleSwap: DefaultMinNativeLiquidityForModuleSwap,
 		MaxFillsPerOrder:                DefaultMaxFillsPerOrder,
+		PoolPriceHalfLifeBlocks:         DefaultPoolPriceHalfLifeBlocks,
+		FeeMaxPriceDrift:                DefaultFeeMaxPriceDrift,
+		ModuleMaxPriceDrift:             DefaultModuleMaxPriceDrift,
 	}
 }
 
@@ -84,6 +93,31 @@ func (p Params) Validate() error {
 
 	if p.MaxFillsPerOrder < 1 {
 		return fmt.Errorf("max fills per order must be at least 1")
+	}
+
+	if p.PoolPriceHalfLifeBlocks < 1 || p.PoolPriceHalfLifeBlocks > MaxPoolPriceHalfLifeBlocks {
+		return fmt.Errorf("pool price half life must be between 1 and %d blocks", MaxPoolPriceHalfLifeBlocks)
+	}
+
+	if err := validateDrift(p.FeeMaxPriceDrift); err != nil {
+		return fmt.Errorf("invalid FeeMaxPriceDrift: %w", err)
+	}
+
+	if err := validateDrift(p.ModuleMaxPriceDrift); err != nil {
+		return fmt.Errorf("invalid ModuleMaxPriceDrift: %w", err)
+	}
+
+	return nil
+}
+
+// validateDrift accepts a ratio strictly between 0 and 1.
+func validateDrift(d math.LegacyDec) error {
+	if d.IsNil() {
+		return fmt.Errorf("drift must be set")
+	}
+
+	if !d.IsPositive() || !d.LT(math.LegacyOneDec()) {
+		return fmt.Errorf("drift must be greater than 0 and less than 1")
 	}
 
 	return nil

@@ -53,7 +53,8 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 // still queued is refunded to its owner and the queue store is removed. Param field 11
 // becomes maxFillsPerOrder and is set to its default if it is 0; fields 7 and 8 become
 // priceLevelOwnersWindow (set to 500) and priceLevelExtraGas (kept). The owner-price index is
-// built from the resting orders, then every aggregate gets its distinct-owner count.
+// built from the resting orders, then every aggregate gets its distinct-owner count. Last, the pool price
+// average params are set to their defaults and every pool gets its price average record.
 func (m Migrator) Migrate4to5(ctx sdk.Context) error {
 	adapter := runtime.KVStoreAdapter(m.keeper.storeService.OpenKVStore(ctx))
 	store := prefix.NewStore(adapter, []byte{})
@@ -73,5 +74,5 @@ func (m Migrator) Migrate4to5(ctx sdk.Context) error {
 	v5.MigrateOwnerPriceIndex(ctx, m.keeper)
 	v5.MigratePriceLevelOwners(ctx, m.keeper)
 
-	return nil
+	return v5.MigratePoolPriceAverage(ctx, m.keeper)
 }

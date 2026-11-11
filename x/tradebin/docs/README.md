@@ -53,6 +53,7 @@ While a denom is halted:
 A market or pool is halted iff its base **or** quote is halted. Both sides of a book are frozen: every fill has one party receiving the halted denom, so there is no "exit-only" direction on an order book. Un-halting lets resting orders resume matching and pools resume swapping — nothing else to do.
 
 ### Halt queries
+- `bzed query tradebin pool-price-average <pool-id>` – the moving average of a pool's price.
 - `bzed query tradebin halted-denoms` (REST `GET /bze/tradebin/halted_denoms`, paginated) — every halted denom, in store order.
 - `bzed query tradebin denom-halted <denom>` (REST `GET /bze/tradebin/denom_halted?denom=<denom>`) — `halted: true|false` for one denom. Over REST the denom goes in the query string because ibc/factory denoms contain `/`.
 - Indexers can follow the `DenomHaltedEvent` / `DenomUnhaltedEvent` typed events, emitted once per denom whose state actually changed.
@@ -126,6 +127,16 @@ Query the pool with `bzed query tradebin liquidity-pool <id>` before and after t
 
 So per message: a create ends with executed, saved (or amended) and/or refunded events; each fill entry with executed and/or refunded events; a cancel with a canceled event. A cancel of an order that does not exist (filled or cancelled meanwhile) is refused with `order not found` and the transaction reverts.
 
+## Pool Price Average
+Every pool keeps an exponential moving average of its price, `quote reserve / base reserve` in the pool's own base/quote orientation (a pool with a zero reserve, or a price that rounds to 0 at 18 decimals, has no price). It lets later features compare a pool's current price with where it has been over the last blocks.
+
+- The average is updated in one place only: the first time a pool is saved in a block. The price stored at that moment is the price the pool had at the start of the block, and it is folded in for all blocks since the previous update. Trades inside the current block never reach the average.
+- The fold is `avg = price + (avg − price) × 0.5^(elapsed / pool_price_half_life_blocks)`. After `pool_price_half_life_blocks` blocks the average has covered half the distance to the price. A gap above 20 half lives means the average is simply the stored price.
+- A pool's first save starts the average at the price of the pool being saved. The v8.3.0 upgrade seeds every existing pool with its price at the upgrade height.
+- Records are not part of the genesis export. Importing a genesis seeds them again through the pool saves.
+- Params: `pool_price_half_life_blocks` (default 20), `fee_max_price_drift` (default 0.10) and `module_max_price_drift` (default 0.03), see [params.md](params.md). The two drift limits are stored here and used by the checks that compare a pool's price with its average.
+- Query: `bzed query tradebin pool-price-average <pool-id>`, REST `/bze/tradebin/pool_price_average?pool_id=<id>` (the id is a query parameter because pool ids contain `/`). It returns the average brought up to the current block and the height at which the record was last written.
+
 ## User Dust
 Partial order fills can leave fractional coin amounts (dust) that are too small to settle. The module tracks dust per user address, and it accumulates across trades.
 
@@ -153,6 +164,7 @@ Partial order fills can leave fractional coin amounts (dust) that are too small 
 ## Version History
 
 ### v8.3.0
+- Pool price moving average, three new params and a query (see above).
 - Order book orders execute inside their transaction, metered by its gas: the EndBlock queue, its counter, the pending-cancel marker, the queue gas surcharge, the queue price scan and the `order_book_queue_message_scan_extra_gas` param are removed. Every order gets an id before matching, and `order_id` replaces `message_id` in the order events; `OrderCreateMessageEvent`, `OrderCancelMessageEvent`, `OrderCancelSkippedEvent` and `OrderMessageFailedEvent` are removed. The upgrade refunds every message still queued (reason `upgrade`).
 - One order examines at most `max_fills_per_order` resting orders, filled or skipped (param field 11, renamed from `order_book_per_block_messages`, default 500); the remainder is refunded with reason `max_fills_reached`.
 - One owner has at most one order per market, side and price: a new order at a price where its owner already rests one is merged with that order. The merged order takes the new order's id and goes to the back of the queue at its price, so topping up an order gives up its place; the old id is gone (`OrderAmendedEvent` with `previous_id`, a cancel by the old id is refused with `order not found`). Orders placed before v8.3.0 stay as they are; new orders at their price are merged with the earliest of them.
