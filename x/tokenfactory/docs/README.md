@@ -119,6 +119,7 @@ Runbook:
 - `mintable` flag on the denom authority and `MsgDisableMinting` (admin-only, irreversible); `MsgMint` is refused on non-mintable denoms; renouncing the admin turns minting off
 - Consensus version 3→4: the migration sets `mintable = true` on every denom that has an admin and `mintable = false` on every renounced denom
 - `DenomConfig` (community pool, transfer fee, gas surcharge) with `MsgSetDenomConfig` (admin-only), the `denom_config` query and `DenomConfigChangeEvent`; no migration, a missing config means the defaults
+- The subdenom rules (no `/`, no `_`, a valid coin denom of its own) are checked by the message server too, not only by `ValidateBasic`
 
 ### v8.1.0
 - Subdenom validation now disallows slash (`/`) characters to prevent ambiguous denom paths

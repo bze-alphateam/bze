@@ -21,7 +21,20 @@ const (
 // [a-zA-Z0-9/:._-]. The default bank metadata of a new denom names its display
 // unit after the upper-cased subdenom, and bank refuses a unit that is not a
 // valid coin denom.
+//
+// It must not contain "/" either: a factory denom is exactly
+// factory/{creator}/{subdenom}, and other modules split it on "/" (tradebin's
+// store keys depend on that). "_" is refused as well. Both the message's
+// ValidateBasic and the msg server run this check.
 func ValidateSubdenom(subdenom string) error {
+	if strings.Contains(subdenom, "/") {
+		return errors.Wrap(ErrInvalidSubdenom, "subdenom must not contain /")
+	}
+
+	if strings.Contains(subdenom, "_") {
+		return errors.Wrap(ErrInvalidSubdenom, "subdenom must not contain _")
+	}
+
 	if err := sdk.ValidateDenom(subdenom); err != nil {
 		return errors.Wrap(ErrInvalidSubdenom, err.Error())
 	}

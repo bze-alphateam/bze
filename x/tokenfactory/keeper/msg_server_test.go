@@ -133,6 +133,28 @@ func (suite *IntegrationTestSuite) TestCreateDenom_InvalidSubdenomRefused() {
 	}
 }
 
+// A subdenom holding "/" or "_" is refused by the msg server too, not only by
+// ValidateBasic (a direct call skips it): the full denom must keep exactly
+// three "/"-separated parts. Nothing is charged, no metadata is read or
+// written (no expectation on the bank or trade keepers beyond the supply
+// check) and no denom authority is stored.
+func (suite *IntegrationTestSuite) TestCreateDenom_SlashOrUnderscoreSubdenomRefused() {
+	creator := sdk.AccAddress("creator").String()
+	suite.Require().NoError(suite.k.SetParams(suite.ctx, types.Params{CreateDenomFee: sdk.NewInt64Coin("ubze", 1000)}))
+
+	for _, subdenom := range []string{"a/b", "my/token/x", "a_b", "my_token"} {
+		suite.Run(subdenom, func() {
+			suite.bank.EXPECT().HasSupply(suite.ctx, subdenom).Return(false).Times(1)
+
+			_, err := suite.msgServer.CreateDenom(suite.ctx, &types.MsgCreateDenom{Creator: creator, Subdenom: subdenom})
+			suite.Require().ErrorIs(err, types.ErrInvalidSubdenom)
+
+			_, err = suite.k.GetDenomAuthority(suite.ctx, "factory/"+creator+"/"+subdenom)
+			suite.Require().Error(err)
+		})
+	}
+}
+
 func (suite *IntegrationTestSuite) TestCreateDenom_ValidationError() {
 	creator := sdk.AccAddress("creator").String()
 	subdenom := "invalid_subdenom" // Contains underscore
@@ -149,7 +171,7 @@ func (suite *IntegrationTestSuite) TestCreateDenom_ValidationError() {
 
 	suite.Require().Error(err)
 	suite.Require().Nil(res)
-	suite.Require().Equal(types.ErrInvalidSubdenom, err)
+	suite.Require().ErrorIs(err, types.ErrInvalidSubdenom)
 }
 
 func (suite *IntegrationTestSuite) TestCreateDenom_ChargingError() {
