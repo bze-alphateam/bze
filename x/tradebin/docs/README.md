@@ -137,6 +137,14 @@ Every pool keeps an exponential moving average of its price, `quote reserve / ba
 - Params: `pool_price_half_life_blocks` (default 20), `fee_max_price_drift` (default 0.10) and `module_max_price_drift` (default 0.03), see [params.md](params.md). The two drift limits are stored here and used by the checks that compare a pool's price with its average.
 - Query: `bzed query tradebin pool-price-average <pool-id>`, REST `/bze/tradebin/pool_price_average?pool_id=<id>` (the id is a query parameter because pool ids contain `/`). It returns the average brought up to the current block and the height at which the record was last written.
 
+### Safe variants of the protocol swaps
+Three tradebin functions trade a protocol amount at the live price of a pool: `CaptureAndSwapUserFee` (large protocol fees paid in a non-native denom), `ModuleSwapForNativeDenom` and `ModuleAddLiquidityWithNativeDenom`. They are unchanged. Next to them, `SafeCaptureAndSwapUserFee`, `SafeModuleSwapForNativeDenom` and `SafeModuleAddLiquidityWithNativeDenom` (same signatures) first compare the price of the pool between the native denom and the other denom with the pool's moving average, then call the original.
+
+- A pool is drifted when `|price − average| / average` is above the limit. Exactly at the limit is allowed. A pool without an average record, or without a price, counts as drifted.
+- `SafeCaptureAndSwapUserFee` uses `fee_max_price_drift`. When the preferred fee denom's pool drifted, the fee is charged in the native denom instead (the payer fails with the usual error if there is not enough of it). Without a preferred denom, with the native denom as preferred, or without a pool, it behaves like the original.
+- `SafeModuleSwapForNativeDenom` and `SafeModuleAddLiquidityWithNativeDenom` use `module_max_price_drift`. If the pool of any non-native coin drifted they return `ErrPoolPriceDrift` (code 4018) before moving any coin.
+- Maker/taker fees (`CaptureAndTryToSwapUserFeesOrSendItAsIs`) have no safe variant: the amounts are tiny and a check would slow order placement.
+
 ## User Dust
 Partial order fills can leave fractional coin amounts (dust) that are too small to settle. The module tracks dust per user address, and it accumulates across trades.
 

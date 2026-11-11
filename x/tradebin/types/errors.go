@@ -27,4 +27,5 @@ var (
 	ErrInvalidRoutes          = sdkerrors.Register(ModuleName, 4015, "invalid routes")
 	ErrInvalidPoolSwap        = sdkerrors.Register(ModuleName, 4016, "invalid pool swap")
 	ErrDenomHalted            = sdkerrors.Register(ModuleName, 4017, "denom is halted")
+	ErrPoolPriceDrift         = sdkerrors.Register(ModuleName, 4018, "pool price is too far from its moving average")
 )
