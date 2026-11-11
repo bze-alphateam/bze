@@ -308,9 +308,9 @@ func (suite *IntegrationTestSuite) TestRewardHooks_D25_RemovedSourceStaysPinnedF
 }
 
 // From voting_end on the tally is final: a yes voter who exits before the
-// settle no longer turns a passed proposal into a rejected one. The exit only
-// prunes the vote index; the ballot stays and the proposal passes. One second
-// earlier the same exit still takes the share out (see D19).
+// settle no longer turns a passed proposal into a rejected one. The ballot
+// keeps the share and its vote-index entry, and the proposal passes. One
+// second earlier the same exit still takes the share out (see D19).
 func (suite *IntegrationTestSuite) TestExitHook_TallyFrozenAtVotingEnd() {
 	s := suite.createStakeDao()
 	s.joinSr("1", memberA, 70)
@@ -325,7 +325,7 @@ func (suite *IntegrationTestSuite) TestExitHook_TallyFrozenAtVotingEnd() {
 	suite.endVoting(id, 0)
 	suite.Require().NoError(suite.k.StakingRewardHooks().AfterStakingRewardExit(suite.ctx, "1", memberA.String(), math.NewInt(70), stakeDenom))
 
-	suite.Require().False(suite.k.HasVoteIndex(suite.ctx, srSource, memberA, id))
+	suite.Require().True(suite.k.HasVoteIndex(suite.ctx, srSource, memberA, id))
 	after, found := suite.k.GetBallot(suite.ctx, id, memberA)
 	suite.Require().True(found)
 	suite.Require().Equal(ballot, after)
@@ -335,4 +335,28 @@ func (suite *IntegrationTestSuite) TestExitHook_TallyFrozenAtVotingEnd() {
 	status, err := suite.settle(id)
 	suite.Require().NoError(err)
 	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
+}
+
+// An exit before voting_end takes the share out of the ballot and removes its
+// vote-index entry together; the voter's other share keeps both.
+func (suite *IntegrationTestSuite) TestExitHook_DuringVotingRemovesShareAndIndex() {
+	s := suite.createStakeDao()
+	s.joinSr("1", memberA, 30)
+	s.joinDr(stakeDenom, memberA, 20)
+	suite.atBlock(10)
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+
+	suite.endVoting(id, -1)
+	suite.Require().NoError(suite.k.StakingRewardHooks().AfterStakingRewardExit(suite.ctx, "1", memberA.String(), math.NewInt(30), stakeDenom))
+
+	suite.Require().False(suite.k.HasVoteIndex(suite.ctx, srSource, memberA, id))
+	suite.Require().True(suite.k.HasVoteIndex(suite.ctx, drSource, memberA, id))
+	ballot, found := suite.k.GetBallot(suite.ctx, id, memberA)
+	suite.Require().True(found)
+	suite.Require().Equal([]types.BallotShare{{Source: string(drSource), Amount: math.NewInt(20)}}, ballot.Shares)
+	suite.requireTally(id, 20, 0, 0)
+	suite.requireInvariants(id, memberA)
+	suite.Require().Equal(1, suite.ballotReducedEvents())
 }
