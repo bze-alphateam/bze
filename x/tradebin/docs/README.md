@@ -53,7 +53,6 @@ While a denom is halted:
 A market or pool is halted iff its base **or** quote is halted. Both sides of a book are frozen: every fill has one party receiving the halted denom, so there is no "exit-only" direction on an order book. Un-halting lets resting orders resume matching and pools resume swapping — nothing else to do.
 
 ### Halt queries
-- `bzed query tradebin pool-price-average <pool-id>` – the moving average of a pool's price.
 - `bzed query tradebin halted-denoms` (REST `GET /bze/tradebin/halted_denoms`, paginated) — every halted denom, in store order.
 - `bzed query tradebin denom-halted <denom>` (REST `GET /bze/tradebin/denom_halted?denom=<denom>`) — `halted: true|false` for one denom. Over REST the denom goes in the query string because ibc/factory denoms contain `/`.
 - Indexers can follow the `DenomHaltedEvent` / `DenomUnhaltedEvent` typed events, emitted once per denom whose state actually changed.

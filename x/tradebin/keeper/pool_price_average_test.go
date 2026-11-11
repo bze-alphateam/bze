@@ -296,3 +296,58 @@ func (suite *IntegrationTestSuite) TestPoolPriceAverage_SeededByPoolSaves() {
 	suite.Require().True(found)
 	suite.Require().Equal(ppaDec("0.5"), rec.AvgPrice)
 }
+
+// A priced pool is emptied and the empty pool is saved again in a later block: nothing to fold or restart
+// from, so the record stays as it was.
+func (suite *IntegrationTestSuite) TestPoolPriceAverage_UnpricedSavesLeaveTheRecordUntouched() {
+	suite.k.SetLiquidityPool(suite.ppaAt(10), ppaPoolInts(100, 200))
+	suite.k.SetLiquidityPool(suite.ppaAt(11), ppaPoolInts(0, 0))
+	before := suite.ppaRecord(suite.ppaAt(11))
+	suite.Require().Equal(ppaDec("2"), before.AvgPrice)
+	suite.Require().Equal(int64(11), before.LastHeight)
+
+	suite.k.SetLiquidityPool(suite.ppaAt(12), ppaPoolInts(0, 0))
+	suite.Require().Equal(before, suite.ppaRecord(suite.ppaAt(12)))
+}
+
+// Half life 2, one block: the average moves by 1 - 2^(-1/2) of the gap. The expected value is computed
+// independently: 4 + (2 - 4) * 0.70710678118654752440 = 2.5857864376269049512.
+func (suite *IntegrationTestSuite) TestPoolPriceAverage_FoldsWithARealRoot() {
+	suite.ppaHalfLife(2)
+	suite.k.SetLiquidityPool(suite.ppaAt(10), ppaPoolInts(100, 200))
+	suite.k.SetLiquidityPool(suite.ppaAt(11), ppaPoolInts(100, 400))
+	suite.k.SetLiquidityPool(suite.ppaAt(12), ppaPoolInts(100, 400))
+
+	got := suite.ppaRecord(suite.ppaAt(12)).AvgPrice
+	want := ppaDec("2.585786437626904951")
+	suite.Require().True(got.Sub(want).Abs().LTE(ppaDec("0.0000000000000001")), "got %s", got)
+}
+
+// Exactly 20 half lives still fold: with half life 1 the old gap of 6 shrinks by 2^-20 (2^-20 = 9.5367431640625e-7):
+// 8 - 6 / 1048576 = 7.9999942779541015625. One block more and the average is the stored price.
+func (suite *IntegrationTestSuite) TestPoolPriceAverage_TwentyHalfLifeBoundary() {
+	suite.ppaHalfLife(1)
+	suite.k.SetLiquidityPool(suite.ppaAt(10), ppaPoolInts(100, 200))
+	suite.k.SetLiquidityPool(suite.ppaAt(11), ppaPoolInts(100, 800))
+
+	atLimit, found := suite.k.GetPoolPriceAverage(suite.ppaAt(31), ppaPool)
+	suite.Require().True(found)
+	// the exact value has 19 decimals; allow the one unit of rounding of the 18-decimal arithmetic
+	suite.Require().True(atLimit.Sub(ppaDec("7.999994277954101562")).Abs().LTE(ppaDec("0.000000000000000002")), "got %s", atLimit)
+	suite.Require().NotEqual(ppaDec("8"), atLimit)
+
+	pastLimit, found := suite.k.GetPoolPriceAverage(suite.ppaAt(32), ppaPool)
+	suite.Require().True(found)
+	suite.Require().Equal(ppaDec("8"), pastLimit)
+}
+
+// With the default half life of 20, 20 blocks land halfway between the average and the stored price.
+func (suite *IntegrationTestSuite) TestPoolPriceAverage_DefaultHalfLifeHalfway() {
+	suite.Require().Equal(uint64(20), suite.k.GetParams(suite.ctx).PoolPriceHalfLifeBlocks)
+	suite.k.SetLiquidityPool(suite.ppaAt(10), ppaPoolInts(100, 200))
+	suite.k.SetLiquidityPool(suite.ppaAt(11), ppaPoolInts(100, 400))
+
+	got, found := suite.k.GetPoolPriceAverage(suite.ppaAt(31), ppaPool)
+	suite.Require().True(found)
+	suite.Require().True(got.Sub(ppaDec("3")).Abs().LT(ppaDec("0.000000000001")), "got %s", got)
+}
