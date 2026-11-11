@@ -27,7 +27,7 @@ func (suite *IntegrationTestSuite) setDrMoneyInParams(maxPrizes uint32) {
 // expectFeeCapture wires the exact capture-and-swap -> fee collector pair for one fee.
 func (suite *IntegrationTestSuite) expectFeeCapture(acc sdk.AccAddress, fee sdk.Coins) {
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(suite.ctx, acc, fee, types.ModuleName).
+		SafeCaptureAndSwapUserFee(suite.ctx, acc, fee, types.ModuleName).
 		Return(fee, nil).Times(1)
 	suite.bank.EXPECT().
 		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, fee).
@@ -271,7 +271,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_IdsIncrement()
 	suite.richBalance(creator)
 	suite.expectFeeCapture(creator, drPrizeFee)
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(suite.ctx, creator, drScheduleFee, types.ModuleName).
+		SafeCaptureAndSwapUserFee(suite.ctx, creator, drScheduleFee, types.ModuleName).
 		Return(drScheduleFee, nil).Times(2)
 	suite.bank.EXPECT().
 		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, drScheduleFee).

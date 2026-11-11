@@ -33,7 +33,7 @@ const swapRoundUp = 3
 func (suite *IntegrationTestSuite) expectFeePaidInFeeToken(acc sdk.AccAddress, fee sdk.Coins) {
 	captured := fee.Add(sdk.NewCoin("ubze", math.NewInt(swapRoundUp)))
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(suite.ctx, acc, fee, types.ModuleName).
+		SafeCaptureAndSwapUserFee(suite.ctx, acc, fee, types.ModuleName).
 		Return(captured, nil).Times(1)
 	suite.bank.EXPECT().
 		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, captured).
@@ -43,7 +43,7 @@ func (suite *IntegrationTestSuite) expectFeePaidInFeeToken(acc sdk.AccAddress, f
 // expectFeeUnpayable wires a capture that fails the way the bank does when neither denom covers it.
 func (suite *IntegrationTestSuite) expectFeeUnpayable(acc sdk.AccAddress, fee sdk.Coins) {
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(suite.ctx, acc, fee, types.ModuleName).
+		SafeCaptureAndSwapUserFee(suite.ctx, acc, fee, types.ModuleName).
 		Return(nil, errors.Wrapf(sdkerrors.ErrInsufficientFunds, "spendable balance 0ubze is smaller than %s", fee)).
 		Times(1)
 }

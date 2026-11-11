@@ -73,7 +73,7 @@ func (suite *IntegrationTestSuite) expectNewDaoAccount(id uint64) {
 // for the given module. The bank keeper is never used for it.
 func (suite *IntegrationTestSuite) expectFee(destModule string) {
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(gomock.Any(), creatorAddr, sdk.NewCoins(types.DefaultDaoCreationFee), destModule).
+		SafeCaptureAndSwapUserFee(gomock.Any(), creatorAddr, sdk.NewCoins(types.DefaultDaoCreationFee), destModule).
 		Return(sdk.NewCoins(types.DefaultDaoCreationFee), nil)
 }
 
@@ -418,7 +418,7 @@ func (suite *IntegrationTestSuite) TestCreateDao_CustomFeeCaptured() {
 	suite.Require().NoError(suite.k.SetParams(suite.ctx, params))
 	suite.expectNewDaoAccount(1)
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(gomock.Any(), creatorAddr, sdk.NewCoins(sdk.NewInt64Coin("ubze", 1234)), burnerModule).
+		SafeCaptureAndSwapUserFee(gomock.Any(), creatorAddr, sdk.NewCoins(sdk.NewInt64Coin("ubze", 1234)), burnerModule).
 		Return(sdk.NewCoins(sdk.NewInt64Coin("ubze", 1200)), nil)
 
 	res, err := suite.msgServer.CreateDao(suite.ctx, validCreateDaoMsg())
@@ -456,7 +456,7 @@ func (suite *IntegrationTestSuite) TestCreateDao_InsufficientFunds() {
 	addr := daoAddress(1)
 	suite.acc.EXPECT().GetAccount(gomock.Any(), addr).Return(nil)
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(gomock.Any(), creatorAddr, sdk.NewCoins(types.DefaultDaoCreationFee), burnerModule).
+		SafeCaptureAndSwapUserFee(gomock.Any(), creatorAddr, sdk.NewCoins(types.DefaultDaoCreationFee), burnerModule).
 		Return(nil, sdkerrors.ErrInsufficientFunds)
 
 	res, err := suite.msgServer.CreateDao(suite.ctx, validCreateDaoMsg())

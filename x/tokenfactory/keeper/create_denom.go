@@ -92,7 +92,7 @@ func (k Keeper) chargeForCreateDenom(ctx sdk.Context, creatorAddr string) (err e
 			return err
 		}
 
-		capturedFee, err := k.tradeKeeper.CaptureAndSwapUserFee(ctx, accAddr, sdk.NewCoins(params.CreateDenomFee), types.ModuleName)
+		capturedFee, err := k.tradeKeeper.SafeCaptureAndSwapUserFee(ctx, accAddr, sdk.NewCoins(params.CreateDenomFee), types.ModuleName)
 		if err != nil {
 			return err
 		}

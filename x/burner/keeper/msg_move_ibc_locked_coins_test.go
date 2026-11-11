@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/bze-alphateam/bze/x/burner/types"
+	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -146,7 +147,7 @@ func (suite *IntegrationTestSuite) TestMsgServer_MoveIbcLockedCoins_AddLiquidity
 	suite.bank.EXPECT().GetBalance(suite.ctx, lockAddr, denom).Return(lockedBalance).Times(1)
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, lockedBalance).Return(true).Times(1)
 	suite.trade.EXPECT().
-		ModuleAddLiquidityWithNativeDenom(suite.ctx, types.BlackHoleModuleName, sdk.NewCoins(lockedBalance)).
+		SafeModuleAddLiquidityWithNativeDenom(suite.ctx, types.BlackHoleModuleName, sdk.NewCoins(lockedBalance)).
 		Return(sdk.Coins{}, sdk.Coins{}, errors.New("liquidity error")).
 		Times(1)
 
@@ -178,7 +179,7 @@ func (suite *IntegrationTestSuite) TestMsgServer_MoveIbcLockedCoins_NoLiquidityA
 	suite.bank.EXPECT().GetBalance(suite.ctx, lockAddr, denom).Return(lockedBalance).Times(1)
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, lockedBalance).Return(true).Times(1)
 	suite.trade.EXPECT().
-		ModuleAddLiquidityWithNativeDenom(suite.ctx, types.BlackHoleModuleName, sdk.NewCoins(lockedBalance)).
+		SafeModuleAddLiquidityWithNativeDenom(suite.ctx, types.BlackHoleModuleName, sdk.NewCoins(lockedBalance)).
 		Return(emptyCoins, emptyCoins, nil).
 		Times(1)
 
@@ -214,7 +215,7 @@ func (suite *IntegrationTestSuite) TestMsgServer_MoveIbcLockedCoins_SuccessNoRef
 	suite.bank.EXPECT().GetBalance(suite.ctx, lockAddr, denom).Return(lockedBalance).Times(1)
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, lockedBalance).Return(true).Times(1)
 	suite.trade.EXPECT().
-		ModuleAddLiquidityWithNativeDenom(suite.ctx, types.BlackHoleModuleName, sdk.NewCoins(lockedBalance)).
+		SafeModuleAddLiquidityWithNativeDenom(suite.ctx, types.BlackHoleModuleName, sdk.NewCoins(lockedBalance)).
 		Return(addedCoins, refundedCoins, nil).
 		Times(1)
 
@@ -253,7 +254,7 @@ func (suite *IntegrationTestSuite) TestMsgServer_MoveIbcLockedCoins_SuccessWithN
 	suite.bank.EXPECT().GetBalance(suite.ctx, lockAddr, denom).Return(lockedBalance).Times(1)
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, lockedBalance).Return(true).Times(1)
 	suite.trade.EXPECT().
-		ModuleAddLiquidityWithNativeDenom(suite.ctx, types.BlackHoleModuleName, sdk.NewCoins(lockedBalance)).
+		SafeModuleAddLiquidityWithNativeDenom(suite.ctx, types.BlackHoleModuleName, sdk.NewCoins(lockedBalance)).
 		Return(addedCoins, refundedCoins, nil).
 		Times(1)
 
@@ -300,7 +301,7 @@ func (suite *IntegrationTestSuite) TestMsgServer_MoveIbcLockedCoins_SuccessRefun
 	suite.bank.EXPECT().GetBalance(suite.ctx, lockAddr, denom).Return(lockedBalance).Times(1)
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, lockedBalance).Return(true).Times(1)
 	suite.trade.EXPECT().
-		ModuleAddLiquidityWithNativeDenom(suite.ctx, types.BlackHoleModuleName, sdk.NewCoins(lockedBalance)).
+		SafeModuleAddLiquidityWithNativeDenom(suite.ctx, types.BlackHoleModuleName, sdk.NewCoins(lockedBalance)).
 		Return(addedCoins, refundedCoins, nil).
 		Times(1)
 
@@ -341,7 +342,7 @@ func (suite *IntegrationTestSuite) TestMsgServer_MoveIbcLockedCoins_SendRefundEr
 	suite.bank.EXPECT().GetBalance(suite.ctx, lockAddr, denom).Return(lockedBalance).Times(1)
 	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, lockedBalance).Return(true).Times(1)
 	suite.trade.EXPECT().
-		ModuleAddLiquidityWithNativeDenom(suite.ctx, types.BlackHoleModuleName, sdk.NewCoins(lockedBalance)).
+		SafeModuleAddLiquidityWithNativeDenom(suite.ctx, types.BlackHoleModuleName, sdk.NewCoins(lockedBalance)).
 		Return(addedCoins, refundedCoins, nil).
 		Times(1)
 
@@ -356,4 +357,35 @@ func (suite *IntegrationTestSuite) TestMsgServer_MoveIbcLockedCoins_SendRefundEr
 	suite.Require().Error(err)
 	suite.Require().Nil(res)
 	suite.Require().Contains(err.Error(), "failed to send refunded native coins to burner module")
+}
+
+// When the pool price drifted, the message fails and the coin stays in the black hole, so it can be moved later.
+func (suite *IntegrationTestSuite) TestMsgServer_MoveIbcLockedCoins_PriceDrift() {
+	denom := "ibc/ABC123"
+	msg := &types.MsgMoveIbcLockedCoins{
+		Creator: sdk.AccAddress("creator").String(),
+		Denom:   denom,
+	}
+
+	lockAddr := sdk.AccAddress("blackhole___________")
+	lockAcc := authtypes.ModuleAccount{
+		BaseAccount: &authtypes.BaseAccount{Address: lockAddr.String()},
+		Name:        types.BlackHoleModuleName,
+	}
+	lockedBalance := sdk.NewInt64Coin(denom, 1000)
+
+	suite.bank.EXPECT().HasSupply(suite.ctx, denom).Return(true).Times(1)
+	suite.acc.EXPECT().GetModuleAccount(suite.ctx, types.BlackHoleModuleName).Return(&lockAcc).Times(1)
+	suite.bank.EXPECT().GetBalance(suite.ctx, lockAddr, denom).Return(lockedBalance).Times(1)
+	suite.trade.EXPECT().CanSwapForNativeDenom(suite.ctx, lockedBalance).Return(true).Times(1)
+	suite.trade.EXPECT().
+		SafeModuleAddLiquidityWithNativeDenom(suite.ctx, types.BlackHoleModuleName, sdk.NewCoins(lockedBalance)).
+		Return(nil, nil, tradebintypes.ErrPoolPriceDrift).
+		Times(1)
+	// no bank movement is expected: a call would fail the test
+
+	res, err := suite.msgServer.MoveIbcLockedCoins(suite.ctx, msg)
+
+	suite.Require().Nil(res)
+	suite.Require().ErrorIs(err, tradebintypes.ErrPoolPriceDrift)
 }

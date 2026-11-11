@@ -26,17 +26,17 @@ func (suite *IntegrationTestSuite) TestConvertCollectedFees_FailingCoinDoesNotBl
 		suite.tradeMock.EXPECT().CanSwapForNativeDenom(gomock.Any(), coin).Return(true).Times(1)
 	}
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(a)).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(a)).
 		Return(sdk.NewInt64Coin(denomBze, 10), nil).
 		Times(1)
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(b)).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(b)).
 		DoAndReturn(func(_ sdk.Context, _ string, _ sdk.Coins) (sdk.Coin, error) {
 			panic("integer overflow")
 		}).
 		Times(1)
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(c)).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(c)).
 		Return(sdk.NewInt64Coin(denomBze, 30), nil).
 		Times(1)
 
@@ -76,11 +76,11 @@ func (suite *IntegrationTestSuite) TestConvertCollectedFees_SwapErrorKeepsCoinAn
 		suite.tradeMock.EXPECT().CanSwapForNativeDenom(gomock.Any(), coin).Return(true).Times(1)
 	}
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(a)).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(a)).
 		Return(sdk.Coin{}, errors.New("swap failed")).
 		Times(1)
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(b)).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(b)).
 		Return(sdk.NewInt64Coin(denomBze, 20), nil).
 		Times(1)
 
@@ -118,11 +118,11 @@ func (suite *IntegrationTestSuite) TestConvertCommunityPoolFees_FailingCoinDoesN
 		Times(1)
 	suite.tradeMock.EXPECT().CanSwapForNativeDenom(gomock.Any(), c).Return(true).Times(1)
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(a)).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(a)).
 		Return(sdk.NewInt64Coin(denomBze, 10), nil).
 		Times(1)
 	suite.tradeMock.EXPECT().
-		ModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(c)).
+		SafeModuleSwapForNativeDenom(gomock.Any(), types.CpFeeCollector, sdk.NewCoins(c)).
 		Return(sdk.NewInt64Coin(denomBze, 30), nil).
 		Times(1)
 

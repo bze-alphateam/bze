@@ -240,7 +240,7 @@ func (suite *IntegrationTestSuite) TestSettleProposal_NestingDepth() {
 func (suite *IntegrationTestSuite) expectDaoCreatesDao(payer sdk.AccAddress, id uint64) {
 	suite.expectNewDaoAccount(id)
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(gomock.Any(), payer, sdk.NewCoins(types.DefaultDaoCreationFee), burnerModule).
+		SafeCaptureAndSwapUserFee(gomock.Any(), payer, sdk.NewCoins(types.DefaultDaoCreationFee), burnerModule).
 		Return(sdk.NewCoins(types.DefaultDaoCreationFee), nil)
 }
 

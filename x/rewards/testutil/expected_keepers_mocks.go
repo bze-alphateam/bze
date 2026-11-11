@@ -201,21 +201,6 @@ func (m *MockTradingKeeper) EXPECT() *MockTradingKeeperMockRecorder {
 	return m.recorder
 }
 
-// CaptureAndSwapUserFee mocks base method.
-func (m *MockTradingKeeper) CaptureAndSwapUserFee(ctx types.Context, payer types.AccAddress, fee types.Coins, toModule string) (types.Coins, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CaptureAndSwapUserFee", ctx, payer, fee, toModule)
-	ret0, _ := ret[0].(types.Coins)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CaptureAndSwapUserFee indicates an expected call of CaptureAndSwapUserFee.
-func (mr *MockTradingKeeperMockRecorder) CaptureAndSwapUserFee(ctx, payer, fee, toModule any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CaptureAndSwapUserFee", reflect.TypeOf((*MockTradingKeeper)(nil).CaptureAndSwapUserFee), ctx, payer, fee, toModule)
-}
-
 // MarketExists mocks base method.
 func (m *MockTradingKeeper) MarketExists(ctx types.Context, marketId string) bool {
 	m.ctrl.T.Helper()
@@ -228,6 +213,21 @@ func (m *MockTradingKeeper) MarketExists(ctx types.Context, marketId string) boo
 func (mr *MockTradingKeeperMockRecorder) MarketExists(ctx, marketId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarketExists", reflect.TypeOf((*MockTradingKeeper)(nil).MarketExists), ctx, marketId)
+}
+
+// SafeCaptureAndSwapUserFee mocks base method.
+func (m *MockTradingKeeper) SafeCaptureAndSwapUserFee(ctx types.Context, payer types.AccAddress, fee types.Coins, toModule string) (types.Coins, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SafeCaptureAndSwapUserFee", ctx, payer, fee, toModule)
+	ret0, _ := ret[0].(types.Coins)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SafeCaptureAndSwapUserFee indicates an expected call of SafeCaptureAndSwapUserFee.
+func (mr *MockTradingKeeperMockRecorder) SafeCaptureAndSwapUserFee(ctx, payer, fee, toModule any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SafeCaptureAndSwapUserFee", reflect.TypeOf((*MockTradingKeeper)(nil).SafeCaptureAndSwapUserFee), ctx, payer, fee, toModule)
 }
 
 // MockEpochKeeper is a mock of EpochKeeper interface.

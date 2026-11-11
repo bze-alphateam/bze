@@ -61,7 +61,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_CreateDenomReward_Su
 		Return(sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(1_000_000)))).Times(1)
 	// exact fee flows through capture-and-swap, then module->module to the fee collector
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(suite.ctx, creator, fee, types.ModuleName).
+		SafeCaptureAndSwapUserFee(suite.ctx, creator, fee, types.ModuleName).
 		Return(fee, nil).Times(1)
 	suite.bank.EXPECT().
 		SendCoinsFromModuleToModule(suite.ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, fee).
@@ -164,7 +164,7 @@ func (suite *IntegrationTestSuite) TestMsgServerDenomReward_CreateDenomReward_In
 	}))
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ubze").Return(true).Times(1)
-	suite.trade.EXPECT().CaptureAndSwapUserFee(suite.ctx, creator, fee, types.ModuleName).
+	suite.trade.EXPECT().SafeCaptureAndSwapUserFee(suite.ctx, creator, fee, types.ModuleName).
 		Return(nil, sdkerrors.ErrInsufficientFunds).Times(1)
 
 	msg := types.NewMsgCreateDenomReward(creator.String(), "ubze")

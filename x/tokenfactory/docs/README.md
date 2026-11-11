@@ -123,4 +123,4 @@ Runbook:
 
 ### v8.1.0
 - Subdenom validation now disallows slash (`/`) characters to prevent ambiguous denom paths
-- Creation fee routing changed from `FundCommunityPool` (distribution keeper) to `CaptureAndSwapUserFee` (trade keeper) with forwarding to fee collector
+- Creation fee routing changed from `FundCommunityPool` (distribution keeper) to `CaptureAndSwapUserFee` (trade keeper, price-checked: `SafeCaptureAndSwapUserFee`) with forwarding to fee collector

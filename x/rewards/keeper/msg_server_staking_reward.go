@@ -482,7 +482,7 @@ func (k msgServer) captureCreationFee(ctx sdk.Context, payer sdk.AccAddress, fee
 		return errors.Wrapf(sdkerrors.ErrInvalidRequest, "trade keeper is not available")
 	}
 
-	capturedFee, err := k.tradeKeeper.CaptureAndSwapUserFee(ctx, payer, fee, types.ModuleName)
+	capturedFee, err := k.tradeKeeper.SafeCaptureAndSwapUserFee(ctx, payer, fee, types.ModuleName)
 	if err != nil {
 		return errors.Wrapf(err, "could not pay the fee %s", fee)
 	}
