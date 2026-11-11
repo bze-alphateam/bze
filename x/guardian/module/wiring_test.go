@@ -15,7 +15,7 @@ import (
 // The module's services go through the real SDK plumbing: both messages are
 // routed by the MsgServiceRouter and Params by the GRPCQueryRouter.
 func TestRegisterServices_RoutesMsgsAndQuery(t *testing.T) {
-	k, _ := keepertest.GuardianKeeper(t)
+	k, _ := keepertest.GuardianKeeper(t, nil)
 	cdc := keepertest.GuardianCodec()
 
 	msr := baseapp.NewMsgServiceRouter()

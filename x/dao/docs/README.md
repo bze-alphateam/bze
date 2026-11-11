@@ -202,6 +202,8 @@ The import checks the module's invariants and fails, naming the one broken:
 
 Validation also requires each DAO at its derived address, valid metadata and config, an electorate that fits the type (members only in static-list DAOs, never the DAO itself, sources only in stake DAOs), member records only for current members of static-list DAOs, and for proposals an existing DAO, a known status, a valid proposer, non-negative tallies and denominator and a valid deposit. The param bounds (periods, member and source caps) are not checked: params can change after a DAO is created, and the DAO keeps its settings.
 
+**Export and restart (operators).** The module stores absolute block heights: join records and each proposal's `submit_height`, which decide whether stake is eligible to vote. A chain restarted from an export (including a zero-height export) must start at `initial_height` = the exported height + 1. A new chain that starts again from height 1 would compare new heights against the old ones and count or drop stake on the wrong side of a proposal's submit height.
+
 ## Parameters
 | Parameter | Default | Meaning |
 | --- | --- | --- |

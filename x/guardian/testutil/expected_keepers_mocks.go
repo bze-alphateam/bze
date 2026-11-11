@@ -10,6 +10,7 @@
 package testutil
 
 import (
+	context "context"
 	reflect "reflect"
 
 	types "github.com/cosmos/cosmos-sdk/types"
@@ -118,4 +119,42 @@ func (m *MockRateLimitKeeper) SetRateLimit(ctx types.Context, rateLimit types0.R
 func (mr *MockRateLimitKeeperMockRecorder) SetRateLimit(ctx, rateLimit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRateLimit", reflect.TypeOf((*MockRateLimitKeeper)(nil).SetRateLimit), ctx, rateLimit)
+}
+
+// MockBankKeeper is a mock of BankKeeper interface.
+type MockBankKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockBankKeeperMockRecorder
+	isgomock struct{}
+}
+
+// MockBankKeeperMockRecorder is the mock recorder for MockBankKeeper.
+type MockBankKeeperMockRecorder struct {
+	mock *MockBankKeeper
+}
+
+// NewMockBankKeeper creates a new mock instance.
+func NewMockBankKeeper(ctrl *gomock.Controller) *MockBankKeeper {
+	mock := &MockBankKeeper{ctrl: ctrl}
+	mock.recorder = &MockBankKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockBankKeeper) EXPECT() *MockBankKeeperMockRecorder {
+	return m.recorder
+}
+
+// HasSupply mocks base method.
+func (m *MockBankKeeper) HasSupply(ctx context.Context, denom string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasSupply", ctx, denom)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// HasSupply indicates an expected call of HasSupply.
+func (mr *MockBankKeeperMockRecorder) HasSupply(ctx, denom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasSupply", reflect.TypeOf((*MockBankKeeper)(nil).HasSupply), ctx, denom)
 }

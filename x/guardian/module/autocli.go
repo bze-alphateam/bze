@@ -52,7 +52,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "block-denom [denom]",
 					Short:     "Stop every IBC transfer of a denom, on every channel",
 					Long: "Puts the denom on the rate limit blacklist: every ICS-20 transfer of it is refused in both directions on every channel, " +
-						"whether or not it has a rate limit. Signed by the guardian or the governance authority; only a governance proposal can lift it.",
+						"whether or not it has a rate limit. The denom must exist on chain, spelled exactly as stored (ibc/ followed by the upper-case hash for an IBC token). " +
+						"Signed by the guardian or the governance authority; only a governance proposal can lift it.",
 					Example:        "bzed tx guardian block-denom ibc/ABC... --from guardian",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
 				},

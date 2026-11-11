@@ -1,6 +1,8 @@
 package types
 
 import (
+	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ratelimittypes "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/types"
 )
@@ -17,4 +19,10 @@ type RateLimitKeeper interface {
 	RemoveDenomFromBlacklist(ctx sdk.Context, denom string)
 	IsDenomBlacklisted(ctx sdk.Context, denom string) bool
 	GetAllBlacklistedDenoms(ctx sdk.Context) []string
+}
+
+// BankKeeper is the part of the bank keeper x/guardian uses: it only checks
+// that a denom exists on chain before blocking it.
+type BankKeeper interface {
+	HasSupply(ctx context.Context, denom string) bool
 }

@@ -7,6 +7,7 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	ratelimitkeeper "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/keeper"
 	ratelimittypes "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
@@ -126,6 +127,7 @@ func TestGuardian_BlockDenomStopsBothDirectionsAndOnlyGovernanceUnblocks(t *test
 	a, ctx := newRateLimitApp(t)
 	require.NoError(t, a.GuardianKeeper.SetParams(ctx, guardiantypes.NewParams(guardianSigner)))
 	const denom = "ibc/6490A7EAB61059BFC1CDDEB05917DD70BDF3A611654162A1A47DB930D40D8AF4"
+	require.NoError(t, a.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewInt64Coin(denom, 1))))
 
 	require.False(t, a.RatelimitKeeper.IsDenomBlacklisted(ctx, denom))
 	require.NoError(t, handle(a, ctx, &guardiantypes.MsgBlockDenom{Signer: guardianSigner, Denom: denom}))
@@ -172,4 +174,27 @@ func TestGuardian_BlockDenomLeavesTheRateLimitUntouched(t *testing.T) {
 	after, found := a.RatelimitKeeper.GetRateLimit(ctx, rlDenom, rlChannel)
 	require.True(t, found)
 	require.Equal(t, before, after)
+}
+
+// The guardian keeper is wired to the real bank keeper: a denom without a
+// supply on chain, here other spellings of an existing IBC denom, is refused
+// and stays off the blacklist, while the existing denom is blocked.
+func TestGuardian_BlockDenomRefusesDenomsWithoutSupply(t *testing.T) {
+	a, ctx := newRateLimitApp(t)
+	require.NoError(t, a.GuardianKeeper.SetParams(ctx, guardiantypes.NewParams(guardianSigner)))
+	const denom = "ibc/6490A7EAB61059BFC1CDDEB05917DD70BDF3A611654162A1A47DB930D40D8AF4"
+	require.NoError(t, a.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(sdk.NewInt64Coin(denom, 1))))
+
+	for _, other := range []string{
+		"ibc/6490a7eab61059bfc1cddeb05917dd70bdf3a611654162a1a47db930d40d8af4",
+		"uusdc",
+		"transfer/channel-3/uusdc",
+	} {
+		require.ErrorIs(t, handle(a, ctx, &guardiantypes.MsgBlockDenom{Signer: guardianSigner, Denom: other}), guardiantypes.ErrDenomNotFound, other)
+		require.False(t, a.RatelimitKeeper.IsDenomBlacklisted(ctx, other), other)
+	}
+	require.Empty(t, a.RatelimitKeeper.GetAllBlacklistedDenoms(ctx))
+
+	require.NoError(t, handle(a, ctx, &guardiantypes.MsgBlockDenom{Signer: guardianSigner, Denom: denom}))
+	require.Equal(t, []string{denom}, a.RatelimitKeeper.GetAllBlacklistedDenoms(ctx))
 }

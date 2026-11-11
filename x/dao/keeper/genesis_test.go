@@ -133,3 +133,38 @@ func (suite *IntegrationTestSuite) TestGenesis_JoinRecordOfUnpinnedSource() {
 	dao.InitGenesis(freshCtx, &fresh, *exported)
 	suite.Require().Equal(exported, dao.ExportGenesis(freshCtx, &fresh))
 }
+
+// An exit after voting_end and before the settle keeps the ballot's share and
+// its vote-index entry, so the state exported in that window passes the
+// genesis checks and imports into a fresh keeper. The settle afterwards gives
+// the same outcome as without the exit.
+func (suite *IntegrationTestSuite) TestGenesis_ExitAfterVotingEndExportsValidState() {
+	s := suite.createStakeDao()
+	s.joinSr("1", memberA, 70)
+	s.joinDr(stakeDenom, memberB, 20)
+	suite.atBlock(10)
+	id, err := suite.submit(memberA, 1, false)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+	suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_NO))
+
+	suite.endVoting(id, 0)
+	delete(s.sr["1"], memberA.String())
+	suite.Require().NoError(suite.k.StakingRewardHooks().AfterStakingRewardExit(suite.ctx, "1", memberA.String(), math.NewInt(70), stakeDenom))
+
+	exported := dao.ExportGenesis(suite.ctx, suite.k)
+	suite.Require().NoError(exported.Validate())
+	suite.Require().True(suite.k.HasVoteIndex(suite.ctx, srSource, memberA, id))
+	suite.requireInvariants(id, memberA, memberB)
+	suite.Require().Contains(exported.VoteIndex, types.VoteIndexEntry{Source: string(srSource), Address: memberA.String(), ProposalId: id})
+
+	fresh, freshCtx := keepertest.DaoKeeper(suite.T(), keepertest.DaoCodec(), nil, nil, testutil.NewMockBankKeeper(gomock.NewController(suite.T())), nil, nil)
+	suite.Require().NotPanics(func() { dao.InitGenesis(freshCtx, &fresh, *exported) })
+	suite.Require().Equal(exported, dao.ExportGenesis(freshCtx, &fresh))
+
+	status, err := suite.settle(id)
+	suite.Require().NoError(err)
+	suite.Require().Equal(types.ProposalStatus_EXECUTED, status)
+	suite.requireTally(id, 70, 20, 0)
+	suite.Require().NoError(dao.ExportGenesis(suite.ctx, suite.k).Validate())
+}

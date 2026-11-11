@@ -64,10 +64,6 @@ func (k Keeper) validateCreateDenom(ctx sdk.Context, creatorAddr string, subdeno
 		return "", fmt.Errorf("temporary error until IBC bug is sorted out, can't create subdenoms that are the same as a native denom")
 	}
 
-	if strings.Contains(subdenom, "_") {
-		return "", types.ErrInvalidSubdenom
-	}
-
 	if err := types.ValidateSubdenom(subdenom); err != nil {
 		return "", err
 	}

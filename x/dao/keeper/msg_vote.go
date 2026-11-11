@@ -122,17 +122,23 @@ func addToTally(proposal *types.Proposal, option types.VoteOption, amount math.I
 }
 
 // reduceBallots takes the source's share out of the address's ballots on
-// proposals still being voted on, after the address left the source. From
-// voting_end on the tally is final: an exit no longer changes it, so nobody
-// can turn a decided outcome before the settle. Vote-index entries of the
-// other proposals are only deleted (I6). Missing state is skipped: the Exit
-// hooks that call it must not fail.
+// proposals still being voted on, after the address left the source, together
+// with its vote-index entry. From voting_end on the tally is final: an exit no
+// longer changes it, so nobody can turn a decided outcome before the settle;
+// the share and its vote-index entry both stay (I6 holds for every share of a
+// VOTING proposal). Vote-index entries of proposals no longer in voting are
+// only deleted. Missing state is skipped: the Exit hooks that call it must
+// not fail.
 func (k Keeper) reduceBallots(ctx sdk.Context, source []byte, addr sdk.AccAddress) {
 	for _, proposalId := range k.votedProposals(ctx, source, addr) {
-		k.removeVoteIndex(ctx, source, addr, proposalId)
-
 		proposal, found := k.GetProposal(ctx, proposalId)
-		if !found || proposal.Status != types.ProposalStatus_VOTING || proposal.VotingEnded(ctx.BlockTime()) {
+		if found && proposal.Status == types.ProposalStatus_VOTING && proposal.VotingEnded(ctx.BlockTime()) {
+			// the tally is final: the share stays, so its index entry stays too
+			continue
+		}
+
+		k.removeVoteIndex(ctx, source, addr, proposalId)
+		if !found || proposal.Status != types.ProposalStatus_VOTING {
 			continue
 		}
 

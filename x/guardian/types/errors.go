@@ -17,4 +17,5 @@ var (
 	ErrAlreadyBlocked        = sdkerrors.Register(ModuleName, 1106, "denom is already blocked")
 	ErrNotBlocked            = sdkerrors.Register(ModuleName, 1107, "denom is not blocked")
 	ErrInvalidDenom          = sdkerrors.Register(ModuleName, 1108, "invalid denom")
+	ErrDenomNotFound         = sdkerrors.Register(ModuleName, 1109, "denom does not exist on chain")
 )

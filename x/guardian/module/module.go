@@ -157,6 +157,8 @@ type ModuleInputs struct {
 	Cdc          codec.Codec
 	Config       *modulev1.Module
 	Logger       log.Logger
+
+	BankKeeper types.BankKeeper
 }
 
 type ModuleOutputs struct {
@@ -177,6 +179,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.StoreService,
 		in.Logger,
 		authority.String(),
+		in.BankKeeper,
 	)
 
 	m := NewAppModule(in.Cdc, &k)
