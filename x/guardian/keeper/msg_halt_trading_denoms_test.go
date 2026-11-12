@@ -172,31 +172,52 @@ func TestHaltTradingDenoms_NativeDenomIsRefused(t *testing.T) {
 	}
 }
 
-// An invalid list is refused before the signer or tradebin is looked at: the
-// handler runs ValidateBasic itself, for messages executed by x/gov or x/authz.
+// An invalid list from the guardian is refused before tradebin is looked
+// at: the handler runs ValidateBasic itself, for messages executed by x/gov
+// or x/authz.
 func TestHaltTradingDenoms_InvalidListIsRefused(t *testing.T) {
-	for name, denoms := range map[string][]string{
-		"empty":     {},
-		"invalid":   {"u token"},
-		"duplicate": {haltTokenA, haltTokenB, haltTokenA},
-		"too many":  manyDenoms(tradebintypes.MaxDenomsPerHaltMsg + 1),
+	for name, c := range map[string]struct {
+		denoms []string
+		reason string
+	}{
+		"empty":     {[]string{}, "no denoms provided"},
+		"invalid":   {[]string{"u token"}, `invalid denom "u token"`},
+		"duplicate": {[]string{haltTokenA, haltTokenB, haltTokenA}, "duplicate denom " + haltTokenA},
+		"too many":  {manyDenoms(tradebintypes.MaxDenomsPerHaltMsg + 1), "at most 1000 denoms per message, got 1001"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			e := newHaltEnv(t)
 
-			_, err := e.msgServer.HaltTradingDenoms(e.ctx, haltMsg(guardianAddr, denoms...))
+			_, err := e.msgServer.HaltTradingDenoms(e.ctx, haltMsg(guardianAddr, c.denoms...))
 			require.ErrorIs(t, err, types.ErrInvalidDenom)
+			require.ErrorContains(t, err, c.reason)
 			require.Empty(t, e.ctx.EventManager().Events())
 		})
 	}
 }
 
-func TestHaltTradingDenoms_InvalidSignerIsRefused(t *testing.T) {
-	e := newHaltEnv(t)
+// The signer is checked before the message body, as in tradebin's
+// MsgHaltDenoms handler: a stranger, or an address that does not decode, is
+// unauthorized even when the denoms are invalid too.
+func TestHaltTradingDenoms_SignerIsCheckedFirst(t *testing.T) {
+	for name, signer := range map[string]string{"stranger": strangerAddr, "not an address": "nope", "empty": ""} {
+		for list, denoms := range map[string][]string{
+			"valid":     {haltTokenA},
+			"empty":     {},
+			"invalid":   {"u token"},
+			"duplicate": {haltTokenA, haltTokenA},
+			"native":    {haltNative},
+		} {
+			t.Run(name+"/"+list, func(t *testing.T) {
+				e := newHaltEnv(t)
 
-	_, err := e.msgServer.HaltTradingDenoms(e.ctx, haltMsg("nope", haltTokenA))
-	require.Error(t, err)
-	require.Empty(t, e.ctx.EventManager().Events())
+				_, err := e.msgServer.HaltTradingDenoms(e.ctx, haltMsg(signer, denoms...))
+				require.ErrorIs(t, err, types.ErrUnauthorized)
+				require.NotErrorIs(t, err, types.ErrInvalidDenom)
+				require.Empty(t, e.ctx.EventManager().Events())
+			})
+		}
+	}
 }
 
 // Without a tradebin keeper the message fails instead of panicking.

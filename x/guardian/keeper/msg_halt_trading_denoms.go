@@ -20,12 +20,14 @@ import (
 // The guardian or the governance authority can sign it. Lifting a halt is
 // left to governance, through tradebin's MsgUnhaltDenoms.
 func (k msgServer) HaltTradingDenoms(goCtx context.Context, msg *types.MsgHaltTradingDenoms) (*types.MsgHaltTradingDenomsResponse, error) {
-	if err := msg.ValidateBasic(); err != nil {
+	// the signer first, as tradebin's MsgHaltDenoms handler does: any other
+	// account is refused as unauthorized whatever the message carries
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if err := k.authorize(ctx, msg.Signer); err != nil {
 		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	if err := k.authorize(ctx, msg.Signer); err != nil {
+	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
 	}
 

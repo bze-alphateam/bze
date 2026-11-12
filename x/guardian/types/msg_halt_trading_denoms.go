@@ -3,6 +3,7 @@ package types
 import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
 )
@@ -17,7 +18,7 @@ var _ sdk.Msg = &MsgHaltTradingDenoms{}
 // decoder.
 func (m *MsgHaltTradingDenoms) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
-		return errorsmod.Wrap(err, "invalid signer address")
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid signer address: %s", err)
 	}
 
 	if len(m.Denoms) == 0 {
