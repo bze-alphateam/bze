@@ -84,6 +84,7 @@ derived from it. History older than v8.0.0 lives in the
 
 ### Bug Fixes
 
+* (x/burner) [#231](https://github.com/bze-alphateam/bze/pull/231) A winning raffle ticket is only paid when the raffle's pot and total won are updated with it: when the stored total won can't be parsed, the ticket is removed without a payout, like a ticket whose pot can't be parsed. Before, the winner was paid and the pot and total won were left unchanged.
 * (x/tradebin) [#149](https://github.com/bze-alphateam/bze/pull/149) An `AddLiquidity` refused by its `min_lp_tokens` slippage guard now always fails with `tradebin` code 4014 "resulted amount too low" and the exact minted amount in the log. When the deposit minted more LP than fits a uint64 (about 1.8e19), formatting the message panicked, so the tx failed with a recovered panic that clients could not tell apart from other failures. No state changed in either case.
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.
 * (x/rewards) [#143](https://github.com/bze-alphateam/bze/pull/143) `MsgUpdateDenomRewardSchedule` checks that the extra days are at most 36500 before it computes the extra budget. A handler reached without `ValidateBasic` used to panic on a math overflow, which turned into a failed transaction. It now returns the duration error. Only the error changes: the same transactions fail as before.
