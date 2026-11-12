@@ -20,7 +20,8 @@ func (k *Keeper) SetUpgradeKeeper(upgradeKeeper types.UpgradeKeeper) {
 // the usual "UPGRADE NEEDED" message until it runs a binary with an upgrade
 // handler for the plan name, or until the validators skip the height with
 // --unsafe-skip-upgrades. x/upgrade keeps one plan, so this replaces any plan
-// already scheduled. There is no message to undo it: a cancel would need a
+// already scheduled. The plan info is the constant HaltPlanInfo, never the
+// reason (see HaltPlanInfo). There is no message to undo it: a cancel would need a
 // governance proposal to pass within the same block.
 func (k msgServer) HaltChain(goCtx context.Context, msg *types.MsgHaltChain) (*types.MsgHaltChainResponse, error) {
 	if err := msg.ValidateBasic(); err != nil {
@@ -40,7 +41,7 @@ func (k msgServer) HaltChain(goCtx context.Context, msg *types.MsgHaltChain) (*t
 	plan := upgradetypes.Plan{
 		Name:   types.HaltPlanName(height),
 		Height: height,
-		Info:   msg.Reason,
+		Info:   types.HaltPlanInfo,
 	}
 	if err := k.upgradeKeeper.ScheduleUpgrade(ctx, plan); err != nil {
 		return nil, err

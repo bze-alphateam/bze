@@ -42,7 +42,7 @@ func TestGuardian_HaltChainReplacesThePlan(t *testing.T) {
 
 	plan, err := bApp.UpgradeKeeper.GetUpgradePlan(ctx)
 	require.NoError(t, err)
-	require.Equal(t, upgradetypes.Plan{Name: "emergency-halt-501", Height: haltAt + 1, Info: "incident"}, plan)
+	require.Equal(t, upgradetypes.Plan{Name: "emergency-halt-501", Height: haltAt + 1, Info: guardiantypes.HaltPlanInfo}, plan)
 }
 
 // A stranger is refused through the router and the plan is left as it was.

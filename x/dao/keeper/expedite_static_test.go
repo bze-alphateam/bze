@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/bze-alphateam/bze/x/dao/types"
@@ -92,4 +93,36 @@ func (suite *IntegrationTestSuite) TestSettleProposal_StakeDaoKeepsExpediteDelay
 	suite.requireLiveStatus(id, false, 0, false)
 	_, err = suite.settle(id)
 	suite.Require().ErrorIs(err, types.ErrExpediteTooEarly)
+}
+
+// Fail closed: a proposal whose DAO record cannot be found keeps the delay,
+// so the exemption only applies to a DAO known to be a static list.
+func (suite *IntegrationTestSuite) TestSettleProposal_MissingDaoKeepsExpediteDelay() {
+	suite.setExpediteDelay(time.Hour)
+	now := suite.ctx.BlockTime().Unix()
+	suite.k.SetAllProposals(suite.ctx, []types.Proposal{{
+		Id:                1,
+		DaoId:             7,
+		Proposer:          memberA.String(),
+		Expedited:         true,
+		Status:            types.ProposalStatus_VOTING,
+		SubmitTime:        now,
+		VotingEnd:         now + int64((24 * time.Hour).Seconds()),
+		PinnedConfig:      validConfig(),
+		PinnedDenominator: math.NewInt(2),
+		Yes:               math.NewInt(2),
+		No:                math.ZeroInt(),
+		Abstain:           math.ZeroInt(),
+	}})
+	_, found := suite.k.GetDao(suite.ctx, 7)
+	suite.Require().False(found)
+
+	suite.requireLiveStatus(1, false, 0, false)
+	_, err := suite.settle(1)
+	suite.Require().ErrorIs(err, types.ErrExpediteTooEarly)
+	suite.requireStillVoting(1)
+
+	// only the delay held it back
+	suite.ctx = suite.ctx.WithBlockTime(time.Unix(now+3600, 0))
+	suite.requireLiveStatus(1, false, 0, true)
 }

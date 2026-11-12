@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -38,7 +39,7 @@ func TestHaltChain_GuardianAndAuthoritySchedule(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			e := newEnv(t)
 			up := e.withUpgrade(t)
-			want := upgradetypes.Plan{Name: "emergency-halt-1001", Height: haltHeight + 1, Info: "stop everything"}
+			want := upgradetypes.Plan{Name: "emergency-halt-1001", Height: haltHeight + 1, Info: types.HaltPlanInfo}
 			up.EXPECT().ScheduleUpgrade(gomock.Any(), want).Return(nil).Times(1)
 
 			res, err := e.msgServer.HaltChain(e.ctx, haltMsg(signer))
@@ -120,4 +121,24 @@ func TestHaltChain_UpgradeKeeperNotSet(t *testing.T) {
 // The plan name carries the height, so every halt has its own name.
 func TestHaltPlanName(t *testing.T) {
 	require.Equal(t, "emergency-halt-42", types.HaltPlanName(42))
+}
+
+// The reason never reaches the plan info: tools such as cosmovisor read the
+// info as JSON (with auto-download, binary URLs), so it is a constant and the
+// reason stays in the event and the response.
+func TestHaltChain_ReasonNeverInPlanInfo(t *testing.T) {
+	e := newEnv(t)
+	up := e.withUpgrade(t)
+	reason := `{"binaries":{"linux/amd64":"https://x?checksum=sha256:00"}}`
+	var got upgradetypes.Plan
+	up.EXPECT().ScheduleUpgrade(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, p upgradetypes.Plan) error {
+		got = p
+		return nil
+	}).Times(1)
+
+	_, err := e.msgServer.HaltChain(e.ctx, &types.MsgHaltChain{Signer: guardianAddr, Reason: reason})
+	require.NoError(t, err)
+	require.Equal(t, "emergency halt", got.Info)
+	require.Equal(t, types.HaltPlanInfo, got.Info)
+	require.NotContains(t, got.Info, "binaries")
 }

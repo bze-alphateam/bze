@@ -117,7 +117,8 @@ message MsgHaltChain {
 
   // signer is the guardian or the governance authority.
   string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // reason is a short explanation, stored as the plan info (1 to 256 bytes).
+  // reason is a short explanation (1 to 256 bytes), in the event only; the
+  // plan info is a fixed text.
   string reason = 2;
 }
 

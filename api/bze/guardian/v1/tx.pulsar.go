@@ -4880,7 +4880,8 @@ type MsgHaltChain struct {
 
 	// signer is the guardian or the governance authority.
 	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
-	// reason is a short explanation, stored as the plan info (1 to 256 bytes).
+	// reason is a short explanation (1 to 256 bytes), in the event only; the
+	// plan info is a fixed text.
 	Reason string `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
 }
 

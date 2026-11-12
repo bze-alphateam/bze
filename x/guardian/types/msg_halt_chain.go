@@ -10,6 +10,12 @@ import (
 // MaxHaltReasonLength is the longest MsgHaltChain reason, in bytes.
 const MaxHaltReasonLength = 256
 
+// HaltPlanInfo is the info of every halt plan. It is a constant on purpose:
+// tools such as cosmovisor parse the plan info (as JSON, with binary download
+// URLs when auto-download is on), so no signer-chosen text goes there; the
+// reason is in the event and the response only.
+const HaltPlanInfo = "emergency halt"
+
 // HaltPlanPrefix starts the name of every halt plan; the height follows it.
 const HaltPlanPrefix = "emergency-halt-"
 

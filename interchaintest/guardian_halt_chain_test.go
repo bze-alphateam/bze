@@ -166,5 +166,5 @@ func (s *guardianHaltSuite) guardianHalts(t *testing.T) {
 	p := s.plan(t)
 	require.Equal(t, name, p.Plan.Name, "the halt replaced the release plan")
 	require.Equal(t, haltHeight, int64(p.Plan.Height))
-	require.Equal(t, ghReason, p.Plan.Info)
+	require.Equal(t, "emergency halt", p.Plan.Info, "the reason never goes into the plan info")
 }
