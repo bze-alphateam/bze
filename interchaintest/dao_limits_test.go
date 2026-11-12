@@ -6,11 +6,16 @@ import (
 
 	"github.com/cosmos/interchaintest/v10/ibc"
 	"github.com/stretchr/testify/require"
+
+	"github.com/bze-alphateam/bze/interchaintest/helpers"
 )
 
 // daoMaxExecutionDepth is x/dao's MaxDaoExecutionDepth: nested DAO
 // executions, counting the outermost proposal or admin-execute.
 const daoMaxExecutionDepth = 5
+
+// daoDepthGas is the fixed gas limit of the refused six-level execution.
+const daoDepthGas = 5_000_000
 
 // E15. Execution limits. On the admin path a DAO's admin cannot sign, as the
 // DAO, an authz grant, a fee allowance or an authz exec: the whole
@@ -89,7 +94,12 @@ func (s *daoSuite) executionLimits(t *testing.T) {
 		for _, ref := range chain {
 			watch = append(watch, ref.addr)
 		}
-		s.refuse(t, admin, refusal{codespace: daoModule, code: 1134, watch: watch}, exec(chain[0], nested(daoMaxExecutionDepth+1)...)...)
+		// a generous fixed gas limit: six nested executions must reach the
+		// depth check, not run out of gas
+		args := exec(chain[0], nested(daoMaxExecutionDepth+1)...)
+		s.refuseSend(t, admin, refusal{codespace: daoModule, code: 1134, watch: watch}, args, func() (helpers.TxResult, error) {
+			return helpers.ExecTxWith(s.ctx, s.bze, admin, []helpers.TxOption{helpers.WithGas(daoDepthGas)}, args...)
+		})
 	})
 
 	t.Run("proposals query refuses an unknown status", func(t *testing.T) {

@@ -345,7 +345,8 @@ func (s *transferFeeSuite) tinyGasFee(t *testing.T) {
 // it below the fee payer's minimum ubze liquidity. Each of those fees moves
 // the tok pool price by several percent, and a fee is swapped from tok only
 // while the price is within feeMaxPriceDrift of its moving average (it is
-// charged in ubze otherwise), so each case waits for the price to settle.
+// charged in ubze otherwise), so each case waits for the price to settle
+// within 2% of its average.
 func (s *transferFeeSuite) otherProtocolFees(t *testing.T) {
 	admin, u1 := s.admin.FormattedAddress(), s.u1.FormattedAddress()
 	s.mustExec(t, s.admin, "tokenfactory", "mint", coinStr(xfDeepTok+xfMoreUserTok, s.tok))
@@ -357,6 +358,12 @@ func (s *transferFeeSuite) otherProtocolFees(t *testing.T) {
 	daoCfg.voting, daoCfg.expedited = "259200s", "86400s" // 72h and 24h
 	drift, err := helpers.QueryPriceDriftParams(s.ctx, s.bze)
 	require.NoError(t, err)
+	// each 25,000 BZE fee moves the deepened pool's price by about 5%, all in
+	// the same direction: starting within 2%, the schedule case's second fee
+	// in the same tx still sees the price under the fee limit
+	xfStartDrift := sdkmath.LegacyMustNewDecFromStr("0.02")
+	require.True(t, xfStartDrift.Add(sdkmath.LegacyMustNewDecFromStr("0.05")).LT(drift.FeeMaxDrift),
+		"the start drift plus one fee's move stays under feeMaxPriceDrift %s", drift.FeeMaxDrift)
 
 	for _, c := range []struct {
 		name string
@@ -371,7 +378,7 @@ func (s *transferFeeSuite) otherProtocolFees(t *testing.T) {
 		{"denom reward schedule: prize and schedule fees", []string{"rewards", "create-denom-reward-schedule", s.tok, chain.Denom, "1000", "1"}, 2},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			require.NoError(t, helpers.WaitForPoolPriceWithin(s.ctx, s.bze, xfCalmBlocks, drift.FeeMaxDrift, s.tokPool))
+			require.NoError(t, helpers.WaitForPoolPriceWithin(s.ctx, s.bze, xfCalmBlocks, xfStartDrift, s.tokPool))
 			res := s.mustExecWith(t, s.u1, []helpers.TxOption{helpers.WithFees(coinStr(20_000, s.tok)), helpers.WithGas(xfTxGas)}, c.args...)
 			captures := s.captures(t, res, u1)
 			require.Len(t, captures, c.fees, "fees captured in tok")
