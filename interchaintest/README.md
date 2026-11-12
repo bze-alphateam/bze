@@ -47,6 +47,7 @@ make e2e-ibc                        # blocked inbound IBC: bze <-> simd through 
 make e2e-ratelimit                  # IBC rate limiting: quotas refused and refunded both ways, net flow, timeout undo, guardian tighten and block, gov loosen and unblock (~8 min)
 make e2e-guardian                   # guardian switches: disable MsgMultiSwap (swap refused, other tradebin msgs work), stranger and protected types refused, gov reset (~4 min)
 make e2e-guardian-halt              # guardian halts a denom on the DEX (same effect as the gov halt), user and native refused, gov unhalts (~5 min)
+make e2e-guardian-pause             # guardian automation pause: fees wait in the txfeecollector and a burning week tick burns nothing while paused, stranger and guardian resume refused, gov resume converts and burns (~6 min)
 make e2e-fees                       # fee destinations, minimum gas prices, ante refusals, fee grants, txfeecollector params
 make e2e-transferfee                # factory-token transfer fee on protocol fees and gas surcharge: routing, burn, fee grants, fallback, rate changes
 make e2e-orderbook                  # order-book engine: fills, remainders, dust, cancels, refusals, queue limits

@@ -56,3 +56,9 @@ type ParamSubspace interface {
 	Get(context.Context, []byte, interface{})
 	Set(context.Context, []byte, interface{})
 }
+
+// GuardianKeeper tells whether the guardian paused the protocol automation. Implemented by the x/guardian keeper.
+type GuardianKeeper interface {
+	// IsAutomationPaused is true while EndBlock must not convert, send or fund anything.
+	IsAutomationPaused(ctx context.Context) bool
+}

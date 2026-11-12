@@ -48,3 +48,14 @@ message ChainHaltScheduledEvent {
   int64 height = 3;
   string reason = 4;
 }
+
+// AutomationPausedEvent is emitted when the protocol automation is paused.
+message AutomationPausedEvent {
+  string signer = 1;
+}
+
+// AutomationResumedEvent is emitted when governance resumes the protocol
+// automation.
+message AutomationResumedEvent {
+  string authority = 1;
+}

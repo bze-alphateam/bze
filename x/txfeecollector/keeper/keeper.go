@@ -29,6 +29,9 @@ type (
 		// denomCpProvider resolves the community pool a denom's fees are forwarded to. nil means
 		// no denom has one.
 		denomCpProvider types.DenomCommunityPoolProvider
+
+		// guardianKeeper tells whether the protocol automation is paused. nil means never paused.
+		guardianKeeper types.GuardianKeeper
 	}
 )
 
@@ -42,6 +45,7 @@ func NewKeeper(
 	tradeKeeper types.TradeKeeper,
 	distrKeeper types.DistrKeeper,
 	denomCpProvider types.DenomCommunityPoolProvider,
+	guardianKeeper types.GuardianKeeper,
 ) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
@@ -57,7 +61,18 @@ func NewKeeper(
 		tradeKeeper:     tradeKeeper,
 		distrKeeper:     distrKeeper,
 		denomCpProvider: denomCpProvider,
+		guardianKeeper:  guardianKeeper,
 	}
+}
+
+// IsAutomationPaused reports whether the guardian paused the protocol automation: EndBlock then leaves every collected
+// coin where it is. A keeper without a guardian keeper is never paused.
+func (k Keeper) IsAutomationPaused(ctx sdk.Context) bool {
+	if k.guardianKeeper == nil {
+		return false
+	}
+
+	return k.guardianKeeper.IsAutomationPaused(ctx)
 }
 
 // GetAuthority returns the module's authority.

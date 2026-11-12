@@ -20,6 +20,9 @@ The module registers two dedicated accounts:
 
 At EndBlock, collected fees are converted to native denom and distributed to their respective destinations.
 
+### Guardian pause
+While the x/guardian protocol automation pause is on (`MsgPauseAutomation`, signed by the guardian or governance), EndBlock does nothing at all: neither pass reads, swaps, sends or funds anything, no event is emitted and the cursors don't move. The collected coins wait in `txfeecollector` and `txfeecollector_cp`. After governance resumes it (`MsgResumeAutomation`), the next EndBlock picks up where the cursors stand, so the coins collected during the pause are handled like any other. The module reads the flag through a one-method `GuardianKeeper` interface (`IsAutomationPaused`); the ante handler and the transfer fee are not affected.
+
 ## Collector rules
 `txfeecollector` (gas fees paid in non-native coins, for the validators):
 - ubze → the validators (the SDK fee collector).
@@ -80,6 +83,7 @@ Adjust flags to your governance CLI; the message fields are just `validator_min_
 ## Version History
 
 ### v8.3.0
+- EndBlock does nothing while the x/guardian protocol automation pause is on (see [Guardian pause](#guardian-pause)); new `GuardianKeeper` dependency (depinject)
 - Coins in `txfeecollector_cp` whose factory denom has a community pool address (x/tokenfactory `DenomConfig`) are forwarded to it in EndBlock, in the same pass that converts the rest for the chain's community pool
 - Added the `CommunityPoolFeePaidEvent` typed event (`proto/bze/txfeecollector/events.proto`), one per forwarded coin
 - Collector passes are bounded and cursor-based (see [Bounded passes and the cursor](#bounded-passes-and-the-cursor)): each reads at most `max_balance_iterations` balances after its cursor straight from the bank store instead of loading the whole account, so coins kept to wait can't starve the ones after them

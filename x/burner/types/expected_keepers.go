@@ -43,3 +43,9 @@ type ParamSubspace interface {
 	Get(context.Context, []byte, interface{})
 	Set(context.Context, []byte, interface{})
 }
+
+// GuardianKeeper tells whether the guardian paused the protocol automation. Implemented by the x/guardian keeper.
+type GuardianKeeper interface {
+	// IsAutomationPaused is true while the periodic burn must not burn, lock or pool anything.
+	IsAutomationPaused(ctx context.Context) bool
+}

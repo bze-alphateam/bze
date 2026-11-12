@@ -171,6 +171,12 @@ func (am AppModule) BeginBlock(_ context.Context) error {
 // The end block implementation is optional.
 func (am AppModule) EndBlock(gotCtx context.Context) error {
 	ctx := sdk.UnwrapSDKContext(gotCtx)
+	// the guardian paused the protocol automation: no pass runs, the collected coins wait in the collectors and the
+	// first EndBlock after governance resumes it handles them (both passes read the balances, nothing is skipped)
+	if am.keeper.IsAutomationPaused(ctx) {
+		return nil
+	}
+
 	err := bzeutils.ApplyFuncIfNoError(ctx, func(c sdk.Context) error {
 		return am.keeper.ConvertCollectedFeesToNativeDenom(c)
 	})
@@ -221,6 +227,7 @@ type ModuleInputs struct {
 	DistrKeeper   types.DistrKeeper
 
 	DenomCpProvider types.DenomCommunityPoolProvider
+	GuardianKeeper  types.GuardianKeeper
 }
 
 type ModuleOutputs struct {
@@ -246,6 +253,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.TradeKeeper,
 		in.DistrKeeper,
 		in.DenomCpProvider,
+		in.GuardianKeeper,
 	)
 	m := NewAppModule(
 		in.Cdc,

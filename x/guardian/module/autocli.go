@@ -23,6 +23,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:     "Lists the denoms whose IBC transfers are blocked",
 					Long:      "Lists the denoms on the rate limit module's blacklist. Every IBC transfer of these denoms is refused, in both directions, on every channel.",
 				},
+				{
+					RpcMethod: "AutomationPaused",
+					Use:       "automation-paused",
+					Short:     "Shows whether the protocol automation is paused",
+					Long:      "Shows whether the txfeecollector EndBlock conversions and the burner's periodic burn are paused. The paused field is printed as false when the automation runs.",
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
@@ -96,6 +102,22 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						"The reason (1 to 256 bytes) is emitted in the event; the plan info is the fixed text \"emergency halt\".",
 					Example:        `bzed tx guardian halt-chain "incident under investigation" --from guardian`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reason"}},
+				},
+				{
+					RpcMethod: "PauseAutomation",
+					Use:       "pause-automation",
+					Short:     "Pause the txfeecollector EndBlock conversions and the burner's periodic burn",
+					Long: "Stops the protocol's own automatic fund movements: the txfeecollector EndBlock conversions (gas fees and community pool fees) " +
+						"and the burner's periodic burn. The coins stay where they are. Signed by the guardian or the governance authority; " +
+						"only a governance proposal can resume the automation.",
+					Example: "bzed tx guardian pause-automation --from guardian",
+				},
+				{
+					RpcMethod:   "ResumeAutomation",
+					Use:         "resume-automation",
+					Short:       "Submit a governance proposal to resume the protocol automation",
+					Example:     `bzed tx guardian resume-automation --deposit 1000000ubze --title "..." --summary "..." --from mykey`,
+					GovProposal: true, // authority gated: wrapped in a x/gov proposal, authority filled with the gov address
 				},
 			},
 		},

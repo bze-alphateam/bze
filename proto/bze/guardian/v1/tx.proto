@@ -43,6 +43,13 @@ service Msg {
   // stops there until it runs a binary that handles the plan, or until the
   // validators skip the height. It replaces any plan already scheduled.
   rpc HaltChain (MsgHaltChain) returns (MsgHaltChainResponse);
+
+  // PauseAutomation stops the protocol's own automatic fund movements: the
+  // txfeecollector EndBlock conversions and the burner's periodic burn.
+  rpc PauseAutomation (MsgPauseAutomation) returns (MsgPauseAutomationResponse);
+
+  // ResumeAutomation lifts the pause. Governance only.
+  rpc ResumeAutomation (MsgResumeAutomation) returns (MsgResumeAutomationResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -172,3 +179,29 @@ message MsgHaltChainResponse {
   // height the chain stops at.
   int64 height = 2;
 }
+
+// MsgPauseAutomation is the Msg/PauseAutomation request type.
+message MsgPauseAutomation {
+  option (cosmos.msg.v1.signer) = "signer";
+  option (amino.name) = "bze/x/guardian/MsgPauseAutomation";
+
+  // signer is the guardian or the governance authority.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgPauseAutomationResponse defines the response structure for executing a
+// MsgPauseAutomation message.
+message MsgPauseAutomationResponse {}
+
+// MsgResumeAutomation is the Msg/ResumeAutomation request type.
+message MsgResumeAutomation {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "bze/x/guardian/MsgResumeAutomation";
+
+  // authority is the governance module account, the guardian cannot resume.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgResumeAutomationResponse defines the response structure for executing a
+// MsgResumeAutomation message.
+message MsgResumeAutomationResponse {}

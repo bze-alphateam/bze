@@ -26,6 +26,8 @@ const (
 	Msg_DisableMessages_FullMethodName   = "/bze.guardian.v1.Msg/DisableMessages"
 	Msg_HaltTradingDenoms_FullMethodName = "/bze.guardian.v1.Msg/HaltTradingDenoms"
 	Msg_HaltChain_FullMethodName         = "/bze.guardian.v1.Msg/HaltChain"
+	Msg_PauseAutomation_FullMethodName   = "/bze.guardian.v1.Msg/PauseAutomation"
+	Msg_ResumeAutomation_FullMethodName  = "/bze.guardian.v1.Msg/ResumeAutomation"
 )
 
 // MsgClient is the client API for Msg service.
@@ -56,6 +58,11 @@ type MsgClient interface {
 	// stops there until it runs a binary that handles the plan, or until the
 	// validators skip the height. It replaces any plan already scheduled.
 	HaltChain(ctx context.Context, in *MsgHaltChain, opts ...grpc.CallOption) (*MsgHaltChainResponse, error)
+	// PauseAutomation stops the protocol's own automatic fund movements: the
+	// txfeecollector EndBlock conversions and the burner's periodic burn.
+	PauseAutomation(ctx context.Context, in *MsgPauseAutomation, opts ...grpc.CallOption) (*MsgPauseAutomationResponse, error)
+	// ResumeAutomation lifts the pause. Governance only.
+	ResumeAutomation(ctx context.Context, in *MsgResumeAutomation, opts ...grpc.CallOption) (*MsgResumeAutomationResponse, error)
 }
 
 type msgClient struct {
@@ -129,6 +136,24 @@ func (c *msgClient) HaltChain(ctx context.Context, in *MsgHaltChain, opts ...grp
 	return out, nil
 }
 
+func (c *msgClient) PauseAutomation(ctx context.Context, in *MsgPauseAutomation, opts ...grpc.CallOption) (*MsgPauseAutomationResponse, error) {
+	out := new(MsgPauseAutomationResponse)
+	err := c.cc.Invoke(ctx, Msg_PauseAutomation_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ResumeAutomation(ctx context.Context, in *MsgResumeAutomation, opts ...grpc.CallOption) (*MsgResumeAutomationResponse, error) {
+	out := new(MsgResumeAutomationResponse)
+	err := c.cc.Invoke(ctx, Msg_ResumeAutomation_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -157,6 +182,11 @@ type MsgServer interface {
 	// stops there until it runs a binary that handles the plan, or until the
 	// validators skip the height. It replaces any plan already scheduled.
 	HaltChain(context.Context, *MsgHaltChain) (*MsgHaltChainResponse, error)
+	// PauseAutomation stops the protocol's own automatic fund movements: the
+	// txfeecollector EndBlock conversions and the burner's periodic burn.
+	PauseAutomation(context.Context, *MsgPauseAutomation) (*MsgPauseAutomationResponse, error)
+	// ResumeAutomation lifts the pause. Governance only.
+	ResumeAutomation(context.Context, *MsgResumeAutomation) (*MsgResumeAutomationResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -184,6 +214,12 @@ func (UnimplementedMsgServer) HaltTradingDenoms(context.Context, *MsgHaltTrading
 }
 func (UnimplementedMsgServer) HaltChain(context.Context, *MsgHaltChain) (*MsgHaltChainResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HaltChain not implemented")
+}
+func (UnimplementedMsgServer) PauseAutomation(context.Context, *MsgPauseAutomation) (*MsgPauseAutomationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PauseAutomation not implemented")
+}
+func (UnimplementedMsgServer) ResumeAutomation(context.Context, *MsgResumeAutomation) (*MsgResumeAutomationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResumeAutomation not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -324,6 +360,42 @@ func _Msg_HaltChain_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_PauseAutomation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgPauseAutomation)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).PauseAutomation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_PauseAutomation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).PauseAutomation(ctx, req.(*MsgPauseAutomation))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ResumeAutomation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgResumeAutomation)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ResumeAutomation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_ResumeAutomation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ResumeAutomation(ctx, req.(*MsgResumeAutomation))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -358,6 +430,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "HaltChain",
 			Handler:    _Msg_HaltChain_Handler,
+		},
+		{
+			MethodName: "PauseAutomation",
+			Handler:    _Msg_PauseAutomation_Handler,
+		},
+		{
+			MethodName: "ResumeAutomation",
+			Handler:    _Msg_ResumeAutomation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -75,6 +75,7 @@ func newEndBlockModuleWithLogger(t *testing.T, logger log.Logger) (txfeecollecto
 		trade,
 		distr,
 		cp,
+		nil,
 	)
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
 	require.NoError(t, k.SetParams(ctx, types.DefaultParams()))
