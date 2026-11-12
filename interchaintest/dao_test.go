@@ -124,6 +124,7 @@ func TestDao(t *testing.T) {
 		{"E11 cancel games", s.cancelGames},
 		{"E12 open-proposal slot griefing", s.slotGriefing},
 		{"E13 pinned sources via x/rewards", s.pinnedSources},
+		{"E15 execution limits", s.executionLimits},
 		{"B queries", s.queries},
 		{"F CLI facts", s.cliFacts},
 		{"A11 update-params and E14 mid-flight changes", s.updateParams},

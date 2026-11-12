@@ -276,6 +276,9 @@ func New(
 	// build app
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 
+	// x/guardian schedules its chain halt plan through the upgrade keeper.
+	app.GuardianKeeper.SetUpgradeKeeper(app.UpgradeKeeper)
+
 	// register legacy modules
 	if err := app.registerIBCModules(appOpts); err != nil {
 		return nil, err
@@ -294,7 +297,10 @@ func New(
 	app.sm.RegisterStoreDecoders()
 	app.setEpochsHooks()
 	app.setTradebinHooks()
+	// x/guardian halts denoms on the DEX through the tradebin keeper
+	app.GuardianKeeper.SetTradebinKeeper(app.TradebinKeeper)
 	app.setRewardsHooks()
+	app.wireGuardianCircuit()
 	app.setupUpgradeHandlers()
 
 	anteOptions := ante.HandlerOptions{

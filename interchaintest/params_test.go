@@ -67,6 +67,11 @@ const (
 	paTfFee = 500 // tok, step 10
 
 	paMsgGas = 500_000
+
+	// step 11: a 1 BZE create-denom fee, and a swap of 10,000 BZE into the
+	// tok pool (2e11 ubze deep) that moves its price by about 10%
+	paGuardCreateFee = 1_000_000
+	paGuardSwap      = 10_000_000_000
 )
 
 // TestParams changes the tradebin, rewards and tokenfactory params through
@@ -95,7 +100,8 @@ func TestParams(t *testing.T) {
 	t.Run("8 rewards prize denom cap", s.prizeCap)
 	t.Run("9 rewards extra gas of exits", s.exitGas)
 	t.Run("10 tokenfactory create-denom fee", s.createDenomFee)
-	t.Run("11 params back at genesis", s.backAtGenesis)
+	t.Run("11 tradebin pool price guard", s.priceGuard)
+	t.Run("12 params back at genesis", s.backAtGenesis)
 }
 
 // paramsSuite reuses the cointrunk suite's proposal and query helpers and,
@@ -147,6 +153,9 @@ func setupParams(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain) *pa
 	require.EqualValues(t, paExtraGas, s.rw.ExtraGasForExitStake, "genesis extra gas for exit stake")
 	require.EqualValues(t, paExtraGas, s.rw.ExtraGasForDenomExit, "genesis extra gas for denom exit")
 	require.Equal(t, chain.Denom, s.tf.CreateDenomFee.Denom, "genesis create-denom fee")
+	require.EqualValues(t, 20, s.tb.PoolPriceHalfLifeBlocks, "genesis pool price half life")
+	require.Equal(t, sdkmath.LegacyMustNewDecFromStr("0.1").String(), s.tb.FeeMaxPriceDrift.String(), "genesis fee max price drift")
+	require.Equal(t, sdkmath.LegacyMustNewDecFromStr("0.03").String(), s.tb.ModuleMaxPriceDrift.String(), "genesis module max price drift")
 
 	factory := "factory/" + s.admin.FormattedAddress() + "/"
 	s.tok, s.stk1, s.stk2, s.stk3 = factory+"tok", factory+"stk1", factory+"stk2", factory+"stk3"
@@ -218,6 +227,12 @@ func (s *paramsSuite) invalidParams(t *testing.T) {
 		{"tradebin zero min native liquidity", tb(func(p *paTradebin) { p.MinNativeLiquidityForModuleSwap = sdkmath.ZeroInt() }), "min native liquidity for module swap must be positive"},
 		{"tradebin zero price level owners window", tb(func(p *paTradebin) { p.PriceLevelOwnersWindow = 0 }), "price level owners window must be at least 1"},
 		{"tradebin zero price level extra gas", tb(func(p *paTradebin) { p.PriceLevelExtraGas = 0 }), "price level extra gas must be at least 1"},
+		{"tradebin zero pool price half life", tb(func(p *paTradebin) { p.PoolPriceHalfLifeBlocks = 0 }), "pool price half life must be between 1 and 100000 blocks"},
+		{"tradebin pool price half life above the cap", tb(func(p *paTradebin) { p.PoolPriceHalfLifeBlocks = 100_001 }), "pool price half life must be between 1 and 100000 blocks"},
+		{"tradebin zero fee max price drift", tb(func(p *paTradebin) { p.FeeMaxPriceDrift = sdkmath.LegacyZeroDec() }), "invalid FeeMaxPriceDrift"},
+		{"tradebin fee max price drift of 1", tb(func(p *paTradebin) { p.FeeMaxPriceDrift = sdkmath.LegacyOneDec() }), "invalid FeeMaxPriceDrift"},
+		{"tradebin zero module max price drift", tb(func(p *paTradebin) { p.ModuleMaxPriceDrift = sdkmath.LegacyZeroDec() }), "invalid ModuleMaxPriceDrift"},
+		{"tradebin module max price drift of 1", tb(func(p *paTradebin) { p.ModuleMaxPriceDrift = sdkmath.LegacyOneDec() }), "invalid ModuleMaxPriceDrift"},
 		{"rewards negative staking reward fee", rw(func(p *paRewards) { p.CreateStakingRewardFee = negative(chain.Denom) }), "invalid CreateStakingRewardFee"},
 		{"rewards negative trading reward fee", rw(func(p *paRewards) { p.CreateTradingRewardFee = negative(chain.Denom) }), "invalid createTradingRewardFee"},
 		{"rewards invalid denom reward fee denom", rw(func(p *paRewards) { p.CreateDenomRewardFee = sdk.Coin{Denom: "1bad", Amount: sdkmath.NewInt(1)} }), "invalid fee coin"},
@@ -443,7 +458,70 @@ func (s *paramsSuite) createDenomFee(t *testing.T) {
 	t.Run("zero", func(t *testing.T) { s.requireCreateDenom(t, "pa2", sdk.NewCoins()) })
 }
 
-// 11. After the last restore every module holds its genesis params again.
+// 11. The pool price guard params apply to the next protocol fee. With a
+// half life of 100,000 blocks the tok pool's average stays where it was
+// while the admin's swap moves the price by about 10%: under a fee drift
+// limit of 1% a create-denom fee is charged in ubze although the tx fee is
+// in tok; raised to 50%, the same fee is captured in tok and swapped. The
+// create-denom fee is 1 BZE (well within what a user's tok buys), and the
+// tradebin params end back at genesis.
+func (s *paramsSuite) priceGuard(t *testing.T) {
+	tf := s.tf
+	tf.CreateDenomFee = sdk.NewInt64Coin(chain.Denom, paGuardCreateFee)
+	tb := s.tb
+	tb.PoolPriceHalfLifeBlocks = 100_000
+	tb.FeeMaxPriceDrift, tb.ModuleMaxPriceDrift = sdkmath.LegacyMustNewDecFromStr("0.01"), sdkmath.LegacyMustNewDecFromStr("0.01")
+	s.propose(t, "slow pool price average, tight drift limits, 1 BZE create-denom fee", tb, tf)
+
+	// every pool has an average; an unknown pool has none
+	_, err := helpers.QueryPoolPriceAverage(s.ctx, s.bze, s.tokPool)
+	require.NoError(t, err)
+	_, err = helpers.QueryPoolPriceAverage(s.ctx, s.bze, "nope_"+chain.Denom)
+	require.ErrorContains(t, err, "not found")
+
+	// the swap moves the tok price by about 10% (ubze in: the price, ubze
+	// per tok, goes up)
+	s.mustExec(t, s.admin, "tradebin", "multi-swap", s.tokPool, coinStr(paGuardSwap, chain.Denom), coinStr(1, s.tok))
+	st, err := helpers.QueryPoolPriceState(s.ctx, s.bze, s.tokPool)
+	require.NoError(t, err)
+	require.True(t, helpers.PoolPriceDrifted(st.Price, st.Avg, sdkmath.LegacyMustNewDecFromStr("0.05")), "the tok price moved more than 5%%: %+v", st)
+	require.False(t, helpers.PoolPriceDrifted(st.Price, st.Avg, sdkmath.LegacyMustNewDecFromStr("0.5")), "and less than 50%%: %+v", st)
+
+	createDenom := func(t *testing.T, sub string) (helpers.TxResult, sdk.Coins, sdk.Coins) {
+		t.Helper()
+		u := s.user.FormattedAddress()
+		before := s.addrBalances(t, u, 0)
+		res := s.mustExecWith(t, s.user, []helpers.TxOption{helpers.WithFees(coinStr(paTokTxFee, s.tok)), helpers.WithGas(paMsgGas)},
+			"tokenfactory", "create-denom", sub)
+		return res, before, s.addrBalances(t, u, 0)
+	}
+
+	t.Run("drifted: charged in ubze", func(t *testing.T) {
+		u := s.user.FormattedAddress()
+		res, before, after := createDenom(t, "guard1")
+		require.True(t, s.transfers(t, res.Events, u, s.tradebin).IsZero(), "nothing captured in tok")
+		require.Equal(t, tf.CreateDenomFee.String(), s.transfers(t, res.Events, u, s.tfAcc).String(), "the fee in ubze to the tokenfactory module")
+		require.Equal(t, tf.CreateDenomFee.String(), s.transfers(t, res.Events, s.tfAcc, s.cpFees).String(), "and to the community-pool fee collector")
+		require.Equal(t, before.Sub(tf.CreateDenomFee, sdk.NewInt64Coin(s.tok, paTokTxFee)), after, "user pays the fee in ubze and the tx fee in tok")
+	})
+
+	tb.FeeMaxPriceDrift = sdkmath.LegacyMustNewDecFromStr("0.5")
+	s.propose(t, "fee drift limit 50%", tb)
+	t.Run("within the raised limit: captured in tok", func(t *testing.T) {
+		u := s.user.FormattedAddress()
+		res, before, after := createDenom(t, "guard2")
+		captured := s.transfers(t, res.Events, u, s.tradebin).AmountOf(s.tok)
+		require.True(t, captured.IsPositive(), "the fee is captured in tok")
+		toCp := s.transfers(t, res.Events, s.tfAcc, s.cpFees).AmountOf(chain.Denom)
+		require.True(t, toCp.GTE(tf.CreateDenomFee.Amount), "the swapped fee reaches the community-pool fee collector: %s", toCp)
+		require.Equal(t, before.AmountOf(chain.Denom), after.AmountOf(chain.Denom), "no ubze spent")
+		require.Equal(t, before.AmountOf(s.tok).Sub(captured).SubRaw(paTokTxFee), after.AmountOf(s.tok), "the fee and the tx fee in tok")
+	})
+
+	s.propose(t, "tradebin and tokenfactory params back at genesis", s.tbGenesis, s.tfGenesis)
+}
+
+// 12. After the last restore every module holds its genesis params again.
 func (s *paramsSuite) backAtGenesis(t *testing.T) {
 	s.propose(t, "tokenfactory params back at genesis", s.tfGenesis)
 	require.Equal(t, s.tbGenesis.msgParams(), s.queryTradebin(t).msgParams(), "tradebin")
@@ -654,6 +732,8 @@ type paTradebin struct {
 	FillOrdersExtraGas                              uint64
 	MinNativeLiquidityForModuleSwap                 sdkmath.Int
 	MaxFillsPerOrder                                uint64
+	PoolPriceHalfLifeBlocks                         uint64
+	FeeMaxPriceDrift, ModuleMaxPriceDrift           sdkmath.LegacyDec
 }
 
 func (paTradebin) module() string { return "tradebin" }
@@ -671,6 +751,9 @@ func (p paTradebin) msgParams() map[string]any {
 		"fillOrdersExtraGas":              u64(p.FillOrdersExtraGas),
 		"minNativeLiquidityForModuleSwap": p.MinNativeLiquidityForModuleSwap.String(),
 		"maxFillsPerOrder":                u64(p.MaxFillsPerOrder),
+		"poolPriceHalfLifeBlocks":         u64(p.PoolPriceHalfLifeBlocks),
+		"feeMaxPriceDrift":                p.FeeMaxPriceDrift.String(),
+		"moduleMaxPriceDrift":             p.ModuleMaxPriceDrift.String(),
 	}
 }
 
@@ -753,11 +836,18 @@ func (s *paramsSuite) queryTradebin(t *testing.T) paTradebin {
 		FillOrdersExtraGas              helpers.Int64 `json:"fillordersextragas"`
 		MinNativeLiquidityForModuleSwap string        `json:"minnativeliquidityformoduleswap"`
 		MaxFillsPerOrder                helpers.Int64 `json:"maxfillsperorder"`
+		PoolPriceHalfLifeBlocks         helpers.Int64 `json:"poolpricehalflifeblocks"`
+		FeeMaxPriceDrift                string        `json:"feemaxpricedrift"`
+		ModuleMaxPriceDrift             string        `json:"modulemaxpricedrift"`
 	}
 	raw := s.moduleParams(t, "tradebin", "createmarketfee", "marketmakerfee", "markettakerfee", "makerfeedestination", "takerfeedestination",
 		"nativedenom", "pricelevelownerswindow", "pricelevelextragas", "fillordersextragas", "minnativeliquidityformoduleswap",
-		"maxfillsperorder")
+		"maxfillsperorder", "poolpricehalflifeblocks", "feemaxpricedrift", "modulemaxpricedrift")
 	require.NoError(t, json.Unmarshal(raw, &p), "%s", raw)
+	feeDrift, err := helpers.ParseDec(p.FeeMaxPriceDrift)
+	require.NoError(t, err, "feeMaxPriceDrift")
+	moduleDrift, err := helpers.ParseDec(p.ModuleMaxPriceDrift)
+	require.NoError(t, err, "moduleMaxPriceDrift")
 	return paTradebin{
 		CreateMarketFee:                 p.CreateMarketFee.coin(),
 		MarketMakerFee:                  p.MarketMakerFee.coin(),
@@ -770,6 +860,9 @@ func (s *paramsSuite) queryTradebin(t *testing.T) paTradebin {
 		FillOrdersExtraGas:              uint64(p.FillOrdersExtraGas),
 		MinNativeLiquidityForModuleSwap: parseInt(p.MinNativeLiquidityForModuleSwap),
 		MaxFillsPerOrder:                uint64(p.MaxFillsPerOrder),
+		PoolPriceHalfLifeBlocks:         uint64(p.PoolPriceHalfLifeBlocks),
+		FeeMaxPriceDrift:                feeDrift,
+		ModuleMaxPriceDrift:             moduleDrift,
 	}
 }
 

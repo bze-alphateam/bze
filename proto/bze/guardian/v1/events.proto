@@ -26,6 +26,29 @@ message DenomUnblockedEvent {
   string denom = 2;
 }
 
+// MessagesDisabledEvent is emitted when message types are added to the
+// x/circuit disable list.
+message MessagesDisabledEvent {
+  string signer = 1;
+  repeated string msg_type_urls = 2;
+}
+
+// TradingDenomsHaltedEvent is emitted once per MsgHaltTradingDenoms. denoms
+// lists the denoms the message halted, without those that were already
+// halted. tradebin's DenomHaltedEvent is emitted for each of them as well.
+message TradingDenomsHaltedEvent {
+  string signer = 1;
+  repeated string denoms = 2;
+}
+
+// ChainHaltScheduledEvent is emitted when a halt plan is scheduled.
+message ChainHaltScheduledEvent {
+  string signer = 1;
+  string name = 2;
+  int64 height = 3;
+  string reason = 4;
+}
+
 // AutomationPausedEvent is emitted when the protocol automation is paused.
 message AutomationPausedEvent {
   string signer = 1;
