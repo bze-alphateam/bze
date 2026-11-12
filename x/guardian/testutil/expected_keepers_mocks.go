@@ -158,3 +158,94 @@ func (mr *MockBankKeeperMockRecorder) HasSupply(ctx, denom any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasSupply", reflect.TypeOf((*MockBankKeeper)(nil).HasSupply), ctx, denom)
 }
+
+// MockCircuitKeeper is a mock of CircuitKeeper interface.
+type MockCircuitKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockCircuitKeeperMockRecorder
+	isgomock struct{}
+}
+
+// MockCircuitKeeperMockRecorder is the mock recorder for MockCircuitKeeper.
+type MockCircuitKeeperMockRecorder struct {
+	mock *MockCircuitKeeper
+}
+
+// NewMockCircuitKeeper creates a new mock instance.
+func NewMockCircuitKeeper(ctrl *gomock.Controller) *MockCircuitKeeper {
+	mock := &MockCircuitKeeper{ctrl: ctrl}
+	mock.recorder = &MockCircuitKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockCircuitKeeper) EXPECT() *MockCircuitKeeperMockRecorder {
+	return m.recorder
+}
+
+// Disable mocks base method.
+func (m *MockCircuitKeeper) Disable(ctx context.Context, msgTypeURL string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Disable", ctx, msgTypeURL)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Disable indicates an expected call of Disable.
+func (mr *MockCircuitKeeperMockRecorder) Disable(ctx, msgTypeURL any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Disable", reflect.TypeOf((*MockCircuitKeeper)(nil).Disable), ctx, msgTypeURL)
+}
+
+// IsDisabled mocks base method.
+func (m *MockCircuitKeeper) IsDisabled(ctx context.Context, msgTypeURL string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsDisabled", ctx, msgTypeURL)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsDisabled indicates an expected call of IsDisabled.
+func (mr *MockCircuitKeeperMockRecorder) IsDisabled(ctx, msgTypeURL any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsDisabled", reflect.TypeOf((*MockCircuitKeeper)(nil).IsDisabled), ctx, msgTypeURL)
+}
+
+// MockMsgRouter is a mock of MsgRouter interface.
+type MockMsgRouter struct {
+	ctrl     *gomock.Controller
+	recorder *MockMsgRouterMockRecorder
+	isgomock struct{}
+}
+
+// MockMsgRouterMockRecorder is the mock recorder for MockMsgRouter.
+type MockMsgRouterMockRecorder struct {
+	mock *MockMsgRouter
+}
+
+// NewMockMsgRouter creates a new mock instance.
+func NewMockMsgRouter(ctrl *gomock.Controller) *MockMsgRouter {
+	mock := &MockMsgRouter{ctrl: ctrl}
+	mock.recorder = &MockMsgRouterMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockMsgRouter) EXPECT() *MockMsgRouterMockRecorder {
+	return m.recorder
+}
+
+// IsRegistered mocks base method.
+func (m *MockMsgRouter) IsRegistered(msgTypeURL string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsRegistered", msgTypeURL)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsRegistered indicates an expected call of IsRegistered.
+func (mr *MockMsgRouterMockRecorder) IsRegistered(msgTypeURL any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsRegistered", reflect.TypeOf((*MockMsgRouter)(nil).IsRegistered), msgTypeURL)
+}

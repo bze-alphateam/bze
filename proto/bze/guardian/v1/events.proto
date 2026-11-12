@@ -25,3 +25,10 @@ message DenomUnblockedEvent {
   string authority = 1;
   string denom = 2;
 }
+
+// MessagesDisabledEvent is emitted when message types are added to the
+// x/circuit disable list.
+message MessagesDisabledEvent {
+  string signer = 1;
+  repeated string msg_type_urls = 2;
+}

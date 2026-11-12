@@ -295,6 +295,7 @@ func New(
 	app.setEpochsHooks()
 	app.setTradebinHooks()
 	app.setRewardsHooks()
+	app.wireGuardianCircuit()
 	app.setupUpgradeHandlers()
 
 	anteOptions := ante.HandlerOptions{
