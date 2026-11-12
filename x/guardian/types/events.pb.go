@@ -221,6 +221,115 @@ func (m *DenomUnblockedEvent) GetDenom() string {
 	return ""
 }
 
+// MessagesDisabledEvent is emitted when message types are added to the
+// x/circuit disable list.
+type MessagesDisabledEvent struct {
+	Signer      string   `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+	MsgTypeUrls []string `protobuf:"bytes,2,rep,name=msg_type_urls,json=msgTypeUrls,proto3" json:"msg_type_urls,omitempty"`
+}
+
+func (m *MessagesDisabledEvent) Reset()         { *m = MessagesDisabledEvent{} }
+func (m *MessagesDisabledEvent) String() string { return proto.CompactTextString(m) }
+func (*MessagesDisabledEvent) ProtoMessage()    {}
+func (*MessagesDisabledEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptor_96627918fa510111, []int{3}
+}
+func (m *MessagesDisabledEvent) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MessagesDisabledEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MessagesDisabledEvent.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MessagesDisabledEvent) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MessagesDisabledEvent.Merge(m, src)
+}
+func (m *MessagesDisabledEvent) XXX_Size() int {
+	return m.Size()
+}
+func (m *MessagesDisabledEvent) XXX_DiscardUnknown() {
+	xxx_messageInfo_MessagesDisabledEvent.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MessagesDisabledEvent proto.InternalMessageInfo
+
+func (m *MessagesDisabledEvent) GetSigner() string {
+	if m != nil {
+		return m.Signer
+	}
+	return ""
+}
+
+func (m *MessagesDisabledEvent) GetMsgTypeUrls() []string {
+	if m != nil {
+		return m.MsgTypeUrls
+	}
+	return nil
+}
+
+// TradingDenomsHaltedEvent is emitted once per MsgHaltTradingDenoms. denoms
+// lists the denoms the message halted, without those that were already
+// halted. tradebin's DenomHaltedEvent is emitted for each of them as well.
+type TradingDenomsHaltedEvent struct {
+	Signer string   `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+	Denoms []string `protobuf:"bytes,2,rep,name=denoms,proto3" json:"denoms,omitempty"`
+}
+
+func (m *TradingDenomsHaltedEvent) Reset()         { *m = TradingDenomsHaltedEvent{} }
+func (m *TradingDenomsHaltedEvent) String() string { return proto.CompactTextString(m) }
+func (*TradingDenomsHaltedEvent) ProtoMessage()    {}
+func (*TradingDenomsHaltedEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptor_96627918fa510111, []int{4}
+}
+func (m *TradingDenomsHaltedEvent) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TradingDenomsHaltedEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TradingDenomsHaltedEvent.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TradingDenomsHaltedEvent) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TradingDenomsHaltedEvent.Merge(m, src)
+}
+func (m *TradingDenomsHaltedEvent) XXX_Size() int {
+	return m.Size()
+}
+func (m *TradingDenomsHaltedEvent) XXX_DiscardUnknown() {
+	xxx_messageInfo_TradingDenomsHaltedEvent.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TradingDenomsHaltedEvent proto.InternalMessageInfo
+
+func (m *TradingDenomsHaltedEvent) GetSigner() string {
+	if m != nil {
+		return m.Signer
+	}
+	return ""
+}
+
+func (m *TradingDenomsHaltedEvent) GetDenoms() []string {
+	if m != nil {
+		return m.Denoms
+	}
+	return nil
+}
+
 // ChainHaltScheduledEvent is emitted when a halt plan is scheduled.
 type ChainHaltScheduledEvent struct {
 	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
@@ -233,7 +342,7 @@ func (m *ChainHaltScheduledEvent) Reset()         { *m = ChainHaltScheduledEvent
 func (m *ChainHaltScheduledEvent) String() string { return proto.CompactTextString(m) }
 func (*ChainHaltScheduledEvent) ProtoMessage()    {}
 func (*ChainHaltScheduledEvent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_96627918fa510111, []int{3}
+	return fileDescriptor_96627918fa510111, []int{5}
 }
 func (m *ChainHaltScheduledEvent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -294,36 +403,42 @@ func init() {
 	proto.RegisterType((*TightenRateLimitEvent)(nil), "bze.guardian.v1.TightenRateLimitEvent")
 	proto.RegisterType((*DenomBlockedEvent)(nil), "bze.guardian.v1.DenomBlockedEvent")
 	proto.RegisterType((*DenomUnblockedEvent)(nil), "bze.guardian.v1.DenomUnblockedEvent")
+	proto.RegisterType((*MessagesDisabledEvent)(nil), "bze.guardian.v1.MessagesDisabledEvent")
+	proto.RegisterType((*TradingDenomsHaltedEvent)(nil), "bze.guardian.v1.TradingDenomsHaltedEvent")
 	proto.RegisterType((*ChainHaltScheduledEvent)(nil), "bze.guardian.v1.ChainHaltScheduledEvent")
 }
 
 func init() { proto.RegisterFile("bze/guardian/v1/events.proto", fileDescriptor_96627918fa510111) }
 
 var fileDescriptor_96627918fa510111 = []byte{
-	// 359 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x92, 0xbd, 0x4e, 0xe3, 0x40,
-	0x14, 0x85, 0xe3, 0xcd, 0xdf, 0x66, 0x9a, 0xd5, 0x7a, 0x17, 0x30, 0x52, 0xb0, 0x50, 0x2a, 0x9a,
-	0xd8, 0x8a, 0x78, 0x02, 0x02, 0x08, 0x22, 0x51, 0x39, 0xd0, 0xd0, 0x44, 0x63, 0xcf, 0x95, 0x67,
-	0x84, 0x7d, 0x27, 0xb2, 0xc7, 0x0e, 0xc9, 0x53, 0xf0, 0x58, 0x94, 0x29, 0x29, 0x51, 0xf2, 0x22,
-	0x68, 0x26, 0x4e, 0x42, 0x83, 0x90, 0xe8, 0x7c, 0xce, 0xe7, 0x73, 0x74, 0x7d, 0x7d, 0x49, 0x37,
-	0x5c, 0x80, 0x1f, 0x17, 0x34, 0x63, 0x82, 0xa2, 0x5f, 0x0e, 0x7c, 0x28, 0x01, 0x55, 0xee, 0x4d,
-	0x33, 0xa9, 0xa4, 0xfd, 0x27, 0x5c, 0x80, 0xb7, 0xa5, 0x5e, 0x39, 0xe8, 0x2d, 0x2d, 0x72, 0x70,
-	0x2f, 0x62, 0xae, 0x00, 0x03, 0xaa, 0xe0, 0x4e, 0xa4, 0x42, 0x5d, 0xeb, 0x84, 0x7d, 0x48, 0x5a,
-	0xb9, 0x88, 0x11, 0x32, 0xc7, 0x3a, 0xb5, 0xce, 0x3a, 0x41, 0xa5, 0xec, 0xff, 0xa4, 0xc9, 0x00,
-	0x65, 0xea, 0xfc, 0x32, 0xf6, 0x46, 0xd8, 0x27, 0x84, 0x44, 0x9c, 0x22, 0x42, 0x32, 0x11, 0xcc,
-	0xa9, 0x1b, 0xd4, 0xa9, 0x9c, 0x11, 0xb3, 0x8f, 0xc9, 0x6f, 0x99, 0xb0, 0x49, 0x0e, 0xc8, 0x9c,
-	0x86, 0x81, 0x6d, 0x99, 0xb0, 0x31, 0xe0, 0x0e, 0x65, 0x10, 0x95, 0x4e, 0x73, 0x87, 0x02, 0x88,
-	0x4a, 0x8d, 0x10, 0x66, 0x9b, 0x54, 0x6b, 0x83, 0x10, 0x66, 0xdb, 0x94, 0x46, 0x26, 0xd5, 0xde,
-	0x21, 0x9d, 0xea, 0x5d, 0x90, 0xbf, 0x57, 0x7a, 0xa6, 0x61, 0x22, 0xa3, 0x27, 0x60, 0x3f, 0xf8,
-	0x9a, 0xde, 0x88, 0xfc, 0x33, 0x15, 0x0f, 0x18, 0x7e, 0x2e, 0xe9, 0x92, 0x0e, 0x2d, 0x14, 0x97,
-	0x99, 0x50, 0xf3, 0xaa, 0x67, 0x6f, 0x7c, 0x51, 0x55, 0x90, 0xa3, 0x4b, 0x4e, 0x05, 0xde, 0xd2,
-	0x44, 0x8d, 0x23, 0x0e, 0xac, 0x48, 0xbe, 0x9b, 0xc9, 0x26, 0x0d, 0xa4, 0x29, 0x54, 0x3d, 0xe6,
-	0x59, 0xbf, 0xcb, 0x41, 0xff, 0x27, 0xb3, 0xdb, 0x7a, 0x50, 0x29, 0xed, 0x67, 0x40, 0x73, 0x89,
-	0xd5, 0x5a, 0x2b, 0x35, 0xbc, 0x79, 0x5d, 0xb9, 0xd6, 0x72, 0xe5, 0x5a, 0xef, 0x2b, 0xd7, 0x7a,
-	0x59, 0xbb, 0xb5, 0xe5, 0xda, 0xad, 0xbd, 0xad, 0xdd, 0xda, 0x63, 0x3f, 0x16, 0x8a, 0x17, 0xa1,
-	0x17, 0xc9, 0xd4, 0x0f, 0x17, 0xd0, 0xa7, 0xc9, 0x94, 0x53, 0x05, 0xd4, 0x28, 0xff, 0x79, 0x7f,
-	0x3b, 0x6a, 0x3e, 0x85, 0x3c, 0x6c, 0x99, 0xc3, 0x39, 0xff, 0x08, 0x00, 0x00, 0xff, 0xff, 0xba,
-	0x44, 0xdc, 0xe7, 0x58, 0x02, 0x00, 0x00,
+	// 426 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x92, 0xc1, 0x6e, 0xd3, 0x40,
+	0x10, 0x86, 0xe3, 0xa6, 0x4d, 0xc9, 0x20, 0x84, 0x30, 0xb4, 0x18, 0xa9, 0x58, 0x95, 0x4f, 0xbd,
+	0x34, 0x56, 0xc5, 0x13, 0x50, 0x8a, 0xa0, 0x08, 0x2e, 0x4e, 0x7a, 0xe1, 0x12, 0xad, 0xbd, 0x23,
+	0x7b, 0xc5, 0x7a, 0x36, 0xda, 0x5d, 0xbb, 0x24, 0x4f, 0xc1, 0x63, 0x71, 0xcc, 0x91, 0x23, 0x4a,
+	0x5e, 0x04, 0xed, 0xc6, 0x49, 0xb9, 0xa0, 0x48, 0xdc, 0xfc, 0xcf, 0xe7, 0xff, 0xd7, 0xbf, 0xbb,
+	0x03, 0x67, 0xf9, 0x02, 0xd3, 0xb2, 0x61, 0x9a, 0x0b, 0x46, 0x69, 0x7b, 0x95, 0x62, 0x8b, 0x64,
+	0xcd, 0x68, 0xa6, 0x95, 0x55, 0xe1, 0xd3, 0x7c, 0x81, 0xa3, 0x2d, 0x1d, 0xb5, 0x57, 0xc9, 0x32,
+	0x80, 0x93, 0x89, 0x28, 0x2b, 0x8b, 0x94, 0x31, 0x8b, 0x9f, 0x45, 0x2d, 0xec, 0x7b, 0xe7, 0x08,
+	0x4f, 0x61, 0x60, 0x44, 0x49, 0xa8, 0xa3, 0xe0, 0x3c, 0xb8, 0x18, 0x66, 0x9d, 0x0a, 0x5f, 0xc0,
+	0x11, 0x47, 0x52, 0x75, 0x74, 0xe0, 0xc7, 0x1b, 0x11, 0xbe, 0x06, 0x28, 0x2a, 0x46, 0x84, 0x72,
+	0x2a, 0x78, 0xd4, 0xf7, 0x68, 0xd8, 0x4d, 0x6e, 0x79, 0xf8, 0x0a, 0x1e, 0x29, 0xc9, 0xa7, 0x06,
+	0x89, 0x47, 0x87, 0x1e, 0x1e, 0x2b, 0xc9, 0xc7, 0x48, 0x3b, 0xa4, 0xb1, 0x68, 0xa3, 0xa3, 0x1d,
+	0xca, 0xb0, 0x68, 0x1d, 0x22, 0xbc, 0xdf, 0xb8, 0x06, 0x1b, 0x44, 0x78, 0xbf, 0x75, 0x39, 0xe4,
+	0x5d, 0xc7, 0x3b, 0xe4, 0x5c, 0xc9, 0x5b, 0x78, 0x76, 0xe3, 0x3a, 0x5d, 0x4b, 0x55, 0x7c, 0x43,
+	0xfe, 0x1f, 0xa7, 0x49, 0x6e, 0xe1, 0xb9, 0x8f, 0xb8, 0xa3, 0xfc, 0xef, 0x90, 0x33, 0x18, 0xb2,
+	0xc6, 0x56, 0x4a, 0x0b, 0x3b, 0xef, 0x72, 0x1e, 0x06, 0xff, 0x88, 0x1a, 0xc3, 0xc9, 0x17, 0x34,
+	0x86, 0x95, 0x68, 0x6e, 0x84, 0x61, 0xb9, 0xdc, 0xd7, 0x28, 0x81, 0x27, 0xb5, 0x29, 0xa7, 0x76,
+	0x3e, 0xc3, 0x69, 0xa3, 0xa5, 0x89, 0x0e, 0xce, 0xfb, 0x17, 0xc3, 0xec, 0x71, 0x6d, 0xca, 0xc9,
+	0x7c, 0x86, 0x77, 0x5a, 0x9a, 0xe4, 0x13, 0x44, 0x13, 0xcd, 0xb8, 0xa0, 0xd2, 0xd7, 0x34, 0x1f,
+	0x99, 0xb4, 0xfb, 0x72, 0x4f, 0x61, 0xe0, 0x1b, 0x6d, 0x03, 0x3b, 0x95, 0x34, 0xf0, 0xf2, 0x5d,
+	0xc5, 0x04, 0xb9, 0x8c, 0x71, 0x51, 0x21, 0x6f, 0xf6, 0x56, 0x0c, 0xe1, 0x90, 0x58, 0x8d, 0xdd,
+	0x41, 0xfd, 0xb7, 0xfb, 0xb7, 0x42, 0xb7, 0x48, 0xfe, 0xf1, 0xfb, 0x59, 0xa7, 0xdc, 0x5c, 0x23,
+	0x33, 0x8a, 0xba, 0x77, 0xef, 0xd4, 0xf5, 0x87, 0x9f, 0xab, 0x38, 0x58, 0xae, 0xe2, 0xe0, 0xf7,
+	0x2a, 0x0e, 0x7e, 0xac, 0xe3, 0xde, 0x72, 0x1d, 0xf7, 0x7e, 0xad, 0xe3, 0xde, 0xd7, 0xcb, 0x52,
+	0xd8, 0xaa, 0xc9, 0x47, 0x85, 0xaa, 0xd3, 0x7c, 0x81, 0x97, 0x4c, 0xce, 0x2a, 0x66, 0x91, 0x79,
+	0x95, 0x7e, 0x7f, 0x58, 0x6e, 0x77, 0x45, 0x26, 0x1f, 0xf8, 0xcd, 0x7e, 0xf3, 0x27, 0x00, 0x00,
+	0xff, 0xff, 0xec, 0x24, 0x3f, 0xf1, 0xf9, 0x02, 0x00, 0x00,
 }
 
 func (m *TightenRateLimitEvent) Marshal() (dAtA []byte, err error) {
@@ -472,6 +587,84 @@ func (m *DenomUnblockedEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *MessagesDisabledEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MessagesDisabledEvent) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MessagesDisabledEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.MsgTypeUrls) > 0 {
+		for iNdEx := len(m.MsgTypeUrls) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.MsgTypeUrls[iNdEx])
+			copy(dAtA[i:], m.MsgTypeUrls[iNdEx])
+			i = encodeVarintEvents(dAtA, i, uint64(len(m.MsgTypeUrls[iNdEx])))
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Signer)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *TradingDenomsHaltedEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TradingDenomsHaltedEvent) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TradingDenomsHaltedEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Denoms) > 0 {
+		for iNdEx := len(m.Denoms) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Denoms[iNdEx])
+			copy(dAtA[i:], m.Denoms[iNdEx])
+			i = encodeVarintEvents(dAtA, i, uint64(len(m.Denoms[iNdEx])))
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Signer)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *ChainHaltScheduledEvent) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -599,6 +792,44 @@ func (m *DenomUnblockedEvent) Size() (n int) {
 	l = len(m.Denom)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *MessagesDisabledEvent) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Signer)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if len(m.MsgTypeUrls) > 0 {
+		for _, s := range m.MsgTypeUrls {
+			l = len(s)
+			n += 1 + l + sovEvents(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TradingDenomsHaltedEvent) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Signer)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if len(m.Denoms) > 0 {
+		for _, s := range m.Denoms {
+			l = len(s)
+			n += 1 + l + sovEvents(uint64(l))
+		}
 	}
 	return n
 }
@@ -1113,6 +1344,234 @@ func (m *DenomUnblockedEvent) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MessagesDisabledEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MessagesDisabledEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MessagesDisabledEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MsgTypeUrls", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MsgTypeUrls = append(m.MsgTypeUrls, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TradingDenomsHaltedEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TradingDenomsHaltedEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TradingDenomsHaltedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denoms", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denoms = append(m.Denoms, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

@@ -28,7 +28,7 @@ func (e *env) withUpgrade(t *testing.T) *testutil.MockUpgradeKeeper {
 	return up
 }
 
-func haltMsg(signer string) *types.MsgHaltChain {
+func haltChainMsg(signer string) *types.MsgHaltChain {
 	return &types.MsgHaltChain{Signer: signer, Reason: "stop everything"}
 }
 
@@ -42,7 +42,7 @@ func TestHaltChain_GuardianAndAuthoritySchedule(t *testing.T) {
 			want := upgradetypes.Plan{Name: "emergency-halt-1001", Height: haltHeight + 1, Info: types.HaltPlanInfo}
 			up.EXPECT().ScheduleUpgrade(gomock.Any(), want).Return(nil).Times(1)
 
-			res, err := e.msgServer.HaltChain(e.ctx, haltMsg(signer))
+			res, err := e.msgServer.HaltChain(e.ctx, haltChainMsg(signer))
 			require.NoError(t, err)
 			require.Equal(t, &types.MsgHaltChainResponse{Name: want.Name, Height: want.Height}, res)
 
@@ -66,7 +66,7 @@ func TestHaltChain_GuardianInAnotherSpelling(t *testing.T) {
 	up := e.withUpgrade(t)
 	up.EXPECT().ScheduleUpgrade(gomock.Any(), gomock.Any()).Return(nil).Times(1)
 
-	_, err := e.msgServer.HaltChain(e.ctx, haltMsg(strings.ToUpper(guardianAddr)))
+	_, err := e.msgServer.HaltChain(e.ctx, haltChainMsg(strings.ToUpper(guardianAddr)))
 	require.NoError(t, err)
 }
 
@@ -76,11 +76,11 @@ func TestHaltChain_OthersRefused(t *testing.T) {
 	e := newEnv(t)
 	e.withUpgrade(t) // no ScheduleUpgrade expected: a call panics
 
-	_, err := e.msgServer.HaltChain(e.ctx, haltMsg(strangerAddr))
+	_, err := e.msgServer.HaltChain(e.ctx, haltChainMsg(strangerAddr))
 	require.ErrorIs(t, err, types.ErrUnauthorized)
 
 	require.NoError(t, e.k.SetParams(e.ctx, types.NewParams("")))
-	_, err = e.msgServer.HaltChain(e.ctx, haltMsg(guardianAddr))
+	_, err = e.msgServer.HaltChain(e.ctx, haltChainMsg(guardianAddr))
 	require.ErrorIs(t, err, types.ErrUnauthorized)
 	require.Empty(t, e.ctx.EventManager().Events())
 }
@@ -104,7 +104,7 @@ func TestHaltChain_ScheduleErrorReturned(t *testing.T) {
 	boom := errors.New("refused")
 	up.EXPECT().ScheduleUpgrade(gomock.Any(), gomock.Any()).Return(boom).Times(1)
 
-	_, err := e.msgServer.HaltChain(e.ctx, haltMsg(guardianAddr))
+	_, err := e.msgServer.HaltChain(e.ctx, haltChainMsg(guardianAddr))
 	require.ErrorIs(t, err, boom)
 	require.Empty(t, e.ctx.EventManager().Events())
 }
@@ -114,7 +114,7 @@ func TestHaltChain_UpgradeKeeperNotSet(t *testing.T) {
 	k, ctx := keepertest.GuardianKeeper(t, nil)
 	require.NoError(t, k.SetParams(ctx, types.NewParams(guardianAddr)))
 
-	_, err := keeper.NewMsgServerImpl(&k).HaltChain(ctx, haltMsg(guardianAddr))
+	_, err := keeper.NewMsgServerImpl(&k).HaltChain(ctx, haltChainMsg(guardianAddr))
 	require.ErrorIs(t, err, types.ErrUpgradeKeeperNotSet)
 }
 

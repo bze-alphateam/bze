@@ -542,8 +542,8 @@ func (s *tokenFactorySuite) createRefusals(t *testing.T) {
 	}{
 		{"duplicate subdenom", "tok", tfRefusal{false, tfCodespace, 1101, "attempting to create a denom that already exists (has bank metadata)"}},
 		{"empty subdenom", "", tfRefusal{true, tfSdk, 18, "subdenom must not be empty"}},
-		{"underscore", "a_b", tfRefusal{true, tfSdk, 18, "subdenom should not contain _"}},
-		{"slash", "a/b", tfRefusal{true, tfSdk, 18, "subdenom should not contain /"}},
+		{"underscore", "a_b", tfRefusal{true, tfSdk, 18, "subdenom must not contain _"}},
+		{"slash", "a/b", tfRefusal{true, tfSdk, 18, "subdenom must not contain /"}},
 		{"45 characters", strings.Repeat("a", tfMaxSubLen+1), tfRefusal{false, tfCodespace, 1106, "subdenom too long, max length is 44 bytes"}},
 		{"subdenom with supply", chain.Denom, tfRefusal{false, tfUndefined, 1, "can't create subdenoms that are the same as a native denom"}},
 		{"invalid denom character", "tok!", tfRefusal{true, tfSdk, 18, "invalid denom: tok!"}},

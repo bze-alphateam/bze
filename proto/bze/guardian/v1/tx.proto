@@ -28,6 +28,17 @@ service Msg {
   // UnblockDenom takes a denom off the blacklist. Governance only.
   rpc UnblockDenom (MsgUnblockDenom) returns (MsgUnblockDenomResponse);
 
+  // DisableMessages adds message types to the x/circuit disable list: the app
+  // refuses every message of these types, sent in a tx or executed by another
+  // module. Only governance re-enables them, with x/circuit's
+  // MsgResetCircuitBreaker.
+  rpc DisableMessages (MsgDisableMessages) returns (MsgDisableMessagesResponse);
+
+  // HaltTradingDenoms halts denoms on the DEX, with the same effect as the
+  // tradebin governance message MsgHaltDenoms. Only governance lifts the halt,
+  // through tradebin's MsgUnhaltDenoms.
+  rpc HaltTradingDenoms (MsgHaltTradingDenoms) returns (MsgHaltTradingDenomsResponse);
+
   // HaltChain schedules an upgrade plan at the next block height: every node
   // stops there until it runs a binary that handles the plan, or until the
   // validators skip the height. It replaces any plan already scheduled.
@@ -109,6 +120,37 @@ message MsgUnblockDenom {
 // MsgUnblockDenomResponse defines the response structure for executing a
 // MsgUnblockDenom message.
 message MsgUnblockDenomResponse {}
+
+// MsgDisableMessages is the Msg/DisableMessages request type.
+message MsgDisableMessages {
+  option (cosmos.msg.v1.signer) = "signer";
+  option (amino.name) = "bze/x/guardian/MsgDisableMessages";
+
+  // signer is the guardian or the governance authority.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // msg_type_urls are the type URLs to disable, e.g. /bze.tradebin.MsgMultiSwap.
+  repeated string msg_type_urls = 2;
+}
+
+// MsgDisableMessagesResponse defines the response structure for executing a
+// MsgDisableMessages message.
+message MsgDisableMessagesResponse {}
+
+// MsgHaltTradingDenoms is the Msg/HaltTradingDenoms request type.
+message MsgHaltTradingDenoms {
+  option (cosmos.msg.v1.signer) = "signer";
+  option (amino.name) = "bze/x/guardian/MsgHaltTradingDenoms";
+
+  // signer is the guardian or the governance authority.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // denoms to halt on the DEX: valid denoms, no duplicates, at most 1000, not
+  // the native denom. A denom that is already halted is left as it is.
+  repeated string denoms = 2;
+}
+
+// MsgHaltTradingDenomsResponse defines the response structure for executing a
+// MsgHaltTradingDenoms message.
+message MsgHaltTradingDenomsResponse {}
 
 // MsgHaltChain is the Msg/HaltChain request type.
 message MsgHaltChain {
