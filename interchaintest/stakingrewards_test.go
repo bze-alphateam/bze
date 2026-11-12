@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -94,6 +95,9 @@ const (
 	srCalmBlocks = 200
 
 	srTxGas = 500_000
+	// a refusal is sent at most this many times while day ticks or unlock
+	// payouts fall during it (refuse)
+	srRefuseAttempts = 3
 
 	// LegacyDec precision: the accumulator S has 18 decimals
 	decPrecision = 18
@@ -631,7 +635,6 @@ func (s *stakingRewardsSuite) update(t *testing.T) {
 	s.requireRefused(t, "staking reward not found", s.dave, "rewards", "update-staking-reward", srUnknownID, "1")
 
 	// srMaxDuration more days pass ValidateBasic; the total does not
-	state := s.moduleState(t)
 	ubzeBefore, davePrz = s.balance(t, dave, chain.Denom), s.balance(t, dave, s.prz)
 	require.True(t, davePrz.GTE(sdkmath.NewInt(srBPrize*srMaxDuration)), "dave must afford the escrow, so only the total refuses it")
 	res, err := helpers.ExecTxWith(s.ctx, s.bze, s.dave, []helpers.TxOption{helpers.WithGas(srTxGas)},
@@ -642,7 +645,16 @@ func (s *stakingRewardsSuite) update(t *testing.T) {
 	require.Contains(t, res.RawLog, fmt.Sprintf("the new duration exceeds the maximum allowed of %d days", srMaxDuration))
 	require.Equal(t, davePrz.String(), s.balance(t, dave, s.prz).String(), "the escrow sent before the check must be rolled back")
 	require.Equal(t, ubzeBefore.Sub(s.txFee(t, res)).String(), s.balance(t, dave, chain.Denom).String(), "the failed tx costs its fee")
-	require.Equal(t, state, s.moduleState(t), "the failed extension must change neither the escrow nor the reward")
+	// the module state the tx saw against the state after its block: the
+	// hour epochs of that block may pay pending unlocks of earlier exits out
+	// of the module, nothing else may move
+	stateBefore, after := s.moduleStateAt(t, res.Height-1), s.moduleStateAt(t, res.Height)
+	paid := s.unlocksPaidIn(t, res.Height)
+	wantState := stateBefore
+	wantState.Stk = parseInt(stateBefore.Stk).Sub(paid.AmountOf(s.stk)).String()
+	wantState.Prz = parseInt(stateBefore.Prz).Sub(paid.AmountOf(s.prz)).String()
+	wantState.Stb = parseInt(stateBefore.Stb).Sub(paid.AmountOf(s.stb)).String()
+	require.Equal(t, wantState, after, "the failed extension must change neither the escrow nor the reward (unlocks paid in its block: %s)", paid)
 	s.requireEscrow(t)
 }
 
@@ -971,9 +983,15 @@ func (s *stakingRewardsSuite) unlockEntries(t *testing.T, rewardID string, user 
 
 func (s *stakingRewardsSuite) pendingUnlocks(t *testing.T) []pendingUnlockInfo {
 	t.Helper()
+	return s.pendingUnlocksAt(t, 0)
+}
+
+// pendingUnlocksAt reads the pending unlocks at a height (0 for the latest).
+func (s *stakingRewardsSuite) pendingUnlocksAt(t *testing.T, height int64) []pendingUnlockInfo {
+	t.Helper()
 	res, err := helpers.Query[struct {
 		List []pendingUnlockInfo `json:"list"`
-	}](s.ctx, s.bze, "rewards", "all-pending-unlock-participants")
+	}](s.ctx, s.bze, append([]string{"rewards", "all-pending-unlock-participants"}, srHeightFlag(height)...)...)
 	require.NoError(t, err)
 	return res.List
 }
@@ -1154,22 +1172,28 @@ func (s *stakingRewardsSuite) requireRefusedMsg(t *testing.T, reason string, use
 }
 
 // refuse sends a tx that must be refused with reason and asserts the rewards
-// state is unchanged. Rewards with stakers change on every day tick, so a
-// refusal that straddles one is sent once more: a refused tx has no effect
-// to repeat.
+// state is unchanged. Rewards with stakers change on every day tick and the
+// hour epochs pay pending unlocks out of the module, so a refusal that
+// straddles either is sent again: a refused tx has no effect to repeat.
 func (s *stakingRewardsSuite) refuse(t *testing.T, reason string, what any, send func() (helpers.TxResult, error)) helpers.TxResult {
 	t.Helper()
 	for attempt := 1; ; attempt++ {
-		day := s.currentDay(t)
+		day, unlocks := s.currentDay(t), s.pendingUnlocks(t)
 		before := s.moduleState(t)
 		res, err := send()
 		msg, err := helpers.RejectionReason(res, err)
 		require.NoError(t, err, "tx %v", what)
 		require.Contains(t, msg, reason)
 		after := s.moduleState(t)
-		if attempt == 1 && s.currentDay(t) != day {
-			t.Logf("a day tick fell during the refusal of %v; sending it again", what)
-			continue
+		if attempt < srRefuseAttempts {
+			if s.currentDay(t) != day {
+				t.Logf("a day tick fell during the refusal of %v; sending it again", what)
+				continue
+			}
+			if !slices.Equal(unlocks, s.pendingUnlocks(t)) {
+				t.Logf("pending unlocks were paid during the refusal of %v; sending it again", what)
+				continue
+			}
 		}
 		require.Equal(t, before, after, "a refused tx must not change the rewards state")
 		return res
@@ -1179,6 +1203,50 @@ func (s *stakingRewardsSuite) refuse(t *testing.T, reason string, what any, send
 type srModuleState struct {
 	Stk, Prz, Stb string
 	Rewards       []srInfo
+}
+
+// moduleStateAt is moduleState at the end of height.
+func (s *stakingRewardsSuite) moduleStateAt(t *testing.T, height int64) srModuleState {
+	t.Helper()
+	balance := func(denom string) string {
+		res, err := helpers.Query[struct {
+			Balance struct {
+				Amount string `json:"amount"`
+			} `json:"balance"`
+		}](s.ctx, s.bze, append([]string{"bank", "balance", s.module, denom}, srHeightFlag(height)...)...)
+		require.NoError(t, err)
+		if res.Balance.Amount == "" {
+			return "0"
+		}
+		return parseInt(res.Balance.Amount).String()
+	}
+	rewards, err := helpers.Query[struct {
+		List []srInfo `json:"list"`
+	}](s.ctx, s.bze, append([]string{"rewards", "all-staking-rewards"}, srHeightFlag(height)...)...)
+	require.NoError(t, err)
+	return srModuleState{Stk: balance(s.stk), Prz: balance(s.prz), Stb: balance(s.stb), Rewards: rewards.List}
+}
+
+// unlocksPaidIn returns the pending unlocks paid out of the module in the
+// block at height: the entries queued at height-1 that are gone at height.
+// No unlock may be queued in that block.
+func (s *stakingRewardsSuite) unlocksPaidIn(t *testing.T, height int64) sdk.Coins {
+	t.Helper()
+	before := map[string]pendingUnlockInfo{}
+	for _, e := range s.pendingUnlocksAt(t, height-1) {
+		before[e.Index] = e
+	}
+	for _, e := range s.pendingUnlocksAt(t, height) {
+		was, ok := before[e.Index]
+		require.True(t, ok, "no unlock may be queued at height %d: %+v", height, e)
+		require.Equal(t, was, e, "a pending unlock changed at height %d", height)
+		delete(before, e.Index)
+	}
+	paid := sdk.NewCoins()
+	for _, e := range before {
+		paid = paid.Add(sdk.NewCoin(e.Denom, parseInt(e.Amount)))
+	}
+	return paid
 }
 
 func (s *stakingRewardsSuite) moduleState(t *testing.T) srModuleState {

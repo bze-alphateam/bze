@@ -919,6 +919,8 @@ func (s *orderBookSuite) setTradebinParam(t *testing.T, name, value string) {
 	}](s.ctx, s.bze, "tradebin", "params")
 	require.NoError(t, err)
 	params := res.Params
+	requireDecimalDecParams(t, params)
+	require.NoError(t, helpers.DecParamsForTx(params, helpers.TradebinDecParams...))
 	params[name] = json.RawMessage(value)
 	_, err = helpers.SubmitAndPassProposal(s.ctx, s.bze, s.admin, helpers.Proposal{
 		Messages: []any{map[string]any{"@type": "/bze.tradebin.MsgUpdateParams", "authority": s.gov, "params": params}},
@@ -927,6 +929,22 @@ func (s *orderBookSuite) setTradebinParam(t *testing.T, name, value string) {
 	})
 	require.NoError(t, err)
 	require.JSONEq(t, value, string(s.tradebinParam(t, name)), "tradebin %s", name)
+}
+
+// requireDecimalDecParams requires the queried tradebin Dec params (those the
+// release has) to be printed as decimals: the params query output must be
+// valid input for a MsgUpdateParams as it is.
+func requireDecimalDecParams(t *testing.T, params map[string]json.RawMessage) {
+	t.Helper()
+	for _, name := range helpers.TradebinDecParams {
+		raw, ok := params[name]
+		if !ok {
+			continue
+		}
+		var v string
+		require.NoError(t, json.Unmarshal(raw, &v), "tradebin param %s", name)
+		require.Contains(t, v, ".", "the tradebin params query must print %s as a decimal, got %s", name, raw)
+	}
 }
 
 // blockTime reads the header time of the block at height.

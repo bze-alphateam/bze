@@ -2,6 +2,7 @@ syntax = "proto3";
 package bze.tradebin.v2;
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/tradebin/v2types";
@@ -42,12 +43,14 @@ message Params {
   uint64 poolPriceHalfLifeBlocks = 13 [(gogoproto.moretags) = "yaml:\"pool_price_half_life_blocks\""];
   // largest relative distance between a pool's price and its moving average accepted for the fees users pay
   string feeMaxPriceDrift = 14 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"fee_max_price_drift\""
   ];
   // largest relative distance between a pool's price and its moving average accepted for module operations
   string moduleMaxPriceDrift = 15 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false,
     (gogoproto.moretags) = "yaml:\"module_max_price_drift\""

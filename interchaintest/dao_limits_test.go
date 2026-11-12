@@ -89,10 +89,26 @@ func (s *daoSuite) executionLimits(t *testing.T) {
 			}
 			return []map[string]any{inner}
 		}
-		s.adminExec(t, admin, chain[0], []daoFlow{flow(chain[daoMaxExecutionDepth-1].addr, r, ubze(1))}, nested(daoMaxExecutionDepth)...)
 		watch := []string{r}
 		for _, ref := range chain {
 			watch = append(watch, ref.addr)
+		}
+		// the deepest allowed nesting runs: only the innermost send moves
+		// coins, and every DAO on the way reports its own admin execution,
+		// innermost first (each is emitted once its message has run)
+		res := s.run(t, admin, watch, []daoFlow{flow(chain[daoMaxExecutionDepth-1].addr, r, ubze(1))},
+			append([]string{"dao", "admin-execute", chain[0].idArg()}, msgArgs(nested(daoMaxExecutionDepth)...)...)...)
+		executed := daoEvents(res, "EventAdminExecuted")
+		require.Len(t, executed, daoMaxExecutionDepth, "one EventAdminExecuted per nested execution in tx %s: %+v", res.TxHash, executed)
+		for k, e := range executed {
+			i := daoMaxExecutionDepth - 1 - k
+			wantAdmin := admin.FormattedAddress()
+			if i > 0 {
+				wantAdmin = chain[i-1].addr
+			}
+			require.Equal(t, chain[i].idArg(), e.Attributes["id"], "event %d: dao", k)
+			require.Equal(t, wantAdmin, e.Attributes["admin"], "event %d: admin of dao %d", k, chain[i].id)
+			require.Equal(t, "1", e.Attributes["msg_count"], "event %d: dao %d executed one message", k, chain[i].id)
 		}
 		// a generous fixed gas limit: six nested executions must reach the
 		// depth check, not run out of gas
