@@ -3,6 +3,7 @@ package interchaintest_test
 import (
 	"context"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -58,6 +59,7 @@ const (
 	rlGuardianUnauthorizedCode   = 1101
 	rlGuardianQuotaRaiseCode     = 1103
 	rlGuardianAlreadyBlockedCode = 1106
+	rlGuardianDenomNotFoundCode  = 1109 // guardian ErrDenomNotFound
 )
 
 // TestRateLimitIbc proves IBC rate limiting in the real transfer stack: bze,
@@ -570,6 +572,24 @@ func (r *rateLimitSuite) guardianBlocks(t *testing.T) {
 	res = r.tx(t, r.guardian, "guardian", "block-denom", voucher)
 	require.EqualValues(t, rlGuardianAlreadyBlockedCode, res.Code, res.RawLog)
 	require.Equal(t, "guardian", res.Codespace, res.RawLog)
+
+	// only a denom with a supply on bze can be blocked, in its exact
+	// spelling: other spellings of the voucher, its base name and trace path,
+	// and an unknown denom are refused and block nothing
+	for _, denom := range []string{
+		"ibc/" + strings.ToLower(strings.TrimPrefix(voucher, "ibc/")),
+		chain.SimdDenom,
+		chain.TransferPort + "/" + r.net.BzeChannel + "/" + chain.SimdDenom,
+		"unothere",
+	} {
+		res = r.tx(t, r.guardian, "guardian", "block-denom", denom)
+		require.EqualValues(t, rlGuardianDenomNotFoundCode, res.Code, "%s: %s", denom, res.RawLog)
+		require.Equal(t, "guardian", res.Codespace, res.RawLog)
+		require.Contains(t, res.RawLog, "denom does not exist on chain")
+		blocked, err = helpers.QueryBlockedDenoms(r.ctx, r.bze)
+		require.NoError(t, err)
+		require.Equal(t, []string{voucher}, blocked, "%s blocked nothing", denom)
+	}
 
 	// governance unblocks
 	_, err = helpers.SubmitAndPassProposal(r.ctx, r.bze, r.admin, helpers.Proposal{

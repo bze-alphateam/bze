@@ -314,7 +314,7 @@ proto-all:
 # implicitly: build them once with e2e-image / e2e-image-ref, then run suites.
 E2E_TIMEOUT ?= 60m
 
-.PHONY: e2e-image e2e-image-ref e2e e2e-smoke e2e-denomrewards e2e-amm e2e-tokenfactory e2e-halt e2e-update-pools e2e-ibc e2e-ratelimit e2e-orderbook e2e-tradingrewards e2e-burner e2e-fees e2e-transferfee e2e-cointrunk e2e-params e2e-dao e2e-upgrade e2e-unit e2e-lint
+.PHONY: e2e-image e2e-image-ref e2e e2e-smoke e2e-denomrewards e2e-amm e2e-tokenfactory e2e-halt e2e-update-pools e2e-ibc e2e-ratelimit e2e-orderbook e2e-tradingrewards e2e-burner e2e-fees e2e-transferfee e2e-cointrunk e2e-params e2e-input-rules e2e-dao e2e-upgrade e2e-unit e2e-lint
 
 # Builds the working tree as bze:local.
 e2e-image:
@@ -388,6 +388,11 @@ e2e-cointrunk:
 
 e2e-params:
 	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestParams ./...
+
+# Runs the input rules suite: canonical amounts, address case in x/rewards,
+# protocol fees inside authz exec.
+e2e-input-rules:
+	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestInputRules ./...
 
 # Runs the x/dao suite: every message, query, exploit-catalog case and
 # invariant on one shared chain (long: run it with E2E_TIMEOUT=120m).
