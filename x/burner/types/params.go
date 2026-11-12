@@ -18,6 +18,8 @@ var (
 const (
 	// DefaultIbcMoveCooldownBlocks is the default number of blocks between two moves of the same denom.
 	DefaultIbcMoveCooldownBlocks uint64 = 1000
+	// MaxIbcMoveCooldownBlocks is the largest accepted cooldown, about 2 years of 6 second blocks.
+	MaxIbcMoveCooldownBlocks uint64 = 10_000_000
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -91,6 +93,10 @@ func validateIbcMoveMaxReserveRatio(v math.LegacyDec) error {
 func validateIbcMoveCooldownBlocks(v uint64) error {
 	if v == 0 {
 		return fmt.Errorf("ibc move cooldown blocks must be at least 1")
+	}
+
+	if v > MaxIbcMoveCooldownBlocks {
+		return fmt.Errorf("ibc move cooldown blocks must be at most %d: %d", MaxIbcMoveCooldownBlocks, v)
 	}
 
 	return nil

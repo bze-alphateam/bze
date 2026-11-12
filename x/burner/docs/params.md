@@ -22,7 +22,7 @@ This module exposes three on-chain parameters: how often the accumulated burner 
 ## `ibc_move_cooldown_blocks`
 - **Type:** `uint64`
 - **Default:** `1000`
-- **Valid:** `>= 1`
+- **Valid:** `1` to `10,000,000` (about 2 years of 6 second blocks)
 - **Purpose:** After a successful move of a denom, the next move of that denom is refused until this many blocks have passed. Each denom has its own cooldown.
 
 Chains upgrading to consensus version 5 get both defaults written by the module migration.

@@ -21,6 +21,7 @@ This file captures implementation details for integrators and operators. For use
 - Before any coin moves, it checks, in order:
   - **Cooldown:** the store keeps, per denom, the height of the last successful move (prefix `iml/` + denom → `IbcMoveLock`). A move is refused (`ErrIbcMoveCooldown`) while `height - last_move_height < ibc_move_cooldown_blocks`. This check runs before any trade module call. The lock is written only after a successful move. A denom that was never moved has no lock.
   - **Cap:** the pool id comes from `CreatePoolId(native_denom, denom)`, and the IBC reserve is `reserve_base` or `reserve_quote`, whichever side holds the denom. The move takes `min(locked balance, floor(ibc_move_max_reserve_ratio × reserve))`. With no pool or a cap of 0 it is refused (`ErrIbcMoveNoCapacity`).
+- The cap uses the pool's live reserve at the time of the move, not the price average. A swap earlier in the same block that grows the reserve is bounded by the module price-drift guard of `SafeModuleAddLiquidityWithNativeDenom`.
 - `CanSwapForNativeDenom` and the zap then run on the capped coin. The rest of the balance stays locked.
 - The burner reads tradebin only through its `TradeKeeper` interface: `GetParams` (native denom), `CreatePoolId`, `GetLiquidityPool`.
 - The locks are exported and imported in genesis (`ibc_move_locks`; denoms must be unique and non-empty).

@@ -30,6 +30,8 @@ func TestParams_ValidateIbcMoveLimits(t *testing.T) {
 		{desc: "zero cooldown", ratio: math.LegacyNewDecWithPrec(3, 2), cooldown: 0},
 		{desc: "smallest ratio and cooldown", ratio: math.LegacySmallestDec(), cooldown: 1, valid: true},
 		{desc: "ratio 1", ratio: math.LegacyOneDec(), cooldown: 1_000_000, valid: true},
+		{desc: "max cooldown", ratio: math.LegacyNewDecWithPrec(3, 2), cooldown: 10_000_000, valid: true},
+		{desc: "cooldown above max", ratio: math.LegacyNewDecWithPrec(3, 2), cooldown: 10_000_001},
 	}
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
