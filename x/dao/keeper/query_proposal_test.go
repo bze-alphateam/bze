@@ -129,15 +129,17 @@ func (suite *IntegrationTestSuite) TestQueryProposal_ExpediteSettleable() {
 	suite.requireLiveStatus(expedited, false, 0, false)
 }
 
-// The flag follows min_expedite_delay as SettleProposal does: a proposal that
-// meets the bars is not settleable until the delay after its submission.
+// The flag follows min_expedite_delay as SettleProposal does: a stake DAO
+// proposal that meets the bars is not settleable until the delay after its
+// submission.
 func (suite *IntegrationTestSuite) TestQueryProposal_ExpediteSettleableAfterDelay() {
 	suite.setExpediteDelay(time.Hour)
-	suite.createStaticDao(noConfigChange)
+	_, s := suite.expediteStakeDao(noConfigChange)
+	s.joinSr("1", memberA, 100)
+	suite.atBlock(10)
 	id, err := suite.submit(memberA, 1, true)
 	suite.Require().NoError(err)
 	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
-	suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_YES))
 	suite.requireLiveStatus(id, false, 0, false)
 
 	proposal, _ := suite.k.GetProposal(suite.ctx, id)
@@ -193,4 +195,21 @@ func (suite *IntegrationTestSuite) TestQueryProposal_NotFound() {
 
 	_, err = suite.k.Proposal(suite.ctx, nil)
 	suite.Require().Equal(codes.InvalidArgument, status.Code(err))
+}
+
+// A static-list DAO ignores the delay: the flag is set as soon as the tally
+// meets the bars, in the submit block, whatever min_expedite_delay is.
+func (suite *IntegrationTestSuite) TestQueryProposal_ExpediteSettleableStaticListNoDelay() {
+	suite.setExpediteDelay(time.Hour)
+	suite.createStaticDao(noConfigChange)
+	id, err := suite.submit(memberA, 1, true)
+	suite.Require().NoError(err)
+	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
+	suite.requireLiveStatus(id, false, 0, false)
+	suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_YES))
+	suite.requireLiveStatus(id, false, 0, true)
+
+	_, err = suite.settle(id)
+	suite.Require().NoError(err)
+	suite.requireSettled(id, types.ProposalStatus_EXECUTED, true)
 }
