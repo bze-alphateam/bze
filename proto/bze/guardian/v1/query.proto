@@ -20,6 +20,11 @@ service Query {
     option (google.api.http).get = "/bze/guardian/v1/blocked_denoms";
   }
 
+  // AutomationPaused tells whether the protocol automation is paused.
+  rpc AutomationPaused (QueryAutomationPausedRequest) returns (QueryAutomationPausedResponse) {
+    option (google.api.http).get = "/bze/guardian/v1/automation_paused";
+  }
+
   // ClosedChannels lists the transfer channels closed by the guardian or governance.
   rpc ClosedChannels (QueryClosedChannelsRequest) returns (QueryClosedChannelsResponse) {
     option (google.api.http).get = "/bze/guardian/v1/closed_channels";
@@ -42,6 +47,16 @@ message QueryBlockedDenomsRequest {}
 message QueryBlockedDenomsResponse {
   // denoms are the blacklisted denoms, every transfer of them is refused.
   repeated string denoms = 1;
+}
+
+// QueryAutomationPausedRequest is request type for the Query/AutomationPaused RPC method.
+message QueryAutomationPausedRequest {}
+
+// QueryAutomationPausedResponse is response type for the Query/AutomationPaused RPC method.
+message QueryAutomationPausedResponse {
+  // paused is true while the txfeecollector EndBlock conversions and the
+  // burner's periodic burn are stopped.
+  bool paused = 1 [(amino.dont_omitempty) = true];
 }
 
 // QueryClosedChannelsRequest is request type for the Query/ClosedChannels RPC method.

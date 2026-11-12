@@ -12,6 +12,11 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgTightenRateLimit{},
 		&MsgBlockDenom{},
 		&MsgUnblockDenom{},
+		&MsgDisableMessages{},
+		&MsgHaltTradingDenoms{},
+		&MsgHaltChain{},
+		&MsgPauseAutomation{},
+		&MsgResumeAutomation{},
 		&MsgCloseChannel{},
 		&MsgReopenChannel{},
 	)

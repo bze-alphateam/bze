@@ -74,7 +74,7 @@ func setupClosed(t *testing.T) (sdk.Context, ibcmiddleware.IBCMiddleware, *recor
 
 	app := &recordingApp{}
 	ics4 := &recordingICS4{}
-	im := ibcmiddleware.NewIBCMiddleware(app, ics4, paramsKeeper{params: types.DefaultParams()}, closedGuard())
+	im := ibcmiddleware.NewIBCMiddleware(app, ics4, paramsKeeper{params: types.DefaultParams(), closed: closedGuard().closed})
 
 	return gateContext(), im, app, ics4
 }

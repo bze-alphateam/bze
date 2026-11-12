@@ -29,9 +29,10 @@ import (
 	"github.com/bze-alphateam/bze/x/txfeecollector/types"
 )
 
-// ParamsKeeper is the slice of the x/txfeecollector keeper the filter needs: the
-// module params holding the blocked (channel, base denom) pairs.
-type ParamsKeeper interface {
+// Keeper is the slice of the x/txfeecollector keeper the middleware needs: the module
+// params holding the blocked (channel, base denom) pairs, and the closed-channel check.
+type Keeper interface {
+	ChannelGuard
 	GetParams(ctx context.Context) types.Params
 }
 
@@ -39,8 +40,7 @@ type ParamsKeeper interface {
 type IBCMiddleware struct {
 	app    porttypes.IBCModule
 	gate   SendGate
-	keeper ParamsKeeper
-	guard  ChannelGuard
+	keeper Keeper
 }
 
 var _ porttypes.Middleware = (*IBCMiddleware)(nil)
@@ -51,12 +51,11 @@ var _ porttypes.Middleware = (*IBCMiddleware)(nil)
 // the transfer keeper's sends. In the app the transfer keeper is given its own SendGate
 // (it is built before this middleware), so this one only matters to callers that send
 // through the middleware itself.
-func NewIBCMiddleware(app porttypes.IBCModule, ics4 porttypes.ICS4Wrapper, keeper ParamsKeeper, guard ChannelGuard) IBCMiddleware {
+func NewIBCMiddleware(app porttypes.IBCModule, ics4 porttypes.ICS4Wrapper, keeper Keeper) IBCMiddleware {
 	return IBCMiddleware{
 		app:    app,
-		gate:   NewSendGate(ics4, guard),
+		gate:   NewSendGate(ics4, keeper),
 		keeper: keeper,
-		guard:  guard,
 	}
 }
 
@@ -67,7 +66,7 @@ func NewIBCMiddleware(app porttypes.IBCModule, ics4 porttypes.ICS4Wrapper, keepe
 func (im IBCMiddleware) OnRecvPacket(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
 	// A closed channel stops the whole channel: returning vouchers and packets that do
 	// not parse are refused too. The sending chain refunds on the error acknowledgement.
-	if im.guard.IsChannelClosed(ctx, packet.GetDestChannel()) {
+	if im.keeper.IsChannelClosed(ctx, packet.GetDestChannel()) {
 		ctx.Logger().Info(
 			"refused inbound ibc transfer on a closed channel",
 			"channel", packet.GetDestChannel(),

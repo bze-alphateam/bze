@@ -21,7 +21,7 @@ func TestGenesis(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	acc := testutil.NewMockAccountKeeper(ctrl)
-	k, ctx := keepertest.BurnerKeeper(t, nil, acc, nil, nil)
+	k, ctx := keepertest.BurnerKeeper(t, nil, acc, nil, nil, nil)
 
 	burner.InitGenesis(ctx, k, genesisState)
 	got := burner.ExportGenesis(ctx, k)

@@ -36,3 +36,20 @@ func TestGenesis_InvalidClosedChannelPanics(t *testing.T) {
 		guardian.InitGenesis(ctx, &k, types.GenesisState{Params: types.DefaultParams(), ClosedChannels: []string{"nope"}})
 	})
 }
+
+// Both stop switches with state survive an export and import together.
+func TestGenesis_PauseAndClosedChannelsRoundTrip(t *testing.T) {
+	k, ctx := keepertest.GuardianKeeper(t, nil)
+
+	genesis := types.GenesisState{Params: types.DefaultParams(), AutomationPaused: true, ClosedChannels: []string{"channel-3"}}
+	guardian.InitGenesis(ctx, &k, genesis)
+	require.True(t, k.IsAutomationPaused(ctx))
+	require.True(t, k.IsChannelClosed(ctx, "channel-3"))
+
+	exported := guardian.ExportGenesis(ctx, &k)
+	require.Equal(t, genesis, *exported)
+
+	other, otherCtx := keepertest.GuardianKeeper(t, nil)
+	guardian.InitGenesis(otherCtx, &other, *exported)
+	require.Equal(t, exported, guardian.ExportGenesis(otherCtx, &other))
+}

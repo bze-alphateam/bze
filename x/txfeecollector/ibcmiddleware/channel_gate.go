@@ -13,7 +13,8 @@ import (
 )
 
 // ChannelGuard reports whether every ICS-20 transfer on a channel of this chain is
-// stopped. The app wires the x/guardian keeper here; this package never imports it.
+// stopped. The app wires the txfeecollector keeper here, which reads the x/guardian
+// closed channels through its GuardianKeeper; this package never imports x/guardian.
 type ChannelGuard interface {
 	IsChannelClosed(ctx context.Context, channelID string) bool
 }

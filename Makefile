@@ -314,7 +314,7 @@ proto-all:
 # implicitly: build them once with e2e-image / e2e-image-ref, then run suites.
 E2E_TIMEOUT ?= 60m
 
-.PHONY: e2e-image e2e-image-ref e2e e2e-smoke e2e-denomrewards e2e-amm e2e-tokenfactory e2e-halt e2e-update-pools e2e-ibc e2e-ratelimit e2e-guardian-ibc e2e-orderbook e2e-tradingrewards e2e-burner e2e-fees e2e-transferfee e2e-cointrunk e2e-params e2e-dao e2e-upgrade e2e-unit e2e-lint
+.PHONY: e2e-image e2e-image-ref e2e e2e-smoke e2e-denomrewards e2e-amm e2e-tokenfactory e2e-halt e2e-update-pools e2e-ibc e2e-ratelimit e2e-guardian-ibc e2e-guardian e2e-guardian-halt e2e-guardian-pause e2e-orderbook e2e-tradingrewards e2e-burner e2e-fees e2e-transferfee e2e-cointrunk e2e-params e2e-input-rules e2e-dao e2e-dao-expedite e2e-guardian-halt-chain e2e-upgrade e2e-unit e2e-lint
 
 # Builds the working tree as bze:local.
 e2e-image:
@@ -375,6 +375,18 @@ e2e-ibc:
 e2e-ratelimit:
 	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestRateLimitIbc ./...
 
+# Runs the guardian emergency switches suite.
+e2e-guardian:
+	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run '^TestGuardian$$' ./...
+
+# Runs the guardian DEX halt suite: the guardian halts a denom, gov unhalts it.
+e2e-guardian-halt:
+	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestGuardianHaltTradingDenoms ./...
+
+# Runs the guardian protocol automation pause suite (waits one week tick, ~5 min).
+e2e-guardian-pause:
+	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestGuardianPause ./...
+
 # Runs the guardian IBC channel switch suite (bze <-> simd through Hermes).
 e2e-guardian-ibc:
 	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestGuardianChannelIbc ./...
@@ -393,10 +405,24 @@ e2e-cointrunk:
 e2e-params:
 	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestParams ./...
 
+# Runs the input rules suite: canonical amounts, address case in x/rewards,
+# protocol fees inside authz exec.
+e2e-input-rules:
+	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestInputRules ./...
+
 # Runs the x/dao suite: every message, query, exploit-catalog case and
 # invariant on one shared chain (long: run it with E2E_TIMEOUT=120m).
 e2e-dao:
 	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestDao ./...
+
+# Runs the expedite delay suite: a static-list DAO settles an expedited
+# proposal at once, a stake DAO waits for min_expedite_delay.
+e2e-dao-expedite:
+	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestStaticDaoExpedite ./...
+
+# Runs the guardian chain halt suite. It stops its own network for good.
+e2e-guardian-halt-chain:
+	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestGuardianHaltChain ./...
 
 # Runs the chain upgrade suite: E2E_UPGRADE_FROM -> E2E_UPGRADE_TO through a gov
 # plan named E2E_UPGRADE_NAME (see interchaintest/README.md). Run before every tag.

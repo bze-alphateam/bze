@@ -22,6 +22,9 @@ type IntegrationTestSuite struct {
 	bank      *testutil.MockBankKeeper
 	acc       *testutil.MockAccountKeeper
 	trade     *testutil.MockTradeKeeper
+	guardian  *testutil.MockGuardianKeeper
+	// paused is what the mocked guardian answers to IsAutomationPaused
+	paused bool
 }
 
 func (suite *IntegrationTestSuite) SetupTest() {
@@ -38,13 +41,18 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	mockTrade := testutil.NewMockTradeKeeper(mockCtrl)
 	require.NotNil(t, mockTrade)
 
-	k, ctx := keeper2.BurnerKeeper(t, mockBank, mockAcc, mockEpoch, mockTrade)
+	mockGuardian := testutil.NewMockGuardianKeeper(mockCtrl)
+	suite.paused = false
+	mockGuardian.EXPECT().IsAutomationPaused(gomock.Any()).DoAndReturn(func(_ any) bool { return suite.paused }).AnyTimes()
+
+	k, ctx := keeper2.BurnerKeeper(t, mockBank, mockAcc, mockEpoch, mockTrade, mockGuardian)
 	suite.ctx = ctx
 	suite.k = &k
 	suite.epoch = mockEpoch
 	suite.bank = mockBank
 	suite.acc = mockAcc
 	suite.trade = mockTrade
+	suite.guardian = mockGuardian
 	suite.msgServer = keeper.NewMsgServerImpl(k)
 }
 

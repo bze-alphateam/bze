@@ -18,6 +18,14 @@ var (
 	ErrNotBlocked            = sdkerrors.Register(ModuleName, 1107, "denom is not blocked")
 	ErrInvalidDenom          = sdkerrors.Register(ModuleName, 1108, "invalid denom")
 	ErrDenomNotFound         = sdkerrors.Register(ModuleName, 1109, "denom does not exist on chain")
+	ErrInvalidMsgTypeURLs    = sdkerrors.Register(ModuleName, 1110, "invalid message type urls")
+	ErrProtectedMsgType      = sdkerrors.Register(ModuleName, 1111, "message type cannot be disabled")
+	ErrUnknownMsgType        = sdkerrors.Register(ModuleName, 1112, "message type is not routed by the app")
+	ErrAlreadyDisabled       = sdkerrors.Register(ModuleName, 1113, "message type is already disabled")
+	ErrCircuitKeeperNotSet   = sdkerrors.Register(ModuleName, 1114, "circuit keeper is not set")
+
+	// 1120-1129: DEX denom halt
+	ErrTradebinKeeperNotSet = sdkerrors.Register(ModuleName, 1120, "tradebin keeper is not set")
 
 	// channel switch: codes 1140-1149
 	ErrInvalidChannel       = sdkerrors.Register(ModuleName, 1140, "invalid channel id")

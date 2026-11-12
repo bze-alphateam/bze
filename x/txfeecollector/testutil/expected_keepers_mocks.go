@@ -438,3 +438,55 @@ func (mr *MockParamSubspaceMockRecorder) Set(arg0, arg1, arg2 any) *gomock.Call 
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockParamSubspace)(nil).Set), arg0, arg1, arg2)
 }
+
+// MockGuardianKeeper is a mock of GuardianKeeper interface.
+type MockGuardianKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockGuardianKeeperMockRecorder
+	isgomock struct{}
+}
+
+// MockGuardianKeeperMockRecorder is the mock recorder for MockGuardianKeeper.
+type MockGuardianKeeperMockRecorder struct {
+	mock *MockGuardianKeeper
+}
+
+// NewMockGuardianKeeper creates a new mock instance.
+func NewMockGuardianKeeper(ctrl *gomock.Controller) *MockGuardianKeeper {
+	mock := &MockGuardianKeeper{ctrl: ctrl}
+	mock.recorder = &MockGuardianKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockGuardianKeeper) EXPECT() *MockGuardianKeeperMockRecorder {
+	return m.recorder
+}
+
+// IsAutomationPaused mocks base method.
+func (m *MockGuardianKeeper) IsAutomationPaused(ctx context.Context) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsAutomationPaused", ctx)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsAutomationPaused indicates an expected call of IsAutomationPaused.
+func (mr *MockGuardianKeeperMockRecorder) IsAutomationPaused(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAutomationPaused", reflect.TypeOf((*MockGuardianKeeper)(nil).IsAutomationPaused), ctx)
+}
+
+// IsChannelClosed mocks base method.
+func (m *MockGuardianKeeper) IsChannelClosed(ctx context.Context, channelID string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsChannelClosed", ctx, channelID)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsChannelClosed indicates an expected call of IsChannelClosed.
+func (mr *MockGuardianKeeperMockRecorder) IsChannelClosed(ctx, channelID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsChannelClosed", reflect.TypeOf((*MockGuardianKeeper)(nil).IsChannelClosed), ctx, channelID)
+}

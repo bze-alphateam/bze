@@ -56,3 +56,12 @@ type ParamSubspace interface {
 	Get(context.Context, []byte, interface{})
 	Set(context.Context, []byte, interface{})
 }
+
+// GuardianKeeper is the x/guardian state txfeecollector reads: the protocol automation pause and the closed
+// transfer channels. Implemented by the x/guardian keeper.
+type GuardianKeeper interface {
+	// IsAutomationPaused is true while EndBlock must not convert, send or fund anything.
+	IsAutomationPaused(ctx context.Context) bool
+	// IsChannelClosed is true while every ICS-20 transfer on the channel must be refused, in both directions.
+	IsChannelClosed(ctx context.Context, channelID string) bool
+}

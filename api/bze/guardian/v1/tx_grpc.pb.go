@@ -19,12 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_UpdateParams_FullMethodName     = "/bze.guardian.v1.Msg/UpdateParams"
-	Msg_TightenRateLimit_FullMethodName = "/bze.guardian.v1.Msg/TightenRateLimit"
-	Msg_BlockDenom_FullMethodName       = "/bze.guardian.v1.Msg/BlockDenom"
-	Msg_UnblockDenom_FullMethodName     = "/bze.guardian.v1.Msg/UnblockDenom"
-	Msg_CloseChannel_FullMethodName     = "/bze.guardian.v1.Msg/CloseChannel"
-	Msg_ReopenChannel_FullMethodName    = "/bze.guardian.v1.Msg/ReopenChannel"
+	Msg_UpdateParams_FullMethodName      = "/bze.guardian.v1.Msg/UpdateParams"
+	Msg_TightenRateLimit_FullMethodName  = "/bze.guardian.v1.Msg/TightenRateLimit"
+	Msg_BlockDenom_FullMethodName        = "/bze.guardian.v1.Msg/BlockDenom"
+	Msg_UnblockDenom_FullMethodName      = "/bze.guardian.v1.Msg/UnblockDenom"
+	Msg_DisableMessages_FullMethodName   = "/bze.guardian.v1.Msg/DisableMessages"
+	Msg_HaltTradingDenoms_FullMethodName = "/bze.guardian.v1.Msg/HaltTradingDenoms"
+	Msg_HaltChain_FullMethodName         = "/bze.guardian.v1.Msg/HaltChain"
+	Msg_PauseAutomation_FullMethodName   = "/bze.guardian.v1.Msg/PauseAutomation"
+	Msg_ResumeAutomation_FullMethodName  = "/bze.guardian.v1.Msg/ResumeAutomation"
+	Msg_CloseChannel_FullMethodName      = "/bze.guardian.v1.Msg/CloseChannel"
+	Msg_ReopenChannel_FullMethodName     = "/bze.guardian.v1.Msg/ReopenChannel"
 )
 
 // MsgClient is the client API for Msg service.
@@ -42,6 +47,24 @@ type MsgClient interface {
 	BlockDenom(ctx context.Context, in *MsgBlockDenom, opts ...grpc.CallOption) (*MsgBlockDenomResponse, error)
 	// UnblockDenom takes a denom off the blacklist. Governance only.
 	UnblockDenom(ctx context.Context, in *MsgUnblockDenom, opts ...grpc.CallOption) (*MsgUnblockDenomResponse, error)
+	// DisableMessages adds message types to the x/circuit disable list: the app
+	// refuses every message of these types, sent in a tx or executed by another
+	// module. Only governance re-enables them, with x/circuit's
+	// MsgResetCircuitBreaker.
+	DisableMessages(ctx context.Context, in *MsgDisableMessages, opts ...grpc.CallOption) (*MsgDisableMessagesResponse, error)
+	// HaltTradingDenoms halts denoms on the DEX, with the same effect as the
+	// tradebin governance message MsgHaltDenoms. Only governance lifts the halt,
+	// through tradebin's MsgUnhaltDenoms.
+	HaltTradingDenoms(ctx context.Context, in *MsgHaltTradingDenoms, opts ...grpc.CallOption) (*MsgHaltTradingDenomsResponse, error)
+	// HaltChain schedules an upgrade plan at the next block height: every node
+	// stops there until it runs a binary that handles the plan, or until the
+	// validators skip the height. It replaces any plan already scheduled.
+	HaltChain(ctx context.Context, in *MsgHaltChain, opts ...grpc.CallOption) (*MsgHaltChainResponse, error)
+	// PauseAutomation stops the protocol's own automatic fund movements: the
+	// txfeecollector EndBlock conversions and the burner's periodic burn.
+	PauseAutomation(ctx context.Context, in *MsgPauseAutomation, opts ...grpc.CallOption) (*MsgPauseAutomationResponse, error)
+	// ResumeAutomation lifts the pause. Governance only.
+	ResumeAutomation(ctx context.Context, in *MsgResumeAutomation, opts ...grpc.CallOption) (*MsgResumeAutomationResponse, error)
 	// CloseChannel stops every ICS-20 transfer on a transfer channel, in both
 	// directions. The channel itself stays open in IBC.
 	CloseChannel(ctx context.Context, in *MsgCloseChannel, opts ...grpc.CallOption) (*MsgCloseChannelResponse, error)
@@ -94,6 +117,51 @@ func (c *msgClient) UnblockDenom(ctx context.Context, in *MsgUnblockDenom, opts 
 	return out, nil
 }
 
+func (c *msgClient) DisableMessages(ctx context.Context, in *MsgDisableMessages, opts ...grpc.CallOption) (*MsgDisableMessagesResponse, error) {
+	out := new(MsgDisableMessagesResponse)
+	err := c.cc.Invoke(ctx, Msg_DisableMessages_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) HaltTradingDenoms(ctx context.Context, in *MsgHaltTradingDenoms, opts ...grpc.CallOption) (*MsgHaltTradingDenomsResponse, error) {
+	out := new(MsgHaltTradingDenomsResponse)
+	err := c.cc.Invoke(ctx, Msg_HaltTradingDenoms_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) HaltChain(ctx context.Context, in *MsgHaltChain, opts ...grpc.CallOption) (*MsgHaltChainResponse, error) {
+	out := new(MsgHaltChainResponse)
+	err := c.cc.Invoke(ctx, Msg_HaltChain_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) PauseAutomation(ctx context.Context, in *MsgPauseAutomation, opts ...grpc.CallOption) (*MsgPauseAutomationResponse, error) {
+	out := new(MsgPauseAutomationResponse)
+	err := c.cc.Invoke(ctx, Msg_PauseAutomation_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ResumeAutomation(ctx context.Context, in *MsgResumeAutomation, opts ...grpc.CallOption) (*MsgResumeAutomationResponse, error) {
+	out := new(MsgResumeAutomationResponse)
+	err := c.cc.Invoke(ctx, Msg_ResumeAutomation_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) CloseChannel(ctx context.Context, in *MsgCloseChannel, opts ...grpc.CallOption) (*MsgCloseChannelResponse, error) {
 	out := new(MsgCloseChannelResponse)
 	err := c.cc.Invoke(ctx, Msg_CloseChannel_FullMethodName, in, out, opts...)
@@ -127,6 +195,24 @@ type MsgServer interface {
 	BlockDenom(context.Context, *MsgBlockDenom) (*MsgBlockDenomResponse, error)
 	// UnblockDenom takes a denom off the blacklist. Governance only.
 	UnblockDenom(context.Context, *MsgUnblockDenom) (*MsgUnblockDenomResponse, error)
+	// DisableMessages adds message types to the x/circuit disable list: the app
+	// refuses every message of these types, sent in a tx or executed by another
+	// module. Only governance re-enables them, with x/circuit's
+	// MsgResetCircuitBreaker.
+	DisableMessages(context.Context, *MsgDisableMessages) (*MsgDisableMessagesResponse, error)
+	// HaltTradingDenoms halts denoms on the DEX, with the same effect as the
+	// tradebin governance message MsgHaltDenoms. Only governance lifts the halt,
+	// through tradebin's MsgUnhaltDenoms.
+	HaltTradingDenoms(context.Context, *MsgHaltTradingDenoms) (*MsgHaltTradingDenomsResponse, error)
+	// HaltChain schedules an upgrade plan at the next block height: every node
+	// stops there until it runs a binary that handles the plan, or until the
+	// validators skip the height. It replaces any plan already scheduled.
+	HaltChain(context.Context, *MsgHaltChain) (*MsgHaltChainResponse, error)
+	// PauseAutomation stops the protocol's own automatic fund movements: the
+	// txfeecollector EndBlock conversions and the burner's periodic burn.
+	PauseAutomation(context.Context, *MsgPauseAutomation) (*MsgPauseAutomationResponse, error)
+	// ResumeAutomation lifts the pause. Governance only.
+	ResumeAutomation(context.Context, *MsgResumeAutomation) (*MsgResumeAutomationResponse, error)
 	// CloseChannel stops every ICS-20 transfer on a transfer channel, in both
 	// directions. The channel itself stays open in IBC.
 	CloseChannel(context.Context, *MsgCloseChannel) (*MsgCloseChannelResponse, error)
@@ -151,6 +237,21 @@ func (UnimplementedMsgServer) BlockDenom(context.Context, *MsgBlockDenom) (*MsgB
 }
 func (UnimplementedMsgServer) UnblockDenom(context.Context, *MsgUnblockDenom) (*MsgUnblockDenomResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnblockDenom not implemented")
+}
+func (UnimplementedMsgServer) DisableMessages(context.Context, *MsgDisableMessages) (*MsgDisableMessagesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DisableMessages not implemented")
+}
+func (UnimplementedMsgServer) HaltTradingDenoms(context.Context, *MsgHaltTradingDenoms) (*MsgHaltTradingDenomsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HaltTradingDenoms not implemented")
+}
+func (UnimplementedMsgServer) HaltChain(context.Context, *MsgHaltChain) (*MsgHaltChainResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HaltChain not implemented")
+}
+func (UnimplementedMsgServer) PauseAutomation(context.Context, *MsgPauseAutomation) (*MsgPauseAutomationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PauseAutomation not implemented")
+}
+func (UnimplementedMsgServer) ResumeAutomation(context.Context, *MsgResumeAutomation) (*MsgResumeAutomationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResumeAutomation not implemented")
 }
 func (UnimplementedMsgServer) CloseChannel(context.Context, *MsgCloseChannel) (*MsgCloseChannelResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CloseChannel not implemented")
@@ -243,6 +344,96 @@ func _Msg_UnblockDenom_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_DisableMessages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDisableMessages)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).DisableMessages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_DisableMessages_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).DisableMessages(ctx, req.(*MsgDisableMessages))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_HaltTradingDenoms_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgHaltTradingDenoms)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).HaltTradingDenoms(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_HaltTradingDenoms_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).HaltTradingDenoms(ctx, req.(*MsgHaltTradingDenoms))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_HaltChain_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgHaltChain)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).HaltChain(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_HaltChain_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).HaltChain(ctx, req.(*MsgHaltChain))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_PauseAutomation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgPauseAutomation)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).PauseAutomation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_PauseAutomation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).PauseAutomation(ctx, req.(*MsgPauseAutomation))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ResumeAutomation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgResumeAutomation)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ResumeAutomation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_ResumeAutomation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ResumeAutomation(ctx, req.(*MsgResumeAutomation))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_CloseChannel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgCloseChannel)
 	if err := dec(in); err != nil {
@@ -301,6 +492,26 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnblockDenom",
 			Handler:    _Msg_UnblockDenom_Handler,
+		},
+		{
+			MethodName: "DisableMessages",
+			Handler:    _Msg_DisableMessages_Handler,
+		},
+		{
+			MethodName: "HaltTradingDenoms",
+			Handler:    _Msg_HaltTradingDenoms_Handler,
+		},
+		{
+			MethodName: "HaltChain",
+			Handler:    _Msg_HaltChain_Handler,
+		},
+		{
+			MethodName: "PauseAutomation",
+			Handler:    _Msg_PauseAutomation_Handler,
+		},
+		{
+			MethodName: "ResumeAutomation",
+			Handler:    _Msg_ResumeAutomation_Handler,
 		},
 		{
 			MethodName: "CloseChannel",

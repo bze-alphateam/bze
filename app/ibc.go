@@ -99,14 +99,14 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 	app.GuardianKeeper.SetChannelKeeper(app.IBCKeeper.ChannelKeeper)
 
 	// Create IBC transfer keeper. Outgoing transfer packets go through the closed-channel
-	// gate (x/guardian channel switch), then the rate-limiting keeper (its ICS-4 wrapper),
-	// on their way to the channel keeper. A send on a closed channel fails before any
+	// gate (x/guardian channel switch, read through the txfeecollector keeper), then the
+	// rate-limiting keeper (its ICS-4 wrapper), on their way to the channel keeper. A send on a closed channel fails before any
 	// quota is counted.
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
 		app.appCodec,
 		runtime.NewKVStoreService(app.GetKey(ibctransfertypes.StoreKey)),
 		app.GetSubspace(ibctransfertypes.ModuleName),
-		txfeecollectoribc.NewSendGate(app.RatelimitKeeper, app.GuardianKeeper),
+		txfeecollectoribc.NewSendGate(app.RatelimitKeeper, app.TxfeecollectorKeeper),
 		app.IBCKeeper.ChannelKeeper,
 		app.MsgServiceRouter(),
 		app.AccountKeeper,
@@ -151,7 +151,7 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 	// commits the receive state changes only for a nil or successful acknowledgement,
 	// so a refused packet never consumes quota.
 	transferStack := porttypes.IBCModule(ibctransfer.NewIBCModule(app.TransferKeeper))
-	transferStack = txfeecollectoribc.NewIBCMiddleware(transferStack, app.IBCKeeper.ChannelKeeper, app.TxfeecollectorKeeper, app.GuardianKeeper)
+	transferStack = txfeecollectoribc.NewIBCMiddleware(transferStack, app.IBCKeeper.ChannelKeeper, app.TxfeecollectorKeeper)
 	transferStack = ratelimit.NewIBCMiddleware(app.RatelimitKeeper, transferStack)
 
 	icaControllerIBCModule := icacontroller.NewIBCMiddleware(app.ICAControllerKeeper)

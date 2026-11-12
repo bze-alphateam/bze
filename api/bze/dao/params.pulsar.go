@@ -1313,10 +1313,11 @@ type Params struct {
 	// min_electorate_lock_days is the shortest unstaking lock (days) a staking
 	// reward or Denom Reward needs to join a stake DAO's electorate.
 	MinElectorateLockDays uint32 `protobuf:"varint,14,opt,name=min_electorate_lock_days,json=minElectorateLockDays,proto3" json:"min_electorate_lock_days,omitempty"`
-	// min_expedite_delay is how long after submission an expedited proposal
-	// that meets the expedite bars can settle early, so voters always get time
-	// to react; 0 allows it at once. A proposal at its voting end settles
-	// normally whatever the delay.
+	// min_expedite_delay is how long after submission an expedited proposal of a
+	// stake DAO that meets the expedite bars can settle early, so voters get time
+	// to react; 0 allows it at once. Static-list DAOs are exempt: their expedited
+	// proposals settle as soon as the bars are met. A proposal at its voting end
+	// settles normally whatever the delay.
 	MinExpediteDelay *durationpb.Duration `protobuf:"bytes,15,opt,name=min_expedite_delay,json=minExpediteDelay,proto3" json:"min_expedite_delay,omitempty"`
 }
 

@@ -42,8 +42,14 @@ func (k Keeper) Proposal(goCtx context.Context, req *types.QueryProposalRequest)
 
 // earliestExpediteSettle is the first block time (unix seconds) an expedited
 // proposal can settle early: submit_time plus the current min_expedite_delay
-// param.
+// param, or submit_time itself for a static-list DAO. Its members are a fixed,
+// known list with one vote each, so no stake can be brought in to rush a vote
+// and the delay only slows an emergency down. A DAO's type never changes.
 func (k Keeper) earliestExpediteSettle(ctx context.Context, proposal types.Proposal) int64 {
+	if dao, found := k.GetDao(ctx, proposal.DaoId); found && dao.Type == types.DaoType_DAO_TYPE_STATIC_LIST {
+		return proposal.SubmitTime
+	}
+
 	return proposal.SubmitTime + int64(k.GetParams(ctx).MinExpediteDelay/time.Second)
 }
 

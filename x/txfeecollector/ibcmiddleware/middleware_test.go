@@ -94,13 +94,19 @@ func (a *recordingApp) OnChanCloseInit(_ sdk.Context, _, _ string) error {
 	return nil
 }
 
-// paramsKeeper is the smallest thing the middleware needs: the module params.
+// paramsKeeper is the smallest thing the middleware needs: the module params and the
+// closed channels (none unless set).
 type paramsKeeper struct {
 	params types.Params
+	closed map[string]bool
 }
 
 func (p paramsKeeper) GetParams(_ context.Context) types.Params {
 	return p.params
+}
+
+func (p paramsKeeper) IsChannelClosed(_ context.Context, channelID string) bool {
+	return p.closed[channelID]
 }
 
 // unusedICS4Wrapper proves the send path is never exercised by the filter: any call to
@@ -139,7 +145,7 @@ func setup(t *testing.T, blocked []types.BlockedIbcTransfer) (sdk.Context, ibcmi
 	require.NoError(t, params.Validate())
 
 	app := &recordingApp{}
-	im := ibcmiddleware.NewIBCMiddleware(app, unusedICS4Wrapper{t: t}, paramsKeeper{params: params}, channelGuard{})
+	im := ibcmiddleware.NewIBCMiddleware(app, unusedICS4Wrapper{t: t}, paramsKeeper{params: params})
 
 	return ctx, im, app
 }
@@ -346,7 +352,7 @@ func TestUnmarshalPacketDataMissingOnTheApp(t *testing.T) {
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 
-	im := ibcmiddleware.NewIBCMiddleware(plainApp{}, unusedICS4Wrapper{t: t}, paramsKeeper{params: types.DefaultParams()}, channelGuard{})
+	im := ibcmiddleware.NewIBCMiddleware(plainApp{}, unusedICS4Wrapper{t: t}, paramsKeeper{params: types.DefaultParams()})
 
 	_, _, err := im.UnmarshalPacketData(ctx, ibctransfertypes.PortID, blockedChannel, []byte("packet"))
 	require.Error(t, err)

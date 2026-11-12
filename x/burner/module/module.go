@@ -244,6 +244,8 @@ type ModuleInputs struct {
 	BankKeeper    types.BankKeeper
 	EpochKeeper   types.EpochKeeper
 	TradeKeeper   types.TradeKeeper
+	// GuardianKeeper pauses the periodic burn while the guardian paused the protocol automation.
+	GuardianKeeper types.GuardianKeeper
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
@@ -271,6 +273,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		in.EpochKeeper,
 		in.TradeKeeper,
+		in.GuardianKeeper,
 	)
 	m := NewAppModule(
 		in.Cdc,

@@ -10,6 +10,10 @@ const (
 	periodicBurnHookName = "periodic_burner"
 )
 
+// GetBurnerPeriodicBurnHook marks a periodic burn as pending at the end of every PeriodicBurningWeeks-th week. It only
+// writes the queue flag and moves no coin, so it also runs while the protocol automation is paused: the burn itself
+// (ProcessPeriodicBurnQueue) waits, and an epoch that ended during the pause is burned right after the resume instead
+// of at the next burning epoch.
 func (k Keeper) GetBurnerPeriodicBurnHook() types.EpochHook {
 	return types.NewAfterEpochHook(periodicBurnHookName, func(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 		if epochIdentifier != periodicBurnEpochIdentifier {

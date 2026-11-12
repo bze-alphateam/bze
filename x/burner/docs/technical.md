@@ -14,6 +14,7 @@ This file captures implementation details for integrators and operators. For use
   - LP tokens are moved to `burner_black_hole` (supply unchanged, effectively frozen).
   - IBC tokens are swapped to native via the trade module when possible, then burned; otherwise they remain untouched.
 - Each successful burn emits `CoinsBurnedEvent` and appends/aggregates an entry in `burnedCoins` keyed by block height.
+- Guardian pause: `ProcessPeriodicBurnQueue()` returns before reading any balance while the x/guardian protocol automation pause is on (read through the one-method `GuardianKeeper` interface, `IsAutomationPaused`). The epoch hook still enqueues (it only writes the `Pending` flag), so the queue stays pending through the pause and the first EndBlock after the resume burns the whole balance. The burn is balance based, so several burning weeks during the pause add up to one burn. `BurnAnyCoins` is not gated: the raffle cleanup keeps burning finished raffles' pots.
 
 ## Raffle Mechanics
 - **Epoch timing:** Raffle durations are counted in hourly epochs (`duration * 24`). Cleanup happens in an epoch hook keyed to the `"hour"` identifier.
@@ -36,6 +37,7 @@ This file captures implementation details for integrators and operators. For use
 
 ## Version History
 ### v8.3.0
+- The periodic burn queue is not processed while the x/guardian protocol automation pause is on; new `GuardianKeeper` dependency (depinject)
 - `ProcessPeriodicBurnQueue()` reads at most 101 balances of the burner account per block (bounded `GetBalancesPage` instead of `GetAllBalances`); it burns the first 100 and keeps the queue pending only when the 101st exists
 
 ### v8.1.0

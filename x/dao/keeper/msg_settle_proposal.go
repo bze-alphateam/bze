@@ -42,7 +42,8 @@ func (k msgServer) SettleProposal(goCtx context.Context, msg *types.MsgSettlePro
 	case proposal.Status == types.ProposalStatus_VOTING && !proposal.Expedited:
 		return nil, errorsmod.Wrapf(types.ErrVotingNotEnded, "proposal %d votes until %d", proposal.Id, proposal.VotingEnd)
 	case proposal.Status == types.ProposalStatus_VOTING:
-		// voters always get min_expedite_delay to react before an early settle
+		// stake DAO voters get min_expedite_delay to react before an early
+		// settle; a static-list DAO settles as soon as its bars are met
 		if earliest := k.earliestExpediteSettle(ctx, proposal); now < earliest {
 			return nil, errorsmod.Wrapf(types.ErrExpediteTooEarly, "proposal %d can settle early from %d", proposal.Id, earliest)
 		}
