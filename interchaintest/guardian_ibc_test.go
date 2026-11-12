@@ -27,6 +27,8 @@ const (
 	gcRefusedOut = 50_000  // 4. ubze bze -> simd on the closed channel
 	gcRefusedIn  = 70_000  // 5. stake simd -> bze on the closed channel
 	gcVoucherIn  = 30_000  // 5. ubze vouchers simd -> bze on the closed channel
+	gcInFlightIn = 60_000  // 3. stake simd -> bze in flight while the channel closes, refunded after
+	gcGovOut     = 40_000  // 8. ubze bze -> simd after governance closed the channel
 
 	gcUnknownChannel = "channel-99"
 
@@ -75,6 +77,7 @@ func TestGuardianChannelIbc(t *testing.T) {
 	t.Run("5 inbound on the closed channel is refunded", s.inboundRefunded)
 	t.Run("6 the guardian cannot reopen", s.guardianCannotReopen)
 	t.Run("7 governance reopens", s.govReopens)
+	t.Run("8 governance closes through a proposal", s.govCloses)
 }
 
 type guardianChannelSuite struct {
@@ -182,10 +185,12 @@ func (g *guardianChannelSuite) closeRefused(t *testing.T) {
 }
 
 // 3. With the relayer stopped, bzeUser sends two ubze transfers: one with the
-// default timeout and one that times out on simd. The guardian closes the
-// channel, then the relayer resumes: the first is received on simd and its
-// acknowledgement still reaches bze, the second is refunded on bze by its
-// timeout. Neither is stranded by the close.
+// default timeout and one that times out on simd, and simdUser sends stake to
+// bze. The guardian closes the channel, then the relayer resumes: the first
+// ubze transfer is received on simd and its acknowledgement still reaches bze,
+// the second is refunded on bze by its timeout, and the stake transfer is
+// received on bze after the close, answered with the closed-channel error
+// acknowledgement and refunded on simd. Nothing is stranded by the close.
 func (g *guardianChannelSuite) closeWithInFlight(t *testing.T) {
 	r, rep := g.net.Relayer, g.net.Reporter
 	ubze := g.balance(t, g.bze, g.bzeUser, chain.Denom)
@@ -201,6 +206,15 @@ func (g *guardianChannelSuite) closeWithInFlight(t *testing.T) {
 		"--packet-timeout-height", "0-0", "--packet-timeout-timestamp", "1000000000")
 	require.NoError(t, err)
 	require.Equal(t, escrow.AddRaw(gcAckedOut+gcTimeoutOut), g.balanceOf(t, g.bze, g.bzeEscrow, chain.Denom), "both escrowed while in flight")
+
+	stake := g.balance(t, g.simd, g.simdUser, chain.SimdDenom)
+	simdEscrow := g.balanceOf(t, g.simd, g.simdEscrow, chain.SimdDenom)
+	stakeVouchers := g.balance(t, g.bze, g.bzeUser, g.stakeVoucher)
+	inbound, err := helpers.SendIbc(g.ctx, g.simd, g.simdUser, g.main.simd, g.bzeUser.FormattedAddress(), sdk.NewInt64Coin(chain.SimdDenom, gcInFlightIn))
+	require.NoError(t, err)
+	inboundFee, err := helpers.TxFee(inbound.Tx, chain.SimdDenom)
+	require.NoError(t, err)
+	require.Equal(t, simdEscrow.AddRaw(gcInFlightIn), g.balanceOf(t, g.simd, g.simdEscrow, chain.SimdDenom), "escrowed on simd while in flight")
 	require.NoError(t, testutil.WaitForBlocks(g.ctx, 3, g.simd))
 
 	res := g.tx(t, g.guardian, "guardian", "close-channel", g.main.bze)
@@ -214,6 +228,16 @@ func (g *guardianChannelSuite) closeWithInFlight(t *testing.T) {
 	require.NoError(t, err)
 	_, err = helpers.WaitForTimeout(g.ctx, g.bze, timedOut)
 	require.NoError(t, err)
+	recv, err := helpers.WaitForRecv(g.ctx, g.bze, g.main.bze, inbound.Sequence)
+	require.NoError(t, err)
+	inboundAck, err := helpers.WaitForAck(g.ctx, g.simd, inbound)
+	require.NoError(t, err)
+
+	require.Equal(t, `{"error":"`+gcClosedAckError+`"}`, packetAck(t, recv, g.main.bze, inbound.Sequence), "received after the close: refused")
+	require.Len(t, helpers.EventsWith(helpers.TxEvents(inboundAck, ibcTransferEvent), map[string]string{"error": gcClosedAckError}), 1, "simd processed the error ack")
+	require.Equal(t, stake.Sub(inboundFee), g.balance(t, g.simd, g.simdUser, chain.SimdDenom), "the inbound transfer was refunded on simd, minus the tx fee only")
+	require.Equal(t, simdEscrow, g.balanceOf(t, g.simd, g.simdEscrow, chain.SimdDenom), "simd escrow released")
+	require.Equal(t, stakeVouchers, g.balance(t, g.bze, g.bzeUser, g.stakeVoucher), "nothing minted on bze")
 
 	ackedFee, err := helpers.TxFee(acked.Tx, chain.Denom)
 	require.NoError(t, err)
@@ -289,4 +313,22 @@ func (g *guardianChannelSuite) govReopens(t *testing.T) {
 
 	g.transferIn(t, chain.SimdDenom, gcStakeIn).requireAccepted(t)
 	g.transferOut(t, gcUbzeOut)
+}
+
+// 8. Governance can close a channel too: a real proposal carrying
+// MsgCloseChannel signed by the gov authority closes the main channel, and a
+// transfer from bze is refused again.
+func (g *guardianChannelSuite) govCloses(t *testing.T) {
+	_, err := helpers.SubmitAndPassProposal(g.ctx, g.bze, g.admin, helpers.Proposal{
+		Messages: []any{map[string]any{"@type": "/bze.guardian.v1.MsgCloseChannel", "signer": g.gov, "channel_id": g.main.bze}},
+		Title:    "Close the main channel",
+		Summary:  "e2e: governance closes a channel",
+	})
+	require.NoError(t, err)
+	require.Equal(t, []string{g.main.bze}, g.closedChannels(t))
+
+	res, err := helpers.TrySendIbc(g.ctx, g.bze, g.bzeUser, g.main.bze, g.simdUser.FormattedAddress(), sdk.NewInt64Coin(chain.Denom, gcGovOut), gcGas)
+	require.NoError(t, err)
+	g.requireCode(t, res, "txfeecollector", gcClosedCode)
+	require.Empty(t, helpers.TxEvents(res, "send_packet"), "no packet was committed")
 }

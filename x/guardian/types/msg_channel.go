@@ -31,10 +31,17 @@ func (m *MsgReopenChannel) ValidateBasic() error {
 	return ValidateChannelID(m.ChannelId)
 }
 
-// ValidateChannelID accepts an IBC channel identifier (channel-<n>).
+// ValidateChannelID accepts an IBC channel identifier in the canonical form
+// ibc-go generates (channel-<n>, no leading zeros): any other spelling, such as
+// channel-07, can never name a real channel.
 func ValidateChannelID(channelID string) error {
-	if _, err := channeltypes.ParseChannelSequence(channelID); err != nil {
+	sequence, err := channeltypes.ParseChannelSequence(channelID)
+	if err != nil {
 		return errorsmod.Wrap(ErrInvalidChannel, err.Error())
+	}
+
+	if channelID != channeltypes.FormatChannelIdentifier(sequence) {
+		return errorsmod.Wrapf(ErrInvalidChannel, "%s is not canonical, use %s", channelID, channeltypes.FormatChannelIdentifier(sequence))
 	}
 
 	return nil

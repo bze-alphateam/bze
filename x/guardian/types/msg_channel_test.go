@@ -21,6 +21,8 @@ var channelCases = []struct {
 	{"not a channel id", "connection-0", false},
 	{"space", "channel 0", false},
 	{"path separator", "channel-0/transfer", false},
+	{"leading zero", "channel-07", false},
+	{"zero padded zero", "channel-00", false},
 }
 
 func TestMsgCloseChannel_ValidateBasic(t *testing.T) {
@@ -65,6 +67,9 @@ func TestGenesis_ValidateClosedChannels(t *testing.T) {
 
 	invalid := types.GenesisState{Params: types.DefaultParams(), ClosedChannels: []string{"channel-0", "nope"}}
 	require.ErrorIs(t, invalid.Validate(), types.ErrInvalidChannel)
+
+	padded := types.GenesisState{Params: types.DefaultParams(), ClosedChannels: []string{"channel-07"}}
+	require.ErrorIs(t, padded.Validate(), types.ErrInvalidChannel)
 
 	duplicate := types.GenesisState{Params: types.DefaultParams(), ClosedChannels: []string{"channel-0", "channel-0"}}
 	require.Error(t, duplicate.Validate())
