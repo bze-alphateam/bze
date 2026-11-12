@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/store/prefix"
 	"github.com/bze-alphateam/bze/x/burner/exported"
 	"github.com/bze-alphateam/bze/x/burner/migrations/v4"
+	v5 "github.com/bze-alphateam/bze/x/burner/migrations/v5"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -31,4 +32,12 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 	m.keeper.Logger().Info("migrating x/burner state from consensus version 3 to version 4")
 
 	return v4.Migrate(store, m.keeper.cdc)
+}
+
+// Migrate4to5 migrates the x/burner module state from consensus version 4 to version 5: it gives the stored params the
+// default limits of MsgMoveIbcLockedCoins.
+func (m Migrator) Migrate4to5(ctx sdk.Context) error {
+	m.keeper.Logger().Info("migrating x/burner state from consensus version 4 to version 5")
+
+	return v5.MigrateParams(ctx, m.keeper)
 }

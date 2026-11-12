@@ -3,12 +3,21 @@ package types
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 var (
 	//periodic_burning_weeks
 	KeyPeriodicBurningWeeks = []byte("PeriodicBurningWeeks")
+
+	// DefaultIbcMoveMaxReserveRatio is the default share of the pool's IBC reserve one MsgMoveIbcLockedCoins moves at most.
+	DefaultIbcMoveMaxReserveRatio = math.LegacyNewDecWithPrec(3, 2)
+)
+
+const (
+	// DefaultIbcMoveCooldownBlocks is the default number of blocks between two moves of the same denom.
+	DefaultIbcMoveCooldownBlocks uint64 = 1000
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -18,10 +27,13 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-// NewParams creates a new Params instance
+// NewParams creates a new Params instance with the given burning period and the default limits of
+// MsgMoveIbcLockedCoins.
 func NewParams(periodicBurningWeeks int64) Params {
 	return Params{
-		PeriodicBurningWeeks: periodicBurningWeeks,
+		PeriodicBurningWeeks:   periodicBurningWeeks,
+		IbcMoveMaxReserveRatio: DefaultIbcMoveMaxReserveRatio,
+		IbcMoveCooldownBlocks:  DefaultIbcMoveCooldownBlocks,
 	}
 }
 
@@ -30,7 +42,8 @@ func DefaultParams() Params {
 	return NewParams(1)
 }
 
-// ParamSetPairs get the params.ParamSet
+// ParamSetPairs get the params.ParamSet. It is used only to read the legacy x/params subspace, which never held the
+// MsgMoveIbcLockedCoins limits.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyPeriodicBurningWeeks, &p.PeriodicBurningWeeks, validatePeriodicBurningWeeks),
@@ -43,7 +56,11 @@ func (p Params) Validate() error {
 		return fmt.Errorf("invalid burning period weeks: %d", p.PeriodicBurningWeeks)
 	}
 
-	return nil
+	if err := validateIbcMoveMaxReserveRatio(p.IbcMoveMaxReserveRatio); err != nil {
+		return err
+	}
+
+	return validateIbcMoveCooldownBlocks(p.IbcMoveCooldownBlocks)
 }
 
 func validatePeriodicBurningWeeks(i interface{}) error {
@@ -54,6 +71,26 @@ func validatePeriodicBurningWeeks(i interface{}) error {
 
 	if v <= 0 {
 		return fmt.Errorf("invalid burning period weeks: %d", v)
+	}
+
+	return nil
+}
+
+func validateIbcMoveMaxReserveRatio(v math.LegacyDec) error {
+	if v.IsNil() {
+		return fmt.Errorf("ibc move max reserve ratio is required")
+	}
+
+	if !v.IsPositive() || v.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("ibc move max reserve ratio must be in (0, 1]: %s", v)
+	}
+
+	return nil
+}
+
+func validateIbcMoveCooldownBlocks(v uint64) error {
+	if v == 0 {
+		return fmt.Errorf("ibc move cooldown blocks must be at least 1")
 	}
 
 	return nil

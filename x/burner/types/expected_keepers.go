@@ -4,6 +4,9 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
+	tradebinv2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 )
 
 // EpochKeeper defines expected keeper that can return the current epoch
@@ -36,6 +39,11 @@ type TradeKeeper interface {
 	IsNativeDenom(ctx sdk.Context, denom string) bool
 	CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool
 	SafeModuleAddLiquidityWithNativeDenom(ctx sdk.Context, fromModule string, coins sdk.Coins) (addedCoins sdk.Coins, refundedCoins sdk.Coins, err error)
+	// GetParams returns the tradebin params (the native denom).
+	GetParams(ctx context.Context) (params tradebinv2types.Params)
+	// CreatePoolId returns the pool's assets in their stored order and the pool id.
+	CreatePoolId(base, quote string) (newBase, newQuote, id string)
+	GetLiquidityPool(ctx sdk.Context, id string) (val tradebintypes.LiquidityPool, found bool)
 }
 
 // ParamSubspace defines the expected Subspace interface for parameters.
