@@ -320,7 +320,6 @@ func (suite *IntegrationTestSuite) TestWithdrawLucky_MultipleParticipants_MixedR
 func (suite *IntegrationTestSuite) TestWithdrawLucky_WinnerInvalidTotalWon() {
 	denom := "utoken"
 	creator := sdk.AccAddress("creator").String()
-	creatorAddr, _ := sdk.AccAddressFromBech32(creator)
 
 	suite.k.SetRaffle(suite.ctx, types.Raffle{
 		Denom:       denom,
@@ -339,23 +338,24 @@ func (suite *IntegrationTestSuite) TestWithdrawLucky_WinnerInvalidTotalWon() {
 	}
 	suite.k.SetRaffleParticipant(suite.ctx, participant)
 
-	wonCoin := sdk.NewCoin(denom, math.NewInt(10000))
-	suite.bank.EXPECT().SendCoinsFromModuleToAccount(
-		gomock.Any(), types.RaffleModuleName, creatorAddr, sdk.NewCoins(wonCoin),
-	).Return(nil).Times(1)
-
-	// Should not panic - just logs error and continues
+	// no SendCoinsFromModuleToAccount expectation: the winner must not be paid when the raffle totals can't be
+	// updated in the same step, so any call fails the test
 	suite.k.WithdrawLuckyRaffleParticipants(suite.ctx, 10)
 
-	// Winner count should still increment
+	// the raffle is left exactly as it was
 	raffle, found := suite.k.GetRaffle(suite.ctx, denom)
 	suite.Require().True(found)
-	suite.Require().Equal(uint64(1), raffle.Winners)
-	// Pot and TotalWon should NOT be updated since parsing failed
+	suite.Require().Equal(uint64(0), raffle.Winners)
 	suite.Require().Equal("not-a-number", raffle.TotalWon)
 	suite.Require().Equal("100000", raffle.Pot)
 
-	// Participant removed
+	// no winner recorded, no winner event emitted
+	suite.Require().Empty(suite.k.GetRaffleWinners(suite.ctx, denom))
+	for _, ev := range suite.ctx.EventManager().Events() {
+		suite.Require().NotEqual("bze.burner.RaffleWinnerEvent", ev.Type)
+	}
+
+	// the ticket is still removed
 	participants := suite.k.GetAllRaffleParticipants(suite.ctx)
 	suite.Require().Empty(participants)
 }
