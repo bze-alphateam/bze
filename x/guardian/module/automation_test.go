@@ -3,6 +3,8 @@ package guardian_test
 import (
 	"testing"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -68,14 +70,18 @@ func TestAutoCLIOptions_Automation(t *testing.T) {
 	}
 	require.Equal(t, "automation-paused", query["AutomationPaused"])
 
+	tx := map[string]*autocliv1.RpcCommandOptions{}
 	for _, m := range opts.Tx.RpcCommandOptions {
-		switch m.RpcMethod {
-		case "PauseAutomation":
-			require.Equal(t, "pause-automation", m.Use)
-			require.False(t, m.GovProposal)
-		case "ResumeAutomation":
-			require.Equal(t, "resume-automation", m.Use)
-			require.True(t, m.GovProposal)
-		}
+		tx[m.RpcMethod] = m
 	}
+
+	pause, ok := tx["PauseAutomation"]
+	require.True(t, ok, "pause-automation command")
+	require.Equal(t, "pause-automation", pause.Use)
+	require.False(t, pause.GovProposal, "the guardian signs it directly")
+
+	resume, ok := tx["ResumeAutomation"]
+	require.True(t, ok, "resume-automation command")
+	require.Equal(t, "resume-automation", resume.Use)
+	require.True(t, resume.GovProposal, "governance only")
 }

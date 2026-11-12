@@ -43,6 +43,10 @@ const (
 	gpTickWait   = 6 * time.Minute
 
 	gpCodespace        = "guardian"
+	gpResumedEvent     = "bze.guardian.v1.AutomationResumedEvent"
+	gpBurnedEvent      = "bze.burner.CoinsBurnedEvent"
+	gpBurnerStore      = "burner"
+	gpBurnQueuePrefix  = "pbq/" // the burner's periodic burn queue, present only while a burn is pending
 	gpUnauthorizedCode = 1101
 	gpAlreadyPaused    = 1130
 )
@@ -137,7 +141,7 @@ func (s *guardianPauseSuite) mustExec(t *testing.T, user ibc.Wallet, opts []help
 	return res
 }
 
-// requireRefused asserts a tx was included and failed with the guardian code.
+// requireGuardianRefused asserts a tx was included and failed with the guardian code.
 func requireGuardianRefused(t *testing.T, res helpers.TxResult, err error, code uint32) {
 	t.Helper()
 	require.NoError(t, err)
@@ -169,6 +173,52 @@ func (s *guardianPauseSuite) payGpdFee(t *testing.T) helpers.TxResult {
 	t.Helper()
 	return s.mustExec(t, s.user, []helpers.TxOption{helpers.WithFees(coinStr(gpPauseFee, s.gpd)), helpers.WithGas(gpSendGas)},
 		"bank", "send", s.user.FormattedAddress(), s.admin.FormattedAddress(), coinStr(1, chain.Denom))
+}
+
+// burnPending tells whether the burner's periodic burn queue holds a pending
+// burn (the entry is removed once the burn is done).
+func (s *guardianPauseSuite) burnPending(t *testing.T) bool {
+	t.Helper()
+	n, err := helpers.StorePrefixKeys(s.ctx, s.bze, gpBurnerStore, []byte(gpBurnQueuePrefix))
+	require.NoError(t, err)
+	return n > 0
+}
+
+// balanceAt is the address's balance of denom at the end of height.
+func (s *guardianPauseSuite) balanceAt(t *testing.T, addr, denom string, height int64) sdkmath.Int {
+	t.Helper()
+	res, err := helpers.Query[struct {
+		Balance struct {
+			Amount string `json:"amount"`
+		} `json:"balance"`
+	}](s.ctx, s.bze, "bank", "balance", addr, denom, "--height", strconv.FormatInt(height, 10))
+	require.NoError(t, err)
+	if res.Balance.Amount == "" {
+		return sdkmath.ZeroInt()
+	}
+	return parseInt(res.Balance.Amount)
+}
+
+// blockEvents returns the finalize-block events of eventType in heights
+// [from, to], keyed by height.
+func (s *guardianPauseSuite) blockEvents(t *testing.T, from, to int64, eventType string) map[int64][]helpers.Event {
+	t.Helper()
+	out := map[int64][]helpers.Event{}
+	for h := from; h <= to; h++ {
+		events, err := helpers.BlockEvents(s.ctx, s.bze, h, eventType)
+		require.NoError(t, err)
+		if len(events) > 0 {
+			out[h] = events
+		}
+	}
+	return out
+}
+
+func (s *guardianPauseSuite) height(t *testing.T) int64 {
+	t.Helper()
+	h, err := s.bze.Height(s.ctx)
+	require.NoError(t, err)
+	return h
 }
 
 func (s *guardianPauseSuite) waitBlocks(t *testing.T, n int) {
@@ -223,6 +273,7 @@ func (s *guardianPauseSuite) burnWaits(t *testing.T) {
 	require.NoError(t, helpers.WaitForEpoch(ctx, s.bze, "week", week+1))
 	s.waitBlocks(t, gpWaitBlocks)
 
+	require.True(t, s.burnPending(t), "the burning week tick left a burn pending")
 	require.True(t, s.balance(t, s.burner, chain.Denom).GTE(before), "nothing burned on the week tick")
 	require.Equal(t, s.waiting, s.balance(t, s.txFees, s.gpd), "the fees still wait")
 	require.True(t, s.paused(t))
@@ -240,8 +291,10 @@ func (s *guardianPauseSuite) guardianCantResume(t *testing.T) {
 
 // 6. A governance proposal resumes the automation: the next blocks swap the
 // waiting fees and run the burn the week tick left pending, without waiting
-// for the next tick.
+// for the next tick. The burner may receive burn-bound fees again right after,
+// so the burn is asserted on the burn events, not on an empty burner.
 func (s *guardianPauseSuite) govResumes(t *testing.T) {
+	from := s.height(t)
 	_, err := helpers.SubmitAndPassProposal(s.ctx, s.bze, s.admin, helpers.Proposal{
 		Messages: []any{map[string]any{
 			"@type":     "/bze.guardian.v1.MsgResumeAutomation",
@@ -254,8 +307,34 @@ func (s *guardianPauseSuite) govResumes(t *testing.T) {
 	require.False(t, s.paused(t))
 
 	s.waitBlocks(t, gpWaitBlocks)
+	to := s.height(t)
 	require.True(t, s.balance(t, s.txFees, s.gpd).IsZero(), "the waiting fees are swapped")
-	require.True(t, s.balance(t, s.burner, chain.Denom).IsZero(), "the pending burn ran")
+
+	resumed := s.blockEvents(t, from, to, gpResumedEvent)
+	require.Len(t, resumed, 1, "one AutomationResumedEvent")
+	var resumedAt int64
+	for h, events := range resumed {
+		require.Len(t, events, 1)
+		require.Equal(t, s.gov, helpers.Unquote(events[0].Attributes["authority"]), "resumed by the gov authority")
+		resumedAt = h
+	}
+
+	// the first burn after the resume is the pending one (a later week tick may burn again)
+	burns := s.blockEvents(t, resumedAt, to, gpBurnedEvent)
+	require.NotEmpty(t, burns, "the pending burn ran after the resume")
+	first := to
+	for h := range burns {
+		first = min(first, h)
+	}
+	pending := s.balanceAt(t, s.burner, chain.Denom, first-1)
+	require.True(t, pending.GTE(sdkmath.NewInt(gpBurnerFunds)), "the burner held the funds before the burn: %s", pending)
+
+	events, err := helpers.BlockEvents(s.ctx, s.bze, first, "burn")
+	require.NoError(t, err)
+	_, burned, err := helpers.SupplyChange(events)
+	require.NoError(t, err)
+	require.Equal(t, pending, burned[s.burner].AmountOf(chain.Denom), "the pending burn burns the whole ubze balance at height %d", first)
+	require.False(t, s.burnPending(t), "no burn pending after the resume")
 
 	// fees paid now are swapped in their own block again
 	res := s.payGpdFee(t)

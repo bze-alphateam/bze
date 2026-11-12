@@ -31,6 +31,7 @@ type PauseTestSuite struct {
 	suite.Suite
 
 	ctx      sdk.Context
+	storeKey *storetypes.KVStoreKey
 	k        keeper.Keeper
 	am       txfeecollector.AppModule
 	bank     *testutil.MockBankKeeper
@@ -58,6 +59,7 @@ func (s *PauseTestSuite) SetupTest() {
 	s.guardian.EXPECT().IsAutomationPaused(gomock.Any()).DoAndReturn(func(_ any) bool { return s.paused }).AnyTimes()
 
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
+	s.storeKey = storeKey
 	db := dbm.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
@@ -98,11 +100,35 @@ func (s *PauseTestSuite) expectBothPasses(gasFee, cpFee sdk.Coin) {
 	s.distr.EXPECT().FundCommunityPool(gomock.Any(), sdk.NewCoins(cpFee), cpAddr).Return(nil).Times(1)
 }
 
-// While paused, EndBlock reads no balance, swaps, sends and funds nothing, emits no event and writes no state (the
-// collector cursors and the params stay as they were).
+// moveCursors runs one unpaused EndBlock over a full one-coin page of each collector (MaxBalanceIterations = 1), so both
+// collector cursors are left on ubze.
+func (s *PauseTestSuite) moveCursors() {
+	params := s.k.GetParams(s.ctx)
+	params.MaxBalanceIterations = 1
+	s.Require().NoError(s.k.SetParams(s.ctx, params))
+
+	native := sdk.NewCoins(sdk.NewInt64Coin("ubze", 7))
+	s.account.EXPECT().GetModuleAddress(types.ModuleName).Return(feeAddr).Times(1)
+	s.bank.EXPECT().GetBalancesPage(gomock.Any(), feeAddr, "", 1).Return(native, "ubze").Times(1)
+	s.trade.EXPECT().IsNativeDenom(gomock.Any(), "ubze").Return(true).Times(2)
+	s.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, authtypes.FeeCollectorName, native).Return(nil).Times(1)
+	s.account.EXPECT().GetModuleAddress(types.CpFeeCollector).Return(cpAddr).Times(1)
+	s.bank.EXPECT().GetBalancesPage(gomock.Any(), cpAddr, "", 1).Return(native, "ubze").Times(1)
+	s.distr.EXPECT().FundCommunityPool(gomock.Any(), native, cpAddr).Return(nil).Times(1)
+	s.Require().NoError(s.am.EndBlock(s.ctx))
+
+	kv := s.ctx.KVStore(s.storeKey)
+	s.Require().Equal("ubze", string(kv.Get(types.CollectorCursorKey(types.ModuleName))))
+	s.Require().Equal("ubze", string(kv.Get(types.CollectorCursorKey(types.CpFeeCollector))))
+}
+
+// While paused, EndBlock reads no balance, swaps, sends and funds nothing, emits no event and writes no state: the
+// collector cursors and the params stay as they were, and the first pass after the resume starts after the cursors.
 func (s *PauseTestSuite) TestPaused_DoesNothing() {
+	s.moveCursors()
 	s.paused = true
 	params := s.k.GetParams(s.ctx)
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 
 	for i := 0; i < 3; i++ {
 		s.Require().NoError(s.am.EndBlock(s.ctx))
@@ -111,6 +137,19 @@ func (s *PauseTestSuite) TestPaused_DoesNothing() {
 	s.Require().Empty(s.ctx.EventManager().Events())
 	s.Require().Equal(params, s.k.GetParams(s.ctx))
 	s.Require().True(s.k.IsAutomationPaused(s.ctx))
+	kv := s.ctx.KVStore(s.storeKey)
+	s.Require().Equal("ubze", string(kv.Get(types.CollectorCursorKey(types.ModuleName))), "gas fee cursor unchanged")
+	s.Require().Equal("ubze", string(kv.Get(types.CollectorCursorKey(types.CpFeeCollector))), "community pool cursor unchanged")
+
+	// resumed: both passes read after the cursors left by the last unpaused pass (nothing there, so they wrap)
+	s.paused = false
+	s.account.EXPECT().GetModuleAddress(types.ModuleName).Return(feeAddr).Times(1)
+	s.bank.EXPECT().GetBalancesPage(gomock.Any(), feeAddr, "ubze", 1).Return(nil, "").Times(1)
+	s.bank.EXPECT().GetBalancesPage(gomock.Any(), feeAddr, "", 1).Return(nil, "").Times(1)
+	s.account.EXPECT().GetModuleAddress(types.CpFeeCollector).Return(cpAddr).Times(1)
+	s.bank.EXPECT().GetBalancesPage(gomock.Any(), cpAddr, "ubze", 1).Return(nil, "").Times(1)
+	s.bank.EXPECT().GetBalancesPage(gomock.Any(), cpAddr, "", 1).Return(nil, "").Times(1)
+	s.Require().NoError(s.am.EndBlock(s.ctx))
 }
 
 // Not paused, EndBlock runs both passes exactly as before.
