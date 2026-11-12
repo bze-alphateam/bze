@@ -52,7 +52,8 @@ make e2e-orderbook                  # order-book engine: fills, remainders, dust
 make e2e-tradingrewards             # trading rewards: create, gov activation, hooks, leaderboard, payout, cleanup, pending expiry (~25 min)
 make e2e-burner                     # burner: fund routing, periodic burn and interval, raffles, locked IBC coins (~15 min)
 make e2e-cointrunk                  # cointrunk: domains and publishers by gov, free and paid articles, monthly limit, respect tax
-make e2e-params                     # tradebin, rewards and tokenfactory params by gov: authority, refusals, each param's effect on a real tx
+make e2e-params                     # tradebin, rewards and tokenfactory params by gov: authority, refusals, each param's effect on a real tx (pool price guard included)
+make e2e-input-rules                # canonical amounts in tradebin, burner and rewards messages; one rewards position per account whatever the address case; protocol fees inside authz exec paid in ubze
 make e2e-dao                        # x/dao: every message, query, exploit-catalog case (D1–D29) and invariant, with a funds audit per tx (E2E_TIMEOUT=120m)
 make e2e-upgrade                    # chain upgrade from the previous release (see below)
 cd interchaintest && go test -v -run TestSmoke ./...
@@ -166,6 +167,14 @@ adds its own with `chain.WithGenesis(...)`.
   `helpers.TxEvents` / `helpers.BlockEvents`.
 - Wait for time with `helpers.WaitForEpoch`, pass gov messages with
   `helpers.SubmitAndPassProposal`.
+- Pool price guard: every pool keeps a moving average of its price. A
+  protocol fee paid in a non-native denom is swapped only while that pool's
+  price is within `feeMaxPriceDrift` of its average (charged in ubze
+  otherwise), and the txfeecollector and burner swap or add liquidity only
+  within `moduleMaxPriceDrift`. After a step that moves a pool (a large swap
+  or a large fee swap), wait with `helpers.WaitForPoolPriceCalm` (or
+  `WaitForPoolPriceWithin` for one limit) before asserting such a swap;
+  `helpers.QueryPoolPriceState` reads the price next to its average.
 - Tests live in package `interchaintest_test` and are black-box; lint them with
   `make e2e-lint`.
 - Add a `make e2e-<suite>` target to the root Makefile.
