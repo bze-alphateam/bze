@@ -86,6 +86,17 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:        "bzed tx guardian halt-trading-denoms factory/bze1.../utoken ibc/ABC... --from guardian",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denoms", Varargs: true}},
 				},
+				{
+					RpcMethod: "HaltChain",
+					Use:       "halt-chain [reason]",
+					Short:     "Stop the chain at the next block (last resort)",
+					Long: "Schedules an upgrade plan named emergency-halt-<height> at the next block height; every node stops there with UPGRADE NEEDED. " +
+						"It replaces any plan already scheduled and cannot be undone by a message: only a binary with an upgrade handler for the plan, " +
+						"or all validators restarting with --unsafe-skip-upgrades <height>, restarts the chain. Signed by the guardian or the governance authority. " +
+						"The reason (1 to 256 bytes) is emitted in the event; the plan info is the fixed text \"emergency halt\".",
+					Example:        `bzed tx guardian halt-chain "incident under investigation" --from guardian`,
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reason"}},
+				},
 			},
 		},
 	}

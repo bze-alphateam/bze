@@ -40,3 +40,11 @@ message TradingDenomsHaltedEvent {
   string signer = 1;
   repeated string denoms = 2;
 }
+
+// ChainHaltScheduledEvent is emitted when a halt plan is scheduled.
+message ChainHaltScheduledEvent {
+  string signer = 1;
+  string name = 2;
+  int64 height = 3;
+  string reason = 4;
+}

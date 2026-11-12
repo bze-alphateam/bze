@@ -33,6 +33,9 @@ type Keeper struct {
 
 	// tradebinKeeper is wired after the depinject build, see SetTradebinKeeper.
 	tradebinKeeper types.TradebinKeeper
+
+	// upgradeKeeper is wired after the depinject build, see SetUpgradeKeeper.
+	upgradeKeeper types.UpgradeKeeper
 }
 
 func NewKeeper(

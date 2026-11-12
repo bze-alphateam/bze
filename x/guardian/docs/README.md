@@ -24,6 +24,7 @@ The guardian module holds the chain's emergency switches: the IBC rate limits of
 - **What can be disabled**: any other routed message type, including staking, bank or slashing messages (e.g. `/cosmos.staking.v1beta1.MsgDelegate`, `/cosmos.bank.v1beta1.MsgSend`, `/cosmos.slashing.v1beta1.MsgUnjail`), and stays disabled until governance resets it. A passed proposal that carries a disabled message fails on execution.
 - **Re-enable message types** (governance only): a proposal with `x/circuit`'s `MsgResetCircuitBreaker`, signed by the governance authority. The guardian has no reset message and no `x/circuit` permission.
 - **Halt denoms on the DEX** (`MsgHaltTradingDenoms`, guardian or governance): the same halt as the tradebin governance message `MsgHaltDenoms`, written to tradebin's halted denoms list. A halted denom gets no new order, fill, market, pool or liquidity add, no AMM swap involving it (user routes, module swaps, fee swaps) and is no longer accepted as a tx fee; cancelling orders, removing liquidity, bank sends and IBC transfers keep working. Up to 1000 valid denoms per message, no duplicates; the native denom is refused. A denom that is already halted is left as it is. **Turned back on only by governance**, with a proposal carrying tradebin's `MsgUnhaltDenoms`; the guardian cannot lift a halt.
+- **Halt the chain** (`MsgHaltChain`, guardian or governance): the last resort. Schedules an x/upgrade plan named `emergency-halt-<height>` at the next block height (the earliest x/upgrade accepts). The `reason` (1 to 256 bytes) is emitted in `ChainHaltScheduledEvent` only; the plan info is always the fixed text `emergency halt` (tools such as Cosmovisor read the info as JSON with binary download links, so no signer-chosen text goes there). Every node stops at that height. There is no message to restart it, see [Chain halt runbook](#chain-halt-runbook).
 
 ```bash
 # As the guardian, disable swaps on the DEX
@@ -43,7 +44,23 @@ bzed tx guardian halt-trading-denoms factory/bze1.../utoken ibc/6490A7EAB61059BF
 
 # As the guardian, lower the ubze quotas on channel-0 to 3% send, 0% receive
 bzed tx guardian tighten-rate-limit ubze channel-0 3 0 --from guardian
+
+# As the guardian, stop the whole chain at the next block
+bzed tx guardian halt-chain "incident under investigation" --from guardian
 ```
+
+## Chain halt runbook
+`MsgHaltChain` is an ordinary upgrade plan, so the chain stops the way it stops for a release:
+
+1. **Halt.** The guardian (or a governance proposal) sends `MsgHaltChain`. The tx response and the `ChainHaltScheduledEvent` give the plan name and height `H` (the tx height + 1). `bzed query upgrade plan` shows the plan until the chain stops.
+2. **The chain stops at `H`.** Every node logs `UPGRADE "emergency-halt-H" NEEDED at height: H: emergency halt`, writes `upgrade-info.json` to its data directory and stops committing blocks (Cosmovisor then looks for a binary under `upgrades/emergency-halt-H`). State is the one after block `H - 1`; no transaction of block `H` is executed.
+3. **Replaced plan.** x/upgrade keeps one plan, so a release plan scheduled for a later height is replaced by the halt plan. Governance schedules it again after the restart.
+4. **Restart**, either way:
+   - **New binary** (the normal way, e.g. with the fix): the binary registers an upgrade handler named `emergency-halt-H` (it may just return the version map, or run a migration that repairs state). Validators install it (under Cosmovisor: `upgrades/emergency-halt-H/bin/bzed`) and start; block `H` runs the handler and the chain continues. The plan is cleared.
+   - **Skip the height** (no code change needed): every validator, with at least 2/3 of the voting power, restarts the *same* binary with `bzed start --unsafe-skip-upgrades H`. x/upgrade then clears the plan at `H` and the chain continues. Remove the flag on the next restart.
+5. **Afterwards**, governance reschedules any release plan the halt replaced.
+
+The guardian cannot cancel a halt (a `MsgCancelUpgrade` is governance only and would have to pass before `H`, which is one block away). Only use it when a running chain does more harm than a stopped one.
 
 ## Queries
 - `bzed query guardian params`: the guardian address.
@@ -54,3 +71,8 @@ bzed tx guardian tighten-rate-limit ubze channel-0 3 0 --from guardian
 ## Events
 - `TightenRateLimitEvent` (signer, denom, channel, old and new percents), `DenomBlockedEvent` (`signer`, `denom`), `DenomUnblockedEvent` (`authority`, `denom`) and `MessagesDisabledEvent` (`signer`, `msg_type_urls`). A reset emits `x/circuit`'s `reset_circuit_breaker` event.
 - `TradingDenomsHaltedEvent` (`signer`, `denoms`): one per `MsgHaltTradingDenoms`, listing the denoms it halted (not those already halted). Each of them also gets tradebin's `DenomHaltedEvent` (`denom`), the event a governance halt emits.
+- `TightenRateLimitEvent` (signer, denom, channel, old and new percents), `DenomBlockedEvent` (`signer`, `denom`) and `DenomUnblockedEvent` (`authority`, `denom`).
+- `ChainHaltScheduledEvent` (`signer`, `name`, `height`, `reason`).
+
+## Guardian as a DAO
+The guardian address can be the account of a static-list `x/dao` DAO (e.g. five members with `expedite_threshold` 0.5 and `expedite_quorum` 0.6, so three yes votes pass). Static-list DAOs are exempt from `min_expedite_delay`: an expedited proposal carrying a guardian message is settled (and run) as soon as the third member has voted, with `MsgSettleProposal` in the next tx or in the same tx as the last vote.

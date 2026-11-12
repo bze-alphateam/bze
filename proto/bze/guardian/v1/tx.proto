@@ -38,6 +38,11 @@ service Msg {
   // tradebin governance message MsgHaltDenoms. Only governance lifts the halt,
   // through tradebin's MsgUnhaltDenoms.
   rpc HaltTradingDenoms (MsgHaltTradingDenoms) returns (MsgHaltTradingDenomsResponse);
+
+  // HaltChain schedules an upgrade plan at the next block height: every node
+  // stops there until it runs a binary that handles the plan, or until the
+  // validators skip the height. It replaces any plan already scheduled.
+  rpc HaltChain (MsgHaltChain) returns (MsgHaltChainResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -146,3 +151,24 @@ message MsgHaltTradingDenoms {
 // MsgHaltTradingDenomsResponse defines the response structure for executing a
 // MsgHaltTradingDenoms message.
 message MsgHaltTradingDenomsResponse {}
+
+// MsgHaltChain is the Msg/HaltChain request type.
+message MsgHaltChain {
+  option (cosmos.msg.v1.signer) = "signer";
+  option (amino.name) = "bze/x/guardian/MsgHaltChain";
+
+  // signer is the guardian or the governance authority.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // reason is a short explanation (1 to 256 bytes), in the event only; the
+  // plan info is a fixed text.
+  string reason = 2;
+}
+
+// MsgHaltChainResponse defines the response structure for executing a
+// MsgHaltChain message.
+message MsgHaltChainResponse {
+  // name of the scheduled upgrade plan.
+  string name = 1;
+  // height the chain stops at.
+  int64 height = 2;
+}

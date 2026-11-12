@@ -25,6 +25,7 @@ const (
 	Msg_UnblockDenom_FullMethodName      = "/bze.guardian.v1.Msg/UnblockDenom"
 	Msg_DisableMessages_FullMethodName   = "/bze.guardian.v1.Msg/DisableMessages"
 	Msg_HaltTradingDenoms_FullMethodName = "/bze.guardian.v1.Msg/HaltTradingDenoms"
+	Msg_HaltChain_FullMethodName         = "/bze.guardian.v1.Msg/HaltChain"
 )
 
 // MsgClient is the client API for Msg service.
@@ -51,6 +52,10 @@ type MsgClient interface {
 	// tradebin governance message MsgHaltDenoms. Only governance lifts the halt,
 	// through tradebin's MsgUnhaltDenoms.
 	HaltTradingDenoms(ctx context.Context, in *MsgHaltTradingDenoms, opts ...grpc.CallOption) (*MsgHaltTradingDenomsResponse, error)
+	// HaltChain schedules an upgrade plan at the next block height: every node
+	// stops there until it runs a binary that handles the plan, or until the
+	// validators skip the height. It replaces any plan already scheduled.
+	HaltChain(ctx context.Context, in *MsgHaltChain, opts ...grpc.CallOption) (*MsgHaltChainResponse, error)
 }
 
 type msgClient struct {
@@ -115,6 +120,15 @@ func (c *msgClient) HaltTradingDenoms(ctx context.Context, in *MsgHaltTradingDen
 	return out, nil
 }
 
+func (c *msgClient) HaltChain(ctx context.Context, in *MsgHaltChain, opts ...grpc.CallOption) (*MsgHaltChainResponse, error) {
+	out := new(MsgHaltChainResponse)
+	err := c.cc.Invoke(ctx, Msg_HaltChain_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -139,6 +153,10 @@ type MsgServer interface {
 	// tradebin governance message MsgHaltDenoms. Only governance lifts the halt,
 	// through tradebin's MsgUnhaltDenoms.
 	HaltTradingDenoms(context.Context, *MsgHaltTradingDenoms) (*MsgHaltTradingDenomsResponse, error)
+	// HaltChain schedules an upgrade plan at the next block height: every node
+	// stops there until it runs a binary that handles the plan, or until the
+	// validators skip the height. It replaces any plan already scheduled.
+	HaltChain(context.Context, *MsgHaltChain) (*MsgHaltChainResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -163,6 +181,9 @@ func (UnimplementedMsgServer) DisableMessages(context.Context, *MsgDisableMessag
 }
 func (UnimplementedMsgServer) HaltTradingDenoms(context.Context, *MsgHaltTradingDenoms) (*MsgHaltTradingDenomsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HaltTradingDenoms not implemented")
+}
+func (UnimplementedMsgServer) HaltChain(context.Context, *MsgHaltChain) (*MsgHaltChainResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HaltChain not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -285,6 +306,24 @@ func _Msg_HaltTradingDenoms_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_HaltChain_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgHaltChain)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).HaltChain(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_HaltChain_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).HaltChain(ctx, req.(*MsgHaltChain))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -315,6 +354,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "HaltTradingDenoms",
 			Handler:    _Msg_HaltTradingDenoms_Handler,
+		},
+		{
+			MethodName: "HaltChain",
+			Handler:    _Msg_HaltChain_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -14,6 +14,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgUnblockDenom{},
 		&MsgDisableMessages{},
 		&MsgHaltTradingDenoms{},
+		&MsgHaltChain{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

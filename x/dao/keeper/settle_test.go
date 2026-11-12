@@ -794,11 +794,13 @@ func (suite *IntegrationTestSuite) TestSettleProposal_WhaleWaitsForExpediteDelay
 	suite.requireSettled(id, types.ProposalStatus_EXECUTED, true)
 }
 
-// The delay is checked before the bars: a proposal below the bars is refused
-// as too early while the delay runs, then as below the bars.
+// The delay is checked before the bars: a stake DAO proposal below the bars
+// is refused as too early while the delay runs, then as below the bars.
 func (suite *IntegrationTestSuite) TestSettleProposal_ExpediteDelayBeforeBars() {
 	suite.setExpediteDelay(time.Hour)
-	suite.createStaticDao(noConfigChange)
+	_, s := suite.expediteStakeDao(noConfigChange)
+	s.joinSr("1", memberA, 50)
+	suite.atBlock(10)
 	id, err := suite.submit(memberA, 1, true)
 	suite.Require().NoError(err)
 	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
@@ -813,16 +815,17 @@ func (suite *IntegrationTestSuite) TestSettleProposal_ExpediteDelayBeforeBars() 
 	suite.requireStillVoting(id)
 }
 
-// With the default 24h delay and a 24h expedited period, a proposal never
-// settles early, but at its voting end it settles normally: the delay only
-// bounds early settles.
+// With the default 24h delay and a 24h expedited period, a stake DAO proposal
+// never settles early, but at its voting end it settles normally: the delay
+// only bounds early settles.
 func (suite *IntegrationTestSuite) TestSettleProposal_ExpediteDelayNeverBlocksVotingEnd() {
 	suite.Require().Equal(24*time.Hour, suite.k.GetParams(suite.ctx).MinExpediteDelay)
-	suite.createStaticDao(noConfigChange)
+	_, s := suite.expediteStakeDao(noConfigChange)
+	s.joinSr("1", memberA, 100)
+	suite.atBlock(10)
 	id, err := suite.submit(memberA, 1, true)
 	suite.Require().NoError(err)
 	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
-	suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_YES))
 
 	suite.endVoting(id, -1)
 	_, err = suite.settle(id)
@@ -835,15 +838,16 @@ func (suite *IntegrationTestSuite) TestSettleProposal_ExpediteDelayNeverBlocksVo
 	suite.requireSettled(id, types.ProposalStatus_EXECUTED, false)
 }
 
-// The delay is the param at settle time: lowering it lets a waiting proposal
-// settle early at once.
+// The delay is the param at settle time: lowering it lets a waiting stake DAO
+// proposal settle early at once.
 func (suite *IntegrationTestSuite) TestSettleProposal_ExpediteDelayReadAtSettle() {
 	suite.setExpediteDelay(time.Hour)
-	suite.createStaticDao(noConfigChange)
+	_, s := suite.expediteStakeDao(noConfigChange)
+	s.joinSr("1", memberA, 100)
+	suite.atBlock(10)
 	id, err := suite.submit(memberA, 1, true)
 	suite.Require().NoError(err)
 	suite.Require().NoError(suite.vote(memberA, id, types.VoteOption_YES))
-	suite.Require().NoError(suite.vote(memberB, id, types.VoteOption_YES))
 
 	_, err = suite.settle(id)
 	suite.Require().ErrorIs(err, types.ErrExpediteTooEarly)

@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ratelimittypes "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/types"
 
@@ -52,4 +53,10 @@ type TradebinKeeper interface {
 	GetParams(ctx context.Context) tradebinv2types.Params
 	IsDenomHalted(ctx sdk.Context, denom string) bool
 	SetHaltedDenom(ctx sdk.Context, denom string)
+}
+
+// UpgradeKeeper is the part of the x/upgrade keeper x/guardian uses: it only
+// schedules the plan that halts the chain.
+type UpgradeKeeper interface {
+	ScheduleUpgrade(ctx context.Context, plan upgradetypes.Plan) error
 }
