@@ -28,6 +28,12 @@ service Msg {
   // UnblockDenom takes a denom off the blacklist. Governance only.
   rpc UnblockDenom (MsgUnblockDenom) returns (MsgUnblockDenomResponse);
 
+  // DisableMessages adds message types to the x/circuit disable list: the app
+  // refuses every message of these types, sent in a tx or executed by another
+  // module. Only governance re-enables them, with x/circuit's
+  // MsgResetCircuitBreaker.
+  rpc DisableMessages (MsgDisableMessages) returns (MsgDisableMessagesResponse);
+
   // HaltTradingDenoms halts denoms on the DEX, with the same effect as the
   // tradebin governance message MsgHaltDenoms. Only governance lifts the halt,
   // through tradebin's MsgUnhaltDenoms.
@@ -109,6 +115,21 @@ message MsgUnblockDenom {
 // MsgUnblockDenomResponse defines the response structure for executing a
 // MsgUnblockDenom message.
 message MsgUnblockDenomResponse {}
+
+// MsgDisableMessages is the Msg/DisableMessages request type.
+message MsgDisableMessages {
+  option (cosmos.msg.v1.signer) = "signer";
+  option (amino.name) = "bze/x/guardian/MsgDisableMessages";
+
+  // signer is the guardian or the governance authority.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // msg_type_urls are the type URLs to disable, e.g. /bze.tradebin.MsgMultiSwap.
+  repeated string msg_type_urls = 2;
+}
+
+// MsgDisableMessagesResponse defines the response structure for executing a
+// MsgDisableMessages message.
+message MsgDisableMessagesResponse {}
 
 // MsgHaltTradingDenoms is the Msg/HaltTradingDenoms request type.
 message MsgHaltTradingDenoms {

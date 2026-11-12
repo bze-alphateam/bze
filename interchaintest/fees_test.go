@@ -86,6 +86,10 @@ const (
 
 	// step 13 proposals pay above the raised minimum
 	feGovPrices = "0.03" + chain.Denom
+
+	// blocks step 3 waits at most for the tre pool price to come back within
+	// moduleMaxPriceDrift (about 50 blocks for a 17% move)
+	feCalmBlocks = 150
 )
 
 // TestFees follows every fee to its final account and proves the minimum gas
@@ -301,6 +305,55 @@ func (s *feesSuite) communityPoolNonNative(t *testing.T) {
 		require.True(t, s.transfers(t, block, s.cpFees, s.distr).IsZero(), "nothing funded")
 		require.Equal(t, left.Add(fee...), s.addrBalances(t, s.cpFees, res.Height), "the nsw fee waits next to the tre")
 	})
+
+	t.Run("kept while the pool price moved", func(t *testing.T) {
+		// the admin sells a tenth of the tre reserve: the price moves about
+		// 17%, far beyond moduleMaxPriceDrift, and the swap's fee in tre
+		// reaches the collector
+		pool := s.pool(t, s.trePool)
+		in := pool.reserveBase().QuoRaw(10)
+		q := s.quote(in, pool.reserveBase(), pool.reserveQuote())
+		before := s.addrBalances(t, s.cpFees, 0)
+		res := s.mustExec(t, s.admin, "tradebin", "multi-swap", s.trePool, sdk.NewCoin(s.tre, in).String(), coinStr(1, chain.Denom))
+		require.Equal(t, sdk.NewCoins(sdk.NewCoin(s.tre, q.fee)), s.transfers(t, res.Events, s.tradebin, s.cpFees), "swap fee in tre to the collector")
+
+		block := s.blockEvents(t, res.Height)
+		require.Empty(t, s.swapsBy(block, s.cpFees), "the collector does not swap at a moved price")
+		require.True(t, s.transfers(t, block, s.cpFees, s.distr).IsZero(), "nothing funded")
+		require.True(t, s.transfers(t, block, s.cpFees, s.burner).IsZero(), "nothing burned")
+		require.Equal(t, before.Add(sdk.NewCoin(s.tre, q.fee)), s.addrBalances(t, s.cpFees, res.Height), "the tre fee waits in the collector")
+
+		// once the price is back near its average, a pass swaps all the tre
+		// the collector holds and funds the community pool with the ubze
+		require.NoError(t, helpers.WaitForPoolPriceCalm(s.ctx, s.bze, feCalmBlocks, s.trePool))
+		var swapHeight int64
+		var swap helpers.Event
+		for h := res.Height + 1; swapHeight == 0; h++ {
+			require.LessOrEqual(t, h, res.Height+int64(feCalmBlocks)+5, "no swap by the collector after the pool settled")
+			s.waitForHeight(t, h)
+			if swaps := helpers.EventsWith(s.swapsBy(s.blockEvents(t, h), s.cpFees), map[string]string{"pool_id": s.trePool}); len(swaps) > 0 {
+				require.Len(t, swaps, 1)
+				swapHeight, swap = h, swaps[0]
+			}
+		}
+		held := s.addrBalances(t, s.cpFees, swapHeight-1).AmountOf(s.tre)
+		require.True(t, held.GTE(q.fee), "the waiting fee is still there before the swap: %s", held)
+		at := s.poolAtHeight(t, s.trePool, swapHeight-1)
+		cq := s.quote(held, at.reserveBase(), at.reserveQuote())
+		require.Equal(t, sdk.NewCoin(s.tre, held), eventCoin(t, swap, "in"), "the collector swaps all its tre")
+		require.Equal(t, sdk.NewCoin(chain.Denom, cq.out), eventCoin(t, swap, "out"), "exact swap output")
+		require.Equal(t, cq.out, s.transfers(t, s.blockEvents(t, swapHeight), s.cpFees, s.distr).AmountOf(chain.Denom), "the ubze funds the community pool")
+	})
+}
+
+// poolAtHeight is a pool as it stood at height.
+func (s *feesSuite) poolAtHeight(t *testing.T, id string, height int64) poolInfo {
+	t.Helper()
+	res, err := helpers.Query[struct {
+		Pool poolInfo `json:"pool"`
+	}](s.ctx, s.bze, "tradebin", "liquidity-pool", id, "--height", strconv.FormatInt(height, 10))
+	require.NoError(t, err)
+	return res.Pool
 }
 
 // 4. A taker paying its tx fee in gld pays the 0.1 BZE taker fee in gld too.

@@ -48,6 +48,11 @@ const (
 	brOtherPoolVoucher = 100_000_000
 	brOtherPoolBze     = 50_000_000_000
 
+	brPriceDriftCode = 4018 // tradebin ErrPoolPriceDrift
+	// blocks step 10 waits at most for the moved voucher pool's price to come
+	// back within moduleMaxPriceDrift (about 56 blocks for a 21% move)
+	brCalmBlocks = 150
+
 	brFundBze    = 5_000_000
 	brFundBrn    = 3_000_000
 	brFundLp     = 1_000_000
@@ -528,9 +533,11 @@ func (s *burnerSuite) raffleExpiry(t *testing.T) {
 }
 
 // 10. MoveIbcLockedCoins needs a deep enough ubze pool: with no pool and with
-// a shallow one it is refused. Once the pool is deep, the whole locked
-// balance goes into the pool as liquidity, the LP shares stay locked and the
-// ubze tradebin returns goes to the burner.
+// a shallow one it is refused. A deep pool whose price was just moved far
+// from its moving average refuses it too (tradebin's price drift error);
+// once the price is back near the average, the whole locked balance goes
+// into the pool as liquidity, the LP shares stay locked and the ubze tradebin
+// returns goes to the burner.
 func (s *burnerSuite) moveLocked(t *testing.T) {
 	locked := s.balance(t, s.blackHole, s.other)
 	require.Equal(t, sdkmath.NewInt(brFundOther), locked, "utoken voucher locked in step 2")
@@ -551,8 +558,18 @@ func (s *burnerSuite) moveLocked(t *testing.T) {
 		refuse(t, s.other, burnerCodespace, 1102, "liquidity availability")
 	})
 
-	t.Run("move", func(t *testing.T) {
+	t.Run("pool price moved", func(t *testing.T) {
 		s.mustExec(t, s.admin, "tradebin", "add-liquidity", s.otherPool, strconv.Itoa(2*brOtherPoolVoucher), strconv.Itoa(2*brOtherPoolBze), "1")
+		// a swap of a tenth of the ubze reserve moves the price by about 21%,
+		// far beyond moduleMaxPriceDrift: the burner adds no liquidity at
+		// that price
+		in := s.pool(t, s.otherPool).reserveQuote().QuoRaw(10)
+		s.mustExec(t, s.admin, "tradebin", "multi-swap", s.otherPool, sdk.NewCoin(chain.Denom, in).String(), coinStr(1, s.other))
+		refuse(t, s.other, ammCodespace, brPriceDriftCode, "pool price is too far from its moving average")
+		require.NoError(t, helpers.WaitForPoolPriceCalm(s.ctx, s.bze, brCalmBlocks, s.otherPool))
+	})
+
+	t.Run("move", func(t *testing.T) {
 		pool := s.pool(t, s.otherPool)
 		hole, burner := s.addrBalances(t, s.blackHole, 0), s.balance(t, s.burner, chain.Denom)
 		before := s.addrBalances(t, s.p1.FormattedAddress(), 0)

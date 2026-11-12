@@ -34,10 +34,13 @@ type env struct {
 	msgServer types.MsgServer
 	rl        *testutil.MockRateLimitKeeper
 	bank      *testutil.MockBankKeeper
+	circuit   *testutil.MockCircuitKeeper
+	router    *testutil.MockMsgRouter
 }
 
 // newEnv is a real keeper on an in-memory store with a mocked rate-limiting
-// keeper and bank keeper, and the guardian param set.
+// keeper, bank keeper, circuit keeper and msg router, and the guardian param
+// set.
 func newEnv(t *testing.T) *env {
 	t.Helper()
 
@@ -46,9 +49,13 @@ func newEnv(t *testing.T) *env {
 	k, ctx := keepertest.GuardianKeeper(t, bank)
 	rl := testutil.NewMockRateLimitKeeper(ctrl)
 	k.SetRateLimitKeeper(rl)
+	circuit := testutil.NewMockCircuitKeeper(ctrl)
+	router := testutil.NewMockMsgRouter(ctrl)
+	k.SetCircuitKeeper(circuit)
+	k.SetMsgRouter(router)
 	require.NoError(t, k.SetParams(ctx, types.NewParams(guardianAddr)))
 
-	return &env{ctx: ctx, k: &k, msgServer: keeper.NewMsgServerImpl(&k), rl: rl, bank: bank}
+	return &env{ctx: ctx, k: &k, msgServer: keeper.NewMsgServerImpl(&k), rl: rl, bank: bank, circuit: circuit, router: router}
 }
 
 // storedLimit is a rate limit with a flow already counted in its window.

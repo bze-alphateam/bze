@@ -23,6 +23,7 @@ const (
 	Msg_TightenRateLimit_FullMethodName  = "/bze.guardian.v1.Msg/TightenRateLimit"
 	Msg_BlockDenom_FullMethodName        = "/bze.guardian.v1.Msg/BlockDenom"
 	Msg_UnblockDenom_FullMethodName      = "/bze.guardian.v1.Msg/UnblockDenom"
+	Msg_DisableMessages_FullMethodName   = "/bze.guardian.v1.Msg/DisableMessages"
 	Msg_HaltTradingDenoms_FullMethodName = "/bze.guardian.v1.Msg/HaltTradingDenoms"
 )
 
@@ -41,6 +42,11 @@ type MsgClient interface {
 	BlockDenom(ctx context.Context, in *MsgBlockDenom, opts ...grpc.CallOption) (*MsgBlockDenomResponse, error)
 	// UnblockDenom takes a denom off the blacklist. Governance only.
 	UnblockDenom(ctx context.Context, in *MsgUnblockDenom, opts ...grpc.CallOption) (*MsgUnblockDenomResponse, error)
+	// DisableMessages adds message types to the x/circuit disable list: the app
+	// refuses every message of these types, sent in a tx or executed by another
+	// module. Only governance re-enables them, with x/circuit's
+	// MsgResetCircuitBreaker.
+	DisableMessages(ctx context.Context, in *MsgDisableMessages, opts ...grpc.CallOption) (*MsgDisableMessagesResponse, error)
 	// HaltTradingDenoms halts denoms on the DEX, with the same effect as the
 	// tradebin governance message MsgHaltDenoms. Only governance lifts the halt,
 	// through tradebin's MsgUnhaltDenoms.
@@ -91,6 +97,15 @@ func (c *msgClient) UnblockDenom(ctx context.Context, in *MsgUnblockDenom, opts 
 	return out, nil
 }
 
+func (c *msgClient) DisableMessages(ctx context.Context, in *MsgDisableMessages, opts ...grpc.CallOption) (*MsgDisableMessagesResponse, error) {
+	out := new(MsgDisableMessagesResponse)
+	err := c.cc.Invoke(ctx, Msg_DisableMessages_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) HaltTradingDenoms(ctx context.Context, in *MsgHaltTradingDenoms, opts ...grpc.CallOption) (*MsgHaltTradingDenomsResponse, error) {
 	out := new(MsgHaltTradingDenomsResponse)
 	err := c.cc.Invoke(ctx, Msg_HaltTradingDenoms_FullMethodName, in, out, opts...)
@@ -115,6 +130,11 @@ type MsgServer interface {
 	BlockDenom(context.Context, *MsgBlockDenom) (*MsgBlockDenomResponse, error)
 	// UnblockDenom takes a denom off the blacklist. Governance only.
 	UnblockDenom(context.Context, *MsgUnblockDenom) (*MsgUnblockDenomResponse, error)
+	// DisableMessages adds message types to the x/circuit disable list: the app
+	// refuses every message of these types, sent in a tx or executed by another
+	// module. Only governance re-enables them, with x/circuit's
+	// MsgResetCircuitBreaker.
+	DisableMessages(context.Context, *MsgDisableMessages) (*MsgDisableMessagesResponse, error)
 	// HaltTradingDenoms halts denoms on the DEX, with the same effect as the
 	// tradebin governance message MsgHaltDenoms. Only governance lifts the halt,
 	// through tradebin's MsgUnhaltDenoms.
@@ -137,6 +157,9 @@ func (UnimplementedMsgServer) BlockDenom(context.Context, *MsgBlockDenom) (*MsgB
 }
 func (UnimplementedMsgServer) UnblockDenom(context.Context, *MsgUnblockDenom) (*MsgUnblockDenomResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnblockDenom not implemented")
+}
+func (UnimplementedMsgServer) DisableMessages(context.Context, *MsgDisableMessages) (*MsgDisableMessagesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DisableMessages not implemented")
 }
 func (UnimplementedMsgServer) HaltTradingDenoms(context.Context, *MsgHaltTradingDenoms) (*MsgHaltTradingDenomsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HaltTradingDenoms not implemented")
@@ -226,6 +249,24 @@ func _Msg_UnblockDenom_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_DisableMessages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDisableMessages)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).DisableMessages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_DisableMessages_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).DisableMessages(ctx, req.(*MsgDisableMessages))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_HaltTradingDenoms_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgHaltTradingDenoms)
 	if err := dec(in); err != nil {
@@ -266,6 +307,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnblockDenom",
 			Handler:    _Msg_UnblockDenom_Handler,
+		},
+		{
+			MethodName: "DisableMessages",
+			Handler:    _Msg_DisableMessages_Handler,
 		},
 		{
 			MethodName: "HaltTradingDenoms",

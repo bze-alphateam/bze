@@ -28,6 +28,7 @@ func TestRegisterServices_RoutesMsgsAndQuery(t *testing.T) {
 
 	require.NotNil(t, msr.Handler(&types.MsgUpdateParams{}))
 	require.NotNil(t, msr.Handler(&types.MsgTightenRateLimit{}))
+	require.NotNil(t, msr.Handler(&types.MsgDisableMessages{}))
 	require.NotNil(t, qr.Route("/bze.guardian.v1.Query/Params"))
 }
 
@@ -48,6 +49,7 @@ func TestAutoCLIOptions(t *testing.T) {
 	require.Equal(t, "params", uses["Params"])
 	require.Contains(t, uses["TightenRateLimit"], "tighten-rate-limit [denom] [channel-id] [max-percent-send] [max-percent-recv]")
 	require.Contains(t, uses["UpdateParams"], "update-params")
+	require.Equal(t, "disable-messages [msg-type-urls...]", uses["DisableMessages"])
 }
 
 func TestConsensusVersion(t *testing.T) {

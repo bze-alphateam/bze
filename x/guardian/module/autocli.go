@@ -66,6 +66,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					GovProposal:    true, // authority gated: wrapped in a x/gov proposal, authority filled with the gov address
 				},
 				{
+					RpcMethod: "DisableMessages",
+					Use:       "disable-messages [msg-type-urls...]",
+					Short:     "Disable message types through the x/circuit circuit breaker",
+					Long: "Adds the message types to the x/circuit disable list: the chain refuses every message of these types, sent in a tx or executed by another module. " +
+						"Signed by the guardian or the governance authority. Governance, circuit, upgrade and guardian messages, and the x/dao submit/vote/settle messages, cannot be disabled. " +
+						"Only a governance proposal with x/circuit's MsgResetCircuitBreaker re-enables a message; 'bzed q circuit disabled-list' shows the list.",
+					Example:        "bzed tx guardian disable-messages /bze.tradebin.MsgMultiSwap --from guardian",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "msg_type_urls", Varargs: true}},
+				},
+				{
 					RpcMethod: "HaltTradingDenoms",
 					Use:       "halt-trading-denoms [denom]...",
 					Short:     "Halt denoms on the DEX",

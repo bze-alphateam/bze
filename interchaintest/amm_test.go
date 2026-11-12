@@ -60,6 +60,11 @@ const (
 
 	ammOrderAmount = 1_000
 
+	// blocks a step waits at most for a pool price to come back within the
+	// drift params of its moving average (about 35 blocks for a 10% move at
+	// the default half-life of 20 blocks)
+	ammCalmBlocks = 120
+
 	tradebinEventPrefix = "bze.tradebin."
 	ammCodespace        = "tradebin"
 	ammMaxRoutes        = 5 // tradebin MaxRoutes
@@ -373,6 +378,9 @@ func (s *ammSuite) removeLiquidity(t *testing.T) {
 // ubze to the validators' fee collector. A denom without a ubze pool can not
 // pay fees.
 func (s *ammSuite) txFeeInUsd(t *testing.T) {
+	// the swaps of steps 3 and 4 moved the usd/ubze price; the EndBlock swap
+	// only runs while the price is within moduleMaxPriceDrift of its average
+	require.NoError(t, helpers.WaitForPoolPriceCalm(s.ctx, s.bze, ammCalmBlocks, s.usdPool))
 	require.True(t, s.balance(t, s.txFees, s.usd).IsZero(), "txfeecollector holds usd before the test")
 	pool := s.pool(t, s.usdPool)
 	fee := sdkmath.NewInt(ammUsdFee)
@@ -416,6 +424,7 @@ func (s *ammSuite) takerFeeInUsd(t *testing.T) {
 	s.mustExec(t, s.maker, "tradebin", "create-order", "sell", sdkmath.NewInt(ammOrderAmount).String(), sdkmath.NewInt(price).String(), s.market)
 	makerUsd := s.balance(t, s.maker.FormattedAddress(), s.usd)
 
+	require.NoError(t, helpers.WaitForPoolPriceCalm(s.ctx, s.bze, ammCalmBlocks, s.usdPool))
 	pool := s.pool(t, s.usdPool)
 	takerFee := s.params.MarketTakerFee.Amount
 	req := inputFor(takerFee, pool.reserveBase(), pool.reserveQuote())
@@ -615,7 +624,8 @@ func (s *ammSuite) reversedPool(t *testing.T) {
 
 // 13. The LP denom of a new pool is ulp/<uppercase hex sha256(pool id)>, with
 // bank metadata: base unit ulp/<hash> at exponent 0, display unit lp/<hash>
-// at exponent 6, no name or symbol.
+// at exponent 6, and the name, symbol and description of lpDenomMetadata
+// (v8.3.0: the bank module refuses metadata with a blank name or symbol).
 func (s *ammSuite) lpMetadata(t *testing.T) {
 	sum := sha256.Sum256([]byte(s.revPool))
 	hash := strings.ToUpper(hex.EncodeToString(sum[:]))
@@ -625,11 +635,12 @@ func (s *ammSuite) lpMetadata(t *testing.T) {
 
 	res, err := helpers.Query[struct {
 		Metadata struct {
-			Name       string `json:"name"`
-			Symbol     string `json:"symbol"`
-			Display    string `json:"display"`
-			Base       string `json:"base"`
-			DenomUnits []struct {
+			Name        string `json:"name"`
+			Symbol      string `json:"symbol"`
+			Description string `json:"description"`
+			Display     string `json:"display"`
+			Base        string `json:"base"`
+			DenomUnits  []struct {
 				Denom    string        `json:"denom"`
 				Exponent helpers.Int64 `json:"exponent"`
 			} `json:"denom_units"`
@@ -639,13 +650,31 @@ func (s *ammSuite) lpMetadata(t *testing.T) {
 	md := res.Metadata
 	assert.Equal(t, base, md.Base)
 	assert.Equal(t, display, md.Display)
-	assert.Empty(t, md.Name)
-	assert.Empty(t, md.Symbol)
+	want := lpDenomMetadata(s.revPool)
+	assert.Equal(t, want.name, md.Name)
+	assert.Equal(t, want.symbol, md.Symbol)
+	assert.Equal(t, want.description, md.Description)
 	require.Len(t, md.DenomUnits, 2, "%+v", md.DenomUnits)
 	assert.Equal(t, base, md.DenomUnits[0].Denom)
 	assert.EqualValues(t, 0, md.DenomUnits[0].Exponent)
 	assert.Equal(t, display, md.DenomUnits[1].Denom)
 	assert.EqualValues(t, 6, md.DenomUnits[1].Exponent)
+}
+
+// lpMetadataText is the name, symbol and description of a pool's LP share
+// denom metadata.
+type lpMetadataText struct{ name, symbol, description string }
+
+// lpDenomMetadata is what the chain stores for a pool's LP share denom: the
+// symbol is "LP-" and the first 6 characters of the uppercase hex sha256 of
+// the pool id, for hashed and legacy LP denoms alike.
+func lpDenomMetadata(poolID string) lpMetadataText {
+	sum := sha256.Sum256([]byte(poolID))
+	return lpMetadataText{
+		name:        "LP share of pool " + poolID,
+		symbol:      "LP-" + strings.ToUpper(hex.EncodeToString(sum[:]))[:6],
+		description: "Liquidity provider share of the " + poolID + " pool on the BZE DEX",
+	}
 }
 
 // 14. Slippage guards: a MinLpTokens one above what the deposit mints and a

@@ -355,7 +355,8 @@ func (s *daoSuite) settleProposal(t *testing.T) {
 		res := s.pass(t, pid, m[:2], "EXECUTION_FAILED")
 		executed := s.event(t, res, "EventProposalExecuted")
 		require.Equal(t, "false", executed.Attributes["success"])
-		require.Equal(t, "message failed", executed.Attributes["error"])
+		// a DAO never signs a settle: refused with its own fixed reason
+		require.Equal(t, "message not allowed", executed.Attributes["error"])
 		s.settle(t, anyone, pid, "EXECUTION_FAILED", nil, nil)
 		s.failed = pid
 	})

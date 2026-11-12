@@ -297,6 +297,7 @@ func New(
 	// x/guardian halts denoms on the DEX through the tradebin keeper
 	app.GuardianKeeper.SetTradebinKeeper(app.TradebinKeeper)
 	app.setRewardsHooks()
+	app.wireGuardianCircuit()
 	app.setupUpgradeHandlers()
 
 	anteOptions := ante.HandlerOptions{

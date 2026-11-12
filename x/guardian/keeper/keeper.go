@@ -26,6 +26,11 @@ type Keeper struct {
 	// rateLimitKeeper is wired after the depinject build, see SetRateLimitKeeper.
 	rateLimitKeeper types.RateLimitKeeper
 
+	// circuitKeeper and msgRouter are wired after the depinject build, see
+	// SetCircuitKeeper and SetMsgRouter.
+	circuitKeeper types.CircuitKeeper
+	msgRouter     types.MsgRouter
+
 	// tradebinKeeper is wired after the depinject build, see SetTradebinKeeper.
 	tradebinKeeper types.TradebinKeeper
 }
@@ -55,6 +60,18 @@ func NewKeeper(
 // so it cannot be an input of ProvideModule.
 func (k *Keeper) SetRateLimitKeeper(rateLimitKeeper types.RateLimitKeeper) {
 	k.rateLimitKeeper = rateLimitKeeper
+}
+
+// SetCircuitKeeper wires the x/circuit disable list. The app adapts the
+// circuit keeper, whose disable list is a store collection and not a method.
+func (k *Keeper) SetCircuitKeeper(circuitKeeper types.CircuitKeeper) {
+	k.circuitKeeper = circuitKeeper
+}
+
+// SetMsgRouter wires the app's message router, which only exists once the app
+// is built.
+func (k *Keeper) SetMsgRouter(msgRouter types.MsgRouter) {
+	k.msgRouter = msgRouter
 }
 
 // GetAuthority returns the module's authority.
