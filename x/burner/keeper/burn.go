@@ -28,9 +28,17 @@ func (k Keeper) EnqueuePeriodicBurn(ctx sdk.Context) {
 // There is no cursor: every block re-reads the burner's balances from the start, so every coin of a batch must leave
 // the account. BurnAnyCoins guarantees it for exchangeable coins: one that can't be added as liquidity (an error, a
 // refund or a panic) is locked instead of being retried at the front of the account forever.
+//
+// While the guardian has the protocol automation paused nothing is read, burned, locked or pooled and the queue stays
+// pending: the first block after governance resumes it burns everything the account holds by then, including what
+// arrived during the pause.
 func (k Keeper) ProcessPeriodicBurnQueue(ctx sdk.Context) error {
 	queue, found := k.GetPeriodicBurnQueue(ctx)
 	if !found || !queue.Pending {
+		return nil
+	}
+
+	if k.IsAutomationPaused(ctx) {
 		return nil
 	}
 

@@ -221,36 +221,131 @@ func (m *DenomUnblockedEvent) GetDenom() string {
 	return ""
 }
 
+// AutomationPausedEvent is emitted when the protocol automation is paused.
+type AutomationPausedEvent struct {
+	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+}
+
+func (m *AutomationPausedEvent) Reset()         { *m = AutomationPausedEvent{} }
+func (m *AutomationPausedEvent) String() string { return proto.CompactTextString(m) }
+func (*AutomationPausedEvent) ProtoMessage()    {}
+func (*AutomationPausedEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptor_96627918fa510111, []int{3}
+}
+func (m *AutomationPausedEvent) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AutomationPausedEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AutomationPausedEvent.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AutomationPausedEvent) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AutomationPausedEvent.Merge(m, src)
+}
+func (m *AutomationPausedEvent) XXX_Size() int {
+	return m.Size()
+}
+func (m *AutomationPausedEvent) XXX_DiscardUnknown() {
+	xxx_messageInfo_AutomationPausedEvent.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AutomationPausedEvent proto.InternalMessageInfo
+
+func (m *AutomationPausedEvent) GetSigner() string {
+	if m != nil {
+		return m.Signer
+	}
+	return ""
+}
+
+// AutomationResumedEvent is emitted when governance resumes the protocol
+// automation.
+type AutomationResumedEvent struct {
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+}
+
+func (m *AutomationResumedEvent) Reset()         { *m = AutomationResumedEvent{} }
+func (m *AutomationResumedEvent) String() string { return proto.CompactTextString(m) }
+func (*AutomationResumedEvent) ProtoMessage()    {}
+func (*AutomationResumedEvent) Descriptor() ([]byte, []int) {
+	return fileDescriptor_96627918fa510111, []int{4}
+}
+func (m *AutomationResumedEvent) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AutomationResumedEvent) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AutomationResumedEvent.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AutomationResumedEvent) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AutomationResumedEvent.Merge(m, src)
+}
+func (m *AutomationResumedEvent) XXX_Size() int {
+	return m.Size()
+}
+func (m *AutomationResumedEvent) XXX_DiscardUnknown() {
+	xxx_messageInfo_AutomationResumedEvent.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AutomationResumedEvent proto.InternalMessageInfo
+
+func (m *AutomationResumedEvent) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*TightenRateLimitEvent)(nil), "bze.guardian.v1.TightenRateLimitEvent")
 	proto.RegisterType((*DenomBlockedEvent)(nil), "bze.guardian.v1.DenomBlockedEvent")
 	proto.RegisterType((*DenomUnblockedEvent)(nil), "bze.guardian.v1.DenomUnblockedEvent")
+	proto.RegisterType((*AutomationPausedEvent)(nil), "bze.guardian.v1.AutomationPausedEvent")
+	proto.RegisterType((*AutomationResumedEvent)(nil), "bze.guardian.v1.AutomationResumedEvent")
 }
 
 func init() { proto.RegisterFile("bze/guardian/v1/events.proto", fileDescriptor_96627918fa510111) }
 
 var fileDescriptor_96627918fa510111 = []byte{
-	// 310 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x91, 0xbd, 0x4e, 0xc3, 0x30,
-	0x14, 0x85, 0x6b, 0xa0, 0x2d, 0xf5, 0x82, 0x08, 0x3f, 0x0a, 0x52, 0xb1, 0x50, 0x27, 0x96, 0x26,
-	0xaa, 0x78, 0x02, 0x2a, 0x10, 0xaa, 0xc4, 0x54, 0x60, 0x61, 0xa9, 0xec, 0xf8, 0x2a, 0xb1, 0x48,
-	0xaf, 0xab, 0xc4, 0x4d, 0x69, 0x9f, 0x82, 0xc7, 0x62, 0xec, 0xc8, 0x88, 0x9a, 0x17, 0x41, 0x71,
-	0xd2, 0x94, 0x81, 0x89, 0xf1, 0x9c, 0x4f, 0xdf, 0x91, 0xad, 0x4b, 0xbb, 0x62, 0x05, 0x7e, 0x38,
-	0xe7, 0x89, 0x54, 0x1c, 0xfd, 0x6c, 0xe0, 0x43, 0x06, 0x68, 0x52, 0x6f, 0x96, 0x68, 0xa3, 0x9d,
-	0x23, 0xb1, 0x02, 0x6f, 0x4b, 0xbd, 0x6c, 0xd0, 0x5b, 0x13, 0x7a, 0xf6, 0xac, 0xc2, 0xc8, 0x00,
-	0x8e, 0xb9, 0x81, 0x47, 0x35, 0x55, 0xe6, 0xbe, 0x30, 0x9c, 0x73, 0xda, 0x4a, 0x55, 0x88, 0x90,
-	0xb8, 0xe4, 0x8a, 0x5c, 0x77, 0xc6, 0x55, 0x72, 0x4e, 0x69, 0x53, 0x02, 0xea, 0xa9, 0xbb, 0x67,
-	0xeb, 0x32, 0x38, 0x97, 0x94, 0x06, 0x11, 0x47, 0x84, 0x78, 0xa2, 0xa4, 0xbb, 0x6f, 0x51, 0xa7,
-	0x6a, 0x46, 0xd2, 0xb9, 0xa0, 0x87, 0x3a, 0x96, 0x93, 0x14, 0x50, 0xba, 0x07, 0x16, 0xb6, 0x75,
-	0x2c, 0x9f, 0x00, 0x6b, 0x94, 0x40, 0x90, 0xb9, 0xcd, 0x1a, 0x8d, 0x21, 0xc8, 0x0a, 0x84, 0xb0,
-	0x28, 0xad, 0x56, 0x89, 0x10, 0x16, 0x5b, 0xab, 0x40, 0xd6, 0x6a, 0xd7, 0xa8, 0xb0, 0x7a, 0xb7,
-	0xf4, 0xf8, 0xae, 0x78, 0xd3, 0x30, 0xd6, 0xc1, 0x1b, 0xc8, 0x7f, 0xfc, 0xa6, 0x37, 0xa2, 0x27,
-	0x76, 0xe2, 0x05, 0xc5, 0xef, 0x91, 0x2e, 0xed, 0xf0, 0xb9, 0x89, 0x74, 0xa2, 0xcc, 0xb2, 0xda,
-	0xd9, 0x15, 0x7f, 0x4f, 0x0d, 0x1f, 0x3e, 0x37, 0x8c, 0xac, 0x37, 0x8c, 0x7c, 0x6f, 0x18, 0xf9,
-	0xc8, 0x59, 0x63, 0x9d, 0xb3, 0xc6, 0x57, 0xce, 0x1a, 0xaf, 0xfd, 0x50, 0x99, 0x68, 0x2e, 0xbc,
-	0x40, 0x4f, 0x7d, 0xb1, 0x82, 0x3e, 0x8f, 0x67, 0x11, 0x37, 0xc0, 0x6d, 0xf2, 0xdf, 0x77, 0x47,
-	0x34, 0xcb, 0x19, 0xa4, 0xa2, 0x65, 0x2f, 0x78, 0xf3, 0x13, 0x00, 0x00, 0xff, 0xff, 0x71, 0x85,
-	0x5e, 0xe2, 0xe1, 0x01, 0x00, 0x00,
+	// 340 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x92, 0xcd, 0x4a, 0xf3, 0x40,
+	0x14, 0x86, 0x9b, 0xef, 0xb3, 0xad, 0x9d, 0x8d, 0x18, 0x6d, 0x89, 0x50, 0x83, 0x64, 0xe5, 0xa6,
+	0x09, 0x45, 0x70, 0xdf, 0xa2, 0x48, 0xc1, 0x85, 0x44, 0xdd, 0xb8, 0x29, 0x93, 0xcc, 0x21, 0x19,
+	0x4c, 0xce, 0x94, 0x64, 0x26, 0xb5, 0xbd, 0x0a, 0x2f, 0xcb, 0x65, 0x97, 0x2e, 0xa5, 0xbd, 0x11,
+	0xc9, 0xf4, 0x27, 0x6e, 0x44, 0x71, 0x79, 0xde, 0x87, 0xe7, 0x9d, 0x33, 0x70, 0x48, 0x37, 0x98,
+	0x83, 0x17, 0x29, 0x9a, 0x31, 0x4e, 0xd1, 0x2b, 0xfa, 0x1e, 0x14, 0x80, 0x32, 0x77, 0x27, 0x99,
+	0x90, 0xc2, 0x3c, 0x08, 0xe6, 0xe0, 0x6e, 0xa9, 0x5b, 0xf4, 0x9d, 0x85, 0x41, 0xda, 0x0f, 0x3c,
+	0x8a, 0x25, 0xa0, 0x4f, 0x25, 0xdc, 0xf2, 0x94, 0xcb, 0xeb, 0xd2, 0x30, 0x3b, 0xa4, 0x91, 0xf3,
+	0x08, 0x21, 0xb3, 0x8c, 0x33, 0xe3, 0xbc, 0xe5, 0x6f, 0x26, 0xf3, 0x98, 0xd4, 0x19, 0xa0, 0x48,
+	0xad, 0x7f, 0x3a, 0x5e, 0x0f, 0xe6, 0x29, 0x21, 0x61, 0x4c, 0x11, 0x21, 0x19, 0x73, 0x66, 0xfd,
+	0xd7, 0xa8, 0xb5, 0x49, 0x46, 0xcc, 0x3c, 0x21, 0xfb, 0x22, 0x61, 0xe3, 0x1c, 0x90, 0x59, 0x7b,
+	0x1a, 0x36, 0x45, 0xc2, 0xee, 0x01, 0x77, 0x28, 0x83, 0xb0, 0xb0, 0xea, 0x3b, 0xe4, 0x43, 0x58,
+	0x94, 0x08, 0x61, 0xba, 0xb6, 0x1a, 0x6b, 0x84, 0x30, 0xdd, 0x5a, 0x25, 0xd2, 0x56, 0x73, 0x87,
+	0x4a, 0xcb, 0x19, 0x90, 0xc3, 0xab, 0x72, 0xa7, 0x61, 0x22, 0xc2, 0x67, 0x60, 0x7f, 0xf8, 0x8d,
+	0x33, 0x22, 0x47, 0xba, 0xe2, 0x11, 0x83, 0xaf, 0x25, 0x5d, 0xd2, 0xa2, 0x4a, 0xc6, 0x22, 0xe3,
+	0x72, 0xb6, 0xe9, 0xa9, 0x82, 0x6f, 0xaa, 0x3c, 0xd2, 0x1e, 0x28, 0x29, 0x52, 0x2a, 0xb9, 0xc0,
+	0x3b, 0xaa, 0xf2, 0x1f, 0x36, 0x72, 0x2e, 0x49, 0xa7, 0x12, 0x7c, 0xc8, 0x55, 0xfa, 0xab, 0xe7,
+	0x87, 0x37, 0x6f, 0x4b, 0xdb, 0x58, 0x2c, 0x6d, 0xe3, 0x63, 0x69, 0x1b, 0xaf, 0x2b, 0xbb, 0xb6,
+	0x58, 0xd9, 0xb5, 0xf7, 0x95, 0x5d, 0x7b, 0xea, 0x45, 0x5c, 0xc6, 0x2a, 0x70, 0x43, 0x91, 0x7a,
+	0xc1, 0x1c, 0x7a, 0x34, 0x99, 0xc4, 0x54, 0x02, 0xd5, 0x93, 0xf7, 0x52, 0x5d, 0x8b, 0x9c, 0x4d,
+	0x20, 0x0f, 0x1a, 0xfa, 0x54, 0x2e, 0x3e, 0x03, 0x00, 0x00, 0xff, 0xff, 0xe2, 0xd9, 0xe6, 0x93,
+	0x4a, 0x02, 0x00, 0x00,
 }
 
 func (m *TightenRateLimitEvent) Marshal() (dAtA []byte, err error) {
@@ -399,6 +494,66 @@ func (m *DenomUnblockedEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *AutomationPausedEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutomationPausedEvent) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AutomationPausedEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Signer)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AutomationResumedEvent) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AutomationResumedEvent) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AutomationResumedEvent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintEvents(dAtA []byte, offset int, v uint64) int {
 	offset -= sovEvents(v)
 	base := offset
@@ -475,6 +630,32 @@ func (m *DenomUnblockedEvent) Size() (n int) {
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *AutomationPausedEvent) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Signer)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *AutomationResumedEvent) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
@@ -967,6 +1148,170 @@ func (m *DenomUnblockedEvent) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutomationPausedEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutomationPausedEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutomationPausedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AutomationResumedEvent) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AutomationResumedEvent: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AutomationResumedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

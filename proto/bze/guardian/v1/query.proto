@@ -19,6 +19,11 @@ service Query {
   rpc BlockedDenoms (QueryBlockedDenomsRequest) returns (QueryBlockedDenomsResponse) {
     option (google.api.http).get = "/bze/guardian/v1/blocked_denoms";
   }
+
+  // AutomationPaused tells whether the protocol automation is paused.
+  rpc AutomationPaused (QueryAutomationPausedRequest) returns (QueryAutomationPausedResponse) {
+    option (google.api.http).get = "/bze/guardian/v1/automation_paused";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -37,4 +42,14 @@ message QueryBlockedDenomsRequest {}
 message QueryBlockedDenomsResponse {
   // denoms are the blacklisted denoms, every transfer of them is refused.
   repeated string denoms = 1;
+}
+
+// QueryAutomationPausedRequest is request type for the Query/AutomationPaused RPC method.
+message QueryAutomationPausedRequest {}
+
+// QueryAutomationPausedResponse is response type for the Query/AutomationPaused RPC method.
+message QueryAutomationPausedResponse {
+  // paused is true while the txfeecollector EndBlock conversions and the
+  // burner's periodic burn are stopped.
+  bool paused = 1 [(amino.dont_omitempty) = true];
 }

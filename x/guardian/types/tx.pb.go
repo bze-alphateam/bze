@@ -418,6 +418,174 @@ func (m *MsgUnblockDenomResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUnblockDenomResponse proto.InternalMessageInfo
 
+// MsgPauseAutomation is the Msg/PauseAutomation request type.
+type MsgPauseAutomation struct {
+	// signer is the guardian or the governance authority.
+	Signer string `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+}
+
+func (m *MsgPauseAutomation) Reset()         { *m = MsgPauseAutomation{} }
+func (m *MsgPauseAutomation) String() string { return proto.CompactTextString(m) }
+func (*MsgPauseAutomation) ProtoMessage()    {}
+func (*MsgPauseAutomation) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a229f9b0940ab408, []int{8}
+}
+func (m *MsgPauseAutomation) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgPauseAutomation) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgPauseAutomation.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgPauseAutomation) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgPauseAutomation.Merge(m, src)
+}
+func (m *MsgPauseAutomation) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgPauseAutomation) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgPauseAutomation.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgPauseAutomation proto.InternalMessageInfo
+
+func (m *MsgPauseAutomation) GetSigner() string {
+	if m != nil {
+		return m.Signer
+	}
+	return ""
+}
+
+// MsgPauseAutomationResponse defines the response structure for executing a
+// MsgPauseAutomation message.
+type MsgPauseAutomationResponse struct {
+}
+
+func (m *MsgPauseAutomationResponse) Reset()         { *m = MsgPauseAutomationResponse{} }
+func (m *MsgPauseAutomationResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgPauseAutomationResponse) ProtoMessage()    {}
+func (*MsgPauseAutomationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a229f9b0940ab408, []int{9}
+}
+func (m *MsgPauseAutomationResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgPauseAutomationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgPauseAutomationResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgPauseAutomationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgPauseAutomationResponse.Merge(m, src)
+}
+func (m *MsgPauseAutomationResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgPauseAutomationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgPauseAutomationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgPauseAutomationResponse proto.InternalMessageInfo
+
+// MsgResumeAutomation is the Msg/ResumeAutomation request type.
+type MsgResumeAutomation struct {
+	// authority is the governance module account, the guardian cannot resume.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+}
+
+func (m *MsgResumeAutomation) Reset()         { *m = MsgResumeAutomation{} }
+func (m *MsgResumeAutomation) String() string { return proto.CompactTextString(m) }
+func (*MsgResumeAutomation) ProtoMessage()    {}
+func (*MsgResumeAutomation) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a229f9b0940ab408, []int{10}
+}
+func (m *MsgResumeAutomation) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgResumeAutomation) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgResumeAutomation.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgResumeAutomation) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgResumeAutomation.Merge(m, src)
+}
+func (m *MsgResumeAutomation) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgResumeAutomation) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgResumeAutomation.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgResumeAutomation proto.InternalMessageInfo
+
+func (m *MsgResumeAutomation) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+// MsgResumeAutomationResponse defines the response structure for executing a
+// MsgResumeAutomation message.
+type MsgResumeAutomationResponse struct {
+}
+
+func (m *MsgResumeAutomationResponse) Reset()         { *m = MsgResumeAutomationResponse{} }
+func (m *MsgResumeAutomationResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgResumeAutomationResponse) ProtoMessage()    {}
+func (*MsgResumeAutomationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a229f9b0940ab408, []int{11}
+}
+func (m *MsgResumeAutomationResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgResumeAutomationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgResumeAutomationResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgResumeAutomationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgResumeAutomationResponse.Merge(m, src)
+}
+func (m *MsgResumeAutomationResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgResumeAutomationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgResumeAutomationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgResumeAutomationResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgUpdateParams)(nil), "bze.guardian.v1.MsgUpdateParams")
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "bze.guardian.v1.MsgUpdateParamsResponse")
@@ -427,52 +595,62 @@ func init() {
 	proto.RegisterType((*MsgBlockDenomResponse)(nil), "bze.guardian.v1.MsgBlockDenomResponse")
 	proto.RegisterType((*MsgUnblockDenom)(nil), "bze.guardian.v1.MsgUnblockDenom")
 	proto.RegisterType((*MsgUnblockDenomResponse)(nil), "bze.guardian.v1.MsgUnblockDenomResponse")
+	proto.RegisterType((*MsgPauseAutomation)(nil), "bze.guardian.v1.MsgPauseAutomation")
+	proto.RegisterType((*MsgPauseAutomationResponse)(nil), "bze.guardian.v1.MsgPauseAutomationResponse")
+	proto.RegisterType((*MsgResumeAutomation)(nil), "bze.guardian.v1.MsgResumeAutomation")
+	proto.RegisterType((*MsgResumeAutomationResponse)(nil), "bze.guardian.v1.MsgResumeAutomationResponse")
 }
 
 func init() { proto.RegisterFile("bze/guardian/v1/tx.proto", fileDescriptor_a229f9b0940ab408) }
 
 var fileDescriptor_a229f9b0940ab408 = []byte{
-	// 631 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0x3d, 0x4f, 0xdb, 0x5c,
-	0x14, 0x8e, 0xe1, 0x05, 0x29, 0xf7, 0x6d, 0x0b, 0x75, 0x41, 0x31, 0x2e, 0x18, 0x64, 0x55, 0x15,
-	0xa2, 0xc4, 0x2e, 0x54, 0xea, 0x90, 0xad, 0x51, 0xa5, 0x0a, 0xa9, 0x91, 0x90, 0x81, 0x85, 0x25,
-	0xba, 0xb6, 0x6f, 0xaf, 0x2d, 0xf0, 0xbd, 0x96, 0xef, 0x4d, 0x14, 0x32, 0x55, 0x48, 0x5d, 0x3a,
-	0x55, 0xfd, 0x15, 0x1d, 0x33, 0x30, 0xf4, 0x27, 0x30, 0x22, 0xa6, 0xaa, 0x43, 0x54, 0x25, 0x43,
-	0xfe, 0x46, 0xe5, 0x8f, 0xc4, 0xc6, 0x71, 0x0b, 0x6a, 0xbb, 0x44, 0x39, 0xe7, 0x39, 0x1f, 0xcf,
-	0x79, 0x7c, 0xce, 0x05, 0x92, 0xd9, 0x45, 0x3a, 0x6e, 0xc1, 0xc0, 0x76, 0x21, 0xd1, 0xdb, 0x3b,
-	0x3a, 0xef, 0x68, 0x7e, 0x40, 0x39, 0x15, 0x17, 0xcc, 0x2e, 0xd2, 0xc6, 0x88, 0xd6, 0xde, 0x91,
-	0x1f, 0x42, 0xcf, 0x25, 0x54, 0x8f, 0x7e, 0xe3, 0x18, 0xb9, 0x62, 0x51, 0xe6, 0x51, 0xa6, 0x7b,
-	0x0c, 0x87, 0xb9, 0x1e, 0xc3, 0x09, 0xb0, 0x12, 0x03, 0xcd, 0xc8, 0xd2, 0x63, 0x23, 0x81, 0x96,
-	0x30, 0xc5, 0x34, 0xf6, 0x87, 0xff, 0x12, 0xef, 0x6a, 0x9e, 0x87, 0x0f, 0x03, 0xe8, 0x25, 0x39,
-	0xea, 0x57, 0x01, 0x2c, 0x34, 0x18, 0x3e, 0xf2, 0x6d, 0xc8, 0xd1, 0x7e, 0x84, 0x88, 0x2f, 0x41,
-	0x19, 0xb6, 0xb8, 0x43, 0x03, 0x97, 0x9f, 0x49, 0xc2, 0x86, 0xb0, 0x59, 0xae, 0x4b, 0xd7, 0x17,
-	0xd5, 0xa5, 0xa4, 0xd9, 0x2b, 0xdb, 0x0e, 0x10, 0x63, 0x07, 0x3c, 0x70, 0x09, 0x36, 0xd2, 0x50,
-	0xb1, 0x06, 0xe6, 0xe3, 0xda, 0xd2, 0xcc, 0x86, 0xb0, 0xf9, 0xff, 0x6e, 0x45, 0xcb, 0x0d, 0xaa,
-	0xc5, 0x0d, 0xea, 0xe5, 0xcb, 0xfe, 0x7a, 0xe9, 0xcb, 0xa8, 0xb7, 0x25, 0x18, 0x49, 0x46, 0x6d,
-	0xe7, 0x7c, 0xd4, 0xdb, 0x4a, 0x6b, 0x7d, 0x1c, 0xf5, 0xb6, 0x94, 0x90, 0x78, 0x27, 0xa5, 0x9e,
-	0xa3, 0xa9, 0xae, 0x80, 0x4a, 0xce, 0x65, 0x20, 0xe6, 0x53, 0xc2, 0x90, 0xda, 0x9f, 0x01, 0x8f,
-	0x1a, 0x0c, 0x1f, 0xba, 0xd8, 0xe1, 0x88, 0x18, 0x90, 0xa3, 0xb7, 0xae, 0xe7, 0x72, 0xf1, 0x39,
-	0x98, 0x67, 0x2e, 0x26, 0x28, 0xb8, 0x75, 0xac, 0x24, 0x4e, 0x5c, 0x02, 0x73, 0x36, 0x22, 0xd4,
-	0x8b, 0x46, 0x2a, 0x1b, 0xb1, 0x21, 0xae, 0x01, 0x60, 0x39, 0x90, 0x10, 0x74, 0xda, 0x74, 0x6d,
-	0x69, 0x36, 0x82, 0xca, 0x89, 0x67, 0xcf, 0x16, 0x8f, 0xc0, 0xa2, 0x07, 0x3b, 0x4d, 0x1f, 0x05,
-	0x16, 0x22, 0xbc, 0xc9, 0x10, 0xb1, 0xa5, 0xff, 0xa2, 0x86, 0xcf, 0xc2, 0xc9, 0xbf, 0xf7, 0xd7,
-	0x97, 0xe3, 0xa6, 0xcc, 0x3e, 0xd1, 0x5c, 0xaa, 0x7b, 0x90, 0x3b, 0xda, 0x1e, 0xe1, 0xd7, 0x17,
-	0x55, 0x90, 0xb0, 0xd9, 0x23, 0xdc, 0x78, 0xe0, 0xc1, 0xce, 0x7e, 0x5c, 0xe3, 0x00, 0x91, 0xa9,
-	0xb2, 0x01, 0xb2, 0xda, 0xd2, 0xdc, 0x5f, 0x95, 0x35, 0x90, 0xd5, 0xae, 0xed, 0x86, 0xd2, 0x27,
-	0xf3, 0x86, 0xba, 0xab, 0xd3, 0xba, 0xe7, 0x85, 0x54, 0xd7, 0xc0, 0xe3, 0x02, 0xf7, 0x44, 0xff,
-	0x0f, 0x02, 0xb8, 0xdf, 0x60, 0xb8, 0x7e, 0x4a, 0xad, 0x93, 0xd7, 0x91, 0x62, 0xff, 0x48, 0xf9,
-	0xda, 0x76, 0x8e, 0xec, 0xea, 0x34, 0xd9, 0xb4, 0xab, 0x5a, 0x01, 0xcb, 0x37, 0x1c, 0x13, 0x82,
-	0x9f, 0x93, 0xb5, 0x27, 0x66, 0x4a, 0xf1, 0x4f, 0xd7, 0xbe, 0x98, 0xe8, 0x1d, 0x17, 0x3a, 0x43,
-	0x60, 0xbc, 0xd0, 0x19, 0xd7, 0x98, 0xef, 0xee, 0xf9, 0x2c, 0x98, 0x6d, 0x30, 0x2c, 0x1e, 0x83,
-	0x7b, 0x37, 0x4e, 0x75, 0x63, 0xea, 0xc4, 0x72, 0x27, 0x21, 0x6f, 0xde, 0x16, 0x31, 0xee, 0x21,
-	0xbe, 0x03, 0x8b, 0x53, 0x07, 0xf3, 0xa4, 0x28, 0x3b, 0x1f, 0x25, 0x6f, 0xdf, 0x25, 0x6a, 0xd2,
-	0xe7, 0x10, 0x80, 0xcc, 0x62, 0x28, 0x45, 0xb9, 0x29, 0x2e, 0x3f, 0xfd, 0x3d, 0x3e, 0xa9, 0x1a,
-	0x2a, 0x93, 0xfd, 0x9a, 0xc5, 0xca, 0x64, 0x22, 0x7e, 0xa1, 0x4c, 0x81, 0xfa, 0xf2, 0xdc, 0xfb,
-	0xf0, 0xad, 0xaa, 0xbf, 0xb9, 0x1c, 0x28, 0xc2, 0xd5, 0x40, 0x11, 0x7e, 0x0c, 0x14, 0xe1, 0xd3,
-	0x50, 0x29, 0x5d, 0x0d, 0x95, 0xd2, 0xb7, 0xa1, 0x52, 0x3a, 0xae, 0x62, 0x97, 0x3b, 0x2d, 0x53,
-	0xb3, 0xa8, 0xa7, 0x9b, 0x5d, 0x54, 0x85, 0xa7, 0xbe, 0x03, 0x39, 0x82, 0x91, 0x95, 0xfd, 0xe4,
-	0xfc, 0xcc, 0x47, 0xcc, 0x9c, 0x8f, 0xde, 0xde, 0x17, 0x3f, 0x03, 0x00, 0x00, 0xff, 0xff, 0x3a,
-	0x3c, 0x04, 0x4a, 0x23, 0x06, 0x00, 0x00,
+	// 723 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0xcd, 0x4e, 0xdb, 0x4c,
+	0x14, 0x8d, 0xf9, 0x93, 0x32, 0xdf, 0xd7, 0x42, 0x5d, 0x50, 0x8c, 0x0b, 0x86, 0xba, 0x55, 0x85,
+	0x80, 0xd8, 0x85, 0xaa, 0x5d, 0x64, 0x47, 0x54, 0xa9, 0x42, 0x6a, 0x24, 0x64, 0x60, 0xc3, 0x26,
+	0x9a, 0xd8, 0xd3, 0x89, 0x05, 0x9e, 0xb1, 0x3c, 0x93, 0x28, 0xb0, 0xaa, 0xaa, 0x76, 0xd3, 0x55,
+	0xd5, 0xa7, 0xe8, 0x92, 0x05, 0x8b, 0x3e, 0x02, 0xbb, 0x22, 0x56, 0x55, 0x17, 0xa8, 0x82, 0x05,
+	0xaf, 0x51, 0xf9, 0x27, 0x89, 0x19, 0x9b, 0x92, 0xd2, 0x6e, 0xa2, 0xcc, 0xbd, 0xe7, 0xde, 0x7b,
+	0xee, 0xd1, 0x99, 0x31, 0x50, 0x1a, 0x07, 0xc8, 0xc4, 0x2d, 0x18, 0x38, 0x2e, 0x24, 0x66, 0x7b,
+	0xc5, 0xe4, 0x1d, 0xc3, 0x0f, 0x28, 0xa7, 0xf2, 0x78, 0xe3, 0x00, 0x19, 0xdd, 0x8c, 0xd1, 0x5e,
+	0x51, 0xef, 0x41, 0xcf, 0x25, 0xd4, 0x8c, 0x7e, 0x63, 0x8c, 0x5a, 0xb2, 0x29, 0xf3, 0x28, 0x33,
+	0x3d, 0x86, 0xc3, 0x5a, 0x8f, 0xe1, 0x24, 0x31, 0x1d, 0x27, 0xea, 0xd1, 0xc9, 0x8c, 0x0f, 0x49,
+	0x6a, 0x12, 0x53, 0x4c, 0xe3, 0x78, 0xf8, 0x2f, 0x89, 0xce, 0x88, 0x3c, 0x7c, 0x18, 0x40, 0x2f,
+	0xa9, 0xd1, 0xbf, 0x4a, 0x60, 0xbc, 0xc6, 0xf0, 0xb6, 0xef, 0x40, 0x8e, 0x36, 0xa2, 0x8c, 0xfc,
+	0x02, 0x14, 0x61, 0x8b, 0x37, 0x69, 0xe0, 0xf2, 0x7d, 0x45, 0x9a, 0x97, 0x16, 0x8a, 0x55, 0xe5,
+	0xf4, 0xa8, 0x3c, 0x99, 0x0c, 0x5b, 0x73, 0x9c, 0x00, 0x31, 0xb6, 0xc9, 0x03, 0x97, 0x60, 0xab,
+	0x0f, 0x95, 0x2b, 0x60, 0x2c, 0xee, 0xad, 0x0c, 0xcd, 0x4b, 0x0b, 0xff, 0xad, 0x96, 0x0c, 0x61,
+	0x51, 0x23, 0x1e, 0x50, 0x2d, 0x1e, 0x9f, 0xcd, 0x15, 0xbe, 0x5c, 0x1e, 0x2e, 0x4a, 0x56, 0x52,
+	0x51, 0x59, 0x79, 0x77, 0x79, 0xb8, 0xd8, 0xef, 0xf5, 0xf1, 0xf2, 0x70, 0x51, 0x0b, 0x89, 0x77,
+	0xfa, 0xd4, 0x05, 0x9a, 0xfa, 0x34, 0x28, 0x09, 0x21, 0x0b, 0x31, 0x9f, 0x12, 0x86, 0xf4, 0xb3,
+	0x21, 0x70, 0xbf, 0xc6, 0xf0, 0x96, 0x8b, 0x9b, 0x1c, 0x11, 0x0b, 0x72, 0xf4, 0xda, 0xf5, 0x5c,
+	0x2e, 0x3f, 0x05, 0x63, 0xcc, 0xc5, 0x04, 0x05, 0x37, 0xae, 0x95, 0xe0, 0xe4, 0x49, 0x30, 0xea,
+	0x20, 0x42, 0xbd, 0x68, 0xa5, 0xa2, 0x15, 0x1f, 0xe4, 0x59, 0x00, 0xec, 0x26, 0x24, 0x04, 0xed,
+	0xd5, 0x5d, 0x47, 0x19, 0x8e, 0x52, 0xc5, 0x24, 0xb2, 0xee, 0xc8, 0xdb, 0x60, 0xc2, 0x83, 0x9d,
+	0xba, 0x8f, 0x02, 0x1b, 0x11, 0x5e, 0x67, 0x88, 0x38, 0xca, 0x48, 0x34, 0x70, 0x29, 0xdc, 0xfc,
+	0xc7, 0xd9, 0xdc, 0x54, 0x3c, 0x94, 0x39, 0xbb, 0x86, 0x4b, 0x4d, 0x0f, 0xf2, 0xa6, 0xb1, 0x4e,
+	0xf8, 0xe9, 0x51, 0x19, 0x24, 0x6c, 0xd6, 0x09, 0xb7, 0xee, 0x7a, 0xb0, 0xb3, 0x11, 0xf7, 0xd8,
+	0x44, 0x24, 0xd3, 0x36, 0x40, 0x76, 0x5b, 0x19, 0xfd, 0xab, 0xb6, 0x16, 0xb2, 0xdb, 0x95, 0xd5,
+	0x50, 0xfa, 0x64, 0xdf, 0x50, 0x77, 0x3d, 0xab, 0xbb, 0x28, 0xa4, 0x3e, 0x0b, 0x1e, 0xe4, 0x84,
+	0x7b, 0xfa, 0x7f, 0x90, 0xc0, 0x9d, 0x1a, 0xc3, 0xd5, 0x3d, 0x6a, 0xef, 0xbe, 0x8c, 0x14, 0xfb,
+	0x47, 0xca, 0x57, 0x96, 0x05, 0xb2, 0x33, 0x59, 0xb2, 0xfd, 0xa9, 0x7a, 0x09, 0x4c, 0x5d, 0x09,
+	0xf4, 0x08, 0x7e, 0x4e, 0x6c, 0x4f, 0x1a, 0x7d, 0x8a, 0xb7, 0xb5, 0x7d, 0x3e, 0xd1, 0x01, 0x0d,
+	0x9d, 0x22, 0xd0, 0x35, 0x74, 0x2a, 0xd4, 0xe3, 0xbb, 0x0f, 0xe4, 0x1a, 0xc3, 0x1b, 0xb0, 0xc5,
+	0xd0, 0x5a, 0x8b, 0x53, 0x0f, 0x72, 0x97, 0x92, 0x3f, 0x17, 0x35, 0x66, 0x95, 0x92, 0xef, 0x61,
+	0x96, 0x92, 0x30, 0x44, 0x9f, 0x01, 0x6a, 0x36, 0xda, 0x23, 0xf6, 0x5e, 0x8a, 0x6e, 0x9a, 0x85,
+	0x58, 0xcb, 0x4b, 0x53, 0xbb, 0xa5, 0x98, 0x95, 0xe7, 0x59, 0xd9, 0x72, 0xfc, 0x28, 0x8e, 0x4b,
+	0xfc, 0x28, 0x86, 0xbb, 0x2c, 0x57, 0xbf, 0x8d, 0x80, 0xe1, 0x1a, 0xc3, 0xf2, 0x0e, 0xf8, 0xff,
+	0xca, 0x4b, 0x37, 0x9f, 0x79, 0xa1, 0x84, 0x17, 0x45, 0x5d, 0xb8, 0x09, 0xd1, 0x9d, 0x21, 0xbf,
+	0x01, 0x13, 0x99, 0xf7, 0xe6, 0x71, 0x5e, 0xb5, 0x88, 0x52, 0x97, 0x07, 0x41, 0xf5, 0xe6, 0x6c,
+	0x01, 0x90, 0xba, 0x57, 0x5a, 0x5e, 0x6d, 0x3f, 0xaf, 0x3e, 0xf9, 0x7d, 0xbe, 0xd7, 0x35, 0x54,
+	0x26, 0x7d, 0x19, 0xf2, 0x95, 0x49, 0x21, 0xae, 0x51, 0x26, 0xc7, 0xbc, 0xb2, 0x0d, 0xc6, 0x45,
+	0xe7, 0x3e, 0xca, 0x2b, 0x16, 0x40, 0xea, 0xd2, 0x00, 0xa0, 0xb4, 0xfc, 0x19, 0x13, 0xe6, 0xca,
+	0x2f, 0xa2, 0xf2, 0xe5, 0xbf, 0xce, 0x4a, 0xea, 0xe8, 0xdb, 0xf0, 0xbb, 0x55, 0x7d, 0x75, 0x7c,
+	0xae, 0x49, 0x27, 0xe7, 0x9a, 0xf4, 0xf3, 0x5c, 0x93, 0x3e, 0x5d, 0x68, 0x85, 0x93, 0x0b, 0xad,
+	0xf0, 0xfd, 0x42, 0x2b, 0xec, 0x94, 0xb1, 0xcb, 0x9b, 0xad, 0x86, 0x61, 0x53, 0xcf, 0x6c, 0x1c,
+	0xa0, 0x32, 0xdc, 0xf3, 0x9b, 0x90, 0x23, 0x18, 0x9d, 0xd2, 0x3e, 0xe6, 0xfb, 0x3e, 0x62, 0x8d,
+	0xb1, 0xe8, 0x3b, 0xfc, 0xec, 0x57, 0x00, 0x00, 0x00, 0xff, 0xff, 0x3d, 0xa0, 0x04, 0xd5, 0x2f,
+	0x08, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -498,6 +676,11 @@ type MsgClient interface {
 	BlockDenom(ctx context.Context, in *MsgBlockDenom, opts ...grpc.CallOption) (*MsgBlockDenomResponse, error)
 	// UnblockDenom takes a denom off the blacklist. Governance only.
 	UnblockDenom(ctx context.Context, in *MsgUnblockDenom, opts ...grpc.CallOption) (*MsgUnblockDenomResponse, error)
+	// PauseAutomation stops the protocol's own automatic fund movements: the
+	// txfeecollector EndBlock conversions and the burner's periodic burn.
+	PauseAutomation(ctx context.Context, in *MsgPauseAutomation, opts ...grpc.CallOption) (*MsgPauseAutomationResponse, error)
+	// ResumeAutomation lifts the pause. Governance only.
+	ResumeAutomation(ctx context.Context, in *MsgResumeAutomation, opts ...grpc.CallOption) (*MsgResumeAutomationResponse, error)
 }
 
 type msgClient struct {
@@ -544,6 +727,24 @@ func (c *msgClient) UnblockDenom(ctx context.Context, in *MsgUnblockDenom, opts 
 	return out, nil
 }
 
+func (c *msgClient) PauseAutomation(ctx context.Context, in *MsgPauseAutomation, opts ...grpc.CallOption) (*MsgPauseAutomationResponse, error) {
+	out := new(MsgPauseAutomationResponse)
+	err := c.cc.Invoke(ctx, "/bze.guardian.v1.Msg/PauseAutomation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ResumeAutomation(ctx context.Context, in *MsgResumeAutomation, opts ...grpc.CallOption) (*MsgResumeAutomationResponse, error) {
+	out := new(MsgResumeAutomationResponse)
+	err := c.cc.Invoke(ctx, "/bze.guardian.v1.Msg/ResumeAutomation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// UpdateParams defines a (governance) operation for updating the module
@@ -557,6 +758,11 @@ type MsgServer interface {
 	BlockDenom(context.Context, *MsgBlockDenom) (*MsgBlockDenomResponse, error)
 	// UnblockDenom takes a denom off the blacklist. Governance only.
 	UnblockDenom(context.Context, *MsgUnblockDenom) (*MsgUnblockDenomResponse, error)
+	// PauseAutomation stops the protocol's own automatic fund movements: the
+	// txfeecollector EndBlock conversions and the burner's periodic burn.
+	PauseAutomation(context.Context, *MsgPauseAutomation) (*MsgPauseAutomationResponse, error)
+	// ResumeAutomation lifts the pause. Governance only.
+	ResumeAutomation(context.Context, *MsgResumeAutomation) (*MsgResumeAutomationResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -574,6 +780,12 @@ func (*UnimplementedMsgServer) BlockDenom(ctx context.Context, req *MsgBlockDeno
 }
 func (*UnimplementedMsgServer) UnblockDenom(ctx context.Context, req *MsgUnblockDenom) (*MsgUnblockDenomResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnblockDenom not implemented")
+}
+func (*UnimplementedMsgServer) PauseAutomation(ctx context.Context, req *MsgPauseAutomation) (*MsgPauseAutomationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PauseAutomation not implemented")
+}
+func (*UnimplementedMsgServer) ResumeAutomation(ctx context.Context, req *MsgResumeAutomation) (*MsgResumeAutomationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResumeAutomation not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -652,6 +864,42 @@ func _Msg_UnblockDenom_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_PauseAutomation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgPauseAutomation)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).PauseAutomation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.guardian.v1.Msg/PauseAutomation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).PauseAutomation(ctx, req.(*MsgPauseAutomation))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ResumeAutomation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgResumeAutomation)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ResumeAutomation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/bze.guardian.v1.Msg/ResumeAutomation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ResumeAutomation(ctx, req.(*MsgResumeAutomation))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "bze.guardian.v1.Msg",
@@ -672,6 +920,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnblockDenom",
 			Handler:    _Msg_UnblockDenom_Handler,
+		},
+		{
+			MethodName: "PauseAutomation",
+			Handler:    _Msg_PauseAutomation_Handler,
+		},
+		{
+			MethodName: "ResumeAutomation",
+			Handler:    _Msg_ResumeAutomation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -948,6 +1204,112 @@ func (m *MsgUnblockDenomResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgPauseAutomation) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgPauseAutomation) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgPauseAutomation) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Signer) > 0 {
+		i -= len(m.Signer)
+		copy(dAtA[i:], m.Signer)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Signer)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgPauseAutomationResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgPauseAutomationResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgPauseAutomationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgResumeAutomation) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgResumeAutomation) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgResumeAutomation) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgResumeAutomationResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgResumeAutomationResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgResumeAutomationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1061,6 +1423,50 @@ func (m *MsgUnblockDenom) Size() (n int) {
 }
 
 func (m *MsgUnblockDenomResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgPauseAutomation) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Signer)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgPauseAutomationResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgResumeAutomation) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgResumeAutomationResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1809,6 +2215,270 @@ func (m *MsgUnblockDenomResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUnblockDenomResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgPauseAutomation) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgPauseAutomation: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgPauseAutomation: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Signer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgPauseAutomationResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgPauseAutomationResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgPauseAutomationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgResumeAutomation) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgResumeAutomation: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgResumeAutomation: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgResumeAutomationResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgResumeAutomationResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgResumeAutomationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

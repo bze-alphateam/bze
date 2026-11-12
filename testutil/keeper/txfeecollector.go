@@ -43,6 +43,7 @@ func TxfeecollectorKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
@@ -84,6 +85,7 @@ func TxfeecollectorKeeperWithMocks(
 		tradeKeeper,
 		distrKeeper,
 		denomCpProvider,
+		nil,
 	)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())

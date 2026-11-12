@@ -24,6 +24,8 @@ You can send multiple denominations in a single `fund-burner` call (e.g. `100000
 
 After the next scheduled burn, the burned amount will appear in `burnedCoins` queries (see Queries below).
 
+The x/guardian guardian (or governance) can pause the periodic burn together with the other protocol automation (`MsgPauseAutomation`); only governance resumes it. While paused, the coins stay in the burner. A burning week that ends during the pause is not skipped: the first block after the resume burns everything the burner holds by then. Raffles are not paused.
+
 ## Raffles
 Raffles are per-denom and run for a set duration. Tickets settle a couple of blocks after purchase, so results come quickly.
 
@@ -94,6 +96,9 @@ The module registers a dedicated account named `burner_black_hole`. This account
 - All other messages (`fund-burner`, `start-raffle`, `join-raffle`, `move-ibc-locked-coins`) are open to any account.
 
 ## Version History
+
+### v8.3.0
+- The periodic burn waits while the x/guardian protocol automation pause is on; a burning week that ended during the pause is burned right after governance resumes it
 
 ### v8.1.0
 - Queued periodic burning: burns now processed at EndBlock in bounded batches (up to 100 denoms/block) instead of synchronously in epoch hooks

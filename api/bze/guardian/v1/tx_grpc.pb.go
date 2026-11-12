@@ -23,6 +23,8 @@ const (
 	Msg_TightenRateLimit_FullMethodName = "/bze.guardian.v1.Msg/TightenRateLimit"
 	Msg_BlockDenom_FullMethodName       = "/bze.guardian.v1.Msg/BlockDenom"
 	Msg_UnblockDenom_FullMethodName     = "/bze.guardian.v1.Msg/UnblockDenom"
+	Msg_PauseAutomation_FullMethodName  = "/bze.guardian.v1.Msg/PauseAutomation"
+	Msg_ResumeAutomation_FullMethodName = "/bze.guardian.v1.Msg/ResumeAutomation"
 )
 
 // MsgClient is the client API for Msg service.
@@ -40,6 +42,11 @@ type MsgClient interface {
 	BlockDenom(ctx context.Context, in *MsgBlockDenom, opts ...grpc.CallOption) (*MsgBlockDenomResponse, error)
 	// UnblockDenom takes a denom off the blacklist. Governance only.
 	UnblockDenom(ctx context.Context, in *MsgUnblockDenom, opts ...grpc.CallOption) (*MsgUnblockDenomResponse, error)
+	// PauseAutomation stops the protocol's own automatic fund movements: the
+	// txfeecollector EndBlock conversions and the burner's periodic burn.
+	PauseAutomation(ctx context.Context, in *MsgPauseAutomation, opts ...grpc.CallOption) (*MsgPauseAutomationResponse, error)
+	// ResumeAutomation lifts the pause. Governance only.
+	ResumeAutomation(ctx context.Context, in *MsgResumeAutomation, opts ...grpc.CallOption) (*MsgResumeAutomationResponse, error)
 }
 
 type msgClient struct {
@@ -86,6 +93,24 @@ func (c *msgClient) UnblockDenom(ctx context.Context, in *MsgUnblockDenom, opts 
 	return out, nil
 }
 
+func (c *msgClient) PauseAutomation(ctx context.Context, in *MsgPauseAutomation, opts ...grpc.CallOption) (*MsgPauseAutomationResponse, error) {
+	out := new(MsgPauseAutomationResponse)
+	err := c.cc.Invoke(ctx, Msg_PauseAutomation_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ResumeAutomation(ctx context.Context, in *MsgResumeAutomation, opts ...grpc.CallOption) (*MsgResumeAutomationResponse, error) {
+	out := new(MsgResumeAutomationResponse)
+	err := c.cc.Invoke(ctx, Msg_ResumeAutomation_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -101,6 +126,11 @@ type MsgServer interface {
 	BlockDenom(context.Context, *MsgBlockDenom) (*MsgBlockDenomResponse, error)
 	// UnblockDenom takes a denom off the blacklist. Governance only.
 	UnblockDenom(context.Context, *MsgUnblockDenom) (*MsgUnblockDenomResponse, error)
+	// PauseAutomation stops the protocol's own automatic fund movements: the
+	// txfeecollector EndBlock conversions and the burner's periodic burn.
+	PauseAutomation(context.Context, *MsgPauseAutomation) (*MsgPauseAutomationResponse, error)
+	// ResumeAutomation lifts the pause. Governance only.
+	ResumeAutomation(context.Context, *MsgResumeAutomation) (*MsgResumeAutomationResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -119,6 +149,12 @@ func (UnimplementedMsgServer) BlockDenom(context.Context, *MsgBlockDenom) (*MsgB
 }
 func (UnimplementedMsgServer) UnblockDenom(context.Context, *MsgUnblockDenom) (*MsgUnblockDenomResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnblockDenom not implemented")
+}
+func (UnimplementedMsgServer) PauseAutomation(context.Context, *MsgPauseAutomation) (*MsgPauseAutomationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PauseAutomation not implemented")
+}
+func (UnimplementedMsgServer) ResumeAutomation(context.Context, *MsgResumeAutomation) (*MsgResumeAutomationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ResumeAutomation not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -205,6 +241,42 @@ func _Msg_UnblockDenom_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_PauseAutomation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgPauseAutomation)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).PauseAutomation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_PauseAutomation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).PauseAutomation(ctx, req.(*MsgPauseAutomation))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ResumeAutomation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgResumeAutomation)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ResumeAutomation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_ResumeAutomation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ResumeAutomation(ctx, req.(*MsgResumeAutomation))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -227,6 +299,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnblockDenom",
 			Handler:    _Msg_UnblockDenom_Handler,
+		},
+		{
+			MethodName: "PauseAutomation",
+			Handler:    _Msg_PauseAutomation_Handler,
+		},
+		{
+			MethodName: "ResumeAutomation",
+			Handler:    _Msg_ResumeAutomation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

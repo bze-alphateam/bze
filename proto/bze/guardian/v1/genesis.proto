@@ -14,4 +14,8 @@ message GenesisState {
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
   ];
+
+  // automation_paused keeps the protocol automation pause across a genesis
+  // export and import: only governance resumes it.
+  bool automation_paused = 2;
 }
