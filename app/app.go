@@ -276,6 +276,9 @@ func New(
 	// build app
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 
+	// x/guardian schedules its chain halt plan through the upgrade keeper.
+	app.GuardianKeeper.SetUpgradeKeeper(app.UpgradeKeeper)
+
 	// register legacy modules
 	if err := app.registerIBCModules(appOpts); err != nil {
 		return nil, err

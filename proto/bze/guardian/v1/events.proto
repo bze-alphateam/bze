@@ -25,3 +25,11 @@ message DenomUnblockedEvent {
   string authority = 1;
   string denom = 2;
 }
+
+// ChainHaltScheduledEvent is emitted when a halt plan is scheduled.
+message ChainHaltScheduledEvent {
+  string signer = 1;
+  string name = 2;
+  int64 height = 3;
+  string reason = 4;
+}

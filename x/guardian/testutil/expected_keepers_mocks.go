@@ -13,8 +13,9 @@ import (
 	context "context"
 	reflect "reflect"
 
-	types "github.com/cosmos/cosmos-sdk/types"
-	types0 "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/types"
+	types "cosmossdk.io/x/upgrade/types"
+	types0 "github.com/cosmos/cosmos-sdk/types"
+	types1 "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -43,7 +44,7 @@ func (m *MockRateLimitKeeper) EXPECT() *MockRateLimitKeeperMockRecorder {
 }
 
 // AddDenomToBlacklist mocks base method.
-func (m *MockRateLimitKeeper) AddDenomToBlacklist(ctx types.Context, denom string) {
+func (m *MockRateLimitKeeper) AddDenomToBlacklist(ctx types0.Context, denom string) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "AddDenomToBlacklist", ctx, denom)
 }
@@ -55,7 +56,7 @@ func (mr *MockRateLimitKeeperMockRecorder) AddDenomToBlacklist(ctx, denom any) *
 }
 
 // GetAllBlacklistedDenoms mocks base method.
-func (m *MockRateLimitKeeper) GetAllBlacklistedDenoms(ctx types.Context) []string {
+func (m *MockRateLimitKeeper) GetAllBlacklistedDenoms(ctx types0.Context) []string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllBlacklistedDenoms", ctx)
 	ret0, _ := ret[0].([]string)
@@ -69,10 +70,10 @@ func (mr *MockRateLimitKeeperMockRecorder) GetAllBlacklistedDenoms(ctx any) *gom
 }
 
 // GetRateLimit mocks base method.
-func (m *MockRateLimitKeeper) GetRateLimit(ctx types.Context, denom, channelId string) (types0.RateLimit, bool) {
+func (m *MockRateLimitKeeper) GetRateLimit(ctx types0.Context, denom, channelId string) (types1.RateLimit, bool) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRateLimit", ctx, denom, channelId)
-	ret0, _ := ret[0].(types0.RateLimit)
+	ret0, _ := ret[0].(types1.RateLimit)
 	ret1, _ := ret[1].(bool)
 	return ret0, ret1
 }
@@ -84,7 +85,7 @@ func (mr *MockRateLimitKeeperMockRecorder) GetRateLimit(ctx, denom, channelId an
 }
 
 // IsDenomBlacklisted mocks base method.
-func (m *MockRateLimitKeeper) IsDenomBlacklisted(ctx types.Context, denom string) bool {
+func (m *MockRateLimitKeeper) IsDenomBlacklisted(ctx types0.Context, denom string) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsDenomBlacklisted", ctx, denom)
 	ret0, _ := ret[0].(bool)
@@ -98,7 +99,7 @@ func (mr *MockRateLimitKeeperMockRecorder) IsDenomBlacklisted(ctx, denom any) *g
 }
 
 // RemoveDenomFromBlacklist mocks base method.
-func (m *MockRateLimitKeeper) RemoveDenomFromBlacklist(ctx types.Context, denom string) {
+func (m *MockRateLimitKeeper) RemoveDenomFromBlacklist(ctx types0.Context, denom string) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RemoveDenomFromBlacklist", ctx, denom)
 }
@@ -110,7 +111,7 @@ func (mr *MockRateLimitKeeperMockRecorder) RemoveDenomFromBlacklist(ctx, denom a
 }
 
 // SetRateLimit mocks base method.
-func (m *MockRateLimitKeeper) SetRateLimit(ctx types.Context, rateLimit types0.RateLimit) {
+func (m *MockRateLimitKeeper) SetRateLimit(ctx types0.Context, rateLimit types1.RateLimit) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetRateLimit", ctx, rateLimit)
 }
@@ -157,4 +158,42 @@ func (m *MockBankKeeper) HasSupply(ctx context.Context, denom string) bool {
 func (mr *MockBankKeeperMockRecorder) HasSupply(ctx, denom any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasSupply", reflect.TypeOf((*MockBankKeeper)(nil).HasSupply), ctx, denom)
+}
+
+// MockUpgradeKeeper is a mock of UpgradeKeeper interface.
+type MockUpgradeKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockUpgradeKeeperMockRecorder
+	isgomock struct{}
+}
+
+// MockUpgradeKeeperMockRecorder is the mock recorder for MockUpgradeKeeper.
+type MockUpgradeKeeperMockRecorder struct {
+	mock *MockUpgradeKeeper
+}
+
+// NewMockUpgradeKeeper creates a new mock instance.
+func NewMockUpgradeKeeper(ctrl *gomock.Controller) *MockUpgradeKeeper {
+	mock := &MockUpgradeKeeper{ctrl: ctrl}
+	mock.recorder = &MockUpgradeKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockUpgradeKeeper) EXPECT() *MockUpgradeKeeperMockRecorder {
+	return m.recorder
+}
+
+// ScheduleUpgrade mocks base method.
+func (m *MockUpgradeKeeper) ScheduleUpgrade(ctx context.Context, plan types.Plan) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ScheduleUpgrade", ctx, plan)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ScheduleUpgrade indicates an expected call of ScheduleUpgrade.
+func (mr *MockUpgradeKeeperMockRecorder) ScheduleUpgrade(ctx, plan any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScheduleUpgrade", reflect.TypeOf((*MockUpgradeKeeper)(nil).ScheduleUpgrade), ctx, plan)
 }
