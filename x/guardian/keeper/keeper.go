@@ -30,6 +30,9 @@ type Keeper struct {
 	// SetCircuitKeeper and SetMsgRouter.
 	circuitKeeper types.CircuitKeeper
 	msgRouter     types.MsgRouter
+
+	// tradebinKeeper is wired after the depinject build, see SetTradebinKeeper.
+	tradebinKeeper types.TradebinKeeper
 }
 
 func NewKeeper(

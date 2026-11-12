@@ -23,4 +23,7 @@ var (
 	ErrUnknownMsgType        = sdkerrors.Register(ModuleName, 1112, "message type is not routed by the app")
 	ErrAlreadyDisabled       = sdkerrors.Register(ModuleName, 1113, "message type is already disabled")
 	ErrCircuitKeeperNotSet   = sdkerrors.Register(ModuleName, 1114, "circuit keeper is not set")
+
+	// 1120-1129: DEX denom halt
+	ErrTradebinKeeperNotSet = sdkerrors.Register(ModuleName, 1120, "tradebin keeper is not set")
 )

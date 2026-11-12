@@ -23,6 +23,7 @@ The guardian module holds the chain's emergency switches: the IBC rate limits of
   - a type that is already disabled.
 - **What can be disabled**: any other routed message type, including staking, bank or slashing messages (e.g. `/cosmos.staking.v1beta1.MsgDelegate`, `/cosmos.bank.v1beta1.MsgSend`, `/cosmos.slashing.v1beta1.MsgUnjail`), and stays disabled until governance resets it. A passed proposal that carries a disabled message fails on execution.
 - **Re-enable message types** (governance only): a proposal with `x/circuit`'s `MsgResetCircuitBreaker`, signed by the governance authority. The guardian has no reset message and no `x/circuit` permission.
+- **Halt denoms on the DEX** (`MsgHaltTradingDenoms`, guardian or governance): the same halt as the tradebin governance message `MsgHaltDenoms`, written to tradebin's halted denoms list. A halted denom gets no new order, fill, market, pool or liquidity add, no AMM swap involving it (user routes, module swaps, fee swaps) and is no longer accepted as a tx fee; cancelling orders, removing liquidity, bank sends and IBC transfers keep working. Up to 1000 valid denoms per message, no duplicates; the native denom is refused. A denom that is already halted is left as it is. **Turned back on only by governance**, with a proposal carrying tradebin's `MsgUnhaltDenoms`; the guardian cannot lift a halt.
 
 ```bash
 # As the guardian, disable swaps on the DEX
@@ -37,6 +38,9 @@ bzed tx gov submit-proposal proposal.json --from mykey
 # As the guardian, stop every IBC transfer of an IBC denom (exact on-chain spelling)
 bzed tx guardian block-denom ibc/6490A7EAB61059BFC1CDDEB05917DD70BDF3A611654162A1A47DB930D40D8AF4 --from guardian
 
+# As the guardian, halt two denoms on the DEX
+bzed tx guardian halt-trading-denoms factory/bze1.../utoken ibc/6490A7EAB61059BFC1CDDEB05917DD70BDF3A611654162A1A47DB930D40D8AF4 --from guardian
+
 # As the guardian, lower the ubze quotas on channel-0 to 3% send, 0% receive
 bzed tx guardian tighten-rate-limit ubze channel-0 3 0 --from guardian
 ```
@@ -45,6 +49,8 @@ bzed tx guardian tighten-rate-limit ubze channel-0 3 0 --from guardian
 - `bzed query guardian params`: the guardian address.
 - `bzed query guardian blocked-denoms`: the blacklisted denoms (the `ratelimit` module has no CLI for its blacklist; its gRPC `AllBlacklistedDenoms` works too).
 - `bzed query circuit disabled-list`: the disabled message types (gRPC `cosmos.circuit.v1.Query/DisabledList`, REST `/cosmos/circuit/v1/disable_list`).
+- `bzed query tradebin halted-denoms` and `bzed query tradebin denom-halted [denom]`: the denoms halted on the DEX, by the guardian or by governance (one list).
 
 ## Events
 - `TightenRateLimitEvent` (signer, denom, channel, old and new percents), `DenomBlockedEvent` (`signer`, `denom`), `DenomUnblockedEvent` (`authority`, `denom`) and `MessagesDisabledEvent` (`signer`, `msg_type_urls`). A reset emits `x/circuit`'s `reset_circuit_breaker` event.
+- `TradingDenomsHaltedEvent` (`signer`, `denoms`): one per `MsgHaltTradingDenoms`, listing the denoms it halted (not those already halted). Each of them also gets tradebin's `DenomHaltedEvent` (`denom`), the event a governance halt emits.

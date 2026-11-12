@@ -294,6 +294,8 @@ func New(
 	app.sm.RegisterStoreDecoders()
 	app.setEpochsHooks()
 	app.setTradebinHooks()
+	// x/guardian halts denoms on the DEX through the tradebin keeper
+	app.GuardianKeeper.SetTradebinKeeper(app.TradebinKeeper)
 	app.setRewardsHooks()
 	app.wireGuardianCircuit()
 	app.setupUpgradeHandlers()
