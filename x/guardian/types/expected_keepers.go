@@ -26,3 +26,18 @@ type RateLimitKeeper interface {
 type BankKeeper interface {
 	HasSupply(ctx context.Context, denom string) bool
 }
+
+// CircuitKeeper is the part of the x/circuit keeper x/guardian uses: it reads
+// the list of disabled message types and adds to it. It has no way to take a
+// type off the list: only governance re-enables a message, through x/circuit's
+// own MsgResetCircuitBreaker.
+type CircuitKeeper interface {
+	IsDisabled(ctx context.Context, msgTypeURL string) (bool, error)
+	Disable(ctx context.Context, msgTypeURL string) error
+}
+
+// MsgRouter tells whether a type URL is a message the app routes to a Msg
+// service, so only real message types can be disabled.
+type MsgRouter interface {
+	IsRegistered(msgTypeURL string) bool
+}
