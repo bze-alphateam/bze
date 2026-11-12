@@ -25,3 +25,11 @@ message DenomUnblockedEvent {
   string authority = 1;
   string denom = 2;
 }
+
+// TradingDenomsHaltedEvent is emitted once per MsgHaltTradingDenoms. denoms
+// lists the denoms the message halted, without those that were already
+// halted. tradebin's DenomHaltedEvent is emitted for each of them as well.
+message TradingDenomsHaltedEvent {
+  string signer = 1;
+  repeated string denoms = 2;
+}

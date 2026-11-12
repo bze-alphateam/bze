@@ -25,6 +25,9 @@ type Keeper struct {
 
 	// rateLimitKeeper is wired after the depinject build, see SetRateLimitKeeper.
 	rateLimitKeeper types.RateLimitKeeper
+
+	// tradebinKeeper is wired after the depinject build, see SetTradebinKeeper.
+	tradebinKeeper types.TradebinKeeper
 }
 
 func NewKeeper(

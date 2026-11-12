@@ -13,6 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	v2types "github.com/bze-alphateam/bze/x/tradebin/v2types"
 	types "github.com/cosmos/cosmos-sdk/types"
 	types0 "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/types"
 	gomock "go.uber.org/mock/gomock"
@@ -157,4 +158,68 @@ func (m *MockBankKeeper) HasSupply(ctx context.Context, denom string) bool {
 func (mr *MockBankKeeperMockRecorder) HasSupply(ctx, denom any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasSupply", reflect.TypeOf((*MockBankKeeper)(nil).HasSupply), ctx, denom)
+}
+
+// MockTradebinKeeper is a mock of TradebinKeeper interface.
+type MockTradebinKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockTradebinKeeperMockRecorder
+	isgomock struct{}
+}
+
+// MockTradebinKeeperMockRecorder is the mock recorder for MockTradebinKeeper.
+type MockTradebinKeeperMockRecorder struct {
+	mock *MockTradebinKeeper
+}
+
+// NewMockTradebinKeeper creates a new mock instance.
+func NewMockTradebinKeeper(ctrl *gomock.Controller) *MockTradebinKeeper {
+	mock := &MockTradebinKeeper{ctrl: ctrl}
+	mock.recorder = &MockTradebinKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockTradebinKeeper) EXPECT() *MockTradebinKeeperMockRecorder {
+	return m.recorder
+}
+
+// GetParams mocks base method.
+func (m *MockTradebinKeeper) GetParams(ctx context.Context) v2types.Params {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetParams", ctx)
+	ret0, _ := ret[0].(v2types.Params)
+	return ret0
+}
+
+// GetParams indicates an expected call of GetParams.
+func (mr *MockTradebinKeeperMockRecorder) GetParams(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetParams", reflect.TypeOf((*MockTradebinKeeper)(nil).GetParams), ctx)
+}
+
+// IsDenomHalted mocks base method.
+func (m *MockTradebinKeeper) IsDenomHalted(ctx types.Context, denom string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsDenomHalted", ctx, denom)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsDenomHalted indicates an expected call of IsDenomHalted.
+func (mr *MockTradebinKeeperMockRecorder) IsDenomHalted(ctx, denom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsDenomHalted", reflect.TypeOf((*MockTradebinKeeper)(nil).IsDenomHalted), ctx, denom)
+}
+
+// SetHaltedDenom mocks base method.
+func (m *MockTradebinKeeper) SetHaltedDenom(ctx types.Context, denom string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetHaltedDenom", ctx, denom)
+}
+
+// SetHaltedDenom indicates an expected call of SetHaltedDenom.
+func (mr *MockTradebinKeeperMockRecorder) SetHaltedDenom(ctx, denom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetHaltedDenom", reflect.TypeOf((*MockTradebinKeeper)(nil).SetHaltedDenom), ctx, denom)
 }

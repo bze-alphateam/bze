@@ -27,6 +27,11 @@ service Msg {
 
   // UnblockDenom takes a denom off the blacklist. Governance only.
   rpc UnblockDenom (MsgUnblockDenom) returns (MsgUnblockDenomResponse);
+
+  // HaltTradingDenoms halts denoms on the DEX, with the same effect as the
+  // tradebin governance message MsgHaltDenoms. Only governance lifts the halt,
+  // through tradebin's MsgUnhaltDenoms.
+  rpc HaltTradingDenoms (MsgHaltTradingDenoms) returns (MsgHaltTradingDenomsResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -104,3 +109,19 @@ message MsgUnblockDenom {
 // MsgUnblockDenomResponse defines the response structure for executing a
 // MsgUnblockDenom message.
 message MsgUnblockDenomResponse {}
+
+// MsgHaltTradingDenoms is the Msg/HaltTradingDenoms request type.
+message MsgHaltTradingDenoms {
+  option (cosmos.msg.v1.signer) = "signer";
+  option (amino.name) = "bze/x/guardian/MsgHaltTradingDenoms";
+
+  // signer is the guardian or the governance authority.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // denoms to halt on the DEX: valid denoms, no duplicates, at most 1000, not
+  // the native denom. A denom that is already halted is left as it is.
+  repeated string denoms = 2;
+}
+
+// MsgHaltTradingDenomsResponse defines the response structure for executing a
+// MsgHaltTradingDenoms message.
+message MsgHaltTradingDenomsResponse {}

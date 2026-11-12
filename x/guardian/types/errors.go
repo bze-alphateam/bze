@@ -18,4 +18,7 @@ var (
 	ErrNotBlocked            = sdkerrors.Register(ModuleName, 1107, "denom is not blocked")
 	ErrInvalidDenom          = sdkerrors.Register(ModuleName, 1108, "invalid denom")
 	ErrDenomNotFound         = sdkerrors.Register(ModuleName, 1109, "denom does not exist on chain")
+
+	// 1120-1129: DEX denom halt
+	ErrTradebinKeeperNotSet = sdkerrors.Register(ModuleName, 1120, "tradebin keeper is not set")
 )
