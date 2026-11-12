@@ -3,6 +3,7 @@ package interchaintest_test
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -42,10 +43,11 @@ const (
 
 // TestGuardian proves the guardian's emergency switches through the real
 // binary. Message circuit breaker: the guardian disables MsgMultiSwap, a
-// user's swap is refused while the other tradebin messages still work, a
-// stranger cannot disable anything, the guardian cannot disable governance,
-// circuit or guardian messages, and a governance proposal with x/circuit's
-// MsgResetCircuitBreaker re-enables the swap. The state carries over between
+// user's swap is refused and so is a passed governance proposal carrying it,
+// while the other tradebin messages still work; a stranger cannot disable
+// anything, the guardian cannot disable governance, circuit or guardian
+// messages, and a governance proposal with x/circuit's MsgResetCircuitBreaker
+// re-enables the swap. The state carries over between
 // the subtests, which run in order.
 func TestGuardian(t *testing.T) {
 	if testing.Short() {
@@ -62,10 +64,11 @@ func TestGuardian(t *testing.T) {
 	t.Run("1 a swap works before the breaker", s.swapWorks)
 	t.Run("2 guardian disables MsgMultiSwap", s.disableSwap)
 	t.Run("3 a swap is refused", s.swapRefused)
-	t.Run("4 other tradebin messages still work", s.otherTradebinMsgs)
-	t.Run("5 a stranger cannot disable messages", s.strangerRefused)
-	t.Run("6 protected messages cannot be disabled", s.protectedRefused)
-	t.Run("7 governance resets the breaker", s.govResets)
+	t.Run("4 a passed proposal with a disabled message fails", s.govProposalFails)
+	t.Run("5 other tradebin messages still work", s.otherTradebinMsgs)
+	t.Run("6 a stranger cannot disable messages", s.strangerRefused)
+	t.Run("7 protected messages cannot be disabled", s.protectedRefused)
+	t.Run("8 governance resets the breaker", s.govResets)
 }
 
 type guardianSuite struct {
@@ -150,7 +153,36 @@ func (s *guardianSuite) swapRefused(t *testing.T) {
 	require.Equal(t, usd, s.balance(t, s.trader, s.usd), "the trader kept the usd")
 }
 
-// 4. Only the disabled type is refused: the trader adds liquidity to the same
+// 4. Governance executes through the same router: a proposal carrying a
+// MsgMultiSwap passes the vote and fails on execution with the breaker's
+// error, and the swap does not run.
+func (s *guardianSuite) govProposalFails(t *testing.T) {
+	pool := s.poolState(t)
+	govUsd := s.balanceOf(t, s.gov, s.usd)
+
+	id, err := helpers.SubmitAndPassProposal(s.ctx, s.bze, s.lp, helpers.Proposal{
+		Messages: []any{s.swapMsgFrom(s.gov)},
+		Title:    "swap from governance",
+		Summary:  "e2e: a disabled message in a passed proposal",
+	})
+	require.Error(t, err, "the proposal does not pass")
+	require.NotZero(t, id, "the proposal was submitted")
+
+	res, qerr := helpers.Query[struct {
+		Proposal struct {
+			Status       string `json:"status"`
+			FailedReason string `json:"failed_reason"`
+		} `json:"proposal"`
+	}](s.ctx, s.bze, "gov", "proposal", strconv.FormatUint(id, 10))
+	require.NoError(t, qerr)
+	require.Equal(t, "PROPOSAL_STATUS_FAILED", res.Proposal.Status, "passed the vote, failed on execution: %v", err)
+	require.Contains(t, res.Proposal.FailedReason, gdnCircuitRe)
+
+	require.Equal(t, pool, s.poolState(t), "the pool did not move")
+	require.Equal(t, govUsd, s.balanceOf(t, s.gov, s.usd), "the gov account swapped nothing")
+}
+
+// 5. Only the disabled type is refused: the trader adds liquidity to the same
 // pool.
 func (s *guardianSuite) otherTradebinMsgs(t *testing.T) {
 	res := s.mustTx(t, s.trader, "tradebin", "add-liquidity", s.pool,
@@ -158,7 +190,7 @@ func (s *guardianSuite) otherTradebinMsgs(t *testing.T) {
 	require.NotEmpty(t, helpers.TxEvents(res, "bze.tradebin.LiquidityAddedEvent"), "liquidity was added")
 }
 
-// 5. An account that is neither the guardian nor governance is refused and
+// 6. An account that is neither the guardian nor governance is refused and
 // the disable list does not change.
 func (s *guardianSuite) strangerRefused(t *testing.T) {
 	res := s.refusedMsg(t, s.stranger, s.disableMsg(s.stranger, "/cosmos.bank.v1beta1.MsgSend"))
@@ -167,7 +199,7 @@ func (s *guardianSuite) strangerRefused(t *testing.T) {
 	require.Equal(t, []string{gdnSwapURL}, s.disabledList(t))
 }
 
-// 6. The guardian cannot disable governance, the circuit breaker's reset or
+// 7. The guardian cannot disable governance, the circuit breaker's reset or
 // its own messages: that would lock governance or itself out.
 func (s *guardianSuite) protectedRefused(t *testing.T) {
 	for _, url := range []string{
@@ -186,7 +218,7 @@ func (s *guardianSuite) protectedRefused(t *testing.T) {
 	}
 }
 
-// 7. A governance proposal with x/circuit's MsgResetCircuitBreaker takes the
+// 8. A governance proposal with x/circuit's MsgResetCircuitBreaker takes the
 // type off the list and the swap works again.
 func (s *guardianSuite) govResets(t *testing.T) {
 	_, err := helpers.SubmitAndPassProposal(s.ctx, s.bze, s.lp, helpers.Proposal{
@@ -209,9 +241,13 @@ func (s *guardianSuite) govResets(t *testing.T) {
 // messages, transactions and queries
 
 func (s *guardianSuite) swapMsg() map[string]any {
+	return s.swapMsgFrom(s.trader.FormattedAddress())
+}
+
+func (s *guardianSuite) swapMsgFrom(creator string) map[string]any {
 	return map[string]any{
 		"@type":      gdnSwapURL,
-		"creator":    s.trader.FormattedAddress(),
+		"creator":    creator,
 		"routes":     []string{s.pool},
 		"input":      map[string]string{"denom": s.usd, "amount": sdkmath.NewInt(gdnSwapIn).String()},
 		"min_output": map[string]string{"denom": chain.Denom, "amount": "1"},
@@ -271,7 +307,12 @@ func (s *guardianSuite) txFee(t *testing.T, res helpers.TxResult) sdkmath.Int {
 
 func (s *guardianSuite) balance(t *testing.T, user ibc.Wallet, denom string) sdkmath.Int {
 	t.Helper()
-	b, err := helpers.Balance(s.ctx, s.bze, user.FormattedAddress(), denom)
+	return s.balanceOf(t, user.FormattedAddress(), denom)
+}
+
+func (s *guardianSuite) balanceOf(t *testing.T, addr, denom string) sdkmath.Int {
+	t.Helper()
+	b, err := helpers.Balance(s.ctx, s.bze, addr, denom)
 	require.NoError(t, err)
 	return b
 }

@@ -17,11 +17,11 @@ The guardian module holds the chain's emergency switches: the IBC rate limits of
 - **Tighten a rate limit** (`MsgTightenRateLimit`, guardian or governance): lowers the send and receive percents of an existing rate limit. A raise of either percent is refused, no limit is created, the window length is unchanged and the flow already counted in the current window is kept. `0`/`0` stops the pair.
 - **Block a denom** (`MsgBlockDenom`, guardian or governance): puts the denom on the blacklist. The blacklist matches the exact denom string, so the denom must exist on chain (have a supply), written exactly as the chain stores it: for an IBC token that is `ibc/` followed by the upper-case hash. A lower-case hash, a base name such as `uusdc`, a trace path such as `transfer/channel-3/uusdc` or an unknown denom is refused with `denom does not exist on chain`. Blocking an already blocked denom is refused.
 - **Unblock a denom** (`MsgUnblockDenom`, governance only): takes the denom off the blacklist. Any entry can be removed, whether or not the denom still has a supply. The guardian can never reopen a denom.
-
 - **Disable message types** (`MsgDisableMessages`, guardian or governance): adds 1 to 100 type URLs (no duplicates) to the circuit breaker's disable list. Every URL is checked before anything is written; one refused URL refuses the whole message. Refused:
   - protected types, which would lock governance or the guardian out: every `/cosmos.gov.`, `/cosmos.circuit.`, `/cosmos.upgrade.` and `/bze.guardian.` message, and `/bze.dao.MsgSubmitProposal`, `/bze.dao.MsgVote`, `/bze.dao.MsgSettleProposal` (a DAO guardian needs them to act);
   - a URL that is not a message the app routes (`message type is not routed by the app`);
   - a type that is already disabled.
+- **What can be disabled**: any other routed message type, including staking, bank or slashing messages (e.g. `/cosmos.staking.v1beta1.MsgDelegate`, `/cosmos.bank.v1beta1.MsgSend`, `/cosmos.slashing.v1beta1.MsgUnjail`), and stays disabled until governance resets it. A passed proposal that carries a disabled message fails on execution.
 - **Re-enable message types** (governance only): a proposal with `x/circuit`'s `MsgResetCircuitBreaker`, signed by the governance authority. The guardian has no reset message and no `x/circuit` permission.
 
 ```bash
@@ -47,4 +47,4 @@ bzed tx guardian tighten-rate-limit ubze channel-0 3 0 --from guardian
 - `bzed query circuit disabled-list`: the disabled message types (gRPC `cosmos.circuit.v1.Query/DisabledList`, REST `/cosmos/circuit/v1/disable_list`).
 
 ## Events
-- `TightenRateLimitEvent` (signer, denom, channel, old and new percents), `DenomBlockedEvent` (`signer`, `denom`) `DenomUnblockedEvent` (`authority`, `denom`) and `MessagesDisabledEvent` (`signer`, `msg_type_urls`). A reset emits `x/circuit`'s `reset_circuit_breaker` event.
+- `TightenRateLimitEvent` (signer, denom, channel, old and new percents), `DenomBlockedEvent` (`signer`, `denom`), `DenomUnblockedEvent` (`authority`, `denom`) and `MessagesDisabledEvent` (`signer`, `msg_type_urls`). A reset emits `x/circuit`'s `reset_circuit_breaker` event.
