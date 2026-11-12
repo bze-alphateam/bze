@@ -10,4 +10,8 @@ const (
 
 var (
 	ParamsKey = []byte("p_guardian")
+
+	// ClosedChannelKeyPrefix holds one entry per closed transfer channel, keyed by
+	// channel id.
+	ClosedChannelKeyPrefix = []byte("closed_channel/")
 )

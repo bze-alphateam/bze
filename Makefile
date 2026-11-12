@@ -314,7 +314,7 @@ proto-all:
 # implicitly: build them once with e2e-image / e2e-image-ref, then run suites.
 E2E_TIMEOUT ?= 60m
 
-.PHONY: e2e-image e2e-image-ref e2e e2e-smoke e2e-denomrewards e2e-amm e2e-tokenfactory e2e-halt e2e-update-pools e2e-ibc e2e-ratelimit e2e-guardian e2e-guardian-halt e2e-guardian-pause e2e-orderbook e2e-tradingrewards e2e-burner e2e-fees e2e-transferfee e2e-cointrunk e2e-params e2e-input-rules e2e-dao e2e-dao-expedite e2e-guardian-halt-chain e2e-upgrade e2e-unit e2e-lint
+.PHONY: e2e-image e2e-image-ref e2e e2e-smoke e2e-denomrewards e2e-amm e2e-tokenfactory e2e-halt e2e-update-pools e2e-ibc e2e-ratelimit e2e-guardian-ibc e2e-guardian e2e-guardian-halt e2e-guardian-pause e2e-orderbook e2e-tradingrewards e2e-burner e2e-fees e2e-transferfee e2e-cointrunk e2e-params e2e-input-rules e2e-dao e2e-dao-expedite e2e-guardian-halt-chain e2e-upgrade e2e-unit e2e-lint
 
 # Builds the working tree as bze:local.
 e2e-image:
@@ -386,6 +386,10 @@ e2e-guardian-halt:
 # Runs the guardian protocol automation pause suite (waits one week tick, ~5 min).
 e2e-guardian-pause:
 	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestGuardianPause ./...
+
+# Runs the guardian IBC channel switch suite (bze <-> simd through Hermes).
+e2e-guardian-ibc:
+	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestGuardianChannelIbc ./...
 
 # Runs the fee destinations and minimum gas price suite.
 e2e-fees:

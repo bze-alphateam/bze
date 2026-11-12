@@ -19,6 +19,7 @@ var storeKeys = []struct {
 }{
 	{"params", types.ParamsKey, "p_guardian"},
 	{"automation paused", types.AutomationPausedKey, "automation_paused"},
+	{"closed channels", types.ClosedChannelKeyPrefix, "closed_channel/"},
 }
 
 func TestStoreKeys_Pinned(t *testing.T) {

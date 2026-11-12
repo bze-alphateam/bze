@@ -17,6 +17,8 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgHaltChain{},
 		&MsgPauseAutomation{},
 		&MsgResumeAutomation{},
+		&MsgCloseChannel{},
+		&MsgReopenChannel{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

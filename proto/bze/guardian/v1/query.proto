@@ -24,6 +24,11 @@ service Query {
   rpc AutomationPaused (QueryAutomationPausedRequest) returns (QueryAutomationPausedResponse) {
     option (google.api.http).get = "/bze/guardian/v1/automation_paused";
   }
+
+  // ClosedChannels lists the transfer channels closed by the guardian or governance.
+  rpc ClosedChannels (QueryClosedChannelsRequest) returns (QueryClosedChannelsResponse) {
+    option (google.api.http).get = "/bze/guardian/v1/closed_channels";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -52,4 +57,13 @@ message QueryAutomationPausedResponse {
   // paused is true while the txfeecollector EndBlock conversions and the
   // burner's periodic burn are stopped.
   bool paused = 1 [(amino.dont_omitempty) = true];
+}
+
+// QueryClosedChannelsRequest is request type for the Query/ClosedChannels RPC method.
+message QueryClosedChannelsRequest {}
+
+// QueryClosedChannelsResponse is response type for the Query/ClosedChannels RPC method.
+message QueryClosedChannelsResponse {
+  // channel_ids are the closed transfer channels, every ICS-20 transfer on them is refused.
+  repeated string channel_ids = 1;
 }

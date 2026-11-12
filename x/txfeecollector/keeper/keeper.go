@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"context"
+
 	"fmt"
 
 	"cosmossdk.io/core/store"
@@ -30,7 +32,8 @@ type (
 		// no denom has one.
 		denomCpProvider types.DenomCommunityPoolProvider
 
-		// guardianKeeper tells whether the protocol automation is paused. nil means never paused.
+		// guardianKeeper tells whether the protocol automation is paused and which transfer channels are
+		// closed. nil means never paused and no channel closed.
 		guardianKeeper types.GuardianKeeper
 	}
 )
@@ -73,6 +76,16 @@ func (k Keeper) IsAutomationPaused(ctx sdk.Context) bool {
 	}
 
 	return k.guardianKeeper.IsAutomationPaused(ctx)
+}
+
+// IsChannelClosed reports whether the guardian closed the transfer channel: the IBC middleware and send gate of this
+// module then refuse every ICS-20 transfer on it. A keeper without a guardian keeper has no channel closed.
+func (k Keeper) IsChannelClosed(ctx context.Context, channelID string) bool {
+	if k.guardianKeeper == nil {
+		return false
+	}
+
+	return k.guardianKeeper.IsChannelClosed(ctx, channelID)
 }
 
 // GetAuthority returns the module's authority.

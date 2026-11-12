@@ -12,6 +12,7 @@ The guardian module holds the chain's emergency switches: the IBC rate limits of
 ## Concepts
 - **Guardian**: one address, kept in the module params (empty means only governance). The guardian or the governance authority signs the emergency messages. Only governance changes the guardian (`MsgUpdateParams`).
 - **Circuit breaker**: the `x/circuit` disable list. The app's message router refuses every message whose type is on the list with `circuit breaker disables execution of this message: <type url>`, whether it comes in a transaction or is executed by another module (a governance proposal, `authz` `MsgExec`, `x/dao` execution). `x/circuit`'s authority is the governance module account and no account holds `x/circuit` permissions; x/guardian writes the list directly, so the guardian can add to it but never take anything off.
+- **Closed channel**: a transfer channel on which every ICS-20 transfer is stopped by x/guardian, in both directions, for every denom. It is a flag of this module, not an IBC channel close: the channel stays `OPEN` in IBC and the light clients keep updating.
 - **Blacklist**: the `ratelimit` module's denom blacklist. Every ICS-20 transfer of a blacklisted denom is refused in both directions on every channel, with or without a rate limit (outgoing transfers fail as transactions, incoming ones are refunded on the sending chain).
 
 ## Messages
@@ -29,7 +30,6 @@ The guardian module holds the chain's emergency switches: the IBC rate limits of
 - **Pause the protocol automation** (`MsgPauseAutomation`, guardian or governance): stops the txfeecollector EndBlock (both the gas fee pass and the community pool pass: no swap, no send, no community pool funding) and the burner's periodic burn (no burn, no lock, no liquidity added). Every coin stays where it is, in `txfeecollector`, `txfeecollector_cp` and `burner`. Pausing an already paused automation is refused. Raffle draws and the cleanup of finished raffles are user-facing and keep running.
 - **Resume the protocol automation** (`MsgResumeAutomation`, governance only): lifts the pause. Nothing is lost while paused: the txfeecollector passes read the collectors' balances, so the first EndBlock after the resume handles the coins collected during the pause; a burning week that ended during the pause still marks the periodic burn pending, and the first EndBlock after the resume burns the whole burner balance instead of waiting for the next burning week. The guardian can never resume.
 
-
 ```bash
 # As the guardian, disable swaps on the DEX
 bzed tx guardian disable-messages /bze.tradebin.MsgMultiSwap --from guardian
@@ -39,6 +39,22 @@ bzed tx guardian disable-messages /bze.tradebin.MsgMultiSwap --from guardian
 #    "authority": "<gov module address>",
 #    "msg_type_urls": ["/bze.tradebin.MsgMultiSwap"]}
 bzed tx gov submit-proposal proposal.json --from mykey
+```
+
+- **Close a channel** (`MsgCloseChannel`, guardian or governance): stops every ICS-20 transfer on an existing transfer channel (`transfer` port; an unknown channel is refused, closing a closed channel is refused). On the closed channel:
+  - a transfer sent from BZE fails as a transaction: nothing is escrowed and no rate limit quota is counted;
+  - a transfer arriving on BZE is answered with an error acknowledgement, so the sending chain refunds its sender when the acknowledgement is relayed. This includes BZE tokens coming back home;
+  - acknowledgements and timeouts of transfers sent before the close still go through, so those transfers are completed or refunded as usual.
+- **Reopen a channel** (`MsgReopenChannel`, governance only): lets transfers through the channel again. Reopening a channel that is not closed is refused. The guardian can never reopen a channel.
+
+Only the ICS-20 transfer stack is covered. Other IBC applications (interchain accounts host and controller) are not affected by a closed channel.
+
+```bash
+# As the guardian, stop every IBC transfer on channel-0, in both directions
+bzed tx guardian close-channel channel-0 --from guardian
+
+# Reopen it through a governance proposal
+bzed tx guardian reopen-channel channel-0 --deposit 1000000ubze --title "Reopen channel-0" --summary "..." --from mykey
 
 # As the guardian, stop every IBC transfer of an IBC denom (exact on-chain spelling)
 bzed tx guardian block-denom ibc/6490A7EAB61059BFC1CDDEB05917DD70BDF3A611654162A1A47DB930D40D8AF4 --from guardian
@@ -74,6 +90,7 @@ The guardian cannot cancel a halt (a `MsgCancelUpgrade` is governance only and w
 
 ## Queries
 - `bzed query guardian params`: the guardian address.
+- `bzed query guardian closed-channels`: the closed transfer channels.
 - `bzed query guardian blocked-denoms`: the blacklisted denoms (the `ratelimit` module has no CLI for its blacklist; its gRPC `AllBlacklistedDenoms` works too).
 - `bzed query circuit disabled-list`: the disabled message types (gRPC `cosmos.circuit.v1.Query/DisabledList`, REST `/cosmos/circuit/v1/disable_list`).
 - `bzed query tradebin halted-denoms` and `bzed query tradebin denom-halted [denom]`: the denoms halted on the DEX, by the guardian or by governance (one list).
@@ -83,9 +100,9 @@ The guardian cannot cancel a halt (a `MsgCancelUpgrade` is governance only and w
 ## Events
 - `TightenRateLimitEvent` (signer, denom, channel, old and new percents), `DenomBlockedEvent` (`signer`, `denom`), `DenomUnblockedEvent` (`authority`, `denom`) and `MessagesDisabledEvent` (`signer`, `msg_type_urls`). A reset emits `x/circuit`'s `reset_circuit_breaker` event.
 - `TradingDenomsHaltedEvent` (`signer`, `denoms`): one per `MsgHaltTradingDenoms`, listing the denoms it halted (not those already halted). Each of them also gets tradebin's `DenomHaltedEvent` (`denom`), the event a governance halt emits.
-- `TightenRateLimitEvent` (signer, denom, channel, old and new percents), `DenomBlockedEvent` (`signer`, `denom`) and `DenomUnblockedEvent` (`authority`, `denom`).
 - `ChainHaltScheduledEvent` (`signer`, `name`, `height`, `reason`).
 - `AutomationPausedEvent` (`signer`) and `AutomationResumedEvent` (`authority`).
+- `ChannelClosedEvent` (`signer`, `channel_id`) and `ChannelReopenedEvent` (`authority`, `channel_id`).
 
 ## Guardian as a DAO
 The guardian address can be the account of a static-list `x/dao` DAO (e.g. five members with `expedite_threshold` 0.5 and `expedite_quorum` 0.6, so three yes votes pass). Static-list DAOs are exempt from `min_expedite_delay`: an expedited proposal carrying a guardian message is settled (and run) as soon as the third member has voted, with `MsgSettleProposal` in the next tx or in the same tx as the last vote.

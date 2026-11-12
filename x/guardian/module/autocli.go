@@ -29,6 +29,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:     "Shows whether the protocol automation is paused",
 					Long:      "Shows whether the txfeecollector EndBlock conversions and the burner's periodic burn are paused. The paused field is printed as false when the automation runs.",
 				},
+				{
+					RpcMethod: "ClosedChannels",
+					Use:       "closed-channels",
+					Short:     "Lists the transfer channels whose IBC transfers are stopped",
+					Long:      "Lists the transfer channels closed by the guardian or governance. Every ICS-20 transfer on them is refused, in both directions; the channels themselves stay open in IBC.",
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
@@ -118,6 +124,24 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:       "Submit a governance proposal to resume the protocol automation",
 					Example:     `bzed tx guardian resume-automation --deposit 1000000ubze --title "..." --summary "..." --from mykey`,
 					GovProposal: true, // authority gated: wrapped in a x/gov proposal, authority filled with the gov address
+				},
+				{
+					RpcMethod: "CloseChannel",
+					Use:       "close-channel [channel-id]",
+					Short:     "Stop every IBC transfer on a transfer channel, in both directions",
+					Long: "Closes the transfer channel for ICS-20 transfers: sends on it fail and received transfers are answered with an error acknowledgement, " +
+						"so the sending chain refunds them. Acknowledgements and timeouts of transfers already in flight still go through. " +
+						"The channel stays open in IBC. Signed by the guardian or the governance authority; only a governance proposal can reopen it.",
+					Example:        "bzed tx guardian close-channel channel-0 --from guardian",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "channel_id"}},
+				},
+				{
+					RpcMethod:      "ReopenChannel",
+					Use:            "reopen-channel [channel-id]",
+					Short:          "Submit a governance proposal to reopen a closed transfer channel",
+					Example:        `bzed tx guardian reopen-channel channel-0 --deposit 1000000ubze --title "..." --summary "..." --from mykey`,
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "channel_id"}},
+					GovProposal:    true, // authority gated: wrapped in a x/gov proposal, authority filled with the gov address
 				},
 			},
 		},

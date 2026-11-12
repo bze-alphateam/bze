@@ -476,3 +476,17 @@ func (mr *MockGuardianKeeperMockRecorder) IsAutomationPaused(ctx any) *gomock.Ca
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAutomationPaused", reflect.TypeOf((*MockGuardianKeeper)(nil).IsAutomationPaused), ctx)
 }
+
+// IsChannelClosed mocks base method.
+func (m *MockGuardianKeeper) IsChannelClosed(ctx context.Context, channelID string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsChannelClosed", ctx, channelID)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsChannelClosed indicates an expected call of IsChannelClosed.
+func (mr *MockGuardianKeeperMockRecorder) IsChannelClosed(ctx, channelID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsChannelClosed", reflect.TypeOf((*MockGuardianKeeper)(nil).IsChannelClosed), ctx, channelID)
+}

@@ -26,4 +26,11 @@ var (
 
 	// 1120-1129: DEX denom halt
 	ErrTradebinKeeperNotSet = sdkerrors.Register(ModuleName, 1120, "tradebin keeper is not set")
+
+	// channel switch: codes 1140-1149
+	ErrInvalidChannel       = sdkerrors.Register(ModuleName, 1140, "invalid channel id")
+	ErrChannelNotFound      = sdkerrors.Register(ModuleName, 1141, "transfer channel not found")
+	ErrChannelAlreadyClosed = sdkerrors.Register(ModuleName, 1142, "channel is already closed")
+	ErrChannelNotClosed     = sdkerrors.Register(ModuleName, 1143, "channel is not closed")
+	ErrChannelKeeperNotSet  = sdkerrors.Register(ModuleName, 1144, "channel keeper is not set")
 )

@@ -18,6 +18,9 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 	}
 
 	k.SetAutomationPaused(ctx, genState.AutomationPaused)
+	for _, channelID := range genState.ClosedChannels {
+		k.SetClosedChannel(ctx, channelID)
+	}
 }
 
 // ExportGenesis returns the module's exported genesis.
@@ -25,6 +28,7 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 	genesis.Params = k.GetParams(ctx)
 	genesis.AutomationPaused = k.IsAutomationPaused(ctx)
+	genesis.ClosedChannels = k.GetAllClosedChannels(ctx)
 
 	return genesis
 }

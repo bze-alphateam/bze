@@ -95,14 +95,18 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 	// x/guardian lowers the quotas through the rate-limiting keeper. It is built by
 	// depinject before this keeper exists, so the keeper is handed over here.
 	app.GuardianKeeper.SetRateLimitKeeper(app.RatelimitKeeper)
+	// It checks that a transfer channel exists before closing it.
+	app.GuardianKeeper.SetChannelKeeper(app.IBCKeeper.ChannelKeeper)
 
-	// Create IBC transfer keeper. Outgoing transfer packets go through the rate-limiting
-	// keeper (its ICS-4 wrapper) on their way to the channel keeper.
+	// Create IBC transfer keeper. Outgoing transfer packets go through the closed-channel
+	// gate (x/guardian channel switch, read through the txfeecollector keeper), then the
+	// rate-limiting keeper (its ICS-4 wrapper), on their way to the channel keeper. A send on a closed channel fails before any
+	// quota is counted.
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
 		app.appCodec,
 		runtime.NewKVStoreService(app.GetKey(ibctransfertypes.StoreKey)),
 		app.GetSubspace(ibctransfertypes.ModuleName),
-		app.RatelimitKeeper,
+		txfeecollectoribc.NewSendGate(app.RatelimitKeeper, app.TxfeecollectorKeeper),
 		app.IBCKeeper.ChannelKeeper,
 		app.MsgServiceRouter(),
 		app.AccountKeeper,
@@ -139,7 +143,8 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 	// The txfeecollector inbound filter sits on top of the transfer application: it
 	// answers packets listed in the BlockedIbcInbound param with an error
 	// acknowledgement (see x/txfeecollector/ibcmiddleware). Only received packets are
-	// affected - sends, acks and timeouts pass straight through.
+	// affected - acks and timeouts pass straight through. The same middleware refuses
+	// every packet received on a channel closed through x/guardian.
 	// The rate-limiting middleware sits outside the filter: when the filter (or the
 	// quota) answers with an error acknowledgement, the middleware only drops its
 	// pending-packet marker. The inflow it counted is discarded because IBC core

@@ -18,4 +18,6 @@ message GenesisState {
   // automation_paused keeps the protocol automation pause across a genesis
   // export and import: only governance resumes it.
   bool automation_paused = 2;
+  // closed_channels are the transfer channels whose ICS-20 transfers are refused.
+  repeated string closed_channels = 4;
 }

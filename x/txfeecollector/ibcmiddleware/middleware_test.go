@@ -94,13 +94,19 @@ func (a *recordingApp) OnChanCloseInit(_ sdk.Context, _, _ string) error {
 	return nil
 }
 
-// paramsKeeper is the smallest thing the middleware needs: the module params.
+// paramsKeeper is the smallest thing the middleware needs: the module params and the
+// closed channels (none unless set).
 type paramsKeeper struct {
 	params types.Params
+	closed map[string]bool
 }
 
 func (p paramsKeeper) GetParams(_ context.Context) types.Params {
 	return p.params
+}
+
+func (p paramsKeeper) IsChannelClosed(_ context.Context, channelID string) bool {
+	return p.closed[channelID]
 }
 
 // unusedICS4Wrapper proves the send path is never exercised by the filter: any call to

@@ -28,6 +28,8 @@ const (
 	Msg_HaltChain_FullMethodName         = "/bze.guardian.v1.Msg/HaltChain"
 	Msg_PauseAutomation_FullMethodName   = "/bze.guardian.v1.Msg/PauseAutomation"
 	Msg_ResumeAutomation_FullMethodName  = "/bze.guardian.v1.Msg/ResumeAutomation"
+	Msg_CloseChannel_FullMethodName      = "/bze.guardian.v1.Msg/CloseChannel"
+	Msg_ReopenChannel_FullMethodName     = "/bze.guardian.v1.Msg/ReopenChannel"
 )
 
 // MsgClient is the client API for Msg service.
@@ -63,6 +65,12 @@ type MsgClient interface {
 	PauseAutomation(ctx context.Context, in *MsgPauseAutomation, opts ...grpc.CallOption) (*MsgPauseAutomationResponse, error)
 	// ResumeAutomation lifts the pause. Governance only.
 	ResumeAutomation(ctx context.Context, in *MsgResumeAutomation, opts ...grpc.CallOption) (*MsgResumeAutomationResponse, error)
+	// CloseChannel stops every ICS-20 transfer on a transfer channel, in both
+	// directions. The channel itself stays open in IBC.
+	CloseChannel(ctx context.Context, in *MsgCloseChannel, opts ...grpc.CallOption) (*MsgCloseChannelResponse, error)
+	// ReopenChannel lets ICS-20 transfers through a closed channel again.
+	// Governance only.
+	ReopenChannel(ctx context.Context, in *MsgReopenChannel, opts ...grpc.CallOption) (*MsgReopenChannelResponse, error)
 }
 
 type msgClient struct {
@@ -154,6 +162,24 @@ func (c *msgClient) ResumeAutomation(ctx context.Context, in *MsgResumeAutomatio
 	return out, nil
 }
 
+func (c *msgClient) CloseChannel(ctx context.Context, in *MsgCloseChannel, opts ...grpc.CallOption) (*MsgCloseChannelResponse, error) {
+	out := new(MsgCloseChannelResponse)
+	err := c.cc.Invoke(ctx, Msg_CloseChannel_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ReopenChannel(ctx context.Context, in *MsgReopenChannel, opts ...grpc.CallOption) (*MsgReopenChannelResponse, error) {
+	out := new(MsgReopenChannelResponse)
+	err := c.cc.Invoke(ctx, Msg_ReopenChannel_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -187,6 +213,12 @@ type MsgServer interface {
 	PauseAutomation(context.Context, *MsgPauseAutomation) (*MsgPauseAutomationResponse, error)
 	// ResumeAutomation lifts the pause. Governance only.
 	ResumeAutomation(context.Context, *MsgResumeAutomation) (*MsgResumeAutomationResponse, error)
+	// CloseChannel stops every ICS-20 transfer on a transfer channel, in both
+	// directions. The channel itself stays open in IBC.
+	CloseChannel(context.Context, *MsgCloseChannel) (*MsgCloseChannelResponse, error)
+	// ReopenChannel lets ICS-20 transfers through a closed channel again.
+	// Governance only.
+	ReopenChannel(context.Context, *MsgReopenChannel) (*MsgReopenChannelResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -220,6 +252,12 @@ func (UnimplementedMsgServer) PauseAutomation(context.Context, *MsgPauseAutomati
 }
 func (UnimplementedMsgServer) ResumeAutomation(context.Context, *MsgResumeAutomation) (*MsgResumeAutomationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ResumeAutomation not implemented")
+}
+func (UnimplementedMsgServer) CloseChannel(context.Context, *MsgCloseChannel) (*MsgCloseChannelResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CloseChannel not implemented")
+}
+func (UnimplementedMsgServer) ReopenChannel(context.Context, *MsgReopenChannel) (*MsgReopenChannelResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReopenChannel not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -396,6 +434,42 @@ func _Msg_ResumeAutomation_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CloseChannel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCloseChannel)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CloseChannel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_CloseChannel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CloseChannel(ctx, req.(*MsgCloseChannel))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ReopenChannel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgReopenChannel)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ReopenChannel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_ReopenChannel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ReopenChannel(ctx, req.(*MsgReopenChannel))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -438,6 +512,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ResumeAutomation",
 			Handler:    _Msg_ResumeAutomation_Handler,
+		},
+		{
+			MethodName: "CloseChannel",
+			Handler:    _Msg_CloseChannel_Handler,
+		},
+		{
+			MethodName: "ReopenChannel",
+			Handler:    _Msg_ReopenChannel_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

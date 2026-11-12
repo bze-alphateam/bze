@@ -36,6 +36,8 @@ type Keeper struct {
 
 	// upgradeKeeper is wired after the depinject build, see SetUpgradeKeeper.
 	upgradeKeeper types.UpgradeKeeper
+	// channelKeeper is wired after the depinject build, see SetChannelKeeper.
+	channelKeeper types.ChannelKeeper
 }
 
 func NewKeeper(
