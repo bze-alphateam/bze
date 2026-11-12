@@ -38,6 +38,9 @@ message GenesisState {
   repeated PinCount pins = 9 [(gogoproto.nullable) = false];
   // member_records are the heights members were added to static-list DAOs at.
   repeated MemberRecord member_records = 10 [(gogoproto.nullable) = false];
+  // admin_change_count is the last admin change sequence handed out; every
+  // DAO's admin_seq and pending_admin_seq is at most it.
+  uint64 admin_change_count = 11;
 }
 
 // VoteIndexEntry says the address's ballot on the proposal counts a share of

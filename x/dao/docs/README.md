@@ -31,6 +31,7 @@ The DAO module lets anyone create an on-chain organisation with its own treasury
 - `MsgAcceptAdminNomination`: second step of the handover. Rules:
   - A nomination must be pending, and the signer (`nominee`) must be the pending admin. A DAO nominee signs through its own proposal or admin, which proves it can act; it then administers the other DAO as its parent.
   - The nominee becomes the admin and the nomination is cleared. The former admin loses all its powers at once, `MsgAdminExecute` included.
+  - A nomination is stale once any DAO on the DAO's admin chain (the DAOs `dao-controller` walks, up to 16) changed its admin after the nomination was made, a handover to its voters included: accepting it is refused (`ErrStaleNomination`). So a nomination a parent DAO made on its sub-DAO, at any depth, does not outlive a change of who controls the parent. The new controller clears it with `MsgWithdrawAdminNomination` through the parent and can nominate again. Every admin change takes the next value of a module-wide sequence (`admin_seq` on the DAO); a nomination records the sequence's value when it was made (`pending_admin_seq`), and is stale when a DAO on the chain has a higher `admin_seq`.
   - The electorate is not checked: the new admin is external and can fix it.
 - `MsgWithdrawAdminNomination`: cancels a pending handover before the nominee accepts it. Rules:
   - The signer (`authority`) must be the DAO's current admin, signing as for `MsgNominateAdmin`. The nominee cannot withdraw; it simply does not accept.
@@ -189,7 +190,7 @@ The listings below take the standard pagination flags (`--page-limit`, `--page-k
 - `bzed query dao ballots [proposal-id]` – a proposal's ballots, ordered by voter key (REST `GET /bze/dao/ballots/{proposal_id}`). A cleanup deletes them once the proposal is finished.
 
 ## Genesis
-The genesis state holds the whole module state: the params, every DAO record, every proposal record (cleaned-up proposals are gone), `dao_count` and `proposal_count` (the last ids handed out, so ids keep growing across an export and import), the ballots, the vote index (`{source, address, proposal_id}` for every counted stake share), the join records, the source pins and the member records. The address and admin indexes are rebuilt from the DAO records, the DAO proposal index and the open markers from the proposal records; everything else is imported as it is.
+The genesis state holds the whole module state: the params, every DAO record, every proposal record (cleaned-up proposals are gone), `dao_count` and `proposal_count` (the last ids handed out, so ids keep growing across an export and import), `admin_change_count` (the last admin change sequence handed out), the ballots, the vote index (`{source, address, proposal_id}` for every counted stake share), the join records, the source pins and the member records. The address and admin indexes are rebuilt from the DAO records, the DAO proposal index and the open markers from the proposal records; everything else is imported as it is.
 
 The import checks the module's invariants and fails, naming the one broken:
 - I1: the `dao` module account holds at least the deposits of the proposals in `VOTING`, the only ones not released yet (x/bank is imported first). A surplus is accepted: before the module existed its address was not blocked, so coins sent to it then must not halt the upgrade or a later import.
@@ -198,7 +199,7 @@ The import checks the module's invariants and fails, naming the one broken:
 - I4: each source's pin count is the number of DAOs whose electorate holds it plus the number of proposals in `VOTING` that pinned it.
 - I5: DAO and proposal ids (also those named by the vote index) are between 1 and their counter.
 - I6: every share of a ballot on a proposal in `VOTING` has its vote-index entry, and every entry of such a proposal names a share. Entries of a proposal that left voting are leftovers the address's next exit prunes, and are accepted. Join records of a source no longer pinned are accepted too: unpinning keeps them, and an old join height is below the submit height of any later proposal, so it never makes stake ineligible.
-- I7: every DAO has a valid admin, and a pending admin is neither the admin nor the DAO.
+- I7: every DAO has a valid admin, and a pending admin is neither the admin nor the DAO. `pending_admin_seq` is 0 when no nomination is pending, and no `admin_seq` or `pending_admin_seq` is above `admin_change_count`.
 
 Validation also requires each DAO at its derived address, valid metadata and config, an electorate that fits the type (members only in static-list DAOs, never the DAO itself, sources only in stake DAOs), member records only for current members of static-list DAOs, and for proposals an existing DAO, a known status, a valid proposer, non-negative tallies and denominator and a valid deposit. The param bounds (periods, member and source caps) are not checked: params can change after a DAO is created, and the DAO keeps its settings.
 

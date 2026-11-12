@@ -119,6 +119,13 @@ message Dao {
   StakeElectorate electorate = 10;
   // created_at is the block time (unix seconds) the DAO was created at.
   int64 created_at = 11;
+  // admin_seq is the admin_change_count value issued when the admin last
+  // changed; 0 if it never changed.
+  uint64 admin_seq = 12;
+  // pending_admin_seq is the admin_change_count value when the pending
+  // nomination was made; 0 when none is pending. The nomination can only be
+  // accepted while no DAO on the admin chain changed its admin after it.
+  uint64 pending_admin_seq = 13;
 }
 
 // Proposal is a DAO proposal. It pins the DAO's config, electorate and quorum

@@ -69,6 +69,11 @@ func ProposalCounterKey() []byte {
 	return []byte{2}
 }
 
+// AdminChangeCounterKey is the key of the admin change sequence inside CounterKeyPrefix.
+func AdminChangeCounterKey() []byte {
+	return []byte{3}
+}
+
 // ProposalKey is the key of a Proposal inside ProposalKeyPrefix.
 func ProposalKey(proposalId uint64) []byte {
 	return sdk.Uint64ToBigEndian(proposalId)

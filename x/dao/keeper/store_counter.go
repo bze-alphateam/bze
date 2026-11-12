@@ -40,3 +40,14 @@ func (k Keeper) GetProposalCounter(ctx context.Context) uint64 {
 func (k Keeper) SetProposalCounter(ctx context.Context, value uint64) {
 	k.setCounter(ctx, types.ProposalCounterKey(), value)
 }
+
+// GetAdminChangeCounter returns the last admin change sequence handed out (0
+// before the first admin change).
+func (k Keeper) GetAdminChangeCounter(ctx context.Context) uint64 {
+	return k.getCounter(ctx, types.AdminChangeCounterKey())
+}
+
+// SetAdminChangeCounter sets the last admin change sequence handed out.
+func (k Keeper) SetAdminChangeCounter(ctx context.Context, value uint64) {
+	k.setCounter(ctx, types.AdminChangeCounterKey(), value)
+}

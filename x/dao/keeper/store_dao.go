@@ -77,7 +77,9 @@ func (k Keeper) setDao(ctx context.Context, dao types.Dao) {
 }
 
 // setAdmin makes newAdmin the DAO's admin, clears any pending nomination and
-// moves the DAO's admin index entry, in one place. newAdmin must be a valid
+// moves the DAO's admin index entry, in one place. It stamps the DAO with the
+// next admin change sequence, which voids the nominations made earlier by the
+// DAOs it controls (see AcceptAdminNomination). newAdmin must be a valid
 // bech32 address. It returns the updated DAO.
 func (k Keeper) setAdmin(ctx context.Context, dao types.Dao, newAdmin sdk.AccAddress) types.Dao {
 	oldAdmin := sdk.MustAccAddressFromBech32(dao.Admin)
@@ -86,8 +88,13 @@ func (k Keeper) setAdmin(ctx context.Context, dao types.Dao, newAdmin sdk.AccAdd
 	adminIndex.Delete(types.DaoAdminKey(oldAdmin, dao.Id))
 	adminIndex.Set(types.DaoAdminKey(newAdmin, dao.Id), []byte{})
 
+	seq := k.GetAdminChangeCounter(ctx) + 1
+	k.SetAdminChangeCounter(ctx, seq)
+
 	dao.Admin = newAdmin.String()
+	dao.AdminSeq = seq
 	dao.PendingAdmin = ""
+	dao.PendingAdminSeq = 0
 	k.setDao(ctx, dao)
 
 	return dao

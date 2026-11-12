@@ -51,7 +51,9 @@ func (k msgServer) NominateAdmin(goCtx context.Context, msg *types.MsgNominateAd
 		return nil, errorsmod.Wrapf(types.ErrInvalidNominee, "the nominee is dao %d itself: nominate nobody to make it self-owned", dao.Id)
 	}
 
+	// the nomination holds while no DAO above changes its admin after this point
 	dao.PendingAdmin = nominee
+	dao.PendingAdminSeq = k.GetAdminChangeCounter(ctx)
 	k.setDao(ctx, dao)
 
 	if err := ctx.EventManager().EmitTypedEvent(&types.EventAdminNominated{
