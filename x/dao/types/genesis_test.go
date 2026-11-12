@@ -59,7 +59,7 @@ func validGenesis() types.GenesisState {
 				Electorate: &types.StakeElectorate{SrIds: []string{"1"}, DrDenom: "ubze"},
 			},
 		},
-		DaoCount:      2,
+		DaoCount: 2,
 		Proposals: []types.Proposal{
 			voting,
 			validProposal(9, 2, types.ProposalStatus_CANCELLED),
@@ -119,6 +119,22 @@ func TestGenesisState_Validate(t *testing.T) {
 		{desc: "invalid pending admin", mutate: func(gs *types.GenesisState) { gs.Daos[0].PendingAdmin = "bad" }, wantErr: "invalid pending_admin address"},
 		{desc: "pending admin is the admin", mutate: func(gs *types.GenesisState) { gs.Daos[0].PendingAdmin = gs.Daos[0].Admin }, wantErr: "pending_admin is the admin"},
 		{desc: "pending admin is the dao", mutate: func(gs *types.GenesisState) { gs.Daos[0].PendingAdmin = gs.Daos[0].Address }, wantErr: "pending_admin is the dao itself"},
+		{desc: "admin sequences at the counter", mutate: func(gs *types.GenesisState) {
+			gs.AdminChangeCount = 4
+			gs.Daos[0].AdminSeq, gs.Daos[0].PendingAdminSeq = 4, 4
+			gs.Daos[1].AdminSeq = 3
+		}},
+		{desc: "admin seq above the counter", mutate: func(gs *types.GenesisState) {
+			gs.AdminChangeCount = 2
+			gs.Daos[1].AdminSeq = 3
+		}, wantErr: "admin_seq 3 or pending_admin_seq 0 is above admin_change_count 2"},
+		{desc: "pending admin seq above the counter", mutate: func(gs *types.GenesisState) {
+			gs.Daos[0].PendingAdminSeq = 1
+		}, wantErr: "admin_seq 0 or pending_admin_seq 1 is above admin_change_count 0"},
+		{desc: "pending admin seq without a nomination", mutate: func(gs *types.GenesisState) {
+			gs.AdminChangeCount = 1
+			gs.Daos[1].PendingAdminSeq = 1
+		}, wantErr: "pending_admin_seq is set without a pending_admin"},
 		{desc: "invalid name", mutate: func(gs *types.GenesisState) { gs.Daos[0].Name = "" }, wantErr: "name must have"},
 		{desc: "invalid config", mutate: func(gs *types.GenesisState) { gs.Daos[0].Config.Threshold = math.LegacyZeroDec() }, wantErr: "threshold must be"},
 		{desc: "static dao without members", mutate: func(gs *types.GenesisState) { gs.Daos[0].Members = nil }, wantErr: "at least one member"},

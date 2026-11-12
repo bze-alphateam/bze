@@ -37,6 +37,7 @@ func (k msgServer) WithdrawAdminNomination(goCtx context.Context, msg *types.Msg
 
 	nominee := dao.PendingAdmin
 	dao.PendingAdmin = ""
+	dao.PendingAdminSeq = 0
 	k.setDao(ctx, dao)
 
 	if err := ctx.EventManager().EmitTypedEvent(&types.EventAdminNominationWithdrawn{

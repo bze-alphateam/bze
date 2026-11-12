@@ -39,6 +39,11 @@ func (gs GenesisState) Validate() error {
 			return fmt.Errorf("I5: dao id %d is outside [1, dao_count %d]", dao.Id, gs.DaoCount)
 		}
 
+		// admin change sequences are handed out by the counter too
+		if dao.AdminSeq > gs.AdminChangeCount || dao.PendingAdminSeq > gs.AdminChangeCount {
+			return fmt.Errorf("dao %d: admin_seq %d or pending_admin_seq %d is above admin_change_count %d", dao.Id, dao.AdminSeq, dao.PendingAdminSeq, gs.AdminChangeCount)
+		}
+
 		if err := validateGenesisDao(dao); err != nil {
 			return errorsmod.Wrapf(err, "dao %d", dao.Id)
 		}
@@ -434,6 +439,10 @@ func validateGenesisDao(dao Dao) error {
 	admin, err := sdk.AccAddressFromBech32(dao.Admin)
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "I7: invalid admin address (%s)", err)
+	}
+
+	if dao.PendingAdmin == "" && dao.PendingAdminSeq != 0 {
+		return errorsmod.Wrap(ErrInvalidNominee, "I7: pending_admin_seq is set without a pending_admin")
 	}
 
 	// a nomination names someone other than the admin and the DAO itself

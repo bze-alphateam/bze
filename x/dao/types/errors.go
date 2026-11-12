@@ -43,4 +43,5 @@ var (
 	ErrExpediteTooEarly    = sdkerrors.Register(ModuleName, 1132, "the expedited proposal cannot settle early yet")
 	ErrMsgNotAllowed       = sdkerrors.Register(ModuleName, 1133, "the message is not allowed in this dao execution")
 	ErrExecutionTooDeep    = sdkerrors.Register(ModuleName, 1134, "dao executions are nested too deep")
+	ErrStaleNomination     = sdkerrors.Register(ModuleName, 1135, "the admin nomination is stale: control of the nominating dao changed since")
 )

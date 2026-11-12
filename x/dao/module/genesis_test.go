@@ -42,6 +42,7 @@ func genesisConfig() types.DaoConfig {
 
 // genesisDaos returns three DAOs: 1 a self-owned static list, 2 a stake DAO
 // with an external admin and a pending nomination, 3 a stake DAO owned by DAO 1.
+// Each changed its admin once; admin_change_count is 3.
 func genesisDaos() []types.Dao {
 	return []types.Dao{
 		{
@@ -54,6 +55,7 @@ func genesisDaos() []types.Dao {
 			Config:      genesisConfig(),
 			Members:     []string{memberA.String(), memberB.String()},
 			CreatedAt:   1_700_000_000,
+			AdminSeq:    1,
 		},
 		{
 			Id:           2,
@@ -65,6 +67,9 @@ func genesisDaos() []types.Dao {
 			Config:       genesisConfig(),
 			Electorate:   &types.StakeElectorate{SrIds: []string{"3", "7"}, DrDenom: "ubze"},
 			CreatedAt:    1_700_000_100,
+			AdminSeq:     2,
+			// nominated after DAO 3's admin change
+			PendingAdminSeq: 3,
 		},
 		{
 			Id:         3,
@@ -75,6 +80,7 @@ func genesisDaos() []types.Dao {
 			Config:     genesisConfig(),
 			Electorate: &types.StakeElectorate{SrIds: []string{"3"}},
 			CreatedAt:  1_700_000_200,
+			AdminSeq:   3,
 		},
 	}
 }
@@ -105,12 +111,13 @@ func TestGenesis_DefaultRoundTrip(t *testing.T) {
 // address and admin indexes are rebuilt on import, the pins imported as they are.
 func TestGenesis_DaosRoundTrip(t *testing.T) {
 	genesisState := types.GenesisState{
-		Params:        types.DefaultParams(),
-		Daos:          genesisDaos(),
-		DaoCount:      3,
-		ProposalCount: 5,
-		Pins:          []types.PinCount{{Source: "dr/ubze", Count: 1}, {Source: "sr/3", Count: 2}, {Source: "sr/7", Count: 1}},
-		MemberRecords: []types.MemberRecord{{DaoId: 1, Address: memberB.String(), Height: 42}},
+		Params:           types.DefaultParams(),
+		Daos:             genesisDaos(),
+		DaoCount:         3,
+		AdminChangeCount: 3,
+		ProposalCount:    5,
+		Pins:             []types.PinCount{{Source: "dr/ubze", Count: 1}, {Source: "sr/3", Count: 2}, {Source: "sr/7", Count: 1}},
+		MemberRecords:    []types.MemberRecord{{DaoId: 1, Address: memberB.String(), Height: 42}},
 	}
 	require.NoError(t, genesisState.Validate())
 
@@ -129,6 +136,7 @@ func TestGenesis_DaosRoundTrip(t *testing.T) {
 
 	require.Equal(t, uint64(3), fresh.GetDaoCounter(freshCtx))
 	require.Equal(t, uint64(5), fresh.GetProposalCounter(freshCtx))
+	require.Equal(t, uint64(3), fresh.GetAdminChangeCounter(freshCtx))
 
 	for _, d := range genesisDaos() {
 		res, err := fresh.DaoByAddress(freshCtx, &types.QueryDaoByAddressRequest{Address: d.Address})
@@ -247,12 +255,13 @@ func genesisBallots() []types.Ballot {
 // of the DAOs and of proposal 2. Every list is in export order.
 func proposalsGenesis(t *testing.T) types.GenesisState {
 	gs := types.GenesisState{
-		Params:        types.DefaultParams(),
-		Daos:          genesisDaos(),
-		DaoCount:      3,
-		Proposals:     genesisProposals(t),
-		ProposalCount: 10,
-		Ballots:       genesisBallots(),
+		Params:           types.DefaultParams(),
+		Daos:             genesisDaos(),
+		DaoCount:         3,
+		AdminChangeCount: 3,
+		Proposals:        genesisProposals(t),
+		ProposalCount:    10,
+		Ballots:          genesisBallots(),
 		VoteIndex: []types.VoteIndexEntry{
 			{Source: "sr/3", Address: memberA.String(), ProposalId: 2},
 			{Source: "sr/3", Address: memberA.String(), ProposalId: 6},
