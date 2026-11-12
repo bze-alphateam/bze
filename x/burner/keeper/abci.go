@@ -62,6 +62,15 @@ func (k Keeper) resolveRaffleTicket(ctx sdk.Context, participant types.RafflePar
 		//user won
 		wonCoin := k.getWonCoin(&raffle, currentPot)
 
+		// the pot and the total won are updated together with the payout: when the total won can't be read the
+		// winner isn't paid, the ticket is removed without a draw
+		totalWonInt, ok := math.NewIntFromString(raffle.TotalWon)
+		if !ok {
+			logger.Error("could not parse total won, removing the ticket without a payout")
+			k.RemoveRaffleParticipant(ctx, participant)
+			return
+		}
+
 		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.RaffleModuleName, creatorAddr, sdk.NewCoins(wonCoin))
 		if err != nil {
 			logger.Error("could not send coins from module to account", err)
@@ -70,18 +79,13 @@ func (k Keeper) resolveRaffleTicket(ctx sdk.Context, participant types.RafflePar
 		}
 
 		raffle.Winners += 1
-		totalWonInt, ok := math.NewIntFromString(raffle.TotalWon)
-		if !ok {
-			logger.Error("could not parse total won")
+		// the total won is only displayed: when it can't grow any more it is left as it is
+		if newTotalWon, err := totalWonInt.SafeAdd(wonCoin.Amount); err != nil {
+			logger.Error("total won overflow, leaving it unchanged", "error", err)
 		} else {
-			// the total won is only displayed: when it can't grow any more it is left as it is
-			if newTotalWon, err := totalWonInt.SafeAdd(wonCoin.Amount); err != nil {
-				logger.Error("total won overflow, leaving it unchanged", "error", err)
-			} else {
-				raffle.TotalWon = newTotalWon.String()
-			}
-			raffle.Pot = currentPot.Amount.Sub(wonCoin.Amount).String()
+			raffle.TotalWon = newTotalWon.String()
 		}
+		raffle.Pot = currentPot.Amount.Sub(wonCoin.Amount).String()
 
 		k.SetRaffle(ctx, raffle)
 		k.SetRaffleWinner(ctx, types.RaffleWinner{
