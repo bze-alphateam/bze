@@ -1117,6 +1117,7 @@ func (s *upgradeSuite) setTradebinParam(t *testing.T, name string, value json.Ra
 	t.Helper()
 	params := s.params(t, 0, "tradebin")
 	require.Contains(t, params, name, "tradebin param %s", name)
+	require.NoError(t, helpers.DecParamsForTx(params, helpers.TradebinDecParams...))
 	params[name] = value
 	_, err := helpers.SubmitAndPassProposalWith(s.ctx, s.bze, s.admin, s.txOpts(), helpers.Proposal{
 		Messages: []any{map[string]any{"@type": "/bze.tradebin.MsgUpdateParams", "authority": s.gov, "params": params}},

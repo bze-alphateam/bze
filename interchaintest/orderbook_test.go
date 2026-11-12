@@ -919,6 +919,7 @@ func (s *orderBookSuite) setTradebinParam(t *testing.T, name, value string) {
 	}](s.ctx, s.bze, "tradebin", "params")
 	require.NoError(t, err)
 	params := res.Params
+	require.NoError(t, helpers.DecParamsForTx(params, helpers.TradebinDecParams...))
 	params[name] = json.RawMessage(value)
 	_, err = helpers.SubmitAndPassProposal(s.ctx, s.bze, s.admin, helpers.Proposal{
 		Messages: []any{map[string]any{"@type": "/bze.tradebin.MsgUpdateParams", "authority": s.gov, "params": params}},

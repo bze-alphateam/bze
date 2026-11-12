@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"path"
 	"slices"
+	"strconv"
 	"testing"
 	"time"
 
@@ -461,7 +462,69 @@ func (s *daoSuite) exportAndValidate(t *testing.T) {
 	t.Logf("export: %d daos, %d proposals (%d in voting), %d ballots, %d vote-index entries, %d join records, %d pins",
 		len(g.Daos), len(g.Proposals), len(voting), len(g.Ballots), len(g.VoteIndex), len(g.JoinRecords), len(g.Pins))
 
-	_, stderr, err := node.ExecBin(s.ctx, "genesis", "validate", path.Join(node.HomeDir(), "state_export.json"))
+	// The rate-limiting module (ibc-apps) starts its hour epoch in InitGenesis
+	// at the genesis hour with the start height of the InitChain context,
+	// which is 0 for a chain whose first block is 1. Its own genesis
+	// validation refuses that height once the epoch number is not 0, so until
+	// the first hour rollover writes a real height, a chain started from
+	// genesis at any hour but 00 exports an epoch it refuses. The module never
+	// reads that height; networks that add it in an upgrade start it at the
+	// upgrade height. In that case the export is refused for exactly that
+	// reason, and a copy with only the start height set to the first block
+	// must validate: everything else is validated as exported.
+	validate := path.Join(node.HomeDir(), "state_export.json")
+	if epoch := ratelimitHourEpoch(t, exported); epoch.EpochNumber != 0 && epoch.EpochStartHeight == 0 {
+		_, _, err := node.ExecBin(s.ctx, "genesis", "validate", validate)
+		require.ErrorContains(t, err, "if hour epoch number is non-empty, epoch height must be initialized",
+			"the export may be refused only for the rate-limiting hour epoch start height")
+		const patched = "state_export_ratelimit_epoch.json"
+		require.NoError(t, node.WriteFile(s.ctx, setRatelimitEpochStartHeight(t, exported, 1), patched))
+		validate = path.Join(node.HomeDir(), patched)
+		t.Logf("rate-limiting hour epoch %d exported with start height 0: validating a copy with start height 1", epoch.EpochNumber)
+	}
+	_, stderr, err := node.ExecBin(s.ctx, "genesis", "validate", validate)
 	require.NoError(t, err, "genesis validate: %s", stderr)
 	t.Log("importing the export into a fresh node is not covered: the harness starts chains from generated genesis only")
+}
+
+// ratelimitEpoch is the rate-limiting hour epoch of an exported genesis.
+type ratelimitEpoch struct {
+	EpochNumber      helpers.Int64 `json:"epoch_number"`
+	EpochStartHeight helpers.Int64 `json:"epoch_start_height"`
+}
+
+func ratelimitHourEpoch(t *testing.T, exported string) ratelimitEpoch {
+	t.Helper()
+	var doc struct {
+		AppState struct {
+			Ratelimit struct {
+				HourEpoch *ratelimitEpoch `json:"hour_epoch"`
+			} `json:"ratelimit"`
+		} `json:"app_state"`
+	}
+	require.NoError(t, json.Unmarshal([]byte(exported), &doc))
+	require.NotNil(t, doc.AppState.Ratelimit.HourEpoch, "the export holds the rate-limiting hour epoch")
+	return *doc.AppState.Ratelimit.HourEpoch
+}
+
+// setRatelimitEpochStartHeight returns the exported genesis with only
+// app_state.ratelimit.hour_epoch.epoch_start_height changed.
+func setRatelimitEpochStartHeight(t *testing.T, exported string, height int64) []byte {
+	t.Helper()
+	keys := []string{"app_state", "ratelimit", "hour_epoch"}
+	objs := make([]map[string]json.RawMessage, len(keys)+1)
+	require.NoError(t, json.Unmarshal([]byte(exported), &objs[0]))
+	for i, k := range keys {
+		require.Contains(t, objs[i], k)
+		require.NoError(t, json.Unmarshal(objs[i][k], &objs[i+1]), "%s", k)
+	}
+	objs[len(keys)]["epoch_start_height"] = json.RawMessage(strconv.Quote(strconv.FormatInt(height, 10)))
+	for i := len(keys) - 1; i >= 0; i-- {
+		bz, err := json.Marshal(objs[i+1])
+		require.NoError(t, err)
+		objs[i][keys[i]] = bz
+	}
+	out, err := json.Marshal(objs[0])
+	require.NoError(t, err)
+	return out
 }
