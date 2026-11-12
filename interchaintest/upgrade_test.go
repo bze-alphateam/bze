@@ -1222,8 +1222,8 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 
 // v830PoolPriceAverages checks the tradebin v5 migration's pool price
 // guard: the three new params at their defaults, and one moving average
-// record per pool, seeded in the upgrade block with the pool's price at
-// that height.
+// record per pool, seeded in the upgrade block with the pool's price as the
+// last block of the previous release left it.
 func (s *upgradeSuite) v830PoolPriceAverages(t *testing.T) {
 	params, err := helpers.QueryPriceDriftParams(s.ctx, s.bze)
 	require.NoError(t, err)
@@ -1237,13 +1237,14 @@ func (s *upgradeSuite) v830PoolPriceAverages(t *testing.T) {
 		avg, err := helpers.QueryPoolPriceAverageAt(s.ctx, s.bze, p.ID, s.plan)
 		require.NoError(t, err, "pool %s has a moving average record", p.ID)
 		require.Equal(t, s.plan, avg.LastHeight, "pool %s average seeded at the upgrade height", p.ID)
-		price, err := helpers.QueryPoolPriceAt(s.ctx, s.bze, p.ID, s.plan)
+		// the migration seeds from the pools as the previous block left them
+		price, err := helpers.QueryPoolPriceAt(s.ctx, s.bze, p.ID, s.plan-1)
 		require.NoError(t, err)
-		require.Equal(t, price.String(), avg.AvgPrice.String(), "pool %s average is its price at the upgrade", p.ID)
+		require.Equal(t, price.String(), avg.AvgPrice.String(), "pool %s average is its price before the upgrade", p.ID)
 	}
 	// the record does not exist on v8.2.0
 	_, err = helpers.QueryPoolPriceAverageAt(s.ctx, s.bze, pools[0].ID, s.plan-1)
-	require.Error(t, err, "no pool price average before the upgrade")
+	require.ErrorContains(t, err, "not found", "no pool price average before the upgrade")
 }
 
 // v830LpMetadata checks the LP share metadata backfill: every pool's LP

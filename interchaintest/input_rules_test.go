@@ -35,11 +35,12 @@ const (
 	// rule, not a lack of tok
 	irGranterTok = 50_000_000
 	irUserStk    = 1_000
-	irOrderPrice = "1000" // ubze per tok: far above the pool price of nothing, the sell rests
+	irOrderPrice = "1000" // ubze per tok: the pool price; there is no buy on the book, so the sell rests
 	irTokTxFee   = 20     // tok, about 20,000 ubze: above the minimum at irTxGas
 	irTxGas      = 500_000
 
 	irCanonicalMsg = "must be a canonical base-10 integer"
+	irRafflePot    = "100000" // the burner's minimum raffle pot
 )
 
 // irNonCanonical are integers the chain could parse but that are not
@@ -164,6 +165,9 @@ func (s *inputRulesSuite) nonCanonicalAmounts(t *testing.T) {
 	join := func(amount string) map[string]any {
 		return map[string]any{"@type": "/bze.rewards.MsgJoinStaking", "creator": u, "reward_id": s.srID, "amount": amount}
 	}
+	distribute := func(amount string) map[string]any {
+		return map[string]any{"@type": "/bze.rewards.MsgDistributeStakingRewards", "creator": u, "reward_id": s.srID, "amount": amount}
+	}
 	tradingReward := func(prize string) map[string]any {
 		return map[string]any{"@type": "/bze.rewards.MsgCreateTradingReward", "creator": u, "prize_amount": prize, "prize_denom": chain.Denom,
 			"duration": "1", "market_id": s.market, "slots": "1"}
@@ -176,10 +180,12 @@ func (s *inputRulesSuite) nonCanonicalAmounts(t *testing.T) {
 			{"order amount", order(v)},
 			{"fill orders amount", fill(v)},
 			{"raffle pot", raffle(v, "10")},
-			{"raffle ticket price", raffle("1000", v)},
+			// the pot is checked first and must be at least 100,000
+			{"raffle ticket price", raffle(irRafflePot, v)},
 			{"staking reward prize", stakingReward(v, "1")},
 			{"staking reward min stake", stakingReward("100", v)},
 			{"join staking amount", join(v)},
+			{"distribute staking rewards amount", distribute(v)},
 			{"trading reward prize", tradingReward(v)},
 		} {
 			t.Run(c.name+" "+v, func(t *testing.T) {

@@ -527,10 +527,7 @@ func (s *stakingRewardsSuite) createFeeInFactoryToken(t *testing.T) {
 
 	// once the average caught up, an EndBlock swaps the waiting tx fee on the
 	// reserves the previous block left
-	require.NoError(t, helpers.WaitForPoolPriceCalm(s.ctx, s.bze, srCalmBlocks, poolID))
-	from, err := s.bze.Height(s.ctx)
-	require.NoError(t, err)
-	for i := 0; i < 3 && !s.balance(t, s.txFees, s.fee).IsZero(); i++ {
+	for i := 0; i < srCalmBlocks && !s.balance(t, s.txFees, s.fee).IsZero(); i++ {
 		require.NoError(t, testutil.WaitForBlocks(s.ctx, 1, s.bze))
 	}
 	require.True(t, s.balance(t, s.txFees, s.fee).IsZero(), "the tx fee is swapped once the pool is calm")
@@ -538,12 +535,19 @@ func (s *stakingRewardsSuite) createFeeInFactoryToken(t *testing.T) {
 	require.NoError(t, err)
 	var swaps []helpers.Event
 	var swapHeight int64
-	for h := from; h <= to && len(swaps) == 0; h++ {
+	for h := res.Height + 1; h <= to && len(swaps) == 0; h++ {
 		events, err := helpers.BlockEvents(s.ctx, s.bze, h, tradebinEventPrefix+"SwapEvent")
 		require.NoError(t, err)
 		swaps, swapHeight = helpers.EventsWith(events, map[string]string{"creator": s.txFees, "pool_id": poolID}), h
 	}
-	require.Len(t, swaps, 1, "one EndBlock swap of the waiting tx fee between heights %d and %d", from, to)
+	require.Len(t, swaps, 1, "one EndBlock swap of the waiting tx fee between heights %d and %d", res.Height+1, to)
+	// it ran in a block where the pool was back within moduleMaxPriceDrift:
+	// the price before the swap against the average the swap block folded in
+	calm, err := helpers.QueryPoolPriceAverageAt(s.ctx, s.bze, poolID, swapHeight)
+	require.NoError(t, err)
+	price, err := helpers.QueryPoolPriceAt(s.ctx, s.bze, poolID, swapHeight-1)
+	require.NoError(t, err)
+	require.False(t, helpers.PoolPriceDrifted(price, calm.AvgPrice, drift.ModuleMaxDrift), "pool calm before the swap block: price %s average %s", price, calm.AvgPrice)
 	prev := s.poolAt(t, poolID, swapHeight-1)
 	// the query prints the stored LegacyDec as its 18-decimal scaled integer
 	poolFee := sdkmath.LegacyNewDecFromIntWithPrec(parseInt(prev.Fee), sdkmath.LegacyPrecision)

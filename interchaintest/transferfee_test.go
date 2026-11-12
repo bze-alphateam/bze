@@ -2,6 +2,7 @@ package interchaintest_test
 
 import (
 	"context"
+	"encoding/json"
 	"strconv"
 	"testing"
 
@@ -273,10 +274,15 @@ func (s *transferFeeSuite) orderFee(t *testing.T) {
 }
 
 // 7. u3 holds enough tok for gas only: the create-denom fee is taken in ubze
-// and no transfer fee is charged.
+// and no transfer fee is charged. Step 4's fee swap moved the tok pool by
+// about 23%; the step waits for the price to come back within
+// feeMaxPriceDrift so the fallback is the balance rule, not the price guard.
 func (s *transferFeeSuite) fallback(t *testing.T) {
 	u3 := s.u3.FormattedAddress()
 	createFee := s.createDenomFee(t)
+	drift, err := helpers.QueryPriceDriftParams(s.ctx, s.bze)
+	require.NoError(t, err)
+	require.NoError(t, helpers.WaitForPoolPriceWithin(s.ctx, s.bze, xfCalmBlocks, drift.FeeMaxDrift, s.tokPool))
 
 	ubze := s.balance(t, u3, chain.Denom)
 	res := s.mustExecWith(t, s.u3, []helpers.TxOption{helpers.WithFees(coinStr(20_000, s.tok)), helpers.WithGas(xfTxGas)}, "tokenfactory", "create-denom", "paidbze")
@@ -358,12 +364,13 @@ func (s *transferFeeSuite) otherProtocolFees(t *testing.T) {
 	daoCfg.voting, daoCfg.expedited = "259200s", "86400s" // 72h and 24h
 	drift, err := helpers.QueryPriceDriftParams(s.ctx, s.bze)
 	require.NoError(t, err)
-	// each 25,000 BZE fee moves the deepened pool's price by about 5%, all in
-	// the same direction: starting within 2%, the schedule case's second fee
-	// in the same tx still sees the price under the fee limit
-	xfStartDrift := sdkmath.LegacyMustNewDecFromStr("0.02")
-	require.True(t, xfStartDrift.Add(sdkmath.LegacyMustNewDecFromStr("0.05")).LT(drift.FeeMaxDrift),
-		"the start drift plus one fee's move stays under feeMaxPriceDrift %s", drift.FeeMaxDrift)
+	// a 25,000 BZE fee moves the deepened pool's price by about 6%, the
+	// 50,000 BZE DAO creation fee by about 10%, all in the same direction.
+	// Only the schedule case captures two fees in one tx: starting within 1%
+	// of the average, its second fee sees the price moved by the first one
+	// (checked from the reserves below) and still under the fee limit.
+	xfStartDrift := sdkmath.LegacyMustNewDecFromStr("0.01")
+	rw := s.rewardFees(t)
 
 	for _, c := range []struct {
 		name string
@@ -379,6 +386,15 @@ func (s *transferFeeSuite) otherProtocolFees(t *testing.T) {
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			require.NoError(t, helpers.WaitForPoolPriceWithin(s.ctx, s.bze, xfCalmBlocks, xfStartDrift, s.tokPool))
+			if c.fees == 2 {
+				// the first fee takes the prize fee's ubze out of the pool:
+				// the price (ubze per tok) falls to ((q - f) / q)^2 of itself
+				q := s.pool(t, s.tokPool).reserveQuote()
+				left := sdkmath.LegacyNewDecFromInt(q.Sub(rw.prize)).Quo(sdkmath.LegacyNewDecFromInt(q))
+				move := sdkmath.LegacyOneDec().Sub(left.Mul(left))
+				require.True(t, xfStartDrift.Add(move).LT(drift.FeeMaxDrift),
+					"the first fee moves the price by %s: the second must still see it under feeMaxPriceDrift %s", move, drift.FeeMaxDrift)
+			}
 			res := s.mustExecWith(t, s.u1, []helpers.TxOption{helpers.WithFees(coinStr(20_000, s.tok)), helpers.WithGas(xfTxGas)}, c.args...)
 			captures := s.captures(t, res, u1)
 			require.Len(t, captures, c.fees, "fees captured in tok")
@@ -418,6 +434,34 @@ func (s *transferFeeSuite) surchargeChanges(t *testing.T) {
 			s.requireSurcharge(t, res, u1, s.tok, split, xfCpDest)
 		})
 	}
+}
+
+// xfRewardFees are the rewards fees the schedule case captures.
+type xfRewardFees struct{ prize, schedule sdkmath.Int }
+
+func (s *transferFeeSuite) rewardFees(t *testing.T) xfRewardFees {
+	t.Helper()
+	// the CLI prints the params by JSON or by proto field name
+	res, err := helpers.Query[struct {
+		Params map[string]json.RawMessage `json:"params"`
+	}](s.ctx, s.bze, "rewards", "params")
+	require.NoError(t, err)
+	fee := func(names ...string) sdk.Coin {
+		for _, n := range names {
+			if raw, ok := res.Params[n]; ok {
+				var c paCoin
+				require.NoError(t, json.Unmarshal(raw, &c), "%s: %s", n, raw)
+				return c.coin()
+			}
+		}
+		t.Fatalf("rewards param %v missing from %v", names, res.Params)
+		return sdk.Coin{}
+	}
+	prize := fee("createDenomRewardPrizeFee", "create_denom_reward_prize_fee")
+	schedule := fee("addDenomRewardScheduleFee", "add_denom_reward_schedule_fee")
+	require.Equal(t, chain.Denom, prize.Denom, "prize fee in ubze")
+	require.True(t, prize.Amount.IsPositive(), "prize fee")
+	return xfRewardFees{prize: prize.Amount, schedule: schedule.Amount}
 }
 
 // captures lists the tok amounts the payer sent to tradebin in the tx, one
