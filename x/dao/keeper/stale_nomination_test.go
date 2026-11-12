@@ -67,7 +67,7 @@ func (suite *IntegrationTestSuite) TestStaleNomination_DirectSubDaoAfterHandover
 
 	suite.Require().ErrorIs(err, types.ErrStaleNomination)
 	suite.requireAdmin(2, daoAddress(1), adminAddr.String())
-	suite.Require().Error(suite.adminExecute(adminAddr, 2, treasurySend(adminAddr, 1)))
+	suite.Require().ErrorIs(suite.adminExecute(adminAddr, 2, treasurySend(adminAddr, 1)), types.ErrNotDaoAdmin)
 }
 
 // One level deeper: the admin makes DAO 2 (through DAO 1) nominate itself on
