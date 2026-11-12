@@ -44,6 +44,10 @@ const (
 	xfDeepTok     = 1_000_000_000_000
 	xfMoreUserTok = 500_000_000_000
 
+	// blocks a step waits at most for the tok pool price to come back near
+	// its moving average after a protocol fee swap moved it
+	xfCalmBlocks = 150
+
 	xfSendGas = 200_000
 	xfTxGas   = 500_000
 
@@ -338,7 +342,10 @@ func (s *transferFeeSuite) tinyGasFee(t *testing.T) {
 // denom reward schedule, which captures two fees (the new prize denom's and
 // the schedule's), each paying its own transfer fee. The admin deepens the
 // tok pool first so the default fees (25,000 to 50,000 BZE each) don't take
-// it below the fee payer's minimum ubze liquidity.
+// it below the fee payer's minimum ubze liquidity. Each of those fees moves
+// the tok pool price by several percent, and a fee is swapped from tok only
+// while the price is within feeMaxPriceDrift of its moving average (it is
+// charged in ubze otherwise), so each case waits for the price to settle.
 func (s *transferFeeSuite) otherProtocolFees(t *testing.T) {
 	admin, u1 := s.admin.FormattedAddress(), s.u1.FormattedAddress()
 	s.mustExec(t, s.admin, "tokenfactory", "mint", coinStr(xfDeepTok+xfMoreUserTok, s.tok))
@@ -348,6 +355,8 @@ func (s *transferFeeSuite) otherProtocolFees(t *testing.T) {
 	// protobuf durations are written in seconds
 	daoCfg := defaultCfg()
 	daoCfg.voting, daoCfg.expedited = "259200s", "86400s" // 72h and 24h
+	drift, err := helpers.QueryPriceDriftParams(s.ctx, s.bze)
+	require.NoError(t, err)
 
 	for _, c := range []struct {
 		name string
@@ -362,6 +371,7 @@ func (s *transferFeeSuite) otherProtocolFees(t *testing.T) {
 		{"denom reward schedule: prize and schedule fees", []string{"rewards", "create-denom-reward-schedule", s.tok, chain.Denom, "1000", "1"}, 2},
 	} {
 		t.Run(c.name, func(t *testing.T) {
+			require.NoError(t, helpers.WaitForPoolPriceWithin(s.ctx, s.bze, xfCalmBlocks, drift.FeeMaxDrift, s.tokPool))
 			res := s.mustExecWith(t, s.u1, []helpers.TxOption{helpers.WithFees(coinStr(20_000, s.tok)), helpers.WithGas(xfTxGas)}, c.args...)
 			captures := s.captures(t, res, u1)
 			require.Len(t, captures, c.fees, "fees captured in tok")

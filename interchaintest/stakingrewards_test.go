@@ -88,6 +88,10 @@ const (
 	srFeeTxGas   = 1_000_000
 	// a fee paid in another denom may buy at most this much more than the fee
 	srFeeTolerancePct = 1
+	// blocks a step waits at most for the fee token's pool price to come
+	// back near its moving average (about 66 blocks for a 30% move at the
+	// default half-life of 20 blocks to fall under 3%)
+	srCalmBlocks = 200
 
 	srTxGas = 500_000
 
@@ -451,8 +455,11 @@ func (s *stakingRewardsSuite) createRefusals(t *testing.T) {
 // the create fee (in ubze) is then taken in that token too. The chain takes
 // the input that buys the fee from the pool (rounded up), swaps it and sends
 // the whole swap output to the community-pool collector: at least the fee and
-// at most srFeeTolerancePct above it; erin spends no ubze. The EndBlock then swaps the tx fee on the
-// reserves the fee swap left.
+// at most srFeeTolerancePct above it; erin spends no ubze. That swap takes
+// 25,000 BZE out of a 150,000 BZE pool and moves its price by about 30%, far
+// beyond moduleMaxPriceDrift: the EndBlock keeps the tx fee in the
+// txfeecollector instead of swapping it, and swaps it once the pool's moving
+// average has caught up with the price.
 func (s *stakingRewardsSuite) createFeeInFactoryToken(t *testing.T) {
 	erin := s.erin.FormattedAddress()
 	s.mustExec(t, s.erin, "tokenfactory", "create-denom", "fee")
@@ -502,20 +509,47 @@ func (s *stakingRewardsSuite) createFeeInFactoryToken(t *testing.T) {
 
 	// the fee swap ran on the pool as the previous block left it
 	pool := s.poolAt(t, poolID, res.Height-1)
-	// the query prints the stored LegacyDec as its 18-decimal scaled integer
-	poolFee := sdkmath.LegacyNewDecFromIntWithPrec(parseInt(pool.Fee), sdkmath.LegacyPrecision)
 	// the providers keep the pool fee, so the input reserve grows by the whole input
 	base, quote := pool.reserveBase().Add(in), pool.reserveQuote().Sub(out)
-	txOut := srSwapOut(txFee.Amount, base, quote, poolFee)
 	events, err := helpers.BlockEvents(s.ctx, s.bze, res.Height, tradebinEventPrefix+"SwapEvent")
 	require.NoError(t, err)
-	swaps := helpers.EventsWith(events, map[string]string{"creator": s.txFees, "pool_id": poolID})
-	require.Len(t, swaps, 1, "the EndBlock must swap the tx fee once: %+v", events)
+	require.Empty(t, helpers.EventsWith(events, map[string]string{"creator": s.txFees, "pool_id": poolID}),
+		"the pool price moved too far from its average: the EndBlock does not swap the tx fee: %+v", events)
+	after := s.poolAt(t, poolID, res.Height)
+	require.Equal(t, base.String(), after.reserveBase().String(), "fee token reserve: the fee swap only")
+	require.Equal(t, quote.String(), after.reserveQuote().String(), "ubze reserve: the fee swap only")
+	st, err := helpers.QueryPoolPriceState(s.ctx, s.bze, poolID)
+	require.NoError(t, err)
+	drift, err := helpers.QueryPriceDriftParams(s.ctx, s.bze)
+	require.NoError(t, err)
+	require.True(t, helpers.PoolPriceDrifted(st.Price, st.Avg, drift.ModuleMaxDrift), "the pool price is still far from its average: %+v", st)
+	require.Equal(t, txFee.Amount.String(), s.balance(t, s.txFees, s.fee).String(), "the tx fee waits in the txfeecollector")
+
+	// once the average caught up, an EndBlock swaps the waiting tx fee on the
+	// reserves the previous block left
+	require.NoError(t, helpers.WaitForPoolPriceCalm(s.ctx, s.bze, srCalmBlocks, poolID))
+	from, err := s.bze.Height(s.ctx)
+	require.NoError(t, err)
+	for i := 0; i < 3 && !s.balance(t, s.txFees, s.fee).IsZero(); i++ {
+		require.NoError(t, testutil.WaitForBlocks(s.ctx, 1, s.bze))
+	}
+	require.True(t, s.balance(t, s.txFees, s.fee).IsZero(), "the tx fee is swapped once the pool is calm")
+	to, err := s.bze.Height(s.ctx)
+	require.NoError(t, err)
+	var swaps []helpers.Event
+	var swapHeight int64
+	for h := from; h <= to && len(swaps) == 0; h++ {
+		events, err := helpers.BlockEvents(s.ctx, s.bze, h, tradebinEventPrefix+"SwapEvent")
+		require.NoError(t, err)
+		swaps, swapHeight = helpers.EventsWith(events, map[string]string{"creator": s.txFees, "pool_id": poolID}), h
+	}
+	require.Len(t, swaps, 1, "one EndBlock swap of the waiting tx fee between heights %d and %d", from, to)
+	prev := s.poolAt(t, poolID, swapHeight-1)
+	// the query prints the stored LegacyDec as its 18-decimal scaled integer
+	poolFee := sdkmath.LegacyNewDecFromIntWithPrec(parseInt(prev.Fee), sdkmath.LegacyPrecision)
+	txOut := srSwapOut(txFee.Amount, prev.reserveBase(), prev.reserveQuote(), poolFee)
 	require.Equal(t, txFee, eventCoin(t, swaps[0], "in"), "EndBlock swap input")
 	require.Equal(t, sdk.NewCoin(chain.Denom, txOut), eventCoin(t, swaps[0], "out"), "EndBlock swap output")
-	after := s.poolAt(t, poolID, res.Height)
-	require.Equal(t, base.Add(txFee.Amount).String(), after.reserveBase().String(), "fee token reserve")
-	require.Equal(t, quote.Sub(txOut).String(), after.reserveQuote().String(), "ubze reserve")
 	s.requireEscrow(t)
 }
 
@@ -535,6 +569,9 @@ func (s *stakingRewardsSuite) createWithoutUbze(t *testing.T) {
 	require.True(t, s.balance(t, addr, chain.Denom).IsZero(), "gina must hold no ubze")
 
 	createFee := s.params.CreateStakingRewardFee.Amount
+	// the fee is swapped from the fee token only while its pool is calm
+	// (step 12 waited for that; each fee swap moves it again)
+	require.NoError(t, helpers.WaitForPoolPriceCalm(s.ctx, s.bze, srCalmBlocks, s.fee+"_"+chain.Denom))
 	moduleUbze := s.balance(t, s.module, chain.Denom)
 	res := s.mustExecWith(t, gina, feeOpts,
 		"rewards", "create-staking-reward", strconv.Itoa(srDPrize), s.prz, s.stb, strconv.Itoa(srDDuration), "1", "0")

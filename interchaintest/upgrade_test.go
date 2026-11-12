@@ -755,7 +755,20 @@ type v830State struct {
 	kept, renounced string
 	// queue is the order book queue left at the upgrade height (BZE-247)
 	queue v830Queue
+	// plusSR is a staking reward created on v8.2.0 with a prize amount in a
+	// non-canonical integer form (upV830PlusPrize)
+	plusSR string
 }
+
+// A staking reward created on v8.2.0 with its prize amount written with a
+// plus sign: v8.2.0 accepts and stores the string as sent, the v8.3.0
+// handler rewrites it to the canonical form of the same integer. Nobody
+// stakes, and its duration outlasts the suite.
+const (
+	upV830PlusPrize      = "+1000"
+	upV830PlusPrizeCanon = "1000"
+	upV830PlusDuration   = 1000 // days
+)
 
 // The v8.2.0 order book queue at the upgrade height (BZE-247): with
 // orderBookPerBlockMessages lowered to 1, admin queues upV830Backlog sell
@@ -837,6 +850,25 @@ func (s *upgradeSuite) v830Before(t *testing.T) any {
 	})
 	require.Equal(t, admin, s.denomAuthority(t, 0, st.kept).Admin)
 	require.Empty(t, s.denomAuthority(t, 0, st.renounced).Admin)
+
+	// the LP share denoms of the seeded pools have no name or symbol on
+	// v8.2.0; the handler fills them (v830LpMetadata)
+	for _, p := range s.pools(t, 0) {
+		md := s.lpMetadata(t, 0, p.LpDenom)
+		require.Empty(t, md.Name, "pool %s LP name before the upgrade", p.ID)
+		require.Empty(t, md.Symbol, "pool %s LP symbol before the upgrade", p.ID)
+	}
+
+	// a staking reward whose prize amount is stored as "+1000"
+	s.exec(t, s.admin, "rewards", "create-staking-reward",
+		upV830PlusPrize, chain.Denom, s.abc, strconv.Itoa(upV830PlusDuration), "1", "1")
+	for _, sr := range s.allStakingRewards(t) {
+		if sr.StakingDenom == s.abc {
+			st.plusSR = sr.RewardID
+			require.Equal(t, upV830PlusPrize, sr.PrizeAmount, "v8.2.0 stores the prize amount as sent")
+		}
+	}
+	require.NotEmpty(t, st.plusSR, "staking reward of %s", s.abc)
 
 	// last: the queue must still hold messages when the plan height is reached
 	st.queue = s.v830QueueBacklog(t)
@@ -1175,6 +1207,9 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	require.True(t, s.supported(t, "interchain-accounts", "host", "params"), "ICA host params")
 
 	s.v830MintableFlags(t, b)
+	s.v830PoolPriceAverages(t)
+	s.v830LpMetadata(t)
+	s.v830PrizeAmounts(t, b)
 	s.v830QueueRefunded(t, b.queue)
 	s.v830PriceLevelOwners(t)
 	s.v830OwnerPriceIndex(t, b.queue)
@@ -1183,6 +1218,84 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	// and its retired address still refuses funds
 	s.requireAccountBlocked(t, upV830BurnerFees)
 	require.True(t, s.balances(t, 0, s.accounts[upV830BurnerFees]).IsZero(), "%s stays empty", upV830BurnerFees)
+}
+
+// v830PoolPriceAverages checks the tradebin v5 migration's pool price
+// guard: the three new params at their defaults, and one moving average
+// record per pool, seeded in the upgrade block with the pool's price at
+// that height.
+func (s *upgradeSuite) v830PoolPriceAverages(t *testing.T) {
+	params, err := helpers.QueryPriceDriftParams(s.ctx, s.bze)
+	require.NoError(t, err)
+	require.EqualValues(t, 20, params.HalfLifeBlocks, "poolPriceHalfLifeBlocks default")
+	require.Equal(t, sdkmath.LegacyMustNewDecFromStr("0.1").String(), params.FeeMaxDrift.String(), "feeMaxPriceDrift default")
+	require.Equal(t, sdkmath.LegacyMustNewDecFromStr("0.03").String(), params.ModuleMaxDrift.String(), "moduleMaxPriceDrift default")
+
+	pools := s.pools(t, s.plan)
+	require.NotEmpty(t, pools)
+	for _, p := range pools {
+		avg, err := helpers.QueryPoolPriceAverageAt(s.ctx, s.bze, p.ID, s.plan)
+		require.NoError(t, err, "pool %s has a moving average record", p.ID)
+		require.Equal(t, s.plan, avg.LastHeight, "pool %s average seeded at the upgrade height", p.ID)
+		price, err := helpers.QueryPoolPriceAt(s.ctx, s.bze, p.ID, s.plan)
+		require.NoError(t, err)
+		require.Equal(t, price.String(), avg.AvgPrice.String(), "pool %s average is its price at the upgrade", p.ID)
+	}
+	// the record does not exist on v8.2.0
+	_, err = helpers.QueryPoolPriceAverageAt(s.ctx, s.bze, pools[0].ID, s.plan-1)
+	require.Error(t, err, "no pool price average before the upgrade")
+}
+
+// v830LpMetadata checks the LP share metadata backfill: every pool's LP
+// denom has the name, symbol and description a new pool gets, and keeps its
+// base, display and units.
+func (s *upgradeSuite) v830LpMetadata(t *testing.T) {
+	for _, p := range s.pools(t, 0) {
+		before, after := s.lpMetadata(t, s.plan-1, p.LpDenom), s.lpMetadata(t, 0, p.LpDenom)
+		want := lpDenomMetadata(p.ID)
+		require.Equal(t, want.name, after.Name, "pool %s LP name", p.ID)
+		require.Equal(t, want.symbol, after.Symbol, "pool %s LP symbol", p.ID)
+		require.Equal(t, want.description, after.Description, "pool %s LP description", p.ID)
+		require.Equal(t, before.Base, after.Base, "pool %s LP base", p.ID)
+		require.Equal(t, before.Display, after.Display, "pool %s LP display", p.ID)
+		require.Equal(t, before.DenomUnits, after.DenomUnits, "pool %s LP units", p.ID)
+	}
+}
+
+// v830PrizeAmounts checks the staking reward prize amounts are stored in
+// canonical form after the upgrade: "+1000" becomes "1000", and the
+// reward seeded with a canonical amount is untouched (step 4).
+func (s *upgradeSuite) v830PrizeAmounts(t *testing.T, b v830State) {
+	get := func(height int64) srInfo {
+		return query[struct {
+			StakingReward srInfo `json:"staking_reward"`
+		}](t, s, height, "rewards", "get-staking-reward", b.plusSR).StakingReward
+	}
+	require.Equal(t, upV830PlusPrize, get(s.plan-1).PrizeAmount, "before the upgrade")
+	after := get(0)
+	require.Equal(t, upV830PlusPrizeCanon, after.PrizeAmount, "canonical after the upgrade")
+	require.Equal(t, chain.Denom, after.PrizeDenom)
+	require.EqualValues(t, upV830PlusDuration, after.Duration)
+}
+
+// upLpMetadata is the bank metadata of an LP share denom.
+type upLpMetadata struct {
+	Name        string `json:"name"`
+	Symbol      string `json:"symbol"`
+	Description string `json:"description"`
+	Base        string `json:"base"`
+	Display     string `json:"display"`
+	DenomUnits  []struct {
+		Denom    string        `json:"denom"`
+		Exponent helpers.Int64 `json:"exponent"`
+	} `json:"denom_units"`
+}
+
+func (s *upgradeSuite) lpMetadata(t *testing.T, height int64, denom string) upLpMetadata {
+	t.Helper()
+	return query[struct {
+		Metadata upLpMetadata `json:"metadata"`
+	}](t, s, height, "bank", "denom-metadata", denom).Metadata
 }
 
 // upV830Guardian is the guardian the v8.3.0 handler sets (the project lead's

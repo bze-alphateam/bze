@@ -824,6 +824,8 @@ var daoErrText = map[uint32]string{
 	1130: "the expedited proposal does not meet the expedite bars yet",
 	1131: "the proposal is not finished",
 	1132: "the expedited proposal cannot settle early yet",
+	1133: "the message is not allowed in this dao execution",
+	1134: "dao executions are nested too deep",
 }
 
 // refuse sends `bzed tx <args>` with a fixed gas limit (no simulation, so the
