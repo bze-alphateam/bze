@@ -19,8 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Query_Params_FullMethodName        = "/bze.guardian.v1.Query/Params"
-	Query_BlockedDenoms_FullMethodName = "/bze.guardian.v1.Query/BlockedDenoms"
+	Query_Params_FullMethodName         = "/bze.guardian.v1.Query/Params"
+	Query_BlockedDenoms_FullMethodName  = "/bze.guardian.v1.Query/BlockedDenoms"
+	Query_ClosedChannels_FullMethodName = "/bze.guardian.v1.Query/ClosedChannels"
 )
 
 // QueryClient is the client API for Query service.
@@ -31,6 +32,8 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// BlockedDenoms lists the denoms on the rate limit module's blacklist.
 	BlockedDenoms(ctx context.Context, in *QueryBlockedDenomsRequest, opts ...grpc.CallOption) (*QueryBlockedDenomsResponse, error)
+	// ClosedChannels lists the transfer channels closed by the guardian or governance.
+	ClosedChannels(ctx context.Context, in *QueryClosedChannelsRequest, opts ...grpc.CallOption) (*QueryClosedChannelsResponse, error)
 }
 
 type queryClient struct {
@@ -59,6 +62,15 @@ func (c *queryClient) BlockedDenoms(ctx context.Context, in *QueryBlockedDenomsR
 	return out, nil
 }
 
+func (c *queryClient) ClosedChannels(ctx context.Context, in *QueryClosedChannelsRequest, opts ...grpc.CallOption) (*QueryClosedChannelsResponse, error) {
+	out := new(QueryClosedChannelsResponse)
+	err := c.cc.Invoke(ctx, Query_ClosedChannels_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -67,6 +79,8 @@ type QueryServer interface {
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// BlockedDenoms lists the denoms on the rate limit module's blacklist.
 	BlockedDenoms(context.Context, *QueryBlockedDenomsRequest) (*QueryBlockedDenomsResponse, error)
+	// ClosedChannels lists the transfer channels closed by the guardian or governance.
+	ClosedChannels(context.Context, *QueryClosedChannelsRequest) (*QueryClosedChannelsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -79,6 +93,9 @@ func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*Q
 }
 func (UnimplementedQueryServer) BlockedDenoms(context.Context, *QueryBlockedDenomsRequest) (*QueryBlockedDenomsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BlockedDenoms not implemented")
+}
+func (UnimplementedQueryServer) ClosedChannels(context.Context, *QueryClosedChannelsRequest) (*QueryClosedChannelsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClosedChannels not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -129,6 +146,24 @@ func _Query_BlockedDenoms_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_ClosedChannels_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryClosedChannelsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ClosedChannels(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_ClosedChannels_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ClosedChannels(ctx, req.(*QueryClosedChannelsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -143,6 +178,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BlockedDenoms",
 			Handler:    _Query_BlockedDenoms_Handler,
+		},
+		{
+			MethodName: "ClosedChannels",
+			Handler:    _Query_ClosedChannels_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

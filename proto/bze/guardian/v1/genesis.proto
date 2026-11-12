@@ -14,4 +14,7 @@ message GenesisState {
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
   ];
+
+  // closed_channels are the transfer channels whose ICS-20 transfers are refused.
+  repeated string closed_channels = 4;
 }

@@ -25,3 +25,15 @@ message DenomUnblockedEvent {
   string authority = 1;
   string denom = 2;
 }
+
+// ChannelClosedEvent is emitted when a transfer channel is closed.
+message ChannelClosedEvent {
+  string signer = 1;
+  string channel_id = 2;
+}
+
+// ChannelReopenedEvent is emitted when a closed transfer channel is reopened.
+message ChannelReopenedEvent {
+  string authority = 1;
+  string channel_id = 2;
+}

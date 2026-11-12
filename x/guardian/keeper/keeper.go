@@ -25,6 +25,9 @@ type Keeper struct {
 
 	// rateLimitKeeper is wired after the depinject build, see SetRateLimitKeeper.
 	rateLimitKeeper types.RateLimitKeeper
+
+	// channelKeeper is wired after the depinject build, see SetChannelKeeper.
+	channelKeeper types.ChannelKeeper
 }
 
 func NewKeeper(

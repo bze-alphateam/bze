@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ratelimittypes "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/types"
+	channeltypes "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 )
 
 // RateLimitKeeper is the part of the ibc-apps rate-limiting keeper x/guardian
@@ -25,4 +26,10 @@ type RateLimitKeeper interface {
 // that a denom exists on chain before blocking it.
 type BankKeeper interface {
 	HasSupply(ctx context.Context, denom string) bool
+}
+
+// ChannelKeeper is the part of the IBC channel keeper x/guardian uses: it only
+// checks that a transfer channel exists before closing it.
+type ChannelKeeper interface {
+	GetChannel(ctx sdk.Context, portID, channelID string) (channeltypes.Channel, bool)
 }

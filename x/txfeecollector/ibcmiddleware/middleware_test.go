@@ -139,7 +139,7 @@ func setup(t *testing.T, blocked []types.BlockedIbcTransfer) (sdk.Context, ibcmi
 	require.NoError(t, params.Validate())
 
 	app := &recordingApp{}
-	im := ibcmiddleware.NewIBCMiddleware(app, unusedICS4Wrapper{t: t}, paramsKeeper{params: params})
+	im := ibcmiddleware.NewIBCMiddleware(app, unusedICS4Wrapper{t: t}, paramsKeeper{params: params}, channelGuard{})
 
 	return ctx, im, app
 }
@@ -346,7 +346,7 @@ func TestUnmarshalPacketDataMissingOnTheApp(t *testing.T) {
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 
-	im := ibcmiddleware.NewIBCMiddleware(plainApp{}, unusedICS4Wrapper{t: t}, paramsKeeper{params: types.DefaultParams()})
+	im := ibcmiddleware.NewIBCMiddleware(plainApp{}, unusedICS4Wrapper{t: t}, paramsKeeper{params: types.DefaultParams()}, channelGuard{})
 
 	_, _, err := im.UnmarshalPacketData(ctx, ibctransfertypes.PortID, blockedChannel, []byte("packet"))
 	require.Error(t, err)

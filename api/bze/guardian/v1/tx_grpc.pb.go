@@ -23,6 +23,8 @@ const (
 	Msg_TightenRateLimit_FullMethodName = "/bze.guardian.v1.Msg/TightenRateLimit"
 	Msg_BlockDenom_FullMethodName       = "/bze.guardian.v1.Msg/BlockDenom"
 	Msg_UnblockDenom_FullMethodName     = "/bze.guardian.v1.Msg/UnblockDenom"
+	Msg_CloseChannel_FullMethodName     = "/bze.guardian.v1.Msg/CloseChannel"
+	Msg_ReopenChannel_FullMethodName    = "/bze.guardian.v1.Msg/ReopenChannel"
 )
 
 // MsgClient is the client API for Msg service.
@@ -40,6 +42,12 @@ type MsgClient interface {
 	BlockDenom(ctx context.Context, in *MsgBlockDenom, opts ...grpc.CallOption) (*MsgBlockDenomResponse, error)
 	// UnblockDenom takes a denom off the blacklist. Governance only.
 	UnblockDenom(ctx context.Context, in *MsgUnblockDenom, opts ...grpc.CallOption) (*MsgUnblockDenomResponse, error)
+	// CloseChannel stops every ICS-20 transfer on a transfer channel, in both
+	// directions. The channel itself stays open in IBC.
+	CloseChannel(ctx context.Context, in *MsgCloseChannel, opts ...grpc.CallOption) (*MsgCloseChannelResponse, error)
+	// ReopenChannel lets ICS-20 transfers through a closed channel again.
+	// Governance only.
+	ReopenChannel(ctx context.Context, in *MsgReopenChannel, opts ...grpc.CallOption) (*MsgReopenChannelResponse, error)
 }
 
 type msgClient struct {
@@ -86,6 +94,24 @@ func (c *msgClient) UnblockDenom(ctx context.Context, in *MsgUnblockDenom, opts 
 	return out, nil
 }
 
+func (c *msgClient) CloseChannel(ctx context.Context, in *MsgCloseChannel, opts ...grpc.CallOption) (*MsgCloseChannelResponse, error) {
+	out := new(MsgCloseChannelResponse)
+	err := c.cc.Invoke(ctx, Msg_CloseChannel_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ReopenChannel(ctx context.Context, in *MsgReopenChannel, opts ...grpc.CallOption) (*MsgReopenChannelResponse, error) {
+	out := new(MsgReopenChannelResponse)
+	err := c.cc.Invoke(ctx, Msg_ReopenChannel_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -101,6 +127,12 @@ type MsgServer interface {
 	BlockDenom(context.Context, *MsgBlockDenom) (*MsgBlockDenomResponse, error)
 	// UnblockDenom takes a denom off the blacklist. Governance only.
 	UnblockDenom(context.Context, *MsgUnblockDenom) (*MsgUnblockDenomResponse, error)
+	// CloseChannel stops every ICS-20 transfer on a transfer channel, in both
+	// directions. The channel itself stays open in IBC.
+	CloseChannel(context.Context, *MsgCloseChannel) (*MsgCloseChannelResponse, error)
+	// ReopenChannel lets ICS-20 transfers through a closed channel again.
+	// Governance only.
+	ReopenChannel(context.Context, *MsgReopenChannel) (*MsgReopenChannelResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -119,6 +151,12 @@ func (UnimplementedMsgServer) BlockDenom(context.Context, *MsgBlockDenom) (*MsgB
 }
 func (UnimplementedMsgServer) UnblockDenom(context.Context, *MsgUnblockDenom) (*MsgUnblockDenomResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnblockDenom not implemented")
+}
+func (UnimplementedMsgServer) CloseChannel(context.Context, *MsgCloseChannel) (*MsgCloseChannelResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CloseChannel not implemented")
+}
+func (UnimplementedMsgServer) ReopenChannel(context.Context, *MsgReopenChannel) (*MsgReopenChannelResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReopenChannel not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -205,6 +243,42 @@ func _Msg_UnblockDenom_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CloseChannel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCloseChannel)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CloseChannel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_CloseChannel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CloseChannel(ctx, req.(*MsgCloseChannel))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ReopenChannel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgReopenChannel)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ReopenChannel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_ReopenChannel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ReopenChannel(ctx, req.(*MsgReopenChannel))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -227,6 +301,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnblockDenom",
 			Handler:    _Msg_UnblockDenom_Handler,
+		},
+		{
+			MethodName: "CloseChannel",
+			Handler:    _Msg_CloseChannel_Handler,
+		},
+		{
+			MethodName: "ReopenChannel",
+			Handler:    _Msg_ReopenChannel_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

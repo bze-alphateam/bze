@@ -18,4 +18,11 @@ var (
 	ErrNotBlocked            = sdkerrors.Register(ModuleName, 1107, "denom is not blocked")
 	ErrInvalidDenom          = sdkerrors.Register(ModuleName, 1108, "invalid denom")
 	ErrDenomNotFound         = sdkerrors.Register(ModuleName, 1109, "denom does not exist on chain")
+
+	// channel switch: codes 1140-1149
+	ErrInvalidChannel       = sdkerrors.Register(ModuleName, 1140, "invalid channel id")
+	ErrChannelNotFound      = sdkerrors.Register(ModuleName, 1141, "transfer channel not found")
+	ErrChannelAlreadyClosed = sdkerrors.Register(ModuleName, 1142, "channel is already closed")
+	ErrChannelNotClosed     = sdkerrors.Register(ModuleName, 1143, "channel is not closed")
+	ErrChannelKeeperNotSet  = sdkerrors.Register(ModuleName, 1144, "channel keeper is not set")
 )

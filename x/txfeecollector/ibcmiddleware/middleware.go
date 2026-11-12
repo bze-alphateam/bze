@@ -7,9 +7,12 @@
 // accepts the packet: answering with an error acknowledgement means nothing is minted
 // here and the sending chain refunds the sender when the ack is relayed.
 //
-// Only OnRecvPacket inspects anything. Every other callback delegates to the wrapped
-// application, so outgoing transfers, their acknowledgements and their timeout refunds
-// behave exactly as they did before this middleware existed.
+// The package also enforces the channel switch of x/guardian: on a closed channel every
+// inbound transfer gets an error acknowledgement and every outbound send fails (see
+// SendGate, the ICS-4 wrapper the transfer keeper sends through).
+//
+// Acknowledgements and timeouts always delegate to the wrapped application, so refunds
+// of transfers already in flight keep working whatever is blocked or closed.
 package ibcmiddleware
 
 import (
@@ -35,30 +38,45 @@ type ParamsKeeper interface {
 // IBCMiddleware wraps an IBC application and filters the packets it receives.
 type IBCMiddleware struct {
 	app    porttypes.IBCModule
-	ics4   porttypes.ICS4Wrapper
+	gate   SendGate
 	keeper ParamsKeeper
+	guard  ChannelGuard
 }
 
 var _ porttypes.Middleware = (*IBCMiddleware)(nil)
 
-// NewIBCMiddleware wraps app with the inbound filter.
+// NewIBCMiddleware wraps app with the inbound filter and the closed-channel check.
 //
-// ics4 is only used by the ICS4Wrapper methods, which this middleware passes straight
-// through: the send path of the transfer module is wired to the IBC channel keeper
-// directly, so nothing this middleware does can affect outgoing packets.
-func NewIBCMiddleware(app porttypes.IBCModule, ics4 porttypes.ICS4Wrapper, keeper ParamsKeeper) IBCMiddleware {
+// ics4 is only used by the ICS4Wrapper methods, which go through the same SendGate as
+// the transfer keeper's sends. In the app the transfer keeper is given its own SendGate
+// (it is built before this middleware), so this one only matters to callers that send
+// through the middleware itself.
+func NewIBCMiddleware(app porttypes.IBCModule, ics4 porttypes.ICS4Wrapper, keeper ParamsKeeper, guard ChannelGuard) IBCMiddleware {
 	return IBCMiddleware{
 		app:    app,
-		ics4:   ics4,
+		gate:   NewSendGate(ics4, guard),
 		keeper: keeper,
+		guard:  guard,
 	}
 }
 
-// OnRecvPacket refuses the packet with an error acknowledgement when it is a fresh
-// mint of a blocked (destination channel, base denom) pair. Anything else - including
-// packets this middleware cannot parse as an ICS-20 transfer - reaches the wrapped
-// application untouched.
+// OnRecvPacket refuses every packet arriving on a closed channel, and a fresh mint of
+// a blocked (destination channel, base denom) pair, with an error acknowledgement.
+// Anything else - including packets this middleware cannot parse as an ICS-20
+// transfer - reaches the wrapped application untouched.
 func (im IBCMiddleware) OnRecvPacket(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement {
+	// A closed channel stops the whole channel: returning vouchers and packets that do
+	// not parse are refused too. The sending chain refunds on the error acknowledgement.
+	if im.guard.IsChannelClosed(ctx, packet.GetDestChannel()) {
+		ctx.Logger().Info(
+			"refused inbound ibc transfer on a closed channel",
+			"channel", packet.GetDestChannel(),
+			"sequence", packet.GetSequence(),
+		)
+
+		return channeltypes.NewErrorAcknowledgement(types.ErrChannelClosed)
+	}
+
 	var data ibctransfertypes.FungibleTokenPacketData
 	if err := ibctransfertypes.ModuleCdc.UnmarshalJSON(packet.GetData(), &data); err != nil {
 		// not an ICS-20 transfer packet: let the application decide what to do with it
@@ -101,13 +119,14 @@ func (im IBCMiddleware) OnRecvPacket(ctx sdk.Context, channelVersion string, pac
 	return channeltypes.NewErrorAcknowledgement(types.ErrBlockedIbcInbound)
 }
 
-// OnAcknowledgementPacket passes through: it carries the counterparty's answer to a
-// packet this chain sent, including the refunds of blocked transfers we bounced back.
+// OnAcknowledgementPacket passes through, on closed channels too: it carries the
+// counterparty's answer to a packet this chain sent, and refunds a failed transfer.
 func (im IBCMiddleware) OnAcknowledgementPacket(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error {
 	return im.app.OnAcknowledgementPacket(ctx, channelVersion, packet, acknowledgement, relayer)
 }
 
-// OnTimeoutPacket passes through so outgoing transfers are refunded as usual.
+// OnTimeoutPacket passes through, on closed channels too, so outgoing transfers are
+// refunded as usual.
 func (im IBCMiddleware) OnTimeoutPacket(ctx sdk.Context, channelVersion string, packet channeltypes.Packet, relayer sdk.AccAddress) error {
 	return im.app.OnTimeoutPacket(ctx, channelVersion, packet, relayer)
 }
@@ -152,8 +171,8 @@ func (im IBCMiddleware) OnChanCloseConfirm(ctx sdk.Context, portID, channelID st
 	return im.app.OnChanCloseConfirm(ctx, portID, channelID)
 }
 
-// SendPacket implements the ICS4Wrapper interface: pass through, the filter never
-// touches outgoing packets.
+// SendPacket implements the ICS4Wrapper interface: it fails on a closed channel and
+// passes anything else through (see SendGate).
 func (im IBCMiddleware) SendPacket(
 	ctx sdk.Context,
 	sourcePort string,
@@ -162,7 +181,7 @@ func (im IBCMiddleware) SendPacket(
 	timeoutTimestamp uint64,
 	data []byte,
 ) (sequence uint64, err error) {
-	return im.ics4.SendPacket(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
+	return im.gate.SendPacket(ctx, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 }
 
 // WriteAcknowledgement implements the ICS4Wrapper interface: pass through.
@@ -171,12 +190,12 @@ func (im IBCMiddleware) WriteAcknowledgement(
 	packet ibcexported.PacketI,
 	ack ibcexported.Acknowledgement,
 ) error {
-	return im.ics4.WriteAcknowledgement(ctx, packet, ack)
+	return im.gate.WriteAcknowledgement(ctx, packet, ack)
 }
 
 // GetAppVersion implements the ICS4Wrapper interface: pass through.
 func (im IBCMiddleware) GetAppVersion(ctx sdk.Context, portID, channelID string) (string, bool) {
-	return im.ics4.GetAppVersion(ctx, portID, channelID)
+	return im.gate.GetAppVersion(ctx, portID, channelID)
 }
 
 // The transfer application implements the optional PacketDataUnmarshaler interface

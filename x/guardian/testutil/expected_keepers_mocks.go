@@ -15,6 +15,7 @@ import (
 
 	types "github.com/cosmos/cosmos-sdk/types"
 	types0 "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/types"
+	types1 "github.com/cosmos/ibc-go/v10/modules/core/04-channel/types"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -157,4 +158,43 @@ func (m *MockBankKeeper) HasSupply(ctx context.Context, denom string) bool {
 func (mr *MockBankKeeperMockRecorder) HasSupply(ctx, denom any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasSupply", reflect.TypeOf((*MockBankKeeper)(nil).HasSupply), ctx, denom)
+}
+
+// MockChannelKeeper is a mock of ChannelKeeper interface.
+type MockChannelKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockChannelKeeperMockRecorder
+	isgomock struct{}
+}
+
+// MockChannelKeeperMockRecorder is the mock recorder for MockChannelKeeper.
+type MockChannelKeeperMockRecorder struct {
+	mock *MockChannelKeeper
+}
+
+// NewMockChannelKeeper creates a new mock instance.
+func NewMockChannelKeeper(ctrl *gomock.Controller) *MockChannelKeeper {
+	mock := &MockChannelKeeper{ctrl: ctrl}
+	mock.recorder = &MockChannelKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockChannelKeeper) EXPECT() *MockChannelKeeperMockRecorder {
+	return m.recorder
+}
+
+// GetChannel mocks base method.
+func (m *MockChannelKeeper) GetChannel(ctx types.Context, portID, channelID string) (types1.Channel, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetChannel", ctx, portID, channelID)
+	ret0, _ := ret[0].(types1.Channel)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
+}
+
+// GetChannel indicates an expected call of GetChannel.
+func (mr *MockChannelKeeperMockRecorder) GetChannel(ctx, portID, channelID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetChannel", reflect.TypeOf((*MockChannelKeeper)(nil).GetChannel), ctx, portID, channelID)
 }
