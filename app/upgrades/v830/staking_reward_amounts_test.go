@@ -1,6 +1,8 @@
 package v830_test
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/bze-alphateam/bze/bzeutils"
@@ -71,56 +73,82 @@ func stakingReward(id, prizeAmount string) rewardstypes.StakingReward {
 }
 
 // Stored prize amounts that are not canonical base-10 integers are rewritten to canonical form; canonical amounts
-// are not rewritten; every other field stays as stored.
+// are not rewritten; every other field stays as stored. The stored form is read with Go integer literal rules, so
+// a leading 0 means octal, also after a sign. Zero and negative values are rewritten too: the step only makes the
+// form canonical, it does not check the value.
 func TestHandler_NormalisesStakingRewardPrizeAmounts(t *testing.T) {
-	cases := map[string]string{
-		"canonical":  "1000",
-		"padded":     "0100",
-		"prefixed-x": "0x10",
-		"prefixed-o": "0o10",
-		"prefixed-b": "0b10",
-		"underscore": "1_000",
-		"plus":       "+10",
+	cases := []struct {
+		id, stored, want string
+	}{
+		{id: "canonical", stored: "1000", want: "1000"},
+		{id: "padded", stored: "0100", want: "64"},
+		{id: "prefixed-x", stored: "0x10", want: "16"},
+		{id: "prefixed-o", stored: "0o10", want: "8"},
+		{id: "prefixed-b", stored: "0b10", want: "2"},
+		{id: "underscore", stored: "1_000", want: "1000"},
+		{id: "plus", stored: "+10", want: "10"},
+		{id: "negative-padded", stored: "-010", want: "-8"},
+		{id: "double-zero", stored: "00", want: "0"},
 	}
 	var rewards []rewardstypes.StakingReward
-	for _, id := range []string{"canonical", "padded", "prefixed-x", "prefixed-o", "prefixed-b", "underscore", "plus"} {
-		rewards = append(rewards, stakingReward(id, cases[id]))
+	for i, tc := range cases {
+		rewards = append(rewards, distinctStakingReward(i, tc.id, tc.stored))
 	}
 	store := newFakeStakingRewards(rewards...)
 
 	runStakingRewardNormalisation(t, store)
 
-	want := map[string]string{
-		"canonical":  "1000",
-		"padded":     "64",
-		"prefixed-x": "16",
-		"prefixed-o": "8",
-		"prefixed-b": "2",
-		"underscore": "1000",
-		"plus":       "10",
-	}
-	for id, amount := range want {
-		got := store.byId[id]
-		require.Equal(t, amount, got.PrizeAmount, id)
+	for i, tc := range cases {
+		got := store.byId[tc.id]
+		require.Equal(t, tc.want, got.PrizeAmount, tc.id)
 
-		expected := stakingReward(id, amount)
-		require.Equal(t, expected, got, "%s: only the prize amount may change", id)
+		expected := distinctStakingReward(i, tc.id, tc.want)
+		require.Equal(t, expected, got, "%s: only the prize amount may change", tc.id)
+		require.Equal(t, expected.DistributedStake, got.DistributedStake, tc.id)
+		require.Equal(t, expected.Payouts, got.Payouts, tc.id)
 
-		_, err := bzeutils.ParseCanonicalAmount(got.PrizeAmount)
-		require.NoError(t, err, id)
+		_, err := bzeutils.ParseCanonicalInt(got.PrizeAmount)
+		require.NoError(t, err, tc.id)
 	}
 	require.NotContains(t, store.written, "canonical", "a canonical amount is not rewritten")
-	require.Len(t, store.written, len(want)-1)
+	require.Len(t, store.written, len(cases)-1)
+
+	// the zero and negative results stay unusable as a prize amount
+	for _, id := range []string{"negative-padded", "double-zero"} {
+		_, err := bzeutils.ParseCanonicalAmount(store.byId[id].PrizeAmount)
+		require.Error(t, err, id)
+	}
 }
 
-// A stored value that is not an integer in any form is left as it is.
+// distinctStakingReward is stakingReward with a distributed stake and payout count of its own, so a rewrite that
+// mixes up rewards or resets these fields is seen.
+func distinctStakingReward(i int, id, prizeAmount string) rewardstypes.StakingReward {
+	sr := stakingReward(id, prizeAmount)
+	sr.Payouts = uint32(3 + i)
+	sr.DistributedStake = fmt.Sprintf("0.%d5", i+1)
+
+	return sr
+}
+
+// A stored value that is not an integer in any form, or is beyond the integer range, is left as it is.
 func TestHandler_LeavesUnreadableStakingRewardPrizeAmount(t *testing.T) {
-	store := newFakeStakingRewards(stakingReward("garbage", "12abc"), stakingReward("empty", ""))
+	// 2 * 10^77 (78 digits) does not fit the 256-bit integer range; with a leading 0 the value is read as
+	// octal, so the padded one needs more of them to be out of range too (2 * 8^90)
+	overRange := "2" + strings.Repeat("0", 77)
+	overRangePadded := "02" + strings.Repeat("0", 90)
+	store := newFakeStakingRewards(
+		stakingReward("garbage", "12abc"),
+		stakingReward("empty", ""),
+		stakingReward("over-range", overRange),
+		stakingReward("over-range-padded", overRangePadded),
+	)
 
 	runStakingRewardNormalisation(t, store)
 
 	require.Equal(t, "12abc", store.byId["garbage"].PrizeAmount)
 	require.Equal(t, "", store.byId["empty"].PrizeAmount)
+	require.Equal(t, overRange, store.byId["over-range"].PrizeAmount)
+	require.Equal(t, overRangePadded, store.byId["over-range-padded"].PrizeAmount)
 	require.Empty(t, store.written)
 }
 
