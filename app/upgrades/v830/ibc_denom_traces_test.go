@@ -177,7 +177,7 @@ func newTraceApp(t *testing.T, traces ...v8Trace) (*app.App, sdk.Context, map[st
 func runTraceUpgrade(t *testing.T, bApp *app.App, ctx sdk.Context, vm map[string]uint64) {
 	t.Helper()
 
-	handler := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.GuardianKeeper,
+	handler := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.AccountKeeper, bApp.GuardianKeeper,
 		bApp.RatelimitKeeper, bApp.BankKeeper, bApp.TradebinKeeper, bApp.BankKeeper, bApp.RewardsKeeper,
 		runtime.NewKVStoreService(bApp.GetKey(transfertypes.StoreKey)), bApp.TransferKeeper,
 		runtime.NewKVStoreService(bApp.GetKey(ibcexported.StoreKey)))

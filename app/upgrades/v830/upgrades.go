@@ -14,6 +14,7 @@ const UpgradeName = "v8.3.0"
 func CreateUpgradeHandler(
 	cfg module.Configurator,
 	mm *module.Manager,
+	accountKeeper AccountKeeper,
 	guardianKeeper GuardianKeeper,
 	rateLimitKeeper RateLimitKeeper,
 	bankKeeper BankKeeper,
@@ -32,6 +33,12 @@ func CreateUpgradeHandler(
 
 		// The IBC store migration accepts no channel with an unfinished channel upgrade.
 		if err := restoreUnfinishedChannelUpgrades(ctx, ibcStore); err != nil {
+			return nil, err
+		}
+
+		// The new module accounts exist as module accounts before any module,
+		// x/dao's InitGenesis included, can reach their addresses.
+		if err := ensureNewModuleAccounts(ctx, accountKeeper); err != nil {
 			return nil, err
 		}
 

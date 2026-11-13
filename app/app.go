@@ -354,6 +354,7 @@ func (app *App) setupUpgradeHandlers() {
 		v830.CreateUpgradeHandler(
 			app.Configurator(),
 			app.ModuleManager,
+			app.AccountKeeper,
 			app.GuardianKeeper,
 			app.RatelimitKeeper,
 			app.BankKeeper,
