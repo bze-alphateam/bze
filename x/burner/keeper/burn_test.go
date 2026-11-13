@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/bze-alphateam/bze/x/burner/types"
-	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"go.uber.org/mock/gomock"
@@ -221,18 +220,14 @@ func (suite *IntegrationTestSuite) TestProcessQueue_MixedCoinTypes() {
 	ibcCoin := sdk.NewInt64Coin("ibc/ABC123", 200)
 	coins := sdk.NewCoins(nativeCoin, lpCoin, ibcCoin)
 
-	addedCoins := sdk.NewCoins(sdk.NewInt64Coin("ibc/ABC123", 180))
-	refundedCoins := sdk.NewCoins()
-
 	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
 	suite.bank.EXPECT().GetBalancesPage(gomock.Any(), addr, "", types.MaxDenomsBurnPerBlock+1).Return(coins, "").Times(1)
 
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ubze").Return(true).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ulp_token1").Return(false).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/ABC123").Return(false).Times(1)
-	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibcCoin).Return(true).Times(1)
-	suite.trade.EXPECT().SafeModuleAddLiquidityWithNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(ibcCoin)).Return(addedCoins, refundedCoins, nil).Times(1)
-	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, types.BlackHoleModuleName, sdk.NewCoins(lpCoin)).Return(nil).Times(1)
+	// the IBC coin is locked with the LP share, never added to a pool
+	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, types.BlackHoleModuleName, sdk.NewCoins(lpCoin, ibcCoin)).Return(nil).Times(1)
 	suite.bank.EXPECT().BurnCoins(gomock.Any(), types.ModuleName, sdk.NewCoins(nativeCoin)).Return(nil).Times(1)
 
 	err := suite.k.ProcessPeriodicBurnQueue(suite.ctx)
@@ -304,28 +299,14 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_OnlyIBCCoins() {
 		sdk.NewInt64Coin("ibc/DEF456", 500),
 	)
 
-	addedCoins := sdk.NewCoins(
-		sdk.NewInt64Coin("ibc/ABC123", 900),
-		sdk.NewInt64Coin("ibc/DEF456", 450),
-	)
-	refundedCoins := sdk.NewCoins() // No refunds in this case
-
-	// Mock native denom checks
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/ABC123").Return(false).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/DEF456").Return(false).Times(1)
+	// IBC coins are locked in the black hole, exchangeable or not: no swap check, no liquidity add
+	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), fromModule, types.BlackHoleModuleName, coins).Return(nil).Times(1)
 
-	// Mock swap capability checks
-	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), coins[0]).Return(true).Times(1)
-	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), coins[1]).Return(true).Times(1)
-
-	// Mock add liquidity operation - each coin is added on its own
-	suite.trade.EXPECT().SafeModuleAddLiquidityWithNativeDenom(gomock.Any(), fromModule, sdk.NewCoins(coins[0])).Return(sdk.NewCoins(addedCoins[0]), refundedCoins, nil).Times(1)
-	suite.trade.EXPECT().SafeModuleAddLiquidityWithNativeDenom(gomock.Any(), fromModule, sdk.NewCoins(coins[1])).Return(sdk.NewCoins(addedCoins[1]), refundedCoins, nil).Times(1)
-
-	// No burn operation expected - IBC coins are added to liquidity, LP tokens are locked
-
-	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
+	burned, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
+	suite.Require().True(burned.IsZero())
 }
 
 func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_MixedCoins() {
@@ -336,10 +317,8 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_MixedCoins() {
 	ibcCoin := sdk.NewInt64Coin("ibc/ABC123", 200)
 
 	coins := sdk.NewCoins(nativeCoin, factoryCoin, lpCoin, ibcCoin)
-	addedCoins := sdk.NewCoins(sdk.NewInt64Coin("ibc/ABC123", 180)) // IBC coins added to liquidity
-	refundedCoins := sdk.NewCoins()                                 // No refunds
 	expectedBurnCoins := sdk.NewCoins(nativeCoin, factoryCoin)
-	lockableCoins := sdk.NewCoins(lpCoin)
+	lockableCoins := sdk.NewCoins(lpCoin, ibcCoin)
 
 	// Mock native denom checks
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ubze").Return(true).Times(1)
@@ -347,13 +326,7 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_MixedCoins() {
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ulp_token1").Return(false).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/ABC123").Return(false).Times(1)
 
-	// Mock swap capability check for IBC coin
-	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibcCoin).Return(true).Times(1)
-
-	// Mock add liquidity operation
-	suite.trade.EXPECT().SafeModuleAddLiquidityWithNativeDenom(gomock.Any(), fromModule, sdk.NewCoins(ibcCoin)).Return(addedCoins, refundedCoins, nil).Times(1)
-
-	// Mock send LP tokens to black hole
+	// Mock send LP tokens and the IBC coin to black hole
 	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), fromModule, types.BlackHoleModuleName, lockableCoins).Return(nil).Times(1)
 
 	// Mock burn operation (only native and factory tokens)
@@ -387,28 +360,6 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_ZeroAmountCoins() {
 	expectedBurnCoins := sdk.NewCoins(sdk.NewInt64Coin("uother", 1000))
 	suite.bank.EXPECT().BurnCoins(gomock.Any(), fromModule, expectedBurnCoins).Return(nil).Times(1)
 
-	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
-	suite.Require().NoError(err)
-}
-
-func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_AddLiquidityError() {
-	fromModule := "test_module"
-	coins := sdk.NewCoins(sdk.NewInt64Coin("ibc/ABC123", 1000))
-	addLiquidityError := errors.New("add liquidity failed")
-
-	// Mock native denom check
-	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/ABC123").Return(false).Times(1)
-
-	// Mock swap capability check
-	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), coins[0]).Return(true).Times(1)
-
-	// Mock add liquidity operation failure - the function continues even on error
-	suite.trade.EXPECT().SafeModuleAddLiquidityWithNativeDenom(gomock.Any(), fromModule, coins).Return(nil, nil, addLiquidityError).Times(1)
-
-	// the coin that could not be added is locked
-	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), fromModule, types.BlackHoleModuleName, coins).Return(nil).Times(1)
-
-	// Should not error - the function logs the error and continues
 	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
 	suite.Require().NoError(err)
 }
@@ -452,9 +403,6 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_UnknownDenomLocked(
 	// Mock native denom check
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "unknown/denom").Return(false).Times(1)
 
-	// Mock swap capability check (returns false)
-	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), coins[0]).Return(false).Times(1)
-
 	// Unknown denoms that are not swappable are now locked (sent to black hole)
 	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), fromModule, types.BlackHoleModuleName, coins).Return(nil).Times(1)
 
@@ -471,9 +419,6 @@ func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_IBCNotSwappable() {
 
 	// Mock native denom check
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/NONSWAPPABLE").Return(false).Times(1)
-
-	// Mock swap capability check (returns false)
-	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibcCoin).Return(false).Times(1)
 
 	// IBC coins that cannot be swapped are now locked (sent to black hole)
 	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), fromModule, types.BlackHoleModuleName, coins).Return(nil).Times(1)
@@ -963,18 +908,4 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_FactoryToken() 
 	// Queue should be removed
 	_, found := suite.k.GetRaffleCleanupQueue(suite.ctx)
 	suite.Require().False(found)
-}
-
-// When the pool price drifted, the periodic burn locks the coin in the black hole instead of adding liquidity.
-func (suite *IntegrationTestSuite) TestBurn_TestBurnAnyCoins_PriceDriftLocksCoin() {
-	fromModule := "test_module"
-	coins := sdk.NewCoins(sdk.NewInt64Coin("ibc/ABC123", 1000))
-
-	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/ABC123").Return(false).Times(1)
-	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), coins[0]).Return(true).Times(1)
-	suite.trade.EXPECT().SafeModuleAddLiquidityWithNativeDenom(gomock.Any(), fromModule, coins).Return(nil, nil, tradebintypes.ErrPoolPriceDrift).Times(1)
-	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), fromModule, types.BlackHoleModuleName, coins).Return(nil).Times(1)
-
-	_, err := suite.k.BurnAnyCoins(suite.ctx, fromModule, coins)
-	suite.Require().NoError(err)
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/bzeutils"
 	"github.com/bze-alphateam/bze/x/burner/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,12 +25,12 @@ func (k Keeper) EnqueuePeriodicBurn(ctx sdk.Context) {
 
 // ProcessPeriodicBurnQueue processes the periodic burn queue if active, burning coins in batches and emitting events.
 // There is no cursor: every block re-reads the burner's balances from the start, so every coin of a batch must leave
-// the account. BurnAnyCoins guarantees it for exchangeable coins: one that can't be added as liquidity (an error, a
-// refund or a panic) is locked instead of being retried at the front of the account forever.
+// the account. BurnAnyCoins guarantees it: every coin it does not burn is locked in the black hole module, IBC coins
+// included, so none is retried at the front of the account forever.
 //
 // While the guardian has the protocol automation paused nothing is read, burned, locked or pooled and the queue stays
-// pending: the first block after governance resumes it burns everything the account holds by then, including what
-// arrived during the pause.
+// pending: the first block after governance resumes it burns or locks everything the account holds by then, including
+// what arrived during the pause.
 func (k Keeper) ProcessPeriodicBurnQueue(ctx sdk.Context) error {
 	queue, found := k.GetPeriodicBurnQueue(ctx)
 	if !found || !queue.Pending {
@@ -157,8 +156,8 @@ func (k Keeper) ProcessRaffleCleanupQueue(ctx sdk.Context) error {
 }
 
 // cleanupRaffle removes a finished raffle (its delete hook, the raffle and its winners) and burns what is left in its
-// pot. A pot that can't be burned or exchanged is locked by BurnAnyCoins; a burn that returns an error leaves the pot in
-// the raffle module.
+// pot. A pot that can't be burned (an LP share or an IBC coin) is locked by BurnAnyCoins; a burn that returns an error
+// leaves the pot in the raffle module.
 func (k Keeper) cleanupRaffle(ctx sdk.Context, itemLogger log.Logger, item types.RaffleDeleteHook) {
 	k.removeRaffleData(ctx, item)
 
@@ -232,23 +231,15 @@ func (k Keeper) removeRaffleData(ctx sdk.Context, item types.RaffleDeleteHook) {
 	}
 }
 
-// BurnAnyCoins attempts to burn, lock, or exchange specified coins from a module account.
-// It directly burns native and token factory denominations, locks LP tokens, and exchanges IBC tokens for native ones.
-// An exchangeable coin is added as liquidity on its own (see addLiquidityWithNative); whatever of it is not added is
-// locked like a non-exchangeable coin, so it never stays in fromModule to be retried every block.
-// It returns the coins that were successfully burned.
+// BurnAnyCoins burns or locks the specified coins of a module account and returns the coins it burned.
+// Native and token factory coins are burned. Every other coin (LP shares, IBC coins, exchangeable or not) is locked in
+// the black hole module: MsgMoveIbcLockedCoins is the only way locked IBC coins reach a liquidity pool. No coin stays
+// in fromModule, so the periodic burn never retries one.
 func (k Keeper) BurnAnyCoins(ctx sdk.Context, fromModule string, coins sdk.Coins) (sdk.Coins, error) {
 	logger := k.Logger().With("method", "BurnAnyCoins", "fromModule", fromModule)
 	logger.Debug("iterating through provided coins")
 
-	burnable, exchangeable, lockable := k.filterCoinsToBurn(ctx, coins)
-	for _, c := range exchangeable {
-		//use exchangeable coins to add liquidity with native denom, one coin at a time; what can't be added is locked
-		notAdded := k.addLiquidityWithNative(ctx, fromModule, c)
-		if notAdded.IsPositive() {
-			lockable = lockable.Add(notAdded)
-		}
-	}
+	burnable, lockable := k.splitBurnableCoins(ctx, coins)
 
 	//lock coins in black hole address
 	if len(lockable) > 0 {
@@ -271,6 +262,32 @@ func (k Keeper) BurnAnyCoins(ctx sdk.Context, fromModule string, coins sdk.Coins
 	return burnable, nil
 }
 
+// splitBurnableCoins splits the positive coins into the ones that can be burned directly (native and token factory)
+// and the ones to lock (everything else).
+func (k Keeper) splitBurnableCoins(ctx sdk.Context, coins sdk.Coins) (burnable, lockable sdk.Coins) {
+	for _, c := range coins {
+		if !c.IsPositive() {
+			continue
+		}
+
+		if k.isDirectlyBurnable(ctx, c.Denom) {
+			burnable = burnable.Add(c)
+			continue
+		}
+
+		lockable = lockable.Add(c)
+	}
+
+	return burnable, lockable
+}
+
+// isDirectlyBurnable reports whether coins of denom can be burned as they are: native and token factory coins.
+func (k Keeper) isDirectlyBurnable(ctx sdk.Context, denom string) bool {
+	return k.tradeKeeper.IsNativeDenom(ctx, denom) || bzeutils.IsTokenFactoryDenom(denom)
+}
+
+// filterCoinsToBurn sorts the coins of a MsgFundBurner: burnable ones and exchangeable IBC coins go to the burner
+// module (the periodic burn burns the first and locks the second), the others straight to the black hole module.
 func (k Keeper) filterCoinsToBurn(ctx sdk.Context, toBurn sdk.Coins) (burnable, exchangeable, lockable sdk.Coins) {
 	logger := k.Logger().With("method", "filterCoinsToBurn")
 	for _, c := range toBurn {
@@ -281,7 +298,7 @@ func (k Keeper) filterCoinsToBurn(ctx sdk.Context, toBurn sdk.Coins) (burnable, 
 
 		// native coins can be burned directly
 		// factory tokens can be burned directly
-		if k.tradeKeeper.IsNativeDenom(ctx, c.Denom) || bzeutils.IsTokenFactoryDenom(c.Denom) {
+		if k.isDirectlyBurnable(ctx, c.Denom) {
 			logger.Debug("coin is native or factory token, can be burned directly", "coin", c.String())
 			burnable = burnable.Add(c)
 			continue
@@ -320,34 +337,4 @@ func (k Keeper) canExchange(ctx sdk.Context, c sdk.Coin) bool {
 	})
 
 	return err == nil && can
-}
-
-// addLiquidityWithNative adds one exchangeable coin as liquidity with native denom, in its own cached context, and
-// returns the part of it that is still in fromModule afterwards:
-//   - add-liquidity fails (an error, or a panic such as an arithmetic overflow): its writes are discarded and the
-//     whole coin is returned;
-//   - add-liquidity refunds the coin (it could not be added): the refunded amount is returned.
-//
-// Other refunds (LP shares, native leftovers) stay in fromModule as before.
-func (k Keeper) addLiquidityWithNative(ctx sdk.Context, fromModule string, c sdk.Coin) sdk.Coin {
-	logger := k.Logger().With("method", "addLiquidityWithNative", "fromModule", fromModule, "coin", c.String())
-
-	notAdded := sdk.NewCoin(c.Denom, math.ZeroInt())
-	err := bzeutils.ApplyFuncIfNoError(ctx, func(cached sdk.Context) error {
-		added, refunded, err := k.tradeKeeper.SafeModuleAddLiquidityWithNativeDenom(cached, fromModule, sdk.NewCoins(c))
-		if err != nil {
-			return err
-		}
-		logger.Debug("added liquidity with native denom", "added", added.String(), "refunded", refunded.String())
-		notAdded = sdk.NewCoin(c.Denom, refunded.AmountOf(c.Denom))
-
-		return nil
-	})
-	if err != nil {
-		logger.Error("error on module add liquidity with native, locking the coin", "error", err)
-
-		return c
-	}
-
-	return notAdded
 }

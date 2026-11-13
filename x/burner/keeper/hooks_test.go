@@ -123,8 +123,6 @@ func (suite *IntegrationTestSuite) TestHooks_PeriodicBurnHook_EnqueueAndProcess(
 		sdk.NewInt64Coin("ibc/ABC123", 200),
 	)
 
-	addedCoins := sdk.NewCoins(sdk.NewInt64Coin("ibc/ABC123", 180))
-	refundedCoins := sdk.NewCoins()
 	expectedBurnCoins := sdk.NewCoins(
 		sdk.NewInt64Coin("ubze", 1000),
 		sdk.NewInt64Coin("utoken", 500),
@@ -136,9 +134,8 @@ func (suite *IntegrationTestSuite) TestHooks_PeriodicBurnHook_EnqueueAndProcess(
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ubze").Return(true).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "utoken").Return(true).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/ABC123").Return(false).Times(1)
-	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), sdk.NewInt64Coin("ibc/ABC123", 200)).Return(true).Times(1)
-
-	suite.trade.EXPECT().SafeModuleAddLiquidityWithNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ibc/ABC123", 200))).Return(addedCoins, refundedCoins, nil).Times(1)
+	// the IBC coin is locked, never added to a pool: no other tradebin call is expected
+	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, types.BlackHoleModuleName, sdk.NewCoins(sdk.NewInt64Coin("ibc/ABC123", 200))).Return(nil).Times(1)
 	suite.bank.EXPECT().BurnCoins(gomock.Any(), types.ModuleName, expectedBurnCoins).Return(nil).Times(1)
 
 	err = suite.k.ProcessPeriodicBurnQueue(suite.ctx)
@@ -195,21 +192,13 @@ func (suite *IntegrationTestSuite) TestHooks_PeriodicBurnHook_OnlyIBCTokens() {
 		sdk.NewInt64Coin("ibc/DEF456", 500),
 	)
 
-	addedCoins := sdk.NewCoins(
-		sdk.NewInt64Coin("ibc/ABC123", 900),
-		sdk.NewInt64Coin("ibc/DEF456", 450),
-	)
-	refundedCoins := sdk.NewCoins()
-
 	suite.acc.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(&moduleAcc).Times(1)
 	suite.bank.EXPECT().GetBalancesPage(gomock.Any(), addr, "", types.MaxDenomsBurnPerBlock+1).Return(ibcOnlyCoins, "").Times(1)
 
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/ABC123").Return(false).Times(1)
 	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), "ibc/DEF456").Return(false).Times(1)
-	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibcOnlyCoins[0]).Return(true).Times(1)
-	suite.trade.EXPECT().CanSwapForNativeDenom(gomock.Any(), ibcOnlyCoins[1]).Return(true).Times(1)
-	suite.trade.EXPECT().SafeModuleAddLiquidityWithNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(ibcOnlyCoins[0])).Return(sdk.NewCoins(addedCoins[0]), refundedCoins, nil).Times(1)
-	suite.trade.EXPECT().SafeModuleAddLiquidityWithNativeDenom(gomock.Any(), types.ModuleName, sdk.NewCoins(ibcOnlyCoins[1])).Return(sdk.NewCoins(addedCoins[1]), refundedCoins, nil).Times(1)
+	// IBC coins are locked, never added to a pool: no other tradebin call is expected
+	suite.bank.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, types.BlackHoleModuleName, ibcOnlyCoins).Return(nil).Times(1)
 
 	err = suite.k.ProcessPeriodicBurnQueue(suite.ctx)
 	suite.Require().NoError(err)

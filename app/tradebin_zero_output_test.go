@@ -49,6 +49,7 @@ func newZeroOutputApp(t *testing.T) (*app.App, sdk.Context) {
 	// no InitChain here: set the state the conversions read
 	require.NoError(t, bApp.BankKeeper.SetParams(ctx, banktypes.DefaultParams()))
 	require.NoError(t, bApp.TradebinKeeper.SetParams(ctx, v2types.DefaultParams()))
+	require.NoError(t, bApp.BurnerKeeper.SetParams(ctx, burnertypes.DefaultParams()))
 	require.NoError(t, bApp.TxfeecollectorKeeper.SetParams(ctx, txfeecollectortypes.DefaultParams()))
 	require.NoError(t, bApp.DistrKeeper.FeePool.Set(ctx, distrtypes.InitialFeePool()))
 
