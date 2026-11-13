@@ -2,6 +2,7 @@ package app_test
 
 import (
 	"fmt"
+	"math/big"
 	"testing"
 	"time"
 
@@ -230,4 +231,110 @@ func requireDust(t *testing.T, bApp *app.App, ctx sdk.Context, owner sdk.AccAddr
 	dust, found := bApp.TradebinKeeper.GetUserDust(ctx, owner.String(), denom)
 	require.True(t, found, "dust of %s", owner)
 	require.Equal(t, amount, dust.Amount)
+}
+
+// The queue was filled by binaries that parsed amounts with math.NewIntFromString (base 0) and kept the amount
+// string as sent. The v8.3.0 upgrade refunds, with the real keepers, (a) two queued buys of 2^255 - 1 at one price,
+// whose sum fills the 256-bit range and was never added to an aggregate, and (b) queued sells with non-canonical
+// amount strings, "0x64" (100) and "010" (8, octal). Every owner gets exactly the escrowed value back, nothing
+// panics, no aggregate is created and the queue is gone.
+func TestTradebin_UpgradeRefundsHugeAndNonCanonicalQueuedAmounts(t *testing.T) {
+	appOptions := make(simtestutil.AppOptionsMap, 0)
+	appOptions[flags.FlagHome] = t.TempDir()
+	bApp, err := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, appOptions)
+	require.NoError(t, err)
+	ctx := bApp.NewUncachedContext(false, cmtproto.Header{Time: time.Unix(1_700_000_000, 0)})
+	require.NoError(t, bApp.BankKeeper.SetParams(ctx, banktypes.DefaultParams()))
+	bApp.IBCKeeper.ClientKeeper.SetParams(ctx, clienttypes.DefaultParams())
+	require.NoError(t, bApp.TradebinKeeper.SetParams(ctx, v2types.DefaultParams()))
+
+	k := bApp.TradebinKeeper
+	market := tradebintypes.Market{Base: rollbackBase, Quote: rollbackQuote, Creator: sdk.AccAddress("market_creator______").String()}
+	k.SetMarket(ctx, market)
+	marketId := market.Base + "/" + market.Quote
+
+	// 2^255 - 1: two of them escrowed in the module stay inside the 256-bit range of a balance and of the supply
+	huge := math.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 255), big.NewInt(1)))
+	hugeA := sdk.AccAddress("upgrade_huge_buyer_a")
+	hugeB := sdk.AccAddress("upgrade_huge_buyer_b")
+	odd := sdk.AccAddress("upgrade_odd_seller__")
+	queued := []queuedMessage{
+		{messageType: tradebintypes.OrderTypeBuy, orderType: tradebintypes.OrderTypeBuy, amount: huge.String(), price: "1", owner: hugeA},
+		{messageType: tradebintypes.OrderTypeBuy, orderType: tradebintypes.OrderTypeBuy, amount: huge.String(), price: "1", owner: hugeB},
+		{messageType: tradebintypes.OrderTypeSell, orderType: tradebintypes.OrderTypeSell, amount: "0x64", price: "2", owner: odd},
+		// a fill of buy orders was queued with the escrowed side, sell
+		{messageType: queuedFillBuy, orderType: tradebintypes.OrderTypeSell, amount: "010", price: "3", owner: odd},
+	}
+	// the values the old binary escrowed for them
+	escrowed := []sdk.Coin{
+		sdk.NewCoin(market.Quote, huge),
+		sdk.NewCoin(market.Quote, huge),
+		sdk.NewInt64Coin(market.Base, 100),
+		sdk.NewInt64Coin(market.Base, 8),
+	}
+
+	store := ctx.KVStore(bApp.GetKey(tradebintypes.StoreKey))
+	moduleAddr := authtypes.NewModuleAddress(tradebintypes.ModuleName)
+	for i := range queued {
+		qm := &queued[i]
+		qm.id = fmt.Sprintf("%024d", 200+i)
+		store.Set([]byte(v5.QueueMessagePrefix+marketId+"/"+qm.id+"/"), qm.encode(marketId))
+
+		// escrow the way the old binary did: base-0 amount, order coins, coins sent to the module
+		amount, ok := math.NewIntFromString(qm.amount)
+		require.True(t, ok)
+		orderCoins, err := k.GetOrderCoinsWithDust(ctx, tradebintypes.OrderCoinsArguments{
+			OrderType: qm.orderType, OrderPrice: qm.price, OrderAmount: amount, Market: &market, UserAddress: qm.owner.String(),
+		})
+		require.NoError(t, err)
+		require.Equal(t, escrowed[i].String(), orderCoins.Coin.String(), qm.amount)
+		require.NoError(t, bApp.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(orderCoins.Coin)))
+		require.NoError(t, bApp.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, qm.owner, sdk.NewCoins(orderCoins.Coin)))
+		require.NoError(t, bApp.BankKeeper.SendCoinsFromAccountToModule(ctx, qm.owner, tradebintypes.ModuleName, sdk.NewCoins(orderCoins.Coin)))
+		k.StoreProcessedUserDust(ctx, orderCoins.UserDust, &orderCoins.Dust)
+	}
+	store.Set([]byte(v5.QueueMessageCounterPrefix), []byte("204"))
+	require.Equal(t, sdk.NewCoins(sdk.NewInt64Coin(market.Base, 108), sdk.NewCoin(market.Quote, huge.Add(huge))).String(), bApp.BankKeeper.GetAllBalances(ctx, moduleAddr).String())
+	require.Empty(t, k.GetAllAggregatedOrder(ctx))
+
+	ctx = ctx.WithEventManager(sdk.NewEventManager())
+	vm := bApp.ModuleManager.GetVersionMap()
+	vm[tradebintypes.ModuleName] = 4
+	require.NotPanics(t, func() {
+		newVM, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.AccountKeeper, bApp.GuardianKeeper, bApp.RatelimitKeeper, bApp.BankKeeper, bApp.TradebinKeeper, bApp.BankKeeper, bApp.RewardsKeeper, runtime.NewKVStoreService(bApp.GetKey(ibctransfertypes.StoreKey)), bApp.TransferKeeper, ibcStoreService(bApp))(
+			ctx, upgradetypes.Plan{Name: v830.UpgradeName}, vm,
+		)
+		require.NoError(t, err)
+		require.Equal(t, uint64(5), newVM[tradebintypes.ModuleName])
+	})
+
+	// every owner has exactly the escrowed value back, the module holds nothing of it, no aggregate was made
+	require.Equal(t, sdk.NewCoins(escrowed[0]).String(), bApp.BankKeeper.GetAllBalances(ctx, hugeA).String())
+	require.Equal(t, sdk.NewCoins(escrowed[1]).String(), bApp.BankKeeper.GetAllBalances(ctx, hugeB).String())
+	require.Equal(t, sdk.NewCoins(sdk.NewInt64Coin(market.Base, 108)).String(), bApp.BankKeeper.GetAllBalances(ctx, odd).String())
+	require.True(t, bApp.BankKeeper.GetAllBalances(ctx, moduleAddr).IsZero())
+	require.Empty(t, k.GetAllAggregatedOrder(ctx))
+	require.Empty(t, k.GetAllOrder(ctx))
+
+	iterator := storetypes.KVStorePrefixIterator(ctx.KVStore(bApp.GetKey(tradebintypes.StoreKey)), []byte("Qm/"))
+	require.False(t, iterator.Valid())
+	require.NoError(t, iterator.Close())
+
+	// one refund event per message, with the canonical amount and the escrowed value
+	var refunds []*tradebintypes.OrderMessageRefundedEvent
+	for _, e := range ctx.EventManager().ABCIEvents() {
+		if e.Type != "bze.tradebin.OrderMessageRefundedEvent" {
+			continue
+		}
+		msg, err := sdk.ParseTypedEvent(e)
+		require.NoError(t, err)
+		refunds = append(refunds, msg.(*tradebintypes.OrderMessageRefundedEvent))
+	}
+	wantAmounts := []string{huge.String(), huge.String(), "100", "8"}
+	require.Len(t, refunds, len(queued))
+	for i, refund := range refunds {
+		require.Equal(t, queued[i].id, refund.OrderId)
+		require.Equal(t, wantAmounts[i], refund.Amount)
+		require.Equal(t, escrowed[i].String(), refund.Refund)
+	}
 }
