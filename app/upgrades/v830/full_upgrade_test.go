@@ -127,8 +127,8 @@ func v830FullMintTo(t *testing.T, bApp *app.App, ctx sdk.Context, addr sdk.AccAd
 
 // The real v8.3.0 handler runs once on the real app, from the full v8.2.0 version map, over state that needs every
 // one of its steps: a denom trace the transfer store migration cannot parse, a channel FLUSHING an upgrade, a
-// queued order book message, a staking reward with a non-canonical prize amount and coins left at the retired
-// txfeecollector_burner address. It completes and each step leaves its outcome.
+// queued order book message, an LP share denom with blank metadata, a staking reward with a non-canonical prize
+// amount and coins left at the retired txfeecollector_burner address. It completes and each step leaves its outcome.
 func TestHandler_FullUpgradeFromV820State(t *testing.T) {
 	converted := convertedTraces[0]
 	valid := validTraces[0]
@@ -147,6 +147,12 @@ func TestHandler_FullUpgradeFromV820State(t *testing.T) {
 	v830FullMintTo(t, bApp, ctx, buyer, escrow)
 	v830FullQueueBuy(t, bApp, ctx, market, buyer, "10", "2")
 	require.True(t, bApp.BankKeeper.GetAllBalances(ctx, buyer).IsZero())
+
+	// an LP share denom whose metadata pool creation left without a name and symbol
+	lpPoolId := "ubze_" + v830FullQuote
+	lpBlank := lpMetadata(tradebintypes.GetLpDenom(lpPoolId), tradebintypes.GetLpScaledDenom(lpPoolId))
+	bApp.BankKeeper.SetDenomMetaData(ctx, lpBlank)
+	bApp.TradebinKeeper.SetLiquidityPool(ctx, tradebintypes.LiquidityPool{Id: lpPoolId, LpDenom: lpBlank.Base})
 
 	// a staking reward with a padded prize amount
 	bApp.RewardsKeeper.SetStakingReward(ctx, stakingReward("full-upgrade", "0100"))
@@ -185,6 +191,15 @@ func TestHandler_FullUpgradeFromV820State(t *testing.T) {
 	require.Equal(t, channeltypes.OPEN, channel.State)
 	require.Equal(t, transfertypes.V1, channel.Version)
 	require.False(t, ctx.KVStore(bApp.GetKey(ibcexported.StoreKey)).Has(channelv10.ChannelUpgradeKey(transfertypes.PortID, v830FullChannel)))
+
+	// the blank LP metadata is backfilled, units and display as stored
+	lpGot, found := bApp.BankKeeper.GetDenomMetaData(ctx, lpBlank.Base)
+	require.True(t, found)
+	require.NoError(t, lpGot.Validate())
+	require.Equal(t, "LP share of pool "+lpPoolId, lpGot.Name)
+	require.Equal(t, wantLpSymbol(lpPoolId), lpGot.Symbol)
+	require.Equal(t, lpBlank.DenomUnits, lpGot.DenomUnits)
+	require.Equal(t, lpBlank.Display, lpGot.Display)
 
 	// the queued buy is refunded and the queue is gone
 	require.Equal(t, escrow.String(), bApp.BankKeeper.GetAllBalances(ctx, buyer).String())
