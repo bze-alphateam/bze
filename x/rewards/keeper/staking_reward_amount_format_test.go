@@ -14,6 +14,9 @@ import (
 
 const amountFormatDenom = "ubze"
 
+// amountFormatCanonicalErr is the text of the refusal of an amount that is not a canonical base-10 integer.
+const amountFormatCanonicalErr = "must be a canonical base-10 integer"
+
 // setZeroCreationFees makes reward creation free so no fee path is exercised.
 func (suite *IntegrationTestSuite) setZeroCreationFees() {
 	params := types.DefaultParams()
@@ -104,8 +107,12 @@ func (suite *IntegrationTestSuite) TestStakingRewardAmountFormat_DistributeNonCa
 				RewardId: "format-distribute-forms",
 				Amount:   amount,
 			})
-			suite.Require().Error(err, "amount %q must be refused", amount)
+			suite.Require().ErrorIs(err, types.ErrInvalidAmount, "amount %q must be refused", amount)
 			suite.Require().True(sent.IsZero(), "amount %q: no coins may move", amount)
+
+			after, found := suite.k.GetStakingReward(suite.ctx, "format-distribute-forms")
+			suite.Require().True(found)
+			suite.Require().Equal("0", after.DistributedStake, "amount %q: the reward must be left as it was", amount)
 		})
 	}
 }
@@ -121,10 +128,67 @@ func (suite *IntegrationTestSuite) TestStakingRewardAmountFormat_UpdateStoredNon
 		RewardId: "format-update",
 		Duration: "3",
 	})
-	suite.Require().Error(err, "amounts must be canonical base-10 integers")
+	suite.Require().ErrorContains(err, amountFormatCanonicalErr, "amounts must be canonical base-10 integers")
 	suite.Require().True(sent.IsZero(), "no coins may move when the request is refused")
 
 	after, found := suite.k.GetStakingReward(suite.ctx, "format-update")
 	suite.Require().True(found)
-	suite.Require().Equal(uint32(5), after.Duration, "the reward must be left as it was")
+	suite.Require().Equal(amountFormatReward("format-update", "0100"), after, "the reward must be left as it was")
+}
+
+func (suite *IntegrationTestSuite) TestStakingRewardAmountFormat_JoinNonCanonicalAmount() {
+	joiner := sdk.AccAddress("joiner")
+	sent := math.ZeroInt()
+	suite.expectSends(&sent)
+	suite.k.SetStakingReward(suite.ctx, amountFormatReward("format-join", "1000"))
+
+	_, err := suite.msgServer.JoinStaking(suite.ctx, &types.MsgJoinStaking{
+		Creator:  joiner.String(),
+		RewardId: "format-join",
+		Amount:   "0100",
+	})
+	suite.Require().ErrorContains(err, amountFormatCanonicalErr, "amounts must be canonical base-10 integers")
+	suite.Require().True(sent.IsZero(), "no coins may move when the request is refused")
+
+	_, found := suite.k.GetStakingRewardParticipant(suite.ctx, joiner.String(), "format-join")
+	suite.Require().False(found, "no participant may be written")
+
+	after, found := suite.k.GetStakingReward(suite.ctx, "format-join")
+	suite.Require().True(found)
+	suite.Require().Equal(amountFormatReward("format-join", "1000"), after, "the reward must be left as it was")
+}
+
+// The daily distribution credits only a stored prize amount written in canonical base-10 form: a
+// reward holding any other form is skipped for the day while its canonical neighbours are paid.
+func (suite *IntegrationTestSuite) TestStakingRewardAmountFormat_DailyDistributionStoredNonCanonicalAmount() {
+	staker := sdk.AccAddress("staker")
+	stored := amountFormatReward("format-daily-a", "0100")
+	stored.StakedAmount = "1000"
+	suite.k.SetStakingReward(suite.ctx, stored)
+	suite.k.SetStakingRewardParticipant(suite.ctx, types.StakingRewardParticipant{
+		Address:  staker.String(),
+		RewardId: stored.RewardId,
+		Amount:   "1000",
+		JoinedAt: "0",
+	})
+
+	canonical := amountFormatReward("format-daily-b", "100")
+	canonical.StakedAmount = "1000"
+	suite.k.SetStakingReward(suite.ctx, canonical)
+
+	suite.k.EnqueueStakingRewardsDistribution(suite.ctx)
+	suite.k.ProcessStakingRewardsDistributionQueue(suite.ctx)
+
+	after, found := suite.k.GetStakingReward(suite.ctx, stored.RewardId)
+	suite.Require().True(found)
+	suite.Require().Equal("0", after.DistributedStake, "nothing may be credited from a non-canonical stored amount")
+	suite.Require().Equal(uint32(0), after.Payouts, "the payout must not be counted")
+
+	paid, found := suite.k.GetStakingReward(suite.ctx, canonical.RewardId)
+	suite.Require().True(found)
+	suite.Require().Equal(uint32(1), paid.Payouts, "a canonical reward in the same batch is paid")
+	suite.Require().Equal(math.LegacyMustNewDecFromStr("0.1").String(), paid.DistributedStake)
+
+	_, found = suite.k.GetStakingRewardsDistributionQueue(suite.ctx)
+	suite.Require().False(found, "the distribution pass must complete")
 }

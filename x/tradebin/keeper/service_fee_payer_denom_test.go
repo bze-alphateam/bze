@@ -19,10 +19,11 @@ func (suite *IntegrationTestSuite) feeEntryPoints() map[string]captureFee {
 	return map[string]captureFee{
 		"CaptureAndSwapUserFee":                   suite.k.CaptureAndSwapUserFee,
 		"CaptureAndTryToSwapUserFeesOrSendItAsIs": suite.k.CaptureAndTryToSwapUserFeesOrSendItAsIs,
+		"SafeCaptureAndSwapUserFee":               suite.k.SafeCaptureAndSwapUserFee,
 	}
 }
 
-// requireNativeFeeOnly captures the native fee with ctx through both entry points and checks that nothing but the
+// requireNativeFeeOnly captures the native fee with ctx through every entry point and checks that nothing but the
 // native fee moved: the bank mock has no SpendableCoins expectation, so an attempt to pay in the preferred denom fails.
 func (suite *IntegrationTestSuite) requireNativeFeeOnly(ctx sdk.Context, payer sdk.AccAddress) {
 	pool := trySwapDeepPool()
@@ -105,4 +106,29 @@ func (suite *IntegrationTestSuite) TestFeePayerDenom_NoPreferredDenomPaysNative(
 	ctx := suite.ctx.WithValue(keeper.CtxFeePayerKey, protocolFeePayer)
 
 	suite.requireNativeFeeOnly(ctx, protocolFeePayer)
+}
+
+// Another account charged in the same tx pays in native also when the pool drifted from its average: the drift
+// fallback does not turn the tx fee denom into a choice of that account.
+func (suite *IntegrationTestSuite) TestFeePayerDenom_OtherPayerPaysNativeOnDriftedPool() {
+	ctx := suite.safeCtx()
+	fee := sdk.NewCoins(sdk.NewCoin(denomBze, math.NewInt(100_000_000)))
+	feeCtx := ctx.WithValue(keeper.CtxFeeDenomKey, denomStake).WithValue(keeper.CtxFeePayerKey, txFeePayer)
+
+	for name, capture := range suite.feeEntryPoints() {
+		// the first save of the block seeds the average at price 2; the second one moves the price 20% away
+		pool := suite.safeSeedPool(ctx, denomStake, 100_000_000_000, 50_000_000_000)
+		pool = suite.safeMoveQuote(ctx, pool, math.NewInt(120_000_000_000))
+
+		suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), protocolFeePayer, types.ModuleName, fee).Return(nil).Times(1)
+
+		captured, err := capture(feeCtx, protocolFeePayer, fee, types.ModuleName)
+		suite.Require().NoError(err, name)
+		suite.Require().Equal(fee, captured, name)
+
+		stored, found := suite.k.GetLiquidityPool(ctx, pool.Id)
+		suite.Require().True(found, name)
+		suite.Require().Equal(pool.ReserveBase, stored.ReserveBase, name)
+		suite.Require().Equal(pool.ReserveQuote, stored.ReserveQuote, name)
+	}
 }

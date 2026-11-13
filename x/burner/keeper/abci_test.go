@@ -392,7 +392,18 @@ func (suite *IntegrationTestSuite) TestWithdrawLucky_SmallPot_PrizeTruncatesToZe
 
 	suite.k.WithdrawLuckyRaffleParticipants(suite.ctx, 10)
 
+	// the ticket counts as a win of nothing: the pot and the total won are unchanged, the winner is recorded
+	// with a zero amount and the ticket is removed
 	raffle, found := suite.k.GetRaffle(suite.ctx, denom)
 	suite.Require().True(found)
 	suite.Require().Equal(uint64(1), raffle.Winners)
+	suite.Require().Equal("1", raffle.Pot)
+	suite.Require().Equal("0", raffle.TotalWon)
+
+	winners := suite.k.GetRaffleWinners(suite.ctx, denom)
+	suite.Require().Len(winners, 1)
+	suite.Require().Equal(creator, winners[0].Winner)
+	suite.Require().Equal("0", winners[0].Amount)
+
+	suite.Require().Empty(suite.k.GetAllRaffleParticipants(suite.ctx))
 }

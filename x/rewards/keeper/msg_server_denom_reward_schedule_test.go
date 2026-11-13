@@ -200,8 +200,9 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_PrizeDenomNoSu
 	suite.Require().ErrorIs(err, types.ErrInvalidPrizeDenom)
 }
 
-// Duration is bound to [1, HundredYearsInDays]: 0 and 36501 are rejected, the exact bound 36500 is
-// accepted with the full (large) budget escrowed.
+// Duration is bound to [1, HundredYearsInDays] by the handler itself (ValidateBasic is not run here):
+// 0, 36501 and 2^31 are rejected with no balance check, escrow or schedule written, the exact bound
+// 36500 is accepted with the full (large) budget escrowed.
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_DurationBounds() {
 	creator := sdk.AccAddress("drs-creator-08")
 	suite.setDrMoneyInParams(50)
@@ -209,9 +210,12 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Create_DurationBounds
 
 	suite.bank.EXPECT().HasSupply(suite.ctx, "ufoo").Return(true).AnyTimes()
 
-	for _, bad := range []string{"0", "36501", "-4", "abc"} {
+	// no balance or escrow expectations yet: any SpendableCoins or send call here fails the test
+	for _, bad := range []string{"0", "36501", "2147483648", "-4", "abc"} {
 		_, err := suite.msgServer.CreateDenomRewardSchedule(suite.ctx, types.NewMsgCreateDenomRewardSchedule(creator.String(), "ubze", "ufoo", math.NewInt(1000), bad))
 		suite.Require().ErrorIs(err, types.ErrInvalidDuration, "duration %q", bad)
+		suite.Require().Empty(suite.k.GetAllDenomRewardSchedule(suite.ctx), "duration %q: no schedule may be written", bad)
+		suite.Require().Equal(uint64(0), suite.k.GetDenomRewardScheduleCounter(suite.ctx), "duration %q", bad)
 	}
 
 	suite.richBalance(creator)
@@ -364,6 +368,26 @@ func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Update_HugeExtraDaysR
 
 	schedule, _ := suite.k.GetDenomRewardSchedule(suite.ctx, "ubze", "000000000000")
 	suite.Require().Equal(uint32(10), schedule.Duration)
+}
+
+// The handler itself bounds the extra days (ValidateBasic is not run here): 36501 and 2^31 are
+// refused before any balance check or escrow, and the stored schedule is left as it was.
+func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Update_ExtraDaysAboveBoundRefused() {
+	creator := sdk.AccAddress("drs-updater-07")
+	stored := types.DenomRewardSchedule{
+		ScheduleId: "000000000000", StakingDenom: "ubze", PrizeDenom: "ufoo", DailyAmount: math.NewInt(1000), Duration: 10, Payouts: 2,
+	}
+	suite.k.SetDenomRewardSchedule(suite.ctx, stored)
+
+	// no balance or escrow expectations: any SpendableCoins or send call fails the test
+	for _, bad := range []string{"36501", "2147483648"} {
+		_, err := suite.msgServer.UpdateDenomRewardSchedule(suite.ctx, types.NewMsgUpdateDenomRewardSchedule(creator.String(), "ubze", "000000000000", bad))
+		suite.Require().ErrorIs(err, types.ErrInvalidDuration, "duration %q", bad)
+
+		schedule, found := suite.k.GetDenomRewardSchedule(suite.ctx, "ubze", "000000000000")
+		suite.Require().True(found)
+		suite.Require().Equal(stored, schedule, "duration %q: the schedule must be left as it was", bad)
+	}
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerDrSchedule_Update_NotFound() {
