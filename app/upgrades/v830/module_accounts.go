@@ -36,8 +36,7 @@ var newModuleAccounts = []newModuleAccount{
 //   - a module account with another name or other permissions: an error;
 //   - a plain BaseAccount: replaced by the module account, keeping its address, account number and sequence;
 //     its balances, held by x/bank, are untouched;
-//   - any other account type: left in place and logged. An error here would abort the upgrade, while such an
-//     account only stops the module from receiving coins as a module account until a later upgrade handles it.
+//   - any other account type: left in place and logged. An error here would abort the upgrade and stop the chain.
 //
 // It never asks the account keeper for the module account itself, which panics on a plain account.
 func ensureNewModuleAccounts(ctx sdk.Context, ak AccountKeeper) error {
