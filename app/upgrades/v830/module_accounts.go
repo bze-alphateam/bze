@@ -34,11 +34,14 @@ var newModuleAccounts = []newModuleAccount{
 //   - no account: the module account is created with a new account number;
 //   - a module account with the expected name and permissions: left as it is;
 //   - a module account with another name or other permissions: an error;
-//   - a plain BaseAccount: replaced by the module account, keeping its address, account number and sequence;
-//     its balances, held by x/bank, are untouched;
-//   - any other account type: left in place and logged. An error here would abort the upgrade and stop the chain.
+//   - any other account without a public key (a plain or a vesting account): replaced by the module account,
+//     keeping its address, account number and sequence. Its balances, held by x/bank, are untouched; a vesting
+//     schedule is dropped and its coins become module balance. A module address has no private key, so such an
+//     account never signed anything;
+//   - an account with a public key: left in place and logged, since converting it would take it from whoever
+//     holds the key. An error here would abort the upgrade and stop the chain.
 //
-// It never asks the account keeper for the module account itself, which panics on a plain account.
+// It never asks the account keeper for the module account itself, which panics on a non-module account.
 func ensureNewModuleAccounts(ctx sdk.Context, ak AccountKeeper) error {
 	for _, macc := range newModuleAccounts {
 		if err := ensureModuleAccount(ctx, ak, macc.name, macc.permissions); err != nil {
@@ -59,8 +62,7 @@ func ensureModuleAccount(ctx sdk.Context, ak AccountKeeper, name string, permiss
 		return nil
 	}
 
-	switch existing := acc.(type) {
-	case sdk.ModuleAccountI:
+	if existing, ok := acc.(sdk.ModuleAccountI); ok {
 		if existing.GetName() != name || !samePermissions(existing.GetPermissions(), permissions) {
 			return fmt.Errorf(
 				"module account at %s is %q with permissions %v, expected %q with permissions %v",
@@ -69,27 +71,30 @@ func ensureModuleAccount(ctx sdk.Context, ak AccountKeeper, name string, permiss
 		}
 
 		return nil
-	case *authtypes.BaseAccount:
-		base := authtypes.NewBaseAccount(addr, nil, existing.GetAccountNumber(), existing.GetSequence())
-		macc := authtypes.NewModuleAccount(base, name, permissions...)
-		if err := macc.Validate(); err != nil {
-			return fmt.Errorf("module account %s: %w", name, err)
-		}
-		ak.SetAccount(ctx, macc)
-		ctx.Logger().Info(
-			"replaced plain account with module account",
-			"name", name, "address", addr.String(), "account_number", existing.GetAccountNumber(),
-		)
+	}
 
-		return nil
-	default:
+	if acc.GetPubKey() != nil {
 		ctx.Logger().Error(
-			"unsupported account type at module address, left unchanged",
+			"account with a public key at module address, left unchanged",
 			"name", name, "address", addr.String(), "type", fmt.Sprintf("%T", acc),
 		)
 
 		return nil
 	}
+
+	base := authtypes.NewBaseAccount(addr, nil, acc.GetAccountNumber(), acc.GetSequence())
+	macc := authtypes.NewModuleAccount(base, name, permissions...)
+	if err := macc.Validate(); err != nil {
+		return fmt.Errorf("module account %s: %w", name, err)
+	}
+	ak.SetAccount(ctx, macc)
+	ctx.Logger().Info(
+		"replaced account with module account",
+		"name", name, "address", addr.String(), "type", fmt.Sprintf("%T", acc),
+		"account_number", acc.GetAccountNumber(),
+	)
+
+	return nil
 }
 
 // samePermissions compares two permission lists regardless of order; nil and empty are equal.

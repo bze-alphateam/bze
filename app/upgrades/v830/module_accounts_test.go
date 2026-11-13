@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -112,20 +113,38 @@ func TestHandler_RefusesMismatchedDaoModuleAccount(t *testing.T) {
 	require.Zero(t, accounts.sets)
 }
 
-// Any other account type at the dao address is left in place: the upgrade goes on, without panicking.
-func TestHandler_LeavesUnsupportedAccountAtDaoAddress(t *testing.T) {
+// A vesting account at the dao address, which has no public key, becomes the module account with the same number
+// and sequence; the vesting schedule is dropped.
+func TestHandler_ConvertsVestingAccountAtDaoAddress(t *testing.T) {
 	accounts := newFakeAccounts()
 	vesting, err := vestingtypes.NewContinuousVestingAccount(
-		authtypes.NewBaseAccount(daoAddr, nil, 9, 0), sdk.NewCoins(sdk.NewInt64Coin("ubze", 10)), 1, 2,
+		authtypes.NewBaseAccount(daoAddr, nil, 9, 4), sdk.NewCoins(sdk.NewInt64Coin("ubze", 10)), 1, 2,
 	)
 	require.NoError(t, err)
 	accounts.accounts[daoAddr.String()] = vesting
+
+	require.NoError(t, runWithAccounts(t, accounts))
+
+	macc, ok := accounts.accounts[daoAddr.String()].(*authtypes.ModuleAccount)
+	require.True(t, ok)
+	require.Equal(t, daotypes.ModuleName, macc.GetName())
+	require.Empty(t, macc.GetPermissions())
+	require.Equal(t, uint64(9), macc.GetAccountNumber())
+	require.Equal(t, uint64(4), macc.GetSequence())
+	require.NoError(t, macc.Validate())
+}
+
+// An account with a public key at the dao address is left in place: the upgrade goes on, without panicking.
+func TestHandler_LeavesAccountWithPubKeyAtDaoAddress(t *testing.T) {
+	accounts := newFakeAccounts()
+	withKey := authtypes.NewBaseAccount(daoAddr, secp256k1.GenPrivKeyFromSecret([]byte("dao")).PubKey(), 11, 2)
+	accounts.accounts[daoAddr.String()] = withKey
 
 	require.NotPanics(t, func() {
 		require.NoError(t, runWithAccounts(t, accounts))
 	})
 	require.Zero(t, accounts.sets)
-	require.Same(t, vesting, accounts.accounts[daoAddr.String()])
+	require.Same(t, withKey, accounts.accounts[daoAddr.String()])
 }
 
 // The account step runs before the module migrations: a failed migration still finds it done.
