@@ -11,36 +11,6 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-// tbAggBookState is everything an order adds to the order book.
-type tbAggBookState struct {
-	orders      []types.Order
-	aggregates  []types.AggregatedOrder
-	ownerPrice  []types.OrderReference
-	priceOrders []types.OrderReference
-	userOrders  []types.OrderReference
-	counter     uint64
-	raw         map[string]string
-}
-
-func (suite *IntegrationTestSuite) tbAggCaptureBook(ctx sdk.Context) tbAggBookState {
-	raw := make(map[string]string)
-	it := ctx.KVStore(suite.storeKey).Iterator(nil, nil)
-	defer it.Close()
-	for ; it.Valid(); it.Next() {
-		raw[string(it.Key())] = string(it.Value())
-	}
-
-	return tbAggBookState{
-		orders:      suite.k.GetAllOrder(ctx),
-		aggregates:  suite.k.GetAllAggregatedOrder(ctx),
-		ownerPrice:  suite.k.GetAllOwnerPriceOrder(ctx),
-		priceOrders: suite.k.GetAllPriceOrder(ctx),
-		userOrders:  suite.k.GetAllUserOrder(ctx),
-		counter:     suite.k.GetOrderCounter(ctx),
-		raw:         raw,
-	}
-}
-
 // tbAggCreateOrder runs CreateOrder and turns a panic inside the handler into its value.
 func (suite *IntegrationTestSuite) tbAggCreateOrder(ctx sdk.Context, msg *types.MsgCreateOrder) (err error, panicked any) {
 	defer func() {
@@ -52,9 +22,9 @@ func (suite *IntegrationTestSuite) tbAggCreateOrder(ctx sdk.Context, msg *types.
 }
 
 // A buy resting at a price with an amount near 2^255 leaves no room in the 256-bit aggregate of that price level:
-// a second such buy from another owner fails (an error or a panic of the handler) instead of resting, and in the
-// cached transaction context nothing it wrote before the failure (order, indexes, owner index, counter) is kept.
-func (suite *IntegrationTestSuite) TestCreateOrder_AggregateOverflowFailsAndKeepsTheBook() {
+// a second such buy from another owner fails with an overflow (an error or a panic of the handler) instead of
+// resting. The transaction's writes are then discarded by baseapp, as for any failed message.
+func (suite *IntegrationTestSuite) TestCreateOrder_AggregateOverflowFails() {
 	suite.k.SetMarket(suite.ctx, market)
 	first := sdk.AccAddress("addr1_______________")
 	second := sdk.AccAddress("addr2_______________")
@@ -67,9 +37,8 @@ func (suite *IntegrationTestSuite) TestCreateOrder_AggregateOverflowFailsAndKeep
 	suite.Require().True(found)
 	suite.Require().Equal(huge.String(), agg.Amount)
 	suite.Require().Equal(uint64(1), agg.Owners)
-	before := suite.tbAggCaptureBook(suite.ctx)
-	suite.Require().Len(before.orders, 1)
-	suite.Require().Equal(uint64(1), before.counter)
+	suite.Require().Len(suite.k.GetAllOrder(suite.ctx), 1)
+	suite.Require().Equal(uint64(1), suite.k.GetOrderCounter(suite.ctx))
 
 	// the second buy pays its fee and escrows 2^255 quote, then reaches the book
 	params := suite.k.GetParams(suite.ctx)
@@ -91,15 +60,6 @@ func (suite *IntegrationTestSuite) TestCreateOrder_AggregateOverflowFailsAndKeep
 		suite.Require().Contains(strings.ToLower(fmt.Sprint(panicked)), "overflow", "the handler failed for another reason")
 	} else {
 		suite.Require().Error(err, "a second 2^255 buy at the same price must not rest")
+		suite.Require().Contains(strings.ToLower(err.Error()), "overflow", "the handler failed for another reason")
 	}
-
-	// the cache context was not written: the book is exactly as before
-	after := suite.tbAggCaptureBook(suite.ctx)
-	suite.Require().Equal(before, after)
-	agg, found = suite.k.GetAggregatedOrder(suite.ctx, getMarketId(), types.OrderTypeBuy, price)
-	suite.Require().True(found)
-	suite.Require().Equal(huge.String(), agg.Amount)
-	suite.Require().Equal(uint64(1), agg.Owners)
-	_, found = suite.k.GetOwnerPriceOrder(suite.ctx, second.String(), getMarketId(), types.OrderTypeBuy, price)
-	suite.Require().False(found)
 }

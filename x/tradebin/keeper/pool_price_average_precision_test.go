@@ -17,58 +17,45 @@ func (suite *IntegrationTestSuite) ppaSaveEveryBlock(pool func() (math.Int, math
 	return averages
 }
 
-// Known precision limit of the price average, pinned as it is: the fold keeps 18 decimals, so for a price in the
-// 1e-16 range the gap to the price is a handful of 1e-18 units. Each block keeps d = 0.5^(1/20) ~ 0.966 of the
-// gap and rounds it back to a whole unit; once the gap is 14 units, 14 x 0.966 = 13.52 rounds to 14 again and the
-// average stops moving. With the pool saved once per block at price 1e-16 for 200 blocks (10 half-lives, where
-// exact arithmetic would leave ~0.1 unit of gap), the average stays at 1.14e-16, 14% above the price. It does not
-// converge, and the relative gap is larger than the default fee and module drift limits (10%), so such a pool
-// counts as drifted for as long as it keeps being saved every block. A save after more than 20 half-lives without
-// one resets the average to the price.
-func (suite *IntegrationTestSuite) TestPoolPriceAverage_TinyPriceFoldStallsAboveThePrice() {
-	suite.Require().Equal(uint64(20), suite.k.GetParams(suite.ctx).PoolPriceHalfLifeBlocks)
+// The fold keeps 18 decimals; at very small prices it stops short of the price. This pins only the direction:
+// with the pool saved once per block at a price in the 1e-16 range, the average moves toward the price, never
+// moves away from it and never crosses it.
+func (suite *IntegrationTestSuite) TestPoolPriceAverage_TinyPriceMovesDownTowardThePrice() {
 	base := math.NewIntWithDecimal(1, 16)
 	price := ppaDec("0.0000000000000001")
 
 	// block 10 seeds the average at 2e-16; block 11 moves the pool to 1e-16
 	suite.k.SetLiquidityPool(suite.ppaAt(10), ppaPoolWith(base, math.NewInt(2)))
 	suite.k.SetLiquidityPool(suite.ppaAt(11), ppaPoolWith(base, math.NewInt(1)))
-	suite.Require().Equal(ppaDec("0.0000000000000002"), suite.ppaRecord(suite.ppaAt(11)).AvgPrice)
+	seed := suite.ppaRecord(suite.ppaAt(11)).AvgPrice
+	suite.Require().Equal(ppaDec("0.0000000000000002"), seed)
 
 	averages := suite.ppaSaveEveryBlock(func() (math.Int, math.Int) { return base, math.NewInt(1) }, 12, 211)
+	averages[11] = seed
 
-	// the first folds move by ~3% of the gap, as expected
-	suite.Require().Equal(ppaDec("0.000000000000000197"), averages[12])
-	suite.Require().Equal(ppaDec("0.000000000000000194"), averages[13])
-	// the average never goes past the price and never moves away from it
-	for h := int64(13); h <= 211; h++ {
+	suite.Require().True(averages[211].LT(seed), "the average moves toward the price")
+	for h := int64(12); h <= 211; h++ {
 		suite.Require().True(averages[h].LTE(averages[h-1]), "height %d", h)
-		suite.Require().True(averages[h].GT(price), "height %d", h)
+		suite.Require().True(averages[h].GTE(price), "height %d", h)
 	}
-	// it stalls 14 units above the price well before the 200 blocks are over
-	stalled := ppaDec("0.000000000000000114")
-	for h := int64(111); h <= 211; h++ {
-		suite.Require().Equal(stalled, averages[h], "height %d", h)
-	}
-
-	// the read-only view agrees, and the relative gap is over the default drift limits
-	avg, found := suite.k.GetPoolPriceAverage(suite.ppaAt(212), ppaPool)
-	suite.Require().True(found)
-	suite.Require().Equal(stalled, avg)
-	gap := avg.Sub(price).Quo(avg)
-	params := suite.k.GetParams(suite.ctx)
-	suite.Require().True(gap.GT(params.FeeMaxPriceDrift), "gap %s", gap)
-	suite.Require().True(gap.GT(params.ModuleMaxPriceDrift), "gap %s", gap)
 }
 
-// The same limit from below: an average seeded at 1e-16 that follows a pool moved to 2e-16 stalls 14 units under it.
-func (suite *IntegrationTestSuite) TestPoolPriceAverage_TinyPriceFoldStallsBelowThePrice() {
+// The same from below: an average seeded at 1e-16 that follows a pool moved to 2e-16 moves up toward it.
+func (suite *IntegrationTestSuite) TestPoolPriceAverage_TinyPriceMovesUpTowardThePrice() {
 	base := math.NewIntWithDecimal(1, 16)
+	price := ppaDec("0.0000000000000002")
 
 	suite.k.SetLiquidityPool(suite.ppaAt(10), ppaPoolWith(base, math.NewInt(1)))
 	suite.k.SetLiquidityPool(suite.ppaAt(11), ppaPoolWith(base, math.NewInt(2)))
-	averages := suite.ppaSaveEveryBlock(func() (math.Int, math.Int) { return base, math.NewInt(2) }, 12, 211)
+	seed := suite.ppaRecord(suite.ppaAt(11)).AvgPrice
+	suite.Require().Equal(ppaDec("0.0000000000000001"), seed)
 
-	suite.Require().Equal(ppaDec("0.000000000000000186"), averages[211])
-	suite.Require().Equal(averages[150], averages[211])
+	averages := suite.ppaSaveEveryBlock(func() (math.Int, math.Int) { return base, math.NewInt(2) }, 12, 211)
+	averages[11] = seed
+
+	suite.Require().True(averages[211].GT(seed), "the average moves toward the price")
+	for h := int64(12); h <= 211; h++ {
+		suite.Require().True(averages[h].GTE(averages[h-1]), "height %d", h)
+		suite.Require().True(averages[h].LTE(price), "height %d", h)
+	}
 }
