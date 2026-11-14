@@ -826,6 +826,7 @@ var daoErrText = map[uint32]string{
 	1132: "the expedited proposal cannot settle early yet",
 	1133: "the message is not allowed in this dao execution",
 	1134: "dao executions are nested too deep",
+	1135: "the admin nomination is stale: control of the nominating dao changed since",
 }
 
 // refuse sends `bzed tx <args>` with a fixed gas limit (no simulation, so the

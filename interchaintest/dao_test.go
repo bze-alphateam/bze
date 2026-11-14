@@ -102,6 +102,7 @@ func TestDao(t *testing.T) {
 		{"A1 create-dao", s.createDao},
 		{"A2 admin-execute", s.adminExecute},
 		{"A3 admin handover", s.adminHandover},
+		{"A3 stale admin nominations", s.staleNominations},
 		{"A4 submit-proposal", s.submitProposal},
 		{"A5 vote", s.voting},
 		{"A6 cancel-proposal", s.cancelProposal},

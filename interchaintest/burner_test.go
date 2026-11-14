@@ -2,6 +2,8 @@ package interchaintest_test
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -20,16 +22,18 @@ import (
 )
 
 // The burner suite routes coins by kind: ubze and factory denoms are burned,
-// LP shares are locked in the black hole, IBC vouchers with a deep ubze pool
-// are added to that pool as liquidity and vouchers without one are locked.
+// LP shares and IBC vouchers without a deep ubze pool go straight to the black
+// hole, and a voucher with a deep pool goes to the burner, whose periodic burn
+// and raffle cleanup lock it in the black hole too. MoveIbcLockedCoins is the
+// only way a locked voucher reaches its pool: at most ibc_move_max_reserve_ratio
+// of the pool's voucher reserve per move, once per ibc_move_cooldown_blocks.
 // The network starts with periodic_burning_weeks = 1000, so no week tick burns
 // before the suite enables the periodic burn by governance (step 3): steps 1
 // and 2 fill the burner without racing the 210 s week epochs.
 //
 // The test pools keep their whole swap fee for the providers (none to the
-// burner), so the coins a burn pass leaves in the burner are exactly what
-// tradebin refunds plus the fees txfeecollector moves in after the burner's
-// EndBlock.
+// burner), so the coins a burn pass leaves in the burner are exactly the fees
+// txfeecollector moves in after the burner's EndBlock.
 const (
 	brAdminFunds = 1_000_000_000_000 // 1,000,000 BZE: three denoms, two pools, liquidity, proposals
 	brUserFunds  = 10_000_000_000    // 10,000 BZE each
@@ -63,6 +67,22 @@ const (
 	brLockedWeeks = 1000
 	brTxGas       = 500_000
 
+	// the burner's IBC move params: the genesis defaults, and the values
+	// step 10 sets by governance. brNewCooldown is longer than the blocks
+	// between the first move and the end of that proposal, so the cooldown
+	// is still running when it passes.
+	brMoveRatio    = "0.03"
+	brMoveCooldown = 1000
+	brNewRatio     = "0.001"
+	brNewCooldown  = 150
+	// floor(brZeroCapRatio × the utoken pool's voucher reserve, about
+	// 281,000,000) is 0
+	brZeroCapRatio = "0.000000001"
+	brMaxCooldown  = 10_000_000 // MaxIbcMoveCooldownBlocks
+
+	brCooldownCode   = 1103 // burner ErrIbcMoveCooldown
+	brNoCapacityCode = 1104 // burner ErrIbcMoveNoCapacity
+
 	burnerEventPrefix = "bze.burner."
 	burnerCodespace   = "burner"
 	sdkCodespace      = "sdk"
@@ -87,9 +107,11 @@ var (
 // TestBurner runs the burner module end to end on a bze network connected to
 // an ibc-go simd chain: FundBurner routing by coin kind (IBC vouchers
 // included), the periodic burn on the week tick and its interval param set by
-// governance, raffles (start, a win, a loss, refusals, the expiry burn) and
-// MoveIbcLockedCoins. Every burn is asserted exactly against the balance it
-// destroys and the all-burned-coins record. Subtests run in order and share
+// governance, raffles (start, a win, a loss, refusals, the expiry burn, the
+// lock of an IBC pot), MoveIbcLockedCoins with its cap, cooldown and params,
+// and the move locks in the genesis export. Every burn is asserted exactly
+// against the balance it destroys and the all-burned-coins record, every lock
+// against the coins the black hole receives. Subtests run in order and share
 // state; the step numbers match the scenario of the suite's design.
 func TestBurner(t *testing.T) {
 	if testing.Short() {
@@ -116,6 +138,8 @@ func TestBurner(t *testing.T) {
 	t.Run("9 raffle expiry", s.raffleExpiry)
 	t.Run("10 move ibc locked coins", s.moveLocked)
 	t.Run("11 queries", s.queries)
+	// last: it stops the network
+	t.Run("12 genesis export", s.exportLocks)
 }
 
 type burnerSuite struct {
@@ -133,11 +157,13 @@ type burnerSuite struct {
 
 	endAt map[string]int64    // raffle denom → EndAt hour epoch
 	burns map[int64]sdk.Coins // height → coins the burner recorded as burned
+	// moves is the height of the last successful MoveIbcLockedCoins per denom
+	moves map[string]int64
 }
 
 func setupBurner(t *testing.T, ctx context.Context, net chain.IbcNetwork, simdMnemonic string) *burnerSuite {
 	bze := net.Bze
-	s := &burnerSuite{ammSuite: &ammSuite{ctx: ctx, bze: bze}, net: net, endAt: map[string]int64{}, burns: map[int64]sdk.Coins{}}
+	s := &burnerSuite{ammSuite: &ammSuite{ctx: ctx, bze: bze}, net: net, endAt: map[string]int64{}, burns: map[int64]sdk.Coins{}, moves: map[string]int64{}}
 
 	s.admin = interchaintest.GetAndFundTestUsers(t, ctx, "br-admin", sdkmath.NewInt(brAdminFunds), bze)[0]
 	users := interchaintest.GetAndFundTestUsers(t, ctx, "br", sdkmath.NewInt(brUserFunds), bze, bze, bze)
@@ -158,7 +184,8 @@ func setupBurner(t *testing.T, ctx context.Context, net chain.IbcNetwork, simdMn
 		*addr, err = helpers.ModuleAddress(ctx, bze, name)
 		require.NoError(t, err)
 	}
-	require.Equal(t, int64(brLockedWeeks), s.burningWeeks(t), "genesis periodic_burning_weeks")
+	require.Equal(t, brParams{weeks: brLockedWeeks, ratio: brMoveRatio, cooldown: brMoveCooldown}.String(), s.burnerParams(t).String(),
+		"genesis burner params: the weeks override and the IBC move defaults")
 
 	factory := "factory/" + s.admin.FormattedAddress() + "/"
 	s.brn, s.rw, s.rl = factory+"brn", factory+"rwd", factory+"rlk"
@@ -232,8 +259,8 @@ func (s *burnerSuite) fundRouting(t *testing.T) {
 	}
 }
 
-// 2. A voucher with a deep ubze pool goes to the burner (it can be exchanged
-// for ubze); a voucher without a pool is locked in the black hole.
+// 2. A voucher with a deep ubze pool goes to the burner (the periodic burn
+// locks it, step 3); a voucher without a pool is locked in the black hole.
 func (s *burnerSuite) ibcRouting(t *testing.T) {
 	stake, other := sdk.NewInt64Coin(s.stake, brFundStake), sdk.NewInt64Coin(s.other, brFundOther)
 	s.requireFunded(t, s.admin, sdk.NewCoins(stake, other), sdk.NewCoins(stake), sdk.NewCoins(other))
@@ -241,25 +268,24 @@ func (s *burnerSuite) ibcRouting(t *testing.T) {
 
 // 3. MsgUpdateParams is gov-only and refuses a non-positive interval. With the
 // interval set to 1 by a proposal, the next week tick burns the burner's whole
-// ubze and factory balance (exactly its balance at the block before), adds the
-// stake voucher to the stake pool as liquidity and records the burn. The LP
-// shares and the ubze tradebin returns stay in the burner for the next pass.
+// ubze and factory balance (exactly its balance at the block before), locks
+// the stake voucher in the black hole (no liquidity is added, the stake pool
+// does not change) and records the burn. Only the fees moved in after the
+// burn are left in the burner.
 func (s *burnerSuite) periodicBurn(t *testing.T) {
 	t.Run("signed by a user", func(t *testing.T) {
 		before := s.addrBalances(t, s.p3.FormattedAddress(), 0)
-		res, err := helpers.ExecMsgs(s.ctx, s.bze, s.p3, []helpers.TxOption{helpers.WithGas(brTxGas)}, s.paramsMsg(s.p3.FormattedAddress(), 1))
+		p := s.burnerParams(t)
+		p.weeks = 1
+		res, err := helpers.ExecMsgs(s.ctx, s.bze, s.p3, []helpers.TxOption{helpers.WithGas(brTxGas)}, s.paramsMsg(s.p3.FormattedAddress(), p))
 		s.requireRefused(t, res, err, burnerCodespace, 1100, "invalid authority")
 		require.Equal(t, before.Sub(s.paidFee(t, res)...), s.addrBalances(t, s.p3.FormattedAddress(), 0), "p3 balances")
 	})
 	for _, weeks := range []int64{0, -1} {
 		t.Run("weeks "+strconv.FormatInt(weeks, 10), func(t *testing.T) {
-			_, err := helpers.SubmitAndPassProposal(s.ctx, s.bze, s.admin, helpers.Proposal{
-				Messages: []any{s.paramsMsg(s.gov, weeks)},
-				Title:    "invalid burner params",
-				Summary:  "e2e: a non-positive burning interval",
-			})
-			require.ErrorContains(t, err, "invalid burning period weeks")
-			require.Equal(t, int64(brLockedWeeks), s.burningWeeks(t))
+			p := s.burnerParams(t)
+			p.weeks = weeks
+			s.requireParamsRefused(t, p, "a non-positive burning interval", "invalid burning period weeks")
 		})
 	}
 
@@ -278,30 +304,35 @@ func (s *burnerSuite) periodicBurn(t *testing.T) {
 	require.Equal(t, s.supplyAt(t, s.brn, height-1).Sub(prev.AmountOf(s.brn)), s.supplyAt(t, s.brn, height), "brn supply")
 	require.Equal(t, s.supplyAt(t, s.stake, height-1), s.supplyAt(t, s.stake, height), "the stake voucher is not burned")
 
-	// the stake voucher went into the stake pool: the voucher reserve grows by
-	// all of it and the ubze reserve shrinks by what tradebin returned
+	// the stake voucher is locked: all of it goes to the black hole, none to
+	// tradebin, and the stake pool is untouched
 	events := s.blockEvents(t, height)
-	returned := s.transfers(t, events, s.tradebin, s.burner)
-	added := helpers.EventsWith(s.blockTypedEvents(t, height, tradebinEventPrefix+"LiquidityAddedEvent"), map[string]string{"creator": "burner", "pool_id": s.stakePool})
-	require.Len(t, added, 1, "liquidity added by the burner")
-	require.Equal(t, sdkmath.NewInt(brFundStake), s.transfers(t, events, s.burner, s.tradebin).AmountOf(s.stake), "stake voucher to tradebin")
-	require.Equal(t, parseInt(added[0].Attributes["mintedAmount"]), returned.AmountOf(s.stakeLp), "minted LP returned to the burner")
-	require.Equal(t, sdk.NewCoins(sdk.NewCoin(chain.Denom, returned.AmountOf(chain.Denom)), sdk.NewCoin(s.stakeLp, returned.AmountOf(s.stakeLp))), returned, "tradebin returns LP and ubze only")
-	before, after := s.poolAt(t, s.stakePool, height-1), s.poolAt(t, s.stakePool, height)
-	require.Equal(t, before.reserveBase().AddRaw(brFundStake), after.reserveBase(), "stake reserve")
-	require.Equal(t, before.reserveQuote().Sub(returned.AmountOf(chain.Denom)), after.reserveQuote(), "ubze reserve")
+	stake := sdk.NewCoins(sdk.NewInt64Coin(s.stake, brFundStake))
+	require.Equal(t, stake, s.transfers(t, events, s.burner, s.blackHole), "the stake voucher, and only it, is locked")
+	require.Empty(t, s.transfers(t, events, s.burner, s.tradebin), "nothing goes from the burner to tradebin")
+	require.Empty(t, helpers.EventsWith(s.blockTypedEvents(t, height, tradebinEventPrefix+"LiquidityAddedEvent"), map[string]string{"creator": "burner"}),
+		"the burner adds no liquidity")
+	require.Equal(t, s.poolAt(t, s.stakePool, height-1), s.poolAt(t, s.stakePool, height), "stake pool unchanged")
+	require.Equal(t, s.addrBalances(t, s.blackHole, height-1).Add(stake...), s.addrBalances(t, s.blackHole, height), "black hole gains the stake voucher")
 
-	// left in the burner: tradebin's returns and the fees moved in after the burn
-	want := returned.Add(s.transfers(t, events, s.cpFees, s.burner)...)
+	// left in the burner: the fees moved in after the burn
+	want := s.transfers(t, events, s.cpFees, s.burner)
 	require.Equal(t, want, s.addrBalances(t, s.burner, height), "burner after the burn")
 }
 
 // 4. With the interval set to 2, only ticks ending an even week burn: of the
-// next two ticks one leaves the burner untouched and the other locks the LP
-// shares the previous pass left and burns the ubze. The interval is then
-// parked at 1000 weeks again.
+// next two ticks one leaves the burner untouched (a stake voucher funded
+// before them stays there) and the other burns the ubze and locks that
+// voucher. The interval is then parked at 1000 weeks again.
 func (s *burnerSuite) interval(t *testing.T) {
 	executed := s.setBurningWeeks(t, 2)
+	// funded once the 2-week interval runs, so a 1-week tick can not lock it
+	// first; both ticks below see it
+	stake := sdk.NewInt64Coin(s.stake, brFundStake)
+	funded := s.requireFunded(t, s.admin, sdk.NewCoins(stake), sdk.NewCoins(stake), sdk.NewCoins())
+	require.Equal(t, s.epochAt(t, "week", executed), s.epochAt(t, "week", funded.Height), "no week tick between the proposal and the funding")
+	held := s.addrBalances(t, s.burner, funded.Height)
+	require.Equal(t, sdk.NewCoins(sdk.NewCoin(chain.Denom, held.AmountOf(chain.Denom)), stake), held, "the burner holds ubze and the stake voucher only")
 	burned := 0
 	for tick := 0; tick < 2; tick++ {
 		height, week := s.nextWeekTick(t, executed)
@@ -317,13 +348,14 @@ func (s *burnerSuite) interval(t *testing.T) {
 		}
 		t.Logf("week %d ended at height %d: burn", week, height)
 		burned++
-		require.True(t, prev.AmountOf(s.stakeLp).IsPositive(), "LP shares left by the previous pass")
-		require.Equal(t, sdk.NewCoins(sdk.NewCoin(chain.Denom, prev.AmountOf(chain.Denom)), sdk.NewCoin(s.stakeLp, prev.AmountOf(s.stakeLp))), prev, "burner before the pass")
+		require.Equal(t, sdk.NewCoins(sdk.NewCoin(chain.Denom, prev.AmountOf(chain.Denom)), stake), prev, "burner before the pass: ubze and the stake voucher")
 		burnable := sdk.NewCoins(sdk.NewCoin(chain.Denom, prev.AmountOf(chain.Denom)))
 		s.requireBurned(t, height, s.burner, burnable)
 		s.requireCoinsBurnedEvent(t, height, burnable)
 		s.burns[height] = burnable
-		require.Equal(t, sdk.NewCoins(sdk.NewCoin(s.stakeLp, prev.AmountOf(s.stakeLp))), s.transfers(t, events, s.burner, s.blackHole), "LP shares locked")
+		require.Equal(t, sdk.NewCoins(stake), s.transfers(t, events, s.burner, s.blackHole), "the stake voucher is locked")
+		require.Empty(t, s.transfers(t, events, s.burner, s.tradebin), "nothing goes from the burner to tradebin")
+		require.Equal(t, s.poolAt(t, s.stakePool, height-1), s.poolAt(t, s.stakePool, height), "stake pool unchanged")
 		want := s.transfers(t, events, s.cpFees, s.burner)
 		require.Equal(t, want, s.addrBalances(t, s.burner, height), "burner after the pass")
 	}
@@ -335,10 +367,10 @@ func (s *burnerSuite) interval(t *testing.T) {
 }
 
 // 5. StartRaffle captures the pot in burner_raffle and records the raffle,
-// ending 24 × duration hour epochs after its block. Refusals leave everything
-// but the tx fee untouched.
+// ending 24 × duration hour epochs after its block; an IBC voucher can be a
+// raffle's denom too. Refusals leave everything but the tx fee untouched.
 func (s *burnerSuite) startRaffle(t *testing.T) {
-	for denom, r := range map[string]brRaffle{s.rw: brWin, s.rl: brLoss} {
+	for denom, r := range map[string]brRaffle{s.rw: brWin, s.rl: brLoss, s.stake: brLoss} {
 		before := s.addrBalances(t, s.admin.FormattedAddress(), 0)
 		res := s.mustExecWith(t, s.admin, []helpers.TxOption{helpers.WithGas(brTxGas)}, s.startArgs(r, denom)...)
 		pot := sdk.NewInt64Coin(denom, r.pot)
@@ -530,30 +562,76 @@ func (s *burnerSuite) raffleExpiry(t *testing.T) {
 		s.requireBurned(t, height, s.raffleAcc, burned)
 		s.burns[height] = s.burns[height].Add(burned...)
 	}
+
+	// the stake voucher raffle's pot can't be burned: its cleanup locks it in
+	// the black hole instead of adding it to the deep stake pool. A pot that
+	// is only locked burns nothing, so the cleanup records no burn and, as
+	// before, emits no RaffleFinishedEvent
+	t.Run("ibc voucher pot locked", func(t *testing.T) {
+		height := s.epochStartHeight(t, "hour", s.endAt[s.stake]+1, brExpiryWait)
+		_, found := s.raffle(t, s.stake, height-1)
+		require.True(t, found, "raffle of the stake voucher before its end")
+		pot := s.addrBalances(t, s.raffleAcc, height-1).AmountOf(s.stake)
+		require.Equal(t, sdkmath.NewInt(brLoss.pot), pot, "burner_raffle holds the pot, nobody joined")
+
+		events := s.blockEvents(t, height)
+		locked := sdk.NewCoins(sdk.NewCoin(s.stake, pot))
+		require.Equal(t, locked, s.transfers(t, events, s.raffleAcc, s.blackHole), "the pot, and only it, is locked")
+		require.True(t, s.transfers(t, events, s.raffleAcc, s.tradebin).IsZero(), "nothing goes from burner_raffle to tradebin")
+		require.Equal(t, s.addrBalances(t, s.blackHole, height-1).AmountOf(s.stake).Add(pot), s.addrBalances(t, s.blackHole, height).AmountOf(s.stake), "black hole stake voucher balance")
+		// burner_raffle burns at that height only what the rw and rl raffles left
+		s.requireBurned(t, height, s.raffleAcc, expired[height])
+		require.Equal(t, s.supplyAt(t, s.stake, height-1), s.supplyAt(t, s.stake, height), "the stake voucher is not burned")
+		require.Equal(t, s.poolAt(t, s.stakePool, height-1), s.poolAt(t, s.stakePool, height), "stake pool unchanged")
+		require.Empty(t, helpers.EventsWith(s.blockTypedEvents(t, height, tradebinEventPrefix+"LiquidityAddedEvent"), map[string]string{"pool_id": s.stakePool}),
+			"no liquidity added to the stake pool")
+		require.Empty(t, helpers.EventsWith(s.blockTypedEvents(t, height, burnerEventPrefix+"RaffleFinishedEvent"), map[string]string{"denom": s.stake}),
+			"no RaffleFinishedEvent for a locked pot")
+		require.True(t, s.burns[height].AmountOf(s.stake).IsZero(), "the stake voucher is in no burn record")
+
+		_, found = s.raffle(t, s.stake, height)
+		require.False(t, found, "raffle of the stake voucher removed")
+		require.True(t, s.balance(t, s.raffleAcc, s.stake).IsZero(), "burner_raffle stake voucher balance")
+	})
 }
 
-// 10. MoveIbcLockedCoins needs a deep enough ubze pool: with no pool and with
-// a shallow one it is refused. A deep pool whose price was just moved far
-// from its moving average refuses it too (tradebin's price drift error);
-// once the price is back near the average, the whole locked balance goes
-// into the pool as liquidity, the LP shares stay locked and the ubze tradebin
-// returns goes to the burner.
+// 10. MoveIbcLockedCoins of the utoken voucher (locked in step 2) is refused
+// with no pool (no capacity), with a shallow pool (the swap guard) and while
+// the deep pool's price is far from its moving average (tradebin's price
+// drift error). None of the refusals starts the cooldown: once the price is
+// calm the first move goes ahead at once. A move takes at most
+// floor(ibc_move_max_reserve_ratio × the pool's voucher reserve) and leaves
+// the rest locked; the same denom is then refused until
+// ibc_move_cooldown_blocks have passed, while another denom (the stake
+// voucher the periodic burns and the raffle cleanup locked) moves in the same
+// window. Both IBC move params are set by governance, which refuses values out
+// of their bounds and a message without them, and the next move follows the
+// new ones: a ratio whose cap rounds down to 0 refuses the move without
+// writing a lock, so the move goes ahead as soon as the ratio is raised.
 func (s *burnerSuite) moveLocked(t *testing.T) {
 	locked := s.balance(t, s.blackHole, s.other)
 	require.Equal(t, sdkmath.NewInt(brFundOther), locked, "utoken voucher locked in step 2")
-	refuse := func(t *testing.T, denom, codespace string, code uint32, reason string) {
+	stakeLocked := s.balance(t, s.blackHole, s.stake)
+	require.Equal(t, sdkmath.NewInt(2*brFundStake+brLoss.pot), stakeLocked, "stake voucher locked by the burns of steps 3 and 4 and the raffle cleanup of step 9")
+	refuse := func(t *testing.T, denom, codespace string, code uint32, reason string) helpers.TxResult {
 		t.Helper()
 		before, hole := s.addrBalances(t, s.p1.FormattedAddress(), 0), s.addrBalances(t, s.blackHole, 0)
 		res, err := helpers.ExecTxWith(s.ctx, s.bze, s.p1, []helpers.TxOption{helpers.WithGas(brTxGas)}, "burner", "move-ibc-locked-coins", denom)
 		s.requireRefused(t, res, err, codespace, code, reason)
 		require.Equal(t, before.Sub(s.paidFee(t, res)...), s.addrBalances(t, s.p1.FormattedAddress(), 0), "p1 balances")
 		require.Equal(t, hole, s.addrBalances(t, s.blackHole, 0), "black hole balances")
+		return res
+	}
+	cooldownReason := func(denom string, cooldown int64) string {
+		return fmt.Sprintf("last move at height %d, next one allowed at height %d", s.moves[denom], s.moves[denom]+cooldown)
 	}
 
 	t.Run("no pool", func(t *testing.T) {
-		refuse(t, s.other, burnerCodespace, 1102, "liquidity availability")
+		refuse(t, s.other, burnerCodespace, brNoCapacityCode, "no liquidity pool "+s.otherPool)
 	})
 	t.Run("shallow pool", func(t *testing.T) {
+		// the cap (3% of 100,000,000) is positive, but the pool's 50,000 BZE
+		// are not above min_native_liquidity_for_module_swap
 		s.createPool(t, s.other, brOtherPoolVoucher, brOtherPoolBze)
 		refuse(t, s.other, burnerCodespace, 1102, "liquidity availability")
 	})
@@ -569,35 +647,102 @@ func (s *burnerSuite) moveLocked(t *testing.T) {
 		require.NoError(t, helpers.WaitForPoolPriceCalm(s.ctx, s.bze, brCalmBlocks, s.otherPool))
 	})
 
-	t.Run("move", func(t *testing.T) {
+	// no refusal above wrote a lock: the move goes ahead right after them
+	var remaining sdkmath.Int
+	t.Run("move capped at the reserve ratio", func(t *testing.T) {
+		remaining = s.requireMoved(t, s.other, s.otherPool, locked, brMoveRatio, true)
+	})
+	t.Run("same denom within the cooldown", func(t *testing.T) {
+		refuse(t, s.other, burnerCodespace, brCooldownCode, cooldownReason(s.other, brMoveCooldown))
+	})
+	t.Run("another denom within the cooldown", func(t *testing.T) {
+		// the stake pool's voucher reserve is deep enough for the whole locked
+		// balance: the move takes all of it
+		s.requireMoved(t, s.stake, s.stakePool, stakeLocked, brMoveRatio, false)
+	})
+	t.Run("nothing left to move", func(t *testing.T) {
+		// the balance is checked before the cooldown
+		refuse(t, s.stake, burnerCodespace, 1102, "no coins to move")
+	})
+
+	t.Run("params refusals", func(t *testing.T) {
+		for _, c := range []struct {
+			name, reason string
+			mod          func(*brParams)
+		}{
+			{"ratio 0", "ibc move max reserve ratio must be in (0, 1]", func(p *brParams) { p.ratio = "0" }},
+			{"ratio above 1", "ibc move max reserve ratio must be in (0, 1]", func(p *brParams) { p.ratio = "1.5" }},
+			{"cooldown 0", "ibc move cooldown blocks must be at least 1", func(p *brParams) { p.cooldown = 0 }},
+			{"cooldown above the maximum", fmt.Sprintf("ibc move cooldown blocks must be at most %d", brMaxCooldown), func(p *brParams) { p.cooldown = brMaxCooldown + 1 }},
+		} {
+			t.Run(c.name, func(t *testing.T) {
+				p := s.burnerParams(t)
+				c.mod(&p)
+				s.requireParamsRefused(t, p, c.name, c.reason)
+			})
+		}
+		t.Run("weeks only", func(t *testing.T) {
+			// the v8.2.0 shape of the message: the IBC move params are missing
+			before := s.burnerParams(t)
+			msg := map[string]any{
+				"@type":     "/bze.burner.MsgUpdateParams",
+				"authority": s.gov,
+				"params":    map[string]any{"periodic_burning_weeks": strconv.FormatInt(before.weeks, 10)},
+			}
+			_, err := helpers.SubmitAndPassProposal(s.ctx, s.bze, s.admin, helpers.Proposal{
+				Messages: []any{msg}, Title: "invalid burner params", Summary: "e2e: weeks only",
+			})
+			require.Error(t, err)
+			// a missing decimal decodes as nil or as zero, depending on the JSON path
+			if !strings.Contains(err.Error(), "ibc move max reserve ratio is required") {
+				require.ErrorContains(t, err, "ibc move max reserve ratio must be in (0, 1]")
+			}
+			require.Equal(t, before.String(), s.burnerParams(t).String(), "burner params unchanged")
+		})
+	})
+
+	t.Run("params by governance", func(t *testing.T) {
+		// a ratio so small that the cap of the utoken pool rounds down to 0
+		p := s.burnerParams(t)
+		p.ratio, p.cooldown = brZeroCapRatio, brNewCooldown
+		s.setBurnerParams(t, p)
+		h, err := s.bze.Height(s.ctx)
+		require.NoError(t, err)
+		require.Less(t, h, s.moves[s.other]+brNewCooldown, "the new cooldown must still run when the proposal passed")
+	})
+	t.Run("same denom within the new cooldown", func(t *testing.T) {
+		refuse(t, s.other, burnerCodespace, brCooldownCode, cooldownReason(s.other, brNewCooldown))
+	})
+	var zeroCapAt int64
+	t.Run("cap of 0 after the new cooldown", func(t *testing.T) {
+		s.waitForHeight(t, s.moves[s.other]+brNewCooldown)
 		pool := s.pool(t, s.otherPool)
-		hole, burner := s.addrBalances(t, s.blackHole, 0), s.balance(t, s.burner, chain.Denom)
-		before := s.addrBalances(t, s.p1.FormattedAddress(), 0)
-
-		res := s.mustExecWith(t, s.p1, []helpers.TxOption{helpers.WithGas(brTxGas)}, "burner", "move-ibc-locked-coins", s.other)
-		require.Equal(t, sdk.NewCoins(sdk.NewCoin(s.other, locked)), s.transfers(t, res.Events, s.blackHole, s.tradebin), "locked voucher to tradebin")
-		returned := s.transfers(t, res.Events, s.tradebin, s.blackHole)
-		refund := returned.AmountOf(chain.Denom)
-		added := helpers.EventsWith(helpers.TxEvents(res, tradebinEventPrefix+"LiquidityAddedEvent"), map[string]string{"creator": "burner_black_hole", "pool_id": s.otherPool})
-		require.Len(t, added, 1, "liquidity added by the black hole")
-		minted := parseInt(added[0].Attributes["mintedAmount"])
-		require.Equal(t, sdk.NewCoins(sdk.NewCoin(pool.LpDenom, minted), sdk.NewCoin(chain.Denom, refund)), returned, "tradebin returns LP and ubze only")
-		require.Equal(t, sdk.NewCoins(sdk.NewCoin(chain.Denom, refund)), s.transfers(t, res.Events, s.blackHole, s.burner), "returned ubze to the burner")
-
-		after := s.pool(t, s.otherPool)
-		require.Equal(t, pool.reserveBase().Add(locked), after.reserveBase(), "utoken reserve")
-		require.Equal(t, pool.reserveQuote().Sub(refund), after.reserveQuote(), "ubze reserve")
-		wantHole := hole.Sub(sdk.NewCoin(s.other, locked)).Add(sdk.NewCoin(pool.LpDenom, minted))
-		require.Equal(t, wantHole, s.addrBalances(t, s.blackHole, 0), "black hole balances")
-		require.True(t, s.balance(t, s.burner, chain.Denom).GTE(burner.Add(refund)), "the burner holds the returned ubze")
-		require.Equal(t, before.Sub(sdk.NewCoin(chain.Denom, s.txFee(t, res))), s.addrBalances(t, s.p1.FormattedAddress(), 0), "p1 pays only the fee")
+		require.True(t, sdkmath.LegacyMustNewDecFromStr(brZeroCapRatio).MulInt(pool.reserveBase()).TruncateInt().IsZero(),
+			"floor(%s × %s) must be 0", brZeroCapRatio, pool.reserveBase())
+		res := refuse(t, s.other, burnerCodespace, brNoCapacityCode, "pool "+s.otherPool+" reserve is too small to move any coins")
+		require.Positive(t, res.Height, "the refusal is included in a block")
+		require.Equal(t, s.poolAt(t, s.otherPool, res.Height-1), s.poolAt(t, s.otherPool, res.Height), "utoken pool unchanged")
+		require.Equal(t, remaining, s.balance(t, s.blackHole, s.other), "the utoken voucher stays locked")
+		zeroCapAt = res.Height
+	})
+	t.Run("params: a ratio with capacity", func(t *testing.T) {
+		p := s.burnerParams(t)
+		p.ratio = brNewRatio
+		s.setBurnerParams(t, p)
+	})
+	t.Run("move right after the refusal, capped at the new ratio", func(t *testing.T) {
+		// the first move's swap moved the pool price
+		require.NoError(t, helpers.WaitForPoolPriceCalm(s.ctx, s.bze, brCalmBlocks, s.otherPool))
+		s.requireMoved(t, s.other, s.otherPool, remaining, brNewRatio, true)
+		// a lock written by the refusal would have blocked this move for
+		// brNewCooldown blocks
+		require.Less(t, s.moves[s.other], zeroCapAt+brNewCooldown, "the move ran within the cooldown a refusal lock would start")
 	})
 
 	for _, c := range []struct {
 		name, denom, codespace, reason string
 		code                           uint32
 	}{
-		{"nothing locked", s.other, burnerCodespace, "no coins to move", 1102},
 		// pools created since v8.1.1 mint ulp/<hash> LP denoms
 		{"LP share", s.stakeLp, sdkCodespace, "cannot move LP shares", 18},
 		{"not an IBC denom", s.brn, sdkCodespace, "only ibc denoms are allowed", 18},
@@ -609,11 +754,59 @@ func (s *burnerSuite) moveLocked(t *testing.T) {
 	}
 }
 
+// requireMoved sends MoveIbcLockedCoins of denom, of which the black hole
+// holds locked, and asserts the move: exactly min(locked, floor(ratio × the
+// pool's voucher reserve)) goes from the black hole to tradebin and into the
+// pool, the LP shares tradebin mints stay locked, the ubze it returns goes to
+// the burner and the rest of the voucher stays locked. capped says whether
+// the cap must bite (less than locked moves). It records the move height and
+// returns the voucher still locked.
+func (s *burnerSuite) requireMoved(t *testing.T, denom, poolID string, locked sdkmath.Int, ratio string, capped bool) sdkmath.Int {
+	t.Helper()
+	before := s.addrBalances(t, s.p1.FormattedAddress(), 0)
+	res := s.mustExecWith(t, s.p1, []helpers.TxOption{helpers.WithGas(brTxGas)}, "burner", "move-ibc-locked-coins", denom)
+	pool, hole := s.poolAt(t, poolID, res.Height-1), s.addrBalances(t, s.blackHole, res.Height-1)
+	require.Equal(t, denom, pool.Base, "the voucher is the pool's base")
+	require.Equal(t, locked, hole.AmountOf(denom), "locked %s before the move", denom)
+
+	limit := sdkmath.LegacyMustNewDecFromStr(ratio).MulInt(pool.reserveBase()).TruncateInt()
+	require.True(t, limit.IsPositive(), "the cap of %s is positive", denom)
+	if capped {
+		require.True(t, limit.LT(locked), "the cap %s bites on the %s locked", limit, locked)
+	} else {
+		require.True(t, locked.LTE(limit), "the %s locked fit under the cap %s", locked, limit)
+	}
+	moved := sdkmath.MinInt(locked, limit)
+
+	require.Equal(t, sdk.NewCoins(sdk.NewCoin(denom, moved)), s.transfers(t, res.Events, s.blackHole, s.tradebin), "locked voucher to tradebin")
+	returned := s.transfers(t, res.Events, s.tradebin, s.blackHole)
+	refund := returned.AmountOf(chain.Denom)
+	added := helpers.EventsWith(helpers.TxEvents(res, tradebinEventPrefix+"LiquidityAddedEvent"), map[string]string{"creator": "burner_black_hole", "pool_id": poolID})
+	require.Len(t, added, 1, "liquidity added by the black hole")
+	minted := parseInt(added[0].Attributes["mintedAmount"])
+	require.Equal(t, sdk.NewCoins(sdk.NewCoin(pool.LpDenom, minted), sdk.NewCoin(chain.Denom, refund)), returned, "tradebin returns LP and ubze only")
+	require.Equal(t, sdk.NewCoins(sdk.NewCoin(chain.Denom, refund)), s.transfers(t, res.Events, s.blackHole, s.burner), "returned ubze to the burner")
+	// the periodic burn is parked, so the burner keeps it (fees may come in too)
+	burnerBefore := s.addrBalances(t, s.burner, res.Height-1).AmountOf(chain.Denom)
+	require.True(t, s.addrBalances(t, s.burner, res.Height).AmountOf(chain.Denom).GTE(burnerBefore.Add(refund)), "the burner holds the returned ubze")
+
+	after := s.poolAt(t, poolID, res.Height)
+	require.Equal(t, pool.reserveBase().Add(moved), after.reserveBase(), "voucher reserve")
+	require.Equal(t, pool.reserveQuote().Sub(refund), after.reserveQuote(), "ubze reserve")
+	wantHole := hole.Sub(sdk.NewCoin(denom, moved)).Add(sdk.NewCoin(pool.LpDenom, minted))
+	require.Equal(t, wantHole, s.addrBalances(t, s.blackHole, res.Height), "black hole balances: the rest of the voucher stays locked")
+	require.Equal(t, before.Sub(sdk.NewCoin(chain.Denom, s.txFee(t, res))), s.addrBalances(t, s.p1.FormattedAddress(), 0), "p1 pays only the fee")
+
+	s.moves[denom] = res.Height
+	return locked.Sub(moved)
+}
+
 // 11. The queries return what the steps produced: the interval parked again
-// at the end of step 4, no running raffle or winner left, and one all-burned-coins record per burn
+// at the end of step 4, the IBC move params set in step 10, no running raffle or winner left, and one all-burned-coins record per burn
 // height with exactly the coins burned there.
 func (s *burnerSuite) queries(t *testing.T) {
-	require.Equal(t, int64(brLockedWeeks), s.burningWeeks(t), "periodic_burning_weeks")
+	require.Equal(t, brParams{weeks: brLockedWeeks, ratio: brNewRatio, cooldown: brNewCooldown}.String(), s.burnerParams(t).String(),
+		"burner params: the interval parked in step 4, the IBC move params of step 10")
 	require.Empty(t, s.raffles(t), "raffles")
 	require.Empty(t, s.raffleWinners(t, s.rw), "winners of rw")
 
@@ -635,10 +828,50 @@ func (s *burnerSuite) queries(t *testing.T) {
 	require.Equal(t, s.burns, got, "all-burned-coins")
 }
 
+// 12. The genesis export carries the burner params and one move lock per
+// denom moved in step 10, at the height of its last successful move. It
+// stops the network, so it runs last.
+func (s *burnerSuite) exportLocks(t *testing.T) {
+	require.Len(t, s.moves, 2, "step 10 moved the utoken and the stake vouchers")
+	node := s.bze.Validators[0]
+	require.NoError(t, s.bze.StopAllNodes(s.ctx))
+	exported, err := node.ExportState(s.ctx, -1)
+	require.NoError(t, err)
+
+	var doc struct {
+		AppState struct {
+			Burner struct {
+				Params struct {
+					PeriodicBurningWeeks   helpers.Int64 `json:"periodic_burning_weeks"`
+					IbcMoveMaxReserveRatio string        `json:"ibc_move_max_reserve_ratio"`
+					IbcMoveCooldownBlocks  helpers.Int64 `json:"ibc_move_cooldown_blocks"`
+				} `json:"params"`
+				IbcMoveLocks []struct {
+					Denom          string        `json:"denom"`
+					LastMoveHeight helpers.Int64 `json:"last_move_height"`
+				} `json:"ibc_move_locks"`
+			} `json:"burner"`
+		} `json:"app_state"`
+	}
+	require.NoError(t, json.Unmarshal([]byte(exported), &doc))
+	g := doc.AppState.Burner
+	ratio, err := helpers.ParseDec(g.Params.IbcMoveMaxReserveRatio)
+	require.NoError(t, err)
+	require.Equal(t, brParams{weeks: brLockedWeeks, ratio: brNewRatio, cooldown: brNewCooldown}.String(),
+		brParams{weeks: int64(g.Params.PeriodicBurningWeeks), ratio: ratio.String(), cooldown: uint64(g.Params.IbcMoveCooldownBlocks)}.String(), //nolint:gosec // a validated block count
+		"exported burner params")
+	got := map[string]int64{}
+	for _, l := range g.IbcMoveLocks {
+		got[l.Denom] = int64(l.LastMoveHeight)
+	}
+	require.Len(t, g.IbcMoveLocks, len(got), "one lock per denom")
+	require.Equal(t, s.moves, got, "exported ibc_move_locks")
+}
+
 // requireFunded sends amount to the burner from user and asserts the routing:
 // toBurner to the burner, toLocker to the black hole, the FundBurnerEvent and
-// user's balances.
-func (s *burnerSuite) requireFunded(t *testing.T, user ibc.Wallet, amount, toBurner, toLocker sdk.Coins) {
+// user's balances. It returns the tx.
+func (s *burnerSuite) requireFunded(t *testing.T, user ibc.Wallet, amount, toBurner, toLocker sdk.Coins) helpers.TxResult {
 	t.Helper()
 	addr := user.FormattedAddress()
 	before := s.addrBalances(t, addr, 0)
@@ -649,6 +882,7 @@ func (s *burnerSuite) requireFunded(t *testing.T, user ibc.Wallet, amount, toBur
 	require.Len(t, events, 1, "FundBurnerEvent")
 	require.Equal(t, map[string]string{"from": addr, "amount": amount.String()}, withoutMode(events[0].Attributes))
 	require.Equal(t, before.Sub(amount...).Sub(sdk.NewCoin(chain.Denom, s.txFee(t, res))), s.addrBalances(t, addr, 0), "balances of %s", user.KeyName())
+	return res
 }
 
 // requireBurned asserts the coins burned by addr in the finalize-block events
@@ -687,28 +921,57 @@ func (s *burnerSuite) startArgs(r brRaffle, denom string) []string {
 		strconv.FormatInt(r.chances, 10), r.ratio, strconv.FormatInt(r.ticket, 10), denom}
 }
 
-func (s *burnerSuite) paramsMsg(authority string, weeks int64) map[string]any {
+// brParams are the burner params; ratio is a decimal ("0.03").
+type brParams struct {
+	weeks    int64
+	ratio    string
+	cooldown uint64
+}
+
+// String is the params with the ratio in its canonical 18-decimal form, so
+// two params compare whatever form the ratio was written in.
+func (p brParams) String() string {
+	return fmt.Sprintf("periodic_burning_weeks %d, ibc_move_max_reserve_ratio %s, ibc_move_cooldown_blocks %d",
+		p.weeks, sdkmath.LegacyMustNewDecFromStr(p.ratio).String(), p.cooldown)
+}
+
+// paramsMsg is a burner MsgUpdateParams carrying all three params, the ratio
+// as a decimal (gogoproto JSON).
+func (s *burnerSuite) paramsMsg(authority string, p brParams) map[string]any {
 	return map[string]any{
 		"@type":     "/bze.burner.MsgUpdateParams",
 		"authority": authority,
-		"params":    map[string]any{"periodic_burning_weeks": strconv.FormatInt(weeks, 10)},
+		"params": map[string]any{
+			"periodic_burning_weeks":     strconv.FormatInt(p.weeks, 10),
+			"ibc_move_max_reserve_ratio": sdkmath.LegacyMustNewDecFromStr(p.ratio).String(),
+			"ibc_move_cooldown_blocks":   strconv.FormatUint(p.cooldown, 10),
+		},
 	}
 }
 
-// setBurningWeeks passes a proposal setting periodic_burning_weeks and
-// returns the height of the block whose gov EndBlock executed it: a week tick
-// at that height still ran with the old interval.
+// setBurningWeeks passes a proposal setting periodic_burning_weeks, keeping
+// the other params, and returns the height of the block whose gov EndBlock
+// executed it: a week tick at that height still ran with the old interval.
 func (s *burnerSuite) setBurningWeeks(t *testing.T, weeks int64) int64 {
+	t.Helper()
+	p := s.burnerParams(t)
+	p.weeks = weeks
+	return s.setBurnerParams(t, p)
+}
+
+// setBurnerParams passes a proposal setting the burner params to p, checks
+// the chain holds them and returns the height that executed it.
+func (s *burnerSuite) setBurnerParams(t *testing.T, p brParams) int64 {
 	t.Helper()
 	from, err := s.bze.Height(s.ctx)
 	require.NoError(t, err)
 	id, err := helpers.SubmitAndPassProposal(s.ctx, s.bze, s.admin, helpers.Proposal{
-		Messages: []any{s.paramsMsg(s.gov, weeks)},
-		Title:    "burner interval",
-		Summary:  "e2e: set periodic_burning_weeks to " + strconv.FormatInt(weeks, 10),
+		Messages: []any{s.paramsMsg(s.gov, p)},
+		Title:    "burner params",
+		Summary:  "e2e: " + p.String(),
 	})
 	require.NoError(t, err)
-	require.Equal(t, weeks, s.burningWeeks(t))
+	require.Equal(t, p.String(), s.burnerParams(t).String(), "burner params after the proposal")
 
 	to, err := s.bze.Height(s.ctx)
 	require.NoError(t, err)
@@ -722,15 +985,39 @@ func (s *burnerSuite) setBurningWeeks(t *testing.T, weeks int64) int64 {
 	return 0
 }
 
-func (s *burnerSuite) burningWeeks(t *testing.T) int64 {
+// requireParamsRefused requires a proposal setting the burner params to p to
+// be refused with reason, and the params to stay as they were.
+func (s *burnerSuite) requireParamsRefused(t *testing.T, p brParams, name, reason string) {
+	t.Helper()
+	before := s.burnerParams(t)
+	_, err := helpers.SubmitAndPassProposal(s.ctx, s.bze, s.admin, helpers.Proposal{
+		Messages: []any{s.paramsMsg(s.gov, p)},
+		Title:    "invalid burner params",
+		Summary:  "e2e: " + name,
+	})
+	require.ErrorContains(t, err, reason)
+	require.Equal(t, before.String(), s.burnerParams(t).String(), "burner params unchanged")
+}
+
+// burnerParams queries the burner params. The CLI prints the ratio either as
+// a decimal or as the 18-decimal integer of a LegacyDec.
+func (s *burnerSuite) burnerParams(t *testing.T) brParams {
 	t.Helper()
 	res, err := helpers.Query[struct {
 		Params struct {
-			PeriodicBurningWeeks helpers.Int64 `json:"periodic_burning_weeks"`
+			PeriodicBurningWeeks   helpers.Int64 `json:"periodic_burning_weeks"`
+			IbcMoveMaxReserveRatio string        `json:"ibc_move_max_reserve_ratio"`
+			IbcMoveCooldownBlocks  helpers.Int64 `json:"ibc_move_cooldown_blocks"`
 		} `json:"params"`
 	}](s.ctx, s.bze, "burner", "params")
 	require.NoError(t, err)
-	return int64(res.Params.PeriodicBurningWeeks)
+	ratio, err := helpers.ParseDec(res.Params.IbcMoveMaxReserveRatio)
+	require.NoError(t, err)
+	return brParams{
+		weeks:    int64(res.Params.PeriodicBurningWeeks),
+		ratio:    ratio.String(),
+		cooldown: uint64(res.Params.IbcMoveCooldownBlocks), //nolint:gosec // a validated block count
+	}
 }
 
 // nextWeekTick returns the first week tick after height: the start block of a

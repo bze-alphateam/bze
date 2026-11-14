@@ -53,7 +53,7 @@ make e2e-fees                       # fee destinations, minimum gas prices, ante
 make e2e-transferfee                # factory-token transfer fee on protocol fees and gas surcharge: routing, burn, fee grants, fallback, rate changes
 make e2e-orderbook                  # order-book engine: fills, remainders, dust, cancels, refusals, queue limits
 make e2e-tradingrewards             # trading rewards: create, gov activation, hooks, leaderboard, payout, cleanup, pending expiry (~25 min)
-make e2e-burner                     # burner: fund routing, periodic burn and interval, raffles, locked IBC coins (~15 min)
+make e2e-burner                     # burner: fund routing, periodic burn and interval (IBC vouchers locked), raffles (an IBC pot locked), locked IBC coin moves: cap, cooldown, params, export (~20 min)
 make e2e-cointrunk                  # cointrunk: domains and publishers by gov, free and paid articles, monthly limit, respect tax
 make e2e-params                     # tradebin, rewards and tokenfactory params by gov: authority, refusals, each param's effect on a real tx (pool price guard included)
 make e2e-input-rules                # canonical amounts in tradebin, burner and rewards messages; one rewards position per account whatever the address case; protocol fees inside authz exec paid in ubze

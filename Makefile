@@ -363,7 +363,7 @@ e2e-orderbook:
 e2e-tradingrewards:
 	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run 'TestTradingRewards|TestTradingRewardExpiry' ./...
 
-# Runs the burner suite (bze <-> simd through Hermes; waits three week ticks, ~15 min).
+# Runs the burner suite (bze <-> simd through Hermes; waits three week ticks and a 150-block move cooldown, ~20 min).
 e2e-burner:
 	cd interchaintest && go test -v -timeout $(E2E_TIMEOUT) -run TestBurner ./...
 
