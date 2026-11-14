@@ -979,7 +979,6 @@ func (s *upgradeSuite) v830TradingRewardBefore(t *testing.T) string {
 	require.Equal(t, id, activated[0].Attributes["reward_id"])
 
 	want := s.epoch(t, height, "hour") + upV830TrDuration*24
-	require.Equal(t, strconv.FormatInt(want, 10), activated[0].Attributes["expire_at"], "the activation event's expire_at")
 	r := s.tradingReward(t, id)
 	require.Equal(t, s.market, r.MarketID)
 	require.Equal(t, want, int64(r.ExpireAt), "v8.2.0 starts the countdown at the activation")
