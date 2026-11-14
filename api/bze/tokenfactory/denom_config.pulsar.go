@@ -586,7 +586,8 @@ type DenomConfig struct {
 
 	// community_pool receives the token's fee coins. Empty means none.
 	CommunityPool string `protobuf:"bytes,1,opt,name=community_pool,json=communityPool,proto3" json:"community_pool,omitempty"`
-	// transfer_fee is the ratio charged on top of user sends, 0 <= x <= 0.05.
+	// transfer_fee is the ratio charged on top of protocol fees paid in the token
+	// (not on sends or IBC transfers), 0 <= x <= 0.05.
 	TransferFee string `protobuf:"bytes,2,opt,name=transfer_fee,json=transferFee,proto3" json:"transfer_fee,omitempty"`
 	// gas_surcharge is the ratio added to gas paid in the token, 0 <= x <= 2.
 	GasSurcharge string `protobuf:"bytes,3,opt,name=gas_surcharge,json=gasSurcharge,proto3" json:"gas_surcharge,omitempty"`

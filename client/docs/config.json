@@ -31,7 +31,25 @@
       }
     },
     {
+      "url": "../../tmp-swagger-gen/bze/dao/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "DaoParams",
+          "Proposal": "DaoProposal",
+          "Proposals": "DaoProposals"
+        }
+      }
+    },
+    {
       "url": "../../tmp-swagger-gen/bze/epochs/query.swagger.json"
+    },
+    {
+      "url": "../../tmp-swagger-gen/bze/guardian/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "GuardianParams"
+        }
+      }
     },
     {
       "url": "../../tmp-swagger-gen/bze/rewards/query.swagger.json",
