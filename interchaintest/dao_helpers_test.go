@@ -16,6 +16,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/interchaintest/v10/ibc"
 	"github.com/stretchr/testify/require"
 
@@ -551,24 +552,62 @@ func (s *daoSuite) blockTime(t *testing.T) (int64, int64) {
 }
 
 // waitTime waits until the latest block's time is at least unix: every tx
-// sent after it lands in a block at or after unix.
-func (s *daoSuite) waitTime(t *testing.T, unix int64) {
+// sent after it lands in a block at or after unix. It returns that block's
+// height.
+func (s *daoSuite) waitTime(t *testing.T, unix int64) int64 {
 	t.Helper()
 	deadline := time.Now().Add(3 * time.Minute)
 	for {
-		_, now := s.blockTime(t)
+		height, now := s.blockTime(t)
 		if now >= unix {
-			return
+			return height
 		}
 		require.True(t, time.Now().Before(deadline), "block time did not reach %d (at %d)", unix, now)
 		time.Sleep(300 * time.Millisecond)
 	}
 }
 
-// waitVotingEnd waits until the proposal's voting has ended.
-func (s *daoSuite) waitVotingEnd(t *testing.T, pid uint64) {
+// waitVotingEnd waits until the proposal's voting has ended and returns the
+// height of the first block seen at or after the voting end.
+func (s *daoSuite) waitVotingEnd(t *testing.T, pid uint64) int64 {
 	t.Helper()
-	s.waitTime(t, int64(s.prop(t, pid).VotingEnd))
+	return s.waitTime(t, int64(s.prop(t, pid).VotingEnd))
+}
+
+// waitAppHeight waits until the application has committed height. CometBFT
+// reports a block in its status before the application commits it, so a
+// query right after waitTime can still be answered from the previous block.
+func (s *daoSuite) waitAppHeight(t *testing.T, height int64) {
+	t.Helper()
+	deadline := time.Now().Add(time.Minute)
+	for {
+		info, err := s.bze.GetNode().Client.ABCIInfo(s.ctx)
+		require.NoError(t, err)
+		if info.Response.LastBlockHeight >= height {
+			return
+		}
+		require.True(t, time.Now().Before(deadline), "app did not commit height %d (at %d)", height, info.Response.LastBlockHeight)
+		time.Sleep(200 * time.Millisecond)
+	}
+}
+
+// proposalAt queries the proposal at height, so the query's block time is
+// that block's time.
+func (s *daoSuite) proposalAt(t *testing.T, id uint64, height int64) daoProposalResp {
+	t.Helper()
+	s.waitAppHeight(t, height)
+	req, err := http.NewRequestWithContext(s.ctx, http.MethodGet, s.api+fmt.Sprintf("/bze/dao/proposal/%d", id), nil)
+	require.NoError(t, err)
+	req.Header.Set(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
+	res, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	body, err := io.ReadAll(res.Body)
+	_ = res.Body.Close()
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, res.StatusCode, "GET proposal %d at height %d: %s", id, height, body)
+	var out daoProposalResp
+	require.NoError(t, json.Unmarshal(body, &out))
+	return out
 }
 
 // ---------------------------------------------------------------------------

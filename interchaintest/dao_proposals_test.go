@@ -229,8 +229,7 @@ func (s *daoSuite) cancelProposal(t *testing.T) {
 	t.Run("refused from voting_end", func(t *testing.T) {
 		pid := s.submit(t, m[0], d, "late cancel", nil)
 		s.vote(t, m[1], pid, "yes")
-		s.waitVotingEnd(t, pid)
-		require.True(t, s.proposal(t, pid).VotingEnded)
+		require.True(t, s.proposalAt(t, pid, s.waitVotingEnd(t, pid)).VotingEnded, "voting_ended is set in the first block at or after the voting end")
 		s.refuse(t, m[0], daoCode(1124), "dao", "cancel-proposal", daoU64(pid))
 		s.requireStatus(t, pid, "VOTING")
 		status := "REJECTED"
