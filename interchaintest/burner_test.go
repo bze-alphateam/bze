@@ -321,18 +321,22 @@ func (s *burnerSuite) periodicBurn(t *testing.T) {
 }
 
 // 4. With the interval set to 2, only ticks ending an even week burn: of the
-// next two ticks one leaves the burner untouched (a stake voucher funded
-// before them stays there) and the other burns the ubze and locks that
+// next two ticks one leaves the burner untouched (ubze and a stake voucher
+// funded before them stay there) and the other burns the ubze and locks that
 // voucher. The interval is then parked at 1000 weeks again.
 func (s *burnerSuite) interval(t *testing.T) {
 	executed := s.setBurningWeeks(t, 2)
-	// funded once the 2-week interval runs, so a 1-week tick can not lock it
-	// first; both ticks below see it
-	stake := sdk.NewInt64Coin(s.stake, brFundStake)
-	funded := s.requireFunded(t, s.admin, sdk.NewCoins(stake), sdk.NewCoins(stake), sdk.NewCoins())
+	// funded once the 2-week interval runs, so a 1-week tick can not burn or
+	// lock them first; both ticks below see them. The ubze is funded too:
+	// step 3's burn emptied the burner of ubze and no fee in this step reaches
+	// it, so without it the burning tick would only lock the voucher
+	stake, bze := sdk.NewInt64Coin(s.stake, brFundStake), sdk.NewInt64Coin(chain.Denom, brFundBze)
+	before := s.addrBalances(t, s.burner, 0)
+	funded := s.requireFunded(t, s.admin, sdk.NewCoins(bze, stake), sdk.NewCoins(bze, stake), sdk.NewCoins())
 	require.Equal(t, s.epochAt(t, "week", executed), s.epochAt(t, "week", funded.Height), "no week tick between the proposal and the funding")
 	held := s.addrBalances(t, s.burner, funded.Height)
 	require.Equal(t, sdk.NewCoins(sdk.NewCoin(chain.Denom, held.AmountOf(chain.Denom)), stake), held, "the burner holds ubze and the stake voucher only")
+	require.True(t, held.AmountOf(chain.Denom).GTE(before.AmountOf(chain.Denom).AddRaw(brFundBze)), "the funded ubze is in the burner")
 	burned := 0
 	for tick := 0; tick < 2; tick++ {
 		height, week := s.nextWeekTick(t, executed)
@@ -349,6 +353,7 @@ func (s *burnerSuite) interval(t *testing.T) {
 		t.Logf("week %d ended at height %d: burn", week, height)
 		burned++
 		require.Equal(t, sdk.NewCoins(sdk.NewCoin(chain.Denom, prev.AmountOf(chain.Denom)), stake), prev, "burner before the pass: ubze and the stake voucher")
+		require.True(t, prev.AmountOf(chain.Denom).GTE(sdkmath.NewInt(brFundBze)), "burner before the pass: at least the funded ubze")
 		burnable := sdk.NewCoins(sdk.NewCoin(chain.Denom, prev.AmountOf(chain.Denom)))
 		s.requireBurned(t, height, s.burner, burnable)
 		s.requireCoinsBurnedEvent(t, height, burnable)

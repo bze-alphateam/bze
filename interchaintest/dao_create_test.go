@@ -522,7 +522,21 @@ func (s *daoSuite) staleNominations(t *testing.T) {
 		x := s.createStatic(t, member, defaultCfg(), addrs(member), a.FormattedAddress())
 		y := s.createStatic(t, member, defaultCfg(), addrs(member), x.addr)
 		z := s.createStatic(t, member, defaultCfg(), addrs(member), y.addr)
-		s.adminExec(t, a, x, nil, adminExecMsg(x.addr, y.id, nominate(y.addr, z, a.FormattedAddress())))
+		// a nested admin execution: each DAO on the way reports its own
+		// EventAdminExecuted, y's (inner, admin x) first, then x's (admin a)
+		res := s.run(t, a, []string{x.addr}, nil, append([]string{"dao", "admin-execute", x.idArg()},
+			msgArgs(adminExecMsg(x.addr, y.id, nominate(y.addr, z, a.FormattedAddress())))...)...)
+		executed := daoEvents(res, "EventAdminExecuted")
+		require.Len(t, executed, 2, "one EventAdminExecuted per nested execution in tx %s: %+v", res.TxHash, executed)
+		for k, want := range []struct {
+			dao   daoRef
+			admin string
+		}{{y, x.addr}, {x, a.FormattedAddress()}} {
+			require.Equal(t, map[string]string{"id": want.dao.idArg(), "admin": want.admin, "msg_count": "1"},
+				map[string]string{"id": executed[k].Attributes["id"], "admin": executed[k].Attributes["admin"], "msg_count": executed[k].Attributes["msg_count"]},
+				"EventAdminExecuted %d", k)
+		}
+		require.Equal(t, a.FormattedAddress(), s.event(t, res, "EventAdminNominated").Attributes["nominee"])
 		require.Equal(t, a.FormattedAddress(), s.dao(t, z.id).PendingAdmin)
 
 		handOver(t, x, a, b)
