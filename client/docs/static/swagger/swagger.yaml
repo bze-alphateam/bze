@@ -8382,8 +8382,10 @@ paths:
                   transfer_fee:
                     type: string
                     description: >-
-                      transfer_fee is the ratio charged on top of user sends, 0
-                      <= x <= 0.05.
+                      transfer_fee is the ratio charged on top of protocol fees
+                      paid in the token
+
+                      (not on sends or IBC transfers), 0 <= x <= 0.05.
                   gas_surcharge:
                     type: string
                     description: >-
@@ -45246,8 +45248,10 @@ definitions:
       transfer_fee:
         type: string
         description: >-
-          transfer_fee is the ratio charged on top of user sends, 0 <= x <=
-          0.05.
+          transfer_fee is the ratio charged on top of protocol fees paid in the
+          token
+
+          (not on sends or IBC transfers), 0 <= x <= 0.05.
       gas_surcharge:
         type: string
         description: >-
@@ -45438,8 +45442,10 @@ definitions:
           transfer_fee:
             type: string
             description: >-
-              transfer_fee is the ratio charged on top of user sends, 0 <= x <=
-              0.05.
+              transfer_fee is the ratio charged on top of protocol fees paid in
+              the token
+
+              (not on sends or IBC transfers), 0 <= x <= 0.05.
           gas_surcharge:
             type: string
             description: >-

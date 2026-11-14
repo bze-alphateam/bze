@@ -16,7 +16,8 @@ message DenomConfig {
   // community_pool receives the token's fee coins. Empty means none.
   string community_pool = 1 [(amino.dont_omitempty) = true];
 
-  // transfer_fee is the ratio charged on top of user sends, 0 <= x <= 0.05.
+  // transfer_fee is the ratio charged on top of protocol fees paid in the token
+  // (not on sends or IBC transfers), 0 <= x <= 0.05.
   string transfer_fee = 2 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
