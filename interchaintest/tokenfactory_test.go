@@ -200,6 +200,11 @@ func (s *tokenFactorySuite) renounce(t *testing.T) {
 	admin, other := s.admin.FormattedAddress(), s.other.FormattedAddress()
 	// brand it first, so the renounce must leave a branding nobody can change
 	s.mustExecMsg(t, s.admin, s.brandingMsg(admin, tfBranding("inter")))
+	// and give it a config: the admin's own address as community pool and zero rates, so the
+	// renounce must leave a stored config nobody can change while later steps pay nothing extra
+	s.mustExecMsg(t, s.admin, tfSetDenomConfigMsg(admin, s.denom, admin, "0", "0"))
+	cfg := tfDenomConfig{CommunityPool: admin, TransferFee: "0", GasSurcharge: "0"}
+	s.requireDenomConfig(t, s.denom, cfg)
 
 	res := s.mustExecMsg(t, s.admin, s.changeAdminMsg(admin, ""))
 	s.requireAdminChange(t, res, admin, "")
@@ -217,6 +222,8 @@ func (s *tokenFactorySuite) renounce(t *testing.T) {
 			"clear branding":  s.brandingMsg(addr, nil),
 			"change admin":    s.changeAdminMsg(addr, peer),
 			"disable minting": tfDisableMintingMsg(addr, s.denom),
+			// valid fields, so the refusal comes from the admin check
+			"set denom config": tfSetDenomConfigMsg(addr, s.denom, peer, "0.001", "0.5"),
 		} {
 			t.Run(user.KeyName()+" "+name, func(t *testing.T) {
 				s.requireRefused(t, "unauthorized", user, msg)
@@ -227,6 +234,7 @@ func (s *tokenFactorySuite) renounce(t *testing.T) {
 	got, found := s.queryBranding(t)
 	require.True(t, found)
 	require.Equal(t, tfBranding("inter"), got)
+	s.requireDenomConfig(t, s.denom, cfg)
 
 	// the coin itself still moves
 	before := s.balance(t, other, s.denom)
