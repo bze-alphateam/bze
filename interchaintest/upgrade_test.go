@@ -758,7 +758,22 @@ type v830State struct {
 	// plusSR is a staking reward created on v8.2.0 with a prize amount in a
 	// non-canonical integer form (upV830PlusPrize)
 	plusSR string
+	// dao is the plain account v8.2.0 created at the dao module address,
+	// funded with upV830DaoSquat before the upgrade
+	dao upAccount
+	// burningWeeks is the burner's periodic_burning_weeks on v8.2.0
+	burningWeeks int64
 }
+
+// upV830DaoName is the s.accounts name of the dao module address: v8.2.0 has
+// no dao module, so a plain transfer creates a plain account there, which
+// the v8.3.0 handler turns into the dao module account in place.
+const (
+	upV830DaoName  = "dao module address"
+	upV830DaoSquat = 1_234_567
+	// the deposit of the DAO proposal submitted after the upgrade
+	upV830DaoDeposit = 1_000
+)
 
 // A staking reward created on v8.2.0 with its prize amount written with a
 // plus sign: v8.2.0 accepts and stores the string as sent, the v8.3.0
@@ -870,9 +885,43 @@ func (s *upgradeSuite) v830Before(t *testing.T) any {
 	}
 	require.NotEmpty(t, st.plusSR, "staking reward of %s", s.abc)
 
+	s.v830DaoAccountBefore(t, &st)
+
+	// the burner has one param on v8.2.0; the v4 -> v5 migration adds the
+	// two IBC move params at their defaults
+	require.Equal(t, int64(4), st.versions["burner"], "burner module version before")
+	burner := s.params(t, 0, "burner")
+	require.NotContains(t, burner, "ibc_move_max_reserve_ratio", "no IBC move cap on v8.2.0")
+	require.NotContains(t, burner, "ibc_move_cooldown_blocks", "no IBC move cooldown on v8.2.0")
+	var weeks helpers.Int64
+	require.NoError(t, json.Unmarshal(burner["periodic_burning_weeks"], &weeks))
+	st.burningWeeks = int64(weeks)
+
 	// last: the queue must still hold messages when the plan height is reached
 	st.queue = s.v830QueueBacklog(t)
 	return st
+}
+
+// v830DaoAccountBefore sends ubze to the dao module address on v8.2.0, where
+// nothing blocks it: x/bank creates a plain account without a public key
+// there. The address joins s.accounts, so step 4 checks the balance survives.
+func (s *upgradeSuite) v830DaoAccountBefore(t *testing.T, st *v830State) {
+	addr, err := helpers.ModuleAddress(s.ctx, s.bze, "dao")
+	require.NoError(t, err)
+	_, found := s.account(t, addr)
+	require.False(t, found, "no account at the dao module address yet")
+	res := s.exec(t, s.admin, "bank", "send", s.admin.FormattedAddress(), addr, coinStr(upV830DaoSquat, chain.Denom))
+	got, err := helpers.Transferred(helpers.TxEvents(res, "transfer"), s.admin.FormattedAddress(), addr, chain.Denom)
+	require.NoError(t, err)
+	require.Equal(t, sdkmath.NewInt(upV830DaoSquat), got, "ubze sent to the dao module address")
+
+	acc, found := s.account(t, addr)
+	require.True(t, found, "x/bank created an account at the dao module address")
+	require.Equal(t, "/cosmos.auth.v1beta1.BaseAccount", acc.Type, "a plain account")
+	require.Equal(t, addr, acc.Address)
+	require.False(t, acc.HasPubKey, "the account has no public key")
+	st.dao = acc
+	s.accounts[upV830DaoName] = addr
 }
 
 // v830QueueBacklog builds the queue the v8.3.0 migration refunds (see
@@ -1147,9 +1196,11 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	require.Equal(t, int64(6), versions["rewards"], "rewards migrated 5 -> 6")
 	require.Equal(t, int64(4), versions["tokenfactory"], "tokenfactory migrated 3 -> 4")
 	require.Equal(t, int64(5), versions["tradebin"], "tradebin migrated 4 -> 5")
+	require.Equal(t, int64(5), versions["burner"], "burner migrated 4 -> 5")
+	require.Equal(t, int64(1), versions["dao"], "the new dao module starts at version 1")
 	for name, v := range b.versions {
 		switch name {
-		case "ibc", "transfer", "rewards", "tokenfactory", "tradebin":
+		case "ibc", "transfer", "rewards", "tokenfactory", "tradebin", "burner":
 			continue
 		}
 		require.Equal(t, v, versions[name], "%s module version unchanged", name)
@@ -1216,10 +1267,141 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	s.v830PriceLevelOwners(t)
 	s.v830OwnerPriceIndex(t, b.queue)
 
+	s.v830BurnerParams(t, b)
+	s.v830DaoAccount(t, b)
+
 	// the sweep left txfeecollector_burner empty (step 4 checked the moves),
 	// and its retired address still refuses funds
 	s.requireAccountBlocked(t, upV830BurnerFees)
 	require.True(t, s.balances(t, 0, s.accounts[upV830BurnerFees]).IsZero(), "%s stays empty", upV830BurnerFees)
+}
+
+// v830BurnerParams checks the burner v5 migration: the two IBC move params
+// at their defaults, the burning interval as v8.2.0 left it.
+func (s *upgradeSuite) v830BurnerParams(t *testing.T, b v830State) {
+	res := query[struct {
+		Params struct {
+			PeriodicBurningWeeks   helpers.Int64 `json:"periodic_burning_weeks"`
+			IbcMoveMaxReserveRatio string        `json:"ibc_move_max_reserve_ratio"`
+			IbcMoveCooldownBlocks  helpers.Int64 `json:"ibc_move_cooldown_blocks"`
+		} `json:"params"`
+	}](t, s, 0, "burner", "params").Params
+	require.Equal(t, b.burningWeeks, int64(res.PeriodicBurningWeeks), "periodic_burning_weeks unchanged")
+	ratio, err := helpers.ParseDec(res.IbcMoveMaxReserveRatio)
+	require.NoError(t, err)
+	require.Equal(t, sdkmath.LegacyMustNewDecFromStr("0.03").String(), ratio.String(), "ibc_move_max_reserve_ratio default")
+	require.Equal(t, int64(1000), int64(res.IbcMoveCooldownBlocks), "ibc_move_cooldown_blocks default")
+}
+
+// v830DaoAccount checks the handler turned the plain account v8.2.0 left at
+// the dao module address into the dao module account in place (same address,
+// account number and sequence, no permissions, the balance kept: step 4), that
+// the address now refuses funds, and that a DAO proposal's deposit goes into
+// the escrow, which needs that module account.
+func (s *upgradeSuite) v830DaoAccount(t *testing.T, b v830State) {
+	addr := s.accounts[upV830DaoName]
+	acc, found := s.account(t, addr)
+	require.True(t, found, "account at the dao module address")
+	require.Equal(t, upAccount{
+		Type: "/cosmos.auth.v1beta1.ModuleAccount", Address: addr, Number: b.dao.Number, Sequence: b.dao.Sequence,
+		Name: "dao", Permissions: []string{},
+	}, acc, "the plain account became the dao module account in place")
+	squat := sdk.NewCoins(sdk.NewInt64Coin(chain.Denom, upV830DaoSquat))
+	require.Equal(t, squat.String(), s.balances(t, 0, addr).String(), "the dao module account keeps the coins sent on v8.2.0")
+	s.requireAccountBlocked(t, "dao")
+
+	// a static DAO of admin alone, with a deposit; the dao params are the
+	// defaults, so the periods are at least min_voting_period (1 hour)
+	cfg := map[string]any{
+		"min_quorum": "0.5", "threshold": "0.5", "voting_period": "7200s",
+		"allow_expedite": false, "expedited_period": "3600s", "expedite_quorum": "0.6", "expedite_threshold": "0.6",
+		"open_submission": false, "deposit_refund_policy": "ALWAYS", "cost_destination": "BURN", "kept_deposit_destination": "BURN",
+		"proposal_deposit": map[string]string{"denom": chain.Denom, "amount": strconv.Itoa(upV830DaoDeposit)},
+	}
+	admin := s.admin.FormattedAddress()
+	res := s.exec(t, s.admin, "dao", "create-dao", "static-list", "upgrade dao", mustJSON(cfg), "--members", admin)
+	created := helpers.TxEvents(res, "bze.dao.EventDaoCreated")
+	require.Len(t, created, 1, "EventDaoCreated")
+	treasury := created[0].Attributes["address"]
+	require.NotEmpty(t, treasury)
+
+	escrow := s.balance(t, addr, chain.Denom)
+	res = s.exec(t, s.admin, "dao", "submit-proposal", created[0].Attributes["id"], "after the upgrade",
+		msgArgs(bankSend(treasury, admin, sdk.NewCoins(sdk.NewInt64Coin(chain.Denom, 1))))[0])
+	require.Len(t, helpers.TxEvents(res, "bze.dao.EventProposalSubmitted"), 1, "EventProposalSubmitted")
+	got, err := helpers.Transferred(helpers.TxEvents(res, "transfer"), admin, addr, chain.Denom)
+	require.NoError(t, err)
+	require.Equal(t, sdkmath.NewInt(upV830DaoDeposit), got, "the deposit goes into the dao escrow")
+	require.Equal(t, escrow.AddRaw(upV830DaoDeposit), s.balance(t, addr, chain.Denom), "the escrow holds the coins sent on v8.2.0 and the deposit")
+}
+
+// upAccount is an x/auth account as `q auth account` prints it.
+type upAccount struct {
+	Type             string
+	Address          string
+	Number, Sequence int64
+	HasPubKey        bool
+	// Name and Permissions are a module account's
+	Name        string
+	Permissions []string
+}
+
+// account reads the account at addr; found is false when there is none. The
+// CLI prints the account either as a proto JSON Any ("@type" beside the
+// fields) or in amino JSON ("type" and "value"); both are read.
+func (s *upgradeSuite) account(t *testing.T, addr string) (upAccount, bool) {
+	t.Helper()
+	res, err := helpers.Query[struct {
+		Account json.RawMessage `json:"account"`
+	}](s.ctx, s.bze, "auth", "account", addr)
+	if err != nil && strings.Contains(err.Error(), "not found") {
+		return upAccount{}, false
+	}
+	require.NoError(t, err)
+	var fields map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(res.Account, &fields))
+	var typ string
+	if raw, ok := fields["@type"]; ok {
+		require.NoError(t, json.Unmarshal(raw, &typ))
+	} else {
+		require.NoError(t, json.Unmarshal(fields["type"], &typ))
+		value := fields["value"]
+		fields = nil
+		require.NoError(t, json.Unmarshal(value, &fields))
+	}
+	if proto, ok := map[string]string{
+		"cosmos-sdk/BaseAccount":   "/cosmos.auth.v1beta1.BaseAccount",
+		"cosmos-sdk/ModuleAccount": "/cosmos.auth.v1beta1.ModuleAccount",
+	}[typ]; ok {
+		typ = proto
+	}
+	var base struct {
+		Address       string          `json:"address"`
+		AccountNumber helpers.Int64   `json:"account_number"`
+		Sequence      helpers.Int64   `json:"sequence"`
+		PubKey        json.RawMessage `json:"pub_key"`
+	}
+	acc := upAccount{Type: typ}
+	if raw, ok := fields["base_account"]; ok {
+		require.NoError(t, json.Unmarshal(raw, &base))
+		acc.Permissions = []string{}
+		if raw, ok := fields["permissions"]; ok {
+			require.NoError(t, json.Unmarshal(raw, &acc.Permissions))
+		}
+		if acc.Permissions == nil {
+			acc.Permissions = []string{}
+		}
+		if raw, ok := fields["name"]; ok {
+			require.NoError(t, json.Unmarshal(raw, &acc.Name))
+		}
+	} else {
+		bz, err := json.Marshal(fields)
+		require.NoError(t, err)
+		require.NoError(t, json.Unmarshal(bz, &base))
+	}
+	acc.Address, acc.Number, acc.Sequence = base.Address, int64(base.AccountNumber), int64(base.Sequence)
+	acc.HasPubKey = len(base.PubKey) > 0 && string(base.PubKey) != "null"
+	return acc, true
 }
 
 // v830PoolPriceAverages checks the tradebin v5 migration's pool price

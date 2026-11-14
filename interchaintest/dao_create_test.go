@@ -1,6 +1,7 @@
 package interchaintest_test
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -459,5 +460,88 @@ func (s *daoSuite) adminHandover(t *testing.T) {
 		require.Len(t, s.daosByAdmin(t, x.addr), 2, "x administers itself and y")
 		require.Equal(t, "SELF_OWNED", s.controller(t, y.id).EndReason)
 		require.Equal(t, x.addr, s.controller(t, y.id).Controller)
+	})
+}
+
+// A3. A nomination a DAO made through its admin chain is void once a DAO on
+// that chain changes its admin: whoever nominated may no longer control it.
+// The stale nomination stays pending (a new one is refused) until the new
+// controller withdraws it; its own nomination then goes through. A change of
+// an unrelated DAO's admin voids nothing.
+func (s *daoSuite) staleNominations(t *testing.T) {
+	a, b, c, member := s.user(t), s.user(t), s.user(t), s.user(t)
+	nominate := func(authority string, d daoRef, nominee string) map[string]any {
+		return daoMsg("MsgNominateAdmin", map[string]any{"authority": authority, "dao_id": d.idArg(), "nominee": nominee})
+	}
+	// handOver hands d from its admin user to the next user, signed directly
+	handOver := func(t *testing.T, d daoRef, from, to ibc.Wallet) {
+		t.Helper()
+		s.run(t, from, nil, nil, "dao", "nominate-admin", d.idArg(), to.FormattedAddress())
+		res := s.run(t, to, nil, nil, "dao", "accept-admin-nomination", d.idArg())
+		changed := s.event(t, res, "EventAdminChanged")
+		require.Equal(t, []string{from.FormattedAddress(), to.FormattedAddress()}, []string{changed.Attributes["old_admin"], changed.Attributes["new_admin"]})
+	}
+	stale := func(link, d daoRef, nominee string) refusal {
+		return refusal{codespace: daoModule, code: 1135, reason: fmt.Sprintf("dao %d changed its admin after dao %d nominated %s", link.id, d.id, nominee)}
+	}
+
+	t.Run("the nominating dao changed its admin", func(t *testing.T) {
+		x := s.createStatic(t, member, defaultCfg(), addrs(member), a.FormattedAddress())
+		y := s.createStatic(t, member, defaultCfg(), addrs(member), x.addr)
+		res := s.adminExec(t, a, x, nil, nominate(x.addr, y, a.FormattedAddress()))
+		require.Equal(t, a.FormattedAddress(), s.event(t, res, "EventAdminNominated").Attributes["nominee"])
+		require.Equal(t, a.FormattedAddress(), s.dao(t, y.id).PendingAdmin)
+
+		handOver(t, x, a, b)
+		s.refuse(t, a, stale(x, y, a.FormattedAddress()), "dao", "accept-admin-nomination", y.idArg())
+		rec := s.dao(t, y.id)
+		require.Equal(t, x.addr, rec.Admin, "y stays with x")
+		require.Equal(t, a.FormattedAddress(), rec.PendingAdmin, "the stale nomination stays pending")
+		s.adminRefuse(t, b, x, daoCode(1112), nominate(x.addr, y, c.FormattedAddress()))
+
+		withdraw := daoMsg("MsgWithdrawAdminNomination", map[string]any{"authority": x.addr, "dao_id": y.idArg()})
+		res = s.adminExec(t, b, x, nil, withdraw)
+		require.Equal(t, a.FormattedAddress(), s.event(t, res, "EventAdminNominationWithdrawn").Attributes["nominee"])
+		require.Empty(t, s.dao(t, y.id).PendingAdmin)
+
+		s.adminExec(t, b, x, nil, nominate(x.addr, y, c.FormattedAddress()))
+		require.Equal(t, c.FormattedAddress(), s.dao(t, y.id).PendingAdmin)
+		res = s.run(t, c, nil, nil, "dao", "accept-admin-nomination", y.idArg())
+		changed := s.event(t, res, "EventAdminChanged")
+		require.Equal(t, []string{x.addr, c.FormattedAddress()}, []string{changed.Attributes["old_admin"], changed.Attributes["new_admin"]})
+		rec = s.dao(t, y.id)
+		require.Equal(t, c.FormattedAddress(), rec.Admin)
+		require.Empty(t, rec.PendingAdmin)
+		require.Equal(t, []uint64{y.id}, daoIDs(s.daosByAdmin(t, c.FormattedAddress())), "daos-by-admin lists y under c")
+		require.Empty(t, s.daosByAdmin(t, x.addr), "x administers no dao any more")
+		ctl := s.controller(t, y.id)
+		require.Equal(t, []string{c.FormattedAddress(), "ACCOUNT"}, []string{ctl.Controller, ctl.EndReason})
+	})
+
+	t.Run("a dao two levels up changed its admin", func(t *testing.T) {
+		x := s.createStatic(t, member, defaultCfg(), addrs(member), a.FormattedAddress())
+		y := s.createStatic(t, member, defaultCfg(), addrs(member), x.addr)
+		z := s.createStatic(t, member, defaultCfg(), addrs(member), y.addr)
+		s.adminExec(t, a, x, nil, adminExecMsg(x.addr, y.id, nominate(y.addr, z, a.FormattedAddress())))
+		require.Equal(t, a.FormattedAddress(), s.dao(t, z.id).PendingAdmin)
+
+		handOver(t, x, a, b)
+		s.refuse(t, a, stale(x, z, a.FormattedAddress()), "dao", "accept-admin-nomination", z.idArg())
+		rec := s.dao(t, z.id)
+		require.Equal(t, y.addr, rec.Admin, "z stays with y")
+		require.Equal(t, a.FormattedAddress(), rec.PendingAdmin, "the stale nomination stays pending")
+	})
+
+	t.Run("an unrelated dao changed its admin", func(t *testing.T) {
+		x := s.createStatic(t, member, defaultCfg(), addrs(member), a.FormattedAddress())
+		y := s.createStatic(t, member, defaultCfg(), addrs(member), x.addr)
+		other := s.createStatic(t, member, defaultCfg(), addrs(member), a.FormattedAddress())
+		s.adminExec(t, a, x, nil, nominate(x.addr, y, a.FormattedAddress()))
+
+		handOver(t, other, a, b)
+		res := s.run(t, a, nil, nil, "dao", "accept-admin-nomination", y.idArg())
+		changed := s.event(t, res, "EventAdminChanged")
+		require.Equal(t, []string{x.addr, a.FormattedAddress()}, []string{changed.Attributes["old_admin"], changed.Attributes["new_admin"]})
+		require.Equal(t, a.FormattedAddress(), s.dao(t, y.id).Admin)
 	})
 }
