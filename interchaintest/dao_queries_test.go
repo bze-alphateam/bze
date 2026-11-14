@@ -182,8 +182,7 @@ func (s *daoSuite) queries(t *testing.T) {
 		require.Contains(t, []int{http.StatusOK, http.StatusNotFound}, code)
 		require.Empty(t, empty.Ballots)
 
-		s.waitVotingEnd(t, pid)
-		res = cliQuery[daoProposalResp](t, s, "proposal", daoU64(pid))
+		res = s.proposalAt(t, pid, s.waitVotingEnd(t, pid))
 		require.True(t, res.VotingEnded, "voting_ended is set from the voting end on, while the proposal is in voting")
 		s.settleFirst(t, m[0], pid, "REJECTED") // a 1-1 tie does not exceed the 0.5 threshold; 3 of 3 meet the quorum
 	})

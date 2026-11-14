@@ -1384,20 +1384,24 @@ func (s *upgradeSuite) account(t *testing.T, addr string) (upAccount, bool) {
 	acc := upAccount{Type: typ}
 	if raw, ok := fields["base_account"]; ok {
 		require.NoError(t, json.Unmarshal(raw, &base))
-		acc.Permissions = []string{}
+	} else {
+		bz, err := json.Marshal(fields)
+		require.NoError(t, err)
+		require.NoError(t, json.Unmarshal(bz, &base))
+	}
+	// a module account's name and permissions sit beside base_account in the
+	// proto JSON, and beside the flattened base fields in the "type"/"value"
+	// form the CLI prints (the module account's own JSON encoding)
+	if typ == "/cosmos.auth.v1beta1.ModuleAccount" {
+		if raw, ok := fields["name"]; ok {
+			require.NoError(t, json.Unmarshal(raw, &acc.Name))
+		}
 		if raw, ok := fields["permissions"]; ok {
 			require.NoError(t, json.Unmarshal(raw, &acc.Permissions))
 		}
 		if acc.Permissions == nil {
 			acc.Permissions = []string{}
 		}
-		if raw, ok := fields["name"]; ok {
-			require.NoError(t, json.Unmarshal(raw, &acc.Name))
-		}
-	} else {
-		bz, err := json.Marshal(fields)
-		require.NoError(t, err)
-		require.NoError(t, json.Unmarshal(bz, &base))
 	}
 	acc.Address, acc.Number, acc.Sequence = base.Address, int64(base.AccountNumber), int64(base.Sequence)
 	acc.HasPubKey = len(base.PubKey) > 0 && string(base.PubKey) != "null"
