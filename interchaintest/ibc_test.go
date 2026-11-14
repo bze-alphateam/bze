@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -28,6 +29,9 @@ const (
 	// ibcOtherDenom is a second simd-origin denom, held by simdUser from genesis
 	ibcOtherDenom = "utoken"
 	ibcOtherFunds = 1_000_000_000
+	// ibcRefusedGas is the gas limit of a submit tx the chain refuses: a
+	// fixed limit broadcasts it, so its code is known
+	ibcRefusedGas = 500_000
 
 	ibcStakeIn     = 1_000_000 // 1. stake simd -> bze
 	ibcBzeOut      = 1_000_000 // 1. and 5. ubze bze -> simd
@@ -176,6 +180,27 @@ func (s *ibcSuite) block(t *testing.T) {
 	s.setBlocked(t, "Block stake", blockedEntry{s.net.BzeChannel, chain.SimdDenom})
 	require.Equal(t, []blockedEntry{{s.net.BzeChannel, chain.SimdDenom}}, s.blockedParam(t))
 	require.Equal(t, before, s.otherParams(t), "only blocked_ibc_inbound changed")
+
+	// packets carry only the canonical channel-{N}: any other spelling would be
+	// stored but never match a packet, so the params validation refuses it.
+	// Gov validates the messages of a proposal when it is submitted, so the
+	// submit tx fails (gov code 12, invalid proposal message) and no proposal
+	// exists. The tx is broadcast with a fixed gas limit to get its code.
+	t.Run("non-canonical channel ids are refused", func(t *testing.T) {
+		for _, id := range []string{"channel-03", "Channel-3", "channel_3"} {
+			t.Run(id, func(t *testing.T) {
+				params := s.queryParams(t)
+				_, err := helpers.SubmitAndPassProposalWith(s.ctx, s.bze, s.admin, []helpers.TxOption{helpers.WithGas(ibcRefusedGas)}, helpers.Proposal{
+					Messages: []any{s.blockedParamsMsg(t, blockedEntry{id, chain.SimdDenom})},
+					Title:    "Block a non-canonical channel id",
+					Summary:  "e2e: " + id,
+				})
+				require.ErrorContains(t, err, "submit proposal: code 12: ")
+				require.ErrorContains(t, err, fmt.Sprintf("invalid blocked ibc inbound channel id %q: expected the form channel-{N}: invalid proposal message", id))
+				require.Equal(t, params, s.queryParams(t), "txfeecollector params unchanged")
+			})
+		}
+	})
 }
 
 // 3. The blocked transfer is answered with an error acknowledgement: bze
@@ -680,6 +705,18 @@ func (s *ibcSuite) blockedParam(t *testing.T) []blockedEntry {
 // carries the current params with the blocked list replaced by entries.
 func (s *ibcSuite) setBlocked(t *testing.T, title string, entries ...blockedEntry) {
 	t.Helper()
+	_, err := helpers.SubmitAndPassProposal(s.ctx, s.bze, s.admin, helpers.Proposal{
+		Messages: []any{s.blockedParamsMsg(t, entries...)},
+		Title:    title,
+		Summary:  "e2e: " + title,
+	})
+	require.NoError(t, err)
+}
+
+// blockedParamsMsg is a txfeecollector MsgUpdateParams signed by gov that
+// carries the current params with the blocked list replaced by entries.
+func (s *ibcSuite) blockedParamsMsg(t *testing.T, entries ...blockedEntry) map[string]any {
+	t.Helper()
 	params := map[string]any{}
 	for k, v := range s.otherParams(t) {
 		params[k] = v
@@ -698,17 +735,11 @@ func (s *ibcSuite) setBlocked(t *testing.T, title string, entries ...blockedEntr
 		blocked = append(blocked, map[string]string{"channel_id": e.ChannelID, "base_denom": e.BaseDenom})
 	}
 	params[blockedParamName] = blocked
-
-	_, err := helpers.SubmitAndPassProposal(s.ctx, s.bze, s.admin, helpers.Proposal{
-		Messages: []any{map[string]any{
-			"@type":     "/bze.txfeecollector.MsgUpdateParams",
-			"authority": s.gov,
-			"params":    params,
-		}},
-		Title:   title,
-		Summary: "e2e: " + title,
-	})
-	require.NoError(t, err)
+	return map[string]any{
+		"@type":     "/bze.txfeecollector.MsgUpdateParams",
+		"authority": s.gov,
+		"params":    params,
+	}
 }
 
 // channelEnd is a transfer channel end as `q ibc channel` prints it.

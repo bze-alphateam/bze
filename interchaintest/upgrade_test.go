@@ -730,19 +730,25 @@ func (s *upgradeSuite) createDenomReward(t *testing.T) {
 // the voucher and the pool's LP denom are the exact mainnet ones. The handler
 // blocks uusdc on channel-3 and hands the black hole's USDC.n/BZE LP shares to
 // the wind-down admin, touching nothing else. The Denom Rewards messages work.
-// v8.3.0: TODO(BZE-152) — x/dao added with its params.
+// v8.3.0: x/dao, x/guardian and the IBC rate limits are added. x/dao and
+// x/guardian start at module version 1, the rate-limiting module at 2, and
+// x/dao holds its default params (DAO creation fee 50,000 BZE, burned).
 //
-// BZE-154 (cosmos-sdk v0.53 + ibc-go v10): the capability and feeibc modules
+// Rewards v5 -> v6 migration: v8.2.0 started an activated trading reward's
+// countdown at its activation; the migration resets it (expire_at 0) on every
+// active reward that has had no trade yet, and its first trade starts it.
+//
+// cosmos-sdk v0.53 + ibc-go v10: the capability and feeibc modules
 // are gone (their version entries stay frozen: x/upgrade never deletes one),
-// ibc-go v10 migrated core (6 -> 8) and transfer (5 -> 6), BZE-173 migrated
+// ibc-go v10 migrated core (6 -> 8) and transfer (5 -> 6), the rewards migration moved
 // rewards (5 -> 6), no other module version moved, and IBC keeps working over the
 // channel opened before the upgrade, including the voucher it minted.
 //
-// BZE-155: the unused x/group and x/nft modules are gone: their stores are
+// The unused x/group and x/nft modules are gone: their stores are
 // deleted, their version entries frozen, their CLI queries unknown, and the
 // nft module account (left on chain, empty) still refuses funds.
 //
-// BZE-217: tokenfactory migrated 3 -> 4. Every denom that has an admin is
+// Tokenfactory migrated 3 -> 4. Every denom that has an admin is
 // mintable and its admin can still mint; a denom renounced before the
 // upgrade is non-mintable. Every denom reads the default DenomConfig, and an
 // admin can set one.
@@ -753,7 +759,7 @@ type v830State struct {
 	voucher string
 	// kept keeps its admin across the upgrade, renounced is renounced before it
 	kept, renounced string
-	// queue is the order book queue left at the upgrade height (BZE-247)
+	// queue is the order book queue left at the upgrade height
 	queue v830Queue
 	// plusSR is a staking reward created on v8.2.0 with a prize amount in a
 	// non-canonical integer form (upV830PlusPrize)
@@ -763,6 +769,38 @@ type v830State struct {
 	dao upAccount
 	// burningWeeks is the burner's periodic_burning_weeks on v8.2.0
 	burningWeeks int64
+	// trReward is the trading reward on s.market v8.2.0 activated with no trade
+	trReward string
+}
+
+// The trading reward on s.market activated on v8.2.0 with no trade
+// (v830TradingRewardBefore): a 30-day countdown is 720 hour epochs, far more
+// than the suite runs. Its first trade, after the upgrade, is at a price
+// between bob's buy and sell.
+const (
+	upV830TrPrize    = 1_000 // ubze, one slot
+	upV830TrDuration = 30    // days
+	upV830TrPrice    = "2"
+)
+
+// upV830DaoParams are the x/dao defaults the v8.3.0 handler stores
+// (InitGenesis of the new module).
+var upV830DaoParams = daoParams{
+	MaxSrPerDao:               5,
+	MaxStaticMembers:          128,
+	MaxOpenProposals:          10,
+	MaxMsgsPerProposal:        16,
+	MaxProposalBytes:          20_000,
+	MaxTitleLen:               140,
+	MaxSummaryLen:             5_000,
+	MinVotingPeriod:           time.Hour.String(),
+	MaxVotingPeriod:           (90 * 24 * time.Hour).String(),
+	ExecutionWindow:           (14 * 24 * time.Hour).String(),
+	CleanupBatchSize:          100,
+	DaoCreationFee:            sdk.NewInt64Coin("ubze", 50_000_000_000),
+	DaoCreationFeeDestination: "burner",
+	MinElectorateLockDays:     5,
+	MinExpediteDelay:          (24 * time.Hour).String(),
 }
 
 // upV830DaoName is the s.accounts name of the dao module address: v8.2.0 has
@@ -785,7 +823,7 @@ const (
 	upV830PlusDuration   = 1000 // days
 )
 
-// The v8.2.0 order book queue at the upgrade height (BZE-247): with
+// The v8.2.0 order book queue at the upgrade height: with
 // orderBookPerBlockMessages lowered to 1, admin queues upV830Backlog sell
 // orders and, behind them, the cancel of a resting sell in one tx. The queue
 // drains one message per block, slower than the upgrade proposal passes, so
@@ -854,7 +892,7 @@ func (s *upgradeSuite) v830Before(t *testing.T) any {
 	s.ibc.transferIn(t, chain.SimdDenom, upV830In).requireAccepted(t)
 	st.voucher = helpers.IbcDenom(s.ibc.main.bze, chain.SimdDenom)
 
-	// BZE-217: one denom keeps its admin, one is renounced
+	// tokenfactory 3 -> 4: one denom keeps its admin, one is renounced
 	admin := s.admin.FormattedAddress()
 	st.kept, st.renounced = "factory/"+admin+"/kept", "factory/"+admin+"/gone"
 	s.exec(t, s.admin, "tokenfactory", "create-denom", "kept")
@@ -897,9 +935,105 @@ func (s *upgradeSuite) v830Before(t *testing.T) any {
 	require.NoError(t, json.Unmarshal(burner["periodic_burning_weeks"], &weeks))
 	st.burningWeeks = int64(weeks)
 
+	for _, name := range []string{"dao", "guardian", "ratelimit"} {
+		require.NotContains(t, st.versions, name, "no %s module on v8.2.0", name)
+	}
+
+	st.trReward = s.v830TradingRewardBefore(t)
+
 	// last: the queue must still hold messages when the plan height is reached
 	st.queue = s.v830QueueBacklog(t)
 	return st
+}
+
+// v830TradingRewardBefore creates a trading reward on s.market and activates
+// it by gov with no trade: v8.2.0 starts its countdown at the activation,
+// expire_at = the activation block's hour epoch + duration × 24. Nothing
+// trades on s.market until v830TradingReward: the backlog's sells rest above
+// every buy.
+func (s *upgradeSuite) v830TradingRewardBefore(t *testing.T) string {
+	res := s.exec(t, s.admin, "rewards", "create-trading-reward",
+		strconv.Itoa(upV830TrPrize), chain.Denom, strconv.Itoa(upV830TrDuration), s.market, "1")
+	created := helpers.EventsWith(helpers.TxEvents(res, drEventPrefix+"TradingRewardCreateEvent"), map[string]string{"market_id": s.market})
+	require.Len(t, created, 1, "TradingRewardCreateEvent of %s", s.market)
+	id := created[0].Attributes["reward_id"]
+	require.NotEmpty(t, id)
+
+	_, err := helpers.SubmitAndPassProposalWith(s.ctx, s.bze, s.admin, s.txOpts(), helpers.Proposal{
+		Messages: []any{map[string]any{"@type": "/bze.rewards.MsgActivateTradingReward", "creator": s.gov, "reward_id": id}},
+		Title:    "Activate a trading reward",
+		Summary:  "e2e: a trading reward activated with no trade across the upgrade",
+	})
+	require.NoError(t, err)
+
+	cur, err := s.bze.Height(s.ctx)
+	require.NoError(t, err)
+	var activated []helpers.Event
+	var height int64
+	for h := cur; h > cur-20 && h > 0 && len(activated) == 0; h-- {
+		activated, err = helpers.BlockEvents(s.ctx, s.bze, h, drEventPrefix+"TradingRewardActivationEvent")
+		require.NoError(t, err)
+		height = h
+	}
+	require.Len(t, activated, 1, "one TradingRewardActivationEvent in the 20 blocks up to %d", cur)
+	require.Equal(t, id, activated[0].Attributes["reward_id"])
+
+	want := s.epoch(t, height, "hour") + upV830TrDuration*24
+	r := s.tradingReward(t, id)
+	require.Equal(t, s.market, r.MarketID)
+	require.Equal(t, want, int64(r.ExpireAt), "v8.2.0 starts the countdown at the activation")
+	require.Positive(t, int64(r.ExpireAt))
+	require.Equal(t, []string{id}, s.activeTradingRewards(t), "the reward is active")
+	return id
+}
+
+// v830TradingReward checks the rewards v6 migration: the reward v8.2.0
+// activated with no trade is still active with expire_at 0, and the first
+// trade on s.market starts its countdown. Admin rests a sell between bob's
+// orders and carol takes it whole, so step 7 finds the book as it was.
+func (s *upgradeSuite) v830TradingReward(t *testing.T, b v830State) {
+	require.Equal(t, []string{b.trReward}, s.activeTradingRewards(t), "the reward is still active")
+	require.Zero(t, int64(s.tradingReward(t, b.trReward).ExpireAt), "the migration reset the countdown")
+
+	carol := s.carol.FormattedAddress()
+	s.exec(t, s.admin, "tradebin", "create-order", "sell", strconv.Itoa(upOrderAmount), upV830TrPrice, s.market)
+	res := s.execMsg(t, s.carol, map[string]any{
+		"@type":      "/bze.tradebin.MsgFillOrders",
+		"creator":    carol,
+		"market_id":  s.market,
+		"order_type": "sell",
+		"orders":     []map[string]string{{"price": upV830TrPrice, "amount": strconv.Itoa(upOrderAmount)}},
+	})
+	executed := helpers.TxEvents(res, tradebinEventPrefix+"OrderExecutedEvent")
+	require.Len(t, helpers.EventsWith(executed, map[string]string{"market_id": s.market, "maker": s.admin.FormattedAddress(), "taker": carol}), 1,
+		"admin's sell executes against carol")
+	require.Empty(t, s.userOrders(t, 0, s.carol), "carol has no resting order")
+
+	want := s.epoch(t, res.Height, "hour") + upV830TrDuration*24
+	started := helpers.TxEvents(res, drEventPrefix+"TradingRewardStartEvent")
+	require.Len(t, started, 1, "TradingRewardStartEvent: %+v", started)
+	require.Equal(t, b.trReward, started[0].Attributes["reward_id"])
+	require.Equal(t, strconv.FormatInt(want, 10), started[0].Attributes["expire_at"])
+	require.Equal(t, want, int64(s.tradingReward(t, b.trReward).ExpireAt), "the first trade starts the countdown")
+}
+
+func (s *upgradeSuite) tradingReward(t *testing.T, id string) trReward {
+	t.Helper()
+	return query[struct {
+		TradingReward trReward `json:"trading_reward"`
+	}](t, s, 0, "rewards", "trading-reward", id).TradingReward
+}
+
+// activeTradingRewards lists the ids of the active trading rewards.
+func (s *upgradeSuite) activeTradingRewards(t *testing.T) []string {
+	t.Helper()
+	var ids []string
+	for _, r := range query[struct {
+		List []trReward `json:"list"`
+	}](t, s, 0, "rewards", "all-trading-rewards", "--state", "active").List {
+		ids = append(ids, r.RewardID)
+	}
+	return ids
 }
 
 // v830DaoAccountBefore sends ubze to the dao module address on v8.2.0, where
@@ -995,7 +1129,7 @@ func (s *upgradeSuite) v830Moves(t *testing.T, before any) []upgradeMove {
 	return moves
 }
 
-// v830QueueRefunded checks the tradebin 4 -> 5 migration (BZE-247): every
+// v830QueueRefunded checks the tradebin 4 -> 5 migration: every
 // order still queued at the plan height is refunded once, with reason
 // upgrade, in queue order; nothing is executed or cancelled; the cancel's
 // order still rests and no queue key is left in the store. Param field 11 is
@@ -1041,13 +1175,13 @@ func (s *upgradeSuite) v830QueueRefunded(t *testing.T, q v830Queue) {
 }
 
 // v830OwnerPriceIndex checks that the tradebin 4 -> 5 migration builds the
-// owner-price index (BZE-249): there was no Tb/op/ key on v8.2.0 and there
+// owner-price index: there was no Tb/op/ key on v8.2.0 and there
 // are some after the upgrade. The backlog orders still resting are several
 // orders of admin at one price (placed before v8.3.0): they stay separate and
 // the index points at the lowest id of them, so admin's next sell at that
 // price is merged with that order (OrderAmendedEvent, no new order): the
-// merged order rests under the sell's new id and the lowest id is gone
-// (BZE-267), the other backlog orders are untouched.
+// merged order rests under the sell's new id and the lowest id is gone;
+// the other backlog orders are untouched.
 func (s *upgradeSuite) v830OwnerPriceIndex(t *testing.T, q v830Queue) {
 	// the count on v8.2.0 was taken with the backlog (v830QueueBacklog)
 	require.Zero(t, q.ownerPriceKeys, "no owner-price index before the migration")
@@ -1093,7 +1227,7 @@ func (s *upgradeSuite) v830OwnerPriceIndex(t *testing.T, q v830Queue) {
 }
 
 // v830PriceLevelOwners checks that the tradebin 4 -> 5 migration wrote the
-// distinct-owner count of every price level (BZE-250): no aggregate counts
+// distinct-owner count of every price level: no aggregate counts
 // owners at plan - 1, and at the plan height every one counts the distinct
 // owners resting at its price, admin's several backlog orders at one price
 // once.
@@ -1182,8 +1316,8 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	b := before.(v830State)
 
 	// module versions: the ibc-go v10 migrations, the rewards v5 -> v6
-	// trading reward countdown reset (BZE-173) and the tradebin v4 -> v5
-	// order book queue removal (BZE-247) ran, everything else as before. x/upgrade never deletes a version entry, so the removed
+	// trading reward countdown reset and the tradebin v4 -> v5
+	// order book queue removal ran, everything else as before. x/upgrade never deletes a version entry, so the removed
 	// capability, feeibc, group and nft modules keep their last versions; their
 	// stores are deleted by the store loader and their CLI is gone (checked below)
 	versions := s.moduleVersions(t, s.plan)
@@ -1198,6 +1332,8 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	require.Equal(t, int64(5), versions["tradebin"], "tradebin migrated 4 -> 5")
 	require.Equal(t, int64(5), versions["burner"], "burner migrated 4 -> 5")
 	require.Equal(t, int64(1), versions["dao"], "the new dao module starts at version 1")
+	require.Equal(t, int64(1), versions["guardian"], "the new guardian module starts at version 1")
+	require.Equal(t, int64(2), versions["ratelimit"], "the new rate-limiting module starts at its consensus version 2")
 	for name, v := range b.versions {
 		switch name {
 		case "ibc", "transfer", "rewards", "tokenfactory", "tradebin", "burner":
@@ -1268,7 +1404,9 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	s.v830OwnerPriceIndex(t, b.queue)
 
 	s.v830BurnerParams(t, b)
+	s.v830DaoParams(t)
 	s.v830DaoAccount(t, b)
+	s.v830TradingReward(t, b)
 
 	// the sweep left txfeecollector_burner empty (step 4 checked the moves),
 	// and its retired address still refuses funds
@@ -1291,6 +1429,20 @@ func (s *upgradeSuite) v830BurnerParams(t *testing.T, b v830State) {
 	require.NoError(t, err)
 	require.Equal(t, sdkmath.LegacyMustNewDecFromStr("0.03").String(), ratio.String(), "ibc_move_max_reserve_ratio default")
 	require.Equal(t, int64(1000), int64(res.IbcMoveCooldownBlocks), "ibc_move_cooldown_blocks default")
+}
+
+// v830DaoParams checks x/dao holds exactly its default params. The CLI
+// prints durations as seconds ("3600s"), compared as Go durations.
+func (s *upgradeSuite) v830DaoParams(t *testing.T) {
+	got := query[struct {
+		Params daoParams `json:"params"`
+	}](t, s, 0, "dao", "params").Params
+	for _, d := range []*string{&got.MinVotingPeriod, &got.MaxVotingPeriod, &got.ExecutionWindow, &got.MinExpediteDelay} {
+		v, err := time.ParseDuration(*d)
+		require.NoError(t, err)
+		*d = v.String()
+	}
+	require.Equal(t, mustJSON(upV830DaoParams), mustJSON(got), "x/dao default params")
 }
 
 // v830DaoAccount checks the handler turned the plain account v8.2.0 left at
@@ -1491,8 +1643,8 @@ func (s *upgradeSuite) lpMetadata(t *testing.T, height int64, denom string) upLp
 // address, hard-coded because the e2e module does not import the chain).
 const upV830Guardian = "bze1jx4x3kn8mlz2s03zdpf2a38x9gl66llvjqdd55"
 
-// v830RateLimits checks the IBC rate limiting the v8.3.0 handler sets up
-// (BZE-256): the guardian is the mainnet constant, and of the initial
+// v830RateLimits checks the IBC rate limiting the v8.3.0 handler sets up:
+// the guardian is the mainnet constant, and of the initial
 // rate limits only the ones whose path exists on this network were added.
 // The network has one channel, channel-0, which carries ubze: it gets
 // the 2% / 2% quota in a 24 h window with an empty flow; every other row of
@@ -1521,7 +1673,7 @@ func (s *upgradeSuite) v830RateLimits(t *testing.T) {
 	require.Empty(t, blocked)
 }
 
-// v830MintableFlags checks the tokenfactory 3 -> 4 migration (BZE-217): every
+// v830MintableFlags checks the tokenfactory 3 -> 4 migration: every
 // seeded denom and kept keep their admin and are mintable, renounced is not,
 // and kept's admin can still mint it. All of them read the default
 // DenomConfig, and kept's admin can set one.
