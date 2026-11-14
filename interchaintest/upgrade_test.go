@@ -1390,7 +1390,8 @@ func (s *upgradeSuite) account(t *testing.T, addr string) (upAccount, bool) {
 		require.NoError(t, json.Unmarshal(bz, &base))
 	}
 	// a module account's name and permissions sit beside base_account in the
-	// proto JSON, and beside the flattened base fields in amino JSON
+	// proto JSON, and beside the flattened base fields in the "type"/"value"
+	// form the CLI prints (the module account's own JSON encoding)
 	if typ == "/cosmos.auth.v1beta1.ModuleAccount" {
 		if raw, ok := fields["name"]; ok {
 			require.NoError(t, json.Unmarshal(raw, &acc.Name))
