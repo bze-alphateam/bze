@@ -29,7 +29,7 @@ func (c DenomConfig) IsDefault() bool {
 		!c.GasSurcharge.IsNil() && c.GasSurcharge.IsZero()
 }
 
-// Validate checks the community pool address and that both rates are set and within their caps.
+// Validate checks the community pool address and that both rates are set, non-negative and within their caps.
 func (c DenomConfig) Validate() error {
 	if c.CommunityPool != "" {
 		if _, err := sdk.AccAddressFromBech32(c.CommunityPool); err != nil {

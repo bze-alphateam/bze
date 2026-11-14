@@ -103,6 +103,64 @@ func (suite *IntegrationTestSuite) TestMsgUpdatePools_UpdatesFeeAndSplitOnly() {
 	suite.Require().True(events[0].NewFeeDest.Providers.Equal(newDest.Providers))
 }
 
+// A batch that changes several pools writes every entry to its own pool and emits one event per pool,
+// in message order.
+func (suite *IntegrationTestSuite) TestMsgUpdatePools_BatchUpdatesEveryChangedPool() {
+	first := suite.seedUpdatablePool(updPoolId, denomStake, denomBze)
+	second := suite.seedUpdatablePool(updPoolOther, denomHalted, denomBze)
+
+	firstFee := math.LegacyMustNewDecFromStr("0.01")
+	firstDest := updFeeDest("0.5", "0.25", "0.25")
+	secondFee := math.LegacyMustNewDecFromStr("0.02")
+	secondDest := updFeeDest("0.2", "0.2", "0.6")
+	msg := types.NewMsgUpdatePools(haltAuthority(), []types.PoolUpdate{
+		{PoolId: updPoolId, Fee: firstFee, FeeDest: firstDest},
+		{PoolId: updPoolOther, Fee: secondFee, FeeDest: secondDest},
+	})
+
+	_, err := suite.msgServer.UpdatePools(suite.ctx, msg)
+	suite.Require().NoError(err)
+
+	cases := []struct {
+		id   string
+		seed types.LiquidityPool
+		fee  math.LegacyDec
+		dest types.FeeDestination
+	}{
+		{updPoolId, first, firstFee, firstDest},
+		{updPoolOther, second, secondFee, secondDest},
+	}
+	for _, c := range cases {
+		after, found := suite.k.GetLiquidityPool(suite.ctx, c.id)
+		suite.Require().True(found)
+		suite.Require().True(after.Fee.Equal(c.fee), "pool %s fee", c.id)
+		suite.Require().True(after.FeeDest.Treasury.Equal(c.dest.Treasury), "pool %s treasury share", c.id)
+		suite.Require().True(after.FeeDest.Burner.Equal(c.dest.Burner), "pool %s burner share", c.id)
+		suite.Require().True(after.FeeDest.Providers.Equal(c.dest.Providers), "pool %s providers share", c.id)
+
+		// every other field is untouched
+		expected := c.seed
+		expected.Fee = after.Fee
+		expected.FeeDest = after.FeeDest
+		suite.Require().Equal(expected, after)
+	}
+
+	events := suite.poolFeesUpdatedEvents()
+	suite.Require().Len(events, 2)
+	for i, c := range cases {
+		ev := events[i]
+		suite.Require().Equal(c.id, ev.PoolId)
+		suite.Require().Equal(c.seed.Fee.String(), ev.OldFee)
+		suite.Require().Equal(c.fee.String(), ev.NewFee)
+		suite.Require().True(ev.OldFeeDest.Treasury.Equal(c.seed.FeeDest.Treasury))
+		suite.Require().True(ev.OldFeeDest.Burner.Equal(c.seed.FeeDest.Burner))
+		suite.Require().True(ev.OldFeeDest.Providers.Equal(c.seed.FeeDest.Providers))
+		suite.Require().True(ev.NewFeeDest.Treasury.Equal(c.dest.Treasury))
+		suite.Require().True(ev.NewFeeDest.Burner.Equal(c.dest.Burner))
+		suite.Require().True(ev.NewFeeDest.Providers.Equal(c.dest.Providers))
+	}
+}
+
 func (suite *IntegrationTestSuite) TestMsgUpdatePools_InvalidAuthorityRejected() {
 	before := suite.seedUpdatablePool(updPoolId, denomStake, denomBze)
 	msg := types.NewMsgUpdatePools(getTestAddress(), []types.PoolUpdate{

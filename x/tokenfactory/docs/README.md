@@ -57,12 +57,12 @@ Each factory denom has a `DenomConfig`, stored next to its authority record:
 | Field | Meaning | Allowed values | Default |
 |---|---|---|---|
 | `community_pool` | address that receives the token's fee coins | empty (none) or a valid, non-blocked address | empty |
-| `transfer_fee` | ratio charged on top of user sends | `0` to `0.05` (5%) | `0` |
+| `transfer_fee` | ratio charged on top of protocol fees paid in the token (not on sends or IBC transfers) | `0` to `0.05` (5%) | `0` |
 | `gas_surcharge` | ratio added when the token pays gas | `0` to `2` (200%) | `0` |
 
 - `MsgSetDenomConfig` replaces the whole configuration. **Every field must be sent**: a missing rate is refused, so send `0` explicitly. An empty `community_pool` means none, and it is the only way to clear it.
 - Rates are decimal ratios, like staking and DEX rates: `0.001` is 0.1%. The caps (`MaxTransferFee`, `MaxGasSurcharge`) are chain constants; changing them needs an upgrade.
-- Only the current admin may send it, a user or a DAO. The admin can raise or lower both rates and change or clear the community pool at any time. After a renounce nobody can change it: the token keeps its configuration as it was.
+- Only the current admin may send it, a user or a DAO. The admin can raise or lower both rates and change or clear the community pool at any time. After a renounce the token keeps its configuration as it was: only an admin that governance later assigns with `MsgSetDenomAdmin` can change it, and minting stays off.
 - A community pool the bank module blocks (module accounts such as the fee collector or the x/dao module) is refused with `ErrInvalidDenomConfig`. A DAO treasury is a plain account and is accepted.
 - Rates can be set without a community pool. The transfer fee and gas surcharge are then still charged, and the coins are burned.
 - Rate changes, increases included, apply from the next block. The caps are the holders' protection.

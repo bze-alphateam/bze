@@ -47,6 +47,16 @@ func TestMsgUpdatePools_ValidateBasic(t *testing.T) {
 	allToBurner := types.FeeDestination{Treasury: math.LegacyZeroDec(), Burner: math.LegacyOneDec(), Providers: math.LegacyZeroDec()}
 	missingShare := validFeeDest()
 	missingShare.Burner = math.LegacyDec{}
+	missingTreasury := validFeeDest()
+	missingTreasury.Treasury = math.LegacyDec{}
+	missingProviders := validFeeDest()
+	missingProviders.Providers = math.LegacyDec{}
+	// sums to one, so only the sign check refuses it
+	negativeProviders := types.FeeDestination{
+		Treasury:  math.LegacyMustNewDecFromStr("0.5"),
+		Burner:    math.LegacyMustNewDecFromStr("0.7"),
+		Providers: math.LegacyMustNewDecFromStr("-0.2"),
+	}
 
 	tests := []struct {
 		name      string
@@ -70,9 +80,12 @@ func TestMsgUpdatePools_ValidateBasic(t *testing.T) {
 		{"negative fee", authority, []types.PoolUpdate{poolUpdate("p", "-0.003", validFeeDest())}, sdkerrors.ErrInvalidCoins},
 		{"missing fee", authority, []types.PoolUpdate{{PoolId: "p", FeeDest: validFeeDest()}}, sdkerrors.ErrInvalidCoins},
 		{"negative share", authority, []types.PoolUpdate{poolUpdate("p", "0.003", negative)}, types.ErrNegativeFeeDestination},
+		{"negative providers share", authority, []types.PoolUpdate{poolUpdate("p", "0.003", negativeProviders)}, types.ErrNegativeFeeDestination},
 		{"shares sum below one", authority, []types.PoolUpdate{poolUpdate("p", "0.003", sumBelowOne)}, types.ErrInvalidFeeDestination},
 		{"shares sum above one", authority, []types.PoolUpdate{poolUpdate("p", "0.003", sumAboveOne)}, types.ErrInvalidFeeDestination},
 		{"missing share", authority, []types.PoolUpdate{poolUpdate("p", "0.003", missingShare)}, types.ErrInvalidFeeDestination},
+		{"missing treasury share", authority, []types.PoolUpdate{poolUpdate("p", "0.003", missingTreasury)}, types.ErrInvalidFeeDestination},
+		{"missing providers share", authority, []types.PoolUpdate{poolUpdate("p", "0.003", missingProviders)}, types.ErrInvalidFeeDestination},
 		{"one invalid entry fails the batch", authority, []types.PoolUpdate{valid, poolUpdate("p", "0.5", validFeeDest())}, sdkerrors.ErrInvalidCoins},
 	}
 	for _, tc := range tests {
@@ -105,6 +118,14 @@ func TestValidatePoolFeeDestination(t *testing.T) {
 	negative.Burner = math.LegacyMustNewDecFromStr("-0.2")
 	negative.Providers = math.LegacyMustNewDecFromStr("0.9")
 	require.ErrorIs(t, types.ValidatePoolFeeDestination(negative), types.ErrNegativeFeeDestination)
+
+	// sums to one, so only the sign check refuses it
+	negativeProviders := types.FeeDestination{
+		Treasury:  math.LegacyMustNewDecFromStr("0.5"),
+		Burner:    math.LegacyMustNewDecFromStr("0.7"),
+		Providers: math.LegacyMustNewDecFromStr("-0.2"),
+	}
+	require.ErrorIs(t, types.ValidatePoolFeeDestination(negativeProviders), types.ErrNegativeFeeDestination)
 
 	off := validFeeDest()
 	off.Treasury = math.LegacyMustNewDecFromStr("0.31")
