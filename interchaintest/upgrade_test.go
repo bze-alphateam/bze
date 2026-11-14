@@ -734,21 +734,21 @@ func (s *upgradeSuite) createDenomReward(t *testing.T) {
 // x/guardian start at module version 1, the rate-limiting module at 2, and
 // x/dao holds its default params (DAO creation fee 50,000 BZE, burned).
 //
-// BZE-173 (rewards v5 -> v6): v8.2.0 started an activated trading reward's
+// Rewards v5 -> v6 migration: v8.2.0 started an activated trading reward's
 // countdown at its activation; the migration resets it (expire_at 0) on every
 // active reward that has had no trade yet, and its first trade starts it.
 //
-// BZE-154 (cosmos-sdk v0.53 + ibc-go v10): the capability and feeibc modules
+// cosmos-sdk v0.53 + ibc-go v10: the capability and feeibc modules
 // are gone (their version entries stay frozen: x/upgrade never deletes one),
-// ibc-go v10 migrated core (6 -> 8) and transfer (5 -> 6), BZE-173 migrated
+// ibc-go v10 migrated core (6 -> 8) and transfer (5 -> 6), the rewards migration moved
 // rewards (5 -> 6), no other module version moved, and IBC keeps working over the
 // channel opened before the upgrade, including the voucher it minted.
 //
-// BZE-155: the unused x/group and x/nft modules are gone: their stores are
+// The unused x/group and x/nft modules are gone: their stores are
 // deleted, their version entries frozen, their CLI queries unknown, and the
 // nft module account (left on chain, empty) still refuses funds.
 //
-// BZE-217: tokenfactory migrated 3 -> 4. Every denom that has an admin is
+// Tokenfactory migrated 3 -> 4. Every denom that has an admin is
 // mintable and its admin can still mint; a denom renounced before the
 // upgrade is non-mintable. Every denom reads the default DenomConfig, and an
 // admin can set one.
@@ -759,7 +759,7 @@ type v830State struct {
 	voucher string
 	// kept keeps its admin across the upgrade, renounced is renounced before it
 	kept, renounced string
-	// queue is the order book queue left at the upgrade height (BZE-247)
+	// queue is the order book queue left at the upgrade height
 	queue v830Queue
 	// plusSR is a staking reward created on v8.2.0 with a prize amount in a
 	// non-canonical integer form (upV830PlusPrize)
@@ -823,7 +823,7 @@ const (
 	upV830PlusDuration   = 1000 // days
 )
 
-// The v8.2.0 order book queue at the upgrade height (BZE-247): with
+// The v8.2.0 order book queue at the upgrade height: with
 // orderBookPerBlockMessages lowered to 1, admin queues upV830Backlog sell
 // orders and, behind them, the cancel of a resting sell in one tx. The queue
 // drains one message per block, slower than the upgrade proposal passes, so
@@ -892,7 +892,7 @@ func (s *upgradeSuite) v830Before(t *testing.T) any {
 	s.ibc.transferIn(t, chain.SimdDenom, upV830In).requireAccepted(t)
 	st.voucher = helpers.IbcDenom(s.ibc.main.bze, chain.SimdDenom)
 
-	// BZE-217: one denom keeps its admin, one is renounced
+	// tokenfactory 3 -> 4: one denom keeps its admin, one is renounced
 	admin := s.admin.FormattedAddress()
 	st.kept, st.renounced = "factory/"+admin+"/kept", "factory/"+admin+"/gone"
 	s.exec(t, s.admin, "tokenfactory", "create-denom", "kept")
@@ -1130,7 +1130,7 @@ func (s *upgradeSuite) v830Moves(t *testing.T, before any) []upgradeMove {
 	return moves
 }
 
-// v830QueueRefunded checks the tradebin 4 -> 5 migration (BZE-247): every
+// v830QueueRefunded checks the tradebin 4 -> 5 migration: every
 // order still queued at the plan height is refunded once, with reason
 // upgrade, in queue order; nothing is executed or cancelled; the cancel's
 // order still rests and no queue key is left in the store. Param field 11 is
@@ -1176,13 +1176,13 @@ func (s *upgradeSuite) v830QueueRefunded(t *testing.T, q v830Queue) {
 }
 
 // v830OwnerPriceIndex checks that the tradebin 4 -> 5 migration builds the
-// owner-price index (BZE-249): there was no Tb/op/ key on v8.2.0 and there
+// owner-price index: there was no Tb/op/ key on v8.2.0 and there
 // are some after the upgrade. The backlog orders still resting are several
 // orders of admin at one price (placed before v8.3.0): they stay separate and
 // the index points at the lowest id of them, so admin's next sell at that
 // price is merged with that order (OrderAmendedEvent, no new order): the
-// merged order rests under the sell's new id and the lowest id is gone
-// (BZE-267), the other backlog orders are untouched.
+// merged order rests under the sell's new id and the lowest id is gone;
+// the other backlog orders are untouched.
 func (s *upgradeSuite) v830OwnerPriceIndex(t *testing.T, q v830Queue) {
 	// the count on v8.2.0 was taken with the backlog (v830QueueBacklog)
 	require.Zero(t, q.ownerPriceKeys, "no owner-price index before the migration")
@@ -1228,7 +1228,7 @@ func (s *upgradeSuite) v830OwnerPriceIndex(t *testing.T, q v830Queue) {
 }
 
 // v830PriceLevelOwners checks that the tradebin 4 -> 5 migration wrote the
-// distinct-owner count of every price level (BZE-250): no aggregate counts
+// distinct-owner count of every price level: no aggregate counts
 // owners at plan - 1, and at the plan height every one counts the distinct
 // owners resting at its price, admin's several backlog orders at one price
 // once.
@@ -1317,8 +1317,8 @@ func (s *upgradeSuite) v830After(t *testing.T, before any) {
 	b := before.(v830State)
 
 	// module versions: the ibc-go v10 migrations, the rewards v5 -> v6
-	// trading reward countdown reset (BZE-173) and the tradebin v4 -> v5
-	// order book queue removal (BZE-247) ran, everything else as before. x/upgrade never deletes a version entry, so the removed
+	// trading reward countdown reset and the tradebin v4 -> v5
+	// order book queue removal ran, everything else as before. x/upgrade never deletes a version entry, so the removed
 	// capability, feeibc, group and nft modules keep their last versions; their
 	// stores are deleted by the store loader and their CLI is gone (checked below)
 	versions := s.moduleVersions(t, s.plan)
@@ -1644,8 +1644,8 @@ func (s *upgradeSuite) lpMetadata(t *testing.T, height int64, denom string) upLp
 // address, hard-coded because the e2e module does not import the chain).
 const upV830Guardian = "bze1jx4x3kn8mlz2s03zdpf2a38x9gl66llvjqdd55"
 
-// v830RateLimits checks the IBC rate limiting the v8.3.0 handler sets up
-// (BZE-256): the guardian is the mainnet constant, and of the initial
+// v830RateLimits checks the IBC rate limiting the v8.3.0 handler sets up:
+// the guardian is the mainnet constant, and of the initial
 // rate limits only the ones whose path exists on this network were added.
 // The network has one channel, channel-0, which carries ubze: it gets
 // the 2% / 2% quota in a 24 h window with an empty flow; every other row of
@@ -1674,7 +1674,7 @@ func (s *upgradeSuite) v830RateLimits(t *testing.T) {
 	require.Empty(t, blocked)
 }
 
-// v830MintableFlags checks the tokenfactory 3 -> 4 migration (BZE-217): every
+// v830MintableFlags checks the tokenfactory 3 -> 4 migration: every
 // seeded denom and kept keep their admin and are mintable, renounced is not,
 // and kept's admin can still mint it. All of them read the default
 // DenomConfig, and kept's admin can set one.
