@@ -45,7 +45,7 @@ type DistrKeeper interface {
 // DenomCommunityPoolProvider reads a denom's DenomConfig. Implemented by the tokenfactory keeper.
 type DenomCommunityPoolProvider interface {
 	// GetDenomCommunityPool returns the community pool address a denom's fees are forwarded to, false when the denom
-	// has none.
+	// has none. A stored address that is blocked from receiving funds is reported as none.
 	GetDenomCommunityPool(ctx sdk.Context, denom string) (sdk.AccAddress, bool)
 	// GetDenomFeeRates returns the denom's transfer fee and gas surcharge ratios, zeros when none are set.
 	GetDenomFeeRates(ctx sdk.Context, denom string) (transferFee, gasSurcharge math.LegacyDec)

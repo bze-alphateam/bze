@@ -44,6 +44,10 @@ func (k Keeper) SetDenomConfig(ctx sdk.Context, denom string, cfg types.DenomCon
 }
 
 // GetDenomCommunityPool returns the denom's community pool address, false when it has none.
+//
+// Every reader of a denom's community pool goes through here, so a stored address the bank refuses to send to
+// (blocked) counts as no community pool: MsgSetDenomConfig refuses such an address, but one can become blocked after
+// it was stored, and the denom's fees then follow the no-community-pool path instead of failing on the send.
 func (k Keeper) GetDenomCommunityPool(ctx sdk.Context, denom string) (sdk.AccAddress, bool) {
 	cfg := k.GetDenomConfig(ctx, denom)
 	if cfg.CommunityPool == "" {
@@ -54,6 +58,10 @@ func (k Keeper) GetDenomCommunityPool(ctx sdk.Context, denom string) (sdk.AccAdd
 	if err != nil {
 		k.Logger().Error("invalid stored community pool address", "denom", denom, "error", err)
 
+		return nil, false
+	}
+
+	if k.bankKeeper.BlockedAddr(addr) {
 		return nil, false
 	}
 

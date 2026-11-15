@@ -19,9 +19,9 @@ import (
 //   - anything else (too small to swap, no pool or a shallow one): kept in the collector until it can be swapped
 //
 // A failed send to a denom's community pool returns the error and the caller is expected to discard everything the
-// pass wrote (EndBlock runs it through bzeutils.ApplyFuncIfNoError), the cursor move included. Such a send can only
-// fail on a blocked recipient or a missing balance, neither of which should happen, so a failure is a bug: the coins
-// stay in the collector, never rerouted, swapped or burned, until it is fixed.
+// pass wrote (EndBlock runs it through bzeutils.ApplyFuncIfNoError), the cursor move included. The provider never
+// returns a blocked address (a blocked community pool counts as none), so such a send should not fail and a failure
+// is a bug: the coins stay in the collector, never rerouted, swapped or burned, until it is fixed.
 func (k Keeper) ConvertCommunityPoolFees(ctx sdk.Context) error {
 	moduleAddr := k.accountKeeper.GetModuleAddress(types.CpFeeCollector)
 	page := k.readCollectorPage(ctx, types.CpFeeCollector, moduleAddr)

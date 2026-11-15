@@ -52,6 +52,9 @@ func (suite *IntegrationTestSuite) requireConfig(denom, cp, transferFee, gasSurc
 	suite.Require().True(tf.Equal(res.Config.TransferFee))
 	suite.Require().True(gs.Equal(res.Config.GasSurcharge))
 
+	if cp != "" {
+		suite.bank.EXPECT().BlockedAddr(sdk.MustAccAddressFromBech32(cp)).Return(false).Times(1)
+	}
 	addr, ok := suite.k.GetDenomCommunityPool(suite.ctx, denom)
 	suite.Require().Equal(cp != "", ok)
 	if cp != "" {
@@ -177,6 +180,27 @@ func (suite *IntegrationTestSuite) TestSetDenomConfig_BlockedCommunityPool() {
 	suite.Require().ErrorIs(err, types.ErrInvalidDenomConfig)
 	suite.requireConfig(denom, "", "0", "0")
 	suite.Require().Empty(suite.denomConfigEvents())
+}
+
+// A stored community pool address that is blocked from receiving funds (it became blocked after it was set) reads as
+// no community pool, while the stored config itself is left as it is.
+func (suite *IntegrationTestSuite) TestGetDenomCommunityPool_BlockedAfterSetReadsAsNone() {
+	admin := sdk.AccAddress("admin").String()
+	cp := sdk.AccAddress("later-module-account")
+	denom := suite.setupMintableDenom(admin)
+	suite.Require().NoError(suite.setDenomConfig(admin, denom, cp.String(), "0.01", "1"))
+
+	suite.bank.EXPECT().BlockedAddr(cp).Return(true).Times(1)
+	addr, ok := suite.k.GetDenomCommunityPool(suite.ctx, denom)
+	suite.Require().False(ok)
+	suite.Require().Nil(addr)
+
+	// the config and the fee rates are untouched: only the community pool lookup changes
+	cfg := suite.k.GetDenomConfig(suite.ctx, denom)
+	suite.Require().Equal(cp.String(), cfg.CommunityPool)
+	tf, gs := suite.k.GetDenomFeeRates(suite.ctx, denom)
+	suite.Require().True(math.LegacyMustNewDecFromStr("0.01").Equal(tf))
+	suite.Require().True(math.LegacyOneDec().Equal(gs))
 }
 
 // The msg server refuses invalid values even when ValidateBasic was skipped.
