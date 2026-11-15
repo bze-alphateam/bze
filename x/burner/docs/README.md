@@ -66,7 +66,7 @@ bzed tx burner join-raffle \
 
 ### What Happens After the Raffle Ends
 - Duration is tracked in hourly epochs; after `duration` days elapse, the raffle is cleaned up.
-- Remaining pot is burned; a `RaffleFinishedEvent` is emitted.
+- Remaining pot is burned, or locked in the black hole when it can't be burned (LP shares, IBC coins). A `RaffleFinishedEvent` is emitted for every finished raffle, whether its pot was burned, locked or empty.
 - Up to the latest 100 winners per denom are kept (older ones roll over).
 
 ## Queries (CLI / REST / gRPC)

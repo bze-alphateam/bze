@@ -160,6 +160,8 @@ func (k Keeper) ProcessRaffleCleanupQueue(ctx sdk.Context) error {
 // leaves the pot in the raffle module.
 func (k Keeper) cleanupRaffle(ctx sdk.Context, itemLogger log.Logger, item types.RaffleDeleteHook) {
 	k.removeRaffleData(ctx, item)
+	// the raffle is finished once its data is removed, whatever happens to its pot (burned, locked or empty)
+	defer k.emitRaffleFinishedEvent(ctx, itemLogger, item.Denom)
 
 	raffleAcc := k.accountKeeper.GetModuleAccount(ctx, types.RaffleModuleName)
 	if raffleAcc == nil {
@@ -190,8 +192,10 @@ func (k Keeper) cleanupRaffle(ctx sdk.Context, itemLogger log.Logger, item types
 	}
 
 	itemLogger.Debug("burned raffle coins", "burned_current_pot", burned)
+}
 
-	err = ctx.EventManager().EmitTypedEvent(&types.RaffleFinishedEvent{Denom: item.Denom})
+func (k Keeper) emitRaffleFinishedEvent(ctx sdk.Context, itemLogger log.Logger, denom string) {
+	err := ctx.EventManager().EmitTypedEvent(&types.RaffleFinishedEvent{Denom: denom})
 	if err != nil {
 		itemLogger.Error("failed to emit raffle finished event", "error", err)
 	}
@@ -202,6 +206,8 @@ func (k Keeper) cleanupRaffle(ctx sdk.Context, itemLogger log.Logger, item types
 // pot in the black hole module (in its own cached context; on failure the pot stays in the raffle module).
 func (k Keeper) cleanupFailedRaffle(ctx sdk.Context, itemLogger log.Logger, item types.RaffleDeleteHook) {
 	k.removeRaffleData(ctx, item)
+	// the events of the failed cleanup were discarded with its writes
+	k.emitRaffleFinishedEvent(ctx, itemLogger, item.Denom)
 
 	err := bzeutils.ApplyFuncIfNoError(ctx, func(cached sdk.Context) error {
 		raffleAcc := k.accountKeeper.GetModuleAccount(cached, types.RaffleModuleName)

@@ -35,7 +35,7 @@ This file captures implementation details for integrators and operators. For use
   - Winners receive `ratio * current_pot` (truncated), pot is reduced, and a `RaffleWinnerEvent` is emitted.
   - Losers add their ticket price to the pot and trigger `RaffleLostEvent`.
   - Winner records are stored modulo 100 indexes per denom (only the latest 100 kept).
-- **Expiration:** At the configured end epoch, remaining pot is burned via `BurnAnyCoins`, the raffle and winner records are deleted, and `RaffleFinishedEvent` is emitted.
+- **Expiration:** At the configured end epoch, the raffle and winner records are deleted, the remaining pot goes through `BurnAnyCoins` (burned, or locked in the black hole for LP shares and IBC coins), and `RaffleFinishedEvent` is emitted for every finished raffle, whether its pot was burned, locked or empty.
 
 ## Queries and Storage
 - Raffles and participants are stored under prefixed keys for pagination; burned coin history is keyed by block height.
