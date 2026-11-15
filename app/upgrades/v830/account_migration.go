@@ -22,7 +22,7 @@ import (
 // handler reads the source's state at the upgrade height.
 const (
 	AccountMigrationSource   = "bze1z3mkcr2jz424w6m49frgjmy9uhlrx69phqwg3l"
-	AccountMigrationRecovery = "bze1ucx0c63jut4x9ekstszed64hmcumaa62k84xex"
+	AccountMigrationRecovery = "bze16w8swmdq7p6kcrdunlxwly7zw6pytgl0k7a3z0"
 )
 
 // MigrationStakingKeeper is the part of the staking keeper the account migration uses.
