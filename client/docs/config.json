@@ -201,6 +201,62 @@
           "Params": "UpgradeParams"
         }
       }
+    },
+    {
+      "url": "../../tmp-swagger-gen/ibc/applications/interchain_accounts/controller/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "InterchainAccountsControllerParams"
+        }
+      }
+    },
+    {
+      "url": "../../tmp-swagger-gen/ibc/applications/interchain_accounts/host/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "InterchainAccountsHostParams"
+        }
+      }
+    },
+    {
+      "url": "../../tmp-swagger-gen/ibc/applications/transfer/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "TransferParams"
+        }
+      }
+    },
+    {
+      "url": "../../tmp-swagger-gen/ibc/core/channel/v1/query.swagger.json"
+    },
+    {
+      "url": "../../tmp-swagger-gen/ibc/core/channel/v2/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "NextSequenceSend": "ChannelV2NextSequenceSend",
+          "PacketAcknowledgement": "ChannelV2PacketAcknowledgement",
+          "PacketAcknowledgements": "ChannelV2PacketAcknowledgements",
+          "PacketCommitment": "ChannelV2PacketCommitment",
+          "PacketCommitments": "ChannelV2PacketCommitments",
+          "PacketReceipt": "ChannelV2PacketReceipt",
+          "UnreceivedAcks": "ChannelV2UnreceivedAcks",
+          "UnreceivedPackets": "ChannelV2UnreceivedPackets"
+        }
+      }
+    },
+    {
+      "url": "../../tmp-swagger-gen/ibc/core/client/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "UpgradedConsensusState": "ClientUpgradedConsensusState"
+        }
+      }
+    },
+    {
+      "url": "../../tmp-swagger-gen/ibc/core/connection/v1/query.swagger.json"
+    },
+    {
+      "url": "../../tmp-swagger-gen/ratelimit/v1/query.swagger.json"
     }
   ]
 }
