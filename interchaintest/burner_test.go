@@ -570,8 +570,8 @@ func (s *burnerSuite) raffleExpiry(t *testing.T) {
 
 	// the stake voucher raffle's pot can't be burned: its cleanup locks it in
 	// the black hole instead of adding it to the deep stake pool. A pot that
-	// is only locked burns nothing, so the cleanup records no burn and, as
-	// before, emits no RaffleFinishedEvent
+	// is only locked burns nothing, so the cleanup records no burn, but the
+	// raffle still ends with its RaffleFinishedEvent
 	t.Run("ibc voucher pot locked", func(t *testing.T) {
 		height := s.epochStartHeight(t, "hour", s.endAt[s.stake]+1, brExpiryWait)
 		_, found := s.raffle(t, s.stake, height-1)
@@ -590,8 +590,8 @@ func (s *burnerSuite) raffleExpiry(t *testing.T) {
 		require.Equal(t, s.poolAt(t, s.stakePool, height-1), s.poolAt(t, s.stakePool, height), "stake pool unchanged")
 		require.Empty(t, helpers.EventsWith(s.blockTypedEvents(t, height, tradebinEventPrefix+"LiquidityAddedEvent"), map[string]string{"pool_id": s.stakePool}),
 			"no liquidity added to the stake pool")
-		require.Empty(t, helpers.EventsWith(s.blockTypedEvents(t, height, burnerEventPrefix+"RaffleFinishedEvent"), map[string]string{"denom": s.stake}),
-			"no RaffleFinishedEvent for a locked pot")
+		require.Len(t, helpers.EventsWith(s.blockTypedEvents(t, height, burnerEventPrefix+"RaffleFinishedEvent"), map[string]string{"denom": s.stake}), 1,
+			"one RaffleFinishedEvent for a locked pot")
 		require.True(t, s.burns[height].AmountOf(s.stake).IsZero(), "the stake voucher is in no burn record")
 
 		_, found = s.raffle(t, s.stake, height)

@@ -105,6 +105,7 @@ derived from it. History older than v8.0.0 lives in the
 
 ### Bug Fixes
 
+* (x/burner) [#PRNUM](https://github.com/bze-alphateam/bze/pull/PRNUM) `RaffleFinishedEvent` is emitted for every finished raffle, including when its pot is locked in the black hole, is empty, or its cleanup fails. It used to be emitted only when part of the pot was burned.
 * (build) [#137](https://github.com/bze-alphateam/bze/pull/137) `make build-win64` cross-compiles for `windows/amd64`. It used to build for the host, so the released `bzed.exe` was a macOS or Linux binary with an `.exe` name.
 
 ## [v8.2.0](https://github.com/bze-alphateam/bze/releases/tag/v8.2.0) - 2026-10-14
