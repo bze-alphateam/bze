@@ -7,9 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -25,8 +27,8 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	transfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v10/modules/core/02-client/types"
 	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 	"github.com/stretchr/testify/require"
 
@@ -71,7 +73,8 @@ func newMigFixture(t *testing.T) *migFixture {
 	appOptions[flags.FlagHome] = t.TempDir()
 	bApp, err := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, appOptions)
 	require.NoError(t, err)
-	ctx := bApp.NewUncachedContext(false, cmtproto.Header{Height: 100, Time: time.Date(2026, 11, 20, 12, 0, 0, 0, time.UTC)})
+	start := time.Date(2026, 11, 20, 12, 0, 0, 0, time.UTC)
+	ctx := bApp.NewUncachedContext(false, cmtproto.Header{Height: 100, Time: start}).WithHeaderInfo(header.Info{Height: 100, Time: start})
 
 	require.NoError(t, bApp.BankKeeper.SetParams(ctx, banktypes.DefaultParams()))
 	stakingParams := stakingtypes.DefaultParams()
@@ -82,6 +85,8 @@ func newMigFixture(t *testing.T) *migFixture {
 	require.NoError(t, bApp.DistrKeeper.FeePool.Set(ctx, distrtypes.InitialFeePool()))
 	require.NoError(t, bApp.DistrKeeper.Params.Set(ctx, distrtypes.DefaultParams()))
 	require.NoError(t, bApp.UpgradeKeeper.SetModuleVersionMap(ctx, bApp.ModuleManager.GetVersionMap()))
+	// the handler's rate limit step reads the IBC client params, as on any live chain
+	bApp.IBCKeeper.ClientKeeper.SetParams(ctx, clienttypes.DefaultParams())
 
 	return &migFixture{t: t, app: bApp, ctx: ctx, msg: stakingkeeper.NewMsgServerImpl(bApp.StakingKeeper)}
 }
@@ -97,6 +102,7 @@ func ubze(amount int64) sdk.Coin { return sdk.NewInt64Coin(migBond, amount) }
 
 func (f *migFixture) nextBlock(d time.Duration) {
 	f.ctx = f.ctx.WithBlockHeight(f.ctx.BlockHeight() + 1).WithBlockTime(f.ctx.BlockTime().Add(d))
+	f.ctx = f.ctx.WithHeaderInfo(header.Info{Height: f.ctx.BlockHeight(), Time: f.ctx.BlockTime()})
 }
 
 func (f *migFixture) endBlock() {
@@ -479,6 +485,7 @@ func TestAccountMigration_MovesEverything(t *testing.T) {
 	require.Equal(t, recoveryAtA.String(), f.delegatedValue(migRecovery, a).String(), "the stale redelegation record slashes nothing")
 
 	f.nextBlock(migUnbondingT + time.Hour)
+	f.nextBlock(migUnbondingT + time.Hour)
 	f.endBlock()
 	f.nextBlock(5 * time.Second)
 	f.endBlock()
@@ -659,13 +666,13 @@ func TestAccountMigration_DustAndEmptyDelegations(t *testing.T) {
 	a, g := f.createValidator(1), f.createValidator(7)
 	f.endBlock()
 
-	// a loses a third of its tokens: one ubze then buys shares worth less than one ubze
-	f.nextBlock(5 * time.Second)
-	aVal := f.validator(a)
-	_, err := f.app.StakingKeeper.Slash(f.ctx, a.cons, f.ctx.BlockHeight(), aVal.ConsensusPower(f.app.StakingKeeper.PowerReduction(f.ctx)), math.LegacyNewDecWithPrec(333, 3))
-	require.NoError(t, err)
+	// one ubze delegated, then a loses half its tokens: the shares are worth half an ubze
 	f.fund(migSource, ubze(1))
 	f.delegate(migSource, a, 1)
+	f.nextBlock(5 * time.Second)
+	aVal := f.validator(a)
+	_, err := f.app.StakingKeeper.Slash(f.ctx, a.cons, f.ctx.BlockHeight(), aVal.ConsensusPower(f.app.StakingKeeper.PowerReduction(f.ctx)), math.LegacyNewDecWithPrec(5, 1))
+	require.NoError(t, err)
 	require.True(t, f.delegatedValue(migSource, a).IsZero(), "precondition: dust delegation")
 
 	// a record with no shares and no distribution record
