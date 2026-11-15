@@ -1,27 +1,25 @@
 package v830
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"math"
-	"slices"
-	"time"
 
 	"cosmossdk.io/core/address"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	rewardstypes "github.com/bze-alphateam/bze/x/rewards/types"
 )
 
-// The account migration approved via the v8.3.0 upgrade proposal: everything AccountMigrationSource owns at the
-// upgrade height moves to AccountMigrationRecovery. Nothing is hard-coded: the handler reads the source's state at
-// the upgrade height.
+// The account migration approved via the v8.3.0 upgrade proposal: everything AccountMigrationSource holds in
+// staking and in its balance at the upgrade height moves to AccountMigrationRecovery. Nothing is hard-coded: the
+// handler reads the source's state at the upgrade height.
 const (
 	AccountMigrationSource   = "bze1z3mkcr2jz424w6m49frgjmy9uhlrx69phqwg3l"
 	AccountMigrationRecovery = "bze1ucx0c63jut4x9ekstszed64hmcumaa62k84xex"
@@ -31,6 +29,7 @@ const (
 type MigrationStakingKeeper interface {
 	ValidatorAddressCodec() address.Codec
 	BondDenom(ctx context.Context) (string, error)
+	PowerReduction(ctx context.Context) sdkmath.Int
 	GetValidator(ctx context.Context, addr sdk.ValAddress) (stakingtypes.Validator, error)
 	IterateDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress, cb func(stakingtypes.Delegation) (stop bool)) error
 	Unbond(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares sdkmath.LegacyDec) (sdkmath.Int, error)
@@ -40,8 +39,6 @@ type MigrationStakingKeeper interface {
 	GetUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress, maxRetrieve uint16) ([]stakingtypes.UnbondingDelegation, error)
 	RemoveUnbondingDelegation(ctx context.Context, ubd stakingtypes.UnbondingDelegation) error
 	DeleteUnbondingIndex(ctx context.Context, id uint64) error
-	GetUBDQueueTimeSlice(ctx context.Context, timestamp time.Time) ([]stakingtypes.DVPair, error)
-	SetUBDQueueTimeSlice(ctx context.Context, timestamp time.Time, keys []stakingtypes.DVPair) error
 }
 
 // MigrationDistributionKeeper is the part of the distribution keeper the account migration uses.
@@ -52,7 +49,7 @@ type MigrationDistributionKeeper interface {
 
 // MigrationAuthzKeeper is the part of the authz keeper the account migration uses.
 type MigrationAuthzKeeper interface {
-	IterateGrants(ctx context.Context, handler func(granterAddr, granteeAddr sdk.AccAddress, grant authz.Grant) bool)
+	GranterGrants(ctx context.Context, req *authz.QueryGranterGrantsRequest) (*authz.QueryGranterGrantsResponse, error)
 	DeleteGrant(ctx context.Context, grantee, granter sdk.AccAddress, msgType string) error
 }
 
@@ -79,18 +76,6 @@ type AccountMigrationKeepers struct {
 	Staking      MigrationStakingKeeper
 	Distribution MigrationDistributionKeeper
 	Authz        MigrationAuthzKeeper
-	// Rewards moves the source's x/rewards staking participations and pending unlocks. Optional.
-	Rewards MigrationRewardsKeeper
-}
-
-// MigrationRewardsKeeper is the part of the rewards keeper the account migration uses.
-type MigrationRewardsKeeper interface {
-	GetAllStakingRewardParticipant(ctx sdk.Context) []rewardstypes.StakingRewardParticipant
-	GetStakingRewardParticipant(ctx sdk.Context, address, rewardId string) (rewardstypes.StakingRewardParticipant, bool)
-	SetStakingRewardParticipant(ctx sdk.Context, participant rewardstypes.StakingRewardParticipant)
-	RemoveStakingRewardParticipant(ctx sdk.Context, address, rewardId string)
-	GetAllPendingUnlockParticipant(ctx sdk.Context) []rewardstypes.PendingUnlockParticipant
-	SetPendingUnlockParticipant(ctx sdk.Context, p rewardstypes.PendingUnlockParticipant)
 }
 
 func (k AccountMigrationKeepers) complete() bool {
@@ -99,9 +84,10 @@ func (k AccountMigrationKeepers) complete() bool {
 
 // migrationStep counts the units of one step.
 type migrationStep struct {
-	name   string
-	ok     int
-	failed int
+	name    string
+	ok      int
+	failed  int
+	aborted bool
 }
 
 type migrationReport struct {
@@ -111,27 +97,43 @@ type migrationReport struct {
 	swept     sdk.Coins   // coins sent from the source's balance
 }
 
-func (r *migrationReport) step(name string) *migrationStep {
+func (s *migrationStep) count(err error) {
+	if err != nil {
+		s.failed++
+		return
+	}
+	s.ok++
+}
+
+// runStep runs one step; a panic outside the step's units stops that step only, the next steps still run.
+func (r *migrationReport) runStep(ctx sdk.Context, name string, fn func(s *migrationStep)) {
 	s := &migrationStep{name: name}
 	r.steps = append(r.steps, s)
-	return s
+	defer func() {
+		if p := recover(); p != nil {
+			s.aborted = true
+			ctx.Logger().Error("account migration step stopped by a panic",
+				"upgrade", UpgradeName, "step", name, "panic", fmt.Sprintf("%v", p))
+		}
+	}()
+	fn(s)
 }
 
 // migrateAccount runs the account migration approved via the v8.3.0 upgrade proposal. It never returns an error
-// and never panics: every unit of work runs in its own cached context, written only when the unit succeeds. A failed
-// unit is logged and leaves its state as it was; the other units go on.
+// and never panics: each step recovers on its own, and every unit of work runs in its own cached context, written
+// only when the unit succeeds. A failed unit is logged and leaves its state as it was; the other units go on.
 //
 // Order matters:
 //  1. the source's withdraw address becomes the recovery address, so the rewards every later Unbond pays out land
 //     there;
-//  2. authz grants given by (and to) the source are revoked;
-//  3. each delegation is unbonded from the source and delegated by the recovery address to the same validator, both
+//  2. each delegation is unbonded from the source and delegated by the recovery address to the same validator, both
 //     legs in one unit; if the validator is gone after the unbond (or cannot take a delegation), the amount is paid
 //     to the recovery address from the pool holding it;
-//  4. each unbonding delegation is delegated back by the recovery address (as a cancelled unbonding would be), or
-//     paid out when the validator is gone; its entries, unbonding ids and queue references are removed;
-//  5. positions in the chain's own modules;
-//  6. last, every spendable denom is sent to the recovery address, one unit per denom.
+//  3. each unbonding delegation is delegated back by the recovery address (as a cancelled unbonding would be), or
+//     paid out when the validator is gone; its entries and unbonding ids are removed;
+//  4. the commission of a validator the source operates is withdrawn (to the recovery address);
+//  5. authz grants given by the source are revoked;
+//  6. last, the spendable balance is sent to the recovery address: all at once, or one denom per unit if that fails.
 //
 // Redelegation records of the source are left in place: once the source has no delegation, completing one moves no
 // coins and slashing one finds no delegation to unbond (see the tests).
@@ -167,31 +169,37 @@ func migrateAccount(ctx sdk.Context, k AccountMigrationKeepers) {
 	report := &migrationReport{delegated: sdkmath.ZeroInt(), paidOut: sdkmath.ZeroInt(), swept: sdk.NewCoins()}
 
 	// Payouts from a staking pool need the recipient account to exist.
-	report.step("recovery account").count(runUnit(ctx, "recovery account", func(c sdk.Context) error {
-		if k.Account.GetAccount(c, recovery) == nil {
-			k.Account.SetAccount(c, k.Account.NewAccountWithAddress(c, recovery))
-		}
-		return nil
-	}))
-	setWithdrawAddress(ctx, k, source, recovery, report.step("withdraw address"))
-	withdrawOperatorCommission(ctx, k, source, report.step("validator commission"))
-	revokeGrants(ctx, k, source, report.step("authz grants"))
-	migrateDelegations(ctx, k, source, recovery, report)
-	migrateUnbondingDelegations(ctx, k, source, recovery, report)
-	if k.Rewards != nil {
-		migrateRewardsPositions(ctx, k.Rewards, source.String(), recovery.String(), report)
-	}
-	sweepBalances(ctx, k, source, recovery, report)
+	report.runStep(ctx, "recovery account", func(s *migrationStep) {
+		s.count(runUnit(ctx, "recovery account", func(c sdk.Context) error {
+			if k.Account.GetAccount(c, recovery) == nil {
+				k.Account.SetAccount(c, k.Account.NewAccountWithAddress(c, recovery))
+			}
+			return nil
+		}))
+	})
+	report.runStep(ctx, "withdraw address", func(s *migrationStep) {
+		// Written straight to the store: the message path checks the withdraw-addr-enabled param.
+		s.count(runUnit(ctx, "withdraw address", func(c sdk.Context) error {
+			return k.Distribution.SetDelegatorWithdrawAddr(c, source, recovery)
+		}))
+	})
+	report.runStep(ctx, "delegations", func(s *migrationStep) {
+		migrateDelegations(ctx, k, source, recovery, report, s)
+	})
+	report.runStep(ctx, "unbonding delegations", func(s *migrationStep) {
+		migrateUnbondingDelegations(ctx, k, source, recovery, report, s)
+	})
+	report.runStep(ctx, "validator commission", func(s *migrationStep) {
+		withdrawOperatorCommission(ctx, k, source, s)
+	})
+	report.runStep(ctx, "authz grants", func(s *migrationStep) {
+		revokeGrants(ctx, k, source, s)
+	})
+	report.runStep(ctx, "balances", func(s *migrationStep) {
+		sweepBalances(ctx, k, source, recovery, report, s)
+	})
 
 	logSummary(ctx, k, source, report)
-}
-
-func (s *migrationStep) count(err error) {
-	if err != nil {
-		s.failed++
-		return
-	}
-	s.ok++
 }
 
 // runUnit runs fn in its own cached context and writes it only when fn returns nil without panicking.
@@ -215,66 +223,7 @@ func runUnit(ctx sdk.Context, unit string, fn func(sdk.Context) error) (err erro
 	return nil
 }
 
-func setWithdrawAddress(ctx sdk.Context, k AccountMigrationKeepers, source, recovery sdk.AccAddress, s *migrationStep) {
-	// Written straight to the store: the message path checks the withdraw-addr-enabled param.
-	s.count(runUnit(ctx, "withdraw address", func(c sdk.Context) error {
-		return k.Distribution.SetDelegatorWithdrawAddr(c, source, recovery)
-	}))
-}
-
-// withdrawOperatorCommission withdraws the commission of the validator the source operates, if any, to the
-// operator's withdraw address (the recovery address by now). The validator itself stays with its operator key.
-func withdrawOperatorCommission(ctx sdk.Context, k AccountMigrationKeepers, source sdk.AccAddress, s *migrationStep) {
-	valAddr := sdk.ValAddress(source)
-	if _, err := k.Staking.GetValidator(ctx, valAddr); err != nil {
-		return
-	}
-	s.count(runUnit(ctx, "validator commission", func(c sdk.Context) error {
-		_, err := k.Distribution.WithdrawValidatorCommission(c, valAddr)
-		if errors.Is(err, distrtypes.ErrNoValidatorCommission) {
-			return nil
-		}
-		return err
-	}))
-}
-
-type grantRef struct {
-	granter, grantee sdk.AccAddress
-	msgType          string
-}
-
-func revokeGrants(ctx sdk.Context, k AccountMigrationKeepers, source sdk.AccAddress, s *migrationStep) {
-	var grants []grantRef
-	err := runUnit(ctx, "list authz grants", func(c sdk.Context) error {
-		var listErr error
-		k.Authz.IterateGrants(c, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
-			if !granter.Equals(source) && !grantee.Equals(source) {
-				return false
-			}
-			auth, err := grant.GetAuthorization()
-			if err != nil {
-				listErr = errors.Join(listErr, fmt.Errorf("grant %s -> %s: %w", granter, grantee, err))
-				return false
-			}
-			grants = append(grants, grantRef{granter: granter, grantee: grantee, msgType: auth.MsgTypeURL()})
-			return false
-		})
-		return listErr
-	})
-	if err != nil {
-		s.failed++
-	}
-
-	for _, g := range grants {
-		s.count(runUnit(ctx, fmt.Sprintf("revoke grant %s -> %s %s", g.granter, g.grantee, g.msgType), func(c sdk.Context) error {
-			return k.Authz.DeleteGrant(c, g.grantee, g.granter, g.msgType)
-		}))
-	}
-}
-
-func migrateDelegations(ctx sdk.Context, k AccountMigrationKeepers, source, recovery sdk.AccAddress, report *migrationReport) {
-	s := report.step("delegations")
-
+func migrateDelegations(ctx sdk.Context, k AccountMigrationKeepers, source, recovery sdk.AccAddress, report *migrationReport, s *migrationStep) {
 	var delegations []stakingtypes.Delegation
 	if err := runUnit(ctx, "list delegations", func(c sdk.Context) error {
 		return k.Staking.IterateDelegatorDelegations(c, source, func(d stakingtypes.Delegation) bool {
@@ -330,6 +279,12 @@ func moveDelegation(
 	if err != nil {
 		return delegated, paid, err
 	}
+	if bytes.Equal(valAddr, source) {
+		// Moving the operator's self-delegation leaves it below its minimum: Unbond jails the validator.
+		ctx.Logger().Info("account migration: moving the self-delegation of the source's validator",
+			"upgrade", UpgradeName, "validator", d.ValidatorAddress,
+			"power", validator.ConsensusPower(k.Staking.PowerReduction(ctx)), "jailed", validator.IsJailed())
+	}
 	// Unbond leaves the tokens in the pool of the validator's status; it does not change the status.
 	tokenSrc := validator.GetStatus()
 
@@ -374,9 +329,7 @@ func payFromPool(ctx sdk.Context, k AccountMigrationKeepers, status stakingtypes
 	return k.Bank.UndelegateCoinsFromModuleToAccount(ctx, pool, recovery, sdk.NewCoins(sdk.NewCoin(bondDenom, amount)))
 }
 
-func migrateUnbondingDelegations(ctx sdk.Context, k AccountMigrationKeepers, source, recovery sdk.AccAddress, report *migrationReport) {
-	s := report.step("unbonding delegations")
-
+func migrateUnbondingDelegations(ctx sdk.Context, k AccountMigrationKeepers, source, recovery sdk.AccAddress, report *migrationReport, s *migrationStep) {
 	var ubds []stakingtypes.UnbondingDelegation
 	if err := runUnit(ctx, "list unbonding delegations", func(c sdk.Context) (err error) {
 		ubds, err = k.Staking.GetUnbondingDelegations(c, source, math.MaxUint16)
@@ -390,12 +343,12 @@ func migrateUnbondingDelegations(ctx sdk.Context, k AccountMigrationKeepers, sou
 		var delegated, paid sdkmath.Int
 		unit := "unbonding delegation from " + ubd.ValidatorAddress
 		err := runUnit(ctx, unit, func(c sdk.Context) (err error) {
-			delegated, paid, err = moveUnbondingDelegation(c, k, source, recovery, ubd, false)
+			delegated, paid, err = moveUnbondingDelegation(c, k, recovery, ubd, false)
 			return err
 		})
 		if err != nil {
 			err = runUnit(ctx, unit+" (payout)", func(c sdk.Context) (err error) {
-				delegated, paid, err = moveUnbondingDelegation(c, k, source, recovery, ubd, true)
+				delegated, paid, err = moveUnbondingDelegation(c, k, recovery, ubd, true)
 				return err
 			})
 		}
@@ -409,10 +362,11 @@ func migrateUnbondingDelegations(ctx sdk.Context, k AccountMigrationKeepers, sou
 
 // moveUnbondingDelegation mirrors cancelling every entry of ubd, with the recovery address as the delegator: the
 // entries' balance, held in the not-bonded pool, is delegated to the same validator. When the validator is gone,
-// cannot take a delegation, or payout is set, the balance is paid from the not-bonded pool instead. The record, its
-// unbonding ids and its queue references are removed, so nothing completes to the source later.
+// cannot take a delegation, or payout is set, the balance is paid from the not-bonded pool instead. The record and
+// its unbonding ids are removed. Like a cancel, the unbonding queue is left as it is: when its time comes, the
+// staking EndBlocker finds no record for the pair and skips it.
 func moveUnbondingDelegation(
-	ctx sdk.Context, k AccountMigrationKeepers, source, recovery sdk.AccAddress, ubd stakingtypes.UnbondingDelegation, payout bool,
+	ctx sdk.Context, k AccountMigrationKeepers, recovery sdk.AccAddress, ubd stakingtypes.UnbondingDelegation, payout bool,
 ) (delegated, paid sdkmath.Int, err error) {
 	delegated, paid = sdkmath.ZeroInt(), sdkmath.ZeroInt()
 
@@ -422,7 +376,6 @@ func moveUnbondingDelegation(
 	}
 
 	total := sdkmath.ZeroInt()
-	var completions []time.Time
 	for _, entry := range ubd.Entries {
 		if entry.Balance.IsPositive() {
 			total = total.Add(entry.Balance)
@@ -430,17 +383,9 @@ func moveUnbondingDelegation(
 		if err = k.Staking.DeleteUnbondingIndex(ctx, entry.UnbondingId); err != nil {
 			return delegated, paid, err
 		}
-		if !slices.ContainsFunc(completions, entry.CompletionTime.Equal) {
-			completions = append(completions, entry.CompletionTime)
-		}
 	}
 	if err = k.Staking.RemoveUnbondingDelegation(ctx, ubd); err != nil {
 		return delegated, paid, err
-	}
-	for _, completion := range completions {
-		if err = removeFromUBDQueue(ctx, k, completion, ubd.DelegatorAddress, ubd.ValidatorAddress); err != nil {
-			return delegated, paid, err
-		}
 	}
 
 	if !total.IsPositive() {
@@ -464,86 +409,74 @@ func moveUnbondingDelegation(
 	}
 }
 
-// removeFromUBDQueue drops the delegator's pair for validator from the unbonding queue slice at completion.
-func removeFromUBDQueue(ctx sdk.Context, k AccountMigrationKeepers, completion time.Time, delegator, validator string) error {
-	pairs, err := k.Staking.GetUBDQueueTimeSlice(ctx, completion)
+// withdrawOperatorCommission withdraws the commission of the validator the source operates, if any, to the
+// operator's withdraw address (the recovery address by now). The validator itself stays with its operator key.
+func withdrawOperatorCommission(ctx sdk.Context, k AccountMigrationKeepers, source sdk.AccAddress, s *migrationStep) {
+	valAddr := sdk.ValAddress(source)
+	validator, err := k.Staking.GetValidator(ctx, valAddr)
 	if err != nil {
+		return
+	}
+	ctx.Logger().Info("account migration: the source operates a validator",
+		"upgrade", UpgradeName, "validator", validator.GetOperator(),
+		"power", validator.ConsensusPower(k.Staking.PowerReduction(ctx)), "jailed", validator.IsJailed())
+	s.count(runUnit(ctx, "validator commission", func(c sdk.Context) error {
+		_, err := k.Distribution.WithdrawValidatorCommission(c, valAddr)
+		if errors.Is(err, distrtypes.ErrNoValidatorCommission) {
+			return nil
+		}
 		return err
-	}
-	kept := make([]stakingtypes.DVPair, 0, len(pairs))
-	removed := false
-	for _, p := range pairs {
-		if p.ValidatorAddress == validator && p.DelegatorAddress == delegator {
-			removed = true
-			continue
-		}
-		kept = append(kept, p)
-	}
-	if !removed {
-		return nil
-	}
-
-	return k.Staking.SetUBDQueueTimeSlice(ctx, completion, kept)
+	}))
 }
 
-// migrateRewardsPositions moves the source's x/rewards positions to the recovery address:
-//   - a pending unlock pays its Address field when its epoch comes, so only that field changes (the key, holding
-//     the epoch, stays);
-//   - a staking participation is re-keyed with the same stake and starting accumulator, so the reward's totals and
-//     the accrued rewards are unchanged. When the recovery address already takes part in the same reward the two
-//     cannot be merged without paying out pending rewards (rewards module logic), so it is left and logged.
-//
-// No DAO can exist at the upgrade height (x/dao is new in v8.3.0), so the DAO participation hooks have nothing to
-// track for these moves.
-func migrateRewardsPositions(ctx sdk.Context, k MigrationRewardsKeeper, source, recovery string, report *migrationReport) {
-	unlocks := report.step("rewards pending unlocks")
-	var pending []rewardstypes.PendingUnlockParticipant
-	if err := runUnit(ctx, "list pending unlocks", func(c sdk.Context) error {
-		for _, p := range k.GetAllPendingUnlockParticipant(c) {
-			if p.Address == source {
-				pending = append(pending, p)
+type grantRef struct {
+	grantee sdk.AccAddress
+	msgType string
+}
+
+// revokeGrants revokes every authz grant the source gave, read with the granter-prefixed query.
+func revokeGrants(ctx sdk.Context, k AccountMigrationKeepers, source sdk.AccAddress, s *migrationStep) {
+	var grants []grantRef
+	if err := runUnit(ctx, "list authz grants", func(c sdk.Context) error {
+		var next []byte
+		for {
+			res, err := k.Authz.GranterGrants(c, &authz.QueryGranterGrantsRequest{
+				Granter: source.String(), Pagination: &query.PageRequest{Key: next, Limit: 100},
+			})
+			if err != nil {
+				return err
 			}
+			for _, g := range res.Grants {
+				auth, ok := g.Authorization.GetCachedValue().(authz.Authorization)
+				if !ok {
+					return fmt.Errorf("grant to %s: unreadable authorization", g.Grantee)
+				}
+				grantee, err := accAddressFromBech32(g.Grantee)
+				if err != nil {
+					return err
+				}
+				grants = append(grants, grantRef{grantee: grantee, msgType: auth.MsgTypeURL()})
+			}
+			if res.Pagination == nil || len(res.Pagination.NextKey) == 0 {
+				return nil
+			}
+			next = res.Pagination.NextKey
 		}
-		return nil
 	}); err != nil {
-		unlocks.failed++
-	}
-	for _, p := range pending {
-		unlocks.count(runUnit(ctx, "pending unlock "+p.Index, func(c sdk.Context) error {
-			p.Address = recovery
-			k.SetPendingUnlockParticipant(c, p)
-			return nil
-		}))
+		s.failed++
+		return
 	}
 
-	stakes := report.step("rewards staking participations")
-	var participations []rewardstypes.StakingRewardParticipant
-	if err := runUnit(ctx, "list staking participations", func(c sdk.Context) error {
-		for _, p := range k.GetAllStakingRewardParticipant(c) {
-			if p.Address == source {
-				participations = append(participations, p)
-			}
-		}
-		return nil
-	}); err != nil {
-		stakes.failed++
-	}
-	for _, p := range participations {
-		stakes.count(runUnit(ctx, "staking participation "+p.RewardId, func(c sdk.Context) error {
-			if _, found := k.GetStakingRewardParticipant(c, recovery, p.RewardId); found {
-				return fmt.Errorf("recovery address already takes part in staking reward %s", p.RewardId)
-			}
-			k.RemoveStakingRewardParticipant(c, source, p.RewardId)
-			p.Address = recovery
-			k.SetStakingRewardParticipant(c, p)
-			return nil
+	for _, g := range grants {
+		s.count(runUnit(ctx, fmt.Sprintf("revoke grant to %s %s", g.grantee, g.msgType), func(c sdk.Context) error {
+			return k.Authz.DeleteGrant(c, g.grantee, source, g.msgType)
 		}))
 	}
 }
 
-func sweepBalances(ctx sdk.Context, k AccountMigrationKeepers, source, recovery sdk.AccAddress, report *migrationReport) {
-	s := report.step("balances")
-
+// sweepBalances sends the source's spendable balance to the recovery address in one send, or one denom per unit
+// when that send fails, so a denom that cannot move does not hold back the others.
+func sweepBalances(ctx sdk.Context, k AccountMigrationKeepers, source, recovery sdk.AccAddress, report *migrationReport, s *migrationStep) {
 	var spendable sdk.Coins
 	if err := runUnit(ctx, "list balances", func(c sdk.Context) error {
 		spendable = k.Bank.SpendableCoins(c, source)
@@ -552,11 +485,19 @@ func sweepBalances(ctx sdk.Context, k AccountMigrationKeepers, source, recovery 
 		s.failed++
 		return
 	}
+	if spendable.IsZero() {
+		return
+	}
+
+	if err := runUnit(ctx, "balances", func(c sdk.Context) error {
+		return k.Bank.SendCoins(c, source, recovery, spendable)
+	}); err == nil {
+		s.ok++
+		report.swept = report.swept.Add(spendable...)
+		return
+	}
 
 	for _, coin := range spendable {
-		if !coin.IsPositive() {
-			continue
-		}
 		err := runUnit(ctx, "balance "+coin.Denom, func(c sdk.Context) error {
 			return k.Bank.SendCoins(c, source, recovery, sdk.NewCoins(coin))
 		})
@@ -570,7 +511,7 @@ func sweepBalances(ctx sdk.Context, k AccountMigrationKeepers, source, recovery 
 func logSummary(ctx sdk.Context, k AccountMigrationKeepers, source sdk.AccAddress, report *migrationReport) {
 	logger := ctx.Logger().With("upgrade", UpgradeName, "step", "account migration")
 	for _, s := range report.steps {
-		logger.Info("account migration step", "name", s.name, "succeeded", s.ok, "failed", s.failed)
+		logger.Info("account migration step", "name", s.name, "succeeded", s.ok, "failed", s.failed, "aborted", s.aborted)
 	}
 
 	delegationsLeft := 0

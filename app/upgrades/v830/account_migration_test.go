@@ -34,16 +34,14 @@ import (
 
 	"github.com/bze-alphateam/bze/app"
 	v830 "github.com/bze-alphateam/bze/app/upgrades/v830"
-	rewardstypes "github.com/bze-alphateam/bze/x/rewards/types"
 )
 
 const (
-	migBond        = "ubze"
-	migIBCDenom    = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
-	migFactory     = "factory/bze1creator/ctl"
-	migUnbondingT  = 21 * 24 * time.Hour
-	migSelfStake   = 1_000_000
-	migRewardDenom = "ucoin"
+	migBond       = "ubze"
+	migIBCDenom   = "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
+	migFactory    = "factory/bze1creator/ctl"
+	migUnbondingT = 21 * 24 * time.Hour
+	migSelfStake  = 1_000_000
 )
 
 var (
@@ -293,7 +291,7 @@ func (f *migFixture) requireSourceEmpty() {
 
 // Everything the source owns moves to the recovery address through the handler registered in the app: delegations
 // to bonded, unbonding, unbonded and removed validators, one where the recovery address already delegates,
-// unbonding entries (at a removed validator too), rewards, authz grants, x/rewards positions and every balance.
+// unbonding entries (at a removed validator too), rewards, the grants it gave and every balance.
 // Later EndBlockers and a slash of the source validator of a redelegation pay nothing to the source.
 func TestAccountMigration_MovesEverything(t *testing.T) {
 	f := newMigFixture(t)
@@ -338,6 +336,11 @@ func TestAccountMigration_MovesEverything(t *testing.T) {
 	f.undelegate(migSource, b, 30_000)
 	f.undelegate(migSource, e, 500_000)
 	ubdCompletion := f.ctx.BlockTime().Add(migUnbondingT)
+	// another delegator unbonds in the same block: its pair shares the source's queue slice
+	bystander := sdk.AccAddress("migration_bystander_")
+	f.fund(bystander, ubze(400_000))
+	f.delegate(bystander, a, 400_000)
+	f.undelegate(bystander, a, 400_000)
 
 	// a redelegation d -> a
 	f.nextBlock(5 * time.Second)
@@ -345,7 +348,7 @@ func TestAccountMigration_MovesEverything(t *testing.T) {
 	_, err := f.msg.BeginRedelegate(f.ctx, stakingtypes.NewMsgBeginRedelegate(migSource.String(), d.val.String(), a.val.String(), ubze(1_000_000)))
 	require.NoError(t, err)
 
-	// authz: given by the source, given to the source, and one between others that stays
+	// authz: given by the source, and two the source did not give, which stay
 	other, other2 := sdk.AccAddress("migration_other_____"), sdk.AccAddress("migration_other2____")
 	stakeAuth, err := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{a.val}, nil, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, nil)
 	require.NoError(t, err)
@@ -354,16 +357,6 @@ func TestAccountMigration_MovesEverything(t *testing.T) {
 	sendURL := sdk.MsgTypeURL(&banktypes.MsgSend{})
 	require.NoError(t, f.app.AuthzKeeper.SaveGrant(f.ctx, migSource, other, authz.NewGenericAuthorization(sendURL), nil))
 	require.NoError(t, f.app.AuthzKeeper.SaveGrant(f.ctx, other2, other, authz.NewGenericAuthorization(sendURL), nil))
-
-	// x/rewards: a pending unlock, a participation, and one the recovery address already has
-	unlock := rewardstypes.PendingUnlockParticipant{Index: "900/sr1/" + migSource.String(), Address: migSource.String(), Amount: "500", Denom: migRewardDenom}
-	f.app.RewardsKeeper.SetPendingUnlockParticipant(f.ctx, unlock)
-	sr1 := rewardstypes.StakingRewardParticipant{Address: migSource.String(), RewardId: "sr1", Amount: "1000", JoinedAt: "0.5"}
-	sr2 := rewardstypes.StakingRewardParticipant{Address: migSource.String(), RewardId: "sr2", Amount: "300", JoinedAt: "0.1"}
-	sr2Recovery := rewardstypes.StakingRewardParticipant{Address: migRecovery.String(), RewardId: "sr2", Amount: "700", JoinedAt: "0.2"}
-	f.app.RewardsKeeper.SetStakingRewardParticipant(f.ctx, sr1)
-	f.app.RewardsKeeper.SetStakingRewardParticipant(f.ctx, sr2)
-	f.app.RewardsKeeper.SetStakingRewardParticipant(f.ctx, sr2Recovery)
 
 	f.nextBlock(5 * time.Second)
 	f.allocate(a, 400_000)
@@ -429,45 +422,29 @@ func TestAccountMigration_MovesEverything(t *testing.T) {
 	gained := f.balance(migRecovery).Sub(recoveryBefore...)
 	require.Equal(t, sourceLiquid.AmountOf(migIBCDenom).String(), gained.AmountOf(migIBCDenom).String())
 	require.Equal(t, sourceLiquid.AmountOf(migFactory).String(), gained.AmountOf(migFactory).String())
+	// rewards: each delegation's withdrawal at the upgrade height pays what the query computed at that height
 	wantBond := sourceLiquid.AmountOf(migBond).Add(paidOut).Add(rewards)
-	require.InDelta(t, wantBond.Int64(), gained.AmountOf(migBond).Int64(), 5, "recovery ubze: liquid + payout + rewards")
+	require.Equal(t, wantBond.String(), gained.AmountOf(migBond).String(), "recovery ubze: liquid + payout + rewards")
 
-	// unbonding records, ids and queue references are gone
+	// unbonding records and ids are gone; the bystander's unbonding is still queued in the shared slice
 	for _, id := range ubdIDs {
 		_, err := f.app.StakingKeeper.GetUnbondingDelegationByUnbondingID(f.ctx, id)
 		require.Error(t, err, "unbonding id %d", id)
 	}
-	for _, at := range []time.Time{ubdCompletion, ubdCompletion.Add(-5 * time.Second)} {
-		pairs, err := f.app.StakingKeeper.GetUBDQueueTimeSlice(f.ctx, at)
-		require.NoError(t, err)
-		for _, p := range pairs {
-			require.NotEqual(t, migSource.String(), p.DelegatorAddress, "queue at %s", at)
-		}
-	}
+	pairs, err := f.app.StakingKeeper.GetUBDQueueTimeSlice(f.ctx, ubdCompletion)
+	require.NoError(t, err)
+	require.Contains(t, pairs, stakingtypes.DVPair{DelegatorAddress: bystander.String(), ValidatorAddress: a.val.String()})
+	bystanderBefore := f.balance(bystander).AmountOf(migBond)
 
-	// authz
+	// authz: the grant the source gave is revoked, the others stay
 	f.app.AuthzKeeper.IterateGrants(f.ctx, func(granter, grantee sdk.AccAddress, _ authz.Grant) bool {
-		require.False(t, granter.Equals(migSource) || grantee.Equals(migSource), "grant %s -> %s left", granter, grantee)
+		require.False(t, granter.Equals(migSource), "grant %s -> %s left", granter, grantee)
 		return false
 	})
 	kept, _ := f.app.AuthzKeeper.GetAuthorization(f.ctx, other2, other, sendURL)
 	require.NotNil(t, kept, "an unrelated grant stays")
-
-	// x/rewards
-	gotUnlock, found := f.app.RewardsKeeper.GetPendingUnlockParticipant(f.ctx, unlock.Index)
-	require.True(t, found)
-	unlock.Address = migRecovery.String()
-	require.Equal(t, unlock, gotUnlock)
-	_, found = f.app.RewardsKeeper.GetStakingRewardParticipant(f.ctx, migSource.String(), "sr1")
-	require.False(t, found)
-	got1, found := f.app.RewardsKeeper.GetStakingRewardParticipant(f.ctx, migRecovery.String(), "sr1")
-	require.True(t, found)
-	sr1.Address = migRecovery.String()
-	require.Equal(t, sr1, got1)
-	got2, _ := f.app.RewardsKeeper.GetStakingRewardParticipant(f.ctx, migSource.String(), "sr2")
-	require.Equal(t, sr2, got2, "a reward both take part in is left on the source")
-	got2r, _ := f.app.RewardsKeeper.GetStakingRewardParticipant(f.ctx, migRecovery.String(), "sr2")
-	require.Equal(t, sr2Recovery, got2r)
+	kept, _ = f.app.AuthzKeeper.GetAuthorization(f.ctx, migSource, other, sendURL)
+	require.NotNil(t, kept, "a grant to the source is the granter's and stays")
 
 	// later: a slash of d (source of the source's redelegation, at its creation height) and the end of every
 	// unbonding and redelegation period pay nothing to the source and change nothing on the recovery address
@@ -496,6 +473,10 @@ func TestAccountMigration_MovesEverything(t *testing.T) {
 	reds, err = f.app.StakingKeeper.GetRedelegations(f.ctx, migSource, 10)
 	require.NoError(t, err)
 	require.Empty(t, reds, "the redelegation record completed")
+	ubds, err = f.app.StakingKeeper.GetUnbondingDelegations(f.ctx, bystander, 10)
+	require.NoError(t, err)
+	require.Empty(t, ubds, "the bystander's unbonding completed")
+	require.Equal(t, bystanderBefore.AddRaw(400_000).String(), f.balance(bystander).AmountOf(migBond).String())
 }
 
 // rejectingBank refuses every send from the source, so the balance sweep moves nothing.
@@ -683,7 +664,8 @@ func TestAccountMigration_DustAndEmptyDelegations(t *testing.T) {
 	f.applyUpgrade()
 
 	require.Empty(t, f.sourceDelegations())
-	require.True(t, f.delegatedValue(migRecovery, a).IsZero())
+	_, err = f.app.StakingKeeper.GetDelegation(f.ctx, migRecovery, a.val)
+	require.ErrorIs(t, err, stakingtypes.ErrNoDelegation, "nothing delegated for dust")
 	f.requireInvariants()
 }
 
@@ -729,4 +711,37 @@ func TestAccountMigration_NoSourceIsNoOp(t *testing.T) {
 	f.applyUpgrade()
 	f.requireSourceEmpty()
 	require.True(t, f.balance(migRecovery).IsZero())
+}
+
+// panickingCommissionCheck panics when the commission step looks up the source's own validator, outside any unit.
+type panickingCommissionCheck struct {
+	v830.MigrationStakingKeeper
+}
+
+func (s panickingCommissionCheck) GetValidator(ctx context.Context, addr sdk.ValAddress) (stakingtypes.Validator, error) {
+	if addr.Equals(sdk.ValAddress(migSource)) {
+		panic("validator lookup panicked")
+	}
+	return s.MigrationStakingKeeper.GetValidator(ctx, addr)
+}
+
+// A panic in one step outside its units stops that step only: the staking steps and the later steps still run.
+func TestAccountMigration_PanickingStepDoesNotStopOthers(t *testing.T) {
+	f := newMigFixture(t)
+	a := f.createValidator(1)
+	f.endBlock()
+	f.fund(migSource, ubze(5_000_000))
+	f.delegate(migSource, a, 3_000_000)
+	f.nextBlock(5 * time.Second)
+	f.undelegate(migSource, a, 1_000_000)
+	f.nextBlock(5 * time.Second)
+
+	keepers := f.app.V830AccountMigrationKeepers()
+	keepers.Staking = panickingCommissionCheck{keepers.Staking}
+	f.runHandler(keepers)
+
+	f.requireSourceEmpty()
+	f.requireInvariants()
+	require.Equal(t, "3000000", f.delegatedValue(migRecovery, a).String())
+	require.Equal(t, "2000000", f.balance(migRecovery).AmountOf(migBond).String())
 }

@@ -349,7 +349,6 @@ func (app *App) V830AccountMigrationKeepers() v830.AccountMigrationKeepers {
 		Staking:      app.StakingKeeper,
 		Distribution: app.DistrKeeper,
 		Authz:        app.AuthzKeeper,
-		Rewards:      app.RewardsKeeper,
 	}
 }
 
