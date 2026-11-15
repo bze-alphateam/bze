@@ -56,7 +56,7 @@ func runWithAccounts(t *testing.T, accounts *fakeAccounts) error {
 	t.Helper()
 	cfg, mm, ctx := guardianSetup(t)
 
-	_, err := v830.CreateUpgradeHandler(cfg, mm, accounts, &fakeGuardian{}, acceptingRateLimits(t), emptyBank(t), noPools{}, nil, &fakeStakingRewards{}, noTraces{}, nil, emptyIBCStore())(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 2})
+	_, err := v830.CreateUpgradeHandler(cfg, mm, accounts, &fakeGuardian{}, acceptingRateLimits(t), emptyBank(t), noPools{}, nil, &fakeStakingRewards{}, noTraces{}, nil, emptyIBCStore(), v830.AccountMigrationKeepers{})(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 2})
 
 	return err
 }
@@ -156,7 +156,7 @@ func TestHandler_EnsuresModuleAccountsBeforeMigrations(t *testing.T) {
 	require.NoError(t, mm.RegisterServices(cfg))
 	ctx := testutil.DefaultContext(storetypes.NewKVStoreKey("v830"), storetypes.NewTransientStoreKey("v830_t"))
 
-	_, err := v830.CreateUpgradeHandler(cfg, mm, accounts, &fakeGuardian{}, acceptingRateLimits(t), emptyBank(t), noPools{}, nil, &fakeStakingRewards{}, noTraces{}, nil, emptyIBCStore())(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 1})
+	_, err := v830.CreateUpgradeHandler(cfg, mm, accounts, &fakeGuardian{}, acceptingRateLimits(t), emptyBank(t), noPools{}, nil, &fakeStakingRewards{}, noTraces{}, nil, emptyIBCStore(), v830.AccountMigrationKeepers{})(ctx, upgradetypes.Plan{Name: v830.UpgradeName}, module.VersionMap{fakeModuleName: 1})
 	require.Error(t, err)
 	require.Equal(t, 1, migrated)
 	require.Contains(t, accounts.accounts, daoAddr.String())

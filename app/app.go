@@ -341,6 +341,18 @@ func New(
 	return app, nil
 }
 
+// V830AccountMigrationKeepers returns the keepers the v8.3.0 account migration step runs with.
+func (app *App) V830AccountMigrationKeepers() v830.AccountMigrationKeepers {
+	return v830.AccountMigrationKeepers{
+		Account:      app.AccountKeeper,
+		Bank:         app.BankKeeper,
+		Staking:      app.StakingKeeper,
+		Distribution: app.DistrKeeper,
+		Authz:        app.AuthzKeeper,
+		Rewards:      app.RewardsKeeper,
+	}
+}
+
 // setupUpgradeHandlers registers the handlers of the release this code builds.
 // Older handlers are removed once their release has shipped: each one runs once
 // at its height, and nodes syncing from genesis run the binaries of those releases.
@@ -364,6 +376,7 @@ func (app *App) setupUpgradeHandlers() {
 			runtime.NewKVStoreService(app.GetKey(ibctransfertypes.StoreKey)),
 			app.TransferKeeper,
 			runtime.NewKVStoreService(app.GetKey(ibcexported.StoreKey)),
+			app.V830AccountMigrationKeepers(),
 		),
 	)
 

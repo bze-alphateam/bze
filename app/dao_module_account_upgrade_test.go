@@ -78,7 +78,7 @@ func TestUpgrade_ConvertsKeylessAccountAtDaoAddress(t *testing.T) {
 			require.NoError(t, bApp.BankKeeper.MintCoins(ctx, minttypes.ModuleName, planted))
 			before := tc.plant(t, bApp, ctx, planted)
 
-			_, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.AccountKeeper, bApp.GuardianKeeper, bApp.RatelimitKeeper, bApp.BankKeeper, bApp.TradebinKeeper, bApp.BankKeeper, bApp.RewardsKeeper, runtime.NewKVStoreService(bApp.GetKey(ibctransfertypes.StoreKey)), bApp.TransferKeeper, ibcStoreService(bApp))(
+			_, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.AccountKeeper, bApp.GuardianKeeper, bApp.RatelimitKeeper, bApp.BankKeeper, bApp.TradebinKeeper, bApp.BankKeeper, bApp.RewardsKeeper, runtime.NewKVStoreService(bApp.GetKey(ibctransfertypes.StoreKey)), bApp.TransferKeeper, ibcStoreService(bApp), bApp.V830AccountMigrationKeepers())(
 				ctx, upgradetypes.Plan{Name: v830.UpgradeName}, bApp.ModuleManager.GetVersionMap(),
 			)
 			require.NoError(t, err)
@@ -129,7 +129,7 @@ func TestUpgrade_CreatesDaoModuleAccount(t *testing.T) {
 	daoAddr := authtypes.NewModuleAddress(daotypes.ModuleName)
 	require.Nil(t, bApp.AccountKeeper.GetAccount(ctx, daoAddr))
 
-	_, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.AccountKeeper, bApp.GuardianKeeper, bApp.RatelimitKeeper, bApp.BankKeeper, bApp.TradebinKeeper, bApp.BankKeeper, bApp.RewardsKeeper, runtime.NewKVStoreService(bApp.GetKey(ibctransfertypes.StoreKey)), bApp.TransferKeeper, ibcStoreService(bApp))(
+	_, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.AccountKeeper, bApp.GuardianKeeper, bApp.RatelimitKeeper, bApp.BankKeeper, bApp.TradebinKeeper, bApp.BankKeeper, bApp.RewardsKeeper, runtime.NewKVStoreService(bApp.GetKey(ibctransfertypes.StoreKey)), bApp.TransferKeeper, ibcStoreService(bApp), bApp.V830AccountMigrationKeepers())(
 		ctx, upgradetypes.Plan{Name: v830.UpgradeName}, bApp.ModuleManager.GetVersionMap(),
 	)
 	require.NoError(t, err)

@@ -180,7 +180,7 @@ func runTraceUpgrade(t *testing.T, bApp *app.App, ctx sdk.Context, vm map[string
 	handler := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.AccountKeeper, bApp.GuardianKeeper,
 		bApp.RatelimitKeeper, bApp.BankKeeper, bApp.TradebinKeeper, bApp.BankKeeper, bApp.RewardsKeeper,
 		runtime.NewKVStoreService(bApp.GetKey(transfertypes.StoreKey)), bApp.TransferKeeper,
-		runtime.NewKVStoreService(bApp.GetKey(ibcexported.StoreKey)))
+		runtime.NewKVStoreService(bApp.GetKey(ibcexported.StoreKey)), bApp.V830AccountMigrationKeepers())
 
 	var (
 		newVM map[string]uint64
