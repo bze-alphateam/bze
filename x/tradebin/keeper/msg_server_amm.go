@@ -248,7 +248,7 @@ func (k msgServer) AddLiquidity(goCtx context.Context, msg *types.MsgAddLiquidit
 	}
 
 	if minted.Amount.LT(msg.MinLpTokens) {
-		return nil, errors.Wrapf(types.ErrResultedAmountTooLow, "could not mint the minimum expected lp tokens. Minted %d, expected minimum: %s", minted.Amount.Uint64(), msg.MinLpTokens.String())
+		return nil, errors.Wrapf(types.ErrResultedAmountTooLow, "could not mint the minimum expected lp tokens. Minted %s, expected minimum: %s", minted.Amount.String(), msg.MinLpTokens.String())
 	}
 
 	//send LP tokens to user
@@ -308,7 +308,7 @@ func (k msgServer) MultiSwap(goCtx context.Context, msg *types.MsgMultiSwap) (*t
 	//capture user input coins
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, creatorAcc, types.ModuleName, sdk.NewCoins(*ic))
 	if err != nil {
-		return nil, errors.Wrapf(sdkerrors.ErrInvalidCoins, "could not capture user input coins %s", err.Error())
+		return nil, errors.Wrap(err, "could not capture user input coins")
 	}
 
 	inputCoin := *ic
@@ -367,8 +367,11 @@ func (k msgServer) createLpDenom(ctx sdk.Context, lp *types.LiquidityPool) {
 				Exponent: sharesScaleExponent,
 			},
 		},
-		Base:    lp.GetLpDenom(),
-		Display: k.getPoolScaledDenom(lp.GetId()),
+		Base:        lp.GetLpDenom(),
+		Display:     k.getPoolScaledDenom(lp.GetId()),
+		Name:        types.LpDenomName(lp.GetId()),
+		Symbol:      types.LpDenomSymbol(lp.GetId()),
+		Description: types.LpDenomDescription(lp.GetId()),
 	}
 
 	k.bankKeeper.SetDenomMetaData(ctx, denomMetaData)
@@ -433,38 +436,6 @@ func (k msgServer) validatePoolId(ctx sdk.Context, poolId string) error {
 	return nil
 }
 
-func (k msgServer) validateFeeDestination(feeDest *types.FeeDestination) error {
-	//do not allow any of the destinations to be negative
-	if feeDest.Treasury.IsNegative() || feeDest.Burner.IsNegative() || feeDest.Providers.IsNegative() {
-		return types.ErrNegativeFeeDestination
-	}
-
-	//the sum of elements must be 1
-	one := math.LegacyNewDec(1)
-	sum := feeDest.Burner.Add(feeDest.Treasury).Add(feeDest.Providers)
-	if !sum.Equal(one) {
-		return types.ErrInvalidFeeDestination
-	}
-
-	return nil
-}
-
-func (k msgServer) validateFee(fee *math.LegacyDec) error {
-	if !fee.IsPositive() {
-		return errors.Wrap(sdkerrors.ErrInvalidCoins, "fee must be positive")
-	}
-
-	if fee.LT(math.LegacyNewDecWithPrec(1, 3)) {
-		return errors.Wrap(sdkerrors.ErrInvalidCoins, "fee must be at least 0.001 (0.1%)")
-	}
-
-	if fee.GT(math.LegacyNewDecWithPrec(5, 2)) {
-		return errors.Wrap(sdkerrors.ErrInvalidCoins, "fee must be at most 0.05 (5%)")
-	}
-
-	return nil
-}
-
 func (k msgServer) parseValidPoolFees(msg *types.MsgCreateLiquidityPool) (fee math.LegacyDec, feeDest types.FeeDestination, err error) {
 	fee, err = math.LegacyNewDecFromStr(msg.Fee)
 	if err != nil {
@@ -472,7 +443,7 @@ func (k msgServer) parseValidPoolFees(msg *types.MsgCreateLiquidityPool) (fee ma
 		return
 	}
 
-	err = k.validateFee(&fee)
+	err = types.ValidatePoolFee(fee)
 	if err != nil {
 		return
 	}
@@ -483,7 +454,7 @@ func (k msgServer) parseValidPoolFees(msg *types.MsgCreateLiquidityPool) (fee ma
 		return
 	}
 
-	err = k.validateFeeDestination(&feeDest)
+	err = types.ValidatePoolFeeDestination(feeDest)
 	if err != nil {
 		return
 	}

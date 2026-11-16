@@ -43,6 +43,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if genState.RaffleCleanupQueue != nil {
 		k.SetRaffleCleanupQueue(ctx, *genState.RaffleCleanupQueue)
 	}
+
+	for _, lock := range genState.IbcMoveLocks {
+		k.SetIbcMoveLock(ctx, lock)
+	}
 }
 
 // ExportGenesis returns the module's exported genesis.
@@ -71,6 +75,8 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	if found {
 		genesis.RaffleCleanupQueue = &rcq
 	}
+
+	genesis.IbcMoveLocks = k.GetAllIbcMoveLocks(ctx)
 
 	// this line is used by starport scaffolding # genesis/module/export
 

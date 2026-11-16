@@ -65,6 +65,59 @@ func TestValidateBlockedIbcInbound(t *testing.T) {
 			expErrMsg: "invalid blocked ibc inbound channel id",
 		},
 		{
+			name: "channel id Channel-3 is not channel-{N}",
+			blocked: []BlockedIbcTransfer{
+				{ChannelId: "Channel-3", BaseDenom: "uusdc"},
+			},
+			expErr:    true,
+			expErrMsg: "expected the form channel-{N}",
+		},
+		{
+			name: "channel id channel_3 is not channel-{N}",
+			blocked: []BlockedIbcTransfer{
+				{ChannelId: "channel_3", BaseDenom: "uusdc"},
+			},
+			expErr:    true,
+			expErrMsg: "expected the form channel-{N}",
+		},
+		{
+			name: "channel id chnnel-03 is not channel-{N}",
+			blocked: []BlockedIbcTransfer{
+				{ChannelId: "chnnel-03", BaseDenom: "uusdc"},
+			},
+			expErr:    true,
+			expErrMsg: "expected the form channel-{N}",
+		},
+		{
+			name: "channel id channel- is not channel-{N}",
+			blocked: []BlockedIbcTransfer{
+				{ChannelId: "channel-", BaseDenom: "uusdc"},
+			},
+			expErr:    true,
+			expErrMsg: "expected the form channel-{N}",
+		},
+		{
+			name: "channel id channel-03 is not channel-{N}",
+			blocked: []BlockedIbcTransfer{
+				{ChannelId: "channel-03", BaseDenom: "uusdc"},
+			},
+			expErr:    true,
+			expErrMsg: "expected the form channel-{N}",
+		},
+		{
+			// the value stored on mainnet by the v8.2.0 upgrade stays valid
+			name: "mainnet channel-3",
+			blocked: []BlockedIbcTransfer{
+				{ChannelId: "channel-3", BaseDenom: "uusdc"},
+			},
+		},
+		{
+			name: "multi-digit channel id",
+			blocked: []BlockedIbcTransfer{
+				{ChannelId: "channel-123", BaseDenom: "uusdc"},
+			},
+		},
+		{
 			name: "empty base denom",
 			blocked: []BlockedIbcTransfer{
 				{ChannelId: "channel-3", BaseDenom: ""},

@@ -19,3 +19,29 @@ message BlockedIbcInboundEvent {
   // receiver is the account on this chain that would have received the tokens.
   string receiver = 5;
 }
+
+// CommunityPoolFeePaidEvent is emitted at EndBlock for every coin the community pool fee collector forwards to the
+// community pool set on the coin's denom (the factory token's DenomConfig), instead of converting it for the chain's
+// community pool.
+message CommunityPoolFeePaidEvent {
+  // denom is the denomination of the forwarded coin.
+  string denom = 1;
+  // recipient is the denom's community pool address.
+  string recipient = 2;
+  // amount is the forwarded amount.
+  string amount = 3;
+}
+
+// GasSurchargePaidEvent is emitted for every factory-token coin used to pay the tx fee when the token sets a gas
+// surcharge. The amount is the part of the paid fee moved out of the fee collected for validators.
+message GasSurchargePaidEvent {
+  // payer is the account that paid the tx fee (the fee granter when one is set).
+  string payer = 1;
+  // denom is the denomination of the surcharge.
+  string denom = 2;
+  // amount is the surcharge amount.
+  string amount = 3;
+  // destination is the module account the surcharge went to: txfeecollector_cp when the token has a community pool
+  // (forwarded there at EndBlock), burner when it has none (the burner module burns it).
+  string destination = 4;
+}

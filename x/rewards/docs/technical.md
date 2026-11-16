@@ -7,7 +7,7 @@
 - **Locks/Exit:** `MsgExitStaking` initiates withdrawal; locked stakes respect the configured `lock` period before release.
 
 ## Trading Rewards
-- **Pending → Active:** Created rewards stay pending until `MsgActivateTradingReward` (authority) moves them to the active set. Expiration timestamps are refreshed on activation.
+- **Pending → Active:** Created rewards stay pending until `MsgActivateTradingReward` (authority) moves them to the active set with `expire_at = 0` and no active expiration entry. The first trade on the market (the tradebin fill hook) starts the countdown: it sets `expire_at` to the current hour epoch + `duration` × 24, writes the active expiration and emits `TradingRewardStartEvent`. Unfilled slots are sent to the burner at payout (`unpaid_burnt` on `TradingRewardDistributionEvent`).
 - **Market binding:** Only one active trading reward per `market_id`; creation fails if one already exists. The reward stores `slots` (payout rounds) and `duration` (hours) along with total prize to distribute.
 - **Expiration/cleanup:** Expirations are stored to clear pending/active rewards when they time out.
 

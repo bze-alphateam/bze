@@ -50,7 +50,7 @@ func (suite *IntegrationTestSuite) recordSlashDenomFlows(denoms ...string) *drSl
 		Return(nil).
 		AnyTimes()
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		SafeCaptureAndSwapUserFee(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		DoAndReturn(func(_ sdk.Context, _ sdk.AccAddress, fee sdk.Coins, _ string) (sdk.Coins, error) {
 			return fee, nil
 		}).

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
-	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/bze-alphateam/bze/x/rewards/types"
@@ -25,7 +24,7 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 		return nil, sdkerrors.ErrInvalidRequest
 	}
 
-	acc, err := sdk.AccAddressFromBech32(msg.Creator)
+	acc, creator, err := canonicalAddress(msg.Creator)
 	if err != nil {
 		return nil, err
 	}
@@ -57,12 +56,9 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 	}
 
 	fee := k.getRewardCreationFee(ctx, k.GetParams(ctx).CreateTradingRewardFee)
-	neededBalance := toCapture
-	if fee != nil {
-		neededBalance = neededBalance.Add(fee...)
-	}
 
-	err = k.checkUserBalances(ctx, neededBalance, acc)
+	//only the budget is pre-checked: the fee may be paid in the tx fee denom, captureCreationFee decides
+	err = k.checkUserBalances(ctx, toCapture, acc)
 	if err != nil {
 		return nil, err
 	}
@@ -72,16 +68,8 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 		return nil, err
 	}
 
-	if fee != nil {
-		capturedFee, err := k.tradeKeeper.CaptureAndSwapUserFee(ctx, acc, fee, types.ModuleName)
-		if err != nil {
-			return nil, err
-		}
-
-		err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, capturedFee)
-		if err != nil {
-			return nil, err
-		}
+	if err = k.captureCreationFee(ctx, acc, fee); err != nil {
+		return nil, err
 	}
 
 	//add ID
@@ -111,7 +99,7 @@ func (k msgServer) CreateTradingReward(goCtx context.Context, msg *types.MsgCrea
 			Duration:    tradingReward.Duration,
 			MarketId:    tradingReward.MarketId,
 			Slots:       tradingReward.Slots,
-			Creator:     msg.Creator,
+			Creator:     creator,
 		},
 	)
 

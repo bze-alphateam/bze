@@ -42,13 +42,24 @@ make e2e-denomrewards               # denom rewards lifecycle (~8 min)
 make e2e-amm                        # AMM swaps, liquidity and the fee path (~3 min)
 make e2e-tokenfactory               # staking rewards + tokenfactory admin and branding (~5 min)
 make e2e-halt                       # halted denoms: gov halt/unhalt, refused trading, exits (~5 min)
+make e2e-update-pools               # pool fee update: gov MsgUpdatePools, swap with the new fee, unknown pool refused (~4 min)
 make e2e-ibc                        # blocked inbound IBC: bze <-> simd through Hermes (~12 min)
+make e2e-ratelimit                  # IBC rate limiting: quotas refused and refunded both ways, net flow, timeout undo, guardian tighten and block, gov loosen and unblock (~8 min)
+make e2e-guardian                   # guardian switches: disable MsgMultiSwap (swap refused, other tradebin msgs work), stranger and protected types refused, gov reset (~4 min)
+make e2e-guardian-halt              # guardian halts a denom on the DEX (same effect as the gov halt), user and native refused, gov unhalts (~5 min)
+make e2e-guardian-pause             # guardian automation pause: fees wait in the txfeecollector and a burning week tick burns nothing while paused, stranger and guardian resume refused, gov resume converts and burns (~6 min)
+make e2e-guardian-ibc               # guardian channel switch: close refused for others, in-flight transfers settle both ways, send refused, receive refunded, gov reopens and closes (~7 min)
 make e2e-fees                       # fee destinations, minimum gas prices, ante refusals, fee grants, txfeecollector params
+make e2e-transferfee                # factory-token transfer fee on protocol fees and gas surcharge: routing, burn, fee grants, fallback, rate changes
 make e2e-orderbook                  # order-book engine: fills, remainders, dust, cancels, refusals, queue limits
-make e2e-tradingrewards             # trading rewards: create, gov activation, hooks, leaderboard, payout, cleanup (~20 min)
-make e2e-burner                     # burner: fund routing, periodic burn and interval, raffles, locked IBC coins (~15 min)
+make e2e-tradingrewards             # trading rewards: create, gov activation, hooks, leaderboard, payout, cleanup, pending expiry (~25 min)
+make e2e-burner                     # burner: fund routing, periodic burn and interval (IBC vouchers locked), raffles (an IBC pot locked), locked IBC coin moves: cap, cooldown, params, export (~20 min)
 make e2e-cointrunk                  # cointrunk: domains and publishers by gov, free and paid articles, monthly limit, respect tax
-make e2e-params                     # tradebin, rewards and tokenfactory params by gov: authority, refusals, each param's effect on a real tx
+make e2e-params                     # tradebin, rewards and tokenfactory params by gov: authority, refusals, each param's effect on a real tx (pool price guard included)
+make e2e-input-rules                # canonical amounts in tradebin, burner and rewards messages; one rewards position per account whatever the address case; protocol fees inside authz exec paid in ubze
+make e2e-dao                        # x/dao: every message, query, exploit-catalog case (D1–D29) and invariant, with a funds audit per tx (E2E_TIMEOUT=120m)
+make e2e-dao-expedite               # x/dao: a static-list DAO settles an expedited proposal at once, a stake DAO waits for min_expedite_delay (~4 min)
+make e2e-guardian-halt-chain        # x/guardian: a stranger cannot halt, the guardian's halt replaces the release plan and stops the chain (~3 min)
 make e2e-upgrade                    # chain upgrade from the previous release (see below)
 cd interchaintest && go test -v -run TestSmoke ./...
 ```
@@ -68,7 +79,7 @@ Docker network when it ends. Suites do not share state.
 |---|---|---|
 | `E2E_BZE_IMAGE_TAG` | `local` | Tag of the `bze` image to run |
 | `E2E_TIMEOUT` (make only) | `60m` | `go test -timeout` of the make targets |
-| `E2E_UPGRADE_FROM` | `v8.2.0-rc5` | Upgrade suite: image tag the network starts on (the previous release) |
+| `E2E_UPGRADE_FROM` | `v8.2.0` | Upgrade suite: image tag the network starts on (the previous release) |
 | `E2E_UPGRADE_TO` | `local` | Upgrade suite: image tag the validators switch to at the plan height |
 | `E2E_UPGRADE_NAME` | `v8.3.0` | Upgrade suite: plan name, must equal the candidate's `UpgradeName` |
 | `KEEP_CONTAINERS` | unset | Any value keeps the containers after the test, for debugging (remove them by hand) |
@@ -113,20 +124,15 @@ Steps, for a candidate `vX.Y.Z` whose previous release is `vP`:
    log lines) to the tag request.
 
 `E2E_UPGRADE_NAME` must be the `UpgradeName` of the candidate's handler in
-`app/upgrades/`. For example, the v8.2.0 handler is checked from v8.1.1 with
-`E2E_UPGRADE_FROM=v8.1.1 E2E_UPGRADE_NAME=v8.2.0` after
-`make e2e-image-ref REF=v8.1.1`.
+`app/upgrades/`. The code keeps only the handler of the release it builds, and
+`upgradeChecks` only that handler's entry. For example, the v8.3.0 handler is
+checked from v8.2.0 with `E2E_UPGRADE_FROM=v8.2.0 E2E_UPGRADE_NAME=v8.3.0`
+after `make e2e-image-ref REF=v8.2.0`.
 
-A handler that branches on the chain id runs on a network with the live
-chain's id. The v8.2.0 entry is one: its network is `beezee-1`, linked to
-simd through Hermes, and channel-3 carries simd's `uusdc`, so the USDC.n
-voucher is the exact mainnet one. The USDC.n/BZE pool is added to genesis,
-because on mainnet it predates v8.1.1 and has a legacy LP denom
-(`ulp_<base>_<quote>`) no release since can create; the black hole and a
-wallet hold its shares. The suite checks that the handler moves exactly the
-black hole's shares to the wind-down admin, blocks `uusdc` on channel-3
-(refused and refunded, while other denoms and exits still work) and changes
-nothing else, and that the wallet can still withdraw from the legacy pool.
+A handler that touches IBC sets `ibc` on its entry: the network is linked to
+simd through Hermes before the upgrade. The v8.3.0 entry is one (ibc-go v8 to
+v10). It checks that IBC keeps working on the channel opened before the
+upgrade.
 
 All txs use a fixed gas limit, because `--gas auto` does not work on v8.1.1
 and older.
@@ -139,7 +145,7 @@ and older.
 | Validators | 1 (suites can ask for more) |
 | Block time | about 1 s (`timeout_commit = 1s`) |
 | Gas price | `0.01ubze` |
-| Epochs | `day` 30 s, `hour` 5 s, `week` 210 s |
+| Epochs | `day` 30 s, `hour` 5 s, `week` 210 s (a suite overrides them with `chain.Epochs`) |
 | Gov voting period | 20 s (expedited 10 s) |
 | Gov min deposit | 1 BZE (expedited 2 BZE) |
 | Denom rewards lock | 1 day, i.e. 24 `hour` epochs, about 2 minutes |
@@ -166,6 +172,14 @@ adds its own with `chain.WithGenesis(...)`.
   `helpers.TxEvents` / `helpers.BlockEvents`.
 - Wait for time with `helpers.WaitForEpoch`, pass gov messages with
   `helpers.SubmitAndPassProposal`.
+- Pool price guard: every pool keeps a moving average of its price. A
+  protocol fee paid in a non-native denom is swapped only while that pool's
+  price is within `feeMaxPriceDrift` of its average (charged in ubze
+  otherwise), and the txfeecollector and burner swap or add liquidity only
+  within `moduleMaxPriceDrift`. After a step that moves a pool (a large swap
+  or a large fee swap), wait with `helpers.WaitForPoolPriceCalm` (or
+  `WaitForPoolPriceWithin` for one limit) before asserting such a swap;
+  `helpers.QueryPoolPriceState` reads the price next to its average.
 - Tests live in package `interchaintest_test` and are black-box; lint them with
   `make e2e-lint`.
 - Add a `make e2e-<suite>` target to the root Makefile.
@@ -178,10 +192,14 @@ start-up.
 
 ## Known gaps
 
-- Trading rewards: the 30-day expiry of a pending reward, which burns its
-  escrow, takes 720 `hour` epochs (about an hour) and is covered by unit tests
-  only. The trading reward candidates (every trader's running total) have no
-  query, so the suite sees them only through the leaderboard.
+- Trading rewards: the trading reward candidates (every trader's running
+  total) have no query, so the suite sees them only through the leaderboard.
+  The 30-day expiry of a pending reward (720 `hour` epochs, fixed in code) runs
+  in `TestTradingRewardExpiry` on its own network with 2 s `hour` epochs
+  (`chain.Epochs`, about 25 minutes). An epoch can't be shorter than a block:
+  one that falls behind the block time is "catching up", and the rewards
+  module refuses txs until it has caught up. The batching of expiries (100
+  per block) is unit-tested only.
 - Burner: raffles run with `duration` 1 (24 `hour` epochs); the cap of 200
   raffle tickets executing per block and the batching of periodic burns (100
   denoms per block) and raffle cleanups (50 per block) are unit-tested only.

@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/store/prefix"
 	"github.com/bze-alphateam/bze/x/tokenfactory/exported"
 	"github.com/bze-alphateam/bze/x/tokenfactory/migrations/v3"
+	"github.com/bze-alphateam/bze/x/tokenfactory/migrations/v4"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -31,4 +32,21 @@ func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 	m.keeper.Logger().Info("migrating x/tokenfactory state from consensus version 2 to version 3")
 
 	return v3.Migrate(ctx, store, m.legacySubspace, m.keeper.cdc)
+}
+
+// Migrate3to4 migrates the x/tokenfactory module state from the consensus version 3 to
+// version 4. It sets the mintable flag on every denom authority: denoms with an admin stay
+// mintable, renounced denoms become non-mintable.
+func (m Migrator) Migrate3to4(ctx sdk.Context) error {
+	m.keeper.Logger().Info("migrating x/tokenfactory state from consensus version 3 to version 4")
+
+	store := runtime.KVStoreAdapter(m.keeper.storeService.OpenKVStore(ctx))
+	mintable, nonMintable, err := v4.Migrate(store, m.keeper.cdc)
+	if err != nil {
+		return err
+	}
+
+	m.keeper.Logger().Info("x/tokenfactory denom authorities migrated", "mintable", mintable, "non_mintable", nonMintable)
+
+	return nil
 }

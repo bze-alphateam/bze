@@ -69,6 +69,14 @@ message TradingRewardDistributionEvent {
   string prize_amount = 2;
   string prize_denom = 3;
   repeated string winners = 4;
+  string unpaid_burnt = 5; //the prize of the slots nobody filled, sent to the burner (empty when every slot was paid)
+}
+
+// TradingRewardStartEvent is emitted by the first trade on an active trading reward: the countdown
+// starts with that trade, not with the activation.
+message TradingRewardStartEvent {
+  string reward_id = 1;
+  uint32 expire_at = 2; //the hour epoch at which the reward is paid
 }
 
 message DenomRewardCreateEvent {

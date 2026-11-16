@@ -6,6 +6,7 @@ import (
 	v3 "github.com/bze-alphateam/bze/x/rewards/migrations/v3"
 	v4 "github.com/bze-alphateam/bze/x/rewards/migrations/v4"
 	v5 "github.com/bze-alphateam/bze/x/rewards/migrations/v5"
+	v6 "github.com/bze-alphateam/bze/x/rewards/migrations/v6"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -55,4 +56,16 @@ func (m Migrator) Migrate4to5(ctx sdk.Context) error {
 	m.keeper.Logger().Info("migrating x/rewards state from consensus version 4 to version 5")
 
 	return v5.Migrate(ctx, store, m.keeper.cdc)
+}
+
+// Migrate5to6 migrates the x/rewards module state from consensus version 5 to
+// version 6. Active trading rewards nobody traded on go back to waiting for their
+// first trade, which now starts the countdown.
+func (m Migrator) Migrate5to6(ctx sdk.Context) error {
+	m.keeper.Logger().Info("migrating x/rewards state from consensus version 5 to version 6")
+
+	reset := v6.Migrate(ctx, m.keeper)
+	m.keeper.Logger().Info("trading rewards waiting for their first trade", "reward_ids", reset)
+
+	return nil
 }

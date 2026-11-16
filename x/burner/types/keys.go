@@ -13,6 +13,8 @@ const (
 	PeriodicBurnQueueKey = "pbq/"
 	// RaffleCleanupQueueKey is the store key for the raffle cleanup queue
 	RaffleCleanupQueueKey = "rcq/"
+	// IbcMoveLockKeyPrefix is the prefix of the per-denom MsgMoveIbcLockedCoins locks (denom -> last move height)
+	IbcMoveLockKeyPrefix = "iml/"
 )
 
 var (

@@ -53,7 +53,7 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	// Mock fee capture and swap
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(
+		SafeCaptureAndSwapUserFee(
 			suite.ctx,
 			creator,
 			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(200))),
@@ -519,7 +519,7 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 	// Mock fee swap error
 	swapError := fmt.Errorf("fee swap failed")
 	suite.trade.EXPECT().
-		CaptureAndSwapUserFee(
+		SafeCaptureAndSwapUserFee(
 			suite.ctx,
 			creator,
 			sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(200))),
@@ -547,7 +547,8 @@ func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingRewar
 
 	suite.Require().Error(err)
 	suite.Require().Nil(response)
-	suite.Require().Equal(swapError, err)
+	suite.Require().ErrorIs(err, swapError)
+	suite.Require().Contains(err.Error(), "could not pay the fee 200ubze")
 }
 
 func (suite *IntegrationTestSuite) TestMsgServerTradingReward_CreateTradingReward_EpochCatchingUp() {

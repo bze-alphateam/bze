@@ -16,1422 +16,6 @@ import (
 )
 
 var (
-	md_OrderCreateMessageEvent            protoreflect.MessageDescriptor
-	fd_OrderCreateMessageEvent_creator    protoreflect.FieldDescriptor
-	fd_OrderCreateMessageEvent_market_id  protoreflect.FieldDescriptor
-	fd_OrderCreateMessageEvent_order_type protoreflect.FieldDescriptor
-	fd_OrderCreateMessageEvent_amount     protoreflect.FieldDescriptor
-	fd_OrderCreateMessageEvent_price      protoreflect.FieldDescriptor
-	fd_OrderCreateMessageEvent_message_id protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_bze_tradebin_events_proto_init()
-	md_OrderCreateMessageEvent = File_bze_tradebin_events_proto.Messages().ByName("OrderCreateMessageEvent")
-	fd_OrderCreateMessageEvent_creator = md_OrderCreateMessageEvent.Fields().ByName("creator")
-	fd_OrderCreateMessageEvent_market_id = md_OrderCreateMessageEvent.Fields().ByName("market_id")
-	fd_OrderCreateMessageEvent_order_type = md_OrderCreateMessageEvent.Fields().ByName("order_type")
-	fd_OrderCreateMessageEvent_amount = md_OrderCreateMessageEvent.Fields().ByName("amount")
-	fd_OrderCreateMessageEvent_price = md_OrderCreateMessageEvent.Fields().ByName("price")
-	fd_OrderCreateMessageEvent_message_id = md_OrderCreateMessageEvent.Fields().ByName("message_id")
-}
-
-var _ protoreflect.Message = (*fastReflection_OrderCreateMessageEvent)(nil)
-
-type fastReflection_OrderCreateMessageEvent OrderCreateMessageEvent
-
-func (x *OrderCreateMessageEvent) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_OrderCreateMessageEvent)(x)
-}
-
-func (x *OrderCreateMessageEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_OrderCreateMessageEvent_messageType fastReflection_OrderCreateMessageEvent_messageType
-var _ protoreflect.MessageType = fastReflection_OrderCreateMessageEvent_messageType{}
-
-type fastReflection_OrderCreateMessageEvent_messageType struct{}
-
-func (x fastReflection_OrderCreateMessageEvent_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_OrderCreateMessageEvent)(nil)
-}
-func (x fastReflection_OrderCreateMessageEvent_messageType) New() protoreflect.Message {
-	return new(fastReflection_OrderCreateMessageEvent)
-}
-func (x fastReflection_OrderCreateMessageEvent_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_OrderCreateMessageEvent
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_OrderCreateMessageEvent) Descriptor() protoreflect.MessageDescriptor {
-	return md_OrderCreateMessageEvent
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_OrderCreateMessageEvent) Type() protoreflect.MessageType {
-	return _fastReflection_OrderCreateMessageEvent_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_OrderCreateMessageEvent) New() protoreflect.Message {
-	return new(fastReflection_OrderCreateMessageEvent)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_OrderCreateMessageEvent) Interface() protoreflect.ProtoMessage {
-	return (*OrderCreateMessageEvent)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_OrderCreateMessageEvent) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Creator != "" {
-		value := protoreflect.ValueOfString(x.Creator)
-		if !f(fd_OrderCreateMessageEvent_creator, value) {
-			return
-		}
-	}
-	if x.MarketId != "" {
-		value := protoreflect.ValueOfString(x.MarketId)
-		if !f(fd_OrderCreateMessageEvent_market_id, value) {
-			return
-		}
-	}
-	if x.OrderType != "" {
-		value := protoreflect.ValueOfString(x.OrderType)
-		if !f(fd_OrderCreateMessageEvent_order_type, value) {
-			return
-		}
-	}
-	if x.Amount != "" {
-		value := protoreflect.ValueOfString(x.Amount)
-		if !f(fd_OrderCreateMessageEvent_amount, value) {
-			return
-		}
-	}
-	if x.Price != "" {
-		value := protoreflect.ValueOfString(x.Price)
-		if !f(fd_OrderCreateMessageEvent_price, value) {
-			return
-		}
-	}
-	if x.MessageId != "" {
-		value := protoreflect.ValueOfString(x.MessageId)
-		if !f(fd_OrderCreateMessageEvent_message_id, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_OrderCreateMessageEvent) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "bze.tradebin.OrderCreateMessageEvent.creator":
-		return x.Creator != ""
-	case "bze.tradebin.OrderCreateMessageEvent.market_id":
-		return x.MarketId != ""
-	case "bze.tradebin.OrderCreateMessageEvent.order_type":
-		return x.OrderType != ""
-	case "bze.tradebin.OrderCreateMessageEvent.amount":
-		return x.Amount != ""
-	case "bze.tradebin.OrderCreateMessageEvent.price":
-		return x.Price != ""
-	case "bze.tradebin.OrderCreateMessageEvent.message_id":
-		return x.MessageId != ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderCreateMessageEvent"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.OrderCreateMessageEvent does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_OrderCreateMessageEvent) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "bze.tradebin.OrderCreateMessageEvent.creator":
-		x.Creator = ""
-	case "bze.tradebin.OrderCreateMessageEvent.market_id":
-		x.MarketId = ""
-	case "bze.tradebin.OrderCreateMessageEvent.order_type":
-		x.OrderType = ""
-	case "bze.tradebin.OrderCreateMessageEvent.amount":
-		x.Amount = ""
-	case "bze.tradebin.OrderCreateMessageEvent.price":
-		x.Price = ""
-	case "bze.tradebin.OrderCreateMessageEvent.message_id":
-		x.MessageId = ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderCreateMessageEvent"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.OrderCreateMessageEvent does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_OrderCreateMessageEvent) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "bze.tradebin.OrderCreateMessageEvent.creator":
-		value := x.Creator
-		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.OrderCreateMessageEvent.market_id":
-		value := x.MarketId
-		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.OrderCreateMessageEvent.order_type":
-		value := x.OrderType
-		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.OrderCreateMessageEvent.amount":
-		value := x.Amount
-		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.OrderCreateMessageEvent.price":
-		value := x.Price
-		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.OrderCreateMessageEvent.message_id":
-		value := x.MessageId
-		return protoreflect.ValueOfString(value)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderCreateMessageEvent"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.OrderCreateMessageEvent does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_OrderCreateMessageEvent) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "bze.tradebin.OrderCreateMessageEvent.creator":
-		x.Creator = value.Interface().(string)
-	case "bze.tradebin.OrderCreateMessageEvent.market_id":
-		x.MarketId = value.Interface().(string)
-	case "bze.tradebin.OrderCreateMessageEvent.order_type":
-		x.OrderType = value.Interface().(string)
-	case "bze.tradebin.OrderCreateMessageEvent.amount":
-		x.Amount = value.Interface().(string)
-	case "bze.tradebin.OrderCreateMessageEvent.price":
-		x.Price = value.Interface().(string)
-	case "bze.tradebin.OrderCreateMessageEvent.message_id":
-		x.MessageId = value.Interface().(string)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderCreateMessageEvent"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.OrderCreateMessageEvent does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_OrderCreateMessageEvent) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "bze.tradebin.OrderCreateMessageEvent.creator":
-		panic(fmt.Errorf("field creator of message bze.tradebin.OrderCreateMessageEvent is not mutable"))
-	case "bze.tradebin.OrderCreateMessageEvent.market_id":
-		panic(fmt.Errorf("field market_id of message bze.tradebin.OrderCreateMessageEvent is not mutable"))
-	case "bze.tradebin.OrderCreateMessageEvent.order_type":
-		panic(fmt.Errorf("field order_type of message bze.tradebin.OrderCreateMessageEvent is not mutable"))
-	case "bze.tradebin.OrderCreateMessageEvent.amount":
-		panic(fmt.Errorf("field amount of message bze.tradebin.OrderCreateMessageEvent is not mutable"))
-	case "bze.tradebin.OrderCreateMessageEvent.price":
-		panic(fmt.Errorf("field price of message bze.tradebin.OrderCreateMessageEvent is not mutable"))
-	case "bze.tradebin.OrderCreateMessageEvent.message_id":
-		panic(fmt.Errorf("field message_id of message bze.tradebin.OrderCreateMessageEvent is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderCreateMessageEvent"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.OrderCreateMessageEvent does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_OrderCreateMessageEvent) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "bze.tradebin.OrderCreateMessageEvent.creator":
-		return protoreflect.ValueOfString("")
-	case "bze.tradebin.OrderCreateMessageEvent.market_id":
-		return protoreflect.ValueOfString("")
-	case "bze.tradebin.OrderCreateMessageEvent.order_type":
-		return protoreflect.ValueOfString("")
-	case "bze.tradebin.OrderCreateMessageEvent.amount":
-		return protoreflect.ValueOfString("")
-	case "bze.tradebin.OrderCreateMessageEvent.price":
-		return protoreflect.ValueOfString("")
-	case "bze.tradebin.OrderCreateMessageEvent.message_id":
-		return protoreflect.ValueOfString("")
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderCreateMessageEvent"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.OrderCreateMessageEvent does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_OrderCreateMessageEvent) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in bze.tradebin.OrderCreateMessageEvent", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_OrderCreateMessageEvent) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_OrderCreateMessageEvent) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_OrderCreateMessageEvent) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_OrderCreateMessageEvent) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*OrderCreateMessageEvent)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		l = len(x.Creator)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.MarketId)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.OrderType)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.Amount)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.Price)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.MessageId)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*OrderCreateMessageEvent)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.MessageId) > 0 {
-			i -= len(x.MessageId)
-			copy(dAtA[i:], x.MessageId)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MessageId)))
-			i--
-			dAtA[i] = 0x32
-		}
-		if len(x.Price) > 0 {
-			i -= len(x.Price)
-			copy(dAtA[i:], x.Price)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Price)))
-			i--
-			dAtA[i] = 0x2a
-		}
-		if len(x.Amount) > 0 {
-			i -= len(x.Amount)
-			copy(dAtA[i:], x.Amount)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Amount)))
-			i--
-			dAtA[i] = 0x22
-		}
-		if len(x.OrderType) > 0 {
-			i -= len(x.OrderType)
-			copy(dAtA[i:], x.OrderType)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OrderType)))
-			i--
-			dAtA[i] = 0x1a
-		}
-		if len(x.MarketId) > 0 {
-			i -= len(x.MarketId)
-			copy(dAtA[i:], x.MarketId)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MarketId)))
-			i--
-			dAtA[i] = 0x12
-		}
-		if len(x.Creator) > 0 {
-			i -= len(x.Creator)
-			copy(dAtA[i:], x.Creator)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Creator)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*OrderCreateMessageEvent)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: OrderCreateMessageEvent: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: OrderCreateMessageEvent: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Creator = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 2:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.MarketId = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 3:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OrderType", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.OrderType = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 4:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Amount = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 5:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Price", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Price = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 6:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MessageId", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.MessageId = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
-	md_OrderCancelMessageEvent            protoreflect.MessageDescriptor
-	fd_OrderCancelMessageEvent_creator    protoreflect.FieldDescriptor
-	fd_OrderCancelMessageEvent_marketId   protoreflect.FieldDescriptor
-	fd_OrderCancelMessageEvent_orderId    protoreflect.FieldDescriptor
-	fd_OrderCancelMessageEvent_order_type protoreflect.FieldDescriptor
-	fd_OrderCancelMessageEvent_message_id protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_bze_tradebin_events_proto_init()
-	md_OrderCancelMessageEvent = File_bze_tradebin_events_proto.Messages().ByName("OrderCancelMessageEvent")
-	fd_OrderCancelMessageEvent_creator = md_OrderCancelMessageEvent.Fields().ByName("creator")
-	fd_OrderCancelMessageEvent_marketId = md_OrderCancelMessageEvent.Fields().ByName("marketId")
-	fd_OrderCancelMessageEvent_orderId = md_OrderCancelMessageEvent.Fields().ByName("orderId")
-	fd_OrderCancelMessageEvent_order_type = md_OrderCancelMessageEvent.Fields().ByName("order_type")
-	fd_OrderCancelMessageEvent_message_id = md_OrderCancelMessageEvent.Fields().ByName("message_id")
-}
-
-var _ protoreflect.Message = (*fastReflection_OrderCancelMessageEvent)(nil)
-
-type fastReflection_OrderCancelMessageEvent OrderCancelMessageEvent
-
-func (x *OrderCancelMessageEvent) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_OrderCancelMessageEvent)(x)
-}
-
-func (x *OrderCancelMessageEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_OrderCancelMessageEvent_messageType fastReflection_OrderCancelMessageEvent_messageType
-var _ protoreflect.MessageType = fastReflection_OrderCancelMessageEvent_messageType{}
-
-type fastReflection_OrderCancelMessageEvent_messageType struct{}
-
-func (x fastReflection_OrderCancelMessageEvent_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_OrderCancelMessageEvent)(nil)
-}
-func (x fastReflection_OrderCancelMessageEvent_messageType) New() protoreflect.Message {
-	return new(fastReflection_OrderCancelMessageEvent)
-}
-func (x fastReflection_OrderCancelMessageEvent_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_OrderCancelMessageEvent
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_OrderCancelMessageEvent) Descriptor() protoreflect.MessageDescriptor {
-	return md_OrderCancelMessageEvent
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_OrderCancelMessageEvent) Type() protoreflect.MessageType {
-	return _fastReflection_OrderCancelMessageEvent_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_OrderCancelMessageEvent) New() protoreflect.Message {
-	return new(fastReflection_OrderCancelMessageEvent)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_OrderCancelMessageEvent) Interface() protoreflect.ProtoMessage {
-	return (*OrderCancelMessageEvent)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_OrderCancelMessageEvent) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Creator != "" {
-		value := protoreflect.ValueOfString(x.Creator)
-		if !f(fd_OrderCancelMessageEvent_creator, value) {
-			return
-		}
-	}
-	if x.MarketId != "" {
-		value := protoreflect.ValueOfString(x.MarketId)
-		if !f(fd_OrderCancelMessageEvent_marketId, value) {
-			return
-		}
-	}
-	if x.OrderId != "" {
-		value := protoreflect.ValueOfString(x.OrderId)
-		if !f(fd_OrderCancelMessageEvent_orderId, value) {
-			return
-		}
-	}
-	if x.OrderType != "" {
-		value := protoreflect.ValueOfString(x.OrderType)
-		if !f(fd_OrderCancelMessageEvent_order_type, value) {
-			return
-		}
-	}
-	if x.MessageId != "" {
-		value := protoreflect.ValueOfString(x.MessageId)
-		if !f(fd_OrderCancelMessageEvent_message_id, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_OrderCancelMessageEvent) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "bze.tradebin.OrderCancelMessageEvent.creator":
-		return x.Creator != ""
-	case "bze.tradebin.OrderCancelMessageEvent.marketId":
-		return x.MarketId != ""
-	case "bze.tradebin.OrderCancelMessageEvent.orderId":
-		return x.OrderId != ""
-	case "bze.tradebin.OrderCancelMessageEvent.order_type":
-		return x.OrderType != ""
-	case "bze.tradebin.OrderCancelMessageEvent.message_id":
-		return x.MessageId != ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderCancelMessageEvent"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.OrderCancelMessageEvent does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_OrderCancelMessageEvent) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "bze.tradebin.OrderCancelMessageEvent.creator":
-		x.Creator = ""
-	case "bze.tradebin.OrderCancelMessageEvent.marketId":
-		x.MarketId = ""
-	case "bze.tradebin.OrderCancelMessageEvent.orderId":
-		x.OrderId = ""
-	case "bze.tradebin.OrderCancelMessageEvent.order_type":
-		x.OrderType = ""
-	case "bze.tradebin.OrderCancelMessageEvent.message_id":
-		x.MessageId = ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderCancelMessageEvent"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.OrderCancelMessageEvent does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_OrderCancelMessageEvent) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "bze.tradebin.OrderCancelMessageEvent.creator":
-		value := x.Creator
-		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.OrderCancelMessageEvent.marketId":
-		value := x.MarketId
-		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.OrderCancelMessageEvent.orderId":
-		value := x.OrderId
-		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.OrderCancelMessageEvent.order_type":
-		value := x.OrderType
-		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.OrderCancelMessageEvent.message_id":
-		value := x.MessageId
-		return protoreflect.ValueOfString(value)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderCancelMessageEvent"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.OrderCancelMessageEvent does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_OrderCancelMessageEvent) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "bze.tradebin.OrderCancelMessageEvent.creator":
-		x.Creator = value.Interface().(string)
-	case "bze.tradebin.OrderCancelMessageEvent.marketId":
-		x.MarketId = value.Interface().(string)
-	case "bze.tradebin.OrderCancelMessageEvent.orderId":
-		x.OrderId = value.Interface().(string)
-	case "bze.tradebin.OrderCancelMessageEvent.order_type":
-		x.OrderType = value.Interface().(string)
-	case "bze.tradebin.OrderCancelMessageEvent.message_id":
-		x.MessageId = value.Interface().(string)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderCancelMessageEvent"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.OrderCancelMessageEvent does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_OrderCancelMessageEvent) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "bze.tradebin.OrderCancelMessageEvent.creator":
-		panic(fmt.Errorf("field creator of message bze.tradebin.OrderCancelMessageEvent is not mutable"))
-	case "bze.tradebin.OrderCancelMessageEvent.marketId":
-		panic(fmt.Errorf("field marketId of message bze.tradebin.OrderCancelMessageEvent is not mutable"))
-	case "bze.tradebin.OrderCancelMessageEvent.orderId":
-		panic(fmt.Errorf("field orderId of message bze.tradebin.OrderCancelMessageEvent is not mutable"))
-	case "bze.tradebin.OrderCancelMessageEvent.order_type":
-		panic(fmt.Errorf("field order_type of message bze.tradebin.OrderCancelMessageEvent is not mutable"))
-	case "bze.tradebin.OrderCancelMessageEvent.message_id":
-		panic(fmt.Errorf("field message_id of message bze.tradebin.OrderCancelMessageEvent is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderCancelMessageEvent"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.OrderCancelMessageEvent does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_OrderCancelMessageEvent) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "bze.tradebin.OrderCancelMessageEvent.creator":
-		return protoreflect.ValueOfString("")
-	case "bze.tradebin.OrderCancelMessageEvent.marketId":
-		return protoreflect.ValueOfString("")
-	case "bze.tradebin.OrderCancelMessageEvent.orderId":
-		return protoreflect.ValueOfString("")
-	case "bze.tradebin.OrderCancelMessageEvent.order_type":
-		return protoreflect.ValueOfString("")
-	case "bze.tradebin.OrderCancelMessageEvent.message_id":
-		return protoreflect.ValueOfString("")
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderCancelMessageEvent"))
-		}
-		panic(fmt.Errorf("message bze.tradebin.OrderCancelMessageEvent does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_OrderCancelMessageEvent) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in bze.tradebin.OrderCancelMessageEvent", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_OrderCancelMessageEvent) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_OrderCancelMessageEvent) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_OrderCancelMessageEvent) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_OrderCancelMessageEvent) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*OrderCancelMessageEvent)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		l = len(x.Creator)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.MarketId)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.OrderId)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.OrderType)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.MessageId)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*OrderCancelMessageEvent)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.MessageId) > 0 {
-			i -= len(x.MessageId)
-			copy(dAtA[i:], x.MessageId)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MessageId)))
-			i--
-			dAtA[i] = 0x2a
-		}
-		if len(x.OrderType) > 0 {
-			i -= len(x.OrderType)
-			copy(dAtA[i:], x.OrderType)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OrderType)))
-			i--
-			dAtA[i] = 0x22
-		}
-		if len(x.OrderId) > 0 {
-			i -= len(x.OrderId)
-			copy(dAtA[i:], x.OrderId)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OrderId)))
-			i--
-			dAtA[i] = 0x1a
-		}
-		if len(x.MarketId) > 0 {
-			i -= len(x.MarketId)
-			copy(dAtA[i:], x.MarketId)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MarketId)))
-			i--
-			dAtA[i] = 0x12
-		}
-		if len(x.Creator) > 0 {
-			i -= len(x.Creator)
-			copy(dAtA[i:], x.Creator)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Creator)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*OrderCancelMessageEvent)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: OrderCancelMessageEvent: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: OrderCancelMessageEvent: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Creator = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 2:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.MarketId = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 3:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OrderId", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.OrderId = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 4:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OrderType", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.OrderType = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 5:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MessageId", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.MessageId = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
 	md_MarketCreatedEvent         protoreflect.MessageDescriptor
 	fd_MarketCreatedEvent_creator protoreflect.FieldDescriptor
 	fd_MarketCreatedEvent_base    protoreflect.FieldDescriptor
@@ -1455,7 +39,7 @@ func (x *MarketCreatedEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MarketCreatedEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[2]
+	mi := &file_bze_tradebin_events_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1988,7 +572,7 @@ var (
 	fd_OrderExecutedEvent_price      protoreflect.FieldDescriptor
 	fd_OrderExecutedEvent_maker      protoreflect.FieldDescriptor
 	fd_OrderExecutedEvent_taker      protoreflect.FieldDescriptor
-	fd_OrderExecutedEvent_message_id protoreflect.FieldDescriptor
+	fd_OrderExecutedEvent_order_id   protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -2001,7 +585,7 @@ func init() {
 	fd_OrderExecutedEvent_price = md_OrderExecutedEvent.Fields().ByName("price")
 	fd_OrderExecutedEvent_maker = md_OrderExecutedEvent.Fields().ByName("maker")
 	fd_OrderExecutedEvent_taker = md_OrderExecutedEvent.Fields().ByName("taker")
-	fd_OrderExecutedEvent_message_id = md_OrderExecutedEvent.Fields().ByName("message_id")
+	fd_OrderExecutedEvent_order_id = md_OrderExecutedEvent.Fields().ByName("order_id")
 }
 
 var _ protoreflect.Message = (*fastReflection_OrderExecutedEvent)(nil)
@@ -2013,7 +597,7 @@ func (x *OrderExecutedEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *OrderExecutedEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[3]
+	mi := &file_bze_tradebin_events_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2111,9 +695,9 @@ func (x *fastReflection_OrderExecutedEvent) Range(f func(protoreflect.FieldDescr
 			return
 		}
 	}
-	if x.MessageId != "" {
-		value := protoreflect.ValueOfString(x.MessageId)
-		if !f(fd_OrderExecutedEvent_message_id, value) {
+	if x.OrderId != "" {
+		value := protoreflect.ValueOfString(x.OrderId)
+		if !f(fd_OrderExecutedEvent_order_id, value) {
 			return
 		}
 	}
@@ -2146,8 +730,8 @@ func (x *fastReflection_OrderExecutedEvent) Has(fd protoreflect.FieldDescriptor)
 		return x.Maker != ""
 	case "bze.tradebin.OrderExecutedEvent.taker":
 		return x.Taker != ""
-	case "bze.tradebin.OrderExecutedEvent.message_id":
-		return x.MessageId != ""
+	case "bze.tradebin.OrderExecutedEvent.order_id":
+		return x.OrderId != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderExecutedEvent"))
@@ -2178,8 +762,8 @@ func (x *fastReflection_OrderExecutedEvent) Clear(fd protoreflect.FieldDescripto
 		x.Maker = ""
 	case "bze.tradebin.OrderExecutedEvent.taker":
 		x.Taker = ""
-	case "bze.tradebin.OrderExecutedEvent.message_id":
-		x.MessageId = ""
+	case "bze.tradebin.OrderExecutedEvent.order_id":
+		x.OrderId = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderExecutedEvent"))
@@ -2217,8 +801,8 @@ func (x *fastReflection_OrderExecutedEvent) Get(descriptor protoreflect.FieldDes
 	case "bze.tradebin.OrderExecutedEvent.taker":
 		value := x.Taker
 		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.OrderExecutedEvent.message_id":
-		value := x.MessageId
+	case "bze.tradebin.OrderExecutedEvent.order_id":
+		value := x.OrderId
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
@@ -2254,8 +838,8 @@ func (x *fastReflection_OrderExecutedEvent) Set(fd protoreflect.FieldDescriptor,
 		x.Maker = value.Interface().(string)
 	case "bze.tradebin.OrderExecutedEvent.taker":
 		x.Taker = value.Interface().(string)
-	case "bze.tradebin.OrderExecutedEvent.message_id":
-		x.MessageId = value.Interface().(string)
+	case "bze.tradebin.OrderExecutedEvent.order_id":
+		x.OrderId = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderExecutedEvent"))
@@ -2290,8 +874,8 @@ func (x *fastReflection_OrderExecutedEvent) Mutable(fd protoreflect.FieldDescrip
 		panic(fmt.Errorf("field maker of message bze.tradebin.OrderExecutedEvent is not mutable"))
 	case "bze.tradebin.OrderExecutedEvent.taker":
 		panic(fmt.Errorf("field taker of message bze.tradebin.OrderExecutedEvent is not mutable"))
-	case "bze.tradebin.OrderExecutedEvent.message_id":
-		panic(fmt.Errorf("field message_id of message bze.tradebin.OrderExecutedEvent is not mutable"))
+	case "bze.tradebin.OrderExecutedEvent.order_id":
+		panic(fmt.Errorf("field order_id of message bze.tradebin.OrderExecutedEvent is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderExecutedEvent"))
@@ -2319,7 +903,7 @@ func (x *fastReflection_OrderExecutedEvent) NewField(fd protoreflect.FieldDescri
 		return protoreflect.ValueOfString("")
 	case "bze.tradebin.OrderExecutedEvent.taker":
 		return protoreflect.ValueOfString("")
-	case "bze.tradebin.OrderExecutedEvent.message_id":
+	case "bze.tradebin.OrderExecutedEvent.order_id":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -2418,7 +1002,7 @@ func (x *fastReflection_OrderExecutedEvent) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.MessageId)
+		l = len(x.OrderId)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -2451,10 +1035,10 @@ func (x *fastReflection_OrderExecutedEvent) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.MessageId) > 0 {
-			i -= len(x.MessageId)
-			copy(dAtA[i:], x.MessageId)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MessageId)))
+		if len(x.OrderId) > 0 {
+			i -= len(x.OrderId)
+			copy(dAtA[i:], x.OrderId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OrderId)))
 			i--
 			dAtA[i] = 0x42
 		}
@@ -2782,7 +1366,7 @@ func (x *fastReflection_OrderExecutedEvent) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 8:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MessageId", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OrderId", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -2810,7 +1394,7 @@ func (x *fastReflection_OrderExecutedEvent) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.MessageId = string(dAtA[iNdEx:postIndex])
+				x.OrderId = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -2855,7 +1439,7 @@ var (
 	fd_OrderCanceledEvent_amount     protoreflect.FieldDescriptor
 	fd_OrderCanceledEvent_price      protoreflect.FieldDescriptor
 	fd_OrderCanceledEvent_owner      protoreflect.FieldDescriptor
-	fd_OrderCanceledEvent_message_id protoreflect.FieldDescriptor
+	fd_OrderCanceledEvent_order_id   protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -2867,7 +1451,7 @@ func init() {
 	fd_OrderCanceledEvent_amount = md_OrderCanceledEvent.Fields().ByName("amount")
 	fd_OrderCanceledEvent_price = md_OrderCanceledEvent.Fields().ByName("price")
 	fd_OrderCanceledEvent_owner = md_OrderCanceledEvent.Fields().ByName("owner")
-	fd_OrderCanceledEvent_message_id = md_OrderCanceledEvent.Fields().ByName("message_id")
+	fd_OrderCanceledEvent_order_id = md_OrderCanceledEvent.Fields().ByName("order_id")
 }
 
 var _ protoreflect.Message = (*fastReflection_OrderCanceledEvent)(nil)
@@ -2879,7 +1463,7 @@ func (x *OrderCanceledEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *OrderCanceledEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[4]
+	mi := &file_bze_tradebin_events_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2971,9 +1555,9 @@ func (x *fastReflection_OrderCanceledEvent) Range(f func(protoreflect.FieldDescr
 			return
 		}
 	}
-	if x.MessageId != "" {
-		value := protoreflect.ValueOfString(x.MessageId)
-		if !f(fd_OrderCanceledEvent_message_id, value) {
+	if x.OrderId != "" {
+		value := protoreflect.ValueOfString(x.OrderId)
+		if !f(fd_OrderCanceledEvent_order_id, value) {
 			return
 		}
 	}
@@ -3004,8 +1588,8 @@ func (x *fastReflection_OrderCanceledEvent) Has(fd protoreflect.FieldDescriptor)
 		return x.Price != ""
 	case "bze.tradebin.OrderCanceledEvent.owner":
 		return x.Owner != ""
-	case "bze.tradebin.OrderCanceledEvent.message_id":
-		return x.MessageId != ""
+	case "bze.tradebin.OrderCanceledEvent.order_id":
+		return x.OrderId != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderCanceledEvent"))
@@ -3034,8 +1618,8 @@ func (x *fastReflection_OrderCanceledEvent) Clear(fd protoreflect.FieldDescripto
 		x.Price = ""
 	case "bze.tradebin.OrderCanceledEvent.owner":
 		x.Owner = ""
-	case "bze.tradebin.OrderCanceledEvent.message_id":
-		x.MessageId = ""
+	case "bze.tradebin.OrderCanceledEvent.order_id":
+		x.OrderId = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderCanceledEvent"))
@@ -3070,8 +1654,8 @@ func (x *fastReflection_OrderCanceledEvent) Get(descriptor protoreflect.FieldDes
 	case "bze.tradebin.OrderCanceledEvent.owner":
 		value := x.Owner
 		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.OrderCanceledEvent.message_id":
-		value := x.MessageId
+	case "bze.tradebin.OrderCanceledEvent.order_id":
+		value := x.OrderId
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
@@ -3105,8 +1689,8 @@ func (x *fastReflection_OrderCanceledEvent) Set(fd protoreflect.FieldDescriptor,
 		x.Price = value.Interface().(string)
 	case "bze.tradebin.OrderCanceledEvent.owner":
 		x.Owner = value.Interface().(string)
-	case "bze.tradebin.OrderCanceledEvent.message_id":
-		x.MessageId = value.Interface().(string)
+	case "bze.tradebin.OrderCanceledEvent.order_id":
+		x.OrderId = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderCanceledEvent"))
@@ -3139,8 +1723,8 @@ func (x *fastReflection_OrderCanceledEvent) Mutable(fd protoreflect.FieldDescrip
 		panic(fmt.Errorf("field price of message bze.tradebin.OrderCanceledEvent is not mutable"))
 	case "bze.tradebin.OrderCanceledEvent.owner":
 		panic(fmt.Errorf("field owner of message bze.tradebin.OrderCanceledEvent is not mutable"))
-	case "bze.tradebin.OrderCanceledEvent.message_id":
-		panic(fmt.Errorf("field message_id of message bze.tradebin.OrderCanceledEvent is not mutable"))
+	case "bze.tradebin.OrderCanceledEvent.order_id":
+		panic(fmt.Errorf("field order_id of message bze.tradebin.OrderCanceledEvent is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderCanceledEvent"))
@@ -3166,7 +1750,7 @@ func (x *fastReflection_OrderCanceledEvent) NewField(fd protoreflect.FieldDescri
 		return protoreflect.ValueOfString("")
 	case "bze.tradebin.OrderCanceledEvent.owner":
 		return protoreflect.ValueOfString("")
-	case "bze.tradebin.OrderCanceledEvent.message_id":
+	case "bze.tradebin.OrderCanceledEvent.order_id":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -3261,7 +1845,7 @@ func (x *fastReflection_OrderCanceledEvent) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.MessageId)
+		l = len(x.OrderId)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -3294,10 +1878,10 @@ func (x *fastReflection_OrderCanceledEvent) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.MessageId) > 0 {
-			i -= len(x.MessageId)
-			copy(dAtA[i:], x.MessageId)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MessageId)))
+		if len(x.OrderId) > 0 {
+			i -= len(x.OrderId)
+			copy(dAtA[i:], x.OrderId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OrderId)))
 			i--
 			dAtA[i] = 0x3a
 		}
@@ -3586,7 +2170,7 @@ func (x *fastReflection_OrderCanceledEvent) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 7:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MessageId", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OrderId", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -3614,7 +2198,7 @@ func (x *fastReflection_OrderCanceledEvent) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.MessageId = string(dAtA[iNdEx:postIndex])
+				x.OrderId = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -3659,7 +2243,7 @@ var (
 	fd_OrderSavedEvent_amount     protoreflect.FieldDescriptor
 	fd_OrderSavedEvent_price      protoreflect.FieldDescriptor
 	fd_OrderSavedEvent_owner      protoreflect.FieldDescriptor
-	fd_OrderSavedEvent_message_id protoreflect.FieldDescriptor
+	fd_OrderSavedEvent_order_id   protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -3671,7 +2255,7 @@ func init() {
 	fd_OrderSavedEvent_amount = md_OrderSavedEvent.Fields().ByName("amount")
 	fd_OrderSavedEvent_price = md_OrderSavedEvent.Fields().ByName("price")
 	fd_OrderSavedEvent_owner = md_OrderSavedEvent.Fields().ByName("owner")
-	fd_OrderSavedEvent_message_id = md_OrderSavedEvent.Fields().ByName("message_id")
+	fd_OrderSavedEvent_order_id = md_OrderSavedEvent.Fields().ByName("order_id")
 }
 
 var _ protoreflect.Message = (*fastReflection_OrderSavedEvent)(nil)
@@ -3683,7 +2267,7 @@ func (x *OrderSavedEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *OrderSavedEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[5]
+	mi := &file_bze_tradebin_events_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3775,9 +2359,9 @@ func (x *fastReflection_OrderSavedEvent) Range(f func(protoreflect.FieldDescript
 			return
 		}
 	}
-	if x.MessageId != "" {
-		value := protoreflect.ValueOfString(x.MessageId)
-		if !f(fd_OrderSavedEvent_message_id, value) {
+	if x.OrderId != "" {
+		value := protoreflect.ValueOfString(x.OrderId)
+		if !f(fd_OrderSavedEvent_order_id, value) {
 			return
 		}
 	}
@@ -3808,8 +2392,8 @@ func (x *fastReflection_OrderSavedEvent) Has(fd protoreflect.FieldDescriptor) bo
 		return x.Price != ""
 	case "bze.tradebin.OrderSavedEvent.owner":
 		return x.Owner != ""
-	case "bze.tradebin.OrderSavedEvent.message_id":
-		return x.MessageId != ""
+	case "bze.tradebin.OrderSavedEvent.order_id":
+		return x.OrderId != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderSavedEvent"))
@@ -3838,8 +2422,8 @@ func (x *fastReflection_OrderSavedEvent) Clear(fd protoreflect.FieldDescriptor) 
 		x.Price = ""
 	case "bze.tradebin.OrderSavedEvent.owner":
 		x.Owner = ""
-	case "bze.tradebin.OrderSavedEvent.message_id":
-		x.MessageId = ""
+	case "bze.tradebin.OrderSavedEvent.order_id":
+		x.OrderId = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderSavedEvent"))
@@ -3874,8 +2458,8 @@ func (x *fastReflection_OrderSavedEvent) Get(descriptor protoreflect.FieldDescri
 	case "bze.tradebin.OrderSavedEvent.owner":
 		value := x.Owner
 		return protoreflect.ValueOfString(value)
-	case "bze.tradebin.OrderSavedEvent.message_id":
-		value := x.MessageId
+	case "bze.tradebin.OrderSavedEvent.order_id":
+		value := x.OrderId
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
@@ -3909,8 +2493,8 @@ func (x *fastReflection_OrderSavedEvent) Set(fd protoreflect.FieldDescriptor, va
 		x.Price = value.Interface().(string)
 	case "bze.tradebin.OrderSavedEvent.owner":
 		x.Owner = value.Interface().(string)
-	case "bze.tradebin.OrderSavedEvent.message_id":
-		x.MessageId = value.Interface().(string)
+	case "bze.tradebin.OrderSavedEvent.order_id":
+		x.OrderId = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderSavedEvent"))
@@ -3943,8 +2527,8 @@ func (x *fastReflection_OrderSavedEvent) Mutable(fd protoreflect.FieldDescriptor
 		panic(fmt.Errorf("field price of message bze.tradebin.OrderSavedEvent is not mutable"))
 	case "bze.tradebin.OrderSavedEvent.owner":
 		panic(fmt.Errorf("field owner of message bze.tradebin.OrderSavedEvent is not mutable"))
-	case "bze.tradebin.OrderSavedEvent.message_id":
-		panic(fmt.Errorf("field message_id of message bze.tradebin.OrderSavedEvent is not mutable"))
+	case "bze.tradebin.OrderSavedEvent.order_id":
+		panic(fmt.Errorf("field order_id of message bze.tradebin.OrderSavedEvent is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderSavedEvent"))
@@ -3970,7 +2554,7 @@ func (x *fastReflection_OrderSavedEvent) NewField(fd protoreflect.FieldDescripto
 		return protoreflect.ValueOfString("")
 	case "bze.tradebin.OrderSavedEvent.owner":
 		return protoreflect.ValueOfString("")
-	case "bze.tradebin.OrderSavedEvent.message_id":
+	case "bze.tradebin.OrderSavedEvent.order_id":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -4065,7 +2649,7 @@ func (x *fastReflection_OrderSavedEvent) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.MessageId)
+		l = len(x.OrderId)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -4098,10 +2682,10 @@ func (x *fastReflection_OrderSavedEvent) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.MessageId) > 0 {
-			i -= len(x.MessageId)
-			copy(dAtA[i:], x.MessageId)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MessageId)))
+		if len(x.OrderId) > 0 {
+			i -= len(x.OrderId)
+			copy(dAtA[i:], x.OrderId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OrderId)))
 			i--
 			dAtA[i] = 0x3a
 		}
@@ -4390,7 +2974,7 @@ func (x *fastReflection_OrderSavedEvent) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 7:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MessageId", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OrderId", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -4418,7 +3002,875 @@ func (x *fastReflection_OrderSavedEvent) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.MessageId = string(dAtA[iNdEx:postIndex])
+				x.OrderId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_OrderAmendedEvent              protoreflect.MessageDescriptor
+	fd_OrderAmendedEvent_id           protoreflect.FieldDescriptor
+	fd_OrderAmendedEvent_market_id    protoreflect.FieldDescriptor
+	fd_OrderAmendedEvent_order_type   protoreflect.FieldDescriptor
+	fd_OrderAmendedEvent_price        protoreflect.FieldDescriptor
+	fd_OrderAmendedEvent_owner        protoreflect.FieldDescriptor
+	fd_OrderAmendedEvent_added_amount protoreflect.FieldDescriptor
+	fd_OrderAmendedEvent_amount       protoreflect.FieldDescriptor
+	fd_OrderAmendedEvent_previous_id  protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_tradebin_events_proto_init()
+	md_OrderAmendedEvent = File_bze_tradebin_events_proto.Messages().ByName("OrderAmendedEvent")
+	fd_OrderAmendedEvent_id = md_OrderAmendedEvent.Fields().ByName("id")
+	fd_OrderAmendedEvent_market_id = md_OrderAmendedEvent.Fields().ByName("market_id")
+	fd_OrderAmendedEvent_order_type = md_OrderAmendedEvent.Fields().ByName("order_type")
+	fd_OrderAmendedEvent_price = md_OrderAmendedEvent.Fields().ByName("price")
+	fd_OrderAmendedEvent_owner = md_OrderAmendedEvent.Fields().ByName("owner")
+	fd_OrderAmendedEvent_added_amount = md_OrderAmendedEvent.Fields().ByName("added_amount")
+	fd_OrderAmendedEvent_amount = md_OrderAmendedEvent.Fields().ByName("amount")
+	fd_OrderAmendedEvent_previous_id = md_OrderAmendedEvent.Fields().ByName("previous_id")
+}
+
+var _ protoreflect.Message = (*fastReflection_OrderAmendedEvent)(nil)
+
+type fastReflection_OrderAmendedEvent OrderAmendedEvent
+
+func (x *OrderAmendedEvent) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_OrderAmendedEvent)(x)
+}
+
+func (x *OrderAmendedEvent) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_tradebin_events_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_OrderAmendedEvent_messageType fastReflection_OrderAmendedEvent_messageType
+var _ protoreflect.MessageType = fastReflection_OrderAmendedEvent_messageType{}
+
+type fastReflection_OrderAmendedEvent_messageType struct{}
+
+func (x fastReflection_OrderAmendedEvent_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_OrderAmendedEvent)(nil)
+}
+func (x fastReflection_OrderAmendedEvent_messageType) New() protoreflect.Message {
+	return new(fastReflection_OrderAmendedEvent)
+}
+func (x fastReflection_OrderAmendedEvent_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_OrderAmendedEvent
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_OrderAmendedEvent) Descriptor() protoreflect.MessageDescriptor {
+	return md_OrderAmendedEvent
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_OrderAmendedEvent) Type() protoreflect.MessageType {
+	return _fastReflection_OrderAmendedEvent_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_OrderAmendedEvent) New() protoreflect.Message {
+	return new(fastReflection_OrderAmendedEvent)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_OrderAmendedEvent) Interface() protoreflect.ProtoMessage {
+	return (*OrderAmendedEvent)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_OrderAmendedEvent) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Id != "" {
+		value := protoreflect.ValueOfString(x.Id)
+		if !f(fd_OrderAmendedEvent_id, value) {
+			return
+		}
+	}
+	if x.MarketId != "" {
+		value := protoreflect.ValueOfString(x.MarketId)
+		if !f(fd_OrderAmendedEvent_market_id, value) {
+			return
+		}
+	}
+	if x.OrderType != "" {
+		value := protoreflect.ValueOfString(x.OrderType)
+		if !f(fd_OrderAmendedEvent_order_type, value) {
+			return
+		}
+	}
+	if x.Price != "" {
+		value := protoreflect.ValueOfString(x.Price)
+		if !f(fd_OrderAmendedEvent_price, value) {
+			return
+		}
+	}
+	if x.Owner != "" {
+		value := protoreflect.ValueOfString(x.Owner)
+		if !f(fd_OrderAmendedEvent_owner, value) {
+			return
+		}
+	}
+	if x.AddedAmount != "" {
+		value := protoreflect.ValueOfString(x.AddedAmount)
+		if !f(fd_OrderAmendedEvent_added_amount, value) {
+			return
+		}
+	}
+	if x.Amount != "" {
+		value := protoreflect.ValueOfString(x.Amount)
+		if !f(fd_OrderAmendedEvent_amount, value) {
+			return
+		}
+	}
+	if x.PreviousId != "" {
+		value := protoreflect.ValueOfString(x.PreviousId)
+		if !f(fd_OrderAmendedEvent_previous_id, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_OrderAmendedEvent) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.tradebin.OrderAmendedEvent.id":
+		return x.Id != ""
+	case "bze.tradebin.OrderAmendedEvent.market_id":
+		return x.MarketId != ""
+	case "bze.tradebin.OrderAmendedEvent.order_type":
+		return x.OrderType != ""
+	case "bze.tradebin.OrderAmendedEvent.price":
+		return x.Price != ""
+	case "bze.tradebin.OrderAmendedEvent.owner":
+		return x.Owner != ""
+	case "bze.tradebin.OrderAmendedEvent.added_amount":
+		return x.AddedAmount != ""
+	case "bze.tradebin.OrderAmendedEvent.amount":
+		return x.Amount != ""
+	case "bze.tradebin.OrderAmendedEvent.previous_id":
+		return x.PreviousId != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderAmendedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderAmendedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OrderAmendedEvent) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.tradebin.OrderAmendedEvent.id":
+		x.Id = ""
+	case "bze.tradebin.OrderAmendedEvent.market_id":
+		x.MarketId = ""
+	case "bze.tradebin.OrderAmendedEvent.order_type":
+		x.OrderType = ""
+	case "bze.tradebin.OrderAmendedEvent.price":
+		x.Price = ""
+	case "bze.tradebin.OrderAmendedEvent.owner":
+		x.Owner = ""
+	case "bze.tradebin.OrderAmendedEvent.added_amount":
+		x.AddedAmount = ""
+	case "bze.tradebin.OrderAmendedEvent.amount":
+		x.Amount = ""
+	case "bze.tradebin.OrderAmendedEvent.previous_id":
+		x.PreviousId = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderAmendedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderAmendedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_OrderAmendedEvent) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.tradebin.OrderAmendedEvent.id":
+		value := x.Id
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderAmendedEvent.market_id":
+		value := x.MarketId
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderAmendedEvent.order_type":
+		value := x.OrderType
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderAmendedEvent.price":
+		value := x.Price
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderAmendedEvent.owner":
+		value := x.Owner
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderAmendedEvent.added_amount":
+		value := x.AddedAmount
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderAmendedEvent.amount":
+		value := x.Amount
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderAmendedEvent.previous_id":
+		value := x.PreviousId
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderAmendedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderAmendedEvent does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OrderAmendedEvent) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.tradebin.OrderAmendedEvent.id":
+		x.Id = value.Interface().(string)
+	case "bze.tradebin.OrderAmendedEvent.market_id":
+		x.MarketId = value.Interface().(string)
+	case "bze.tradebin.OrderAmendedEvent.order_type":
+		x.OrderType = value.Interface().(string)
+	case "bze.tradebin.OrderAmendedEvent.price":
+		x.Price = value.Interface().(string)
+	case "bze.tradebin.OrderAmendedEvent.owner":
+		x.Owner = value.Interface().(string)
+	case "bze.tradebin.OrderAmendedEvent.added_amount":
+		x.AddedAmount = value.Interface().(string)
+	case "bze.tradebin.OrderAmendedEvent.amount":
+		x.Amount = value.Interface().(string)
+	case "bze.tradebin.OrderAmendedEvent.previous_id":
+		x.PreviousId = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderAmendedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderAmendedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OrderAmendedEvent) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tradebin.OrderAmendedEvent.id":
+		panic(fmt.Errorf("field id of message bze.tradebin.OrderAmendedEvent is not mutable"))
+	case "bze.tradebin.OrderAmendedEvent.market_id":
+		panic(fmt.Errorf("field market_id of message bze.tradebin.OrderAmendedEvent is not mutable"))
+	case "bze.tradebin.OrderAmendedEvent.order_type":
+		panic(fmt.Errorf("field order_type of message bze.tradebin.OrderAmendedEvent is not mutable"))
+	case "bze.tradebin.OrderAmendedEvent.price":
+		panic(fmt.Errorf("field price of message bze.tradebin.OrderAmendedEvent is not mutable"))
+	case "bze.tradebin.OrderAmendedEvent.owner":
+		panic(fmt.Errorf("field owner of message bze.tradebin.OrderAmendedEvent is not mutable"))
+	case "bze.tradebin.OrderAmendedEvent.added_amount":
+		panic(fmt.Errorf("field added_amount of message bze.tradebin.OrderAmendedEvent is not mutable"))
+	case "bze.tradebin.OrderAmendedEvent.amount":
+		panic(fmt.Errorf("field amount of message bze.tradebin.OrderAmendedEvent is not mutable"))
+	case "bze.tradebin.OrderAmendedEvent.previous_id":
+		panic(fmt.Errorf("field previous_id of message bze.tradebin.OrderAmendedEvent is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderAmendedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderAmendedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_OrderAmendedEvent) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tradebin.OrderAmendedEvent.id":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderAmendedEvent.market_id":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderAmendedEvent.order_type":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderAmendedEvent.price":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderAmendedEvent.owner":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderAmendedEvent.added_amount":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderAmendedEvent.amount":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderAmendedEvent.previous_id":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderAmendedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderAmendedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_OrderAmendedEvent) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.tradebin.OrderAmendedEvent", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_OrderAmendedEvent) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OrderAmendedEvent) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_OrderAmendedEvent) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_OrderAmendedEvent) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*OrderAmendedEvent)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Id)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.MarketId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.OrderType)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Price)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Owner)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.AddedAmount)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Amount)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.PreviousId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*OrderAmendedEvent)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.PreviousId) > 0 {
+			i -= len(x.PreviousId)
+			copy(dAtA[i:], x.PreviousId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.PreviousId)))
+			i--
+			dAtA[i] = 0x42
+		}
+		if len(x.Amount) > 0 {
+			i -= len(x.Amount)
+			copy(dAtA[i:], x.Amount)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Amount)))
+			i--
+			dAtA[i] = 0x3a
+		}
+		if len(x.AddedAmount) > 0 {
+			i -= len(x.AddedAmount)
+			copy(dAtA[i:], x.AddedAmount)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.AddedAmount)))
+			i--
+			dAtA[i] = 0x32
+		}
+		if len(x.Owner) > 0 {
+			i -= len(x.Owner)
+			copy(dAtA[i:], x.Owner)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Owner)))
+			i--
+			dAtA[i] = 0x2a
+		}
+		if len(x.Price) > 0 {
+			i -= len(x.Price)
+			copy(dAtA[i:], x.Price)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Price)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if len(x.OrderType) > 0 {
+			i -= len(x.OrderType)
+			copy(dAtA[i:], x.OrderType)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OrderType)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.MarketId) > 0 {
+			i -= len(x.MarketId)
+			copy(dAtA[i:], x.MarketId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MarketId)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Id) > 0 {
+			i -= len(x.Id)
+			copy(dAtA[i:], x.Id)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Id)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*OrderAmendedEvent)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: OrderAmendedEvent: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: OrderAmendedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Id = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.MarketId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OrderType", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.OrderType = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Price", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Price = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Owner = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AddedAmount", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.AddedAmount = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 7:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Amount = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 8:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PreviousId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PreviousId = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -4481,7 +3933,7 @@ func (x *PoolCreatedEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *PoolCreatedEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[6]
+	mi := &file_bze_tradebin_events_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5095,7 +4547,7 @@ func (x *LiquidityAddedEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *LiquidityAddedEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[7]
+	mi := &file_bze_tradebin_events_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5769,7 +5221,7 @@ func (x *LiquidityRemovedEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *LiquidityRemovedEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[8]
+	mi := &file_bze_tradebin_events_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6381,7 +5833,7 @@ func (x *SwapEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *SwapEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[9]
+	mi := &file_bze_tradebin_events_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7017,7 +6469,7 @@ func (x *DenomHaltedEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *DenomHaltedEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[10]
+	mi := &file_bze_tradebin_events_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7437,7 +6889,7 @@ func (x *DenomUnhaltedEvent) ProtoReflect() protoreflect.Message {
 }
 
 func (x *DenomUnhaltedEvent) slowProtoReflect() protoreflect.Message {
-	mi := &file_bze_tradebin_events_proto_msgTypes[11]
+	mi := &file_bze_tradebin_events_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7837,6 +7289,1516 @@ func (x *fastReflection_DenomUnhaltedEvent) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var (
+	md_PoolFeesUpdatedEvent              protoreflect.MessageDescriptor
+	fd_PoolFeesUpdatedEvent_pool_id      protoreflect.FieldDescriptor
+	fd_PoolFeesUpdatedEvent_old_fee      protoreflect.FieldDescriptor
+	fd_PoolFeesUpdatedEvent_new_fee      protoreflect.FieldDescriptor
+	fd_PoolFeesUpdatedEvent_old_fee_dest protoreflect.FieldDescriptor
+	fd_PoolFeesUpdatedEvent_new_fee_dest protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_tradebin_events_proto_init()
+	md_PoolFeesUpdatedEvent = File_bze_tradebin_events_proto.Messages().ByName("PoolFeesUpdatedEvent")
+	fd_PoolFeesUpdatedEvent_pool_id = md_PoolFeesUpdatedEvent.Fields().ByName("pool_id")
+	fd_PoolFeesUpdatedEvent_old_fee = md_PoolFeesUpdatedEvent.Fields().ByName("old_fee")
+	fd_PoolFeesUpdatedEvent_new_fee = md_PoolFeesUpdatedEvent.Fields().ByName("new_fee")
+	fd_PoolFeesUpdatedEvent_old_fee_dest = md_PoolFeesUpdatedEvent.Fields().ByName("old_fee_dest")
+	fd_PoolFeesUpdatedEvent_new_fee_dest = md_PoolFeesUpdatedEvent.Fields().ByName("new_fee_dest")
+}
+
+var _ protoreflect.Message = (*fastReflection_PoolFeesUpdatedEvent)(nil)
+
+type fastReflection_PoolFeesUpdatedEvent PoolFeesUpdatedEvent
+
+func (x *PoolFeesUpdatedEvent) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_PoolFeesUpdatedEvent)(x)
+}
+
+func (x *PoolFeesUpdatedEvent) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_tradebin_events_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_PoolFeesUpdatedEvent_messageType fastReflection_PoolFeesUpdatedEvent_messageType
+var _ protoreflect.MessageType = fastReflection_PoolFeesUpdatedEvent_messageType{}
+
+type fastReflection_PoolFeesUpdatedEvent_messageType struct{}
+
+func (x fastReflection_PoolFeesUpdatedEvent_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_PoolFeesUpdatedEvent)(nil)
+}
+func (x fastReflection_PoolFeesUpdatedEvent_messageType) New() protoreflect.Message {
+	return new(fastReflection_PoolFeesUpdatedEvent)
+}
+func (x fastReflection_PoolFeesUpdatedEvent_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_PoolFeesUpdatedEvent
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_PoolFeesUpdatedEvent) Descriptor() protoreflect.MessageDescriptor {
+	return md_PoolFeesUpdatedEvent
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_PoolFeesUpdatedEvent) Type() protoreflect.MessageType {
+	return _fastReflection_PoolFeesUpdatedEvent_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_PoolFeesUpdatedEvent) New() protoreflect.Message {
+	return new(fastReflection_PoolFeesUpdatedEvent)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_PoolFeesUpdatedEvent) Interface() protoreflect.ProtoMessage {
+	return (*PoolFeesUpdatedEvent)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_PoolFeesUpdatedEvent) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.PoolId != "" {
+		value := protoreflect.ValueOfString(x.PoolId)
+		if !f(fd_PoolFeesUpdatedEvent_pool_id, value) {
+			return
+		}
+	}
+	if x.OldFee != "" {
+		value := protoreflect.ValueOfString(x.OldFee)
+		if !f(fd_PoolFeesUpdatedEvent_old_fee, value) {
+			return
+		}
+	}
+	if x.NewFee != "" {
+		value := protoreflect.ValueOfString(x.NewFee)
+		if !f(fd_PoolFeesUpdatedEvent_new_fee, value) {
+			return
+		}
+	}
+	if x.OldFeeDest != nil {
+		value := protoreflect.ValueOfMessage(x.OldFeeDest.ProtoReflect())
+		if !f(fd_PoolFeesUpdatedEvent_old_fee_dest, value) {
+			return
+		}
+	}
+	if x.NewFeeDest != nil {
+		value := protoreflect.ValueOfMessage(x.NewFeeDest.ProtoReflect())
+		if !f(fd_PoolFeesUpdatedEvent_new_fee_dest, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_PoolFeesUpdatedEvent) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.tradebin.PoolFeesUpdatedEvent.pool_id":
+		return x.PoolId != ""
+	case "bze.tradebin.PoolFeesUpdatedEvent.old_fee":
+		return x.OldFee != ""
+	case "bze.tradebin.PoolFeesUpdatedEvent.new_fee":
+		return x.NewFee != ""
+	case "bze.tradebin.PoolFeesUpdatedEvent.old_fee_dest":
+		return x.OldFeeDest != nil
+	case "bze.tradebin.PoolFeesUpdatedEvent.new_fee_dest":
+		return x.NewFeeDest != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.PoolFeesUpdatedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.PoolFeesUpdatedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_PoolFeesUpdatedEvent) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.tradebin.PoolFeesUpdatedEvent.pool_id":
+		x.PoolId = ""
+	case "bze.tradebin.PoolFeesUpdatedEvent.old_fee":
+		x.OldFee = ""
+	case "bze.tradebin.PoolFeesUpdatedEvent.new_fee":
+		x.NewFee = ""
+	case "bze.tradebin.PoolFeesUpdatedEvent.old_fee_dest":
+		x.OldFeeDest = nil
+	case "bze.tradebin.PoolFeesUpdatedEvent.new_fee_dest":
+		x.NewFeeDest = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.PoolFeesUpdatedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.PoolFeesUpdatedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_PoolFeesUpdatedEvent) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.tradebin.PoolFeesUpdatedEvent.pool_id":
+		value := x.PoolId
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.PoolFeesUpdatedEvent.old_fee":
+		value := x.OldFee
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.PoolFeesUpdatedEvent.new_fee":
+		value := x.NewFee
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.PoolFeesUpdatedEvent.old_fee_dest":
+		value := x.OldFeeDest
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "bze.tradebin.PoolFeesUpdatedEvent.new_fee_dest":
+		value := x.NewFeeDest
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.PoolFeesUpdatedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.PoolFeesUpdatedEvent does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_PoolFeesUpdatedEvent) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.tradebin.PoolFeesUpdatedEvent.pool_id":
+		x.PoolId = value.Interface().(string)
+	case "bze.tradebin.PoolFeesUpdatedEvent.old_fee":
+		x.OldFee = value.Interface().(string)
+	case "bze.tradebin.PoolFeesUpdatedEvent.new_fee":
+		x.NewFee = value.Interface().(string)
+	case "bze.tradebin.PoolFeesUpdatedEvent.old_fee_dest":
+		x.OldFeeDest = value.Message().Interface().(*FeeDestination)
+	case "bze.tradebin.PoolFeesUpdatedEvent.new_fee_dest":
+		x.NewFeeDest = value.Message().Interface().(*FeeDestination)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.PoolFeesUpdatedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.PoolFeesUpdatedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_PoolFeesUpdatedEvent) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tradebin.PoolFeesUpdatedEvent.old_fee_dest":
+		if x.OldFeeDest == nil {
+			x.OldFeeDest = new(FeeDestination)
+		}
+		return protoreflect.ValueOfMessage(x.OldFeeDest.ProtoReflect())
+	case "bze.tradebin.PoolFeesUpdatedEvent.new_fee_dest":
+		if x.NewFeeDest == nil {
+			x.NewFeeDest = new(FeeDestination)
+		}
+		return protoreflect.ValueOfMessage(x.NewFeeDest.ProtoReflect())
+	case "bze.tradebin.PoolFeesUpdatedEvent.pool_id":
+		panic(fmt.Errorf("field pool_id of message bze.tradebin.PoolFeesUpdatedEvent is not mutable"))
+	case "bze.tradebin.PoolFeesUpdatedEvent.old_fee":
+		panic(fmt.Errorf("field old_fee of message bze.tradebin.PoolFeesUpdatedEvent is not mutable"))
+	case "bze.tradebin.PoolFeesUpdatedEvent.new_fee":
+		panic(fmt.Errorf("field new_fee of message bze.tradebin.PoolFeesUpdatedEvent is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.PoolFeesUpdatedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.PoolFeesUpdatedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_PoolFeesUpdatedEvent) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tradebin.PoolFeesUpdatedEvent.pool_id":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.PoolFeesUpdatedEvent.old_fee":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.PoolFeesUpdatedEvent.new_fee":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.PoolFeesUpdatedEvent.old_fee_dest":
+		m := new(FeeDestination)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "bze.tradebin.PoolFeesUpdatedEvent.new_fee_dest":
+		m := new(FeeDestination)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.PoolFeesUpdatedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.PoolFeesUpdatedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_PoolFeesUpdatedEvent) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.tradebin.PoolFeesUpdatedEvent", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_PoolFeesUpdatedEvent) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_PoolFeesUpdatedEvent) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_PoolFeesUpdatedEvent) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_PoolFeesUpdatedEvent) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*PoolFeesUpdatedEvent)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.PoolId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.OldFee)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.NewFee)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.OldFeeDest != nil {
+			l = options.Size(x.OldFeeDest)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.NewFeeDest != nil {
+			l = options.Size(x.NewFeeDest)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*PoolFeesUpdatedEvent)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.NewFeeDest != nil {
+			encoded, err := options.Marshal(x.NewFeeDest)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x2a
+		}
+		if x.OldFeeDest != nil {
+			encoded, err := options.Marshal(x.OldFeeDest)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if len(x.NewFee) > 0 {
+			i -= len(x.NewFee)
+			copy(dAtA[i:], x.NewFee)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.NewFee)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.OldFee) > 0 {
+			i -= len(x.OldFee)
+			copy(dAtA[i:], x.OldFee)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OldFee)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.PoolId) > 0 {
+			i -= len(x.PoolId)
+			copy(dAtA[i:], x.PoolId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.PoolId)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*PoolFeesUpdatedEvent)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PoolFeesUpdatedEvent: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PoolFeesUpdatedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PoolId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PoolId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OldFee", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.OldFee = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field NewFee", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.NewFee = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OldFeeDest", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.OldFeeDest == nil {
+					x.OldFeeDest = &FeeDestination{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.OldFeeDest); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field NewFeeDest", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.NewFeeDest == nil {
+					x.NewFeeDest = &FeeDestination{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.NewFeeDest); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_OrderMessageRefundedEvent            protoreflect.MessageDescriptor
+	fd_OrderMessageRefundedEvent_order_id   protoreflect.FieldDescriptor
+	fd_OrderMessageRefundedEvent_market_id  protoreflect.FieldDescriptor
+	fd_OrderMessageRefundedEvent_order_type protoreflect.FieldDescriptor
+	fd_OrderMessageRefundedEvent_owner      protoreflect.FieldDescriptor
+	fd_OrderMessageRefundedEvent_amount     protoreflect.FieldDescriptor
+	fd_OrderMessageRefundedEvent_refund     protoreflect.FieldDescriptor
+	fd_OrderMessageRefundedEvent_reason     protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_bze_tradebin_events_proto_init()
+	md_OrderMessageRefundedEvent = File_bze_tradebin_events_proto.Messages().ByName("OrderMessageRefundedEvent")
+	fd_OrderMessageRefundedEvent_order_id = md_OrderMessageRefundedEvent.Fields().ByName("order_id")
+	fd_OrderMessageRefundedEvent_market_id = md_OrderMessageRefundedEvent.Fields().ByName("market_id")
+	fd_OrderMessageRefundedEvent_order_type = md_OrderMessageRefundedEvent.Fields().ByName("order_type")
+	fd_OrderMessageRefundedEvent_owner = md_OrderMessageRefundedEvent.Fields().ByName("owner")
+	fd_OrderMessageRefundedEvent_amount = md_OrderMessageRefundedEvent.Fields().ByName("amount")
+	fd_OrderMessageRefundedEvent_refund = md_OrderMessageRefundedEvent.Fields().ByName("refund")
+	fd_OrderMessageRefundedEvent_reason = md_OrderMessageRefundedEvent.Fields().ByName("reason")
+}
+
+var _ protoreflect.Message = (*fastReflection_OrderMessageRefundedEvent)(nil)
+
+type fastReflection_OrderMessageRefundedEvent OrderMessageRefundedEvent
+
+func (x *OrderMessageRefundedEvent) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_OrderMessageRefundedEvent)(x)
+}
+
+func (x *OrderMessageRefundedEvent) slowProtoReflect() protoreflect.Message {
+	mi := &file_bze_tradebin_events_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_OrderMessageRefundedEvent_messageType fastReflection_OrderMessageRefundedEvent_messageType
+var _ protoreflect.MessageType = fastReflection_OrderMessageRefundedEvent_messageType{}
+
+type fastReflection_OrderMessageRefundedEvent_messageType struct{}
+
+func (x fastReflection_OrderMessageRefundedEvent_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_OrderMessageRefundedEvent)(nil)
+}
+func (x fastReflection_OrderMessageRefundedEvent_messageType) New() protoreflect.Message {
+	return new(fastReflection_OrderMessageRefundedEvent)
+}
+func (x fastReflection_OrderMessageRefundedEvent_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_OrderMessageRefundedEvent
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_OrderMessageRefundedEvent) Descriptor() protoreflect.MessageDescriptor {
+	return md_OrderMessageRefundedEvent
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_OrderMessageRefundedEvent) Type() protoreflect.MessageType {
+	return _fastReflection_OrderMessageRefundedEvent_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_OrderMessageRefundedEvent) New() protoreflect.Message {
+	return new(fastReflection_OrderMessageRefundedEvent)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_OrderMessageRefundedEvent) Interface() protoreflect.ProtoMessage {
+	return (*OrderMessageRefundedEvent)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_OrderMessageRefundedEvent) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.OrderId != "" {
+		value := protoreflect.ValueOfString(x.OrderId)
+		if !f(fd_OrderMessageRefundedEvent_order_id, value) {
+			return
+		}
+	}
+	if x.MarketId != "" {
+		value := protoreflect.ValueOfString(x.MarketId)
+		if !f(fd_OrderMessageRefundedEvent_market_id, value) {
+			return
+		}
+	}
+	if x.OrderType != "" {
+		value := protoreflect.ValueOfString(x.OrderType)
+		if !f(fd_OrderMessageRefundedEvent_order_type, value) {
+			return
+		}
+	}
+	if x.Owner != "" {
+		value := protoreflect.ValueOfString(x.Owner)
+		if !f(fd_OrderMessageRefundedEvent_owner, value) {
+			return
+		}
+	}
+	if x.Amount != "" {
+		value := protoreflect.ValueOfString(x.Amount)
+		if !f(fd_OrderMessageRefundedEvent_amount, value) {
+			return
+		}
+	}
+	if x.Refund != "" {
+		value := protoreflect.ValueOfString(x.Refund)
+		if !f(fd_OrderMessageRefundedEvent_refund, value) {
+			return
+		}
+	}
+	if x.Reason != "" {
+		value := protoreflect.ValueOfString(x.Reason)
+		if !f(fd_OrderMessageRefundedEvent_reason, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_OrderMessageRefundedEvent) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "bze.tradebin.OrderMessageRefundedEvent.order_id":
+		return x.OrderId != ""
+	case "bze.tradebin.OrderMessageRefundedEvent.market_id":
+		return x.MarketId != ""
+	case "bze.tradebin.OrderMessageRefundedEvent.order_type":
+		return x.OrderType != ""
+	case "bze.tradebin.OrderMessageRefundedEvent.owner":
+		return x.Owner != ""
+	case "bze.tradebin.OrderMessageRefundedEvent.amount":
+		return x.Amount != ""
+	case "bze.tradebin.OrderMessageRefundedEvent.refund":
+		return x.Refund != ""
+	case "bze.tradebin.OrderMessageRefundedEvent.reason":
+		return x.Reason != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderMessageRefundedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderMessageRefundedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OrderMessageRefundedEvent) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "bze.tradebin.OrderMessageRefundedEvent.order_id":
+		x.OrderId = ""
+	case "bze.tradebin.OrderMessageRefundedEvent.market_id":
+		x.MarketId = ""
+	case "bze.tradebin.OrderMessageRefundedEvent.order_type":
+		x.OrderType = ""
+	case "bze.tradebin.OrderMessageRefundedEvent.owner":
+		x.Owner = ""
+	case "bze.tradebin.OrderMessageRefundedEvent.amount":
+		x.Amount = ""
+	case "bze.tradebin.OrderMessageRefundedEvent.refund":
+		x.Refund = ""
+	case "bze.tradebin.OrderMessageRefundedEvent.reason":
+		x.Reason = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderMessageRefundedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderMessageRefundedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_OrderMessageRefundedEvent) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "bze.tradebin.OrderMessageRefundedEvent.order_id":
+		value := x.OrderId
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderMessageRefundedEvent.market_id":
+		value := x.MarketId
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderMessageRefundedEvent.order_type":
+		value := x.OrderType
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderMessageRefundedEvent.owner":
+		value := x.Owner
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderMessageRefundedEvent.amount":
+		value := x.Amount
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderMessageRefundedEvent.refund":
+		value := x.Refund
+		return protoreflect.ValueOfString(value)
+	case "bze.tradebin.OrderMessageRefundedEvent.reason":
+		value := x.Reason
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderMessageRefundedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderMessageRefundedEvent does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OrderMessageRefundedEvent) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "bze.tradebin.OrderMessageRefundedEvent.order_id":
+		x.OrderId = value.Interface().(string)
+	case "bze.tradebin.OrderMessageRefundedEvent.market_id":
+		x.MarketId = value.Interface().(string)
+	case "bze.tradebin.OrderMessageRefundedEvent.order_type":
+		x.OrderType = value.Interface().(string)
+	case "bze.tradebin.OrderMessageRefundedEvent.owner":
+		x.Owner = value.Interface().(string)
+	case "bze.tradebin.OrderMessageRefundedEvent.amount":
+		x.Amount = value.Interface().(string)
+	case "bze.tradebin.OrderMessageRefundedEvent.refund":
+		x.Refund = value.Interface().(string)
+	case "bze.tradebin.OrderMessageRefundedEvent.reason":
+		x.Reason = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderMessageRefundedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderMessageRefundedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OrderMessageRefundedEvent) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tradebin.OrderMessageRefundedEvent.order_id":
+		panic(fmt.Errorf("field order_id of message bze.tradebin.OrderMessageRefundedEvent is not mutable"))
+	case "bze.tradebin.OrderMessageRefundedEvent.market_id":
+		panic(fmt.Errorf("field market_id of message bze.tradebin.OrderMessageRefundedEvent is not mutable"))
+	case "bze.tradebin.OrderMessageRefundedEvent.order_type":
+		panic(fmt.Errorf("field order_type of message bze.tradebin.OrderMessageRefundedEvent is not mutable"))
+	case "bze.tradebin.OrderMessageRefundedEvent.owner":
+		panic(fmt.Errorf("field owner of message bze.tradebin.OrderMessageRefundedEvent is not mutable"))
+	case "bze.tradebin.OrderMessageRefundedEvent.amount":
+		panic(fmt.Errorf("field amount of message bze.tradebin.OrderMessageRefundedEvent is not mutable"))
+	case "bze.tradebin.OrderMessageRefundedEvent.refund":
+		panic(fmt.Errorf("field refund of message bze.tradebin.OrderMessageRefundedEvent is not mutable"))
+	case "bze.tradebin.OrderMessageRefundedEvent.reason":
+		panic(fmt.Errorf("field reason of message bze.tradebin.OrderMessageRefundedEvent is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderMessageRefundedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderMessageRefundedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_OrderMessageRefundedEvent) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "bze.tradebin.OrderMessageRefundedEvent.order_id":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderMessageRefundedEvent.market_id":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderMessageRefundedEvent.order_type":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderMessageRefundedEvent.owner":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderMessageRefundedEvent.amount":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderMessageRefundedEvent.refund":
+		return protoreflect.ValueOfString("")
+	case "bze.tradebin.OrderMessageRefundedEvent.reason":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: bze.tradebin.OrderMessageRefundedEvent"))
+		}
+		panic(fmt.Errorf("message bze.tradebin.OrderMessageRefundedEvent does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_OrderMessageRefundedEvent) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in bze.tradebin.OrderMessageRefundedEvent", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_OrderMessageRefundedEvent) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OrderMessageRefundedEvent) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_OrderMessageRefundedEvent) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_OrderMessageRefundedEvent) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*OrderMessageRefundedEvent)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.OrderId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.MarketId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.OrderType)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Owner)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Amount)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Refund)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Reason)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*OrderMessageRefundedEvent)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Reason) > 0 {
+			i -= len(x.Reason)
+			copy(dAtA[i:], x.Reason)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Reason)))
+			i--
+			dAtA[i] = 0x3a
+		}
+		if len(x.Refund) > 0 {
+			i -= len(x.Refund)
+			copy(dAtA[i:], x.Refund)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Refund)))
+			i--
+			dAtA[i] = 0x32
+		}
+		if len(x.Amount) > 0 {
+			i -= len(x.Amount)
+			copy(dAtA[i:], x.Amount)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Amount)))
+			i--
+			dAtA[i] = 0x2a
+		}
+		if len(x.Owner) > 0 {
+			i -= len(x.Owner)
+			copy(dAtA[i:], x.Owner)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Owner)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if len(x.OrderType) > 0 {
+			i -= len(x.OrderType)
+			copy(dAtA[i:], x.OrderType)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OrderType)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.MarketId) > 0 {
+			i -= len(x.MarketId)
+			copy(dAtA[i:], x.MarketId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MarketId)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.OrderId) > 0 {
+			i -= len(x.OrderId)
+			copy(dAtA[i:], x.OrderId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OrderId)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*OrderMessageRefundedEvent)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: OrderMessageRefundedEvent: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: OrderMessageRefundedEvent: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OrderId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.OrderId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MarketId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.MarketId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OrderType", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.OrderType = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Owner = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Amount = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Refund", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Refund = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 7:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Reason", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Reason = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -7849,154 +8811,6 @@ const (
 	// Verify that runtime/protoimpl is sufficiently up-to-date.
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
-
-type OrderCreateMessageEvent struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Creator   string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	MarketId  string `protobuf:"bytes,2,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
-	OrderType string `protobuf:"bytes,3,opt,name=order_type,json=orderType,proto3" json:"order_type,omitempty"`
-	Amount    string `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
-	Price     string `protobuf:"bytes,5,opt,name=price,proto3" json:"price,omitempty"`
-	// queue message id, zero-filled 24 digits. Not reused while the message is
-	// queued: the counter resets only once the queue is empty, and a message can
-	// be processed in a later block than its tx (per-block limit, retry on error).
-	MessageId string `protobuf:"bytes,6,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
-}
-
-func (x *OrderCreateMessageEvent) Reset() {
-	*x = OrderCreateMessageEvent{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *OrderCreateMessageEvent) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*OrderCreateMessageEvent) ProtoMessage() {}
-
-// Deprecated: Use OrderCreateMessageEvent.ProtoReflect.Descriptor instead.
-func (*OrderCreateMessageEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *OrderCreateMessageEvent) GetCreator() string {
-	if x != nil {
-		return x.Creator
-	}
-	return ""
-}
-
-func (x *OrderCreateMessageEvent) GetMarketId() string {
-	if x != nil {
-		return x.MarketId
-	}
-	return ""
-}
-
-func (x *OrderCreateMessageEvent) GetOrderType() string {
-	if x != nil {
-		return x.OrderType
-	}
-	return ""
-}
-
-func (x *OrderCreateMessageEvent) GetAmount() string {
-	if x != nil {
-		return x.Amount
-	}
-	return ""
-}
-
-func (x *OrderCreateMessageEvent) GetPrice() string {
-	if x != nil {
-		return x.Price
-	}
-	return ""
-}
-
-func (x *OrderCreateMessageEvent) GetMessageId() string {
-	if x != nil {
-		return x.MessageId
-	}
-	return ""
-}
-
-type OrderCancelMessageEvent struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Creator   string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	MarketId  string `protobuf:"bytes,2,opt,name=marketId,proto3" json:"marketId,omitempty"`
-	OrderId   string `protobuf:"bytes,3,opt,name=orderId,proto3" json:"orderId,omitempty"`
-	OrderType string `protobuf:"bytes,4,opt,name=order_type,json=orderType,proto3" json:"order_type,omitempty"`
-	// queue message id, zero-filled 24 digits. Not reused while the message is
-	// queued: the counter resets only once the queue is empty, and a message can
-	// be processed in a later block than its tx (per-block limit, retry on error).
-	MessageId string `protobuf:"bytes,5,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
-}
-
-func (x *OrderCancelMessageEvent) Reset() {
-	*x = OrderCancelMessageEvent{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *OrderCancelMessageEvent) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*OrderCancelMessageEvent) ProtoMessage() {}
-
-// Deprecated: Use OrderCancelMessageEvent.ProtoReflect.Descriptor instead.
-func (*OrderCancelMessageEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *OrderCancelMessageEvent) GetCreator() string {
-	if x != nil {
-		return x.Creator
-	}
-	return ""
-}
-
-func (x *OrderCancelMessageEvent) GetMarketId() string {
-	if x != nil {
-		return x.MarketId
-	}
-	return ""
-}
-
-func (x *OrderCancelMessageEvent) GetOrderId() string {
-	if x != nil {
-		return x.OrderId
-	}
-	return ""
-}
-
-func (x *OrderCancelMessageEvent) GetOrderType() string {
-	if x != nil {
-		return x.OrderType
-	}
-	return ""
-}
-
-func (x *OrderCancelMessageEvent) GetMessageId() string {
-	if x != nil {
-		return x.MessageId
-	}
-	return ""
-}
 
 type MarketCreatedEvent struct {
 	state         protoimpl.MessageState
@@ -8011,7 +8825,7 @@ type MarketCreatedEvent struct {
 func (x *MarketCreatedEvent) Reset() {
 	*x = MarketCreatedEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[2]
+		mi := &file_bze_tradebin_events_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8025,7 +8839,7 @@ func (*MarketCreatedEvent) ProtoMessage() {}
 
 // Deprecated: Use MarketCreatedEvent.ProtoReflect.Descriptor instead.
 func (*MarketCreatedEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{2}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *MarketCreatedEvent) GetCreator() string {
@@ -8061,16 +8875,15 @@ type OrderExecutedEvent struct {
 	Price     string `protobuf:"bytes,5,opt,name=price,proto3" json:"price,omitempty"`
 	Maker     string `protobuf:"bytes,6,opt,name=maker,proto3" json:"maker,omitempty"`
 	Taker     string `protobuf:"bytes,7,opt,name=taker,proto3" json:"taker,omitempty"`
-	// queue message id, zero-filled 24 digits. Not reused while the message is
-	// queued: the counter resets only once the queue is empty, and a message can
-	// be processed in a later block than its tx (per-block limit, retry on error).
-	MessageId string `protobuf:"bytes,8,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
+	// id of the taker order that executed against this (maker) order, zero-filled.
+	// Every taker gets an order id, even when it never rests on the book.
+	OrderId string `protobuf:"bytes,8,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
 }
 
 func (x *OrderExecutedEvent) Reset() {
 	*x = OrderExecutedEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[3]
+		mi := &file_bze_tradebin_events_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8084,7 +8897,7 @@ func (*OrderExecutedEvent) ProtoMessage() {}
 
 // Deprecated: Use OrderExecutedEvent.ProtoReflect.Descriptor instead.
 func (*OrderExecutedEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{3}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *OrderExecutedEvent) GetId() string {
@@ -8136,9 +8949,9 @@ func (x *OrderExecutedEvent) GetTaker() string {
 	return ""
 }
 
-func (x *OrderExecutedEvent) GetMessageId() string {
+func (x *OrderExecutedEvent) GetOrderId() string {
 	if x != nil {
-		return x.MessageId
+		return x.OrderId
 	}
 	return ""
 }
@@ -8154,16 +8967,14 @@ type OrderCanceledEvent struct {
 	Amount    string `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
 	Price     string `protobuf:"bytes,5,opt,name=price,proto3" json:"price,omitempty"`
 	Owner     string `protobuf:"bytes,6,opt,name=owner,proto3" json:"owner,omitempty"`
-	// queue message id, zero-filled 24 digits. Not reused while the message is
-	// queued: the counter resets only once the queue is empty, and a message can
-	// be processed in a later block than its tx (per-block limit, retry on error).
-	MessageId string `protobuf:"bytes,7,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
+	// id of the cancelled order (same as id)
+	OrderId string `protobuf:"bytes,7,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
 }
 
 func (x *OrderCanceledEvent) Reset() {
 	*x = OrderCanceledEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[4]
+		mi := &file_bze_tradebin_events_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8177,7 +8988,7 @@ func (*OrderCanceledEvent) ProtoMessage() {}
 
 // Deprecated: Use OrderCanceledEvent.ProtoReflect.Descriptor instead.
 func (*OrderCanceledEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{4}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *OrderCanceledEvent) GetId() string {
@@ -8222,9 +9033,9 @@ func (x *OrderCanceledEvent) GetOwner() string {
 	return ""
 }
 
-func (x *OrderCanceledEvent) GetMessageId() string {
+func (x *OrderCanceledEvent) GetOrderId() string {
 	if x != nil {
-		return x.MessageId
+		return x.OrderId
 	}
 	return ""
 }
@@ -8240,16 +9051,14 @@ type OrderSavedEvent struct {
 	Amount    string `protobuf:"bytes,4,opt,name=amount,proto3" json:"amount,omitempty"`
 	Price     string `protobuf:"bytes,5,opt,name=price,proto3" json:"price,omitempty"`
 	Owner     string `protobuf:"bytes,6,opt,name=owner,proto3" json:"owner,omitempty"`
-	// queue message id, zero-filled 24 digits. Not reused while the message is
-	// queued: the counter resets only once the queue is empty, and a message can
-	// be processed in a later block than its tx (per-block limit, retry on error).
-	MessageId string `protobuf:"bytes,7,opt,name=message_id,json=messageId,proto3" json:"message_id,omitempty"`
+	// id of the order that placed this remainder on the book (same as id)
+	OrderId string `protobuf:"bytes,7,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
 }
 
 func (x *OrderSavedEvent) Reset() {
 	*x = OrderSavedEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[5]
+		mi := &file_bze_tradebin_events_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8263,7 +9072,7 @@ func (*OrderSavedEvent) ProtoMessage() {}
 
 // Deprecated: Use OrderSavedEvent.ProtoReflect.Descriptor instead.
 func (*OrderSavedEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{5}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *OrderSavedEvent) GetId() string {
@@ -8308,9 +9117,107 @@ func (x *OrderSavedEvent) GetOwner() string {
 	return ""
 }
 
-func (x *OrderSavedEvent) GetMessageId() string {
+func (x *OrderSavedEvent) GetOrderId() string {
 	if x != nil {
-		return x.MessageId
+		return x.OrderId
+	}
+	return ""
+}
+
+// OrderAmendedEvent is emitted when the remainder of an order is added to the order its owner already
+// rests at the same market, side and price. The merged order is saved under a new id at the back of
+// its price level (BZE-267) and the resting order's id (previous_id) is removed.
+type OrderAmendedEvent struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// id of the merged order: the id the create order got, which its other events carry too
+	Id        string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	MarketId  string `protobuf:"bytes,2,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	OrderType string `protobuf:"bytes,3,opt,name=order_type,json=orderType,proto3" json:"order_type,omitempty"`
+	Price     string `protobuf:"bytes,4,opt,name=price,proto3" json:"price,omitempty"`
+	Owner     string `protobuf:"bytes,5,opt,name=owner,proto3" json:"owner,omitempty"`
+	// amount added to the resting order
+	AddedAmount string `protobuf:"bytes,6,opt,name=added_amount,json=addedAmount,proto3" json:"added_amount,omitempty"`
+	// amount of the resting order after the addition
+	Amount string `protobuf:"bytes,7,opt,name=amount,proto3" json:"amount,omitempty"`
+	// id the order rested under before the addition, which no longer exists
+	PreviousId string `protobuf:"bytes,8,opt,name=previous_id,json=previousId,proto3" json:"previous_id,omitempty"`
+}
+
+func (x *OrderAmendedEvent) Reset() {
+	*x = OrderAmendedEvent{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_tradebin_events_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *OrderAmendedEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OrderAmendedEvent) ProtoMessage() {}
+
+// Deprecated: Use OrderAmendedEvent.ProtoReflect.Descriptor instead.
+func (*OrderAmendedEvent) Descriptor() ([]byte, []int) {
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *OrderAmendedEvent) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *OrderAmendedEvent) GetMarketId() string {
+	if x != nil {
+		return x.MarketId
+	}
+	return ""
+}
+
+func (x *OrderAmendedEvent) GetOrderType() string {
+	if x != nil {
+		return x.OrderType
+	}
+	return ""
+}
+
+func (x *OrderAmendedEvent) GetPrice() string {
+	if x != nil {
+		return x.Price
+	}
+	return ""
+}
+
+func (x *OrderAmendedEvent) GetOwner() string {
+	if x != nil {
+		return x.Owner
+	}
+	return ""
+}
+
+func (x *OrderAmendedEvent) GetAddedAmount() string {
+	if x != nil {
+		return x.AddedAmount
+	}
+	return ""
+}
+
+func (x *OrderAmendedEvent) GetAmount() string {
+	if x != nil {
+		return x.Amount
+	}
+	return ""
+}
+
+func (x *OrderAmendedEvent) GetPreviousId() string {
+	if x != nil {
+		return x.PreviousId
 	}
 	return ""
 }
@@ -8331,7 +9238,7 @@ type PoolCreatedEvent struct {
 func (x *PoolCreatedEvent) Reset() {
 	*x = PoolCreatedEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[6]
+		mi := &file_bze_tradebin_events_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8345,7 +9252,7 @@ func (*PoolCreatedEvent) ProtoMessage() {}
 
 // Deprecated: Use PoolCreatedEvent.ProtoReflect.Descriptor instead.
 func (*PoolCreatedEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{6}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *PoolCreatedEvent) GetCreator() string {
@@ -8391,7 +9298,7 @@ type LiquidityAddedEvent struct {
 func (x *LiquidityAddedEvent) Reset() {
 	*x = LiquidityAddedEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[7]
+		mi := &file_bze_tradebin_events_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8405,7 +9312,7 @@ func (*LiquidityAddedEvent) ProtoMessage() {}
 
 // Deprecated: Use LiquidityAddedEvent.ProtoReflect.Descriptor instead.
 func (*LiquidityAddedEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{7}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *LiquidityAddedEvent) GetCreator() string {
@@ -8457,7 +9364,7 @@ type LiquidityRemovedEvent struct {
 func (x *LiquidityRemovedEvent) Reset() {
 	*x = LiquidityRemovedEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[8]
+		mi := &file_bze_tradebin_events_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8471,7 +9378,7 @@ func (*LiquidityRemovedEvent) ProtoMessage() {}
 
 // Deprecated: Use LiquidityRemovedEvent.ProtoReflect.Descriptor instead.
 func (*LiquidityRemovedEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{8}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *LiquidityRemovedEvent) GetCreator() string {
@@ -8516,7 +9423,7 @@ type SwapEvent struct {
 func (x *SwapEvent) Reset() {
 	*x = SwapEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[9]
+		mi := &file_bze_tradebin_events_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8530,7 +9437,7 @@ func (*SwapEvent) ProtoMessage() {}
 
 // Deprecated: Use SwapEvent.ProtoReflect.Descriptor instead.
 func (*SwapEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{9}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *SwapEvent) GetCreator() string {
@@ -8574,7 +9481,7 @@ type DenomHaltedEvent struct {
 func (x *DenomHaltedEvent) Reset() {
 	*x = DenomHaltedEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[10]
+		mi := &file_bze_tradebin_events_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8588,7 +9495,7 @@ func (*DenomHaltedEvent) ProtoMessage() {}
 
 // Deprecated: Use DenomHaltedEvent.ProtoReflect.Descriptor instead.
 func (*DenomHaltedEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{10}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *DenomHaltedEvent) GetDenom() string {
@@ -8611,7 +9518,7 @@ type DenomUnhaltedEvent struct {
 func (x *DenomUnhaltedEvent) Reset() {
 	*x = DenomUnhaltedEvent{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_bze_tradebin_events_proto_msgTypes[11]
+		mi := &file_bze_tradebin_events_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8625,12 +9532,174 @@ func (*DenomUnhaltedEvent) ProtoMessage() {}
 
 // Deprecated: Use DenomUnhaltedEvent.ProtoReflect.Descriptor instead.
 func (*DenomUnhaltedEvent) Descriptor() ([]byte, []int) {
-	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{11}
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *DenomUnhaltedEvent) GetDenom() string {
 	if x != nil {
 		return x.Denom
+	}
+	return ""
+}
+
+// PoolFeesUpdatedEvent is emitted for every pool a MsgUpdatePools proposal actually changes (not for
+// entries equal to the pool's current values).
+type PoolFeesUpdatedEvent struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	PoolId     string          `protobuf:"bytes,1,opt,name=pool_id,json=poolId,proto3" json:"pool_id,omitempty"`
+	OldFee     string          `protobuf:"bytes,2,opt,name=old_fee,json=oldFee,proto3" json:"old_fee,omitempty"`
+	NewFee     string          `protobuf:"bytes,3,opt,name=new_fee,json=newFee,proto3" json:"new_fee,omitempty"`
+	OldFeeDest *FeeDestination `protobuf:"bytes,4,opt,name=old_fee_dest,json=oldFeeDest,proto3" json:"old_fee_dest,omitempty"`
+	NewFeeDest *FeeDestination `protobuf:"bytes,5,opt,name=new_fee_dest,json=newFeeDest,proto3" json:"new_fee_dest,omitempty"`
+}
+
+func (x *PoolFeesUpdatedEvent) Reset() {
+	*x = PoolFeesUpdatedEvent{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_tradebin_events_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PoolFeesUpdatedEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PoolFeesUpdatedEvent) ProtoMessage() {}
+
+// Deprecated: Use PoolFeesUpdatedEvent.ProtoReflect.Descriptor instead.
+func (*PoolFeesUpdatedEvent) Descriptor() ([]byte, []int) {
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *PoolFeesUpdatedEvent) GetPoolId() string {
+	if x != nil {
+		return x.PoolId
+	}
+	return ""
+}
+
+func (x *PoolFeesUpdatedEvent) GetOldFee() string {
+	if x != nil {
+		return x.OldFee
+	}
+	return ""
+}
+
+func (x *PoolFeesUpdatedEvent) GetNewFee() string {
+	if x != nil {
+		return x.NewFee
+	}
+	return ""
+}
+
+func (x *PoolFeesUpdatedEvent) GetOldFeeDest() *FeeDestination {
+	if x != nil {
+		return x.OldFeeDest
+	}
+	return nil
+}
+
+func (x *PoolFeesUpdatedEvent) GetNewFeeDest() *FeeDestination {
+	if x != nil {
+		return x.NewFeeDest
+	}
+	return nil
+}
+
+// OrderMessageRefundedEvent is emitted when the unexecuted part of an order is
+// returned to its owner instead of resting on the book, in the same transaction.
+// Without it a fill order with no match would leave no trace of its processing.
+type OrderMessageRefundedEvent struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// id of the refunded order, zero-filled (for reason "upgrade": the id of the
+	// queue message refunded by the v8.3.0 migration)
+	OrderId  string `protobuf:"bytes,1,opt,name=order_id,json=orderId,proto3" json:"order_id,omitempty"`
+	MarketId string `protobuf:"bytes,2,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
+	// the side of the refunded order
+	OrderType string `protobuf:"bytes,3,opt,name=order_type,json=orderType,proto3" json:"order_type,omitempty"`
+	Owner     string `protobuf:"bytes,4,opt,name=owner,proto3" json:"owner,omitempty"`
+	// base-denom amount of the order that was not executed
+	Amount string `protobuf:"bytes,5,opt,name=amount,proto3" json:"amount,omitempty"`
+	// the coin actually sent back (coin string); empty when it rounded to zero
+	// and only dust was stored
+	Refund string `protobuf:"bytes,6,opt,name=refund,proto3" json:"refund,omitempty"`
+	// no_match | unfilled_remainder | below_min_amount | max_fills_reached | upgrade
+	Reason string `protobuf:"bytes,7,opt,name=reason,proto3" json:"reason,omitempty"`
+}
+
+func (x *OrderMessageRefundedEvent) Reset() {
+	*x = OrderMessageRefundedEvent{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bze_tradebin_events_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *OrderMessageRefundedEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OrderMessageRefundedEvent) ProtoMessage() {}
+
+// Deprecated: Use OrderMessageRefundedEvent.ProtoReflect.Descriptor instead.
+func (*OrderMessageRefundedEvent) Descriptor() ([]byte, []int) {
+	return file_bze_tradebin_events_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *OrderMessageRefundedEvent) GetOrderId() string {
+	if x != nil {
+		return x.OrderId
+	}
+	return ""
+}
+
+func (x *OrderMessageRefundedEvent) GetMarketId() string {
+	if x != nil {
+		return x.MarketId
+	}
+	return ""
+}
+
+func (x *OrderMessageRefundedEvent) GetOrderType() string {
+	if x != nil {
+		return x.OrderType
+	}
+	return ""
+}
+
+func (x *OrderMessageRefundedEvent) GetOwner() string {
+	if x != nil {
+		return x.Owner
+	}
+	return ""
+}
+
+func (x *OrderMessageRefundedEvent) GetAmount() string {
+	if x != nil {
+		return x.Amount
+	}
+	return ""
+}
+
+func (x *OrderMessageRefundedEvent) GetRefund() string {
+	if x != nil {
+		return x.Refund
+	}
+	return ""
+}
+
+func (x *OrderMessageRefundedEvent) GetReason() string {
+	if x != nil {
+		return x.Reason
 	}
 	return ""
 }
@@ -8645,140 +9714,161 @@ var file_bze_tradebin_events_proto_rawDesc = []byte{
 	0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f,
 	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x22, 0xbc, 0x01, 0x0a, 0x17, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x43, 0x72, 0x65, 0x61,
-	0x74, 0x65, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x18,
-	0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x72, 0x6b,
-	0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61, 0x72,
-	0x6b, 0x65, 0x74, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x74,
-	0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f, 0x72, 0x64, 0x65, 0x72,
-	0x54, 0x79, 0x70, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05,
-	0x70, 0x72, 0x69, 0x63, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x70, 0x72, 0x69,
-	0x63, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x5f, 0x69, 0x64,
-	0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x49,
-	0x64, 0x22, 0xa7, 0x01, 0x0a, 0x17, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x43, 0x61, 0x6e, 0x63, 0x65,
-	0x6c, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x18, 0x0a,
+	0x74, 0x6f, 0x1a, 0x18, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e,
+	0x2f, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x58, 0x0a, 0x12,
+	0x4d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x45, 0x76, 0x65,
+	0x6e, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x12, 0x0a, 0x04,
+	0x62, 0x61, 0x73, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x62, 0x61, 0x73, 0x65,
+	0x12, 0x14, 0x0a, 0x05, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x05, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x22, 0xd5, 0x01, 0x0a, 0x12, 0x4f, 0x72, 0x64, 0x65, 0x72,
+	0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x0e, 0x0a,
+	0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x1b, 0x0a,
+	0x09, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72,
+	0x64, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09,
+	0x6f, 0x72, 0x64, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f,
+	0x75, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e,
+	0x74, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6d, 0x61, 0x6b, 0x65, 0x72,
+	0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6d, 0x61, 0x6b, 0x65, 0x72, 0x12, 0x14, 0x0a,
+	0x05, 0x74, 0x61, 0x6b, 0x65, 0x72, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x61,
+	0x6b, 0x65, 0x72, 0x12, 0x19, 0x0a, 0x08, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18,
+	0x08, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x49, 0x64, 0x22, 0xbf,
+	0x01, 0x0a, 0x12, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x65, 0x64,
+	0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x5f,
+	0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74,
+	0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x54, 0x79, 0x70,
+	0x65, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x72, 0x69,
+	0x63, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x12,
+	0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
+	0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x19, 0x0a, 0x08, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x69,
+	0x64, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x49, 0x64,
+	0x22, 0xbc, 0x01, 0x0a, 0x0f, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x53, 0x61, 0x76, 0x65, 0x64, 0x45,
+	0x76, 0x65, 0x6e, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x02, 0x69, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x5f, 0x69,
+	0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x49,
+	0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65,
+	0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x72, 0x69, 0x63,
+	0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x12, 0x14,
+	0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f,
+	0x77, 0x6e, 0x65, 0x72, 0x12, 0x19, 0x0a, 0x08, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x69, 0x64,
+	0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x49, 0x64, 0x22,
+	0xe7, 0x01, 0x0a, 0x11, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x41, 0x6d, 0x65, 0x6e, 0x64, 0x65, 0x64,
+	0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x5f,
+	0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74,
+	0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x54, 0x79, 0x70,
+	0x65, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72,
+	0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x21, 0x0a,
+	0x0c, 0x61, 0x64, 0x64, 0x65, 0x64, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x06, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x0b, 0x61, 0x64, 0x64, 0x65, 0x64, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74,
+	0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x1f, 0x0a, 0x0b, 0x70, 0x72, 0x65, 0x76,
+	0x69, 0x6f, 0x75, 0x73, 0x5f, 0x69, 0x64, 0x18, 0x08, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x70,
+	0x72, 0x65, 0x76, 0x69, 0x6f, 0x75, 0x73, 0x49, 0x64, 0x22, 0x71, 0x0a, 0x10, 0x50, 0x6f, 0x6f,
+	0x6c, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x18, 0x0a,
 	0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07,
-	0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x1a, 0x0a, 0x08, 0x6d, 0x61, 0x72, 0x6b, 0x65,
-	0x74, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b, 0x65,
-	0x74, 0x49, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x49, 0x64, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x49, 0x64, 0x12, 0x1d, 0x0a,
-	0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x09, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x12, 0x1d, 0x0a, 0x0a,
-	0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x09, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x49, 0x64, 0x22, 0x58, 0x0a, 0x12, 0x4d,
-	0x61, 0x72, 0x6b, 0x65, 0x74, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e,
-	0x74, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x62,
-	0x61, 0x73, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x62, 0x61, 0x73, 0x65, 0x12,
-	0x14, 0x0a, 0x05, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
-	0x71, 0x75, 0x6f, 0x74, 0x65, 0x22, 0xd9, 0x01, 0x0a, 0x12, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x45,
-	0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x0e, 0x0a, 0x02,
-	0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x1b, 0x0a, 0x09,
-	0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x08, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64,
-	0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f,
-	0x72, 0x64, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75,
-	0x6e, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74,
-	0x12, 0x14, 0x0a, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6d, 0x61, 0x6b, 0x65, 0x72, 0x18,
-	0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6d, 0x61, 0x6b, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05,
-	0x74, 0x61, 0x6b, 0x65, 0x72, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x61, 0x6b,
-	0x65, 0x72, 0x12, 0x1d, 0x0a, 0x0a, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x5f, 0x69, 0x64,
-	0x18, 0x08, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x49,
-	0x64, 0x22, 0xc3, 0x01, 0x0a, 0x12, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x43, 0x61, 0x6e, 0x63, 0x65,
-	0x6c, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x72, 0x6b,
-	0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61, 0x72,
-	0x6b, 0x65, 0x74, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x74,
-	0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f, 0x72, 0x64, 0x65, 0x72,
-	0x54, 0x79, 0x70, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05,
-	0x70, 0x72, 0x69, 0x63, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x70, 0x72, 0x69,
-	0x63, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x06, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x1d, 0x0a, 0x0a, 0x6d, 0x65, 0x73, 0x73,
-	0x61, 0x67, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6d, 0x65,
-	0x73, 0x73, 0x61, 0x67, 0x65, 0x49, 0x64, 0x22, 0xc0, 0x01, 0x0a, 0x0f, 0x4f, 0x72, 0x64, 0x65,
-	0x72, 0x53, 0x61, 0x76, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69,
-	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x6d,
-	0x61, 0x72, 0x6b, 0x65, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08,
-	0x6d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65,
-	0x72, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f, 0x72,
-	0x64, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e,
-	0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12,
-	0x14, 0x0a, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
-	0x70, 0x72, 0x69, 0x63, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x06,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x1d, 0x0a, 0x0a, 0x6d,
-	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x09, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x49, 0x64, 0x22, 0x71, 0x0a, 0x10, 0x50, 0x6f,
-	0x6f, 0x6c, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x18,
-	0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x62, 0x61, 0x73, 0x65,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x62, 0x61, 0x73, 0x65, 0x12, 0x14, 0x0a, 0x05,
-	0x71, 0x75, 0x6f, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x71, 0x75, 0x6f,
-	0x74, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x6c, 0x70, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x04,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6c, 0x70, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0x8b, 0x02,
-	0x0a, 0x13, 0x4c, 0x69, 0x71, 0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x41, 0x64, 0x64, 0x65, 0x64,
+	0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x62, 0x61, 0x73, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x62, 0x61, 0x73, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x71,
+	0x75, 0x6f, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x71, 0x75, 0x6f, 0x74,
+	0x65, 0x12, 0x19, 0x0a, 0x08, 0x6c, 0x70, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x04, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x07, 0x6c, 0x70, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0x8b, 0x02, 0x0a,
+	0x13, 0x4c, 0x69, 0x71, 0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x41, 0x64, 0x64, 0x65, 0x64, 0x45,
+	0x76, 0x65, 0x6e, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x3d,
+	0x0a, 0x0a, 0x62, 0x61, 0x73, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e,
+	0x74, 0x52, 0x0a, 0x62, 0x61, 0x73, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x3f, 0x0a,
+	0x0b, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e,
+	0x74, 0x52, 0x0b, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x41,
+	0x0a, 0x0c, 0x6d, 0x69, 0x6e, 0x74, 0x65, 0x64, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04,
+	0x20, 0x01, 0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e,
+	0x49, 0x6e, 0x74, 0x52, 0x0c, 0x6d, 0x69, 0x6e, 0x74, 0x65, 0x64, 0x41, 0x6d, 0x6f, 0x75, 0x6e,
+	0x74, 0x12, 0x17, 0x0a, 0x07, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x05, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x06, 0x70, 0x6f, 0x6f, 0x6c, 0x49, 0x64, 0x22, 0xca, 0x01, 0x0a, 0x15, 0x4c,
+	0x69, 0x71, 0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x64, 0x45,
+	0x76, 0x65, 0x6e, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x3d,
+	0x0a, 0x0a, 0x62, 0x61, 0x73, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e,
+	0x74, 0x52, 0x0a, 0x62, 0x61, 0x73, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x3f, 0x0a,
+	0x0b, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e,
+	0x74, 0x52, 0x0b, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x17,
+	0x0a, 0x07, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x06, 0x70, 0x6f, 0x6f, 0x6c, 0x49, 0x64, 0x22, 0xde, 0x01, 0x0a, 0x09, 0x53, 0x77, 0x61, 0x70,
 	0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12,
-	0x3d, 0x0a, 0x0a, 0x62, 0x61, 0x73, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49,
-	0x6e, 0x74, 0x52, 0x0a, 0x62, 0x61, 0x73, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x3f,
-	0x0a, 0x0b, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49,
-	0x6e, 0x74, 0x52, 0x0b, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12,
-	0x41, 0x0a, 0x0c, 0x6d, 0x69, 0x6e, 0x74, 0x65, 0x64, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18,
-	0x04, 0x20, 0x01, 0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68,
-	0x2e, 0x49, 0x6e, 0x74, 0x52, 0x0c, 0x6d, 0x69, 0x6e, 0x74, 0x65, 0x64, 0x41, 0x6d, 0x6f, 0x75,
-	0x6e, 0x74, 0x12, 0x17, 0x0a, 0x07, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x05, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x06, 0x70, 0x6f, 0x6f, 0x6c, 0x49, 0x64, 0x22, 0xca, 0x01, 0x0a, 0x15,
-	0x4c, 0x69, 0x71, 0x75, 0x69, 0x64, 0x69, 0x74, 0x79, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x64,
-	0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12,
-	0x3d, 0x0a, 0x0a, 0x62, 0x61, 0x73, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49,
-	0x6e, 0x74, 0x52, 0x0a, 0x62, 0x61, 0x73, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x3f,
-	0x0a, 0x0b, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49,
-	0x6e, 0x74, 0x52, 0x0b, 0x71, 0x75, 0x6f, 0x74, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12,
-	0x17, 0x0a, 0x07, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x06, 0x70, 0x6f, 0x6f, 0x6c, 0x49, 0x64, 0x22, 0xde, 0x01, 0x0a, 0x09, 0x53, 0x77, 0x61,
-	0x70, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f,
-	0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72,
-	0x12, 0x4c, 0x0a, 0x02, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x21, 0xc8, 0xde, 0x1f, 0x00, 0xea, 0xde, 0x1f,
-	0x0c, 0x69, 0x6e, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74, 0x79, 0xf2, 0xde, 0x1f,
-	0x09, 0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x69, 0x6e, 0x22, 0x52, 0x02, 0x69, 0x6e, 0x12, 0x50,
-	0x0a, 0x03, 0x6f, 0x75, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f,
+	0x4c, 0x0a, 0x02, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x23, 0xc8, 0xde, 0x1f, 0x00, 0xea, 0xde, 0x1f, 0x0d,
-	0x6f, 0x75, 0x74, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74, 0x79, 0xf2, 0xde, 0x1f,
-	0x0a, 0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x6f, 0x75, 0x74, 0x22, 0x52, 0x03, 0x6f, 0x75, 0x74,
-	0x12, 0x17, 0x0a, 0x07, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x06, 0x70, 0x6f, 0x6f, 0x6c, 0x49, 0x64, 0x22, 0x28, 0x0a, 0x10, 0x44, 0x65, 0x6e,
-	0x6f, 0x6d, 0x48, 0x61, 0x6c, 0x74, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x14, 0x0a,
-	0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64, 0x65,
-	0x6e, 0x6f, 0x6d, 0x22, 0x2a, 0x0a, 0x12, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x55, 0x6e, 0x68, 0x61,
-	0x6c, 0x74, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x64, 0x65, 0x6e,
-	0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x42,
-	0x9f, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64,
-	0x65, 0x62, 0x69, 0x6e, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74,
-	0x6f, 0x50, 0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
-	0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f, 0x62, 0x7a,
-	0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62,
-	0x69, 0x6e, 0xa2, 0x02, 0x03, 0x42, 0x54, 0x58, 0xaa, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x2e, 0x54,
-	0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xca, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72,
-	0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xe2, 0x02, 0x18, 0x42, 0x7a, 0x65, 0x5c, 0x54, 0x72, 0x61,
-	0x64, 0x65, 0x62, 0x69, 0x6e, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0xea, 0x02, 0x0d, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69,
-	0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x21, 0xc8, 0xde, 0x1f, 0x00, 0xea, 0xde, 0x1f, 0x0c,
+	0x69, 0x6e, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74, 0x79, 0xf2, 0xde, 0x1f, 0x09,
+	0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x69, 0x6e, 0x22, 0x52, 0x02, 0x69, 0x6e, 0x12, 0x50, 0x0a,
+	0x03, 0x6f, 0x75, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x23, 0xc8, 0xde, 0x1f, 0x00, 0xea, 0xde, 0x1f, 0x0d, 0x6f,
+	0x75, 0x74, 0x2c, 0x6f, 0x6d, 0x69, 0x74, 0x65, 0x6d, 0x70, 0x74, 0x79, 0xf2, 0xde, 0x1f, 0x0a,
+	0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x6f, 0x75, 0x74, 0x22, 0x52, 0x03, 0x6f, 0x75, 0x74, 0x12,
+	0x17, 0x0a, 0x07, 0x70, 0x6f, 0x6f, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x06, 0x70, 0x6f, 0x6f, 0x6c, 0x49, 0x64, 0x22, 0x28, 0x0a, 0x10, 0x44, 0x65, 0x6e, 0x6f,
+	0x6d, 0x48, 0x61, 0x6c, 0x74, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05,
+	0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64, 0x65, 0x6e,
+	0x6f, 0x6d, 0x22, 0x2a, 0x0a, 0x12, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x55, 0x6e, 0x68, 0x61, 0x6c,
+	0x74, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x64, 0x65, 0x6e, 0x6f,
+	0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0xed,
+	0x01, 0x0a, 0x14, 0x50, 0x6f, 0x6f, 0x6c, 0x46, 0x65, 0x65, 0x73, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x17, 0x0a, 0x07, 0x70, 0x6f, 0x6f, 0x6c, 0x5f,
+	0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x70, 0x6f, 0x6f, 0x6c, 0x49, 0x64,
+	0x12, 0x17, 0x0a, 0x07, 0x6f, 0x6c, 0x64, 0x5f, 0x66, 0x65, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x06, 0x6f, 0x6c, 0x64, 0x46, 0x65, 0x65, 0x12, 0x17, 0x0a, 0x07, 0x6e, 0x65, 0x77,
+	0x5f, 0x66, 0x65, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x6e, 0x65, 0x77, 0x46,
+	0x65, 0x65, 0x12, 0x44, 0x0a, 0x0c, 0x6f, 0x6c, 0x64, 0x5f, 0x66, 0x65, 0x65, 0x5f, 0x64, 0x65,
+	0x73, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74,
+	0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x2e, 0x46, 0x65, 0x65, 0x44, 0x65, 0x73, 0x74, 0x69,
+	0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0a, 0x6f, 0x6c,
+	0x64, 0x46, 0x65, 0x65, 0x44, 0x65, 0x73, 0x74, 0x12, 0x44, 0x0a, 0x0c, 0x6e, 0x65, 0x77, 0x5f,
+	0x66, 0x65, 0x65, 0x5f, 0x64, 0x65, 0x73, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c,
+	0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x2e, 0x46, 0x65,
+	0x65, 0x44, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x04, 0xc8, 0xde,
+	0x1f, 0x00, 0x52, 0x0a, 0x6e, 0x65, 0x77, 0x46, 0x65, 0x65, 0x44, 0x65, 0x73, 0x74, 0x22, 0xd0,
+	0x01, 0x0a, 0x19, 0x4f, 0x72, 0x64, 0x65, 0x72, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x52,
+	0x65, 0x66, 0x75, 0x6e, 0x64, 0x65, 0x64, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x12, 0x19, 0x0a, 0x08,
+	0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07,
+	0x6f, 0x72, 0x64, 0x65, 0x72, 0x49, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x6d, 0x61, 0x72, 0x6b, 0x65,
+	0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x6d, 0x61, 0x72, 0x6b,
+	0x65, 0x74, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x5f, 0x74, 0x79,
+	0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x54,
+	0x79, 0x70, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x04, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f,
+	0x75, 0x6e, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e,
+	0x74, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x66, 0x75, 0x6e, 0x64, 0x18, 0x06, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x06, 0x72, 0x65, 0x66, 0x75, 0x6e, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x61,
+	0x73, 0x6f, 0x6e, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f,
+	0x6e, 0x42, 0x9f, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x62, 0x7a, 0x65, 0x2e, 0x74, 0x72,
+	0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72,
+	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
+	0x6d, 0x2f, 0x62, 0x7a, 0x65, 0x2d, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x74, 0x65, 0x61, 0x6d, 0x2f,
+	0x62, 0x7a, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x62, 0x7a, 0x65, 0x2f, 0x74, 0x72, 0x61, 0x64,
+	0x65, 0x62, 0x69, 0x6e, 0xa2, 0x02, 0x03, 0x42, 0x54, 0x58, 0xaa, 0x02, 0x0c, 0x42, 0x7a, 0x65,
+	0x2e, 0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xca, 0x02, 0x0c, 0x42, 0x7a, 0x65, 0x5c,
+	0x54, 0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0xe2, 0x02, 0x18, 0x42, 0x7a, 0x65, 0x5c, 0x54,
+	0x72, 0x61, 0x64, 0x65, 0x62, 0x69, 0x6e, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
+	0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x42, 0x7a, 0x65, 0x3a, 0x3a, 0x54, 0x72, 0x61, 0x64, 0x65,
+	0x62, 0x69, 0x6e, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -8793,30 +9883,34 @@ func file_bze_tradebin_events_proto_rawDescGZIP() []byte {
 	return file_bze_tradebin_events_proto_rawDescData
 }
 
-var file_bze_tradebin_events_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_bze_tradebin_events_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_bze_tradebin_events_proto_goTypes = []interface{}{
-	(*OrderCreateMessageEvent)(nil), // 0: bze.tradebin.OrderCreateMessageEvent
-	(*OrderCancelMessageEvent)(nil), // 1: bze.tradebin.OrderCancelMessageEvent
-	(*MarketCreatedEvent)(nil),      // 2: bze.tradebin.MarketCreatedEvent
-	(*OrderExecutedEvent)(nil),      // 3: bze.tradebin.OrderExecutedEvent
-	(*OrderCanceledEvent)(nil),      // 4: bze.tradebin.OrderCanceledEvent
-	(*OrderSavedEvent)(nil),         // 5: bze.tradebin.OrderSavedEvent
-	(*PoolCreatedEvent)(nil),        // 6: bze.tradebin.PoolCreatedEvent
-	(*LiquidityAddedEvent)(nil),     // 7: bze.tradebin.LiquidityAddedEvent
-	(*LiquidityRemovedEvent)(nil),   // 8: bze.tradebin.LiquidityRemovedEvent
-	(*SwapEvent)(nil),               // 9: bze.tradebin.SwapEvent
-	(*DenomHaltedEvent)(nil),        // 10: bze.tradebin.DenomHaltedEvent
-	(*DenomUnhaltedEvent)(nil),      // 11: bze.tradebin.DenomUnhaltedEvent
-	(*v1beta1.Coin)(nil),            // 12: cosmos.base.v1beta1.Coin
+	(*MarketCreatedEvent)(nil),        // 0: bze.tradebin.MarketCreatedEvent
+	(*OrderExecutedEvent)(nil),        // 1: bze.tradebin.OrderExecutedEvent
+	(*OrderCanceledEvent)(nil),        // 2: bze.tradebin.OrderCanceledEvent
+	(*OrderSavedEvent)(nil),           // 3: bze.tradebin.OrderSavedEvent
+	(*OrderAmendedEvent)(nil),         // 4: bze.tradebin.OrderAmendedEvent
+	(*PoolCreatedEvent)(nil),          // 5: bze.tradebin.PoolCreatedEvent
+	(*LiquidityAddedEvent)(nil),       // 6: bze.tradebin.LiquidityAddedEvent
+	(*LiquidityRemovedEvent)(nil),     // 7: bze.tradebin.LiquidityRemovedEvent
+	(*SwapEvent)(nil),                 // 8: bze.tradebin.SwapEvent
+	(*DenomHaltedEvent)(nil),          // 9: bze.tradebin.DenomHaltedEvent
+	(*DenomUnhaltedEvent)(nil),        // 10: bze.tradebin.DenomUnhaltedEvent
+	(*PoolFeesUpdatedEvent)(nil),      // 11: bze.tradebin.PoolFeesUpdatedEvent
+	(*OrderMessageRefundedEvent)(nil), // 12: bze.tradebin.OrderMessageRefundedEvent
+	(*v1beta1.Coin)(nil),              // 13: cosmos.base.v1beta1.Coin
+	(*FeeDestination)(nil),            // 14: bze.tradebin.FeeDestination
 }
 var file_bze_tradebin_events_proto_depIdxs = []int32{
-	12, // 0: bze.tradebin.SwapEvent.in:type_name -> cosmos.base.v1beta1.Coin
-	12, // 1: bze.tradebin.SwapEvent.out:type_name -> cosmos.base.v1beta1.Coin
-	2,  // [2:2] is the sub-list for method output_type
-	2,  // [2:2] is the sub-list for method input_type
-	2,  // [2:2] is the sub-list for extension type_name
-	2,  // [2:2] is the sub-list for extension extendee
-	0,  // [0:2] is the sub-list for field type_name
+	13, // 0: bze.tradebin.SwapEvent.in:type_name -> cosmos.base.v1beta1.Coin
+	13, // 1: bze.tradebin.SwapEvent.out:type_name -> cosmos.base.v1beta1.Coin
+	14, // 2: bze.tradebin.PoolFeesUpdatedEvent.old_fee_dest:type_name -> bze.tradebin.FeeDestination
+	14, // 3: bze.tradebin.PoolFeesUpdatedEvent.new_fee_dest:type_name -> bze.tradebin.FeeDestination
+	4,  // [4:4] is the sub-list for method output_type
+	4,  // [4:4] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_bze_tradebin_events_proto_init() }
@@ -8824,32 +9918,9 @@ func file_bze_tradebin_events_proto_init() {
 	if File_bze_tradebin_events_proto != nil {
 		return
 	}
+	file_bze_tradebin_store_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_bze_tradebin_events_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OrderCreateMessageEvent); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_bze_tradebin_events_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OrderCancelMessageEvent); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_bze_tradebin_events_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MarketCreatedEvent); i {
 			case 0:
 				return &v.state
@@ -8861,7 +9932,7 @@ func file_bze_tradebin_events_proto_init() {
 				return nil
 			}
 		}
-		file_bze_tradebin_events_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+		file_bze_tradebin_events_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*OrderExecutedEvent); i {
 			case 0:
 				return &v.state
@@ -8873,7 +9944,7 @@ func file_bze_tradebin_events_proto_init() {
 				return nil
 			}
 		}
-		file_bze_tradebin_events_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+		file_bze_tradebin_events_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*OrderCanceledEvent); i {
 			case 0:
 				return &v.state
@@ -8885,7 +9956,7 @@ func file_bze_tradebin_events_proto_init() {
 				return nil
 			}
 		}
-		file_bze_tradebin_events_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+		file_bze_tradebin_events_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*OrderSavedEvent); i {
 			case 0:
 				return &v.state
@@ -8897,7 +9968,19 @@ func file_bze_tradebin_events_proto_init() {
 				return nil
 			}
 		}
-		file_bze_tradebin_events_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+		file_bze_tradebin_events_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*OrderAmendedEvent); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bze_tradebin_events_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PoolCreatedEvent); i {
 			case 0:
 				return &v.state
@@ -8909,7 +9992,7 @@ func file_bze_tradebin_events_proto_init() {
 				return nil
 			}
 		}
-		file_bze_tradebin_events_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+		file_bze_tradebin_events_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*LiquidityAddedEvent); i {
 			case 0:
 				return &v.state
@@ -8921,7 +10004,7 @@ func file_bze_tradebin_events_proto_init() {
 				return nil
 			}
 		}
-		file_bze_tradebin_events_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+		file_bze_tradebin_events_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*LiquidityRemovedEvent); i {
 			case 0:
 				return &v.state
@@ -8933,7 +10016,7 @@ func file_bze_tradebin_events_proto_init() {
 				return nil
 			}
 		}
-		file_bze_tradebin_events_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+		file_bze_tradebin_events_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*SwapEvent); i {
 			case 0:
 				return &v.state
@@ -8945,7 +10028,7 @@ func file_bze_tradebin_events_proto_init() {
 				return nil
 			}
 		}
-		file_bze_tradebin_events_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+		file_bze_tradebin_events_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DenomHaltedEvent); i {
 			case 0:
 				return &v.state
@@ -8957,8 +10040,32 @@ func file_bze_tradebin_events_proto_init() {
 				return nil
 			}
 		}
-		file_bze_tradebin_events_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+		file_bze_tradebin_events_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DenomUnhaltedEvent); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bze_tradebin_events_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PoolFeesUpdatedEvent); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bze_tradebin_events_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*OrderMessageRefundedEvent); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8976,7 +10083,7 @@ func file_bze_tradebin_events_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_bze_tradebin_events_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

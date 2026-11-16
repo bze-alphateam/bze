@@ -21,4 +21,6 @@ var (
 	ErrBurnFromModuleAccount = sdkerrors.Register(ModuleName, 1109, "burning from Module Account is not allowed")
 	ErrInvalidSubdenom       = sdkerrors.Register(ModuleName, 1110, "invalid subdenom")
 	ErrInvalidBranding       = sdkerrors.Register(ModuleName, 1111, "invalid branding")
+	ErrMintingDisabled       = sdkerrors.Register(ModuleName, 1112, "minting is disabled for this denom")
+	ErrInvalidDenomConfig    = sdkerrors.Register(ModuleName, 1113, "invalid denom config")
 )

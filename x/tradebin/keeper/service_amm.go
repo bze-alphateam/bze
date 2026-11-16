@@ -206,8 +206,17 @@ func (k Keeper) calculateSwapInputAndFee(input sdk.Coin, pool *types.LiquidityPo
 //
 // Returns:
 //   - swapAmount: the optimal amount of inputCoin to swap
-//   - error: if the input coin denom is not in the pool or calculation fails
+//   - error: if the input coin denom is not in the pool, the operands overflow or calculation fails
 func (k Keeper) CalculateOptimalSwapAmount(pool types.LiquidityPool, inputCoin sdk.Coin) (swapAmount math.Int, err error) {
+	// LegacyDec arithmetic panics when a result exceeds its bit length. This pure function (no store, no gas) runs in
+	// EndBlock module paths, so operands too large for the formula return an error instead of panicking.
+	defer func() {
+		if r := recover(); r != nil {
+			swapAmount = math.ZeroInt()
+			err = fmt.Errorf("cannot calculate optimal swap for %s in pool %s: arithmetic overflow: %v", inputCoin.Denom, pool.GetId(), r)
+		}
+	}()
+
 	if !pool.HasDenom(inputCoin.Denom) {
 		return math.ZeroInt(), fmt.Errorf("denom %s does not exist in pool %s", inputCoin.Denom, pool.GetId())
 	}

@@ -65,8 +65,8 @@ func (suite *IntegrationTestSuite) TestMigrate4to5() {
 }
 
 // TestConsensusVersionBumpedOnce pins the rewards module consensus version introduced with
-// the Denom Rewards params migration: exactly one bump from 4 to 5.
+// the trading reward countdown migration: exactly one bump from 5 (v8.2.0) to 6 (v8.3.0).
 func (suite *IntegrationTestSuite) TestConsensusVersionBumpedOnce() {
-	suite.Require().EqualValues(5, rewards.ConsensusVersion)
-	suite.Require().EqualValues(5, rewards.AppModule{}.ConsensusVersion())
+	suite.Require().EqualValues(6, rewards.ConsensusVersion)
+	suite.Require().EqualValues(6, rewards.AppModule{}.ConsensusVersion())
 }

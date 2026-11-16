@@ -80,6 +80,12 @@ func (dfd DeductFeeDecorator) getContextMinGasPrices(ctx sdk.Context) sdk.DecCoi
 	}
 
 	txDenomGasPrice := localNativeGasPrice.Quo(txDenomPrice.Amount)
+	// a factory token's gas surcharge s is paid on top of the converted price: it is split out of the fee at deduction
+	_, gasSurcharge := dfd.txCollectorKeeper.GetDenomFeeRates(ctx, txDenom)
+	if gasSurcharge.IsPositive() {
+		txDenomGasPrice = txDenomGasPrice.Mul(sdkmath.LegacyOneDec().Add(gasSurcharge))
+	}
+
 	if txDenomGasPrice.LT(localGasPrice) {
 		txDenomGasPrice = localGasPrice
 	}

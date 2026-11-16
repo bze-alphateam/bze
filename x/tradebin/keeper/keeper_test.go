@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	storetypes "cosmossdk.io/store/types"
 	keeper2 "github.com/bze-alphateam/bze/testutil/keeper"
 	"github.com/bze-alphateam/bze/x/tradebin/keeper"
 	"github.com/bze-alphateam/bze/x/tradebin/testutil"
@@ -33,6 +34,7 @@ type IntegrationTestSuite struct {
 	suite.Suite
 
 	ctx         sdk.Context
+	storeKey    *storetypes.KVStoreKey
 	k           *keeper.Keeper
 	msgServer   types.MsgServer
 	bankMock    *testutil.MockBankKeeper
@@ -49,8 +51,9 @@ func (suite *IntegrationTestSuite) SetupTest() {
 	mockAccount := testutil.NewMockAccountKeeper(mockCtrl)
 	require.NotNil(t, mockAccount)
 
-	k, ctx := keeper2.TradebinKeeper(t, mockBank, mockAccount)
+	k, ctx, storeKey := keeper2.TradebinKeeperWithStoreKey(t, mockBank, mockAccount)
 	suite.ctx = ctx
+	suite.storeKey = storeKey
 	suite.k = &k
 	suite.bankMock = mockBank
 	suite.accountMock = mockAccount

@@ -1,0 +1,69 @@
+syntax = "proto3";
+package bze.guardian.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "bze/guardian/v1/params.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/guardian/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Params queries the parameters of the module.
+  rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/bze/guardian/v1/params";
+  }
+
+  // BlockedDenoms lists the denoms on the rate limit module's blacklist.
+  rpc BlockedDenoms (QueryBlockedDenomsRequest) returns (QueryBlockedDenomsResponse) {
+    option (google.api.http).get = "/bze/guardian/v1/blocked_denoms";
+  }
+
+  // AutomationPaused tells whether the protocol automation is paused.
+  rpc AutomationPaused (QueryAutomationPausedRequest) returns (QueryAutomationPausedResponse) {
+    option (google.api.http).get = "/bze/guardian/v1/automation_paused";
+  }
+
+  // ClosedChannels lists the transfer channels closed by the guardian or governance.
+  rpc ClosedChannels (QueryClosedChannelsRequest) returns (QueryClosedChannelsResponse) {
+    option (google.api.http).get = "/bze/guardian/v1/closed_channels";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// QueryBlockedDenomsRequest is request type for the Query/BlockedDenoms RPC method.
+message QueryBlockedDenomsRequest {}
+
+// QueryBlockedDenomsResponse is response type for the Query/BlockedDenoms RPC method.
+message QueryBlockedDenomsResponse {
+  // denoms are the blacklisted denoms, every transfer of them is refused.
+  repeated string denoms = 1;
+}
+
+// QueryAutomationPausedRequest is request type for the Query/AutomationPaused RPC method.
+message QueryAutomationPausedRequest {}
+
+// QueryAutomationPausedResponse is response type for the Query/AutomationPaused RPC method.
+message QueryAutomationPausedResponse {
+  // paused is true while the txfeecollector EndBlock conversions and the
+  // burner's periodic burn are stopped.
+  bool paused = 1 [(amino.dont_omitempty) = true];
+}
+
+// QueryClosedChannelsRequest is request type for the Query/ClosedChannels RPC method.
+message QueryClosedChannelsRequest {}
+
+// QueryClosedChannelsResponse is response type for the Query/ClosedChannels RPC method.
+message QueryClosedChannelsResponse {
+  // channel_ids are the closed transfer channels, every ICS-20 transfer on them is refused.
+  repeated string channel_ids = 1;
+}

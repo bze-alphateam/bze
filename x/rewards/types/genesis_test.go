@@ -123,9 +123,31 @@ func TestGenesisState_ValidateDenomRewards(t *testing.T) {
 			expError: "counter 1 is behind schedule id 000000000002",
 		},
 		{
-			name: "queue cursor references missing schedule",
+			// the last schedule of a full batch may finish (and be deleted) in the block that stores it
+			// as the cursor, so an export taken at that height must stay valid (BZE-149)
+			name: "queue cursor pointing at a finished schedule is valid",
 			mutate: func(gs *GenesisState) {
 				gs.DenomRewardsDistributionQueue.Cursor = string(DenomRewardScheduleKey("udenom1", "000000000042"))
+			},
+		},
+		{
+			name: "queue cursor that is not a schedule key",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardsDistributionQueue.Cursor = string(DenomRewardKey("udenom1"))
+			},
+			expError: "is not a schedule key",
+		},
+		{
+			name: "queue cursor with a non-numeric schedule id",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardsDistributionQueue.Cursor = string(DenomRewardScheduleKey("udenom1", "abc"))
+			},
+			expError: "is not a schedule key",
+		},
+		{
+			name: "queue cursor references missing denom reward",
+			mutate: func(gs *GenesisState) {
+				gs.DenomRewardsDistributionQueue.Cursor = string(DenomRewardScheduleKey("missing", "000000000001"))
 			},
 			expError: "queue cursor",
 		},

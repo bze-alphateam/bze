@@ -19,10 +19,8 @@ message GenesisState {
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)      = "market_list,omitempty"
   ];
-  repeated QueueMessage queue_message_list = 3 [
-    (gogoproto.nullable) = false,
-    (gogoproto.jsontag)      = "queue_message_list,omitempty"
-  ];
+  // 3 was queue_message_list (removed in v8.3.0)
+  reserved 3;
   repeated Order order_list = 4 [
     (gogoproto.nullable) = false,
     (gogoproto.jsontag)      = "order_list,omitempty"

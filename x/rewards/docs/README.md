@@ -30,7 +30,7 @@ bzed tx rewards claim-staking-rewards <reward-id> --from mykey
 ## Trading Rewards
 What you can do:
 - **Create a reward** (`MsgCreateTradingReward`): fund a prize pool/denom, pick target `market_id`, set duration and number of slots (payout rounds). A creation fee may apply (swapped to native and sent to the fee collector module).
-- **Activate** (`MsgActivateTradingReward`): governance/authority-only step that moves a pending reward into the active set for its market.
+- **Activate** (`MsgActivateTradingReward`): governance/authority-only step that moves a pending reward into the active set for its market. Activation does not start the countdown: the first trade on the market does, and the reward is paid `duration` days after that trade. An active reward nobody trades on waits for its first trade indefinitely and keeps its market (no other trading reward can run on it meanwhile).
 - Traders earn according to on-chain trading volume/logic of the module; leaderboard and distribution run automatically from the funded pool.
 
 Example:
@@ -50,6 +50,7 @@ When a staking reward has a lock period and you exit:
 - Pending trading rewards must be activated by governance within 30 days. Unactivated rewards expire and their funds are sent to the burner module.
 - Only one active trading reward per market is allowed; creation fails if one already exists.
 - Traders per reward are tracked on a leaderboard (sized by the reward's `slots` parameter), sorted by volume with timestamp-based tie-breaking.
+- At payout every trader on the leaderboard gets one slot's prize. When fewer traders than `slots` made the leaderboard, the prize of the unfilled slots is sent to the burner module.
 - Distribution happens automatically at the end of the reward period.
 
 ## Queries
@@ -73,7 +74,7 @@ When a staking reward has a lock period and you exit:
 ### v8.1.0
 - All reward operations moved from synchronous epoch hooks to bounded queue-based processing at EndBlock (up to 100 items/block): unlock participants, staking reward distribution, and trading reward expiration
 - Added `ExtraGasForExitStake` parameter (default 1,000,000 gas) consumed when exiting a stake
-- Removed `DistrKeeper` dependency — creation fees now routed to `txfeecollector` module via `CaptureAndSwapUserFee` instead of `FundCommunityPool`
+- Removed `DistrKeeper` dependency — creation fees now routed to `txfeecollector` module via `SafeCaptureAndSwapUserFee` instead of `FundCommunityPool`
 - Expired pending trading rewards now send uncaptured tokens to the burner module instead of community pool
 - Leaderboard sorting fix: old code compared the same value for both items; fixed to properly compare `a.Amount` vs `b.Amount`
 - Trading hook now validates `tradedAmount.IsPositive()` before processing

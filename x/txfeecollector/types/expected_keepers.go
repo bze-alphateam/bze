@@ -3,12 +3,13 @@ package types
 import (
 	"context"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type TradeKeeper interface {
 	CanSwapForNativeDenom(ctx sdk.Context, coin sdk.Coin) bool
-	ModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins sdk.Coins) (sdk.Coin, error)
+	SafeModuleSwapForNativeDenom(ctx sdk.Context, toModule string, coins sdk.Coins) (sdk.Coin, error)
 	IsNativeDenom(ctx sdk.Context, denom string) bool
 	HasDeepLiquidityWithNativeDenom(ctx sdk.Context, denom string) bool
 	GetDenomSpotPriceInNativeCoin(ctx sdk.Context, denom string) (sdk.DecCoin, error)
@@ -28,8 +29,12 @@ type FeegrantKeeper interface {
 type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
-	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	// GetBalancesPage returns at most limit balances of addr, the ones whose denom sorts strictly after afterDenom
+	// (all of them from the first when afterDenom is empty), in the bank store's denom order, and the denom of the last
+	// one ("" when none). It reads the store with a bounded iterator, never the whole account.
+	GetBalancesPage(ctx context.Context, addr sdk.AccAddress, afterDenom string, limit int) (sdk.Coins, string)
 	// Methods imported from bank should be defined here
 }
 
@@ -37,8 +42,26 @@ type DistrKeeper interface {
 	FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error
 }
 
+// DenomCommunityPoolProvider reads a denom's DenomConfig. Implemented by the tokenfactory keeper.
+type DenomCommunityPoolProvider interface {
+	// GetDenomCommunityPool returns the community pool address a denom's fees are forwarded to, false when the denom
+	// has none. A stored address that is blocked from receiving funds is reported as none.
+	GetDenomCommunityPool(ctx sdk.Context, denom string) (sdk.AccAddress, bool)
+	// GetDenomFeeRates returns the denom's transfer fee and gas surcharge ratios, zeros when none are set.
+	GetDenomFeeRates(ctx sdk.Context, denom string) (transferFee, gasSurcharge math.LegacyDec)
+}
+
 // ParamSubspace defines the expected Subspace interface for parameters.
 type ParamSubspace interface {
 	Get(context.Context, []byte, interface{})
 	Set(context.Context, []byte, interface{})
+}
+
+// GuardianKeeper is the x/guardian state txfeecollector reads: the protocol automation pause and the closed
+// transfer channels. Implemented by the x/guardian keeper.
+type GuardianKeeper interface {
+	// IsAutomationPaused is true while EndBlock must not convert, send or fund anything.
+	IsAutomationPaused(ctx context.Context) bool
+	// IsChannelClosed is true while every ICS-20 transfer on the channel must be refused, in both directions.
+	IsChannelClosed(ctx context.Context, channelID string) bool
 }

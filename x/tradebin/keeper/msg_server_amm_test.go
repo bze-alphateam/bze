@@ -2,10 +2,14 @@
 package keeper_test
 
 import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"testing"
 
+	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	"github.com/bze-alphateam/bze/x/tradebin/types"
@@ -367,9 +371,14 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_Success() {
 				Exponent: 6,
 			},
 		},
-		Base:    lpDenom,
-		Display: lpScaledDenom,
+		Base:        lpDenom,
+		Display:     lpScaledDenom,
+		Name:        "LP share of pool abc_def",
+		Symbol:      "LP-FA16E9", // first 6 hex chars of sha256("abc_def")
+		Description: "Liquidity provider share of the abc_def pool on the BZE DEX",
 	}
+	// the bank module refuses metadata with a blank name or symbol: exported genesis would fail validation
+	suite.Require().NoError(denomMetaData.Validate())
 
 	createMarketFeeCoin := sdk.NewCoins(suite.k.CreateMarketFee(suite.ctx))
 
@@ -429,7 +438,10 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_TwoIbcDenoms()
 	suite.bankMock.EXPECT().HasSupply(gomock.Any(), ibcQuote).Return(true).AnyTimes()
 	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-	suite.bankMock.EXPECT().SetDenomMetaData(gomock.Any(), gomock.Any()).AnyTimes()
+	var lpMetadata banktypes.Metadata
+	suite.bankMock.EXPECT().SetDenomMetaData(gomock.Any(), gomock.Any()).Do(func(_ context.Context, md banktypes.Metadata) {
+		lpMetadata = md
+	}).Times(1)
 	suite.bankMock.EXPECT().MintCoins(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	res, err := suite.msgServer.CreateLiquidityPool(suite.ctx, msg)
@@ -445,6 +457,11 @@ func (suite *IntegrationTestSuite) TestMsgAmm_CreateLiquidityPool_TwoIbcDenoms()
 	suite.Require().NoError(sdk.ValidateDenom(stored.GetLpDenom()), "LP denom must be a valid SDK denom")
 	suite.Require().LessOrEqual(len(stored.GetLpDenom()), 128, "LP denom must not exceed the SDK 128-char limit")
 	suite.Require().Equal(stored.GetLpDenom(), res.GetLpDenom(), "response must carry the pool's LP denom")
+	// the stored LP metadata must pass the bank module's own validation, which genesis validation runs
+	suite.Require().Equal(stored.GetLpDenom(), lpMetadata.Base)
+	suite.Require().NoError(lpMetadata.Validate())
+	sum := sha256.Sum256([]byte(stored.GetId()))
+	suite.Require().Equal("LP-"+strings.ToUpper(hex.EncodeToString(sum[:]))[:6], lpMetadata.Symbol)
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_InvalidCreator() {
@@ -576,6 +593,36 @@ func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_MinLpTokensNotMet() {
 	_, err := suite.msgServer.AddLiquidity(suite.ctx, msg)
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "could not mint the minimum expected lp tokens")
+}
+
+func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_MinLpTokensNotMet_MintedAboveUint64() {
+
+	testLp := getValidLp()
+	testAcc := getTestAccount()
+	suite.k.SetLiquidityPool(suite.ctx, testLp)
+
+	//the same deposit as above against a supply of 1e21 mints 1e20 LP, past the 2^64 of a uint64
+	supply, ok := math.NewIntFromString("1000000000000000000000")
+	suite.Require().True(ok)
+	mintedAmount, ok := math.NewIntFromString("100000000000000000000")
+	suite.Require().True(ok)
+	suite.Require().False(mintedAmount.IsUint64())
+
+	msg := &types.MsgAddLiquidity{
+		Creator:     testAcc.String(),
+		PoolId:      testLp.Id,
+		BaseAmount:  math.NewInt(100),
+		QuoteAmount: math.NewInt(200),
+		MinLpTokens: mintedAmount.AddRaw(1),
+	}
+
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), testAcc, types.ModuleName, sdk.NewCoins(sdk.NewInt64Coin("ubze", 100), sdk.NewInt64Coin("uusdc", 200))).Times(1).Return(nil)
+	suite.bankMock.EXPECT().GetSupply(suite.ctx, testLp.GetLpDenom()).Times(1).Return(sdk.NewCoin(testLp.GetLpDenom(), supply))
+	suite.bankMock.EXPECT().MintCoins(suite.ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(testLp.GetLpDenom(), mintedAmount))).Return(nil)
+
+	_, err := suite.msgServer.AddLiquidity(suite.ctx, msg)
+	suite.Require().ErrorIs(err, types.ErrResultedAmountTooLow)
+	suite.Require().Contains(err.Error(), "Minted 100000000000000000000, expected minimum: 100000000000000000001")
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_AddLiquidity_ErrorOnSendingLpTokens() {
@@ -1708,6 +1755,41 @@ func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_InsufficientFunds() {
 	suite.Require().Error(err)
 	suite.Require().Contains(err.Error(), "could not capture user input coins")
 	suite.Require().Contains(err.Error(), "insufficient funds")
+}
+
+// A balance shortfall keeps the bank's insufficient funds error (sdk code 5)
+// so wallets can show the usual "not enough balance" message.
+func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_InsufficientFunds_KeepsBankError() {
+	creator := sdk.AccAddress("creator")
+	suite.k.SetLiquidityPool(suite.ctx, types.LiquidityPool{
+		Id:           "pool1",
+		Base:         denomBze,
+		Quote:        denomStake,
+		LpDenom:      "lp_pool1",
+		ReserveBase:  math.NewInt(1000000),
+		ReserveQuote: math.NewInt(2000000),
+		Fee:          math.LegacyNewDecWithPrec(3, 3),
+		Creator:      creator.String(),
+	})
+
+	inputCoin := sdk.NewCoin(denomBze, math.NewInt(1000))
+	msg := types.MsgMultiSwap{
+		Creator:   creator.String(),
+		Routes:    []string{"pool1"},
+		Input:     inputCoin,
+		MinOutput: sdk.NewCoin(denomStake, math.NewInt(1900)),
+	}
+
+	suite.bankMock.EXPECT().
+		SendCoinsFromAccountToModule(suite.ctx, creator, types.ModuleName, sdk.NewCoins(inputCoin)).
+		Return(errors.Wrapf(sdkerrors.ErrInsufficientFunds, "spendable balance 10ubze is smaller than %s", inputCoin))
+
+	_, err := suite.msgServer.MultiSwap(suite.ctx, &msg)
+
+	suite.Require().ErrorIs(err, sdkerrors.ErrInsufficientFunds)
+	suite.Require().NotErrorIs(err, sdkerrors.ErrInvalidCoins)
+	suite.Require().Contains(err.Error(), "could not capture user input coins")
+	suite.Require().Contains(err.Error(), inputCoin.String())
 }
 
 func (suite *IntegrationTestSuite) TestMsgAmm_MultiSwap_DenomNotInPool() {

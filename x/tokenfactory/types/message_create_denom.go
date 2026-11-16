@@ -4,7 +4,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"strings"
 )
 
 var _ sdk.Msg = &MsgCreateDenom{}
@@ -26,12 +25,8 @@ func (msg *MsgCreateDenom) ValidateBasic() error {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "subdenom must not be empty")
 	}
 
-	if strings.Contains(msg.Subdenom, "_") {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "subdenom should not contain _")
-	}
-
-	if strings.Contains(msg.Subdenom, "/") {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "subdenom should not contain /")
+	if err := ValidateSubdenom(msg.Subdenom); err != nil {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	return nil

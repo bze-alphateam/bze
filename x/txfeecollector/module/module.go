@@ -171,6 +171,12 @@ func (am AppModule) BeginBlock(_ context.Context) error {
 // The end block implementation is optional.
 func (am AppModule) EndBlock(gotCtx context.Context) error {
 	ctx := sdk.UnwrapSDKContext(gotCtx)
+	// the guardian paused the protocol automation: no pass runs, the collected coins wait in the collectors and the
+	// first EndBlock after governance resumes it handles them (both passes read the balances, nothing is skipped)
+	if am.keeper.IsAutomationPaused(ctx) {
+		return nil
+	}
+
 	err := bzeutils.ApplyFuncIfNoError(ctx, func(c sdk.Context) error {
 		return am.keeper.ConvertCollectedFeesToNativeDenom(c)
 	})
@@ -178,18 +184,13 @@ func (am AppModule) EndBlock(gotCtx context.Context) error {
 		am.keeper.Logger().Error("error on txfeecollector module EndBlock when calling ConvertCollectedFeesToNativeDenom", "err", err)
 	}
 
+	// the community pool collector's pass: denom community pools, the chain's community pool, LP shares to the burner;
+	// a failed send to a denom's community pool discards the whole pass and the coins stay in the collector
 	err = bzeutils.ApplyFuncIfNoError(ctx, func(c sdk.Context) error {
-		return am.keeper.ConvertBurnerFeesToNativeDenom(c)
+		return am.keeper.ConvertCommunityPoolFees(c)
 	})
 	if err != nil {
-		am.keeper.Logger().Error("error on txfeecollector module EndBlock when calling ConvertBurnerFeesToNativeDenom", "err", err)
-	}
-
-	err = bzeutils.ApplyFuncIfNoError(ctx, func(c sdk.Context) error {
-		return am.keeper.ConvertCommunityPoolFeesToNativeDenom(c)
-	})
-	if err != nil {
-		am.keeper.Logger().Error("error on txfeecollector module EndBlock when calling ConvertCommunityPoolFeesToNativeDenom", "err", err)
+		am.keeper.Logger().Error("error on txfeecollector module EndBlock when calling ConvertCommunityPoolFees", "err", err)
 	}
 
 	return nil
@@ -224,6 +225,9 @@ type ModuleInputs struct {
 	BankKeeper    types.BankKeeper
 	TradeKeeper   types.TradeKeeper
 	DistrKeeper   types.DistrKeeper
+
+	DenomCpProvider types.DenomCommunityPoolProvider
+	GuardianKeeper  types.GuardianKeeper
 }
 
 type ModuleOutputs struct {
@@ -248,6 +252,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		in.TradeKeeper,
 		in.DistrKeeper,
+		in.DenomCpProvider,
+		in.GuardianKeeper,
 	)
 	m := NewAppModule(
 		in.Cdc,

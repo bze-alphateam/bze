@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -30,8 +31,7 @@ const (
 	srCreatorFunds = 250_000_000_000 // 250,000 BZE: three denoms, three staking rewards
 	srUserFunds    = 1_000_000_000   // 1,000 BZE for gas
 	// erin pays the create fee in a factory token: the denom, a pool whose ubze
-	// side stays above MinNativeLiquidityForModuleSwap (1e11) after the fee
-	// swap, and the 25,000 BZE the create checks as spendable first
+	// side stays above MinNativeLiquidityForModuleSwap (1e11) after the fee swap
 	srErinFunds = 250_000_000_000
 
 	srPrize    = 1_000_000
@@ -89,8 +89,15 @@ const (
 	srFeeTxGas   = 1_000_000
 	// a fee paid in another denom may buy at most this much more than the fee
 	srFeeTolerancePct = 1
+	// blocks a step waits at most for the fee token's pool price to come
+	// back near its moving average (about 66 blocks for a 30% move at the
+	// default half-life of 20 blocks to fall under 3%)
+	srCalmBlocks = 200
 
 	srTxGas = 500_000
+	// a refusal is sent at most this many times while day ticks or unlock
+	// payouts fall during it (refuse)
+	srRefuseAttempts = 3
 
 	// LegacyDec precision: the accumulator S has 18 decimals
 	decPrecision = 18
@@ -437,6 +444,10 @@ func (s *stakingRewardsSuite) createRefusals(t *testing.T) {
 		{"duration 0", durationRange, msg("1", "0", "0")},
 		{"duration above 100 years", durationRange, msg("1", strconv.Itoa(srMaxDuration+1), "0")},
 		{"lock above 10 years", fmt.Sprintf("locking time should be between 0 and %d days", srMaxLock), msg("1", "1", strconv.Itoa(srMaxLock+1))},
+		// min_stake is stored as a uint64
+		{"min stake above uint64", "min stake must not exceed 18446744073709551615", s.rewardsMsg("MsgCreateStakingReward", s.creator,
+			"prize_amount", "1", "prize_denom", s.prz, "staking_denom", s.stk,
+			"duration", "1", "min_stake", "18446744073709551616", "lock", "0")},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			s.requireRefusedMsg(t, c.reason, s.creator, c.msg)
@@ -448,8 +459,11 @@ func (s *stakingRewardsSuite) createRefusals(t *testing.T) {
 // the create fee (in ubze) is then taken in that token too. The chain takes
 // the input that buys the fee from the pool (rounded up), swaps it and sends
 // the whole swap output to the community-pool collector: at least the fee and
-// at most srFeeTolerancePct above it; erin spends no ubze. The EndBlock then swaps the tx fee on the
-// reserves the fee swap left.
+// at most srFeeTolerancePct above it; erin spends no ubze. That swap takes
+// 25,000 BZE out of a 150,000 BZE pool and moves its price by about 30%, far
+// beyond moduleMaxPriceDrift: the EndBlock keeps the tx fee in the
+// txfeecollector instead of swapping it, and swaps it once the pool's moving
+// average has caught up with the price.
 func (s *stakingRewardsSuite) createFeeInFactoryToken(t *testing.T) {
 	erin := s.erin.FormattedAddress()
 	s.mustExec(t, s.erin, "tokenfactory", "create-denom", "fee")
@@ -499,20 +513,51 @@ func (s *stakingRewardsSuite) createFeeInFactoryToken(t *testing.T) {
 
 	// the fee swap ran on the pool as the previous block left it
 	pool := s.poolAt(t, poolID, res.Height-1)
-	// the query prints the stored LegacyDec as its 18-decimal scaled integer
-	poolFee := sdkmath.LegacyNewDecFromIntWithPrec(parseInt(pool.Fee), sdkmath.LegacyPrecision)
 	// the providers keep the pool fee, so the input reserve grows by the whole input
 	base, quote := pool.reserveBase().Add(in), pool.reserveQuote().Sub(out)
-	txOut := srSwapOut(txFee.Amount, base, quote, poolFee)
 	events, err := helpers.BlockEvents(s.ctx, s.bze, res.Height, tradebinEventPrefix+"SwapEvent")
 	require.NoError(t, err)
-	swaps := helpers.EventsWith(events, map[string]string{"creator": s.txFees, "pool_id": poolID})
-	require.Len(t, swaps, 1, "the EndBlock must swap the tx fee once: %+v", events)
+	require.Empty(t, helpers.EventsWith(events, map[string]string{"creator": s.txFees, "pool_id": poolID}),
+		"the pool price moved too far from its average: the EndBlock does not swap the tx fee: %+v", events)
+	after := s.poolAt(t, poolID, res.Height)
+	require.Equal(t, base.String(), after.reserveBase().String(), "fee token reserve: the fee swap only")
+	require.Equal(t, quote.String(), after.reserveQuote().String(), "ubze reserve: the fee swap only")
+	st, err := helpers.QueryPoolPriceState(s.ctx, s.bze, poolID)
+	require.NoError(t, err)
+	drift, err := helpers.QueryPriceDriftParams(s.ctx, s.bze)
+	require.NoError(t, err)
+	require.True(t, helpers.PoolPriceDrifted(st.Price, st.Avg, drift.ModuleMaxDrift), "the pool price is still far from its average: %+v", st)
+	require.Equal(t, txFee.Amount.String(), s.balance(t, s.txFees, s.fee).String(), "the tx fee waits in the txfeecollector")
+
+	// once the average caught up, an EndBlock swaps the waiting tx fee on the
+	// reserves the previous block left
+	for i := 0; i < srCalmBlocks && !s.balance(t, s.txFees, s.fee).IsZero(); i++ {
+		require.NoError(t, testutil.WaitForBlocks(s.ctx, 1, s.bze))
+	}
+	require.True(t, s.balance(t, s.txFees, s.fee).IsZero(), "the tx fee is swapped once the pool is calm")
+	to, err := s.bze.Height(s.ctx)
+	require.NoError(t, err)
+	var swaps []helpers.Event
+	var swapHeight int64
+	for h := res.Height + 1; h <= to && len(swaps) == 0; h++ {
+		events, err := helpers.BlockEvents(s.ctx, s.bze, h, tradebinEventPrefix+"SwapEvent")
+		require.NoError(t, err)
+		swaps, swapHeight = helpers.EventsWith(events, map[string]string{"creator": s.txFees, "pool_id": poolID}), h
+	}
+	require.Len(t, swaps, 1, "one EndBlock swap of the waiting tx fee between heights %d and %d", res.Height+1, to)
+	// it ran in a block where the pool was back within moduleMaxPriceDrift:
+	// the price before the swap against the average the swap block folded in
+	calm, err := helpers.QueryPoolPriceAverageAt(s.ctx, s.bze, poolID, swapHeight)
+	require.NoError(t, err)
+	price, err := helpers.QueryPoolPriceAt(s.ctx, s.bze, poolID, swapHeight-1)
+	require.NoError(t, err)
+	require.False(t, helpers.PoolPriceDrifted(price, calm.AvgPrice, drift.ModuleMaxDrift), "pool calm before the swap block: price %s average %s", price, calm.AvgPrice)
+	prev := s.poolAt(t, poolID, swapHeight-1)
+	// the query prints the stored LegacyDec as its 18-decimal scaled integer
+	poolFee := sdkmath.LegacyNewDecFromIntWithPrec(parseInt(prev.Fee), sdkmath.LegacyPrecision)
+	txOut := srSwapOut(txFee.Amount, prev.reserveBase(), prev.reserveQuote(), poolFee)
 	require.Equal(t, txFee, eventCoin(t, swaps[0], "in"), "EndBlock swap input")
 	require.Equal(t, sdk.NewCoin(chain.Denom, txOut), eventCoin(t, swaps[0], "out"), "EndBlock swap output")
-	after := s.poolAt(t, poolID, res.Height)
-	require.Equal(t, base.Add(txFee.Amount).String(), after.reserveBase().String(), "fee token reserve")
-	require.Equal(t, quote.Sub(txOut).String(), after.reserveQuote().String(), "ubze reserve")
 	s.requireEscrow(t)
 }
 
@@ -520,8 +565,6 @@ func (s *stakingRewardsSuite) createFeeInFactoryToken(t *testing.T) {
 // fee token and D's budget, pays the tx fee and the create fee in the token
 // and creates D. Her ubze balance stays 0.
 func (s *stakingRewardsSuite) createWithoutUbze(t *testing.T) {
-	t.Skip("BZE-185: the rewards balance pre-check requires the whole create fee in ubze")
-
 	gina := interchaintest.GetAndFundTestUsers(t, s.ctx, "srzero", sdkmath.NewInt(srZeroFunds), s.bze)[0]
 	require.NoError(t, testutil.WaitForBlocks(s.ctx, 2, s.bze))
 	addr := gina.FormattedAddress()
@@ -534,6 +577,10 @@ func (s *stakingRewardsSuite) createWithoutUbze(t *testing.T) {
 	require.True(t, s.balance(t, addr, chain.Denom).IsZero(), "gina must hold no ubze")
 
 	createFee := s.params.CreateStakingRewardFee.Amount
+	// the fee is swapped from the fee token only while its pool is calm
+	// (step 12 waited for that; each fee swap moves it again)
+	require.NoError(t, helpers.WaitForPoolPriceCalm(s.ctx, s.bze, srCalmBlocks, s.fee+"_"+chain.Denom))
+	moduleUbze := s.balance(t, s.module, chain.Denom)
 	res := s.mustExecWith(t, gina, feeOpts,
 		"rewards", "create-staking-reward", strconv.Itoa(srDPrize), s.prz, s.stb, strconv.Itoa(srDDuration), "1", "0")
 	created := s.requireTxEvent(t, res, "StakingRewardCreateEvent", map[string]string{"prize_amount": strconv.Itoa(srDPrize), "staking_denom": s.stb})
@@ -541,6 +588,8 @@ func (s *stakingRewardsSuite) createWithoutUbze(t *testing.T) {
 	s.funded = s.funded.Add(budget.AmountOf(s.prz))
 
 	out := s.transferred(t, res, s.module, s.cpCollector, chain.Denom)
+	require.Equal(t, s.transferred(t, res, s.tradebin, s.module, chain.Denom).String(), out.String(), "the whole swap output must reach the txfeecollector_cp module")
+	require.Equal(t, moduleUbze.String(), s.balance(t, s.module, chain.Denom).String(), "the rewards module keeps no ubze from the fee swap")
 	require.True(t, out.GTE(createFee), "the community pool must get at least the create fee: %s for %s", out, createFee)
 	require.True(t, out.LTE(createFee.Add(createFee.MulRaw(srFeeTolerancePct).QuoRaw(100))), "the swapped create fee %s must stay within %d%% of %s", out, srFeeTolerancePct, createFee)
 	require.True(t, s.balance(t, addr, chain.Denom).IsZero(), "gina still holds no ubze")
@@ -586,7 +635,6 @@ func (s *stakingRewardsSuite) update(t *testing.T) {
 	s.requireRefused(t, "staking reward not found", s.dave, "rewards", "update-staking-reward", srUnknownID, "1")
 
 	// srMaxDuration more days pass ValidateBasic; the total does not
-	state := s.moduleState(t)
 	ubzeBefore, davePrz = s.balance(t, dave, chain.Denom), s.balance(t, dave, s.prz)
 	require.True(t, davePrz.GTE(sdkmath.NewInt(srBPrize*srMaxDuration)), "dave must afford the escrow, so only the total refuses it")
 	res, err := helpers.ExecTxWith(s.ctx, s.bze, s.dave, []helpers.TxOption{helpers.WithGas(srTxGas)},
@@ -597,7 +645,16 @@ func (s *stakingRewardsSuite) update(t *testing.T) {
 	require.Contains(t, res.RawLog, fmt.Sprintf("the new duration exceeds the maximum allowed of %d days", srMaxDuration))
 	require.Equal(t, davePrz.String(), s.balance(t, dave, s.prz).String(), "the escrow sent before the check must be rolled back")
 	require.Equal(t, ubzeBefore.Sub(s.txFee(t, res)).String(), s.balance(t, dave, chain.Denom).String(), "the failed tx costs its fee")
-	require.Equal(t, state, s.moduleState(t), "the failed extension must change neither the escrow nor the reward")
+	// the module state the tx saw against the state after its block: the
+	// hour epochs of that block may pay pending unlocks of earlier exits out
+	// of the module, nothing else may move
+	stateBefore, after := s.moduleStateAt(t, res.Height-1), s.moduleStateAt(t, res.Height)
+	paid := s.unlocksPaidIn(t, res.Height)
+	wantState := stateBefore
+	wantState.Stk = parseInt(stateBefore.Stk).Sub(paid.AmountOf(s.stk)).String()
+	wantState.Prz = parseInt(stateBefore.Prz).Sub(paid.AmountOf(s.prz)).String()
+	wantState.Stb = parseInt(stateBefore.Stb).Sub(paid.AmountOf(s.stb)).String()
+	require.Equal(t, wantState, after, "the failed extension must change neither the escrow nor the reward (unlocks paid in its block: %s)", paid)
 	s.requireEscrow(t)
 }
 
@@ -926,9 +983,15 @@ func (s *stakingRewardsSuite) unlockEntries(t *testing.T, rewardID string, user 
 
 func (s *stakingRewardsSuite) pendingUnlocks(t *testing.T) []pendingUnlockInfo {
 	t.Helper()
+	return s.pendingUnlocksAt(t, 0)
+}
+
+// pendingUnlocksAt reads the pending unlocks at a height (0 for the latest).
+func (s *stakingRewardsSuite) pendingUnlocksAt(t *testing.T, height int64) []pendingUnlockInfo {
+	t.Helper()
 	res, err := helpers.Query[struct {
 		List []pendingUnlockInfo `json:"list"`
-	}](s.ctx, s.bze, "rewards", "all-pending-unlock-participants")
+	}](s.ctx, s.bze, append([]string{"rewards", "all-pending-unlock-participants"}, srHeightFlag(height)...)...)
 	require.NoError(t, err)
 	return res.List
 }
@@ -1109,22 +1172,28 @@ func (s *stakingRewardsSuite) requireRefusedMsg(t *testing.T, reason string, use
 }
 
 // refuse sends a tx that must be refused with reason and asserts the rewards
-// state is unchanged. Rewards with stakers change on every day tick, so a
-// refusal that straddles one is sent once more: a refused tx has no effect
-// to repeat.
+// state is unchanged. Rewards with stakers change on every day tick and the
+// hour epochs pay pending unlocks out of the module, so a refusal that
+// straddles either is sent again: a refused tx has no effect to repeat.
 func (s *stakingRewardsSuite) refuse(t *testing.T, reason string, what any, send func() (helpers.TxResult, error)) helpers.TxResult {
 	t.Helper()
 	for attempt := 1; ; attempt++ {
-		day := s.currentDay(t)
+		day, unlocks := s.currentDay(t), s.pendingUnlocks(t)
 		before := s.moduleState(t)
 		res, err := send()
 		msg, err := helpers.RejectionReason(res, err)
 		require.NoError(t, err, "tx %v", what)
 		require.Contains(t, msg, reason)
 		after := s.moduleState(t)
-		if attempt == 1 && s.currentDay(t) != day {
-			t.Logf("a day tick fell during the refusal of %v; sending it again", what)
-			continue
+		if attempt < srRefuseAttempts {
+			if s.currentDay(t) != day {
+				t.Logf("a day tick fell during the refusal of %v; sending it again", what)
+				continue
+			}
+			if !slices.Equal(unlocks, s.pendingUnlocks(t)) {
+				t.Logf("pending unlocks were paid during the refusal of %v; sending it again", what)
+				continue
+			}
 		}
 		require.Equal(t, before, after, "a refused tx must not change the rewards state")
 		return res
@@ -1134,6 +1203,50 @@ func (s *stakingRewardsSuite) refuse(t *testing.T, reason string, what any, send
 type srModuleState struct {
 	Stk, Prz, Stb string
 	Rewards       []srInfo
+}
+
+// moduleStateAt is moduleState at the end of height.
+func (s *stakingRewardsSuite) moduleStateAt(t *testing.T, height int64) srModuleState {
+	t.Helper()
+	balance := func(denom string) string {
+		res, err := helpers.Query[struct {
+			Balance struct {
+				Amount string `json:"amount"`
+			} `json:"balance"`
+		}](s.ctx, s.bze, append([]string{"bank", "balance", s.module, denom}, srHeightFlag(height)...)...)
+		require.NoError(t, err)
+		if res.Balance.Amount == "" {
+			return "0"
+		}
+		return parseInt(res.Balance.Amount).String()
+	}
+	rewards, err := helpers.Query[struct {
+		List []srInfo `json:"list"`
+	}](s.ctx, s.bze, append([]string{"rewards", "all-staking-rewards"}, srHeightFlag(height)...)...)
+	require.NoError(t, err)
+	return srModuleState{Stk: balance(s.stk), Prz: balance(s.prz), Stb: balance(s.stb), Rewards: rewards.List}
+}
+
+// unlocksPaidIn returns the pending unlocks paid out of the module in the
+// block at height: the entries queued at height-1 that are gone at height.
+// No unlock may be queued in that block.
+func (s *stakingRewardsSuite) unlocksPaidIn(t *testing.T, height int64) sdk.Coins {
+	t.Helper()
+	before := map[string]pendingUnlockInfo{}
+	for _, e := range s.pendingUnlocksAt(t, height-1) {
+		before[e.Index] = e
+	}
+	for _, e := range s.pendingUnlocksAt(t, height) {
+		was, ok := before[e.Index]
+		require.True(t, ok, "no unlock may be queued at height %d: %+v", height, e)
+		require.Equal(t, was, e, "a pending unlock changed at height %d", height)
+		delete(before, e.Index)
+	}
+	paid := sdk.NewCoins()
+	for _, e := range before {
+		paid = paid.Add(sdk.NewCoin(e.Denom, parseInt(e.Amount)))
+	}
+	return paid
 }
 
 func (s *stakingRewardsSuite) moduleState(t *testing.T) srModuleState {

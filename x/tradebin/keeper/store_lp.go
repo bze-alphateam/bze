@@ -12,6 +12,7 @@ func (k Keeper) getLpStore(ctx sdk.Context) prefix.Store {
 }
 
 func (k Keeper) SetLiquidityPool(ctx sdk.Context, pool types.LiquidityPool) {
+	k.observePoolPrice(ctx, pool)
 	store := k.getLpStore(ctx)
 	b := k.cdc.MustMarshal(&pool)
 	store.Set(types.PoolKey(pool.Id), b)

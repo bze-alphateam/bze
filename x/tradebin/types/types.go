@@ -23,11 +23,3 @@ type OrderCoinsArguments struct {
 	UserAddress  string
 	UserReceives bool
 }
-
-func OrderTypeToMessageTypeFill(orderType string) string {
-	if orderType == OrderTypeBuy {
-		return MessageTypeFillBuy
-	}
-
-	return MessageTypeFillSell
-}

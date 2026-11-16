@@ -30,6 +30,7 @@ type BankKeeper interface {
 
 	SendCoins(ctx context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 	HasBalance(ctx context.Context, addr sdk.AccAddress, amt sdk.Coin) bool
+	BlockedAddr(addr sdk.AccAddress) bool
 }
 
 // ParamSubspace defines the expected Subspace interface for parameters.
@@ -39,5 +40,5 @@ type ParamSubspace interface {
 }
 
 type TradingKeeper interface {
-	CaptureAndSwapUserFee(ctx sdk.Context, payer sdk.AccAddress, fee sdk.Coins, toModule string) (coins sdk.Coins, err error)
+	SafeCaptureAndSwapUserFee(ctx sdk.Context, payer sdk.AccAddress, fee sdk.Coins, toModule string) (coins sdk.Coins, err error)
 }

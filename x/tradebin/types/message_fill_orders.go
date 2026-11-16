@@ -59,10 +59,14 @@ func (msg *MsgFillOrders) ValidateBasic() error {
 			return errorsmod.Wrapf(ErrInvalidOrderPrice, "price should be higher than %s", minPrice.String())
 		}
 
-		if _, ok := pricesMap[fo.Price]; ok {
+		if _, ok := pricesMap[decPrice.String()]; ok {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "duplicate price %s found in items", fo.Price)
 		}
-		pricesMap[fo.Price] = struct{}{}
+		pricesMap[decPrice.String()] = struct{}{}
+
+		if _, err = ParseOrderAmount(fo.Amount); err != nil {
+			return err
+		}
 	}
 
 	return nil

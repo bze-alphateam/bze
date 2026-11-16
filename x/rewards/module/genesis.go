@@ -117,7 +117,9 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.StakingRewardParticipantList = k.GetAllStakingRewardParticipant(ctx)
 	genesis.PendingUnlockParticipantList = k.GetAllPendingUnlockParticipant(ctx)
 	genesis.TradingRewardLeaderboardList = k.GetAllTradingRewardLeaderboard(ctx)
-	genesis.TradingRewardCandidateList = k.GetAllTradingRewardCandidate(ctx)
+	// Candidates of expired rewards still waiting for removal are left out, so the purge queue needs
+	// no genesis field: the imported state has nothing to finish.
+	genesis.TradingRewardCandidateList = k.GetTradingRewardCandidatesForExport(ctx)
 
 	genesis.MarketIdTradingRewardIdList = k.GetAllMarketIdRewardId(ctx)
 	genesis.PendingTradingRewardExpirationList = k.GetAllPendingTradingRewardExpiration(ctx)

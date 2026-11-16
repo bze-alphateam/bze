@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/bze-alphateam/bze/bzeutils"
+
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -38,6 +40,9 @@ type (
 		// after keepers are built, via SetHooks (same approach as tradebin's
 		// SetOnOrderFillHooks).
 		hooks types.StakingRewardHooks
+		// denomRewardHooks are notified on Denom Reward participation changes,
+		// registered the same way via SetDenomRewardHooks.
+		denomRewardHooks types.DenomRewardHooks
 
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
@@ -86,6 +91,40 @@ func (k *Keeper) SetHooks(sh types.StakingRewardHooks) {
 	k.hooks = sh
 }
 
+// SetDenomRewardHooks sets the Denom Reward participation hooks. It panics if
+// called more than once, like SetHooks.
+func (k *Keeper) SetDenomRewardHooks(dh types.DenomRewardHooks) {
+	if k.denomRewardHooks != nil {
+		panic("cannot set denom reward hooks twice")
+	}
+
+	k.denomRewardHooks = dh
+}
+
+func (k Keeper) afterDenomRewardJoin(ctx sdk.Context, stakingDenom, address string, amount math.Int) error {
+	if k.denomRewardHooks == nil {
+		return nil
+	}
+
+	return k.denomRewardHooks.AfterDenomRewardJoin(ctx, stakingDenom, address, amount)
+}
+
+func (k Keeper) afterDenomRewardIncrease(ctx sdk.Context, stakingDenom, address string, amountAdded, newTotal math.Int) error {
+	if k.denomRewardHooks == nil {
+		return nil
+	}
+
+	return k.denomRewardHooks.AfterDenomRewardIncrease(ctx, stakingDenom, address, amountAdded, newTotal)
+}
+
+func (k Keeper) afterDenomRewardExit(ctx sdk.Context, stakingDenom, address string, unstakedAmount math.Int) error {
+	if k.denomRewardHooks == nil {
+		return nil
+	}
+
+	return k.denomRewardHooks.AfterDenomRewardExit(ctx, stakingDenom, address, unstakedAmount)
+}
+
 func (k Keeper) afterStakingRewardJoin(ctx sdk.Context, rewardId, address string, amount math.Int, stakingDenom string) error {
 	if k.hooks == nil {
 		return nil
@@ -128,9 +167,10 @@ func (k Keeper) smallZeroFillId(id uint64) string {
 }
 
 func (k Keeper) getAmountToCapture(denom, amount string, multiplier int64) (sdk.Coins, error) {
-	amtInt, ok := math.NewIntFromString(amount)
-	if !ok {
-		return nil, fmt.Errorf("could not convert povided amount to int: %s", amount)
+	// amounts must be canonical base-10 integers
+	amtInt, err := bzeutils.ParseCanonicalAmount(amount)
+	if err != nil {
+		return nil, fmt.Errorf("could not convert provided amount to int: %w", err)
 	}
 
 	toCapture := sdk.NewCoin(denom, amtInt)

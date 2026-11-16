@@ -5,10 +5,7 @@ import (
 	"net/http"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/bze-alphateam/bze/app/upgrades"
-	v810 "github.com/bze-alphateam/bze/app/upgrades/v810"
-	v811 "github.com/bze-alphateam/bze/app/upgrades/v811"
-	v820 "github.com/bze-alphateam/bze/app/upgrades/v820"
+	v830 "github.com/bze-alphateam/bze/app/upgrades/v830"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -26,9 +23,7 @@ import (
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	_ "cosmossdk.io/x/feegrant/module" // import for side-effects
-	nftkeeper "cosmossdk.io/x/nft/keeper"
-	_ "cosmossdk.io/x/nft/module" // import for side-effects
-	_ "cosmossdk.io/x/upgrade"    // import for side-effects
+	_ "cosmossdk.io/x/upgrade"         // import for side-effects
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -62,9 +57,7 @@ import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
-	_ "github.com/cosmos/cosmos-sdk/x/group/module" // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/mint"         // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/mint" // import for side-effects
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/params" // import for side-effects
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
@@ -74,26 +67,29 @@ import (
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/staking" // import for side-effects
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	_ "github.com/cosmos/ibc-go/modules/capability" // import for side-effects
-	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
-	_ "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts" // import for side-effects
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
-	icahostkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/keeper"
-	_ "github.com/cosmos/ibc-go/v8/modules/apps/29-fee" // import for side-effects
-	ibcfeekeeper "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/keeper"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	ratelimitkeeper "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/keeper"
+	_ "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts" // import for side-effects
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/keeper"
+	icahostkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/keeper"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v10/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 
 	burnermodulekeeper "github.com/bze-alphateam/bze/x/burner/keeper"
 	cointrunkmodulekeeper "github.com/bze-alphateam/bze/x/cointrunk/keeper"
+	daomodulekeeper "github.com/bze-alphateam/bze/x/dao/keeper"
 	epochmodulekeeper "github.com/bze-alphateam/bze/x/epochs/keeper"
+	guardianmodulekeeper "github.com/bze-alphateam/bze/x/guardian/keeper"
 	rewardsmodulekeeper "github.com/bze-alphateam/bze/x/rewards/keeper"
+	rewardsmoduletypes "github.com/bze-alphateam/bze/x/rewards/types"
 	tokenfactorymodulekeeper "github.com/bze-alphateam/bze/x/tokenfactory/keeper"
 	tradebinmodulekeeper "github.com/bze-alphateam/bze/x/tradebin/keeper"
 	tradebintypes "github.com/bze-alphateam/bze/x/tradebin/types"
 
 	_ "github.com/bze-alphateam/bze/client/docs/statik"
 	txfeecollectormodulekeeper "github.com/bze-alphateam/bze/x/txfeecollector/keeper"
+	txfeecollectormoduletypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 )
 
@@ -137,24 +133,14 @@ type App struct {
 	AuthzKeeper          authzkeeper.Keeper
 	EvidenceKeeper       evidencekeeper.Keeper
 	FeeGrantKeeper       feegrantkeeper.Keeper
-	GroupKeeper          groupkeeper.Keeper
-	NFTKeeper            nftkeeper.Keeper
 	CircuitBreakerKeeper circuitkeeper.Keeper
 
 	// IBC
 	IBCKeeper           *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
-	CapabilityKeeper    *capabilitykeeper.Keeper
-	IBCFeeKeeper        ibcfeekeeper.Keeper
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICAHostKeeper       icahostkeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
-
-	// Scoped IBC
-	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
-	ScopedIBCTransferKeeper   capabilitykeeper.ScopedKeeper
-	ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
-	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
-	ScopedKeepers             map[string]capabilitykeeper.ScopedKeeper
+	RatelimitKeeper     ratelimitkeeper.Keeper
 
 	BurnerKeeper         burnermodulekeeper.Keeper
 	EpochKeeper          *epochmodulekeeper.Keeper
@@ -163,6 +149,10 @@ type App struct {
 	RewardsKeeper        *rewardsmodulekeeper.Keeper
 	TradebinKeeper       *tradebinmodulekeeper.Keeper
 	TxfeecollectorKeeper *txfeecollectormodulekeeper.Keeper
+	// txfeecollectorBankKeeper is the bank keeper the txfeecollector module and its ante decorators use
+	txfeecollectorBankKeeper txfeecollectormoduletypes.BankKeeper
+	DaoKeeper                *daomodulekeeper.Keeper
+	GuardianKeeper           *guardianmodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
@@ -197,6 +187,8 @@ func AppConfig() depinject.Config {
 		appConfig,
 		// Alternatively, load the app config from a YAML file.
 		// appconfig.LoadYAML(AppConfigYAML),
+		// the txfeecollector and burner modules' bank keepers: the SDK one plus a bounded balances page read
+		depinject.Provide(ProvideTxfeecollectorBankKeeper, ProvideBurnerBankKeeper),
 		depinject.Supply(
 			// supply custom module basics
 			map[string]module.AppModuleBasic{
@@ -218,7 +210,7 @@ func New(
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) (*App, error) {
 	var (
-		app        = &App{ScopedKeepers: make(map[string]capabilitykeeper.ScopedKeeper)}
+		app        = &App{}
 		appBuilder *runtime.AppBuilder
 
 		// merge the AppConfig and other configuration in one config
@@ -232,7 +224,6 @@ func New(
 				// Passing the getter, the app IBC Keeper will always be accessible.
 				// This needs to be removed after IBC supports App Wiring.
 				app.GetIBCKeeper,
-				app.GetCapabilityScopedKeeper,
 
 				// here alternative options can be supplied to the DI container.
 				// those options can be used f.e to override the default behavior of some modules.
@@ -262,8 +253,6 @@ func New(
 		&app.AuthzKeeper,
 		&app.EvidenceKeeper,
 		&app.FeeGrantKeeper,
-		&app.NFTKeeper,
-		&app.GroupKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.BurnerKeeper,
 		&app.EpochKeeper,
@@ -272,6 +261,9 @@ func New(
 		&app.RewardsKeeper,
 		&app.TradebinKeeper,
 		&app.TxfeecollectorKeeper,
+		&app.txfeecollectorBankKeeper,
+		&app.DaoKeeper,
+		&app.GuardianKeeper,
 		// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	); err != nil {
 		panic(err)
@@ -283,6 +275,9 @@ func New(
 
 	// build app
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
+
+	// x/guardian schedules its chain halt plan through the upgrade keeper.
+	app.GuardianKeeper.SetUpgradeKeeper(app.UpgradeKeeper)
 
 	// register legacy modules
 	if err := app.registerIBCModules(appOpts); err != nil {
@@ -302,6 +297,10 @@ func New(
 	app.sm.RegisterStoreDecoders()
 	app.setEpochsHooks()
 	app.setTradebinHooks()
+	// x/guardian halts denoms on the DEX through the tradebin keeper
+	app.GuardianKeeper.SetTradebinKeeper(app.TradebinKeeper)
+	app.setRewardsHooks()
+	app.wireGuardianCircuit()
 	app.setupUpgradeHandlers()
 
 	anteOptions := ante.HandlerOptions{
@@ -314,7 +313,7 @@ func New(
 
 	customAnte := AnteHandlerOptions{
 		TradeKeeper:       app.TradebinKeeper,
-		BankKeeper:        app.BankKeeper,
+		BankKeeper:        app.txfeecollectorBankKeeper,
 		TxCollectorKeeper: app.TxfeecollectorKeeper,
 	}
 
@@ -342,32 +341,41 @@ func New(
 	return app, nil
 }
 
+// V830AccountMigrationKeepers returns the keepers the v8.3.0 account migration step runs with.
+func (app *App) V830AccountMigrationKeepers() v830.AccountMigrationKeepers {
+	return v830.AccountMigrationKeepers{
+		Account:      app.AccountKeeper,
+		Bank:         app.BankKeeper,
+		Staking:      app.StakingKeeper,
+		Distribution: app.DistrKeeper,
+		Authz:        app.AuthzKeeper,
+	}
+}
+
+// setupUpgradeHandlers registers the handlers of the release this code builds.
+// Older handlers are removed once their release has shipped: each one runs once
+// at its height, and nodes syncing from genesis run the binaries of those releases.
 func (app *App) setupUpgradeHandlers() {
+	// v8.3.0 moves the chain to cosmos-sdk v0.53 and ibc-go v10. No SDK module bumps
+	// its ConsensusVersion between v0.50 and v0.53; RunMigrations runs the ibc-go v10
+	// module migrations. The capability and feeibc stores are deleted by the store
+	// loader below
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v810.UpgradeName,
-		v810.CreateUpgradeHandler(
+		v830.UpgradeName,
+		v830.CreateUpgradeHandler(
 			app.Configurator(),
 			app.ModuleManager,
-		),
-	)
-
-	// v8.1.1 only changes LP denom derivation for new pools: no migrations, no store changes
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v811.UpgradeName,
-		upgrades.EmptyUpgradeHandler(),
-	)
-
-	// v8.2.0 runs module migrations (rewards v4->v5: Denom Rewards param defaults,
-	// txfeecollector v2->v3: empty BlockedIbcInbound default) and then the Noble USDC
-	// wind-down; no store keys are added or removed, so no store loader entry is needed
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v820.UpgradeName,
-		v820.CreateUpgradeHandler(
-			app.Configurator(),
-			app.ModuleManager,
-			app.BankKeeper,
 			app.AccountKeeper,
-			app.TxfeecollectorKeeper,
+			app.GuardianKeeper,
+			app.RatelimitKeeper,
+			app.BankKeeper,
+			app.TradebinKeeper,
+			app.BankKeeper,
+			app.RewardsKeeper,
+			runtime.NewKVStoreService(app.GetKey(ibctransfertypes.StoreKey)),
+			app.TransferKeeper,
+			runtime.NewKVStoreService(app.GetKey(ibcexported.StoreKey)),
+			app.V830AccountMigrationKeepers(),
 		),
 	)
 
@@ -376,8 +384,8 @@ func (app *App) setupUpgradeHandlers() {
 		panic(err)
 	}
 
-	if upgradeInfo.Name == v810.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := v810.GetStoreUpgrades()
+	if upgradeInfo.Name == v830.UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := v830.GetStoreUpgrades()
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
 	}
 }
@@ -450,16 +458,6 @@ func (app *App) GetIBCKeeper() *ibckeeper.Keeper {
 	return app.IBCKeeper
 }
 
-// GetCapabilityScopedKeeper returns the capability scoped keeper.
-func (app *App) GetCapabilityScopedKeeper(moduleName string) capabilitykeeper.ScopedKeeper {
-	sk, ok := app.ScopedKeepers[moduleName]
-	if !ok {
-		sk = app.CapabilityKeeper.ScopeToModule(moduleName)
-		app.ScopedKeepers[moduleName] = sk
-	}
-	return sk
-}
-
 // SimulationManager implements the SimulationApp interface.
 func (app *App) SimulationManager() *module.SimulationManager {
 	return app.sm
@@ -508,6 +506,26 @@ func (app *App) setTradebinHooks() {
 		[]tradebintypes.OnMarketOrderFill{
 			app.RewardsKeeper.GetOnOrderFillHook(),
 		},
+	)
+
+	// protocol fees paid in a factory token pay its transfer fee on top. Set here because the tokenfactory keeper
+	// depends on the tradebin keeper.
+	app.TradebinKeeper.SetDenomFeeRatesProvider(app.TokenfactoryKeeper)
+}
+
+// setRewardsHooks registers the modules notified on staking reward and Denom
+// Reward changes. x/dao vetoes the removal of rewards its electorates use and
+// records when stake joins a source its DAOs or proposals vote with.
+func (app *App) setRewardsHooks() {
+	app.RewardsKeeper.SetHooks(
+		rewardsmoduletypes.NewMultiStakingRewardHooks(
+			app.DaoKeeper.StakingRewardHooks(),
+		),
+	)
+	app.RewardsKeeper.SetDenomRewardHooks(
+		rewardsmoduletypes.NewMultiDenomRewardHooks(
+			app.DaoKeeper.DenomRewardHooks(),
+		),
 	)
 }
 

@@ -43,21 +43,10 @@ func (k msgServer) ActivateTradingReward(goCtx context.Context, msg *types.MsgAc
 	k.RemovePendingTradingRewardExpiration(ctx, r.ExpireAt, r.RewardId)
 	k.RemovePendingTradingReward(ctx, r.RewardId)
 
-	//move the trading reward to active
-	var err error
-	r.ExpireAt, err = k.getNewTradingRewardExpireAt(ctx, r.Duration)
-	if err != nil {
-		return nil, err
-	}
-
+	//move the trading reward to active. The countdown does not start here: the first trade on the
+	//market starts it (see GetOnOrderFillHook), so no active expiration is written until then
+	r.ExpireAt = 0
 	k.SetActiveTradingReward(ctx, r)
-
-	//save expiration
-	exp := types.TradingRewardExpiration{
-		RewardId: r.RewardId,
-		ExpireAt: r.ExpireAt,
-	}
-	k.SetActiveTradingRewardExpiration(ctx, exp)
 
 	//save the market id, so we can find the reward by market id
 	k.SetMarketIdRewardId(ctx, types.MarketIdTradingRewardId{
@@ -65,9 +54,9 @@ func (k msgServer) ActivateTradingReward(goCtx context.Context, msg *types.MsgAc
 		MarketId: r.MarketId,
 	})
 
-	err = ctx.EventManager().EmitTypedEvent(
+	err := ctx.EventManager().EmitTypedEvent(
 		&types.TradingRewardActivationEvent{
-			RewardId: exp.RewardId,
+			RewardId: r.RewardId,
 		},
 	)
 

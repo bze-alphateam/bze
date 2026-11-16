@@ -60,6 +60,11 @@ const (
 
 	ammOrderAmount = 1_000
 
+	// blocks a step waits at most for a pool price to come back within the
+	// drift params of its moving average (about 35 blocks for a 10% move at
+	// the default half-life of 20 blocks)
+	ammCalmBlocks = 120
+
 	tradebinEventPrefix = "bze.tradebin."
 	ammCodespace        = "tradebin"
 	ammMaxRoutes        = 5 // tradebin MaxRoutes
@@ -93,11 +98,12 @@ const (
 // liquidity, single and multi-hop swaps with exact outputs, a tx fee paid in a
 // factory token and swapped to ubze in the txfeecollector EndBlock, the taker
 // fee charged in that token and burned, --gas auto with --gas-prices in ubze
-// and in a factory token, the message_id that links the order events of a
-// MsgFillOrders to the EndBlock engine events, then the swap and deposit
+// and in a factory token, the order_id that links the order events of a
+// MsgFillOrders entry in its tx, then the swap and deposit
 // directions the first steps leave out, slippage guards, a pool fee share to
 // the community pool, LP denom metadata and the create-pool, swap and
-// create-market refusals. Subtests run in order and share state; the step
+// create-market refusals, and a factory token's pool fee share forwarded to
+// the community pool its admin set. Subtests run in order and share state; the step
 // numbers match the scenario of the suite's design.
 func TestAmm(t *testing.T) {
 	if testing.Short() {
@@ -115,7 +121,7 @@ func TestAmm(t *testing.T) {
 	t.Run("6 tx fee in a non-native denom", s.txFeeInUsd)
 	t.Run("7 taker fee in the fee denom", s.takerFeeInUsd)
 	t.Run("8 gas auto with gas prices", s.gasAuto)
-	t.Run("9 fill orders and message ids", s.fillOrders)
+	t.Run("9 fill orders and order ids", s.fillOrders)
 	t.Run("10 swap base to quote", s.swapBaseToQuote)
 	t.Run("11 add liquidity with excess base", s.addExcessBase)
 	t.Run("12 pool with base and quote reversed", s.reversedPool)
@@ -128,6 +134,7 @@ func TestAmm(t *testing.T) {
 	t.Run("19 a dust pool cannot be traded", s.dustPool)
 	t.Run("20 slippage refusal above uint64", s.slippageAboveUint64)
 	t.Run("21 swap above the balance", s.swapAboveBalance)
+	t.Run("22 treasury share to the token's community pool", s.tokenCommunityPool)
 }
 
 type ammSuite struct {
@@ -144,7 +151,7 @@ type ammSuite struct {
 	rev, revPool, cpPool string
 
 	// module account addresses
-	tradebin, burner, blackHole, feeCollector, txFees, burnerFees, cpFees, distribution string
+	tradebin, burner, blackHole, feeCollector, txFees, cpFees, distribution string
 }
 
 func setupAmm(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain) *ammSuite {
@@ -181,14 +188,13 @@ func setupAmm(t *testing.T, ctx context.Context, bze *cosmos.CosmosChain) *ammSu
 	s.cpPool = s.abc + "_" + chain.Denom
 
 	for name, addr := range map[string]*string{
-		"tradebin":              &s.tradebin,
-		"burner":                &s.burner,
-		"burner_black_hole":     &s.blackHole,
-		"fee_collector":         &s.feeCollector,
-		"txfeecollector":        &s.txFees,
-		"txfeecollector_burner": &s.burnerFees,
-		"txfeecollector_cp":     &s.cpFees,
-		"distribution":          &s.distribution,
+		"tradebin":          &s.tradebin,
+		"burner":            &s.burner,
+		"burner_black_hole": &s.blackHole,
+		"fee_collector":     &s.feeCollector,
+		"txfeecollector":    &s.txFees,
+		"txfeecollector_cp": &s.cpFees,
+		"distribution":      &s.distribution,
 	} {
 		var err error
 		*addr, err = helpers.ModuleAddress(ctx, bze, name)
@@ -297,7 +303,7 @@ func (s *ammSuite) singleSwap(t *testing.T) {
 	want := before.Add(sdk.NewCoin(s.usd, q.out)).Sub(sdk.NewCoin(chain.Denom, in.Add(s.params.MarketTakerFee.Amount).Add(s.txFee(t, res))))
 	require.Equal(t, want, s.balances(t, s.trader, chain.Denom, s.usd), "trader balances")
 
-	require.Equal(t, q.burned, s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "swap fee to the burner")
+	require.Equal(t, s.burnedWithTakerFee(q.burned), s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "swap fee and taker fee to the burner")
 	s.requireTakerFeeBurned(t, res)
 }
 
@@ -336,7 +342,7 @@ func (s *ammSuite) multiHopSwap(t *testing.T) {
 	want := before.Add(sdk.NewCoin(s.abc, hop2.out)).Sub(sdk.NewCoin(chain.Denom, in.Add(s.params.MarketTakerFee.Amount).Add(s.txFee(t, res))))
 	require.Equal(t, want, s.balances(t, s.trader, chain.Denom, s.usd, s.abc), "trader balances")
 
-	require.Equal(t, hop1.burned, s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "hop 1 fee to the burner")
+	require.Equal(t, s.burnedWithTakerFee(hop1.burned), s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "hop 1 fee and taker fee to the burner")
 	require.Equal(t, hop2.burned, s.transferred(t, res.Events, s.tradebin, s.burner, s.usd), "hop 2 fee to the burner")
 	s.requireTakerFeeBurned(t, res)
 }
@@ -372,6 +378,9 @@ func (s *ammSuite) removeLiquidity(t *testing.T) {
 // ubze to the validators' fee collector. A denom without a ubze pool can not
 // pay fees.
 func (s *ammSuite) txFeeInUsd(t *testing.T) {
+	// the swaps of steps 3 and 4 moved the usd/ubze price; the EndBlock swap
+	// only runs while the price is within moduleMaxPriceDrift of its average
+	require.NoError(t, helpers.WaitForPoolPriceCalm(s.ctx, s.bze, ammCalmBlocks, s.usdPool))
 	require.True(t, s.balance(t, s.txFees, s.usd).IsZero(), "txfeecollector holds usd before the test")
 	pool := s.pool(t, s.usdPool)
 	fee := sdkmath.NewInt(ammUsdFee)
@@ -407,14 +416,15 @@ func (s *ammSuite) txFeeInUsd(t *testing.T) {
 
 // 7. A taker paying its tx fee in usd also pays the 0.1 BZE taker fee in
 // usd: the chain takes the usd that buys exactly the taker fee from the
-// usd/ubze pool, swaps it and sends the ubze to the burner fee collector,
-// which hands it to the burner in EndBlock. The tx fee is swapped after it.
+// usd/ubze pool, swaps it and sends the ubze straight to the burner. The tx
+// fee is swapped in EndBlock.
 func (s *ammSuite) takerFeeInUsd(t *testing.T) {
 	s.mustExecWith(t, s.lp, []helpers.TxOption{helpers.WithGas(ammTxGas)}, "tradebin", "create-market", s.abc, s.usd)
 	const price = 5
 	s.mustExec(t, s.maker, "tradebin", "create-order", "sell", sdkmath.NewInt(ammOrderAmount).String(), sdkmath.NewInt(price).String(), s.market)
 	makerUsd := s.balance(t, s.maker.FormattedAddress(), s.usd)
 
+	require.NoError(t, helpers.WaitForPoolPriceCalm(s.ctx, s.bze, ammCalmBlocks, s.usdPool))
 	pool := s.pool(t, s.usdPool)
 	takerFee := s.params.MarketTakerFee.Amount
 	req := inputFor(takerFee, pool.reserveBase(), pool.reserveQuote())
@@ -432,14 +442,12 @@ func (s *ammSuite) takerFeeInUsd(t *testing.T) {
 	require.Equal(t, want, s.balances(t, s.taker, chain.Denom, s.usd, s.abc), "taker balances (no ubze spent)")
 	require.Equal(t, makerUsd.Add(cost), s.balance(t, s.maker.FormattedAddress(), s.usd), "maker paid in usd")
 
-	require.Equal(t, feeSwap.out, s.transferred(t, res.Events, s.tradebin, s.burnerFees, chain.Denom), "swapped taker fee to the burner fee collector")
+	require.Equal(t, feeSwap.out, s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "swapped taker fee to the burner")
 	require.Equal(t, feeSwap.burned, s.transferred(t, res.Events, s.tradebin, s.burner, s.usd), "fee-swap pool fee to the burner")
 
 	block := s.blockEvents(t, res.Height)
-	require.Equal(t, feeSwap.out, s.transferred(t, block, s.burnerFees, s.burner, chain.Denom), "burner fee collector to the burner")
 	s.requireSwap(t, block, s.txFees, s.usdPool, sdk.NewCoin(s.usd, txFee), sdk.NewCoin(chain.Denom, txSwap.out))
 	require.Equal(t, txSwap.out, s.transferred(t, block, s.txFees, s.feeCollector, chain.Denom), "swapped tx fee to the fee collector")
-	require.True(t, s.balance(t, s.burnerFees, chain.Denom).IsZero(), "burner fee collector keeps ubze after EndBlock")
 
 	after := s.pool(t, s.usdPool)
 	require.Equal(t, pool.reserveBase().Add(feeSwap.inReserveAdd).Add(txSwap.inReserveAdd), after.reserveBase(), "usd reserve")
@@ -475,10 +483,9 @@ func (s *ammSuite) gasAuto(t *testing.T) {
 	}
 }
 
-// 9. One MsgFillOrders filling three sell orders queues three messages, each
-// with its own message_id; the EndBlock executes them and every
-// OrderExecutedEvent carries the id of the message it executed. A cancel
-// carries its message id from the tx to the EndBlock cancel too.
+// 9. One MsgFillOrders filling three sell orders executes three buy orders in
+// its tx, each with its own order id: every OrderExecutedEvent carries the id
+// of the taker order it executed. A cancel executes in its tx too.
 func (s *ammSuite) fillOrders(t *testing.T) {
 	prices := []int64{2, 3, 4}
 	makerBefore := s.balances(t, s.maker, chain.Denom, s.usd, s.abc)
@@ -505,27 +512,20 @@ func (s *ammSuite) fillOrders(t *testing.T) {
 	require.NoError(t, err)
 	require.Zero(t, res.Code, res.RawLog)
 
-	// filling sell orders queues buy messages, one per order, with distinct ids
-	created := helpers.TxEvents(res, tradebinEventPrefix+"OrderCreateMessageEvent")
-	require.Len(t, created, len(prices))
-	ids := map[string]string{} // price → message id
-	for _, e := range created {
-		assert.Equal(t, "buy", e.Attributes["order_type"])
-		assert.Equal(t, s.market, e.Attributes["market_id"])
-		require.Len(t, e.Attributes["message_id"], 24, "message_id is 24 zero-filled digits")
-		ids[e.Attributes["price"]] = e.Attributes["message_id"]
-	}
-	require.Len(t, ids, len(prices), "one message per price")
-	require.Len(t, uniq(ids), len(prices), "message ids are distinct")
-
-	executed := helpers.EventsWith(s.blockEvents(t, res.Height), map[string]string{"market_id": s.market, "taker": s.taker.FormattedAddress()})
-	executed = filterType(executed, tradebinEventPrefix+"OrderExecutedEvent")
+	// filling sell orders executes buy orders, one per entry, with distinct ids
+	executed := helpers.EventsWith(helpers.TxEvents(res, tradebinEventPrefix+"OrderExecutedEvent"), map[string]string{"market_id": s.market, "taker": s.taker.FormattedAddress()})
 	require.Len(t, executed, len(prices), "one execution per filled order")
+	ids := map[string]string{} // price → taker order id
 	for _, e := range executed {
-		assert.Equal(t, ids[e.Attributes["price"]], e.Attributes["message_id"], "execution at %s carries its message id", e.Attributes["price"])
+		require.Len(t, e.Attributes["order_id"], 24, "order_id is 24 zero-filled digits")
+		ids[e.Attributes["price"]] = e.Attributes["order_id"]
+		assert.Equal(t, "sell", e.Attributes["order_type"], "the maker side")
 		assert.Equal(t, sdkmath.NewInt(ammOrderAmount).String(), e.Attributes["amount"])
 		assert.Equal(t, s.maker.FormattedAddress(), e.Attributes["maker"])
 	}
+	require.Len(t, ids, len(prices), "one execution per price")
+	require.Len(t, uniq(ids), len(prices), "order ids are distinct")
+	require.Empty(t, helpers.TxEvents(res, tradebinEventPrefix+"OrderSavedEvent"), "a fill never rests")
 
 	takerFee := s.params.MarketTakerFee.Amount.Add(s.txFee(t, res))
 	wantTaker := takerBefore.Add(sdk.NewInt64Coin(s.abc, ammOrderAmount*int64(len(prices)))).Sub(sdk.NewCoin(s.usd, cost), sdk.NewCoin(chain.Denom, takerFee))
@@ -536,25 +536,20 @@ func (s *ammSuite) fillOrders(t *testing.T) {
 	s.createAndCancel(t)
 }
 
-// createAndCancel places a sell order nobody fills and cancels it: the
-// cancel's message id goes from the tx event to the EndBlock event.
+// createAndCancel places a sell order nobody fills and cancels it: both
+// execute in their own tx.
 func (s *ammSuite) createAndCancel(t *testing.T) {
 	before := s.balance(t, s.maker.FormattedAddress(), s.abc)
 	res := s.mustExec(t, s.maker, "tradebin", "create-order", "sell", sdkmath.NewInt(ammOrderAmount).String(), "10", s.market)
-	createID := s.requireTxEvent(t, res, "OrderCreateMessageEvent", map[string]string{"market_id": s.market, "price": "10"}).Attributes["message_id"]
-	saved := helpers.EventsWith(filterType(s.blockEvents(t, res.Height), tradebinEventPrefix+"OrderSavedEvent"), map[string]string{"message_id": createID})
-	require.Len(t, saved, 1, "the order is saved by the EndBlock that processed message %s", createID)
-	orderID := saved[0].Attributes["id"]
+	saved := s.requireTxEvent(t, res, "OrderSavedEvent", map[string]string{"market_id": s.market, "price": "10"})
+	orderID := saved.Attributes["id"]
+	require.Len(t, orderID, 24)
+	assert.Equal(t, orderID, saved.Attributes["order_id"], "a resting order keeps the id it was placed with")
 	require.Equal(t, before.SubRaw(ammOrderAmount), s.balance(t, s.maker.FormattedAddress(), s.abc), "order amount locked")
 
 	res = s.mustExec(t, s.maker, "tradebin", "cancel-order", s.market, orderID, "sell")
-	cancelID := s.requireTxEvent(t, res, "OrderCancelMessageEvent", map[string]string{"orderId": orderID}).Attributes["message_id"]
-	// ids are unique only while queued: the counter restarts once the queue
-	// empties, so the cancel may reuse the create's id
-	require.Len(t, cancelID, 24)
-	canceled := helpers.EventsWith(filterType(s.blockEvents(t, res.Height), tradebinEventPrefix+"OrderCanceledEvent"), map[string]string{"id": orderID})
-	require.Len(t, canceled, 1)
-	assert.Equal(t, cancelID, canceled[0].Attributes["message_id"])
+	canceled := s.requireTxEvent(t, res, "OrderCanceledEvent", map[string]string{"id": orderID})
+	assert.Equal(t, orderID, canceled.Attributes["order_id"])
 	require.Equal(t, before, s.balance(t, s.maker.FormattedAddress(), s.abc), "cancel refunds the order amount")
 }
 
@@ -629,7 +624,8 @@ func (s *ammSuite) reversedPool(t *testing.T) {
 
 // 13. The LP denom of a new pool is ulp/<uppercase hex sha256(pool id)>, with
 // bank metadata: base unit ulp/<hash> at exponent 0, display unit lp/<hash>
-// at exponent 6, no name or symbol.
+// at exponent 6, and the name, symbol and description of lpDenomMetadata
+// (v8.3.0: the bank module refuses metadata with a blank name or symbol).
 func (s *ammSuite) lpMetadata(t *testing.T) {
 	sum := sha256.Sum256([]byte(s.revPool))
 	hash := strings.ToUpper(hex.EncodeToString(sum[:]))
@@ -639,11 +635,12 @@ func (s *ammSuite) lpMetadata(t *testing.T) {
 
 	res, err := helpers.Query[struct {
 		Metadata struct {
-			Name       string `json:"name"`
-			Symbol     string `json:"symbol"`
-			Display    string `json:"display"`
-			Base       string `json:"base"`
-			DenomUnits []struct {
+			Name        string `json:"name"`
+			Symbol      string `json:"symbol"`
+			Description string `json:"description"`
+			Display     string `json:"display"`
+			Base        string `json:"base"`
+			DenomUnits  []struct {
 				Denom    string        `json:"denom"`
 				Exponent helpers.Int64 `json:"exponent"`
 			} `json:"denom_units"`
@@ -653,13 +650,31 @@ func (s *ammSuite) lpMetadata(t *testing.T) {
 	md := res.Metadata
 	assert.Equal(t, base, md.Base)
 	assert.Equal(t, display, md.Display)
-	assert.Empty(t, md.Name)
-	assert.Empty(t, md.Symbol)
+	want := lpDenomMetadata(s.revPool)
+	assert.Equal(t, want.name, md.Name)
+	assert.Equal(t, want.symbol, md.Symbol)
+	assert.Equal(t, want.description, md.Description)
 	require.Len(t, md.DenomUnits, 2, "%+v", md.DenomUnits)
 	assert.Equal(t, base, md.DenomUnits[0].Denom)
 	assert.EqualValues(t, 0, md.DenomUnits[0].Exponent)
 	assert.Equal(t, display, md.DenomUnits[1].Denom)
 	assert.EqualValues(t, 6, md.DenomUnits[1].Exponent)
+}
+
+// lpMetadataText is the name, symbol and description of a pool's LP share
+// denom metadata.
+type lpMetadataText struct{ name, symbol, description string }
+
+// lpDenomMetadata is what the chain stores for a pool's LP share denom: the
+// symbol is "LP-" and the first 6 characters of the uppercase hex sha256 of
+// the pool id, for hashed and legacy LP denoms alike.
+func lpDenomMetadata(poolID string) lpMetadataText {
+	sum := sha256.Sum256([]byte(poolID))
+	return lpMetadataText{
+		name:        "LP share of pool " + poolID,
+		symbol:      "LP-" + strings.ToUpper(hex.EncodeToString(sum[:]))[:6],
+		description: "Liquidity provider share of the " + poolID + " pool on the BZE DEX",
+	}
 }
 
 // 14. Slippage guards: a MinLpTokens one above what the deposit mints and a
@@ -745,7 +760,7 @@ func (s *ammSuite) treasuryShare(t *testing.T) {
 
 	s.requireSwap(t, res.Events, s.trader.FormattedAddress(), s.cpPool, sdk.NewCoin(chain.Denom, in), sdk.NewCoin(s.abc, q.out))
 	require.Equal(t, q.treasury, s.transferred(t, res.Events, s.tradebin, s.cpFees, chain.Denom), "treasury share to txfeecollector_cp")
-	require.Equal(t, q.burned, s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "burner share to the burner")
+	require.Equal(t, s.burnedWithTakerFee(q.burned), s.transferred(t, res.Events, s.tradebin, s.burner, chain.Denom), "burner share and taker fee to the burner")
 	s.requireTakerFeeBurned(t, res)
 
 	after := s.pool(t, s.cpPool)
@@ -877,11 +892,8 @@ func (s *ammSuite) dustPool(t *testing.T) {
 // 20. The add-liquidity slippage guard of a deposit that mints more than a
 // uint64 of LP: big1/big2 starts at 1e9/1e9 (1e15 LP) and a deposit of 1e14
 // of each side mints 1e20. MinLpTokens one above must be refused with 4014
-// like any slippage refusal; the chain formats the minted amount with
-// Uint64(), which panics past 2^64 instead.
+// like any slippage refusal, with the exact minted amount in the log.
 func (s *ammSuite) slippageAboveUint64(t *testing.T) {
-	t.Skip("BZE-183: the AddLiquidity slippage refusal panics when the minted LP does not fit a uint64")
-
 	factory := "factory/" + s.lp.FormattedAddress() + "/"
 	big1, big2 := factory+"big1", factory+"big2"
 	for _, sub := range []string{"big1", "big2"} {
@@ -909,8 +921,6 @@ func (s *ammSuite) slippageAboveUint64(t *testing.T) {
 // 21. A swap whose input is above the trader's balance is refused with the
 // bank's insufficient funds (sdk 5), like any other spend above the balance.
 func (s *ammSuite) swapAboveBalance(t *testing.T) {
-	t.Skip("BZE-184: MultiSwap reports a balance shortfall as invalid coins (sdk 10)")
-
 	s.requireRefusals(t, s.trader, []string{chain.Denom, s.usd, s.abc}, []ammRefusal{
 		{"input above the balance", ammSwapMsg(s.trader, []string{s.usdPool}, sdk.NewInt64Coin(chain.Denom, ammLpFunds), sdk.NewInt64Coin(s.usd, 1)),
 			5, "sdk", "insufficient funds", false},
@@ -1220,13 +1230,19 @@ func (s *ammSuite) requireSwap(t *testing.T, events []helpers.Event, creator, po
 	assert.Equal(t, out, eventCoin(t, swaps[0], "out"), "swap output on %s", poolID)
 }
 
-// requireTakerFeeBurned asserts the taker fee, paid in ubze, went to the
-// burner fee collector in the tx and from there to the burner in EndBlock.
+// requireTakerFeeBurned asserts the taker fee, paid in ubze, went straight to
+// the burner module in a transfer of its own.
 func (s *ammSuite) requireTakerFeeBurned(t *testing.T, res helpers.TxResult) {
 	t.Helper()
-	fee := s.params.MarketTakerFee.Amount
-	require.Equal(t, fee, s.transferred(t, res.Events, s.tradebin, s.burnerFees, chain.Denom), "taker fee to the burner fee collector")
-	require.Equal(t, fee, s.transferred(t, s.blockEvents(t, res.Height), s.burnerFees, s.burner, chain.Denom), "taker fee to the burner in EndBlock")
+	fee := sdk.NewCoin(chain.Denom, s.params.MarketTakerFee.Amount)
+	sends := helpers.EventsWith(filterType(res.Events, "transfer"), map[string]string{"sender": s.tradebin, "recipient": s.burner, "amount": fee.String()})
+	require.NotEmpty(t, sends, "taker fee to the burner")
+}
+
+// burnedWithTakerFee is what tradebin sends the burner in ubze in a swap tx:
+// the pool's burner share and the taker fee.
+func (s *ammSuite) burnedWithTakerFee(burned sdkmath.Int) sdkmath.Int {
+	return burned.Add(s.params.MarketTakerFee.Amount)
 }
 
 func eventCoin(t *testing.T, e helpers.Event, key string) sdk.Coin {

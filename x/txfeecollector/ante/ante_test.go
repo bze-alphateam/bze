@@ -48,7 +48,7 @@ func (suite *AnteTestSuite) SetupTest() {
 	suite.distrMock = testutil.NewMockDistrKeeper(suite.mockCtrl)
 	require.NotNil(suite.T(), suite.distrMock)
 
-	k, ctx := keepertest.TxfeecollectorKeeperWithMocks(suite.T(), suite.bankMock, suite.accountMock, suite.tradeMock, suite.distrMock)
+	k, ctx := keepertest.TxfeecollectorKeeperWithMocks(suite.T(), suite.bankMock, suite.accountMock, suite.tradeMock, suite.distrMock, nil)
 	suite.ctx = ctx
 	suite.k = k
 	suite.nextCalled = false

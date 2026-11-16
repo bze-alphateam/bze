@@ -11,8 +11,9 @@ import (
 func TestMsgMoveIbcLockedCoins_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  MsgMoveIbcLockedCoins
-		err  error
+		msg    MsgMoveIbcLockedCoins
+		err    error
+		errMsg string
 	}{
 		{
 			name: "invalid address",
@@ -36,7 +37,17 @@ func TestMsgMoveIbcLockedCoins_ValidateBasic(t *testing.T) {
 				Creator: sample.AccAddress(),
 				Denom:   "ulp_some_pool",
 			},
-			err: sdkerrors.ErrInvalidRequest,
+			err:    sdkerrors.ErrInvalidRequest,
+			errMsg: "cannot move LP shares",
+		},
+		{
+			name: "hashed LP token denom rejected",
+			msg: MsgMoveIbcLockedCoins{
+				Creator: sample.AccAddress(),
+				Denom:   "ulp/0A1B2C3D4E5F",
+			},
+			err:    sdkerrors.ErrInvalidRequest,
+			errMsg: "cannot move LP shares",
 		},
 		{
 			name: "non-IBC denom rejected",
@@ -67,6 +78,9 @@ func TestMsgMoveIbcLockedCoins_ValidateBasic(t *testing.T) {
 			err := tt.msg.ValidateBasic()
 			if tt.err != nil {
 				require.ErrorIs(t, err, tt.err)
+				if tt.errMsg != "" {
+					require.ErrorContains(t, err, tt.errMsg)
+				}
 				return
 			}
 			require.NoError(t, err)

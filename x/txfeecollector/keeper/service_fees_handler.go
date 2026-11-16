@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
+	"github.com/bze-alphateam/bze/bzeutils"
 	"github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -19,36 +19,6 @@ func (k Keeper) ConvertCollectedFeesToNativeDenom(ctx sdk.Context) error {
 	// Bottom line is: we allow the coins to be sent to validator/stakers instead of letting them grow here to be forever checked
 	// in each block.
 	return k.convertFeesAndSend(ctx, types.ModuleName, authtypes.FeeCollectorName, true)
-}
-
-func (k Keeper) ConvertBurnerFeesToNativeDenom(ctx sdk.Context) error {
-	return k.convertFeesAndSend(ctx, types.BurnerFeeCollector, burnermoduletypes.ModuleName, true)
-}
-
-func (k Keeper) ConvertCommunityPoolFeesToNativeDenom(ctx sdk.Context) error {
-	toSend, skipped, err := k.convertFees(ctx, types.CpFeeCollector)
-	if err != nil {
-		return err
-	}
-
-	//TODO: non native coins should be sent to the token's community pool (NOT BZE Community Pool) when they are available.
-	// For now we just send them to burner module if they can't be swapped to native denom.
-	if skipped.Len() > 0 {
-		//if some coins were skipped because we couldn't convert them, send them to the buner module
-		err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.CpFeeCollector, burnermoduletypes.ModuleName, skipped)
-		if err != nil {
-			return err
-		}
-	}
-
-	if toSend == nil || toSend.IsZero() {
-		return nil
-	}
-
-	moduleAddr := k.accountKeeper.GetModuleAddress(types.CpFeeCollector)
-	err = k.distrKeeper.FundCommunityPool(ctx, toSend, moduleAddr)
-
-	return err
 }
 
 // convertFeesAndSend transfers converted fees from one module to another if fees are available and conversion is successful.
@@ -75,9 +45,12 @@ func (k Keeper) convertFeesAndSend(ctx sdk.Context, fromModule, toModule string,
 //
 // The coins that have deep enough liquidity but can't be swapped due to the amount being too low remain untouched
 // until they can be swapped.
+// It looks at one page of the module's balances, the ones after the module's cursor (see readCollectorPage).
+// Each coin is checked and swapped on its own (see swapToNative): a coin that fails stays in the collector without
+// discarding the other coins' swaps or the cursor move.
 func (k Keeper) convertFees(ctx sdk.Context, fromModule string) (toSend, nonSwapable sdk.Coins, err error) {
 	moduleAddr := k.accountKeeper.GetModuleAddress(fromModule)
-	allCoins := k.bankKeeper.GetAllBalances(ctx, moduleAddr)
+	allCoins := k.readCollectorPage(ctx, fromModule, moduleAddr)
 	if allCoins.IsZero() {
 		//nothing to burn at this moment
 		return nil, nil, nil
@@ -86,11 +59,9 @@ func (k Keeper) convertFees(ctx sdk.Context, fromModule string) (toSend, nonSwap
 	params := k.GetParams(ctx)
 	maxIterations := int(params.MaxBalanceIterations)
 
-	//group swappable coins to one collection
-	toSwap := sdk.NewCoins()
 	for i, c := range allCoins {
 		if i >= maxIterations {
-			if toSwap.IsZero() && nonSwapable.IsZero() {
+			if toSend.IsZero() && nonSwapable.IsZero() {
 				k.Logger().Warn("max iterations reached without finding any coins to swap or non-swapable coins.")
 			}
 			break
@@ -105,9 +76,15 @@ func (k Keeper) convertFees(ctx sdk.Context, fromModule string) (toSend, nonSwap
 			continue
 		}
 
-		if k.tradeKeeper.CanSwapForNativeDenom(ctx, c) {
-			//swap if you can
-			toSwap = toSwap.Add(c)
+		swapped, swappable, swapErr := k.swapToNative(ctx, fromModule, c)
+		if swapErr != nil {
+			//the coin stays in the collector, the rest of the page is still handled and the cursor still moves on
+			k.Logger().Error("failed to swap collected fee coin, keeping it", "coin", c.String(), "error", swapErr)
+			continue
+		}
+
+		if swappable {
+			toSend = toSend.Add(swapped)
 		} else if k.tradeKeeper.HasDeepLiquidityWithNativeDenom(ctx, c.Denom) {
 			//if you can't swap, but there is deep liquidity, it means the amount is too low to be swapped at the moment,
 			//so we ignore it.
@@ -122,18 +99,36 @@ func (k Keeper) convertFees(ctx sdk.Context, fromModule string) (toSend, nonSwap
 		}
 	}
 
-	if !toSwap.IsZero() {
-		swapped, err := k.tradeKeeper.ModuleSwapForNativeDenom(ctx, fromModule, toSwap)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		toSend = toSend.Add(swapped)
-	}
-
 	if !toSend.IsAllPositive() {
 		return nil, nonSwapable, nil
 	}
 
 	return toSend, nonSwapable, nil
+}
+
+// swapToNative checks and swaps one collected coin to native denom in its own cached context, so a failure (an error
+// or a panic, e.g. an arithmetic overflow on an oversized amount) discards only this coin's writes and leaves the coin
+// in the collector. swappable is false when the coin can't be swapped right now; nothing is written then.
+func (k Keeper) swapToNative(ctx sdk.Context, fromModule string, c sdk.Coin) (swapped sdk.Coin, swappable bool, err error) {
+	var out sdk.Coin
+	var ok bool
+	err = bzeutils.ApplyFuncIfNoError(ctx, func(cached sdk.Context) error {
+		if !k.tradeKeeper.CanSwapForNativeDenom(cached, c) {
+			return nil
+		}
+
+		res, swapErr := k.tradeKeeper.SafeModuleSwapForNativeDenom(cached, fromModule, sdk.NewCoins(c))
+		if swapErr != nil {
+			return swapErr
+		}
+
+		out, ok = res, true
+
+		return nil
+	})
+	if err != nil {
+		return sdk.Coin{}, false, err
+	}
+
+	return out, ok, nil
 }

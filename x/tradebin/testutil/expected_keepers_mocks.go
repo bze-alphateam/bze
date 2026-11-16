@@ -13,6 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/types"
 	types0 "github.com/cosmos/cosmos-sdk/x/bank/types"
 	gomock "go.uber.org/mock/gomock"
@@ -265,4 +266,58 @@ func (m *MockParamSubspace) Set(arg0 context.Context, arg1 []byte, arg2 any) {
 func (mr *MockParamSubspaceMockRecorder) Set(arg0, arg1, arg2 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockParamSubspace)(nil).Set), arg0, arg1, arg2)
+}
+
+// MockDenomFeeRatesProvider is a mock of DenomFeeRatesProvider interface.
+type MockDenomFeeRatesProvider struct {
+	ctrl     *gomock.Controller
+	recorder *MockDenomFeeRatesProviderMockRecorder
+	isgomock struct{}
+}
+
+// MockDenomFeeRatesProviderMockRecorder is the mock recorder for MockDenomFeeRatesProvider.
+type MockDenomFeeRatesProviderMockRecorder struct {
+	mock *MockDenomFeeRatesProvider
+}
+
+// NewMockDenomFeeRatesProvider creates a new mock instance.
+func NewMockDenomFeeRatesProvider(ctrl *gomock.Controller) *MockDenomFeeRatesProvider {
+	mock := &MockDenomFeeRatesProvider{ctrl: ctrl}
+	mock.recorder = &MockDenomFeeRatesProviderMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockDenomFeeRatesProvider) EXPECT() *MockDenomFeeRatesProviderMockRecorder {
+	return m.recorder
+}
+
+// GetDenomCommunityPool mocks base method.
+func (m *MockDenomFeeRatesProvider) GetDenomCommunityPool(ctx types.Context, denom string) (types.AccAddress, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDenomCommunityPool", ctx, denom)
+	ret0, _ := ret[0].(types.AccAddress)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
+}
+
+// GetDenomCommunityPool indicates an expected call of GetDenomCommunityPool.
+func (mr *MockDenomFeeRatesProviderMockRecorder) GetDenomCommunityPool(ctx, denom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDenomCommunityPool", reflect.TypeOf((*MockDenomFeeRatesProvider)(nil).GetDenomCommunityPool), ctx, denom)
+}
+
+// GetDenomFeeRates mocks base method.
+func (m *MockDenomFeeRatesProvider) GetDenomFeeRates(ctx types.Context, denom string) (math.LegacyDec, math.LegacyDec) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDenomFeeRates", ctx, denom)
+	ret0, _ := ret[0].(math.LegacyDec)
+	ret1, _ := ret[1].(math.LegacyDec)
+	return ret0, ret1
+}
+
+// GetDenomFeeRates indicates an expected call of GetDenomFeeRates.
+func (mr *MockDenomFeeRatesProviderMockRecorder) GetDenomFeeRates(ctx, denom any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDenomFeeRates", reflect.TypeOf((*MockDenomFeeRatesProvider)(nil).GetDenomFeeRates), ctx, denom)
 }

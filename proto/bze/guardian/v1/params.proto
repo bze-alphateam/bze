@@ -1,0 +1,17 @@
+syntax = "proto3";
+package bze.guardian.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/bze-alphateam/bze/x/guardian/types";
+
+// Params defines the parameters of the module.
+message Params {
+  option (amino.name) = "bze/x/guardian/Params";
+  option (gogoproto.equal) = true;
+
+  // guardian is the bech32 address allowed to sign the guardian messages next
+  // to the governance authority. It may be empty: then only the authority can.
+  string guardian = 1;
+}

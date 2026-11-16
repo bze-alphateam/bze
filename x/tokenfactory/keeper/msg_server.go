@@ -64,6 +64,10 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMi
 		return nil, types.ErrUnauthorized
 	}
 
+	if !dAuth.GetMintable() {
+		return nil, types.ErrMintingDisabled.Wrapf("denom: %s", coin.GetDenom())
+	}
+
 	addr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return nil, err
@@ -143,10 +147,20 @@ func (k msgServer) ChangeAdmin(goCtx context.Context, msg *types.MsgChangeAdmin)
 		return nil, types.ErrUnauthorized
 	}
 
+	// renouncing the admin also turns minting off: no admin means a fixed supply, even if
+	// governance later assigns a new admin through MsgSetDenomAdmin
+	mintingDisabled := msg.NewAdmin == "" && dAuth.GetMintable()
 	dAuth.Admin = msg.NewAdmin
+	if msg.NewAdmin == "" {
+		dAuth.Mintable = false
+	}
 	err = k.Keeper.SetDenomAuthority(ctx, msg.Denom, dAuth)
 	if err != nil {
 		return nil, err
+	}
+
+	if mintingDisabled {
+		k.emitMintingDisabledEvent(ctx, msg.Denom, msg.Creator)
 	}
 
 	err = ctx.EventManager().EmitTypedEvent(&types.DenomAdminChangeEvent{

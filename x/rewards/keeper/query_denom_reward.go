@@ -101,8 +101,9 @@ func (k Keeper) DenomRewardParticipant(goCtx context.Context, req *types.QueryDe
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	address := queryAddress(req.Address)
 
-	participant, found := k.GetDenomRewardParticipant(ctx, req.Denom, req.Address)
+	participant, found := k.GetDenomRewardParticipant(ctx, req.Denom, address)
 	if !found {
 		return nil, status.Error(codes.NotFound, "not found")
 	}
@@ -112,7 +113,7 @@ func (k Keeper) DenomRewardParticipant(goCtx context.Context, req *types.QueryDe
 	pending := sdk.NewCoins()
 	k.IterateDenomRewardPrizes(ctx, req.Denom, func(ctx sdk.Context, prize types.DenomRewardPrize) (stop bool) {
 		index := math.LegacyZeroDec()
-		if stored, idxFound := k.GetDenomRewardParticipantIndex(ctx, req.Address, req.Denom, prize.PrizeDenom); idxFound {
+		if stored, idxFound := k.GetDenomRewardParticipantIndex(ctx, address, req.Denom, prize.PrizeDenom); idxFound {
 			index = stored.Index
 		}
 
@@ -135,15 +136,16 @@ func (k Keeper) DenomRewardParticipations(goCtx context.Context, req *types.Quer
 	}
 
 	var list []types.DenomRewardParticipant
+	address := queryAddress(req.Address)
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	markerStore := k.getPrefixedStore(ctx, types.DenomRewardParticipantMarkerPrefix(req.Address))
+	markerStore := k.getPrefixedStore(ctx, types.DenomRewardParticipantMarkerPrefix(address))
 
 	pageRes, err := query.Paginate(markerStore, req.Pagination, func(key []byte, value []byte) error {
 		// the marker key (prefix stripped) is the staking denom followed by the separator,
 		// a byte that can never appear inside a denom (unlike "/", legal in ibc/factory denoms)
 		stakingDenom := strings.TrimSuffix(string(key), types.DenomRewardKeySeparator)
-		participant, found := k.GetDenomRewardParticipant(ctx, stakingDenom, req.Address)
+		participant, found := k.GetDenomRewardParticipant(ctx, stakingDenom, address)
 		if !found {
 			// markers are written and deleted in the same call as the participant record,
 			// so this cannot happen on a consistent store; skip rather than fail the page.

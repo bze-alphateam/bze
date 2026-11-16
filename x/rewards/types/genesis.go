@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"cosmossdk.io/math"
 	// this line is used by starport scaffolding # genesis/types/import
@@ -177,10 +178,30 @@ func (gs GenesisState) validateDenomRewards() error {
 		}
 	}
 
+	// The cursor is the key of the last schedule processed by a full batch. That schedule may have
+	// made its finishing payout and been deleted in the same block, so the cursor only has to be a
+	// well-formed schedule key of an existing denom reward, not the key of a schedule that still exists.
 	if gs.DenomRewardsDistributionQueue != nil && gs.DenomRewardsDistributionQueue.Cursor != "" {
-		if _, ok := scheduleKeys[gs.DenomRewardsDistributionQueue.Cursor]; !ok {
-			return fmt.Errorf("denom rewards distribution queue cursor %q references missing schedule", gs.DenomRewardsDistributionQueue.Cursor)
+		if err := validateDenomRewardScheduleCursor(gs.DenomRewardsDistributionQueue.Cursor, drStaked); err != nil {
+			return err
 		}
+	}
+
+	return nil
+}
+
+// validateDenomRewardScheduleCursor checks that cursor has the DenomRewardScheduleKey layout
+// (staking denom, separator, numeric schedule id, separator) and names an existing denom reward.
+func validateDenomRewardScheduleCursor(cursor string, drStaked map[string]math.Int) error {
+	parts := strings.Split(cursor, DenomRewardKeySeparator)
+	if len(parts) != 3 || parts[0] == "" || parts[2] != "" {
+		return fmt.Errorf("denom rewards distribution queue cursor %q is not a schedule key", cursor)
+	}
+	if _, err := strconv.ParseUint(parts[1], 10, 64); err != nil {
+		return fmt.Errorf("denom rewards distribution queue cursor %q is not a schedule key", cursor)
+	}
+	if _, ok := drStaked[parts[0]]; !ok {
+		return fmt.Errorf("denom rewards distribution queue cursor %q references missing denom reward", cursor)
 	}
 
 	return nil

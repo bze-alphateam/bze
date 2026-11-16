@@ -1,13 +1,10 @@
 package keeper
 
 import (
-	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	"github.com/bze-alphateam/bze/bzeutils"
 	"github.com/bze-alphateam/bze/x/rewards/types"
-	txfeecollectortypes "github.com/bze-alphateam/bze/x/txfeecollector/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // settleDenomParticipant pays out and settles every pending prize of a participant's position in a
@@ -132,24 +129,8 @@ func (k msgServer) ensureDenomRewardPrize(ctx sdk.Context, stakingDenom, prizeDe
 		return prize, types.ErrPrizeDenomCapReached
 	}
 
-	fee := k.getRewardCreationFee(ctx, params.CreateDenomRewardPrizeFee)
-	if fee != nil {
-		if err := k.checkUserBalances(ctx, fee, feePayer); err != nil {
-			return prize, err
-		}
-
-		// the fee can be captured only if the trade keeper is available to swap it
-		if k.tradeKeeper == nil {
-			return prize, errors.Wrapf(sdkerrors.ErrInvalidRequest, "trade keeper is not available")
-		}
-		capturedFee, err := k.tradeKeeper.CaptureAndSwapUserFee(ctx, feePayer, fee, types.ModuleName)
-		if err != nil {
-			return prize, err
-		}
-
-		if err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, txfeecollectortypes.CpFeeCollector, capturedFee); err != nil {
-			return prize, err
-		}
+	if err := k.captureCreationFee(ctx, feePayer, k.getRewardCreationFee(ctx, params.CreateDenomRewardPrizeFee)); err != nil {
+		return prize, err
 	}
 
 	// the accumulator starts a fresh era at S = 0; existing stakers accrue from this point only

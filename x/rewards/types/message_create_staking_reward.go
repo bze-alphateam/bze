@@ -1,10 +1,12 @@
 package types
 
 import (
+	stdmath "math"
 	"strconv"
 
+	"github.com/bze-alphateam/bze/bzeutils"
+
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -37,14 +39,15 @@ func NewMsgCreateStakingReward(creator string, prizeAmount string, prizeDenom st
 func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 	sr := StakingReward{}
 
-	amtInt, ok := math.NewIntFromString(msg.PrizeAmount)
-	if !ok {
-		return sr, errorsmod.Wrapf(ErrInvalidAmount, "could not convert order amount")
+	// amounts must be canonical base-10 integers
+	amtInt, err := bzeutils.ParseCanonicalInt(msg.PrizeAmount)
+	if err != nil {
+		return sr, errorsmod.Wrapf(ErrInvalidAmount, "could not convert order amount: %s", err)
 	}
 	if !amtInt.IsPositive() {
 		return sr, errorsmod.Wrapf(ErrInvalidAmount, "amount should be greater than 0")
 	}
-	sr.PrizeAmount = msg.PrizeAmount
+	sr.PrizeAmount = amtInt.String()
 
 	if msg.PrizeDenom == "" {
 		return sr, ErrInvalidPrizeDenom
@@ -56,9 +59,16 @@ func (msg *MsgCreateStakingReward) ToStakingReward() (StakingReward, error) {
 	}
 	sr.StakingDenom = msg.StakingDenom
 
-	minStake, ok := math.NewIntFromString(msg.MinStake)
-	if !ok || minStake.IsNegative() {
+	minStake, err := bzeutils.ParseCanonicalInt(msg.MinStake)
+	if err != nil {
+		return sr, errorsmod.Wrapf(ErrInvalidMinStake, "%s", err)
+	}
+	if minStake.IsNegative() {
 		return sr, ErrInvalidMinStake
+	}
+	// min_stake is stored and emitted as a uint64
+	if !minStake.IsUint64() {
+		return sr, errorsmod.Wrapf(ErrInvalidMinStake, "min stake must not exceed %d", uint64(stdmath.MaxUint64))
 	}
 	sr.MinStake = minStake.Uint64()
 

@@ -10,9 +10,10 @@
 #   id at run time, and no Go file depends on a build tag (the Makefile's
 #   NETWORK=testnet adds a `testnet` tag nothing reads).
 
-ARG GO_VERSION=1.26
-
-FROM golang:${GO_VERSION}-bookworm AS builder
+# Base images are pinned by tag and multi-arch index digest so every build uses
+# the same Go toolchain and Debian packages. Bump both together with the `go`
+# line in go.mod.
+FROM golang:1.26.11-bookworm@sha256:dc40a13b61304647ed7e5d581d246b86413dfc29d63c6d018310feb93cd98fc0 AS builder
 
 ARG VERSION=unknown
 ARG COMMIT=unknown
@@ -34,7 +35,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
                 -w -s" \
       -o /out/bzed ./cmd/bzed
 
-FROM debian:bookworm-slim
+FROM debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 
 # curl + jq: node start scripts read the trust height/hash and the genesis
 # from an RPC. ~/.bze exists, owned by bze, so a volume mounted there starts

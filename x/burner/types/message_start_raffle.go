@@ -5,6 +5,8 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/bze-alphateam/bze/bzeutils"
 )
 
 const (
@@ -46,9 +48,9 @@ func (msg *MsgStartRaffle) ToStorageRaffle() (raffle Raffle, err error) {
 		return raffle, errors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	potCoin, ok := math.NewIntFromString(msg.Pot)
-	if !ok {
-		return raffle, errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid pot provided (could not convert to string)")
+	potCoin, err := bzeutils.ParseCanonicalInt(msg.Pot)
+	if err != nil {
+		return raffle, errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid pot provided (%s)", err)
 	}
 
 	if !potCoin.IsPositive() {
@@ -58,11 +60,11 @@ func (msg *MsgStartRaffle) ToStorageRaffle() (raffle Raffle, err error) {
 	if potCoin.LT(math.NewInt(AmountMin)) {
 		return raffle, errors.Wrapf(sdkerrors.ErrInvalidCoins, "pot must be at least %d", AmountMin)
 	}
-	raffle.Pot = msg.Pot
+	raffle.Pot = potCoin.String()
 
-	duration, ok := math.NewIntFromString(msg.Duration)
-	if !ok {
-		return raffle, errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid duration (%s)", msg.Duration)
+	duration, err := bzeutils.ParseCanonicalInt(msg.Duration)
+	if err != nil {
+		return raffle, errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid duration (%s)", err)
 	}
 
 	if !duration.IsPositive() {
@@ -89,8 +91,8 @@ func (msg *MsgStartRaffle) ToStorageRaffle() (raffle Raffle, err error) {
 
 	raffle.Ratio = msg.Ratio
 
-	chances, ok := math.NewIntFromString(msg.Chances)
-	if !ok {
+	chances, err := bzeutils.ParseCanonicalInt(msg.Chances)
+	if err != nil {
 		return raffle, errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid chances provided (%s)", err)
 	}
 
@@ -99,16 +101,16 @@ func (msg *MsgStartRaffle) ToStorageRaffle() (raffle Raffle, err error) {
 	}
 	raffle.Chances = chances.Uint64()
 
-	ticketCoin, ok := math.NewIntFromString(msg.TicketPrice)
-	if !ok {
-		return raffle, errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid ticket price provided (could not convert)")
+	ticketCoin, err := bzeutils.ParseCanonicalInt(msg.TicketPrice)
+	if err != nil {
+		return raffle, errors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid ticket price provided (%s)", err)
 	}
 
 	if !ticketCoin.IsPositive() {
 		return raffle, errors.Wrapf(sdkerrors.ErrInvalidCoins, "provided ticket price is not positive")
 	}
 
-	raffle.TicketPrice = msg.TicketPrice
+	raffle.TicketPrice = ticketCoin.String()
 
 	if msg.Denom == "" {
 		return raffle, errors.Wrapf(sdkerrors.ErrInvalidCoins, "no denom provided")

@@ -32,7 +32,7 @@ import (
 )
 
 const (
-	ConsensusVersion = 4
+	ConsensusVersion = 5
 )
 
 var (
@@ -148,6 +148,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4: %v", types.ModuleName, err))
 	}
+
+	if err := cfg.RegisterMigration(types.ModuleName, 4, m.Migrate4to5); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 4 to 5: %v", types.ModuleName, err))
+	}
 }
 
 // RegisterInvariants registers the invariants of the module. If an invariant deviates from its predicted value, the InvariantRegistry triggers appropriate logic (most often the chain will be halted)
@@ -244,6 +248,8 @@ type ModuleInputs struct {
 	BankKeeper    types.BankKeeper
 	EpochKeeper   types.EpochKeeper
 	TradeKeeper   types.TradeKeeper
+	// GuardianKeeper pauses the periodic burn while the guardian paused the protocol automation.
+	GuardianKeeper types.GuardianKeeper
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace
@@ -271,6 +277,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		in.EpochKeeper,
 		in.TradeKeeper,
+		in.GuardianKeeper,
 	)
 	m := NewAppModule(
 		in.Cdc,

@@ -68,7 +68,7 @@ func (suite *IntegrationTestSuite) TestTrySwap_NoPreferredDenom() {
 func (suite *IntegrationTestSuite) TestTrySwap_PreferredDenomSameAsNative() {
 	addr1 := sdk.AccAddress("addr1_______________")
 	fee := sdk.NewCoins(sdk.NewCoin(denomBze, math.NewInt(1000000)))
-	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomBze)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomBze).WithValue(keeper.CtxFeePayerKey, addr1)
 
 	suite.bankMock.EXPECT().
 		SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, fee).
@@ -83,7 +83,7 @@ func (suite *IntegrationTestSuite) TestTrySwap_PreferredDenomSameAsNative() {
 func (suite *IntegrationTestSuite) TestTrySwap_NoNativeFeeInCoins() {
 	addr1 := sdk.AccAddress("addr1_______________")
 	fee := sdk.NewCoins(sdk.NewCoin(denomStake, math.NewInt(1000000)))
-	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, "uatom")
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, "uatom").WithValue(keeper.CtxFeePayerKey, addr1)
 
 	suite.bankMock.EXPECT().
 		SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, fee).
@@ -98,7 +98,7 @@ func (suite *IntegrationTestSuite) TestTrySwap_NoNativeFeeInCoins() {
 func (suite *IntegrationTestSuite) TestTrySwap_PoolNotFound() {
 	addr1 := sdk.AccAddress("addr1_______________")
 	fee := sdk.NewCoins(sdk.NewCoin(denomBze, math.NewInt(1000000)))
-	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, "uatom")
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, "uatom").WithValue(keeper.CtxFeePayerKey, addr1)
 
 	suite.bankMock.EXPECT().
 		SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, fee).
@@ -118,7 +118,7 @@ func (suite *IntegrationTestSuite) TestTrySwap_ZeroNativeReserves() {
 	pool.ReserveQuote = math.ZeroInt()
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake).WithValue(keeper.CtxFeePayerKey, addr1)
 
 	suite.bankMock.EXPECT().
 		SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, fee).
@@ -139,7 +139,7 @@ func (suite *IntegrationTestSuite) TestTrySwap_InsufficientLiquidity() {
 	pool.ReserveBase = math.NewInt(37_000_000_000)
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake).WithValue(keeper.CtxFeePayerKey, addr1)
 
 	suite.bankMock.EXPECT().
 		SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, fee).
@@ -160,7 +160,7 @@ func (suite *IntegrationTestSuite) TestTrySwap_SwapCalculationFails() {
 	pool := trySwapDeepPool()
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake).WithValue(keeper.CtxFeePayerKey, addr1)
 
 	suite.bankMock.EXPECT().
 		SendCoinsFromAccountToModule(gomock.Any(), addr1, types.ModuleName, fee).
@@ -180,7 +180,7 @@ func (suite *IntegrationTestSuite) TestTrySwap_InsufficientBalance() {
 	pool := trySwapDeepPool()
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake).WithValue(keeper.CtxFeePayerKey, addr1)
 
 	suite.bankMock.EXPECT().
 		SpendableCoins(gomock.Any(), addr1).
@@ -226,7 +226,7 @@ func (suite *IntegrationTestSuite) TestTrySwap_AmountTooSmall_CapturesNonNativeA
 	pool := trySwapDeepPool()
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake).WithValue(keeper.CtxFeePayerKey, addr1)
 
 	requiredStake, err := suite.k.CalculateOptimalInputForOutput(pool, nativeFee)
 	suite.Require().Nil(err)
@@ -263,7 +263,7 @@ func (suite *IntegrationTestSuite) TestTrySwap_AmountTooSmall_CaptureError() {
 	pool := trySwapDeepPool()
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake).WithValue(keeper.CtxFeePayerKey, addr1)
 
 	requiredStake, err := suite.k.CalculateOptimalInputForOutput(pool, nativeFee)
 	suite.Require().Nil(err)
@@ -296,7 +296,7 @@ func (suite *IntegrationTestSuite) TestTrySwap_AmountTooSmall_OriginalFunctionFa
 	pool := trySwapDeepPool()
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake).WithValue(keeper.CtxFeePayerKey, addr1)
 
 	requiredStake, err := suite.k.CalculateOptimalInputForOutput(pool, nativeFee)
 	suite.Require().Nil(err)
@@ -330,7 +330,7 @@ func (suite *IntegrationTestSuite) TestTrySwap_SwapSuccess() {
 	pool := trySwapDeepPool()
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake).WithValue(keeper.CtxFeePayerKey, addr1)
 
 	requiredStake, err := suite.k.CalculateOptimalInputForOutput(pool, nativeFee)
 	suite.Require().Nil(err)
@@ -380,7 +380,7 @@ func (suite *IntegrationTestSuite) TestTrySwap_SwapSuccess_CrossModule() {
 	pool := trySwapDeepPool()
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake).WithValue(keeper.CtxFeePayerKey, addr1)
 
 	requiredStake, err := suite.k.CalculateOptimalInputForOutput(pool, nativeFee)
 	suite.Require().Nil(err)
@@ -436,7 +436,7 @@ func (suite *IntegrationTestSuite) TestTrySwap_ZeroPoolFee_SwapsNormally() {
 	pool.Fee = math.LegacyZeroDec()
 	suite.k.SetLiquidityPool(suite.ctx, pool)
 
-	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake)
+	ctx := suite.ctx.WithValue(keeper.CtxFeeDenomKey, denomStake).WithValue(keeper.CtxFeePayerKey, addr1)
 
 	requiredStake, err := suite.k.CalculateOptimalInputForOutput(pool, nativeFee)
 	suite.Require().Nil(err)

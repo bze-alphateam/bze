@@ -27,6 +27,10 @@ type (
 		authority string
 
 		onOrderFillHooks []types.OnMarketOrderFill
+
+		// denomFeeRates reads the transfer fee a factory token charges on the protocol fees paid in it. It is set after
+		// the keepers are built (the tokenfactory keeper depends on this one).
+		denomFeeRates types.DenomFeeRatesProvider
 	}
 )
 
@@ -74,6 +78,11 @@ func (k Keeper) largeZeroFillId(id uint64) string {
 
 func (k Keeper) smallZeroFillId(id uint64) string {
 	return fmt.Sprintf("%012d", id)
+}
+
+// SetDenomFeeRatesProvider sets the provider of the factory tokens' transfer fees.
+func (k *Keeper) SetDenomFeeRatesProvider(provider types.DenomFeeRatesProvider) {
+	k.denomFeeRates = provider
 }
 
 func (k *Keeper) SetOnOrderFillHooks(hooks []types.OnMarketOrderFill) {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -81,27 +82,6 @@ const (
 	upHaltTimeout = 2 * time.Minute
 	// upRestartTimeout bounds the wait for the candidate's first blocks.
 	upRestartTimeout = 2 * time.Minute
-
-	// v8.2.0 Noble USDC wind-down rehearsal (app/upgrades/v820/wind_down.go):
-	// the network runs as beezee-1, linked to simd, whose uusdc reaches bze
-	// over channel-3 as the exact mainnet USDC.n voucher.
-	upMainnetChainID = "beezee-1"
-	upUsdcChannel    = "channel-3"
-	upUsdcBase       = "uusdc"
-	upUsdcVoucher    = "ibc/6490A7EAB61059BFC1CDDEB05917DD70BDF3A611654162A1A47DB930D40D8AF4"
-	upUsdcLpDenom    = "ulp_" + upUsdcVoucher + "_ubze"
-	upWindDownAdmin  = "bze1jx4x3kn8mlz2s03zdpf2a38x9gl66llvjqdd55"
-	upUsdcFunds      = 10_000_000_000 // simd user's genesis uusdc
-	upUsdcIn         = 1_000_000_000  // uusdc sent to admin before the upgrade
-	upAliceLpLocked  = 10_000         // alice locks usd/ubze LP shares: they stay locked
-	upUsdcAfter      = 100_000        // each transfer after the upgrade
-	// the USDC.n/BZE pool comes from genesis, as on mainnet it predates the
-	// "ulp/<hash>" LP denoms of v8.1.1: its reserves, the shares the black
-	// hole holds and those a wallet holds
-	upLegacyReserveUsdc = 500_000_000
-	upLegacyReserveBze  = 2_000_000_000
-	upLegacyLocked      = 600_000_000
-	upLegacyHeld        = 400_000_000
 )
 
 // TestChainUpgrade runs a software upgrade on a two-validator network: it
@@ -128,20 +108,11 @@ func TestChainUpgrade(t *testing.T) {
 		chain.WithoutGenesis(chain.DenomRewardLockKey),
 	}
 	var s *upgradeSuite
-	if check.mainnet {
-		mnemonic, simdAddr := newSimdAccount(t)
-		holderMnemonic, holderAddr := newAccount(t, chain.Bech32Prefix)
-		inet := chain.StartIbc(t, ctx, []ibc.WalletAmount{{
-			Address: simdAddr,
-			Denom:   upUsdcBase,
-			Amount:  sdkmath.NewInt(upUsdcFunds),
-		}}, append(opts, chain.WithChainID(upMainnetChainID), chain.WithGenesisEdit(legacyUsdcPool(holderAddr)))...)
+	if check.ibc {
+		mnemonic, _ := newSimdAccount(t)
+		inet := chain.StartIbc(t, ctx, nil, opts...)
 		s = setupUpgrade(t, ctx, chain.Network{Chain: inet.Bze, Docker: inet.Docker}, cfg, check)
 		s.linkSimd(t, inet, mnemonic)
-		var err error
-		s.lpHolder, err = interchaintest.GetAndFundTestUserWithMnemonic(ctx, "up-lp", holderMnemonic, sdkmath.NewInt(upUserFunds), inet.Bze)
-		require.NoError(t, err)
-		require.Equal(t, holderAddr, s.lpHolder.FormattedAddress())
 	} else {
 		s = setupUpgrade(t, ctx, chain.Start(t, ctx, opts...), cfg, check)
 	}
@@ -173,11 +144,22 @@ type upgradeCheck struct {
 	after  func(s *upgradeSuite, t *testing.T, before any)
 	// moves are the balances the handler moves between s.accounts (by name),
 	// the only balance changes step 4 accepts besides a block's own
-	moves func(s *upgradeSuite, before any) []upgradeMove
-	// mainnet runs the network as beezee-1, linked to simd over IBC, with
-	// mainnet's legacy USDC.n/BZE pool in genesis (legacyUsdcPool), for a
-	// handler that branches on the mainnet chain id
-	mainnet bool
+	moves func(s *upgradeSuite, t *testing.T, before any) []upgradeMove
+	// removedParams are the tradebin params the candidate no longer has; step
+	// 4 compares every other param of the previous release
+	removedParams []string
+	// renamedParams are the tradebin params the candidate carries under a new
+	// name (old name -> new name, same proto field); step 4 expects the value
+	// unchanged under the new name, unless setParams has it
+	renamedParams map[string]string
+	// setParams are the tradebin params (new name -> JSON value) the
+	// migration sets whatever the previous release stored
+	setParams map[string]string
+	// addedOrderFields are the fields the candidate adds to the entries of the
+	// order book queries; step 4 compares the entries without them
+	addedOrderFields []string
+	// ibc links the network to simd over IBC, for a handler that touches IBC
+	ibc bool
 }
 
 // upgradeMove is a coin the handler moves from one account to another.
@@ -186,11 +168,22 @@ type upgradeMove struct {
 	coin     sdk.Coin
 }
 
-// upgradeChecks is keyed by upgrade name. Each release that adds a handler
-// adds its entry, with the assertions of what that handler changes.
+// upgradeChecks is keyed by upgrade name. It holds the entry of the handler
+// the code builds; a release line replaces the previous release's entry with
+// its own, the way app/upgrades keeps only the current handler.
 var upgradeChecks = map[string]upgradeCheck{
-	"v8.2.0": {before: (*upgradeSuite).v820Before, after: (*upgradeSuite).v820After, moves: (*upgradeSuite).v820Moves, mainnet: true},
-	"v8.3.0": {before: (*upgradeSuite).v830Before, after: (*upgradeSuite).v830After},
+	// v8.3.0 runs linked to simd to prove IBC across the ibc-go v10 move
+	"v8.3.0": {
+		before: (*upgradeSuite).v830Before, after: (*upgradeSuite).v830After, moves: (*upgradeSuite).v830Moves, ibc: true,
+		removedParams: []string{"orderBookQueueMessageScanExtraGas"},
+		renamedParams: map[string]string{
+			"orderBookPerBlockMessages": "maxFillsPerOrder",
+			"orderBookExtraGasWindow":   "priceLevelOwnersWindow",
+			"orderBookQueueExtraGas":    "priceLevelExtraGas",
+		},
+		setParams:        map[string]string{"priceLevelOwnersWindow": `"500"`},
+		addedOrderFields: []string{"owners"},
+	},
 }
 
 // upgradeFeatures are the features of the previous release the seed uses.
@@ -225,87 +218,19 @@ type upgradeSuite struct {
 	before, after  upgradeSnapshot
 	// blackHoleAddr and burnerAddr are the burner modules' accounts
 	blackHoleAddr, burnerAddr string
-	// ibc is the simd link of a mainnet run (upgradeCheck.mainnet), nil
-	// otherwise; it reuses the IBC suite's transfer helpers
+	// ibc is the simd link of a run with upgradeCheck.ibc, nil otherwise; it
+	// reuses the IBC suite's transfer helpers
 	ibc *ibcSuite
-	// lpHolder holds the legacy pool's shares outside the black hole (mainnet runs)
-	lpHolder ibc.Wallet
 }
 
-// legacyUsdcPool adds the USDC.n/BZE pool to genesis the way mainnet holds
-// it: created before v8.1.1, so its LP denom is "ulp_<base>_<quote>", which
-// no release since can create. The tradebin module holds the reserves, the
-// black hole and holder the shares. The bank supply is recomputed from the
-// balances.
-func legacyUsdcPool(holder string) func(map[string]any) error {
-	return func(g map[string]any) error {
-		app, ok := g["app_state"].(map[string]any)
-		if !ok {
-			return fmt.Errorf("genesis has no app_state")
-		}
-		bank, ok := app["bank"].(map[string]any)
-		if !ok {
-			return fmt.Errorf("genesis has no bank state")
-		}
-		tradebin, ok := app["tradebin"].(map[string]any)
-		if !ok {
-			return fmt.Errorf("genesis has no tradebin state")
-		}
-		moduleAddr := func(name string) (string, error) {
-			return sdk.Bech32ifyAddressBytes(chain.Bech32Prefix, authtypes.NewModuleAddress(name))
-		}
-		tradebinAddr, err := moduleAddr("tradebin")
-		if err != nil {
-			return err
-		}
-		blackHoleAddr, err := moduleAddr("burner_black_hole")
-		if err != nil {
-			return err
-		}
-		balances, _ := bank["balances"].([]any)
-		for _, b := range []struct {
-			addr  string
-			coins sdk.Coins
-		}{
-			{tradebinAddr, sdk.NewCoins(sdk.NewInt64Coin(upUsdcVoucher, upLegacyReserveUsdc), sdk.NewInt64Coin(chain.Denom, upLegacyReserveBze))},
-			{blackHoleAddr, sdk.NewCoins(sdk.NewInt64Coin(upUsdcLpDenom, upLegacyLocked))},
-			{holder, sdk.NewCoins(sdk.NewInt64Coin(upUsdcLpDenom, upLegacyHeld))},
-		} {
-			coins := make([]any, 0, len(b.coins))
-			for _, c := range b.coins {
-				coins = append(coins, map[string]any{"denom": c.Denom, "amount": c.Amount.String()})
-			}
-			balances = append(balances, map[string]any{"address": b.addr, "coins": coins})
-		}
-		bank["balances"] = balances
-		bank["supply"] = []any{}
-
-		pools, _ := tradebin["liquidity_pools"].([]any)
-		tradebin["liquidity_pools"] = append(pools, map[string]any{
-			"id":            upUsdcVoucher + "_" + chain.Denom,
-			"base":          upUsdcVoucher,
-			"quote":         chain.Denom,
-			"lp_denom":      upUsdcLpDenom,
-			"creator":       holder,
-			"fee":           ammPoolFee,
-			"fee_dest":      map[string]any{"treasury": "0", "burner": "0.5", "providers": "0.5"},
-			"reserve_base":  strconv.Itoa(upLegacyReserveUsdc),
-			"reserve_quote": strconv.Itoa(upLegacyReserveBze),
-			"stable":        false,
-		})
-		return nil
-	}
-}
-
-// linkSimd prepares the IBC side of a mainnet run: a simd user holding
-// uusdc, transfers to and from admin.
+// linkSimd prepares the IBC side of a run linked to simd: a funded simd user,
+// transfers to and from admin over the channel StartIbc opened.
 func (s *upgradeSuite) linkSimd(t *testing.T, net chain.IbcNetwork, simdMnemonic string) {
 	simdUser, err := interchaintest.GetAndFundTestUserWithMnemonic(s.ctx, "up-simd", simdMnemonic, sdkmath.NewInt(ibcSimdFunds), net.Simd)
 	require.NoError(t, err)
 	require.NoError(t, testutil.WaitForBlocks(s.ctx, 2, net.Simd))
 	s.ibc = &ibcSuite{ctx: s.ctx, net: net, bze: net.Bze, simd: net.Simd, admin: s.admin, bzeUser: s.admin, simdUser: simdUser, gov: s.gov}
-	s.ibc.main = s.ibc.newChannel(t, net.BzeChannel, net.SimdChannel, false)
-	require.Equal(t, sdkmath.NewInt(upUsdcFunds), s.ibc.balance(t, net.Simd, simdUser, upUsdcBase), "simd user holds the genesis uusdc")
+	s.ibc.main = s.ibc.newChannel(t, net.BzeChannel, net.SimdChannel)
 }
 
 func setupUpgrade(t *testing.T, ctx context.Context, net chain.Network, cfg chain.Upgrade, check upgradeCheck) *upgradeSuite {
@@ -382,7 +307,7 @@ func (s *upgradeSuite) seed(t *testing.T) {
 	})
 	if s.features.branding {
 		s.execMsg(t, s.admin, map[string]any{
-			"@type": "/bze.tokenfactory.MsgSetDenomBranding", "creator": s.admin.FormattedAddress(), "denom": s.usd, "branding": tfBranding("Inter"),
+			"@type": "/bze.tokenfactory.MsgSetDenomBranding", "creator": s.admin.FormattedAddress(), "denom": s.usd, "branding": tfBranding("inter"),
 		})
 	}
 
@@ -562,7 +487,7 @@ func (s *upgradeSuite) statePreserved(t *testing.T) {
 		for name, coins := range b.Balances {
 			moved[name] = coins
 		}
-		for _, m := range s.check.moves(s, s.handlerBefore) {
+		for _, m := range s.check.moves(s, t, s.handlerBefore) {
 			moved[m.from] = moved[m.from].Sub(m.coin)
 			moved[m.to] = moved[m.to].Add(m.coin)
 			t.Logf("the handler moves %s from %s to %s", m.coin, m.from, m.to)
@@ -579,13 +504,30 @@ func (s *upgradeSuite) statePreserved(t *testing.T) {
 	require.Equal(t, b.Pools, a.Pools, "pools: reserves and LP denoms")
 	require.Equal(t, b.LpSupply, a.LpSupply, "LP supply")
 	require.Equal(t, b.Markets, a.Markets, "markets")
-	require.Equal(t, b.Orders, a.Orders, "resting orders")
-	require.Equal(t, b.Authorities, a.Authorities, "denom admins")
+	require.Equal(t, b.Orders, withoutFields(a.Orders, s.check.addedOrderFields), "resting orders")
+	// compare the admins only: a handler may add fields to the authority
+	// record (v8.3.0 adds mintable, asserted in its handler checks)
+	require.Equal(t, upAdmins(b.Authorities), upAdmins(a.Authorities), "denom admins")
 	require.Equal(t, b.Metadata, a.Metadata, "denom metadata")
 	require.Equal(t, b.Branding, a.Branding, "denom branding")
 	require.Equal(t, b.Halted, a.Halted, "halted denoms")
 	// a handler may add tradebin params, but never changes the ones before it
+	// (a release may remove one: upgradeCheck.removedParams, or rename one:
+	// upgradeCheck.renamedParams)
 	for name, raw := range b.TradebinParams {
+		if slices.Contains(s.check.removedParams, name) {
+			require.NotContains(t, a.TradebinParams, name, "tradebin param %s removed", name)
+			continue
+		}
+		if renamed, ok := s.check.renamedParams[name]; ok {
+			require.NotContains(t, a.TradebinParams, name, "tradebin param %s renamed to %s", name, renamed)
+			if set, ok := s.check.setParams[renamed]; ok {
+				t.Logf("tradebin param %s (was %s): %s -> %s", renamed, name, raw, set)
+				raw = json.RawMessage(set)
+			}
+			require.JSONEq(t, string(raw), string(a.TradebinParams[renamed]), "tradebin param %s, was %s", renamed, name)
+			continue
+		}
 		require.JSONEq(t, string(raw), string(a.TradebinParams[name]), "tradebin param %s", name)
 	}
 
@@ -659,8 +601,7 @@ func (s *upgradeSuite) smoke(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.Zero(t, res.Code, res.RawLog)
-		executed, err := helpers.BlockEvents(s.ctx, s.bze, res.Height, tradebinEventPrefix+"OrderExecutedEvent")
-		require.NoError(t, err)
+		executed := helpers.TxEvents(res, tradebinEventPrefix+"OrderExecutedEvent")
 		require.Len(t, helpers.EventsWith(executed, map[string]string{"market_id": s.market, "maker": bob, "taker": carol}), 1,
 			"bob's sell order executes against carol")
 		require.Equal(t, abcBefore.AddRaw(upOrderAmount), s.balance(t, carol, s.abc))
@@ -789,181 +730,1024 @@ func (s *upgradeSuite) createDenomReward(t *testing.T) {
 // the voucher and the pool's LP denom are the exact mainnet ones. The handler
 // blocks uusdc on channel-3 and hands the black hole's USDC.n/BZE LP shares to
 // the wind-down admin, touching nothing else. The Denom Rewards messages work.
-type v820State struct {
-	versions                   map[string]int64
-	rewardsParams, txFeeParams map[string]json.RawMessage
-	blackHole                  sdk.Coins
-	// lpLocked is the black hole's USDC.n/BZE LP shares the handler moves
-	lpLocked sdk.Coin
-	// usdcChannel is channel-3 on bze and its simd counterparty
-	usdcChannel ibcChannel
+// v8.3.0: x/dao, x/guardian and the IBC rate limits are added. x/dao and
+// x/guardian start at module version 1, the rate-limiting module at 2, and
+// x/dao holds its default params (DAO creation fee 50,000 BZE, burned).
+//
+// Rewards v5 -> v6 migration: v8.2.0 started an activated trading reward's
+// countdown at its activation; the migration resets it (expire_at 0) on every
+// active reward that has had no trade yet, and its first trade starts it.
+//
+// cosmos-sdk v0.53 + ibc-go v10: the capability and feeibc modules
+// are gone (their version entries stay frozen: x/upgrade never deletes one),
+// ibc-go v10 migrated core (6 -> 8) and transfer (5 -> 6), the rewards migration moved
+// rewards (5 -> 6), no other module version moved, and IBC keeps working over the
+// channel opened before the upgrade, including the voucher it minted.
+//
+// The unused x/group and x/nft modules are gone: their stores are
+// deleted, their version entries frozen, their CLI queries unknown, and the
+// nft module account (left on chain, empty) still refuses funds.
+//
+// Tokenfactory migrated 3 -> 4. Every denom that has an admin is
+// mintable and its admin can still mint; a denom renounced before the
+// upgrade is non-mintable. Every denom reads the default DenomConfig, and an
+// admin can set one.
+type v830State struct {
+	versions map[string]int64
+	// voucher is the stake voucher bze minted over the main channel before
+	// the upgrade
+	voucher string
+	// kept keeps its admin across the upgrade, renounced is renounced before it
+	kept, renounced string
+	// queue is the order book queue left at the upgrade height
+	queue v830Queue
+	// plusSR is a staking reward created on v8.2.0 with a prize amount in a
+	// non-canonical integer form (upV830PlusPrize)
+	plusSR string
+	// dao is the plain account v8.2.0 created at the dao module address,
+	// funded with upV830DaoSquat before the upgrade
+	dao upAccount
+	// burningWeeks is the burner's periodic_burning_weeks on v8.2.0
+	burningWeeks int64
+	// trReward is the trading reward on s.market v8.2.0 activated with no trade
+	trReward string
 }
 
-func (s *upgradeSuite) v820Before(t *testing.T) any {
-	require.NotNil(t, s.ibc, "v8.2.0 runs as beezee-1 linked to simd")
-	st := v820State{
-		versions:    s.moduleVersions(t, 0),
-		usdcChannel: s.v820UsdcChannel(t),
+// The trading reward on s.market activated on v8.2.0 with no trade
+// (v830TradingRewardBefore): a 30-day countdown is 720 hour epochs, far more
+// than the suite runs. Its first trade, after the upgrade, is at a price
+// between bob's buy and sell.
+const (
+	upV830TrPrize    = 1_000 // ubze, one slot
+	upV830TrDuration = 30    // days
+	upV830TrPrice    = "2"
+)
+
+// upV830DaoParams are the x/dao defaults the v8.3.0 handler stores
+// (InitGenesis of the new module).
+var upV830DaoParams = daoParams{
+	MaxSrPerDao:               5,
+	MaxStaticMembers:          128,
+	MaxOpenProposals:          10,
+	MaxMsgsPerProposal:        16,
+	MaxProposalBytes:          20_000,
+	MaxTitleLen:               140,
+	MaxSummaryLen:             5_000,
+	MinVotingPeriod:           time.Hour.String(),
+	MaxVotingPeriod:           (90 * 24 * time.Hour).String(),
+	ExecutionWindow:           (14 * 24 * time.Hour).String(),
+	CleanupBatchSize:          100,
+	DaoCreationFee:            sdk.NewInt64Coin("ubze", 50_000_000_000),
+	DaoCreationFeeDestination: "burner",
+	MinElectorateLockDays:     5,
+	MinExpediteDelay:          (24 * time.Hour).String(),
+}
+
+// upV830DaoName is the s.accounts name of the dao module address: v8.2.0 has
+// no dao module, so a plain transfer creates a plain account there, which
+// the v8.3.0 handler turns into the dao module account in place.
+const (
+	upV830DaoName  = "dao module address"
+	upV830DaoSquat = 1_234_567
+	// the deposit of the DAO proposal submitted after the upgrade
+	upV830DaoDeposit = 1_000
+)
+
+// A staking reward created on v8.2.0 with its prize amount written with a
+// plus sign: v8.2.0 accepts and stores the string as sent, the v8.3.0
+// handler rewrites it to the canonical form of the same integer. Nobody
+// stakes, and its duration outlasts the suite.
+const (
+	upV830PlusPrize      = "+1000"
+	upV830PlusPrizeCanon = "1000"
+	upV830PlusDuration   = 1000 // days
+)
+
+// The v8.2.0 order book queue at the upgrade height: with
+// orderBookPerBlockMessages lowered to 1, admin queues upV830Backlog sell
+// orders and, behind them, the cancel of a resting sell in one tx. The queue
+// drains one message per block, slower than the upgrade proposal passes, so
+// the tail of the backlog and the cancel are still queued when the chain
+// halts. The v8.3.0 migration refunds every queued order once and executes
+// none of them; the cancel refunds nothing and its order still rests.
+const (
+	upV830Backlog       = 80
+	upV830BacklogAmount = 10   // abc each
+	upV830BacklogPrice  = "15" // usd per abc, above every other sell: nothing fills them
+	upV830CancelPrice   = "16"
+	upV830BacklogGas    = 60_000_000
+)
+
+type v830Queue struct {
+	creates  []string        // the backlog's queue message ids, in queue order
+	cancelID string          // the resting order the queued cancel targets
+	perBlock json.RawMessage // orderBookPerBlockMessages before the suite lowered it, restored as maxFillsPerOrder
+	// queueKeys and ownerPriceKeys count the Qm/ and Tb/op/ keys once the
+	// backlog is queued, on v8.2.0 (a subspace query reads only the latest state)
+	queueKeys, ownerPriceKeys int
+}
+
+// upV830Deleted are the stores the v8.3.0 store loader deletes: x/capability
+// and the ICS-29 fee middleware (both removed with ibc-go v10), x/group and
+// x/nft (removed from the app).
+var upV830Deleted = []string{"capability", "feeibc", "group", "nft"}
+
+// upV830Frozen are the version entries of the removed modules: x/upgrade never
+// deletes one, so they keep their v8.2.0 values.
+var upV830Frozen = map[string]int64{"capability": 1, "feeibc": 2, "group": 2, "nft": 1}
+
+// upV830BurnerFees is the s.accounts name of txfeecollector_burner, removed in
+// v8.3.0: the handler sweeps whatever it holds to the burner module.
+const upV830BurnerFees = "txfeecollector_burner"
+
+const (
+	upV830In  = 300_000 // stake simd -> bze over the main channel, before and after
+	upV830Out = 100_000 // stake vouchers bze -> simd after the upgrade
+)
+
+func (s *upgradeSuite) v830Before(t *testing.T) any {
+	st := v830State{versions: s.moduleVersions(t, 0)}
+	for name, want := range map[string]int64{"ibc": 6, "transfer": 5, "interchainaccounts": 3} {
+		require.Equal(t, want, st.versions[name], "%s module version before", name)
 	}
-	require.Equal(t, int64(4), st.versions["rewards"], "rewards module version before")
-	require.Equal(t, int64(2), st.versions["txfeecollector"], "txfeecollector module version before")
+	for name, want := range upV830Frozen {
+		require.Equal(t, want, st.versions[name], "%s module version before", name)
+	}
+	require.True(t, s.supported(t, "ibc-fee", "packets"), "the fee module answers before the upgrade")
+	require.True(t, s.supported(t, "group", "groups"), "x/group answers before the upgrade")
+	require.True(t, s.supported(t, "nft", "classes"), "x/nft answers before the upgrade")
+	s.requireAccountBlocked(t, "nft")
+	// the removed burner fee collector joins the snapshots: its balance at
+	// the plan height moves to the burner (v830Moves)
+	s.requireAccountBlocked(t, upV830BurnerFees)
+	burnerFees, err := helpers.ModuleAddress(s.ctx, s.bze, upV830BurnerFees)
+	require.NoError(t, err)
+	s.accounts[upV830BurnerFees] = burnerFees
+	for _, store := range upV830Deleted {
+		res, err := helpers.StoreQuery(s.ctx, s.bze, store, 0)
+		require.NoError(t, err)
+		require.Zero(t, res.Code, "the %s store is mounted before the upgrade: %s", store, res.Log)
+	}
 
-	// uusdc arrives over channel-3 as the mainnet USDC.n voucher
-	in := s.ibc.transferInOn(t, st.usdcChannel, upUsdcBase, upUsdcIn)
-	require.Equal(t, `{"result":"AQ=="}`, in.appAck(t, true), "uusdc accepted before the upgrade")
-	require.Equal(t, upUsdcVoucher, helpers.IbcDenom(upUsdcChannel, upUsdcBase), "the mainnet USDC.n voucher")
-	require.Equal(t, sdkmath.NewInt(upUsdcIn), s.balance(t, s.admin.FormattedAddress(), upUsdcVoucher))
+	s.ibc.transferIn(t, chain.SimdDenom, upV830In).requireAccepted(t)
+	st.voucher = helpers.IbcDenom(s.ibc.main.bze, chain.SimdDenom)
 
-	// the genesis USDC.n/BZE pool has the mainnet LP denom, its shares split
-	// between the black hole and lpHolder; alice locks usd/ubze shares next
-	// to them, which must stay locked
-	legacy := s.pool(t, 0, upUsdcVoucher+"_"+chain.Denom)
-	require.Equal(t, upUsdcLpDenom, legacy.LpDenom, "the mainnet USDC.n/BZE LP denom")
-	require.Equal(t, sdkmath.NewInt(upLegacyLocked+upLegacyHeld), s.supply(t, upUsdcLpDenom), "USDC.n/BZE LP supply")
-	require.Equal(t, sdkmath.NewInt(upLegacyHeld), s.balance(t, s.lpHolder.FormattedAddress(), upUsdcLpDenom), "lpHolder's shares")
-	st.lpLocked = sdk.NewCoin(upUsdcLpDenom, s.balance(t, s.blackHoleAddr, upUsdcLpDenom))
-	require.Equal(t, sdkmath.NewInt(upLegacyLocked), st.lpLocked.Amount, "the black hole's USDC.n/BZE shares")
-	usdLp := s.pool(t, 0, s.usdPool).LpDenom
-	blackHole := s.balances(t, 0, s.blackHoleAddr)
-	s.exec(t, s.alice, "burner", "fund-burner", coinStr(upAliceLpLocked, usdLp))
-	st.blackHole = s.balances(t, 0, s.blackHoleAddr)
-	require.Equal(t, blackHole.Add(sdk.NewInt64Coin(usdLp, upAliceLpLocked)).String(), st.blackHole.String(),
-		"fund-burner locked alice's usd/ubze shares in the black hole")
-	s.accounts["lp holder"] = s.lpHolder.FormattedAddress()
+	// tokenfactory 3 -> 4: one denom keeps its admin, one is renounced
+	admin := s.admin.FormattedAddress()
+	st.kept, st.renounced = "factory/"+admin+"/kept", "factory/"+admin+"/gone"
+	s.exec(t, s.admin, "tokenfactory", "create-denom", "kept")
+	s.exec(t, s.admin, "tokenfactory", "create-denom", "gone")
+	s.exec(t, s.admin, "tokenfactory", "mint", coinStr(upSmokeMint, st.renounced))
+	s.execMsg(t, s.admin, map[string]any{
+		"@type": "/bze.tokenfactory.MsgChangeAdmin", "creator": admin, "denom": st.renounced, "newAdmin": "",
+	})
+	require.Equal(t, admin, s.denomAuthority(t, 0, st.kept).Admin)
+	require.Empty(t, s.denomAuthority(t, 0, st.renounced).Admin)
 
-	// the wind-down admin is an ordinary wallet; step 4 checks its balances
-	s.accounts["wind-down admin"] = upWindDownAdmin
-	require.True(t, s.balances(t, 0, upWindDownAdmin).IsZero(), "the wind-down admin starts empty")
+	// the LP share denoms of the seeded pools have no name or symbol on
+	// v8.2.0; the handler fills them (v830LpMetadata)
+	for _, p := range s.pools(t, 0) {
+		md := s.lpMetadata(t, 0, p.LpDenom)
+		require.Empty(t, md.Name, "pool %s LP name before the upgrade", p.ID)
+		require.Empty(t, md.Symbol, "pool %s LP symbol before the upgrade", p.ID)
+	}
 
-	st.rewardsParams = s.params(t, 0, "rewards")
-	st.txFeeParams = s.params(t, 0, "txfeecollector")
+	// a staking reward whose prize amount is stored as "+1000"
+	s.exec(t, s.admin, "rewards", "create-staking-reward",
+		upV830PlusPrize, chain.Denom, s.abc, strconv.Itoa(upV830PlusDuration), "1", "1")
+	for _, sr := range s.allStakingRewards(t) {
+		if sr.StakingDenom == s.abc {
+			st.plusSR = sr.RewardID
+			require.Equal(t, upV830PlusPrize, sr.PrizeAmount, "v8.2.0 stores the prize amount as sent")
+		}
+	}
+	require.NotEmpty(t, st.plusSR, "staking reward of %s", s.abc)
+
+	s.v830DaoAccountBefore(t, &st)
+
+	// the burner has one param on v8.2.0; the v4 -> v5 migration adds the
+	// two IBC move params at their defaults
+	require.Equal(t, int64(4), st.versions["burner"], "burner module version before")
+	burner := s.params(t, 0, "burner")
+	require.NotContains(t, burner, "ibc_move_max_reserve_ratio", "no IBC move cap on v8.2.0")
+	require.NotContains(t, burner, "ibc_move_cooldown_blocks", "no IBC move cooldown on v8.2.0")
+	var weeks helpers.Int64
+	require.NoError(t, json.Unmarshal(burner["periodic_burning_weeks"], &weeks))
+	st.burningWeeks = int64(weeks)
+
+	for _, name := range []string{"dao", "guardian", "ratelimit"} {
+		require.NotContains(t, st.versions, name, "no %s module on v8.2.0", name)
+	}
+
+	st.trReward = s.v830TradingRewardBefore(t)
+
+	// last: the queue must still hold messages when the plan height is reached
+	st.queue = s.v830QueueBacklog(t)
 	return st
 }
 
-// v820UsdcChannel opens transfer channels to simd until bze has channel-3,
-// the channel id of the Noble link on mainnet, and returns it.
-func (s *upgradeSuite) v820UsdcChannel(t *testing.T) ibcChannel {
-	ch := s.ibc.main
-	for ch.bze != upUsdcChannel {
-		require.Less(t, len(s.ibc.channels(t, s.bze)), 4, "bze has no %s", upUsdcChannel)
-		ch = s.ibc.openChannel(t, ibcTransferVersion)
+// v830TradingRewardBefore creates a trading reward on s.market and activates
+// it by gov with no trade: v8.2.0 starts its countdown at the activation,
+// expire_at = the activation block's hour epoch + duration × 24. Nothing
+// trades on s.market until v830TradingReward: the backlog's sells rest above
+// every buy.
+func (s *upgradeSuite) v830TradingRewardBefore(t *testing.T) string {
+	res := s.exec(t, s.admin, "rewards", "create-trading-reward",
+		strconv.Itoa(upV830TrPrize), chain.Denom, strconv.Itoa(upV830TrDuration), s.market, "1")
+	created := helpers.EventsWith(helpers.TxEvents(res, drEventPrefix+"TradingRewardCreateEvent"), map[string]string{"market_id": s.market})
+	require.Len(t, created, 1, "TradingRewardCreateEvent of %s", s.market)
+	id := created[0].Attributes["reward_id"]
+	require.NotEmpty(t, id)
+
+	_, err := helpers.SubmitAndPassProposalWith(s.ctx, s.bze, s.admin, s.txOpts(), helpers.Proposal{
+		Messages: []any{map[string]any{"@type": "/bze.rewards.MsgActivateTradingReward", "creator": s.gov, "reward_id": id}},
+		Title:    "Activate a trading reward",
+		Summary:  "e2e: a trading reward activated with no trade across the upgrade",
+	})
+	require.NoError(t, err)
+
+	cur, err := s.bze.Height(s.ctx)
+	require.NoError(t, err)
+	var activated []helpers.Event
+	var height int64
+	for h := cur; h > cur-20 && h > 0 && len(activated) == 0; h-- {
+		activated, err = helpers.BlockEvents(s.ctx, s.bze, h, drEventPrefix+"TradingRewardActivationEvent")
+		require.NoError(t, err)
+		height = h
 	}
-	return ch
+	require.Len(t, activated, 1, "one TradingRewardActivationEvent in the 20 blocks up to %d", cur)
+	require.Equal(t, id, activated[0].Attributes["reward_id"])
+
+	want := s.epoch(t, height, "hour") + upV830TrDuration*24
+	r := s.tradingReward(t, id)
+	require.Equal(t, s.market, r.MarketID)
+	require.Equal(t, want, int64(r.ExpireAt), "v8.2.0 starts the countdown at the activation")
+	require.Positive(t, int64(r.ExpireAt))
+	require.Equal(t, []string{id}, s.activeTradingRewards(t), "the reward is active")
+	return id
 }
 
-func (s *upgradeSuite) v820Moves(before any) []upgradeMove {
-	b := before.(v820State)
-	return []upgradeMove{{from: "burner_black_hole module", to: "wind-down admin", coin: b.lpLocked}}
+// v830TradingReward checks the rewards v6 migration: the reward v8.2.0
+// activated with no trade is still active with expire_at 0, and the first
+// trade on s.market starts its countdown. Admin rests a sell between bob's
+// orders and carol takes it whole, so step 7 finds the book as it was.
+func (s *upgradeSuite) v830TradingReward(t *testing.T, b v830State) {
+	require.Equal(t, []string{b.trReward}, s.activeTradingRewards(t), "the reward is still active")
+	require.Zero(t, int64(s.tradingReward(t, b.trReward).ExpireAt), "the migration reset the countdown")
+
+	carol := s.carol.FormattedAddress()
+	s.exec(t, s.admin, "tradebin", "create-order", "sell", strconv.Itoa(upOrderAmount), upV830TrPrice, s.market)
+	res := s.execMsg(t, s.carol, map[string]any{
+		"@type":      "/bze.tradebin.MsgFillOrders",
+		"creator":    carol,
+		"market_id":  s.market,
+		"order_type": "sell",
+		"orders":     []map[string]string{{"price": upV830TrPrice, "amount": strconv.Itoa(upOrderAmount)}},
+	})
+	executed := helpers.TxEvents(res, tradebinEventPrefix+"OrderExecutedEvent")
+	require.Len(t, helpers.EventsWith(executed, map[string]string{"market_id": s.market, "maker": s.admin.FormattedAddress(), "taker": carol}), 1,
+		"admin's sell executes against carol")
+	require.Empty(t, s.userOrders(t, 0, s.carol), "carol has no resting order")
+
+	want := s.epoch(t, res.Height, "hour") + upV830TrDuration*24
+	started := helpers.TxEvents(res, drEventPrefix+"TradingRewardStartEvent")
+	require.Len(t, started, 1, "TradingRewardStartEvent: %+v", started)
+	require.Equal(t, b.trReward, started[0].Attributes["reward_id"])
+	require.Equal(t, strconv.FormatInt(want, 10), started[0].Attributes["expire_at"])
+	require.Equal(t, want, int64(s.tradingReward(t, b.trReward).ExpireAt), "the first trade starts the countdown")
 }
 
-func (s *upgradeSuite) v820After(t *testing.T, before any) {
-	b := before.(v820State)
-
-	versions := s.moduleVersions(t, s.plan)
-	require.Equal(t, int64(5), versions["rewards"], "rewards module version after")
-	require.Equal(t, int64(3), versions["txfeecollector"], "txfeecollector module version after")
-	for name, v := range b.versions {
-		if name != "rewards" && name != "txfeecollector" {
-			require.Equal(t, v, versions[name], "module %s version", name)
-		}
-	}
-	require.Len(t, versions, len(b.versions), "no module added or removed")
-
-	// rewards: the old params are kept, the Denom Rewards params get their
-	// defaults (x/rewards/types/params.go)
-	rewards := s.params(t, s.plan, "rewards")
-	for name, raw := range b.rewardsParams {
-		require.JSONEq(t, string(raw), string(rewards[name]), "rewards param %s", name)
-	}
-	fee := `{"denom":"ubze","amount":"25000000000"}`
-	for _, p := range []struct{ camel, snake, want string }{
-		{"createDenomRewardFee", "create_denom_reward_fee", fee},
-		{"createDenomRewardPrizeFee", "create_denom_reward_prize_fee", fee},
-		{"addDenomRewardScheduleFee", "add_denom_reward_schedule_fee", fee},
-		{"maxPrizeDenomsPerDr", "max_prize_denoms_per_dr", "50"},
-		{"extraGasForDenomExit", "extra_gas_for_denom_exit", `"1000000"`},
-		{"denomRewardLock", "denom_reward_lock", "7"},
-	} {
-		raw, ok := rewards[p.camel]
-		if !ok {
-			raw, ok = rewards[p.snake]
-		}
-		require.True(t, ok, "rewards param %s missing from %v", p.camel, rewards)
-		require.JSONEq(t, p.want, string(raw), "rewards param %s", p.camel)
-	}
-	for _, k := range []string{"denomRewardMinStake", "denom_reward_min_stake"} {
-		if raw, ok := rewards[k]; ok {
-			require.Contains(t, []string{`"0"`, "0"}, string(raw), "denom_reward_min_stake defaults to 0")
-		}
-	}
-
-	// txfeecollector: uusdc on channel-3 blocked, the rest unchanged
-	txFee := s.params(t, s.plan, "txfeecollector")
-	for name, raw := range b.txFeeParams {
-		require.JSONEq(t, string(raw), string(txFee[name]), "txfeecollector param %s", name)
-	}
-	require.Equal(t, []blockedEntry{{upUsdcChannel, upUsdcBase}}, s.ibc.blockedParam(t), "blocked_ibc_inbound")
-
-	// the black hole's USDC.n/BZE shares went to the wind-down admin in the
-	// upgrade block, with a bank transfer; every other locked coin stayed
-	require.Equal(t, b.blackHole.Sub(b.lpLocked).String(), s.balances(t, s.plan, s.blackHoleAddr).String(), "black hole balances")
-	require.True(t, s.balances(t, s.plan, s.blackHoleAddr).AmountOf(upUsdcLpDenom).IsZero(), "no USDC.n/BZE shares left in the black hole")
-	require.Equal(t, sdk.NewCoins(b.lpLocked).String(), s.balances(t, s.plan, upWindDownAdmin).String(), "the wind-down admin holds exactly the moved shares")
-	transfers, err := helpers.BlockEvents(s.ctx, s.bze, s.plan, "transfer")
-	require.NoError(t, err)
-	require.Len(t, helpers.EventsWith(transfers, map[string]string{
-		"sender": s.blackHoleAddr, "recipient": upWindDownAdmin, "amount": b.lpLocked.String(),
-	}), 1, "one transfer of the shares in the upgrade block: %+v", transfers)
-
-	// the block works on the transfer stack: uusdc over channel-3 is refused
-	// and refunded, stake over channel-3 and uusdc over channel-0 arrive
-	s.ibc.transferInOn(t, b.usdcChannel, upUsdcBase, upUsdcAfter).requireRefused(t)
-	s.ibc.transferInOn(t, b.usdcChannel, chain.SimdDenom, upUsdcAfter).requireAccepted(t)
-	s.ibc.transferInOn(t, s.ibc.main, upUsdcBase, upUsdcAfter).requireAccepted(t)
-
-	// exits are untouched: USDC.n leaves over channel-3 and arrives on simd
-	usdc := s.ibc.balance(t, s.ibc.simd, s.ibc.simdUser, upUsdcBase)
-	vouchers := s.balance(t, s.admin.FormattedAddress(), upUsdcVoucher)
-	out, err := helpers.SendIbc(s.ctx, s.bze, s.admin, upUsdcChannel, s.ibc.simdUser.FormattedAddress(), sdk.NewInt64Coin(upUsdcVoucher, upUsdcAfter))
-	require.NoError(t, err)
-	_, err = helpers.WaitForRecv(s.ctx, s.ibc.simd, b.usdcChannel.simd, out.Sequence)
-	require.NoError(t, err)
-	_, err = helpers.WaitForAck(s.ctx, s.bze, out)
-	require.NoError(t, err)
-	require.Equal(t, vouchers.SubRaw(upUsdcAfter), s.balance(t, s.admin.FormattedAddress(), upUsdcVoucher), "USDC.n left bze")
-	require.Equal(t, usdc.AddRaw(upUsdcAfter), s.ibc.balance(t, s.ibc.simd, s.ibc.simdUser, upUsdcBase), "uusdc released on simd")
-
-	// the legacy pool still works with its old LP denom: lpHolder withdraws
-	// its whole share, the shares are burned and the reserves pay it out
-	poolID := upUsdcVoucher + "_" + chain.Denom
-	pool := s.pool(t, 0, poolID)
-	holder := s.lpHolder.FormattedAddress()
-	usdcBefore, bzeBefore := s.balance(t, holder, upUsdcVoucher), s.balance(t, holder, chain.Denom)
-	lpSupply := s.supply(t, upUsdcLpDenom)
-	res := s.exec(t, s.lpHolder, "tradebin", "remove-liquidity", poolID, strconv.Itoa(upLegacyHeld), "1", "1")
-	gotUsdc := s.balance(t, holder, upUsdcVoucher).Sub(usdcBefore)
-	gotBze := s.balance(t, holder, chain.Denom).Sub(bzeBefore).Add(s.txFee(t, res))
-	require.True(t, gotUsdc.IsPositive() && gotBze.IsPositive(), "lpHolder received both reserves: %s, %s", gotUsdc, gotBze)
-	after := s.pool(t, 0, poolID)
-	require.Equal(t, parseInt(pool.ReserveBase).Sub(gotUsdc).String(), after.ReserveBase, "USDC.n reserve paid out")
-	require.Equal(t, parseInt(pool.ReserveQuote).Sub(gotBze).String(), after.ReserveQuote, "ubze reserve paid out")
-	require.Equal(t, lpSupply.SubRaw(upLegacyHeld), s.supply(t, upUsdcLpDenom), "the withdrawn shares are burned")
-	require.True(t, s.balance(t, holder, upUsdcLpDenom).IsZero(), "lpHolder has no shares left")
-
-	// the new messages work
-	s.createDenomReward(t)
+func (s *upgradeSuite) tradingReward(t *testing.T, id string) trReward {
+	t.Helper()
+	return query[struct {
+		TradingReward trReward `json:"trading_reward"`
+	}](t, s, 0, "rewards", "trading-reward", id).TradingReward
 }
 
-// v8.3.0: TODO(BZE-154, BZE-155, BZE-152) — each story adds the assertions of
-// its part of the v8.3.0 handler here: the capability and feeibc stores gone
-// (BZE-154), the group and nft stores gone (BZE-155), x/dao added with its
-// params (BZE-152), and the module versions after the upgrade.
-func (s *upgradeSuite) v830Before(t *testing.T) any {
-	return s.moduleVersions(t, 0)
+// activeTradingRewards lists the ids of the active trading rewards.
+func (s *upgradeSuite) activeTradingRewards(t *testing.T) []string {
+	t.Helper()
+	var ids []string
+	for _, r := range query[struct {
+		List []trReward `json:"list"`
+	}](t, s, 0, "rewards", "all-trading-rewards", "--state", "active").List {
+		ids = append(ids, r.RewardID)
+	}
+	return ids
+}
+
+// v830DaoAccountBefore sends ubze to the dao module address on v8.2.0, where
+// nothing blocks it: x/bank creates a plain account without a public key
+// there. The address joins s.accounts, so step 4 checks the balance survives.
+func (s *upgradeSuite) v830DaoAccountBefore(t *testing.T, st *v830State) {
+	addr, err := helpers.ModuleAddress(s.ctx, s.bze, "dao")
+	require.NoError(t, err)
+	_, found := s.account(t, addr)
+	require.False(t, found, "no account at the dao module address yet")
+	res := s.exec(t, s.admin, "bank", "send", s.admin.FormattedAddress(), addr, coinStr(upV830DaoSquat, chain.Denom))
+	got, err := helpers.Transferred(helpers.TxEvents(res, "transfer"), s.admin.FormattedAddress(), addr, chain.Denom)
+	require.NoError(t, err)
+	require.Equal(t, sdkmath.NewInt(upV830DaoSquat), got, "ubze sent to the dao module address")
+
+	acc, found := s.account(t, addr)
+	require.True(t, found, "x/bank created an account at the dao module address")
+	require.Equal(t, "/cosmos.auth.v1beta1.BaseAccount", acc.Type, "a plain account")
+	require.Equal(t, addr, acc.Address)
+	require.False(t, acc.HasPubKey, "the account has no public key")
+	st.dao = acc
+	s.accounts[upV830DaoName] = addr
+}
+
+// v830QueueBacklog builds the queue the v8.3.0 migration refunds (see
+// upV830Backlog).
+func (s *upgradeSuite) v830QueueBacklog(t *testing.T) v830Queue {
+	admin := s.admin.FormattedAddress()
+	var q v830Queue
+	s.exec(t, s.admin, "tradebin", "create-order", "sell", strconv.Itoa(upV830BacklogAmount), upV830CancelPrice, s.market)
+	require.NoError(t, testutil.WaitForBlocks(s.ctx, 1, s.bze))
+	orders := s.userOrders(t, 0, s.admin)
+	require.Len(t, orders, 1, "admin's sell to cancel rests")
+	q.cancelID = orders[0].ID
+
+	q.perBlock = s.params(t, 0, "tradebin")["orderBookPerBlockMessages"]
+	require.NotEmpty(t, q.perBlock)
+	s.setTradebinParam(t, "orderBookPerBlockMessages", json.RawMessage(`"1"`))
+
+	msgs := make([]any, 0, upV830Backlog+1)
+	for range upV830Backlog {
+		msgs = append(msgs, map[string]any{
+			"@type": "/bze.tradebin.MsgCreateOrder", "creator": admin, "order_type": "sell",
+			"amount": strconv.Itoa(upV830BacklogAmount), "price": upV830BacklogPrice, "market_id": s.market,
+		})
+	}
+	msgs = append(msgs, map[string]any{
+		"@type": "/bze.tradebin.MsgCancelOrder", "creator": admin, "market_id": s.market, "order_id": q.cancelID, "order_type": "sell",
+	})
+	res, err := helpers.ExecMsgs(s.ctx, s.bze, s.admin, []helpers.TxOption{helpers.WithGas(upV830BacklogGas)}, msgs...)
+	require.NoError(t, err)
+	require.Zero(t, res.Code, res.RawLog)
+	for _, e := range helpers.TxEvents(res, tradebinEventPrefix+"OrderCreateMessageEvent") {
+		q.creates = append(q.creates, e.Attributes["message_id"])
+	}
+	require.Len(t, q.creates, upV830Backlog, "one queued message per order")
+	s.requireEvent(t, res, tradebinEventPrefix+"OrderCancelMessageEvent", map[string]string{"orderId": q.cancelID})
+	t.Logf("queued %d orders and a cancel at height %d", upV830Backlog, res.Height)
+
+	q.queueKeys, err = helpers.StorePrefixKeys(s.ctx, s.bze, "tradebin", []byte("Qm/"))
+	require.NoError(t, err)
+	require.Positive(t, q.queueKeys, "queue keys on v8.2.0")
+	q.ownerPriceKeys, err = helpers.StorePrefixKeys(s.ctx, s.bze, "tradebin", []byte("Tb/op/"))
+	require.NoError(t, err)
+	require.Zero(t, q.ownerPriceKeys, "no owner-price index on v8.2.0")
+	return q
+}
+
+// v830Queued is the number of backlog orders still queued at the plan height:
+// the others rest on the book at plan - 1, next to the cancel's target.
+func (s *upgradeSuite) v830Queued(t *testing.T, q v830Queue) int {
+	t.Helper()
+	resting := len(s.userOrders(t, s.plan-1, s.admin)) - 1
+	queued := upV830Backlog - resting
+	require.Positive(t, queued, "the backlog drained before the plan height (%d orders rest): raise upV830Backlog", resting)
+	require.Less(t, queued, upV830Backlog, "no backlog order executed before the plan height")
+	return queued
+}
+
+// v830Moves: the migration sends the abc of every queued order from the
+// tradebin module back to admin, and the handler sweeps every coin left at
+// txfeecollector_burner to the burner module. v8.2.0's EndBlock empties the
+// collector of what it can swap, so the sweep may move nothing here; the app
+// tests seed every denom kind.
+func (s *upgradeSuite) v830Moves(t *testing.T, before any) []upgradeMove {
+	queued := s.v830Queued(t, before.(v830State).queue)
+	moves := []upgradeMove{{from: "tradebin module", to: "admin", coin: sdk.NewInt64Coin(s.abc, int64(queued*upV830BacklogAmount))}}
+	left := s.before.Balances[upV830BurnerFees]
+	t.Logf("%s holds %s at the plan height - 1", upV830BurnerFees, left)
+	for _, c := range left {
+		moves = append(moves, upgradeMove{from: upV830BurnerFees, to: "burner module", coin: c})
+	}
+	return moves
+}
+
+// v830QueueRefunded checks the tradebin 4 -> 5 migration: every
+// order still queued at the plan height is refunded once, with reason
+// upgrade, in queue order; nothing is executed or cancelled; the cancel's
+// order still rests and no queue key is left in the store. Param field 11 is
+// read as maxFillsPerOrder and keeps the lowered value (the migration sets
+// the default only over a 0); the value before the suite lowered it is
+// restored afterwards under the new name.
+func (s *upgradeSuite) v830QueueRefunded(t *testing.T, q v830Queue) {
+	admin := s.admin.FormattedAddress()
+	queued := s.v830Queued(t, q)
+
+	refunds, err := helpers.BlockEvents(s.ctx, s.bze, s.plan, tradebinEventPrefix+"OrderMessageRefundedEvent")
+	require.NoError(t, err)
+	require.Len(t, refunds, queued, "one refund per queued order, none for the cancel")
+	amount := strconv.Itoa(upV830BacklogAmount)
+	for i, e := range refunds {
+		a := e.Attributes
+		require.Equal(t,
+			[]string{q.creates[upV830Backlog-queued+i], s.market, "sell", admin, amount, amount + s.abc, "upgrade"},
+			[]string{a["order_id"], a["market_id"], a["order_type"], a["owner"], a["amount"], a["refund"], a["reason"]},
+			"refund %d", i)
+	}
+	for _, typ := range []string{"OrderSavedEvent", "OrderExecutedEvent", "OrderCanceledEvent"} {
+		events, err := helpers.BlockEvents(s.ctx, s.bze, s.plan, tradebinEventPrefix+typ)
+		require.NoError(t, err)
+		require.Empty(t, events, "no %s at the plan height: the migration executes nothing", typ)
+	}
+
+	var ids []string
+	for _, o := range s.userOrders(t, s.plan, s.admin) {
+		ids = append(ids, o.ID)
+	}
+	require.Contains(t, ids, q.cancelID, "the queued cancel's order still rests")
+	require.Len(t, ids, upV830Backlog-queued+1, "the backlog orders saved before the upgrade still rest")
+
+	// the count on v8.2.0 was taken with the backlog (v830QueueBacklog)
+	require.Positive(t, q.queueKeys, "queue keys before the upgrade")
+	keys, err := helpers.StorePrefixKeys(s.ctx, s.bze, "tradebin", []byte("Qm/"))
+	require.NoError(t, err)
+	require.Zero(t, keys, "no queue key left after the migration")
+
+	require.JSONEq(t, `"1"`, string(s.params(t, s.plan, "tradebin")["maxFillsPerOrder"]), "field 11 kept its stored value")
+	s.setTradebinParam(t, "maxFillsPerOrder", q.perBlock)
+}
+
+// v830OwnerPriceIndex checks that the tradebin 4 -> 5 migration builds the
+// owner-price index: there was no Tb/op/ key on v8.2.0 and there
+// are some after the upgrade. The backlog orders still resting are several
+// orders of admin at one price (placed before v8.3.0): they stay separate and
+// the index points at the lowest id of them, so admin's next sell at that
+// price is merged with that order (OrderAmendedEvent, no new order): the
+// merged order rests under the sell's new id and the lowest id is gone;
+// the other backlog orders are untouched.
+func (s *upgradeSuite) v830OwnerPriceIndex(t *testing.T, q v830Queue) {
+	// the count on v8.2.0 was taken with the backlog (v830QueueBacklog)
+	require.Zero(t, q.ownerPriceKeys, "no owner-price index before the migration")
+	keys, err := helpers.StorePrefixKeys(s.ctx, s.bze, "tradebin", []byte("Tb/op/"))
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, keys, 2, "owner-price index of admin's sells at %s and %s", upV830BacklogPrice, upV830CancelPrice)
+
+	var backlog []string
+	for _, o := range s.userOrders(t, s.plan, s.admin) {
+		if o.ID != q.cancelID {
+			backlog = append(backlog, o.ID)
+		}
+	}
+	require.Greater(t, len(backlog), 1, "several backlog orders of admin rest at one price")
+	lowest := slices.Min(backlog)
+
+	amount := strconv.Itoa(upV830BacklogAmount)
+	res := s.exec(t, s.admin, "tradebin", "create-order", "sell", amount, upV830BacklogPrice, s.market)
+	amended := helpers.TxEvents(res, tradebinEventPrefix+"OrderAmendedEvent")
+	require.Len(t, amended, 1, "the sell is added to a resting order")
+	a := amended[0].Attributes
+	require.Equal(t,
+		[]string{lowest, s.market, "sell", upV830BacklogPrice, s.admin.FormattedAddress(), amount, strconv.Itoa(2 * upV830BacklogAmount)},
+		[]string{a["previous_id"], a["market_id"], a["order_type"], a["price"], a["owner"], a["added_amount"], a["amount"]},
+		"the sell is merged with the lowest backlog id")
+	merged := a["id"]
+	require.NotContains(t, backlog, merged, "the merged order rests under a new id")
+	require.NotEqual(t, q.cancelID, merged, "the merged order rests under a new id")
+	require.Empty(t, helpers.TxEvents(res, tradebinEventPrefix+"OrderSavedEvent"), "no new order")
+
+	var after []string
+	for _, o := range s.userOrders(t, 0, s.admin) {
+		after = append(after, o.ID)
+	}
+	require.Len(t, after, len(backlog)+1, "the other backlog orders still rest apart")
+	require.NotContains(t, after, lowest, "the lowest backlog id is replaced")
+	require.Contains(t, after, merged)
+	for _, id := range backlog {
+		if id != lowest {
+			require.Contains(t, after, id, "backlog order %s untouched", id)
+		}
+	}
+}
+
+// v830PriceLevelOwners checks that the tradebin 4 -> 5 migration wrote the
+// distinct-owner count of every price level: no aggregate counts
+// owners at plan - 1, and at the plan height every one counts the distinct
+// owners resting at its price, admin's several backlog orders at one price
+// once.
+func (s *upgradeSuite) v830PriceLevelOwners(t *testing.T) {
+	type level struct{ typ, price string }
+	resting := map[level][]string{}
+	for _, u := range []ibc.Wallet{s.admin, s.alice, s.bob, s.carol} {
+		for _, ref := range s.userOrders(t, s.plan, u) {
+			order := query[struct {
+				Order struct {
+					Price string `json:"price"`
+					Owner string `json:"owner"`
+				} `json:"order"`
+			}](t, s, s.plan, "tradebin", "market-order", s.market, ref.OrderType, ref.ID).Order
+			l := level{ref.OrderType, sdkmath.LegacyMustNewDecFromStr(order.Price).String()}
+			if !slices.Contains(resting[l], order.Owner) {
+				resting[l] = append(resting[l], order.Owner)
+			}
+		}
+	}
+
+	levels := 0
+	for _, typ := range []string{"buy", "sell"} {
+		for _, agg := range s.rawList(t, s.plan-1, "list", "tradebin", "market-aggregated-orders", s.market, typ) {
+			require.Contains(t, []any{nil, "0"}, agg["owners"], "no owner count before the migration")
+		}
+		for _, agg := range s.rawList(t, s.plan, "list", "tradebin", "market-aggregated-orders", s.market, typ) {
+			price, _ := agg["price"].(string)
+			l := level{typ, sdkmath.LegacyMustNewDecFromStr(price).String()}
+			require.NotEmpty(t, resting[l], "orders resting at the %s level %s", typ, price)
+			owners, _ := agg["owners"].(string)
+			require.Equal(t, strconv.Itoa(len(resting[l])), owners, "distinct owners at the %s level %s", typ, price)
+			levels++
+		}
+	}
+	require.Positive(t, levels, "aggregated levels at the plan height")
+	backlog, err := sdkmath.LegacyNewDecFromStr(upV830BacklogPrice)
+	require.NoError(t, err)
+	require.Equal(t, []string{s.admin.FormattedAddress()}, resting[level{"sell", backlog.String()}], "admin alone at the backlog price")
+}
+
+// withoutFields returns the order book lists without the given fields.
+func withoutFields(lists map[string][]map[string]any, fields []string) map[string][]map[string]any {
+	if len(fields) == 0 {
+		return lists
+	}
+	out := make(map[string][]map[string]any, len(lists))
+	for name, list := range lists {
+		if list == nil {
+			out[name] = nil
+			continue
+		}
+		stripped := make([]map[string]any, 0, len(list))
+		for _, entry := range list {
+			e := make(map[string]any, len(entry))
+			for k, v := range entry {
+				if !slices.Contains(fields, k) {
+					e[k] = v
+				}
+			}
+			stripped = append(stripped, e)
+		}
+		out[name] = stripped
+	}
+	return out
+}
+
+// setTradebinParam passes a tradebin MsgUpdateParams that changes one param.
+func (s *upgradeSuite) setTradebinParam(t *testing.T, name string, value json.RawMessage) {
+	t.Helper()
+	params := s.params(t, 0, "tradebin")
+	require.Contains(t, params, name, "tradebin param %s", name)
+	requireDecimalDecParams(t, params)
+	require.NoError(t, helpers.DecParamsForTx(params, helpers.TradebinDecParams...))
+	params[name] = value
+	_, err := helpers.SubmitAndPassProposalWith(s.ctx, s.bze, s.admin, s.txOpts(), helpers.Proposal{
+		Messages: []any{map[string]any{"@type": "/bze.tradebin.MsgUpdateParams", "authority": s.gov, "params": params}},
+		Title:    "Set tradebin " + name,
+		Summary:  "e2e: tradebin " + name,
+	})
+	require.NoError(t, err)
+	require.JSONEq(t, string(value), string(s.params(t, 0, "tradebin")[name]), "tradebin %s", name)
 }
 
 func (s *upgradeSuite) v830After(t *testing.T, before any) {
-	t.Logf("module versions before %v, after %v", before, s.moduleVersions(t, s.plan))
+	b := before.(v830State)
+
+	// module versions: the ibc-go v10 migrations, the rewards v5 -> v6
+	// trading reward countdown reset and the tradebin v4 -> v5
+	// order book queue removal ran, everything else as before. x/upgrade never deletes a version entry, so the removed
+	// capability, feeibc, group and nft modules keep their last versions; their
+	// stores are deleted by the store loader and their CLI is gone (checked below)
+	versions := s.moduleVersions(t, s.plan)
+	t.Logf("module versions before %v, after %v", b.versions, versions)
+	for name, want := range upV830Frozen {
+		require.Equal(t, want, versions[name], "%s entry frozen, no migration", name)
+	}
+	require.Equal(t, int64(8), versions["ibc"], "ibc core migrated 6 -> 8")
+	require.Equal(t, int64(6), versions["transfer"], "transfer migrated 5 -> 6")
+	require.Equal(t, int64(6), versions["rewards"], "rewards migrated 5 -> 6")
+	require.Equal(t, int64(4), versions["tokenfactory"], "tokenfactory migrated 3 -> 4")
+	require.Equal(t, int64(5), versions["tradebin"], "tradebin migrated 4 -> 5")
+	require.Equal(t, int64(5), versions["burner"], "burner migrated 4 -> 5")
+	require.Equal(t, int64(1), versions["dao"], "the new dao module starts at version 1")
+	require.Equal(t, int64(1), versions["guardian"], "the new guardian module starts at version 1")
+	require.Equal(t, int64(2), versions["ratelimit"], "the new rate-limiting module starts at its consensus version 2")
+	for name, v := range b.versions {
+		switch name {
+		case "ibc", "transfer", "rewards", "tokenfactory", "tradebin", "burner":
+			continue
+		}
+		require.Equal(t, v, versions[name], "%s module version unchanged", name)
+	}
+	require.False(t, s.supported(t, "ibc-fee", "packets"), "the fee module is gone from the CLI")
+	require.False(t, s.supported(t, "group", "groups"), "x/group is gone from the CLI")
+	require.False(t, s.supported(t, "nft", "classes"), "x/nft is gone from the CLI")
+	// both removed modules' addresses refuse funds. v8.2.0 never blocked the
+	// feeibc account, so that check is after the upgrade only
+	s.requireAccountBlocked(t, "nft")
+	s.requireAccountBlocked(t, "feeibc")
+
+	// the store loader deleted the four stores: a raw query fails with the
+	// multistore's own error, while a kept store (ibc) still answers
+	for _, store := range upV830Deleted {
+		res, err := helpers.StoreQuery(s.ctx, s.bze, store, 0)
+		require.NoError(t, err)
+		require.NotZero(t, res.Code, "the %s store is gone after the upgrade", store)
+		require.Contains(t, res.Log, "no such store: "+store, "the %s store is gone after the upgrade", store)
+	}
+	res, err := helpers.StoreQuery(s.ctx, s.bze, "ibc", 0)
+	require.NoError(t, err)
+	require.Zero(t, res.Code, "the ibc store still answers: %s", res.Log)
+
+	// the channel opened before the upgrade is still open on both ends
+	s.ibc.requireChannelOpen(t, s.ibc.main)
+
+	// the transfer migration turned the voucher's denom trace into a denom
+	denom := query[struct {
+		Denom struct {
+			Base  string `json:"base"`
+			Trace []struct {
+				PortID    string `json:"port_id"`
+				ChannelID string `json:"channel_id"`
+			} `json:"trace"`
+		} `json:"denom"`
+	}](t, s, 0, "ibc-transfer", "denom", b.voucher).Denom
+	require.Equal(t, chain.SimdDenom, denom.Base, "voucher base denom")
+	require.Len(t, denom.Trace, 1, "voucher trace")
+	require.Equal(t, chain.TransferPort, denom.Trace[0].PortID)
+	require.Equal(t, s.ibc.main.bze, denom.Trace[0].ChannelID)
+
+	s.v830RateLimits(t)
+
+	// IBC keeps working on the same channel: stake arrives, vouchers leave
+	s.ibc.transferIn(t, chain.SimdDenom, upV830In).requireAccepted(t)
+	vouchers := s.ibc.balance(t, s.bze, s.ibc.bzeUser, b.voucher)
+	out, err := helpers.SendIbc(s.ctx, s.bze, s.ibc.bzeUser, s.ibc.main.bze, s.ibc.simdUser.FormattedAddress(), sdk.NewInt64Coin(b.voucher, upV830Out))
+	require.NoError(t, err)
+	_, err = helpers.WaitForRecv(s.ctx, s.ibc.simd, s.ibc.main.simd, out.Sequence)
+	require.NoError(t, err)
+	_, err = helpers.WaitForAck(s.ctx, s.bze, out)
+	require.NoError(t, err)
+	require.Equal(t, vouchers.SubRaw(upV830Out), s.ibc.balance(t, s.bze, s.ibc.bzeUser, b.voucher), "stake vouchers left bze")
+
+	// the ICA host still answers
+	require.True(t, s.supported(t, "interchain-accounts", "host", "params"), "ICA host params")
+
+	s.v830MintableFlags(t, b)
+	s.v830PoolPriceAverages(t)
+	s.v830LpMetadata(t)
+	s.v830PrizeAmounts(t, b)
+	s.v830QueueRefunded(t, b.queue)
+	s.v830PriceLevelOwners(t)
+	s.v830OwnerPriceIndex(t, b.queue)
+
+	s.v830BurnerParams(t, b)
+	s.v830DaoParams(t)
+	s.v830DaoAccount(t, b)
+	s.v830TradingReward(t, b)
+
+	// the sweep left txfeecollector_burner empty (step 4 checked the moves),
+	// and its retired address still refuses funds
+	s.requireAccountBlocked(t, upV830BurnerFees)
+	require.True(t, s.balances(t, 0, s.accounts[upV830BurnerFees]).IsZero(), "%s stays empty", upV830BurnerFees)
+}
+
+// v830BurnerParams checks the burner v5 migration: the two IBC move params
+// at their defaults, the burning interval as v8.2.0 left it.
+func (s *upgradeSuite) v830BurnerParams(t *testing.T, b v830State) {
+	res := query[struct {
+		Params struct {
+			PeriodicBurningWeeks   helpers.Int64 `json:"periodic_burning_weeks"`
+			IbcMoveMaxReserveRatio string        `json:"ibc_move_max_reserve_ratio"`
+			IbcMoveCooldownBlocks  helpers.Int64 `json:"ibc_move_cooldown_blocks"`
+		} `json:"params"`
+	}](t, s, 0, "burner", "params").Params
+	require.Equal(t, b.burningWeeks, int64(res.PeriodicBurningWeeks), "periodic_burning_weeks unchanged")
+	ratio, err := helpers.ParseDec(res.IbcMoveMaxReserveRatio)
+	require.NoError(t, err)
+	require.Equal(t, sdkmath.LegacyMustNewDecFromStr("0.03").String(), ratio.String(), "ibc_move_max_reserve_ratio default")
+	require.Equal(t, int64(1000), int64(res.IbcMoveCooldownBlocks), "ibc_move_cooldown_blocks default")
+}
+
+// v830DaoParams checks x/dao holds exactly its default params. The CLI
+// prints durations as seconds ("3600s"), compared as Go durations.
+func (s *upgradeSuite) v830DaoParams(t *testing.T) {
+	got := query[struct {
+		Params daoParams `json:"params"`
+	}](t, s, 0, "dao", "params").Params
+	for _, d := range []*string{&got.MinVotingPeriod, &got.MaxVotingPeriod, &got.ExecutionWindow, &got.MinExpediteDelay} {
+		v, err := time.ParseDuration(*d)
+		require.NoError(t, err)
+		*d = v.String()
+	}
+	require.Equal(t, mustJSON(upV830DaoParams), mustJSON(got), "x/dao default params")
+}
+
+// v830DaoAccount checks the handler turned the plain account v8.2.0 left at
+// the dao module address into the dao module account in place (same address,
+// account number and sequence, no permissions, the balance kept: step 4), that
+// the address now refuses funds, and that a DAO proposal's deposit goes into
+// the escrow, which needs that module account.
+func (s *upgradeSuite) v830DaoAccount(t *testing.T, b v830State) {
+	addr := s.accounts[upV830DaoName]
+	acc, found := s.account(t, addr)
+	require.True(t, found, "account at the dao module address")
+	require.Equal(t, upAccount{
+		Type: "/cosmos.auth.v1beta1.ModuleAccount", Address: addr, Number: b.dao.Number, Sequence: b.dao.Sequence,
+		Name: "dao", Permissions: []string{},
+	}, acc, "the plain account became the dao module account in place")
+	squat := sdk.NewCoins(sdk.NewInt64Coin(chain.Denom, upV830DaoSquat))
+	require.Equal(t, squat.String(), s.balances(t, 0, addr).String(), "the dao module account keeps the coins sent on v8.2.0")
+	s.requireAccountBlocked(t, "dao")
+
+	// a static DAO of admin alone, with a deposit; the dao params are the
+	// defaults, so the periods are at least min_voting_period (1 hour)
+	cfg := map[string]any{
+		"min_quorum": "0.5", "threshold": "0.5", "voting_period": "7200s",
+		"allow_expedite": false, "expedited_period": "3600s", "expedite_quorum": "0.6", "expedite_threshold": "0.6",
+		"open_submission": false, "deposit_refund_policy": "ALWAYS", "cost_destination": "BURN", "kept_deposit_destination": "BURN",
+		"proposal_deposit": map[string]string{"denom": chain.Denom, "amount": strconv.Itoa(upV830DaoDeposit)},
+	}
+	admin := s.admin.FormattedAddress()
+	res := s.exec(t, s.admin, "dao", "create-dao", "static-list", "upgrade dao", mustJSON(cfg), "--members", admin)
+	created := helpers.TxEvents(res, "bze.dao.EventDaoCreated")
+	require.Len(t, created, 1, "EventDaoCreated")
+	treasury := created[0].Attributes["address"]
+	require.NotEmpty(t, treasury)
+
+	escrow := s.balance(t, addr, chain.Denom)
+	res = s.exec(t, s.admin, "dao", "submit-proposal", created[0].Attributes["id"], "after the upgrade",
+		msgArgs(bankSend(treasury, admin, sdk.NewCoins(sdk.NewInt64Coin(chain.Denom, 1))))[0])
+	require.Len(t, helpers.TxEvents(res, "bze.dao.EventProposalSubmitted"), 1, "EventProposalSubmitted")
+	got, err := helpers.Transferred(helpers.TxEvents(res, "transfer"), admin, addr, chain.Denom)
+	require.NoError(t, err)
+	require.Equal(t, sdkmath.NewInt(upV830DaoDeposit), got, "the deposit goes into the dao escrow")
+	require.Equal(t, escrow.AddRaw(upV830DaoDeposit), s.balance(t, addr, chain.Denom), "the escrow holds the coins sent on v8.2.0 and the deposit")
+}
+
+// upAccount is an x/auth account as `q auth account` prints it.
+type upAccount struct {
+	Type             string
+	Address          string
+	Number, Sequence int64
+	HasPubKey        bool
+	// Name and Permissions are a module account's
+	Name        string
+	Permissions []string
+}
+
+// account reads the account at addr; found is false when there is none. The
+// CLI prints the account either as a proto JSON Any ("@type" beside the
+// fields) or in amino JSON ("type" and "value"); both are read.
+func (s *upgradeSuite) account(t *testing.T, addr string) (upAccount, bool) {
+	t.Helper()
+	res, err := helpers.Query[struct {
+		Account json.RawMessage `json:"account"`
+	}](s.ctx, s.bze, "auth", "account", addr)
+	if err != nil && strings.Contains(err.Error(), "not found") {
+		return upAccount{}, false
+	}
+	require.NoError(t, err)
+	var fields map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(res.Account, &fields))
+	var typ string
+	if raw, ok := fields["@type"]; ok {
+		require.NoError(t, json.Unmarshal(raw, &typ))
+	} else {
+		require.NoError(t, json.Unmarshal(fields["type"], &typ))
+		value := fields["value"]
+		fields = nil
+		require.NoError(t, json.Unmarshal(value, &fields))
+	}
+	if proto, ok := map[string]string{
+		"cosmos-sdk/BaseAccount":   "/cosmos.auth.v1beta1.BaseAccount",
+		"cosmos-sdk/ModuleAccount": "/cosmos.auth.v1beta1.ModuleAccount",
+	}[typ]; ok {
+		typ = proto
+	}
+	var base struct {
+		Address       string          `json:"address"`
+		AccountNumber helpers.Int64   `json:"account_number"`
+		Sequence      helpers.Int64   `json:"sequence"`
+		PubKey        json.RawMessage `json:"pub_key"`
+	}
+	acc := upAccount{Type: typ}
+	if raw, ok := fields["base_account"]; ok {
+		require.NoError(t, json.Unmarshal(raw, &base))
+	} else {
+		bz, err := json.Marshal(fields)
+		require.NoError(t, err)
+		require.NoError(t, json.Unmarshal(bz, &base))
+	}
+	// a module account's name and permissions sit beside base_account in the
+	// proto JSON, and beside the flattened base fields in the "type"/"value"
+	// form the CLI prints (the module account's own JSON encoding)
+	if typ == "/cosmos.auth.v1beta1.ModuleAccount" {
+		if raw, ok := fields["name"]; ok {
+			require.NoError(t, json.Unmarshal(raw, &acc.Name))
+		}
+		if raw, ok := fields["permissions"]; ok {
+			require.NoError(t, json.Unmarshal(raw, &acc.Permissions))
+		}
+		if acc.Permissions == nil {
+			acc.Permissions = []string{}
+		}
+	}
+	acc.Address, acc.Number, acc.Sequence = base.Address, int64(base.AccountNumber), int64(base.Sequence)
+	acc.HasPubKey = len(base.PubKey) > 0 && string(base.PubKey) != "null"
+	return acc, true
+}
+
+// v830PoolPriceAverages checks the tradebin v5 migration's pool price
+// guard: the three new params at their defaults, and one moving average
+// record per pool, seeded in the upgrade block with the pool's price as the
+// last block of the previous release left it.
+func (s *upgradeSuite) v830PoolPriceAverages(t *testing.T) {
+	params, err := helpers.QueryPriceDriftParams(s.ctx, s.bze)
+	require.NoError(t, err)
+	require.EqualValues(t, 20, params.HalfLifeBlocks, "poolPriceHalfLifeBlocks default")
+	require.Equal(t, sdkmath.LegacyMustNewDecFromStr("0.1").String(), params.FeeMaxDrift.String(), "feeMaxPriceDrift default")
+	require.Equal(t, sdkmath.LegacyMustNewDecFromStr("0.03").String(), params.ModuleMaxDrift.String(), "moduleMaxPriceDrift default")
+
+	pools := s.pools(t, s.plan)
+	require.NotEmpty(t, pools)
+	for _, p := range pools {
+		avg, err := helpers.QueryPoolPriceAverageAt(s.ctx, s.bze, p.ID, s.plan)
+		require.NoError(t, err, "pool %s has a moving average record", p.ID)
+		require.Equal(t, s.plan, avg.LastHeight, "pool %s average seeded at the upgrade height", p.ID)
+		// the migration seeds from the pools as the previous block left them
+		price, err := helpers.QueryPoolPriceAt(s.ctx, s.bze, p.ID, s.plan-1)
+		require.NoError(t, err)
+		require.Equal(t, price.String(), avg.AvgPrice.String(), "pool %s average is its price before the upgrade", p.ID)
+	}
+	// the record does not exist on v8.2.0
+	_, err = helpers.QueryPoolPriceAverageAt(s.ctx, s.bze, pools[0].ID, s.plan-1)
+	require.ErrorContains(t, err, "not found", "no pool price average before the upgrade")
+}
+
+// v830LpMetadata checks the LP share metadata backfill: every pool's LP
+// denom has the name, symbol and description a new pool gets, and keeps its
+// base, display and units.
+func (s *upgradeSuite) v830LpMetadata(t *testing.T) {
+	for _, p := range s.pools(t, 0) {
+		before, after := s.lpMetadata(t, s.plan-1, p.LpDenom), s.lpMetadata(t, 0, p.LpDenom)
+		want := lpDenomMetadata(p.ID)
+		require.Equal(t, want.name, after.Name, "pool %s LP name", p.ID)
+		require.Equal(t, want.symbol, after.Symbol, "pool %s LP symbol", p.ID)
+		require.Equal(t, want.description, after.Description, "pool %s LP description", p.ID)
+		require.Equal(t, before.Base, after.Base, "pool %s LP base", p.ID)
+		require.Equal(t, before.Display, after.Display, "pool %s LP display", p.ID)
+		require.Equal(t, before.DenomUnits, after.DenomUnits, "pool %s LP units", p.ID)
+	}
+}
+
+// v830PrizeAmounts checks the staking reward prize amounts are stored in
+// canonical form after the upgrade: "+1000" becomes "1000", and the
+// reward seeded with a canonical amount is untouched (step 4).
+func (s *upgradeSuite) v830PrizeAmounts(t *testing.T, b v830State) {
+	get := func(height int64) srInfo {
+		return query[struct {
+			StakingReward srInfo `json:"staking_reward"`
+		}](t, s, height, "rewards", "get-staking-reward", b.plusSR).StakingReward
+	}
+	require.Equal(t, upV830PlusPrize, get(s.plan-1).PrizeAmount, "before the upgrade")
+	after := get(0)
+	require.Equal(t, upV830PlusPrizeCanon, after.PrizeAmount, "canonical after the upgrade")
+	require.Equal(t, chain.Denom, after.PrizeDenom)
+	require.EqualValues(t, upV830PlusDuration, after.Duration)
+}
+
+// upLpMetadata is the bank metadata of an LP share denom.
+type upLpMetadata struct {
+	Name        string `json:"name"`
+	Symbol      string `json:"symbol"`
+	Description string `json:"description"`
+	Base        string `json:"base"`
+	Display     string `json:"display"`
+	DenomUnits  []struct {
+		Denom    string        `json:"denom"`
+		Exponent helpers.Int64 `json:"exponent"`
+	} `json:"denom_units"`
+}
+
+func (s *upgradeSuite) lpMetadata(t *testing.T, height int64, denom string) upLpMetadata {
+	t.Helper()
+	return query[struct {
+		Metadata upLpMetadata `json:"metadata"`
+	}](t, s, height, "bank", "denom-metadata", denom).Metadata
+}
+
+// upV830Guardian is the guardian the v8.3.0 handler sets (the project lead's
+// address, hard-coded because the e2e module does not import the chain).
+const upV830Guardian = "bze1jx4x3kn8mlz2s03zdpf2a38x9gl66llvjqdd55"
+
+// v830RateLimits checks the IBC rate limiting the v8.3.0 handler sets up:
+// the guardian is the mainnet constant, and of the initial
+// rate limits only the ones whose path exists on this network were added.
+// The network has one channel, channel-0, which carries ubze: it gets
+// the 2% / 2% quota in a 24 h window with an empty flow; every other row of
+// the handler's list (other channels, USDC.n) is skipped and logged, not
+// added, and the upgrade went on. No blocked denoms.
+func (s *upgradeSuite) v830RateLimits(t *testing.T) {
+	guardian, err := helpers.QueryGuardian(s.ctx, s.bze)
+	require.NoError(t, err)
+	require.Equal(t, upV830Guardian, guardian, "the guardian is the mainnet constant")
+
+	limits, err := helpers.QueryRateLimits(s.ctx, s.bze)
+	require.NoError(t, err)
+	require.Len(t, limits, 1, "only the path that exists on this network was added: %+v", limits)
+	rl := limits[0]
+	require.Equal(t, chain.Denom, rl.Path.Denom)
+	require.Equal(t, "channel-0", rl.Path.ChannelOrClientID)
+	require.Equal(t, s.ibc.main.bze, rl.Path.ChannelOrClientID, "channel-0 is the channel of the network")
+	require.Equal(t, sdkmath.NewInt(2), rl.Quota.MaxPercentSend)
+	require.Equal(t, sdkmath.NewInt(2), rl.Quota.MaxPercentRecv)
+	require.EqualValues(t, 24, rl.Quota.DurationHours)
+	require.True(t, rl.FlowIs(sdkmath.ZeroInt(), sdkmath.ZeroInt()), "empty flow")
+	require.True(t, rl.Flow.ChannelValue.IsPositive(), "channel value is the ubze supply")
+
+	blocked, err := helpers.QueryBlockedDenoms(s.ctx, s.bze)
+	require.NoError(t, err)
+	require.Empty(t, blocked)
+}
+
+// v830MintableFlags checks the tokenfactory 3 -> 4 migration: every
+// seeded denom and kept keep their admin and are mintable, renounced is not,
+// and kept's admin can still mint it. All of them read the default
+// DenomConfig, and kept's admin can set one.
+func (s *upgradeSuite) v830MintableFlags(t *testing.T, b v830State) {
+	admin := s.admin.FormattedAddress()
+	denoms := []string{s.usd, s.abc, s.stk, s.prz, b.kept}
+	if s.features.haltedDenoms {
+		denoms = append(denoms, s.hlt)
+	}
+	for _, d := range denoms {
+		auth := s.denomAuthority(t, s.plan, d)
+		require.Equal(t, admin, auth.Admin, "%s admin", d)
+		require.True(t, auth.Mintable, "%s has an admin, so it is mintable", d)
+	}
+	gone := s.denomAuthority(t, s.plan, b.renounced)
+	require.Empty(t, gone.Admin)
+	require.False(t, gone.Mintable, "a renounced denom is not mintable")
+
+	supply := s.supply(t, b.kept)
+	s.exec(t, s.admin, "tokenfactory", "mint", coinStr(upSmokeMint, b.kept))
+	require.Equal(t, supply.AddRaw(upSmokeMint), s.supply(t, b.kept), "the kept denom's admin still mints")
+
+	// DenomConfig has no migration: every existing denom reads as the
+	// defaults, and the kept denom's admin can set one
+	for _, d := range append(denoms, b.renounced) {
+		require.Equal(t, upDenomConfig{TransferFee: "0.000000000000000000", GasSurcharge: "0.000000000000000000"}, s.denomConfig(t, s.plan, d), "%s config", d)
+	}
+	s.exec(t, s.admin, "tokenfactory", "set-denom-config", b.kept, admin, "0.001", "0.5")
+	require.Equal(t, upDenomConfig{CommunityPool: admin, TransferFee: "0.001000000000000000", GasSurcharge: "0.500000000000000000"}, s.denomConfig(t, 0, b.kept))
+}
+
+// upDenomConfig is a denom config with normalised decimal rates.
+type upDenomConfig struct {
+	CommunityPool, TransferFee, GasSurcharge string
+}
+
+// denomConfig reads the denom's config at height (0 = latest), whichever form
+// the query prints the rates in.
+func (s *upgradeSuite) denomConfig(t *testing.T, height int64, denom string) upDenomConfig {
+	t.Helper()
+	res := query[struct {
+		Config struct {
+			CommunityPool string `json:"community_pool"`
+			TransferFee   string `json:"transfer_fee"`
+			GasSurcharge  string `json:"gas_surcharge"`
+		} `json:"config"`
+	}](t, s, height, "tokenfactory", "denom-config", denom)
+	return upDenomConfig{
+		CommunityPool: res.Config.CommunityPool,
+		TransferFee:   ratio(t, res.Config.TransferFee).String(),
+		GasSurcharge:  ratio(t, res.Config.GasSurcharge).String(),
+	}
+}
+
+type upDenomAuthority struct {
+	Admin string `json:"admin"`
+	// the query may omit a false flag, which reads as false
+	Mintable bool `json:"mintable"`
+}
+
+func (s *upgradeSuite) denomAuthority(t *testing.T, height int64, denom string) upDenomAuthority {
+	t.Helper()
+	return query[struct {
+		DenomAuthority upDenomAuthority `json:"denomAuthority"`
+	}](t, s, height, "tokenfactory", "denom-authority", denom).DenomAuthority
+}
+
+// upAdmins maps each denom of an authorities snapshot to its admin.
+func upAdmins(authorities map[string]map[string]any) map[string]any {
+	admins := make(map[string]any, len(authorities))
+	for denom, auth := range authorities {
+		admins[denom] = auth["admin"]
+	}
+	return admins
 }
 
 // upgradeSnapshot is the state that must survive the upgrade, read at one height.
@@ -1237,6 +2021,19 @@ func query[T any](t *testing.T, s *upgradeSuite, height int64, args ...string) T
 	res, err := helpers.Query[T](s.ctx, s.bze, args...)
 	require.NoError(t, err)
 	return res
+}
+
+// requireAccountBlocked checks that the module address of the named module
+// refuses funds: as a blocked module account, or as a blocked address kept
+// for a removed module.
+func (s *upgradeSuite) requireAccountBlocked(t *testing.T, module string) {
+	t.Helper()
+	addr, err := sdk.Bech32ifyAddressBytes(chain.Bech32Prefix, authtypes.NewModuleAddress(module))
+	require.NoError(t, err)
+	res, err := helpers.ExecTxWith(s.ctx, s.bze, s.admin, s.txOpts(), "bank", "send", s.admin.FormattedAddress(), addr, coinStr(1, chain.Denom))
+	require.NoError(t, err)
+	require.NotZero(t, res.Code, "sending to the %s module address must fail", module)
+	require.Contains(t, res.RawLog, addr+" is not allowed to receive funds")
 }
 
 // supported reports whether the running release has the query; an unknown

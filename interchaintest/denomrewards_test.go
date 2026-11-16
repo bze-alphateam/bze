@@ -511,11 +511,11 @@ func (s *denomRewardsSuite) rejoinAfterUnlock(t *testing.T) {
 func (s *denomRewardsSuite) dustAndFreshJoin(t *testing.T) {
 	creator := s.creator.FormattedAddress()
 	factory := "factory/" + creator + "/"
-	s.stk2, s.pa, s.pb = factory+"stk2", factory+"pa", factory+"pb"
+	s.stk2, s.pa, s.pb = factory+"stk2", factory+"pda", factory+"pdb"
 	for _, d := range []struct {
 		sub    string
 		supply int64
-	}{{"stk2", dr2StkSupply}, {"pa", dr2PaSupply}, {"pb", dr2PbSupply}} {
+	}{{"stk2", dr2StkSupply}, {"pda", dr2PaSupply}, {"pdb", dr2PbSupply}} {
 		s.mustExec(t, s.creator, "tokenfactory", "create-denom", d.sub)
 		s.mustExec(t, s.creator, "tokenfactory", "mint", coinStr(d.supply, factory+d.sub))
 	}
@@ -783,7 +783,7 @@ func (s *denomRewardsSuite) refusals(t *testing.T) {
 	}{
 		{"create: denom without supply", s.creator, create(ghost), drCodespace, 5003, "invalid staking denom", false},
 		{"create: invalid denom", s.creator, create("1bad"), drCodespace, 5003, "invalid staking denom", true},
-		{"create: balance below the fee", s.frank, drMsg("MsgCreateDenomReward", s.frank, s.prz, nil), drUndefinedSpace, 1, "user balance is too low", false},
+		{"create: balance below the fee", s.frank, drMsg("MsgCreateDenomReward", s.frank, s.prz, nil), "sdk", 5, "could not pay the fee", false},
 
 		{"schedule: no denom reward", s.creator, schedule(s.prz, s.pb, "1", "1"), drCodespace, 5015, "denom reward not found", false},
 		{"schedule: prize denom without supply", s.creator, schedule(s.stk2, ghost, "1", "1"), drCodespace, 5002, "invalid prize denom", false},

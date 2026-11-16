@@ -26,6 +26,20 @@ const (
 	DenomRewardLockKey = "app_state.rewards.params.denomRewardLock"
 )
 
+// EpochsKey is the genesis key of the epochs list, replaced whole by Epochs.
+const EpochsKey = "app_state.epochs.epochs"
+
+// Epochs returns the epochs genesis override with the given durations. A
+// suite that needs other durations drops the default one with
+// WithoutGenesis(EpochsKey) and adds its own with WithGenesis.
+func Epochs(day, hour, week string) cosmos.GenesisKV {
+	return cosmos.NewGenesisKV(EpochsKey, []map[string]any{
+		epoch("day", day),
+		epoch("hour", hour),
+		epoch("week", week),
+	})
+}
+
 // epoch returns a not-yet-started epoch, in the shape `bzed init` writes it.
 func epoch(identifier, duration string) map[string]any {
 	return map[string]any{
@@ -43,11 +57,7 @@ func epoch(identifier, duration string) map[string]any {
 // append their own with WithGenesis.
 func DefaultGenesis() []cosmos.GenesisKV {
 	return []cosmos.GenesisKV{
-		cosmos.NewGenesisKV("app_state.epochs.epochs", []map[string]any{
-			epoch("day", DayEpochDuration),
-			epoch("hour", HourEpochDuration),
-			epoch("week", WeekEpochDuration),
-		}),
+		Epochs(DayEpochDuration, HourEpochDuration, WeekEpochDuration),
 
 		cosmos.NewGenesisKV("app_state.gov.params.voting_period", VotingPeriod),
 		cosmos.NewGenesisKV("app_state.gov.params.expedited_voting_period", ExpeditedVotingPeriod),

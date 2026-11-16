@@ -6,13 +6,15 @@ The Burner module, developed by BeeZee (BZE) for Cosmos SDK ecosystem, enabling 
 ## Features
 - **Fund Burner**: Allows users to send coins to the Burner module for burning.
 - **Burn Coins via Governance Proposals**: Supports burning all coins in the module through a `BurnCoinsProposal`.
+- **Move Locked IBC Coins**: Anyone can move IBC coins locked in the black hole into their pool with BZE, at most `ibc_move_max_reserve_ratio` of the pool's reserve per call and once per `ibc_move_cooldown_blocks` blocks per denom. The periodic burn locks IBC coins and never pools them itself.
 - **Query Burned Coins**: Enables querying details of burned coins, including the block height at which the burn occurred.
 - **Event Logging**: Records key events like coins being burned and funds being added to the burner.
 
 ## Protobuf Definitions
 
 ### Messages
-- **Params**: Represents the parameters for the Burner module.
+- **Params**: Represents the parameters for the Burner module: `periodic_burning_weeks`, `ibc_move_max_reserve_ratio`, `ibc_move_cooldown_blocks`.
+- **IbcMoveLock**: The height of the last successful `MsgMoveIbcLockedCoins` of a denom (genesis `ibc_move_locks`).
 - **CoinsBurnedEvent**: Logs when coins are burned. Fields:
     - `burned`: Amount of coins burned.
 - **FundBurnerEvent**: Logs when the burner is funded. Fields:

@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (suite *IntegrationTestSuite) TestStoreDenomRewardPrize_SetGetRemove() {
+func (suite *IntegrationTestSuite) TestStoreDenomRewardPrize_SetGet() {
 	prize := types.DenomRewardPrize{
 		StakingDenom:          "ubze",
 		PrizeDenom:            "uprize",
@@ -22,10 +22,6 @@ func (suite *IntegrationTestSuite) TestStoreDenomRewardPrize_SetGetRemove() {
 	suite.Require().True(found)
 	suite.Require().Equal(prize.DistributedStake, got.DistributedStake)
 	suite.Require().Equal(prize.LastDistributionEpoch, got.LastDistributionEpoch)
-
-	suite.k.RemoveDenomRewardPrize(suite.ctx, "ubze", "uprize")
-	_, found = suite.k.GetDenomRewardPrize(suite.ctx, "ubze", "uprize")
-	suite.Require().False(found)
 }
 
 func (suite *IntegrationTestSuite) TestStoreDenomRewardPrize_IterateAndCount_PerDenomIsolation() {

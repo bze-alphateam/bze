@@ -1,6 +1,7 @@
 syntax = "proto3";
 package bze.tokenfactory;
 
+import "amino/amino.proto";
 import "gogoproto/gogo.proto";
 // this line is used by starport scaffolding # genesis/proto/import
 
@@ -11,4 +12,12 @@ message DenomAuthority {
 
   // Can be empty for no admin, or a valid osmosis address
   string admin = 1 [ (gogoproto.moretags) = "yaml:\"admin\"" ];
+
+  // mintable: the admin may mint. Turned off for good by MsgDisableMinting
+  // (or by renouncing the admin through MsgChangeAdmin).
+  // dont_omitempty: the CLI prints a false flag instead of dropping it.
+  bool mintable = 2 [
+    (gogoproto.moretags) = "yaml:\"mintable\"",
+    (amino.dont_omitempty) = true
+  ];
 }

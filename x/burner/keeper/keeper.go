@@ -25,6 +25,9 @@ type (
 		accountKeeper types.AccountKeeper
 		epochKeeper   types.EpochKeeper
 		tradeKeeper   types.TradeKeeper
+
+		// guardianKeeper tells whether the protocol automation is paused. nil means never paused.
+		guardianKeeper types.GuardianKeeper
 	}
 )
 
@@ -38,6 +41,7 @@ func NewKeeper(
 	accountKeeper types.AccountKeeper,
 	epochKeeper types.EpochKeeper,
 	tradeKeeper types.TradeKeeper,
+	guardianKeeper types.GuardianKeeper,
 ) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
@@ -53,7 +57,19 @@ func NewKeeper(
 		accountKeeper: accountKeeper,
 		epochKeeper:   epochKeeper,
 		tradeKeeper:   tradeKeeper,
+
+		guardianKeeper: guardianKeeper,
 	}
+}
+
+// IsAutomationPaused reports whether the guardian paused the protocol automation: the periodic burn then leaves the
+// burner's coins where they are. A keeper without a guardian keeper is never paused.
+func (k Keeper) IsAutomationPaused(ctx sdk.Context) bool {
+	if k.guardianKeeper == nil {
+		return false
+	}
+
+	return k.guardianKeeper.IsAutomationPaused(ctx)
 }
 
 // GetAuthority returns the module's authority.

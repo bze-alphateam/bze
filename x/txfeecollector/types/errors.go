@@ -16,4 +16,8 @@ var (
 	// ErrUnsupportedPacketUnmarshal is returned when the application wrapped by the
 	// inbound filter cannot unmarshal packet data itself (ADR 008).
 	ErrUnsupportedPacketUnmarshal = sdkerrors.Register(ModuleName, 1102, "underlying application does not support packet data unmarshalling")
+	// ErrChannelClosed refuses every ICS-20 transfer on a channel closed through
+	// x/guardian: a send fails the transaction, a receive gets an error
+	// acknowledgement so the sending chain refunds the sender.
+	ErrChannelClosed = sdkerrors.Register(ModuleName, 1140, "ibc transfers on this channel are stopped")
 )

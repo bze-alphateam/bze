@@ -1,8 +1,6 @@
 package app
 
 import (
-	"time"
-
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
@@ -15,9 +13,7 @@ import (
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	govmodulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
-	groupmodulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
-	nftmodulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
 	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
@@ -28,11 +24,12 @@ import (
 	circuittypes "cosmossdk.io/x/circuit/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
-	"cosmossdk.io/x/nft"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	burnermodulev1 "github.com/bze-alphateam/bze/api/bze/burner/module"
 	cointrunkmodulev1 "github.com/bze-alphateam/bze/api/bze/cointrunk/module"
+	daomodulev1 "github.com/bze-alphateam/bze/api/bze/dao/module"
 	epochmodulev1 "github.com/bze-alphateam/bze/api/bze/epochs/module"
+	guardianmodulev1 "github.com/bze-alphateam/bze/api/bze/guardian/module"
 	rewardsmodulev1 "github.com/bze-alphateam/bze/api/bze/rewards/module"
 	tokenfactorymodulev1 "github.com/bze-alphateam/bze/api/bze/tokenfactory/module"
 	tradebinmodulev1 "github.com/bze-alphateam/bze/api/bze/tradebin/module"
@@ -41,8 +38,12 @@ import (
 	burnermoduletypes "github.com/bze-alphateam/bze/x/burner/types"
 	_ "github.com/bze-alphateam/bze/x/cointrunk/module" // import for side-effects
 	cointrunkmoduletypes "github.com/bze-alphateam/bze/x/cointrunk/types"
+	_ "github.com/bze-alphateam/bze/x/dao/module" // import for side-effects
+	daomoduletypes "github.com/bze-alphateam/bze/x/dao/types"
 	_ "github.com/bze-alphateam/bze/x/epochs/module" // import for side-effects
 	epochmoduletypes "github.com/bze-alphateam/bze/x/epochs/types"
+	_ "github.com/bze-alphateam/bze/x/guardian/module" // import for side-effects
+	guardianmoduletypes "github.com/bze-alphateam/bze/x/guardian/types"
 	_ "github.com/bze-alphateam/bze/x/rewards/module" // import for side-effects
 	rewardsmoduletypes "github.com/bze-alphateam/bze/x/rewards/types"
 	_ "github.com/bze-alphateam/bze/x/tokenfactory/module" // import for side-effects
@@ -60,30 +61,34 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
-	ibcfeetypes "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	"google.golang.org/protobuf/types/known/durationpb"
+	ratelimittypes "github.com/cosmos/ibc-apps/modules/rate-limiting/v10/types"
+	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
+	ibcexported "github.com/cosmos/ibc-go/v10/modules/core/exported"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
+)
+
+// Module names of modules removed in v8.3.0, kept so their addresses stay blocked.
+const (
+	// removedNftModuleName is the module name of x/nft (nft.ModuleName).
+	removedNftModuleName = "nft"
+	// removedFeeIbcModuleName is the module name of the ICS-29 fee middleware (ibcfeetypes.ModuleName).
+	removedFeeIbcModuleName = "feeibc"
+	// removedBurnerFeeCollectorName is the module name of txfeecollector_burner, retired in v8.3.0 (burn-bound fees go
+	// straight to the burner module).
+	removedBurnerFeeCollectorName = "txfeecollector_burner"
 )
 
 var (
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
 	// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
-	// NOTE: Capability module must occur first so that it can initialize any capabilities
-	// so that other modules that want to create or claim capabilities afterwards in InitChain
-	// can do so safely.
 	genesisModuleOrder = []string{
 		// cosmos-sdk/ibc modules
-		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		distrtypes.ModuleName,
@@ -92,18 +97,16 @@ var (
 		govtypes.ModuleName,
 		minttypes.ModuleName,
 		ibcexported.ModuleName,
+		ratelimittypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		authz.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
-		ibcfeetypes.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
-		nft.ModuleName,
-		group.ModuleName,
 		consensustypes.ModuleName,
 		circuittypes.ModuleName,
 		// chain modules
@@ -114,6 +117,8 @@ var (
 		rewardsmoduletypes.ModuleName,
 		tradebinmoduletypes.ModuleName,
 		txfeecollectormoduletypes.ModuleName,
+		daomoduletypes.ModuleName,
+		guardianmoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 
@@ -121,7 +126,6 @@ var (
 	// there is nothing left over in the validator fee pool, so as to keep the
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
-	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
 	beginBlockers = []string{
 		// cosmos sdk modules
 		minttypes.ModuleName,
@@ -132,11 +136,10 @@ var (
 		authz.ModuleName,
 		genutiltypes.ModuleName,
 		// ibc modules
-		capabilitytypes.ModuleName,
 		ibcexported.ModuleName,
+		ratelimittypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
-		ibcfeetypes.ModuleName,
 		// chain modules
 		burnermoduletypes.ModuleName,
 		epochmoduletypes.ModuleName,
@@ -153,14 +156,12 @@ var (
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		feegrant.ModuleName,
-		group.ModuleName,
 		genutiltypes.ModuleName,
 		// ibc modules
 		ibcexported.ModuleName,
+		ratelimittypes.ModuleName,
 		ibctransfertypes.ModuleName,
-		capabilitytypes.ModuleName,
 		icatypes.ModuleName,
-		ibcfeetypes.ModuleName,
 		// chain modules
 		burnermoduletypes.ModuleName,
 		epochmoduletypes.ModuleName,
@@ -174,6 +175,7 @@ var (
 
 	preBlockers = []string{
 		upgradetypes.ModuleName,
+		authtypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/preBlockers
 	}
 
@@ -185,9 +187,7 @@ var (
 		{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
 		{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
 		{Account: govtypes.ModuleName, Permissions: []string{authtypes.Burner}},
-		{Account: nft.ModuleName},
 		{Account: ibctransfertypes.ModuleName, Permissions: []string{authtypes.Minter, authtypes.Burner}},
-		{Account: ibcfeetypes.ModuleName},
 		{Account: icatypes.ModuleName},
 		{Account: rewardsmoduletypes.ModuleName, Permissions: []string{authtypes.Burner}},
 		{Account: burnermoduletypes.ModuleName, Permissions: []string{authtypes.Burner}},
@@ -196,8 +196,8 @@ var (
 		{Account: tokenfactorymoduletypes.ModuleName, Permissions: []string{authtypes.Burner, authtypes.Minter}},
 		{Account: tradebinmoduletypes.ModuleName, Permissions: []string{authtypes.Burner, authtypes.Minter}},
 		{Account: txfeecollectormoduletypes.ModuleName},
-		{Account: txfeecollectormoduletypes.BurnerFeeCollector},
 		{Account: txfeecollectormoduletypes.CpFeeCollector},
+		{Account: daomoduletypes.ModuleName},
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 
@@ -208,10 +208,18 @@ var (
 		minttypes.ModuleName,
 		stakingtypes.BondedPoolName,
 		stakingtypes.NotBondedPoolName,
-		nft.ModuleName,
+		// x/nft and the ICS-29 fee middleware were removed in v8.3.0. Their
+		// addresses stay blocked: nobody holds a key for them, so anything sent
+		// there would be stranded
+		removedNftModuleName,
+		removedFeeIbcModuleName,
 		txfeecollectormoduletypes.ModuleName,
-		txfeecollectormoduletypes.BurnerFeeCollector,
+		// txfeecollector_burner is retired in v8.3.0 and kept blocked like nft and
+		// feeibc. The upgrade still sweeps it to the burner: blocking only stops
+		// plain sends to it, never sends out of it
+		removedBurnerFeeCollectorName,
 		txfeecollectormoduletypes.CpFeeCollector,
+		daomoduletypes.ModuleName,
 		// We allow the following module accounts to receive funds:
 		// govtypes.ModuleName
 	}
@@ -249,10 +257,6 @@ var (
 					// Authority: "group", // A custom module authority can be set using a module name
 					// Authority: "cosmos1cwwv22j5ca08ggdv9c2uky355k908694z577tv", // or a specific address
 				}),
-			},
-			{
-				Name:   nft.ModuleName,
-				Config: appconfig.WrapAny(&nftmodulev1.Module{}),
 			},
 			{
 				Name:   vestingtypes.ModuleName,
@@ -310,13 +314,6 @@ var (
 				Config: appconfig.WrapAny(&mintmodulev1.Module{}),
 			},
 			{
-				Name: group.ModuleName,
-				Config: appconfig.WrapAny(&groupmodulev1.Module{
-					MaxExecutionPeriod: durationpb.New(time.Second * 1209600),
-					MaxMetadataLen:     255,
-				}),
-			},
-			{
 				Name:   feegrant.ModuleName,
 				Config: appconfig.WrapAny(&feegrantmodulev1.Module{}),
 			},
@@ -359,6 +356,14 @@ var (
 			{
 				Name:   txfeecollectormoduletypes.ModuleName,
 				Config: appconfig.WrapAny(&txfeecollectormodulev1.Module{}),
+			},
+			{
+				Name:   daomoduletypes.ModuleName,
+				Config: appconfig.WrapAny(&daomodulev1.Module{}),
+			},
+			{
+				Name:   guardianmoduletypes.ModuleName,
+				Config: appconfig.WrapAny(&guardianmodulev1.Module{}),
 			},
 			// this line is used by starport scaffolding # stargate/app/moduleConfig
 		},

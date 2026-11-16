@@ -140,7 +140,7 @@ func (suite *IntegrationTestSuite) TestWithdrawLucky_WinnerSuccess() {
 	// Prize = 100000 * 0.1 = 10000
 	wonCoin := sdk.NewCoin(denom, math.NewInt(10000))
 	suite.bank.EXPECT().SendCoinsFromModuleToAccount(
-		suite.ctx, types.RaffleModuleName, creatorAddr, sdk.NewCoins(wonCoin),
+		gomock.Any(), types.RaffleModuleName, creatorAddr, sdk.NewCoins(wonCoin),
 	).Return(nil).Times(1)
 
 	suite.k.WithdrawLuckyRaffleParticipants(suite.ctx, 10)
@@ -225,7 +225,7 @@ func (suite *IntegrationTestSuite) TestWithdrawLucky_SendCoinsError() {
 
 	wonCoin := sdk.NewCoin(denom, math.NewInt(10000))
 	suite.bank.EXPECT().SendCoinsFromModuleToAccount(
-		suite.ctx, types.RaffleModuleName, creatorAddr, sdk.NewCoins(wonCoin),
+		gomock.Any(), types.RaffleModuleName, creatorAddr, sdk.NewCoins(wonCoin),
 	).Return(errors.New("send failed")).Times(1)
 
 	suite.k.WithdrawLuckyRaffleParticipants(suite.ctx, 10)
@@ -320,7 +320,6 @@ func (suite *IntegrationTestSuite) TestWithdrawLucky_MultipleParticipants_MixedR
 func (suite *IntegrationTestSuite) TestWithdrawLucky_WinnerInvalidTotalWon() {
 	denom := "utoken"
 	creator := sdk.AccAddress("creator").String()
-	creatorAddr, _ := sdk.AccAddressFromBech32(creator)
 
 	suite.k.SetRaffle(suite.ctx, types.Raffle{
 		Denom:       denom,
@@ -339,23 +338,24 @@ func (suite *IntegrationTestSuite) TestWithdrawLucky_WinnerInvalidTotalWon() {
 	}
 	suite.k.SetRaffleParticipant(suite.ctx, participant)
 
-	wonCoin := sdk.NewCoin(denom, math.NewInt(10000))
-	suite.bank.EXPECT().SendCoinsFromModuleToAccount(
-		suite.ctx, types.RaffleModuleName, creatorAddr, sdk.NewCoins(wonCoin),
-	).Return(nil).Times(1)
-
-	// Should not panic - just logs error and continues
+	// no SendCoinsFromModuleToAccount expectation: the winner must not be paid when the raffle totals can't be
+	// updated in the same step, so any call fails the test
 	suite.k.WithdrawLuckyRaffleParticipants(suite.ctx, 10)
 
-	// Winner count should still increment
+	// the raffle is left exactly as it was
 	raffle, found := suite.k.GetRaffle(suite.ctx, denom)
 	suite.Require().True(found)
-	suite.Require().Equal(uint64(1), raffle.Winners)
-	// Pot and TotalWon should NOT be updated since parsing failed
+	suite.Require().Equal(uint64(0), raffle.Winners)
 	suite.Require().Equal("not-a-number", raffle.TotalWon)
 	suite.Require().Equal("100000", raffle.Pot)
 
-	// Participant removed
+	// no winner recorded, no winner event emitted
+	suite.Require().Empty(suite.k.GetRaffleWinners(suite.ctx, denom))
+	for _, ev := range suite.ctx.EventManager().Events() {
+		suite.Require().NotEqual("bze.burner.RaffleWinnerEvent", ev.Type)
+	}
+
+	// the ticket is still removed
 	participants := suite.k.GetAllRaffleParticipants(suite.ctx)
 	suite.Require().Empty(participants)
 }
@@ -387,12 +387,23 @@ func (suite *IntegrationTestSuite) TestWithdrawLucky_SmallPot_PrizeTruncatesToZe
 	// Prize truncates to 0, so SendCoinsFromModuleToAccount is called with 0 amount coin
 	wonCoin := sdk.NewCoin(denom, math.ZeroInt())
 	suite.bank.EXPECT().SendCoinsFromModuleToAccount(
-		suite.ctx, types.RaffleModuleName, gomock.Any(), sdk.NewCoins(wonCoin),
+		gomock.Any(), types.RaffleModuleName, gomock.Any(), sdk.NewCoins(wonCoin),
 	).Return(nil).Times(1)
 
 	suite.k.WithdrawLuckyRaffleParticipants(suite.ctx, 10)
 
+	// the ticket counts as a win of nothing: the pot and the total won are unchanged, the winner is recorded
+	// with a zero amount and the ticket is removed
 	raffle, found := suite.k.GetRaffle(suite.ctx, denom)
 	suite.Require().True(found)
 	suite.Require().Equal(uint64(1), raffle.Winners)
+	suite.Require().Equal("1", raffle.Pot)
+	suite.Require().Equal("0", raffle.TotalWon)
+
+	winners := suite.k.GetRaffleWinners(suite.ctx, denom)
+	suite.Require().Len(winners, 1)
+	suite.Require().Equal(creator, winners[0].Winner)
+	suite.Require().Equal("0", winners[0].Amount)
+
+	suite.Require().Empty(suite.k.GetAllRaffleParticipants(suite.ctx))
 }

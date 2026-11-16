@@ -14,6 +14,10 @@ const (
 	StakingRewardKeyPrefix            = "sr/value/"
 	CounterKey                        = "sr/c/"
 	StakingRewardDistributionQueueKey = "sr/dq/"
+
+	// TradingRewardCandidatePurgeKeyPrefix holds the ids of expired trading rewards whose candidates
+	// are still being removed. It must stay outside RewardCandidateKeyPrefix.
+	TradingRewardCandidatePurgeKeyPrefix = "tr/cp/"
 )
 
 var (

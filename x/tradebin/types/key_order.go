@@ -16,6 +16,7 @@ const (
 	AggOrderKeyPrefix     = "Tb/agg/"
 	HistoryOrderKeyPrefix = "Tb/h/"
 	OrderCounterPrefix    = "Tb/cnt/"
+	OwnerPriceKeyPrefix   = "Tb/op/"
 
 	orderCounterKey = "ocnt"
 )
@@ -42,6 +43,12 @@ func PriceOrderKey(marketId, orderType, price, orderId string) []byte {
 
 func PriceOrderPrefixKey(marketId, orderType, price string) []byte {
 	return []byte(marketId + "/" + orderType + "/" + transformPrice(price) + "/")
+}
+
+// OwnerPriceOrderKey is the key of the owner-price index: the order an owner rests at a market, side and
+// price.
+func OwnerPriceOrderKey(owner, marketId, orderType, price string) []byte {
+	return []byte(owner + "/" + marketId + "/" + orderType + "/" + transformPrice(price) + "/")
 }
 
 func AggOrderKey(marketId, orderType, price string) []byte {

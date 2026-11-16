@@ -40,4 +40,8 @@ message GenesisState {
 
   PeriodicBurnQueue periodic_burn_queue = 7;
   RaffleCleanupQueue raffle_cleanup_queue = 8;
+  repeated IbcMoveLock ibc_move_locks = 9 [
+    (gogoproto.nullable) = false,
+    (gogoproto.jsontag)  = "ibc_move_locks,omitempty"
+  ];
 }

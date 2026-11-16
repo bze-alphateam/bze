@@ -31,7 +31,7 @@ import (
 type drSecLedger struct {
 	in           sdk.Coins // user -> module (stakes, schedule budgets, airdrops)
 	out          sdk.Coins // module -> user (prize payouts, stake returns)
-	feeCaptured  sdk.Coins // user fees captured through CaptureAndSwapUserFee
+	feeCaptured  sdk.Coins // user fees captured through SafeCaptureAndSwapUserFee
 	feeForwarded sdk.Coins // module -> CpFeeCollector forwards
 
 	day  int64
@@ -79,7 +79,7 @@ func recordDenomRewardFlows(bank *testutil.MockBankKeeper, epoch *testutil.MockE
 		}).
 		AnyTimes()
 	trade.EXPECT().
-		CaptureAndSwapUserFee(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		SafeCaptureAndSwapUserFee(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 		DoAndReturn(func(_ sdk.Context, _ sdk.AccAddress, fee sdk.Coins, _ string) (sdk.Coins, error) {
 			ledger.feeCaptured = ledger.feeCaptured.Add(fee...)
 			return fee, nil

@@ -2,9 +2,10 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/bze-alphateam/bze/bzeutils"
 )
 
 var _ sdk.Msg = &MsgJoinStaking{}
@@ -31,9 +32,10 @@ func (msg *MsgJoinStaking) ValidateBasic() error {
 		return errorsmod.Wrapf(ErrInvalidAmount, "empty amount provided")
 	}
 
-	amtInt, ok := math.NewIntFromString(msg.Amount)
-	if !ok {
-		return errorsmod.Wrapf(ErrInvalidAmount, "could not convert amount")
+	// amounts must be canonical base-10 integers
+	amtInt, err := bzeutils.ParseCanonicalInt(msg.Amount)
+	if err != nil {
+		return errorsmod.Wrapf(ErrInvalidAmount, "could not convert amount: %s", err)
 	}
 	if !amtInt.IsPositive() {
 		return errorsmod.Wrapf(ErrInvalidAmount, "amount should be greater than 0")

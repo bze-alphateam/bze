@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"context"
+
 	"fmt"
 
 	"cosmossdk.io/core/store"
@@ -25,6 +27,14 @@ type (
 		accountKeeper types.AccountKeeper
 		tradeKeeper   types.TradeKeeper
 		distrKeeper   types.DistrKeeper
+
+		// denomCpProvider resolves the community pool a denom's fees are forwarded to. nil means
+		// no denom has one.
+		denomCpProvider types.DenomCommunityPoolProvider
+
+		// guardianKeeper tells whether the protocol automation is paused and which transfer channels are
+		// closed. nil means never paused and no channel closed.
+		guardianKeeper types.GuardianKeeper
 	}
 )
 
@@ -37,21 +47,45 @@ func NewKeeper(
 	accountKeeper types.AccountKeeper,
 	tradeKeeper types.TradeKeeper,
 	distrKeeper types.DistrKeeper,
+	denomCpProvider types.DenomCommunityPoolProvider,
+	guardianKeeper types.GuardianKeeper,
 ) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
 	}
 
 	return Keeper{
-		cdc:           cdc,
-		storeService:  storeService,
-		authority:     authority,
-		logger:        logger,
-		bankKeeper:    bankKeeper,
-		accountKeeper: accountKeeper,
-		tradeKeeper:   tradeKeeper,
-		distrKeeper:   distrKeeper,
+		cdc:             cdc,
+		storeService:    storeService,
+		authority:       authority,
+		logger:          logger,
+		bankKeeper:      bankKeeper,
+		accountKeeper:   accountKeeper,
+		tradeKeeper:     tradeKeeper,
+		distrKeeper:     distrKeeper,
+		denomCpProvider: denomCpProvider,
+		guardianKeeper:  guardianKeeper,
 	}
+}
+
+// IsAutomationPaused reports whether the guardian paused the protocol automation: EndBlock then leaves every collected
+// coin where it is. A keeper without a guardian keeper is never paused.
+func (k Keeper) IsAutomationPaused(ctx sdk.Context) bool {
+	if k.guardianKeeper == nil {
+		return false
+	}
+
+	return k.guardianKeeper.IsAutomationPaused(ctx)
+}
+
+// IsChannelClosed reports whether the guardian closed the transfer channel: the IBC middleware and send gate of this
+// module then refuse every ICS-20 transfer on it. A keeper without a guardian keeper has no channel closed.
+func (k Keeper) IsChannelClosed(ctx context.Context, channelID string) bool {
+	if k.guardianKeeper == nil {
+		return false
+	}
+
+	return k.guardianKeeper.IsChannelClosed(ctx, channelID)
 }
 
 // GetAuthority returns the module's authority.

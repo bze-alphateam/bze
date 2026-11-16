@@ -151,6 +151,13 @@ func (dfd DeductFeeDecorator) DeductFees(bankKeeper types.BankKeeper, ctx sdk.Co
 		if err != nil {
 			return errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, err.Error())
 		}
+
+		// the gas surcharge of a factory token is part of the fee just paid: move it to the token's fee destination
+		if dfd.txCollectorKeeper != nil {
+			if err := dfd.txCollectorKeeper.ChargeGasSurcharge(ctx, acc.GetAddress(), nonNativeFees); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

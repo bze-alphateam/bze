@@ -28,6 +28,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		if err != nil {
 			panic(err)
 		}
+		if genDenom.GetDenomConfig() != nil {
+			if err = k.SetDenomConfig(ctx, genDenom.GetDenom(), *genDenom.GetDenomConfig()); err != nil {
+				panic(err)
+			}
+		}
 	}
 	for _, record := range genState.GetDenomBrandings() {
 		if _, err := k.GetDenomAuthority(ctx, record.GetDenom()); err != nil {
@@ -57,10 +62,15 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 			panic(err)
 		}
 
-		genDenoms = append(genDenoms, types.GenesisDenom{
+		genDenom := types.GenesisDenom{
 			Denom:          denom,
 			DenomAuthority: dAuth,
-		})
+		}
+		if cfg := k.GetDenomConfig(ctx, denom); !cfg.IsDefault() {
+			genDenom.DenomConfig = &cfg
+		}
+
+		genDenoms = append(genDenoms, genDenom)
 	}
 
 	genesis.FactoryDenoms = genDenoms

@@ -17,9 +17,13 @@ func SimulateMsgMint(
 ) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, _ := simtypes.RandomAcc(r, accs)
+		simAccount, denom, found := RandomMintableDenom(r, ctx, k, accs)
+		if !found {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgMint{}), "no mintable denom administered by a simulation account"), nil, nil
+		}
 		msg := &types.MsgMint{
 			Creator: simAccount.Address.String(),
+			Coins:   sdk.NewInt64Coin(denom, int64(simtypes.RandIntBetween(r, 1, 1_000_000))).String(),
 		}
 
 		// TODO: Handling the Mint simulation

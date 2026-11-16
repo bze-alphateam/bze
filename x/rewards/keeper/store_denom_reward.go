@@ -33,12 +33,6 @@ func (k Keeper) HasDenomReward(ctx sdk.Context, stakingDenom string) bool {
 	return store.Has(types.DenomRewardKey(stakingDenom))
 }
 
-// RemoveDenomReward removes a DenomReward from the store.
-func (k Keeper) RemoveDenomReward(ctx sdk.Context, stakingDenom string) {
-	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.DenomRewardKeyPrefix))
-	store.Delete(types.DenomRewardKey(stakingDenom))
-}
-
 // GetAllDenomReward returns all DenomReward records.
 func (k Keeper) GetAllDenomReward(ctx sdk.Context) (list []types.DenomReward) {
 	store := k.getPrefixedStore(ctx, types.KeyPrefix(types.DenomRewardKeyPrefix))

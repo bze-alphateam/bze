@@ -1,6 +1,7 @@
 syntax = "proto3";
 package bze.tokenfactory;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/bze-alphateam/bze/x/tokenfactory/types";
@@ -19,3 +20,23 @@ message DenomBrandingChangeEvent {
   string denom = 1;
 }
 
+message DenomMintingDisabledEvent {
+  string denom = 1;
+  string admin = 2;
+}
+
+// DenomConfigChangeEvent carries the denom's new configuration.
+message DenomConfigChangeEvent {
+  string denom = 1;
+  string community_pool = 2;
+  string transfer_fee = 3 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+  string gas_surcharge = 4 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+}
