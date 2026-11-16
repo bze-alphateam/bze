@@ -1,0 +1,118 @@
+name: bzed image
+
+# Builds the bzed container image of a release tag, from source, and pushes it
+# to ghcr.io/bze-alphateam/bzed as :<version tag> (e.g. :v8.2.0) and :<sha8>,
+# the first 8 characters of the tagged commit — the form the BZE deploy gate
+# accepts, so a node running this image is upgraded by deploying that tag.
+# One image serves mainnet and testnet: the chain decides network-specific
+# behaviour from the chain id at run time, not from build tags.
+#
+# Runs ONLY when a v* tag is pushed, never on branch pushes. A tag created
+# before this workflow existed (or a rebuild) is built by hand: Actions →
+# "bzed image" → Run workflow → tag. The tag's tree is exported and this
+# branch's Dockerfile and .dockerignore are copied over it (like
+# scripts/e2e/build-image.sh), so tags that predate the Dockerfile build too.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to build, e.g. v8.2.0-rc4"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bzed-image-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/bze-alphateam/bzed
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve the tag
+        id: vars
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
+            echo "::error::'$TAG' is not a release tag (vX.Y.Z or vX.Y.Z-rcN)"
+            exit 1
+          fi
+          git rev-parse -q --verify "refs/tags/$TAG" >/dev/null || { echo "::error::no tag $TAG"; exit 1; }
+          commit=$(git rev-parse "refs/tags/$TAG^{commit}")
+          sha8=${commit:0:8}
+          tags="$IMAGE:$TAG $IMAGE:$sha8"
+          {
+            echo "tag=$TAG"
+            echo "version=${TAG#v}"
+            echo "commit=$commit"
+            echo "tags=$tags"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Export the tag's tree with the current Dockerfile
+        env:
+          COMMIT: ${{ steps.vars.outputs.commit }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/src"
+          git archive "$COMMIT" | tar -x -C "$RUNNER_TEMP/src"
+          cp Dockerfile .dockerignore "$RUNNER_TEMP/src/"
+
+      - name: Build
+        env:
+          VERSION: ${{ steps.vars.outputs.version }}
+          COMMIT: ${{ steps.vars.outputs.commit }}
+          TAGS: ${{ steps.vars.outputs.tags }}
+        run: |
+          args=()
+          for t in $TAGS; do args+=(-t "$t"); done
+          DOCKER_BUILDKIT=1 docker build \
+            --build-arg "VERSION=$VERSION" \
+            --build-arg "COMMIT=$COMMIT" \
+            --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
+            --label "org.opencontainers.image.revision=$COMMIT" \
+            "${args[@]}" "$RUNNER_TEMP/src"
+
+      - name: Smoke test
+        # `bzed version` must report the tag.
+        env:
+          VERSION: ${{ steps.vars.outputs.version }}
+          TAGS: ${{ steps.vars.outputs.tags }}
+        run: |
+          image=${TAGS%% *}
+          got=$(docker run --rm "$image" bzed version 2>&1)
+          if [ "$got" != "$VERSION" ]; then
+            echo "::error::bzed version printed '$got', want '$VERSION'"
+            exit 1
+          fi
+          echo "bzed version: $got"
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push
+        env:
+          TAGS: ${{ steps.vars.outputs.tags }}
+        run: |
+          for t in $TAGS; do
+            docker push "$t"
+            echo "Pushed \`$t\`" >> "$GITHUB_STEP_SUMMARY"
+          done
