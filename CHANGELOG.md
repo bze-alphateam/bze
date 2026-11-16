@@ -9,6 +9,8 @@ derived from it. History older than v8.0.0 lives in the
 
 ## Unreleased
 
+## [v8.3.0](https://github.com/bze-alphateam/bze/releases/tag/v8.3.0)
+
 ### State Machine Breaking
 
 * (x/tradebin) [#228](https://github.com/bze-alphateam/bze/pull/228) Every pool keeps an exponential moving average of its price (quote reserve / base reserve), updated the first time the pool is saved in a block from the price it had at the start of that block. New params `pool_price_half_life_blocks` (default 20), `fee_max_price_drift` (default 0.10) and `module_max_price_drift` (default 0.03), new `PoolPriceAverage` query (`/bze/tradebin/pool_price_average?pool_id=`). The first save of a pool in a block costs a little more gas. The tradebin 4→5 migration sets the params and seeds every pool; records are not exported in genesis. It is read by the price-drift checks of #229 and #230.
