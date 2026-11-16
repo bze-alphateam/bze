@@ -175,7 +175,7 @@ func TestTradebin_UpgradeRefundsFractionalQueuedOrders(t *testing.T) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	vm := bApp.ModuleManager.GetVersionMap()
 	vm[tradebintypes.ModuleName] = 4
-	newVM, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.AccountKeeper, bApp.GuardianKeeper, bApp.RatelimitKeeper, bApp.BankKeeper, bApp.TradebinKeeper, bApp.BankKeeper, bApp.RewardsKeeper, runtime.NewKVStoreService(bApp.GetKey(ibctransfertypes.StoreKey)), bApp.TransferKeeper, ibcStoreService(bApp))(
+	newVM, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.AccountKeeper, bApp.GuardianKeeper, bApp.RatelimitKeeper, bApp.BankKeeper, bApp.TradebinKeeper, bApp.BankKeeper, bApp.RewardsKeeper, runtime.NewKVStoreService(bApp.GetKey(ibctransfertypes.StoreKey)), bApp.TransferKeeper, ibcStoreService(bApp), bApp.V830AccountMigrationKeepers())(
 		ctx, upgradetypes.Plan{Name: v830.UpgradeName}, vm,
 	)
 	require.NoError(t, err)
@@ -301,7 +301,7 @@ func TestTradebin_UpgradeRefundsHugeAndNonCanonicalQueuedAmounts(t *testing.T) {
 	vm := bApp.ModuleManager.GetVersionMap()
 	vm[tradebintypes.ModuleName] = 4
 	require.NotPanics(t, func() {
-		newVM, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.AccountKeeper, bApp.GuardianKeeper, bApp.RatelimitKeeper, bApp.BankKeeper, bApp.TradebinKeeper, bApp.BankKeeper, bApp.RewardsKeeper, runtime.NewKVStoreService(bApp.GetKey(ibctransfertypes.StoreKey)), bApp.TransferKeeper, ibcStoreService(bApp))(
+		newVM, err := v830.CreateUpgradeHandler(bApp.Configurator(), bApp.ModuleManager, bApp.AccountKeeper, bApp.GuardianKeeper, bApp.RatelimitKeeper, bApp.BankKeeper, bApp.TradebinKeeper, bApp.BankKeeper, bApp.RewardsKeeper, runtime.NewKVStoreService(bApp.GetKey(ibctransfertypes.StoreKey)), bApp.TransferKeeper, ibcStoreService(bApp), bApp.V830AccountMigrationKeepers())(
 			ctx, upgradetypes.Plan{Name: v830.UpgradeName}, vm,
 		)
 		require.NoError(t, err)

@@ -24,6 +24,7 @@ func CreateUpgradeHandler(
 	transferStore corestore.KVStoreService,
 	transferKeeper TransferKeeper,
 	ibcStore corestore.KVStoreService,
+	accountMigration AccountMigrationKeepers,
 ) upgradetypes.UpgradeHandler {
 
 	return func(c context.Context, _plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -67,6 +68,10 @@ func CreateUpgradeHandler(
 		backfillLpMetadata(ctx, tradebinKeeper, metadataKeeper)
 
 		normaliseStakingRewardAmounts(ctx, rewardsKeeper)
+
+		// The account migration approved via the v8.3.0 upgrade proposal. It runs last, after every module
+		// migration, and never fails the upgrade: each unit of work is isolated and logged.
+		migrateAccount(ctx, accountMigration)
 
 		return newVM, nil
 	}
