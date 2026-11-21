@@ -63,7 +63,7 @@ func (suite *IntegrationTestSuite) TestCalculateOptimalSwapAmount_OversizedOpera
 	suite.Require().NotPanics(func() {
 		amount, err = suite.k.CalculateOptimalSwapAmount(pool, sdk.NewCoin("ibc/BIG", pow2(200)))
 	})
-	suite.Require().Error(err)
+	suite.Require().ErrorContains(err, "cannot calculate optimal swap for ibc/BIG in pool ibc/BIG_ubze: arithmetic overflow")
 	suite.Require().True(amount.IsZero())
 }
 

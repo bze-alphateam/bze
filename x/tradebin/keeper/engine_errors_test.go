@@ -276,3 +276,36 @@ func (suite *IntegrationTestSuite) TestEngine_MidFillBankErrorRevertsTx() {
 	_, found = suite.k.GetUserDust(suite.ctx, taker.String(), market.Quote)
 	suite.Require().False(found)
 }
+
+// TestEngine_TakerPayoutBankErrorRevertsTx makes the taker's settlement send fail after the maker was
+// already paid. The error is returned and, run on a cache context like a transaction, the committed
+// state stays exactly as it was.
+func (suite *IntegrationTestSuite) TestEngine_TakerPayoutBankErrorRevertsTx() {
+	suite.k.SetMarket(suite.ctx, market)
+	maker := sdk.AccAddress("addr1_______________")
+	taker := sdk.AccAddress("addr2_______________")
+	suite.placeOrders(suite.newEngine(), limitOrder(types.OrderTypeSell, "1000000", "1", maker))
+	resting, found := suite.k.GetOrder(suite.ctx, getMarketId(), types.OrderTypeSell, orderId(0))
+	suite.Require().True(found)
+
+	makerCoins := sdk.NewCoins(sdk.NewInt64Coin(market.Quote, 1_000_000))
+	takerCoins := sdk.NewCoins(sdk.NewInt64Coin(market.Base, 1_000_000))
+	gomock.InOrder(
+		suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, maker, makerCoins).Return(nil).Times(1),
+		suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, taker, takerCoins).Return(errors.New("taker settlement failure")).Times(1),
+	)
+
+	cacheCtx, _ := suite.ctx.CacheContext()
+	err := suite.newEngine().PlaceOrder(cacheCtx, limitOrder(types.OrderTypeBuy, "1000000", "1", taker))
+	suite.Require().ErrorContains(err, "error 4 when funding user accounts")
+	suite.Require().ErrorContains(err, "taker settlement failure")
+
+	// committed state untouched
+	stored, found := suite.k.GetOrder(suite.ctx, getMarketId(), types.OrderTypeSell, resting.Id)
+	suite.Require().True(found)
+	suite.Require().Equal(resting, stored)
+	suite.Require().Len(suite.k.GetAllOrder(suite.ctx), 1)
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, "1", "1000000")
+	suite.Require().Empty(suite.k.GetAllHistoryOrder(suite.ctx))
+	suite.Require().Equal(uint64(1), suite.k.GetOrderCounter(suite.ctx))
+}

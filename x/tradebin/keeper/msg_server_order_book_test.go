@@ -1644,3 +1644,67 @@ func (suite *IntegrationTestSuite) expectFillEscrow(taker sdk.AccAddress, msg *t
 	}
 	suite.Require().Equal(total, sum)
 }
+
+// TestMsgCreateOrder_EngineFailureReturnsError: the maker payout of a matching order fails, so the
+// message returns the engine error and, run on a cache context like a transaction, leaves the resting
+// order untouched.
+func (suite *IntegrationTestSuite) TestMsgCreateOrder_EngineFailureReturnsError() {
+	suite.k.SetMarket(suite.ctx, market)
+	maker := sdk.AccAddress("addr2_______________")
+	taker := sdk.AccAddress("addr1_______________")
+	suite.placeOrders(suite.newEngine(), limitOrder(types.OrderTypeSell, "10000", "2", maker))
+	resting, found := suite.k.GetOrder(suite.ctx, getMarketId(), types.OrderTypeSell, orderId(0))
+	suite.Require().True(found)
+
+	takerFee := sdk.NewCoins(suite.k.GetParams(suite.ctx).MarketTakerFee)
+	paidCoins := sdk.NewCoins(sdk.NewCoin(denomBze, math.NewInt(2_000_000)))
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), taker, types.ModuleName, takerFee).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, gomock.Any(), takerFee).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), taker, types.ModuleName, paidCoins).Return(nil).Times(1)
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, maker, sdk.NewCoins(sdk.NewInt64Coin(market.Quote, 20000))).Return(fmt.Errorf("maker payout failure")).Times(1)
+
+	cacheCtx, _ := suite.ctx.CacheContext()
+	_, err := suite.msgServer.CreateOrder(cacheCtx, &types.MsgCreateOrder{
+		Amount:    "1000000",
+		Price:     "2",
+		MarketId:  getMarketId(),
+		OrderType: types.OrderTypeBuy,
+		Creator:   taker.String(),
+	})
+	suite.Require().ErrorContains(err, "error 3 when funding user accounts")
+	suite.Require().ErrorContains(err, "maker payout failure")
+
+	stored, found := suite.k.GetOrder(suite.ctx, getMarketId(), types.OrderTypeSell, resting.Id)
+	suite.Require().True(found)
+	suite.Require().Equal(resting, stored)
+	suite.Require().Len(suite.k.GetAllOrder(suite.ctx), 1)
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeSell, "2", "10000")
+	suite.Require().Equal(uint64(1), suite.k.GetOrderCounter(suite.ctx))
+}
+
+// TestMsgCancelOrder_RefundFailureReturnsError: the refund send fails, so the message returns the
+// engine error and the order is still stored (the transaction reverts it).
+func (suite *IntegrationTestSuite) TestMsgCancelOrder_RefundFailureReturnsError() {
+	suite.k.SetMarket(suite.ctx, market)
+	owner := sdk.AccAddress("addr1_______________")
+	suite.placeOrders(suite.newEngine(), limitOrder(types.OrderTypeBuy, "102000", "1", owner))
+	order, found := suite.k.GetOrder(suite.ctx, getMarketId(), types.OrderTypeBuy, orderId(0))
+	suite.Require().True(found)
+
+	suite.bankMock.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, owner, sdk.NewCoins(sdk.NewInt64Coin(market.Quote, 102000))).Return(fmt.Errorf("refund failure")).Times(1)
+
+	cacheCtx, _ := suite.ctx.CacheContext()
+	_, err := suite.msgServer.CancelOrder(cacheCtx, &types.MsgCancelOrder{
+		Creator:   owner.String(),
+		MarketId:  getMarketId(),
+		OrderId:   order.Id,
+		OrderType: types.OrderTypeBuy,
+	})
+	suite.Require().ErrorContains(err, "error on sending funds to order owner")
+	suite.Require().ErrorContains(err, "refund failure")
+
+	stored, found := suite.k.GetOrder(suite.ctx, getMarketId(), types.OrderTypeBuy, order.Id)
+	suite.Require().True(found)
+	suite.Require().Equal(order, stored)
+	suite.checkAggregatedOrder(getMarketId(), types.OrderTypeBuy, "1", "102000")
+}

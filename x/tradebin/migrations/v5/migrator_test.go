@@ -193,6 +193,7 @@ func TestMigrate_EmptyQueueIsANoOp(t *testing.T) {
 }
 
 func TestMigrate_Errors(t *testing.T) {
+	errBoom := errors.New("boom")
 	owner := sdk.AccAddress("owner_______________")
 	valid := oldQueueMessage{messageId: "000000000000000000000001", marketId: marketId, messageType: types.OrderTypeBuy, amount: "10", price: "1", orderType: types.OrderTypeBuy, owner: owner.String()}
 
@@ -201,12 +202,26 @@ func TestMigrate_Errors(t *testing.T) {
 		msg    oldQueueMessage
 		raw    []byte
 		expect func(mt migrationTest)
+		// contains lists the texts the returned error must carry
+		contains []string
+		// is is a sentinel the returned error must wrap, when the site wraps its cause
+		is error
 	}{
-		{name: "undecodable value", msg: valid, raw: []byte{0x0a, 0x05, 'a'}},
-		{name: "invalid amount", msg: func() oldQueueMessage { m := valid; m.amount = "ten"; return m }()},
-		{name: "invalid owner", msg: func() oldQueueMessage { m := valid; m.owner = "nobody"; return m }()},
+		{
+			name: "undecodable value", msg: valid, raw: []byte{0x0a, 0x05, 'a'},
+			contains: []string{`queue message "Qm/`, "invalid queue message field 1"},
+		},
+		{
+			name: "invalid amount", msg: func() oldQueueMessage { m := valid; m.amount = "ten"; return m }(),
+			contains: []string{"could not refund queue message " + valid.messageId, `could not convert amount "ten"`},
+		},
+		{
+			name: "invalid owner", msg: func() oldQueueMessage { m := valid; m.owner = "nobody"; return m }(),
+			contains: []string{"could not refund queue message " + valid.messageId, "invalid owner"},
+		},
 		{
 			name: "market not found", msg: valid,
+			contains: []string{"could not refund queue message " + valid.messageId, "market " + marketId + " not found"},
 			expect: func(mt migrationTest) {
 				mt.k.EXPECT().GetMarketById(gomock.Any(), marketId).Return(types.Market{}, false)
 			},
@@ -215,16 +230,20 @@ func TestMigrate_Errors(t *testing.T) {
 			name: "order coins error", msg: valid,
 			expect: func(mt migrationTest) {
 				mt.k.EXPECT().GetMarketById(gomock.Any(), marketId).Return(testMarket, true)
-				mt.k.EXPECT().GetOrderCoinsWithDust(gomock.Any(), gomock.Any()).Return(types.OrderCoins{}, errors.New("boom"))
+				mt.k.EXPECT().GetOrderCoinsWithDust(gomock.Any(), gomock.Any()).Return(types.OrderCoins{}, errBoom)
 			},
+			contains: []string{"could not refund queue message " + valid.messageId, "could not get order coins"},
+			is:       errBoom,
 		},
 		{
 			name: "bank error", msg: valid,
 			expect: func(mt migrationTest) {
 				mt.k.EXPECT().GetMarketById(gomock.Any(), marketId).Return(testMarket, true)
 				mt.k.EXPECT().GetOrderCoinsWithDust(gomock.Any(), gomock.Any()).Return(types.OrderCoins{Coin: sdk.NewInt64Coin("ubze", 10), Dust: math.LegacyZeroDec()}, nil)
-				mt.bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, owner, gomock.Any()).Return(errors.New("boom"))
+				mt.bank.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, owner, gomock.Any()).Return(errBoom)
 			},
+			contains: []string{"could not refund queue message " + valid.messageId, "could not send refund"},
+			is:       errBoom,
 		},
 	}
 
@@ -240,7 +259,14 @@ func TestMigrate_Errors(t *testing.T) {
 				tc.expect(mt)
 			}
 
-			require.Error(t, v5.Migrate(mt.ctx, mt.store, mt.k, mt.bank))
+			err := v5.Migrate(mt.ctx, mt.store, mt.k, mt.bank)
+			require.Error(t, err)
+			for _, text := range tc.contains {
+				require.ErrorContains(t, err, text)
+			}
+			if tc.is != nil {
+				require.ErrorIs(t, err, tc.is)
+			}
 		})
 	}
 }
