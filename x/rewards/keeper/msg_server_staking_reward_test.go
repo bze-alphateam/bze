@@ -1036,3 +1036,36 @@ func (suite *IntegrationTestSuite) TestMsgServerStakingReward_CreateStakingRewar
 	suite.Require().Nil(response)
 	suite.Require().Equal(counter, suite.k.GetStakingRewardsCounter(suite.ctx))
 }
+
+// A zero amount cannot be captured: the amount parsing refuses it before any balance is read, and the staking
+// reward and its participants are left untouched.
+func (suite *IntegrationTestSuite) TestMsgServerStakingReward_JoinStakingZeroAmountRefused() {
+	creator := sdk.AccAddress("creator")
+	stakingReward := types.StakingReward{
+		RewardId:         "join-zero-reward",
+		PrizeAmount:      "1000",
+		PrizeDenom:       "ubze",
+		StakingDenom:     "ubze",
+		Duration:         5,
+		Payouts:          2,
+		Lock:             7,
+		StakedAmount:     "0",
+		DistributedStake: "0",
+	}
+	suite.k.SetStakingReward(suite.ctx, stakingReward)
+
+	response, err := suite.msgServer.JoinStaking(suite.ctx, &types.MsgJoinStaking{
+		Creator:  creator.String(),
+		RewardId: stakingReward.RewardId,
+		Amount:   "0",
+	})
+
+	suite.Require().ErrorContains(err, "could not convert provided amount to int: amount should be greater than 0")
+	suite.Require().Nil(response)
+
+	stored, found := suite.k.GetStakingReward(suite.ctx, stakingReward.RewardId)
+	suite.Require().True(found)
+	suite.Require().Equal(stakingReward, stored)
+	_, found = suite.k.GetStakingRewardParticipant(suite.ctx, creator.String(), stakingReward.RewardId)
+	suite.Require().False(found)
+}
