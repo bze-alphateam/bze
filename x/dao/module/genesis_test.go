@@ -399,6 +399,21 @@ func TestGenesis_BrokenInvariants(t *testing.T) {
 		{"I2 removed member", votingEscrow, func(gs *types.GenesisState) { gs.Ballots[1].Weight = math.ZeroInt() }, "I2: proposal 1 has NO 1, its ballots add up to 0"},
 		{"I3", votingEscrow, func(gs *types.GenesisState) { gs.Ballots[2].Shares[0].Amount = math.NewInt(5) }, "I3: weight 10 is not the sum of its shares 11"},
 		{"I3 unpinned source", votingEscrow, func(gs *types.GenesisState) { gs.Ballots[2].Shares[0].Source = "sr/7" }, "I3: share of sr/7, a source the proposal did not pin"},
+		{"I3 duplicate share source", votingEscrow, func(gs *types.GenesisState) {
+			gs.Ballots[2].Shares = []types.BallotShare{
+				{Source: "sr/3", Amount: math.NewInt(4)},
+				{Source: "sr/3", Amount: math.NewInt(6)},
+			}
+		}, "I3: two shares of sr/3"},
+		{"I3 zero share", votingEscrow, func(gs *types.GenesisState) {
+			gs.Ballots[2].Shares[0].Amount = math.ZeroInt()
+		}, "I3: share of sr/3 must be positive"},
+		{"I3 negative share", votingEscrow, func(gs *types.GenesisState) {
+			gs.Ballots[2].Shares[0].Amount = math.NewInt(-4)
+		}, "I3: share of sr/3 must be positive"},
+		{"I3 nil share", votingEscrow, func(gs *types.GenesisState) {
+			gs.Ballots[2].Shares[0].Amount = math.Int{}
+		}, "I3: share of sr/3 must be positive"},
 		{"I3 static shares", votingEscrow, func(gs *types.GenesisState) {
 			gs.Ballots[0].Shares = []types.BallotShare{{Source: "sr/3", Amount: math.OneInt()}}
 		}, "I3: a static-list ballot has no shares"},
@@ -436,4 +451,19 @@ func TestGenesis_BrokenInvariants(t *testing.T) {
 			dao.InitGenesis(ctx, &k, gs)
 		})
 	}
+}
+
+// ValidateGenesis refuses JSON that is not a dao genesis state, naming the
+// module, and still accepts the default one and rejects a broken state.
+func TestModuleBasic_ValidateGenesis(t *testing.T) {
+	cdc := keepertest.DaoCodec()
+	basic := dao.AppModuleBasic{}
+
+	err := basic.ValidateGenesis(cdc, nil, []byte(`{not json`))
+	require.ErrorContains(t, err, "failed to unmarshal dao genesis state")
+
+	err = basic.ValidateGenesis(cdc, nil, []byte(`{"dao_count": "not a number"}`))
+	require.ErrorContains(t, err, "failed to unmarshal dao genesis state")
+
+	require.NoError(t, basic.ValidateGenesis(cdc, nil, basic.DefaultGenesis(cdc)))
 }
