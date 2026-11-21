@@ -93,7 +93,8 @@ func TestMsgUpdatePools_ValidateBasic(t *testing.T) {
 			err := types.NewMsgUpdatePools(tc.authority, tc.updates).ValidateBasic()
 			switch {
 			case tc.name == "invalid authority":
-				require.Error(t, err)
+				require.ErrorContains(t, err, "invalid authority address")
+				require.NotErrorIs(t, err, sdkerrors.ErrInvalidRequest)
 			case tc.wantErr != nil:
 				require.ErrorIs(t, err, tc.wantErr)
 			default:
