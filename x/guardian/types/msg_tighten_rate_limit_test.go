@@ -70,6 +70,6 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 
 	require.NoError(t, (&types.MsgUpdateParams{Authority: addr, Params: types.DefaultParams()}).ValidateBasic())
 	require.NoError(t, (&types.MsgUpdateParams{Authority: addr, Params: types.NewParams(addr)}).ValidateBasic())
-	require.Error(t, (&types.MsgUpdateParams{Authority: "nope", Params: types.DefaultParams()}).ValidateBasic())
-	require.Error(t, (&types.MsgUpdateParams{Authority: addr, Params: types.NewParams("nope")}).ValidateBasic())
+	require.ErrorContains(t, (&types.MsgUpdateParams{Authority: "nope", Params: types.DefaultParams()}).ValidateBasic(), "invalid authority address")
+	require.ErrorContains(t, (&types.MsgUpdateParams{Authority: addr, Params: types.NewParams("nope")}).ValidateBasic(), "invalid guardian address (nope)")
 }
