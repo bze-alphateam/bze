@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"errors"
+
 	"github.com/bze-alphateam/bze/x/burner/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -134,5 +136,44 @@ func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_FailingItemIsol
 	suite.requireRaffleCleanedUp(epoch, failing, working)
 	burned := suite.k.GetAllBurnedCoins(suite.ctx)
 	suite.Require().Len(burned, 1)
+	suite.Require().Equal(sdk.NewCoins(workingPot).String(), burned[0].Burned)
+}
+
+// When the burn of a raffle's pot panics and the fallback lock of that pot fails too, the raffle is still removed, the
+// other raffle of the epoch is burned and the epoch completes; the pot stays in the raffle module (no second transfer,
+// no burn record for it).
+func (suite *IntegrationTestSuite) TestProcessRaffleCleanupQueue_FailedRaffleLockErrorKeepsPot() {
+	epoch := uint64(100)
+	failing, working := "factory/creator/aaa", "factory/creator/bbb"
+	addr := suite.raffleCleanupFixture(epoch, failing, working)
+
+	failingPot := sdk.NewInt64Coin(failing, 500)
+	workingPot := sdk.NewInt64Coin(working, 1000)
+	suite.bank.EXPECT().GetBalance(gomock.Any(), addr, failing).Return(failingPot).AnyTimes()
+	suite.bank.EXPECT().GetBalance(gomock.Any(), addr, working).Return(workingPot).AnyTimes()
+	suite.trade.EXPECT().IsNativeDenom(gomock.Any(), gomock.Any()).Return(false).AnyTimes()
+	suite.bank.EXPECT().
+		BurnCoins(gomock.Any(), types.RaffleModuleName, sdk.NewCoins(failingPot)).
+		DoAndReturn(func(_ sdk.Context, _ string, _ sdk.Coins) error {
+			panic("unexpected failure")
+		}).
+		Times(1)
+	suite.bank.EXPECT().BurnCoins(gomock.Any(), types.RaffleModuleName, sdk.NewCoins(workingPot)).Return(nil).Times(1)
+	// the only transfer attempted is the lock of the failing pot, and it errors: gomock fails on any other transfer
+	lockCalls := 0
+	suite.bank.EXPECT().
+		SendCoinsFromModuleToModule(gomock.Any(), types.RaffleModuleName, types.BlackHoleModuleName, sdk.NewCoins(failingPot)).
+		DoAndReturn(func(_ sdk.Context, _, _ string, _ sdk.Coins) error {
+			lockCalls++
+			return errors.New("lock failed")
+		}).
+		Times(1)
+
+	suite.Require().NoError(suite.k.ProcessRaffleCleanupQueue(suite.ctx))
+
+	suite.Require().Equal(1, lockCalls, "the lock of the failed raffle's pot was attempted once")
+	suite.requireRaffleCleanedUp(epoch, failing, working)
+	burned := suite.k.GetAllBurnedCoins(suite.ctx)
+	suite.Require().Len(burned, 1, "only the working raffle's pot is recorded as burned")
 	suite.Require().Equal(sdk.NewCoins(workingPot).String(), burned[0].Burned)
 }

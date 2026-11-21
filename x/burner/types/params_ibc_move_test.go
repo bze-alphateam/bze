@@ -22,16 +22,17 @@ func TestParams_ValidateIbcMoveLimits(t *testing.T) {
 		ratio    math.LegacyDec
 		cooldown uint64
 		valid    bool
+		errText  string
 	}{
-		{desc: "nil ratio", ratio: math.LegacyDec{}, cooldown: 1},
-		{desc: "zero ratio", ratio: math.LegacyZeroDec(), cooldown: 1},
-		{desc: "negative ratio", ratio: math.LegacyNewDecWithPrec(-1, 2), cooldown: 1},
-		{desc: "ratio above 1", ratio: math.LegacyNewDecWithPrec(1000001, 6), cooldown: 1},
-		{desc: "zero cooldown", ratio: math.LegacyNewDecWithPrec(3, 2), cooldown: 0},
+		{desc: "nil ratio", ratio: math.LegacyDec{}, cooldown: 1, errText: "ibc move max reserve ratio is required"},
+		{desc: "zero ratio", ratio: math.LegacyZeroDec(), cooldown: 1, errText: "must be in (0, 1]"},
+		{desc: "negative ratio", ratio: math.LegacyNewDecWithPrec(-1, 2), cooldown: 1, errText: "must be in (0, 1]"},
+		{desc: "ratio above 1", ratio: math.LegacyNewDecWithPrec(1000001, 6), cooldown: 1, errText: "must be in (0, 1]"},
+		{desc: "zero cooldown", ratio: math.LegacyNewDecWithPrec(3, 2), cooldown: 0, errText: "cooldown blocks must be at least 1"},
 		{desc: "smallest ratio and cooldown", ratio: math.LegacySmallestDec(), cooldown: 1, valid: true},
 		{desc: "ratio 1", ratio: math.LegacyOneDec(), cooldown: 1_000_000, valid: true},
 		{desc: "max cooldown", ratio: math.LegacyNewDecWithPrec(3, 2), cooldown: 10_000_000, valid: true},
-		{desc: "cooldown above max", ratio: math.LegacyNewDecWithPrec(3, 2), cooldown: 10_000_001},
+		{desc: "cooldown above max", ratio: math.LegacyNewDecWithPrec(3, 2), cooldown: 10_000_001, errText: "cooldown blocks must be at most 10000000: 10000001"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -42,7 +43,7 @@ func TestParams_ValidateIbcMoveLimits(t *testing.T) {
 			if tc.valid {
 				require.NoError(t, err)
 			} else {
-				require.Error(t, err)
+				require.ErrorContains(t, err, tc.errText)
 			}
 		})
 	}
@@ -50,14 +51,15 @@ func TestParams_ValidateIbcMoveLimits(t *testing.T) {
 
 func TestGenesisState_ValidateIbcMoveLocks(t *testing.T) {
 	tests := []struct {
-		desc  string
-		locks []types.IbcMoveLock
-		valid bool
+		desc    string
+		locks   []types.IbcMoveLock
+		valid   bool
+		errText string
 	}{
 		{desc: "distinct denoms", locks: []types.IbcMoveLock{{Denom: "ibc/A", LastMoveHeight: 1}, {Denom: "ibc/B", LastMoveHeight: 2}}, valid: true},
-		{desc: "duplicate denom", locks: []types.IbcMoveLock{{Denom: "ibc/A", LastMoveHeight: 1}, {Denom: "ibc/A", LastMoveHeight: 2}}},
-		{desc: "empty denom", locks: []types.IbcMoveLock{{Denom: "", LastMoveHeight: 1}}},
-		{desc: "negative height", locks: []types.IbcMoveLock{{Denom: "ibc/A", LastMoveHeight: -1}}},
+		{desc: "duplicate denom", locks: []types.IbcMoveLock{{Denom: "ibc/A", LastMoveHeight: 1}, {Denom: "ibc/A", LastMoveHeight: 2}}, errText: "duplicate ibc move lock for denom ibc/A"},
+		{desc: "empty denom", locks: []types.IbcMoveLock{{Denom: "", LastMoveHeight: 1}}, errText: "ibc move lock with empty denom"},
+		{desc: "negative height", locks: []types.IbcMoveLock{{Denom: "ibc/A", LastMoveHeight: -1}}, errText: "ibc move lock of ibc/A has a negative height: -1"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -67,7 +69,7 @@ func TestGenesisState_ValidateIbcMoveLocks(t *testing.T) {
 			if tc.valid {
 				require.NoError(t, err)
 			} else {
-				require.Error(t, err)
+				require.EqualError(t, err, tc.errText)
 			}
 		})
 	}
