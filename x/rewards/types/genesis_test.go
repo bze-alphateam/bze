@@ -2,6 +2,7 @@ package types
 
 import (
 	"cosmossdk.io/math"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -135,21 +136,21 @@ func TestGenesisState_ValidateDenomRewards(t *testing.T) {
 			mutate: func(gs *GenesisState) {
 				gs.DenomRewardsDistributionQueue.Cursor = string(DenomRewardKey("udenom1"))
 			},
-			expError: "is not a schedule key",
+			expError: fmt.Sprintf("denom rewards distribution queue cursor %q is not a schedule key", string(DenomRewardKey("udenom1"))),
 		},
 		{
 			name: "queue cursor with a non-numeric schedule id",
 			mutate: func(gs *GenesisState) {
 				gs.DenomRewardsDistributionQueue.Cursor = string(DenomRewardScheduleKey("udenom1", "abc"))
 			},
-			expError: "is not a schedule key",
+			expError: fmt.Sprintf("denom rewards distribution queue cursor %q is not a schedule key", string(DenomRewardScheduleKey("udenom1", "abc"))),
 		},
 		{
 			name: "queue cursor references missing denom reward",
 			mutate: func(gs *GenesisState) {
 				gs.DenomRewardsDistributionQueue.Cursor = string(DenomRewardScheduleKey("missing", "000000000001"))
 			},
-			expError: "queue cursor",
+			expError: fmt.Sprintf("denom rewards distribution queue cursor %q references missing denom reward", string(DenomRewardScheduleKey("missing", "000000000001"))),
 		},
 		// value-level rules (BZE-142)
 		{

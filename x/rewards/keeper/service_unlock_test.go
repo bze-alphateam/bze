@@ -322,6 +322,8 @@ func (suite *IntegrationTestSuite) TestProcessQueue_ZeroAmountKeepsEpochInQueue(
 	queue, found := suite.k.GetUnlockParticipantsQueue(suite.ctx)
 	suite.Require().True(found)
 	suite.Require().Len(queue.UnlockEpochs, 1)
+	suite.Require().Equal([]uint64{uint64(epochNumber)}, queue.UnlockEpochs)
+	suite.Require().Equal(participant, participants[0])
 }
 
 // --- Store tests for new functions ---

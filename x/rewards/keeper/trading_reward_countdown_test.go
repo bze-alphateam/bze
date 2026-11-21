@@ -207,3 +207,42 @@ func (suite *IntegrationTestSuite) TestTradingRewardCountdown_MissingLeaderboard
 	suite.Require().True(found)
 	suite.Require().Equal(next.RewardId, mapping.RewardId)
 }
+
+// If the burner refuses the prize of the unfilled slots the failure is only logged: the winners are still paid, the
+// reward still finishes, the market is freed and the distribution event reports nothing burnt.
+func (suite *IntegrationTestSuite) TestTradingRewardCountdown_FailedBurnOfUnfilledSlotsStillFinishesTheReward() {
+	epochNumber := int64(500)
+	tr := countdownTestReward()
+	tr.ExpireAt = uint32(epochNumber)
+	winner := sdk.AccAddress("winner1")
+
+	suite.k.SetActiveTradingReward(suite.ctx, tr)
+	suite.k.SetActiveTradingRewardExpiration(suite.ctx, types.TradingRewardExpiration{RewardId: tr.RewardId, ExpireAt: tr.ExpireAt})
+	suite.k.SetMarketIdRewardId(suite.ctx, types.MarketIdTradingRewardId{RewardId: tr.RewardId, MarketId: tr.MarketId})
+	suite.k.SetTradingRewardLeaderboard(suite.ctx, types.TradingRewardLeaderboard{
+		RewardId: tr.RewardId,
+		List:     []types.TradingRewardLeaderboardEntry{{Amount: "5000", Address: winner.String(), CreatedAt: 1}},
+	})
+
+	unfilled := sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(2000)))
+	gomock.InOrder(
+		suite.bank.EXPECT().
+			SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, winner, sdk.NewCoins(sdk.NewCoin("ubze", math.NewInt(1000)))).
+			Return(nil).
+			Times(1),
+		suite.bank.EXPECT().
+			SendCoinsFromModuleToModule(gomock.Any(), types.ModuleName, burnermoduletypes.ModuleName, unfilled).
+			Return(fmt.Errorf("burner send refused")).
+			Times(1),
+	)
+
+	suite.Require().NoError(suite.k.GetTradingRewardsDistributionHook().AfterEpochEnd(suite.ctx, "hour", epochNumber))
+
+	_, found := suite.k.GetMarketIdRewardId(suite.ctx, tr.MarketId)
+	suite.Require().False(found, "market freed")
+	suite.Require().Len(suite.k.GetAllActiveTradingRewardExpirationByExpireAt(suite.ctx, uint32(epochNumber+168)), 1, "kept one week for display")
+
+	ev, found := suite.findTypedEvent(proto.MessageName(&types.TradingRewardDistributionEvent{}))
+	suite.Require().True(found, "distribution event still emitted")
+	suite.requireEventAttr(ev, "unpaid_burnt", "")
+}
