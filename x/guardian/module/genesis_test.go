@@ -35,7 +35,7 @@ func TestGenesis_DefaultRoundTrip(t *testing.T) {
 func TestGenesis_InvalidGuardianPanics(t *testing.T) {
 	k, ctx := keepertest.GuardianKeeper(t, nil)
 
-	require.Panics(t, func() {
+	require.PanicsWithError(t, "invalid guardian address (nope): decoding bech32 failed: invalid bech32 string length 4", func() {
 		guardian.InitGenesis(ctx, &k, types.GenesisState{Params: types.NewParams("nope")})
 	})
 }

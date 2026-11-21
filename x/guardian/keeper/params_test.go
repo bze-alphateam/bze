@@ -58,7 +58,7 @@ func TestUpdateParams_InvalidGuardianIsRefused(t *testing.T) {
 	e := newEnv(t)
 
 	_, err := e.msgServer.UpdateParams(e.ctx, &types.MsgUpdateParams{Authority: authority, Params: types.NewParams("not-an-address")})
-	require.Error(t, err)
+	require.ErrorContains(t, err, "invalid guardian address (not-an-address)")
 	require.Equal(t, guardianAddr, e.k.GetParams(e.ctx).Guardian)
 }
 

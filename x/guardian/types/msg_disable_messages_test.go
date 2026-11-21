@@ -48,7 +48,7 @@ func TestMsgDisableMessages_ValidateBasic(t *testing.T) {
 		})
 	}
 
-	require.Error(t, (&types.MsgDisableMessages{Signer: "bad", MsgTypeUrls: []string{"/bze.tradebin.MsgMultiSwap"}}).ValidateBasic())
+	require.ErrorContains(t, (&types.MsgDisableMessages{Signer: "bad", MsgTypeUrls: []string{"/bze.tradebin.MsgMultiSwap"}}).ValidateBasic(), "invalid signer address")
 }
 
 func TestIsProtectedMsgTypeURL(t *testing.T) {

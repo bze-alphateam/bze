@@ -32,9 +32,10 @@ func TestGenesis_ClosedChannelsRoundTrip(t *testing.T) {
 func TestGenesis_InvalidClosedChannelPanics(t *testing.T) {
 	k, ctx := keepertest.GuardianKeeper(t, nil)
 
-	require.Panics(t, func() {
+	require.PanicsWithError(t, "channel identifier is not in the format: `channel-{N}`: invalid identifier: invalid channel id", func() {
 		guardian.InitGenesis(ctx, &k, types.GenesisState{Params: types.DefaultParams(), ClosedChannels: []string{"nope"}})
 	})
+	require.False(t, k.IsChannelClosed(ctx, "nope"))
 }
 
 // Both stop switches with state survive an export and import together.

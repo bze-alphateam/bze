@@ -32,6 +32,6 @@ func TestMsgHaltChain_ValidateBasic(t *testing.T) {
 		})
 	}
 
-	require.Error(t, (&types.MsgHaltChain{Signer: "not-an-address", Reason: "x"}).ValidateBasic())
-	require.Error(t, (&types.MsgHaltChain{Reason: "x"}).ValidateBasic())
+	require.ErrorContains(t, (&types.MsgHaltChain{Signer: "not-an-address", Reason: "x"}).ValidateBasic(), "invalid signer address")
+	require.ErrorContains(t, (&types.MsgHaltChain{Reason: "x"}).ValidateBasic(), "invalid signer address")
 }

@@ -28,8 +28,8 @@ var channelCases = []struct {
 func TestMsgCloseChannel_ValidateBasic(t *testing.T) {
 	signer := sdk.AccAddress("signer______________").String()
 
-	require.Error(t, (&types.MsgCloseChannel{Signer: "nope", ChannelId: "channel-0"}).ValidateBasic())
-	require.Error(t, (&types.MsgCloseChannel{Signer: "", ChannelId: "channel-0"}).ValidateBasic())
+	require.ErrorContains(t, (&types.MsgCloseChannel{Signer: "nope", ChannelId: "channel-0"}).ValidateBasic(), "invalid signer address")
+	require.ErrorContains(t, (&types.MsgCloseChannel{Signer: "", ChannelId: "channel-0"}).ValidateBasic(), "invalid signer address")
 
 	for _, c := range channelCases {
 		t.Run(c.name, func(t *testing.T) {
@@ -46,8 +46,8 @@ func TestMsgCloseChannel_ValidateBasic(t *testing.T) {
 func TestMsgReopenChannel_ValidateBasic(t *testing.T) {
 	authority := sdk.AccAddress("authority___________").String()
 
-	require.Error(t, (&types.MsgReopenChannel{Authority: "nope", ChannelId: "channel-0"}).ValidateBasic())
-	require.Error(t, (&types.MsgReopenChannel{Authority: "", ChannelId: "channel-0"}).ValidateBasic())
+	require.ErrorContains(t, (&types.MsgReopenChannel{Authority: "nope", ChannelId: "channel-0"}).ValidateBasic(), "invalid authority address")
+	require.ErrorContains(t, (&types.MsgReopenChannel{Authority: "", ChannelId: "channel-0"}).ValidateBasic(), "invalid authority address")
 
 	for _, c := range channelCases {
 		t.Run(c.name, func(t *testing.T) {
@@ -72,5 +72,5 @@ func TestGenesis_ValidateClosedChannels(t *testing.T) {
 	require.ErrorIs(t, padded.Validate(), types.ErrInvalidChannel)
 
 	duplicate := types.GenesisState{Params: types.DefaultParams(), ClosedChannels: []string{"channel-0", "channel-0"}}
-	require.Error(t, duplicate.Validate())
+	require.ErrorContains(t, duplicate.Validate(), "duplicate closed channel channel-0")
 }

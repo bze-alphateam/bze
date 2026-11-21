@@ -28,8 +28,8 @@ var denomCases = []struct {
 func TestMsgBlockDenom_ValidateBasic(t *testing.T) {
 	signer := sdk.AccAddress("signer______________").String()
 
-	require.Error(t, (&types.MsgBlockDenom{Signer: "nope", Denom: "ubze"}).ValidateBasic())
-	require.Error(t, (&types.MsgBlockDenom{Signer: "", Denom: "ubze"}).ValidateBasic())
+	require.ErrorContains(t, (&types.MsgBlockDenom{Signer: "nope", Denom: "ubze"}).ValidateBasic(), "invalid signer address")
+	require.ErrorContains(t, (&types.MsgBlockDenom{Signer: "", Denom: "ubze"}).ValidateBasic(), "invalid signer address")
 
 	for _, c := range denomCases {
 		t.Run(c.name, func(t *testing.T) {
@@ -46,8 +46,8 @@ func TestMsgBlockDenom_ValidateBasic(t *testing.T) {
 func TestMsgUnblockDenom_ValidateBasic(t *testing.T) {
 	authority := sdk.AccAddress("authority___________").String()
 
-	require.Error(t, (&types.MsgUnblockDenom{Authority: "nope", Denom: "ubze"}).ValidateBasic())
-	require.Error(t, (&types.MsgUnblockDenom{Authority: "", Denom: "ubze"}).ValidateBasic())
+	require.ErrorContains(t, (&types.MsgUnblockDenom{Authority: "nope", Denom: "ubze"}).ValidateBasic(), "invalid authority address")
+	require.ErrorContains(t, (&types.MsgUnblockDenom{Authority: "", Denom: "ubze"}).ValidateBasic(), "invalid authority address")
 
 	for _, c := range denomCases {
 		t.Run(c.name, func(t *testing.T) {
