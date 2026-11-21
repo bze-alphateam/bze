@@ -355,5 +355,6 @@ func TestUnmarshalPacketDataMissingOnTheApp(t *testing.T) {
 	im := ibcmiddleware.NewIBCMiddleware(plainApp{}, unusedICS4Wrapper{t: t}, paramsKeeper{params: types.DefaultParams()})
 
 	_, _, err := im.UnmarshalPacketData(ctx, ibctransfertypes.PortID, blockedChannel, []byte("packet"))
-	require.Error(t, err)
+	require.ErrorIs(t, err, types.ErrUnsupportedPacketUnmarshal)
+	require.ErrorContains(t, err, "underlying app does not implement")
 }

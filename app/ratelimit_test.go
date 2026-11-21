@@ -280,3 +280,46 @@ func TestRateLimit_TransferPassesWithoutRateLimit(t *testing.T) {
 	require.Equal(t, uint64(1), res.Sequence)
 	require.NotEmpty(t, bApp.IBCKeeper.ChannelKeeper.GetPacketCommitment(ctx, ibctransfertypes.PortID, rlChannel, 1))
 }
+
+// A packet that brings ubze back over the limited channel is answered with an error acknowledgement by the
+// rate-limiting middleware when it exceeds the receive quota, and nothing leaves the escrow.
+func TestRateLimit_ReceiveOverQuotaGetsErrorAck(t *testing.T) {
+	bApp, ctx := newRateLimitApp(t)
+	bApp.TransferKeeper.SetParams(ctx, ibctransfertypes.DefaultParams())
+	require.NoError(t, handle(bApp, ctx, &ratelimittypes.MsgAddRateLimit{
+		Authority:         govAuthority(),
+		Denom:             rlDenom,
+		ChannelOrClientId: rlChannel,
+		MaxPercentSend:    sdkmath.NewInt(100),
+		MaxPercentRecv:    sdkmath.NewInt(1),
+		DurationHours:     24,
+	}))
+
+	// 50% of the supply is in escrow, as if it had been sent out before
+	escrow := ibctransfertypes.GetEscrowAddress(ibctransfertypes.PortID, rlChannel)
+	escrowed := sdk.NewCoins(sdk.NewInt64Coin(rlDenom, 500_000))
+	require.NoError(t, bApp.BankKeeper.MintCoins(ctx, minttypes.ModuleName, escrowed))
+	require.NoError(t, bApp.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, escrow, escrowed))
+
+	receiver := sdk.AccAddress("rl_receive_receiver_")
+	data := ibctransfertypes.NewFungibleTokenPacketData("transfer/channel-9/"+rlDenom, "500000", "cosmos1sender", receiver.String(), "")
+	packet := channeltypes.Packet{
+		Sequence:           1,
+		SourcePort:         ibctransfertypes.PortID,
+		SourceChannel:      "channel-9",
+		DestinationPort:    ibctransfertypes.PortID,
+		DestinationChannel: rlChannel,
+		Data:               data.GetBytes(),
+		TimeoutTimestamp:   uint64(time.Date(2026, 11, 3, 0, 0, 0, 0, time.UTC).UnixNano()),
+	}
+
+	route, found := bApp.IBCKeeper.PortKeeper.Router.Route(ibctransfertypes.ModuleName)
+	require.True(t, found)
+	ack := route.OnRecvPacket(ctx, ibctransfertypes.V1, packet, sdk.AccAddress("relayer"))
+	require.NotNil(t, ack)
+	require.False(t, ack.Success(), "an over-quota receive is refused with an error ack")
+	require.Contains(t, string(ack.Acknowledgement()), "ABCI code: 4", "quota exceeded code")
+
+	require.True(t, bApp.BankKeeper.GetBalance(ctx, receiver, rlDenom).IsZero(), "receiver got nothing")
+	require.Equal(t, "500000", bApp.BankKeeper.GetBalance(ctx, escrow, rlDenom).Amount.String(), "escrow untouched")
+}
