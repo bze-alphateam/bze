@@ -273,3 +273,26 @@ func (suite *IntegrationTestSuite) TestCreateDao_FromDao() {
 	_, found = suite.k.GetDao(suite.ctx, 4)
 	suite.Require().True(found)
 }
+
+// A message that resolves to no signer cannot be executed as the DAO: the
+// executor refuses it on both paths and nothing is stored or moved.
+func (suite *IntegrationTestSuite) TestAdminExecute_NoSignerRefused() {
+	suite.createAdminDao()
+	noSigner := &banktypes.MsgMultiSend{}
+
+	err := suite.adminExecute(adminAddr, 1, noSigner)
+
+	suite.Require().ErrorIs(err, types.ErrUnauthorizedSigner)
+	suite.Require().ErrorContains(err, "has no signer")
+	suite.Require().Equal(ubze(100), suite.ledger.balance(daoAddress(1)))
+}
+
+func (suite *IntegrationTestSuite) TestSubmitProposal_NoSignerRefused() {
+	suite.createStaticDao(noConfigChange)
+
+	_, err := suite.submit(memberA, 1, false, &banktypes.MsgMultiSend{})
+
+	suite.Require().ErrorIs(err, types.ErrUnauthorizedSigner)
+	suite.Require().ErrorContains(err, "has no signer")
+	suite.requireNothingStored()
+}

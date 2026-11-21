@@ -72,7 +72,7 @@ func TestKeeperSuite(t *testing.T) {
 }
 
 func TestNewKeeper_InvalidAuthorityPanics(t *testing.T) {
-	require.Panics(t, func() {
+	require.PanicsWithValue(t, "invalid authority address: not-an-address", func() {
 		keeper.NewKeeper(nil, nil, nil, "not-an-address", nil, nil, nil, nil, nil)
 	})
 }
