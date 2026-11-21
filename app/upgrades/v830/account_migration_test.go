@@ -745,3 +745,31 @@ func TestAccountMigration_PanickingStepDoesNotStopOthers(t *testing.T) {
 	require.Equal(t, "3000000", f.delegatedValue(migRecovery, a).String())
 	require.Equal(t, "2000000", f.balance(migRecovery).AmountOf(migBond).String())
 }
+
+// With one keeper missing the whole step is skipped: the source keeps its delegation and balance, the recovery
+// address gets nothing and no withdraw address is written, even though every other keeper is wired.
+func TestAccountMigration_UnwiredKeepersSkipTheStep(t *testing.T) {
+	f := newMigFixture(t)
+	a := f.createValidator(1)
+	f.endBlock()
+	f.fund(migSource, ubze(50_000_000))
+	f.delegate(migSource, a, 10_000_000)
+
+	delegatedBefore := f.delegatedValue(migSource, a)
+	balanceBefore := f.balance(migSource)
+	require.True(t, delegatedBefore.IsPositive())
+	require.False(t, balanceBefore.IsZero())
+
+	keepers := f.app.V830AccountMigrationKeepers()
+	keepers.Authz = nil
+	f.runHandler(keepers)
+
+	require.Equal(t, delegatedBefore.String(), f.delegatedValue(migSource, a).String(), "delegation stays with the source")
+	require.Equal(t, balanceBefore.String(), f.balance(migSource).String(), "balance stays with the source")
+	require.True(t, f.balance(migRecovery).IsZero(), "nothing reaches the recovery address")
+	require.Zero(t, f.delegatedValue(migRecovery, a).Int64(), "recovery address delegates nothing")
+	f.app.DistrKeeper.IterateDelegatorWithdrawAddrs(f.ctx, func(del, _ sdk.AccAddress) bool {
+		require.False(t, del.Equals(migSource), "no withdraw address written")
+		return false
+	})
+}

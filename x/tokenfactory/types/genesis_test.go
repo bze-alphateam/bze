@@ -32,6 +32,8 @@ func TestGenesisState_Validate(t *testing.T) {
 		desc     string
 		genState *types.GenesisState
 		valid    bool
+		errIs    error
+		errMsg   string
 	}{
 		{
 			desc:     "default is valid",
@@ -81,7 +83,9 @@ func TestGenesisState_Validate(t *testing.T) {
 					DenomAuthority: types.DenomAuthority{Admin: "", Mintable: true},
 				}},
 			},
-			valid: false,
+			valid:  false,
+			errIs:  types.ErrInvalidDenom,
+			errMsg: "denom factory/creator/one has no admin but is mintable",
 		},
 		{
 			desc: "denom config above the cap",
@@ -92,7 +96,9 @@ func TestGenesisState_Validate(t *testing.T) {
 					DenomConfig: &types.DenomConfig{TransferFee: math.LegacyNewDecWithPrec(1, 1), GasSurcharge: math.LegacyZeroDec()},
 				}},
 			},
-			valid: false,
+			valid:  false,
+			errIs:  types.ErrInvalidDenomConfig,
+			errMsg: "denom factory/creator/one: transfer fee",
 		},
 		{
 			desc: "denom config with a missing rate",
@@ -103,7 +109,9 @@ func TestGenesisState_Validate(t *testing.T) {
 					DenomConfig: &types.DenomConfig{TransferFee: math.LegacyZeroDec()},
 				}},
 			},
-			valid: false,
+			valid:  false,
+			errIs:  types.ErrInvalidDenomConfig,
+			errMsg: "denom factory/creator/one: gas surcharge is required",
 		},
 		{
 			desc: "duplicate branding denom",
@@ -155,6 +163,10 @@ func TestGenesisState_Validate(t *testing.T) {
 				require.NoError(t, err)
 			} else {
 				require.Error(t, err)
+				if tc.errIs != nil {
+					require.ErrorIs(t, err, tc.errIs)
+					require.ErrorContains(t, err, tc.errMsg)
+				}
 			}
 		})
 	}
