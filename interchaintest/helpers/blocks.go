@@ -3,6 +3,7 @@ package helpers
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -182,7 +183,12 @@ func (s *blockStream) startLocked(ctx context.Context) error {
 		s.blocks = map[int64]streamBlock{}
 		s.height = start - 1
 	}
-	for h := max(s.height+1, earliest); h <= latest; h++ {
+	from := s.height + 1
+	if from < earliest {
+		s.warnSkipped(from, earliest)
+		from = earliest
+	}
+	for h := from; h <= latest; h++ {
 		b, err := fetchBlock(ctx, client, h)
 		if err != nil {
 			return fmt.Errorf("block stream of %s: %w", s.chain.Config().ChainID, err)
@@ -295,7 +301,10 @@ func (s *blockStream) catchUp(ctx context.Context, client rpcclient.Client, h in
 		if err != nil {
 			return err
 		}
-		from = max(from, status.SyncInfo.EarliestBlockHeight)
+		if earliest := status.SyncInfo.EarliestBlockHeight; from < earliest {
+			s.warnSkipped(from, earliest)
+			from = earliest
+		}
 	}
 	for height := from; height <= h; height++ {
 		b, err := fetchBlock(ctx, client, height)
@@ -305,6 +314,15 @@ func (s *blockStream) catchUp(ctx context.Context, client rpcclient.Client, h in
 		s.add(b)
 	}
 	return nil
+}
+
+// warnSkipped logs the heights the stream skips because the node has no
+// block below earliest. That is expected only on a node started again from an
+// exported genesis; anywhere else it means a missing or pruned block, so it
+// is never skipped silently.
+func (s *blockStream) warnSkipped(from, earliest int64) {
+	log.Printf("WARNING: block stream of %s: skipping heights %d-%d, below the node's earliest block %d (expected only after a start from an exported genesis)",
+		s.chain.Config().ChainID, from, earliest-1, earliest)
 }
 
 func (s *blockStream) stopIfIdle() bool {

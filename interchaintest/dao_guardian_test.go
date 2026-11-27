@@ -15,14 +15,16 @@ import (
 )
 
 const (
-	// a min_expedite_delay longer than the whole suite: every early settle
-	// below happens before it, so it is early only because a static-list DAO
+	// a min_expedite_delay longer than the time from a council proposal's
+	// submission to its early settle (a few votes, under a minute), which
+	// each early settle asserts: it is early only because a static-list DAO
 	// does not wait for it
 	gcdDelay     = "200s"
 	gcdDelaySecs = 200
 
 	gcdSend     = 100 // ubze the council sends from its treasury
 	gcdSendURL  = "/cosmos.bank.v1beta1.MsgSend"
+	gcdMultiURL = "/cosmos.bank.v1beta1.MsgMultiSend" // the control of step 5
 	gcdVoteURL  = "/bze.dao.MsgVote"
 	gcdCircuit  = "circuit breaker disables execution of this message: " + gcdSendURL
 	gcdExecFail = "message failed" // the fixed EventProposalExecuted reason of a failed handler
@@ -155,7 +157,9 @@ func (c *councilSuite) councilDisables(t *testing.T) {
 // proposal sending from the treasury is still submitted, voted and settled
 // early (protected dao messages), but its execution fails: EXECUTION_FAILED
 // with the fixed reason of a failed handler. The settle moves nothing (funds
-// audit), so the treasury, which holds the amount, keeps it.
+// audit), so the treasury, which holds the amount, keeps it. "message
+// failed" is the reason of any handler error, so it does not prove the
+// breaker by itself: the retry after the reset in step 6 does.
 func (c *councilSuite) sendFails(t *testing.T) {
 	res, err := helpers.ExecMsgs(c.ctx, c.bze, c.rcpt, []helpers.TxOption{helpers.WithGas(daoRefuseGas)},
 		bankSend(c.rcpt.FormattedAddress(), c.anyone.FormattedAddress(), ubze(1)))
@@ -189,7 +193,12 @@ func (c *councilSuite) sendFails(t *testing.T) {
 
 // 5. A council proposal disabling MsgVote passes the vote, but x/guardian
 // refuses the protected type on execution: EXECUTION_FAILED, and the disable
-// list keeps only MsgSend. The guardian DAO cannot lock itself out.
+// list keeps only MsgSend. The guardian DAO cannot lock itself out. The
+// control is the same proposal with MsgMultiSend, which is not protected: it
+// executes and MsgMultiSend is disabled, so only the protected type made the
+// first one fail. (The protected-type error code itself is pinned for a
+// wallet guardian by TestGuardian; a DAO has no route to sign the message
+// directly, outside a proposal.)
 func (c *councilSuite) voteProtected(t *testing.T) {
 	pid := c.submit(t, c.members[0], c.dao, "disable votes", []map[string]any{c.disableMsg(gcdVoteURL)}, "--expedited")
 	for _, m := range c.members[:3] {
@@ -202,6 +211,20 @@ func (c *councilSuite) voteProtected(t *testing.T) {
 	require.Empty(t, helpers.TxEvents(res, "bze.guardian.v1.MessagesDisabledEvent"))
 	require.Equal(t, []string{gcdSendURL}, c.circuitDisabled(t))
 
+	pid = c.submit(t, c.members[0], c.dao, "disable multi-sends", []map[string]any{c.disableMsg(gcdMultiURL)}, "--expedited")
+	for _, m := range c.members[:3] {
+		c.vote(t, m, pid, "yes")
+	}
+	res = c.settleFirst(t, c.anyone, pid, "EXECUTED")
+	executed = c.event(t, res, "EventProposalExecuted")
+	require.Equal(t, "true", executed.Attributes["success"])
+	disabled := helpers.EventsWith(helpers.TxEvents(res, "bze.guardian.v1.MessagesDisabledEvent"), map[string]string{
+		"signer": c.dao.addr,
+	})
+	require.Len(t, disabled, 1, "one MessagesDisabledEvent signed by the council")
+	require.Contains(t, disabled[0].Attributes["msg_type_urls"], gcdMultiURL)
+	require.ElementsMatch(t, []string{gcdSendURL, gcdMultiURL}, c.circuitDisabled(t))
+
 	// the council still votes after the attempt
 	pid = c.submit(t, c.members[0], c.dao, "still voting", nil, "--expedited")
 	for _, m := range c.members[:3] {
@@ -212,8 +235,8 @@ func (c *councilSuite) voteProtected(t *testing.T) {
 	c.requireInvariants(t)
 }
 
-// 6. A gov proposal with x/circuit's MsgResetCircuitBreaker takes MsgSend off
-// the list. The failed proposal of step 4 is retried within its execution
+// 6. A gov proposal with x/circuit's MsgResetCircuitBreaker takes MsgSend
+// (and the control's MsgMultiSend) off the list. The failed proposal of step 4 is retried within its execution
 // window and now sends exactly the amount from the treasury.
 func (c *councilSuite) govResetsAndRetry(t *testing.T) {
 	require.NotZero(t, c.failedSend, "step 4 left a failed proposal")
@@ -221,10 +244,10 @@ func (c *councilSuite) govResetsAndRetry(t *testing.T) {
 		Messages: []any{map[string]any{
 			"@type":         gdnResetURL,
 			"authority":     c.gov,
-			"msg_type_urls": []string{gcdSendURL},
+			"msg_type_urls": []string{gcdSendURL, gcdMultiURL},
 		}},
 		Title:   "re-enable sends",
-		Summary: "e2e: reset the circuit breaker for MsgSend",
+		Summary: "e2e: reset the circuit breaker for MsgSend and MsgMultiSend",
 	})
 	require.NoError(t, err)
 	require.Empty(t, c.circuitDisabled(t))
