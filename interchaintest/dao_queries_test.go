@@ -472,18 +472,21 @@ func (s *daoSuite) exportAndValidate(t *testing.T) {
 	// reason, and a copy with only the start height set to the first block
 	// must validate: everything else is validated as exported.
 	validate := path.Join(node.HomeDir(), "state_export.json")
+	validated := []byte(exported)
 	if epoch := ratelimitHourEpoch(t, exported); epoch.EpochNumber != 0 && epoch.EpochStartHeight == 0 {
 		_, _, err := node.ExecBin(s.ctx, "genesis", "validate", validate)
 		require.ErrorContains(t, err, "if hour epoch number is non-empty, epoch height must be initialized",
 			"the export may be refused only for the rate-limiting hour epoch start height")
 		const patched = "state_export_ratelimit_epoch.json"
-		require.NoError(t, node.WriteFile(s.ctx, setRatelimitEpochStartHeight(t, exported, 1), patched))
+		validated = setRatelimitEpochStartHeight(t, exported, 1)
+		require.NoError(t, node.WriteFile(s.ctx, validated, patched))
 		validate = path.Join(node.HomeDir(), patched)
 		t.Logf("rate-limiting hour epoch %d exported with start height 0: validating a copy with start height 1", epoch.EpochNumber)
 	}
 	_, stderr, err := node.ExecBin(s.ctx, "genesis", "validate", validate)
 	require.NoError(t, err, "genesis validate: %s", stderr)
-	t.Log("importing the export into a fresh node is not covered: the harness starts chains from generated genesis only")
+	// startFromExport starts the node from exactly the document that validated
+	s.exported = validated
 }
 
 // ratelimitEpoch is the rate-limiting hour epoch of an exported genesis.

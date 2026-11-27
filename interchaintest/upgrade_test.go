@@ -1480,11 +1480,35 @@ func (s *upgradeSuite) v830DaoAccount(t *testing.T, b v830State) {
 	escrow := s.balance(t, addr, chain.Denom)
 	res = s.exec(t, s.admin, "dao", "submit-proposal", created[0].Attributes["id"], "after the upgrade",
 		msgArgs(bankSend(treasury, admin, sdk.NewCoins(sdk.NewInt64Coin(chain.Denom, 1))))[0])
-	require.Len(t, helpers.TxEvents(res, "bze.dao.EventProposalSubmitted"), 1, "EventProposalSubmitted")
+	submitted := helpers.TxEvents(res, "bze.dao.EventProposalSubmitted")
+	require.Len(t, submitted, 1, "EventProposalSubmitted")
 	got, err := helpers.Transferred(helpers.TxEvents(res, "transfer"), admin, addr, chain.Denom)
 	require.NoError(t, err)
 	require.Equal(t, sdkmath.NewInt(upV830DaoDeposit), got, "the deposit goes into the dao escrow")
 	require.Equal(t, escrow.AddRaw(upV830DaoDeposit), s.balance(t, addr, chain.Denom), "the escrow holds the coins sent on v8.2.0 and the deposit")
+
+	// the proposer cancels: the ALWAYS policy refunds the deposit, paid out of
+	// the converted module account while it still holds the coins sent on
+	// v8.2.0, which stay where they are
+	pid := submitted[0].Attributes["id"]
+	adminBefore := s.balance(t, admin, chain.Denom)
+	res = s.exec(t, s.admin, "dao", "cancel-proposal", pid)
+	cancelled := helpers.TxEvents(res, "bze.dao.EventProposalCancelled")
+	require.Len(t, cancelled, 1, "EventProposalCancelled")
+	require.Equal(t, pid, cancelled[0].Attributes["id"])
+	got, err = helpers.Transferred(helpers.TxEvents(res, "transfer"), addr, admin, chain.Denom)
+	require.NoError(t, err)
+	require.Equal(t, sdkmath.NewInt(upV830DaoDeposit), got, "the deposit is refunded from the dao escrow")
+	require.Equal(t, squat.String(), s.balances(t, 0, addr).String(), "the escrow is back to exactly the coins sent on v8.2.0")
+	fee, err := helpers.TxFee(res, chain.Denom)
+	require.NoError(t, err)
+	require.Equal(t, adminBefore.AddRaw(upV830DaoDeposit).Sub(fee), s.balance(t, admin, chain.Denom), "the proposer gets the deposit back and pays only the fee")
+	status := query[struct {
+		Proposal struct {
+			Status string `json:"status"`
+		} `json:"proposal"`
+	}](t, s, 0, "dao", "proposal", pid).Proposal.Status
+	require.Equal(t, "CANCELLED", status)
 }
 
 // upAccount is an x/auth account as `q auth account` prints it.
