@@ -173,13 +173,16 @@ func (s *blockStream) startLocked(ctx context.Context) error {
 		return fmt.Errorf("block stream of %s: status: %w", s.chain.Config().ChainID, err)
 	}
 	latest := status.SyncInfo.LatestBlockHeight
-	start := max(latest-streamLookback, 1)
+	// a node started from an exported genesis has no block below its
+	// initial height
+	earliest := max(status.SyncInfo.EarliestBlockHeight, 1)
+	start := max(latest-streamLookback, earliest)
 	if s.height < start-1 || s.height > latest {
 		// Stale or never started: begin again from the recent blocks.
 		s.blocks = map[int64]streamBlock{}
 		s.height = start - 1
 	}
-	for h := s.height + 1; h <= latest; h++ {
+	for h := max(s.height+1, earliest); h <= latest; h++ {
 		b, err := fetchBlock(ctx, client, h)
 		if err != nil {
 			return fmt.Errorf("block stream of %s: %w", s.chain.Config().ChainID, err)
@@ -285,6 +288,15 @@ func (s *blockStream) catchUp(ctx context.Context, client rpcclient.Client, h in
 	s.mu.Lock()
 	from := s.height + 1
 	s.mu.Unlock()
+	if from <= h {
+		// a gap: skip what the node does not have, e.g. the heights below
+		// the initial height of a node started again from an export
+		status, err := client.Status(ctx)
+		if err != nil {
+			return err
+		}
+		from = max(from, status.SyncInfo.EarliestBlockHeight)
+	}
 	for height := from; height <= h; height++ {
 		b, err := fetchBlock(ctx, client, height)
 		if err != nil {
