@@ -82,8 +82,10 @@ const (
 // and refusals, the exploit catalog D1–D29 and the attack vectors beyond it,
 // a funds audit on every tx (the tx's bank transfers are exactly the fee and
 // the intended moves, and every account involved changed by exactly that),
-// the invariants I1, I2, I3, I5 and I7 after every sub-test, and I4, I6 and
-// `genesis validate` on an export at the end. Every sub-test uses fresh
+// the invariants I1, I2, I3, I5 and I7 after every sub-test, I4, I6 and
+// `genesis validate` on an export at the end, and the node started again from
+// that export, with the DAO state, a guardian pause and a closed channel
+// carried over and two imported proposals closed. Every sub-test uses fresh
 // accounts and DAOs and asserts deltas; a failed sub-test does not stop the
 // ones after it.
 func TestDao(t *testing.T) {
@@ -91,8 +93,17 @@ func TestDao(t *testing.T) {
 		t.Skip("e2e: skipped in short mode")
 	}
 	ctx := context.Background()
-	net := chain.Start(t, ctx, chain.WithGenesis(daoGenesis()...))
+	// a wallet guardian and a closed channel in genesis for the node start
+	// from the export: this suite has no IBC, so the channel is closed
+	// in genesis rather than by a tx
+	guardianMnemonic, guardianAddr := newAccount(t, chain.Bech32Prefix)
+	genesis := append(daoGenesis(),
+		cosmos.NewGenesisKV("app_state.guardian.params.guardian", guardianAddr),
+		cosmos.NewGenesisKV("app_state.guardian.closed_channels", []string{daoClosedChannel}),
+	)
+	net := chain.Start(t, ctx, chain.WithGenesis(genesis...))
 	s := setupDao(t, ctx, net)
+	s.setupGuardian(t, guardianMnemonic, guardianAddr)
 
 	steps := []struct {
 		name string
@@ -129,7 +140,9 @@ func TestDao(t *testing.T) {
 		{"B queries", s.queries},
 		{"F CLI facts", s.cliFacts},
 		{"A11 update-params and E14 mid-flight changes", s.updateParams},
+		{"open proposals and a guardian pause for the export", s.beforeExport},
 		{"D export and genesis validate", s.exportAndValidate},
+		{"node start from the export", s.startFromExport},
 	}
 	for _, step := range steps {
 		t.Run(step.name, func(t *testing.T) {
@@ -191,6 +204,12 @@ type daoSuite struct {
 	failed   uint64
 
 	fx *daoFixtures
+
+	// the node start from the export: the genesis guardian, what was left
+	// open and seen before the export, and the document D validated
+	guardian ibc.Wallet
+	imp      *daoImport
+	exported []byte
 }
 
 func setupDao(t *testing.T, ctx context.Context, net chain.Network) *daoSuite {

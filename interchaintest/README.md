@@ -59,6 +59,7 @@ make e2e-params                     # tradebin, rewards and tokenfactory params 
 make e2e-input-rules                # canonical amounts in tradebin, burner and rewards messages; one rewards position per account whatever the address case; protocol fees inside authz exec paid in ubze
 make e2e-dao                        # x/dao: every message, query, exploit-catalog case (D1–D29) and invariant, with a funds audit per tx (E2E_TIMEOUT=120m)
 make e2e-dao-expedite               # x/dao: a static-list DAO settles an expedited proposal at once, a stake DAO waits for min_expedite_delay (~4 min)
+make e2e-guardian-council          # x/guardian + x/dao: gov makes a static-list DAO the guardian, its expedited proposal disables MsgSend, its send proposal fails until gov resets (~4 min)
 make e2e-guardian-halt-chain        # x/guardian: a stranger cannot halt, the guardian's halt replaces the release plan and stops the chain (~3 min)
 make e2e-upgrade                    # chain upgrade from the previous release (see below)
 cd interchaintest && go test -v -run TestSmoke ./...
